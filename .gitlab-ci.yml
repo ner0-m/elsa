@@ -1,0 +1,109 @@
+image: elsa/ubuntu:18.04
+
+stages:
+- compile
+- test
+
+### job templates ###
+
+.job_template: &build_job
+  stage: compile
+  cache: 
+    key: "$CI_JOB_NAME"
+    paths:
+      - build/
+      
+.job_template: &build_job_artifact
+  stage: compile
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - build/
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    paths:
+      - build/
+    expire_in: 30 mins
+    
+
+### compile jobs ###
+
+build-ubuntu:
+  <<: *build_job_artifact
+  image: elsa/ubuntu:18.04
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make -j${nproc}
+  tags:
+    - linux
+    - elsa
+    
+    
+build-gcc9:
+  <<: *build_job_artifact
+  image: elsa/gcc:9
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make -j${nproc}
+  tags:
+    - linux
+    - elsa
+    - gcc
+    
+build-clang8:
+  <<: *build_job_artifact
+  image: elsa/clang:8
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - make -j${nproc}
+  tags:
+    - linux
+    - elsa
+    - clang
+
+
+### test jobs ###
+
+test-ubuntu:
+  stage: test
+  image: elsa/ubuntu:18.04
+  script:
+    - cd build
+    - ctest
+  dependencies: 
+    - build-ubuntu
+  tags:
+    - linux
+    - elsa
+    
+test-gcc9:
+  stage: test
+  image: elsa/gcc:9
+  script:
+    - cd build
+    - ctest
+  dependencies:
+    - build-gcc9
+  tags:
+    - linux
+    - elsa
+    - gcc
+    
+test-clang8:
+  stage: test
+  image: elsa/clang:8
+  script:
+    - cd build
+    - ctest
+  dependencies:
+    - build-clang8
+  tags:
+    - linux
+    - elsa
+    - clang
