@@ -44,9 +44,9 @@ As elsa depends on Eigen3 and spdlog, you will need to have these packages insta
 # History and contributors
 
 elsa started its life as an internal library at the [Inverse Problems in Tomography](https://ip.campar.in.tum.de) group at the [Technical University in Munich](https://www.tum.de).
-This open-source version is a modernized and cleaned up version of our internal code and will contain most of its functionality, module some parts which we unfortunately cannot share (yet).
+This open-source version is a modernized and cleaned up version of our internal code and will contain most of its functionality, modulo some parts which we unfortunately cannot share (yet).
 
-The contributors to elsa are:
+The *contributors* to elsa are:
 
    * Matthias Wieczorek 
    * Tobias Lasser
