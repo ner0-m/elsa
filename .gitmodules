@@ -1,0 +1,9 @@
+[submodule "thirdparty/Catch2"]
+	path = thirdparty/Catch2
+	url = https://github.com/catchorg/Catch2.git
+[submodule "thirdparty/eigen3"]
+	path = thirdparty/eigen3
+	url = https://github.com/eigenteam/eigen-git-mirror
+[submodule "thirdparty/spdlog"]
+	path = thirdparty/spdlog
+	url = https://github.com/gabime/spdlog.git

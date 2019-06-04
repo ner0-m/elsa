@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+include(CmakeFindDependencyMacro)
+find_dependency(Eigen3 3.3 NO_MODULE REQUIRED)
+
+
+set(_supported_components @ELSA_REGISTERED_COMPONENTS@)
+message(STATUS "elsa components found: ${_supported_components}")
+foreach(_comp ${elsa_FIND_COMPONENTS})
+    if (NOT _comp IN_LIST _supported_components)
+        set(elsa_FOUND False)
+        set(elsa_NOT_FOUND_MESSAGE "Unsupported component: ${_comp}")
+    endif()
+    include(${CMAKE_CURRENT_LIST_DIR}/elsa_${_comp}Targets.cmake)
+endforeach()
