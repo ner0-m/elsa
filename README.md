@@ -14,7 +14,8 @@ The missing modules will be brought online shortly.
 
 # Requirements
 
-elsa requires a *C++17 compliant compiler*, such as GCC, Clang or Microsoft Visual Studio in recent versions. 
+elsa requires a *C++17 compliant compiler*, such as GCC, Clang or Microsoft Visual Studio in recent versions.
+Current testing includes gcc7, gcc9, and clang8.
 
 The main third party dependencies (Eigen3, spdlog, Catch2) are integrated via git submodules.
 
