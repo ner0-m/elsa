@@ -10,7 +10,7 @@ Other imaging modalities can be supported by implemented appropriate operators.
 ## Pre-release status
 
 elsa is currently in pre-release status and not yet fully functional.
-
+However, due to the Fully3D conference on June 2-6, 2019, a subset of the functionality is already available for your perusal.
 
 # Requirements
 
