@@ -28,6 +28,19 @@ namespace elsa
         return new Identity(this->getDomainDescriptor());
     }
 
+    template <typename data_t>
+    bool Identity<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    {
+        if (!LinearOperator<data_t>::isEqual(other))
+            return false;
+
+        auto otherIdentity = dynamic_cast<const Identity*>(&other);
+        if (!otherIdentity)
+            return false;
+
+        return true;
+    }
+
 
     // ------------------------------------------
     // explicit template instantiation

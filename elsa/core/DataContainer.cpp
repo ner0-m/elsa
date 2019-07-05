@@ -114,9 +114,21 @@ namespace elsa {
     }
 
     template<typename data_t>
-    data_t DataContainer<data_t>::squaredNorm() const
+    data_t DataContainer<data_t>::squaredL2Norm() const
     {
-        return _dataHandler->squaredNorm();
+        return _dataHandler->squaredL2Norm();
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::l1Norm() const
+    {
+        return _dataHandler->l1Norm();
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::lInfNorm() const
+    {
+        return _dataHandler->lInfNorm();
     }
 
     template<typename data_t>

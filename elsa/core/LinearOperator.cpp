@@ -1,13 +1,51 @@
 #include "LinearOperator.h"
 
 #include <stdexcept>
+#include <typeinfo>
 
 namespace elsa
 {
     template <typename data_t>
     LinearOperator<data_t>::LinearOperator(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor)
-            : _domainDescriptor{domainDescriptor.clone()}, _rangeDescriptor{rangeDescriptor.clone()}
+        : _domainDescriptor{domainDescriptor.clone()}, _rangeDescriptor{rangeDescriptor.clone()}
     {}
+
+    template <typename data_t>
+    LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& other)
+        : _domainDescriptor{other._domainDescriptor->clone()}, _rangeDescriptor{other._rangeDescriptor->clone()},
+          _isLeaf{other._isLeaf}, _isAdjoint{other._isAdjoint}, _isComposite{other._isComposite}, _mode{other._mode}
+    {
+        if (_isLeaf)
+            _lhs = other._lhs->clone();
+
+        if (_isComposite) {
+            _lhs = other._lhs->clone();
+            _rhs = other._rhs->clone();
+        }
+    }
+
+    template <typename data_t>
+    LinearOperator<data_t>& LinearOperator<data_t>::operator=(const LinearOperator<data_t>& other)
+    {
+        if (*this != other) {
+            _domainDescriptor = other._domainDescriptor->clone();
+            _rangeDescriptor = other._rangeDescriptor->clone();
+            _isLeaf = other._isLeaf;
+            _isAdjoint = other._isAdjoint;
+            _isComposite = other._isComposite;
+            _mode = other._mode;
+
+            if (_isLeaf)
+                _lhs = other._lhs->clone();
+
+            if (_isComposite) {
+                _lhs = other._lhs->clone();
+                _rhs = other._rhs->clone();
+            }
+        }
+
+        return *this;
+    }
 
 
     template <typename data_t>
@@ -40,14 +78,25 @@ namespace elsa
     template <typename data_t>
     void LinearOperator<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
     {
-        if (_isAdjoint) {
-            // sanity check the arguments for the intended evaluation tree leaf operation
-            if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != x.getSize() ||
-                _lhs->getDomainDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                throw std::invalid_argument("LinearOperator::apply: incorrect input/output sizes for adjoint leaf");
+        if (_isLeaf) {
+            if (_isAdjoint) {
+                // sanity check the arguments for the intended evaluation tree leaf operation
+                if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != x.getSize() ||
+                    _lhs->getDomainDescriptor().getNumberOfCoefficients() != Ax.getSize())
+                    throw std::invalid_argument("LinearOperator::apply: incorrect input/output sizes for adjoint leaf");
 
-            _lhs->applyAdjoint(x, Ax);
-            return;
+                _lhs->applyAdjoint(x, Ax);
+                return;
+            }
+            else {
+                // sanity check the arguments for the intended evaluation tree leaf operation
+                if (_lhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize() ||
+                    _lhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
+                    throw std::invalid_argument("LinearOperator::apply: incorrect input/output sizes for leaf");
+
+                _lhs->apply(x, Ax);
+                return;
+            }
         }
 
         if (_isComposite) {
@@ -99,14 +148,26 @@ namespace elsa
     template <typename data_t>
     void LinearOperator<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
     {
-        if (_isAdjoint) {
-            // sanity check the arguments for the intended evaluation tree leaf operation
-            if (_lhs->getDomainDescriptor().getNumberOfCoefficients() != y.getSize() ||
-                _lhs->getRangeDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                throw std::invalid_argument("LinearOperator::applyAdjoint: incorrect input/output sizes for adjoint leaf");
+        if (_isLeaf) {
+            if (_isAdjoint) {
+                // sanity check the arguments for the intended evaluation tree leaf operation
+                if (_lhs->getDomainDescriptor().getNumberOfCoefficients() != y.getSize() ||
+                    _lhs->getRangeDescriptor().getNumberOfCoefficients() != Aty.getSize())
+                    throw std::invalid_argument(
+                            "LinearOperator::applyAdjoint: incorrect input/output sizes for adjoint leaf");
 
-            _lhs->apply(y, Aty);
-            return;
+                _lhs->apply(y, Aty);
+                return;
+            }
+            else {
+                // sanity check the arguments for the intended evaluation tree leaf operation
+                if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize() ||
+                    _lhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
+                    throw std::invalid_argument("LinearOperator::applyAdjoint: incorrect input/output sizes for leaf");
+
+                _lhs->applyAdjoint(y, Aty);
+                return;
+            }
         }
 
         if (_isComposite) {
@@ -143,8 +204,8 @@ namespace elsa
     template <typename data_t>
     LinearOperator<data_t>* LinearOperator<data_t>::cloneImpl() const
     {
-        if (_isAdjoint)
-            return new LinearOperator<data_t>(*_lhs);
+        if (_isLeaf)
+            return new LinearOperator<data_t>(*_lhs, _isAdjoint);
 
         if (_isComposite)
             return new LinearOperator<data_t>(*_lhs, *_rhs, _mode);
@@ -159,8 +220,8 @@ namespace elsa
             *_rangeDescriptor != *other._rangeDescriptor)
             return false;
 
-        if (_isAdjoint)
-            return other._isAdjoint && (*_lhs == *other._lhs);
+        if (_isLeaf)
+            return other._isLeaf && (_isAdjoint == other._isAdjoint) && (*_lhs == *other._lhs);
 
         if (_isComposite)
             return other._isComposite && _mode == other._mode
@@ -170,10 +231,12 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& op)
-        : _domainDescriptor{op.getRangeDescriptor().clone()}, _rangeDescriptor{op.getDomainDescriptor().clone()},
-          _lhs{op.clone()}, _isAdjoint{true}
-    {}
+    LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& op, bool isAdjoint)
+        : _domainDescriptor{(isAdjoint) ? op.getRangeDescriptor().clone() : op.getDomainDescriptor().clone()},
+          _rangeDescriptor{(isAdjoint) ? op.getDomainDescriptor().clone() : op.getRangeDescriptor().clone()},
+          _lhs{op.clone()}, _isLeaf{true}, _isAdjoint{isAdjoint}
+    {
+    }
 
     template <typename data_t>
     LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& lhs,

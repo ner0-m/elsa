@@ -13,6 +13,8 @@ namespace elsa
      * \author Maximilian Hornung - rewrite and performance optimization
      * \author Tobias Lasser - modernization
      *
+     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     *
      * This class represents a linear operator D that computes finite differences,
      * using the central, forward, or backward differences.
      */

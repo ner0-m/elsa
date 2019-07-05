@@ -168,7 +168,9 @@ SCENARIO("Testing the reduction operations of DataContainer") {
 
             THEN("the reductions work as expected") {
                 REQUIRE(dc.sum() == Approx(randVec.sum()) );
-                REQUIRE(dc.squaredNorm() == Approx(randVec.squaredNorm()) );
+                REQUIRE(dc.l1Norm() == Approx(randVec.array().abs().sum()));
+                REQUIRE(dc.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
+                REQUIRE(dc.squaredL2Norm() == Approx(randVec.squaredNorm()) );
 
                 Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(dc.getSize());
                 DataContainer dc2(desc);

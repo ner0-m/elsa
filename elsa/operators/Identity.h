@@ -44,5 +44,8 @@ namespace elsa
 
          /// implement the polymorphic clone operation
          Identity<data_t>* cloneImpl() const override;
+
+         /// implement the polymorphic comparison operation
+         bool isEqual(const LinearOperator<data_t>& other) const override;
      };
 } // namespace elsa

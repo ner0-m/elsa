@@ -63,7 +63,14 @@ namespace elsa
          data_t dot(const DataHandler<data_t>& v) const override;
 
          /// return the squared l2 norm of the data vector (dot product with itself)
-         data_t squaredNorm() const override;
+         data_t squaredL2Norm() const override;
+
+         /// return the l1 norm of the data vector (sum of absolute values)
+         data_t l1Norm() const override;
+
+         /// return the linf norm of the data vector (maximum of absolute values)
+         data_t lInfNorm() const override;
+
 
          /// return the sum of all elements of the data vector
          data_t sum() const override;

@@ -69,7 +69,9 @@ SCENARIO("Testing the reduction operations of DataHandlerCPU") {
 
             THEN("the reductions work as expected") {
                 REQUIRE(dh.sum() == Approx(randVec.sum()) );
-                REQUIRE(dh.squaredNorm() == Approx(randVec.squaredNorm()) );
+                REQUIRE(dh.l1Norm() == Approx(randVec.array().abs().sum()));
+                REQUIRE(dh.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
+                REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()) );
 
                 Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(size);
                 DataHandlerCPU dh2(randVec2);

@@ -21,7 +21,7 @@ namespace elsa
      *
      * This class represents a linear operator A, expressed through its apply/applyAdjoint methods,
      * which implement Ax and A^ty for DataContainers x,y of appropriate sizes. Concrete implementations
-     * of linear operators will derive from this class and override the apply/applyAdjoint methods.
+     * of linear operators will derive from this class and override the _apply/_applyAdjoint methods.
      *
      * LinearOperator also provides functionality to support constructs like the operator expression A^t*B+C,
      * where A,B,C are linear operators. This operator composition is implemented via evaluation trees.
@@ -43,6 +43,12 @@ namespace elsa
 
         /// default destructor
         ~LinearOperator() override = default;
+
+        /// copy construction
+        LinearOperator(const LinearOperator<data_t>& other);
+        /// copy assignment
+        LinearOperator<data_t>& operator=(const LinearOperator<data_t>& other);
+
 
         /// return the domain DataDescriptor
         const DataDescriptor& getDomainDescriptor() const;
@@ -68,6 +74,9 @@ namespace elsa
          * \param[in] x input DataContainer (in the domain of the operator)
          * \param[out] Ax output DataContainer (in the range of the operator)
          *
+         * Please note: this method calls the method _apply that has to be overridden in derived
+         * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
+         * function overloading a virtual one [apply with one vs. two arguments]).
          */
         void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax);
 
@@ -88,6 +97,10 @@ namespace elsa
          *
          * \param[in] y input DataContainer (in the range of the operator)
          * \param[out] A^ty output DataContainer (in the domain of the operator)
+         *
+         * Please note: this method calls the method _applyAdjoint that has to be overridden in
+         * derived classes. (Why is this method not virtual itself? Because you cannot have a
+         * non-virtual function overloading a virtual one [applyAdjoint with one vs. two args]).
          */
         void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty);
 
@@ -104,7 +117,12 @@ namespace elsa
 
         /// friend function to return the adjoint of a LinearOperator (and its derivatives)
         friend LinearOperator<data_t> adjoint(const LinearOperator<data_t>& op) {
-            return LinearOperator(op);
+            return LinearOperator(op, true);
+        }
+
+        /// friend function to return a leaf node of a LinearOperator (and its derivatives)
+        friend LinearOperator<data_t> leaf(const LinearOperator<data_t>& op) {
+            return LinearOperator(op, false);
         }
 
     protected:
@@ -132,6 +150,9 @@ namespace elsa
         /// pointers to nodes in the evaluation tree
         std::unique_ptr<LinearOperator<data_t>> _lhs{}, _rhs{};
 
+        /// flag whether this is a leaf-node
+        bool _isLeaf{false};
+
         /// flag whether this is a leaf-node to implement an adjoint operator
         bool _isAdjoint{false};
 
@@ -145,7 +166,7 @@ namespace elsa
         compositeMode _mode{compositeMode::mult};
 
         /// constructor to produce an adjoint leaf node
-        LinearOperator(const LinearOperator<data_t>& op);
+        LinearOperator(const LinearOperator<data_t>& op, bool isAdjoint);
 
         /// constructor to produce a composite (internal node) of the evaluation tree
         LinearOperator(const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs, compositeMode mode);

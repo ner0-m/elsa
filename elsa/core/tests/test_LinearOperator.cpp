@@ -57,6 +57,10 @@ SCENARIO("Constructing a LinearOperator") {
                 REQUIRE_THROWS_AS(linOp.applyAdjoint(dc), std::logic_error);
             }
 
+            THEN("copies are good") {
+                auto newOp = linOp;
+                REQUIRE(newOp == linOp);
+            }
         }
 
     }
@@ -77,12 +81,67 @@ SCENARIO("Cloning LinearOperators") {
                 REQUIRE(linOpClone.get() != &linOp);
                 REQUIRE(*linOpClone == linOp);
             }
+
+            THEN("copies are also identical") {
+                auto newOp = *linOpClone;
+                REQUIRE(newOp == linOp);
+            }
         }
     }
 }
 
 
-SCENARIO("Adjoint LinearOperator") {
+SCENARIO("Leaf LinearOperator") {
+    GIVEN("a non-adjoint leaf linear operator") {
+        IndexVector_t numCoeff(2); numCoeff << 12, 23;
+        IndexVector_t numCoeff2(2); numCoeff2 << 34, 45;
+        DataDescriptor ddDomain(numCoeff);
+        DataDescriptor ddRange(numCoeff2);
+        MockOperator mockOp(ddDomain, ddRange);
+
+        auto leafOp = leaf(mockOp);
+
+        WHEN("the operator is there") {
+            THEN("the descriptors are set correctly") {
+                REQUIRE(leafOp.getDomainDescriptor() == ddDomain);
+                REQUIRE(leafOp.getRangeDescriptor() == ddRange);
+            }
+        }
+
+        WHEN("given data") {
+            DataContainer dcDomain(ddDomain);
+            DataContainer dcRange(ddRange);
+
+            THEN("the apply operations return the correct result") {
+                auto resultApply = leafOp.apply(dcDomain);
+                for (int i = 0; i < resultApply.getSize(); ++i)
+                    REQUIRE(resultApply[i] == 1);
+
+                auto resultApplyAdjoint = leafOp.applyAdjoint(dcRange);
+                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
+                    REQUIRE(resultApplyAdjoint[i] == 3);
+            }
+
+            THEN("the apply operations care for appropriately sized containers") {
+                REQUIRE_THROWS_AS(leafOp.apply(dcRange), std::invalid_argument);
+                REQUIRE_THROWS_AS(leafOp.applyAdjoint(dcDomain), std::invalid_argument);
+            }
+        }
+
+        WHEN("copying/assigning") {
+            auto newOp = leafOp;
+            auto assignedOp = leaf(newOp);
+
+            THEN("it should be identical") {
+                REQUIRE(newOp == leafOp);
+                REQUIRE(assignedOp == leaf(newOp));
+
+                assignedOp = newOp;
+                REQUIRE(assignedOp == newOp);
+            }
+        }
+    }
+
     GIVEN("an adjoint linear operator") {
         IndexVector_t numCoeff(2); numCoeff << 12, 23;
         IndexVector_t numCoeff2(2); numCoeff2 << 34, 45;
@@ -116,6 +175,19 @@ SCENARIO("Adjoint LinearOperator") {
             THEN("the apply operations care for appropriately sized containers") {
                 REQUIRE_THROWS_AS(adjointOp.apply(dcDomain), std::invalid_argument);
                 REQUIRE_THROWS_AS(adjointOp.applyAdjoint(dcRange), std::invalid_argument);
+            }
+        }
+
+        WHEN("copying/assigning") {
+            auto newOp = adjointOp;
+            auto assignedOp = adjoint(newOp);
+
+            THEN("it should be identical") {
+                REQUIRE(newOp == adjointOp);
+                REQUIRE(assignedOp == adjoint(newOp));
+
+                assignedOp = newOp;
+                REQUIRE(assignedOp == newOp);
             }
         }
     }
@@ -160,6 +232,20 @@ SCENARIO("Composite LinearOperator") {
                 REQUIRE_THROWS_AS(addOp.applyAdjoint(dcDomain), std::invalid_argument);
             }
         }
+
+        WHEN("copying/assigning") {
+            auto newOp = addOp;
+            auto assignedOp = adjoint(newOp);
+
+            THEN("it should be identical") {
+                REQUIRE(newOp == addOp);
+                REQUIRE(assignedOp == adjoint(newOp));
+
+                assignedOp = newOp;
+                REQUIRE(assignedOp == newOp);
+            }
+        }
+
     }
 
     GIVEN("a multiplicative composite linear operator") {
@@ -201,6 +287,20 @@ SCENARIO("Composite LinearOperator") {
                 REQUIRE_THROWS_AS(multOp.applyAdjoint(dcDomain), std::invalid_argument);
             }
         }
+
+        WHEN("copying/assigning") {
+            auto newOp = multOp;
+            auto assignedOp = adjoint(newOp);
+
+            THEN("it should be identical") {
+                REQUIRE(newOp == multOp);
+                REQUIRE(assignedOp == adjoint(newOp));
+
+                assignedOp = newOp;
+                REQUIRE(assignedOp == newOp);
+            }
+        }
+
     }
 
     GIVEN("a complex composite with multiple leafs and levels") {
@@ -243,5 +343,19 @@ SCENARIO("Composite LinearOperator") {
                REQUIRE_THROWS_AS(compositeOp.applyAdjoint(dcDomain), std::invalid_argument);
            }
         }
+
+        WHEN("copying/assigning") {
+            auto newOp = compositeOp;
+            auto assignedOp = adjoint(newOp);
+
+            THEN("it should be identical") {
+                REQUIRE(newOp == compositeOp);
+                REQUIRE(assignedOp == adjoint(newOp));
+
+                assignedOp = newOp;
+                REQUIRE(assignedOp == newOp);
+            }
+        }
+
     }
 }
