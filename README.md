@@ -5,12 +5,10 @@ Currently, operators are implemented for X-ray Computed Tomography.
 Other imaging modalities can be supported by implementing appropriate operators.
 
 
-## Pre-release status
+## Library status
 
-elsa is currently in *pre-release status* and not yet fully functional.
-However, due to the Fully3D conference on June 2-6, 2019, a subset of the functionality is already available for your perusal.
-The missing modules will be brought online shortly.
-
+elsa was just released for the first time with fully functional status on July 19, 2019.
+While the first release is fully functional, some important functionality is still missing and planned for future minor releases in the near future.
 
 # Requirements
 
@@ -32,7 +30,8 @@ Once you have cloned the git repository, compilation can be done by following th
 
 You can provide *-DCMAKE_INSTALL_PREFIX=folder* during the cmake step to select an installation destination other than the default (/usr/local on Unix).
 
-You can run the elsa unit tests by running *ctest*.
+You can run the elsa unit tests by running (in the build folder):
+   * ctest
 
 
 # Building against the elsa library
@@ -49,8 +48,9 @@ This open-source version is a modernized and cleaned up version of our internal 
 
 The *contributors* to elsa are:
 
-   * Matthias Wieczorek 
    * Tobias Lasser
+   * Matthias Wieczorek 
+   * Jakob Vogel
    * David Frank
    * Maximilian Hornung
    * Nikola Dinev
