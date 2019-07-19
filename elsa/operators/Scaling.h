@@ -10,6 +10,8 @@ namespace elsa {
      * \author Maximilian Hornung - minor fixes
      * \author Tobias Lasser - modularization, rewrite
      *
+     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     *
      * This class represents a linear operator A that scales the input, either by a scalar
      * or by a diagonal scaling matrix.
      */

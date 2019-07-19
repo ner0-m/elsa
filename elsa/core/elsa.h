@@ -16,4 +16,6 @@ namespace elsa
     using BooleanVector_t = Eigen::Matrix<bool, Eigen::Dynamic, 1>; /// global type for vectors of booleans
 
     using RealMatrix_t = Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic>; /// global type for matrices of real numbers
+
+    constexpr double pi = 3.14159265358979323846; /// global constexpr for the number pi
 } // namespace elsa

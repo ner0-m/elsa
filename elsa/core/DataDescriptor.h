@@ -61,6 +61,9 @@ namespace elsa
          /// return the spacing per dimension
          RealVector_t getSpacingPerDimension() const;
 
+         /// return the location of the origin (typically the center)
+         RealVector_t getLocationOfOrigin() const;
+
 
          /**
           * \brief computes the linearized index in the data vector from local coordinates
@@ -96,6 +99,9 @@ namespace elsa
 
          /// vector containing precomputed partial products of coefficients per dimension for index computations
          IndexVector_t _productOfCoefficientsPerDimension;
+
+         /// vector containing the origin of the described volume (typically the center)
+         RealVector_t _locationOfOrigin;
 
          /// implement the polymorphic clone operation
          DataDescriptor* cloneImpl() const override;

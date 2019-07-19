@@ -10,6 +10,8 @@ namespace elsa
      * \author Matthias Wieczorek - initial code
      * \author Tobias Lasser - modularization, rewrite
      *
+     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     *
      * This class represents a linear operator A that is the identity, i.e. Ax = x.
      */
      template <typename data_t = real_t>

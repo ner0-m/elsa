@@ -1,4 +1,5 @@
 #include "GradientDescent.h"
+#include "Logger.h"
 
 #include <stdexcept>
 
@@ -20,6 +21,7 @@ namespace elsa
             iterations = _defaultIterations;
 
         for (index_t i = 0; i < iterations; ++i) {
+            Logger::get("GradientDescent")->info("iteration {} of {}", i+1, iterations);
             auto& x = getCurrentSolution();
 
             auto gradient = _problem->getGradient();
@@ -58,7 +60,5 @@ namespace elsa
     // explicit template instantiation
     template class GradientDescent<float>;
     template class GradientDescent<double>;
-    template class GradientDescent<std::complex<float>>;
-    template class GradientDescent<std::complex<double>>;
 
 } // namespace elsa

@@ -14,6 +14,10 @@ namespace elsa
         if ( (numberOfCoefficientsPerDimension.array() <= 0).any() )
             throw std::invalid_argument("DataDescriptor: non-positive number of coefficients not allowed");
 
+        // set the origin at center
+        _locationOfOrigin = static_cast<real_t>(0.5) * (_numberOfCoefficientsPerDimension.cast<real_t>().array() *
+                _spacingPerDimension.array());
+
         // pre-compute the partial products for index computations
         for (index_t i = 0; i < _numberOfDimensions; ++i)
             _productOfCoefficientsPerDimension(i) = _numberOfCoefficientsPerDimension.head(i).prod();
@@ -31,6 +35,10 @@ namespace elsa
             throw std::invalid_argument("DataDescriptor: non-positive number of coefficients not allowed");
         if (numberOfCoefficientsPerDimension.size() != spacingPerDimension.size())
             throw std::invalid_argument("DataDescriptor: mismatch between numberOfCoefficientsPerDimension and spacingPerDimension");
+
+        // set the origin at center
+        _locationOfOrigin = static_cast<real_t>(0.5) * (_numberOfCoefficientsPerDimension.cast<real_t>().array() *
+                                                        _spacingPerDimension.array());
 
         // pre-compute the partial products for index computations
         for (index_t i = 0; i < _numberOfDimensions; ++i)
@@ -55,6 +63,11 @@ namespace elsa
     RealVector_t DataDescriptor::getSpacingPerDimension() const
     {
         return _spacingPerDimension;
+    }
+
+    RealVector_t DataDescriptor::getLocationOfOrigin() const
+    {
+        return _locationOfOrigin;
     }
 
 
@@ -96,7 +109,8 @@ namespace elsa
     {
         return (_numberOfDimensions == other._numberOfDimensions) &&
                 (_numberOfCoefficientsPerDimension == other._numberOfCoefficientsPerDimension) &&
-                (_spacingPerDimension == other._spacingPerDimension);
+                (_spacingPerDimension == other._spacingPerDimension) &&
+                (_locationOfOrigin == other._locationOfOrigin);
     }
 
 } // namespace elsa

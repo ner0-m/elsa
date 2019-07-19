@@ -36,6 +36,8 @@ SCENARIO("Constructing DataDescriptors") {
                 REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
                 REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
                 REQUIRE(dd.getSpacingPerDimension() == RealVector_t::Ones(1));
+                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
+                REQUIRE(dd.getLocationOfOrigin() == origin);
             }
         }
 
@@ -53,6 +55,8 @@ SCENARIO("Constructing DataDescriptors") {
                 REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
                 REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
                 REQUIRE(dd.getSpacingPerDimension() == validSpacing);
+                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
+                REQUIRE(dd.getLocationOfOrigin() == origin);
             }
         }
 
@@ -84,6 +88,8 @@ SCENARIO("Constructing DataDescriptors") {
                 REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
                 REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
                 REQUIRE(dd.getSpacingPerDimension() == RealVector_t::Ones(2));
+                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
+                REQUIRE(dd.getLocationOfOrigin() == origin);
             }
         }
 
@@ -101,6 +107,8 @@ SCENARIO("Constructing DataDescriptors") {
                 REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
                 REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
                 REQUIRE(dd.getSpacingPerDimension() == validSpacing);
+                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
+                REQUIRE(dd.getLocationOfOrigin() == origin);
             }
         }
 
@@ -132,6 +140,8 @@ SCENARIO("Constructing DataDescriptors") {
                 REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
                 REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
                 REQUIRE(dd.getSpacingPerDimension() == RealVector_t::Ones(3));
+                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
+                REQUIRE(dd.getLocationOfOrigin() == origin);
             }
         }
 
@@ -149,6 +159,8 @@ SCENARIO("Constructing DataDescriptors") {
                 REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
                 REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
                 REQUIRE(dd.getSpacingPerDimension() == validSpacing);
+                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
+                REQUIRE(dd.getLocationOfOrigin() == origin);
             }
         }
 

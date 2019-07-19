@@ -57,7 +57,7 @@ namespace elsa
     void Functional<data_t>::getGradient(const DataContainer<data_t>& x, DataContainer<data_t>& result)
     {
         if (x.getDataDescriptor() != getDomainDescriptor() ||
-            result.getDataDescriptor() != _residual->getRangeDescriptor())
+            result.getDataDescriptor() != _residual->getDomainDescriptor())
             throw std::invalid_argument("Functional::getGradient: argument sizes do not match functional");
 
         // optimize for trivial or simple LinearResiduals

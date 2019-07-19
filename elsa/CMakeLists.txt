@@ -15,6 +15,8 @@ add_subdirectory(operators)
 add_subdirectory(functionals)
 add_subdirectory(problems)
 add_subdirectory(solvers)
+add_subdirectory(projectors)
+add_subdirectory(generators)
 
 
 # propogate the variable to the parent scope
