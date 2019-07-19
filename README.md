@@ -5,11 +5,6 @@ Currently, operators are implemented for X-ray Computed Tomography.
 Other imaging modalities can be supported by implementing appropriate operators.
 
 
-## Library status
-
-elsa was just released for the first time with fully functional status on July 19, 2019.
-While the first release is fully functional, some important functionality is still missing and planned for future minor releases in the near future.
-
 # Requirements
 
 elsa requires a *C++17 compliant compiler*, such as GCC, Clang or Microsoft Visual Studio in recent versions.
@@ -41,10 +36,7 @@ When using the elsa library in your project, we advise using CMake as the build 
 As elsa depends on Eigen3 and spdlog, you will need to have these packages installed on your system, and you have to point CMake to those installations.
 
 
-# History and contributors
-
-elsa started its life as an internal library at the [Inverse Problems in Tomography](https://ip.campar.in.tum.de) group at the [Technical University in Munich](https://www.tum.de).
-This open-source version is a modernized and cleaned up version of our internal code and will contain most of its functionality, modulo some parts which we unfortunately cannot share (yet).
+# Contributors
 
 The *contributors* to elsa are:
 
@@ -55,4 +47,10 @@ The *contributors* to elsa are:
    * Maximilian Hornung
    * Nikola Dinev
 
+# History
 
+elsa started its life as an internal library at the [Inverse Problems in Tomography](https://ip.campar.in.tum.de) group at the [Technical University in Munich](https://www.tum.de).
+This open-source version is a modernized and cleaned up version of our internal code and will contain most of its functionality, modulo some parts which we unfortunately cannot share (yet).
+
+*Releases:*
+   * v0.4: first public release (July 19, 2019)
