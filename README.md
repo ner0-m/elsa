@@ -1,3 +1,5 @@
+[![pipeline status](https://gitlab.lrz.de/IP/elsa/badges/master/pipeline.svg)](https://gitlab.lrz.de/IP/elsa/commits/master)
+
 # elsa - an elegant framework for tomographic reconstruction
 
 *elsa* is a modern, flexible C++ library intended for use in tomographic reconstruction.
