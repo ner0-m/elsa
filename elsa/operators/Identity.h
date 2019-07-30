@@ -40,7 +40,7 @@ namespace elsa
           * \brief apply the adjoint of the identity operator A to y, i.e. A^ty = y
           *
           * \param[in] y input DataContainer (in the range of the operator)
-          * \param[out] A^ty output DataContainer (in the domain of the operator)
+          * \param[out] Aty output DataContainer (in the domain of the operator)
           */
           void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
 

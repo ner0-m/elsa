@@ -75,7 +75,7 @@ namespace elsa
          * Using ellipse symmetry, this draws four points with the coordinates center[0] +- xOffset / center[1] +- yOffset,
          * as well as the connecting lines between them (proceeding along the x axis).
          */
-        static void drawShearedLinePairs2d(DataContainer<data_t>& dc, data_t amplitude, Vec2 center, index_t xCoord, index_t yCoord, Vec2 shear);
+        static void drawShearedLinePairs2d(DataContainer<data_t>& dc, data_t amplitude, Vec2 center, index_t xOffset, index_t yOffset, Vec2 shear);
     };
 
 } // namespace elsa

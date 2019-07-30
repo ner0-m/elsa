@@ -55,7 +55,7 @@ namespace elsa
          * \param[in] py offset of the principal point in y direction [default 0]
          * \param[in] centerOfRotationOffsetX offset of the center of rotation in x direction [default 0]
          * \param[in] centerOfRotationOffsetY offset of the center of rotation in y direction [default 0]
-         * \param[in] centerOfRotationOffsetY offset of the center of rotation in z direction [default 0]
+         * \param[in] centerOfRotationOffsetZ offset of the center of rotation in z direction [default 0]
          *
          * Alpha, beta, gamma are Euler rotation angles using the YZY convention. They are specified in radians.
          * In standard circular trajectory CT settings, we would have alpha = beta = 0, while gamma is the angle of rotation)

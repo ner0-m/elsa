@@ -43,7 +43,7 @@ namespace elsa
          * \brief Compute entry and exit point of ray in a volume (given as an AABB)
          *
          * \param[in] aabb the volume specified through an axis-aligned bounding box
-         * \param[in] ray the ray which we test for intersection with aabb
+         * \param[in] r the ray which we test for intersection with aabb
 
          * \returns nullopt if the volume is not hit, otherwise IntersectionResult
          *          with entry/exit parameters tmin/tmax

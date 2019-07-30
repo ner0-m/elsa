@@ -96,7 +96,7 @@ namespace elsa
          * \brief apply the adjoint of operator A to an element of the operator's range
          *
          * \param[in] y input DataContainer (in the range of the operator)
-         * \param[out] A^ty output DataContainer (in the domain of the operator)
+         * \param[out] Aty output DataContainer (in the domain of the operator)
          *
          * Please note: this method calls the method _applyAdjoint that has to be overridden in
          * derived classes. (Why is this method not virtual itself? Because you cannot have a
