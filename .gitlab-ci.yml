@@ -114,6 +114,7 @@ test-clang8:
 
 deploy-docs:
   stage: docs
+  dependencies: []
   script:
     - mkdir -p build
     - cd build
