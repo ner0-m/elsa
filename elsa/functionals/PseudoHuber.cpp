@@ -7,26 +7,26 @@
 namespace elsa
 {
     template <typename data_t>
-    Pseudohuber<data_t>::Pseudohuber(const DataDescriptor& domainDescriptor, real_t delta)
+    PseudoHuber<data_t>::PseudoHuber(const DataDescriptor& domainDescriptor, real_t delta)
         : Functional<data_t>(domainDescriptor), _delta{delta}
     {
         // sanity check delta
         if (delta <= static_cast<real_t>(0.0))
-            throw std::invalid_argument("Pseudohuber: delta has to be positive.");
+            throw std::invalid_argument("PseudoHuber: delta has to be positive.");
     }
 
     template <typename data_t>
-    Pseudohuber<data_t>::Pseudohuber(const Residual<data_t>& residual, real_t delta)
+    PseudoHuber<data_t>::PseudoHuber(const Residual<data_t>& residual, real_t delta)
         : Functional<data_t>(residual), _delta{delta}
     {
         // sanity check delta
         if (delta <= static_cast<real_t>(0.0))
-            throw std::invalid_argument("Pseudohuber: delta has to be positive.");
+            throw std::invalid_argument("PseudoHuber: delta has to be positive.");
     }
 
 
     template <typename data_t>
-    data_t Pseudohuber<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    data_t PseudoHuber<data_t>::_evaluate(const DataContainer<data_t>& Rx)
     {
         // note: this is currently not a reduction in DataContainer, but implemented here "manually"
 
@@ -41,7 +41,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Pseudohuber<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void PseudoHuber<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
     {
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = Rx[i] / _delta;
@@ -50,7 +50,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Pseudohuber<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> PseudoHuber<data_t>::_getHessian(const DataContainer<data_t>& Rx)
     {
         DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
         for (index_t i = 0; i < Rx.getSize(); ++i) {
@@ -65,18 +65,18 @@ namespace elsa
 
 
     template <typename data_t>
-    Pseudohuber<data_t>* Pseudohuber<data_t>::cloneImpl() const
+    PseudoHuber<data_t>* PseudoHuber<data_t>::cloneImpl() const
     {
-        return new Pseudohuber(this->getResidual(), _delta);
+        return new PseudoHuber(this->getResidual(), _delta);
     }
 
     template <typename data_t>
-    bool Pseudohuber<data_t>::isEqual(const Functional<data_t>& other) const
+    bool PseudoHuber<data_t>::isEqual(const Functional<data_t>& other) const
     {
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherPHuber = dynamic_cast<const Pseudohuber*>(&other);
+        auto otherPHuber = dynamic_cast<const PseudoHuber*>(&other);
         if (!otherPHuber)
             return false;
 
@@ -89,8 +89,8 @@ namespace elsa
 
     // ------------------------------------------
     // explicit template instantiation
-    template class Pseudohuber<float>;
-    template class Pseudohuber<double>;
-    // no complex-number instantiations for Pseudohuber! (they would not really be useful)
+    template class PseudoHuber<float>;
+    template class PseudoHuber<double>;
+    // no complex-number instantiations for PseudoHuber! (they would not really be useful)
 
 } // namespace elsa
