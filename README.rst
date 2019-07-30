@@ -10,6 +10,11 @@ elsa - an elegant framework for tomographic reconstruction
 Currently, operators are implemented for X-ray Computed Tomography. 
 Other imaging modalities can be supported by implementing appropriate operators.
 
+Documentation
+-------------
+
+The documentation is available `here <https://ip.campar.in.tum.de/elsadocs/>`_.
+
 
 Requirements
 ------------
