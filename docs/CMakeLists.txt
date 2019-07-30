@@ -38,8 +38,9 @@ if(DOXYGEN_FOUND AND SPHINX_EXECUTABLE)
             ${CMAKE_CURRENT_BINARY_DIR}/sphinx # output dir for sphinx
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Generating the Sphinx documentation")
+    add_dependencies(sphinx doxygen)
 
     add_custom_target(docs)
-    add_dependencies(docs doxygen sphinx)
-    
+    add_dependencies(docs sphinx)
+
 endif()
