@@ -3,6 +3,7 @@ image: elsa/ubuntu:18.04
 stages:
 - compile
 - test
+- docs
 
 ### job templates ###
 
@@ -107,3 +108,19 @@ test-clang8:
     - linux
     - elsa
     - clang
+    
+    
+### docs jobs ###
+
+deploy-docs:
+  stage: docs
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make docs
+  tags:
+    - elsa-docs-deploy
+  only:
+    - master
+
