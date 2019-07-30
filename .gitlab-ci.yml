@@ -120,6 +120,7 @@ deploy-docs:
     - cd build
     - cmake ..
     - make docs
+    - cp -r docs/sphinx/* /var/www/ip/elsadocs/
   tags:
     - elsa-docs-deploy
   only:
