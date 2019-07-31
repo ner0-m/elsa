@@ -588,7 +588,7 @@ SCENARIO("Rays not intersecting the bounding box are present") {
         std::vector<Geometry> geom;
 
         WHEN("Tracing along a y-axis-aligned ray with a negative x-coordinate of origin") {
-            geom.emplace_back(20*volSize, volSize, 0.0, volumeDescriptor, sinoDescriptor, 0.0, volSize);
+            geom.emplace_back(20*volSize, volSize, 0.0, volumeDescriptor, sinoDescriptor, 0.0, -volSize);
 
             BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -609,7 +609,7 @@ SCENARIO("Rays not intersecting the bounding box are present") {
         }
 
         WHEN("Tracing along a y-axis-aligned ray with a x-coordinate of origin beyond the bounding box") {
-            geom.emplace_back(20*volSize, volSize, 0.0, volumeDescriptor, sinoDescriptor, 0.0, -volSize);
+            geom.emplace_back(20*volSize, volSize, 0.0, volumeDescriptor, sinoDescriptor, 0.0, volSize);
 
             BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -631,7 +631,7 @@ SCENARIO("Rays not intersecting the bounding box are present") {
         }
 
         WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin") {
-            geom.emplace_back(20*volSize, volSize, pi/2, volumeDescriptor, sinoDescriptor, 0.0, 0.0, volSize);
+            geom.emplace_back(20*volSize, volSize, pi/2, volumeDescriptor, sinoDescriptor, 0.0, 0.0, -volSize);
 
             BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -653,7 +653,7 @@ SCENARIO("Rays not intersecting the bounding box are present") {
         }
 
         WHEN("Tracing along a x-axis-aligned ray with a y-coordinate of origin beyond the bounding box") {
-            geom.emplace_back(20*volSize, volSize, pi/2, volumeDescriptor, sinoDescriptor, 0.0, 0.0, -volSize);
+            geom.emplace_back(20*volSize, volSize, pi/2, volumeDescriptor, sinoDescriptor, 0.0, 0.0, volSize);
 
             BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -720,7 +720,7 @@ SCENARIO("Rays not intersecting the bounding box are present") {
 
         for (int i=0; i<numCases; i++) {
             WHEN("Tracing along a " + ali[i] +"-axis-aligned ray with negative " + neg[i] + "-coodinate of origin") {
-                geom.emplace_back(20*volSize, volSize, volumeDescriptor, sinoDescriptor, gamma[i], beta[i], alpha[i], 0.0, 0.0, offsetx[i], offsety[i], offsetz[i]);
+                geom.emplace_back(20*volSize, volSize, volumeDescriptor, sinoDescriptor, gamma[i], beta[i], alpha[i], 0.0, 0.0, -offsetx[i], -offsety[i], -offsetz[i]);
 
                 BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -832,7 +832,7 @@ SCENARIO("Axis-aligned rays are present")
 
         WHEN("A y-axis-aligned ray runs along the right volume boundary") {
             //For Siddon's values in the range [0,boxMax) are considered, a ray running along boxMax should be ignored
-            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0, -(volSize*0.5) );
+            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0, (volSize*0.5) );
             BinaryMethod op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("The result of projecting is zero") {
@@ -855,7 +855,7 @@ SCENARIO("Axis-aligned rays are present")
              * CPU version exhibits slightly different behaviour, ignoring all ray running along a bounding box border
              */
         WHEN("A y-axis-aligned ray runs along the left volume boundary") {
-            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,volSize/2.0);
+            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,-volSize/2.0);
             BinaryMethod op(volumeDescriptor,sinoDescriptor,geom);
             THEN("The result of projecting is zero") {
                 volume = 1;
@@ -1028,34 +1028,10 @@ SCENARIO("Axis-aligned rays are present")
         al[4] = "top right edge";
         al[5] = "bottom left edge";
 
-        /**
-         * Slightly different bahaviour: all rays running along a border are ignored
-         */
-        for (index_t i=0; i<numCases/2; i++) {
-            WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume") {
-                // x-ray source must be very far from the volume center to make testing of the op backprojection simpler
-                geom.emplace_back(volSize*2000,volSize,volumeDescriptor,sinoDescriptor,0.0,0.0,0.0,0.0,0.0,offsetx[i],offsety[i]);
-                BinaryMethod op(volumeDescriptor,sinoDescriptor,geom);
-                THEN("The result of projecting is zero") {
-                    volume = 1;
-                    op.apply(volume,sino);
-                    REQUIRE(sino[0]==0);
-
-                    AND_THEN("The backprojection also yields zero") {
-                        sino[0]=1;
-                        op.applyAdjoint(sino,volume);
-
-                        DataContainer zero(volumeDescriptor);
-                        REQUIRE(volume == zero);
-                    }
-                }
-            }
-        }
-
         for (index_t i=0; i<numCases; i++) {
             WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume") {
                 // x-ray source must be very far from the volume center to make testing of the op backprojection simpler
-                geom.emplace_back(volSize*2000,volSize,volumeDescriptor,sinoDescriptor,0.0,0.0,0.0,0.0,0.0,offsetx[i],offsety[i]);
+                geom.emplace_back(volSize*2000,volSize,volumeDescriptor,sinoDescriptor,0.0,0.0,0.0,0.0,0.0,-offsetx[i],-offsety[i]);
                 BinaryMethod op(volumeDescriptor,sinoDescriptor,geom);
                 THEN("The result of projecting is zero") {
                     volume = 1;
