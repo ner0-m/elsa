@@ -71,6 +71,7 @@ namespace elsa
      */
     struct FileSystemUtils {
     public:
+        /// return the absolute path of path with respect to base
         static std::string getAbsolutePath(std::string path, std::string base);
     };
 

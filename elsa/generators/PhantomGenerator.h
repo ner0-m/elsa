@@ -20,7 +20,7 @@ namespace elsa
          /**
           * \brief Create a modified Shepp-Logan phantom in 2d or 3d (with enhanced contrast).
           *
-          * \param[in] size a 2d/3d vector indicating the requested size (has to be square!)
+          * \param[in] sizes a 2d/3d vector indicating the requested size (has to be square!)
           *
           * \returns DataContainer of specified size containing the phantom.
           *

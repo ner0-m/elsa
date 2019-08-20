@@ -29,7 +29,7 @@ namespace elsa
          * \brief Constructor for traversal, accepting bounding box and ray
          *
          * \param[in] aabb axis-aligned boundary box describing the volume
-         * \param[in] ray the ray to be traversed
+         * \param[in] r the ray to be traversed
          */
         TraverseAABB(const BoundingBox& aabb, const Ray& r);
 

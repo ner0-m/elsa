@@ -19,7 +19,7 @@ namespace elsa
      * Reference: https://doi.org/10.1109%2F83.551699
      */
     template <typename data_t = real_t>
-    class Pseudohuber : public Functional<data_t> {
+    class PseudoHuber : public Functional<data_t> {
     public:
         /**
          * \brief Constructor for the Pseudohuber functional, mapping domain vector to scalar (without a residual)
@@ -27,7 +27,7 @@ namespace elsa
          * \param[in] domainDescriptor describing the domain of the functional
          * \param[in] delta parameter for linear slope (defaults to 1)
          */
-        explicit Pseudohuber(const DataDescriptor& domainDescriptor, real_t delta = static_cast<real_t>(1));
+        explicit PseudoHuber(const DataDescriptor& domainDescriptor, real_t delta = static_cast<real_t>(1));
 
         /**
          * \brief Constructor for the Pseudohuber functional, using a residual as input to map to a scalar
@@ -35,10 +35,10 @@ namespace elsa
          * \param[in] residual to be used when evaluating the functional (or its derivative)
          * \param[in] delta parameter for linear slope (defaults to 1)
          */
-        explicit Pseudohuber(const Residual<data_t>& residual, real_t delta = static_cast<real_t>(1));
+        explicit PseudoHuber(const Residual<data_t>& residual, real_t delta = static_cast<real_t>(1));
 
         /// default destructor
-        ~Pseudohuber() override = default;
+        ~PseudoHuber() override = default;
 
     protected:
         /// the evaluation of the Huber norm
@@ -51,7 +51,7 @@ namespace elsa
         LinearOperator<data_t> _getHessian(const DataContainer<data_t>& Rx) override;
 
         /// implement the polymorphic clone operation
-        Pseudohuber<data_t>* cloneImpl() const override;
+        PseudoHuber<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Functional<data_t>& other) const override;

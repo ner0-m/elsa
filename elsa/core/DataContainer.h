@@ -43,6 +43,7 @@ namespace elsa
          * \brief Constructor for empty DataContainer, initializing the data with zeros.
          *
          * \param[in] dataDescriptor containing the associated metadata
+         * \param[in] handlerType the data handler (default: CPU)
          */
         explicit DataContainer(const DataDescriptor& dataDescriptor,
                                 DataHandlerType handlerType = DataHandlerType::CPU);
@@ -53,6 +54,7 @@ namespace elsa
          * 
          * \param[in] dataDescriptor containing the associated metadata
          * \param[in] data vector containing the initialization data
+         * \param[in] handlerType the data handler (default: CPU)
          */
         DataContainer(const DataDescriptor& dataDescriptor, const RealVector_t& data, 
                        DataHandlerType handlerType = DataHandlerType::CPU);

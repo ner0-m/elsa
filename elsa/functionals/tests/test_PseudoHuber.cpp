@@ -17,7 +17,7 @@
 
 using namespace elsa;
 
-SCENARIO("Testing the Pseudohuber norm functional") {
+SCENARIO("Testing the PseudoHuber norm functional") {
     GIVEN("just data (no residual)") {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 34;
@@ -26,7 +26,7 @@ SCENARIO("Testing the Pseudohuber norm functional") {
         real_t delta = 2;
 
         WHEN("instantiating") {
-            Pseudohuber func(dd, delta);
+            PseudoHuber func(dd, delta);
 
             THEN("the functional is as expected") {
                 REQUIRE(func.getDomainDescriptor() == dd);
@@ -89,7 +89,7 @@ SCENARIO("Testing the Pseudohuber norm functional") {
         real_t delta = 1.5;
 
         WHEN("instantiating") {
-            Pseudohuber func(linRes, delta);
+            PseudoHuber func(linRes, delta);
 
             THEN("the functional is as expected") {
                 REQUIRE(func.getDomainDescriptor() == dd);
