@@ -12,8 +12,10 @@ set(MODULE_HEADERS
         BoundingBox.h
         Intersection.h
         TraverseAABB.h
+        TraverseAABBJosephsMethod.h
         BinaryMethod.h
-        SiddonsMethod.h)
+        SiddonsMethod.h
+        JosephsMethod.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -21,8 +23,10 @@ set(MODULE_SOURCES
         BoundingBox.cpp
         Intersection.cpp
         TraverseAABB.cpp
+        TraverseAABBJosephsMethod.cpp
         BinaryMethod.cpp
-        SiddonsMethod.cpp)
+        SiddonsMethod.cpp
+        JosephsMethod.cpp)
 
 
 # build the module library
