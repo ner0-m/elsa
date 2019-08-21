@@ -6,6 +6,7 @@
 #include "DataHandler.h"
 
 #include <memory>
+#include <type_traits>
 
 namespace elsa
 {
@@ -107,6 +108,21 @@ namespace elsa
         /// return an element by n-dimensional coordinate as read-only (not bounds-checked!)
         const data_t& operator()(IndexVector_t coordinate) const;
 
+        template <typename idx0_t, typename... idx_t, 
+                    typename = std::enable_if_t<std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
+        data_t& operator()(idx0_t idx0, idx_t... indices) {
+            IndexVector_t coordinate(sizeof...(indices)+1);
+            ((coordinate<<idx0) , ... , indices);
+            return operator()(coordinate);
+        }
+
+        template <typename idx0_t, typename... idx_t, 
+                    typename = std::enable_if_t<std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
+        const data_t& operator()(idx0_t idx0, idx_t... indices) const{
+            IndexVector_t coordinate(sizeof...(indices)+1);
+            ((coordinate<<idx0) , ... , indices);
+            return operator()(coordinate);
+        }
 
         /// return the dot product of this signal with the one from container other
         data_t dot(const DataContainer<data_t>& other) const;
