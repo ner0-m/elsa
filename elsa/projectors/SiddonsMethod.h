@@ -12,7 +12,7 @@
 namespace elsa
 {
     /**
-     * \brief Operator representing the discretized X-ray transform in 2d/3d using a simplistic binary hit/miss method.
+     * \brief Operator representing the discretized X-ray transform in 2d/3d using Siddon's method.
      *
      * \author David Frank - initial code
      * \author Nikola Dinev - modularization, fixes

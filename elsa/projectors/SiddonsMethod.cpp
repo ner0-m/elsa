@@ -77,7 +77,7 @@ namespace elsa
 
         // --> loop either over every voxel that should  updated or every detector
         // cell that should be calculated
-//#pragma omp parallel for
+#pragma omp parallel for
         for (size_t rangeIndex = 0; rangeIndex < maxIterations; ++rangeIndex)
         {
             // --> get the current ray to the detector center
@@ -98,7 +98,7 @@ namespace elsa
                 auto weight = traverse.updateTraverseAndGetDistance();
                 // --> update result depending on the operation performed
                 if (adjoint)
-//#pragma omp atomic
+#pragma omp atomic
                     result[dataIndexForCurrentVoxel] += vector[rangeIndex] * weight;
                 else
                     result[rangeIndex] += vector[dataIndexForCurrentVoxel] * weight;
