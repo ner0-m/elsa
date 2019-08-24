@@ -6,7 +6,7 @@ namespace elsa
     template <typename data_t>
     SiddonsMethodCUDA<data_t>::SiddonsMethodCUDA(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor,
                                const std::vector<Geometry>& geometryList)
-            : LinearOperator<real_t>(domainDescriptor, rangeDescriptor), _geometryList(geometryList),
+            : LinearOperator<data_t>(domainDescriptor, rangeDescriptor), _geometryList(geometryList),
               _boundingBox(_domainDescriptor->getNumberOfCoefficientsPerDimension())
     {
         auto dim = _domainDescriptor->getNumberOfDimensions();
@@ -138,11 +138,11 @@ namespace elsa
         int remaining = rangeDims(numDim-1)%_threadsPerBlock;
         if (numDim==3) {
             //transfer volume and sinogram
-            cudaExtent volExt =  make_cudaExtent(coeffsPerDim[0]*sizeof(real_t),coeffsPerDim[1],coeffsPerDim[2]);
+            cudaExtent volExt =  make_cudaExtent(coeffsPerDim[0]*sizeof(data_t),coeffsPerDim[1],coeffsPerDim[2]);
             if(cudaMalloc3D(&dvolumePtr,volExt)!=cudaSuccess)
                 throw std::bad_alloc();
         
-            cudaExtent sinoExt = make_cudaExtent(rangeDims[0]*sizeof(real_t),rangeDims[1],rangeDims[2]);
+            cudaExtent sinoExt = make_cudaExtent(rangeDims[0]*sizeof(data_t),rangeDims[1],rangeDims[2]);
             if(cudaMalloc3D(&dsinoPtr,sinoExt)!=cudaSuccess)
                 throw std::bad_alloc();
 
@@ -163,9 +163,9 @@ namespace elsa
                 const dim3 grid(rangeDims(0),rangeDims(1),numImgBlocks); 
                 const int threads = _threadsPerBlock;
                 if(adjoint)
-                    TraverseSiddonsCUDA<real_t,3>::traverseAdjoint(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,(int8_t*)dsinoPtr.ptr, dsinoPtr.pitch,(int8_t*)_rayOrigins.ptr,_rayOrigins.pitch,(int8_t*)_projInvMatrices.ptr,_projInvMatrices.pitch,_boxMax);
+                    TraverseSiddonsCUDA<data_t,3>::traverseAdjoint(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,(int8_t*)dsinoPtr.ptr, dsinoPtr.pitch,(int8_t*)_rayOrigins.ptr,_rayOrigins.pitch,(int8_t*)_projInvMatrices.ptr,_projInvMatrices.pitch,_boxMax);
                 else
-                    TraverseSiddonsCUDA<real_t,3>::traverseForward(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,(int8_t*)dsinoPtr.ptr, dsinoPtr.pitch,(int8_t*)_rayOrigins.ptr,_rayOrigins.pitch,(int8_t*)_projInvMatrices.ptr,_projInvMatrices.pitch,_boxMax);
+                    TraverseSiddonsCUDA<data_t,3>::traverseForward(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,(int8_t*)dsinoPtr.ptr, dsinoPtr.pitch,(int8_t*)_rayOrigins.ptr,_rayOrigins.pitch,(int8_t*)_projInvMatrices.ptr,_projInvMatrices.pitch,_boxMax);
             }
 
             if (remaining>0) {
@@ -179,9 +179,9 @@ namespace elsa
                 int8_t* matrixPtr = (int8_t*)_projInvMatrices.ptr + numImgBlocks*_threadsPerBlock*_projInvMatrices.pitch*3;
                 
                 if(adjoint)
-                    TraverseSiddonsCUDA<real_t,3>::traverseAdjoint(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,imgPtr, dsinoPtr.pitch,rayPtr,_rayOrigins.pitch,matrixPtr,_projInvMatrices.pitch,_boxMax,remStream);
+                    TraverseSiddonsCUDA<data_t,3>::traverseAdjoint(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,imgPtr, dsinoPtr.pitch,rayPtr,_rayOrigins.pitch,matrixPtr,_projInvMatrices.pitch,_boxMax,remStream);
                 else
-                    TraverseSiddonsCUDA<real_t,3>::traverseForward(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,imgPtr, dsinoPtr.pitch,rayPtr,_rayOrigins.pitch,matrixPtr,_projInvMatrices.pitch,_boxMax,remStream);
+                    TraverseSiddonsCUDA<data_t,3>::traverseForward(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,imgPtr, dsinoPtr.pitch,rayPtr,_rayOrigins.pitch,matrixPtr,_projInvMatrices.pitch,_boxMax,remStream);
 
                 if (cudaStreamDestroy(remStream)!=cudaSuccess) 
                     Logger::get("SiddonsMethodCUDA")->error("Couldn't destroy GPU stream; This may cause problems later.");
@@ -199,24 +199,24 @@ namespace elsa
         else {
             //transfer volume and sinogram
 
-            if(cudaMallocPitch(&dvolumePtr.ptr,&dvolumePtr.pitch,coeffsPerDim[0]*sizeof(real_t),coeffsPerDim[1])!=cudaSuccess)
+            if(cudaMallocPitch(&dvolumePtr.ptr,&dvolumePtr.pitch,coeffsPerDim[0]*sizeof(data_t),coeffsPerDim[1])!=cudaSuccess)
                 throw std::bad_alloc();
         
-            if(cudaMallocPitch(&dsinoPtr.ptr,&dsinoPtr.pitch,rangeDims[0]*sizeof(real_t),rangeDims[1])!=cudaSuccess)
+            if(cudaMallocPitch(&dsinoPtr.ptr,&dsinoPtr.pitch,rangeDims[0]*sizeof(data_t),rangeDims[1])!=cudaSuccess)
                 throw std::bad_alloc();
 
             if (adjoint){
-                if (cudaMemcpy2DAsync(dsinoPtr.ptr,dsinoPtr.pitch,sinoPtr,rangeDims[0]*sizeof(real_t),rangeDims[0]*sizeof(real_t),rangeDims[1],cudaMemcpyHostToDevice)!=cudaSuccess)
+                if (cudaMemcpy2DAsync(dsinoPtr.ptr,dsinoPtr.pitch,sinoPtr,rangeDims[0]*sizeof(data_t),rangeDims[0]*sizeof(data_t),rangeDims[1],cudaMemcpyHostToDevice)!=cudaSuccess)
                     throw std::logic_error("SiddonsMethodCUDA::traverseVolume: Couldn't transfer sinogram to GPU.");
 
-                if (cudaMemset2DAsync(dvolumePtr.ptr,dvolumePtr.pitch,0,coeffsPerDim[0]*sizeof(real_t),coeffsPerDim[1])!=cudaSuccess)
+                if (cudaMemset2DAsync(dvolumePtr.ptr,dvolumePtr.pitch,0,coeffsPerDim[0]*sizeof(data_t),coeffsPerDim[1])!=cudaSuccess)
                     throw std::logic_error("SiddonsMethodCUDA::traverseVolume: Could not zero-initialize volume on GPU.");
             }
             else {
-                if (cudaMemcpy2DAsync(dvolumePtr.ptr,dvolumePtr.pitch,volumePtr,coeffsPerDim[0]*sizeof(real_t),coeffsPerDim[0]*sizeof(real_t),coeffsPerDim[1],cudaMemcpyHostToDevice)!=cudaSuccess)
+                if (cudaMemcpy2DAsync(dvolumePtr.ptr,dvolumePtr.pitch,volumePtr,coeffsPerDim[0]*sizeof(data_t),coeffsPerDim[0]*sizeof(data_t),coeffsPerDim[1],cudaMemcpyHostToDevice)!=cudaSuccess)
                     throw std::logic_error("SiddonsMethodCUDA::traverseVolume: Couldn't transfer volume to GPU.");
 
-                if (cudaMemset2DAsync(dsinoPtr.ptr,dsinoPtr.pitch,0,rangeDims[0]*sizeof(real_t),rangeDims[1])!=cudaSuccess)
+                if (cudaMemset2DAsync(dsinoPtr.ptr,dsinoPtr.pitch,0,rangeDims[0]*sizeof(data_t),rangeDims[1])!=cudaSuccess)
                     throw std::logic_error("SiddonsMethodCUDA::traverseVolume: Could not zero-initialize sinogram on GPU.");
             }
                 
@@ -228,9 +228,9 @@ namespace elsa
                 const dim3 grid(rangeDims(0),numImgBlocks); 
                 const int threads = _threadsPerBlock;
                 if (adjoint)
-                    TraverseSiddonsCUDA<real_t,2>::traverseAdjoint(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,(int8_t*)dsinoPtr.ptr, dsinoPtr.pitch,(int8_t*)_rayOrigins.ptr,_rayOrigins.pitch,(int8_t*)_projInvMatrices.ptr,_projInvMatrices.pitch,_boxMax);
+                    TraverseSiddonsCUDA<data_t,2>::traverseAdjoint(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,(int8_t*)dsinoPtr.ptr, dsinoPtr.pitch,(int8_t*)_rayOrigins.ptr,_rayOrigins.pitch,(int8_t*)_projInvMatrices.ptr,_projInvMatrices.pitch,_boxMax);
                 else 
-                    TraverseSiddonsCUDA<real_t,2>::traverseForward(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,(int8_t*)dsinoPtr.ptr, dsinoPtr.pitch,(int8_t*)_rayOrigins.ptr,_rayOrigins.pitch,(int8_t*)_projInvMatrices.ptr,_projInvMatrices.pitch,_boxMax);
+                    TraverseSiddonsCUDA<data_t,2>::traverseForward(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,(int8_t*)dsinoPtr.ptr, dsinoPtr.pitch,(int8_t*)_rayOrigins.ptr,_rayOrigins.pitch,(int8_t*)_projInvMatrices.ptr,_projInvMatrices.pitch,_boxMax);
             }
 
             if (remaining>0) {
@@ -244,9 +244,9 @@ namespace elsa
                 int8_t* matrixPtr = (int8_t*)_projInvMatrices.ptr + numImgBlocks*_threadsPerBlock*_projInvMatrices.pitch*numDim;
                 
                 if (adjoint)
-                    TraverseSiddonsCUDA<real_t,2>::traverseAdjoint(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,imgPtr, dsinoPtr.pitch,rayPtr,_rayOrigins.pitch,matrixPtr,_projInvMatrices.pitch,_boxMax,remStream);
+                    TraverseSiddonsCUDA<data_t,2>::traverseAdjoint(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,imgPtr, dsinoPtr.pitch,rayPtr,_rayOrigins.pitch,matrixPtr,_projInvMatrices.pitch,_boxMax,remStream);
                 else
-                    TraverseSiddonsCUDA<real_t,2>::traverseForward(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,imgPtr, dsinoPtr.pitch,rayPtr,_rayOrigins.pitch,matrixPtr,_projInvMatrices.pitch,_boxMax,remStream);
+                    TraverseSiddonsCUDA<data_t,2>::traverseForward(grid, threads,(int8_t*)dvolumePtr.ptr, dvolumePtr.pitch,imgPtr, dsinoPtr.pitch,rayPtr,_rayOrigins.pitch,matrixPtr,_projInvMatrices.pitch,_boxMax,remStream);
                 if (cudaStreamDestroy(remStream)!=cudaSuccess) 
                     Logger::get("SiddonsMethodCUDA")->error("Couldn't destroy GPU stream; This may cause problems later.");
             }
@@ -255,11 +255,11 @@ namespace elsa
             cudaDeviceSynchronize();
             //retrieve results from GPU
             if(adjoint) {
-                if(cudaMemcpy2D(volumePtr,coeffsPerDim[0]*sizeof(real_t),dvolumePtr.ptr,dvolumePtr.pitch,coeffsPerDim[0]*sizeof(real_t),coeffsPerDim[1],cudaMemcpyDeviceToHost)!=cudaSuccess)
+                if(cudaMemcpy2D(volumePtr,coeffsPerDim[0]*sizeof(data_t),dvolumePtr.ptr,dvolumePtr.pitch,coeffsPerDim[0]*sizeof(data_t),coeffsPerDim[1],cudaMemcpyDeviceToHost)!=cudaSuccess)
                     throw std::logic_error("SiddonsMethodCUDA::traverseVolume: Couldn't retrieve results from GPU.");
             }
             else {
-                if(cudaMemcpy2D(sinoPtr,rangeDims[0]*sizeof(real_t),dsinoPtr.ptr,dsinoPtr.pitch,rangeDims[0]*sizeof(real_t),rangeDims[1],cudaMemcpyDeviceToHost)!=cudaSuccess)
+                if(cudaMemcpy2D(sinoPtr,rangeDims[0]*sizeof(data_t),dsinoPtr.ptr,dsinoPtr.pitch,rangeDims[0]*sizeof(data_t),rangeDims[1],cudaMemcpyDeviceToHost)!=cudaSuccess)
                     throw std::logic_error("SiddonsMethodCUDA::traverseVolume: Couldn't retrieve results from GPU");
             }
         }
@@ -307,5 +307,5 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class SiddonsMethodCUDA<float>;
-    //template class SiddonsMethodCUDA<double>;
+    template class SiddonsMethodCUDA<double>;
 }

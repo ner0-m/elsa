@@ -61,7 +61,7 @@ __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point,
 {
     #pragma unroll
     for (int i=0;i<dim;i++) {
-        point[i] = point[i]<0 ? 0 : point[i];
+        point[i] = point[i]<0.0f ? 0.0f : point[i];
         point[i] = point[i]>boxMax[i] ? boxMax[i] : point[i];
     }
         
@@ -77,8 +77,8 @@ __device__ __forceinline__ bool closestVoxel(const real_t* const __restrict__ po
     #pragma unroll
     for (int i=0;i<dim;i++) {
         // point has been projected onto box => point[i]>=0, can use uint32_t
-        uint32_t fl = trunc(point[i]);
-        voxelCoord[i] = fl == point[i] && rd[i]<0.0? fl-1 : fl;
+        real_t fl = trunc(point[i]);
+        voxelCoord[i] = fl == point[i] && rd[i]<0.0f? fl-1.0f : fl;
         if (voxelCoord[i]>=boxMax[i])
             return false;
     }
@@ -131,7 +131,7 @@ __device__ __forceinline__ bool box_intersect(const real_t* const __restrict__ r
     real_t t2 = (boxMax[0] - ro[0]) * invDir;
 
     /**
-     * fminf and fmaxf adhere to the IEEE standard, and return the non-NaN element if only a single
+     * fmin and fmax adhere to the IEEE standard, and return the non-NaN element if only a single
      * NaN is present
      */
     // tmin and tmax have to be picked for each specific direction without using fmin/fmax (supressing NaNs is bad in this case)
@@ -199,14 +199,39 @@ __device__ __forceinline__ real_t updateTraverse(uint32_t* const __restrict__ cu
     return texit - tentry;
 } 
 
+/* 
+ * atomicAdd() for doubles is only supported on devices of compute capability 6.0 or higher
+ * implementation taken straight from the CUDA C programming guide:
+ * https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
+ */
+#if defined(__CUDA_ARCH__) &&  __CUDA_ARCH__ < 600
+__device__ __forceinline__ double atomicAdd(double* address, double val)
+{
+    unsigned long long int* address_as_ull =
+                              (unsigned long long int*)address;
+    unsigned long long int old = *address_as_ull, assumed;
+
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val +
+                               __longlong_as_double(assumed)));
+
+    // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
+    } while (assumed != old);
+
+    return __longlong_as_double(old);
+}
+#endif
+
 /**
  * __restrict__ tells the compiler the arrays are not aliased, allowing for better optimization
  * must be true for all arrays
  */
 
-template <typename real_t, bool adjoint, uint32_t dim>
+template <typename data_t, bool adjoint, uint32_t dim>
 __global__ void
-traverse(int8_t* const __restrict__ volume,
+traverseVolume(int8_t* const __restrict__ volume,
         const uint64_t volumePitch,
         int8_t* const __restrict__ sinogram, 
         const uint64_t sinogramPitch,
@@ -216,7 +241,7 @@ traverse(int8_t* const __restrict__ volume,
         const uint32_t projPitch,
         const uint32_t* const __restrict__ boxMax)
 {
-    
+    using namespace elsa;
     const int8_t* const projInvPtr = dim==3 ? projInv + (blockIdx.z*blockDim.x + threadIdx.x)*projPitch*3 : 
                                               projInv + (blockIdx.y*blockDim.x + threadIdx.x)*projPitch*2;
 
@@ -230,10 +255,10 @@ traverse(int8_t* const __restrict__ volume,
     if(dim==3)
         pixelCoord[dim-2] = blockIdx.y + 0.5f;
     
-    real_t* sinogramPtr = dim==3 ? (real_t*)(sinogram + ((blockIdx.z*blockDim.x+threadIdx.x)*gridDim.y + blockIdx.y)*sinogramPitch) + blockIdx.x 
-                                    : (real_t*)(sinogram + (blockIdx.y*blockDim.x+threadIdx.x)*sinogramPitch) + blockIdx.x;
+    data_t* sinogramPtr = dim==3 ? (data_t*)(sinogram + ((blockIdx.z*blockDim.x+threadIdx.x)*gridDim.y + blockIdx.y)*sinogramPitch) + blockIdx.x 
+                                    : (data_t*)(sinogram + (blockIdx.y*blockDim.x+threadIdx.x)*sinogramPitch) + blockIdx.x;
     
-    if(!adjoint) *sinogramPtr = 0.0; 
+    if(!adjoint) *sinogramPtr = 0.0f; 
    
     //compute ray direction
     real_t rd[dim]; 
@@ -261,11 +286,11 @@ traverse(int8_t* const __restrict__ volume,
     initMax<real_t,dim>(rd,currentVoxel,entryPoint,tmax);
 
     uint32_t index;
-    real_t texit = 0.0;
-    real_t pixelValue = 0.0; 
+    real_t texit = 0.0f;
+    real_t pixelValue = 0.0f; 
     
-    real_t* volumeXPtr = dim==3 ? (real_t*)(volume + (boxMax[1]*currentVoxel[2] + currentVoxel[1])*volumePitch) + currentVoxel[0]
-                                    : (real_t*)(volume + currentVoxel[1]*volumePitch) + currentVoxel[0];
+    data_t* volumeXPtr = dim==3 ? (data_t*)(volume + (boxMax[1]*currentVoxel[2] + currentVoxel[1])*volumePitch) + currentVoxel[0]
+                                    : (data_t*)(volume + currentVoxel[1]*volumePitch) + currentVoxel[0];
     do {
         real_t d = updateTraverse<real_t,dim>(currentVoxel, stepDir, tdelta, tmax, texit, index);
         if (adjoint) 
@@ -273,8 +298,8 @@ traverse(int8_t* const __restrict__ volume,
         else
             pixelValue += d*(*volumeXPtr);
         
-        volumeXPtr = dim==3 ? (real_t*)(volume + (boxMax[1]*currentVoxel[2] + currentVoxel[1])*volumePitch) + currentVoxel[0]
-                                : (real_t*)(volume + currentVoxel[1]*volumePitch) + currentVoxel[0];
+        volumeXPtr = dim==3 ? (data_t*)(volume + (boxMax[1]*currentVoxel[2] + currentVoxel[1])*volumePitch) + currentVoxel[0]
+                                : (data_t*)(volume + currentVoxel[1]*volumePitch) + currentVoxel[0];
     } while(isVoxelInVolume<real_t,dim>(currentVoxel,boxMax,index));
 
     
@@ -298,7 +323,7 @@ namespace elsa {
               const uint32_t projPitch,
               const uint32_t* const __restrict__ boxMax,
               cudaStream_t stream) {
-        traverse<data_t, false, dim><<<blocks,threads,0,stream>>>(volume,volumePitch,sinogram,sinogramPitch,rayOrigins,originPitch,projInv,projPitch,boxMax);
+        traverseVolume<data_t, false, dim><<<blocks,threads,0,stream>>>(volume,volumePitch,sinogram,sinogramPitch,rayOrigins,originPitch,projInv,projPitch,boxMax);
     }
 
     template <typename data_t, uint32_t dim>
@@ -313,9 +338,13 @@ namespace elsa {
               const uint32_t projPitch,
               const uint32_t* const __restrict__ boxMax,
               cudaStream_t stream) {
-        traverse<data_t, true, dim><<<blocks,threads,0,stream>>>(volume,volumePitch,sinogram,sinogramPitch,rayOrigins,originPitch,projInv,projPitch,boxMax);
+        traverseVolume<data_t, true, dim><<<blocks,threads,0,stream>>>(volume,volumePitch,sinogram,sinogramPitch,rayOrigins,originPitch,projInv,projPitch,boxMax);
     }
 
+    // ------------------------------------------
+    // explicit template instantiation
     template struct TraverseSiddonsCUDA<float,2>;
     template struct TraverseSiddonsCUDA<float,3>;
+    template struct TraverseSiddonsCUDA<double,2>;
+    template struct TraverseSiddonsCUDA<double,3>;
 }

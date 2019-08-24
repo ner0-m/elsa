@@ -9,10 +9,11 @@
 
 #include "cuda_runtime.h"
 #include "stdint.h"
+#include "elsa.h"
 
 namespace elsa {
 
-    template <typename data_t = float, uint32_t dim = 3>
+    template <typename data_t = real_t, uint32_t dim = 3>
     struct TraverseSiddonsCUDA {
         static void traverseForward(const dim3 blocks,
             const int threads,
