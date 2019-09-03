@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
 
 #include "elsa.h"
 #include "LinearOperator.h"
@@ -21,7 +21,7 @@ namespace elsa
      * 
      * \author Nikola Dinev (nikola.dinev@tum.de)
      */
-    template <typename data_t=real_t>
+    template <typename data_t = real_t>
     class SiddonsMethodCUDA : public LinearOperator<data_t>
     {
     public:

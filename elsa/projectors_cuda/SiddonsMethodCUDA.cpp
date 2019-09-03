@@ -11,17 +11,15 @@ namespace elsa
     {
         auto dim = _domainDescriptor->getNumberOfDimensions();
         if (dim != _rangeDescriptor->getNumberOfDimensions()) {
-            throw std::logic_error(std::string("SiddonsMethodCUDA: Domain and range descriptors should have the same dimensionality. Expected format:\n") + 
-                                   "\tdomain coefficients per dimension: volumeSizeX, volumeSizeY, (volumeSizeZ)\n" +
-                                   "\trange coefficients per dimension: detectorSizeX, (detectorSizeY), numProjectionAngles");
+            throw std::logic_error(std::string("SiddonsMethodCUDA: domain and range dimension need to match"));
         }
 
         if (dim!=2 && dim != 3) {
-            throw std::logic_error("SiddonsMethodCUDA: Received descriptor with dimensionality " + std::to_string(dim) + ". Projector only supports 2D and 3D.");
+            throw std::logic_error("SiddonsMethodCUDA: only supporting 2d/3d operations");
         }
 
         if (geometryList.empty()) {
-            throw std::logic_error("SiddonsMethodCUDA: Received empty Geometry vector, but at least one projection angle should be specifed.");
+            throw std::logic_error("SiddonsMethodCUDA: geometry list was empty");
         }
         //transfer boundingBox
         if(cudaMalloc(&_boxMax,dim*sizeof(uint32_t)) != cudaSuccess)
@@ -86,11 +84,6 @@ namespace elsa
     {
         Timer<> timeGuard("SiddonsMethodCUDA", "apply");
 
-        if(x.getDataDescriptor().getNumberOfCoefficientsPerDimension() != _domainDescriptor->getNumberOfCoefficientsPerDimension() ||
-            Ax.getDataDescriptor().getNumberOfCoefficientsPerDimension()!= _rangeDescriptor->getNumberOfCoefficientsPerDimension()) {
-            throw std::logic_error("SiddonsMethodCUDA::apply: Received DataContainer with wrong number of coefficients per dimension.");
-        }
-
         traverseVolume<false>((void*)&(x[0]),(void*)&(Ax[0]));
     }
 
@@ -99,11 +92,6 @@ namespace elsa
     void SiddonsMethodCUDA<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
     {
         Timer<> timeguard("SiddonsMethodCUDA", "applyAdjoint");
-        
-        if (y.getDataDescriptor().getNumberOfCoefficientsPerDimension() != _rangeDescriptor->getNumberOfCoefficientsPerDimension() || 
-            Aty.getDataDescriptor().getNumberOfCoefficientsPerDimension() != _domainDescriptor->getNumberOfCoefficientsPerDimension()) {
-            throw std::logic_error("SiddonsMethodCUDA::applyAdjoint: Received DataContainer with wrong number of coefficients per dimension.");
-        } 
 
         traverseVolume<true>((void*)&(Aty[0]),(void*)&(y[0]));
     }

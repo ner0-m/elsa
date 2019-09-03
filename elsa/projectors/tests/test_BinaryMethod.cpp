@@ -851,25 +851,28 @@ SCENARIO("Axis-aligned rays are present")
             }
         }
 
-            /**
-             * CPU version exhibits slightly different behaviour, ignoring all ray running along a bounding box border
-             */
+        backProj[0]<< 1, 0, 0, 0, 0,
+                      1, 0, 0, 0, 0,
+                      1, 0, 0, 0, 0,
+                      1, 0, 0, 0, 0,
+                      1, 0, 0, 0, 0;
+                      
         WHEN("A y-axis-aligned ray runs along the left volume boundary") {
             geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,-volSize/2.0);
             BinaryMethod op(volumeDescriptor,sinoDescriptor,geom);
-            THEN("The result of projecting is zero") {
-                volume = 1;
-                op.apply(volume,sino);
+            THEN("The result of projecting through a pixel is exactly the pixel's value") {       
+                for (index_t j=0; j<volSize;j++) {
+                    volume = 0;
+                    volume(0,j) = 1;
+                    
+                    op.apply(volume,sino);
+                    REQUIRE(sino[0] == 1);
+                }
 
-                DataContainer resSino(sinoDescriptor);
-                REQUIRE(sino == resSino);
-
-                AND_THEN("The backprojection also yields zero") {
+                AND_THEN("The backprojection yields the exact adjoint") {
                     sino[0] = 1;
                     op.applyAdjoint(sino,volume);
-
-                    DataContainer resVolume(volumeDescriptor);
-                    REQUIRE(volume == resVolume);
+                    REQUIRE( volume == DataContainer(volumeDescriptor,backProj[0]) );
                 }
             }
         }
@@ -1028,14 +1031,52 @@ SCENARIO("Axis-aligned rays are present")
         al[4] = "top right edge";
         al[5] = "bottom left edge";
 
-        for (index_t i=0; i<numCases; i++) {
+        for (index_t i=0; i<numCases/2; i++) {
             WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume") {
                 // x-ray source must be very far from the volume center to make testing of the op backprojection simpler
                 geom.emplace_back(volSize*2000,volSize,volumeDescriptor,sinoDescriptor,0.0,0.0,0.0,0.0,0.0,-offsetx[i],-offsety[i]);
                 BinaryMethod op(volumeDescriptor,sinoDescriptor,geom);
-                THEN("The result of projecting is zero") {
-                    volume = 1;
+                THEN("The result of projecting through a voxel is exactly the voxel's value") {       
+                    for (index_t j=0; j<volSize;j++) {
+                        volume = 0;
+                        switch (i)
+                        {
+                        case 0:
+                            volume(0,volSize/2,j) = 1;
+                            break;
+                        case 1:
+                            volume(volSize/2,0,j) = 1;
+                            break;
+                            break;
+                        case 2:
+                            volume(0,0,j) = 1;
+                            break;
+                        default:
+                            break;
+                        }
+                        
+                        op.apply(volume,sino);
+                        REQUIRE(sino[0]==1);
+                    }
 
+                    AND_THEN("The backprojection yields the exact adjoints") {
+                        sino[0]=1;
+                        op.applyAdjoint(sino,volume);
+
+                        REQUIRE( volume == DataContainer(volumeDescriptor, backProj[i]) );
+                    }
+                }
+            }
+        }
+
+        for (index_t i=numCases/2; i<numCases; i++) {
+            WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume") {
+                // x-ray source must be very far from the volume center to make testing of the op backprojection simpler
+                geom.emplace_back(volSize*2000,volSize,volumeDescriptor,sinoDescriptor,0.0,0.0,0.0,0.0,0.0,-offsetx[i],-offsety[i]);
+                BinaryMethod op(volumeDescriptor,sinoDescriptor,geom);
+                THEN("The result of projecting is zero") {       
+                    volume = 1;
+                    
                     op.apply(volume,sino);
                     REQUIRE(sino[0]==0);
 
@@ -1043,8 +1084,7 @@ SCENARIO("Axis-aligned rays are present")
                         sino[0]=1;
                         op.applyAdjoint(sino,volume);
 
-                        DataContainer zero(volumeDescriptor);
-                        REQUIRE(volume == zero);
+                        REQUIRE(volume == DataContainer(volumeDescriptor));
                     }
                 }
             }

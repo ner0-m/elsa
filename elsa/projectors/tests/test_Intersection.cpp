@@ -78,9 +78,9 @@ SCENARIO("Intersect edges of voxels") {
         }
 
         voxel << 40, 30;
-        THEN("the ray does not intersect") {
+        THEN("the ray intersects") {
             BoundingBox aabb(voxel);
-            REQUIRE(!Intersection::withRay(aabb, r));
+            REQUIRE(Intersection::withRay(aabb, r));
         }
 
         voxel << 40, 29;
@@ -101,9 +101,9 @@ SCENARIO("Intersect edges of voxels") {
         }
 
         voxel << 30, 40;
-        THEN("the ray does not intersect") {
+        THEN("the ray intersects") {
             BoundingBox aabb(voxel);
-            REQUIRE(!Intersection::withRay(aabb, r));
+            REQUIRE(Intersection::withRay(aabb, r));
         }
 
         voxel << 29, 40;

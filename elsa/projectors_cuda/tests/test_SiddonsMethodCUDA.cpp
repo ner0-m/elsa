@@ -569,11 +569,11 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "",
                     0, 0, 0;
 
         al[0] = "left border";
-        al[1] = "right border";
-        al[2] = "top border";
-        al[3] = "bottom border";
-        al[4] = "top right edge";
-        al[5] = "bottom left edge";
+        al[1] = "bottom border";
+        al[2] = "bottom left border";
+        al[3] = "right border";
+        al[4] = "top border";
+        al[5] = "top right edge";
         
         for (index_t i=0; i<numCases/2; i++) {
             WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume") {
@@ -590,7 +590,6 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "",
                             break;
                         case 1:
                             volume(volSize/2,0,j) = 1;
-                            break;
                             break;
                         case 2:
                             volume(0,0,j) = 1;
@@ -625,10 +624,10 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "",
                     REQUIRE(sino[0]==0);
 
                     AND_THEN("The result of backprojection is also zero") {
-                    sino[0]=1;
-                    op.applyAdjoint(sino,volume);
+                        sino[0]=1;
+                        op.applyAdjoint(sino,volume);
 
-                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                        REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
                     }
                 }
             }
