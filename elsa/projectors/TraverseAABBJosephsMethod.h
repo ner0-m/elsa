@@ -112,8 +112,6 @@ private:
     int _exitDirection{-1};
     /// stage at which the traversal currently is
     STAGE _stage {FIRST};
-    /// constant to decide whether we are in next voxel
-    const real_t NEXT_VOXEL_THRESHOLD{0.01};
 
     /// initialize fractionals from a coordinate vector
     void initFractionals(const RealVector_t& currentPosition);

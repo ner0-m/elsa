@@ -16,11 +16,13 @@ if (CMAKE_CUDA_COMPILER)
 
     # list all the headers of the module
     set(MODULE_HEADERS
-            SiddonsMethodCUDA.h)
+            SiddonsMethodCUDA.h
+            JosephsMethodCUDA.h)
 
     # list all the code files of the module
     set(MODULE_SOURCES
-            SiddonsMethodCUDA.cpp)
+            SiddonsMethodCUDA.cpp
+            JosephsMethodCUDA.cpp)
 
     # build the module library
     add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})

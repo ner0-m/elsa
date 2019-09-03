@@ -13,11 +13,13 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 
 # list all the headers of the module
 set(MODULE_HEADERS
-        TraverseSiddonsCUDA.cuh)
+        TraverseSiddonsCUDA.cuh
+        TraverseJosephsCUDA.cuh)
 
 # list all the code files of the module
 set(MODULE_SOURCES
-        TraverseSiddonsCUDA.cu)
+        TraverseSiddonsCUDA.cu
+        TraverseJosephsCUDA.cu)
 
 # build the module library
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})

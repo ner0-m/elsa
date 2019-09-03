@@ -61,6 +61,7 @@ void TraverseAABBJosephsMethod::updateTraverse() {
             _intersectionLength = _nextStep.norm();
             _stage = INTERIOR;
         }
+        [[fallthrough]];
     case INTERIOR:
         if(!_isInAABB) {
             // revert to exit position and adjust values
@@ -71,8 +72,8 @@ void TraverseAABBJosephsMethod::updateTraverse() {
             _ignoreDirection = _exitDirection;
             // move to last sampling point
             RealVector_t currentPosition = _exitPoint - _intersectionLength*_nextStep/2;
-            initFractionals(currentPosition);
             selectClosestVoxel(_nextStep,currentPosition);
+            initFractionals(currentPosition);
             _isInAABB = true;
             _stage=LAST;
         }
@@ -93,19 +94,8 @@ int TraverseAABBJosephsMethod::getIgnoreDirection() const{
 }
 
 void TraverseAABBJosephsMethod::initFractionals(const RealVector_t& currentPosition) {
-    _fractionals = currentPosition;
-    for (int i = 0; i < _aabb._dim; i++) {
-        // fractionals of main Direction don't matter because they are not
-        // used in interpolation
-        if (i == _ignoreDirection) {
-            _fractionals(i) = 0.0;
-        } else {
-            // normalize, so that the middle of the entry pixel gets
-            // fractional value 0, =>
-            // -0.5<=fractionals(i)<=0.5
-            _fractionals(i) = fabs(_fractionals(i)) - std::floor(fabs(_fractionals(i))) - 0.5;
-        }
-    }
+    for (int i=0; i< _aabb._dim; i++)
+        _fractionals(i) = (fabs(currentPosition(i)) - _currentPos(i) - 0.5);
 }
 
 void TraverseAABBJosephsMethod::moveToFirstSamplingPoint(const RealVector_t& rd, real_t intersectionLength) {
@@ -145,10 +135,8 @@ void TraverseAABBJosephsMethod::moveToFirstSamplingPoint(const RealVector_t& rd,
     }
     selectClosestVoxel(rd,currentPosition);
 
-    this->initFractionals(currentPosition);
-    // for the entry point the fractional of the entry direction should also be set
-    _fractionals(_ignoreDirection) = ((fabs(currentPosition(_ignoreDirection)) -
-            std::floor(fabs(currentPosition(_ignoreDirection)))) - 0.5);
+    // init fractionals
+    initFractionals(currentPosition);
 }
 
 inline bool TraverseAABBJosephsMethod::isCurrentPositionInAABB(index_t index) const {
@@ -159,21 +147,10 @@ inline bool TraverseAABBJosephsMethod::isCurrentPositionInAABB(index_t index) co
 void TraverseAABBJosephsMethod::selectClosestVoxel(const RealVector_t& rd, const RealVector_t& currentPosition)
 {
     RealVector_t lowerCorner = currentPosition.array().floor();
-    lowerCorner = ((lowerCorner.array() == currentPosition.array()) && (_stepDirection.array() < 0.0)).select(lowerCorner.array()-1, lowerCorner);
-
-    // --> Don't use ceil, as it will not always yield the upper corner
-    //      e.g. if hit point is (0,0). Ceil will yield (0,0), and we want (1,1)
-    RealVector_t upperCorner = lowerCorner.array() + 1.;
-
-    RealVector_t distToUpperCorner = (currentPosition - upperCorner).cwiseAbs();
-    RealVector_t distToLowerCorner = (currentPosition - lowerCorner).cwiseAbs();
-
-    // --> Is a ray is parallel to an axis and are we really close to the next Voxel?
-    auto condition = ((rd.array() == 1.0) && (distToUpperCorner.array() < NEXT_VOXEL_THRESHOLD)) ||
-                        ((rd.array() == -1.0) && (distToLowerCorner.array() < NEXT_VOXEL_THRESHOLD));
+    lowerCorner = ((lowerCorner.array() == currentPosition.array()) && (_stepDirection.array() < 0.0) || currentPosition.array()==_aabb._max.array()).select(lowerCorner.array()-1, lowerCorner);
 
     // --> If ray is parallel and we are close, choose the next previous/next voxel
-    _currentPos = lowerCorner + condition.select(_stepDirection.template cast<real_t>(), 0);
+    _currentPos = lowerCorner;
 
     // check if we are still inside the aabb
     if ((_currentPos.array()>=_aabb._max.array()).any() || (_currentPos.array()<_aabb._min.array()).any())
