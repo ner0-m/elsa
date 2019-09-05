@@ -475,7 +475,14 @@ namespace elsa
         cudaArray* volume;
         cudaTextureObject_t volumeTex = 0;
 
-        cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(sizeof(data_t)*8,0,0,0,cudaChannelFormatKindFloat);
+        cudaChannelFormatDesc channelDesc;
+
+        if constexpr(sizeof(data_t) == 4)
+            channelDesc = cudaCreateChannelDesc(sizeof(data_t)*8,0,0,0,cudaChannelFormatKindFloat);
+        else if(sizeof(data_t) == 8) 
+            channelDesc = cudaCreateChannelDesc(32,32,0,0,cudaChannelFormatKindSigned);
+        else
+            throw std::invalid_argument("JosephsMethodCUDA::copyTextureToGPU: only supports DataContainer<data_t> with data_t of length 4 or 8 bytes");
 
         if (hostData.getDataDescriptor().getNumberOfDimensions() == 3) {
             cudaExtent volumeExtent = make_cudaExtent(coeffsPerDim[0],coeffsPerDim[1],coeffsPerDim[2]);
@@ -540,7 +547,7 @@ namespace elsa
         texDesc.addressMode[0] = flags ? cudaAddressModeBorder:cudaAddressModeClamp;
         texDesc.addressMode[1] = flags ? cudaAddressModeBorder:cudaAddressModeClamp;
         texDesc.addressMode[2] = flags ? cudaAddressModeBorder:cudaAddressModeClamp;
-        texDesc.filterMode = cudaFilterModeLinear;
+        texDesc.filterMode = sizeof(data_t)==4 ? cudaFilterModeLinear : cudaFilterModePoint;
         texDesc.readMode = cudaReadModeElementType;
         texDesc.normalizedCoords = 0;
 
@@ -553,5 +560,5 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class JosephsMethodCUDA<float>;
-    // template class JosephsMethodCUDA<double>;
+    template class JosephsMethodCUDA<double>;
 }

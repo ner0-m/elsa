@@ -57,7 +57,7 @@ __device__ __forceinline__ void pointAt(const real_t* const __restrict__ ro,
 
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point, 
-                                               const typename elsa::TraverseJosephsCUDA<real_t,dim>::BoundingBox& boxMax) 
+                                               const real_t* const __restrict__ boxMax) 
 {
     #pragma unroll
     for (int i=0;i<dim;i++) {
@@ -69,7 +69,7 @@ __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point,
 
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool closestVoxel(const real_t* const __restrict__ point,
-                                             const typename elsa::TraverseJosephsCUDA<real_t,dim>::BoundingBox& boxMax, 
+                                             const real_t* const __restrict__  boxMax, 
                                              uint32_t* const __restrict__ voxelCoord, 
                                              const real_t* const __restrict__ rd)
 {
@@ -122,7 +122,7 @@ __device__ __forceinline__ void initMax(const real_t* const __restrict__ rd,
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool box_intersect(const real_t* const __restrict__ ro,
                                               const real_t* const __restrict__ rd,
-                                              const typename elsa::TraverseJosephsCUDA<real_t,dim>::BoundingBox& boxMax,
+                                              const real_t* const __restrict__  boxMax,
                                               real_t& tmin,
                                               real_t& tmax)
 {
@@ -198,17 +198,79 @@ __device__ __forceinline__ void updateTraverse(real_t* const __restrict__ curren
         currentPosition[i]+=rd[i]*dist;
 } 
 
-template <typename real_t, uint dim>
-__device__ __forceinline__ real_t tex(cudaTextureObject_t texObj, const real_t* const p) {
+template <typename data_t, uint dim>
+__device__ __forceinline__ data_t tex(cudaTextureObject_t texObj, const elsa::real_t* const p) {
     if(dim==3)
-        return tex3D<real_t>(texObj, p[0],p[1],p[2]);
+        return tex3D<data_t>(texObj, p[0],p[1],p[2]);
     else
-        return tex2D<real_t>(texObj, p[0],p[1]);
+        return tex2D<data_t>(texObj, p[0],p[1]); 
 }
 
+__device__ __forceinline__ double tex2Dd(cudaTextureObject_t texObj, const elsa::real_t x, const elsa::real_t y) {
+    uint2 rt = tex2D<uint2>(texObj, x, y);
+    return  __hiloint2double(rt.y, rt.x);
+}
 
-template <typename real_t, uint dim>
-__global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THREADS_PER_BLOCK)
+template<>
+__device__ __forceinline__ double tex<double,2>(cudaTextureObject_t texObj, const elsa::real_t* const p) {
+    elsa::real_t x = p[0] - 0.5f;
+    elsa::real_t y = p[1] - 0.5f;
+
+    elsa::real_t i = floor(x);
+    elsa::real_t j = floor(y);
+    
+    elsa::real_t a = x-i;
+    elsa::real_t b = y-j;
+
+    double T[2][2];
+    T[0][0] = tex2Dd(texObj,i,j);
+    T[1][0] = tex2Dd(texObj,i+1,j);
+    T[0][1] = tex2Dd(texObj,i,j+1);
+    T[1][1] = tex2Dd(texObj,i+1,j+1);
+
+    return (1-a)*(1-b)*T[0][0] + a*(1-b)*T[1][0] + (1-a)*b*T[0][1] + a*b*T[1][1]; 
+}
+
+__device__ __forceinline__ double tex3Dd(cudaTextureObject_t texObj, const elsa::real_t x, const elsa::real_t y, const elsa::real_t z) {
+    uint2 rt = tex3D<uint2>(texObj, x, y, z);
+    return  __hiloint2double(rt.y, rt.x);
+}
+
+template<>
+__device__ __forceinline__ double tex<double,3>(cudaTextureObject_t texObj, const elsa::real_t* const p) {
+    elsa::real_t x = p[0] - 0.5f;
+    elsa::real_t y = p[1] - 0.5f;
+    elsa::real_t z = p[2] - 0.5f;
+
+    elsa::real_t i = floor(x);
+    elsa::real_t j = floor(y);
+    elsa::real_t k = floor(z);
+    
+    elsa::real_t a = x-i;
+    elsa::real_t b = y-j;
+    elsa::real_t c = z-k;
+
+    double T[2][2][2];
+    T[0][0][0] = tex3Dd(texObj,i,j,k);
+    T[1][0][0] = tex3Dd(texObj,i+1,j,k);
+    T[0][1][0] = tex3Dd(texObj,i,j+1,k);
+    T[0][0][1] = tex3Dd(texObj,i,j,k+1);
+    T[1][1][0] = tex3Dd(texObj,i+1,j+1,k);
+    T[1][0][1] = tex3Dd(texObj,i+1,j,k+1);
+    T[0][1][1] = tex3Dd(texObj,i,j+1,k+1);
+    T[1][1][1] = tex3Dd(texObj,i+1,j+1,k+1);
+
+    return  (1-a)*(1-b)*(1-c)*T[0][0][0]+a*(1-b)*(1-c)*T[1][0][0]+
+
+            (1-a)*b*(1-c)*T[0][1][0]+a*b*(1-c)*T[1][1][0]+
+        
+            (1-a)*(1-b)*c*T[0][0][1]+a*(1-b)*c*T[1][0][1]+
+            
+            (1-a)*b*c*T[0][1][1]+a*b*c*T[1][1][1]; 
+}
+
+template <typename data_t, uint dim>
+__global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THREADS_PER_BLOCK)
     traverseForwardKernel(cudaTextureObject_t volume,
                     int8_t* const __restrict__ sinogram,
                     const uint64_t sinogramPitch,
@@ -216,7 +278,9 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THR
                     const uint32_t originPitch,
                     const int8_t* const __restrict__ projInv,
                     const uint32_t projPitch,
-                    const typename elsa::TraverseJosephsCUDA<real_t,dim>::BoundingBox boxMax) {
+                    const typename elsa::TraverseJosephsCUDA<data_t,dim>::BoundingBox boxMax) {
+    
+    using real_t = elsa::real_t;
 
     const int8_t* const projInvPtr = dim==3 ? projInv + (blockIdx.z*blockDim.x + threadIdx.x)*projPitch*3 : 
                                               projInv + (blockIdx.y*blockDim.x + threadIdx.x)*projPitch*2;
@@ -224,8 +288,8 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THR
     const real_t* const rayOrigin = dim==3 ? (real_t*)(rayOrigins + (blockIdx.z*blockDim.x + threadIdx.x)*originPitch) :
                                              (real_t*)(rayOrigins + (blockIdx.y*blockDim.x + threadIdx.x)*originPitch);
 
-    real_t* sinogramPtr = dim==3 ? ((real_t*)(sinogram + ((blockIdx.z*blockDim.x+threadIdx.x)*gridDim.y + blockIdx.y)*sinogramPitch) + blockIdx.x) :
-                                        ((real_t*)(sinogram + (blockIdx.y*blockDim.x + threadIdx.x)*sinogramPitch)+blockIdx.x);
+    data_t* sinogramPtr = dim==3 ? ((data_t*)(sinogram + ((blockIdx.z*blockDim.x+threadIdx.x)*gridDim.y + blockIdx.y)*sinogramPitch) + blockIdx.x) :
+                                        ((data_t*)(sinogram + (blockIdx.y*blockDim.x + threadIdx.x)*sinogramPitch)+blockIdx.x);
     
     *sinogramPtr = 0;
 
@@ -237,14 +301,14 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THR
       pixelCoord[dim-2]=blockIdx.y + 0.5f;
         
     
-    //compute ray direction
+    //compute ray direction 
     real_t rd[dim];
     gesqmv<real_t, dim>(projInvPtr, pixelCoord, rd, projPitch);
     normalize<real_t, dim>(rd);
 
     //find volume intersections
     real_t tmin, tmax;
-    if(!box_intersect<real_t,dim>(rayOrigin,rd,boxMax,tmin,tmax))
+    if(!box_intersect<real_t,dim>(rayOrigin,rd,boxMax.max,tmin,tmax))
         return;
     
     real_t currentPosition[dim];
@@ -269,7 +333,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THR
         //use midpoint of entire ray intersection as a constant integration value
         updateTraverse<real_t,dim>(currentPosition,rd,intersectionLength*0.5f);
 
-        *sinogramPtr = intersectionLength*tex<real_t,dim>(volume,currentPosition);
+        *sinogramPtr = intersectionLength*tex<data_t,dim>(volume,currentPosition);
         return;
     }
 
@@ -278,7 +342,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THR
      * add first line segment and move to first interior point
      */
     updateTraverse<real_t,dim>(currentPosition,rd,minDelta*0.5f);
-    real_t pixelValue = minDelta*tex<real_t,dim>(volume,currentPosition);
+    data_t pixelValue = minDelta*tex<data_t,dim>(volume,currentPosition);
 
     //from here on use tmin as an indication of the current position along the ray
     tmin+=minDelta;
@@ -288,25 +352,70 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THR
         updateTraverse<real_t,dim>(currentPosition,rd,(minDelta+tdelta)*0.5f);
         tmin+=tdelta;
         minDelta = tdelta;
-        pixelValue += minDelta*tex<real_t,dim>(volume,currentPosition);
+        pixelValue += minDelta*tex<data_t,dim>(volume,currentPosition);
 
         //while interior intersection points remain
         while (tmin+minDelta<tmax) {                
             updateTraverse<real_t,dim>(currentPosition, rd, minDelta);
             tmin+=minDelta;
-            pixelValue += minDelta*tex<real_t,dim>(volume,currentPosition);
+            pixelValue += minDelta*tex<data_t,dim>(volume,currentPosition);
         }
     }
 
     updateTraverse<real_t,dim>(currentPosition,rd,(tmax+minDelta-tmin)*0.5f);
-    pixelValue += (tmax-tmin)*tex<real_t,dim>(volume,currentPosition);
+    pixelValue += (tmax-tmin)*tex<data_t,dim>(volume,currentPosition);
 
     *sinogramPtr = pixelValue;
 }
 
+__device__ __forceinline__ double tex1DLayeredd(cudaTextureObject_t texObj, const elsa::real_t x, const int layer) {
+    uint2 rt = tex1DLayered<uint2>(texObj, x, layer);
+    return  __hiloint2double(rt.y, rt.x);
+}
+
+template <>
+double tex1DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, const int layer) {
+    x = x - 0.5f;
+
+    elsa::real_t i = floor(x);
+    
+    elsa::real_t a = x-i;
+
+    double T[2];
+    T[0] = tex1DLayeredd(texObj,i,layer);
+    T[1] = tex1DLayeredd(texObj,i+1,layer);
+
+    return (1-a)*T[0]+a*T[1]; 
+}
+
+__device__ __forceinline__ double tex2DLayeredd(cudaTextureObject_t texObj, const elsa::real_t x, const elsa::real_t y, const int layer) {
+    uint2 rt = tex2DLayered<uint2>(texObj, x, y, layer);
+    return  __hiloint2double(rt.y, rt.x);
+}
+
+template <>
+double tex2DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, elsa::real_t y, const int layer) {
+    x = x - 0.5f;
+    y = y - 0.5f;
+
+    elsa::real_t i = floor(x);
+    elsa::real_t j = floor(y);
+    
+    elsa::real_t a = x-i;
+    elsa::real_t b = y-j;
+
+    double T[2][2];
+    T[0][0] = tex2DLayeredd(texObj,i,j,layer);
+    T[1][0] = tex2DLayeredd(texObj,i+1,j,layer);
+    T[0][1] = tex2DLayeredd(texObj,i,j+1,layer);
+    T[1][1] = tex2DLayeredd(texObj,i+1,j+1,layer);
+
+    return (1-a)*(1-b)*T[0][0]+a*(1-b)*T[1][0]+(1-a)*b*T[0][1]+a*b*T[1][1]; 
+}
+
 //TODO: check if sorting can be used to make this even faster
-template <typename real_t, uint32_t dim>
-__global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THREADS_PER_BLOCK)
+template <typename data_t, uint32_t dim>
+__global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THREADS_PER_BLOCK)
     traverseAdjointFastKernel(int8_t* const __restrict__ volume,
                         const uint64_t volumePitch,
                         cudaTextureObject_t sinogram,
@@ -316,11 +425,14 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
                         const uint32_t projPitch,
                         const uint32_t numAngles,
                         const uint32_t offset) {
+
+    using real_t = elsa::real_t;
+
     int x = blockIdx.x;
     int y = dim==3 ? blockIdx.y : blockIdx.y*blockDim.x + threadIdx.x;
     int z = dim==3 ? blockIdx.z*blockDim.x + threadIdx.x : 0;
 
-    real_t& voxelRef = *(real_t*)(volume + x*sizeof(real_t) + y*volumePitch + z*volumePitch*gridDim.y);
+    data_t& voxelRef = *(data_t*)(volume + x*sizeof(data_t) + y*volumePitch + z*volumePitch*gridDim.y);
         
     real_t voxelCenter[dim];
     voxelCenter[0] = x+0.5f;
@@ -352,10 +464,10 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
         
         if (dim==3) {
             pixelCoord[1]/=pixelCoord[dim-1];
-            val += tex2DLayered<real_t>(sinogram,pixelCoord[0],pixelCoord[1],i);
+            val += tex2DLayered<data_t>(sinogram,pixelCoord[0],pixelCoord[1],i);
         }
         else {
-            val += tex1DLayered<real_t>(sinogram,pixelCoord[0],i);
+            val += tex1DLayered<data_t>(sinogram,pixelCoord[0],i);
         }
 
     }
@@ -363,70 +475,95 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
     voxelRef = val;
 }
 
-template <typename real_t,uint dim>
+/* 
+ * atomicAdd() for doubles is only supported on devices of compute capability 6.0 or higher
+ * implementation taken straight from the CUDA C programming guide:
+ * https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
+ */
+ #if defined(__CUDA_ARCH__) &&  __CUDA_ARCH__ < 600
+ __device__ __forceinline__ double atomicAdd(double* address, double val)
+ {
+     unsigned long long int* address_as_ull =
+                               (unsigned long long int*)address;
+     unsigned long long int old = *address_as_ull, assumed;
+ 
+     do {
+         assumed = old;
+         old = atomicCAS(address_as_ull, assumed,
+                         __double_as_longlong(val +
+                                __longlong_as_double(assumed)));
+ 
+     // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
+     } while (assumed != old);
+ 
+     return __longlong_as_double(old);
+ }
+ #endif
+
+template <typename data_t,uint dim>
 __device__ __forceinline__ void backproject2(int8_t* const __restrict__ volume,
                                              const uint64_t* const __restrict__ p, 
                                              uint32_t* const __restrict__ voxelCoord,
-                                             const real_t* const __restrict__ voxelCoordf,
-                                             const typename elsa::TraverseJosephsCUDA<real_t,dim>::BoundingBox& boxMax,
-                                             const real_t* const __restrict__ frac,
-                                             const real_t weightedVal) {
+                                             const elsa::real_t* const __restrict__ voxelCoordf,
+                                             const typename elsa::TraverseJosephsCUDA<data_t,dim>::BoundingBox& boxMax,
+                                             const elsa::real_t* const __restrict__ frac,
+                                             const data_t weightedVal) {
     
-    real_t* volumeXPtr = (real_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1]);
-    real_t val = (1.0f-frac[1])*weightedVal;
+    data_t* volumeXPtr = (data_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1]);
+    data_t val = (1.0f-frac[1])*weightedVal;
     atomicAdd(volumeXPtr,val);
 
     //volume[i,j+1]
     voxelCoord[1] = voxelCoord[1]<boxMax[1]-1 ? voxelCoordf[1] + 1 : boxMax[1] - 1;
-    volumeXPtr = (real_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1]);
+    volumeXPtr = (data_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1]);
     val = frac[1]*weightedVal;
     atomicAdd(volumeXPtr, val);
 }
 
-template <typename real_t,uint dim>
+template <typename data_t,uint dim>
 __device__ __forceinline__ void backproject4(int8_t* const __restrict__ volume,
                                              const uint64_t* const __restrict__ p, 
                                              uint32_t* const __restrict__ voxelCoord,
-                                             const real_t* const __restrict__ voxelCoordf,
-                                             const typename elsa::TraverseJosephsCUDA<real_t,dim>::BoundingBox& boxMax,
-                                             const real_t* const __restrict__ frac,
-                                             const real_t weightedVal) {    
-    real_t* volumeXPtr = (real_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1] + p[2]*voxelCoord[2]);
-    real_t val = (1.0f-frac[1])*(1.0f-frac[2])*weightedVal;
+                                             const elsa::real_t* const __restrict__ voxelCoordf,
+                                             const typename elsa::TraverseJosephsCUDA<data_t,dim>::BoundingBox& boxMax,
+                                             const elsa::real_t* const __restrict__ frac,
+                                             const data_t weightedVal) {    
+    data_t* volumeXPtr = (data_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1] + p[2]*voxelCoord[2]);
+    data_t val = (1.0f-frac[1])*(1.0f-frac[2])*weightedVal;
     atomicAdd(volumeXPtr,val);
     //frac[0] is 0
 
     //volume[i,j+1,k]
     voxelCoord[1] = voxelCoord[1]<boxMax[1]-1.0f ? voxelCoordf[1] + 1.0f : boxMax[1] - 1.0f;
-    volumeXPtr = (real_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1] + p[2]*voxelCoord[2]);
+    volumeXPtr = (data_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1] + p[2]*voxelCoord[2]);
     val = frac[1]*(1.0f-frac[2])*weightedVal;
     atomicAdd(volumeXPtr, val);
 
     //volume[i,j+1,k+1]
     voxelCoord[2] = voxelCoord[2]<boxMax[2]-1.0f ? voxelCoordf[2] + 1.0f : boxMax[2] - 1.0f;
-    volumeXPtr = (real_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1] + p[2]*voxelCoord[2]);
+    volumeXPtr = (data_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1] + p[2]*voxelCoord[2]);
     val = frac[1]*frac[2]*weightedVal;
     atomicAdd(volumeXPtr, val);
 
     //volume[i,j,k+1]
     voxelCoord[1] = voxelCoordf[1]<0.0f ? 0 : voxelCoordf[1];
-    volumeXPtr = (real_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1] + p[2]*voxelCoord[2]);
+    volumeXPtr = (data_t*)(volume + p[0]*voxelCoord[0] + p[1]*voxelCoord[1] + p[2]*voxelCoord[2]);
     val = (1.0f-frac[1])*frac[2]*weightedVal;
     atomicAdd(volumeXPtr, val);
 }
 
-template <typename real_t, uint dim>
+template <typename data_t, uint dim>
 __device__ __forceinline__ void backproject(int8_t* const __restrict__ volume,
                                             const uint64_t* const __restrict__ p, 
                                             uint32_t* const __restrict__ voxelCoord,
-                                            const real_t* const __restrict__ voxelCoordf,
-                                            const typename elsa::TraverseJosephsCUDA<real_t,dim>::BoundingBox& boxMax,
-                                            const real_t* const __restrict__ frac,
-                                            const real_t weightedVal) {
+                                            const elsa::real_t* const __restrict__ voxelCoordf,
+                                            const typename elsa::TraverseJosephsCUDA<data_t,dim>::BoundingBox& boxMax,
+                                            const elsa::real_t* const __restrict__ frac,
+                                            const data_t weightedVal) {
     if (dim == 3)
-        backproject4<real_t,dim>(volume,p,voxelCoord,voxelCoordf,boxMax,frac,weightedVal);
+        backproject4<data_t,dim>(volume,p,voxelCoord,voxelCoordf,boxMax,frac,weightedVal);
     else 
-        backproject2<real_t,dim>(volume,p,voxelCoord,voxelCoordf,boxMax,frac,weightedVal);
+        backproject2<data_t,dim>(volume,p,voxelCoord,voxelCoordf,boxMax,frac,weightedVal);
 }
 
 template <typename T>
@@ -436,8 +573,8 @@ __device__ __forceinline__ void swap(T& a, T& b) {
     b = c;
 }
 
-template <typename real_t, uint dim>
-__global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_THREADS_PER_BLOCK) 
+template <typename data_t, uint dim>
+__global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THREADS_PER_BLOCK) 
     traverseAdjointKernel(int8_t* const __restrict__ volume,
                     const uint64_t volumePitch,
                     const int8_t* const __restrict__ sinogram,
@@ -446,7 +583,9 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
                     const uint32_t originPitch,
                     const int8_t* const __restrict__ projInv,
                     const uint32_t projPitch,
-                    typename elsa::TraverseJosephsCUDA<real_t,dim>::BoundingBox boxMax) {
+                    typename elsa::TraverseJosephsCUDA<data_t,dim>::BoundingBox boxMax) {
+    
+    using real_t = elsa::real_t;
 
     const int8_t* const projInvPtr = dim==3 ? projInv + (blockIdx.z*blockDim.x + threadIdx.x)*projPitch*3 : 
                                               projInv + (blockIdx.y*blockDim.x + threadIdx.x)*projPitch*2;
@@ -454,8 +593,8 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
     const real_t* const rayOrigin = dim==3 ? (real_t*)(rayOrigins + (blockIdx.z*blockDim.x + threadIdx.x)*originPitch) :
                                              (real_t*)(rayOrigins + (blockIdx.y*blockDim.x + threadIdx.x)*originPitch);
 
-    const real_t sinogramVal = dim==3 ? *((real_t*)(sinogram + ((blockIdx.z*blockDim.x+threadIdx.x)*gridDim.y + blockIdx.y)*sinogramPitch) + blockIdx.x):
-                                        *((real_t*)(sinogram + (blockIdx.y*blockDim.x + threadIdx.x)*sinogramPitch)+blockIdx.x);
+    const data_t sinogramVal = dim==3 ? *((data_t*)(sinogram + ((blockIdx.z*blockDim.x+threadIdx.x)*gridDim.y + blockIdx.y)*sinogramPitch) + blockIdx.x):
+                                        *((data_t*)(sinogram + (blockIdx.y*blockDim.x + threadIdx.x)*sinogramPitch)+blockIdx.x);
 
     //homogenous pixel coordinates
     real_t pixelCoord[dim]; 
@@ -471,7 +610,7 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
     
     //find volume intersections
     real_t tmin, tmax;
-    if(!box_intersect<real_t,dim>(rayOrigin,rd,boxMax,tmin,tmax))
+    if(!box_intersect<real_t,dim>(rayOrigin,rd,boxMax.max,tmin,tmax))
         return;
     
     int stepDir[dim];
@@ -481,17 +620,17 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
     
     real_t currentPosition[dim];
     pointAt<real_t,dim>(rayOrigin,rd,tmin,currentPosition);
-    projectOntoBox<real_t,dim>(currentPosition,boxMax);
+    projectOntoBox<real_t,dim>(currentPosition,boxMax.max);
 
     uint32_t voxelCoord[dim];
-    if(!closestVoxel<real_t,dim>(currentPosition,boxMax,voxelCoord,rd)) return;
+    if(!closestVoxel<real_t,dim>(currentPosition,boxMax.max,voxelCoord,rd)) return;
 
     //determine primary direction
     uint32_t idx = minIndex<real_t,dim>(tdelta);
     const int s = stepDir[idx];
 
     uint64_t permutation[dim];
-    permutation[0] = sizeof(real_t);
+    permutation[0] = sizeof(data_t);
     permutation[1] = volumePitch;
     if (dim==3)
         permutation[dim-1] = volumePitch*boxMax[1];
@@ -532,7 +671,7 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
             frac[i] = currentPosition[i]-voxelCoordf[i];
             voxelCoord[i] =  fmax(voxelCoordf[i],static_cast<real_t>(0));
         }
-        backproject<real_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,intersectionLength*sinogramVal);
+        backproject<data_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,intersectionLength*sinogramVal);
         return;
     }
 
@@ -547,7 +686,7 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
         frac[i] = currentPosition[i]-voxelCoordf[i];
         voxelCoord[i] =  fmax(voxelCoordf[i],static_cast<real_t>(0));
     }
-    backproject<real_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,minDelta*sinogramVal);
+    backproject<data_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,minDelta*sinogramVal);
     //from here on use tmin as an indication of the current position along the ray
     tmin+=minDelta;
 
@@ -576,7 +715,7 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
             frac[i] = currentPosition[i]-voxelCoordf[i];
             voxelCoord[i] = fmax(static_cast<real_t>(0),voxelCoordf[i]);
         }
-        backproject<real_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,minDelta*sinogramVal);
+        backproject<data_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,minDelta*sinogramVal);
 
         //while interior intersection points remain
         while (tmin+minDelta<tmax) {                
@@ -589,7 +728,7 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
                 frac[i] = currentPosition[i]-voxelCoordf[i];
                 voxelCoord[i] = fmax(voxelCoordf[i],static_cast<real_t>(0));
             }
-            backproject<real_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,minDelta*sinogramVal);
+            backproject<data_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,minDelta*sinogramVal);
 
         }
     }
@@ -640,7 +779,7 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<real_t,dim>::MAX_TH
     swap<real_t>(frac[0],frac[exitDir]);
     swap<real_t>(boxMax[0],boxMax[exitDir]);
     swap<uint64_t>(permutation[0],permutation[exitDir]);
-    backproject<real_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,(tmax-tmin)*sinogramVal); 
+    backproject<data_t,dim>(volume,permutation,voxelCoord,voxelCoordf,boxMax,frac,(tmax-tmin)*sinogramVal); 
 }
 
 namespace elsa {
@@ -692,4 +831,8 @@ void TraverseJosephsCUDA<data_t,dim>::traverseAdjointFast(const dim3 blocks, con
 //template instantiations
 template struct TraverseJosephsCUDA<float,2>;
 template struct TraverseJosephsCUDA<float,3>;
+
+// TODO: support for double precision textures
+template struct TraverseJosephsCUDA<double,2>;
+template struct TraverseJosephsCUDA<double,3>;
 }
