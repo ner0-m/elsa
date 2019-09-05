@@ -206,7 +206,7 @@ __device__ __forceinline__ data_t tex(cudaTextureObject_t texObj, const elsa::re
         return tex2D<data_t>(texObj, p[0],p[1]); 
 }
 
-__device__ __forceinline__ double tex2Dd(cudaTextureObject_t texObj, const elsa::real_t x, const elsa::real_t y) {
+__device__ __forceinline__ double tex2Dd(cudaTextureObject_t texObj, const float x, const float y) {
     uint2 rt = tex2D<uint2>(texObj, x, y);
     return  __hiloint2double(rt.y, rt.x);
 }
@@ -231,7 +231,7 @@ __device__ __forceinline__ double tex<double,2>(cudaTextureObject_t texObj, cons
     return (1-a)*(1-b)*T[0][0] + a*(1-b)*T[1][0] + (1-a)*b*T[0][1] + a*b*T[1][1]; 
 }
 
-__device__ __forceinline__ double tex3Dd(cudaTextureObject_t texObj, const elsa::real_t x, const elsa::real_t y, const elsa::real_t z) {
+__device__ __forceinline__ double tex3Dd(cudaTextureObject_t texObj, const float x, const float y, const elsa::real_t z) {
     uint2 rt = tex3D<uint2>(texObj, x, y, z);
     return  __hiloint2double(rt.y, rt.x);
 }
@@ -304,7 +304,22 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THR
     //compute ray direction 
     real_t rd[dim];
     gesqmv<real_t, dim>(projInvPtr, pixelCoord, rd, projPitch);
-    normalize<real_t, dim>(rd);
+    
+    // determine main direction
+    const uint32_t idx = maxAbsIndex<real_t,dim>(rd);
+    const real_t rdMax = abs(rd[idx]);
+
+    real_t rn;
+    if(dim==3)
+        rn = rnorm3d(rd[0],rd[1],rd[2]);
+    else if(dim==2)
+        rn = rhypot(rd[0],rd[1]);
+
+    real_t weight = rn/rdMax;
+    
+    // normalize ray direction to have length 1/-1 in the main direction
+    #pragma unroll
+    for (int i=0;i<dim;++i) rd[i] /= rdMax;
 
     //find volume intersections
     real_t tmin, tmax;
@@ -313,10 +328,6 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THR
     
     real_t currentPosition[dim];
     pointAt<real_t,dim>(rayOrigin,rd,tmin,currentPosition);
-
-    //determine primary direction
-    const uint32_t idx = maxAbsIndex<real_t,dim>(rd);
-    const real_t tdelta = 1.0f/fabs(rd[idx]);
 
     // truncate as currentPosition is non-negative
     const real_t fl = trunc(currentPosition[idx]);
@@ -333,7 +344,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THR
         //use midpoint of entire ray intersection as a constant integration value
         updateTraverse<real_t,dim>(currentPosition,rd,intersectionLength*0.5f);
 
-        *sinogramPtr = intersectionLength*tex<data_t,dim>(volume,currentPosition);
+        *sinogramPtr = weight*intersectionLength*tex<data_t,dim>(volume,currentPosition);
         return;
     }
 
@@ -342,33 +353,32 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THR
      * add first line segment and move to first interior point
      */
     updateTraverse<real_t,dim>(currentPosition,rd,minDelta*0.5f);
-    data_t pixelValue = minDelta*tex<data_t,dim>(volume,currentPosition);
+    data_t pixelValue = weight*minDelta*tex<data_t,dim>(volume,currentPosition);
 
     //from here on use tmin as an indication of the current position along the ray
     tmin+=minDelta;
 
     //if next point isn't last
-    if (tmax-tmin>tdelta){
-        updateTraverse<real_t,dim>(currentPosition,rd,(minDelta+tdelta)*0.5f);
-        tmin+=tdelta;
-        minDelta = tdelta;
-        pixelValue += minDelta*tex<data_t,dim>(volume,currentPosition);
+    if (tmax-tmin>1.0f){
+        updateTraverse<real_t,dim>(currentPosition,rd,(minDelta+1.0f)*0.5f);
+        tmin+=1.0f;
+        pixelValue += weight*tex<data_t,dim>(volume,currentPosition);
 
         //while interior intersection points remain
-        while (tmin+minDelta<tmax) {                
-            updateTraverse<real_t,dim>(currentPosition, rd, minDelta);
-            tmin+=minDelta;
-            pixelValue += minDelta*tex<data_t,dim>(volume,currentPosition);
+        while (tmax-tmin>1.0f) {                
+            updateTraverse<real_t,dim>(currentPosition, rd, 1.0f);
+            tmin+=1.0f;
+            pixelValue += weight*tex<data_t,dim>(volume,currentPosition);
         }
     }
 
-    updateTraverse<real_t,dim>(currentPosition,rd,(tmax+minDelta-tmin)*0.5f);
-    pixelValue += (tmax-tmin)*tex<data_t,dim>(volume,currentPosition);
+    updateTraverse<real_t,dim>(currentPosition,rd,(tmax-tmin+1.0f)*0.5f);
+    pixelValue += weight*(tmax-tmin)*tex<data_t,dim>(volume,currentPosition);
 
     *sinogramPtr = pixelValue;
 }
 
-__device__ __forceinline__ double tex1DLayeredd(cudaTextureObject_t texObj, const elsa::real_t x, const int layer) {
+__device__ __forceinline__ double tex1DLayeredd(cudaTextureObject_t texObj, const float x, const int layer) {
     uint2 rt = tex1DLayered<uint2>(texObj, x, layer);
     return  __hiloint2double(rt.y, rt.x);
 }
@@ -388,7 +398,7 @@ double tex1DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, const in
     return (1-a)*T[0]+a*T[1]; 
 }
 
-__device__ __forceinline__ double tex2DLayeredd(cudaTextureObject_t texObj, const elsa::real_t x, const elsa::real_t y, const int layer) {
+__device__ __forceinline__ double tex2DLayeredd(cudaTextureObject_t texObj, const float x, const float y, const int layer) {
     uint2 rt = tex2DLayered<uint2>(texObj, x, y, layer);
     return  __hiloint2double(rt.y, rt.x);
 }
@@ -444,7 +454,7 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_TH
         voxelCenter[1] = y+offset+0.5f;
     }
 
-    real_t val = 0.0f;
+    data_t val = 0.0f;
     for (uint i=0;i<numAngles;i++) {
         const int8_t* const projPtr = proj + i*projPitch*dim;
         const real_t* const rayOrigin = (real_t*)(rayOrigins + i*originPitch); 
@@ -832,7 +842,6 @@ void TraverseJosephsCUDA<data_t,dim>::traverseAdjointFast(const dim3 blocks, con
 template struct TraverseJosephsCUDA<float,2>;
 template struct TraverseJosephsCUDA<float,3>;
 
-// TODO: support for double precision textures
 template struct TraverseJosephsCUDA<double,2>;
 template struct TraverseJosephsCUDA<double,3>;
 }

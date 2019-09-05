@@ -412,10 +412,24 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
                             volume(j,volSize/2) = 1;
                         
                         fast.apply(volume,sino);
-                        REQUIRE(sino[0]==1);
+                        /** Using doubles significantly increases interpolation accuracy
+                         *  For example: when using floats, points very near the border (less than ~1/500th of 
+                         *  a pixel away from the border) are rounded to actually lie on the border. This then yields more accurate
+                         *  results when using floats in some of the axis-aligned test cases, despite the lower interpolation accuracy. 
+                         *  
+                         *  => different requirements for floats and doubles, looser requirements for doubles
+                         */ 
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(sino[0]==1);
+                        else
+                            REQUIRE(sino[0]==Approx(1.0));
+                        
                         
                         slow.apply(volume,sino);
-                        REQUIRE(sino[0]==1);
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(sino[0]==1);
+                        else
+                            REQUIRE(sino[0]==Approx(1.0));
                     }
 
                     AND_THEN("The backprojection sets the values of all hit pixels to the detector value") {
@@ -471,7 +485,18 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
                         REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i%2]))); 
 
                         fast.applyAdjoint(sino,volume);
-                        REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i%2])));
+                        /** Using doubles significantly increases interpolation accuracy
+                         *  For example: when using floats, points very near the border (less than ~1/500th of 
+                         *  a pixel away from the border) are rounded to actually lie on the border. This then yields more accurate
+                         *  results when using floats in some of the axis-aligned test cases, despite the lower interpolation accuracy. 
+                         *  
+                         *  => different requirements for floats and doubles, looser requirements for doubles
+                         */
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i%2])));
+                        else
+                            REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i%2]),0.001));
+                        
                     }
                 }
             }
@@ -506,7 +531,18 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
                     REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[0]))); 
 
                     fast.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[0]/2).eval()) ));
+                    /** Using doubles significantly increases interpolation accuracy
+                     *  For example: when using floats, points very near the border (less than ~1/500th of 
+                     *  a pixel away from the border) are rounded to actually lie on the border. This then yields more accurate
+                     *  results when using floats in some of the axis-aligned test cases, despite the lower interpolation accuracy. 
+                     *  
+                     *  => different requirements for floats and doubles, looser requirements for doubles
+                     */
+                    if constexpr (std::is_same_v<data_t,float>)
+                        REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[0]/2).eval())));
+                    else
+                        REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[0]/2).eval()),0.001));
+                    
                 }
             }
         }
@@ -539,7 +575,17 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
                     REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[0]))); 
 
                     fast.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[0]/2).eval())));
+                    /** Using doubles significantly increases interpolation accuracy
+                     *  For example: when using floats, points very near the border (less than ~1/500th of 
+                     *  a pixel away from the border) are rounded to actually lie on the border. This then yields more accurate
+                     *  results when using floats in some of the axis-aligned test cases, despite the lower interpolation accuracy. 
+                     *  
+                     *  => different requirements for floats and doubles, looser requirements for doubles
+                     */
+                    if constexpr (std::is_same_v<data_t,float>)
+                        REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[0]/2).eval())));
+                    else
+                        REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[0]/2).eval()),0.001));
                 }
             }
         }
@@ -620,10 +666,23 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
                             volume(volSize/2,j,volSize/2) = 1;
                         
                         fast.apply(volume,sino);
-                        REQUIRE(sino[0]==1);
+                        /** Using doubles significantly increases interpolation accuracy
+                         *  For example: when using floats, points very near the border (less than ~1/500th of 
+                         *  a pixel away from the border) are rounded to actually lie on the border. This then yields more accurate
+                         *  results when using floats in some of the axis-aligned test cases, despite the lower interpolation accuracy. 
+                         *  
+                         *  => different requirements for floats and doubles, looser requirements for doubles
+                         */ 
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(sino[0]==1);
+                        else
+                            REQUIRE(sino[0]==Approx(1.0));
                         
                         slow.apply(volume,sino);
-                        REQUIRE(sino[0]==1);
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(sino[0]==1);
+                        else
+                            REQUIRE(sino[0]==Approx(1.0));
                     }
 
                     AND_THEN("The backprojection sets the values of all hit voxels to the detector value") {
@@ -694,17 +753,40 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
                             volume(volSize/2,j,volSize/2) = 1;
                         
                         fast.apply(volume,sino);
-                        REQUIRE(sino[0]==0.75);
+                        /** Using doubles significantly increases interpolation accuracy
+                         *  For example: when using floats, points very near the border (less than ~1/500th of 
+                         *  a pixel away from the border) are rounded to actually lie on the border. This then yields more accurate
+                         *  results when using floats in some of the axis-aligned test cases, despite the lower interpolation accuracy. 
+                         *  
+                         *  => different requirements for floats and doubles, looser requirements for doubles
+                         */ 
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(sino[0]==0.75);
+                        else
+                            REQUIRE(sino[0]==Approx(0.75));
                         
                         slow.apply(volume,sino);
-                        REQUIRE(sino[0]==0.75);
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(sino[0]==0.75);
+                        else
+                            REQUIRE(sino[0]==Approx(0.75));
                     }
 
                     AND_THEN("The slow backprojection yields the exact adjoint, the fast backprojection is also exact for a very distant x-ray source") {
                         sino[0]=1;
                         fast.applyAdjoint(sino,volume);
-
-                        REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i/2])));
+                        /** Using doubles significantly increases interpolation accuracy
+                         *  For example: when using floats, points very near the border (less than ~1/500th of 
+                         *  a pixel away from the border) are rounded to actually lie on the border. This then yields more accurate
+                         *  results when using floats in some of the axis-aligned test cases, despite the lower interpolation accuracy. 
+                         *  
+                         *  => different requirements for floats and doubles, looser requirements for doubles
+                         */ 
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i/2])));
+                        else
+                            REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i/2]),0.005));
+                        
 
                         slow.applyAdjoint(sino,volume);
                         REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i/2]))); 
@@ -850,7 +932,17 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
                         sino[0]=1;
                         fast.applyAdjoint(sino,volume);
 
-                        REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[i] / (i>3 ? 4 : 2)).eval())));
+                        /** Using doubles significantly increases interpolation accuracy
+                         *  For example: when using floats, points very near the border (less than ~1/500th of 
+                         *  a pixel away from the border) are rounded to actually lie on the border. This then yields more accurate
+                         *  results when using floats in some of the axis-aligned test cases, despite the lower interpolation accuracy. 
+                         *  
+                         *  => different requirements for floats and doubles, looser requirements for doubles
+                         */ 
+                        if constexpr (std::is_same_v<data_t,float>)
+                            REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[i] / (i>3 ? 4 : 2)).eval())));
+                        else
+                            REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor, (backProj[i] / (i>3 ? 4 : 2)).eval()),0.005));
 
                         slow.applyAdjoint(sino,volume);
                         REQUIRE(isApprox(volume,DataContainer<data_t>(volumeDescriptor,backProj[i]))); 
@@ -1270,12 +1362,6 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
             THEN("Ray intersects the correct pixels") {
                 sino[0] = 1;
                 slow.applyAdjoint(sino,volume);
-                for (int i=0;i<volSize;i++) {
-                    for (int j=0;j<volSize;j++) {
-                        printf("%f ", volume(j,i));
-                    }
-                    printf("\n");
-                }
                     
                 volume = 1;
                 volume(0,0) = 0;
@@ -1289,7 +1375,6 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
                 volume(3,3) = 0;
 
                 fast.apply(volume, sino);
-                printf("%f ",sino[0]);
                 REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 slow.apply(volume, sino);
