@@ -74,16 +74,13 @@ namespace elsa
         std::vector<Geometry> _geometryList;
 
         /// threads per block used in the kernel execution configuration
-        const int _threadsPerBlock = 64;
+        const int _threadsPerBlock = TraverseSiddonsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
 
         /// inverse of of projection matrices; stored column-wise on GPU
         cudaPitchedPtr _projInvMatrices;
 
         /// ray origins for each acquisition angle
         cudaPitchedPtr _rayOrigins;
-
-        /// pointer to device global memory storing _boundingBox.max
-        uint* _boxMax;
 
         /// sets up and starts the kernel traversal routine (for both apply/applyAdjoint)
         template<bool adjoint>
