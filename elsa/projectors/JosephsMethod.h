@@ -59,10 +59,10 @@ namespace elsa
         ~JosephsMethod() = default;
 
     protected:
-        /// apply the binary method (i.e. forward projection)
+        /// apply Joseph's method (i.e. forward projection)
         void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) override;
 
-        /// apply the adjoint of the  binary method (i.e. backward projection)
+        /// apply the adjoint of Joseph's method (i.e. backward projection)
         void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
 
         /// implement the polymorphic clone operation

@@ -99,19 +99,7 @@ namespace elsa
         RealVector_t lowerCorner = _entryPoint.array().floor();
         lowerCorner = ((lowerCorner.array() == _entryPoint.array()) && (_stepDirection.array() < 0.0)).select(lowerCorner.array()-1, lowerCorner);
 
-        // --> Don't use ceil, as it will not always yield the upper corner
-        //      e.g. if hit point is (0,0). Ceil will yield (0,0), and we want (1,1)
-        RealVector_t upperCorner = lowerCorner.array() + 1.;
-
-        RealVector_t distToUpperCorner = (_entryPoint - upperCorner).cwiseAbs();
-        RealVector_t distToLowerCorner = (_entryPoint - lowerCorner).cwiseAbs();
-
-        // --> Is a ray is parallel to an axis and are we really close to the next Voxel?
-        // auto condition = ((rd.array() == 1.0) && (distToUpperCorner.array() < NEXT_VOXEL_THRESHOLD)) ||
-        //                  ((rd.array() == -1.0) && (distToLowerCorner.array() < NEXT_VOXEL_THRESHOLD));
-
-        // --> If ray is parallel and we are close, choose the next previous/next voxel
-        _currentPos = lowerCorner;// + condition.select(_stepDirection.template cast<real_t>(), 0);
+        _currentPos = lowerCorner;
 
         // check if we are still inside the aabb
         if ((_currentPos.array()>=_aabb._max.array()).any() || (_currentPos.array()<_aabb._min.array()).any())
