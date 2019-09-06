@@ -812,7 +812,7 @@ void TraverseJosephsCUDA<data_t,dim>::traverseForward(const dim3 blocks, const i
                     const uint32_t originPitch,
                     const int8_t* const __restrict__ projInv,
                     const uint32_t projPitch,
-                    const BoundingBox boxMax,
+                    const BoundingBox& boxMax,
                     const cudaStream_t stream) {
     traverseForwardKernel<data_t,dim><<<blocks,threads,0,stream>>>(volume,sinogram,sinogramPitch,rayOrigins,originPitch,projInv,projPitch,boxMax);
 }
@@ -827,7 +827,7 @@ void TraverseJosephsCUDA<data_t,dim>::traverseAdjoint(const dim3 blocks, const i
                     const uint32_t originPitch,
                     const int8_t* const __restrict__ projInv,
                     const uint32_t projPitch,
-                    BoundingBox boxMax,
+                    const BoundingBox& boxMax,
                     const cudaStream_t stream) {
     traverseAdjointKernel<data_t,dim><<<blocks,threads,0,stream>>>(volume, volumePitch, sinogram, sinogramPitch, rayOrigins, originPitch, projInv, projPitch, boxMax);
 }

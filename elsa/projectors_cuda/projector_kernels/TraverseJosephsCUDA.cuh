@@ -19,7 +19,7 @@ namespace elsa
 template <typename data_t = elsa::real_t, uint dim = 3>
     struct TraverseJosephsCUDA
     {
-        const static uint32_t MAX_THREADS_PER_BLOCK = 64;
+        const static uint32_t MAX_THREADS_PER_BLOCK = 32;
 
         /**
          *  Allows for the bounding box to be passed to the kernel by value.
@@ -74,7 +74,7 @@ template <typename data_t = elsa::real_t, uint dim = 3>
                                     const uint32_t originPitch,
                                     const int8_t *const __restrict__ projInv,
                                     const uint32_t projPitch,
-                                    const BoundingBox boxMax,
+                                    const BoundingBox& boxMax,
                                     const cudaStream_t stream = 0);
 
         /**
@@ -113,7 +113,7 @@ template <typename data_t = elsa::real_t, uint dim = 3>
                                     const uint32_t originPitch,
                                     const int8_t *const __restrict__ projInv,
                                     const uint32_t projPitch,
-                                    BoundingBox boxMax,
+                                    const BoundingBox& boxMax,
                                     const cudaStream_t stream = 0);
 
         /**

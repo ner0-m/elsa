@@ -16,6 +16,27 @@ namespace elsa {
     template <typename data_t = real_t, uint32_t dim = 3>
     struct TraverseSiddonsCUDA {
 
+        const static uint32_t MAX_THREADS_PER_BLOCK = 64;
+        /**
+         *  Allows for the bounding box to be passed to the kernel by value.
+         *  Kernel arguments are stored in constant memory, and should generally 
+         *  provide faster access to the variables than via global memory.
+         */ 
+        struct BoundingBox
+        {
+            //min is always 0
+
+            uint32_t max[dim];
+            __device__ __forceinline__ const uint32_t &operator[](const uint32_t idx) const
+            {
+                return max[idx];
+            }
+            __device__ __forceinline__ uint32_t &operator[](const uint32_t idx)
+            {
+                return max[idx];
+            }
+        };
+
         /**
          * \brief Forward projection using Siddon's method
          * 
@@ -50,7 +71,7 @@ namespace elsa {
             const uint32_t originPitch,
             const int8_t* const __restrict__ projInv,
             const uint32_t projPitch,
-            const uint32_t* const __restrict__ boxMax,
+            const BoundingBox& boxMax,
             cudaStream_t stream = (cudaStream_t)0);
         
         /**
@@ -87,7 +108,7 @@ namespace elsa {
             const uint32_t originPitch,
             const int8_t* const __restrict__ projInv,
             const uint32_t projPitch,
-            const uint32_t* const __restrict__ boxMax,
+            const BoundingBox& boxMax,
             cudaStream_t stream = (cudaStream_t)0);
     };
 }

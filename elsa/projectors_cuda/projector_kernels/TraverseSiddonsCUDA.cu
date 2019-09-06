@@ -236,7 +236,7 @@ __device__ __forceinline__ double atomicAdd(double* address, double val)
 #endif
 
 template <typename data_t, bool adjoint, uint32_t dim>
-__global__ void
+__global__ void __launch_bounds__(elsa::TraverseSiddonsCUDA<data_t,dim>::MAX_THREADS_PER_BLOCK) 
 traverseVolume(int8_t* const __restrict__ volume,
         const uint64_t volumePitch,
         int8_t* const __restrict__ sinogram, 
@@ -245,7 +245,7 @@ traverseVolume(int8_t* const __restrict__ volume,
         const uint32_t originPitch,
         const int8_t* const __restrict__ projInv,
         const uint32_t projPitch,
-        const uint32_t* const __restrict__ boxMax)
+        const typename elsa::TraverseSiddonsCUDA<data_t,dim>::BoundingBox boxMax)
 {
     using namespace elsa;
     const int8_t* const projInvPtr = dim==3 ? projInv + (blockIdx.z*blockDim.x + threadIdx.x)*projPitch*3 : 
@@ -273,18 +273,18 @@ traverseVolume(int8_t* const __restrict__ volume,
 
     //find volume intersections
     real_t tmin;
-    if(!box_intersect<real_t,dim>(rayOrigin,rd,boxMax,tmin))
+    if(!box_intersect<real_t,dim>(rayOrigin,rd,boxMax.max,tmin))
         return;
 
     real_t entryPoint[dim];
     pointAt<real_t,dim>(rayOrigin,rd,tmin,entryPoint);
-    projectOntoBox<real_t,dim>(entryPoint,boxMax);
+    projectOntoBox<real_t,dim>(entryPoint,boxMax.max);
     
     int stepDir[dim];
     initStepDirection<real_t,dim>(rd,stepDir);
 
     uint32_t currentVoxel[dim];
-    if(!closestVoxel<real_t,dim>(entryPoint, boxMax, currentVoxel, rd, stepDir))
+    if(!closestVoxel<real_t,dim>(entryPoint, boxMax.max, currentVoxel, rd, stepDir))
         return;
     
     real_t tdelta[dim], tmax[dim];
@@ -306,7 +306,7 @@ traverseVolume(int8_t* const __restrict__ volume,
         
         volumeXPtr = dim==3 ? (data_t*)(volume + (boxMax[1]*currentVoxel[2] + currentVoxel[1])*volumePitch) + currentVoxel[0]
                                 : (data_t*)(volume + currentVoxel[1]*volumePitch) + currentVoxel[0];
-    } while(isVoxelInVolume<real_t,dim>(currentVoxel,boxMax,index));
+    } while(isVoxelInVolume<real_t,dim>(currentVoxel,boxMax.max,index));
 
     
     if (!adjoint) {
@@ -327,7 +327,7 @@ namespace elsa {
               const uint32_t originPitch,
               const int8_t* const __restrict__ projInv,
               const uint32_t projPitch,
-              const uint32_t* const __restrict__ boxMax,
+              const BoundingBox& boxMax,
               cudaStream_t stream) {
         traverseVolume<data_t, false, dim><<<blocks,threads,0,stream>>>(volume,volumePitch,sinogram,sinogramPitch,rayOrigins,originPitch,projInv,projPitch,boxMax);
     }
@@ -342,7 +342,7 @@ namespace elsa {
               const uint32_t originPitch,
               const int8_t* const __restrict__ projInv,
               const uint32_t projPitch,
-              const uint32_t* const __restrict__ boxMax,
+              const BoundingBox& boxMax,
               cudaStream_t stream) {
         traverseVolume<data_t, true, dim><<<blocks,threads,0,stream>>>(volume,volumePitch,sinogram,sinogramPitch,rayOrigins,originPitch,projInv,projPitch,boxMax);
     }

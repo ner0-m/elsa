@@ -113,9 +113,7 @@ namespace elsa
         Timer<> timeGuard("JosephsMethodCUDA", "apply");
 
         //transfer volume as texture
-        auto volumePair = copyTextureToGPU(x);
-        auto volumeTex = volumePair.first;
-        auto volume = volumePair.second;
+        auto [volumeTex, volume] = copyTextureToGPU(x);
 
         // allocate memory for projections
         cudaPitchedPtr dsinoPtr;
@@ -235,9 +233,7 @@ namespace elsa
 
             //transfer projections
             if(_fast) {
-                auto sinoPair = copyTextureToGPU<cudaArrayLayered>(y);
-                auto sinoTex = sinoPair.first;
-                auto sino = sinoPair.second;
+                auto [sinoTex,sino] = copyTextureToGPU<cudaArrayLayered>(y);
 
                 cudaDeviceSynchronize();
                 if (numImgBlocks>0) {
@@ -334,9 +330,7 @@ namespace elsa
 
             if(_fast) {
                 //transfer projections
-                auto sinoPair = copyTextureToGPU<cudaArrayLayered>(y);
-                auto sinoTex = sinoPair.first;
-                auto sino = sinoPair.second;
+                auto [sinoTex,sino] = copyTextureToGPU<cudaArrayLayered>(y);
 
                 cudaDeviceSynchronize();
                 if (numImgBlocks>0) {
