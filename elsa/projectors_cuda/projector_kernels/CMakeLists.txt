@@ -68,7 +68,7 @@ endif()
 
 #fmad can reduce accuracy, but only gives a negligible boost to speed
 #use expt-relaxed-constexpr flag to suppress warnings caused by including the Eigen header
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --fmad=false --verbose --expt-relaxed-constexpr")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --fmad=false --expt-relaxed-constexpr")
 
 #set target GPU architectures
 foreach(TARGET_GPU ${TARGET_GPUS})

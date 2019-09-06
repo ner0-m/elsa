@@ -29,15 +29,23 @@ __device__ __forceinline__ void gesqmv(const int8_t* const __restrict__ matrix,
     }
 }
 
-/// normalizes a vector of length 2 or 3 using device inbuilt functions
+/// determine reverse norm of vector of length 2 or 3 using device inbuilt functions
+template <typename real_t, uint32_t dim>
+__device__ __forceinline__ real_t rnorm(real_t* const __restrict__ vector)
+{
+    if(dim==3)
+        return rnorm3d(vector[0],vector[1],vector[2]);
+    else if(dim==2)
+        return rhypot(vector[0],vector[1]);
+    else
+        return -1.0;
+}
+
+/// normalizes a vector of length 2 or 3 using device inbuilt norm
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void normalize(real_t* const __restrict__ vector)
 {
-    real_t rn;
-    if(dim==3)
-        rn = rnorm3d(vector[0],vector[1],vector[2]);
-    else if(dim==2)
-        rn = rhypot(vector[0],vector[1]);
+    real_t rn = rnorm<real_t,dim>(vector);
 
     #pragma unroll
     for (int i=0;i<dim;i++) {
@@ -310,11 +318,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THR
     const uint32_t idx = maxAbsIndex<real_t,dim>(rd);
     const real_t rdMax = abs(rd[idx]);
 
-    real_t rn;
-    if(dim==3)
-        rn = rnorm3d(rd[0],rd[1],rd[2]);
-    else if(dim==2)
-        rn = rhypot(rd[0],rd[1]);
+    real_t rn = rnorm<real_t,dim>(rd);
 
     real_t weight = rn/rdMax;
     
