@@ -63,7 +63,8 @@ namespace elsa
 
 
     template <typename data_t>
-    SiddonsMethodCUDA<data_t>::~SiddonsMethodCUDA() {
+    SiddonsMethodCUDA<data_t>::~SiddonsMethodCUDA() 
+    {
         //Free CUDA resources
         if (cudaFree(_boxMax)!=cudaSuccess ||
             cudaFree(_rayOrigins.ptr)!=cudaSuccess ||
@@ -259,7 +260,8 @@ namespace elsa
 
     template <typename data_t>
     template <cudaMemcpyKind direction, bool async>
-    void SiddonsMethodCUDA<data_t>::copy3DDataContainerGPU(void* hostData,const cudaPitchedPtr& gpuData, const cudaExtent& extent) const{
+    void SiddonsMethodCUDA<data_t>::copy3DDataContainerGPU(void* hostData,const cudaPitchedPtr& gpuData, const cudaExtent& extent) const
+    {
         cudaMemcpy3DParms cpyParams = {0};
         cpyParams.extent = extent;
         cpyParams.kind = direction;

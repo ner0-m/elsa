@@ -29,6 +29,7 @@ __device__ __forceinline__ void gesqmv(const int8_t* const __restrict__ matrix,
     }
 }
 
+/// normalizes a vector of length 2 or 3 using device inbuilt functions
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void normalize(real_t* const __restrict__ vector)
 {
@@ -44,6 +45,7 @@ __device__ __forceinline__ void normalize(real_t* const __restrict__ vector)
     }
 }
 
+/// calculates the point at a distance delta from the ray origin ro in direction rd
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void pointAt(const real_t* const __restrict__ ro,
                                         const real_t* const __restrict__ rd, 
@@ -55,6 +57,7 @@ __device__ __forceinline__ void pointAt(const real_t* const __restrict__ ro,
         result[i] = delta*rd[i]+ro[i];
 }
 
+/// projects a point onto the bounding box by clipping (points inside the bounding box are unaffected)
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point, 
                                                const uint32_t* const __restrict__ boxMax)
@@ -67,6 +70,7 @@ __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point,
         
 }
 
+/// determines the voxel that contains a point, if the point is on a border the voxel in the ray direction is favored
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool closestVoxel(const real_t* const __restrict__ point,
                                              const uint32_t* const __restrict__ boxMax, 
@@ -85,6 +89,7 @@ __device__ __forceinline__ bool closestVoxel(const real_t* const __restrict__ po
     return true; 
 }
 
+/// initializes stepDir with the sign of rd
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void initStepDirection(const real_t* const __restrict__ rd,
                                                   int* const __restrict__ stepDir)
@@ -94,6 +99,7 @@ __device__ __forceinline__ void initStepDirection(const real_t* const __restrict
         stepDir[i] = ((rd[i]>0.0f) - (rd[i]<0.0f)); 
 }
 
+/// initialize step sizes considering the ray direcion
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void initDelta(const real_t* const __restrict__ rd,
                                           const int* const __restrict__ stepDir,
@@ -105,6 +111,7 @@ __device__ __forceinline__ void initDelta(const real_t* const __restrict__ rd,
     }
 }
 
+/// initialize maximum step parameters considering the ray direction
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void initMax(const real_t* const __restrict__ rd,
                                         const uint32_t* const __restrict__ currentVoxel,
@@ -119,6 +126,7 @@ __device__ __forceinline__ void initMax(const real_t* const __restrict__ rd,
     }
 }
 
+/// find intersection points of ray with AABB
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool box_intersect(const real_t* const __restrict__ ro,
                                               const real_t* const __restrict__ rd,
@@ -157,6 +165,7 @@ __device__ __forceinline__ bool box_intersect(const real_t* const __restrict__ r
     return false;
 }
 
+/// returns the index of the smallest element in an array
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ uint32_t minIndex(const real_t* const __restrict__ tmax) {
     uint32_t index = 0;
@@ -172,6 +181,7 @@ __device__ __forceinline__ uint32_t minIndex(const real_t* const __restrict__ tm
     return index;
 }
 
+/// checks whether the voxel lies inside the AABB
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool isVoxelInVolume(const uint32_t* const __restrict__ currentVoxel,
                                                 const uint32_t* const __restrict__ boxMax, 
@@ -180,6 +190,7 @@ __device__ __forceinline__ bool isVoxelInVolume(const uint32_t* const __restrict
     return currentVoxel[index]<boxMax[index];
 }
 
+/// updates the traversal algorithm, after update the current position will be the exit point from current voxel
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ real_t updateTraverse(uint32_t* const __restrict__ currentVoxel, 
                                                  const int* const __restrict__ stepDir,
@@ -223,11 +234,6 @@ __device__ __forceinline__ double atomicAdd(double* address, double val)
     return __longlong_as_double(old);
 }
 #endif
-
-/**
- * __restrict__ tells the compiler the arrays are not aliased, allowing for better optimization
- * must be true for all arrays
- */
 
 template <typename data_t, bool adjoint, uint32_t dim>
 __global__ void

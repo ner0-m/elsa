@@ -15,6 +15,31 @@ namespace elsa {
 
     template <typename data_t = real_t, uint32_t dim = 3>
     struct TraverseSiddonsCUDA {
+
+        /**
+         * \brief Forward projection using Siddon's method
+         * 
+         * \param[in] blocks specifies the grid used for kernel execution
+         * \param[in] threads specifies the number of threads for each block
+         * \param[in] volume pointer to volume data
+         * \param[in] volumePitch pitch (padded width in bytes) of volume
+         * \param[out] sinogram pointer to output
+         * \param[in] sinogramPitch pitch of sinogram
+         * \param[in] rayOrigins pointer to ray origins
+         * \param[in] originPitch pitch of ray origins
+         * \param[in] projInv pointer to inverse of projection matrices
+         * \param[in] projPitch pitch of inverse of projection matrices
+         * \param[in] boxMax specifies the size of the volume
+         * \param[in] stream handle to stream in which the kernel should be placed
+         * 
+         * The variables blocks and threads should be picked based on the sinogram dimensions. To process all 
+         * rays set blocks to (detectorSizeX, detectorSizeY, numAngles / threads), if numAngles is not a multiple of threads
+         * a second kernel call must be made to process the remaining rays with blocks = (detectorSizeX, detectorSizeY, 1)
+         * and threads = numAngles % threadsFirstCall. Sinogram, projection matrix, and ray origin pointers should be
+         * adjusted accordingly to point to the start of the (numAngles - numAngles % threadsFirstCall)-th element.
+         * 
+         * threads should ideally be a multiple of the warp size (32 for all current GPUs).
+         */ 
         static void traverseForward(const dim3 blocks,
             const int threads,
             int8_t* const __restrict__ volume,
@@ -29,10 +54,29 @@ namespace elsa {
             cudaStream_t stream = (cudaStream_t)0);
         
         /**
-         * \brief Acts as the exact adjoint of the forward traversal operator.
+         * \brief Backward projection using Siddon's method
          * 
-         * Volume has to be zero initialized to guarantee correct output.
-         */
+         * \param[in] blocks specifies the grid used for kernel execution
+         * \param[in] threads specifies the number of threads for each block
+         * \param[out] volume pointer to output
+         * \param[in] volumePitch pitch (padded width in bytes) of volume
+         * \param[in] sinogram pointer to sinogram data
+         * \param[in] sinogramPitch pitch of sinogram
+         * \param[in] rayOrigins pointer to ray origins
+         * \param[in] originPitch pitch of ray origins
+         * \param[in] projInv pointer to inverse of projection matrices
+         * \param[in] projPitch pitch of inverse of projection matrices
+         * \param[in] boxMax specifies the size of the volume
+         * \param[in] stream handle to stream in which the kernel should be placed
+         * 
+         * The variables blocks and threads should be picked based on the sinogram dimensions. To process all 
+         * rays set blocks to (detectorSizeX, detectorSizeY, numAngles / threads), if numAngles is not a multiple of threads
+         * a second kernel call must be made to process the remaining rays with blocks = (detectorSizeX, detectorSizeY, 1)
+         * and threads = numAngles % threadsFirstCall. Sinogram, projection matrix, and ray origin pointers should be
+         * adjusted accordingly to point to the start of the (numAngles - numAngles % threadsFirstCall)-th element.
+         * 
+         * threads should ideally be a multiple of the warp size (32 for all current GPUs).
+         */ 
         static void traverseAdjoint(const dim3 blocks,
             const int threads,
             int8_t* const __restrict__ volume,

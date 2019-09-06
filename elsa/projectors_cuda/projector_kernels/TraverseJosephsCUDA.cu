@@ -29,6 +29,7 @@ __device__ __forceinline__ void gesqmv(const int8_t* const __restrict__ matrix,
     }
 }
 
+/// normalizes a vector of length 2 or 3 using device inbuilt functions
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void normalize(real_t* const __restrict__ vector)
 {
@@ -44,6 +45,7 @@ __device__ __forceinline__ void normalize(real_t* const __restrict__ vector)
     }
 }
 
+/// calculates the point at a distance delta from the ray origin ro in direction rd
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void pointAt(const real_t* const __restrict__ ro,
                                         const real_t* const __restrict__ rd, 
@@ -55,6 +57,7 @@ __device__ __forceinline__ void pointAt(const real_t* const __restrict__ ro,
         result[i] = delta*rd[i]+ro[i];
 }
 
+/// projects a point onto the bounding box by clipping (points inside the bounding box are unaffected)
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point, 
                                                const real_t* const __restrict__ boxMax) 
@@ -67,6 +70,7 @@ __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point,
         
 }
 
+/// determines the voxel that contains a point, if the point is on a border the voxel in the ray direction is favored
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool closestVoxel(const real_t* const __restrict__ point,
                                              const real_t* const __restrict__  boxMax, 
@@ -85,6 +89,7 @@ __device__ __forceinline__ bool closestVoxel(const real_t* const __restrict__ po
     return true; 
 }
 
+/// initializes stepDir with the sign of rd
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void initStepDirection(const real_t* const __restrict__ rd,
                                                   int* const __restrict__ stepDir)
@@ -94,6 +99,7 @@ __device__ __forceinline__ void initStepDirection(const real_t* const __restrict
         stepDir[i] = ((rd[i]>0.0f) - (rd[i]<0.0f)); 
 }
 
+/// initialize step sizes considering the ray direcion
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void initDelta(const real_t* const __restrict__ rd,
                                           const int* const __restrict__ stepDir,
@@ -105,20 +111,7 @@ __device__ __forceinline__ void initDelta(const real_t* const __restrict__ rd,
     }
 }
 
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void initMax(const real_t* const __restrict__ rd,
-                                        const uint32_t* const __restrict__ currentVoxel,
-                                        const real_t* const __restrict__ point,
-                                        real_t* const __restrict__ tmax)
-{
-    real_t nextBoundary;
-    #pragma unroll
-    for (int i=0;i<dim;i++) {
-        nextBoundary = rd[i]>0.0f ? currentVoxel[i] + 1 : currentVoxel[i];
-        tmax[i] = rd[i]>=-__FLT_EPSILON__ && rd[i]<=__FLT_EPSILON__ ? __FLT_MAX__ : (nextBoundary - point[i])/rd[i];
-    }
-}
-
+/// find intersection points of ray with AABB
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool box_intersect(const real_t* const __restrict__ ro,
                                               const real_t* const __restrict__ rd,
@@ -158,6 +151,7 @@ __device__ __forceinline__ bool box_intersect(const real_t* const __restrict__ r
     return false;
 }
 
+/// returns the index of the smallest element in an array
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ uint32_t minIndex(const real_t* const __restrict__ array) {
     uint32_t index = 0;
@@ -173,6 +167,7 @@ __device__ __forceinline__ uint32_t minIndex(const real_t* const __restrict__ ar
     return index;
 }
 
+/// return the index of the element with the maximum absolute value in array
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ uint32_t maxAbsIndex(const real_t* const __restrict__ array) {
     uint32_t index = 0;
@@ -188,6 +183,7 @@ __device__ __forceinline__ uint32_t maxAbsIndex(const real_t* const __restrict__
     return index;
 }
 
+/// currentPosition is advanced by dist in direction rd
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void updateTraverse(real_t* const __restrict__ currentPosition, 
                                                  const real_t* const __restrict__ rd, 
@@ -198,6 +194,7 @@ __device__ __forceinline__ void updateTraverse(real_t* const __restrict__ curren
         currentPosition[i]+=rd[i]*dist;
 } 
 
+/// convenience function for texture fetching
 template <typename data_t, uint dim>
 __device__ __forceinline__ data_t tex(cudaTextureObject_t texObj, const elsa::real_t* const p) {
     if(dim==3)
@@ -206,11 +203,13 @@ __device__ __forceinline__ data_t tex(cudaTextureObject_t texObj, const elsa::re
         return tex2D<data_t>(texObj, p[0],p[1]); 
 }
 
+/// fetches double at position (x,y) from 2D texture
 __device__ __forceinline__ double tex2Dd(cudaTextureObject_t texObj, const float x, const float y) {
     uint2 rt = tex2D<uint2>(texObj, x, y);
     return  __hiloint2double(rt.y, rt.x);
 }
 
+/// template specialization for double texture fetches
 template<>
 __device__ __forceinline__ double tex<double,2>(cudaTextureObject_t texObj, const elsa::real_t* const p) {
     elsa::real_t x = p[0] - 0.5f;
@@ -231,11 +230,13 @@ __device__ __forceinline__ double tex<double,2>(cudaTextureObject_t texObj, cons
     return (1-a)*(1-b)*T[0][0] + a*(1-b)*T[1][0] + (1-a)*b*T[0][1] + a*b*T[1][1]; 
 }
 
+/// fetches double at position (x,y,z) from 3D texture
 __device__ __forceinline__ double tex3Dd(cudaTextureObject_t texObj, const float x, const float y, const elsa::real_t z) {
     uint2 rt = tex3D<uint2>(texObj, x, y, z);
     return  __hiloint2double(rt.y, rt.x);
 }
 
+/// template specialization for double texture fetches
 template<>
 __device__ __forceinline__ double tex<double,3>(cudaTextureObject_t texObj, const elsa::real_t* const p) {
     elsa::real_t x = p[0] - 0.5f;
@@ -378,11 +379,13 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_THR
     *sinogramPtr = pixelValue;
 }
 
+/// fetches double at position x, layer layer from a 1D layered texture
 __device__ __forceinline__ double tex1DLayeredd(cudaTextureObject_t texObj, const float x, const int layer) {
     uint2 rt = tex1DLayered<uint2>(texObj, x, layer);
     return  __hiloint2double(rt.y, rt.x);
 }
 
+/// template specialization for layered texture fetches
 template <>
 double tex1DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, const int layer) {
     x = x - 0.5f;
@@ -398,11 +401,13 @@ double tex1DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, const in
     return (1-a)*T[0]+a*T[1]; 
 }
 
+/// fetches double at position (x,y), layer layer from a 2D layered texture
 __device__ __forceinline__ double tex2DLayeredd(cudaTextureObject_t texObj, const float x, const float y, const int layer) {
     uint2 rt = tex2DLayered<uint2>(texObj, x, y, layer);
     return  __hiloint2double(rt.y, rt.x);
 }
 
+/// template specialization for layered texture fetches
 template <>
 double tex2DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, elsa::real_t y, const int layer) {
     x = x - 0.5f;
@@ -510,6 +515,7 @@ __global__  void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t,dim>::MAX_TH
  }
  #endif
 
+/// backprojects the weighted sinogram value to a given pixel
 template <typename data_t,uint dim>
 __device__ __forceinline__ void backproject2(int8_t* const __restrict__ volume,
                                              const uint64_t* const __restrict__ p, 
@@ -530,6 +536,7 @@ __device__ __forceinline__ void backproject2(int8_t* const __restrict__ volume,
     atomicAdd(volumeXPtr, val);
 }
 
+/// backprojects the weighted sinogram value to a given voxel
 template <typename data_t,uint dim>
 __device__ __forceinline__ void backproject4(int8_t* const __restrict__ volume,
                                              const uint64_t* const __restrict__ p, 
@@ -562,6 +569,7 @@ __device__ __forceinline__ void backproject4(int8_t* const __restrict__ volume,
     atomicAdd(volumeXPtr, val);
 }
 
+/// convenience method for backprojecting to a given pixel/voxel
 template <typename data_t, uint dim>
 __device__ __forceinline__ void backproject(int8_t* const __restrict__ volume,
                                             const uint64_t* const __restrict__ p, 
@@ -576,6 +584,7 @@ __device__ __forceinline__ void backproject(int8_t* const __restrict__ volume,
         backproject2<data_t,dim>(volume,p,voxelCoord,voxelCoordf,boxMax,frac,weightedVal);
 }
 
+/// swaps the values of a and b
 template <typename T>
 __device__ __forceinline__ void swap(T& a, T& b) {
     T c = a;

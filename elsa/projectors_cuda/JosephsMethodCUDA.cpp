@@ -69,7 +69,8 @@ namespace elsa
 
 
     template <typename data_t>
-    JosephsMethodCUDA<data_t>::~JosephsMethodCUDA() {
+    JosephsMethodCUDA<data_t>::~JosephsMethodCUDA() 
+    {
         //Free CUDA resources
         if (cudaFree(_rayOrigins.ptr)!=cudaSuccess ||
             cudaFree(_projInvMatrices.ptr)!=cudaSuccess)
@@ -88,7 +89,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    bool JosephsMethodCUDA<data_t>::isEqual(const LinearOperator<data_t>& other) const {
+    bool JosephsMethodCUDA<data_t>::isEqual(const LinearOperator<data_t>& other) const 
+    {
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
@@ -161,7 +163,7 @@ namespace elsa
 
             cudaDeviceSynchronize();
             //retrieve results from GPU
-            copy3DDataContainer<cudaMemcpyDeviceToHost,false>((void*)&Ax[0] ,dsinoPtr,sinoExt);
+            copy3DDataContainer<cudaMemcpyDeviceToHost,false>((void*)&Ax[0],dsinoPtr,sinoExt);
         }
         else {
             if (cudaMallocPitch(&dsinoPtr.ptr,&dsinoPtr.pitch,rangeDims[0]*sizeof(data_t),rangeDims[1])!=cudaSuccess)
@@ -324,7 +326,7 @@ namespace elsa
             }
 
             //retrieve results from GPU
-            copy3DDataContainer<cudaMemcpyDeviceToHost,false>((void*)&Aty[0], dvolumePtr,volExt);
+            copy3DDataContainer<cudaMemcpyDeviceToHost,false>((void*)&Aty[0],dvolumePtr,volExt);
         }
         else {
             if(cudaMallocPitch(&dvolumePtr.ptr,&dvolumePtr.pitch,coeffsPerDim[0]*sizeof(data_t),coeffsPerDim[1])!=cudaSuccess)
@@ -431,7 +433,8 @@ namespace elsa
 
     template <typename data_t>
     template <cudaMemcpyKind direction, bool async>
-    void JosephsMethodCUDA<data_t>::copy3DDataContainer(void* hostData,const cudaPitchedPtr& gpuData, const cudaExtent& extent) const{
+    void JosephsMethodCUDA<data_t>::copy3DDataContainer(void* hostData,const cudaPitchedPtr& gpuData, const cudaExtent& extent) const
+    {
         cudaMemcpy3DParms cpyParams = {0};
         cpyParams.extent = extent;
         cpyParams.kind = direction;
@@ -468,7 +471,8 @@ namespace elsa
 
     template <typename data_t>
     template <unsigned int flags> 
-    std::pair<cudaTextureObject_t, cudaArray*> JosephsMethodCUDA<data_t>::copyTextureToGPU(const DataContainer<data_t>& hostData) const{
+    std::pair<cudaTextureObject_t, cudaArray*> JosephsMethodCUDA<data_t>::copyTextureToGPU(const DataContainer<data_t>& hostData) const
+    {
         //transfer volume as texture
         auto coeffsPerDim =  hostData.getDataDescriptor().getNumberOfCoefficientsPerDimension();
 

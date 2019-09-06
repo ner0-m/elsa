@@ -11,47 +11,61 @@
 #include "LogGuard.h"
 #include "Timer.h"
 
-#include "projector_kernels/TraverseJosephsCUDA.cuh"
+#include "TraverseJosephsCUDA.cuh"
 
 namespace elsa
 {   
     /**
-     * \brief Wrapper for the CUDA projector based on Joseph's method
+     * \brief GPU-operator representing the discretized X-ray transform in 2d/3d using Joseph's method.
+     *
+     * \author Nikola Dinev
      * 
-     * The projector provides two implementations for the backprojection - 
-     * a precise backprojection, using the exact adjoint of the forward projection operator,
-     * and a fast backprojection, which makes use of the GPU's hardware interpolation capabilities.
-     * Currently only utilizes a single GPU.
-     * Volume and images should both fit in device memory at the same time.
+     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
      * 
-     * \author Nikola Dinev (nikola.dinev@tum.de)
+     * The volume is traversed along the rays as specified by the Geometry. For interior voxels
+     * the sampling point is located in the middle of the two planes orthogonal to the main
+     * direction of the ray. For boundary voxels the sampling point is located at the center of the
+     * ray intersection with the voxel.
+     * 
+     * The geometry is represented as a list of projection matrices (see class Geometry), one for each
+     * acquisition pose.
+     * 
+     * Forward projection is accomplished using apply(), backward projection using applyAdjoint().
+     * The projector provides two implementations for the backward projection. The slow version is matched,
+     * while the fast one is not. 
+     * 
+     * Currently only utilizes a single GPU. Volume and images should both fit in device memory at the same time.
+     * 
+     * \warning Hardware interpolation is only supported for JosephsMethodCUDA<float>
+     * \warning Hardware interpolation is significantly less accurate than the software interpolation
      */
     template <typename data_t = real_t> 
     class JosephsMethodCUDA : public LinearOperator<data_t>
     {
     public:
-        JosephsMethodCUDA() = delete;
 
         /**
-         * \brief Construct a new projector for the angles defined in the geometry vector
+         * \brief Constructor for Joseph's traversal method.
          * 
-         * \param domainDescriptor input descriptor
-         * \param rangeDescriptor output descriptor
-         * \param geom describes the projection angles
-         * \param fast uses fast backprojection if set, otherwise precise
-         * \param threadsPerBlock number of threads per block used for the kernel configuration
+         * \param[in] domainDescriptor describing the domain of the operator (the volume)
+         * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         * \param[in] geometryList vector containing the geometries for the acquisition poses
+         * \param[in] performs fast backward projection if set, otherwise matched; forward projection is unaffected
          * 
+         * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
+         * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
         JosephsMethodCUDA(const DataDescriptor &domainDescriptor, const DataDescriptor &rangeDescriptor,
                      const std::vector<Geometry> &geometryList, bool fast = true);
 
+        /// destructor
         virtual ~JosephsMethodCUDA();
 
     protected:
-        /// apply the binary method (i.e. forward projection)
+        /// apply Joseph's method (i.e. forward projection)
         void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) override;
 
-        /// apply the adjoint of the  binary method (i.e. backward projection)
+        /// apply the adjoint of Joseph's method (i.e. backward projection)
         void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
 
         /// implement the polymorphic clone operation
@@ -61,30 +75,58 @@ namespace elsa
         bool isEqual(const LinearOperator<data_t>& other) const override;
         
     private:
-        const BoundingBox _boundingBox;        
-        const std::vector<Geometry> _geometryList;
+        /// the bounding box of the volume
+        BoundingBox _boundingBox;
+
+        /// the geometry list
+        std::vector<Geometry> _geometryList;
+
+        /// threads per block used in the kernel execution configuration
         const int _threadsPerBlock = TraverseJosephsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
+
+        /// flag specifying which version of the backward projection should be used
         const bool _fast;
 
-        // Inverse of of projection matrices; stored column-wise on GPU
+        /// inverse of of projection matrices; stored column-wise on GPU
         cudaPitchedPtr _projInvMatrices;
 
-        // Projection matrices; stored column-wise on GPU
+        /// projection matrices; stored column-wise on GPU
         cudaPitchedPtr _projMatrices;
 
-        // Ray origin for each angle
+        /// ray origins for each acquisition angle
         cudaPitchedPtr _rayOrigins;
 
+        /// convenience typedef for cuda array flags
         using cudaArrayFlags = unsigned int;
 
         /**
-         * \brief Copies contents of a 3D data container to and from the gpu
+         * \brief Copies contents of a 3D data container between GPU and host memory
+         * 
+         * \tparam direction specifies the direction of the copy operation
+         * \tparam async whether the copy should be performed asynchronously wrt. the host
+         * 
+         * \param hostData pointer to host data
+         * \param gpuData pointer to gpu data
+         * \param[in] extent specifies the amount of data to be copied
+         * 
+         * Note that hostData is expected to be a pointer to a linear memory region with no padding between
+         * dimensions - e.g. the data in DataContainer is stored as a vector with no extra padding, and the 
+         * pointer to the start of the memory region can be retrieved as follows:
+         * 
+         * DataContainer x;
+         * void* hostData = (void*)&x[0];
          */
         template <cudaMemcpyKind direction, bool async=true>
         void copy3DDataContainer(void* hostData,const cudaPitchedPtr& gpuData, const cudaExtent& extent) const;
 
         /**
-         * \brief Copies the entire contents of hostData to the GPU, returns the created texture object and its associated cudaArray
+         * \brief Copies the entire contents of DataContainer to the GPU texture memory
+         * 
+         * \tparam cudaArrayFlags flags used for the creation of the cudaArray which will contain the data
+         * 
+         * \param[in] hostData the host data container
+         * 
+         * \returns a pair of the created texture object and its associated cudaArray
          */
         template <cudaArrayFlags flags = 0U>
         std::pair<cudaTextureObject_t, cudaArray*> copyTextureToGPU(const DataContainer<data_t>& hostData) const;

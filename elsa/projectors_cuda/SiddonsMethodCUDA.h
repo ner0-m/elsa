@@ -9,38 +9,55 @@
 #include "LogGuard.h"
 #include "Timer.h"
 
-#include "projector_kernels/TraverseSiddonsCUDA.cuh"
+#include "TraverseSiddonsCUDA.cuh"
 
 namespace elsa
 {
     /**
-     * \brief Wrapper for the CUDA projector based on Siddon's method
+     * \brief GPU-operator representing the discretized X-ray transform in 2d/3d using Siddon's method.
+     *
+     * \author Nikola Dinev
+     *
+     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     *
+     * The volume is traversed along the rays as specified by the Geometry. Each ray is traversed in a
+     * continguous fashion (i.e. along long voxel borders, not diagonally) and each traversed voxel is
+     * counted as a hit with weight according to the length of the path of the ray through the voxel.
+     *
+     * The geometry is represented as a list of projection matrices (see class Geometry), one for each
+     * acquisition pose.
+     *
+     * Forward projection is accomplished using apply(), backward projection using applyAdjoint().
+     * This projector is matched.
      * 
-     * Currently only utilizes a single GPU.
-     * Volume and images should both fit in device memory at the same time.
-     * 
-     * \author Nikola Dinev (nikola.dinev@tum.de)
+     * Currently only utilizes a single GPU. Volume and images should both fit in device memory at the same time.
      */
     template <typename data_t = real_t>
     class SiddonsMethodCUDA : public LinearOperator<data_t>
     {
     public:
-        SiddonsMethodCUDA() = delete;
         
         /**
-         * \brief Construct a new projector for the angles defined in the geometry vector
-         */
+          * \brief Constructor for Siddon's method traversal.
+          *
+          * \param[in] domainDescriptor describing the domain of the operator (the volume)
+          * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
+          * \param[in] geometryList vector containing the geometries for the acquisition poses
+          *
+          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
+          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
+          */
         SiddonsMethodCUDA(const DataDescriptor &domainDescriptor, const DataDescriptor &rangeDescriptor,
                      const std::vector<Geometry> &geom);
 
-
+        /// destructor
         ~SiddonsMethodCUDA();
 
     protected:
-        /// apply the binary method (i.e. forward projection)
+        /// apply Siddon's method (i.e. forward projection)
         void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) override;
 
-        /// apply the adjoint of the  binary method (i.e. backward projection)
+        /// apply the adjoint of Siddon's method (i.e. backward projection)
         void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
 
         /// implement the polymorphic clone operation
@@ -50,25 +67,45 @@ namespace elsa
         bool isEqual(const LinearOperator<data_t>& other) const override;
 
     private:
-        const BoundingBox _boundingBox;
-        
-        const std::vector<Geometry> _geometryList;
+        /// the bounding box of the volume
+        BoundingBox _boundingBox;
+
+        /// the geometry list
+        std::vector<Geometry> _geometryList;
+
+        /// threads per block used in the kernel execution configuration
         const int _threadsPerBlock = 64;
 
-        /**
-         * Inverse of significant part of projection matrices; stored column-wise
-         */
+        /// inverse of of projection matrices; stored column-wise on GPU
         cudaPitchedPtr _projInvMatrices;
-        /**
-         * Ray origin for each direction
-         */
+
+        /// ray origins for each acquisition angle
         cudaPitchedPtr _rayOrigins;
 
+        /// pointer to device global memory storing _boundingBox.max
         uint* _boxMax;
 
+        /// sets up and starts the kernel traversal routine (for both apply/applyAdjoint)
         template<bool adjoint>
         void traverseVolume(void* volumePtr, void* sinoPtr) const;
 
+        /**
+         * \brief Copies contents of a 3D data container between GPU and host memory
+         * 
+         * \tparam direction specifies the direction of the copy operation
+         * \tparam async whether the copy should be performed asynchronously wrt. the host
+         * 
+         * \param hostData pointer to host data
+         * \param gpuData pointer to gpu data
+         * \param[in] extent specifies the amount of data to be copied
+         * 
+         * Note that hostData is expected to be a pointer to a linear memory region with no padding between
+         * dimensions - e.g. the data in DataContainer is stored as a vector with no extra padding, and the 
+         * pointer to the start of the memory region can be retrieved as follows:
+         * 
+         * DataContainer x;
+         * void* hostData = (void*)&x[0];
+         */
         template <cudaMemcpyKind direction, bool async=true>
         void copy3DDataContainerGPU(void* hostData,const cudaPitchedPtr& gpuData, const cudaExtent& extent) const;
 

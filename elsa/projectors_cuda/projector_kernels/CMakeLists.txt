@@ -96,12 +96,14 @@ add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
 #CUDA doesn't support C++17, require C++14
-target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_14)
+set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES CUDA_STANDARD 14 POSITION_INDEPENDENT_CODE ON)
 
 #CUDA doesn't support linking against a library built under the C++17 standard,
 #we only need the elsa.h header -> manually specify include directories
 target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC 
-        $<TARGET_PROPERTY:elsa_core,INTERFACE_INCLUDE_DIRECTORIES>)
+        $<TARGET_PROPERTY:elsa_core,INTERFACE_INCLUDE_DIRECTORIES>
+        $<INSTALL_INTERFACE:include/${ELSA_MODULE_NAME}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # register the module
 registerComponent(${ELSA_MODULE_NAME})
