@@ -8,8 +8,6 @@
 #include "LinearOperator.h"
 #include "Geometry.h"
 #include "BoundingBox.h"
-#include "LogGuard.h"
-#include "Timer.h"
 
 #include "TraverseJosephsCUDA.cuh"
 

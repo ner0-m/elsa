@@ -1,4 +1,6 @@
 #include "JosephsMethodCUDA.h"
+#include "LogGuard.h"
+#include "Timer.h"
 
 namespace elsa
 {

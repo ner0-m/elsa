@@ -1,4 +1,6 @@
 #include "SiddonsMethodCUDA.h"
+#include "LogGuard.h"
+#include "Timer.h"
 
 #include "Logger.h"
 namespace elsa
