@@ -329,7 +329,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "",
 
         const index_t numCases = 4;
         const real_t angles[numCases] = {0.0, pi/2, pi, 3*pi/2};
-        Eigen::Matrix<real_t,volSize*volSize,1> backProj[2]; 
+        Eigen::Matrix<data_t,volSize*volSize,1> backProj[2]; 
         backProj[1] << 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0,
                     1, 1, 1, 1, 1,
@@ -451,7 +451,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "",
         real_t gamma[numCases] = {0.0, pi, pi/2, 3*pi/2,pi/2,3*pi/2};
         std::string al[numCases] = {"z","-z","x","-x","y","-y"}; 
 
-        Eigen::Matrix<real_t,volSize*volSize*volSize,1> backProj[numCases]; 
+        Eigen::Matrix<data_t,volSize*volSize*volSize,1> backProj[numCases]; 
 
         backProj[2] << 0, 0, 0,
                     0, 0, 0,
@@ -671,7 +671,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "",
                     REQUIRE(sino[i]==Approx(5.0));
                 
                 AND_THEN("Backprojection yields the exact adjoint") {
-                    RealVector_t cmp(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> cmp(volSize*volSize);
 
                     cmp << 0, 0, 10, 0, 0,
                            0, 0, 10, 0, 0,
@@ -723,7 +723,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "",
                     REQUIRE(sino[i]==Approx(3.0));
                 
                 AND_THEN("Backprojection yields the exact adjoint") {
-                    RealVector_t cmp(volSize*volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> cmp(volSize*volSize*volSize);
 
                     cmp << 0, 0, 0,
                            0, 6, 0,
@@ -800,7 +800,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 0, 0, 2-2/sqrt(3), 4/sqrt(3)-2,
                                     0, 0, 2/sqrt(3), 0,
                                     0, 2/sqrt(3), 0, 0,
@@ -841,7 +841,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 0, 0, 0, 0,
                                     0, 0, 0, 4-2*sqrt(3),
                                     0, 0, 0, 2/sqrt(3),
@@ -882,7 +882,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 4/sqrt(3)-2, 2-2/sqrt(3), 0, 0,
                                     2/sqrt(3) , 0, 0, 0,
                                     4-2*sqrt(3), 0, 0, 0,
@@ -915,7 +915,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 1/sqrt(3), 0, 0, 0,
                                     0, 0, 0, 0,
                                     0, 0, 0, 0,
@@ -967,7 +967,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
 
                     expected << 4/sqrt(3)-2, 0, 0, 0,
                                 2-2/sqrt(3), 2/sqrt(3),0, 0,
@@ -1009,7 +1009,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     
                     expected << 0, 0, 0, 0,
                                 0, 0, 0, 0,
@@ -1051,7 +1051,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     
                     expected << 0,4-2*sqrt(3), 2/sqrt(3), 4/sqrt(3)-2,
                                 0, 0, 0, 2-2/sqrt(3),
@@ -1086,7 +1086,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 0, 0, 0, 1/sqrt(3),
                                     0, 0, 0, 0,
                                     0, 0, 0, 0,
@@ -1115,7 +1115,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
-        Eigen::Matrix<real_t,volSize*volSize*volSize,1> backProj; 
+        Eigen::Matrix<data_t,volSize*volSize*volSize,1> backProj; 
 
 
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume") {

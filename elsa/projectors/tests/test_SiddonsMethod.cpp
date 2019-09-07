@@ -511,7 +511,9 @@ SCENARIO("Axis-aligned rays are present")
 
         const index_t numCases = 4;
         const real_t angles[numCases] = {0.0, pi/2, pi, 3*pi/2};
-        Eigen::Matrix<real_t,volSize*volSize,1> backProj[2]; 
+        RealVector_t backProj[2]; 
+        backProj[0].resize(volSize*volSize);
+        backProj[1].resize(volSize*volSize);
         backProj[1] << 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0,
                     1, 1, 1, 1, 1,
@@ -637,7 +639,9 @@ SCENARIO("Axis-aligned rays are present")
         real_t gamma[numCases] = {0.0, pi, pi/2, 3*pi/2,pi/2,3*pi/2};
         std::string al[numCases] = {"z","-z","x","-x","y","-y"}; 
 
-        Eigen::Matrix<real_t,volSize*volSize*volSize,1> backProj[numCases]; 
+        RealVector_t backProj[numCases]; 
+        for (auto& backPr: backProj)
+            backPr.resize(volSize*volSize*volSize);
 
         backProj[2] << 0, 0, 0,
                     0, 0, 0,
@@ -1301,7 +1305,7 @@ SCENARIO("Projection under an angle") {
         DataContainer sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
-        Eigen::Matrix<real_t,volSize*volSize*volSize,1> backProj; 
+        RealVector_t backProj(volSize*volSize*volSize); 
 
 
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume") {

@@ -90,7 +90,7 @@ SCENARIO("Testing the l2 norm (squared) functional") {
 
                 REQUIRE(func.evaluate(x) == Approx(0.5f * (dataVec - randomData).squaredNorm()));
 
-                DataContainer grad(dd, dataVec - randomData);
+                DataContainer grad(dd, (dataVec - randomData).eval() );
                 REQUIRE(func.getGradient(x) == grad);
 
                 auto hessian = func.getHessian(x);

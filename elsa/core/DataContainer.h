@@ -50,13 +50,13 @@ namespace elsa
          
          
         /**
-         * \brief Constructor for DataContainer, initializing it with a RealVector
+         * \brief Constructor for DataContainer, initializing it with a DataVector
          * 
          * \param[in] dataDescriptor containing the associated metadata
          * \param[in] data vector containing the initialization data
          * \param[in] handlerType the data handler (default: CPU)
          */
-        DataContainer(const DataDescriptor& dataDescriptor, const RealVector_t& data, 
+        DataContainer(const DataDescriptor& dataDescriptor, const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data, 
                        DataHandlerType handlerType = DataHandlerType::CPU);
 
 
@@ -108,6 +108,7 @@ namespace elsa
         /// return an element by n-dimensional coordinate as read-only (not bounds-checked!)
         const data_t& operator()(IndexVector_t coordinate) const;
 
+        /// return an element by its coordinates (not bounds-checked!)
         template <typename idx0_t, typename... idx_t, 
                     typename = std::enable_if_t<std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
         data_t& operator()(idx0_t idx0, idx_t... indices) {
@@ -116,6 +117,7 @@ namespace elsa
             return operator()(coordinate);
         }
 
+        /// return an element by its coordinates as read-only (not bounds-checked!)
         template <typename idx0_t, typename... idx_t, 
                     typename = std::enable_if_t<std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
         const data_t& operator()(idx0_t idx0, idx_t... indices) const{

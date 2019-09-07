@@ -52,7 +52,7 @@ SCENARIO("Testing the Quadric functional") {
 
                 real_t trueValue = static_cast<real_t>(0.5) * x.dot(x) - x.dot(dc);
                 REQUIRE(func.evaluate(x) == Approx(trueValue));
-                DataContainer grad(dd, dataVec - randomData);
+                DataContainer grad(dd, (dataVec - randomData).eval() );
                 REQUIRE(func.getGradient(x) == grad);
                 REQUIRE(func.getHessian(x) == leaf(idOp));
             }
