@@ -1,5 +1,3 @@
-image: elsa/ubuntu:18.04
-
 stages:
 - compile
 - test
