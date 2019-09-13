@@ -1,1 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
+
+# build the 2d example program
+add_executable(example2d example2d.cpp)
+target_link_libraries(example2d elsa_core elsa_projectors elsa_generators elsa_io elsa_solvers)
+target_compile_features(example2d PUBLIC cxx_std_17)
