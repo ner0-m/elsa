@@ -71,6 +71,7 @@ build-cuda92:
   image: elsa/cuda:9.2
   script:
     - ls -l /usr/bin/n*
+    - nvidia-smi
     - mkdir -p build
     - cd build
     - cmake ..
