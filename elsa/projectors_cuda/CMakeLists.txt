@@ -6,7 +6,9 @@ check_language(CUDA)
 
 if (CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
+    message(STATUS "CUDA support enabled")
 
+    # build the kernels first
     add_subdirectory(projector_kernels)
 
     # necessary to be able to include <cuda_runtime.h>
