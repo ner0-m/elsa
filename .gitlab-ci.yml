@@ -72,7 +72,7 @@ build-cuda92:
   <<: *build_job_artifact
   image: elsa/cuda:9.2
   script:
-    - ls -l /usr/bin/nvidia*
+    - ls -l /usr/bin/n*
     - mkdir -p build
     - cd build
     - cmake ..
