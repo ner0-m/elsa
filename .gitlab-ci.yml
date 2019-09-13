@@ -34,7 +34,7 @@ build-ubuntu:
     - mkdir -p build
     - cd build
     - cmake ..
-    - make -j${nproc}
+    - make -j4
   tags:
     - linux
     - elsa
@@ -44,11 +44,10 @@ build-gcc9:
   <<: *build_job_artifact
   image: elsa/gcc:9
   script:
-    - free
     - mkdir -p build
     - cd build
     - cmake ..
-    - make -j${nproc}
+    - make -j4
   tags:
     - linux
     - elsa
@@ -61,7 +60,7 @@ build-clang8:
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - make -j${nproc}
+    - make -j4
   tags:
     - linux
     - elsa
@@ -74,7 +73,7 @@ build-cuda92:
     - mkdir -p build
     - cd build
     - cmake ..
-    - make -j${nproc}
+    - make -j4
   tags:
     - linux
     - elsa
