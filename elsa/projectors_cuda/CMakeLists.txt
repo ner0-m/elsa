@@ -9,6 +9,9 @@ if (CMAKE_CUDA_COMPILER)
 
     add_subdirectory(projector_kernels)
 
+    # necessary to be able to include <cuda_runtime.h>
+    find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+
     # set the name of the module
     set(ELSA_MODULE_NAME projectors_cuda)
     set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
@@ -35,7 +38,8 @@ if (CMAKE_CUDA_COMPILER)
             $<INSTALL_INTERFACE:include/${ELSA_MODULE_NAME}>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
             )
-
+    target_include_directories(${ELSA_MODULE_TARGET_NAME}
+            PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
     # require C++17
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17) 
