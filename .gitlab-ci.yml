@@ -68,6 +68,20 @@ build-clang8:
     - elsa
     - clang
 
+build-cuda92:
+  <<: *build_job_artifact
+  image: elsa/cuda:9.2
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make -j${nproc}
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+
 
 ### test jobs ###
 
@@ -108,9 +122,23 @@ test-clang8:
     - linux
     - elsa
     - clang
-    
-    
-### docs jobs ###
+
+test-cuda92:
+  stage: test
+  image: elsa/cuda:9.2
+  script:
+    - cd build
+    - ctest
+  dependencies:
+    - build-cuda92
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+
+
+### deploy docs ###
 
 deploy-docs:
   stage: docs
