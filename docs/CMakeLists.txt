@@ -6,13 +6,13 @@ find_package(Sphinx)
 if(DOXYGEN_FOUND)
     message(STATUS "Doxygen found: ${DOXYGEN_EXECUTABLE}")
 else()
-    message(STATUS "Sphinx not found, no documentation building.")
+    message(STATUS "Doxygen not found, no documentation building.")
 endif()
 
 if(SPHINX_EXECUTABLE)
     message(STATUS "Sphinx found: ${SPHINX_EXECUTABLE}")
 else()
-    message(STATUS "Doxygen not found, no documentation building.")
+    message(STATUS "Sphinx not found, no documentation building.")
 endif()
 
 
