@@ -457,12 +457,6 @@ SCENARIO("Calls to functions of super class") {
         }
         BinaryMethod op(volumeDescriptor, sinoDescriptor,geom);
 
-//        WHEN("Checking whether projector is a spd operator") {
-//            THEN("Returns false") {
-//                REQUIRE_FALSE(op.isSpd());
-//            }
-//        }
-
         WHEN("Projector is cloned") {
             auto opClone = op.clone();
             auto sinoClone = sino;
@@ -475,7 +469,7 @@ SCENARIO("Calls to functions of super class") {
 
                 op.applyAdjoint(sino, volume);
                 opClone->applyAdjoint(sino, volumeClone);
-                REQUIRE(volume == volumeClone);
+                REQUIRE((volume-volumeClone).squaredL2Norm() == Approx(0.0));
             }
         }
     }

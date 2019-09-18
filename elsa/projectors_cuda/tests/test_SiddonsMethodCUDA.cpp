@@ -53,12 +53,6 @@ TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "",
         }
         TestType op(volumeDescriptor,sinoDescriptor,geom);
 
-        // WHEN("Checking whether projector is a spd operator") {
-        //     THEN("Returns false") {
-        //         REQUIRE_FALSE(op.isSpd());
-        //     }
-        // }
-
         WHEN("Projector is cloned") {
             auto opClone = op.clone();
             auto sinoClone = DataContainer<data_t>(sinoDescriptor);

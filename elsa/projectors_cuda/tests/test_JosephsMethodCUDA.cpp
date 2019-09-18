@@ -50,13 +50,6 @@ TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", JosephsMet
         TestType fast(volumeDescriptor,sinoDescriptor,geom);
         TestType slow(volumeDescriptor,sinoDescriptor,geom,false);
 
-        // WHEN("Checking whether projector is a spd operator") {
-        //     THEN("Returns false") {
-        //         REQUIRE_FALSE(slow.isSpd());
-        //         REQUIRE_FALSE(fast.isSpd());
-        //     }
-        // }
-
         WHEN("Projector is cloned") {
             auto fastClone = fast.clone();
             auto slowClone = slow.clone();
