@@ -469,7 +469,7 @@ SCENARIO("Calls to functions of super class") {
 
                 op.applyAdjoint(sino, volume);
                 opClone->applyAdjoint(sino, volumeClone);
-                REQUIRE((volume-volumeClone).squaredL2Norm() == Approx(0.0));
+                REQUIRE((volume-volumeClone).squaredL2Norm() == Approx(0.0).margin(1e-5));
             }
         }
     }
