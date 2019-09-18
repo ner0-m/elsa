@@ -10,6 +10,7 @@
 #include "Logger.h"
 
 #include <iostream>
+#include <SiddonsMethod.h>
 
 using namespace elsa;
 
@@ -32,8 +33,8 @@ void example2d()
             arc, size(0)*100, size(0));
 
     // setup operator for 2d X-ray transform
-    Logger::get("Info")->info("Simulating sinogram using binary method");
-    BinaryMethod projector(phantom.getDataDescriptor(), sinoDescriptor, geometry);
+    Logger::get("Info")->info("Simulating sinogram using Siddon's method");
+    SiddonsMethod projector(phantom.getDataDescriptor(), sinoDescriptor, geometry);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);
