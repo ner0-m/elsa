@@ -9,7 +9,7 @@
 
 #include <chrono>
 #include <iostream>
-#include <array>
+#include <vector>
 
 using namespace elsa;
 
@@ -55,7 +55,7 @@ int main()
     int numAngles = 512;
 
     // volume sizes to be tested
-    std::array<int> sizes{128, 256, 384, 512};
+    std::vector<int> sizes{128, 256, 384, 512};
 
     // each operation will be applied numIters times, and the average displayed
     int numIters = 3;
