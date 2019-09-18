@@ -1,5 +1,6 @@
 #include "PhantomGenerator.h"
 #include "EllipseGenerator.h"
+#include "Logger.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -16,6 +17,8 @@ namespace elsa
             throw std::invalid_argument("PhantomGenerator::createModifiedSheppLogan: 2d size has to be square");
         if (sizes.size() == 3 && (sizes[0] != sizes[1] || sizes[0] != sizes[2]))
             throw std::invalid_argument("PhantomGenerator::createModifiedSheppLogan: 3d size has to be cubed");
+
+        Logger::get("PhantomGenerator")->info("creating modified Shepp Logan phantom of size {}^{}", sizes[0], sizes.size());
 
         DataDescriptor dd(sizes);
         DataContainer<data_t> dc(dd);
