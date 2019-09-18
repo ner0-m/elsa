@@ -74,4 +74,5 @@ This open-source version is a modernized and cleaned up version of our internal 
 
 *Releases:*
 
+   - v0.5: the "projector" release (September 18, 2019)
    - v0.4: first public release (July 19, 2019)
