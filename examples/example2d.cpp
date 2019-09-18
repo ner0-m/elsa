@@ -3,14 +3,13 @@
 #include "elsa.h"
 #include "PhantomGenerator.h"
 #include "CircleTrajectoryGenerator.h"
-#include "BinaryMethod.h"
+#include "SiddonsMethod.h"
 #include "EDFHandler.h"
 #include "GradientDescent.h"
 #include "WLSProblem.h"
 #include "Logger.h"
 
 #include <iostream>
-#include <SiddonsMethod.h>
 
 using namespace elsa;
 
@@ -18,17 +17,13 @@ void example2d()
 {
     // generate 2d phantom
     IndexVector_t size(2); size << 128, 128;
-    Logger::get("Info")->info("Creating 2d phantom of size {}x{}", size(0), size(1));
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
 
     // write the phantom out
-    std::string filePhantom{"2dphantom.edf"};
-    Logger::get("Info")->info("Writing out phantom to {}", filePhantom);
-    EDF::write(phantom, filePhantom);
+    EDF::write(phantom, "2dphantom.edf");
 
     // generate circular trajectory
     index_t noAngles{100}, arc{360};
-    Logger::get("Info")->info("Creating circular trajectory with {} poses over an arc of {} degrees", noAngles, arc);
     auto [geometry, sinoDescriptor] = CircleTrajectoryGenerator::createTrajectory(noAngles, phantom.getDataDescriptor(),
             arc, size(0)*100, size(0));
 
@@ -40,9 +35,7 @@ void example2d()
     auto sinogram = projector.apply(phantom);
 
     // write the sinogram out
-    std::string fileSinogram("2dsinogram.edf");
-    Logger::get("Info")->info("Writing out phantom to {}", fileSinogram);
-    EDF::write(sinogram, fileSinogram);
+    EDF::write(sinogram, "2dsinogram.edf");
 
 
     // setup reconstruction problem
@@ -56,9 +49,7 @@ void example2d()
     auto reconstruction = solver.solve(noIterations);
 
     // write the reconstruction out
-    std::string fileReconstruction{"2dreconstruction.edf"};
-    Logger::get("Info")->info("Writing out reconstruction to {}", fileReconstruction);
-    EDF::write(reconstruction, fileReconstruction);
+    EDF::write(reconstruction, "2dreconstruction.edf");
 }
 
 
