@@ -13,7 +13,7 @@ namespace elsa {
     {}
     
     template <typename data_t>
-    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor, const RealVector_t& data,
+    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor, const  Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
             DataHandlerType handlerType)
             : _dataDescriptor{dataDescriptor.clone()},
               _dataHandler{createDataHandler(handlerType, _dataDescriptor->getNumberOfCoefficients())}

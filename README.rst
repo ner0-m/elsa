@@ -24,6 +24,8 @@ Current testing includes gcc7, gcc9, and clang8.
 
 The main third party dependencies (Eigen3, spdlog, Catch2) are integrated via git submodules.
 
+For CUDA support, you need a CUDA capable graphics card as well as an installation of the CUDA toolkit.
+Current testing includes CUDA 9.1 and 9.2 combined with gcc7.
 
 Compiling
 ---------

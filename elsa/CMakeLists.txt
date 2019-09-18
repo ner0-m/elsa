@@ -16,6 +16,9 @@ add_subdirectory(functionals)
 add_subdirectory(problems)
 add_subdirectory(solvers)
 add_subdirectory(projectors)
+if(BUILD_ELSA_PROJECTORS_CUDA)
+    add_subdirectory(projectors_cuda)
+endif(BUILD_ELSA_PROJECTORS_CUDA)
 add_subdirectory(generators)
 
 

@@ -102,6 +102,7 @@ namespace elsa
         IndexVector_t decrementedCoefficients = numberOfCoefficients -
                                                 IndexVector_t::Ones(this->getRangeDescriptor().getNumberOfDimensions());
 
+#pragma omp parallel
         for (int currDim = 0; currDim < numDim; ++currDim) {
             if (!_activeDims[currDim])
                 continue;
@@ -109,6 +110,7 @@ namespace elsa
             index_t modulus = numberOfCoefficients.head(currDim + 1).prod();
             index_t divisor = numberOfCoefficients.head(currDim).prod();
 
+#pragma omp for nowait
             for (index_t id = 0; id < sizeOfDomain; ++id) {
                 index_t icCount = (id % modulus) / divisor; //_domainDescriptor.index(id, ic);
                 index_t ir = id + _dimCounter[currDim] * _coordDelta[currDim];
@@ -147,6 +149,7 @@ namespace elsa
         IndexVector_t numberOfCoefficients = this->getDomainDescriptor().getNumberOfCoefficientsPerDimension();
         IndexVector_t decrementedCoefficients = numberOfCoefficients - IndexVector_t::Ones(numDim);
 
+#pragma omp parallel
         for (index_t currDim = 0; currDim < numDim; ++currDim) {
             if (!_activeDims[currDim])
                 continue;
@@ -154,6 +157,7 @@ namespace elsa
             index_t modulus = numberOfCoefficients.head(currDim + 1).prod();
             index_t divisor = numberOfCoefficients.head(currDim).prod();
 
+#pragma omp for nowait
             for (index_t id = 0; id < sizeOfDomain; ++id) {
                 index_t icCount = (id % modulus) / divisor;
                 index_t ir = id + _dimCounter[currDim] * _coordDelta[currDim];

@@ -1,5 +1,3 @@
-image: elsa/ubuntu:18.04
-
 stages:
 - compile
 - test
@@ -36,7 +34,7 @@ build-ubuntu:
     - mkdir -p build
     - cd build
     - cmake ..
-    - make -j${nproc}
+    - make -j4
   tags:
     - linux
     - elsa
@@ -49,7 +47,7 @@ build-gcc9:
     - mkdir -p build
     - cd build
     - cmake ..
-    - make -j${nproc}
+    - make -j4
   tags:
     - linux
     - elsa
@@ -62,11 +60,25 @@ build-clang8:
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - make -j${nproc}
+    - make -j4
   tags:
     - linux
     - elsa
     - clang
+
+build-cuda92:
+  <<: *build_job_artifact
+  image: elsa/cuda:9.2
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make -j4
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
 
 
 ### test jobs ###
@@ -108,9 +120,23 @@ test-clang8:
     - linux
     - elsa
     - clang
-    
-    
-### docs jobs ###
+
+test-cuda92:
+  stage: test
+  image: elsa/cuda:9.2
+  script:
+    - cd build
+    - ctest
+  dependencies:
+    - build-cuda92
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+
+
+### deploy docs ###
 
 deploy-docs:
   stage: docs

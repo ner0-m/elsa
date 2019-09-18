@@ -336,9 +336,10 @@ SCENARIO("Construction of a 2D traversal object") {
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-
-            THEN("the the aabb is not hit") {
-                REQUIRE_FALSE(traverse.isInBoundingBox());
+            CHECK(traverse.isInBoundingBox());
+            THEN("The ray intersects the aabb at the bottom left pixel") {
+                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
+                REQUIRE(traverse.getCurrentVoxel()(1) == 0); 
             }
         }
 
@@ -348,9 +349,10 @@ SCENARIO("Construction of a 2D traversal object") {
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-
-            THEN("the the aabb is not hit") {
-                REQUIRE_FALSE(traverse.isInBoundingBox());
+            CHECK(traverse.isInBoundingBox());
+            THEN("The ray intersects the aabb at the top left pixel") {
+                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
+                REQUIRE(traverse.getCurrentVoxel()(1) == 0); 
             }
         }
 
@@ -384,9 +386,10 @@ SCENARIO("Construction of a 2D traversal object") {
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-
-            THEN("the the aabb is not hit") {
-                REQUIRE_FALSE(traverse.isInBoundingBox());
+            CHECK(traverse.isInBoundingBox());
+            THEN("The ray intersects the aabb at the bottom left pixel") {
+                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
+                REQUIRE(traverse.getCurrentVoxel()(1) == 0); 
             }
         }
 
@@ -396,9 +399,10 @@ SCENARIO("Construction of a 2D traversal object") {
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-
-            THEN("the the aabb is not hit") {
-                REQUIRE_FALSE(traverse.isInBoundingBox());
+            CHECK(traverse.isInBoundingBox());
+            THEN("The ray intersects the aabb at the top left pixel") {
+                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
+                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
             }
         }
 

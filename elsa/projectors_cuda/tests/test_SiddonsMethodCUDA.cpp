@@ -1,221 +1,39 @@
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
+#include "SiddonsMethodCUDA.h"
 #include "SiddonsMethod.h"
 #include "Geometry.h"
 
 using namespace elsa;
 
-bool isApprox(const DataContainer<real_t>& x,const DataContainer<real_t>& y, real_t prec = Eigen::NumTraits<real_t>::dummy_precision()) {
-    DataContainer<real_t> z = x;
+/*
+ * checks whether two DataContainer<data_t>s contain approximately the same data using the same method as Eigen
+ * https://eigen.tuxfamily.org/dox/classEigen_1_1DenseBase.html#ae8443357b808cd393be1b51974213f9c
+ * 
+ * precision depends on the global elsa::real_t parameter, as the majority of the error is produced by the 
+ * traversal algorithm (which is executed with real_t precision regardless of the DataContainer type)
+ * 
+ */
+template <typename data_t>
+bool isApprox(const DataContainer<data_t>& x,const DataContainer<data_t>& y, real_t prec = Eigen::NumTraits<real_t>::dummy_precision()) {
+    DataContainer<data_t> z = x;
     z -= y;
     return sqrt(z.squaredL2Norm()) <= prec*sqrt(std::min(x.squaredL2Norm(),y.squaredL2Norm()));
 }
 
-SCENARIO("Testing SiddonsMethod projector with only one ray")
-{
-    IndexVector_t sizeDomain(2);
-    sizeDomain << 5, 5;
+/*
+ * this function declaration can be used in conjunction with decltype to deduce the 
+ * template parameter of a templated class at compile time
+ * 
+ * the template parameter must be a typename
+ */
+template <template <typename> typename T, typename data_t>
+constexpr data_t return_data_t(const T<data_t>&);
 
-    IndexVector_t sizeRange(2);
-    sizeRange << 1, 1;
-
-    auto domain = DataDescriptor(sizeDomain);
-    auto range = DataDescriptor(sizeRange);
-
-    Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-
-    GIVEN("A SiddonsMethod for 2D and a domain data with all ones")
-    {
-        std::vector<Geometry> geom;
-
-        auto dataDomain = DataContainer(domain);
-        dataDomain = 1;
-
-        auto dataRange = DataContainer(range);
-        dataRange = 0;
-
-        WHEN("We have a single ray with 0 degrees")
-        {
-            geom.emplace_back(100, 5, 0, domain, range);
-            auto op = SiddonsMethod(domain, range, geom);
-
-            THEN("A^t A x should be close to the original data")
-            {
-                auto AtAx = DataContainer(domain);
-
-                op.apply(dataDomain, dataRange);
-                op.applyAdjoint(dataRange, AtAx);
-
-                auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 0, 0, 5, 0, 0,
-                        0, 0, 5, 0, 0,
-                        0, 0, 5, 0, 0,
-                        0, 0, 5, 0, 0,
-                        0, 0, 5, 0, 0;
-
-                REQUIRE(DataContainer(domain,cmp) == AtAx);
-                REQUIRE(dataRange[0] == Approx(5));
-            }
-        }
-
-        WHEN("We have a single ray with 180 degrees")
-        {
-            geom.emplace_back(100, 5, 180 * pi / 180., domain, range);
-            auto op = SiddonsMethod(domain, range, geom);
-
-            THEN("A^t A x should be close to the original data")
-            {
-                auto AtAx = DataContainer(domain);
-
-                op.apply(dataDomain, dataRange);
-                op.applyAdjoint(dataRange, AtAx);
-
-                auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 0, 0, 5, 0, 0,
-                        0, 0, 5, 0, 0,
-                        0, 0, 5, 0, 0,
-                        0, 0, 5, 0, 0,
-                        0, 0, 5, 0, 0;
-
-                REQUIRE(DataContainer(domain,cmp) == AtAx);
-                REQUIRE(dataRange[0] == Approx(5));
-            }
-        }
-
-        WHEN("We have a single ray with 90 degrees")
-        {
-            geom.emplace_back(100, 5, 90 * pi / 180., domain, range);
-            auto op = SiddonsMethod(domain, range, geom);
-
-            THEN("A^t A x should be close to the original data")
-            {
-                auto AtAx = DataContainer(domain);
-
-                op.apply(dataDomain, dataRange);
-                op.applyAdjoint(dataRange, AtAx);
-
-                auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0,
-                        5, 5, 5, 5, 5,
-                        0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0;
-
-                REQUIRE(DataContainer(domain,cmp) == AtAx);
-                REQUIRE(dataRange[0] == Approx(5));
-            }
-        }
-
-        WHEN("We have a single ray with 270 degrees")
-        {
-            geom.emplace_back(100, 5, 270 * pi / 180., domain, range);
-            auto op = SiddonsMethod(domain, range, geom);
-
-            THEN("A^t A x should be close to the original data")
-            {
-                auto AtAx = DataContainer(domain);
-
-                op.apply(dataDomain, dataRange);
-                op.applyAdjoint(dataRange, AtAx);
-
-                auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0,
-                        5, 5, 5, 5, 5,
-                        0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0;
-
-                REQUIRE(DataContainer(domain,cmp) == AtAx);
-                REQUIRE(dataRange[0] == Approx(5));
-            }
-        }
-
-// FIXME This does not yield the desired result/if fixed the overall results in a reconstruction is bad
-        /*WHEN("We have a single ray with 45 degrees")
-        {
-            geom.emplace_back(100, 5, 45 * pi / 180., domain, range);
-            auto op = SiddonsMethod(domain, range, geom);
-
-            THEN("A^t A x should be close to the original data")
-            {
-                auto AtAx = DataContainer(domain);
-
-                op.apply(dataDomain, dataRange);
-                op.applyAdjoint(dataRange, AtAx);
-
-                std::cout << dataRange.getData().format(CommaInitFmt) << "\n";
-                std::cout << AtAx.getData().format(CommaInitFmt) << "\n";
-
-                auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 10, 0, 0, 0, 0,
-                        0, 10, 0, 0, 0,
-                        0, 0, 10, 0, 0,
-                        0, 0, 0, 10, 0,
-                        0, 0, 0, 0, 10;
-
-                REQUIRE(cmp.isApprox(AtAx.getData(), 1e-2));
-                REQUIRE(dataRange[0] == Approx(7.071));
-            }
-        }
-
-        WHEN("We have a single ray with 225 degrees")
-        {
-            geom.emplace_back(100, 5, 225 * pi / 180., domain, range);
-            auto op = SiddonsMethod(domain, range, geom);
-
-            THEN("A^t A x should be close to the original data")
-            {
-                auto AtAx = DataContainer(domain);
-
-                op.apply(dataDomain, dataRange);
-                op.applyAdjoint(dataRange, AtAx);
-
-                std::cout << dataRange.getData().format(CommaInitFmt) << "\n";
-                std::cout << AtAx.getData().format(CommaInitFmt) << "\n";
-
-                auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 10, 0, 0, 0, 0,
-                        0, 10, 0, 0, 0,
-                        0, 0, 10, 0, 0,
-                        0, 0, 0, 10, 0,
-                        0, 0, 0, 0, 10;
-
-                REQUIRE(cmp.isApprox(AtAx.getData()));
-                REQUIRE(dataRange[0] == Approx(7.071));
-            }
-        }*/
-
-        // TODO fix this direction, currently it does not work correctly. Consider changing geometry, to mirror stuff
-        /*WHEN("We have a single ray with 135 degrees")
-        {
-            geom.emplace_back(100, 5, 135 * pi / 180., domain, range);
-            auto op = SiddonsMethod(domain, range, geom);
-
-            THEN("A^t A x should be close to the original data")
-            {
-                auto AtAx = DataContainer(domain);
-
-                op.apply(dataDomain, dataRange);
-                op.applyAdjoint(dataRange, AtAx);
-
-                std::cout << dataRange.getData().format(CommaInitFmt) << "\n";
-                std::cout << AtAx.getData().format(CommaInitFmt) << "\n";
-
-                auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 0, 0, 0, 0, 10,
-                        0, 0, 0, 10, 0,
-                        0, 0, 10, 0, 0,
-                        0, 10, 0, 0, 0,
-                        10, 0, 0, 0, 0;
-
-                REQUIRE(cmp.isApprox(AtAx.getData()));
-                REQUIRE(dataRange[0] == Approx(7.071));
-            }
-        }*/
-    }
-}
-
-SCENARIO("Calls to functions of super class") {
+TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "",
+                   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>,
+                   SiddonsMethod<float>, SiddonsMethod<double>) {
+    using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A projector") {
         IndexVector_t volumeDims(2), sinoDims(2);
         const index_t volSize = 50;
@@ -225,37 +43,38 @@ SCENARIO("Calls to functions of super class") {
         sinoDims<<detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-
-        RealVector_t randomStuff(volumeDescriptor.getNumberOfCoefficients());
-        randomStuff.setRandom();
-        DataContainer volume(volumeDescriptor, randomStuff);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        volume = 1;
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
         for (std::size_t i = 0;i<numImgs;i++) {
             real_t angle = i*2*pi/50;
             geom.emplace_back(20*volSize,volSize,angle,volumeDescriptor,sinoDescriptor);
         }
-        SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+        TestType op(volumeDescriptor,sinoDescriptor,geom);
 
         WHEN("Projector is cloned") {
             auto opClone = op.clone();
-            auto sinoClone = DataContainer(sino.getDataDescriptor());
-            auto volumeClone = DataContainer(volume.getDataDescriptor());
+            auto sinoClone = DataContainer<data_t>(sinoDescriptor);
+            auto volumeClone = DataContainer<data_t>(volumeDescriptor);
 
             THEN("Results do not change (may still be slightly different due to summation being performed in a different order)") {
                 op.apply(volume,sino);
                 opClone->apply(volume,sinoClone);
-                REQUIRE( isApprox(sino,sinoClone) );
+                REQUIRE(isApprox(sino, sinoClone));
 
                 op.applyAdjoint(sino,volume);
                 opClone->applyAdjoint(sino,volumeClone);
-                REQUIRE((volume-volumeClone).squaredL2Norm() == Approx(0.0).margin(1e-5));
+                REQUIRE(isApprox(volume,volumeClone));
             }
         }
     }
 }
 
-SCENARIO("Output DataContainer is not zero initialized") {
+TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initialized", "",
+				   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>,
+				   SiddonsMethod<float>, SiddonsMethod<double>) {
+    using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A 2D setting") {
         IndexVector_t volumeDims(2), sinoDims(2);
         const index_t volSize = 5;
@@ -265,11 +84,11 @@ SCENARIO("Output DataContainer is not zero initialized") {
         sinoDims<<detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
         geom.emplace_back(20*volSize,volSize,0.0,volumeDescriptor,sinoDescriptor);
-        SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+        TestType op(volumeDescriptor,sinoDescriptor,geom);
 
         WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume") {
             volume = 0;
@@ -277,8 +96,7 @@ SCENARIO("Output DataContainer is not zero initialized") {
 
             THEN("Result is zero") {
                 op.apply(volume,sino);
-                DataContainer zero(sinoDescriptor);
-                REQUIRE(sino == zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
             }
         }
 
@@ -288,8 +106,7 @@ SCENARIO("Output DataContainer is not zero initialized") {
 
             THEN("Result is zero") {
                 op.applyAdjoint(sino,volume);
-                DataContainer zero(volumeDescriptor);
-                REQUIRE(volume == zero);
+                REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
             }
         }
     }
@@ -303,12 +120,12 @@ SCENARIO("Output DataContainer is not zero initialized") {
         sinoDims<<detectorSize,detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
         geom.emplace_back(volSize*20,volSize,volumeDescriptor,sinoDescriptor,0);
-        SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+        TestType op(volumeDescriptor,sinoDescriptor,geom);
 
         WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume") {
             volume = 0;
@@ -316,8 +133,7 @@ SCENARIO("Output DataContainer is not zero initialized") {
 
             THEN("Result is zero") {
                 op.apply(volume,sino);
-                DataContainer zero(sinoDescriptor);
-                REQUIRE(sino == zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
             }
         }
 
@@ -327,14 +143,16 @@ SCENARIO("Output DataContainer is not zero initialized") {
 
             THEN("Result is zero") {
                 op.applyAdjoint(sino,volume);
-                DataContainer zero(volumeDescriptor);
-                REQUIRE(volume == zero);
+                REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
             }
         }
     }
 }
 
-SCENARIO("Rays not intersecting the bounding box are present") {
+TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present", "",
+				   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>,
+				   SiddonsMethod<float>, SiddonsMethod<double>) {
+    using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A 2D setting") {
         IndexVector_t volumeDims(2), sinoDims(2);
         const index_t volSize = 5;
@@ -344,43 +162,41 @@ SCENARIO("Rays not intersecting the bounding box are present") {
         sinoDims<<detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         volume = 1;
         sino = 1;
         std::vector<Geometry> geom;
 
         WHEN("Tracing along a y-axis-aligned ray with a negative x-coordinate of origin") {
-            geom.emplace_back(20*volSize,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,-volSize);
+            geom.emplace_back(20*volSize,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,volSize);
 
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Result of forward projection is zero") {
                 op.apply(volume,sino);
-                DataContainer zero(sinoDescriptor);
-                REQUIRE(sino == zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("Result of backprojection is zero") {
                     op.applyAdjoint(sino,volume);
-                    DataContainer zero(volumeDescriptor);
-                    REQUIRE(volume == zero);
+                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
                 }
             }
 
         }
         
         WHEN("Tracing along a y-axis-aligned ray with a x-coordinate of origin beyond the bounding box") {
-            geom.emplace_back(20*volSize,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,volSize);
+            geom.emplace_back(20*volSize,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,-volSize);
 
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Result of forward projection is zero") {
                 op.apply(volume,sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("Result of backprojection is zero") {
                     op.applyAdjoint(sino,volume);
-                    DataContainer zero(volumeDescriptor); REQUIRE(volume==zero);
+                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
                 }
             }
 
@@ -388,17 +204,17 @@ SCENARIO("Rays not intersecting the bounding box are present") {
         }
 
         WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin") {
-            geom.emplace_back(20*volSize,volSize, pi/2,volumeDescriptor,sinoDescriptor,0.0, 0.0, -volSize);
+            geom.emplace_back(20*volSize,volSize, pi/2,volumeDescriptor,sinoDescriptor,0.0, 0.0, volSize);
 
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Result of forward projection is zero") {
                 op.apply(volume,sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("Result of backprojection is zero") {
                     op.applyAdjoint(sino,volume);
-                    DataContainer zero(volumeDescriptor); REQUIRE(volume==zero);
+                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
                 }
             }
 
@@ -406,17 +222,17 @@ SCENARIO("Rays not intersecting the bounding box are present") {
         }
 
         WHEN("Tracing along a x-axis-aligned ray with a y-coordinate of origin beyond the bounding box") {
-            geom.emplace_back(20*volSize,volSize, pi/2 ,volumeDescriptor,sinoDescriptor,0.0, 0.0, volSize);
+            geom.emplace_back(20*volSize,volSize, pi/2 ,volumeDescriptor,sinoDescriptor,0.0, 0.0, -volSize);
 
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Result of forward projection is zero") {
                 op.apply(volume,sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("Result of backprojection is zero") {
                     op.applyAdjoint(sino,volume);
-                    DataContainer zero(volumeDescriptor); REQUIRE(volume==zero);
+                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
                 }
             }
 
@@ -433,8 +249,8 @@ SCENARIO("Rays not intersecting the bounding box are present") {
         sinoDims<<detectorSize,detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         volume = 1;
         sino = 1;
         std::vector<Geometry> geom;
@@ -467,17 +283,17 @@ SCENARIO("Rays not intersecting the bounding box are present") {
 
         for (int i=0;i<numCases;i++) {
             WHEN("Tracing along a " + ali[i] +"-axis-aligned ray with negative " + neg[i] + "-coodinate of origin") {
-                geom.emplace_back(20*volSize,volSize,volumeDescriptor,sinoDescriptor,gamma[i],beta[i],alpha[i],0.0,0.0,-offsetx[i],-offsety[i],-offsetz[i]);
+                geom.emplace_back(20*volSize,volSize,volumeDescriptor,sinoDescriptor,gamma[i],beta[i],alpha[i],0.0,0.0,offsetx[i],offsety[i],offsetz[i]);
 
-                SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+                TestType op(volumeDescriptor,sinoDescriptor,geom);
 
                 THEN("Result of forward projection is zero") {
                     op.apply(volume,sino);
-                    DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                    REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                     AND_THEN("Result of backprojection is zero") {
                         op.applyAdjoint(sino,volume);
-                        DataContainer zero(volumeDescriptor); REQUIRE(volume==zero);
+                        REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
                     }
                 }
 
@@ -488,8 +304,10 @@ SCENARIO("Rays not intersecting the bounding box are present") {
     }
 }
 
-SCENARIO("Axis-aligned rays are present")
-{
+TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "",
+				   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>,
+				   SiddonsMethod<float>, SiddonsMethod<double>) {
+    using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A 2D setting with a single ray") {
         IndexVector_t volumeDims(2), sinoDims(2);
         const index_t volSize = 5;
@@ -499,15 +317,13 @@ SCENARIO("Axis-aligned rays are present")
         sinoDims<<detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
         const index_t numCases = 4;
         const real_t angles[numCases] = {0.0, pi/2, pi, 3*pi/2};
-        RealVector_t backProj[2]; 
-        backProj[0].resize(volSize*volSize);
-        backProj[1].resize(volSize*volSize);
+        Eigen::Matrix<data_t,volSize*volSize,1> backProj[2]; 
         backProj[1] << 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0,
                     1, 1, 1, 1, 1,
@@ -523,7 +339,7 @@ SCENARIO("Axis-aligned rays are present")
         for (index_t i=0; i<numCases; i++) {
             WHEN("An axis-aligned ray with an angle of " + std::to_string(angles[i]) + " radians passes through the center of a pixel") {
                 geom.emplace_back(volSize*20,volSize,angles[i],volumeDescriptor,sinoDescriptor);
-                SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+                TestType op(volumeDescriptor,sinoDescriptor,geom);
                 THEN("The result of projecting through a pixel is exactly the pixel value") {       
                     for (index_t j=0; j<volSize;j++) {
                         volume = 0;
@@ -538,16 +354,15 @@ SCENARIO("Axis-aligned rays are present")
 
                     AND_THEN("The backprojection sets the values of all hit pixels to the detector value") {
                         op.applyAdjoint(sino,volume);
-
-                        REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,backProj[i%2])));
+                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj[i%2])));
                     }
                 }
             }
         }
 
-        WHEN("A y-axis-aligned ray runs along a voxel boundary") {
+        WHEN("A y-axis-aligned ray runs along the left voxel boundary") {
             geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,-0.5);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
             THEN("The result of projecting through a pixel is the value of the pixel with the higher index") {       
                 for (index_t j=0; j<volSize;j++) {
                     volume = 0;
@@ -560,15 +375,15 @@ SCENARIO("Axis-aligned rays are present")
                 AND_THEN("The backprojection yields the exact adjoint") {
                     sino[0] = 1;
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,backProj[0])));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj[0])));
                 }
             }
         }
         
         WHEN("A y-axis-aligned ray runs along the right volume boundary") {
-            //For Siddon's values in the range [0,boxMax) are considered, a ray running along boxMax should be ignored
+            //For Siddons's values in the range [0,boxMax) are considered, a ray running along boxMax should be ignored
             geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0, (volSize*0.5) );
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("The result of projecting is zero") {       
                 volume = 0;
@@ -579,39 +394,36 @@ SCENARIO("Axis-aligned rays are present")
                     sino[0] = 1;
 
                     op.applyAdjoint(sino,volume);
-                    DataContainer zero(volumeDescriptor); REQUIRE(volume==zero);
+                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
                 }
             }
         }
         
-        /**
-         * CPU version exhibits slightly different behaviour, ignoring all ray running along a bounding box border
-         */
-        // backProj[0] <<  1, 0, 0, 0, 0,
-        //             1, 0, 0, 0, 0,
-        //             1, 0, 0, 0, 0,
-        //             1, 0, 0, 0, 0,
-        //             1, 0, 0, 0, 0;
+        backProj[0] <<  1, 0, 0, 0, 0,
+                    1, 0, 0, 0, 0,
+                    1, 0, 0, 0, 0,
+                    1, 0, 0, 0, 0,
+                    1, 0, 0, 0, 0;
         
-        // WHEN("A y-axis-aligned ray runs along the left volume boundary") {
-        //     geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,volSize/2.0);
-        //     SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
-        //     THEN("The result of projecting through a pixel is exactly the pixel's value") {       
-        //         for (index_t j=0; j<volSize;j++) {
-        //             volume = 0;
-        //             volume(0,j) = 1;
+        WHEN("A y-axis-aligned ray runs along the left volume boundary") {
+            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,-volSize/2.0);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
+            THEN("The result of projecting through a pixel is exactly the pixel's value") {       
+                for (index_t j=0; j<volSize;j++) {
+                    volume = 0;
+                    volume(0,j) = 1;
                     
-        //             op.apply(volume,sino);
-        //             REQUIRE(sino[0] == 1);
-        //         }
+                    op.apply(volume,sino);
+                    REQUIRE(sino[0] == 1);
+                }
 
-        //         AND_THEN("The backprojection yields the exact adjoint") {
-        //             sino[0] = 1;
-        //             op.applyAdjoint(sino,volume);
-        //             REQUIRE(volume.getData().isApprox(backProj[0]));
-        //         }
-        //     }
-        // }
+                AND_THEN("The backprojection yields the exact adjoint") {
+                    sino[0] = 1;
+                    op.applyAdjoint(sino,volume);
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj[0])));
+                }
+            }
+        }
     }
 
     GIVEN("A 3D setting with a single ray") {
@@ -623,8 +435,8 @@ SCENARIO("Axis-aligned rays are present")
         sinoDims<<detectorSize,detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
         const index_t numCases = 6;
@@ -633,9 +445,7 @@ SCENARIO("Axis-aligned rays are present")
         real_t gamma[numCases] = {0.0, pi, pi/2, 3*pi/2,pi/2,3*pi/2};
         std::string al[numCases] = {"z","-z","x","-x","y","-y"}; 
 
-        RealVector_t backProj[numCases]; 
-        for (auto& backPr: backProj)
-            backPr.resize(volSize*volSize*volSize);
+        Eigen::Matrix<data_t,volSize*volSize*volSize,1> backProj[numCases]; 
 
         backProj[2] << 0, 0, 0,
                     0, 0, 0,
@@ -676,7 +486,7 @@ SCENARIO("Axis-aligned rays are present")
         for (index_t i=0; i<numCases; i++) {
             WHEN("A " + al[i] +"-axis-aligned ray passes through the center of a pixel") {
                 geom.emplace_back(volSize*20,volSize,volumeDescriptor,sinoDescriptor,gamma[i],beta[i]);
-                SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+                TestType op(volumeDescriptor,sinoDescriptor,geom);
                 THEN("The result of projecting through a voxel is exactly the voxel value") {       
                     for (index_t j=0; j<volSize;j++) {
                         volume = 0;
@@ -693,7 +503,7 @@ SCENARIO("Axis-aligned rays are present")
 
                     AND_THEN("The backprojection sets the values of all hit voxels to the detector value") {
                         op.applyAdjoint(sino,volume);
-                        REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,backProj[i/2])));
+                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj[i/2])));
                     }
                 }
             }
@@ -754,7 +564,7 @@ SCENARIO("Axis-aligned rays are present")
 
         al[0] = "left border";
         al[1] = "bottom border";
-        al[2] = "bottom left edge";
+        al[2] = "bottom left border";
         al[3] = "right border";
         al[4] = "top border";
         al[5] = "top right edge";
@@ -763,7 +573,7 @@ SCENARIO("Axis-aligned rays are present")
             WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume") {
                 // x-ray source must be very far from the volume center to make testing of the op backprojection simpler
                 geom.emplace_back(volSize*2000,volSize,volumeDescriptor,sinoDescriptor,0.0,0.0,0.0,0.0,0.0,-offsetx[i],-offsety[i]);
-                SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+                TestType op(volumeDescriptor,sinoDescriptor,geom);
                 THEN("The result of projecting through a voxel is exactly the voxel's value") {       
                     for (index_t j=0; j<volSize;j++) {
                         volume = 0;
@@ -774,7 +584,6 @@ SCENARIO("Axis-aligned rays are present")
                             break;
                         case 1:
                             volume(volSize/2,0,j) = 1;
-                            break;
                             break;
                         case 2:
                             volume(0,0,j) = 1;
@@ -791,17 +600,17 @@ SCENARIO("Axis-aligned rays are present")
                         sino[0]=1;
                         op.applyAdjoint(sino,volume);
 
-                        REQUIRE( isApprox(volume, DataContainer(volumeDescriptor,backProj[i])) );
+                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj[i])));
                     }
                 }
             }
         }
 
-        for (index_t i=3; i<numCases; i++) {
+        for (index_t i=numCases/2; i<numCases; i++) {
             WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume") {
                 // x-ray source must be very far from the volume center to make testing of the op backprojection simpler
                 geom.emplace_back(volSize*2000,volSize,volumeDescriptor,sinoDescriptor,0.0,0.0,0.0,0.0,0.0,-offsetx[i],-offsety[i]);
-                SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+                TestType op(volumeDescriptor,sinoDescriptor,geom);
                 THEN("The result of projecting is zero") {       
                     volume = 1;
                     
@@ -809,10 +618,10 @@ SCENARIO("Axis-aligned rays are present")
                     REQUIRE(sino[0]==0);
 
                     AND_THEN("The result of backprojection is also zero") {
-                    sino[0]=1;
-                    op.applyAdjoint(sino,volume);
+                        sino[0]=1;
+                        op.applyAdjoint(sino,volume);
 
-                    DataContainer zero(volumeDescriptor); REQUIRE(volume==zero);
+                        REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
                     }
                 }
             }
@@ -830,8 +639,8 @@ SCENARIO("Axis-aligned rays are present")
         sinoDims<<detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
         WHEN("Both x- and y-axis-aligned rays are present") {
@@ -840,7 +649,7 @@ SCENARIO("Axis-aligned rays are present")
             geom.emplace_back(20*volSize, volSize, 180 * pi / 180., volumeDescriptor, sinoDescriptor);
             geom.emplace_back(20*volSize, volSize, 270 * pi / 180., volumeDescriptor, sinoDescriptor);
 
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Values are accumulated correctly along each ray's path") {
                 volume = 0;
@@ -856,7 +665,7 @@ SCENARIO("Axis-aligned rays are present")
                     REQUIRE(sino[i]==Approx(5.0));
                 
                 AND_THEN("Backprojection yields the exact adjoint") {
-                    RealVector_t cmp(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> cmp(volSize*volSize);
 
                     cmp << 0, 0, 10, 0, 0,
                            0, 0, 10, 0, 0,
@@ -865,7 +674,7 @@ SCENARIO("Axis-aligned rays are present")
                            0, 0, 10, 0, 0;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,cmp)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,cmp)));
                 }
             }
         }
@@ -880,8 +689,8 @@ SCENARIO("Axis-aligned rays are present")
         sinoDims<<detectorSize,detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
         WHEN("x-, y and z-axis-aligned rays are present") {
@@ -891,7 +700,7 @@ SCENARIO("Axis-aligned rays are present")
             for (index_t i = 0;i<numImgs;i++)
                 geom.emplace_back(volSize*20,volSize,volumeDescriptor,sinoDescriptor,gamma[i],beta[i]);
 
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Values are accumulated correctly along each ray's path") {
                 volume = 0;
@@ -908,7 +717,7 @@ SCENARIO("Axis-aligned rays are present")
                     REQUIRE(sino[i]==Approx(3.0));
                 
                 AND_THEN("Backprojection yields the exact adjoint") {
-                    RealVector_t cmp(volSize*volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> cmp(volSize*volSize*volSize);
 
                     cmp << 0, 0, 0,
                            0, 6, 0,
@@ -923,14 +732,17 @@ SCENARIO("Axis-aligned rays are present")
                            0, 0, 0;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,cmp)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,cmp)));
                 }
             }
         }
     }
 }
 
-SCENARIO("Projection under an angle") {
+TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "",
+				   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>,
+				   SiddonsMethod<float>, SiddonsMethod<double>) {
+    using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A 2D setting with a single ray") {
         IndexVector_t volumeDims(2), sinoDims(2);
         const index_t volSize = 4;
@@ -940,14 +752,14 @@ SCENARIO("Projection under an angle") {
         sinoDims<<detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
         WHEN("Projecting under an angle of 30 degrees and ray goes through center of volume") {
             // In this case the ray enters and exits the volume through the borders along the main direction
             geom.emplace_back(volSize*20,volSize,-pi/6,volumeDescriptor,sinoDescriptor);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Ray intersects the correct pixels") {
                 volume = 1;
@@ -958,12 +770,10 @@ SCENARIO("Projection under an angle") {
                 volume(1,2) = 0;
                 volume(1,3) = 0;
                 volume(0,3) = 0;
-                // volume(2,2 also hit due to numerical errors)
-                volume(2,2) = 0;                
+                volume(2,2) = 0;
 
                 op.apply(volume, sino);
-                DataContainer zero(sinoDescriptor);
-                REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("The correct weighting is applied") {
                     volume(3,0) = 1;
@@ -984,14 +794,14 @@ SCENARIO("Projection under an angle") {
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 0, 0, 2-2/sqrt(3), 4/sqrt(3)-2,
                                     0, 0, 2/sqrt(3), 0,
                                     0, 2/sqrt(3), 0, 0,
                                     4/sqrt(3)-2, 2-2/sqrt(3), 0, 0;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,expected)));                        
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,expected),0.0001));                        
                 }
                 
             }
@@ -1002,7 +812,7 @@ SCENARIO("Projection under an angle") {
             // In this case the ray exits through a border along the main ray direction, but enters through a border
             // not along the main direction
             geom.emplace_back(volSize*20,volSize,-pi/6,volumeDescriptor,sinoDescriptor,0.0,sqrt(3));
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Ray intersects the correct pixels") {
                 volume = 1;
@@ -1012,7 +822,7 @@ SCENARIO("Projection under an angle") {
                 volume(2,3) = 0;
                 
                 op.apply(volume, sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("The correct weighting is applied") {
                     volume(3,1) = 4;
@@ -1025,14 +835,14 @@ SCENARIO("Projection under an angle") {
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 0, 0, 0, 0,
                                     0, 0, 0, 4-2*sqrt(3),
                                     0, 0, 0, 2/sqrt(3),
                                     0, 0, 2-2/sqrt(3), 4/sqrt(3)-2;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,expected)));                       
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,expected)));                        
                 }
                 
             }
@@ -1043,7 +853,7 @@ SCENARIO("Projection under an angle") {
             // In this case the ray enters through a border along the main ray direction, but exits through a border
             // not along the main direction
             geom.emplace_back(volSize*20,volSize,-pi/6,volumeDescriptor,sinoDescriptor,0.0,-sqrt(3));
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Ray intersects the correct pixels") {
                 volume = 1;
@@ -1053,7 +863,7 @@ SCENARIO("Projection under an angle") {
                 volume(0,2) = 0;
                 
                 op.apply(volume, sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("The correct weighting is applied") {
                     volume(1,0) = 1;
@@ -1066,14 +876,14 @@ SCENARIO("Projection under an angle") {
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 4/sqrt(3)-2, 2-2/sqrt(3), 0, 0,
                                     2/sqrt(3) , 0, 0, 0,
                                     4-2*sqrt(3), 0, 0, 0,
                                     0, 0, 0, 0;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,expected)));                       
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,expected)));                        
                 }
                 
             }
@@ -1082,14 +892,14 @@ SCENARIO("Projection under an angle") {
 
         WHEN("Projecting under an angle of 30 degrees and ray only intersects a single pixel") {
             geom.emplace_back(volSize*20,volSize,-pi/6,volumeDescriptor,sinoDescriptor,0.0,-2-sqrt(3)/2);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Ray intersects the correct pixels") {
                 volume = 1;
                 volume(0,0) = 0;
                 
                 op.apply(volume, sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("The correct weighting is applied") {
                     volume(0,0) = 1;
@@ -1099,14 +909,14 @@ SCENARIO("Projection under an angle") {
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 1/sqrt(3), 0, 0, 0,
                                     0, 0, 0, 0,
                                     0, 0, 0, 0,
                                     0, 0, 0, 0;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,expected)));
                 }
                 
             }
@@ -1116,7 +926,7 @@ SCENARIO("Projection under an angle") {
         WHEN("Projecting under an angle of 120 degrees and ray goes through center of volume") {
             // In this case the ray enters and exits the volume through the borders along the main direction
             geom.emplace_back(volSize*20,volSize,-2*pi/3,volumeDescriptor,sinoDescriptor);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Ray intersects the correct pixels") {
                 volume = 1;
@@ -1130,7 +940,7 @@ SCENARIO("Projection under an angle") {
                 volume(1,2) = 0;
 
                 op.apply(volume, sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("The correct weighting is applied") {
                     volume(0,0) = 1;
@@ -1151,7 +961,7 @@ SCENARIO("Projection under an angle") {
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
 
                     expected << 4/sqrt(3)-2, 0, 0, 0,
                                 2-2/sqrt(3), 2/sqrt(3),0, 0,
@@ -1159,7 +969,7 @@ SCENARIO("Projection under an angle") {
                                 0, 0, 0, 4/sqrt(3)-2;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,expected))); 
                 }
                 
             }
@@ -1170,7 +980,7 @@ SCENARIO("Projection under an angle") {
             // In this case the ray exits through a border along the main ray direction, but enters through a border
             // not along the main direction
             geom.emplace_back(volSize*20,volSize,-2*pi/3,volumeDescriptor,sinoDescriptor,0.0,0.0,sqrt(3));
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Ray intersects the correct pixels") {
                 volume = 1;
@@ -1180,7 +990,7 @@ SCENARIO("Projection under an angle") {
                 volume(2,3) = 0;
                 
                 op.apply(volume, sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("The correct weighting is applied") {
                     volume(0,2) = 1;
@@ -1193,7 +1003,7 @@ SCENARIO("Projection under an angle") {
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     
                     expected << 0, 0, 0, 0,
                                 0, 0, 0, 0,
@@ -1201,7 +1011,7 @@ SCENARIO("Projection under an angle") {
                                 4/sqrt(3)-2, 2/sqrt(3), 4-2*sqrt(3), 0;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,expected)));
                 }
                 
             }
@@ -1212,7 +1022,7 @@ SCENARIO("Projection under an angle") {
             // In this case the ray enters through a border along the main ray direction, but exits through a border
             // not along the main direction
             geom.emplace_back(volSize*20,volSize,-2*pi/3,volumeDescriptor,sinoDescriptor,0.0,0.0,-sqrt(3));
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Ray intersects the correct pixels") {
                 volume = 1;
@@ -1222,7 +1032,7 @@ SCENARIO("Projection under an angle") {
                 volume(3,1) = 0;
                 
                 op.apply(volume, sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("The correct weighting is applied") {
                     volume(1,0) = 4;
@@ -1235,7 +1045,7 @@ SCENARIO("Projection under an angle") {
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     
                     expected << 0,4-2*sqrt(3), 2/sqrt(3), 4/sqrt(3)-2,
                                 0, 0, 0, 2-2/sqrt(3),
@@ -1243,7 +1053,7 @@ SCENARIO("Projection under an angle") {
                                 0, 0, 0, 0;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,expected)));
                 }
                 
             }
@@ -1253,14 +1063,14 @@ SCENARIO("Projection under an angle") {
         WHEN("Projecting under an angle of 120 degrees and ray only intersects a single pixel") {
             // This is a special case that is handled separately in both forward and backprojection
             geom.emplace_back(volSize*20,volSize,-2*pi/3,volumeDescriptor,sinoDescriptor,0.0,0.0,-2-sqrt(3)/2);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
 
             THEN("Ray intersects the correct pixels") {
                 volume = 1;
                 volume(3,0) = 0;
                 
                 op.apply(volume, sino);
-                DataContainer zero(sinoDescriptor); REQUIRE(sino==zero);
+                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
 
                 AND_THEN("The correct weighting is applied") {
                     volume(3,0) = 1;
@@ -1270,14 +1080,14 @@ SCENARIO("Projection under an angle") {
                     
                     sino[0] = 1;
 
-                    RealVector_t expected(volSize*volSize);
+                    Eigen::Matrix<data_t,Eigen::Dynamic,1> expected(volSize*volSize);
                     expected << 0, 0, 0, 1/sqrt(3),
                                     0, 0, 0, 0,
                                     0, 0, 0, 0,
                                     0, 0, 0, 0;
 
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,expected)));
                 }
                 
             }
@@ -1285,7 +1095,7 @@ SCENARIO("Projection under an angle") {
         }
         
     }
-    
+
     GIVEN("A 3D setting with a single ray") {
         IndexVector_t volumeDims(3), sinoDims(3);
         const index_t volSize = 3;
@@ -1295,17 +1105,17 @@ SCENARIO("Projection under an angle") {
         sinoDims<<detectorSize,detectorSize,numImgs;
         DataDescriptor volumeDescriptor(volumeDims);
         DataDescriptor sinoDescriptor(sinoDims);
-        DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
+        DataContainer<data_t> volume(volumeDescriptor);
+        DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
-        RealVector_t backProj(volSize*volSize*volSize); 
+        Eigen::Matrix<data_t,volSize*volSize*volSize,1> backProj; 
 
 
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume") {
             // In this case the ray enters and exits the volume along the main direction
             geom.emplace_back(volSize*20,volSize,volumeDescriptor,sinoDescriptor,pi/6);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
             
             THEN("The ray intersects the correct voxels") {       
                 volume = 1;
@@ -1340,7 +1150,7 @@ SCENARIO("Projection under an angle") {
                                0, 0, 0;
                     
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,backProj)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj)));
                 }
             }
         }
@@ -1348,7 +1158,7 @@ SCENARIO("Projection under an angle") {
         WHEN("A ray with an angle of 30 degrees enters through the right border") {
             // In this case the ray enters through a border orthogonal to a non-main direction
             geom.emplace_back(volSize*20,volSize,volumeDescriptor,sinoDescriptor,pi/6,0.0,0.0,0.0,0.0,1);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
             
             THEN("The ray intersects the correct voxels") {       
                 volume = 1;
@@ -1382,7 +1192,7 @@ SCENARIO("Projection under an angle") {
                                0, 0, 0;
                     
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,backProj)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj)));
                 }
             }
         }
@@ -1390,7 +1200,7 @@ SCENARIO("Projection under an angle") {
         WHEN("A ray with an angle of 30 degrees exits through the left border") {
             // In this case the ray exit through a border orthogonal to a non-main direction
             geom.emplace_back(volSize*20,volSize,volumeDescriptor,sinoDescriptor,pi/6,0.0,0.0,0.0,0.0,-1);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
             
             THEN("The ray intersects the correct voxels") {       
                 volume = 1;
@@ -1424,7 +1234,7 @@ SCENARIO("Projection under an angle") {
                                0, 0, 0;
                     
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,backProj)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj)));
                 }
             }
         }
@@ -1432,7 +1242,7 @@ SCENARIO("Projection under an angle") {
         WHEN("A ray with an angle of 30 degrees only intersects a single voxel") {
             // special case - no interior voxels, entry and exit voxels are the same
             geom.emplace_back(volSize*20,volSize,volumeDescriptor,sinoDescriptor,pi/6,0.0,0.0,0.0,0.0,-2);
-            SiddonsMethod op(volumeDescriptor,sinoDescriptor,geom);
+            TestType op(volumeDescriptor,sinoDescriptor,geom);
             
             THEN("The ray intersects the correct voxels") {       
                 volume = 1;
@@ -1461,10 +1271,9 @@ SCENARIO("Projection under an angle") {
                                0, 0, 0;
                     
                     op.applyAdjoint(sino,volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor,backProj)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,backProj)));
                 }
             }
         }
     }
-
 }

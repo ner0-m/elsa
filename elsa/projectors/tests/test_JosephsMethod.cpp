@@ -5,7 +5,7 @@
 
 using namespace elsa;
 
-bool isApprox(DataContainer<real_t> x, DataContainer<real_t> y, real_t prec = Eigen::NumTraits<real_t>::dummy_precision()) {
+bool isApprox(const DataContainer<real_t>& x,const DataContainer<real_t>& y, real_t prec = Eigen::NumTraits<real_t>::dummy_precision()) {
     DataContainer<real_t> z = x;
     z -= y;
     return sqrt(z.squaredL2Norm()) <= prec*sqrt(std::min(x.squaredL2Norm(),y.squaredL2Norm()));
@@ -258,12 +258,6 @@ SCENARIO("Calls to functions of super class") {
 
         JosephsMethod op(volumeDescriptor,sinoDescriptor,geom);
 
-        // WHEN("Checking whether projector is a spd operator") {
-        //     THEN("Returns false") {
-        //         REQUIRE_FALSE(op.isSpd());
-        //     }
-        // }
-
         WHEN("Projector is cloned") {
             auto opClone = op.clone();
             auto sinoClone = sino;
@@ -277,7 +271,7 @@ SCENARIO("Calls to functions of super class") {
 
                 op.applyAdjoint(sino,volume);
                 opClone->applyAdjoint(sino,volumeClone);
-                REQUIRE( isApprox(volume,volumeClone) );
+                REQUIRE((volume-volumeClone).squaredL2Norm() == Approx(0.0).margin(1e-5));
             }
         }
     }
@@ -542,7 +536,9 @@ SCENARIO("Axis-aligned rays are present")
 
         const index_t numCases = 4;
         const real_t angles[numCases] = {0.0,pi/2, pi, 3*pi/2};
-        Eigen::Matrix<real_t,volSize*volSize,1> backProj[2]; 
+        RealVector_t backProj[2]; 
+        backProj[0].resize(volSize*volSize);
+        backProj[1].resize(volSize*volSize);
         backProj[1] << 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0,
                     1, 1, 1, 1, 1,
@@ -620,40 +616,56 @@ SCENARIO("Axis-aligned rays are present")
             }
         }
         
+        backProj[0] <<  0, 0, 0, 0, 1,
+                    0, 0, 0, 0, 1,
+                    0, 0, 0, 0, 1,
+                    0, 0, 0, 0, 1,
+                    0, 0, 0, 0, 1;
+        
         WHEN("A y-axis-aligned ray runs along the right volume boundary") {
-            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0, -(volSize*0.5) );
-            JosephsMethod op(volumeDescriptor,sinoDescriptor,geom,JosephsMethod<>::Interpolation::LINEAR);
+            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0, (volSize*0.5) );
+            JosephsMethod op(volumeDescriptor,sinoDescriptor,geom);
 
-            THEN("The result of projecting is zero") {       
-                volume = 1;
-                op.apply(volume,sino);
-                DataContainer zero(sinoDescriptor);
-REQUIRE(sino == zero);
+            THEN("The result of projecting through a pixel is exactly the pixel's value (we mirror values at the border for the purpose of interpolation)") {       
+                for (index_t j=0; j<volSize;j++) {
+                    volume = 0;
+                    volume(volSize-1,j) = 1;
+                    
+                    op.apply(volume,sino);
+                    REQUIRE(sino[0] == 1);
+                }
 
-                AND_THEN("The backprojection also yields zero") {
+                AND_THEN("The slow backprojection yields the exact adjoint, the fast backprojection also yields the exact adjoint for a very distant x-ray source") {
                     sino[0] = 1;
                     op.applyAdjoint(sino,volume);
-                    DataContainer zero(volumeDescriptor);
-REQUIRE(volume == zero); 
+                    REQUIRE( isApprox(volume,DataContainer(volumeDescriptor,backProj[0])) ); 
                 }
             }
         }
         
+        backProj[0] <<  1, 0, 0, 0, 0,
+                    1, 0, 0, 0, 0,
+                    1, 0, 0, 0, 0,
+                    1, 0, 0, 0, 0,
+                    1, 0, 0, 0, 0;
+        
         WHEN("A y-axis-aligned ray runs along the left volume boundary") {
-            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,volSize/2.0);
-            JosephsMethod op(volumeDescriptor,sinoDescriptor,geom,JosephsMethod<>::Interpolation::LINEAR);
-            THEN("The result of projecting is zero") {       
-                volume = 1;
-                op.apply(volume,sino);
+            geom.emplace_back(volSize*2000,volSize,0.0,volumeDescriptor,sinoDescriptor,0.0,-volSize/2.0);
+            JosephsMethod op(volumeDescriptor,sinoDescriptor,geom);
 
-                DataContainer zero(sinoDescriptor);
-REQUIRE(sino == zero);
+            THEN("The result of projecting through a pixel is exactly the pixel's value (we mirror values at the border for the purpose of interpolation)") {       
+                for (index_t j=0; j<volSize;j++) {
+                    volume = 0;
+                    volume(0,j) = 1;
+                    
+                    op.apply(volume,sino);
+                    REQUIRE(sino[0] == 1);
+                }
 
-                AND_THEN("The backprojection also yields zero") {
+                AND_THEN("The slow backprojection yields the exact adjoint, the fast backprojection also yields the exact adjoint for a very distant x-ray source") {
                     sino[0] = 1;
                     op.applyAdjoint(sino,volume);
-                    DataContainer zero(volumeDescriptor);
-REQUIRE(volume == zero); 
+                    REQUIRE( isApprox(volume,DataContainer(volumeDescriptor,backProj[0])) ); 
                 }
             }
         }
@@ -678,8 +690,9 @@ REQUIRE(volume == zero);
         real_t gamma[numCases] = {0.0,pi,pi/2, 3*pi/2,pi/2,3*pi/2};
         std::string al[numCases] = {"z","-z","x","-x","y","-y"}; 
 
-        Eigen::Matrix<real_t,volSize*volSize*volSize,1> backProj[numCases]; 
-
+        RealVector_t backProj[numCases]; 
+        for (auto& backPr: backProj)
+            backPr.resize(volSize*volSize*volSize);
         backProj[2] << 0, 0, 0,
                     0, 0, 0,
                     0, 0, 0,
@@ -826,28 +839,124 @@ REQUIRE(volume == zero);
 
         al[0] = "left border";
         al[1] = "right border";
-        al[2] = "top border";
-        al[3] = "bottom border";
+        al[2] = "bottom border";
+        al[3] = "top border";
         al[4] = "top right edge";
         al[5] = "bottom left edge";
         
+        backProj[0] << 0, 0, 0,
+                    1, 0, 0,
+                    0, 0, 0,
 
-        // different behaviour for rays running along the boundary than GPU projector
+                    0, 0, 0,
+                    1, 0, 0,
+                    0, 0, 0,
+
+                    0, 0, 0,
+                    1, 0, 0,
+                    0, 0, 0;
+        
+        backProj[1] << 0, 0, 0,
+                    0, 0, 1,
+                    0, 0, 0,
+
+                    0, 0, 0,
+                    0, 0, 1,
+                    0, 0, 0,
+
+                    0, 0, 0,
+                    0, 0, 1,
+                    0, 0, 0;
+        
+        backProj[2] << 0, 1, 0,
+                    0, 0, 0,
+                    0, 0, 0,
+
+                    0, 1, 0,
+                    0, 0, 0,
+                    0, 0, 0,
+
+                    0, 1, 0,
+                    0, 0, 0,
+                    0, 0, 0;
+
+        backProj[3] << 0, 0, 0,
+                    0, 0, 0,
+                    0, 1, 0,
+
+                    0, 0, 0,
+                    0, 0, 0,
+                    0, 1, 0,
+
+                    0, 0, 0,
+                    0, 0, 0,
+                    0, 1, 0;
+
+        backProj[4] << 0, 0, 0,
+                    0, 0, 0,
+                    0, 0, 1,
+
+                    0, 0, 0,
+                    0, 0, 0,
+                    0, 0, 1,
+
+                    0, 0, 0,
+                    0, 0, 0,
+                    0, 0, 1;
+        
+        backProj[5] << 1, 0, 0,
+                    0, 0, 0,
+                    0, 0, 0,
+
+                    1, 0, 0,
+                    0, 0, 0,
+                    0, 0, 0,
+
+                    1, 0, 0,
+                    0, 0, 0,
+                    0, 0, 0;
+                    
         for (index_t i=0; i<numCases; i++) {
             WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume") {
+                // x-ray source must be very far from the volume center to make testing of the fast backprojection simpler
                 geom.emplace_back(volSize*2000,volSize,volumeDescriptor,sinoDescriptor,0.0,0.0,0.0,0.0,0.0,-offsetx[i],-offsety[i]);
-                JosephsMethod op(volumeDescriptor,sinoDescriptor,geom,JosephsMethod<>::Interpolation::LINEAR);
-                THEN("The result of projecting is zero") {       
-                    volume = 1;
-                    
-                    op.apply(volume,sino);
-                    REQUIRE(sino[0]==0);
+                JosephsMethod op(volumeDescriptor,sinoDescriptor,geom);
+                THEN("The result of projecting through a voxel is exactly the voxel's value (we mirror values at the border for the purpose of interpolation)") {       
+                    for (index_t j=0; j<volSize;j++) {
+                        volume = 0;
+                        switch (i)
+                        {
+                        case 0:
+                            volume(0,volSize/2,j) = 1;
+                            break;
+                        case 1:
+                            volume(volSize-1,volSize/2,j) = 1;
+                            break;
+                        case 2:
+                            volume(volSize/2,0,j) = 1;
+                            break;
+                        case 3:
+                            volume(volSize/2,volSize-1,j) = 1;
+                            break;
+                        case 4:
+                            volume(volSize-1,volSize-1,j) = 1;
+                            break;
+                        case 5:
+                            volume(0,0,j) = 1;
+                            break;
+                        default:
+                            break;
+                        }
+                        
+                        op.apply(volume,sino);
+                        REQUIRE(sino[0]==1);
+                    }
 
-                    AND_THEN("The backprojection also yields 0") {
+                    AND_THEN("The backprojection yields the exact adjoint") {
                         sino[0]=1;
+
                         op.applyAdjoint(sino,volume);
-                        DataContainer zero(volumeDescriptor);
-REQUIRE(volume == zero); 
+                        REQUIRE( isApprox(volume, DataContainer(volumeDescriptor,backProj[i])) ); 
                     }
                 }
             }
@@ -1288,7 +1397,7 @@ REQUIRE(sino == zero);
         DataContainer sino(sinoDescriptor);
         std::vector<Geometry> geom;
 
-        Eigen::Matrix<real_t,volSize*volSize*volSize,1> backProj; 
+        RealVector_t backProj(volSize*volSize*volSize); 
 
 
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume") {

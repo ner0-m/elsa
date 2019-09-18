@@ -9,6 +9,7 @@ project(elsa VERSION 0.4
 
 option(ELSA_TESTING "Enable the unit tests of elsa" ON)
 option(GIT_SUBMODULE "Check submodules during build" ON)
+option(BUILD_ELSA_PROJECTORS_CUDA "Attempts to build CUDA projectors if set" ON)
 
 
 # ------------ general setup -----------
