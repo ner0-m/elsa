@@ -29,7 +29,7 @@ void example2d()
 
     // setup operator for 2d X-ray transform
     Logger::get("Info")->info("Simulating sinogram using Siddon's method");
-    SiddonsMethod projector(phantom.getDataDescriptor(), sinoDescriptor, geometry);
+    JosephsMethodCUDA projector(phantom.getDataDescriptor(), sinoDescriptor, geometry);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);
