@@ -25,6 +25,13 @@ add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} elsa_core elsa_logging)
 
+# use OpenMP is available
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+
 target_include_directories(${ELSA_MODULE_TARGET_NAME}
         PUBLIC
         $<INSTALL_INTERFACE:include/${ELSA_MODULE_NAME}>
