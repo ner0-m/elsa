@@ -33,7 +33,7 @@ if (CMAKE_CUDA_COMPILER)
     add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
     add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} elsa_core elsa_logging elsa_projectors elsa_projector_kernels)
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_projectors elsa_projector_kernels)
 
     target_include_directories(${ELSA_MODULE_TARGET_NAME}
             PUBLIC
