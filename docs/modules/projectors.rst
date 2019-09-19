@@ -14,6 +14,16 @@ BinaryMethod
 
 .. doxygenclass:: elsa::BinaryMethod
 
+SiddonsMethod
+=============
+
+.. doxygenclass:: elsa::SiddonsMethod
+
+JosephsMethod
+=============
+
+.. doxygenclass:: elsa::JosephsMethod
+
 
 Implementation Details
 ======================
@@ -32,3 +42,8 @@ TraverseAABB
 ------------
 
 .. doxygenclass:: elsa::TraverseAABB
+
+TraverseAABBJosephsMethod
+-------------------------
+
+.. doxygenclass:: elsa::TraverseAABBJosephsMethod

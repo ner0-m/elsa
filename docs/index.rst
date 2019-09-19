@@ -18,5 +18,6 @@
    modules/problems
    modules/solvers
    modules/projectors
+   modules/projectors_cuda
    modules/generators
 
