@@ -55,7 +55,9 @@ endif()
 # ------------
 
 # reset ELSA_TESTING to only be active, if it's NOT a subproject
-set(ELSA_TESTING ELSA_TESTING AND NOT_SUBPROJECT)
+if(NOT NOT_SUBPROJECT)
+    set(ELSA_TESTING OFF)
+endif()
 
 if(ELSA_TESTING)
     message(STATUS "elsa testing is enabled")
@@ -85,36 +87,31 @@ add_subdirectory(examples EXCLUDE_FROM_ALL)
 # ------------ setup installation ------
 # ------------
 
-# Only perform the installation steps when elsa is not being used as
-# a subproject via `add_subdirectory`, or the destinations will break
-if (NOT_SUBPROJECT)
+# set up the target/library for make install
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-    # set up the target/library for make install
-    include(GNUInstallDirs)
-    include(CMakePackageConfigHelpers)
+# setup the ElsaConfig*.cmake files
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/elsaConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfig.cmake
+    INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
+)
 
-    # setup the ElsaConfig*.cmake files
-    write_basic_package_version_file(
-        ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfigVersion.cmake
-        VERSION ${PROJECT_VERSION}
-        COMPATIBILITY AnyNewerVersion
-    )
-    configure_package_config_file(
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/elsaConfig.cmake.in
+# install the config files
+install(
+    FILES
         ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfig.cmake
-        INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
-    )
-
-    # install the config files
-    install(
-        FILES
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfig.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfigVersion.cmake
-        DESTINATION ${INSTALL_CONFIG_DIR}
-    )
-#   this puts the local build tree into the user package repository, but not the installed version...
-#   ...but we rely on the paths in the installed version. sigh. commented out for now.
-#   export(PACKAGE elsa)
-endif(NOT_SUBPROJECT)
+        ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfigVersion.cmake
+    DESTINATION ${INSTALL_CONFIG_DIR}
+)
 
 
+# this puts the local build tree into the user package repository, but not the installed version...
+# ...but we rely on the paths in the installed version. sigh. commented out for now.
+#export(PACKAGE elsa)
