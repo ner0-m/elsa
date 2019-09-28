@@ -16,7 +16,7 @@ if (NOT DEFINED ELSA_MASTER_PROJECT)
     endif()
 endif ()
 
-option(ELSA_TESTING "Enable the unit tests of elsa" ${ELSA_MASTER_PROJECT})
+option(ELSA_TESTING "Enable the unit tests of elsa" ON)
 option(ELSA_INSTALL "Generate the install target" ${ELSA_MASTER_PROJECT})
 option(GIT_SUBMODULE "Check submodules during build" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_EXAMPLES "Build examples" ${ELSA_MASTER_PROJECT})
@@ -65,6 +65,10 @@ include(InstallElsaModule)
 # ------------
 
 # reset ELSA_TESTING to only be active, if it's a standlone project
+if(NOT ELSA_MASTER_PROJECT)
+    set(ELSA_TESTING OFF)
+endif(NOT ELSA_MASTER_PROJECT)
+
 if(ELSA_TESTING)
     message(STATUS "elsa testing is enabled")
 
