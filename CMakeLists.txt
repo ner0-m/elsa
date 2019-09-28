@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.9)
 # detect if elsa is being bundled, disable install and tests
 if(NOT DEFINED PROJECT_NAME)
   set(NOT_SUBPROJECT ON)
+else() 
+  set(SUBPROJECT ON)
+  message(STATUS "Including elsa as a subproject")
 endif()
 
 
@@ -37,25 +40,31 @@ set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake)
 # ------------ dependencies ------------
 # ------------
 
-# include the git submodule update
-include(UpdateGitSubmodules)
-# include the InstallElsaModule function
-include(InstallElsaModule)
+# only populate the dependencies, iff it's a standalone project!
+if(NOT_SUBPROJECT) 
+    # include the git submodule update
+    include(UpdateGitSubmodules)
 
-# setup the Eigen3 library
-find_package(Eigen3 3.3 NO_MODULE QUIET) # first try if there is an installed version
-if(NOT EIGEN3_INCLUDE_DIR) # if not found, try our submodule
-    set(EIGEN3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/eigen3")
-    message(STATUS "Using eigen3 submodule at ${EIGEN3_INCLUDE_DIR}")
-    find_package(Eigen3 3.3 REQUIRED)
+    # setup the Eigen3 library
+    find_package(Eigen3 3.3 NO_MODULE QUIET) # first try if there is an installed version
+    if(NOT EIGEN3_INCLUDE_DIR) # if not found, try our submodule
+        set(EIGEN3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/eigen3")
+        message(STATUS "Using eigen3 submodule at ${EIGEN3_INCLUDE_DIR}")
+        find_package(Eigen3 3.3 REQUIRED)
+    endif()
+else()
+    message(STATUS "    No dependencies added for elsa, as it's a subproject")
 endif()
 
+
+# include the In stallElsaModule function
+include(InstallElsaModule)
 
 # ------------ setup testing -----------
 # ------------
 
-# reset ELSA_TESTING to only be active, if it's NOT a subproject
-if(NOT NOT_SUBPROJECT)
+# reset ELSA_TESTING to only be active, if it's a standlone project
+if(SUBPROJECT)
     set(ELSA_TESTING OFF)
 endif()
 
@@ -67,7 +76,7 @@ if(ELSA_TESTING)
     # add the CMake modules for automatic test discovery
     set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/thirdparty/Catch2/contrib" ${CMAKE_MODULE_PATH})
 else(ELSA_TESTING)
-    message(STATUS "elsa testing is disabled")
+    message(STATUS "    elsa testing is disabled")
 endif(ELSA_TESTING)
 
 
@@ -115,3 +124,4 @@ install(
 # this puts the local build tree into the user package repository, but not the installed version...
 # ...but we rely on the paths in the installed version. sigh. commented out for now.
 #export(PACKAGE elsa)
+==== BASE ====
