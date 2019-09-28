@@ -22,7 +22,7 @@ option(GIT_SUBMODULE "Check submodules during build" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_EXAMPLES "Build examples" ${ELSA_MASTER_PROJECT})
 
 option(ELSA_BUILD_CUDA_PROJECTORS "Attempts to build CUDA projectors if set" ON)
-
+option(ELSA_BUILD_WITH_MORE_WARNINGS "Reduce noise of warnings, but make chaning fast and easy" OFF)
 
 # ------------ general setup -----------
 # ------------
