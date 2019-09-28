@@ -23,14 +23,13 @@ set(MODULE_SOURCES
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC spdlog::spdlog)
-
 target_include_directories(${ELSA_MODULE_TARGET_NAME}
         PUBLIC
         $<INSTALL_INTERFACE:include/${ELSA_MODULE_NAME}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
 
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC spdlog::spdlog_header_only)
 
 # require C++17
 target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)

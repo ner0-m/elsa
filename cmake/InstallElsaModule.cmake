@@ -1,8 +1,8 @@
 # install an elsa module
 
 function(InstallElsaModule ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_EXPORT_TARGET)
-    #This is required so that the exported target has the name core and not elsa_core
-    if(NOT_SUBPROJECT)
+    if(ELSA_INSTALL)
+        #This is required so that the exported target has the name core and not elsa_core
         set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES EXPORT_NAME ${ELSA_MODULE_NAME})
 
         include(GNUInstallDirs)
@@ -24,5 +24,5 @@ function(InstallElsaModule ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_
                 NAMESPACE elsa::
                 DESTINATION ${INSTALL_CONFIG_DIR}
         )
-    endif(NOT_SUBPROJECT)
+    endif(ELSA_INSTALL)
 endfunction()
