@@ -19,7 +19,7 @@ option(BUILD_ELSA_PROJECTORS_CUDA "Attempts to build CUDA projectors if set" ON)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # set default built type to "Debug" (if no other specified)
-set(DEFAULT_BUILD_TYPE "Release")
+set(DEFAULT_BUILD_TYPE "Debug")
 include(SetDefaultBuildType)
 
 # set where to install the exports/targets
