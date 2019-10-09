@@ -28,7 +28,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>::DataContainer(const DataContainer<data_t> &other)
             : _dataDescriptor{other._dataDescriptor->clone()},
-              _dataHandler{other._dataHandler->clone()} 
+              _dataHandler{other._dataHandler}
     {}
 
     template <typename data_t>
@@ -36,7 +36,7 @@ namespace elsa {
     {
         if (this != &other) {
             _dataDescriptor = other._dataDescriptor->clone();
-            _dataHandler = other._dataHandler->clone();
+            _dataHandler = other._dataHandler;
         }
 
         return *this;
@@ -85,6 +85,7 @@ namespace elsa {
     template<typename data_t>
     data_t &DataContainer<data_t>::operator[](index_t index)
     {
+        detach();
         return (*_dataHandler)[index];
     }
 
@@ -97,6 +98,7 @@ namespace elsa {
     template<typename data_t>
     data_t &DataContainer<data_t>::operator()(IndexVector_t coordinate)
     {
+        detach();
         return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
@@ -166,6 +168,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(const DataContainer<data_t>& dc)
     {
+        detach();
         *_dataHandler += *dc._dataHandler;
         return *this;
     }
@@ -173,6 +176,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator-=(const DataContainer<data_t>& dc)
     {
+        detach();
         *_dataHandler -= *dc._dataHandler;
         return *this;
     }
@@ -180,6 +184,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator*=(const DataContainer<data_t>& dc)
     {
+        detach();
         *_dataHandler *= *dc._dataHandler;
         return *this;
     }
@@ -187,6 +192,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator/=(const DataContainer<data_t>& dc)
     {
+        detach();
         *_dataHandler /= *dc._dataHandler;
         return *this;
     }
@@ -195,6 +201,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(data_t scalar)
     {
+        detach();
         *_dataHandler += scalar;
         return *this;
     }
@@ -202,6 +209,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator-=(data_t scalar)
     {
+        detach();
         *_dataHandler -= scalar;
         return *this;
     }
@@ -209,6 +217,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator*=(data_t scalar)
     {
+        detach();
         *_dataHandler *= scalar;
         return *this;
     }
@@ -216,6 +225,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator/=(data_t scalar)
     {
+        detach();
         *_dataHandler /= scalar;
         return *this;
     }
@@ -224,6 +234,7 @@ namespace elsa {
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator=(data_t scalar)
     {
+        detach();
         *_dataHandler = scalar;
         return *this;
     }
@@ -267,6 +278,17 @@ namespace elsa {
     bool DataContainer<data_t>::operator!=(const DataContainer<data_t>& other) const
     {
         return !(*this == other);
+    }
+
+    template <typename data_t>
+    void DataContainer<data_t>::detach()
+    {
+        if (_dataHandler.use_count() != 1) {
+#pragma omp barrier
+#pragma omp single
+            _dataHandler = _dataHandler->clone();
+        }
+        return;
     }
 
     // ------------------------------------------

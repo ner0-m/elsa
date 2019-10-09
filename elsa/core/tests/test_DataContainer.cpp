@@ -11,6 +11,12 @@
 #include <catch2/catch.hpp>
 #include "DataContainer.h"
 
+template <typename data_t>
+int elsa::useCount(const DataContainer<data_t>& dc)
+{
+    return dc._dataHandler.use_count();
+}
+
 using namespace elsa;
 using namespace Catch::literals; // to enable 0.0_a approximate floats
 
@@ -371,6 +377,102 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments") {
                 REQUIRE(resultDivScalar[i] == dc[i] / scalar);
 
 
+        }
+    }
+}
+
+
+SCENARIO("Testing the copy-on-write mechanism") {
+    GIVEN("A random DataContainer") {
+
+        IndexVector_t numCoeff(3);
+        numCoeff << 52, 7, 29;
+        DataDescriptor desc(numCoeff);
+        DataContainer dc(desc);
+        Eigen::VectorXf randVec  = Eigen::VectorXf::Random(dc.getSize());
+
+        for (index_t i = 0; i < dc.getSize(); ++i) {
+            dc[i]  = randVec(i);
+        }
+
+        WHEN("const manipulating a copy constructed shallow copy") {
+            DataContainer dc2(dc);
+            dc + dc;
+            dc.sum();
+            dc.square();
+            dc.log();
+            dc.dot(dc);
+            dc.l1Norm();
+
+            THEN("the data is the same") {
+                REQUIRE(dc2 == dc);
+                REQUIRE(useCount(dc) == 2);
+            }
+        }
+
+        WHEN("non-const manipulating a copy constructed shallow copy") {
+            DataContainer dc2(dc);
+            REQUIRE(useCount(dc) == 2);
+            REQUIRE(useCount(dc2) == 2);
+
+            THEN("copy-on-write is invoked") {
+                dc2 += 2;
+                REQUIRE(dc2 != dc);
+                REQUIRE(useCount(dc2) == 1);
+                REQUIRE(useCount(dc) == 1);
+            }
+
+            THEN("copy-on-write is invoked") {
+                dc2 += dc;
+                REQUIRE(dc2 != dc);
+                REQUIRE(useCount(dc2) == 1);
+                REQUIRE(useCount(dc) == 1);
+            }
+
+            THEN("copy-on-write is invoked") {
+                dc2 -= 2;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked") {
+                dc2 -= dc;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked") {
+                dc2 /= 2;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked") {
+                dc2 /= dc;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked") {
+                dc2 *= 2;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked") {
+                dc2 *= dc;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked") {
+                dc[0] += 2;
+                REQUIRE(dc2 != dc);
+            }
+        }
+
+        WHEN("manipulating a non-shallow-copied container") {
+            for (index_t i = 0; i < dc.getSize(); ++i) {
+                dc[i] += 2;
+            }
+
+            THEN("copy-on-write should not be invoked") {
+                REQUIRE(useCount(dc) == 1);
+            }
         }
     }
 }
