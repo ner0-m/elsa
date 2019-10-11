@@ -7,7 +7,7 @@ project(elsa VERSION 0.5
 
 # ------------ elsa options ------------
 # ------------
-# detect if elsa is being bundled, disable install and tests
+# detect if elsa is being bundled, disable some options based on this
 if (NOT DEFINED ELSA_MASTER_PROJECT)
     if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
         set(ELSA_MASTER_PROJECT ON)
@@ -16,13 +16,14 @@ if (NOT DEFINED ELSA_MASTER_PROJECT)
     endif()
 endif ()
 
-option(ELSA_TESTING "Enable the unit tests of elsa" ON)
+option(ELSA_TESTING "Enable the unit tests of elsa" ${ELSA_MASTER_PROJECT})
 option(ELSA_INSTALL "Generate the install target" ${ELSA_MASTER_PROJECT})
 option(GIT_SUBMODULE "Check submodules during build" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_EXAMPLES "Build examples" ${ELSA_MASTER_PROJECT})
 
 option(ELSA_BUILD_CUDA_PROJECTORS "Attempts to build CUDA projectors if set" ON)
 option(ELSA_BUILD_WITH_MORE_WARNINGS "Reduce noise of warnings, but make chaning fast and easy" OFF)
+option(ELSA_BUILD_WITH_SANITIZERS "Build with Sanitizers. Pass ELSA_SANITIZE_THREAD or ELSA_SANITIZE_ADDRESS" ON)
 
 # ------------ general setup -----------
 # ------------
@@ -74,6 +75,7 @@ if(ELSA_TESTING)
 
     enable_testing()
     add_subdirectory(thirdparty/Catch2)
+
     # add the CMake modules for automatic test discovery
     set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/thirdparty/Catch2/contrib" ${CMAKE_MODULE_PATH})
 else(ELSA_TESTING)

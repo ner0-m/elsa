@@ -24,18 +24,24 @@ add_subdirectory(generators)
 #---------------------------------------------------------------------------------------
 # Turn on compiler warnings and sanitizers for all components on, if wanted
 #---------------------------------------------------------------------------------------
-if(${ELSA_MASTER_PROJECT} AND ${ELSA_BUILD_WITH_MORE_WARNINGS})
+if(${ELSA_MASTER_PROJECT})
     foreach (_component ${ELSA_REGISTERED_COMPONENTS})
-        if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-            target_compile_options( elsa_${_component} PUBLIC -Wall -Wextra -Wconversion -pedantic -Wfatal-errors)
-        endif()
-        if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-            target_compile_options( elsa_${_component} PUBLIC /W3 /WX )
-        endif()
-
-        #include(cmake/sanitizers.cmake)
+        # add warnings if enabled
+        if(${ELSA_BUILD_WITH_MORE_WARNINGS})
+            if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+                target_compile_options( elsa_${_component} PUBLIC -Wall -Wextra -Wconversion -pedantic -Wfatal-errors)
+            endif()
+            if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+                target_compile_options( elsa_${_component} PUBLIC /W3 /WX )
+            endif()
+        endif(${ELSA_BUILD_WITH_MORE_WARNINGS})
     endforeach (_component ELSA_REGISTERED_COMPONENTS)
-endif(${ELSA_MASTER_PROJECT} AND ${ELSA_BUILD_WITH_MORE_WARNINGS})
+
+    # add sanitizers if enabled
+    if(${ELSA_BUILD_WITH_SANITIZERS})
+        include(${PROJECT_SOURCE_DIR}/cmake/Sanitizers.cmake)
+    endif(${ELSA_BUILD_WITH_SANITIZERS})
+endif(${ELSA_MASTER_PROJECT})
 
 # propogate the variable to the parent scope
 set(ELSA_REGISTERED_COMPONENTS "${ELSA_REGISTERED_COMPONENTS};" PARENT_SCOPE)
