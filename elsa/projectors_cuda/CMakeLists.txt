@@ -45,6 +45,8 @@ if (CMAKE_CUDA_COMPILER)
 
     # require C++17
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17) 
+    # set -fPIC
+    set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 
     # build the tests (if enabled)
