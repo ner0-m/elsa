@@ -1,6 +1,6 @@
 @PACKAGE_INIT@
 
-include(CmakeFindDependencyMacro)
+include(CMakeFindDependencyMacro)
 find_dependency(Eigen3 3.3 NO_MODULE REQUIRED)
 
 

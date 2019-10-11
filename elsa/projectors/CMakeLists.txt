@@ -42,7 +42,6 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 
-
 target_include_directories(${ELSA_MODULE_TARGET_NAME}
         PUBLIC
         $<INSTALL_INTERFACE:include/${ELSA_MODULE_NAME}>
@@ -52,6 +51,8 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME}
 
 # require C++17
 target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
+# set -fPIC
+set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 
 # build the tests (if enabled)

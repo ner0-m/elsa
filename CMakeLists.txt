@@ -30,7 +30,7 @@ option(ELSA_BUILD_WITH_MORE_WARNINGS "Reduce noise of warnings, but make chaning
 # add our cmake modules under cmake/
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-# set default built type to "Debug" (if no other specified)
+# set default built type to "Release" (if no other specified)
 set(DEFAULT_BUILD_TYPE "Release")
 include(SetDefaultBuildType)
 
