@@ -1,4 +1,5 @@
 stages:
+- static-test
 - compile
 - test
 - coverage
@@ -41,6 +42,17 @@ stages:
     reports:
       junit: "build/test_reports/test_*.xml"
     
+### static test ###
+
+clang-format:
+  stage: static-test
+  image: elsa/clang:8
+  script:
+    ./tools/ci_scripts/clang-format-test.sh
+  tags:
+    - linux
+    - elsa
+    - clang
 
 ### compile jobs ###
 
@@ -55,8 +67,7 @@ build-ubuntu:
   tags:
     - linux
     - elsa
-    
-    
+
 build-gcc9:
   <<: *build_job_artifact
   image: elsa/gcc:9
@@ -109,7 +120,7 @@ test-ubuntu:
   tags:
     - linux
     - elsa
-    
+
 test-gcc9:
   <<: *test_job_artifact
   stage: test
