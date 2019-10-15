@@ -41,7 +41,8 @@ stages:
   artifacts:
     reports:
       junit: "build/test_reports/test_*.xml"
-    
+
+
 ### static test ###
 
 clang-format:
@@ -53,6 +54,17 @@ clang-format:
     - linux
     - elsa
     - clang
+
+clang-tidy:
+  stage: static-test
+  image: elsa/cuda:9.2
+  script:
+    ./tools/ci_scripts/clang-tidy.sh
+  tags:
+    - linux
+    - elsa
+    - clang
+
 
 ### compile jobs ###
 
