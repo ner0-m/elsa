@@ -1,6 +1,7 @@
 stages:
 - compile
 - test
+- coverage
 - docs
 
 ### job templates ###
@@ -136,19 +137,47 @@ test-cuda92:
     - cuda
 
 
-### deploy docs ###
+### test coverage ###
+
+test-coverage:
+  stage: coverage
+  image: elsa/cuda:9.2
+  script:
+    - apt-get update
+    - apt-get install -y lcov
+    - mkdir -p build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
+    - make all -j4
+    - make test_coverage
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
+    paths:
+      - build/test_coverage/
+    expire_in: 30 mins
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+  only:
+    - master
+
+### deploy docs and coverage report ###
 
 deploy-docs:
   stage: docs
-  dependencies: []
+  dependencies:
+    - test-coverage
   script:
     - mkdir -p build
     - cd build
     - cmake ..
     - make docs
     - cp -r docs/sphinx/* /var/www/ip/elsadocs/
+    - cd ..
+    - cp -r build/test_coverage/* /var/www/ip/elsacoverage/
   tags:
     - elsa-docs-deploy
   only:
     - master
-
