@@ -10,6 +10,7 @@ project(elsa VERSION 0.5
 option(ELSA_TESTING "Enable the unit tests of elsa" ON)
 option(GIT_SUBMODULE "Check submodules during build" ON)
 option(BUILD_ELSA_PROJECTORS_CUDA "Attempts to build CUDA projectors if set" ON)
+option(ELSA_COVERAGE "Enables test coverage reporting" OFF)
 
 
 # ------------ general setup -----------
@@ -57,6 +58,20 @@ if(ELSA_TESTING)
 else(ELSA_TESTING)
     message(STATUS "elsa testing is disabled")
 endif(ELSA_TESTING)
+
+
+# ------------ setup coverage test -----------
+# ------------
+
+if(ELSA_COVERAGE)
+    message(STATUS "elsa coverage is enabled")
+
+    include(CodeCoverage)
+    APPEND_COVERAGE_COMPILER_FLAGS()
+    set(COVERAGE_LCOV_EXCLUDES '${PROJECT_SOURCE_DIR}/thirdparty/*' '/usr/*')
+    SETUP_TARGET_FOR_COVERAGE_LCOV(NAME test_coverage EXECUTABLE ctest)
+endif(ELSA_COVERAGE)
+
 
 
 # ------------ add code/docs -----------
