@@ -3,6 +3,11 @@
 .. |Pipeline status| image:: https://gitlab.lrz.de/IP/elsa/badges/master/pipeline.svg
    :target: https://gitlab.lrz.de/IP/elsa/commits/master
 
+|Coverage status|
+
+.. |Coverage status| image:: https://gitlab.lrz.de/IP/elsa/badges/master/coverage.svg
+   :target: https://gitlab.lrz.de/IP/elsa/commits/master
+
 elsa - an elegant framework for tomographic reconstruction
 ==========================================================
 
