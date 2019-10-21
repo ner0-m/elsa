@@ -24,6 +24,15 @@ stages:
     paths:
       - build/
     expire_in: 30 mins
+
+.job_template: &test_job_artifact
+  script:
+    - make -DELSA_CREATE_JUNIT_REPORTS=ON ..
+    - cd build
+    - ctest
+  artifacts:
+    reports:
+      junit: elsa/*/tests/test_*.xml
     
 
 ### compile jobs ###
@@ -85,11 +94,9 @@ build-cuda92:
 ### test jobs ###
 
 test-ubuntu:
+  <<: *test_job_artifact
   stage: test
   image: elsa/ubuntu:18.04
-  script:
-    - cd build
-    - ctest
   dependencies: 
     - build-ubuntu
   tags:
@@ -97,11 +104,9 @@ test-ubuntu:
     - elsa
     
 test-gcc9:
+  <<: *test_job_artifact
   stage: test
   image: elsa/gcc:9
-  script:
-    - cd build
-    - ctest
   dependencies:
     - build-gcc9
   tags:
@@ -110,11 +115,9 @@ test-gcc9:
     - gcc
     
 test-clang8:
+  <<: *test_job_artifact
   stage: test
   image: elsa/clang:8
-  script:
-    - cd build
-    - ctest
   dependencies:
     - build-clang8
   tags:
@@ -123,11 +126,9 @@ test-clang8:
     - clang
 
 test-cuda92:
+  <<: *test_job_artifact
   stage: test
   image: elsa/cuda:9.2
-  script:
-    - cd build
-    - ctest
   dependencies:
     - build-cuda92
   tags:
