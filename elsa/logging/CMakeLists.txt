@@ -29,10 +29,7 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
 
-target_include_directories(${ELSA_MODULE_TARGET_NAME}
-        PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/thirdparty/spdlog/include>
-        )
-
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC spdlog::spdlog_header_only)
 
 # require C++17
 target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
