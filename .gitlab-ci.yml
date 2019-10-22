@@ -7,6 +7,13 @@ stages:
 
 ### job templates ###
 
+.job_template: &nightly_job
+  only:
+    variables:
+      # only run on scheduled jobs on master branch
+      - $CI_PIPELINE_SOURCE == "schedules" && $CI_COMMIT_REF_NAME == "master"
+
+
 .job_template: &build_job
   stage: compile
   cache: 
@@ -143,6 +150,7 @@ test-cuda92:
 ### test coverage ###
 
 test-coverage:
+  <<: *nightly_job
   stage: coverage
   image: elsa/cuda:9.2
   script:
@@ -163,15 +171,12 @@ test-coverage:
     - elsa
     - gcc
     - cuda
-  only:
-    variables:
-      # only run on scheduled jobs on master branch
-      - $CI_PIPELINE_SOURCE == "schedules" && $CI_COMMIT_REF_NAME == "master"
 
 
 ### Sanitizers ###
 
 thread-sanitizer:
+  <<: *nightly_job
   stage: sanitizer
   image: elsa/cuda:9.2
   script:
@@ -187,12 +192,9 @@ thread-sanitizer:
     - elsa
     - gcc
     - cuda
-  only:
-    variables:
-      # only run on scheduled jobs on master branch
-      - $CI_PIPELINE_SOURCE == "schedules" && $CI_COMMIT_REF_NAME == "master"
 
 address-sanitizer:
+  <<: *nightly_job
   stage: sanitizer
   image: elsa/cuda:9.2
   script:
@@ -208,15 +210,12 @@ address-sanitizer:
     - elsa
     - gcc
     - cuda
-  only:
-    variables:
-      # only run on scheduled jobs on master branch
-      - $CI_PIPELINE_SOURCE == "schedules" && $CI_COMMIT_REF_NAME == "master"
 
 
 ### deploy docs and coverage report ###
 
 deploy-docs:
+  <<: *nightly_job
   stage: docs
   dependencies:
     - test-coverage
@@ -230,5 +229,3 @@ deploy-docs:
     - cp -r build/test_coverage/* /var/www/ip/elsacoverage/
   tags:
     - elsa-docs-deploy
-  only:
-    - master
