@@ -17,7 +17,9 @@ MACRO (ELSA_TEST NAME)
 
     # if we use JUnit reporter handle arguments
     if(${ELSA_CREATE_JUNIT_REPORTS})
-        set(ELSA_JUNIT_ARGUMENTS "-r junit" "-o test_${NAME}.xml")
+        file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/test_reports)
+
+        set(ELSA_JUNIT_ARGUMENTS "-r junit" "-o ${PROJECT_BINARY_DIR}/test_reports/test_${NAME}.xml")
     endif(${ELSA_CREATE_JUNIT_REPORTS})
 
     # let Catch discover and register all the test cases
@@ -54,11 +56,6 @@ if(${ELSA_MASTER_PROJECT})
             endif()
         endif(${ELSA_BUILD_WITH_MORE_WARNINGS})
     endforeach (_component ELSA_REGISTERED_COMPONENTS)
-
-    # add sanitizers if enabled
-    if(${ELSA_BUILD_WITH_SANITIZERS})
-        include(${PROJECT_SOURCE_DIR}/cmake/Sanitizers.cmake)
-    endif(${ELSA_BUILD_WITH_SANITIZERS})
 endif(${ELSA_MASTER_PROJECT})
 
 # propogate the variable to the parent scope
