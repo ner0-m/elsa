@@ -20,10 +20,14 @@ option(ELSA_TESTING "Enable the unit tests of elsa" ${ELSA_MASTER_PROJECT})
 option(ELSA_INSTALL "Generate the install target" ${ELSA_MASTER_PROJECT})
 option(GIT_SUBMODULE "Check submodules during build" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_EXAMPLES "Build examples" ${ELSA_MASTER_PROJECT})
+option(ELSA_COVERAGE "Enables test coverage reporting" OFF)
 
 option(ELSA_BUILD_CUDA_PROJECTORS "Attempts to build CUDA projectors if set" ON)
 option(ELSA_BUILD_WITH_MORE_WARNINGS "Reduce noise of warnings, but make chaning fast and easy" OFF)
-option(ELSA_BUILD_WITH_SANITIZERS "Build with Sanitizers. Pass ELSA_SANITIZE_THREAD or ELSA_SANITIZE_ADDRESS" ON)
+option(ELSA_CREATE_JUNIT_REPORTS "Create JUnit style reports while running tests" ON)
+
+option(ELSA_SANITIZE_THREAD "Build with TSAN" OFF)
+option(ELSA_SANITIZE_ADDRESS "Build with ASAN and UBSAN" OFF)
 
 # ------------ general setup -----------
 # ------------
@@ -81,6 +85,20 @@ if(ELSA_TESTING)
 else(ELSA_TESTING)
     message(STATUS "    elsa testing is disabled")
 endif(ELSA_TESTING)
+
+
+# ------------ setup coverage test -----------
+# ------------
+
+if(ELSA_COVERAGE)
+    message(STATUS "elsa coverage is enabled")
+
+    include(CodeCoverage)
+    APPEND_COVERAGE_COMPILER_FLAGS()
+    set(COVERAGE_LCOV_EXCLUDES '${PROJECT_SOURCE_DIR}/thirdparty/*' '/usr/*')
+    SETUP_TARGET_FOR_COVERAGE_LCOV(NAME test_coverage EXECUTABLE ctest)
+endif(ELSA_COVERAGE)
+
 
 
 # ------------ add code/docs -----------
