@@ -9,9 +9,7 @@ stages:
 
 .job_template: &nightly_job
   only:
-    variables:
-      # only run on scheduled jobs on master branch
-      - $CI_PIPELINE_SOURCE == "schedules" && $CI_COMMIT_REF_NAME == "master"
+    - schedules
 
 
 .job_template: &build_job
