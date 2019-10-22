@@ -27,8 +27,9 @@ stages:
 
 .job_template: &test_job_artifact
   script:
-    - cmake -DELSA_CREATE_JUNIT_REPORTS=ON ..
     - cd build
+    - cmake -DELSA_CREATE_JUNIT_REPORTS=ON ..
+    - make
     - ctest
   artifacts:
     reports:
