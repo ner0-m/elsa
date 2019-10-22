@@ -173,41 +173,41 @@ test-coverage:
 
 ### Sanitizers ###
 
-thread-sanitizer:
-  <<: *nightly_job
-  stage: sanitizer
-  image: elsa/cuda:9.2
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZE_THREAD=ON ..
-    - make all -j4
-    - ctest # let's run tests for now, we should run apps though as well!
-  dependencies:
-    - test-cuda92
-  tags:
-    - linux
-    - elsa
-    - gcc
-    - cuda
-
-address-sanitizer:
-  <<: *nightly_job
-  stage: sanitizer
-  image: elsa/cuda:9.2
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZE_ADDRESS=ON ..
-    - make all -j4
-    - ctest # let's run tests for now, we should run apps though as well!
-  dependencies:
-    - test-cuda92
-  tags:
-    - linux
-    - elsa
-    - gcc
-    - cuda
+#thread-sanitizer:
+#  <<: *nightly_job
+#  stage: sanitizer
+#  image: elsa/cuda:9.2
+#  script:
+#    - mkdir -p build
+#    - cd build
+#    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZE_THREAD=ON ..
+#    - make all -j4
+#    - ctest # let's run tests for now, we should run apps though as well!
+#  dependencies:
+#    - test-cuda92
+#  tags:
+#    - linux
+#    - elsa
+#    - gcc
+#    - cuda
+#
+#address-sanitizer:
+#  <<: *nightly_job
+#  stage: sanitizer
+#  image: elsa/cuda:9.2
+#  script:
+#    - mkdir -p build
+#    - cd build
+#    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZE_ADDRESS=ON ..
+#    - make all -j4
+#    - ctest # let's run tests for now, we should run apps though as well!
+#  dependencies:
+#    - test-cuda92
+#  tags:
+#    - linux
+#    - elsa
+#    - gcc
+#    - cuda
 
 
 ### deploy docs and coverage report ###
