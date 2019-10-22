@@ -27,12 +27,13 @@ stages:
 
 .job_template: &test_job_artifact
   script:
-    - make -DELSA_CREATE_JUNIT_REPORTS=ON ..
     - cd build
+    - cmake -DELSA_CREATE_JUNIT_REPORTS=ON ..
+    - make
     - ctest
   artifacts:
     reports:
-      junit: elsa/*/tests/test_*.xml
+      junit: "build/elsa/**/tests/test_*.xml"
     
 
 ### compile jobs ###
