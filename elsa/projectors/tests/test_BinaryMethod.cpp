@@ -465,7 +465,7 @@ SCENARIO("Calls to functions of super class") {
             THEN("Results do not change (may still be slightly different due to summation being performed in a different order)") {
                 op.apply(volume, sino);
                 opClone->apply(volume, sinoClone);
-                REQUIRE(sino == sinoClone);
+                REQUIRE((sino-sinoClone).squaredL2Norm() == Approx(0.0).margin(1e-5));
 
                 op.applyAdjoint(sino, volume);
                 opClone->applyAdjoint(sino, volumeClone);
