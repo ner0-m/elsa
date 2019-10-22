@@ -2,6 +2,7 @@ stages:
 - compile
 - test
 - coverage
+- sanitizer
 - docs
 
 ### job templates ###
@@ -163,7 +164,55 @@ test-coverage:
     - gcc
     - cuda
   only:
-    - master
+    variables:
+      # only run on scheduled jobs on master branch
+      - $CI_PIPELINE_SOURCE == "schedules" && $CI_COMMIT_REF_NAME == "master"
+
+
+### Sanitizers ###
+
+thread-sanitizer:
+  stage: sanitizer
+  image: elsa/cuda:9.2
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZE_THREAD=ON ..
+    - make all -j4
+    - ctest # let's run tests for now, we should run apps though as well!
+  dependencies:
+    - test-cuda92
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+  only:
+    variables:
+      # only run on scheduled jobs on master branch
+      - $CI_PIPELINE_SOURCE == "schedules" && $CI_COMMIT_REF_NAME == "master"
+
+address-sanitizer:
+  stage: sanitizer
+  image: elsa/cuda:9.2
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZE_ADDRESS=ON ..
+    - make all -j4
+    - ctest # let's run tests for now, we should run apps though as well!
+  dependencies:
+    - test-cuda92
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+  only:
+    variables:
+      # only run on scheduled jobs on master branch
+      - $CI_PIPELINE_SOURCE == "schedules" && $CI_COMMIT_REF_NAME == "master"
+
 
 ### deploy docs and coverage report ###
 
