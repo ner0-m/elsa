@@ -10,11 +10,10 @@
 
 namespace elsa
 {
-    /// forward declaration for friend function useCount
+    // forward declaration for friend test function
     template <typename data_t = real_t> class DataContainer;
-    /// used for testing and defined in test file
+    // used for testing and defined in test file (declared as friend)
     template <typename data_t> int useCount(const DataContainer<data_t>&);
-
 
     /**
      * \brief class representing and storing a linearized n-dimensional signal
@@ -198,7 +197,7 @@ namespace elsa
         /// comparison with another DataContainer
         bool operator!=(const DataContainer<data_t>& other) const;
 
-        /// used for testing and defined in test file
+        /// used for testing only and defined in test file
         friend int useCount <> (const DataContainer<data_t>& dc);
 
     private:
