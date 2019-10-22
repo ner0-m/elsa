@@ -33,7 +33,7 @@ stages:
     - ctest
   artifacts:
     reports:
-      junit: "elsa/**/tests/test_*.xml"
+      junit: "build/elsa/**/tests/test_*.xml"
     
 
 ### compile jobs ###
