@@ -10,6 +10,10 @@
 
 namespace elsa
 {
+    // forward declaration for friend test function
+    template <typename data_t = real_t> class DataContainer;
+    // used for testing and defined in test file (declared as friend)
+    template <typename data_t> int useCount(const DataContainer<data_t>&);
 
     /**
      * \brief class representing and storing a linearized n-dimensional signal
@@ -23,8 +27,11 @@ namespace elsa
      * This class provides a container for a signal that is stored in memory. This signal can
      * be n-dimensional, and will be stored in memory in a linearized fashion. The information
      * on how this linearization is performed is provided by an associated DataDescriptor.
+     *
+     * The class implements copy-on-write. Therefore any non-const functions should call the
+     * detach() function first to trigger the copy-on-write mechanism.
      */
-    template <typename data_t = real_t>
+    template <typename data_t>
     class DataContainer {
     public:
         /**
@@ -87,7 +94,6 @@ namespace elsa
          * \param[in] other DataContainer to move from
          */
         DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
-
 
         /// return the current DataDescriptor
         const DataDescriptor& getDataDescriptor() const;
@@ -191,12 +197,14 @@ namespace elsa
         /// comparison with another DataContainer
         bool operator!=(const DataContainer<data_t>& other) const;
 
+        /// used for testing only and defined in test file
+        friend int useCount <> (const DataContainer<data_t>& dc);
 
     private:
         /// the current DataDescriptor
         std::unique_ptr<DataDescriptor> _dataDescriptor;
         /// the current DataHandler
-        std::unique_ptr<DataHandler<data_t>> _dataHandler;
+        std::shared_ptr<DataHandler<data_t>> _dataHandler;
 
         /// factory method to create DataHandlers based on handlerType with perfect forwarding of constructor arguments
         template <typename ... Args>
@@ -204,6 +212,9 @@ namespace elsa
 
         /// private constructor accepting a DataDescriptor and a DataHandler
         explicit DataContainer(const DataDescriptor& dataDescriptor, std::unique_ptr<DataHandler<data_t>> dataHandler);
+
+        /// creates the deep copy for the copy-on-write mechanism
+        void detach();
     };
 
 

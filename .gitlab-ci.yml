@@ -1,6 +1,7 @@
 stages:
 - compile
 - test
+- coverage
 - docs
 
 ### job templates ###
@@ -23,6 +24,16 @@ stages:
     paths:
       - build/
     expire_in: 30 mins
+
+.job_template: &test_job_artifact
+  script:
+    - cd build
+    - cmake -DELSA_CREATE_JUNIT_REPORTS=ON ..
+    - make
+    - ctest
+  artifacts:
+    reports:
+      junit: "build/test_reports/test_*.xml"
     
 
 ### compile jobs ###
@@ -84,11 +95,9 @@ build-cuda92:
 ### test jobs ###
 
 test-ubuntu:
+  <<: *test_job_artifact
   stage: test
   image: elsa/ubuntu:18.04
-  script:
-    - cd build
-    - ctest
   dependencies: 
     - build-ubuntu
   tags:
@@ -96,11 +105,9 @@ test-ubuntu:
     - elsa
     
 test-gcc9:
+  <<: *test_job_artifact
   stage: test
   image: elsa/gcc:9
-  script:
-    - cd build
-    - ctest
   dependencies:
     - build-gcc9
   tags:
@@ -109,11 +116,9 @@ test-gcc9:
     - gcc
     
 test-clang8:
+  <<: *test_job_artifact
   stage: test
   image: elsa/clang:8
-  script:
-    - cd build
-    - ctest
   dependencies:
     - build-clang8
   tags:
@@ -122,11 +127,9 @@ test-clang8:
     - clang
 
 test-cuda92:
+  <<: *test_job_artifact
   stage: test
   image: elsa/cuda:9.2
-  script:
-    - cd build
-    - ctest
   dependencies:
     - build-cuda92
   tags:
@@ -136,19 +139,47 @@ test-cuda92:
     - cuda
 
 
-### deploy docs ###
+### test coverage ###
+
+test-coverage:
+  stage: coverage
+  image: elsa/cuda:9.2
+  script:
+    - apt-get update
+    - apt-get install -y lcov
+    - mkdir -p build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
+    - make all -j4
+    - make test_coverage
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
+    paths:
+      - build/test_coverage/
+    expire_in: 30 mins
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+  only:
+    - master
+
+### deploy docs and coverage report ###
 
 deploy-docs:
   stage: docs
-  dependencies: []
+  dependencies:
+    - test-coverage
   script:
     - mkdir -p build
     - cd build
     - cmake ..
     - make docs
     - cp -r docs/sphinx/* /var/www/ip/elsadocs/
+    - cd ..
+    - cp -r build/test_coverage/* /var/www/ip/elsacoverage/
   tags:
     - elsa-docs-deploy
   only:
     - master
-
