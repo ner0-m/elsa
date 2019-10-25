@@ -2,7 +2,7 @@
 
 function(InstallElsaModule ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_EXPORT_TARGET)
     if(ELSA_INSTALL)
-        #This is required so that the exported target has the name core and not elsa_core
+        # This is required so that the exported target has the name core and not elsa_core
         set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES EXPORT_NAME ${ELSA_MODULE_NAME})
 
         include(GNUInstallDirs)
@@ -16,7 +16,7 @@ function(InstallElsaModule ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_
         )
         # install the header files
         install(FILES ${MODULE_HEADERS}
-                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${ELSA_MODULE_NAME}
+                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/elsa/${ELSA_MODULE_NAME}
         )
         # create the config file for the module
         install(EXPORT ${ELSA_MODULE_EXPORT_TARGET}

@@ -29,26 +29,29 @@ set(MODULE_SOURCES
 # build the module library
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
+add_dependencies(elsa ${ELSA_MODULE_TARGET_NAME})
+
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Eigen3::Eigen)
 
 # use OpenMP is available
-find_package(OpenMP REQUIRED)
+find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
+
 target_include_directories(${ELSA_MODULE_TARGET_NAME}
         PUBLIC
-        $<INSTALL_INTERFACE:include/${ELSA_MODULE_NAME}>
+        $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
-
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Eigen3::Eigen)
 
 
 # require C++17
 target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
 # set -fPIC
 set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 
 # build the tests (if enabled)
 if(ELSA_TESTING)

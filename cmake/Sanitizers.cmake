@@ -1,3 +1,4 @@
+# setup sanitizers
 
 if(ELSA_SANITIZE_THREAD AND ELSA_SANITIZE_ADDRESS)
     message(FATAL_ERROR "AddressSanitizer is not compatible with ThreadSanitizer.")

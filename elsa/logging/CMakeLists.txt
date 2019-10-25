@@ -22,10 +22,11 @@ set(MODULE_SOURCES
 # build the module library
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
+add_dependencies(elsa ${ELSA_MODULE_TARGET_NAME})
 
 target_include_directories(${ELSA_MODULE_TARGET_NAME}
         PUBLIC
-        $<INSTALL_INTERFACE:include/${ELSA_MODULE_NAME}>
+        $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
 

@@ -7,7 +7,7 @@ macro(registerComponent name)
 endmacro()
 
 # macro for the unit tests
-MACRO (ELSA_TEST NAME)
+macro(ELSA_TEST NAME)
     # create the test executable
     add_executable(test_${NAME} test_${NAME}.cpp test_main.cpp)
     # add catch and the corresponding elsa library
@@ -18,18 +18,20 @@ MACRO (ELSA_TEST NAME)
     # if we use JUnit reporter handle arguments
     if(${ELSA_CREATE_JUNIT_REPORTS})
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/test_reports)
-
         set(ELSA_JUNIT_ARGUMENTS "-r junit" "-o ${PROJECT_BINARY_DIR}/test_reports/test_${NAME}.xml")
     endif(${ELSA_CREATE_JUNIT_REPORTS})
 
     # let Catch discover and register all the test cases
     catch_discover_tests(test_${NAME} TEST_SPEC ${ELSA_JUNIT_ARGUMENTS})
-ENDMACRO (ELSA_TEST)
+endmacro(ELSA_TEST)
 
 # add sanitizers if in debug mode
 if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
     include(${PROJECT_SOURCE_DIR}/cmake/Sanitizers.cmake)
 endif()
+
+# add a general custom target "elsa" that includes everything
+add_custom_target(elsa)
 
 # add the elsa modules
 add_subdirectory(core)
@@ -46,22 +48,17 @@ endif(ELSA_BUILD_CUDA_PROJECTORS)
 add_subdirectory(generators)
 
 
-#---------------------------------------------------------------------------------------
-# Turn on compiler warnings and sanitizers for all components on, if wanted
-#---------------------------------------------------------------------------------------
-if(${ELSA_MASTER_PROJECT})
-    foreach (_component ${ELSA_REGISTERED_COMPONENTS})
-        # add warnings if enabled
-        if(${ELSA_BUILD_WITH_MORE_WARNINGS})
-            if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-                target_compile_options( elsa_${_component} PUBLIC -Wall -Wextra -Wconversion -pedantic -Wfatal-errors)
-            endif()
-            if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-                target_compile_options( elsa_${_component} PUBLIC /W3 /WX )
-            endif()
-        endif(${ELSA_BUILD_WITH_MORE_WARNINGS})
-    endforeach (_component ELSA_REGISTERED_COMPONENTS)
-endif(${ELSA_MASTER_PROJECT})
+# if stand-alone and option set, turn on all warnings for all components
+if(${ELSA_MASTER_PROJECT} AND ${ELSA_BUILD_WITH_MORE_WARNINGS})
+    foreach(_component ${ELSA_REGISTERED_COMPONENTS})
+        if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+            target_compile_options(elsa_${_component} PUBLIC -Wall -Wextra -Wconversion -pedantic -Wfatal-errors)
+        endif()
+        if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+            target_compile_options(elsa_${_component} PUBLIC /W3 /WX)
+        endif()
+    endforeach(_component ELSA_REGISTERED_COMPONENTS)
+endif()
 
 # propogate the variable to the parent scope
 set(ELSA_REGISTERED_COMPONENTS "${ELSA_REGISTERED_COMPONENTS};" PARENT_SCOPE)

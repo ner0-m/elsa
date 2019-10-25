@@ -68,15 +68,13 @@ if(NOT Spdlog_FIND_VERSION)
   set(Spdlog_FIND_VERSION "${SPDLOG_MAJOR_VERSION}.${SPDLOG_MINOR_VERSION}.${SPDLOG_PATCH_VERSION}")
 endif(NOT Spdlog_FIND_VERSION)
 
-find_package(PkgConfig)
-
 if(EXISTS "${Spdlog_INCLUDE_DIR}")
   _spdlog_check_version()
   set(Spdlog_FOUND ${Spdlog_VERSION_OK})
 
 else(EXISTS "${Spdlog_INCLUDE_DIR}")
-  # search first if an Eigen3Config.cmake is available in the system,
-  # if successful this would set EIGEN3_INCLUDE_DIR and the rest of
+  # search first if an SpdlogConfig.cmake is available in the system,
+  # if successful this would set Spdlog_INCLUDE_DIR and the rest of
   # the script will work as usual
   find_package(Spdlog ${Spdlog_FIND_VERSION} NO_MODULE QUIET)
 
@@ -93,10 +91,7 @@ else(EXISTS "${Spdlog_INCLUDE_DIR}")
             DOC "spdlog library header files"
             PATH_SUFFIXES spdlog
             )
-    message(DEBUG " spdlog dir ${Spdlog_INCLUDE_DIR}")
   endif(NOT Spdlog_INCLUDE_DIR)
-
-  message(DEBUG " spdlog dir ${Spdlog_INCLUDE_DIR}")
 
   if(Spdlog_INCLUDE_DIR)
     _spdlog_check_version()
