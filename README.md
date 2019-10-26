@@ -53,6 +53,10 @@ When using the elsa library in your project, we advise using CMake as the build 
 
 As elsa depends on Eigen3 and spdlog, you will need to have these packages installed on your system, and you have to point CMake to those installations.
 
+Contributing
+------------
+To get involved, please see our [contributing page.](CONTRIBUTING.md)
+
 Contributors
 ------------
 
