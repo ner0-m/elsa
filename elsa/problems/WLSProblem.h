@@ -2,7 +2,6 @@
 
 #include "Problem.h"
 #include "Scaling.h"
-#include "Functional.h"
 #include "LinearResidual.h"
 
 namespace elsa
@@ -17,7 +16,7 @@ namespace elsa
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a weighted least squares optimization problem, i.e.
-     * \f$ \argmin_x \frac{1}{2} \| WAx - b \|_2^2 \f$, where \f$ W \f$ is a weighting (scaling) operator,
+     * \f$ \argmin_x \frac{1}{2} \| Ax - b \|_{W,2}^2 \f$, where \f$ W \f$ is a weighting (scaling) operator,
      * \f$ A \f$ is a linear operator and \f$ b \f$ is a data vector.
      */
     template <typename data_t = real_t>
@@ -64,29 +63,11 @@ namespace elsa
         ~WLSProblem() override = default;
 
     protected:
-        /// the evaluation of the wls problem
-        data_t _evaluate() override;
-
-        /// the getGradient method for the wls problem
-        void _getGradient(DataContainer<data_t>& result) override;
-
-        /// the getHessian method for the wls problem
-        LinearOperator<data_t> _getHessian() override;
 
         /// implement the polymorphic clone operation
         WLSProblem<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Problem<data_t>& other) const override;
-
-    private:
-        /// the linear residual
-        std::unique_ptr<Residual<data_t>> _residual{};
-
-        /// the weighted l2 functional
-        std::unique_ptr<Functional<data_t>> _functional{};
-
-        /// helper constructor for easy implementation of cloneImpl
-        WLSProblem(const Residual<data_t>& residual, const Functional<data_t>& functional, const DataContainer<data_t>& x0);
     };
 } // namespace elsa

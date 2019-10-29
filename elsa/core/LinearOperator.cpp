@@ -62,7 +62,7 @@ namespace elsa
 
 
     template <typename data_t>
-    DataContainer<data_t> LinearOperator<data_t>::apply(const DataContainer<data_t>& x)
+    DataContainer<data_t> LinearOperator<data_t>::apply(const DataContainer<data_t>& x) const
     {
         DataContainer<data_t> result(*_rangeDescriptor);
         apply(x, result);
@@ -70,13 +70,13 @@ namespace elsa
     }
     
     template <typename data_t>
-    void LinearOperator<data_t>::apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    void LinearOperator<data_t>::apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         _apply(x, Ax);
     }
 
     template <typename data_t>
-    void LinearOperator<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    void LinearOperator<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         if (_isLeaf) {
             if (_isAdjoint) {
@@ -132,7 +132,7 @@ namespace elsa
 
 
     template <typename data_t>
-    DataContainer<data_t> LinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y)
+    DataContainer<data_t> LinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y) const
     {
         DataContainer<data_t> result(*_domainDescriptor);
         applyAdjoint(y, result);
@@ -140,13 +140,13 @@ namespace elsa
     }
     
     template <typename data_t>
-    void LinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void LinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
     {
         _applyAdjoint(y, Aty);
     }
 
     template <typename data_t>
-    void LinearOperator<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void LinearOperator<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
     {
         if (_isLeaf) {
             if (_isAdjoint) {

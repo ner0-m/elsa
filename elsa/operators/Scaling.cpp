@@ -16,7 +16,31 @@ namespace elsa
     {}
 
     template <typename data_t>
-    void Scaling<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    bool Scaling<data_t>::isIsotropic() const
+    {
+        return _isIsotropic;
+    }
+
+    template <typename data_t>
+    data_t Scaling<data_t>::getScaleFactor() const 
+    {
+        if (!_isIsotropic)
+            throw std::logic_error("Scaling: scaling is not isotropic");
+
+        return _scaleFactor;
+    }
+
+    template <typename data_t>
+    const DataContainer<data_t>&  Scaling<data_t>::getScaleFactors() const 
+    {
+        if (_isIsotropic)
+            throw std::logic_error("Scaling: scaling is isotropic");
+        
+        return *_scaleFactors;
+    }
+
+    template <typename data_t>
+    void Scaling<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer timeguard("Scaling", "apply");
 
@@ -27,7 +51,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Scaling<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void Scaling<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
     {
         Timer timeguard("Scaling", "applyAdjoint");
 

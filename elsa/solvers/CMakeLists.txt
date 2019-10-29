@@ -9,12 +9,14 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 # list all the headers of the module
 set(MODULE_HEADERS
         Solver.h
-        GradientDescent.h)
+        GradientDescent.h
+        CG.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         Solver.cpp
-        GradientDescent.cpp)
+        GradientDescent.cpp
+        CG.cpp)
 
 
 # build the module library

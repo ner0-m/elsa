@@ -9,7 +9,7 @@
 #include <catch2/catch.hpp>
 #include "GradientDescent.h"
 #include "WLSProblem.h"
-#include "OptimizationProblem.h"
+#include "Problem.h"
 #include "Identity.h"
 #include "LinearResidual.h"
 #include "L2NormPow2.h"
@@ -72,7 +72,7 @@ SCENARIO("Solving a Tikhonov optimization problem") {
         L2NormPow2 regFunc(dd);
         RegularizationTerm regTerm(1.0f, regFunc);
 
-        OptimizationProblem prob(func, regTerm);
+        Problem prob(func, regTerm);
 
         WHEN("setting up a gd solver") {
             GradientDescent solver(prob, 0.5);

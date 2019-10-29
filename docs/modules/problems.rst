@@ -9,17 +9,18 @@ Problem
 
 .. doxygenclass:: elsa::Problem
 
+RegularizationTerm
+==================
+
+.. doxygenclass:: elsa::RegularizationTerm
+
 WLSProblem
 ==========
 
 .. doxygenclass:: elsa::WLSProblem
 
-OptimizationProblem
+QuadricProblem
 ===================
 
-.. doxygenclass:: elsa::OptimizationProblem
+.. doxygenclass:: elsa::QuadricProblem
 
-RegularizationTerm
-==================
-
-.. doxygenclass:: elsa::RegularizationTerm

@@ -31,6 +31,7 @@ SCENARIO("Testing the weighted, squared l2 norm functional") {
 
             THEN("the functional is as expected") {
                 REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE(func.getWeightingOperator() == scalingOp);
 
                 auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
                 REQUIRE(linRes);
@@ -86,6 +87,7 @@ SCENARIO("Testing the weighted, squared l2 norm functional") {
 
             THEN("the functional is as expected") {
                 REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE(func.getWeightingOperator() == scalingOp);
 
                 auto* lRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
                 REQUIRE(lRes);

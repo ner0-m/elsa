@@ -14,8 +14,8 @@ namespace elsa
      *
      * \tparam data_t data type for the domain of the functional, defaulting to real_t
      *
-     * The weighted, squared l2 norm functional evaluates to \f$ 0.5 * \langle Wx, x \rangle \f$ using the
-     * standard scalar product, and where W is a diagonal scaling operator.
+     * The weighted, squared l2 norm functional evaluates to \f$ 0.5 * \| x \|_{W,2} = 0.5 * \langle x, Wx \rangle \f$
+     * using the standard scalar product, and where W is a diagonal scaling operator.
      */
     template <typename data_t = real_t>
     class WeightedL2NormPow2 : public Functional<data_t> {
@@ -38,6 +38,9 @@ namespace elsa
         /// default destructor
         ~WeightedL2NormPow2() override = default;
 
+        /// returns the weighting operator
+        const Scaling<data_t>& getWeightingOperator() const;
+
     protected:
         /// the evaluation of the weighted, squared l2 norm
         data_t _evaluate(const DataContainer<data_t>& Rx) override;
@@ -56,7 +59,7 @@ namespace elsa
 
     private:
         /// the weighting operator
-        std::unique_ptr<LinearOperator<data_t>> _weightingOp;
+        std::unique_ptr<Scaling<data_t>> _weightingOp;
     };
 
 } // namespace elsa

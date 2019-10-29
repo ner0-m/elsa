@@ -5,6 +5,7 @@ include(CTest)
 include(Catch)
 
 # the actual tests
-ELSA_TEST(WLSProblem)
 ELSA_TEST(RegularizationTerm)
-ELSA_TEST(OptimizationProblem)
+ELSA_TEST(Problem)
+ELSA_TEST(WLSProblem)
+ELSA_TEST(QuadricProblem)

@@ -48,7 +48,8 @@ namespace elsa
          * \param[in] domainDescriptor describing the domain of the operator (the volume)
          * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
          * \param[in] geometryList vector containing the geometries for the acquisition poses
-         *
+         * \param[in] interpolation enum specifying the interpolation mode
+         * 
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
@@ -60,10 +61,10 @@ namespace elsa
 
     protected:
         /// apply Joseph's method (i.e. forward projection)
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) override;
+        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// apply the adjoint of Joseph's method (i.e. backward projection)
-        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
+        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         JosephsMethod<data_t>* cloneImpl() const override;
@@ -102,15 +103,16 @@ namespace elsa
         /**
          * \brief  Linear interpolation, works in any dimension
          *
-         * \param vector the input DataContainer
-         * \param result DataContainer for results
-         * \param fractionals the fractional numbers used in the interpolation
-         * \param adjoint true for backward projection, false for forward
-         * \param domainDim number of dimensions
-         * \param currentVoxel coordinates of voxel for interpolation
-         * \param intersection weighting for the interpolated values depending on the incidence angle
-         * \param from index of the current vector position
-         * \param to index of the current result position
+         * \param[in] vector the input DataContainer
+         * \param[out] result DataContainer for results
+         * \param[in] fractionals the fractional numbers used in the interpolation
+         * \param[in] adjoint true for backward projection, false for forward
+         * \param[in] domainDim number of dimensions
+         * \param[in] currentVoxel coordinates of voxel for interpolation
+         * \param[in] intersection weighting for the interpolated values depending on the incidence angle
+         * \param[in] from index of the current vector position
+         * \param[in] to index of the current result position
+         * \param[in] mainDirection specifies the main direction of the ray
          */
         void LINEAR(const DataContainer<data_t>& vector, DataContainer<data_t>& result, const RealVector_t& fractionals, bool adjoint,
                 int domainDim, const IndexVector_t& currentVoxel, float intersection, index_t from, index_t to, int mainDirection) const;    

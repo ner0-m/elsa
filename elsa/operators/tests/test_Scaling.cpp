@@ -19,11 +19,18 @@ SCENARIO("Constructing a Scaling operator") {
         DataDescriptor dd(numCoeff);
 
         WHEN("instantiating an isotropic scaling operator") {
-            Scaling scalingOp(dd, 3.5f);
+            real_t scaleFactor = 3.5f;
+            Scaling scalingOp(dd, scaleFactor);
 
             THEN("the descriptors are as expected") {
                 REQUIRE(scalingOp.getDomainDescriptor() == dd);
                 REQUIRE(scalingOp.getRangeDescriptor() == dd);
+            }
+            
+            THEN("the scaling is isotropic and correct") {
+                REQUIRE(scalingOp.isIsotropic());
+                REQUIRE(scalingOp.getScaleFactor() == scaleFactor);
+                REQUIRE_THROWS_AS(scalingOp.getScaleFactors(), std::logic_error);
             }
         }
 
@@ -35,6 +42,12 @@ SCENARIO("Constructing a Scaling operator") {
             THEN("the descriptors  are as expected") {
                 REQUIRE(scalingOp.getDomainDescriptor() == dd);
                 REQUIRE(scalingOp.getRangeDescriptor() == dd);
+            }
+            
+            THEN("the scaling is anisotropic") {
+                REQUIRE(!scalingOp.isIsotropic());
+                REQUIRE(scalingOp.getScaleFactors() == dc);
+                REQUIRE_THROWS_AS(scalingOp.getScaleFactor(), std::logic_error);
             }
         }
 

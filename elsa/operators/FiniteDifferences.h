@@ -38,7 +38,7 @@ namespace elsa
          *
          * Note: the descriptor for the range is automatically generated from the domain.
          */
-        FiniteDifferences(const DataDescriptor& domainDescriptor, DiffType type = DiffType::FORWARD);
+        explicit FiniteDifferences(const DataDescriptor& domainDescriptor, DiffType type = DiffType::FORWARD);
 
         /**
          * \brief Constructor for FiniteDifferences over selected dimensions.
@@ -63,10 +63,10 @@ namespace elsa
 
     protected:
         /// apply the finite differences operator
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax) override;
+        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax) const override;
 
         /// apply the adjoint of the finite differences operator
-        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
+        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         FiniteDifferences<data_t>* cloneImpl() const override;
@@ -90,11 +90,11 @@ namespace elsa
 
         /// the actual finite differences computations (with mode as template parameter for performance)
         template <typename FDtype>
-        void applyHelper(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax, FDtype type);
+        void applyHelper(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax, FDtype type) const;
 
         /// the actual finite differences computations (with mode as template parameter for performance)
         template <typename FDtype>
-        void applyAdjointHelper(const DataContainer<data_t>& y, DataContainer<data_t>&  Aty, FDtype type);
+        void applyAdjointHelper(const DataContainer<data_t>& y, DataContainer<data_t>&  Aty, FDtype type) const;
 
     };
 } // namespace elsa

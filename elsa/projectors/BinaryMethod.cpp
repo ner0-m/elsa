@@ -25,14 +25,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    void BinaryMethod<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    void BinaryMethod<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer t("BinaryMethod", "apply");
         traverseVolume<false>(x, Ax);
     }
 
     template <typename data_t>
-    void BinaryMethod<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void BinaryMethod<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
     {
         Timer t("BinaryMethod", "applyAdjoint");
         traverseVolume<true>(y, Aty);

@@ -46,17 +46,17 @@ namespace elsa
           * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
           */
         SiddonsMethodCUDA(const DataDescriptor &domainDescriptor, const DataDescriptor &rangeDescriptor,
-                     const std::vector<Geometry> &geom);
+                     const std::vector<Geometry> &geometryList);
 
         /// destructor
         ~SiddonsMethodCUDA();
 
     protected:
         /// apply Siddon's method (i.e. forward projection)
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) override;
+        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// apply the adjoint of Siddon's method (i.e. backward projection)
-        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
+        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         SiddonsMethodCUDA<data_t>* cloneImpl() const override;

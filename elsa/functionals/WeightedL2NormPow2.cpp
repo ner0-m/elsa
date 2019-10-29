@@ -8,18 +8,24 @@ namespace elsa
     template <typename data_t>
     WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Scaling<data_t>& weightingOp)
         : Functional<data_t>(weightingOp.getDomainDescriptor()),
-          _weightingOp{weightingOp.clone()}
+          _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
     {}
 
     template <typename data_t>
     WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Residual<data_t>& residual, const Scaling<data_t>& weightingOp)
         : Functional<data_t>(residual),
-          _weightingOp{weightingOp.clone()}
+          _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
     {
         // sanity check
         if (residual.getDomainDescriptor() != weightingOp.getDomainDescriptor() ||
             residual.getRangeDescriptor() != weightingOp.getRangeDescriptor())
             throw std::invalid_argument("WeightedL2NormPow2: sizes of residual and weighting operator do not match");
+    }
+
+    template <typename data_t>
+    const Scaling<data_t>& WeightedL2NormPow2<data_t>::getWeightingOperator() const
+    {
+        return *_weightingOp;
     }
 
     template <typename data_t>

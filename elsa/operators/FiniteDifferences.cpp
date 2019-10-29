@@ -51,7 +51,7 @@ namespace elsa
 
 
     template <typename data_t>
-    void FiniteDifferences<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    void FiniteDifferences<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer<> timeguard("FiniteDifferences", "apply");
 
@@ -71,7 +71,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void FiniteDifferences<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void FiniteDifferences<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
     {
         Timer<> timeguard("FiniteDifferences", "applyAdjoint");
 
@@ -93,7 +93,7 @@ namespace elsa
 
     template <typename data_t>
     template <typename FDtype>
-    void FiniteDifferences<data_t>::applyHelper(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax, FDtype type)
+    void FiniteDifferences<data_t>::applyHelper(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax, FDtype type) const
     {
         index_t sizeOfDomain = this->getDomainDescriptor().getNumberOfCoefficients();
         index_t numDim = this->getDomainDescriptor().getNumberOfDimensions();
@@ -141,7 +141,7 @@ namespace elsa
 
     template <typename data_t>
     template <typename FDtype>
-    void FiniteDifferences<data_t>::applyAdjointHelper(const DataContainer<data_t>& y, DataContainer<data_t>&  Aty, FDtype type)
+    void FiniteDifferences<data_t>::applyAdjointHelper(const DataContainer<data_t>& y, DataContainer<data_t>&  Aty, FDtype type) const
     {
         index_t sizeOfDomain = this->getDomainDescriptor().getNumberOfCoefficients();
         index_t numDim = this->getDomainDescriptor().getNumberOfDimensions();

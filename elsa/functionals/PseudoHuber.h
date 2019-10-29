@@ -13,7 +13,7 @@ namespace elsa
      *
      * \tparam data_t data type for the domain of the residual of the functional, defaulting to real_t
      *
-     * The Pseudohuber norm evaluates to \f$ \sum_{i=1}^n \delta \left( \sqrt{1 + (x_i / delta)^2} - 1 \right) \f$
+     * The Pseudohuber norm evaluates to \f$ \sum_{i=1}^n \delta \left( \sqrt{1 + (x_i / \delta)^2} - 1 \right) \f$
      * for \f$ x=(x_i)_{i=1}^n \f$ and a slope parameter \f$ \delta \f$.
      *
      * Reference: https://doi.org/10.1109%2F83.551699

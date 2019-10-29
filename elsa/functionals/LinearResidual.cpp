@@ -46,7 +46,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t>& LinearResidual<data_t>::getOperator() const
+    const LinearOperator<data_t>& LinearResidual<data_t>::getOperator() const
     {
         if (!_operator)
             throw std::runtime_error("LinearResidual::getOperator: operator not present");
@@ -55,14 +55,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    const  DataContainer<data_t>& LinearResidual<data_t>::getDataVector() const
+    const DataContainer<data_t>& LinearResidual<data_t>::getDataVector() const
     {
         if (!_dataVector)
             throw std::runtime_error("LinearResidual::getDataVector: data vector not present");
 
         return *_dataVector;
     }
-
 
     template <typename data_t>
     LinearResidual<data_t>* LinearResidual<data_t>::cloneImpl() const

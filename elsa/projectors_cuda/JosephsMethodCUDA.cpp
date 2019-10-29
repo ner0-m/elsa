@@ -110,7 +110,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void JosephsMethodCUDA<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    void JosephsMethodCUDA<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer<> timeGuard("JosephsMethodCUDA", "apply");
 
@@ -216,7 +216,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void JosephsMethodCUDA<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void JosephsMethodCUDA<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
     {
         Timer<> timeguard("JosephsMethodCUDA", "applyAdjoint");
 

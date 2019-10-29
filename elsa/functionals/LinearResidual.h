@@ -59,7 +59,7 @@ namespace elsa
         bool hasDataVector() const;
 
         /// return the operator A (throws if the residual has none)
-        LinearOperator<data_t>& getOperator() const;
+        const LinearOperator<data_t>& getOperator() const;
 
         /// return the data vector b (throws if the residual has none)
         const DataContainer<data_t>& getDataVector() const;

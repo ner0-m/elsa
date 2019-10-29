@@ -66,7 +66,7 @@ namespace elsa
          *
          * Please note: this method uses apply(x, Ax) to perform the actual operation.
          */
-        DataContainer<data_t> apply(const DataContainer<data_t>& x);
+        DataContainer<data_t> apply(const DataContainer<data_t>& x) const;
 
         /**
          * \brief apply the operator A to an element in the operator's domain
@@ -78,7 +78,7 @@ namespace elsa
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
          * function overloading a virtual one [apply with one vs. two arguments]).
          */
-        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax);
+        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
 
         /**
          * \brief apply the adjoint of operator A to an element of the operator's range
@@ -90,7 +90,7 @@ namespace elsa
          *
          * Please note: this method uses applyAdjoint(y, Aty) to perform the actual operation.
          */
-        DataContainer<data_t> applyAdjoint(const DataContainer<data_t>& y);
+        DataContainer<data_t> applyAdjoint(const DataContainer<data_t>& y) const;
 
         /**
          * \brief apply the adjoint of operator A to an element of the operator's range
@@ -102,7 +102,7 @@ namespace elsa
          * derived classes. (Why is this method not virtual itself? Because you cannot have a
          * non-virtual function overloading a virtual one [applyAdjoint with one vs. two args]).
          */
-        void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty);
+        void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const;
 
 
         /// friend operator+ to support composition of LinearOperators (and its derivatives)
@@ -141,10 +141,10 @@ namespace elsa
 
 
         /// the apply method that has to be overridden in derived classes
-        virtual void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax);
+        virtual void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
 
         /// the applyAdjoint  method that has to be overridden in derived classes
-        virtual void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty);
+        virtual void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const;
 
     private:
         /// pointers to nodes in the evaluation tree

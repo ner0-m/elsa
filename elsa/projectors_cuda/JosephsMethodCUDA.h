@@ -48,7 +48,7 @@ namespace elsa
          * \param[in] domainDescriptor describing the domain of the operator (the volume)
          * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
          * \param[in] geometryList vector containing the geometries for the acquisition poses
-         * \param[in] performs fast backward projection if set, otherwise matched; forward projection is unaffected
+         * \param[in] fast performs fast backward projection if set, otherwise matched; forward projection is unaffected
          * 
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
@@ -61,10 +61,10 @@ namespace elsa
 
     protected:
         /// apply Joseph's method (i.e. forward projection)
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) override;
+        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// apply the adjoint of Joseph's method (i.e. backward projection)
-        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
+        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         JosephsMethodCUDA<data_t>* cloneImpl() const override;

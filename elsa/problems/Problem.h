@@ -1,51 +1,95 @@
 #pragma once
 
-#include "elsa.h"
-#include "Cloneable.h"
-#include "DataContainer.h"
-#include "DataDescriptor.h"
-#include "LinearOperator.h"
+#include "Functional.h"
+#include "RegularizationTerm.h"
+
+#include <vector>
 
 namespace elsa
 {
     /**
-     * \brief Base class representing an optimization problem.
+     * \brief Class representing a generic optimization problem consisting of data term and regularization term(s).
      *
-     * \author Mathias Wieczorek - initial code
+     * \author Matthias Wieczorek - initial code
      * \author Maximilian Hornung - modularization
      * \author Tobias Lasser - rewrite, modernization
      *
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
-     * This class represents an abstract optimization problem, for use with iterative solvers.
-     * It stores a current estimated solution.
+     * This class represents a generic optimization problem, which consists of a data term and (optionally) of one
+     * (or many) regularization terms, \f$ \argmin_x D(x) + \sum_{i=1}^n \lambda_i R(x) \f$. Here, the data term
+     * \f$ D(x) \f$ is represented through a Functional (or it derivatives), the regularization terms are represented
+     * by RegularizationTerms, which encapsulate regularization parameters \f$ \lambda_i \f$ (scalar values) and the actual
+     * regularization terms \f$ R(x) \f$ (Functionals or its derivatives).
      */
     template <typename data_t = real_t>
-    class Problem : public Cloneable<Problem<data_t>> {
+    class Problem: public Cloneable<Problem<data_t>> {
     public:
         /**
-         * \brief Constructor for the problem, accepting an initial guess x0
+         * \brief Constructor for optimization problem, accepting a data and multiple regularization terms, and an initial guess x0.
          *
-         * \param[in] x0 initial value for the current estimated solution variable
+         * \param[in] dataTerm functional expressing the data term
+         * \param[in] regTerms vector of RegularizationTerms (weight and functional)
+         * \param[in] x0 initial value for the current estimated solution
          */
-        explicit Problem(const DataContainer<data_t>& x0);
+        Problem(const Functional<data_t>& dataTerm, const std::vector<RegularizationTerm<data_t>>& regTerms,
+                const DataContainer<data_t>& x0);
 
         /**
-         * \brief Constructor for the problem (initial guess implicitly set to 0)
+         * \brief Constructor for optimization problem, accepting a data and multiple regularization terms.
          *
-         * \param[in] domainDescriptor describing the domain of the problem
+         * \param[in] dataTerm functional expressing the data term
+         * \param[in] regTerms vector of RegularizationTerms (weight and functional)
          */
-        explicit Problem(const DataDescriptor& domainDescriptor);
+        Problem(const Functional<data_t>& dataTerm, const std::vector<RegularizationTerm<data_t>>& regTerms);
+
+        /**
+         * \brief Constructor for optimization problem, accepting a data and one regularization term, and an initial guess x0.
+         *
+         * \param[in] dataTerm functional expressing the data term
+         * \param[in] regTerm RegularizationTerm (weight and functional)
+         * \param[in] x0 initial value for the current estimated solution
+         */
+        Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm,
+                const DataContainer<data_t>& x0);
+
+        /**
+         * \brief Constructor for optimization problem, accepting a data and one regularization term.
+         *
+         * \param[in] dataTerm functional expressing the data term
+         * \param[in] regTerm RegularizationTerm (weight and functional)
+         */
+        Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm);
+
+        /**
+         * \brief Constructor for optimization problem, accepting a data term and an initial guess x0.
+         *
+         * \param[in] dataTerm functional expressing the data term
+         * \param[in] x0 initial value for the current estimated solution
+         */
+        Problem(const Functional<data_t>& dataTerm, const DataContainer<data_t>& x0);
+
+        /**
+         * \brief Constructor for optimization problem, accepting a data term.
+         *
+         * \param[in] dataTerm functional expressing the data term
+         */
+        explicit Problem(const Functional<data_t>& dataTerm);
 
         /// default destructor
         ~Problem() override = default;
+
+        /// return the data term
+        const Functional<data_t>& getDataTerm() const;
+
+        /// return the vector of regularization terms
+        const std::vector<RegularizationTerm<data_t>>& getRegularizationTerms() const;
 
         /// return the current estimated solution (const version)
         const DataContainer<data_t>& getCurrentSolution() const;
 
         /// return the current estimated solution
         DataContainer<data_t>& getCurrentSolution();
-
 
         /**
          * \brief evaluate the problem at the current estimated solution
@@ -84,22 +128,34 @@ namespace elsa
          */
         LinearOperator<data_t> getHessian();
 
-
-
     protected:
+        /// the data term
+        std::unique_ptr<Functional<data_t>> _dataTerm{};
+
+        /// the regularization terms
+        std::vector<RegularizationTerm<data_t>> _regTerms{};
+
         /// the current estimated solution
         DataContainer<data_t> _currentSolution;
 
-        /// the evaluate method that has to be overridden in derived classes
-        virtual data_t _evaluate() = 0;
+        /// protected copy constructor, simplifies cloning (of the subclasses primarily)
+        Problem(const Problem<data_t>& problem);
 
-        /// the getGradient method that has to be overridden in derived classes
-        virtual void _getGradient(DataContainer<data_t>& result) = 0;
+        /// the evaluation of the optimization problem
+        virtual data_t _evaluate();
 
-        /// the getHessian method that has to be overridden in derived classes
-        virtual LinearOperator<data_t> _getHessian() = 0;
+        /// the getGradient method for the optimization problem
+        virtual void _getGradient(DataContainer<data_t>& result);
+
+        /// the getHessian method for the optimization problem
+        virtual LinearOperator<data_t> _getHessian();
+
+        /// implement the polymorphic clone operation
+        Problem<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Problem<data_t>& other) const override;
     };
 } // namespace elsa
+
+

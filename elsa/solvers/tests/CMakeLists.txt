@@ -6,3 +6,4 @@ include(Catch)
 
 # the actual tests
 ELSA_TEST(GradientDescent)
+ELSA_TEST(CG)

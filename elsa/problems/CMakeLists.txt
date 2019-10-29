@@ -8,17 +8,17 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 
 # list all the headers of the module
 set(MODULE_HEADERS
-        Problem.h
         RegularizationTerm.h
-        OptimizationProblem.h
-        WLSProblem.h)
+        Problem.h
+        WLSProblem.h
+        QuadricProblem.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
-        Problem.cpp
         RegularizationTerm.cpp
-        OptimizationProblem.cpp
-        WLSProblem.cpp)
+        Problem.cpp
+        WLSProblem.cpp
+        QuadricProblem.cpp)
 
 
 # build the module library

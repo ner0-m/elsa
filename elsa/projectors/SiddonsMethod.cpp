@@ -27,14 +27,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    void SiddonsMethod<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    void SiddonsMethod<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer t("SiddonsMethod", "apply");
         traverseVolume<false>(x, Ax);
     }
 
     template <typename data_t>
-    void SiddonsMethod<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void SiddonsMethod<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
     {
         Timer t("SiddonsMethod", "applyAdjoint");
         traverseVolume<true>(y, Aty);

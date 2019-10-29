@@ -37,12 +37,21 @@ namespace elsa {
         /// default destructor
         ~Scaling() override = default;
 
+        /// is the scaling isotropic
+        bool isIsotropic() const;
+
+        /// returns the scale factor (throws if scaling is not isotropic)
+        data_t getScaleFactor() const;
+
+        /// returns the scale factors (throws if scaling is isotropic)
+        const DataContainer<data_t>& getScaleFactors() const;
+
     protected:
         /// apply the scaling operation
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax) override;
+        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax) const override;
 
         /// apply the adjoint of the scaling operation
-        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
+        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         Scaling<data_t>* cloneImpl() const override;

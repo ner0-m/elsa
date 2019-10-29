@@ -9,14 +9,14 @@ namespace elsa
     {}
 
     template <typename data_t>
-    void Identity<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    void Identity<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer timeguard("Identity", "apply");
         Ax = x;
     }
 
     template <typename data_t>
-    void Identity<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void Identity<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
     {
         Timer timeguard("Identity", "applyAdjoint");
         Aty = y;

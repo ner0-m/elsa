@@ -8,7 +8,7 @@
  */
 
 #include <catch2/catch.hpp>
-#include "OptimizationProblem.h"
+#include "Problem.h"
 #include "Identity.h"
 #include "Scaling.h"
 #include "LinearResidual.h"
@@ -16,7 +16,7 @@
 
 using namespace elsa;
 
-SCENARIO("Testing OptimizationProblem without regularization") {
+SCENARIO("Testing Problem without regularization") {
     GIVEN("some data term") {
         IndexVector_t numCoeff(2); numCoeff << 17, 23;
         DataDescriptor dd(numCoeff);
@@ -34,7 +34,7 @@ SCENARIO("Testing OptimizationProblem without regularization") {
         L2NormPow2 func(linRes);
 
         WHEN("setting up the problem without x0") {
-            OptimizationProblem prob(func);
+            Problem prob(func);
 
             THEN("the clone works correctly") {
                 auto probClone = prob.clone();
@@ -62,7 +62,7 @@ SCENARIO("Testing OptimizationProblem without regularization") {
             x0Vec.setRandom();
             DataContainer dcX0(dd, x0Vec);
 
-            OptimizationProblem prob(func, dcX0);
+            Problem prob(func, dcX0);
 
             THEN("the clone works correctly") {
                 auto probClone = prob.clone();
@@ -87,7 +87,7 @@ SCENARIO("Testing OptimizationProblem without regularization") {
 }
 
 
-SCENARIO("Testing OptimizationProblem with one regularization term") {
+SCENARIO("Testing Problem with one regularization term") {
     GIVEN("some data term and some regularization term") {
         // least squares data term
         IndexVector_t numCoeff(2); numCoeff << 23, 47;
@@ -111,7 +111,7 @@ SCENARIO("Testing OptimizationProblem with one regularization term") {
         RegularizationTerm regTerm(weight, regFunc);
 
         WHEN("setting up the problem without x0") {
-            OptimizationProblem prob(func, regTerm);
+            Problem prob(func, regTerm);
 
             THEN("the clone works correctly") {
                 auto probClone = prob.clone();
@@ -139,7 +139,7 @@ SCENARIO("Testing OptimizationProblem with one regularization term") {
             x0Vec.setRandom();
             DataContainer dcX0(dd, x0Vec);
 
-            OptimizationProblem prob(func, regTerm, dcX0);
+            Problem prob(func, regTerm, dcX0);
 
             THEN("the clone works correctly") {
                 auto probClone = prob.clone();
@@ -165,7 +165,7 @@ SCENARIO("Testing OptimizationProblem with one regularization term") {
 }
 
 
-SCENARIO("Testing OptimizationProblem with several regularization terms") {
+SCENARIO("Testing Problem with several regularization terms") {
     GIVEN("some data term and several regularization terms") {
         // least squares data term
         IndexVector_t numCoeff(3); numCoeff << 17, 33, 52;
@@ -194,7 +194,7 @@ SCENARIO("Testing OptimizationProblem with several regularization terms") {
         std::vector<RegularizationTerm<real_t>> vecReg{regTerm1, regTerm2};
 
         WHEN("setting up the problem without x0") {
-            OptimizationProblem prob(func, vecReg);
+            Problem prob(func, vecReg);
 
             THEN("the clone works correctly") {
                 auto probClone = prob.clone();
@@ -222,7 +222,7 @@ SCENARIO("Testing OptimizationProblem with several regularization terms") {
             x0Vec.setRandom();
             DataContainer dcX0(dd, x0Vec);
 
-            OptimizationProblem prob(func, vecReg, dcX0);
+            Problem prob(func, vecReg, dcX0);
 
             THEN("the clone works correctly") {
                 auto probClone = prob.clone();
