@@ -64,6 +64,7 @@ The **contributors** to elsa are:
 - David Frank
 - Maximilian Hornung
 - Nikola Dinev
+- Jens Petit
 
 History
 -------
