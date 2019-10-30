@@ -1,0 +1,11 @@
+FROM ubuntu:18.04
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+LABEL Description="default Ubuntu 18.04 with build essentials"
+
+# install build tools, cmake, git
+RUN apt-get -qq update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -qqy \
+       build-essential software-properties-common \
+       cmake git pkg-config
+
+CMD bash

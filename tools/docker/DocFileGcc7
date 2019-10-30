@@ -1,0 +1,24 @@
+FROM gcc:7
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+LABEL Description="gcc7 on Debian with cmake/git"
+
+# install wget
+RUN apt-get -qq update \
+ && apt-get install -qqy wget pkg-config
+
+
+# install CMAKE
+ARG cmake_version=3.14.3
+ARG cmake_version_short=3.14
+ARG cmake_dir=cmake-${cmake_version}
+
+RUN wget https://cmake.org/files/v${cmake_version_short}/${cmake_dir}.tar.gz \
+ && tar -xvzf ${cmake_dir}.tar.gz \
+ && rm ${cmake_dir}.tar.gz \
+ && cd ${cmake_dir} \
+ && ./configure \
+ && make -j${nproc} && make install \
+ && cd .. && rm -rf ${cmake_dir} && ldconfig
+
+CMD bash
+

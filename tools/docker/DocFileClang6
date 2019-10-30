@@ -1,0 +1,31 @@
+FROM clang:6
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+LABEL Description="clang6 on Debian with cmake/git"
+
+# install wget
+RUN apt-get -qq update \
+ && apt-get install -qqy wget ca-certificates pkg-config
+
+
+# install CMAKE
+ARG cmake_version=3.14.3
+ARG cmake_version_short=3.14
+ARG cmake_dir=cmake-${cmake_version}
+
+RUN wget https://cmake.org/files/v${cmake_version_short}/${cmake_dir}.tar.gz \
+ && tar -xvzf ${cmake_dir}.tar.gz \
+ && rm ${cmake_dir}.tar.gz \
+ && cd ${cmake_dir} \
+ && export CC=clang \
+ && export CXX=clang++ \
+ && export CXXFLAGS="-std=c++17 -stdlib=libc++" \
+ && export LDFLAGS="-lc++ -lc++abi" \
+ && ./configure \
+ && make -j${nproc} && make install \
+ && cd .. && rm -rf ${cmake_dir} && ldconfig
+
+# fix libc++ paths
+RUN ln -sf /usr/local/lib/libc++.a /usr/lib/x86_64-linux-gnu/libc++.a \
+ && ln -sf /usr/local/lib/libc++.so.1.0 /usr/lib/x86_64-linux-gnu/libc++.so.1.0
+
+CMD bash
