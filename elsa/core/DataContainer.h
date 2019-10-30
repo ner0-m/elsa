@@ -4,6 +4,7 @@
 #include "elsa.h"
 #include "DataDescriptor.h"
 #include "DataHandler.h"
+#include "DataContainerIterator.h"
 
 #include <memory>
 #include <type_traits>
@@ -20,7 +21,7 @@ namespace elsa
      *
      * \author Matthias Wieczorek - initial code
      * \author Tobias Lasser - rewrite, modularization, modernization
-     * \author David Frank - added DataHandler concept
+     * \author David Frank - added DataHandler concept, iterators
      *
      * \tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
      *
@@ -207,6 +208,66 @@ namespace elsa
 
         /// used for testing only and defined in test file
         friend int useCount <> (const DataContainer<data_t>& dc);
+
+        /// iterator for DataContainer (random access and continuous)
+        using iterator = DataContainerIterator<DataContainer<data_t>>;
+
+        /// const iterator for DataContainer (random access and continuous)
+        using const_iterator = ConstDataContainerIterator<DataContainer<data_t>>;
+
+        /// alias for reverse iterator
+        using reverse_iterator          = std::reverse_iterator<iterator>;
+        /// alias for const reverse iterator
+        using const_reverse_iterator    = std::reverse_iterator<const_iterator>;
+
+        /// returns iterator to the first element of the container
+        iterator begin();
+
+        /// returns const iterator to the first element of the container (cannot mutate data)
+        const_iterator begin() const;
+
+        /// returns const iterator to the first element of the container (cannot mutate data)
+        const_iterator cbegin() const;
+
+        /// returns iterator to one past the last element of the container
+        iterator end();
+
+        /// returns const iterator to one past the last element of the container (cannot mutate data)
+        const_iterator end() const;
+
+        /// returns const iterator to one past the last element of the container (cannot mutate data)
+        const_iterator cend() const;
+
+        /// returns reversed iterator to the last element of the container
+        reverse_iterator rbegin();
+
+        /// returns const reversed iterator to the last element of the container (cannot mutate data)
+        const_reverse_iterator rbegin() const;
+
+        /// returns const reversed iterator to the last element of the container (cannot mutate data)
+        const_reverse_iterator crbegin() const;
+
+        /// returns reversed iterator to one past the first element of container
+        reverse_iterator rend();
+
+        /// returns const reversed iterator to one past the first element of container (cannot mutate data)
+        const_reverse_iterator rend() const;
+
+        /// returns const reversed iterator to one past the first element of container (cannot mutate data)
+        const_reverse_iterator crend() const;
+
+        /// value_type of the DataContainer elements for iterators
+        using value_type      = data_t;
+        /// pointer type of DataContainer elements for iterators
+        using pointer         = data_t*;
+        /// const pointer type of DataContainer elements for iterators
+        using const_pointer   = const data_t*;
+        /// reference type of DataContainer elements for iterators
+        using reference       = data_t&;
+        /// const reference type of DataContainer elements for iterators
+        using const_reference = const data_t&;
+        /// difference type for iterators
+        using difference_type = std::ptrdiff_t;
 
     private:
         /// the current DataDescriptor

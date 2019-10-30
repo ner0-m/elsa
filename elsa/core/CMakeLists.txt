@@ -13,6 +13,7 @@ set(MODULE_HEADERS
         DataDescriptor.h
         BlockDescriptor.h
         DataContainer.h
+        DataContainerIterator.h
         DataHandler.h
         DataHandlerCPU.h
         LinearOperator.h)

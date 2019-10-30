@@ -289,6 +289,82 @@ namespace elsa {
         return;
     }
 
+    template <typename data_t>
+    typename DataContainer<data_t>::iterator DataContainer<data_t>::begin()
+    {
+        detach();
+        return iterator(&(*this)[0]);
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::const_iterator DataContainer<data_t>::begin() const
+    {
+        return cbegin();
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::const_iterator DataContainer<data_t>::cbegin() const
+    {
+        return const_iterator(&(*this)[0]);
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::iterator DataContainer<data_t>::end()
+    {
+        detach();
+        return iterator(&(*this)[0] + getSize());
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::const_iterator DataContainer<data_t>::end() const
+    {
+        return cend();
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::const_iterator DataContainer<data_t>::cend() const
+    {
+        return const_iterator(&(*this)[0] + getSize());
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::reverse_iterator DataContainer<data_t>::rbegin()
+    {
+        detach();
+        return reverse_iterator(end());
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::rbegin() const
+    {
+        return crbegin();
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::crbegin() const
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::reverse_iterator DataContainer<data_t>::rend()
+    {
+        detach();
+        return reverse_iterator(begin());
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::rend() const
+    {
+        return crend();
+    }
+
+    template <typename data_t>
+    typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::crend() const
+    {
+        return const_reverse_iterator(cbegin());
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;

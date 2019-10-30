@@ -474,3 +474,159 @@ SCENARIO("Testing the copy-on-write mechanism") {
         }
     }
 }
+
+SCENARIO("Testing iterators for DataContainer") {
+    GIVEN("A 1D container") {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(1);
+        numCoeff << size;
+        DataDescriptor desc(numCoeff);
+
+        DataContainer dc1(desc);
+        DataContainer dc2(desc);
+
+        Eigen::VectorXf randVec1  = Eigen::VectorXf::Random(size);
+        Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(size);
+
+        for (index_t i = 0; i < size; ++i) {
+            dc1[i] = randVec1(i);
+            dc2[i] = randVec2(i);
+        }
+
+        THEN("We can iterate forward") {
+            int i = 0;
+            for (auto v = dc1.cbegin(); v != dc1.cend(); v++) {
+                REQUIRE(*v == randVec1[i++]);
+            }
+            REQUIRE(i == size);
+        }
+
+        THEN("We can iterate backward") {
+            int i = size;
+            for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
+                REQUIRE(*v == randVec1[--i]);
+            }
+            REQUIRE(i == 0);
+        }
+
+        THEN("We can iterate and mutate") {
+            int i = 0;
+            for (auto& v : dc1) {
+                v =  v * 2;
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size);
+
+            i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size);
+        }
+
+        THEN("We can use STL algorithms") {
+            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
+            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
+        }
+    }
+    GIVEN("A 2D container") {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(2);
+        numCoeff << size, size;
+        DataDescriptor desc(numCoeff);
+
+        DataContainer dc1(desc);
+
+        Eigen::VectorXf randVec1 = Eigen::VectorXf::Random(size * size);
+
+        for (index_t i = 0; i < dc1.getSize(); ++i) {
+            dc1[i] = randVec1[i];
+        }
+
+        THEN("We can iterate forward") {
+            int i = 0;
+            for(auto v : dc1) {
+                REQUIRE(v == randVec1[i++]);
+            }
+            REQUIRE(i == size * size);
+        }
+
+        THEN("We can iterate backward") {
+            int i = size * size;
+            for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
+                REQUIRE(*v == randVec1[--i]);
+            }
+            REQUIRE(i == 0);
+        }
+
+        THEN("We can iterate and mutate") {
+            int i = 0;
+            for (auto& v : dc1) {
+                v =  v * 2;
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size * size);
+
+            i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size * size);
+        }
+
+        THEN("We can use STL algorithms") {
+            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
+            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
+        }
+    }
+    GIVEN("A 3D container") {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(3);
+        numCoeff << size, size, size;
+        DataDescriptor desc(numCoeff);
+
+        DataContainer dc1(desc);
+
+        Eigen::VectorXf randVec1  = Eigen::VectorXf::Random(size * size * size);
+
+        for (index_t i = 0; i < dc1.getSize(); ++i) {
+            dc1[i] = randVec1[i];
+        }
+
+        THEN("We can iterate forward") {
+            int i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == randVec1[i++]);
+            }
+            REQUIRE(i == size * size * size);
+        }
+
+        THEN("We can iterate backward") {
+            int i = size * size * size;
+            for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
+                REQUIRE(*v == randVec1[--i]);
+            }
+            REQUIRE(i == 0);
+        }
+
+        THEN("We can iterate and mutate") {
+            int i = 0;
+            for (auto& v : dc1) {
+                v =  v * 2;
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size * size * size);
+
+            i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size * size * size);
+        }
+
+        THEN("We can use STL algorithms") {
+            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
+            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
+        }
+    }
+}
