@@ -43,26 +43,24 @@ namespace elsa {
     }
 
     template <typename data_t>
-    DataContainer<data_t>::DataContainer(DataContainer<data_t> &&other)
+    DataContainer<data_t>::DataContainer(DataContainer<data_t> &&other) noexcept
         : _dataDescriptor{std::move(other._dataDescriptor)},
           _dataHandler{std::move(other._dataHandler)}
     {
-        // make sure to leave other in a valid state (since we do not check for empty pointers!)
-        IndexVector_t numCoeff(1); numCoeff << 1;
-        other._dataDescriptor = std::make_unique<DataDescriptor>(numCoeff);
-        other._dataHandler = createDataHandler(DataHandlerType::CPU, other._dataDescriptor->getNumberOfCoefficients());
+        // leave other in a valid state
+        other._dataDescriptor = nullptr;
+        other._dataHandler = nullptr;
     }
 
     template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator=(DataContainer<data_t>&& other)
+    DataContainer<data_t>& DataContainer<data_t>::operator=(DataContainer<data_t>&& other) noexcept
     {
         _dataDescriptor = std::move(other._dataDescriptor);
         _dataHandler = std::move(other._dataHandler);
 
-        // make sure to leave other in a valid state (since we do not check for empty pointers!)
-        IndexVector_t numCoeff(1); numCoeff << 1;
-        other._dataDescriptor = std::make_unique<DataDescriptor>(numCoeff);
-        other._dataHandler = createDataHandler(DataHandlerType::CPU, other._dataDescriptor->getNumberOfCoefficients());
+        // leave other in a valid state
+        other._dataDescriptor = nullptr;
+        other._dataHandler = nullptr;
 
         return *this;
     }

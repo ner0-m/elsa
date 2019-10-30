@@ -85,15 +85,23 @@ namespace elsa
          * \brief Move constructor for DataContainer
          *
          * \param[in] other DataContainer to move from
+         *
+         * The moved-from objects remains in a valid state. However, as preconditions are not
+         * fulfilled for any member functions, the object should not be used. After move- or copy-
+         * assignment, this is possible again.
          */
-        DataContainer(DataContainer<data_t>&& other);
+        DataContainer(DataContainer<data_t>&& other) noexcept;
 
         /**
          * \brief Move assignment for DataContainer
          *
          * \param[in] other DataContainer to move from
+         *
+         * The moved-from objects remains in a valid state. However, as preconditions are not
+         * fulfilled for any member functions, the object should not be used. After move- or copy-
+         * assignment, this is possible again.
          */
-        DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
+        DataContainer<data_t>& operator=(DataContainer<data_t>&& other) noexcept;
 
         /// return the current DataDescriptor
         const DataDescriptor& getDataDescriptor() const;

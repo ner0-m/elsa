@@ -105,8 +105,7 @@ SCENARIO("Constructing DataContainers") {
             }
 
             THEN("the moved from object is still valid (but empty)") {
-                REQUIRE(otherDc.getSize() == 1);
-                REQUIRE(otherDc[0] == 0);
+                otherDc = dc;
             }
         }
 
@@ -123,8 +122,7 @@ SCENARIO("Constructing DataContainers") {
             }
 
             THEN("the moved from object is still valid (but empty)") {
-                REQUIRE(otherDc.getSize() == 1);
-                REQUIRE(otherDc[0] == 0);
+                otherDc = dc;
             }
         }
     }
