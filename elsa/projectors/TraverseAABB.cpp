@@ -110,7 +110,7 @@ namespace elsa
     {
         RealVector_t tdelta = _stepDirection.template cast<real_t>().cwiseQuotient(rd);
 
-        _tDelta = (Eigen::abs(rd.array()) > EPS.array()).select(tdelta, MAX);
+        _tDelta = (Eigen::abs(rd.array()) > _EPS.array()).select(tdelta, _MAX);
     }
 
     void TraverseAABB::initMax(const RealVector_t& rd)
@@ -121,7 +121,7 @@ namespace elsa
                 .cwiseQuotient(rd)
                 .matrix();
 
-        _tMax = (Eigen::abs(rd.array()) > EPS.array()).select(tmax, MAX);
+        _tMax = (Eigen::abs(rd.array()) > _EPS.array()).select(tmax, _MAX);
     }
 
     bool TraverseAABB::isCurrentPositionInAABB(index_t index) const

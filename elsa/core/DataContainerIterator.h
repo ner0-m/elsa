@@ -16,11 +16,11 @@ namespace elsa::detail
      * for it.
      */
     template <typename T>
-    class ptr_iterator
+    class PtrIterator
     {
     public:
         /// alias for iterator type
-        using self_type = ptr_iterator;
+        using self_type = PtrIterator;
 
         /// the iterator category
         using iterator_category = std::random_access_iterator_tag;
@@ -34,7 +34,7 @@ namespace elsa::detail
         using difference_type = typename T::difference_type;
 
         /// constructor taking a non-owning pointer to the data
-        explicit ptr_iterator(pointer ptr) : _ptr(ptr) {}
+        explicit PtrIterator(pointer ptr) : _ptr(ptr) {}
 
         /// de-referencing operator
         reference operator*() { return *_ptr; }
@@ -98,20 +98,20 @@ namespace elsa::detail
         }
 
         /// return the difference between iterators
-        difference_type operator-(ptr_iterator const& r) const { return _ptr - r._ptr; }
+        difference_type operator-(PtrIterator const& r) const { return _ptr - r._ptr; }
 
         /// compare < with other iterator
-        bool operator<(const ptr_iterator& r) const { return _ptr < r._ptr; }
+        bool operator<(const PtrIterator& r) const { return _ptr < r._ptr; }
         /// compare <= with other iterator
-        bool operator<=(const ptr_iterator& r) const { return _ptr <= r._ptr; }
+        bool operator<=(const PtrIterator& r) const { return _ptr <= r._ptr; }
         /// compare > with other iterator
-        bool operator>(const ptr_iterator& r) const { return _ptr > r._ptr; }
+        bool operator>(const PtrIterator& r) const { return _ptr > r._ptr; }
         /// compare >= with other iterator
-        bool operator>=(const ptr_iterator& r) const { return _ptr >= r._ptr; }
+        bool operator>=(const PtrIterator& r) const { return _ptr >= r._ptr; }
         /// compare != with other iterator
-        bool operator!=(const ptr_iterator& r) const { return _ptr != r._ptr; }
+        bool operator!=(const PtrIterator& r) const { return _ptr != r._ptr; }
         /// compare == with other iterator
-        bool operator==(const ptr_iterator& r) const { return _ptr == r._ptr; }
+        bool operator==(const PtrIterator& r) const { return _ptr == r._ptr; }
 
     private:
         /// non-owning (!) pointer to data (do not clean up or anything)
@@ -131,11 +131,11 @@ namespace elsa::detail
      * for it.
      */
     template <typename T>
-    class const_ptr_iterator
+    class ConstPtrIterator
     {
     public:
         /// alias for iterator type
-        using self_type = const_ptr_iterator;
+        using self_type = ConstPtrIterator;
 
         /// the iterator category
         using iterator_category = std::random_access_iterator_tag;
@@ -149,7 +149,7 @@ namespace elsa::detail
         using difference_type = typename T::difference_type;
 
         /// constructor taking a non-owning pointer to the data
-        explicit const_ptr_iterator(pointer ptr) : _ptr(ptr) {}
+        explicit ConstPtrIterator(pointer ptr) : _ptr(ptr) {}
 
         /// de-referencing operator
         reference operator*() { return *_ptr; }
@@ -213,7 +213,7 @@ namespace elsa::detail
         }
 
         /// return the difference between iterators
-        difference_type operator-(const_ptr_iterator const& r) const { return _ptr - r._ptr; }
+        difference_type operator-(ConstPtrIterator const& r) const { return _ptr - r._ptr; }
 
         /// compare < with other iterator
         bool operator<(const self_type& r) const { return _ptr < r._ptr; }
@@ -239,9 +239,9 @@ namespace elsa
 {
     /// alias for the iterator for DataContainer
     template <typename T>
-    using DataContainerIterator = detail::ptr_iterator<T>;
+    using DataContainerIterator = detail::PtrIterator<T>;
 
     /// alias for the constant iterator for DataContainer
     template <typename T>
-    using ConstDataContainerIterator = detail::const_ptr_iterator<T>;
+    using ConstDataContainerIterator = detail::ConstPtrIterator<T>;
 } // end namespace elsa

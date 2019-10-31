@@ -107,7 +107,7 @@ namespace elsa
         }
 
         if (_isComposite) {
-            if (_mode == compositeMode::add) {
+            if (_mode == CompositeMode::ADD) {
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_rhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
                     || _rhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize()
@@ -121,7 +121,7 @@ namespace elsa
                 return;
             }
 
-            if (_mode == compositeMode::mult) {
+            if (_mode == CompositeMode::MULT) {
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_rhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
                     || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
@@ -180,7 +180,7 @@ namespace elsa
         }
 
         if (_isComposite) {
-            if (_mode == compositeMode::add) {
+            if (_mode == CompositeMode::ADD) {
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_rhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
                     || _rhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize()
@@ -194,7 +194,7 @@ namespace elsa
                 return;
             }
 
-            if (_mode == compositeMode::mult) {
+            if (_mode == CompositeMode::MULT) {
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
                     || _rhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
@@ -254,7 +254,7 @@ namespace elsa
 
     template <typename data_t>
     LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& lhs,
-                                           const LinearOperator<data_t>& rhs, compositeMode mode)
+                                           const LinearOperator<data_t>& rhs, CompositeMode mode)
         : _domainDescriptor{rhs.getDomainDescriptor().clone()},
           _rangeDescriptor{lhs.getRangeDescriptor().clone()},
           _lhs{lhs.clone()},
@@ -264,7 +264,7 @@ namespace elsa
     {
         // sanity check the descriptors
         switch (_mode) {
-            case compositeMode::add:
+            case CompositeMode::ADD:
                 // for addition, both domains and ranges should match
                 if (_lhs->getDomainDescriptor() != _rhs->getDomainDescriptor()
                     || _lhs->getRangeDescriptor() != _rhs->getRangeDescriptor())
@@ -272,7 +272,7 @@ namespace elsa
                         "LinearOperator: composite add domain/range mismatch");
                 break;
 
-            case compositeMode::mult:
+            case CompositeMode::MULT:
                 // for multiplication, domain of _lhs should match range of _rhs
                 if (_lhs->getDomainDescriptor() != _rhs->getRangeDescriptor())
                     throw std::invalid_argument(
