@@ -47,10 +47,7 @@ namespace elsa
             return false;
 
         auto otherL2NormPow2 = dynamic_cast<const L2NormPow2*>(&other);
-        if (!otherL2NormPow2)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherL2NormPow2);
     }
 
     // ------------------------------------------

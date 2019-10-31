@@ -48,10 +48,7 @@ namespace elsa
             return false;
 
         auto otherWLS = dynamic_cast<const WLSProblem*>(&other);
-        if (!otherWLS)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherWLS);
     }
 
     // ------------------------------------------

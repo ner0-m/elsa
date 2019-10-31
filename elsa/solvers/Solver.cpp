@@ -28,10 +28,7 @@ namespace elsa
     template <typename data_t>
     bool Solver<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        if (*_problem != *other._problem)
-            return false;
-
-        return true;
+        return static_cast<bool>(*_problem == *other._problem);
     }
 
     // ------------------------------------------

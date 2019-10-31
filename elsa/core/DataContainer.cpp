@@ -279,7 +279,6 @@ namespace elsa
 #pragma omp single
             _dataHandler = _dataHandler->clone();
         }
-        return;
     }
 
     template <typename data_t>

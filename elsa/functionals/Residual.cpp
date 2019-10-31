@@ -50,11 +50,8 @@ namespace elsa
     template <typename data_t>
     bool Residual<data_t>::isEqual(const Residual<data_t>& other) const
     {
-        if (*_domainDescriptor != *other._domainDescriptor
-            || *_rangeDescriptor != *other._rangeDescriptor)
-            return false;
-
-        return true;
+        return !static_cast<bool>(*_domainDescriptor != *other._domainDescriptor
+                                  || *_rangeDescriptor != *other._rangeDescriptor);
     }
 
     // ------------------------------------------

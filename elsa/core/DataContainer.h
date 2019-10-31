@@ -15,7 +15,7 @@ namespace elsa
     class DataContainer;
     // used for testing and defined in test file (declared as friend)
     template <typename data_t>
-    int useCount(const DataContainer<data_t>&);
+    int useCount(const DataContainer<data_t>& /*dc*/);
 
     /**
      * \brief class representing and storing a linearized n-dimensional signal

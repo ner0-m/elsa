@@ -61,10 +61,7 @@ namespace elsa
             return false;
 
         auto otherQP = dynamic_cast<const QuadricProblem*>(&other);
-        if (!otherQP)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherQP);
     }
 
     template <typename data_t>

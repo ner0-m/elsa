@@ -111,10 +111,8 @@ namespace elsa
     template <typename data_t>
     bool Functional<data_t>::isEqual(const Functional<data_t>& other) const
     {
-        if (*_domainDescriptor != *other._domainDescriptor || *_residual != *other._residual)
-            return false;
-
-        return true;
+        return !static_cast<bool>(*_domainDescriptor != *other._domainDescriptor
+                                  || *_residual != *other._residual);
     }
 
     // ------------------------------------------

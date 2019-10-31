@@ -46,10 +46,7 @@ namespace elsa
             return false;
 
         auto otherLInfNorm = dynamic_cast<const LInfNorm*>(&other);
-        if (!otherLInfNorm)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherLInfNorm);
     }
 
     // ------------------------------------------

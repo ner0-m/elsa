@@ -198,10 +198,10 @@ SCENARIO("Testing FiniteDifferences in 2D with not all dimensions active")
         WHEN("using forward differences (default)")
         {
             BooleanVector_t activeDims(2);
-            activeDims << 1, 0;
+            activeDims << true, false;
             FiniteDifferences fdOp1(dd, activeDims);
 
-            activeDims << 0, 1;
+            activeDims << false, true;
             FiniteDifferences fdOp2(dd, activeDims);
 
             THEN("the results are correct")
@@ -223,10 +223,10 @@ SCENARIO("Testing FiniteDifferences in 2D with not all dimensions active")
         WHEN("using backward differences")
         {
             BooleanVector_t activeDims(2);
-            activeDims << 1, 0;
+            activeDims << true, false;
             FiniteDifferences fdOp1(dd, activeDims, FiniteDifferences<real_t>::DiffType::BACKWARD);
 
-            activeDims << 0, 1;
+            activeDims << false, true;
             FiniteDifferences fdOp2(dd, activeDims, FiniteDifferences<real_t>::DiffType::BACKWARD);
 
             THEN("the results are correct")
@@ -248,10 +248,10 @@ SCENARIO("Testing FiniteDifferences in 2D with not all dimensions active")
         WHEN("using central differences")
         {
             BooleanVector_t activeDims(2);
-            activeDims << 1, 0;
+            activeDims << true, false;
             FiniteDifferences fdOp1(dd, activeDims, FiniteDifferences<real_t>::DiffType::CENTRAL);
 
-            activeDims << 0, 1;
+            activeDims << false, true;
             FiniteDifferences fdOp2(dd, activeDims, FiniteDifferences<real_t>::DiffType::CENTRAL);
 
             THEN("the results are correct")

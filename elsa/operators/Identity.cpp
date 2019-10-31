@@ -38,10 +38,7 @@ namespace elsa
             return false;
 
         auto otherIdentity = dynamic_cast<const Identity*>(&other);
-        if (!otherIdentity)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherIdentity);
     }
 
     // ------------------------------------------

@@ -76,7 +76,7 @@ namespace elsa
             std::getline(metaFile, metaLine);
             StringUtils::trim(metaLine);
 
-            if (!metaLine.length())
+            if (metaLine.length() == 0u)
                 continue;
 
             // split the header line into name and value
@@ -178,7 +178,7 @@ namespace elsa
 
         // convert spacing
         RealVector_t dimSpacing(RealVector_t::Ones(nDims));
-        if (dimSpacingVec.size() > 0) {
+        if (!dimSpacingVec.empty()) {
             for (index_t i = 0; i < nDims; ++i)
                 dimSpacing[i] = dimSpacingVec[i];
         }

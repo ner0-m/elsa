@@ -10,11 +10,12 @@ namespace elsa
     void StringUtils::trim(std::string& str)
     {
         // trim whitespace from beginning
-        str.erase(str.begin(),
-                  std::find_if(str.begin(), str.end(), [](int ch) { return !std::isspace(ch); }));
+        str.erase(str.begin(), std::find_if(str.begin(), str.end(),
+                                            [](int ch) { return std::isspace(ch) == 0; }));
         // trim whitespace from end
         str.erase(
-            std::find_if(str.rbegin(), str.rend(), [](int ch) { return !std::isspace(ch); }).base(),
+            std::find_if(str.rbegin(), str.rend(), [](int ch) { return std::isspace(ch) == 0; })
+                .base(),
             str.end());
     }
 

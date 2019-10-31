@@ -6,7 +6,7 @@ namespace elsa
 {
 
     BlockDescriptor::BlockDescriptor(index_t numberOfBlocks, const DataDescriptor& dataDescriptor)
-        : DataDescriptor(dataDescriptor), _blockDescriptors{}, _blockOffsets(numberOfBlocks)
+        : DataDescriptor(dataDescriptor), _blockOffsets(numberOfBlocks)
     {
         // sanity check
         if (numberOfBlocks <= 0)
@@ -48,7 +48,7 @@ namespace elsa
 
     BlockDescriptor::BlockDescriptor(const BlockDescriptor& blockDescriptor)
         : DataDescriptor(blockDescriptor),
-          _blockDescriptors{},
+
           _blockOffsets{blockDescriptor._blockOffsets}
     {
         for (const auto& descriptor : blockDescriptor._blockDescriptors)
@@ -63,7 +63,7 @@ namespace elsa
             return false;
 
         auto otherBlock = dynamic_cast<const BlockDescriptor*>(&other);
-        if (!otherBlock)
+        if (otherBlock == nullptr)
             return false;
 
         if (_blockDescriptors.size() != otherBlock->_blockDescriptors.size())
@@ -73,10 +73,7 @@ namespace elsa
             if (*_blockDescriptors.at(i) != *otherBlock->_blockDescriptors.at(i))
                 return false;
 
-        if (_blockOffsets != otherBlock->_blockOffsets)
-            return false;
-
-        return true;
+        return _blockOffsets == otherBlock->_blockOffsets;
     }
 
 } // namespace elsa

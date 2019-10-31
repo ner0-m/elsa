@@ -135,7 +135,7 @@ namespace elsa
             dim.push_back(DataUtils::parse<index_t>(dimIt->second));
         }
         const std::size_t nDims = dim.size();
-        if (!nDims)
+        if (nDims == 0u)
             throw std::runtime_error("EDF::parseHeader: dimension information not found");
 
         // parse the (non-standard) spacing tag
@@ -201,7 +201,7 @@ namespace elsa
 
         // convert spacing
         RealVector_t dimSpacingVec(RealVector_t::Ones(nDims));
-        if (spacing.size() > 0) {
+        if (!spacing.empty()) {
             if (spacing.size() != nDims)
                 throw std::runtime_error("EDF::parseHeader: spacing inconsistency");
             for (index_t i = 0; i < nDims; ++i)

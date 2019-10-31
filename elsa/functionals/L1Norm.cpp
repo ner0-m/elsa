@@ -46,10 +46,7 @@ namespace elsa
             return false;
 
         auto otherL1Norm = dynamic_cast<const L1Norm*>(&other);
-        if (!otherL1Norm)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherL1Norm);
     }
 
     // ------------------------------------------
