@@ -15,15 +15,20 @@
 
 using namespace elsa;
 
-SCENARIO("Testing the l2 norm (squared) functional") {
-    GIVEN("just data (no residual)") {
-        IndexVector_t numCoeff(2); numCoeff << 11, 13;
+SCENARIO("Testing the l2 norm (squared) functional")
+{
+    GIVEN("just data (no residual)")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 11, 13;
         DataDescriptor dd(numCoeff);
 
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             L2NormPow2 func(dd);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
                 auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
@@ -32,14 +37,17 @@ SCENARIO("Testing the l2 norm (squared) functional") {
                 REQUIRE(linRes->hasDataVector() == false);
             }
 
-            THEN("a clone behaves as expected") {
-                auto l2Clone = func.clone();;
+            THEN("a clone behaves as expected")
+            {
+                auto l2Clone = func.clone();
+                ;
 
                 REQUIRE(l2Clone.get() != &func);
                 REQUIRE(*l2Clone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
@@ -53,8 +61,10 @@ SCENARIO("Testing the l2 norm (squared) functional") {
         }
     }
 
-    GIVEN("a residual with data") {
-        IndexVector_t numCoeff(2); numCoeff << 47, 11;
+    GIVEN("a residual with data")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 47, 11;
         DataDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
@@ -65,10 +75,12 @@ SCENARIO("Testing the l2 norm (squared) functional") {
 
         LinearResidual linRes(A, b);
 
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             L2NormPow2 func(linRes);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
                 auto* lRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
@@ -76,21 +88,23 @@ SCENARIO("Testing the l2 norm (squared) functional") {
                 REQUIRE(*lRes == linRes);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto l2Clone = func.clone();
 
                 REQUIRE(l2Clone.get() != &func);
                 REQUIRE(*l2Clone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work was expected") {
+            THEN("the evaluate, gradient and Hessian work was expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
 
                 REQUIRE(func.evaluate(x) == Approx(0.5f * (dataVec - randomData).squaredNorm()));
 
-                DataContainer grad(dd, (dataVec - randomData).eval() );
+                DataContainer grad(dd, (dataVec - randomData).eval());
                 REQUIRE(func.getGradient(x) == grad);
 
                 auto hessian = func.getHessian(x);

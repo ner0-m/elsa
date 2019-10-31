@@ -11,26 +11,32 @@
 
 using namespace elsa;
 
-
-SCENARIO("Constructing an Identity operator") {
-    GIVEN("a descriptor") {
-        IndexVector_t numCoeff(3); numCoeff << 13, 45, 28;
+SCENARIO("Constructing an Identity operator")
+{
+    GIVEN("a descriptor")
+    {
+        IndexVector_t numCoeff(3);
+        numCoeff << 13, 45, 28;
         DataDescriptor dd(numCoeff);
 
-        WHEN("instantiating an Identity operator") {
+        WHEN("instantiating an Identity operator")
+        {
             Identity idOp(dd);
 
-            THEN("the DataDescriptors are as expected") {
+            THEN("the DataDescriptors are as expected")
+            {
                 REQUIRE(idOp.getDomainDescriptor() == dd);
                 REQUIRE(idOp.getRangeDescriptor() == dd);
             }
         }
 
-        WHEN("cloning an  Identity operator") {
+        WHEN("cloning an  Identity operator")
+        {
             Identity idOp(dd);
             auto idOpClone = idOp.clone();
 
-            THEN("everything matches") {
+            THEN("everything matches")
+            {
                 REQUIRE(idOpClone.get() != &idOp);
                 REQUIRE(*idOpClone == idOp);
             }
@@ -38,29 +44,35 @@ SCENARIO("Constructing an Identity operator") {
     }
 }
 
-
-SCENARIO("Using Identity") {
-    GIVEN("some data") {
-        IndexVector_t numCoeff(2); numCoeff << 11, 13;
+SCENARIO("Using Identity")
+{
+    GIVEN("some data")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 11, 13;
         DataDescriptor dd(numCoeff);
         DataContainer input(dd);
         input = 3.3f;
 
         Identity idOp(dd);
 
-        WHEN("applying the identity") {
+        WHEN("applying the identity")
+        {
             auto output = idOp.apply(input);
 
-            THEN("the result is as expected") {
+            THEN("the result is as expected")
+            {
                 REQUIRE(output.getSize() == input.getSize());
                 REQUIRE(input == output);
             }
         }
 
-        WHEN("applying the adjoint of identity") {
+        WHEN("applying the adjoint of identity")
+        {
             auto output = idOp.applyAdjoint(input);
 
-            THEN("the results is as expected") {
+            THEN("the results is as expected")
+            {
                 REQUIRE(output.getSize() == input.getSize());
                 REQUIRE(input == output);
             }

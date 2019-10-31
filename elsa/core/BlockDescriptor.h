@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "elsa.h"
 #include "Cloneable.h"
 #include "DataDescriptor.h"
@@ -12,17 +11,19 @@ namespace elsa
 {
 
     /**
-     *  \brief Class representing metadata for blocked, linearized n-dimensional signal stored in memory
+     *  \brief Class representing metadata for blocked, linearized n-dimensional signal stored in
+     * memory
      *
      *  \author Matthias Wieczorek - initial code
      *  \author David Frank - rewrite
      *  \author Nikola Dinev - various enhancements
      *  \author Tobias Lasser - rewrite, modularization, modernization
      *
-     *  This class provides metadata about a signal that is stored in memory (typically a DataContainer).
-     *  This signal can be n-dimensional, and will be stored in memory in a linearized fashion in blocks.
-     *  The blocks can be used to support various operations (like blocked operators or ordered subsets),
-     *  however, the blocks have to lie in memory one after the other (i.e. no stride is supported).
+     *  This class provides metadata about a signal that is stored in memory (typically a
+     * DataContainer). This signal can be n-dimensional, and will be stored in memory in a
+     * linearized fashion in blocks. The blocks can be used to support various operations (like
+     * blocked operators or ordered subsets), however, the blocks have to lie in memory one after
+     * the other (i.e. no stride is supported).
      */
     class BlockDescriptor : public DataDescriptor
     {
@@ -34,15 +35,16 @@ namespace elsa
         ~BlockDescriptor() override = default;
 
         /**
-         *  \brief Create a new descriptor, replicating the dataDescriptor numberOfBlocks times along a new dimension
+         *  \brief Create a new descriptor, replicating the dataDescriptor numberOfBlocks times
+         * along a new dimension
          *
          *  \param[in] numberOfBlocks is the desired number of blocks
-         *  \param[in] dataDescriptor is the descriptor that will be replicated numberOfBlocks times along a new dimension
+         *  \param[in] dataDescriptor is the descriptor that will be replicated numberOfBlocks times
+         * along a new dimension
          *
          *  \throw std::invalid_argument if numberOfBlocks is non-positive
          */
         explicit BlockDescriptor(index_t numberOfBlocks, const DataDescriptor& dataDescriptor);
-
 
         /// return the number of blocks
         index_t getNumberOfBlocks() const;

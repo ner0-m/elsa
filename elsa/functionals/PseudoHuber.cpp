@@ -24,7 +24,6 @@ namespace elsa
             throw std::invalid_argument("PseudoHuber: delta has to be positive.");
     }
 
-
     template <typename data_t>
     data_t PseudoHuber<data_t>::_evaluate(const DataContainer<data_t>& Rx)
     {
@@ -34,7 +33,9 @@ namespace elsa
 
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = Rx[i] / _delta;
-            result += _delta * _delta * (std::sqrt(static_cast<data_t>(1.0) + temp * temp) - static_cast<data_t>(1.0));
+            result +=
+                _delta * _delta
+                * (std::sqrt(static_cast<data_t>(1.0) + temp * temp) - static_cast<data_t>(1.0));
         }
 
         return result;
@@ -57,12 +58,12 @@ namespace elsa
             data_t temp = Rx[i] / _delta;
             data_t tempSq = temp * temp;
             data_t sqrtOnePTempSq = std::sqrt(static_cast<data_t>(1.0) + tempSq);
-            scaleFactors[i] = (sqrtOnePTempSq - tempSq / sqrtOnePTempSq) / (static_cast<data_t>(1.0) + tempSq);
+            scaleFactors[i] =
+                (sqrtOnePTempSq - tempSq / sqrtOnePTempSq) / (static_cast<data_t>(1.0) + tempSq);
         }
 
         return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
     }
-
 
     template <typename data_t>
     PseudoHuber<data_t>* PseudoHuber<data_t>::cloneImpl() const
@@ -85,7 +86,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

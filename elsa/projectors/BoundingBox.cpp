@@ -4,8 +4,7 @@
 
 namespace elsa
 {
-    BoundingBox::BoundingBox(const IndexVector_t& volumeDimensions)
-    : _dim(volumeDimensions.size())
+    BoundingBox::BoundingBox(const IndexVector_t& volumeDimensions) : _dim(volumeDimensions.size())
     {
         // sanity check
         if (volumeDimensions.size() < 2 || volumeDimensions.size() > 3)

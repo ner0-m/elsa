@@ -15,9 +15,12 @@
 
 using namespace elsa;
 
-SCENARIO("Testing the weighted, squared l2 norm functional") {
-    GIVEN("just data (no residual)") {
-        IndexVector_t numCoeff(2); numCoeff << 7, 17;
+SCENARIO("Testing the weighted, squared l2 norm functional")
+{
+    GIVEN("just data (no residual)")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 7, 17;
         DataDescriptor dd(numCoeff);
 
         RealVector_t scalingData(dd.getNumberOfCoefficients());
@@ -26,10 +29,12 @@ SCENARIO("Testing the weighted, squared l2 norm functional") {
 
         Scaling scalingOp(dd, scaleFactors);
 
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             WeightedL2NormPow2 func(scalingOp);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
                 REQUIRE(func.getWeightingOperator() == scalingOp);
 
@@ -39,14 +44,17 @@ SCENARIO("Testing the weighted, squared l2 norm functional") {
                 REQUIRE(linRes->hasDataVector() == false);
             }
 
-            THEN("a clone behaves as expected") {
-                auto wl2Clone = func.clone();;
+            THEN("a clone behaves as expected")
+            {
+                auto wl2Clone = func.clone();
+                ;
 
                 REQUIRE(wl2Clone.get() != &func);
                 REQUIRE(*wl2Clone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
@@ -61,9 +69,11 @@ SCENARIO("Testing the weighted, squared l2 norm functional") {
         }
     }
 
-    GIVEN("a residual with data") {
+    GIVEN("a residual with data")
+    {
         // linear residual
-        IndexVector_t numCoeff(2); numCoeff << 47, 11;
+        IndexVector_t numCoeff(2);
+        numCoeff << 47, 11;
         DataDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
@@ -81,11 +91,12 @@ SCENARIO("Testing the weighted, squared l2 norm functional") {
 
         Scaling scalingOp(dd, scaleFactors);
 
-
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             WeightedL2NormPow2 func(linRes, scalingOp);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
                 REQUIRE(func.getWeightingOperator() == scalingOp);
 
@@ -94,14 +105,16 @@ SCENARIO("Testing the weighted, squared l2 norm functional") {
                 REQUIRE(*lRes == linRes);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto wl2Clone = func.clone();
 
                 REQUIRE(wl2Clone.get() != &func);
                 REQUIRE(*wl2Clone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work was expected") {
+            THEN("the evaluate, gradient and Hessian work was expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);

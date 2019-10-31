@@ -7,7 +7,7 @@ namespace elsa
 {
     template <typename data_t>
     GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem, real_t stepSize)
-    : Solver<data_t>(problem), _stepSize{stepSize}
+        : Solver<data_t>(problem), _stepSize{stepSize}
     {
         // sanity check
         if (_stepSize <= 0)
@@ -21,7 +21,7 @@ namespace elsa
             iterations = _defaultIterations;
 
         for (index_t i = 0; i < iterations; ++i) {
-            Logger::get("GradientDescent")->info("iteration {} of {}", i+1, iterations);
+            Logger::get("GradientDescent")->info("iteration {} of {}", i + 1, iterations);
             auto& x = getCurrentSolution();
 
             auto gradient = _problem->getGradient();
@@ -31,7 +31,6 @@ namespace elsa
 
         return getCurrentSolution();
     }
-
 
     template <typename data_t>
     GradientDescent<data_t>* GradientDescent<data_t>::cloneImpl() const
@@ -54,7 +53,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

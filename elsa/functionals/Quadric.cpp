@@ -7,27 +7,27 @@ namespace elsa
 {
     template <typename data_t>
     Quadric<data_t>::Quadric(const LinearOperator<data_t>& A, const DataContainer<data_t>& b)
-        : Functional<data_t>(A.getDomainDescriptor()),
-          _linearResidual{A, b}
-    {}
+        : Functional<data_t>(A.getDomainDescriptor()), _linearResidual{A, b}
+    {
+    }
 
     template <typename data_t>
     Quadric<data_t>::Quadric(const LinearOperator<data_t>& A)
-        : Functional<data_t>(A.getDomainDescriptor()),
-          _linearResidual{A}
-    {}
+        : Functional<data_t>(A.getDomainDescriptor()), _linearResidual{A}
+    {
+    }
 
     template <typename data_t>
     Quadric<data_t>::Quadric(const DataContainer<data_t>& b)
-        : Functional<data_t>(b.getDataDescriptor()),
-          _linearResidual{b}
-    {}
+        : Functional<data_t>(b.getDataDescriptor()), _linearResidual{b}
+    {
+    }
 
     template <typename data_t>
     Quadric<data_t>::Quadric(const DataDescriptor& domainDescriptor)
-        : Functional<data_t>(domainDescriptor),
-          _linearResidual{domainDescriptor}
-    {}
+        : Functional<data_t>(domainDescriptor), _linearResidual{domainDescriptor}
+    {
+    }
 
     template <typename data_t>
     const LinearResidual<data_t>& Quadric<data_t>::getGradientExpression() const
@@ -39,22 +39,19 @@ namespace elsa
     data_t Quadric<data_t>::_evaluate(const DataContainer<data_t>& Rx)
     {
         data_t xtAx;
-        
+
         if (_linearResidual.hasOperator()) {
             auto temp = _linearResidual.getOperator().apply(Rx);
             xtAx = Rx.dot(temp);
-        }
-        else {
+        } else {
             xtAx = Rx.squaredL2Norm();
         }
-        
+
         if (_linearResidual.hasDataVector()) {
             return static_cast<data_t>(0.5) * xtAx - Rx.dot(_linearResidual.getDataVector());
-        }
-        else {
+        } else {
             return static_cast<data_t>(0.5) * xtAx;
         }
-        
     }
 
     template <typename data_t>
@@ -66,18 +63,18 @@ namespace elsa
     template <typename data_t>
     LinearOperator<data_t> Quadric<data_t>::_getHessian(const DataContainer<data_t>& Rx)
     {
-        if(_linearResidual.hasOperator())
+        if (_linearResidual.hasOperator())
             return leaf(_linearResidual.getOperator());
-        else 
+        else
             return leaf(Identity<data_t>(*_domainDescriptor));
     }
-
 
     template <typename data_t>
     Quadric<data_t>* Quadric<data_t>::cloneImpl() const
     {
         if (_linearResidual.hasOperator() && _linearResidual.hasDataVector())
-            return new Quadric<data_t>(_linearResidual.getOperator(), _linearResidual.getDataVector());
+            return new Quadric<data_t>(_linearResidual.getOperator(),
+                                       _linearResidual.getDataVector());
         else if (_linearResidual.hasOperator() && !_linearResidual.hasDataVector())
             return new Quadric<data_t>(_linearResidual.getOperator());
         else if (!_linearResidual.hasOperator() && _linearResidual.hasDataVector())
@@ -101,7 +98,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

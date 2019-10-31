@@ -14,21 +14,25 @@ namespace elsa
      *
      * \tparam data_t data type for the domain of the functional, defaulting to real_t
      *
-     * The weighted, squared l2 norm functional evaluates to \f$ 0.5 * \| x \|_{W,2} = 0.5 * \langle x, Wx \rangle \f$
-     * using the standard scalar product, and where W is a diagonal scaling operator.
+     * The weighted, squared l2 norm functional evaluates to \f$ 0.5 * \| x \|_{W,2} = 0.5 * \langle
+     * x, Wx \rangle \f$ using the standard scalar product, and where W is a diagonal scaling
+     * operator.
      */
     template <typename data_t = real_t>
-    class WeightedL2NormPow2 : public Functional<data_t> {
+    class WeightedL2NormPow2 : public Functional<data_t>
+    {
     public:
         /**
-         * \brief Constructor for the weighted, squared l2 norm, mapping domain vector to a scalar (without a residual)
+         * \brief Constructor for the weighted, squared l2 norm, mapping domain vector to a scalar
+         * (without a residual)
          *
          * \param[in] weightingOp diagonal scaling operator used for weights
          */
         explicit WeightedL2NormPow2(const Scaling<data_t>& weightingOp);
 
         /**
-         * \brief Constructor for the weighted, squared l2 norm, using a residual as input to map to a scalar
+         * \brief Constructor for the weighted, squared l2 norm, using a residual as input to map to
+         * a scalar
          *
          * \param[in] residual to be used when evaluating the functional (or its derivatives)
          * \param[in] weightingOp diagonal scaling operator used for weights

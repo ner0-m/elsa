@@ -18,7 +18,8 @@ namespace elsa
      * This class represents abstract (typically iterative) solvers acting on optimization problems.
      */
     template <typename data_t = real_t>
-    class Solver : public Cloneable<Solver<data_t>> {
+    class Solver : public Cloneable<Solver<data_t>>
+    {
     public:
         /**
          * \brief Constructor for the solver, accepting an optimization problem
@@ -39,8 +40,8 @@ namespace elsa
         /**
          * \brief Solve the optimization problem (most likely iteratively)
          *
-         * \param[in] iterations number of iterations to execute (optional argument, the default 0 value lets the
-         * solve choose how many iterations to execute)
+         * \param[in] iterations number of iterations to execute (optional argument, the default 0
+         * value lets the solve choose how many iterations to execute)
          *
          * \returns a reference to the current solution (after solving)
          *

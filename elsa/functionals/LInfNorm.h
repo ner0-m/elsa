@@ -11,23 +11,28 @@ namespace elsa
      * \author Maximilian Hornung - modularization
      * \author Tobias Lasser - modernization
      *
-     * \tparam data_t data type for the domain of the residual of the functional, defaulting to real_t
+     * \tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * real_t
      *
-     * The linf / max norm functional evaluates to \f$ \max_{i=1,\ldots,n} |x_i| \f$ for \f$ x=(x_i)_{i=1}^n \f$.
-     * Please note that it is not differentiable, hence getGradient and getHessian will throw exceptions.
+     * The linf / max norm functional evaluates to \f$ \max_{i=1,\ldots,n} |x_i| \f$ for \f$
+     * x=(x_i)_{i=1}^n \f$. Please note that it is not differentiable, hence getGradient and
+     * getHessian will throw exceptions.
      */
     template <typename data_t = real_t>
-    class LInfNorm : public Functional<data_t> {
+    class LInfNorm : public Functional<data_t>
+    {
     public:
         /**
-         * \brief Constructor for the linf norm functional, mapping domain vector to scalar (without a residual)
+         * \brief Constructor for the linf norm functional, mapping domain vector to scalar (without
+         * a residual)
          *
          * \param[in] domainDescriptor describing the domain of the functional
          */
         explicit LInfNorm(const DataDescriptor& domainDescriptor);
 
         /**
-         * \brief Constructor for the linf norm functional, using a residual as input to map to a scalar
+         * \brief Constructor for the linf norm functional, using a residual as input to map to a
+         * scalar
          *
          * \param[in] residual to be used when evaluating the functional (or its derivative)
          */

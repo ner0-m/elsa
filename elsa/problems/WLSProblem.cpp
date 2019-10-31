@@ -13,14 +13,16 @@ namespace elsa
     }
 
     template <typename data_t>
-    WLSProblem<data_t>::WLSProblem(const Scaling<data_t>& W, const LinearOperator<data_t>& A, const DataContainer<data_t>& b)
+    WLSProblem<data_t>::WLSProblem(const Scaling<data_t>& W, const LinearOperator<data_t>& A,
+                                   const DataContainer<data_t>& b)
         : Problem<data_t>{WeightedL2NormPow2<data_t>{LinearResidual<data_t>{A, b}, W}}
     {
         // sanity checks are done in the member constructors already
     }
 
     template <typename data_t>
-    WLSProblem<data_t>::WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b, const DataContainer<data_t>& x0)
+    WLSProblem<data_t>::WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
+                                   const DataContainer<data_t>& x0)
         : Problem<data_t>{L2NormPow2<data_t>{LinearResidual<data_t>{A, b}}, x0}
     {
         // sanity checks are done in the member constructors already
@@ -51,7 +53,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

@@ -8,7 +8,8 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a generic optimization problem consisting of data term and regularization term(s).
+     * \brief Class representing a generic optimization problem consisting of data term and
+     * regularization term(s).
      *
      * \author Matthias Wieczorek - initial code
      * \author Maximilian Hornung - modularization
@@ -16,35 +17,42 @@ namespace elsa
      *
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
-     * This class represents a generic optimization problem, which consists of a data term and (optionally) of one
-     * (or many) regularization terms, \f$ \argmin_x D(x) + \sum_{i=1}^n \lambda_i R(x) \f$. Here, the data term
-     * \f$ D(x) \f$ is represented through a Functional (or it derivatives), the regularization terms are represented
-     * by RegularizationTerms, which encapsulate regularization parameters \f$ \lambda_i \f$ (scalar values) and the actual
+     * This class represents a generic optimization problem, which consists of a data term and
+     * (optionally) of one (or many) regularization terms, \f$ \argmin_x D(x) + \sum_{i=1}^n
+     * \lambda_i R(x) \f$. Here, the data term \f$ D(x) \f$ is represented through a Functional (or
+     * it derivatives), the regularization terms are represented by RegularizationTerms, which
+     * encapsulate regularization parameters \f$ \lambda_i \f$ (scalar values) and the actual
      * regularization terms \f$ R(x) \f$ (Functionals or its derivatives).
      */
     template <typename data_t = real_t>
-    class Problem: public Cloneable<Problem<data_t>> {
+    class Problem : public Cloneable<Problem<data_t>>
+    {
     public:
         /**
-         * \brief Constructor for optimization problem, accepting a data and multiple regularization terms, and an initial guess x0.
+         * \brief Constructor for optimization problem, accepting a data and multiple regularization
+         * terms, and an initial guess x0.
          *
          * \param[in] dataTerm functional expressing the data term
          * \param[in] regTerms vector of RegularizationTerms (weight and functional)
          * \param[in] x0 initial value for the current estimated solution
          */
-        Problem(const Functional<data_t>& dataTerm, const std::vector<RegularizationTerm<data_t>>& regTerms,
+        Problem(const Functional<data_t>& dataTerm,
+                const std::vector<RegularizationTerm<data_t>>& regTerms,
                 const DataContainer<data_t>& x0);
 
         /**
-         * \brief Constructor for optimization problem, accepting a data and multiple regularization terms.
+         * \brief Constructor for optimization problem, accepting a data and multiple regularization
+         * terms.
          *
          * \param[in] dataTerm functional expressing the data term
          * \param[in] regTerms vector of RegularizationTerms (weight and functional)
          */
-        Problem(const Functional<data_t>& dataTerm, const std::vector<RegularizationTerm<data_t>>& regTerms);
+        Problem(const Functional<data_t>& dataTerm,
+                const std::vector<RegularizationTerm<data_t>>& regTerms);
 
         /**
-         * \brief Constructor for optimization problem, accepting a data and one regularization term, and an initial guess x0.
+         * \brief Constructor for optimization problem, accepting a data and one regularization
+         * term, and an initial guess x0.
          *
          * \param[in] dataTerm functional expressing the data term
          * \param[in] regTerm RegularizationTerm (weight and functional)
@@ -54,7 +62,8 @@ namespace elsa
                 const DataContainer<data_t>& x0);
 
         /**
-         * \brief Constructor for optimization problem, accepting a data and one regularization term.
+         * \brief Constructor for optimization problem, accepting a data and one regularization
+         * term.
          *
          * \param[in] dataTerm functional expressing the data term
          * \param[in] regTerm RegularizationTerm (weight and functional)
@@ -62,7 +71,8 @@ namespace elsa
         Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm);
 
         /**
-         * \brief Constructor for optimization problem, accepting a data term and an initial guess x0.
+         * \brief Constructor for optimization problem, accepting a data term and an initial guess
+         * x0.
          *
          * \param[in] dataTerm functional expressing the data term
          * \param[in] x0 initial value for the current estimated solution
@@ -96,7 +106,8 @@ namespace elsa
          *
          * \returns the value of the problem evaluated at the current estimated solution
          *
-         * Please note: this method calls the method _evaluate that has to be overridden in derived classes.
+         * Please note: this method calls the method _evaluate that has to be overridden in derived
+         * classes.
          */
         data_t evaluate();
 
@@ -113,9 +124,11 @@ namespace elsa
         /**
          * \brief compute the gradient of the problem at the current estimated solution
          *
-         * \param[out] result output DataContainer containing the gradient (in the domain of the problem)
+         * \param[out] result output DataContainer containing the gradient (in the domain of the
+         * problem)
          *
-         * Please note: this method calls the method _getGradient that has to be overridden in derived classes.
+         * Please note: this method calls the method _getGradient that has to be overridden in
+         * derived classes.
          */
         void getGradient(DataContainer<data_t>& result);
 
@@ -124,7 +137,8 @@ namespace elsa
          *
          * \returns a LinearOperator (the Hessian)
          *
-         * Please note: this method calls the method _getHessian that has to be overridden in derived classes.
+         * Please note: this method calls the method _getHessian that has to be overridden in
+         * derived classes.
          */
         LinearOperator<data_t> getHessian();
 
@@ -157,5 +171,3 @@ namespace elsa
         bool isEqual(const Problem<data_t>& other) const override;
     };
 } // namespace elsa
-
-

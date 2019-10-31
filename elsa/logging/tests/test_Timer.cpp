@@ -11,7 +11,8 @@
 
 using namespace elsa;
 
-SCENARIO("Using Timer") {
+SCENARIO("Using Timer")
+{
     Timer("who", "what");
     // cannot test much more than creation/destruction...
 

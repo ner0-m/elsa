@@ -7,10 +7,12 @@
 namespace elsa
 {
     template <typename data_t>
-    BinaryMethod<data_t>::BinaryMethod(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor,
+    BinaryMethod<data_t>::BinaryMethod(const DataDescriptor& domainDescriptor,
+                                       const DataDescriptor& rangeDescriptor,
                                        const std::vector<Geometry>& geometryList)
-    : LinearOperator<data_t>(domainDescriptor, rangeDescriptor), _geometryList{geometryList},
-      _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()}
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+          _geometryList{geometryList},
+          _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()}
     {
         // sanity checks
         auto dim = _domainDescriptor->getNumberOfDimensions();
@@ -25,14 +27,16 @@ namespace elsa
     }
 
     template <typename data_t>
-    void BinaryMethod<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
+    void BinaryMethod<data_t>::_apply(const DataContainer<data_t>& x,
+                                      DataContainer<data_t>& Ax) const
     {
         Timer t("BinaryMethod", "apply");
         traverseVolume<false>(x, Ax);
     }
 
     template <typename data_t>
-    void BinaryMethod<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
+    void BinaryMethod<data_t>::_applyAdjoint(const DataContainer<data_t>& y,
+                                             DataContainer<data_t>& Aty) const
     {
         Timer t("BinaryMethod", "applyAdjoint");
         traverseVolume<true>(y, Aty);
@@ -62,7 +66,8 @@ namespace elsa
 
     template <typename data_t>
     template <bool adjoint>
-    void BinaryMethod<data_t>::traverseVolume(const DataContainer<data_t>& vector, DataContainer<data_t>& result) const
+    void BinaryMethod<data_t>::traverseVolume(const DataContainer<data_t>& vector,
+                                              DataContainer<data_t>& result) const
     {
         index_t maxIterations{0};
         if (adjoint) {
@@ -89,7 +94,8 @@ namespace elsa
 
             while (traverse.isInBoundingBox()) {
                 // --> initial index to access the data vector
-                auto dataIndexForCurrentVoxel = _domainDescriptor->getIndexFromCoordinate(traverse.getCurrentVoxel());
+                auto dataIndexForCurrentVoxel =
+                    _domainDescriptor->getIndexFromCoordinate(traverse.getCurrentVoxel());
 
                 // --> update result depending on the operation performed
                 if (adjoint)
@@ -104,17 +110,18 @@ namespace elsa
     }
 
     template <typename data_t>
-    typename BinaryMethod<data_t>::Ray BinaryMethod<data_t>::computeRayToDetector(index_t detectorIndex, index_t dimension) const
+    typename BinaryMethod<data_t>::Ray
+        BinaryMethod<data_t>::computeRayToDetector(index_t detectorIndex, index_t dimension) const
     {
         auto detectorCoord = _rangeDescriptor->getCoordinateFromIndex(detectorIndex);
 
-        //center of detector pixel is 0.5 units away from the corresponding detector coordinates
+        // center of detector pixel is 0.5 units away from the corresponding detector coordinates
         auto geometry = _geometryList.at(detectorCoord(dimension - 1));
-        auto [ro, rd] = geometry.computeRayTo(detectorCoord.block(0, 0, dimension-1, 1).template cast<real_t>().array() + 0.5);
+        auto [ro, rd] = geometry.computeRayTo(
+            detectorCoord.block(0, 0, dimension - 1, 1).template cast<real_t>().array() + 0.5);
 
         return Ray(ro, rd);
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

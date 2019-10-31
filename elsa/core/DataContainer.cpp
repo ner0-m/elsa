@@ -4,32 +4,36 @@
 #include <stdexcept>
 #include <utility>
 
-namespace elsa {
+namespace elsa
+{
 
-    template<typename data_t>
-    DataContainer<data_t>::DataContainer(const DataDescriptor &dataDescriptor, DataHandlerType handlerType)
-            : _dataDescriptor{dataDescriptor.clone()},
-              _dataHandler{createDataHandler(handlerType, _dataDescriptor->getNumberOfCoefficients())} 
-    {}
-    
     template <typename data_t>
-    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor, const  Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
-            DataHandlerType handlerType)
-            : _dataDescriptor{dataDescriptor.clone()},
-              _dataHandler{createDataHandler(handlerType, _dataDescriptor->getNumberOfCoefficients())}
+    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor,
+                                         DataHandlerType handlerType)
+        : _dataDescriptor{dataDescriptor.clone()},
+          _dataHandler{createDataHandler(handlerType, _dataDescriptor->getNumberOfCoefficients())}
+    {
+    }
+
+    template <typename data_t>
+    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor,
+                                         const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
+                                         DataHandlerType handlerType)
+        : _dataDescriptor{dataDescriptor.clone()},
+          _dataHandler{createDataHandler(handlerType, _dataDescriptor->getNumberOfCoefficients())}
     {
         if (_dataHandler->getSize() != data.size())
             throw std::invalid_argument("DataContainer: initialization vector has invalid size");
-        
+
         for (index_t i = 0; i < _dataHandler->getSize(); ++i)
             (*_dataHandler)[i] = data[i];
     }
 
     template <typename data_t>
-    DataContainer<data_t>::DataContainer(const DataContainer<data_t> &other)
-            : _dataDescriptor{other._dataDescriptor->clone()},
-              _dataHandler{other._dataHandler}
-    {}
+    DataContainer<data_t>::DataContainer(const DataContainer<data_t>& other)
+        : _dataDescriptor{other._dataDescriptor->clone()}, _dataHandler{other._dataHandler}
+    {
+    }
 
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator=(const DataContainer<data_t>& other)
@@ -43,7 +47,7 @@ namespace elsa {
     }
 
     template <typename data_t>
-    DataContainer<data_t>::DataContainer(DataContainer<data_t> &&other) noexcept
+    DataContainer<data_t>::DataContainer(DataContainer<data_t>&& other) noexcept
         : _dataDescriptor{std::move(other._dataDescriptor)},
           _dataHandler{std::move(other._dataHandler)}
     {
@@ -65,55 +69,51 @@ namespace elsa {
         return *this;
     }
 
-
-
-    template<typename data_t>
-    const DataDescriptor &DataContainer<data_t>::getDataDescriptor() const
+    template <typename data_t>
+    const DataDescriptor& DataContainer<data_t>::getDataDescriptor() const
     {
         return *_dataDescriptor;
     }
 
-    template<typename data_t>
+    template <typename data_t>
     index_t DataContainer<data_t>::getSize() const
     {
         return _dataHandler->getSize();
     }
 
-
-    template<typename data_t>
-    data_t &DataContainer<data_t>::operator[](index_t index)
+    template <typename data_t>
+    data_t& DataContainer<data_t>::operator[](index_t index)
     {
         detach();
         return (*_dataHandler)[index];
     }
 
-    template<typename data_t>
-    const data_t &DataContainer<data_t>::operator[](index_t index) const
+    template <typename data_t>
+    const data_t& DataContainer<data_t>::operator[](index_t index) const
     {
         return (*_dataHandler)[index];
     }
 
-    template<typename data_t>
-    data_t &DataContainer<data_t>::operator()(IndexVector_t coordinate)
+    template <typename data_t>
+    data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate)
     {
         detach();
         return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
-    template<typename data_t>
-    const data_t &DataContainer<data_t>::operator()(IndexVector_t coordinate) const
+    template <typename data_t>
+    const data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate) const
     {
         return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
-
-    template<typename data_t>
-    data_t DataContainer<data_t>::dot(const DataContainer<data_t> &other) const
+    template <typename data_t>
+    data_t DataContainer<data_t>::dot(const DataContainer<data_t>& other) const
     {
         return _dataHandler->dot(*other._dataHandler);
     }
 
-    template<typename data_t>
+    template <typename data_t>
     data_t DataContainer<data_t>::squaredL2Norm() const
     {
         return _dataHandler->squaredL2Norm();
@@ -131,37 +131,35 @@ namespace elsa {
         return _dataHandler->lInfNorm();
     }
 
-    template<typename data_t>
+    template <typename data_t>
     data_t DataContainer<data_t>::sum() const
     {
         return _dataHandler->sum();
     }
 
-
-    template<typename data_t>
+    template <typename data_t>
     DataContainer<data_t> DataContainer<data_t>::square() const
     {
         return DataContainer<data_t>(*_dataDescriptor, _dataHandler->square());
     }
 
-    template<typename data_t>
+    template <typename data_t>
     DataContainer<data_t> DataContainer<data_t>::sqrt() const
     {
         return DataContainer<data_t>(*_dataDescriptor, _dataHandler->sqrt());
     }
 
-    template<typename data_t>
+    template <typename data_t>
     DataContainer<data_t> DataContainer<data_t>::exp() const
     {
         return DataContainer<data_t>(*_dataDescriptor, _dataHandler->exp());
     }
 
-    template<typename data_t>
+    template <typename data_t>
     DataContainer<data_t> DataContainer<data_t>::log() const
     {
         return DataContainer<data_t>(*_dataDescriptor, _dataHandler->log());
     }
-
 
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(const DataContainer<data_t>& dc)
@@ -195,7 +193,6 @@ namespace elsa {
         return *this;
     }
 
-
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(data_t scalar)
     {
@@ -228,7 +225,6 @@ namespace elsa {
         return *this;
     }
 
-
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator=(data_t scalar)
     {
@@ -237,11 +233,11 @@ namespace elsa {
         return *this;
     }
 
-
-    template<typename data_t>
-    template<typename ... Args>
+    template <typename data_t>
+    template <typename... Args>
     std::unique_ptr<DataHandler<data_t>>
-    DataContainer<data_t>::createDataHandler(DataHandlerType handlerType, Args &&... args) {
+        DataContainer<data_t>::createDataHandler(DataHandlerType handlerType, Args&&... args)
+    {
         switch (handlerType) {
             case DataHandlerType::CPU:
                 return std::make_unique<DataHandlerCPU<data_t>>(std::forward<Args>(args)...);
@@ -250,15 +246,12 @@ namespace elsa {
         }
     }
 
-
-    template<typename data_t>
-    DataContainer<data_t>::DataContainer(const DataDescriptor &dataDescriptor,
+    template <typename data_t>
+    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor,
                                          std::unique_ptr<DataHandler<data_t>> dataHandler)
-            : _dataDescriptor{dataDescriptor.clone()},
-              _dataHandler{std::move(dataHandler)}
+        : _dataDescriptor{dataDescriptor.clone()}, _dataHandler{std::move(dataHandler)}
     {
     }
-
 
     template <typename data_t>
     bool DataContainer<data_t>::operator==(const DataContainer<data_t>& other) const

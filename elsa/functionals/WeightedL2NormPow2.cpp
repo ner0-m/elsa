@@ -9,17 +9,20 @@ namespace elsa
     WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Scaling<data_t>& weightingOp)
         : Functional<data_t>(weightingOp.getDomainDescriptor()),
           _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
-    {}
+    {
+    }
 
     template <typename data_t>
-    WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Residual<data_t>& residual, const Scaling<data_t>& weightingOp)
+    WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Residual<data_t>& residual,
+                                                   const Scaling<data_t>& weightingOp)
         : Functional<data_t>(residual),
           _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
     {
         // sanity check
-        if (residual.getDomainDescriptor() != weightingOp.getDomainDescriptor() ||
-            residual.getRangeDescriptor() != weightingOp.getRangeDescriptor())
-            throw std::invalid_argument("WeightedL2NormPow2: sizes of residual and weighting operator do not match");
+        if (residual.getDomainDescriptor() != weightingOp.getDomainDescriptor()
+            || residual.getRangeDescriptor() != weightingOp.getRangeDescriptor())
+            throw std::invalid_argument(
+                "WeightedL2NormPow2: sizes of residual and weighting operator do not match");
     }
 
     template <typename data_t>
@@ -48,7 +51,6 @@ namespace elsa
     {
         return leaf(*_weightingOp);
     }
-
 
     template <typename data_t>
     WeightedL2NormPow2<data_t>* WeightedL2NormPow2<data_t>::cloneImpl() const

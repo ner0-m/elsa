@@ -11,11 +11,13 @@ namespace elsa
      *
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
-     * This class implements a simple gradient descent iterative solver with a fixed, given step size.
-     * No particular stopping rule is currently implemented (only a fixed number of iterations, default to 100).
+     * This class implements a simple gradient descent iterative solver with a fixed, given step
+     * size. No particular stopping rule is currently implemented (only a fixed number of
+     * iterations, default to 100).
      */
     template <typename data_t = real_t>
-    class GradientDescent : public Solver<data_t> {
+    class GradientDescent : public Solver<data_t>
+    {
     public:
         /**
          * \brief Constructor for gradient descent, accepting a problem and a fixed step size
@@ -42,13 +44,14 @@ namespace elsa
         using Solver<data_t>::_problem;
 
         /**
-          * \brief Solve the optimization problem, i.e. apply iterations number of iterations of gradient descent
-          *
-          * \param[in] iterations number of iterations to execute (the default 0 value executes
-          * _defaultIterations of iterations)
-          *
-          * \returns a reference to the current solution
-          */
+         * \brief Solve the optimization problem, i.e. apply iterations number of iterations of
+         * gradient descent
+         *
+         * \param[in] iterations number of iterations to execute (the default 0 value executes
+         * _defaultIterations of iterations)
+         *
+         * \returns a reference to the current solution
+         */
         DataContainer<data_t>& _solve(index_t iterations) override;
 
         /// implement the polymorphic clone operation

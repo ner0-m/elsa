@@ -34,7 +34,6 @@ namespace elsa
         return dataContainer;
     }
 
-
     template <typename data_t>
     void EDF::write(const DataContainer<data_t>& data, std::string filename)
     {
@@ -53,7 +52,6 @@ namespace elsa
         for (index_t i = 0; i < data.getSize(); ++i)
             file.write(reinterpret_cast<const char*>(&data[i]), sizeof(data_t));
     }
-
 
     std::map<std::string, std::string> EDF::readHeader(std::ifstream& file)
     {
@@ -119,8 +117,8 @@ namespace elsa
         return properties;
     }
 
-
-    std::pair<DataDescriptor, DataUtils::DataType> EDF::parseHeader(const std::map<std::string, std::string>& properties)
+    std::pair<DataDescriptor, DataUtils::DataType>
+        EDF::parseHeader(const std::map<std::string, std::string>& properties)
     {
         // read the dimensions
         std::vector<index_t> dim;
@@ -171,8 +169,8 @@ namespace elsa
                 dataType = DataUtils::DataType::INT16;
             else if (datatypeValue == "unsignedshort")
                 dataType = DataUtils::DataType::UINT16;
-            else if (datatypeValue == "float" || datatypeValue == "floatvalue" ||
-                     datatypeValue == "real")
+            else if (datatypeValue == "float" || datatypeValue == "floatvalue"
+                     || datatypeValue == "real")
                 dataType = DataUtils::DataType::FLOAT32;
             else if (datatypeValue == "double" || datatypeValue == "doublevalue")
                 dataType = DataUtils::DataType::FLOAT64;
@@ -191,8 +189,7 @@ namespace elsa
             size = DataUtils::parse<index_t>(sizeIt->second);
 
         auto imageIt = properties.find("image");
-        if (imageIt != properties.end() &&
-            DataUtils::parse<index_t>(imageIt->second) != 1)
+        if (imageIt != properties.end() && DataUtils::parse<index_t>(imageIt->second) != 1)
             throw std::runtime_error("EDF::parseHeader: image not set to 1");
 
         // convert size
@@ -217,7 +214,6 @@ namespace elsa
         return std::make_pair(dataDescriptor, dataType);
     }
 
-
     template <typename data_t>
     void EDF::writeHeader(std::ofstream& file, const DataContainer<data_t>& data)
     {
@@ -234,10 +230,8 @@ namespace elsa
         // write dimension and size
         for (std::size_t i = 0; i < descriptor.getNumberOfDimensions(); ++i)
             file << "Dim_" << (i + 1) << " = "
-                 << descriptor.getNumberOfCoefficientsPerDimension()[i]
-                 << ";\n";
-        file << "Size = "
-             << descriptor.getNumberOfCoefficients() * sizeof(data_t) << ";\n";
+                 << descriptor.getNumberOfCoefficientsPerDimension()[i] << ";\n";
+        file << "Size = " << descriptor.getNumberOfCoefficients() * sizeof(data_t) << ";\n";
 
         // write spacing
         file << "Spacing =";
@@ -260,17 +254,41 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::string EDF::getDataTypeName(const DataContainer<data_t> &data)
+    std::string EDF::getDataTypeName(const DataContainer<data_t>& data)
     {
         throw std::invalid_argument("EDF::getDataTypeName: invalid/unsupported data type");
     }
 
-    template<> std::string EDF::getDataTypeName(const DataContainer<int8_t> &data) { return "SignedByte"; }
-    template<> std::string EDF::getDataTypeName(const DataContainer<uint8_t> &data) { return "UnsignedByte"; }
-    template<> std::string EDF::getDataTypeName(const DataContainer<int16_t> &data) { return "SignedShort"; }
-    template<> std::string EDF::getDataTypeName(const DataContainer<uint16_t> &data) { return "UnsignedShort"; }
-    template<> std::string EDF::getDataTypeName(const DataContainer<float> &data) { return "FloatValue"; }
-    template<> std::string EDF::getDataTypeName(const DataContainer<double> &data) { return "DoubleValue"; }
+    template <>
+    std::string EDF::getDataTypeName(const DataContainer<int8_t>& data)
+    {
+        return "SignedByte";
+    }
+    template <>
+    std::string EDF::getDataTypeName(const DataContainer<uint8_t>& data)
+    {
+        return "UnsignedByte";
+    }
+    template <>
+    std::string EDF::getDataTypeName(const DataContainer<int16_t>& data)
+    {
+        return "SignedShort";
+    }
+    template <>
+    std::string EDF::getDataTypeName(const DataContainer<uint16_t>& data)
+    {
+        return "UnsignedShort";
+    }
+    template <>
+    std::string EDF::getDataTypeName(const DataContainer<float>& data)
+    {
+        return "FloatValue";
+    }
+    template <>
+    std::string EDF::getDataTypeName(const DataContainer<double>& data)
+    {
+        return "DoubleValue";
+    }
 
     // ------------------------------------------
     // explicit template instantiation

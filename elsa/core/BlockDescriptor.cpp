@@ -5,10 +5,8 @@
 namespace elsa
 {
 
-    BlockDescriptor::BlockDescriptor(index_t numberOfBlocks, const DataDescriptor &dataDescriptor)
-        : DataDescriptor(dataDescriptor),
-          _blockDescriptors{},
-          _blockOffsets(numberOfBlocks)
+    BlockDescriptor::BlockDescriptor(index_t numberOfBlocks, const DataDescriptor& dataDescriptor)
+        : DataDescriptor(dataDescriptor), _blockDescriptors{}, _blockOffsets(numberOfBlocks)
     {
         // sanity check
         if (numberOfBlocks <= 0)
@@ -23,33 +21,32 @@ namespace elsa
         _numberOfDimensions++;
 
         _numberOfCoefficientsPerDimension.conservativeResize(_numberOfDimensions);
-        _numberOfCoefficientsPerDimension(_numberOfDimensions-1) = numberOfBlocks;
+        _numberOfCoefficientsPerDimension(_numberOfDimensions - 1) = numberOfBlocks;
 
         _spacingPerDimension.conservativeResize(_numberOfDimensions);
-        _spacingPerDimension(_numberOfDimensions-1) = 1.0;
+        _spacingPerDimension(_numberOfDimensions - 1) = 1.0;
 
         _productOfCoefficientsPerDimension.conservativeResize(_numberOfDimensions);
-        _productOfCoefficientsPerDimension(_numberOfDimensions-1) =
-                _numberOfCoefficientsPerDimension.head(_numberOfDimensions-1).prod();
+        _productOfCoefficientsPerDimension(_numberOfDimensions - 1) =
+            _numberOfCoefficientsPerDimension.head(_numberOfDimensions - 1).prod();
     }
 
-    index_t BlockDescriptor::getNumberOfBlocks() const {
-        return _blockDescriptors.size();
-    }
+    index_t BlockDescriptor::getNumberOfBlocks() const { return _blockDescriptors.size(); }
 
-    const DataDescriptor& BlockDescriptor::getIthDescriptor(index_t i) const {
+    const DataDescriptor& BlockDescriptor::getIthDescriptor(index_t i) const
+    {
         return *_blockDescriptors.at(i);
     }
 
-    index_t BlockDescriptor::getIthBlockOffset(elsa::index_t i) const {
+    index_t BlockDescriptor::getIthBlockOffset(elsa::index_t i) const
+    {
         if (i < 0 || i >= _blockOffsets.size())
             throw std::invalid_argument("BlockDescriptor: index i is out of bounds");
 
         return _blockOffsets.coeff(i);
     }
 
-
-    BlockDescriptor::BlockDescriptor(const BlockDescriptor &blockDescriptor)
+    BlockDescriptor::BlockDescriptor(const BlockDescriptor& blockDescriptor)
         : DataDescriptor(blockDescriptor),
           _blockDescriptors{},
           _blockOffsets{blockDescriptor._blockOffsets}
@@ -58,10 +55,7 @@ namespace elsa
             _blockDescriptors.emplace_back(descriptor->clone());
     }
 
-    BlockDescriptor* BlockDescriptor::cloneImpl() const
-    {
-        return new BlockDescriptor(*this);
-    }
+    BlockDescriptor* BlockDescriptor::cloneImpl() const { return new BlockDescriptor(*this); }
 
     bool BlockDescriptor::isEqual(const DataDescriptor& other) const
     {

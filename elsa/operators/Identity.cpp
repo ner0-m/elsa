@@ -6,7 +6,8 @@ namespace elsa
     template <typename data_t>
     Identity<data_t>::Identity(const DataDescriptor& descriptor)
         : LinearOperator<data_t>(descriptor, descriptor)
-    {}
+    {
+    }
 
     template <typename data_t>
     void Identity<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
@@ -16,7 +17,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Identity<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
+    void Identity<data_t>::_applyAdjoint(const DataContainer<data_t>& y,
+                                         DataContainer<data_t>& Aty) const
     {
         Timer timeguard("Identity", "applyAdjoint");
         Aty = y;
@@ -40,7 +42,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

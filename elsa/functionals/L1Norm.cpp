@@ -7,13 +7,13 @@ namespace elsa
     template <typename data_t>
     L1Norm<data_t>::L1Norm(const DataDescriptor& domainDescriptor)
         : Functional<data_t>(domainDescriptor)
-    {}
+    {
+    }
 
     template <typename data_t>
-    L1Norm<data_t>::L1Norm(const Residual<data_t>& residual)
-        : Functional<data_t>(residual)
-    {}
-
+    L1Norm<data_t>::L1Norm(const Residual<data_t>& residual) : Functional<data_t>(residual)
+    {
+    }
 
     template <typename data_t>
     data_t L1Norm<data_t>::_evaluate(const DataContainer<data_t>& Rx)
@@ -33,7 +33,6 @@ namespace elsa
         throw std::logic_error("L1Norm: not differentiable, so no Hessian! (busted!)");
     }
 
-
     template <typename data_t>
     L1Norm<data_t>* L1Norm<data_t>::cloneImpl() const
     {
@@ -52,7 +51,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

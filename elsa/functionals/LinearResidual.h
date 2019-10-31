@@ -13,12 +13,13 @@ namespace elsa
      * \tparam data_t data type for the domain and range of the operator, default to real_t
      *
      * A linear residual is a vector-valued mapping \f$ \mathbb{R}^n\to\mathbb{R}^m \f$, namely
-     * \f$ x \mapsto  Ax - b \f$, where A is a LinearOperator, b a constant data vector (DataContainer)
-     * and x a variable (DataContainer).
-     * This linear residual can be used as input to a Functional.
+     * \f$ x \mapsto  Ax - b \f$, where A is a LinearOperator, b a constant data vector
+     * (DataContainer) and x a variable (DataContainer). This linear residual can be used as input
+     * to a Functional.
      */
     template <typename data_t = real_t>
-    class LinearResidual : public Residual<data_t> {
+    class LinearResidual : public Residual<data_t>
+    {
     public:
         /**
          * \brief Constructor for a trivial residual \f$ x \mapsto x \f$
@@ -50,7 +51,6 @@ namespace elsa
 
         /// default destructor
         ~LinearResidual() override = default;
-
 
         /// return true if the residual has an operator A
         bool hasOperator() const;
@@ -85,7 +85,6 @@ namespace elsa
          * If A is not set, then an Identity operator is returned.
          */
         LinearOperator<data_t> _getJacobian(const DataContainer<data_t>& x) override;
-
 
     private:
         /// flag if operator A is present

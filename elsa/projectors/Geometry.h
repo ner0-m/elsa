@@ -16,27 +16,27 @@ namespace elsa
      * \author Nikola Dinev - refactoring
      * \author Tobias Lasser - refactoring, modernization
      *
-     * The location of X-ray source, volume (typically containing the center of rotation), and X-ray detector
-     * are encoded using projection matrices (see A. Zissermann, "Multiple View Geometry in Computer Vision").
-     * Detectors are assumed to be flat.
+     * The location of X-ray source, volume (typically containing the center of rotation), and X-ray
+     * detector are encoded using projection matrices (see A. Zissermann, "Multiple View Geometry in
+     * Computer Vision"). Detectors are assumed to be flat.
      */
-    class Geometry {
+    class Geometry
+    {
     public:
         /**
-        * \brief Constructor for 2D projective geometry
-        *
-        * \param[in] sourceToCenterOfRotation distance from source to the center of rotation (along y axis)
-        * \param[in] centerOfRotationToDetector distance from center of rotation to detector (along y axis)
-        * \param[in] angle rotation angle (in radians)
-        * \param[in] volumeDescriptor descriptor for the 2d volume
-        * \param[in] sinoDescriptor descriptor for the sinogram
-        * \param[in] offset offset of the principal point [default 0]
-        * \param[in] centerOfRotationOffsetX offset of the center of rotation in x direction [default 0]
-        * \param[in] centerOfRotationOffsetY offset of the center of rotation in y direction [default 0]
-        */
-        Geometry(real_t sourceToCenterOfRotation, real_t centerOfRotationToDetector,
-                 real_t angle,
-                 const DataDescriptor &volumeDescriptor, const DataDescriptor &sinoDescriptor,
+         * \brief Constructor for 2D projective geometry
+         *
+         * \param[in] sourceToCenterOfRotation distance from source to the center of rotation (along
+         * y axis) \param[in] centerOfRotationToDetector distance from center of rotation to
+         * detector (along y axis) \param[in] angle rotation angle (in radians) \param[in]
+         * volumeDescriptor descriptor for the 2d volume \param[in] sinoDescriptor descriptor for
+         * the sinogram \param[in] offset offset of the principal point [default 0] \param[in]
+         * centerOfRotationOffsetX offset of the center of rotation in x direction [default 0]
+         * \param[in] centerOfRotationOffsetY offset of the center of rotation in y direction
+         * [default 0]
+         */
+        Geometry(real_t sourceToCenterOfRotation, real_t centerOfRotationToDetector, real_t angle,
+                 const DataDescriptor& volumeDescriptor, const DataDescriptor& sinoDescriptor,
                  real_t offset = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetX = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetY = static_cast<real_t>(0.0));
@@ -44,28 +44,28 @@ namespace elsa
         /**
          * \brief Constructor for 3D projective geometry using Euler angles
          *
-         * \param[in] sourceToCenterOfRotation distance from source to the center of rotation (along z axis)
-         * \param[in] centerOfRotationToDetector distance from center of rotation to detector (along z axis)
-         * \param[in] volumeDescriptor descriptor for the 3d volume
+         * \param[in] sourceToCenterOfRotation distance from source to the center of rotation (along
+         * z axis) \param[in] centerOfRotationToDetector distance from center of rotation to
+         * detector (along z axis) \param[in] volumeDescriptor descriptor for the 3d volume
          * \param[in] sinoDescriptor descriptor for the sinogram
          * \param[in] gamma third rotation angle around y''-axis (in radians)
-         * \param[in] beta second rotation angle around z' axis (such that y->y'', in radians) [default 0]
-         * \param[in] alpha first rotation angle around y axis (such that z->z', in radians) [default 0]
-         * \param[in] px offset of the principal point in x direction [default 0]
-         * \param[in] py offset of the principal point in y direction [default 0]
-         * \param[in] centerOfRotationOffsetX offset of the center of rotation in x direction [default 0]
-         * \param[in] centerOfRotationOffsetY offset of the center of rotation in y direction [default 0]
-         * \param[in] centerOfRotationOffsetZ offset of the center of rotation in z direction [default 0]
+         * \param[in] beta second rotation angle around z' axis (such that y->y'', in radians)
+         * [default 0] \param[in] alpha first rotation angle around y axis (such that z->z', in
+         * radians) [default 0] \param[in] px offset of the principal point in x direction [default
+         * 0] \param[in] py offset of the principal point in y direction [default 0] \param[in]
+         * centerOfRotationOffsetX offset of the center of rotation in x direction [default 0]
+         * \param[in] centerOfRotationOffsetY offset of the center of rotation in y direction
+         * [default 0] \param[in] centerOfRotationOffsetZ offset of the center of rotation in z
+         * direction [default 0]
          *
-         * Alpha, beta, gamma are Euler rotation angles using the YZY convention. They are specified in radians.
-         * In standard circular trajectory CT settings, we would have alpha = beta = 0, while gamma is the angle of rotation)
+         * Alpha, beta, gamma are Euler rotation angles using the YZY convention. They are specified
+         * in radians. In standard circular trajectory CT settings, we would have alpha = beta = 0,
+         * while gamma is the angle of rotation)
          */
         Geometry(real_t sourceToCenterOfRotation, real_t centerOfRotationToDetector,
-                 const DataDescriptor &volumeDescriptor, const DataDescriptor &sinoDescriptor,
-                 real_t gamma,
-                 real_t beta = static_cast<real_t>(0.0),
-                 real_t alpha = static_cast<real_t>(0.0),
-                 real_t px = static_cast<real_t>(0.0),
+                 const DataDescriptor& volumeDescriptor, const DataDescriptor& sinoDescriptor,
+                 real_t gamma, real_t beta = static_cast<real_t>(0.0),
+                 real_t alpha = static_cast<real_t>(0.0), real_t px = static_cast<real_t>(0.0),
                  real_t py = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetX = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetY = static_cast<real_t>(0.0),
@@ -74,28 +74,29 @@ namespace elsa
         /**
          * \brief Constructor for 3D projective geometry using a 3x3 rotation matrix
          *
-         * \param[in] sourceToCenterOfRotation distance from source to the center of rotation (along z axis)
-         * \param[in] centerOfRotationToDetector distance from center of rotation to detector (along z axis)
-         * \param[in] volumeDescriptor descriptor for the 3d volume
+         * \param[in] sourceToCenterOfRotation distance from source to the center of rotation (along
+         * z axis) \param[in] centerOfRotationToDetector distance from center of rotation to
+         * detector (along z axis) \param[in] volumeDescriptor descriptor for the 3d volume
          * \param[in] sinoDescriptor descriptor for the sinogram
          * \param[in] R a 3x3 rotation matrix
          * \param[in] px offset of the principal point in x-direction [default 0]
          * \param[in] py offset of the principal point in y-direction [default 0]
-         * \param[in] centerOfRotationOffsetX offset of the center of rotation in x direction [default 0]
-         * \param[in] centerOfRotationOffsetY offset of the center of rotation in y direction [default 0]
-         * \param[in] centerOfRotationOffsetZ offset of the center of rotation in z direction [default 0]
+         * \param[in] centerOfRotationOffsetX offset of the center of rotation in x direction
+         * [default 0] \param[in] centerOfRotationOffsetY offset of the center of rotation in y
+         * direction [default 0] \param[in] centerOfRotationOffsetZ offset of the center of rotation
+         * in z direction [default 0]
          */
         Geometry(real_t sourceToCenterOfRotation, real_t centerOfRotationToDetector,
-                 const DataDescriptor &volumeDescriptor, const DataDescriptor &sinoDescriptor,
-                 const RealMatrix_t& R,
-                 real_t px = static_cast<real_t>(0.0),
+                 const DataDescriptor& volumeDescriptor, const DataDescriptor& sinoDescriptor,
+                 const RealMatrix_t& R, real_t px = static_cast<real_t>(0.0),
                  real_t py = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetX = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetY = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetZ = static_cast<real_t>(0.0));
 
         /**
-         * \brief Compute a ray (ray origin and ray direction) that hits the specified point p on the detector
+         * \brief Compute a ray (ray origin and ray direction) that hits the specified point p on
+         * the detector
          *
          * \param[in] p point p on detector
          *
@@ -104,7 +105,6 @@ namespace elsa
          * Computation are done using the projection matrix.
          */
         std::pair<RealVector_t, RealVector_t> computeRayTo(const RealVector_t& p) const;
-
 
         /**
          * \brief Return the projection matrix

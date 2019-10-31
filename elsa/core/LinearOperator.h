@@ -11,7 +11,8 @@ namespace elsa
 {
 
     /**
-     * \brief Base class representing a linear operator A. Also implements operator expression functionality.
+     * \brief Base class representing a linear operator A. Also implements operator expression
+     * functionality.
      *
      * \author Matthias Wieczorek - initial code
      * \author Maximilian Hornung - composite rewrite
@@ -20,18 +21,22 @@ namespace elsa
      * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * This class represents a linear operator A, expressed through its apply/applyAdjoint methods,
-     * which implement Ax and A^ty for DataContainers x,y of appropriate sizes. Concrete implementations
-     * of linear operators will derive from this class and override the _apply/_applyAdjoint methods.
+     * which implement Ax and A^ty for DataContainers x,y of appropriate sizes. Concrete
+     * implementations of linear operators will derive from this class and override the
+     * _apply/_applyAdjoint methods.
      *
-     * LinearOperator also provides functionality to support constructs like the operator expression A^t*B+C,
-     * where A,B,C are linear operators. This operator composition is implemented via evaluation trees.
+     * LinearOperator also provides functionality to support constructs like the operator expression
+     * A^t*B+C, where A,B,C are linear operators. This operator composition is implemented via
+     * evaluation trees.
      *
-     * LinearOperator and all its derived classes are expected to be light-weight and easily copyable/cloneable,
-     * due to the implementation of evaluation trees. Hence any pre-computations/caching should only be done
-     * in a lazy manner (e.g. during the first call of apply), and not in the constructor.
+     * LinearOperator and all its derived classes are expected to be light-weight and easily
+     * copyable/cloneable, due to the implementation of evaluation trees. Hence any
+     * pre-computations/caching should only be done in a lazy manner (e.g. during the first call of
+     * apply), and not in the constructor.
      */
     template <typename data_t = real_t>
-    class LinearOperator : public Cloneable<LinearOperator<data_t>> {
+    class LinearOperator : public Cloneable<LinearOperator<data_t>>
+    {
     public:
         /**
          * \brief Constructor for the linear operator A, mapping from domain to range
@@ -39,7 +44,8 @@ namespace elsa
          * \param[in] domainDescriptor DataDescriptor describing the domain of the operator
          * \param[in] rangeDescriptor DataDescriptor describing the range of the operator
          */
-        LinearOperator(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor);
+        LinearOperator(const DataDescriptor& domainDescriptor,
+                       const DataDescriptor& rangeDescriptor);
 
         /// default destructor
         ~LinearOperator() override = default;
@@ -48,7 +54,6 @@ namespace elsa
         LinearOperator(const LinearOperator<data_t>& other);
         /// copy assignment
         LinearOperator<data_t>& operator=(const LinearOperator<data_t>& other);
-
 
         /// return the domain DataDescriptor
         const DataDescriptor& getDomainDescriptor() const;
@@ -104,24 +109,29 @@ namespace elsa
          */
         void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const;
 
-
         /// friend operator+ to support composition of LinearOperators (and its derivatives)
-        friend LinearOperator<data_t> operator+(const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs) {
+        friend LinearOperator<data_t> operator+(const LinearOperator<data_t>& lhs,
+                                                const LinearOperator<data_t>& rhs)
+        {
             return LinearOperator(lhs, rhs, compositeMode::add);
         }
 
         /// friend operator* to support composition of LinearOperators (and its derivatives)
-        friend LinearOperator<data_t> operator*(const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs) {
+        friend LinearOperator<data_t> operator*(const LinearOperator<data_t>& lhs,
+                                                const LinearOperator<data_t>& rhs)
+        {
             return LinearOperator(lhs, rhs, compositeMode::mult);
         }
 
         /// friend function to return the adjoint of a LinearOperator (and its derivatives)
-        friend LinearOperator<data_t> adjoint(const LinearOperator<data_t>& op) {
+        friend LinearOperator<data_t> adjoint(const LinearOperator<data_t>& op)
+        {
             return LinearOperator(op, true);
         }
 
         /// friend function to return a leaf node of a LinearOperator (and its derivatives)
-        friend LinearOperator<data_t> leaf(const LinearOperator<data_t>& op) {
+        friend LinearOperator<data_t> leaf(const LinearOperator<data_t>& op)
+        {
             return LinearOperator(op, false);
         }
 
@@ -132,19 +142,18 @@ namespace elsa
         /// the data descriptor of the range of the operator
         std::unique_ptr<DataDescriptor> _rangeDescriptor;
 
-
         /// implement the polymorphic clone operation
         LinearOperator<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const LinearOperator<data_t>& other) const override;
 
-
         /// the apply method that has to be overridden in derived classes
         virtual void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
 
         /// the applyAdjoint  method that has to be overridden in derived classes
-        virtual void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const;
+        virtual void _applyAdjoint(const DataContainer<data_t>& y,
+                                   DataContainer<data_t>& Aty) const;
 
     private:
         /// pointers to nodes in the evaluation tree
@@ -169,7 +178,8 @@ namespace elsa
         LinearOperator(const LinearOperator<data_t>& op, bool isAdjoint);
 
         /// constructor to produce a composite (internal node) of the evaluation tree
-        LinearOperator(const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs, compositeMode mode);
+        LinearOperator(const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs,
+                       compositeMode mode);
     };
 
 } // namespace elsa

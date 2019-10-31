@@ -3,8 +3,7 @@
 
 namespace elsa
 {
-    TraverseAABB::TraverseAABB(const BoundingBox& aabb, const Ray& r)
-    : _aabb{aabb}
+    TraverseAABB::TraverseAABB(const BoundingBox& aabb, const Ray& r) : _aabb{aabb}
     {
         // compute the first intersection
         calculateAABBIntersections(r);
@@ -56,16 +55,12 @@ namespace elsa
         return (_tExit - tEntry);
     }
 
-    bool TraverseAABB::isInBoundingBox() const
-    {
-        return _isInAABB;
-    }
+    bool TraverseAABB::isInBoundingBox() const { return _isInAABB; }
 
     IndexVector_t TraverseAABB::getCurrentVoxel() const
     {
         return _currentPos.template cast<IndexVector_t::Scalar>();
     }
-
 
     void TraverseAABB::calculateAABBIntersections(const TraverseAABB::Ray& r)
     {
@@ -84,8 +79,10 @@ namespace elsa
 
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
-            _entryPoint = (_entryPoint.array() < _aabb._min.array()).select(_aabb._min, _entryPoint);
-            _entryPoint = (_entryPoint.array() > _aabb._max.array()).select(_aabb._max, _entryPoint);
+            _entryPoint =
+                (_entryPoint.array() < _aabb._min.array()).select(_aabb._min, _entryPoint);
+            _entryPoint =
+                (_entryPoint.array() > _aabb._max.array()).select(_aabb._max, _entryPoint);
         }
     }
 
@@ -97,12 +94,15 @@ namespace elsa
     void TraverseAABB::selectClosestVoxel(const RealVector_t& rd)
     {
         RealVector_t lowerCorner = _entryPoint.array().floor();
-        lowerCorner = ((lowerCorner.array() == _entryPoint.array()) && (_stepDirection.array() < 0.0)).select(lowerCorner.array()-1, lowerCorner);
+        lowerCorner =
+            ((lowerCorner.array() == _entryPoint.array()) && (_stepDirection.array() < 0.0))
+                .select(lowerCorner.array() - 1, lowerCorner);
 
         _currentPos = lowerCorner;
 
         // check if we are still inside the aabb
-        if ((_currentPos.array()>=_aabb._max.array()).any() || (_currentPos.array()<_aabb._min.array()).any())
+        if ((_currentPos.array() >= _aabb._max.array()).any()
+            || (_currentPos.array() < _aabb._min.array()).any())
             _isInAABB = false;
     }
 
@@ -115,7 +115,11 @@ namespace elsa
 
     void TraverseAABB::initMax(const RealVector_t& rd)
     {
-        RealVector_t tmax = (((rd.array() > 0.0f).select(_currentPos.array() + 1., _currentPos)).matrix() - _entryPoint).cwiseQuotient(rd).matrix();
+        RealVector_t tmax =
+            (((rd.array() > 0.0f).select(_currentPos.array() + 1., _currentPos)).matrix()
+             - _entryPoint)
+                .cwiseQuotient(rd)
+                .matrix();
 
         _tMax = (Eigen::abs(rd.array()) > EPS.array()).select(tmax, MAX);
     }

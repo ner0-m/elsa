@@ -24,7 +24,6 @@ namespace elsa
             throw std::invalid_argument("Huber: delta has to be positive.");
     }
 
-
     template <typename data_t>
     data_t Huber<data_t>::_evaluate(const DataContainer<data_t>& Rx)
     {
@@ -70,7 +69,6 @@ namespace elsa
         return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
     }
 
-
     template <typename data_t>
     Huber<data_t>* Huber<data_t>::cloneImpl() const
     {
@@ -92,7 +90,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

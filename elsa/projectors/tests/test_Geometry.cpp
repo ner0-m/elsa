@@ -11,26 +11,33 @@
 
 using namespace elsa;
 
-SCENARIO("Testing 2D geometries") {
-    GIVEN("some 2D setup") {
-        IndexVector_t volCoeff(2); volCoeff << 5, 5;
+SCENARIO("Testing 2D geometries")
+{
+    GIVEN("some 2D setup")
+    {
+        IndexVector_t volCoeff(2);
+        volCoeff << 5, 5;
         DataDescriptor ddVol(volCoeff);
 
-        IndexVector_t detCoeff(1); detCoeff << 5;
+        IndexVector_t detCoeff(1);
+        detCoeff << 5;
         DataDescriptor ddDet(detCoeff);
 
         real_t s2c = 10;
         real_t c2d = 4;
 
-        WHEN("testing geometry without rotation/offsets") {
+        WHEN("testing geometry without rotation/offsets")
+        {
             Geometry g(s2c, c2d, 0, ddVol, ddDet);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(2, 2);
                 id.setIdentity();
 
@@ -40,20 +47,23 @@ SCENARIO("Testing 2D geometries") {
                 REQUIRE(result.sum() == Approx(0));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 RealMatrix_t id(2, 2);
                 id.setIdentity();
                 REQUIRE((g.getRotationMatrix() - id).sum() == Approx(0));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
                 REQUIRE((c[0] - o[0]) == Approx(0));
                 REQUIRE((c[1] - o[1] + s2c) == Approx(0));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel : {0.5, 2.5, 4.5}) {
                     RealVector_t pixel(1);
@@ -63,23 +73,27 @@ SCENARIO("Testing 2D geometries") {
                     auto c = g.getCameraCenter();
                     REQUIRE((ro - c).sum() == Approx(0));
 
-                    real_t factor = (std::abs(rd[0]) > 0) ? ((pixel[0] - ro[0]) / rd[0]) : (s2c + c2d);
+                    real_t factor =
+                        (std::abs(rd[0]) > 0) ? ((pixel[0] - ro[0]) / rd[0]) : (s2c + c2d);
                     real_t detCoordY = ro[1] + factor * rd[1];
                     REQUIRE(detCoordY == Approx(ddVol.getLocationOfOrigin()[1] + c2d));
                 }
             }
         }
 
-        WHEN("testing geometry without rotation but with principal point offset") {
+        WHEN("testing geometry without rotation but with principal point offset")
+        {
             real_t px = 2;
             Geometry g(s2c, c2d, 0, ddVol, ddDet, px);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(2, 2);
                 id.setIdentity();
 
@@ -89,20 +103,23 @@ SCENARIO("Testing 2D geometries") {
                 REQUIRE(result.sum() == Approx(0));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 RealMatrix_t id(2, 2);
                 id.setIdentity();
                 REQUIRE((g.getRotationMatrix() - id).sum() == Approx(0));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
                 REQUIRE((c[0] - o[0]) == Approx(0));
                 REQUIRE((c[1] - o[1] + s2c) == Approx(0));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel : {0.5, 2.5, 4.5}) {
                     RealVector_t pixel(1);
@@ -112,23 +129,27 @@ SCENARIO("Testing 2D geometries") {
                     auto c = g.getCameraCenter();
                     REQUIRE((ro - c).sum() == Approx(0));
 
-                    real_t factor = (std::abs(rd[0]) > 0) ? ((pixel[0] - ro[0] - px) / rd[0]) : (s2c + c2d);
+                    real_t factor =
+                        (std::abs(rd[0]) > 0) ? ((pixel[0] - ro[0] - px) / rd[0]) : (s2c + c2d);
                     real_t detCoordY = ro[1] + factor * rd[1];
                     REQUIRE(detCoordY == Approx(ddVol.getLocationOfOrigin()[1] + c2d));
                 }
             }
         }
 
-        WHEN("testing geometry with 90 degree rotation and no offsets") {
+        WHEN("testing geometry with 90 degree rotation and no offsets")
+        {
             real_t angle = pi / 2; // 90 degrees
             Geometry g(s2c, c2d, angle, ddVol, ddDet);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(2, 2);
                 id.setIdentity();
 
@@ -138,13 +159,15 @@ SCENARIO("Testing 2D geometries") {
                 REQUIRE(result.sum() == Approx(0.0).margin(0.000001));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 RealMatrix_t rot(2, 2);
                 rot << 0, -1, 1, 0;
                 REQUIRE((g.getRotationMatrix() - rot).sum() == Approx(0).margin(0.0000001));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
 
@@ -152,7 +175,8 @@ SCENARIO("Testing 2D geometries") {
                 REQUIRE((c[1] - o[1]) == Approx(0).margin(0.000001));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel : {0.5, 2.5, 4.5}) {
                     RealVector_t pixel(1);
@@ -162,26 +186,29 @@ SCENARIO("Testing 2D geometries") {
                     auto c = g.getCameraCenter();
                     REQUIRE((ro - c).sum() == Approx(0));
 
-                    real_t factor = (std::abs(rd[1]) > 0.0000001) ? ((ro[1] - pixel[0]) / rd[1]) : (s2c + c2d);
+                    real_t factor =
+                        (std::abs(rd[1]) > 0.0000001) ? ((ro[1] - pixel[0]) / rd[1]) : (s2c + c2d);
                     real_t detCoordX = ro[0] + factor * rd[0];
                     REQUIRE(detCoordX == Approx(ddVol.getLocationOfOrigin()[0] + c2d));
                 }
             }
-
         }
 
-        WHEN("testing geometry with 45 degree rotation and offset center of rotation") {
+        WHEN("testing geometry with 45 degree rotation and offset center of rotation")
+        {
             real_t angle = pi / 4; // 45 degrees
             real_t cx = -1;
             real_t cy = 2;
             Geometry g(s2c, c2d, angle, ddVol, ddDet, 0, cx, cy);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(2, 2);
                 id.setIdentity();
 
@@ -191,26 +218,29 @@ SCENARIO("Testing 2D geometries") {
                 REQUIRE(result.sum() == Approx(0.0).margin(0.000001));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 RealMatrix_t rot(2, 2);
                 rot << std::cos(angle), -std::sin(angle), std::sin(angle), std::cos(angle);
                 REQUIRE((g.getRotationMatrix() - rot).sum() == Approx(0));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
 
                 real_t oldX = 0;
                 real_t oldY = -s2c;
-                real_t newX = std::cos(angle) * oldX  + std::sin(angle) * oldY + o[0] + cx;
+                real_t newX = std::cos(angle) * oldX + std::sin(angle) * oldY + o[0] + cx;
                 real_t newY = -std::sin(angle) * oldX + std::cos(angle) * oldY + o[1] + cy;
 
                 REQUIRE((c[0] - newX) == Approx(0).margin(0.000001));
                 REQUIRE((c[1] - newY) == Approx(0).margin(0.000001));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel : {0.5, 2.5, 4.5}) {
                     RealVector_t pixel(1);
@@ -221,7 +251,8 @@ SCENARIO("Testing 2D geometries") {
                     REQUIRE((ro - c).sum() == Approx(0.0));
 
                     auto o = ddVol.getLocationOfOrigin();
-                    RealVector_t detCoordWorld(2); detCoordWorld << detPixel - o[0], c2d;
+                    RealVector_t detCoordWorld(2);
+                    detCoordWorld << detPixel - o[0], c2d;
                     RealVector_t rotD = g.getRotationMatrix().transpose() * detCoordWorld;
                     rotD[0] += o[0] + cx;
                     rotD[1] += o[1] + cy;
@@ -235,9 +266,10 @@ SCENARIO("Testing 2D geometries") {
     }
 }
 
-
-SCENARIO("Testing 3D geometries") {
-    GIVEN("some 3D setup") {
+SCENARIO("Testing 3D geometries")
+{
+    GIVEN("some 3D setup")
+    {
         IndexVector_t volCoeff(3);
         volCoeff << 5, 5, 5;
         DataDescriptor ddVol(volCoeff);
@@ -249,15 +281,18 @@ SCENARIO("Testing 3D geometries") {
         real_t s2c = 10;
         real_t c2d = 4;
 
-        WHEN("testing geometry without rotation/offsets") {
+        WHEN("testing geometry without rotation/offsets")
+        {
             Geometry g(s2c, c2d, ddVol, ddDet, 0);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
 
@@ -267,13 +302,15 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE(result.sum() == Approx(0));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
                 REQUIRE((g.getRotationMatrix() - id).sum() == Approx(0));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
                 REQUIRE((c[0] - o[0]) == Approx(0));
@@ -281,13 +318,14 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE((c[2] - o[2] + s2c) == Approx(0));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
                     for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
-                        auto[ro, rd] = g.computeRayTo(pixel);
+                        auto [ro, rd] = g.computeRayTo(pixel);
 
                         auto c = g.getCameraCenter();
                         REQUIRE((ro - c).sum() == Approx(0));
@@ -312,17 +350,20 @@ SCENARIO("Testing 3D geometries") {
             }
         }
 
-        WHEN("testing geometry without rotation but with principal point offsets") {
+        WHEN("testing geometry without rotation but with principal point offsets")
+        {
             real_t px = -1;
             real_t py = 3;
             Geometry g(s2c, c2d, ddVol, ddDet, 0, 0, 0, px, py);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
 
@@ -332,13 +373,15 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE(result.sum() == Approx(0));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
                 REQUIRE((g.getRotationMatrix() - id).sum() == Approx(0));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
                 REQUIRE((c[0] - o[0]) == Approx(0));
@@ -346,13 +389,14 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE((c[2] - o[2] + s2c) == Approx(0));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
                     for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
-                        auto[ro, rd] = g.computeRayTo(pixel);
+                        auto [ro, rd] = g.computeRayTo(pixel);
 
                         auto c = g.getCameraCenter();
                         REQUIRE((ro - c).sum() == Approx(0));
@@ -377,16 +421,19 @@ SCENARIO("Testing 3D geometries") {
             }
         }
 
-        WHEN("testing geometry with 90 degree rotation and no offsets") {
+        WHEN("testing geometry with 90 degree rotation and no offsets")
+        {
             real_t angle = pi / 2;
             Geometry g(s2c, c2d, ddVol, ddDet, angle);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
 
@@ -396,13 +443,16 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE(result.sum() == Approx(0).margin(0.0000001));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 RealMatrix_t rot(3, 3);
-                rot << std::cos(angle), 0, std::sin(angle), 0, 1, 0, -std::sin(angle), 0, std::cos(angle);
+                rot << std::cos(angle), 0, std::sin(angle), 0, 1, 0, -std::sin(angle), 0,
+                    std::cos(angle);
                 REQUIRE((g.getRotationMatrix() - rot).sum() == Approx(0));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
 
@@ -411,13 +461,14 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE((c[2] - o[2]) == Approx(0).margin(0.000001));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
                     for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
-                        auto[ro, rd] = g.computeRayTo(pixel);
+                        auto [ro, rd] = g.computeRayTo(pixel);
 
                         auto c = g.getCameraCenter();
                         REQUIRE((ro - c).sum() == Approx(0));
@@ -442,19 +493,23 @@ SCENARIO("Testing 3D geometries") {
             }
         }
 
-        WHEN("testing geometry with 45/22.5 degree rotation and offset center of rotation") {
+        WHEN("testing geometry with 45/22.5 degree rotation and offset center of rotation")
+        {
             real_t angle1 = pi / 4;
             real_t angle2 = pi / 2;
             RealVector_t offset(3);
             offset << 1, -2, -1;
-            Geometry g(s2c, c2d, ddVol, ddDet, angle1, angle2, 0, 0, 0, offset[0], offset[1], offset[2]);
+            Geometry g(s2c, c2d, ddVol, ddDet, angle1, angle2, 0, 0, 0, offset[0], offset[1],
+                       offset[2]);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
 
@@ -464,15 +519,19 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE(result.sum() == Approx(0).margin(0.00001));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 RealMatrix_t rot1(3, 3);
-                rot1 << std::cos(angle1), 0, std::sin(angle1), 0, 1, 0, -std::sin(angle1), 0, std::cos(angle1);
+                rot1 << std::cos(angle1), 0, std::sin(angle1), 0, 1, 0, -std::sin(angle1), 0,
+                    std::cos(angle1);
                 RealMatrix_t rot2(3, 3);
-                rot2 << std::cos(angle2), -std::sin(angle2), 0, std::sin(angle2), std::cos(angle2), 0, 0, 0, 1;
-                REQUIRE((g.getRotationMatrix() - rot1*rot2).sum() == Approx(0));
+                rot2 << std::cos(angle2), -std::sin(angle2), 0, std::sin(angle2), std::cos(angle2),
+                    0, 0, 0, 1;
+                REQUIRE((g.getRotationMatrix() - rot1 * rot2).sum() == Approx(0));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
 
@@ -485,13 +544,14 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE((rotSrc - c).sum() == Approx(0).margin(0.000001));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
                     for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
-                        auto[ro, rd] = g.computeRayTo(pixel);
+                        auto [ro, rd] = g.computeRayTo(pixel);
 
                         auto c = g.getCameraCenter();
                         REQUIRE((ro - c).sum() == Approx(0));
@@ -499,7 +559,8 @@ SCENARIO("Testing 3D geometries") {
                         auto o = ddVol.getLocationOfOrigin();
                         RealVector_t detCoordWorld(3);
                         detCoordWorld << detPixel1 - o[0], detPixel2 - o[1], c2d;
-                        RealVector_t rotD = g.getRotationMatrix().transpose() * detCoordWorld + o + offset;
+                        RealVector_t rotD =
+                            g.getRotationMatrix().transpose() * detCoordWorld + o + offset;
 
                         real_t factor = 0;
                         if (std::abs(rd[0]) > 0.000001)
@@ -516,26 +577,32 @@ SCENARIO("Testing 3D geometries") {
             }
         }
 
-        WHEN("testing geometry with 45/22.5/12.25 degree rotation as a rotation matrix") {
+        WHEN("testing geometry with 45/22.5/12.25 degree rotation as a rotation matrix")
+        {
             real_t angle1 = pi / 4;
             real_t angle2 = pi / 2;
             real_t angle3 = pi / 8;
             RealMatrix_t rot1(3, 3);
-            rot1 << std::cos(angle1), 0, std::sin(angle1), 0, 1, 0, -std::sin(angle1), 0, std::cos(angle1);
+            rot1 << std::cos(angle1), 0, std::sin(angle1), 0, 1, 0, -std::sin(angle1), 0,
+                std::cos(angle1);
             RealMatrix_t rot2(3, 3);
-            rot2 << std::cos(angle2), -std::sin(angle2), 0, std::sin(angle2), std::cos(angle2), 0, 0, 0, 1;
+            rot2 << std::cos(angle2), -std::sin(angle2), 0, std::sin(angle2), std::cos(angle2), 0,
+                0, 0, 1;
             RealMatrix_t rot3(3, 3);
-            rot3 << std::cos(angle3), 0, std::sin(angle3), 0, 1, 0, -std::sin(angle3), 0, std::cos(angle3);
+            rot3 << std::cos(angle3), 0, std::sin(angle3), 0, 1, 0, -std::sin(angle3), 0,
+                std::cos(angle3);
             RealMatrix_t R = rot1 * rot2 * rot3;
 
             Geometry g(s2c, c2d, ddVol, ddDet, R);
 
-            THEN("a copy is the same") {
+            THEN("a copy is the same")
+            {
                 Geometry gCopy(g);
                 REQUIRE(gCopy == g);
             }
 
-            THEN("then P and Pinv are inverse") {
+            THEN("then P and Pinv are inverse")
+            {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
 
@@ -545,11 +612,13 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE(result.sum() == Approx(0).margin(0.00001));
             }
 
-            THEN("then the rotation matrix is correct") {
+            THEN("then the rotation matrix is correct")
+            {
                 REQUIRE((g.getRotationMatrix() - R).sum() == Approx(0));
             }
 
-            THEN("the camera center is correct") {
+            THEN("the camera center is correct")
+            {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
 
@@ -562,13 +631,14 @@ SCENARIO("Testing 3D geometries") {
                 REQUIRE((rotSrc - c).sum() == Approx(0).margin(0.00001));
             }
 
-            THEN("rays make sense") {
+            THEN("rays make sense")
+            {
                 // test outer + central pixels
                 for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
                     for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
-                        auto[ro, rd] = g.computeRayTo(pixel);
+                        auto [ro, rd] = g.computeRayTo(pixel);
 
                         auto c = g.getCameraCenter();
                         REQUIRE((ro - c).sum() == Approx(0));

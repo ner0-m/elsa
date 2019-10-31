@@ -14,19 +14,23 @@ namespace elsa
      * \author Maximilian Hornung - modularization
      * \author Tobias Lasser - rewrite
      *
-     * \tparam data_t data type for the domain of the residual of the functional, defaulting to real_t
+     * \tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * real_t
      *
-     * A functional is a mapping a vector to a scalar value (e.g. mapping the output of a Residual to a scalar).
-     * Typical examples of functionals are norms or semi-norms, such as the L2 or L1 norms.
+     * A functional is a mapping a vector to a scalar value (e.g. mapping the output of a Residual
+     * to a scalar). Typical examples of functionals are norms or semi-norms, such as the L2 or L1
+     * norms.
      *
-     * Using LinearOperators, Residuals (e.g. LinearResidual) and a Functional (e.g. L2NormPow2) enables the
-     * formulation of typical terms in an OptimizationProblem.
+     * Using LinearOperators, Residuals (e.g. LinearResidual) and a Functional (e.g. L2NormPow2)
+     * enables the formulation of typical terms in an OptimizationProblem.
      */
     template <typename data_t = real_t>
-    class Functional : public Cloneable<Functional<data_t>> {
+    class Functional : public Cloneable<Functional<data_t>>
+    {
     public:
         /**
-         * \brief Constructor for the functional, mapping a domain vector to a scalar (without a residual)
+         * \brief Constructor for the functional, mapping a domain vector to a scalar (without a
+         * residual)
          *
          * \param[in] domainDescriptor describing the domain of the functional
          */
@@ -78,9 +82,10 @@ namespace elsa
          * \param[in] x input DataContainer (in the domain of the functional)
          * \param[out] result output DataContainer (in the domain of the functional)
          *
-         * Please note: after evaluating the residual at x, this methods calls the method _getGradientInPlace
-         * that has to be overridden in derived classes to compute the functional's gradient, and after that
-         * the chain rule for the residual is applied (if necessary).
+         * Please note: after evaluating the residual at x, this methods calls the method
+         * _getGradientInPlace that has to be overridden in derived classes to compute the
+         * functional's gradient, and after that the chain rule for the residual is applied (if
+         * necessary).
          */
         void getGradient(const DataContainer<data_t>& x, DataContainer<data_t>& result);
 
@@ -91,11 +96,12 @@ namespace elsa
          *
          * \returns a LinearOperator (the Hessian)
          *
-         * Note: some derived classes might decide to use only the diagonal of the Hessian as a fast approximation!
+         * Note: some derived classes might decide to use only the diagonal of the Hessian as a fast
+         * approximation!
          *
-         * Please note: after evaluating the residual at x, this method calls the method _getHessian that has to
-         * be overridden in derived classes to compute the functional's Hessian, and after that the chain rule
-         * for the residual is applied (if necessary).
+         * Please note: after evaluating the residual at x, this method calls the method _getHessian
+         * that has to be overridden in derived classes to compute the functional's Hessian, and
+         * after that the chain rule for the residual is applied (if necessary).
          */
         LinearOperator<data_t> getHessian(const DataContainer<data_t>& x);
 
@@ -109,7 +115,6 @@ namespace elsa
         /// implement the polymorphic comparison operation
         bool isEqual(const Functional<data_t>& other) const override;
 
-
         /**
          * \brief the _evaluate method that has to be overridden in derived classes
          *
@@ -117,19 +122,20 @@ namespace elsa
          *
          * \returns the evaluated functional
          *
-         * Please note: the evaluation of the residual is already performed in evaluate, so this method only
-         * has to compute the functional's value itself.
+         * Please note: the evaluation of the residual is already performed in evaluate, so this
+         * method only has to compute the functional's value itself.
          */
         virtual data_t _evaluate(const DataContainer<data_t>& Rx) = 0;
 
         /**
          * \brief the _getGradientInPlace method that has to be overridden in derived classes
          *
-         * \param[in,out] Rx the residual evaluated at x (in), and the gradient of the functional (out)
+         * \param[in,out] Rx the residual evaluated at x (in), and the gradient of the functional
+         * (out)
          *
          * Please note: the evaluation of the residual is already performed in getGradient, as well
-         * as the application of the chain rule. This method here only has to compute the gradient of
-         * the functional itself, in an in-place manner (to avoid unnecessary DataContainers).
+         * as the application of the chain rule. This method here only has to compute the gradient
+         * of the functional itself, in an in-place manner (to avoid unnecessary DataContainers).
          */
         virtual void _getGradientInPlace(DataContainer<data_t>& Rx) = 0;
 

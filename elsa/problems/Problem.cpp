@@ -7,7 +7,7 @@ namespace elsa
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
                              const std::vector<RegularizationTerm<data_t>>& regTerms,
                              const DataContainer<data_t>& x0)
-    : _dataTerm{dataTerm.clone()}, _regTerms{regTerms}, _currentSolution{x0}
+        : _dataTerm{dataTerm.clone()}, _regTerms{regTerms}, _currentSolution{x0}
     {
         // sanity checks
         if (_dataTerm->getDomainDescriptor() != this->_currentSolution.getDataDescriptor())
@@ -15,48 +15,57 @@ namespace elsa
 
         for (auto& regTerm : _regTerms) {
             if (dataTerm.getDomainDescriptor() != regTerm.getFunctional().getDomainDescriptor())
-                throw std::invalid_argument("Problem: one of the reg terms' domain does not match the data term's");
+                throw std::invalid_argument(
+                    "Problem: one of the reg terms' domain does not match the data term's");
         }
     }
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
                              const std::vector<RegularizationTerm<data_t>>& regTerms)
-    : _dataTerm{dataTerm.clone()}, _regTerms{regTerms}, _currentSolution{dataTerm.getDomainDescriptor()}
+        : _dataTerm{dataTerm.clone()},
+          _regTerms{regTerms},
+          _currentSolution{dataTerm.getDomainDescriptor()}
     {
         // sanity check
         for (auto& regTerm : _regTerms) {
             if (dataTerm.getDomainDescriptor() != regTerm.getFunctional().getDomainDescriptor())
-                throw std::invalid_argument("Problem: one of the reg terms' domain does not match the data term's");
+                throw std::invalid_argument(
+                    "Problem: one of the reg terms' domain does not match the data term's");
         }
     }
 
     template <typename data_t>
-    Problem<data_t>::Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm,
+    Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
+                             const RegularizationTerm<data_t>& regTerm,
                              const DataContainer<data_t>& x0)
-    : _dataTerm{dataTerm.clone()}, _regTerms{regTerm}, _currentSolution{x0}
+        : _dataTerm{dataTerm.clone()}, _regTerms{regTerm}, _currentSolution{x0}
     {
         // sanity checks
         if (_dataTerm->getDomainDescriptor() != this->_currentSolution.getDataDescriptor())
             throw std::invalid_argument("Problem: domain of dataTerm and solution do not match");
 
         if (dataTerm.getDomainDescriptor() != regTerm.getFunctional().getDomainDescriptor())
-            throw std::invalid_argument("Problem: one of the reg terms' domain does not match the data term's");
+            throw std::invalid_argument(
+                "Problem: one of the reg terms' domain does not match the data term's");
     }
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
                              const RegularizationTerm<data_t>& regTerm)
-    : _dataTerm{dataTerm.clone()}, _regTerms{regTerm}, _currentSolution{dataTerm.getDomainDescriptor()}
+        : _dataTerm{dataTerm.clone()},
+          _regTerms{regTerm},
+          _currentSolution{dataTerm.getDomainDescriptor()}
     {
         // sanity check
         if (dataTerm.getDomainDescriptor() != regTerm.getFunctional().getDomainDescriptor())
-            throw std::invalid_argument("Problem: one of the reg terms' domain does not match the data term's");
+            throw std::invalid_argument(
+                "Problem: one of the reg terms' domain does not match the data term's");
     }
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm, const DataContainer<data_t>& x0)
-    : _dataTerm{dataTerm.clone()}, _currentSolution{x0}
+        : _dataTerm{dataTerm.clone()}, _currentSolution{x0}
     {
         // sanity check
         if (_dataTerm->getDomainDescriptor() != this->_currentSolution.getDataDescriptor())
@@ -65,14 +74,17 @@ namespace elsa
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm)
-    : _dataTerm{dataTerm.clone()}, _currentSolution{dataTerm.getDomainDescriptor()}
-    {}
+        : _dataTerm{dataTerm.clone()}, _currentSolution{dataTerm.getDomainDescriptor()}
+    {
+    }
 
     template <typename data_t>
-    Problem<data_t>::Problem(const Problem<data_t>& problem):
-        _dataTerm{problem._dataTerm->clone()}, _regTerms{problem._regTerms},
-        _currentSolution{problem._currentSolution}
-    {}
+    Problem<data_t>::Problem(const Problem<data_t>& problem)
+        : _dataTerm{problem._dataTerm->clone()},
+          _regTerms{problem._regTerms},
+          _currentSolution{problem._currentSolution}
+    {
+    }
 
     template <typename data_t>
     const Functional<data_t>& Problem<data_t>::getDataTerm() const
@@ -131,7 +143,6 @@ namespace elsa
         return hessian;
     }
 
-
     template <typename data_t>
     Problem<data_t>* Problem<data_t>::cloneImpl() const
     {
@@ -141,7 +152,7 @@ namespace elsa
     template <typename data_t>
     bool Problem<data_t>::isEqual(const Problem<data_t>& other) const
     {
-        if (_currentSolution != other._currentSolution )
+        if (_currentSolution != other._currentSolution)
             return false;
 
         if (*_dataTerm != *other._dataTerm)
@@ -179,7 +190,6 @@ namespace elsa
     {
         return _getHessian();
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

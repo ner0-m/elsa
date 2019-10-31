@@ -17,12 +17,15 @@
 
 using namespace elsa;
 
-SCENARIO("Solving a simple linear problem") {
+SCENARIO("Solving a simple linear problem")
+{
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);
 
-    GIVEN("a linear problem") {
-        IndexVector_t numCoeff(2); numCoeff << 13, 24;
+    GIVEN("a linear problem")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 13, 24;
         DataDescriptor dd(numCoeff);
 
         RealVector_t bVec(dd.getNumberOfCoefficients());
@@ -33,17 +36,20 @@ SCENARIO("Solving a simple linear problem") {
 
         WLSProblem prob(idOp, dcB);
 
-        WHEN("setting up a gd solver") {
+        WHEN("setting up a gd solver")
+        {
             GradientDescent solver(prob, 0.1);
 
-            THEN("the clone works correctly") {
+            THEN("the clone works correctly")
+            {
                 auto gdClone = solver.clone();
 
                 REQUIRE(gdClone.get() != &solver);
                 REQUIRE(*gdClone == solver);
             }
 
-            THEN("it works as expected") {
+            THEN("it works as expected")
+            {
                 auto solution = solver.solve(1000);
                 REQUIRE(solution.squaredL2Norm() == Approx(bVec.squaredNorm()));
             }
@@ -51,13 +57,15 @@ SCENARIO("Solving a simple linear problem") {
     }
 }
 
-
-SCENARIO("Solving a Tikhonov optimization problem") {
+SCENARIO("Solving a Tikhonov optimization problem")
+{
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);
 
-    GIVEN("a Tikhonov problem") {
-        IndexVector_t numCoeff(2); numCoeff << 13, 24;
+    GIVEN("a Tikhonov problem")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 13, 24;
         DataDescriptor dd(numCoeff);
 
         RealVector_t bVec(dd.getNumberOfCoefficients());
@@ -74,17 +82,20 @@ SCENARIO("Solving a Tikhonov optimization problem") {
 
         Problem prob(func, regTerm);
 
-        WHEN("setting up a gd solver") {
+        WHEN("setting up a gd solver")
+        {
             GradientDescent solver(prob, 0.5);
 
-            THEN("the clone works correctly") {
+            THEN("the clone works correctly")
+            {
                 auto gdClone = solver.clone();
 
                 REQUIRE(gdClone.get() != &solver);
                 REQUIRE(*gdClone == solver);
             }
 
-            THEN("it works as expected") {
+            THEN("it works as expected")
+            {
                 auto solution = solver.solve(1000);
                 REQUIRE(solution.squaredL2Norm() == Approx(0.25 * bVec.squaredNorm()));
             }

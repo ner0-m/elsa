@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "elsa.h"
 #include "DataDescriptor.h"
 #include "DataHandler.h"
@@ -12,9 +11,11 @@
 namespace elsa
 {
     // forward declaration for friend test function
-    template <typename data_t = real_t> class DataContainer;
+    template <typename data_t = real_t>
+    class DataContainer;
     // used for testing and defined in test file (declared as friend)
-    template <typename data_t> int useCount(const DataContainer<data_t>&);
+    template <typename data_t>
+    int useCount(const DataContainer<data_t>&);
 
     /**
      * \brief class representing and storing a linearized n-dimensional signal
@@ -33,14 +34,16 @@ namespace elsa
      * detach() function first to trigger the copy-on-write mechanism.
      */
     template <typename data_t>
-    class DataContainer {
+    class DataContainer
+    {
     public:
         /**
          * \brief type of the DataHandler used to store the actual data
          *
          * The following handler types are currently supported:
          *    - CPU: data is stored as an Eigen::Matrix in CPU main memory
-         *    - MAP: data is not explicitly stored, but using an Eigen::Map to refer to other storage
+         *    - MAP: data is not explicitly stored, but using an Eigen::Map to refer to other
+         * storage
          */
         enum class DataHandlerType { CPU };
 
@@ -54,19 +57,18 @@ namespace elsa
          * \param[in] handlerType the data handler (default: CPU)
          */
         explicit DataContainer(const DataDescriptor& dataDescriptor,
-                                DataHandlerType handlerType = DataHandlerType::CPU);
-         
-         
+                               DataHandlerType handlerType = DataHandlerType::CPU);
+
         /**
          * \brief Constructor for DataContainer, initializing it with a DataVector
-         * 
+         *
          * \param[in] dataDescriptor containing the associated metadata
          * \param[in] data vector containing the initialization data
          * \param[in] handlerType the data handler (default: CPU)
          */
-        DataContainer(const DataDescriptor& dataDescriptor, const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data, 
-                       DataHandlerType handlerType = DataHandlerType::CPU);
-
+        DataContainer(const DataDescriptor& dataDescriptor,
+                      const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
+                      DataHandlerType handlerType = DataHandlerType::CPU);
 
         /**
          * \brief Copy constructor for DataContainer
@@ -107,9 +109,9 @@ namespace elsa
         /// return the current DataDescriptor
         const DataDescriptor& getDataDescriptor() const;
 
-        /// return the size of the stored data (i.e. the number of elements in the linearized signal)
+        /// return the size of the stored data (i.e. the number of elements in the linearized
+        /// signal)
         index_t getSize() const;
-
 
         /// return the index-th element of linearized signal (not bounds-checked!)
         data_t& operator[](index_t index);
@@ -124,20 +126,24 @@ namespace elsa
         const data_t& operator()(IndexVector_t coordinate) const;
 
         /// return an element by its coordinates (not bounds-checked!)
-        template <typename idx0_t, typename... idx_t, 
-                    typename = std::enable_if_t<std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
-        data_t& operator()(idx0_t idx0, idx_t... indices) {
-            IndexVector_t coordinate(sizeof...(indices)+1);
-            ((coordinate<<idx0) , ... , indices);
+        template <typename idx0_t, typename... idx_t,
+                  typename = std::enable_if_t<
+                      std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
+        data_t& operator()(idx0_t idx0, idx_t... indices)
+        {
+            IndexVector_t coordinate(sizeof...(indices) + 1);
+            ((coordinate << idx0), ..., indices);
             return operator()(coordinate);
         }
 
         /// return an element by its coordinates as read-only (not bounds-checked!)
-        template <typename idx0_t, typename... idx_t, 
-                    typename = std::enable_if_t<std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
-        const data_t& operator()(idx0_t idx0, idx_t... indices) const{
-            IndexVector_t coordinate(sizeof...(indices)+1);
-            ((coordinate<<idx0) , ... , indices);
+        template <typename idx0_t, typename... idx_t,
+                  typename = std::enable_if_t<
+                      std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
+        const data_t& operator()(idx0_t idx0, idx_t... indices) const
+        {
+            IndexVector_t coordinate(sizeof...(indices) + 1);
+            ((coordinate << idx0), ..., indices);
             return operator()(coordinate);
         }
 
@@ -156,7 +162,6 @@ namespace elsa
         /// return the sum of all elements of this signal
         data_t sum() const;
 
-
         /// return a new DataContainer with element-wise squared values of this one
         DataContainer<data_t> square() const;
 
@@ -168,7 +173,6 @@ namespace elsa
 
         /// return a new DataContainer with element-wise logarithms of this one
         DataContainer<data_t> log() const;
-
 
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
@@ -182,7 +186,6 @@ namespace elsa
         /// compute in-place element-wise division by another container
         DataContainer<data_t>& operator/=(const DataContainer<data_t>& dc);
 
-
         /// compute in-place addition of a scalar
         DataContainer<data_t>& operator+=(data_t scalar);
 
@@ -195,10 +198,8 @@ namespace elsa
         /// compute in-place division by a scalar
         DataContainer<data_t>& operator/=(data_t scalar);
 
-
         /// assign a scalar to the DataContainer
         DataContainer<data_t>& operator=(data_t scalar);
-
 
         /// comparison with another DataContainer
         bool operator==(const DataContainer<data_t>& other) const;
@@ -207,7 +208,7 @@ namespace elsa
         bool operator!=(const DataContainer<data_t>& other) const;
 
         /// used for testing only and defined in test file
-        friend int useCount <> (const DataContainer<data_t>& dc);
+        friend int useCount<>(const DataContainer<data_t>& dc);
 
         /// iterator for DataContainer (random access and continuous)
         using iterator = DataContainerIterator<DataContainer<data_t>>;
@@ -216,9 +217,9 @@ namespace elsa
         using const_iterator = ConstDataContainerIterator<DataContainer<data_t>>;
 
         /// alias for reverse iterator
-        using reverse_iterator          = std::reverse_iterator<iterator>;
+        using reverse_iterator = std::reverse_iterator<iterator>;
         /// alias for const reverse iterator
-        using const_reverse_iterator    = std::reverse_iterator<const_iterator>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         /// returns iterator to the first element of the container
         iterator begin();
@@ -232,38 +233,44 @@ namespace elsa
         /// returns iterator to one past the last element of the container
         iterator end();
 
-        /// returns const iterator to one past the last element of the container (cannot mutate data)
+        /// returns const iterator to one past the last element of the container (cannot mutate
+        /// data)
         const_iterator end() const;
 
-        /// returns const iterator to one past the last element of the container (cannot mutate data)
+        /// returns const iterator to one past the last element of the container (cannot mutate
+        /// data)
         const_iterator cend() const;
 
         /// returns reversed iterator to the last element of the container
         reverse_iterator rbegin();
 
-        /// returns const reversed iterator to the last element of the container (cannot mutate data)
+        /// returns const reversed iterator to the last element of the container (cannot mutate
+        /// data)
         const_reverse_iterator rbegin() const;
 
-        /// returns const reversed iterator to the last element of the container (cannot mutate data)
+        /// returns const reversed iterator to the last element of the container (cannot mutate
+        /// data)
         const_reverse_iterator crbegin() const;
 
         /// returns reversed iterator to one past the first element of container
         reverse_iterator rend();
 
-        /// returns const reversed iterator to one past the first element of container (cannot mutate data)
+        /// returns const reversed iterator to one past the first element of container (cannot
+        /// mutate data)
         const_reverse_iterator rend() const;
 
-        /// returns const reversed iterator to one past the first element of container (cannot mutate data)
+        /// returns const reversed iterator to one past the first element of container (cannot
+        /// mutate data)
         const_reverse_iterator crend() const;
 
         /// value_type of the DataContainer elements for iterators
-        using value_type      = data_t;
+        using value_type = data_t;
         /// pointer type of DataContainer elements for iterators
-        using pointer         = data_t*;
+        using pointer = data_t*;
         /// const pointer type of DataContainer elements for iterators
-        using const_pointer   = const data_t*;
+        using const_pointer = const data_t*;
         /// reference type of DataContainer elements for iterators
-        using reference       = data_t&;
+        using reference = data_t&;
         /// const reference type of DataContainer elements for iterators
         using const_reference = const data_t&;
         /// difference type for iterators
@@ -275,21 +282,24 @@ namespace elsa
         /// the current DataHandler
         std::shared_ptr<DataHandler<data_t>> _dataHandler;
 
-        /// factory method to create DataHandlers based on handlerType with perfect forwarding of constructor arguments
-        template <typename ... Args>
-        std::unique_ptr<DataHandler<data_t>> createDataHandler(DataHandlerType handlerType, Args&& ... args);
+        /// factory method to create DataHandlers based on handlerType with perfect forwarding of
+        /// constructor arguments
+        template <typename... Args>
+        std::unique_ptr<DataHandler<data_t>> createDataHandler(DataHandlerType handlerType,
+                                                               Args&&... args);
 
         /// private constructor accepting a DataDescriptor and a DataHandler
-        explicit DataContainer(const DataDescriptor& dataDescriptor, std::unique_ptr<DataHandler<data_t>> dataHandler);
+        explicit DataContainer(const DataDescriptor& dataDescriptor,
+                               std::unique_ptr<DataHandler<data_t>> dataHandler);
 
         /// creates the deep copy for the copy-on-write mechanism
         void detach();
     };
 
-
     /// element-wise addition of two DataContainers
     template <typename data_t>
-    DataContainer<data_t> operator+(const DataContainer<data_t>& left, const DataContainer<data_t>& right)
+    DataContainer<data_t> operator+(const DataContainer<data_t>& left,
+                                    const DataContainer<data_t>& right)
     {
         DataContainer<data_t> result(left);
         result += right;
@@ -298,7 +308,8 @@ namespace elsa
 
     /// element-wise subtraction of two DataContainers
     template <typename data_t>
-    DataContainer<data_t> operator-(const DataContainer<data_t>& left, const DataContainer<data_t>& right)
+    DataContainer<data_t> operator-(const DataContainer<data_t>& left,
+                                    const DataContainer<data_t>& right)
     {
         DataContainer<data_t> result(left);
         result -= right;
@@ -307,7 +318,8 @@ namespace elsa
 
     /// element-wise multiplication of two DataContainers
     template <typename data_t>
-    DataContainer<data_t> operator*(const DataContainer<data_t>& left, const DataContainer<data_t>& right)
+    DataContainer<data_t> operator*(const DataContainer<data_t>& left,
+                                    const DataContainer<data_t>& right)
     {
         DataContainer<data_t> result(left);
         result *= right;
@@ -316,13 +328,13 @@ namespace elsa
 
     /// element-wise division of two DataContainers
     template <typename data_t>
-    DataContainer<data_t> operator/(const DataContainer<data_t>& left, const DataContainer<data_t>& right)
+    DataContainer<data_t> operator/(const DataContainer<data_t>& left,
+                                    const DataContainer<data_t>& right)
     {
         DataContainer<data_t> result(left);
         result /= right;
         return result;
     }
-
 
     /// addition of DataContainer and scalar
     template <typename data_t>
@@ -335,7 +347,7 @@ namespace elsa
 
     /// addition of scalar and DataContainer
     template <typename data_t>
-    DataContainer<data_t> operator+(data_t left, const DataContainer<data_t>&  right)
+    DataContainer<data_t> operator+(data_t left, const DataContainer<data_t>& right)
     {
         DataContainer<data_t> result(right);
         result += left;
@@ -372,7 +384,7 @@ namespace elsa
 
     /// multiplication of scalar and DataContainer
     template <typename data_t>
-    DataContainer<data_t> operator*(data_t left, const DataContainer<data_t>&  right)
+    DataContainer<data_t> operator*(data_t left, const DataContainer<data_t>& right)
     {
         DataContainer<data_t> result(right);
         result *= left;
@@ -390,14 +402,12 @@ namespace elsa
 
     /// division of DataContainer and scalar
     template <typename data_t>
-    DataContainer<data_t> operator/(data_t left, const DataContainer<data_t>&  right)
+    DataContainer<data_t> operator/(data_t left, const DataContainer<data_t>& right)
     {
         DataContainer<data_t> result(right);
         result = left;
         result /= right;
         return result;
     }
-
-
 
 } // namespace elsa

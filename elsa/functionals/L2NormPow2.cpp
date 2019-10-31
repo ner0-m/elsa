@@ -8,13 +8,13 @@ namespace elsa
     template <typename data_t>
     L2NormPow2<data_t>::L2NormPow2(const DataDescriptor& domainDescriptor)
         : Functional<data_t>(domainDescriptor)
-    {}
+    {
+    }
 
     template <typename data_t>
-    L2NormPow2<data_t>::L2NormPow2(const Residual<data_t>& residual)
-        : Functional<data_t>(residual)
-    {}
-
+    L2NormPow2<data_t>::L2NormPow2(const Residual<data_t>& residual) : Functional<data_t>(residual)
+    {
+    }
 
     template <typename data_t>
     data_t L2NormPow2<data_t>::_evaluate(const DataContainer<data_t>& Rx)
@@ -33,7 +33,6 @@ namespace elsa
     {
         return leaf(Identity<data_t>(Rx.getDataDescriptor()));
     }
-
 
     template <typename data_t>
     L2NormPow2<data_t>* L2NormPow2<data_t>::cloneImpl() const
