@@ -23,7 +23,7 @@ namespace elsa
      * This class represents a linear operator A, expressed through its apply/applyAdjoint methods,
      * which implement Ax and A^ty for DataContainers x,y of appropriate sizes. Concrete
      * implementations of linear operators will derive from this class and override the
-     * _apply/_applyAdjoint methods.
+     * applyImpl/applyAdjointImpl methods.
      *
      * LinearOperator also provides functionality to support constructs like the operator expression
      * A^t*B+C, where A,B,C are linear operators. This operator composition is implemented via
@@ -79,7 +79,7 @@ namespace elsa
          * \param[in] x input DataContainer (in the domain of the operator)
          * \param[out] Ax output DataContainer (in the range of the operator)
          *
-         * Please note: this method calls the method _apply that has to be overridden in derived
+         * Please note: this method calls the method applyImpl that has to be overridden in derived
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
          * function overloading a virtual one [apply with one vs. two arguments]).
          */
@@ -103,7 +103,7 @@ namespace elsa
          * \param[in] y input DataContainer (in the range of the operator)
          * \param[out] Aty output DataContainer (in the domain of the operator)
          *
-         * Please note: this method calls the method _applyAdjoint that has to be overridden in
+         * Please note: this method calls the method applyAdjointImpl that has to be overridden in
          * derived classes. (Why is this method not virtual itself? Because you cannot have a
          * non-virtual function overloading a virtual one [applyAdjoint with one vs. two args]).
          */
@@ -149,11 +149,11 @@ namespace elsa
         bool isEqual(const LinearOperator<data_t>& other) const override;
 
         /// the apply method that has to be overridden in derived classes
-        virtual void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
+        virtual void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
 
         /// the applyAdjoint  method that has to be overridden in derived classes
-        virtual void _applyAdjoint(const DataContainer<data_t>& y,
-                                   DataContainer<data_t>& Aty) const;
+        virtual void applyAdjointImpl(const DataContainer<data_t>& y,
+                                      DataContainer<data_t>& Aty) const;
 
     private:
         /// pointers to nodes in the evaluation tree

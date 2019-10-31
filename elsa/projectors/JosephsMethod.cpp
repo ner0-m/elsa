@@ -31,16 +31,16 @@ namespace elsa
     }
 
     template <typename data_t>
-    void JosephsMethod<data_t>::_apply(const DataContainer<data_t>& x,
-                                       DataContainer<data_t>& Ax) const
+    void JosephsMethod<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                          DataContainer<data_t>& Ax) const
     {
         Timer<> timeguard("JosephsMethod", "apply");
         traverseVolume<false>(x, Ax);
     }
 
     template <typename data_t>
-    void JosephsMethod<data_t>::_applyAdjoint(const DataContainer<data_t>& y,
-                                              DataContainer<data_t>& Aty) const
+    void JosephsMethod<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                                 DataContainer<data_t>& Aty) const
     {
         Timer<> timeguard("JosephsMethod", "applyAdjoint");
         traverseVolume<true>(y, Aty);
@@ -109,7 +109,7 @@ namespace elsa
 
                 switch (_interpolation) {
                     case Interpolation::LINEAR:
-                        LINEAR(vector, result, traverse.getFractionals(), adjoint, rangeDim,
+                        linear(vector, result, traverse.getFractionals(), adjoint, rangeDim,
                                currentVoxel, intersection, from, to, traverse.getIgnoreDirection());
                         break;
                     case Interpolation::NN:
@@ -143,7 +143,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void JosephsMethod<data_t>::LINEAR(const DataContainer<data_t>& vector,
+    void JosephsMethod<data_t>::linear(const DataContainer<data_t>& vector,
                                        DataContainer<data_t>& result,
                                        const RealVector_t& fractionals, bool adjoint, int domainDim,
                                        const IndexVector_t& currentVoxel, float intersection,

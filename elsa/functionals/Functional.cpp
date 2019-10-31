@@ -40,11 +40,11 @@ namespace elsa
         // optimize for trivial LinearResiduals (no extra copy for residual result needed then)
         if (auto* linearResidual = dynamic_cast<LinearResidual<data_t>*>(_residual.get())) {
             if (!linearResidual->hasOperator() && !linearResidual->hasDataVector())
-                return _evaluate(x);
+                return evaluateImpl(x);
         }
 
         // in all other cases: evaluate the residual first, then call our virtual _evaluate
-        return _evaluate(_residual->evaluate(x));
+        return evaluateImpl(_residual->evaluate(x));
     }
 
     template <typename data_t>
@@ -69,7 +69,7 @@ namespace elsa
             // if trivial, no extra copy for residual result needed (and no chain rule)
             if (!linearResidual->hasOperator() && !linearResidual->hasDataVector()) {
                 result = x;
-                _getGradientInPlace(result);
+                getGradientInPlaceImpl(result);
                 return;
             }
 
@@ -77,14 +77,14 @@ namespace elsa
             if (!linearResidual->hasOperator()) {
                 linearResidual->evaluate(x,
                                          result); // sizes of x and result will match in this case
-                _getGradientInPlace(result);
+                getGradientInPlaceImpl(result);
                 return;
             }
         }
 
         // the general case
         auto temp = _residual->evaluate(x);
-        _getGradientInPlace(temp);
+        getGradientInPlaceImpl(temp);
         _residual->getJacobian(x).applyAdjoint(temp, result); // apply the chain rule
     }
 
@@ -95,16 +95,16 @@ namespace elsa
         if (auto* linearResidual = dynamic_cast<LinearResidual<data_t>*>(_residual.get())) {
             // if trivial, no extra copy for residual result needed (and no chain rule)
             if (!linearResidual->hasOperator() && !linearResidual->hasDataVector())
-                return _getHessian(x);
+                return getHessianImpl(x);
 
             // if no operator, no need for chain rule
             if (!linearResidual->hasOperator())
-                return _getHessian(_residual->evaluate(x));
+                return getHessianImpl(_residual->evaluate(x));
         }
 
         // the general case (with chain rule)
         auto jacobian = _residual->getJacobian(x);
-        auto hessian = adjoint(jacobian) * (_getHessian(_residual->evaluate(x))) * (jacobian);
+        auto hessian = adjoint(jacobian) * (getHessianImpl(_residual->evaluate(x))) * (jacobian);
         return hessian;
     }
 

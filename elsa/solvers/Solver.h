@@ -54,7 +54,7 @@ namespace elsa
         std::unique_ptr<Problem<data_t>> _problem;
 
         /// the solve method to be overridden in derived classes
-        virtual DataContainer<data_t>& _solve(index_t iterations) = 0;
+        virtual DataContainer<data_t>& solveImpl(index_t iterations) = 0;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Solver<data_t>& other) const override;

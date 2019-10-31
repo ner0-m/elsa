@@ -36,7 +36,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t Quadric<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    data_t Quadric<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         data_t xtAx;
 
@@ -55,13 +55,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Quadric<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void Quadric<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
     {
         Rx = _linearResidual.evaluate(Rx);
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Quadric<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> Quadric<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         if (_linearResidual.hasOperator())
             return leaf(_linearResidual.getOperator());

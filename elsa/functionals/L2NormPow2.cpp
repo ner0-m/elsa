@@ -17,19 +17,19 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t L2NormPow2<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    data_t L2NormPow2<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         return static_cast<data_t>(0.5) * Rx.squaredL2Norm();
     }
 
     template <typename data_t>
-    void L2NormPow2<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void L2NormPow2<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
     {
         // gradient is Rx itself (no need for self-assignment)
     }
 
     template <typename data_t>
-    LinearOperator<data_t> L2NormPow2<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> L2NormPow2<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         return leaf(Identity<data_t>(Rx.getDataDescriptor()));
     }

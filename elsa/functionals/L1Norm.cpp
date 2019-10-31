@@ -16,19 +16,19 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t L1Norm<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    data_t L1Norm<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         return Rx.l1Norm();
     }
 
     template <typename data_t>
-    void L1Norm<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void L1Norm<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
     {
         throw std::logic_error("L1Norm: not differentiable, so no gradient! (busted!)");
     }
 
     template <typename data_t>
-    LinearOperator<data_t> L1Norm<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> L1Norm<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         throw std::logic_error("L1Norm: not differentiable, so no Hessian! (busted!)");
     }

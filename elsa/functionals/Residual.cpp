@@ -38,13 +38,13 @@ namespace elsa
             || result.getDataDescriptor() != getRangeDescriptor())
             throw std::invalid_argument("Residual::evaluate: argument sizes do not match residual");
 
-        _evaluate(x, result);
+        evaluateImpl(x, result);
     }
 
     template <typename data_t>
     LinearOperator<data_t> Residual<data_t>::getJacobian(const DataContainer<data_t>& x)
     {
-        return _getJacobian(x);
+        return getJacobianImpl(x);
     }
 
     template <typename data_t>

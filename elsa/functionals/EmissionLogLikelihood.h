@@ -69,13 +69,13 @@ namespace elsa
 
     protected:
         /// the evaluation of the emission log-likelihood
-        data_t _evaluate(const DataContainer<data_t>& Rx) override;
+        data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void _getGradientInPlace(DataContainer<data_t>& Rx) override;
+        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
 
         /// the computation of the Hessian
-        LinearOperator<data_t> _getHessian(const DataContainer<data_t>& Rx) override;
+        LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
 
         /// implement the polymorphic clone operation
         EmissionLogLikelihood<data_t>* cloneImpl() const override;

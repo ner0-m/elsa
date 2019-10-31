@@ -71,7 +71,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t TransmissionLogLikelihood<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    data_t TransmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         auto result = static_cast<data_t>(0.0);
 
@@ -87,7 +87,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void TransmissionLogLikelihood<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void TransmissionLogLikelihood<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
     {
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = (*_b)[i] * std::exp(-Rx[i]);
@@ -102,7 +102,7 @@ namespace elsa
 
     template <typename data_t>
     LinearOperator<data_t>
-        TransmissionLogLikelihood<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+        TransmissionLogLikelihood<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
         for (index_t i = 0; i < Rx.getSize(); ++i) {

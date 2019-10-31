@@ -156,13 +156,13 @@ namespace elsa
         Problem(const Problem<data_t>& problem);
 
         /// the evaluation of the optimization problem
-        virtual data_t _evaluate();
+        virtual data_t evaluateImpl();
 
         /// the getGradient method for the optimization problem
-        virtual void _getGradient(DataContainer<data_t>& result);
+        virtual void getGradientImpl(DataContainer<data_t>& result);
 
         /// the getHessian method for the optimization problem
-        virtual LinearOperator<data_t> _getHessian();
+        virtual LinearOperator<data_t> getHessianImpl();
 
         /// implement the polymorphic clone operation
         Problem<data_t>* cloneImpl() const override;

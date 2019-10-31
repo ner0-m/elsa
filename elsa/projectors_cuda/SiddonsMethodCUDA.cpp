@@ -83,8 +83,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void SiddonsMethodCUDA<data_t>::_apply(const DataContainer<data_t>& x,
-                                           DataContainer<data_t>& Ax) const
+    void SiddonsMethodCUDA<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                              DataContainer<data_t>& Ax) const
     {
         Timer<> timeGuard("SiddonsMethodCUDA", "apply");
 
@@ -92,8 +92,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void SiddonsMethodCUDA<data_t>::_applyAdjoint(const DataContainer<data_t>& y,
-                                                  DataContainer<data_t>& Aty) const
+    void SiddonsMethodCUDA<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                                     DataContainer<data_t>& Aty) const
     {
         Timer<> timeguard("SiddonsMethodCUDA", "applyAdjoint");
 

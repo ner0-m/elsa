@@ -91,9 +91,10 @@ namespace elsa
         bool isEqual(const Residual<data_t>& other) const override;
 
         /// the evaluate method that has to be overridden in derived classes
-        virtual void _evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result) = 0;
+        virtual void evaluateImpl(const DataContainer<data_t>& x,
+                                  DataContainer<data_t>& result) = 0;
 
         /// the getJacobian method that has to be overriden in derived classes
-        virtual LinearOperator<data_t> _getJacobian(const DataContainer<data_t>& x) = 0;
+        virtual LinearOperator<data_t> getJacobianImpl(const DataContainer<data_t>& x) = 0;
     };
 } // namespace elsa

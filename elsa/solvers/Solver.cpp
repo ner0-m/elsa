@@ -22,7 +22,7 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& Solver<data_t>::solve(index_t iterations)
     {
-        return _solve(iterations);
+        return solveImpl(iterations);
     }
 
     template <typename data_t>

@@ -72,7 +72,7 @@ namespace elsa
         bool isEqual(const Residual<data_t>& other) const override;
 
         /// the evaluate method, evaluating the residual at x and placing the value in result
-        void _evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result) override;
+        void evaluateImpl(const DataContainer<data_t>& x, DataContainer<data_t>& result) override;
 
         /**
          * \brief return the Jacobian (first derivative) of the linear residual at x.
@@ -84,7 +84,7 @@ namespace elsa
          * If A is set, then the Jacobian is A and this returns a copy of A.
          * If A is not set, then an Identity operator is returned.
          */
-        LinearOperator<data_t> _getJacobian(const DataContainer<data_t>& x) override;
+        LinearOperator<data_t> getJacobianImpl(const DataContainer<data_t>& x) override;
 
     private:
         /// flag if operator A is present

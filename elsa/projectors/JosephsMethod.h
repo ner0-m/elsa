@@ -63,11 +63,11 @@ namespace elsa
 
     protected:
         /// apply Joseph's method (i.e. forward projection)
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// apply the adjoint of Joseph's method (i.e. backward projection)
-        void _applyAdjoint(const DataContainer<data_t>& y,
-                           DataContainer<data_t>& Aty) const override;
+        void applyAdjointImpl(const DataContainer<data_t>& y,
+                              DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         JosephsMethod<data_t>* cloneImpl() const override;
@@ -116,7 +116,7 @@ namespace elsa
          * angle \param[in] from index of the current vector position \param[in] to index of the
          * current result position \param[in] mainDirection specifies the main direction of the ray
          */
-        void LINEAR(const DataContainer<data_t>& vector, DataContainer<data_t>& result,
+        void linear(const DataContainer<data_t>& vector, DataContainer<data_t>& result,
                     const RealVector_t& fractionals, bool adjoint, int domainDim,
                     const IndexVector_t& currentVoxel, float intersection, index_t from, index_t to,
                     int mainDirection) const;

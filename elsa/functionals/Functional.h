@@ -125,7 +125,7 @@ namespace elsa
          * Please note: the evaluation of the residual is already performed in evaluate, so this
          * method only has to compute the functional's value itself.
          */
-        virtual data_t _evaluate(const DataContainer<data_t>& Rx) = 0;
+        virtual data_t evaluateImpl(const DataContainer<data_t>& Rx) = 0;
 
         /**
          * \brief the _getGradientInPlace method that has to be overridden in derived classes
@@ -137,7 +137,7 @@ namespace elsa
          * as the application of the chain rule. This method here only has to compute the gradient
          * of the functional itself, in an in-place manner (to avoid unnecessary DataContainers).
          */
-        virtual void _getGradientInPlace(DataContainer<data_t>& Rx) = 0;
+        virtual void getGradientInPlaceImpl(DataContainer<data_t>& Rx) = 0;
 
         /**
          * \brief the _getHessian method that has to be overridden in derived classes
@@ -150,6 +150,6 @@ namespace elsa
          * as the application of the chain rule. This method here only has to compute the Hessian of
          * the functional itself.
          */
-        virtual LinearOperator<data_t> _getHessian(const DataContainer<data_t>& Rx) = 0;
+        virtual LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) = 0;
     };
 } // namespace elsa

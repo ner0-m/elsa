@@ -111,7 +111,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t Problem<data_t>::_evaluate()
+    data_t Problem<data_t>::evaluateImpl()
     {
         data_t result = _dataTerm->evaluate(_currentSolution);
 
@@ -122,7 +122,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Problem<data_t>::_getGradient(DataContainer<data_t>& result)
+    void Problem<data_t>::getGradientImpl(DataContainer<data_t>& result)
     {
         _dataTerm->getGradient(_currentSolution, result);
 
@@ -131,7 +131,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Problem<data_t>::_getHessian()
+    LinearOperator<data_t> Problem<data_t>::getHessianImpl()
     {
         auto hessian = _dataTerm->getHessian(_currentSolution);
 
@@ -168,7 +168,7 @@ namespace elsa
     template <typename data_t>
     data_t Problem<data_t>::evaluate()
     {
-        return _evaluate();
+        return evaluateImpl();
     }
 
     template <typename data_t>
@@ -182,13 +182,13 @@ namespace elsa
     template <typename data_t>
     void Problem<data_t>::getGradient(DataContainer<data_t>& result)
     {
-        _getGradient(result);
+        getGradientImpl(result);
     }
 
     template <typename data_t>
     LinearOperator<data_t> Problem<data_t>::getHessian()
     {
-        return _getHessian();
+        return getHessianImpl();
     }
 
     // ------------------------------------------

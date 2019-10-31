@@ -15,7 +15,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>& GradientDescent<data_t>::_solve(index_t iterations)
+    DataContainer<data_t>& GradientDescent<data_t>::solveImpl(index_t iterations)
     {
         if (iterations == 0)
             iterations = _defaultIterations;

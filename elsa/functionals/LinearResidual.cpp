@@ -119,8 +119,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void LinearResidual<data_t>::_evaluate(const DataContainer<data_t>& x,
-                                           DataContainer<data_t>& result)
+    void LinearResidual<data_t>::evaluateImpl(const DataContainer<data_t>& x,
+                                              DataContainer<data_t>& result)
     {
         if (_hasOperator)
             _operator->apply(x, result);
@@ -132,7 +132,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> LinearResidual<data_t>::_getJacobian(const DataContainer<data_t>& x)
+    LinearOperator<data_t> LinearResidual<data_t>::getJacobianImpl(const DataContainer<data_t>& x)
     {
         if (_hasOperator)
             return leaf(*_operator);

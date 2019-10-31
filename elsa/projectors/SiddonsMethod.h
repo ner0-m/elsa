@@ -52,11 +52,11 @@ namespace elsa
 
     protected:
         /// apply Siddon's method (i.e. forward projection)
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// apply the adjoint of Siddon's method (i.e. backward projection)
-        void _applyAdjoint(const DataContainer<data_t>& y,
-                           DataContainer<data_t>& Aty) const override;
+        void applyAdjointImpl(const DataContainer<data_t>& y,
+                              DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         SiddonsMethod<data_t>* cloneImpl() const override;
