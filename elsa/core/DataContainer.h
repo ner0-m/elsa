@@ -7,12 +7,12 @@
 
 #include <memory>
 #include <type_traits>
+#include "Expression.h"
+
+#include <omp.h>
 
 namespace elsa
 {
-    // forward declaration for friend test function
-    template <typename data_t = real_t>
-    class DataContainer;
     // used for testing and defined in test file (declared as friend)
     template <typename data_t>
     int useCount(const DataContainer<data_t>& /*dc*/);
@@ -34,7 +34,7 @@ namespace elsa
      * detach() function first to trigger the copy-on-write mechanism.
      */
     template <typename data_t>
-    class DataContainer
+    class DataContainer : public BaseDataContainer
     {
     public:
         /**
@@ -105,6 +105,17 @@ namespace elsa
          * assignment, this is possible again.
          */
         DataContainer<data_t>& operator=(DataContainer<data_t>&& other) noexcept;
+
+        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
+        DataContainer<data_t>& operator=(Source const& source)
+        {
+            detach();
+            for (index_t i = 0; i < getSize(); ++i) {
+                this->operator[](i) = source[i];
+            }
+
+            return *this;
+        }
 
         /// return the current DataDescriptor
         const DataDescriptor& getDataDescriptor() const;
@@ -297,44 +308,49 @@ namespace elsa
     };
 
     /// element-wise addition of two DataContainers
-    template <typename data_t>
-    DataContainer<data_t> operator+(const DataContainer<data_t>& left,
-                                    const DataContainer<data_t>& right)
+    namespace detail
     {
-        DataContainer<data_t> result(left);
-        result += right;
-        return result;
-    }
 
-    /// element-wise subtraction of two DataContainers
-    template <typename data_t>
-    DataContainer<data_t> operator-(const DataContainer<data_t>& left,
-                                    const DataContainer<data_t>& right)
-    {
-        DataContainer<data_t> result(left);
-        result -= right;
-        return result;
-    }
+        template <typename data_t>
+        DataContainer<data_t> operator+(const DataContainer<data_t>& left,
+                                        const DataContainer<data_t>& right)
+        {
+            DataContainer<data_t> result(left);
+            result += right;
+            return result;
+        }
 
-    /// element-wise multiplication of two DataContainers
-    template <typename data_t>
-    DataContainer<data_t> operator*(const DataContainer<data_t>& left,
-                                    const DataContainer<data_t>& right)
-    {
-        DataContainer<data_t> result(left);
-        result *= right;
-        return result;
-    }
+        /// element-wise subtraction of two DataContainers
+        template <typename data_t>
+        DataContainer<data_t> operator-(const DataContainer<data_t>& left,
+                                        const DataContainer<data_t>& right)
+        {
+            DataContainer<data_t> result(left);
+            result -= right;
+            return result;
+        }
 
-    /// element-wise division of two DataContainers
-    template <typename data_t>
-    DataContainer<data_t> operator/(const DataContainer<data_t>& left,
-                                    const DataContainer<data_t>& right)
-    {
-        DataContainer<data_t> result(left);
-        result /= right;
-        return result;
-    }
+        /// element-wise multiplication of two DataContainers
+        template <typename data_t>
+        DataContainer<data_t> operator*(const DataContainer<data_t>& left,
+                                        const DataContainer<data_t>& right)
+        {
+            DataContainer<data_t> result(left);
+            result *= right;
+            return result;
+        }
+
+        /// element-wise division of two DataContainers
+        template <typename data_t>
+        DataContainer<data_t> operator/(const DataContainer<data_t>& left,
+                                        const DataContainer<data_t>& right)
+        {
+            DataContainer<data_t> result(left);
+            result /= right;
+            return result;
+        }
+
+    } // namespace detail
 
     /// addition of DataContainer and scalar
     template <typename data_t>
@@ -408,6 +424,34 @@ namespace elsa
         result = left;
         result /= right;
         return result;
+    }
+
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto operator*(LHS const& lhs, RHS const& rhs)
+    {
+        return Expression{[](auto const& left, auto const& right) { return left * right; }, lhs,
+                          rhs};
+    }
+
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto operator+(LHS const& lhs, RHS const& rhs)
+    {
+        return Expression{[](auto const& left, auto const& right) { return left + right; }, lhs,
+                          rhs};
+    }
+
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto operator-(LHS const& lhs, RHS const& rhs)
+    {
+        return Expression{[](auto const& left, auto const& right) { return left - right; }, lhs,
+                          rhs};
+    }
+
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto operator/(LHS const& lhs, RHS const& rhs)
+    {
+        return Expression{[](auto const& left, auto const& right) { return left / right; }, lhs,
+                          rhs};
     }
 
 } // namespace elsa

@@ -113,10 +113,10 @@ add_subdirectory(elsa)
 # the documentation
 add_subdirectory(docs EXCLUDE_FROM_ALL)
 
-if(ELSA_BUILD_EXAMPLES)
-    # the examples
-    add_subdirectory(examples EXCLUDE_FROM_ALL)
-endif(ELSA_BUILD_EXAMPLES)
+#if(ELSA_BUILD_EXAMPLES)
+#    # the examples
+#    add_subdirectory(examples EXCLUDE_FROM_ALL)
+#endif(ELSA_BUILD_EXAMPLES)
 
 
 # ------------ setup installation ------

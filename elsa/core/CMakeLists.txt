@@ -16,7 +16,8 @@ set(MODULE_HEADERS
         DataContainerIterator.h
         DataHandler.h
         DataHandlerCPU.h
-        LinearOperator.h)
+        LinearOperator.h
+        Expression.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
