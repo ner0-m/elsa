@@ -8,26 +8,33 @@
 
 using namespace elsa;
 
-SCENARIO("Testing RegularizationTerm") {
-    GIVEN("some term") {
-        IndexVector_t numCoeff(2); numCoeff << 7, 16;
+SCENARIO("Testing RegularizationTerm")
+{
+    GIVEN("some term")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 7, 16;
         DataDescriptor dd(numCoeff);
 
         real_t weight = 2.5;
         L2NormPow2 functional(dd);
 
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             RegularizationTerm regTerm(weight, functional);
 
-            THEN("everything is as expected") {
+            THEN("everything is as expected")
+            {
                 REQUIRE(regTerm.getWeight() == weight);
                 REQUIRE(regTerm.getFunctional() == functional);
             }
         }
     }
 
-    GIVEN("another regularization term") {
-        IndexVector_t numCoeff(3); numCoeff << 11, 17, 23;
+    GIVEN("another regularization term")
+    {
+        IndexVector_t numCoeff(3);
+        numCoeff << 11, 17, 23;
         DataDescriptor dd(numCoeff);
 
         real_t weight = 3.1;
@@ -35,10 +42,12 @@ SCENARIO("Testing RegularizationTerm") {
 
         RegularizationTerm regTerm(weight, functional);
 
-        WHEN("copy constructing") {
+        WHEN("copy constructing")
+        {
             RegularizationTerm rt(regTerm);
 
-            THEN("it copied correctly") {
+            THEN("it copied correctly")
+            {
                 REQUIRE(rt.getWeight() == regTerm.getWeight());
                 REQUIRE(rt.getFunctional() == regTerm.getFunctional());
 
@@ -46,11 +55,13 @@ SCENARIO("Testing RegularizationTerm") {
             }
         }
 
-        WHEN("copy assigning") {
+        WHEN("copy assigning")
+        {
             RegularizationTerm rt(0.0f, functional);
             rt = regTerm;
 
-            THEN("it copied correctly") {
+            THEN("it copied correctly")
+            {
                 REQUIRE(rt.getWeight() == regTerm.getWeight());
                 REQUIRE(rt.getFunctional() == regTerm.getFunctional());
 
@@ -58,12 +69,14 @@ SCENARIO("Testing RegularizationTerm") {
             }
         }
 
-        WHEN("move constructing") {
+        WHEN("move constructing")
+        {
             RegularizationTerm oldOtherRt(regTerm);
 
             RegularizationTerm rt(std::move(regTerm));
 
-            THEN("it moved correctly") {
+            THEN("it moved correctly")
+            {
                 REQUIRE(rt.getWeight() == oldOtherRt.getWeight());
                 REQUIRE(rt.getFunctional() == oldOtherRt.getFunctional());
 
@@ -71,13 +84,15 @@ SCENARIO("Testing RegularizationTerm") {
             }
         }
 
-        WHEN("move assigning") {
+        WHEN("move assigning")
+        {
             RegularizationTerm oldOtherRt(regTerm);
 
             RegularizationTerm rt(0.0f, functional);
             rt = std::move(regTerm);
 
-            THEN("it moved correctly") {
+            THEN("it moved correctly")
+            {
                 REQUIRE(rt.getWeight() == oldOtherRt.getWeight());
                 REQUIRE(rt.getFunctional() == oldOtherRt.getFunctional());
 

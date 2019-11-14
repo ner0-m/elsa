@@ -11,23 +11,31 @@
 #include <catch2/catch.hpp>
 #include "DataContainer.h"
 
+template <typename data_t>
+int elsa::useCount(const DataContainer<data_t>& dc)
+{
+    return dc._dataHandler.use_count();
+}
+
 using namespace elsa;
 using namespace Catch::literals; // to enable 0.0_a approximate floats
 
-SCENARIO("Constructing DataContainers") {
-    GIVEN("a DataDescriptor") {
+SCENARIO("Constructing DataContainers")
+{
+    GIVEN("a DataDescriptor")
+    {
         IndexVector_t numCoeff(3);
         numCoeff << 17, 47, 91;
         DataDescriptor desc(numCoeff);
 
-        WHEN("constructing an empty DataContainer") {
+        WHEN("constructing an empty DataContainer")
+        {
             DataContainer dc(desc);
 
-            THEN("it has the correct DataDescriptor") {
-                REQUIRE(dc.getDataDescriptor() == desc);
-            }
+            THEN("it has the correct DataDescriptor") { REQUIRE(dc.getDataDescriptor() == desc); }
 
-            THEN("it has a zero data vector of correct size") {
+            THEN("it has a zero data vector of correct size")
+            {
                 REQUIRE(dc.getSize() == desc.getNumberOfCoefficients());
 
                 for (index_t i = 0; i < desc.getNumberOfCoefficients(); ++i)
@@ -35,17 +43,17 @@ SCENARIO("Constructing DataContainers") {
             }
         }
 
-        WHEN("constructing an initialized DataContainer") {
+        WHEN("constructing an initialized DataContainer")
+        {
             RealVector_t data(desc.getNumberOfCoefficients());
             data.setRandom();
 
             DataContainer dc(desc, data);
 
-            THEN("it has the correct DataDescriptor") {
-                REQUIRE(dc.getDataDescriptor() == desc);
-            }
+            THEN("it has the correct DataDescriptor") { REQUIRE(dc.getDataDescriptor() == desc); }
 
-            THEN("it has correctly initialized data") {
+            THEN("it has correctly initialized data")
+            {
                 REQUIRE(dc.getSize() == desc.getNumberOfCoefficients());
 
                 for (index_t i = 0; i < dc.getSize(); ++i)
@@ -54,7 +62,8 @@ SCENARIO("Constructing DataContainers") {
         }
     }
 
-    GIVEN("another DataContainer") {
+    GIVEN("another DataContainer")
+    {
         IndexVector_t numCoeff(2);
         numCoeff << 32, 57;
         DataDescriptor desc(numCoeff);
@@ -64,10 +73,12 @@ SCENARIO("Constructing DataContainers") {
         for (index_t i = 0; i < otherDc.getSize(); ++i)
             otherDc[i] = randVec(i);
 
-        WHEN("copy constructing") {
+        WHEN("copy constructing")
+        {
             DataContainer dc(otherDc);
 
-            THEN("it copied correctly") {
+            THEN("it copied correctly")
+            {
                 REQUIRE(dc.getDataDescriptor() == otherDc.getDataDescriptor());
                 REQUIRE(&dc.getDataDescriptor() != &otherDc.getDataDescriptor());
 
@@ -75,11 +86,13 @@ SCENARIO("Constructing DataContainers") {
             }
         }
 
-        WHEN("copy assigning") {
+        WHEN("copy assigning")
+        {
             DataContainer dc(desc);
             dc = otherDc;
 
-            THEN("it copied correctly") {
+            THEN("it copied correctly")
+            {
                 REQUIRE(dc.getDataDescriptor() == otherDc.getDataDescriptor());
                 REQUIRE(&dc.getDataDescriptor() != &otherDc.getDataDescriptor());
 
@@ -87,57 +100,58 @@ SCENARIO("Constructing DataContainers") {
             }
         }
 
-        WHEN("move constructing") {
+        WHEN("move constructing")
+        {
             DataContainer oldOtherDc(otherDc);
 
             DataContainer dc(std::move(otherDc));
 
-            THEN("it moved correctly") {
+            THEN("it moved correctly")
+            {
                 REQUIRE(dc.getDataDescriptor() == oldOtherDc.getDataDescriptor());
 
                 REQUIRE(dc == oldOtherDc);
             }
 
-            THEN("the moved from object is still valid (but empty)") {
-                REQUIRE(otherDc.getSize() == 1);
-                REQUIRE(otherDc[0] == 0);
-            }
+            THEN("the moved from object is still valid (but empty)") { otherDc = dc; }
         }
 
-        WHEN("move assigning") {
+        WHEN("move assigning")
+        {
             DataContainer oldOtherDc(otherDc);
 
             DataContainer dc(desc);
             dc = std::move(otherDc);
 
-            THEN("it moved correctly") {
+            THEN("it moved correctly")
+            {
                 REQUIRE(dc.getDataDescriptor() == oldOtherDc.getDataDescriptor());
 
                 REQUIRE(dc == oldOtherDc);
             }
 
-            THEN("the moved from object is still valid (but empty)") {
-                REQUIRE(otherDc.getSize() == 1);
-                REQUIRE(otherDc[0] == 0);
-            }
+            THEN("the moved from object is still valid (but empty)") { otherDc = dc; }
         }
     }
 }
 
-
-SCENARIO("Element-wise access of DataContainers") {
-    GIVEN("a DataContainer") {
+SCENARIO("Element-wise access of DataContainers")
+{
+    GIVEN("a DataContainer")
+    {
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
         DataDescriptor desc(numCoeff);
         DataContainer dc(desc);
 
-        WHEN("accessing the elements") {
+        WHEN("accessing the elements")
+        {
             IndexVector_t coord(2);
             coord << 17, 4;
             index_t index = desc.getIndexFromCoordinate(coord);
 
-            THEN("it works as expected when using indices/coordinates") {
+            THEN("it works as expected when using indices/coordinates")
+            {
                 REQUIRE(dc[index] == 0.0_a);
                 REQUIRE(dc(coord) == 0.0_a);
                 REQUIRE(dc(17, 4) == 0.0_a);
@@ -156,52 +170,56 @@ SCENARIO("Element-wise access of DataContainers") {
     }
 }
 
-
-SCENARIO("Testing the reduction operations of DataContainer") {
-    GIVEN("a DataContainer") {
+SCENARIO("Testing the reduction operations of DataContainer")
+{
+    GIVEN("a DataContainer")
+    {
         IndexVector_t numCoeff(3);
         numCoeff << 11, 73, 45;
         DataDescriptor desc(numCoeff);
         DataContainer dc(desc);
 
-        WHEN("putting in some random data") {
+        WHEN("putting in some random data")
+        {
             Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
             for (index_t i = 0; i < dc.getSize(); ++i)
                 dc[i] = randVec(i);
 
-            THEN("the reductions work as expected") {
-                REQUIRE(dc.sum() == Approx(randVec.sum()) );
+            THEN("the reductions work as expected")
+            {
+                REQUIRE(dc.sum() == Approx(randVec.sum()));
                 REQUIRE(dc.l1Norm() == Approx(randVec.array().abs().sum()));
                 REQUIRE(dc.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
-                REQUIRE(dc.squaredL2Norm() == Approx(randVec.squaredNorm()) );
+                REQUIRE(dc.squaredL2Norm() == Approx(randVec.squaredNorm()));
 
                 Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(dc.getSize());
                 DataContainer dc2(desc);
                 for (index_t i = 0; i < dc2.getSize(); ++i)
                     dc2[i] = randVec2(i);
 
-                REQUIRE(dc.dot(dc2) == Approx(randVec.dot(randVec2)) );
+                REQUIRE(dc.dot(dc2) == Approx(randVec.dot(randVec2)));
             }
         }
-
-
     }
 }
 
-
-SCENARIO("Testing the element-wise operations of DataContainer") {
-    GIVEN("a DataContainer") {
+SCENARIO("Testing the element-wise operations of DataContainer")
+{
+    GIVEN("a DataContainer")
+    {
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
         DataDescriptor desc(numCoeff);
         DataContainer dc(desc);
 
-        WHEN("putting in some random data") {
+        WHEN("putting in some random data")
+        {
             Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
             for (index_t i = 0; i < dc.getSize(); ++i)
                 dc[i] = randVec(i);
 
-            THEN("the element-wise unary operations work as expected") {
+            THEN("the element-wise unary operations work as expected")
+            {
                 auto dcSquare = dc.square();
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dcSquare[i] == Approx(randVec(i) * randVec(i)));
@@ -221,44 +239,49 @@ SCENARIO("Testing the element-wise operations of DataContainer") {
                         REQUIRE(dcLog[i] == Approx(std::log(randVec(i))));
             }
 
-            THEN("the binary in-place addition of a scalar work as expected") {
+            THEN("the binary in-place addition of a scalar work as expected")
+            {
                 float scalar = 923.41;
                 dc += scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) + scalar);
             }
 
-            THEN("the binary in-place subtraction of a scalar work as expected") {
+            THEN("the binary in-place subtraction of a scalar work as expected")
+            {
                 float scalar = 74.165;
                 dc -= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) - scalar);
             }
 
-            THEN("the binary in-place multiplication with a scalar work as expected") {
+            THEN("the binary in-place multiplication with a scalar work as expected")
+            {
                 float scalar = 12.69;
                 dc *= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) * scalar);
             }
 
-            THEN("the binary in-place division by a scalar work as expected") {
+            THEN("the binary in-place division by a scalar work as expected")
+            {
                 float scalar = 82.61;
                 dc /= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) / scalar);
             }
 
-            THEN("the element-wise assignment of a scalar works as expected") {
+            THEN("the element-wise assignment of a scalar works as expected")
+            {
                 float scalar = 123.45;
                 dc = scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == scalar);
             }
-
         }
 
-        WHEN("having two containers with random data") {
+        WHEN("having two containers with random data")
+        {
             Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
             for (index_t i = 0; i < dc.getSize(); ++i)
                 dc[i] = randVec(i);
@@ -268,38 +291,42 @@ SCENARIO("Testing the element-wise operations of DataContainer") {
             for (index_t i = 0; i < dc2.getSize(); ++i)
                 dc2[i] = randVec2[i];
 
-            THEN("the element-wise in-place addition works as expected") {
+            THEN("the element-wise in-place addition works as expected")
+            {
                 dc += dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) + randVec2(i));
             }
 
-            THEN("the element-wise in-place subtraction works as expected") {
+            THEN("the element-wise in-place subtraction works as expected")
+            {
                 dc -= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) - randVec2(i));
             }
 
-            THEN("the element-wise in-place multiplication works as expected") {
+            THEN("the element-wise in-place multiplication works as expected")
+            {
                 dc *= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) * randVec2(i));
             }
 
-            THEN("the element-wise in-place division works as expected") {
+            THEN("the element-wise in-place division works as expected")
+            {
                 dc /= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     if (dc2[i] != 0)
                         REQUIRE(dc[i] == randVec(i) / randVec2(i));
             }
-
         }
     }
 }
 
-
-SCENARIO("Testing the arithmetic operations with DataContainer arguments") {
-    GIVEN("some DataContainers") {
+SCENARIO("Testing the arithmetic operations with DataContainer arguments")
+{
+    GIVEN("some DataContainers")
+    {
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
         DataDescriptor desc(numCoeff);
@@ -307,15 +334,16 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments") {
         DataContainer dc(desc);
         DataContainer dc2(desc);
 
-        Eigen::VectorXf randVec  = Eigen::VectorXf::Random(dc.getSize());
+        Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
         Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(dc.getSize());
 
         for (index_t i = 0; i < dc.getSize(); ++i) {
-            dc[i]  = randVec(i);
+            dc[i] = randVec(i);
             dc2[i] = randVec2(i);
         }
 
-        THEN("the binary element-wise operations work as expected") {
+        THEN("the binary element-wise operations work as expected")
+        {
             auto resultPlus = dc + dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 REQUIRE(resultPlus[i] == dc[i] + dc2[i]);
@@ -334,7 +362,8 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments") {
                     REQUIRE(resultDiv[i] == dc[i] / dc2[i]);
         }
 
-        THEN("the operations with a scalar work as expected") {
+        THEN("the operations with a scalar work as expected")
+        {
             float scalar = 4.92;
 
             auto resultScalarPlus = scalar + dc;
@@ -369,8 +398,286 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments") {
             auto resultDivScalar = dc / scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 REQUIRE(resultDivScalar[i] == dc[i] / scalar);
+        }
+    }
+}
 
+SCENARIO("Testing the copy-on-write mechanism")
+{
+    GIVEN("A random DataContainer")
+    {
 
+        IndexVector_t numCoeff(3);
+        numCoeff << 52, 7, 29;
+        DataDescriptor desc(numCoeff);
+        DataContainer dc(desc);
+        Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
+
+        for (index_t i = 0; i < dc.getSize(); ++i) {
+            dc[i] = randVec(i);
+        }
+
+        WHEN("const manipulating a copy constructed shallow copy")
+        {
+            DataContainer dc2(dc);
+            dc + dc;
+            dc.sum();
+            dc.square();
+            dc.log();
+            dc.dot(dc);
+            dc.l1Norm();
+
+            THEN("the data is the same")
+            {
+                REQUIRE(dc2 == dc);
+                REQUIRE(useCount(dc) == 2);
+            }
+        }
+
+        WHEN("non-const manipulating a copy constructed shallow copy")
+        {
+            DataContainer dc2(dc);
+            REQUIRE(useCount(dc) == 2);
+            REQUIRE(useCount(dc2) == 2);
+
+            THEN("copy-on-write is invoked")
+            {
+                dc2 += 2;
+                REQUIRE(dc2 != dc);
+                REQUIRE(useCount(dc2) == 1);
+                REQUIRE(useCount(dc) == 1);
+            }
+
+            THEN("copy-on-write is invoked")
+            {
+                dc2 += dc;
+                REQUIRE(dc2 != dc);
+                REQUIRE(useCount(dc2) == 1);
+                REQUIRE(useCount(dc) == 1);
+            }
+
+            THEN("copy-on-write is invoked")
+            {
+                dc2 -= 2;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked")
+            {
+                dc2 -= dc;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked")
+            {
+                dc2 /= 2;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked")
+            {
+                dc2 /= dc;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked")
+            {
+                dc2 *= 2;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked")
+            {
+                dc2 *= dc;
+                REQUIRE(dc2 != dc);
+            }
+
+            THEN("copy-on-write is invoked")
+            {
+                dc[0] += 2;
+                REQUIRE(dc2 != dc);
+            }
+        }
+
+        WHEN("manipulating a non-shallow-copied container")
+        {
+            for (index_t i = 0; i < dc.getSize(); ++i) {
+                dc[i] += 2;
+            }
+
+            THEN("copy-on-write should not be invoked") { REQUIRE(useCount(dc) == 1); }
+        }
+    }
+}
+
+SCENARIO("Testing iterators for DataContainer")
+{
+    GIVEN("A 1D container")
+    {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(1);
+        numCoeff << size;
+        DataDescriptor desc(numCoeff);
+
+        DataContainer dc1(desc);
+        DataContainer dc2(desc);
+
+        Eigen::VectorXf randVec1 = Eigen::VectorXf::Random(size);
+        Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(size);
+
+        for (index_t i = 0; i < size; ++i) {
+            dc1[i] = randVec1(i);
+            dc2[i] = randVec2(i);
+        }
+
+        THEN("We can iterate forward")
+        {
+            int i = 0;
+            for (auto v = dc1.cbegin(); v != dc1.cend(); v++) {
+                REQUIRE(*v == randVec1[i++]);
+            }
+            REQUIRE(i == size);
+        }
+
+        THEN("We can iterate backward")
+        {
+            int i = size;
+            for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
+                REQUIRE(*v == randVec1[--i]);
+            }
+            REQUIRE(i == 0);
+        }
+
+        THEN("We can iterate and mutate")
+        {
+            int i = 0;
+            for (auto& v : dc1) {
+                v = v * 2;
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size);
+
+            i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size);
+        }
+
+        THEN("We can use STL algorithms")
+        {
+            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
+            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
+        }
+    }
+    GIVEN("A 2D container")
+    {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(2);
+        numCoeff << size, size;
+        DataDescriptor desc(numCoeff);
+
+        DataContainer dc1(desc);
+
+        Eigen::VectorXf randVec1 = Eigen::VectorXf::Random(size * size);
+
+        for (index_t i = 0; i < dc1.getSize(); ++i) {
+            dc1[i] = randVec1[i];
+        }
+
+        THEN("We can iterate forward")
+        {
+            int i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == randVec1[i++]);
+            }
+            REQUIRE(i == size * size);
+        }
+
+        THEN("We can iterate backward")
+        {
+            int i = size * size;
+            for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
+                REQUIRE(*v == randVec1[--i]);
+            }
+            REQUIRE(i == 0);
+        }
+
+        THEN("We can iterate and mutate")
+        {
+            int i = 0;
+            for (auto& v : dc1) {
+                v = v * 2;
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size * size);
+
+            i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size * size);
+        }
+
+        THEN("We can use STL algorithms")
+        {
+            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
+            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
+        }
+    }
+    GIVEN("A 3D container")
+    {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(3);
+        numCoeff << size, size, size;
+        DataDescriptor desc(numCoeff);
+
+        DataContainer dc1(desc);
+
+        Eigen::VectorXf randVec1 = Eigen::VectorXf::Random(size * size * size);
+
+        for (index_t i = 0; i < dc1.getSize(); ++i) {
+            dc1[i] = randVec1[i];
+        }
+
+        THEN("We can iterate forward")
+        {
+            int i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == randVec1[i++]);
+            }
+            REQUIRE(i == size * size * size);
+        }
+
+        THEN("We can iterate backward")
+        {
+            int i = size * size * size;
+            for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
+                REQUIRE(*v == randVec1[--i]);
+            }
+            REQUIRE(i == 0);
+        }
+
+        THEN("We can iterate and mutate")
+        {
+            int i = 0;
+            for (auto& v : dc1) {
+                v = v * 2;
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size * size * size);
+
+            i = 0;
+            for (auto v : dc1) {
+                REQUIRE(v == 2 * randVec1[i++]);
+            }
+            REQUIRE(i == size * size * size);
+        }
+
+        THEN("We can use STL algorithms")
+        {
+            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
+            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
         }
     }
 }

@@ -16,8 +16,8 @@ using namespace elsa;
 
 using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
 
-
-SCENARIO("Intersect corners of pixels") {
+SCENARIO("Intersect corners of pixels")
+{
     size_t dim = 2;
 
     IndexVector_t voxel(dim);
@@ -59,8 +59,10 @@ SCENARIO("Intersect corners of pixels") {
     REQUIRE(!Intersection::withRay(aabb, r));
 }
 
-SCENARIO("Intersect edges of voxels") {
-    GIVEN("some ray") {
+SCENARIO("Intersect edges of voxels")
+{
+    GIVEN("some ray")
+    {
         size_t dim = 2;
         RealVector_t ro(dim);
         ro << 132, 30;
@@ -72,19 +74,22 @@ SCENARIO("Intersect edges of voxels") {
 
         // horizontal check
         voxel << 30, 31;
-        THEN("the ray intersects") {
+        THEN("the ray intersects")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(Intersection::withRay(aabb, r));
         }
 
         voxel << 40, 30;
-        THEN("the ray intersects") {
+        THEN("the ray intersects")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(Intersection::withRay(aabb, r));
         }
 
         voxel << 40, 29;
-        THEN("the ray does not intersect") {
+        THEN("the ray does not intersect")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(!Intersection::withRay(aabb, r));
         }
@@ -95,45 +100,49 @@ SCENARIO("Intersect edges of voxels") {
         r = Ray(ro, rd);
 
         voxel << 31, 30;
-        THEN("the ray intersects") {
+        THEN("the ray intersects")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(Intersection::withRay(aabb, r));
         }
 
         voxel << 30, 40;
-        THEN("the ray intersects") {
+        THEN("the ray intersects")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(Intersection::withRay(aabb, r));
         }
 
         voxel << 29, 40;
-        THEN("the ray does not intersect") {
+        THEN("the ray does not intersect")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(!Intersection::withRay(aabb, r));
         }
-
 
         rd << 0.0, 1.0;
         ro << 1.5, -10;
         r = Ray(ro, rd);
 
         voxel << 0, 1;
-        THEN("the ray does not intersect") {
+        THEN("the ray does not intersect")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(!Intersection::withRay(aabb, r));
         }
 
         voxel << 1, 1;
-        THEN("the ray does not intersect") {
+        THEN("the ray does not intersect")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(!Intersection::withRay(aabb, r));
         }
 
         voxel << 2, 1;
-        THEN("the ray intersects") {
+        THEN("the ray intersects")
+        {
             BoundingBox aabb(voxel);
             REQUIRE(Intersection::withRay(aabb, r));
         }
     }
-
 }

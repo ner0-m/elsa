@@ -17,9 +17,11 @@ namespace elsa
      * \author Nikola Dinev - fixes
      *
      * This traversal always proceeds along "long" voxel edges, it will never "jump diagonally".
-     * The method is based on J. Amantides, A. Woo: A Fast Voxel Traversal Algorithm for Ray Tracing.
+     * The method is based on J. Amantides, A. Woo: A Fast Voxel Traversal Algorithm for Ray
+     * Tracing.
      */
-    class TraverseAABB {
+    class TraverseAABB
+    {
     private:
         /// convenience type def for ray
         using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
@@ -39,7 +41,8 @@ namespace elsa
         void updateTraverse();
 
         /**
-         * \brief Update the traverser status by taking the next traversal step, return the distance of step
+         * \brief Update the traverser status by taking the next traversal step, return the distance
+         * of step
          *
          * \returns the distance of the step taken
          */
@@ -78,12 +81,13 @@ namespace elsa
         real_t _tExit{0.0};
 
         /// constant vector containing epsilon
-        const RealVector_t EPS{RealVector_t(_aabb._dim).setConstant(std::numeric_limits<real_t>::epsilon())};
+        const RealVector_t _EPS{
+            RealVector_t(_aabb._dim).setConstant(std::numeric_limits<real_t>::epsilon())};
         /// constant vector containing the maximum number
-        const RealVector_t MAX{RealVector_t(_aabb._dim).setConstant(std::numeric_limits<real_t>::max())};
+        const RealVector_t _MAX{
+            RealVector_t(_aabb._dim).setConstant(std::numeric_limits<real_t>::max())};
         /// constant to decide whether we are in next voxel
-        const real_t NEXT_VOXEL_THRESHOLD{0.01};
-
+        const real_t _NEXT_VOXEL_THRESHOLD{0.01};
 
         /// compute the entry and exit points of ray r with the volume (aabb)
         void calculateAABBIntersections(const Ray& r);

@@ -4,26 +4,22 @@ namespace elsa
 {
 
     template <typename data_t>
-    DataHandlerCPU<data_t>::DataHandlerCPU(index_t size, bool initialize)
-        : _data(size)
+    DataHandlerCPU<data_t>::DataHandlerCPU(index_t size, bool initialize) : _data(size)
     {
         if (initialize)
             _data.setZero();
     }
 
     template <typename data_t>
-    DataHandlerCPU<data_t>::DataHandlerCPU(DataVector_t vector)
-        : _data{vector}
+    DataHandlerCPU<data_t>::DataHandlerCPU(DataVector_t vector) : _data{vector}
     {
     }
-
 
     template <typename data_t>
     index_t DataHandlerCPU<data_t>::getSize() const
     {
         return static_cast<index_t>(_data.size());
     }
-
 
     template <typename data_t>
     data_t& DataHandlerCPU<data_t>::operator[](index_t index)
@@ -37,14 +33,14 @@ namespace elsa
         return _data[index];
     }
 
-
     template <typename data_t>
     data_t DataHandlerCPU<data_t>::dot(const DataHandler<data_t>& v) const
     {
         if (v.getSize() != getSize())
             throw std::invalid_argument("DataHandlerCPU: dot product argument has wrong size");
 
-        // if the other handler is not CPU, use the slow element-wise fallback version of dot product
+        // if the other handler is not CPU, use the slow element-wise fallback version of dot
+        // product
         auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v);
         if (!otherHandler)
             return this->slowDotProduct(v);
@@ -75,7 +71,6 @@ namespace elsa
     {
         return _data.sum();
     }
-
 
     template <typename data_t>
     std::unique_ptr<DataHandler<data_t>> DataHandlerCPU<data_t>::square() const
@@ -113,7 +108,6 @@ namespace elsa
         return result;
     }
 
-
     template <typename data_t>
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
@@ -137,7 +131,8 @@ namespace elsa
         if (v.getSize() != getSize())
             throw std::invalid_argument("DataHandler: subtraction argument has wrong size");
 
-        // if the other handler is not CPU, use the slow element-wise fallback version of subtraction
+        // if the other handler is not CPU, use the slow element-wise fallback version of
+        // subtraction
         auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v);
         if (!otherHandler) {
             this->slowSubtraction(v);
@@ -146,7 +141,6 @@ namespace elsa
 
         _data -= otherHandler->_data;
         return *this;
-
     }
 
     template <typename data_t>
@@ -155,7 +149,8 @@ namespace elsa
         if (v.getSize() != getSize())
             throw std::invalid_argument("DataHandler: multiplication argument has wrong size");
 
-        // if the other handler is not CPU, use the slow element-wise fallback version of multiplication
+        // if the other handler is not CPU, use the slow element-wise fallback version of
+        // multiplication
         auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v);
         if (!otherHandler) {
             this->slowMultiplication(v);
@@ -164,7 +159,6 @@ namespace elsa
 
         _data.array() *= otherHandler->_data.array();
         return *this;
-
     }
 
     template <typename data_t>
@@ -182,9 +176,7 @@ namespace elsa
 
         _data.array() /= otherHandler->_data.array();
         return *this;
-
     }
-
 
     template <typename data_t>
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator+=(data_t scalar)
@@ -214,7 +206,6 @@ namespace elsa
         return *this;
     }
 
-
     template <typename data_t>
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator=(data_t scalar)
     {
@@ -222,15 +213,15 @@ namespace elsa
         return *this;
     }
 
-
-
     template <typename data_t>
-    DataHandlerCPU<data_t>* DataHandlerCPU<data_t>::cloneImpl() const {
+    DataHandlerCPU<data_t>* DataHandlerCPU<data_t>::cloneImpl() const
+    {
         return new DataHandlerCPU<data_t>(*this);
     }
 
     template <typename data_t>
-    bool DataHandlerCPU<data_t>::isEqual(const DataHandler<data_t> &other) const {
+    bool DataHandlerCPU<data_t>::isEqual(const DataHandler<data_t>& other) const
+    {
         auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&other);
         if (!otherHandler)
             return false;
@@ -243,7 +234,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

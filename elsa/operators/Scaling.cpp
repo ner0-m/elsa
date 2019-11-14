@@ -6,17 +6,46 @@ namespace elsa
     template <typename data_t>
     Scaling<data_t>::Scaling(const DataDescriptor& descriptor, data_t scaleFactor)
         : LinearOperator<data_t>(descriptor, descriptor),
-          _isIsotropic{true}, _scaleFactor{scaleFactor}
-    {}
+          _isIsotropic{true},
+          _scaleFactor{scaleFactor}
+    {
+    }
 
     template <typename data_t>
-    Scaling<data_t>::Scaling(const DataDescriptor& descriptor, const DataContainer<data_t>& scaleFactors)
+    Scaling<data_t>::Scaling(const DataDescriptor& descriptor,
+                             const DataContainer<data_t>& scaleFactors)
         : LinearOperator<data_t>(descriptor, descriptor),
-          _isIsotropic{false}, _scaleFactors{std::make_unique<DataContainer<data_t>>(scaleFactors)}
-    {}
+          _isIsotropic{false},
+          _scaleFactors{std::make_unique<DataContainer<data_t>>(scaleFactors)}
+    {
+    }
 
     template <typename data_t>
-    void Scaling<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    bool Scaling<data_t>::isIsotropic() const
+    {
+        return _isIsotropic;
+    }
+
+    template <typename data_t>
+    data_t Scaling<data_t>::getScaleFactor() const
+    {
+        if (!_isIsotropic)
+            throw std::logic_error("Scaling: scaling is not isotropic");
+
+        return _scaleFactor;
+    }
+
+    template <typename data_t>
+    const DataContainer<data_t>& Scaling<data_t>::getScaleFactors() const
+    {
+        if (_isIsotropic)
+            throw std::logic_error("Scaling: scaling is isotropic");
+
+        return *_scaleFactors;
+    }
+
+    template <typename data_t>
+    void Scaling<data_t>::applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer timeguard("Scaling", "apply");
 
@@ -27,7 +56,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Scaling<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void Scaling<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                           DataContainer<data_t>& Aty) const
     {
         Timer timeguard("Scaling", "applyAdjoint");
 
@@ -67,7 +97,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

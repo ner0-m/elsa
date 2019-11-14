@@ -25,9 +25,11 @@ namespace elsa
 
             // check if file logging is enabled
             if (getInstance()._fileName)
-                sinkVector.push_back(std::make_shared<spdlog::sinks::basic_file_sink_st>(*getInstance()._fileName));
+                sinkVector.push_back(
+                    std::make_shared<spdlog::sinks::basic_file_sink_st>(*getInstance()._fileName));
 
-            auto newLogger = std::make_shared<spdlog::logger>(name, begin(sinkVector), end(sinkVector));
+            auto newLogger =
+                std::make_shared<spdlog::logger>(name, begin(sinkVector), end(sinkVector));
             newLogger->set_level(convertLevelToSpdlog(getInstance()._level));
             getInstance()._loggers[name] = newLogger;
         }
@@ -41,7 +43,8 @@ namespace elsa
         for (auto& [key, logger] : getInstance()._loggers) {
             // if there is less than two sinks, add a file sink
             if (logger->sinks().size() < 2)
-                logger->sinks().push_back(std::make_shared<spdlog::sinks::basic_file_sink_st>(*getInstance()._fileName));
+                logger->sinks().push_back(
+                    std::make_shared<spdlog::sinks::basic_file_sink_st>(*getInstance()._fileName));
         }
     }
 
@@ -54,14 +57,22 @@ namespace elsa
     spdlog::level::level_enum Logger::convertLevelToSpdlog(Logger::LogLevel level)
     {
         switch (level) {
-            case LogLevel::TRACE:    return spdlog::level::trace;
-            case LogLevel::DEBUG:    return spdlog::level::debug;
-            case LogLevel::INFO:     return spdlog::level::info;
-            case LogLevel::WARN:     return spdlog::level::warn;
-            case LogLevel::ERR:      return spdlog::level::err;
-            case LogLevel::CRITICAL: return spdlog::level::critical;
-            case LogLevel::OFF:      return spdlog::level::off;
-            default:                 return spdlog::level::info;
+            case LogLevel::TRACE:
+                return spdlog::level::trace;
+            case LogLevel::DEBUG:
+                return spdlog::level::debug;
+            case LogLevel::INFO:
+                return spdlog::level::info;
+            case LogLevel::WARN:
+                return spdlog::level::warn;
+            case LogLevel::ERR:
+                return spdlog::level::err;
+            case LogLevel::CRITICAL:
+                return spdlog::level::critical;
+            case LogLevel::OFF:
+                return spdlog::level::off;
+            default:
+                return spdlog::level::info;
         }
     }
 

@@ -19,7 +19,8 @@ namespace elsa
      * using the central, forward, or backward differences.
      */
     template <typename data_t = real_t>
-    class FiniteDifferences : public LinearOperator<data_t> {
+    class FiniteDifferences : public LinearOperator<data_t>
+    {
     public:
         /// supported types of finite differences
         enum class DiffType { FORWARD, BACKWARD, CENTRAL };
@@ -38,7 +39,8 @@ namespace elsa
          *
          * Note: the descriptor for the range is automatically generated from the domain.
          */
-        FiniteDifferences(const DataDescriptor& domainDescriptor, DiffType type = DiffType::FORWARD);
+        explicit FiniteDifferences(const DataDescriptor& domainDescriptor,
+                                   DiffType type = DiffType::FORWARD);
 
         /**
          * \brief Constructor for FiniteDifferences over selected dimensions.
@@ -55,18 +57,19 @@ namespace elsa
          *
          * Note: the descriptor for the range is automatically generated from the domain.
          */
-        FiniteDifferences(const DataDescriptor& domainDescriptor,
-                          const BooleanVector_t& activeDims, DiffType type = DiffType::FORWARD);
+        FiniteDifferences(const DataDescriptor& domainDescriptor, const BooleanVector_t& activeDims,
+                          DiffType type = DiffType::FORWARD);
 
         /// default destructor
         ~FiniteDifferences() override = default;
 
     protected:
         /// apply the finite differences operator
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax) override;
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// apply the adjoint of the finite differences operator
-        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
+        void applyAdjointImpl(const DataContainer<data_t>& y,
+                              DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         FiniteDifferences<data_t>* cloneImpl() const override;
@@ -84,17 +87,20 @@ namespace elsa
         /// precompute some helper variables to optimize speed
         void precomputeHelpers();
 
-        std::vector<index_t> _coordDiff{}; /// precomputed helper for coordinate diffs
+        std::vector<index_t> _coordDiff{};  /// precomputed helper for coordinate diffs
         std::vector<index_t> _coordDelta{}; /// precomputed helper for coordinate deltas
         std::vector<index_t> _dimCounter{}; /// precomputed helper for active dim counter
 
-        /// the actual finite differences computations (with mode as template parameter for performance)
+        /// the actual finite differences computations (with mode as template parameter for
+        /// performance)
         template <typename FDtype>
-        void applyHelper(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax, FDtype type);
+        void applyHelper(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
+                         FDtype type) const;
 
-        /// the actual finite differences computations (with mode as template parameter for performance)
+        /// the actual finite differences computations (with mode as template parameter for
+        /// performance)
         template <typename FDtype>
-        void applyAdjointHelper(const DataContainer<data_t>& y, DataContainer<data_t>&  Aty, FDtype type);
-
+        void applyAdjointHelper(const DataContainer<data_t>& y, DataContainer<data_t>& Aty,
+                                FDtype type) const;
     };
 } // namespace elsa

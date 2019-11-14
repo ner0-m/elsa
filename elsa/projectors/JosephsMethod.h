@@ -17,27 +17,28 @@ namespace elsa
      * \author Christoph Hahn - initial implementation
      * \author Maximilian Hornung - modularization
      * \author Nikola Dinev - fixes
-     * 
+     *
      * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
-     * 
+     *
      * The volume is traversed along the rays as specified by the Geometry. For interior voxels
      * the sampling point is located in the middle of the two planes orthogonal to the main
      * direction of the ray. For boundary voxels the sampling point is located at the center of the
      * ray intersection with the voxel.
-     * 
-     * The geometry is represented as a list of projection matrices (see class Geometry), one for each
-     * acquisition pose.
-     * 
+     *
+     * The geometry is represented as a list of projection matrices (see class Geometry), one for
+     * each acquisition pose.
+     *
      * Two modes of interpolation are available:
      * NN (NearestNeighbours) takes the value of the pixel/voxel containing the point
      * LINEAR performs linear interpolation for the nearest 2 pixels (in 2D)
-     * or the nearest 4 voxels (in 3D). 
-     * 
+     * or the nearest 4 voxels (in 3D).
+     *
      * Forward projection is accomplished using apply(), backward projection using applyAdjoint().
      * This projector is matched.
      */
     template <typename data_t = real_t>
-    class JosephsMethod : public LinearOperator<data_t> {
+    class JosephsMethod : public LinearOperator<data_t>
+    {
     public:
         /// Available interpolation modes
         enum class Interpolation { NN, LINEAR };
@@ -48,22 +49,25 @@ namespace elsa
          * \param[in] domainDescriptor describing the domain of the operator (the volume)
          * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
          * \param[in] geometryList vector containing the geometries for the acquisition poses
+         * \param[in] interpolation enum specifying the interpolation mode
          *
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
         JosephsMethod(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor,
-                const std::vector<Geometry>& geometryList, Interpolation interpolation = Interpolation::LINEAR);
+                      const std::vector<Geometry>& geometryList,
+                      Interpolation interpolation = Interpolation::LINEAR);
 
         /// default destructor
         ~JosephsMethod() = default;
 
     protected:
         /// apply Joseph's method (i.e. forward projection)
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) override;
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// apply the adjoint of Joseph's method (i.e. backward projection)
-        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
+        void applyAdjointImpl(const DataContainer<data_t>& y,
+                              DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         JosephsMethod<data_t>* cloneImpl() const override;
@@ -83,7 +87,8 @@ namespace elsa
 
         /// the traversal routine (for both apply/applyAdjoint)
         template <bool adjoint>
-        void traverseVolume(const DataContainer<data_t>& vector, DataContainer<data_t>& result) const;
+        void traverseVolume(const DataContainer<data_t>& vector,
+                            DataContainer<data_t>& result) const;
 
         /// convenience typedef for ray
         using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
@@ -98,22 +103,23 @@ namespace elsa
          */
         Ray computeRayToDetector(index_t detectorIndex, index_t dimension) const;
 
-
         /**
          * \brief  Linear interpolation, works in any dimension
          *
-         * \param vector the input DataContainer
-         * \param result DataContainer for results
-         * \param fractionals the fractional numbers used in the interpolation
-         * \param adjoint true for backward projection, false for forward
-         * \param domainDim number of dimensions
-         * \param currentVoxel coordinates of voxel for interpolation
-         * \param intersection weighting for the interpolated values depending on the incidence angle
-         * \param from index of the current vector position
-         * \param to index of the current result position
+         * \param[in] vector the input DataContainer
+         * \param[out] result DataContainer for results
+         * \param[in] fractionals the fractional numbers used in the interpolation
+         * \param[in] adjoint true for backward projection, false for forward
+         * \param[in] domainDim number of dimensions
+         * \param[in] currentVoxel coordinates of voxel for interpolation
+         * \param[in] intersection weighting for the interpolated values depending on the incidence
+         * angle \param[in] from index of the current vector position \param[in] to index of the
+         * current result position \param[in] mainDirection specifies the main direction of the ray
          */
-        void LINEAR(const DataContainer<data_t>& vector, DataContainer<data_t>& result, const RealVector_t& fractionals, bool adjoint,
-                int domainDim, const IndexVector_t& currentVoxel, float intersection, index_t from, index_t to, int mainDirection) const;    
+        void linear(const DataContainer<data_t>& vector, DataContainer<data_t>& result,
+                    const RealVector_t& fractionals, bool adjoint, int domainDim,
+                    const IndexVector_t& currentVoxel, float intersection, index_t from, index_t to,
+                    int mainDirection) const;
 
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;

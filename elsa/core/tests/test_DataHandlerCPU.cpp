@@ -12,24 +12,27 @@
 
 using namespace elsa;
 
-SCENARIO("Constructing DataHandlerCPU") {
-    GIVEN("a certain size") {
+SCENARIO("Constructing DataHandlerCPU")
+{
+    GIVEN("a certain size")
+    {
         index_t size = 314;
 
-        WHEN("constructing with zeros") {
+        WHEN("constructing with zeros")
+        {
             DataHandlerCPU dh(size);
 
-            THEN("it has the correct size") {
-                REQUIRE(size == dh.getSize());
-            }
+            THEN("it has the correct size") { REQUIRE(size == dh.getSize()); }
 
-            THEN("it has a zero vector") {
+            THEN("it has a zero vector")
+            {
                 for (index_t i = 0; i < size; ++i)
                     REQUIRE(dh[i] == 0.0);
             }
         }
 
-        WHEN("constructing with a given vector") {
+        WHEN("constructing with a given vector")
+        {
             Eigen::VectorXf randVec = Eigen::VectorXf::Random(size);
             DataHandlerCPU dh(randVec);
 
@@ -39,16 +42,19 @@ SCENARIO("Constructing DataHandlerCPU") {
     }
 }
 
-
-SCENARIO("Cloning DataHandlerCPU") {
-    GIVEN("some DataHandlerCPU") {
+SCENARIO("Cloning DataHandlerCPU")
+{
+    GIVEN("some DataHandlerCPU")
+    {
         index_t size = 728;
         DataHandlerCPU dh(size);
 
-        WHEN("cloning") {
+        WHEN("cloning")
+        {
             auto dhClone = dh.clone();
 
-            THEN("everything matches") {
+            THEN("everything matches")
+            {
                 REQUIRE(dhClone.get() != &dh);
                 REQUIRE(*dhClone == dh);
 
@@ -58,28 +64,32 @@ SCENARIO("Cloning DataHandlerCPU") {
     }
 }
 
-
-SCENARIO("Testing the reduction operations of DataHandlerCPU") {
-    GIVEN("some DataHandlerCPU") {
+SCENARIO("Testing the reduction operations of DataHandlerCPU")
+{
+    GIVEN("some DataHandlerCPU")
+    {
         index_t size = 284;
 
-        WHEN("putting in some random data") {
+        WHEN("putting in some random data")
+        {
             Eigen::VectorXf randVec = Eigen::VectorXf::Random(size);
             DataHandlerCPU dh(randVec);
 
-            THEN("the reductions work as expected") {
-                REQUIRE(dh.sum() == Approx(randVec.sum()) );
+            THEN("the reductions work as expected")
+            {
+                REQUIRE(dh.sum() == Approx(randVec.sum()));
                 REQUIRE(dh.l1Norm() == Approx(randVec.array().abs().sum()));
                 REQUIRE(dh.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
-                REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()) );
+                REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()));
 
                 Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(size);
                 DataHandlerCPU dh2(randVec2);
 
-                REQUIRE(dh.dot(dh2) == Approx(randVec.dot(randVec2)) );
+                REQUIRE(dh.dot(dh2) == Approx(randVec.dot(randVec2)));
             }
 
-            THEN("the dot product expects correctly sized arguments") {
+            THEN("the dot product expects correctly sized arguments")
+            {
                 index_t wrongSize = size - 1;
                 Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(wrongSize);
                 DataHandlerCPU dh2(randVec2);
@@ -90,36 +100,40 @@ SCENARIO("Testing the reduction operations of DataHandlerCPU") {
     }
 }
 
-
-SCENARIO("Testing the element-wise operations of DataHandlerCPU") {
-    GIVEN("some DataHandlerCPU") {
+SCENARIO("Testing the element-wise operations of DataHandlerCPU")
+{
+    GIVEN("some DataHandlerCPU")
+    {
         index_t size = 567;
 
-        WHEN("putting in some random data") {
+        WHEN("putting in some random data")
+        {
             Eigen::VectorXf randVec = Eigen::VectorXf::Random(size);
             DataHandlerCPU dh(randVec);
 
-            THEN("the element-wise unary operations work as expected") {
+            THEN("the element-wise unary operations work as expected")
+            {
                 auto dhSquared = dh.square();
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE( (*dhSquared)[i] == Approx(randVec(i)*randVec(i)) );
+                    REQUIRE((*dhSquared)[i] == Approx(randVec(i) * randVec(i)));
 
                 auto dhSqrt = dh.sqrt();
                 for (index_t i = 0; i < size; ++i)
                     if (randVec(i) >= 0)
-                        REQUIRE( (*dhSqrt)[i] == Approx(std::sqrt(randVec(i))) );
+                        REQUIRE((*dhSqrt)[i] == Approx(std::sqrt(randVec(i))));
 
                 auto dhExp = dh.exp();
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE( (*dhExp)[i] == Approx(std::exp(randVec(i))) );
+                    REQUIRE((*dhExp)[i] == Approx(std::exp(randVec(i))));
 
                 auto dhLog = dh.log();
                 for (index_t i = 0; i < size; ++i)
                     if (randVec(i) > 0)
-                        REQUIRE( (*dhLog)[i] == Approx(log(randVec(i))) );
+                        REQUIRE((*dhLog)[i] == Approx(log(randVec(i))));
             }
 
-            THEN("the element-wise binary vector operations work as expected") {
+            THEN("the element-wise binary vector operations work as expected")
+            {
                 DataHandlerCPU oldDh = dh;
 
                 Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(size);
@@ -146,7 +160,8 @@ SCENARIO("Testing the element-wise operations of DataHandlerCPU") {
                         REQUIRE(dh[i] == oldDh[i] / dh2[i]);
             }
 
-            THEN("the element-wise binary scalar operations work as expected") {
+            THEN("the element-wise binary scalar operations work as expected")
+            {
                 DataHandlerCPU oldDh = dh;
                 float scalar = 3.5;
 
@@ -170,7 +185,8 @@ SCENARIO("Testing the element-wise operations of DataHandlerCPU") {
                     REQUIRE(dh[i] == oldDh[i] / scalar);
             }
 
-            THEN("the element-wise assignment of a scalar works as expected") {
+            THEN("the element-wise assignment of a scalar works as expected")
+            {
                 float scalar = 47.11;
 
                 dh = scalar;
@@ -181,16 +197,18 @@ SCENARIO("Testing the element-wise operations of DataHandlerCPU") {
     }
 }
 
-
-SCENARIO("Testing the arithmetic operations with DataHandler arguments") {
-    GIVEN("some DataHandlers") {
+SCENARIO("Testing the arithmetic operations with DataHandler arguments")
+{
+    GIVEN("some DataHandlers")
+    {
         index_t size = 1095;
         Eigen::VectorXf randVec = Eigen::VectorXf::Random(size);
         Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(size);
         DataHandlerCPU dh(randVec);
         DataHandlerCPU dh2(randVec2);
 
-        THEN("the binary element-wise operations work as expected") {
+        THEN("the binary element-wise operations work as expected")
+        {
             auto resultPlus = dh + dh2;
             for (index_t i = 0; i < size; ++i)
                 REQUIRE((*resultPlus)[i] == dh[i] + dh2[i]);
@@ -209,7 +227,8 @@ SCENARIO("Testing the arithmetic operations with DataHandler arguments") {
                     REQUIRE((*resultDiv)[i] == dh[i] / dh2[i]);
         }
 
-        THEN("the operations with a scalar work as expected") {
+        THEN("the operations with a scalar work as expected")
+        {
             float scalar = 4.7;
 
             auto resultScalarPlus = scalar + dh;
@@ -239,7 +258,7 @@ SCENARIO("Testing the arithmetic operations with DataHandler arguments") {
             auto resultScalarDiv = scalar / dh;
             for (index_t i = 0; i < size; ++i)
                 if (dh[i] != 0)
-                REQUIRE((*resultScalarDiv)[i] == scalar / dh[i]);
+                    REQUIRE((*resultScalarDiv)[i] == scalar / dh[i]);
 
             auto resultDivScalar = dh / scalar;
             for (index_t i = 0; i < size; ++i)

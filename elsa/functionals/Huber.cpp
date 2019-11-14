@@ -24,9 +24,8 @@ namespace elsa
             throw std::invalid_argument("Huber: delta has to be positive.");
     }
 
-
     template <typename data_t>
-    data_t Huber<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    data_t Huber<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         // note: this is currently not a reduction in DataContainer, but implemented here "manually"
 
@@ -44,7 +43,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Huber<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void Huber<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
     {
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t value = Rx[i];
@@ -57,7 +56,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Huber<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> Huber<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
         for (index_t i = 0; i < Rx.getSize(); ++i) {
@@ -69,7 +68,6 @@ namespace elsa
 
         return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
     }
-
 
     template <typename data_t>
     Huber<data_t>* Huber<data_t>::cloneImpl() const
@@ -92,7 +90,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

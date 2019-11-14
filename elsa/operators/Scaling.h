@@ -2,7 +2,8 @@
 
 #include "LinearOperator.h"
 
-namespace elsa {
+namespace elsa
+{
     /**
      * \brief Operator representing a scaling operation.
      *
@@ -16,7 +17,8 @@ namespace elsa {
      * or by a diagonal scaling matrix.
      */
     template <typename data_t = real_t>
-    class Scaling : public LinearOperator<data_t> {
+    class Scaling : public LinearOperator<data_t>
+    {
     public:
         /**
          * \brief Constructor for a scalar, isotropic scaling operator.
@@ -30,19 +32,30 @@ namespace elsa {
          * \brief Constructor for a diagonal, anisotropic scaling operator.
          *
          * \param[in] descriptor DataDescriptor describing the domain and the range of the operator
-         * \param[in] scaleFactors a DataContainer containing the scaling factor to be put on the diagonal
+         * \param[in] scaleFactors a DataContainer containing the scaling factor to be put on the
+         * diagonal
          */
         Scaling(const DataDescriptor& descriptor, const DataContainer<data_t>& scaleFactors);
 
         /// default destructor
         ~Scaling() override = default;
 
+        /// is the scaling isotropic
+        bool isIsotropic() const;
+
+        /// returns the scale factor (throws if scaling is not isotropic)
+        data_t getScaleFactor() const;
+
+        /// returns the scale factors (throws if scaling is isotropic)
+        const DataContainer<data_t>& getScaleFactors() const;
+
     protected:
         /// apply the scaling operation
-        void _apply(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax) override;
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// apply the adjoint of the scaling operation
-        void _applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) override;
+        void applyAdjointImpl(const DataContainer<data_t>& y,
+                              DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         Scaling<data_t>* cloneImpl() const override;

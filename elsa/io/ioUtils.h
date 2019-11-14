@@ -40,7 +40,7 @@ namespace elsa
         enum class ByteOrder { LOW_BYTE_FIRST, HIGH_BYTE_FIRST };
 
         /// our default byte order is little endian (low byte first)
-        static const ByteOrder defaultByteOrder = ByteOrder::LOW_BYTE_FIRST;
+        static const ByteOrder DEFAULT_BYTE_ORDER = ByteOrder::LOW_BYTE_FIRST;
 
         /// data types
         enum class DataType { INT8, UINT8, INT16, UINT16, INT32, UINT32, FLOAT32, FLOAT64 };
@@ -59,9 +59,7 @@ namespace elsa
         /// read in raw data (of type raw_data_t) into a data container (of type data_t)
         template <typename raw_data_t, typename data_t>
         static void parseRawData(std::ifstream& file, DataContainer<data_t>& data);
-
     };
-
 
     /**
      * \brief class providing utility functions for the filesystem

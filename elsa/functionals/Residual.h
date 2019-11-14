@@ -9,19 +9,21 @@
 namespace elsa
 {
     /**
-      * \brief Abstract base class representing a residual, i.e. a vector-valued mapping.
-      *
-      * \author Matthias Wieczorek - initial code
-      * \author Tobias Lasser - modularization, streamlining
-      *
-      * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
-      *
-      * A residual is a vector-valued mapping representing an error (or mismatch). For real numbers
-      * this corresponds to \f$ \mathbb{R}^n\to\mathbb{R}^m \f$ (e.g. \f$ x \mapsto Ax-b \f$ for linear residuals).
-      * In order to measure this error, the residual can be used as input to a Functional.
-      */
+     * \brief Abstract base class representing a residual, i.e. a vector-valued mapping.
+     *
+     * \author Matthias Wieczorek - initial code
+     * \author Tobias Lasser - modularization, streamlining
+     *
+     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     *
+     * A residual is a vector-valued mapping representing an error (or mismatch). For real numbers
+     * this corresponds to \f$ \mathbb{R}^n\to\mathbb{R}^m \f$ (e.g. \f$ x \mapsto Ax-b \f$ for
+     * linear residuals). In order to measure this error, the residual can be used as input to a
+     * Functional.
+     */
     template <typename data_t = real_t>
-    class Residual : public Cloneable<Residual<data_t>> {
+    class Residual : public Cloneable<Residual<data_t>>
+    {
     public:
         /**
          * \brief Constructor for the residual, mapping from domain to range
@@ -39,7 +41,6 @@ namespace elsa
 
         /// return the range descriptor
         const DataDescriptor& getRangeDescriptor() const;
-
 
         /**
          * \brief evaluate the residual at x and return the result
@@ -74,7 +75,8 @@ namespace elsa
          * \returns a LinearOperator (the Jacobian)
          *
          * Please note: this method calls the method _getJacobian that has to be overridden in
-         * derived classes. (This is not strictly necessary, it's just for consistency with evaluate.)
+         * derived classes. (This is not strictly necessary, it's just for consistency with
+         * evaluate.)
          */
         LinearOperator<data_t> getJacobian(const DataContainer<data_t>& x);
 
@@ -85,15 +87,14 @@ namespace elsa
         /// the data descriptor of the range of the residual
         std::unique_ptr<DataDescriptor> _rangeDescriptor;
 
-
         /// implement the polymorphic comparison operation
         bool isEqual(const Residual<data_t>& other) const override;
 
-
         /// the evaluate method that has to be overridden in derived classes
-        virtual void _evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result) = 0;
+        virtual void evaluateImpl(const DataContainer<data_t>& x,
+                                  DataContainer<data_t>& result) = 0;
 
         /// the getJacobian method that has to be overriden in derived classes
-        virtual LinearOperator<data_t> _getJacobian(const DataContainer<data_t>& x) = 0;
+        virtual LinearOperator<data_t> getJacobianImpl(const DataContainer<data_t>& x) = 0;
     };
 } // namespace elsa
