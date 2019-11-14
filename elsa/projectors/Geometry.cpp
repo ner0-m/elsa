@@ -119,6 +119,61 @@ namespace elsa
 
         buildMatrices();
     }
+      
+    Geometry::Geometry(real_t sourceToCenterOfRotation, real_t centerOfRotationToDetector,
+                const RealMatrix_t& P,
+                const DataDescriptor &volumeDescriptor, const DataDescriptor &sinoDescriptor,
+                real_t px, real_t py)
+    : _objectDimension{3}, _P{P}, _Pinv{RealMatrix_t::Identity(3+1, 3)},
+      _K{RealMatrix_t::Identity(3, 3)}, _R{RealMatrix_t::Identity(3,3)}, _t{RealVector_t::Zero(3)},
+      _S{RealMatrix_t::Identity(3+1, 3+1)}, _C{RealVector_t::Zero(3)}
+    {
+        // setup scaling matrix _S
+        _S << volumeDescriptor.getSpacingPerDimension()[0], 0, 0, 0,
+                0, volumeDescriptor.getSpacingPerDimension()[1], 0, 0,
+                0, 0, volumeDescriptor.getSpacingPerDimension()[2], 0,
+                0, 0, 0, 1;
+        
+        // setup the intrinsic parameters _K
+        real_t alpha1 = sinoDescriptor.getSpacingPerDimension()[0];
+        real_t alpha2 = sinoDescriptor.getSpacingPerDimension()[1];
+
+        _K << (sourceToCenterOfRotation + centerOfRotationToDetector) / alpha1, 0, sinoDescriptor.getLocationOfOrigin()[0] / alpha1 + px,
+                0, (sourceToCenterOfRotation + centerOfRotationToDetector) / alpha2, sinoDescriptor.getLocationOfOrigin()[1] / alpha2 + py,
+                0, 0, 1;
+                
+        // compute the camera center
+        _C = -(_P.block(0, 0, _objectDimension, _objectDimension).colPivHouseholderQr().solve(
+                    _P.block(0, _objectDimension, _objectDimension, 1)));
+        
+        // compute inverse _Pinv of _P via its components
+        RealMatrix_t Sinv = (static_cast<real_t>(1.0) / _S.diagonal().array()).matrix().asDiagonal();
+
+        RealMatrix_t Kinv = RealMatrix_t::Identity(_objectDimension, _objectDimension);
+        Kinv(0, 0) = static_cast<real_t>(1.0) / _K(0, 0);
+        Kinv(0, _objectDimension-1) = -_K(0, _objectDimension-1) / _K(0, 0);
+        if (_objectDimension == 3) {
+            Kinv(1, 1) = static_cast<real_t>(1.0) / _K(1, 1);
+            Kinv(1, _objectDimension-1) = -_K(1, _objectDimension-1) / _K(1, 1);
+        }
+        
+        RealMatrix_t tmpIdinv(_objectDimension+1, _objectDimension);
+        tmpIdinv.setIdentity();
+        
+        //Use Rt = tmpIdinv* Kinv* P * Sinv
+        RealMatrix_t Rt = tmpIdinv*Kinv*P*Sinv;
+        
+        _R = Rt.block(0,0,_objectDimension,_objectDimension);
+        _t = Rt.block(0,_objectDimension,_objectDimension,1);
+        
+        RealMatrix_t Rtinv(_objectDimension+1, _objectDimension+1);
+        Rtinv.block(0, 0, _objectDimension, _objectDimension) = _R.transpose();
+        Rtinv.block(0, _objectDimension, _objectDimension, 1) = -_R.transpose() * _t;
+        Rtinv.block(_objectDimension, 0, 1, _objectDimension).setZero();
+        Rtinv(_objectDimension, _objectDimension) = 1;
+        
+        _Pinv = Sinv * Rtinv * tmpIdinv * Kinv;
+    }
 
     std::pair<RealVector_t, RealVector_t> Geometry::computeRayTo(const RealVector_t& p) const
     {

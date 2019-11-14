@@ -9,6 +9,8 @@
 #include <catch2/catch.hpp>
 #include "Geometry.h"
 
+#include <iostream>
+
 using namespace elsa;
 
 SCENARIO("Testing 2D geometries") {
@@ -592,5 +594,89 @@ SCENARIO("Testing 3D geometries") {
                 }
             }
         }
+        
+        WHEN("testing geometry from projection matrix with 45/22.5/12.25 degree rotation") {
+            real_t angle1 = pi / 4;
+            real_t angle2 = pi / 2;
+            real_t angle3 = pi / 8;
+            RealMatrix_t rot1(3, 3);
+            rot1 << std::cos(angle1), 0, std::sin(angle1), 0, 1, 0, -std::sin(angle1), 0, std::cos(angle1);
+            RealMatrix_t rot2(3, 3);
+            rot2 << std::cos(angle2), -std::sin(angle2), 0, std::sin(angle2), std::cos(angle2), 0, 0, 0, 1;
+            RealMatrix_t rot3(3, 3);
+            rot3 << std::cos(angle3), 0, std::sin(angle3), 0, 1, 0, -std::sin(angle3), 0, std::cos(angle3);
+            RealMatrix_t R = rot1 * rot2 * rot3;
+
+            Geometry g(s2c, c2d, ddVol, ddDet, R);
+            
+            Geometry g1(s2c, c2d, g.getProjectionMatrix(), ddVol, ddDet);
+            
+            THEN("a copy is the same") {
+                Geometry gCopy(g1);
+                REQUIRE(gCopy == g1);
+            }
+            THEN("then the projection matrices of both geometries are the same") {
+                auto P = g.getProjectionMatrix();
+                auto P1 = g1.getProjectionMatrix();
+                RealMatrix_t result = (P1 - P);
+                REQUIRE(result.sum() == Approx(0).margin(0.000001));
+            }
+            THEN("then the  inv projection matrices of both geometries are the same") {
+                auto P = g.getInverseProjectionMatrix();
+                auto P1 = g1.getInverseProjectionMatrix();
+                RealMatrix_t result = (P1 - P);
+                REQUIRE(result.sum() == Approx(0).margin(0.000001));
+            }
+            THEN("then the roation matrices of both geometries are the same") {
+                auto R = g.getRotationMatrix();
+                auto R1 = g1.getRotationMatrix();
+                RealMatrix_t result = (R1 - R);
+                REQUIRE(result.sum() == Approx(0).margin(0.000001));
+            }
+            THEN("then the  camera centers of both geometries are the same") {
+                auto C = g.getCameraCenter();
+                auto C1 = g1.getCameraCenter();
+                RealVector_t result = (C - C1);
+                REQUIRE(result.sum() == Approx(0));
+            }
+        }
+        
+        WHEN("testing geometry from projection matrix without rotation but with principal point offsets") {
+            real_t px = -1;
+            real_t py = 3;
+            Geometry g(s2c, c2d, ddVol, ddDet, 0, 0, 0, px, py);
+            
+            Geometry g1(s2c, c2d, g.getProjectionMatrix(), ddVol, ddDet,px,py);
+            
+            THEN("a copy is the same") {
+                Geometry gCopy(g1);
+                REQUIRE(gCopy == g1);
+            }
+            THEN("then the projection matrices of both geometries are the same") {
+                auto P = g.getProjectionMatrix();
+                auto P1 = g1.getProjectionMatrix();
+                RealMatrix_t result = (P1 - P);
+                REQUIRE(result.sum() == Approx(0));
+            }
+            THEN("then the  inv projection matrices of both geometries are the same") {
+                auto P = g.getInverseProjectionMatrix();
+                auto P1 = g1.getInverseProjectionMatrix();
+                RealMatrix_t result = (P1 - P);
+                REQUIRE(result.sum() == Approx(0).margin(0.000001));
+            }
+            THEN("then the roation matrices of both geometries are the same") {
+                auto R = g.getRotationMatrix();
+                auto R1 = g1.getRotationMatrix();
+                RealMatrix_t result = (R1 - R);
+                REQUIRE(result.sum() == Approx(0).margin(0.000001));
+            }
+            THEN("then the  camera centers of both geometries are the same") {
+                auto C = g.getCameraCenter();
+                auto C1 = g1.getCameraCenter();
+                RealVector_t result = (C1 - C);
+                REQUIRE(result.sum() == Approx(0));
+                REQUIRE(C1 == C);
+            }
+        }    
     }
 }

@@ -93,7 +93,26 @@ namespace elsa
                  real_t centerOfRotationOffsetX = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetY = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetZ = static_cast<real_t>(0.0));
-
+        
+        
+        /**
+         * \brief Constructor for 3D projective geometry using a 3x4 projection matrix
+         *
+         * \param[in] sourceToCenterOfRotation distance from source to the center of rotation (along z axis)
+         * \param[in] centerOfRotationToDetector distance from center of rotation to detector (along z axis)
+         * \param[in] P a 3x4 projection matrix
+         * \param[in] volumeDescriptor descriptor for the 3d volume
+         * \param[in] sinoDescriptor descriptor for the sinogram
+         * \param[in] px offset of the principal point in x-direction [default 0]
+         * \param[in] py offset of the principal point in y-direction [default 0]
+         * \param[in] P a 3x4 projection matrix
+         */
+        Geometry(real_t sourceToCenterOfRotation, real_t centerOfRotationToDetector,
+                const RealMatrix_t& P,
+                const DataDescriptor &volumeDescriptor, const DataDescriptor &sinoDescriptor,
+                real_t px = static_cast<real_t>(0.0),
+                real_t py = static_cast<real_t>(0.0));
+        
         /**
          * \brief Compute a ray (ray origin and ray direction) that hits the specified point p on the detector
          *
