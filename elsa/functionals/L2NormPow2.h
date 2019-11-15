@@ -11,22 +11,27 @@ namespace elsa
      * \author Maximilian Hornung - modularization
      * \author Tobias Lasser - modernization
      *
-     * \tparam data_t data type for the domain of the residual of the functional, defaulting to real_t
+     * \tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * real_t
      *
-     * The l2 norm (squared) functional evaluates to \f$ 0.5 * \sum_{i=1}^n x_i^2 \f$ for \f$ x=(x_i)_{i=1}^n \f$.
+     * The l2 norm (squared) functional evaluates to \f$ 0.5 * \sum_{i=1}^n x_i^2 \f$ for \f$
+     * x=(x_i)_{i=1}^n \f$.
      */
     template <typename data_t = real_t>
-    class L2NormPow2 : public Functional<data_t> {
+    class L2NormPow2 : public Functional<data_t>
+    {
     public:
         /**
-         * \brief Constructor for the l2 norm (squared) functional, mapping domain vector to a scalar (without a residual)
+         * \brief Constructor for the l2 norm (squared) functional, mapping domain vector to a
+         * scalar (without a residual)
          *
          * \param[in] domainDescriptor describing the domain of the functional
          */
         explicit L2NormPow2(const DataDescriptor& domainDescriptor);
 
         /**
-         * \brief Constructor for the l2 norm (squared) functional, using a residual as input to map to a scalar
+         * \brief Constructor for the l2 norm (squared) functional, using a residual as input to map
+         * to a scalar
          *
          * \param[in] residual to be used when evaluating the functional (or its derivatives)
          */
@@ -37,13 +42,13 @@ namespace elsa
 
     protected:
         /// the evaluation of the l2 norm (squared)
-        data_t _evaluate(const DataContainer<data_t>& Rx) override;
+        data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void _getGradientInPlace(DataContainer<data_t>& Rx) override;
+        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
 
         /// the computation of the Hessian
-        LinearOperator<data_t> _getHessian(const DataContainer<data_t>& Rx) override;
+        LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
 
         /// implement the polymorphic clone operation
         L2NormPow2<data_t>* cloneImpl() const override;

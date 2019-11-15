@@ -9,6 +9,11 @@ Solver
 
 .. doxygenclass:: elsa::Solver
 
+CG
+==
+
+.. doxygenclass:: elsa::CG
+
 GradientDescent
 ===============
 

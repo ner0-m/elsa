@@ -3,9 +3,9 @@
 namespace elsa
 {
     template <typename data_t>
-    Solver<data_t>::Solver(const Problem<data_t>& problem)
-    : _problem{problem.clone()}
-    {}
+    Solver<data_t>::Solver(const Problem<data_t>& problem) : _problem{problem.clone()}
+    {
+    }
 
     template <typename data_t>
     const DataContainer<data_t>& Solver<data_t>::getCurrentSolution() const
@@ -22,17 +22,13 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& Solver<data_t>::solve(index_t iterations)
     {
-        return _solve(iterations);
+        return solveImpl(iterations);
     }
-
 
     template <typename data_t>
     bool Solver<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        if (*_problem != *other._problem)
-            return false;
-
-        return true;
+        return static_cast<bool>(*_problem == *other._problem);
     }
 
     // ------------------------------------------

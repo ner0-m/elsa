@@ -17,8 +17,10 @@
 
 using namespace elsa;
 
-SCENARIO("Testing the EmissionLogLikelihood functional") {
-    GIVEN("just data (no residual)") {
+SCENARIO("Testing the EmissionLogLikelihood functional")
+{
+    GIVEN("just data (no residual)")
+    {
         IndexVector_t numCoeff(3);
         numCoeff << 9, 15, 19;
         DataDescriptor dd(numCoeff);
@@ -27,30 +29,35 @@ SCENARIO("Testing the EmissionLogLikelihood functional") {
         y.setRandom();
         DataContainer dcY(dd, y);
 
-        WHEN("instantiating without r") {
+        WHEN("instantiating without r")
+        {
             EmissionLogLikelihood func(dd, dcY);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
-                auto *linRes = dynamic_cast<const LinearResidual<real_t> *>(&func.getResidual());
+                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
                 REQUIRE(linRes);
                 REQUIRE(linRes->hasDataVector() == false);
                 REQUIRE(linRes->hasOperator() == false);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto emllClone = func.clone();
 
                 REQUIRE(emllClone.get() != &func);
                 REQUIRE(*emllClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 for (index_t i = 0; i < dataVec.size(); ++i) // ensure non-negative numbers
-                    if (dataVec[i] < 0) dataVec[i] *= -1;
+                    if (dataVec[i] < 0)
+                        dataVec[i] *= -1;
                 DataContainer x(dd, dataVec);
 
                 // compute the "true" values
@@ -73,27 +80,32 @@ SCENARIO("Testing the EmissionLogLikelihood functional") {
             }
         }
 
-        WHEN("instantiating with r") {
+        WHEN("instantiating with r")
+        {
             RealVector_t r(dd.getNumberOfCoefficients());
             r.setRandom();
             for (index_t i = 0; i < r.size(); ++i)
-                if (r[i] < 0) r[i] *= -1;
+                if (r[i] < 0)
+                    r[i] *= -1;
             DataContainer dcR(dd, r);
 
             EmissionLogLikelihood func(dd, dcY, dcR);
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto emllClone = func.clone();
 
                 REQUIRE(emllClone.get() != &func);
                 REQUIRE(*emllClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 for (index_t i = 0; i < dataVec.size(); ++i) // ensure non-negative numbers
-                    if (dataVec[i] < 0) dataVec[i] *= -1;
+                    if (dataVec[i] < 0)
+                        dataVec[i] *= -1;
                 DataContainer x(dd, dataVec);
 
                 // compute the "true" values
@@ -117,7 +129,8 @@ SCENARIO("Testing the EmissionLogLikelihood functional") {
         }
     }
 
-    GIVEN("a residual with data") {
+    GIVEN("a residual with data")
+    {
         IndexVector_t numCoeff(3);
         numCoeff << 3, 15, 21;
         DataDescriptor dd(numCoeff);
@@ -132,31 +145,35 @@ SCENARIO("Testing the EmissionLogLikelihood functional") {
         y.setRandom();
         DataContainer dcY(dd, y);
 
-        WHEN("instantiating without r") {
+        WHEN("instantiating without r")
+        {
             EmissionLogLikelihood func(linRes, dcY);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
-                auto *lRes = dynamic_cast<const LinearResidual<real_t> *>(&func.getResidual());
+                auto* lRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
                 REQUIRE(lRes);
                 REQUIRE(*lRes == linRes);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto emllClone = func.clone();
 
                 REQUIRE(emllClone.get() != &func);
                 REQUIRE(*emllClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 // ensure non-negative numbers
                 for (index_t i = 0; i < dataVec.size(); ++i) {
                     if (dataVec[i] - resData[i] < 0)
-                        dataVec[i] -= 2*(dataVec[i] - resData[i]);
+                        dataVec[i] -= 2 * (dataVec[i] - resData[i]);
                 }
                 DataContainer x(dd, dataVec);
 
@@ -182,29 +199,33 @@ SCENARIO("Testing the EmissionLogLikelihood functional") {
             }
         }
 
-        WHEN("instantiating with r") {
+        WHEN("instantiating with r")
+        {
             RealVector_t r(dd.getNumberOfCoefficients());
             r.setRandom();
             for (index_t i = 0; i < r.size(); ++i)
-                if (r[i] < 0) r[i] *= -1;
+                if (r[i] < 0)
+                    r[i] *= -1;
             DataContainer dcR(dd, r);
 
             EmissionLogLikelihood func(linRes, dcY, dcR);
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto emllClone = func.clone();
 
                 REQUIRE(emllClone.get() != &func);
                 REQUIRE(*emllClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 // ensure non-negative numbers
                 for (index_t i = 0; i < dataVec.size(); ++i) {
                     if (dataVec[i] - resData[i] < 0)
-                        dataVec[i] -= 2*(dataVec[i] - resData[i]);
+                        dataVec[i] -= 2 * (dataVec[i] - resData[i]);
                 }
                 DataContainer x(dd, dataVec);
 
@@ -228,7 +249,6 @@ SCENARIO("Testing the EmissionLogLikelihood functional") {
                 for (index_t i = 0; i < hx.getSize(); ++i)
                     REQUIRE(hx[i] == Approx(dataVec[i] * trueScale[i]));
             }
-
         }
     }
 }

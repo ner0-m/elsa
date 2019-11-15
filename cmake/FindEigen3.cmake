@@ -19,6 +19,13 @@
 #
 # EIGEN3_ROOT
 # EIGEN3_ROOT_DIR
+#
+# as well as in the following subdirectories:
+#
+# include
+# thirdparty
+# ThirdParty
+# external
 
 # Copyright (c) 2006, 2007 Montel Laurent, <montel@kde.org>
 # Copyright (c) 2008, 2009 Gael Guennebaud, <g.gael@free.fr>
@@ -80,11 +87,15 @@ else (EIGEN3_INCLUDE_DIR)
   if(NOT EIGEN3_INCLUDE_DIR)
     find_path(EIGEN3_INCLUDE_DIR NAMES signature_of_eigen3_matrix_library
         HINTS
-        ENV EIGEN3_ROOT 
-        ENV EIGEN3_ROOT_DIR
+            ENV EIGEN3_ROOT
+            ENV EIGEN3_ROOT_DIR
+            include
+            thirdparty
+            ThirdParty
+            external
         PATHS
-        ${CMAKE_INSTALL_PREFIX}/include
-        ${KDE4_INCLUDE_DIR}
+            ${CMAKE_INSTALL_PREFIX}/include
+            ${KDE4_INCLUDE_DIR}
         PATH_SUFFIXES eigen3 eigen
       )
   endif(NOT EIGEN3_INCLUDE_DIR)

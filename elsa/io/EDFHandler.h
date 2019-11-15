@@ -18,14 +18,17 @@ namespace elsa
      * \author Maximilian Hornung - modularization
      * \author Tobias Lasser - modernization
      *
-     * Class to handle reading EDF files into DataContainers and writing of DataContainers to EDF files.
+     * Class to handle reading EDF files into DataContainers and writing of DataContainers to EDF
+     * files.
      *
      * EDF files are non-standard files that include a 1024 Byte header containing textual meta data
-     * about the following raw data. It allows storing images of arbitrary dimensions in a low-overhead manner.
+     * about the following raw data. It allows storing images of arbitrary dimensions in a
+     * low-overhead manner.
      *
      * Please note: we assume little endian byte order.
      */
-    class EDF {
+    class EDF
+    {
     public:
         /// read from filename into a DataContainer
         template <typename data_t = real_t>
@@ -40,7 +43,8 @@ namespace elsa
         static std::map<std::string, std::string> readHeader(std::ifstream& file);
 
         /// parse the EDF header property map into a DataDescriptor and DataType
-        static std::pair<DataDescriptor, DataUtils::DataType> parseHeader(const std::map<std::string, std::string>& properties);
+        static std::pair<DataDescriptor, DataUtils::DataType>
+            parseHeader(const std::map<std::string, std::string>& properties);
 
         /// write the EDF header to file
         template <typename data_t>

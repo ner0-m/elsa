@@ -17,34 +17,40 @@
 
 using namespace elsa;
 
-SCENARIO("Testing the PseudoHuber norm functional") {
-    GIVEN("just data (no residual)") {
+SCENARIO("Testing the PseudoHuber norm functional")
+{
+    GIVEN("just data (no residual)")
+    {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 34;
         DataDescriptor dd(numCoeff);
 
         real_t delta = 2;
 
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             PseudoHuber func(dd, delta);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
-                auto *linRes = dynamic_cast<const LinearResidual<real_t> *>(&func.getResidual());
+                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
                 REQUIRE(linRes);
                 REQUIRE(linRes->hasDataVector() == false);
                 REQUIRE(linRes->hasOperator() == false);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto phClone = func.clone();
 
                 REQUIRE(phClone.get() != &func);
                 REQUIRE(*phClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
@@ -59,7 +65,8 @@ SCENARIO("Testing the PseudoHuber norm functional") {
                     real_t sqrtOnePTempSq = std::sqrt(static_cast<real_t>(1.0) + tempSq);
                     trueValue += delta * delta * (sqrtOnePTempSq - static_cast<real_t>(1.0));
                     trueGrad[i] = dataVec[i] / sqrtOnePTempSq;
-                    trueScale[i] = (sqrtOnePTempSq - tempSq / sqrtOnePTempSq) / (static_cast<real_t>(1.0) + tempSq);
+                    trueScale[i] = (sqrtOnePTempSq - tempSq / sqrtOnePTempSq)
+                                   / (static_cast<real_t>(1.0) + tempSq);
                 }
 
                 REQUIRE(func.evaluate(x) == Approx(trueValue));
@@ -72,7 +79,8 @@ SCENARIO("Testing the PseudoHuber norm functional") {
         }
     }
 
-    GIVEN("a residual with data") {
+    GIVEN("a residual with data")
+    {
         // linear residual
         IndexVector_t numCoeff(3);
         numCoeff << 3, 7, 11;
@@ -88,25 +96,29 @@ SCENARIO("Testing the PseudoHuber norm functional") {
 
         real_t delta = 1.5;
 
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             PseudoHuber func(linRes, delta);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
-                auto *lRes = dynamic_cast<const LinearResidual<real_t> *>(&func.getResidual());
+                auto* lRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
                 REQUIRE(lRes);
                 REQUIRE(*lRes == linRes);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto phClone = func.clone();
 
                 REQUIRE(phClone.get() != &func);
                 REQUIRE(*phClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
@@ -121,7 +133,8 @@ SCENARIO("Testing the PseudoHuber norm functional") {
                     real_t sqrtOnePTempSq = std::sqrt(static_cast<real_t>(1.0) + tempSq);
                     trueValue += delta * delta * (sqrtOnePTempSq - static_cast<real_t>(1.0));
                     trueGrad[i] = (dataVec[i] - randomData[i]) / sqrtOnePTempSq;
-                    trueScale[i] = (sqrtOnePTempSq - tempSq / sqrtOnePTempSq) / (static_cast<real_t>(1.0) + tempSq);
+                    trueScale[i] = (sqrtOnePTempSq - tempSq / sqrtOnePTempSq)
+                                   / (static_cast<real_t>(1.0) + tempSq);
                 }
 
                 REQUIRE(func.evaluate(x) == Approx(trueValue));

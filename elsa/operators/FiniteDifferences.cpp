@@ -4,22 +4,25 @@
 namespace elsa
 {
     template <typename data_t>
-    FiniteDifferences<data_t>::FiniteDifferences(const DataDescriptor& domainDescriptor, DiffType type)
+    FiniteDifferences<data_t>::FiniteDifferences(const DataDescriptor& domainDescriptor,
+                                                 DiffType type)
         : FiniteDifferences(domainDescriptor,
-                            BooleanVector_t::Ones(domainDescriptor.getNumberOfDimensions()),
-                            type)
-    {}
+                            BooleanVector_t::Ones(domainDescriptor.getNumberOfDimensions()), type)
+    {
+    }
 
     template <typename data_t>
     FiniteDifferences<data_t>::FiniteDifferences(const DataDescriptor& domainDescriptor,
                                                  const BooleanVector_t& activeDims, DiffType type)
-        : LinearOperator<data_t>(domainDescriptor, domainDescriptor), // setting range in body of constructor
-          _activeDims{activeDims}, _type{type}
+        : LinearOperator<data_t>(domainDescriptor,
+                                 domainDescriptor), // setting range in body of constructor
+          _activeDims{activeDims},
+          _type{type}
     {
         // build the range descriptor of appropriate size
         IndexVector_t coefficients(domainDescriptor.getNumberOfDimensions() + 1);
         coefficients << domainDescriptor.getNumberOfCoefficientsPerDimension(),
-                activeDims.cast<index_t>().sum();
+            activeDims.cast<index_t>().sum();
 
         RealVector_t spacing(domainDescriptor.getNumberOfDimensions() + 1);
         spacing << domainDescriptor.getSpacingPerDimension(), 1;
@@ -33,7 +36,7 @@ namespace elsa
     void FiniteDifferences<data_t>::precomputeHelpers()
     {
         IndexVector_t numberOfCoefficients =
-                this->_rangeDescriptor->getNumberOfCoefficientsPerDimension();
+            this->_rangeDescriptor->getNumberOfCoefficientsPerDimension();
 
         index_t deltaTmp = 1;
         int count = -1;
@@ -49,9 +52,9 @@ namespace elsa
         }
     }
 
-
     template <typename data_t>
-    void FiniteDifferences<data_t>::_apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax)
+    void FiniteDifferences<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                              DataContainer<data_t>& Ax) const
     {
         Timer<> timeguard("FiniteDifferences", "apply");
 
@@ -71,7 +74,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void FiniteDifferences<data_t>::_applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty)
+    void FiniteDifferences<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                                     DataContainer<data_t>& Aty) const
     {
         Timer<> timeguard("FiniteDifferences", "applyAdjoint");
 
@@ -90,17 +94,19 @@ namespace elsa
         }
     }
 
-
     template <typename data_t>
     template <typename FDtype>
-    void FiniteDifferences<data_t>::applyHelper(const DataContainer<data_t>& x, DataContainer<data_t>&  Ax, FDtype type)
+    void FiniteDifferences<data_t>::applyHelper(const DataContainer<data_t>& x,
+                                                DataContainer<data_t>& Ax, FDtype type) const
     {
         index_t sizeOfDomain = this->getDomainDescriptor().getNumberOfCoefficients();
         index_t numDim = this->getDomainDescriptor().getNumberOfDimensions();
 
-        IndexVector_t numberOfCoefficients = this->getRangeDescriptor().getNumberOfCoefficientsPerDimension();
-        IndexVector_t decrementedCoefficients = numberOfCoefficients -
-                                                IndexVector_t::Ones(this->getRangeDescriptor().getNumberOfDimensions());
+        IndexVector_t numberOfCoefficients =
+            this->getRangeDescriptor().getNumberOfCoefficientsPerDimension();
+        IndexVector_t decrementedCoefficients =
+            numberOfCoefficients
+            - IndexVector_t::Ones(this->getRangeDescriptor().getNumberOfDimensions());
 
 #pragma omp parallel
         for (int currDim = 0; currDim < numDim; ++currDim) {
@@ -141,12 +147,15 @@ namespace elsa
 
     template <typename data_t>
     template <typename FDtype>
-    void FiniteDifferences<data_t>::applyAdjointHelper(const DataContainer<data_t>& y, DataContainer<data_t>&  Aty, FDtype type)
+    void FiniteDifferences<data_t>::applyAdjointHelper(const DataContainer<data_t>& y,
+                                                       DataContainer<data_t>& Aty,
+                                                       FDtype type) const
     {
         index_t sizeOfDomain = this->getDomainDescriptor().getNumberOfCoefficients();
         index_t numDim = this->getDomainDescriptor().getNumberOfDimensions();
 
-        IndexVector_t numberOfCoefficients = this->getDomainDescriptor().getNumberOfCoefficientsPerDimension();
+        IndexVector_t numberOfCoefficients =
+            this->getDomainDescriptor().getNumberOfCoefficientsPerDimension();
         IndexVector_t decrementedCoefficients = numberOfCoefficients - IndexVector_t::Ones(numDim);
 
 #pragma omp parallel
@@ -187,7 +196,6 @@ namespace elsa
         }
     }
 
-
     template <typename data_t>
     FiniteDifferences<data_t>* FiniteDifferences<data_t>::cloneImpl() const
     {
@@ -209,7 +217,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

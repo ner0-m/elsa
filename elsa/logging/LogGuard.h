@@ -16,10 +16,13 @@ namespace elsa
      * This class serves as a guard for logging, simple instantiation will log a starting message,
      * while going out of scope logs an ending message.
      */
-    class LogGuard {
+    class LogGuard
+    {
     public:
-        /// constructor taking the name of the logger to log to, the message and the log level of the message
-        LogGuard(std::string loggerName, std::string message, Logger::LogLevel level = Logger::LogLevel::INFO);
+        /// constructor taking the name of the logger to log to, the message and the log level of
+        /// the message
+        LogGuard(std::string loggerName, std::string message,
+                 Logger::LogLevel level = Logger::LogLevel::INFO);
 
         /// destructor outputting the final log message
         ~LogGuard();

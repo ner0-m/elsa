@@ -11,44 +11,48 @@ namespace elsa
           _productOfCoefficientsPerDimension{numberOfCoefficientsPerDimension}
     {
         // sanity checks
-        if ( (numberOfCoefficientsPerDimension.array() <= 0).any() )
-            throw std::invalid_argument("DataDescriptor: non-positive number of coefficients not allowed");
+        if ((numberOfCoefficientsPerDimension.array() <= 0).any())
+            throw std::invalid_argument(
+                "DataDescriptor: non-positive number of coefficients not allowed");
 
         // set the origin at center
-        _locationOfOrigin = static_cast<real_t>(0.5) * (_numberOfCoefficientsPerDimension.cast<real_t>().array() *
-                _spacingPerDimension.array());
+        _locationOfOrigin = static_cast<real_t>(0.5)
+                            * (_numberOfCoefficientsPerDimension.cast<real_t>().array()
+                               * _spacingPerDimension.array());
 
         // pre-compute the partial products for index computations
         for (index_t i = 0; i < _numberOfDimensions; ++i)
-            _productOfCoefficientsPerDimension(i) = _numberOfCoefficientsPerDimension.head(i).prod();
+            _productOfCoefficientsPerDimension(i) =
+                _numberOfCoefficientsPerDimension.head(i).prod();
     }
 
-
-    DataDescriptor::DataDescriptor(IndexVector_t numberOfCoefficientsPerDimension, RealVector_t spacingPerDimension)
-         : _numberOfDimensions{numberOfCoefficientsPerDimension.size()},
-           _numberOfCoefficientsPerDimension{numberOfCoefficientsPerDimension},
-           _spacingPerDimension{spacingPerDimension},
-           _productOfCoefficientsPerDimension{numberOfCoefficientsPerDimension}
+    DataDescriptor::DataDescriptor(IndexVector_t numberOfCoefficientsPerDimension,
+                                   RealVector_t spacingPerDimension)
+        : _numberOfDimensions{numberOfCoefficientsPerDimension.size()},
+          _numberOfCoefficientsPerDimension{numberOfCoefficientsPerDimension},
+          _spacingPerDimension{spacingPerDimension},
+          _productOfCoefficientsPerDimension{numberOfCoefficientsPerDimension}
     {
         // sanity checks
-        if ( (numberOfCoefficientsPerDimension.array() <= 0).any() )
-            throw std::invalid_argument("DataDescriptor: non-positive number of coefficients not allowed");
+        if ((numberOfCoefficientsPerDimension.array() <= 0).any())
+            throw std::invalid_argument(
+                "DataDescriptor: non-positive number of coefficients not allowed");
         if (numberOfCoefficientsPerDimension.size() != spacingPerDimension.size())
-            throw std::invalid_argument("DataDescriptor: mismatch between numberOfCoefficientsPerDimension and spacingPerDimension");
+            throw std::invalid_argument("DataDescriptor: mismatch between "
+                                        "numberOfCoefficientsPerDimension and spacingPerDimension");
 
         // set the origin at center
-        _locationOfOrigin = static_cast<real_t>(0.5) * (_numberOfCoefficientsPerDimension.cast<real_t>().array() *
-                                                        _spacingPerDimension.array());
+        _locationOfOrigin = static_cast<real_t>(0.5)
+                            * (_numberOfCoefficientsPerDimension.cast<real_t>().array()
+                               * _spacingPerDimension.array());
 
         // pre-compute the partial products for index computations
         for (index_t i = 0; i < _numberOfDimensions; ++i)
-            _productOfCoefficientsPerDimension(i) = _numberOfCoefficientsPerDimension.head(i).prod();
+            _productOfCoefficientsPerDimension(i) =
+                _numberOfCoefficientsPerDimension.head(i).prod();
     }
 
-    index_t DataDescriptor::getNumberOfDimensions() const
-    {
-        return _numberOfDimensions;
-    }
+    index_t DataDescriptor::getNumberOfDimensions() const { return _numberOfDimensions; }
 
     index_t DataDescriptor::getNumberOfCoefficients() const
     {
@@ -60,26 +64,19 @@ namespace elsa
         return _numberOfCoefficientsPerDimension;
     }
 
-    RealVector_t DataDescriptor::getSpacingPerDimension() const
-    {
-        return _spacingPerDimension;
-    }
+    RealVector_t DataDescriptor::getSpacingPerDimension() const { return _spacingPerDimension; }
 
-    RealVector_t DataDescriptor::getLocationOfOrigin() const
-    {
-        return _locationOfOrigin;
-    }
-
+    RealVector_t DataDescriptor::getLocationOfOrigin() const { return _locationOfOrigin; }
 
     index_t DataDescriptor::getIndexFromCoordinate(elsa::IndexVector_t coordinate) const
     {
         // sanity check
-        if (coordinate.size() != _productOfCoefficientsPerDimension.size() )
-            throw std::invalid_argument("DataDescriptor: mismatch of coordinate and descriptor size");
+        if (coordinate.size() != _productOfCoefficientsPerDimension.size())
+            throw std::invalid_argument(
+                "DataDescriptor: mismatch of coordinate and descriptor size");
 
         return _productOfCoefficientsPerDimension.cwiseProduct(coordinate).sum();
     }
-
 
     IndexVector_t DataDescriptor::getCoordinateFromIndex(elsa::index_t index) const
     {
@@ -99,18 +96,14 @@ namespace elsa
         return coordinate;
     }
 
-
-    DataDescriptor* DataDescriptor::cloneImpl() const
-    {
-        return new DataDescriptor(*this);
-    }
+    DataDescriptor* DataDescriptor::cloneImpl() const { return new DataDescriptor(*this); }
 
     bool DataDescriptor::isEqual(const DataDescriptor& other) const
     {
-        return (_numberOfDimensions == other._numberOfDimensions) &&
-                (_numberOfCoefficientsPerDimension == other._numberOfCoefficientsPerDimension) &&
-                (_spacingPerDimension == other._spacingPerDimension) &&
-                (_locationOfOrigin == other._locationOfOrigin);
+        return (_numberOfDimensions == other._numberOfDimensions)
+               && (_numberOfCoefficientsPerDimension == other._numberOfCoefficientsPerDimension)
+               && (_spacingPerDimension == other._spacingPerDimension)
+               && (_locationOfOrigin == other._locationOfOrigin);
     }
 
 } // namespace elsa

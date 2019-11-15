@@ -8,60 +8,70 @@ namespace elsa
 {
 
     template <typename data_t>
-    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const DataDescriptor& domainDescriptor, const DataContainer<data_t>& y,
-                                                                 const DataContainer<data_t>& b, const DataContainer<data_t>& r)
-            : Functional<data_t>(domainDescriptor), _y{std::make_unique<DataContainer<data_t>>(y)},
-              _b{std::make_unique<DataContainer<data_t>>(b)}, _r{std::make_unique<DataContainer<data_t>>(r)}
+    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(
+        const DataDescriptor& domainDescriptor, const DataContainer<data_t>& y,
+        const DataContainer<data_t>& b, const DataContainer<data_t>& r)
+        : Functional<data_t>(domainDescriptor),
+          _y{std::make_unique<DataContainer<data_t>>(y)},
+          _b{std::make_unique<DataContainer<data_t>>(b)},
+          _r{std::make_unique<DataContainer<data_t>>(r)}
     {
         // sanity check
-        if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != b.getDataDescriptor() ||
-            domainDescriptor != r.getDataDescriptor())
-            throw std::invalid_argument("TransmissionLogLikelihood: descriptor and y/b/r not matching in size.");
-
+        if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != b.getDataDescriptor()
+            || domainDescriptor != r.getDataDescriptor())
+            throw std::invalid_argument(
+                "TransmissionLogLikelihood: descriptor and y/b/r not matching in size.");
     }
 
     template <typename data_t>
-    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                                                                 const DataContainer<data_t>& y, const DataContainer<data_t>& b)
-            : Functional<data_t>(domainDescriptor),
-              _y{std::make_unique<DataContainer<data_t>>(y)}, _b{std::make_unique<DataContainer<data_t>>(b)}
+    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(
+        const DataDescriptor& domainDescriptor, const DataContainer<data_t>& y,
+        const DataContainer<data_t>& b)
+        : Functional<data_t>(domainDescriptor),
+          _y{std::make_unique<DataContainer<data_t>>(y)},
+          _b{std::make_unique<DataContainer<data_t>>(b)}
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != b.getDataDescriptor())
-            throw std::invalid_argument("TransmissionLogLikelihood: descriptor and y/b not matching in size.");
-
-    }
-
-    template <typename data_t>
-    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const Residual<data_t>& residual, const DataContainer<data_t>& y,
-                                                                 const DataContainer<data_t>& b, const DataContainer<data_t>& r)
-       : Functional<data_t>(residual), _y{std::make_unique<DataContainer<data_t>>(y)},
-         _b{std::make_unique<DataContainer<data_t>>(b)}, _r{std::make_unique<DataContainer<data_t>>(r)}
-    {
-        // sanity check
-        if (residual.getRangeDescriptor() != y.getDataDescriptor() ||
-            residual.getRangeDescriptor() != b.getDataDescriptor() ||
-            residual.getRangeDescriptor() != r.getDataDescriptor())
-            throw std::invalid_argument("TransmissionLogLikelihood: residual and y/b/r not matching in size.");
-
+            throw std::invalid_argument(
+                "TransmissionLogLikelihood: descriptor and y/b not matching in size.");
     }
 
     template <typename data_t>
     TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const Residual<data_t>& residual,
-                                                                 const DataContainer<data_t>& y, const DataContainer<data_t>& b)
+                                                                 const DataContainer<data_t>& y,
+                                                                 const DataContainer<data_t>& b,
+                                                                 const DataContainer<data_t>& r)
         : Functional<data_t>(residual),
-          _y{std::make_unique<DataContainer<data_t>>(y)}, _b{std::make_unique<DataContainer<data_t>>(b)}
+          _y{std::make_unique<DataContainer<data_t>>(y)},
+          _b{std::make_unique<DataContainer<data_t>>(b)},
+          _r{std::make_unique<DataContainer<data_t>>(r)}
     {
         // sanity check
-        if (residual.getRangeDescriptor() != y.getDataDescriptor() ||
-            residual.getRangeDescriptor() != b.getDataDescriptor())
-            throw std::invalid_argument("TransmissionLogLikelihood: residual and y/b not matching in size.");
-
+        if (residual.getRangeDescriptor() != y.getDataDescriptor()
+            || residual.getRangeDescriptor() != b.getDataDescriptor()
+            || residual.getRangeDescriptor() != r.getDataDescriptor())
+            throw std::invalid_argument(
+                "TransmissionLogLikelihood: residual and y/b/r not matching in size.");
     }
 
+    template <typename data_t>
+    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const Residual<data_t>& residual,
+                                                                 const DataContainer<data_t>& y,
+                                                                 const DataContainer<data_t>& b)
+        : Functional<data_t>(residual),
+          _y{std::make_unique<DataContainer<data_t>>(y)},
+          _b{std::make_unique<DataContainer<data_t>>(b)}
+    {
+        // sanity check
+        if (residual.getRangeDescriptor() != y.getDataDescriptor()
+            || residual.getRangeDescriptor() != b.getDataDescriptor())
+            throw std::invalid_argument(
+                "TransmissionLogLikelihood: residual and y/b not matching in size.");
+    }
 
     template <typename data_t>
-    data_t TransmissionLogLikelihood<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    data_t TransmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         auto result = static_cast<data_t>(0.0);
 
@@ -77,7 +87,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void TransmissionLogLikelihood<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void TransmissionLogLikelihood<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
     {
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = (*_b)[i] * std::exp(-Rx[i]);
@@ -91,7 +101,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> TransmissionLogLikelihood<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t>
+        TransmissionLogLikelihood<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
         for (index_t i = 0; i < Rx.getSize(); ++i) {
@@ -105,7 +116,6 @@ namespace elsa
 
         return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
     }
-
 
     template <typename data_t>
     TransmissionLogLikelihood<data_t>* TransmissionLogLikelihood<data_t>::cloneImpl() const
@@ -134,7 +144,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

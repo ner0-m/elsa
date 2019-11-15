@@ -11,8 +11,10 @@
 
 using namespace elsa;
 
-SCENARIO("Drawing a rotated filled ellipse in 2d") {
-    GIVEN("a volume and example ellipse parameters") {
+SCENARIO("Drawing a rotated filled ellipse in 2d")
+{
+    GIVEN("a volume and example ellipse parameters")
+    {
         IndexVector_t numCoeff(2);
         numCoeff << 200, 200;
         DataDescriptor dd(numCoeff);
@@ -21,8 +23,10 @@ SCENARIO("Drawing a rotated filled ellipse in 2d") {
         Eigen::Matrix<index_t, 2, 1> center{100, 100};
         Eigen::Matrix<index_t, 2, 1> sizes{40, 80};
 
-        WHEN("comparing an ellipse created using an inefficient method") {
-            THEN("the ellipse mostly matches the efficient one") {
+        WHEN("comparing an ellipse created using an inefficient method")
+        {
+            THEN("the ellipse mostly matches the efficient one")
+            {
                 // check a few rotation angles
                 for (real_t angleDeg : {0, 18, 30, 45, 60, 72, 90}) {
                     real_t angleRad = angleDeg * pi / 180.0;
@@ -34,11 +38,13 @@ SCENARIO("Drawing a rotated filled ellipse in 2d") {
 
                     for (index_t x = 0; x < numCoeff[0]; ++x) {
                         for (index_t y = 0; y < numCoeff[1]; ++y) {
-                            real_t aPart = (x - center[0]) * std::cos(angleRad) + (y - center[1]) * std::sin(angleRad);
+                            real_t aPart = (x - center[0]) * std::cos(angleRad)
+                                           + (y - center[1]) * std::sin(angleRad);
                             aPart *= aPart;
                             aPart /= sizes[0] * sizes[0];
 
-                            real_t bPart = -(x - center[0]) * std::sin(angleRad) + (y - center[1]) * std::cos(angleRad);
+                            real_t bPart = -(x - center[0]) * std::sin(angleRad)
+                                           + (y - center[1]) * std::cos(angleRad);
                             bPart *= bPart;
                             bPart /= sizes[1] * sizes[1];
 
@@ -47,23 +53,26 @@ SCENARIO("Drawing a rotated filled ellipse in 2d") {
                             coord[1] = numCoeff[1] - 1 - y; // flip y axis
 
                             if (aPart + bPart <= 1.0) { // point in ellipse
-                                if (dc(coord) == 0) ++wrongPixelCounter; // CHECK(dc(coord) > 0);
-                            } else { // point not in ellipse
-                                if (dc(coord) != 0) ++wrongPixelCounter; // CHECK(dc(coord) == 0);
+                                if (dc(coord) == 0)
+                                    ++wrongPixelCounter; // CHECK(dc(coord) > 0);
+                            } else {                     // point not in ellipse
+                                if (dc(coord) != 0)
+                                    ++wrongPixelCounter; // CHECK(dc(coord) == 0);
                             }
-
                         }
                     }
-                    REQUIRE((static_cast<real_t>(wrongPixelCounter) / sizes.prod()) < 0.11); // 11% isn't great... :(
+                    REQUIRE((static_cast<real_t>(wrongPixelCounter) / sizes.prod())
+                            < 0.11); // 11% isn't great... :(
                 }
             }
         }
     }
 }
 
-
-SCENARIO("Drawing a rotated filled ellipsoid in 3d") {
-    GIVEN("a volume and example ellipsoid parameters") {
+SCENARIO("Drawing a rotated filled ellipsoid in 3d")
+{
+    GIVEN("a volume and example ellipsoid parameters")
+    {
         IndexVector_t numCoeff(3);
         numCoeff << 64, 64, 64;
         DataDescriptor dd(numCoeff);
@@ -72,10 +81,12 @@ SCENARIO("Drawing a rotated filled ellipsoid in 3d") {
         Eigen::Matrix<index_t, 3, 1> center{32, 32, 32};
         Eigen::Matrix<index_t, 3, 1> sizes{10, 25, 5};
 
-        WHEN("creating an ellipse") {
+        WHEN("creating an ellipse")
+        {
             EllipseGenerator<real_t>::drawFilledEllipsoid3d(dc, 1.0, center, sizes, -18, 0, 10);
 
-            THEN("somebody should check it...") {
+            THEN("somebody should check it...")
+            {
                 REQUIRE(true); // TODO: add a reasonable test here
             }
         }

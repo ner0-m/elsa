@@ -39,11 +39,12 @@ namespace elsa
         return dataContainer;
     }
 
-
     template <typename data_t>
-    void MHD::write(const DataContainer<data_t>& data, std::string metaFilename, std::string rawFilename)
+    void MHD::write(const DataContainer<data_t>& data, std::string metaFilename,
+                    std::string rawFilename)
     {
-        Logger::get("MHD")->info("Writing meta data to {} and raw data to {}", metaFilename, rawFilename);
+        Logger::get("MHD")->info("Writing meta data to {} and raw data to {}", metaFilename,
+                                 rawFilename);
 
         // open the meta file
         std::ofstream metaFile(metaFilename);
@@ -64,26 +65,25 @@ namespace elsa
             rawFile.write(reinterpret_cast<const char*>(&data[i]), sizeof(data_t));
     }
 
-
     std::map<std::string, std::string> MHD::readHeader(std::ifstream& metaFile)
     {
         std::map<std::string, std::string> properties;
 
         // read header data
         std::string metaLine;
-        while (!metaFile.eof())
-        {
+        while (!metaFile.eof()) {
             // read next header line
             std::getline(metaFile, metaLine);
             StringUtils::trim(metaLine);
 
-            if (!metaLine.length())
+            if (metaLine.length() == 0u)
                 continue;
 
             // split the header line into name and value
             size_t delim = metaLine.find('=');
             if (delim == std::string::npos)
-                throw std::runtime_error("MHD::readHeader: found non-empty line without name/value pair");
+                throw std::runtime_error(
+                    "MHD::readHeader: found non-empty line without name/value pair");
 
             std::string name = metaLine.substr(0, delim);
             StringUtils::trim(name);
@@ -97,9 +97,8 @@ namespace elsa
         return properties;
     }
 
-
-    std::tuple<DataDescriptor, std::string, DataUtils::DataType> MHD::parseHeader(
-            const std::map<std::string, std::string> &properties)
+    std::tuple<DataDescriptor, std::string, DataUtils::DataType>
+        MHD::parseHeader(const std::map<std::string, std::string>& properties)
     {
         // check the dimensions
         auto nDimsIt = properties.find("ndims");
@@ -116,7 +115,8 @@ namespace elsa
             StringUtils::toLower(byteOrderValue);
 
             if (byteOrderValue != "false" && byteOrderValue != "no")
-                throw std::runtime_error("MHD::parseHeader: only supporting little endian byte order");
+                throw std::runtime_error(
+                    "MHD::parseHeader: only supporting little endian byte order");
         }
 
         // check for the 'element type' value
@@ -139,7 +139,8 @@ namespace elsa
             else if (elementTypeValue == "MET_DOUBLE")
                 dataType = DataUtils::DataType::FLOAT64;
             else
-                throw std::runtime_error("MHD::parseHeader: tag 'element type' of unsupported value");
+                throw std::runtime_error(
+                    "MHD::parseHeader: tag 'element type' of unsupported value");
         } else
             throw std::runtime_error("MHD::parseHeader: tag 'element type' not found");
 
@@ -177,7 +178,7 @@ namespace elsa
 
         // convert spacing
         RealVector_t dimSpacing(RealVector_t::Ones(nDims));
-        if (dimSpacingVec.size() > 0) {
+        if (!dimSpacingVec.empty()) {
             for (index_t i = 0; i < nDims; ++i)
                 dimSpacing[i] = dimSpacingVec[i];
         }
@@ -188,42 +189,65 @@ namespace elsa
         return std::make_tuple(dataDescriptor, rawDataPath, dataType);
     }
 
-
     template <typename data_t>
-    void MHD::writeHeader(std::ofstream &metaFile, const DataContainer<data_t> &data, std::string rawFilename)
+    void MHD::writeHeader(std::ofstream& metaFile, const DataContainer<data_t>& data,
+                          std::string rawFilename)
     {
         auto descriptor = data.getDataDescriptor();
 
         // write dimension, size and spacing
         metaFile << "NDims = " << descriptor.getNumberOfDimensions() << "\n";
-        metaFile << "DimSize = "
-                 << (descriptor.getNumberOfCoefficientsPerDimension()).transpose() << "\n";
-        metaFile << "ElementSpacing = "
-                 << (descriptor.getSpacingPerDimension()).transpose() << "\n";
+        metaFile << "DimSize = " << (descriptor.getNumberOfCoefficientsPerDimension()).transpose()
+                 << "\n";
+        metaFile << "ElementSpacing = " << (descriptor.getSpacingPerDimension()).transpose()
+                 << "\n";
 
         // write the data type and the byte swapping flag
         metaFile << "ElementType = " << getDataTypeName(data) << "\n";
 
-        metaFile << "ElementByteOrderMSB = False" << "\n";
+        metaFile << "ElementByteOrderMSB = False"
+                 << "\n";
 
         // write the data path and close
         metaFile << "ElementDataFile = " << rawFilename << std::endl;
     }
 
-
     template <typename data_t>
-    std::string MHD::getDataTypeName(const DataContainer<data_t> &data)
+    std::string MHD::getDataTypeName(const DataContainer<data_t>& data)
     {
         throw std::invalid_argument("MHD::getDataTypeName: invalid/unsupported data type");
     }
 
-    template<> std::string MHD::getDataTypeName(const DataContainer<int8_t> &data) { return "MET_CHAR"; }
-    template<> std::string MHD::getDataTypeName(const DataContainer<uint8_t> &data) { return "MET_UCHAR"; }
-    template<> std::string MHD::getDataTypeName(const DataContainer<int16_t> &data) { return "MET_SHORT"; }
-    template<> std::string MHD::getDataTypeName(const DataContainer<uint16_t> &data) { return "MET_USHORT"; }
-    template<> std::string MHD::getDataTypeName(const DataContainer<float> &data) { return "MET_FLOAT"; }
-    template<> std::string MHD::getDataTypeName(const DataContainer<double> &data) { return "MET_DOUBLE"; }
-
+    template <>
+    std::string MHD::getDataTypeName(const DataContainer<int8_t>& data)
+    {
+        return "MET_CHAR";
+    }
+    template <>
+    std::string MHD::getDataTypeName(const DataContainer<uint8_t>& data)
+    {
+        return "MET_UCHAR";
+    }
+    template <>
+    std::string MHD::getDataTypeName(const DataContainer<int16_t>& data)
+    {
+        return "MET_SHORT";
+    }
+    template <>
+    std::string MHD::getDataTypeName(const DataContainer<uint16_t>& data)
+    {
+        return "MET_USHORT";
+    }
+    template <>
+    std::string MHD::getDataTypeName(const DataContainer<float>& data)
+    {
+        return "MET_FLOAT";
+    }
+    template <>
+    std::string MHD::getDataTypeName(const DataContainer<double>& data)
+    {
+        return "MET_DOUBLE";
+    }
 
     // ------------------------------------------
     // explicit template instantiation

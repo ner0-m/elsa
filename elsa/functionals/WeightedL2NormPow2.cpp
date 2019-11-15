@@ -8,22 +8,31 @@ namespace elsa
     template <typename data_t>
     WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Scaling<data_t>& weightingOp)
         : Functional<data_t>(weightingOp.getDomainDescriptor()),
-          _weightingOp{weightingOp.clone()}
-    {}
-
-    template <typename data_t>
-    WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Residual<data_t>& residual, const Scaling<data_t>& weightingOp)
-        : Functional<data_t>(residual),
-          _weightingOp{weightingOp.clone()}
+          _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
     {
-        // sanity check
-        if (residual.getDomainDescriptor() != weightingOp.getDomainDescriptor() ||
-            residual.getRangeDescriptor() != weightingOp.getRangeDescriptor())
-            throw std::invalid_argument("WeightedL2NormPow2: sizes of residual and weighting operator do not match");
     }
 
     template <typename data_t>
-    data_t WeightedL2NormPow2<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Residual<data_t>& residual,
+                                                   const Scaling<data_t>& weightingOp)
+        : Functional<data_t>(residual),
+          _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
+    {
+        // sanity check
+        if (residual.getDomainDescriptor() != weightingOp.getDomainDescriptor()
+            || residual.getRangeDescriptor() != weightingOp.getRangeDescriptor())
+            throw std::invalid_argument(
+                "WeightedL2NormPow2: sizes of residual and weighting operator do not match");
+    }
+
+    template <typename data_t>
+    const Scaling<data_t>& WeightedL2NormPow2<data_t>::getWeightingOperator() const
+    {
+        return *_weightingOp;
+    }
+
+    template <typename data_t>
+    data_t WeightedL2NormPow2<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         auto temp = _weightingOp->apply(Rx);
 
@@ -31,18 +40,18 @@ namespace elsa
     }
 
     template <typename data_t>
-    void WeightedL2NormPow2<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void WeightedL2NormPow2<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
     {
         auto temp = _weightingOp->apply(Rx);
         Rx = temp;
     }
 
     template <typename data_t>
-    LinearOperator<data_t> WeightedL2NormPow2<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t>
+        WeightedL2NormPow2<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         return leaf(*_weightingOp);
     }
-
 
     template <typename data_t>
     WeightedL2NormPow2<data_t>* WeightedL2NormPow2<data_t>::cloneImpl() const

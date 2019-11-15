@@ -11,24 +11,25 @@ namespace elsa
     {
         // trim whitespace from beginning
         str.erase(str.begin(), std::find_if(str.begin(), str.end(),
-                [](int ch) { return !std::isspace(ch);} ));
+                                            [](int ch) { return std::isspace(ch) == 0; }));
         // trim whitespace from end
-        str.erase(std::find_if(str.rbegin(), str.rend(),
-                [](int ch) { return !std::isspace(ch); }).base(), str.end());
+        str.erase(
+            std::find_if(str.rbegin(), str.rend(), [](int ch) { return std::isspace(ch) == 0; })
+                .base(),
+            str.end());
     }
 
-    void StringUtils::toLower(std::string &str)
+    void StringUtils::toLower(std::string& str)
     {
         std::transform(str.begin(), str.end(), str.begin(),
-                       [](unsigned char c){ return std::tolower(c); });
+                       [](unsigned char c) { return std::tolower(c); });
     }
 
-    void StringUtils::toUpper(std::string &str)
+    void StringUtils::toUpper(std::string& str)
     {
         std::transform(str.begin(), str.end(), str.begin(),
-                       [](unsigned char c){ return std::toupper(c); });
+                       [](unsigned char c) { return std::toupper(c); });
     }
-
 
     index_t DataUtils::getSizeOfDataType(DataUtils::DataType type)
     {
@@ -80,7 +81,7 @@ namespace elsa
     }
 
     template <typename raw_data_t, typename data_t>
-    void DataUtils::parseRawData(std::ifstream &file, DataContainer<data_t> &data)
+    void DataUtils::parseRawData(std::ifstream& file, DataContainer<data_t>& data)
     {
         index_t sizeInElements = data.getSize();
         index_t sizeInBytes = sizeInElements * sizeof(raw_data_t);
@@ -91,7 +92,7 @@ namespace elsa
             throw std::runtime_error("DataUtils::parseRawData: failed allocating memory");
 
         // parse data into the storage
-        file.read(reinterpret_cast<char *>(ptr.get()), sizeInBytes);
+        file.read(reinterpret_cast<char*>(ptr.get()), sizeInBytes);
         if (file.gcount() != sizeInBytes)
             throw std::runtime_error("DataUtils::parseRawData: failed to read sufficient data");
 
@@ -100,10 +101,10 @@ namespace elsa
             data[i] = static_cast<data_t>(ptr[i]);
     }
 
-
     std::string FileSystemUtils::getAbsolutePath(std::string path, std::string base)
     {
-        // note: this should really be done with C++17 <filesystem>... if it were universally available
+        // note: this should really be done with C++17 <filesystem>... if it were universally
+        // available
 
         // split off filename at end
         auto found = base.find_last_of("/\\");
@@ -136,7 +137,8 @@ namespace elsa
     template void DataUtils::parseRawData<uint16_t, double>(std::ifstream&, DataContainer<double>&);
     template void DataUtils::parseRawData<float, double>(std::ifstream&, DataContainer<double>&);
     template void DataUtils::parseRawData<double, double>(std::ifstream&, DataContainer<double>&);
-    template void DataUtils::parseRawData<uint16_t, index_t>(std::ifstream&, DataContainer<index_t>&);
+    template void DataUtils::parseRawData<uint16_t, index_t>(std::ifstream&,
+                                                             DataContainer<index_t>&);
     template void DataUtils::parseRawData<float, index_t>(std::ifstream&, DataContainer<index_t>&);
     template void DataUtils::parseRawData<double, index_t>(std::ifstream&, DataContainer<index_t>&);
 } // namespace elsa

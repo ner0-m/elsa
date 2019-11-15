@@ -18,22 +18,27 @@ namespace elsa
         real_t _tmin, _tmax;
 
         /// default constructor
-        IntersectionResult() : _tmin{std::numeric_limits<real_t>().infinity()},
-                               _tmax{std::numeric_limits<real_t>().infinity()} {}
+        IntersectionResult()
+            : _tmin{std::numeric_limits<real_t>().infinity()},
+              _tmax{std::numeric_limits<real_t>().infinity()}
+        {
+        }
 
         /// simple constructor with values tmin, tmax
         IntersectionResult(real_t tmin, real_t tmax) : _tmin{tmin}, _tmax{tmax} {}
     };
 
     /**
-     * \brief The intersection class computes intersections between rays and axis-aligned bounding boxes (AABBs)
+     * \brief The intersection class computes intersections between rays and axis-aligned bounding
+     * boxes (AABBs)
      *
      * \author Tobias Lasser - initial code, modernization
      * \author David Frank - various fixes
      * \author Maximilian Hornung - modularization
      * \author Nikola Dinev - various fixes
      */
-    class Intersection {
+    class Intersection
+    {
     private:
         /// the type for a ray using Eigen
         using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
@@ -51,9 +56,10 @@ namespace elsa
          * If the ray is running along a border of the bounding box, the lower bound will
          * be counted as in the bounding and the upper bound will be  counted as outside.
          *
-         * Method adapted from https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/
+         * Method adapted from
+         https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/
          */
-        static std::optional<IntersectionResult> withRay(const BoundingBox& aabb, const Ray &r);
+        static std::optional<IntersectionResult> withRay(const BoundingBox& aabb, const Ray& r);
     };
 
     /**
@@ -68,7 +74,8 @@ namespace elsa
      * not provide this security and should be avoided in this case
      */
     template <typename T1, typename T2>
-    constexpr T1 minNum(T1 x, T2 y) {
+    constexpr T1 minNum(T1 x, T2 y)
+    {
         return std::not_equal_to<>()(y, y) ? x : (std::less<>()(x, y) ? x : y);
     }
 
@@ -82,7 +89,8 @@ namespace elsa
      * Same thing for NaN's as for the min function
      */
     template <typename T1, typename T2>
-    constexpr T1 maxNum(T1 x, T2 y) {
+    constexpr T1 maxNum(T1 x, T2 y)
+    {
         return std::not_equal_to<>()(y, y) ? x : (std::greater<>()(x, y) ? x : y);
     }
 

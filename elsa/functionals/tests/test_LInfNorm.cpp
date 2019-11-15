@@ -15,15 +15,20 @@
 
 using namespace elsa;
 
-SCENARIO("Testing the linf norm functional") {
-    GIVEN("just data (no residual)") {
-        IndexVector_t numCoeff(2); numCoeff << 8, 15;
+SCENARIO("Testing the linf norm functional")
+{
+    GIVEN("just data (no residual)")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 8, 15;
         DataDescriptor dd(numCoeff);
 
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             LInfNorm func(dd);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
                 auto& residual = func.getResidual();
@@ -33,14 +38,16 @@ SCENARIO("Testing the linf norm functional") {
                 REQUIRE(linRes->hasOperator() == false);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto lInfClone = func.clone();
 
                 REQUIRE(lInfClone.get() != &func);
                 REQUIRE(*lInfClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer dc(dd, dataVec);
@@ -52,8 +59,10 @@ SCENARIO("Testing the linf norm functional") {
         }
     }
 
-    GIVEN("a residual with data") {
-        IndexVector_t numCoeff(3); numCoeff << 3, 7, 13;
+    GIVEN("a residual with data")
+    {
+        IndexVector_t numCoeff(3);
+        numCoeff << 3, 7, 13;
         DataDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
@@ -64,10 +73,12 @@ SCENARIO("Testing the linf norm functional") {
 
         LinearResidual linRes(idOp, dc);
 
-        WHEN("instantiating") {
+        WHEN("instantiating")
+        {
             LInfNorm func(linRes);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
                 auto& residual = func.getResidual();
@@ -76,19 +87,22 @@ SCENARIO("Testing the linf norm functional") {
                 REQUIRE(*lRes == linRes);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto lInfClone = func.clone();
 
                 REQUIRE(lInfClone.get() != &func);
                 REQUIRE(*lInfClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
 
-                REQUIRE(func.evaluate(x) == Approx((dataVec - randomData).lpNorm<Eigen::Infinity>()));
+                REQUIRE(func.evaluate(x)
+                        == Approx((dataVec - randomData).lpNorm<Eigen::Infinity>()));
                 REQUIRE_THROWS_AS(func.getGradient(x), std::logic_error);
                 REQUIRE_THROWS_AS(func.getHessian(x), std::logic_error);
             }

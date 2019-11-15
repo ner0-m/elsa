@@ -8,49 +8,57 @@ namespace elsa
 {
     template <typename data_t>
     EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                                                         const DataContainer<data_t>& y, const DataContainer<data_t>& r)
-        : Functional<data_t>(domainDescriptor), _y{std::make_unique<DataContainer<data_t>>(y)},
+                                                         const DataContainer<data_t>& y,
+                                                         const DataContainer<data_t>& r)
+        : Functional<data_t>(domainDescriptor),
+          _y{std::make_unique<DataContainer<data_t>>(y)},
           _r{std::make_unique<DataContainer<data_t>>(r)}
     {
         // sanity check
-        if (domainDescriptor != y.getDataDescriptor() ||
-            domainDescriptor != r.getDataDescriptor())
-            throw std::invalid_argument("EmissionLogLikelihood: descriptor and y/r not matching in size.");
+        if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != r.getDataDescriptor())
+            throw std::invalid_argument(
+                "EmissionLogLikelihood: descriptor and y/r not matching in size.");
     }
 
     template <typename data_t>
-    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const DataDescriptor& domainDescriptor, const DataContainer<data_t>& y)
+    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const DataDescriptor& domainDescriptor,
+                                                         const DataContainer<data_t>& y)
         : Functional<data_t>(domainDescriptor), _y{std::make_unique<DataContainer<data_t>>(y)}
     {
         // sanity check
-        if (domainDescriptor != y.getDataDescriptor() )
-            throw std::invalid_argument("EmissionLogLikelihood: descriptor and y not matching in size.");
+        if (domainDescriptor != y.getDataDescriptor())
+            throw std::invalid_argument(
+                "EmissionLogLikelihood: descriptor and y not matching in size.");
     }
 
     template <typename data_t>
     EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const Residual<data_t>& residual,
-                                                         const DataContainer<data_t>& y, const DataContainer<data_t>& r)
-            : Functional<data_t>(residual), _y{std::make_unique<DataContainer<data_t>>(y)},
-              _r{std::make_unique<DataContainer<data_t>>(r)}
+                                                         const DataContainer<data_t>& y,
+                                                         const DataContainer<data_t>& r)
+        : Functional<data_t>(residual),
+          _y{std::make_unique<DataContainer<data_t>>(y)},
+          _r{std::make_unique<DataContainer<data_t>>(r)}
     {
         // sanity check
-        if (residual.getRangeDescriptor() != y.getDataDescriptor() ||
-            residual.getRangeDescriptor() != r.getDataDescriptor())
-            throw std::invalid_argument("EmissionLogLikelihood: residual and y/r not matching in size.");
+        if (residual.getRangeDescriptor() != y.getDataDescriptor()
+            || residual.getRangeDescriptor() != r.getDataDescriptor())
+            throw std::invalid_argument(
+                "EmissionLogLikelihood: residual and y/r not matching in size.");
     }
 
     template <typename data_t>
-    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const Residual<data_t>& residual, const DataContainer<data_t>& y)
-            : Functional<data_t>(residual), _y{std::make_unique<DataContainer<data_t>>(y)}
+    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const Residual<data_t>& residual,
+                                                         const DataContainer<data_t>& y)
+        : Functional<data_t>(residual), _y{std::make_unique<DataContainer<data_t>>(y)}
     {
         // sanity check
         if (residual.getRangeDescriptor() != y.getDataDescriptor())
-            throw std::invalid_argument("EmissionLogLikelihood: residual and y not matching in size.");
+            throw std::invalid_argument(
+                "EmissionLogLikelihood: residual and y not matching in size.");
     }
 
-
     template <typename data_t>
-    data_t EmissionLogLikelihood<data_t>::_evaluate(const DataContainer<data_t>& Rx)
+    data_t EmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         auto result = static_cast<data_t>(0.0);
 
@@ -66,7 +74,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void EmissionLogLikelihood<data_t>::_getGradientInPlace(DataContainer<data_t>& Rx)
+    void EmissionLogLikelihood<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
     {
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = Rx[i];
@@ -78,7 +86,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> EmissionLogLikelihood<data_t>::_getHessian(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t>
+        EmissionLogLikelihood<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
         for (index_t i = 0; i < Rx.getSize(); ++i) {
@@ -91,7 +100,6 @@ namespace elsa
 
         return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
     }
-
 
     template <typename data_t>
     EmissionLogLikelihood<data_t>* EmissionLogLikelihood<data_t>::cloneImpl() const
@@ -120,7 +128,6 @@ namespace elsa
 
         return true;
     }
-
 
     // ------------------------------------------
     // explicit template instantiation

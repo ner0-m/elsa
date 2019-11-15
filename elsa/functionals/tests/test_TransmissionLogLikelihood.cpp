@@ -17,8 +17,10 @@
 
 using namespace elsa;
 
-SCENARIO("Testing the TransmissionLogLikelihood functional") {
-    GIVEN("just data (no residual)") {
+SCENARIO("Testing the TransmissionLogLikelihood functional")
+{
+    GIVEN("just data (no residual)")
+    {
         IndexVector_t numCoeff(3);
         numCoeff << 3, 7, 13;
         DataDescriptor dd(numCoeff);
@@ -31,31 +33,37 @@ SCENARIO("Testing the TransmissionLogLikelihood functional") {
         b.setRandom();
         // ensure b has positive values (due to log)
         for (index_t i = 0; i < dd.getNumberOfCoefficients(); ++i) {
-            if (b[i] < 0) b[i] *= -1;
-            if (b[i] == 0) b[i] += 1;
+            if (b[i] < 0)
+                b[i] *= -1;
+            if (b[i] == 0)
+                b[i] += 1;
         }
         DataContainer dcB(dd, b);
 
-        WHEN("instantiating without r") {
+        WHEN("instantiating without r")
+        {
             TransmissionLogLikelihood func(dd, dcY, dcB);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
-                auto *linRes = dynamic_cast<const LinearResidual<real_t> *>(&func.getResidual());
+                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
                 REQUIRE(linRes);
                 REQUIRE(linRes->hasDataVector() == false);
                 REQUIRE(linRes->hasOperator() == false);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto tmllClone = func.clone();
 
                 REQUIRE(tmllClone.get() != &func);
                 REQUIRE(*tmllClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
@@ -80,24 +88,28 @@ SCENARIO("Testing the TransmissionLogLikelihood functional") {
             }
         }
 
-        WHEN("instantiating with r") {
+        WHEN("instantiating with r")
+        {
             RealVector_t r(dd.getNumberOfCoefficients());
             r.setRandom();
             // ensure non-negative values
             for (index_t i = 0; i < r.size(); ++i)
-                if (r[i] < 0) r[i] *= -1;
+                if (r[i] < 0)
+                    r[i] *= -1;
             DataContainer dcR(dd, r);
 
             TransmissionLogLikelihood func(dd, dcY, dcB, dcR);
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto tmllClone = func.clone();
 
                 REQUIRE(tmllClone.get() != &func);
                 REQUIRE(*tmllClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
@@ -124,7 +136,8 @@ SCENARIO("Testing the TransmissionLogLikelihood functional") {
         }
     }
 
-    GIVEN("a residual with data") {
+    GIVEN("a residual with data")
+    {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 17;
         DataDescriptor dd(numCoeff);
@@ -143,30 +156,36 @@ SCENARIO("Testing the TransmissionLogLikelihood functional") {
         b.setRandom();
         // ensure b has positive values (due to log)
         for (index_t i = 0; i < dd.getNumberOfCoefficients(); ++i) {
-            if (b[i] < 0) b[i] *= -1;
-            if (b[i] == 0) b[i] += 1;
+            if (b[i] < 0)
+                b[i] *= -1;
+            if (b[i] == 0)
+                b[i] += 1;
         }
         DataContainer dcB(dd, b);
 
-        WHEN("instantiating without r") {
+        WHEN("instantiating without r")
+        {
             TransmissionLogLikelihood func(linRes, dcY, dcB);
 
-            THEN("the functional is as expected") {
+            THEN("the functional is as expected")
+            {
                 REQUIRE(func.getDomainDescriptor() == dd);
 
-                auto *lRes = dynamic_cast<const LinearResidual<real_t> *>(&func.getResidual());
+                auto* lRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
                 REQUIRE(lRes);
                 REQUIRE(*lRes == linRes);
             }
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto tmllClone = func.clone();
 
                 REQUIRE(tmllClone.get() != &func);
                 REQUIRE(*tmllClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);
@@ -193,24 +212,28 @@ SCENARIO("Testing the TransmissionLogLikelihood functional") {
             }
         }
 
-        WHEN("instantiating with r") {
+        WHEN("instantiating with r")
+        {
             RealVector_t r(dd.getNumberOfCoefficients());
             r.setRandom();
             // ensure non-negative values
             for (index_t i = 0; i < r.size(); ++i)
-                if (r[i] < 0) r[i] *= -1;
+                if (r[i] < 0)
+                    r[i] *= -1;
             DataContainer dcR(dd, r);
 
             TransmissionLogLikelihood func(linRes, dcY, dcB, dcR);
 
-            THEN("a clone behaves as expected") {
+            THEN("a clone behaves as expected")
+            {
                 auto tmllClone = func.clone();
 
                 REQUIRE(tmllClone.get() != &func);
                 REQUIRE(*tmllClone == func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected") {
+            THEN("the evaluate, gradient and Hessian work as expected")
+            {
                 RealVector_t dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
                 DataContainer x(dd, dataVec);

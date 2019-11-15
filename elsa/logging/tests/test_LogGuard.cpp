@@ -11,7 +11,8 @@
 
 using namespace elsa;
 
-SCENARIO("Using LogGuard") {
+SCENARIO("Using LogGuard")
+{
     LogGuard("logger", "message");
     // cannot test much more than creation/destruction...
 
