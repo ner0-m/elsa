@@ -357,6 +357,64 @@ namespace elsa
         return const_reverse_iterator(cbegin());
     }
 
+    template <typename data_t>
+    data_t DataContainer<data_t>::test() const
+    {
+        data_t result;
+
+        for (index_t i = 0; i < getSize(); ++i) {
+            result += this->operator[](i);
+        }
+
+        return result;
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::test_omp() const
+    {
+        data_t result;
+
+        auto data = _dataHandler.get();
+
+        index_t I = getSize();
+
+#pragma omp parallel private(data)
+        {
+#pragma omp for
+        for (index_t i = 0; i < I; ++i) {
+            result += data->operator[](i);
+        }
+        }
+        return result;
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::test_s() const
+    {
+        index_t result;
+
+        for (index_t i = 0; i < getSize(); ++i) {
+            result += i;
+        }
+
+        return result;
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::test_s_omp() const
+    {
+        index_t result;
+
+#pragma omp parallel
+        {
+#pragma omp for simd
+        for (index_t i = 0; i < getSize(); ++i) {
+            result += i;
+        }
+        }
+        return result;
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;

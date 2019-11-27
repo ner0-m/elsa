@@ -110,12 +110,36 @@ namespace elsa
         DataContainer<data_t>& operator=(Source const& source)
         {
             detach();
-            for (index_t i = 0; i < getSize(); ++i) {
-                this->operator[](i) = source[i];
+
+            index_t I = getSize();
+
+            auto data = _dataHandler.get();
+            auto src = source;
+
+#pragma omp parallel
+            {
+#pragma omp for simd private(data, src) schedule(dynamic)
+                for (index_t i = 0; i < I; ++i)
+                {
+                    data->operator[](i) = src[i];
+                }
             }
 
             return *this;
         }
+
+        /// return the dot product of this signal with the one from container other
+        data_t test() const;
+
+        /// return the dot product of this signal with the one from container other
+        data_t test_omp() const;
+
+        /// return the dot product of this signal with the one from container other
+        data_t test_s() const;
+
+        /// return the dot product of this signal with the one from container other
+        data_t test_s_omp() const;
+
 
         /// return the current DataDescriptor
         const DataDescriptor& getDataDescriptor() const;
