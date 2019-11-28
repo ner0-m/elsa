@@ -50,10 +50,10 @@ namespace elsa
         index_t getNumberOfBlocks() const;
 
         /// return the DataDescriptor of the i-th block
-        const DataDescriptor& getIthDescriptor(index_t i) const;
+        const DataDescriptor& getDescriptorOfBlock(index_t i) const;
 
         /// return the offset to access the data of the i-th block
-        index_t getIthBlockOffset(index_t i) const;
+        index_t getOffsetOfBlock(index_t i) const;
 
     protected:
         /// vector of DataDescriptors describing the individual blocks

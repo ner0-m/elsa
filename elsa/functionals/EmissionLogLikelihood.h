@@ -85,10 +85,10 @@ namespace elsa
 
     private:
         /// the measurement data vector y
-        std::unique_ptr<DataContainer<data_t>> _y{};
+        std::unique_ptr<const DataContainer<data_t>> _y{};
 
         /// the background event data vector r
-        std::unique_ptr<DataContainer<data_t>> _r{};
+        std::unique_ptr<const DataContainer<data_t>> _r{};
     };
 
 } // namespace elsa

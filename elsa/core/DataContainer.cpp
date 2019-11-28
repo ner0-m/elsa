@@ -1,5 +1,7 @@
 #include "DataContainer.h"
 #include "DataHandlerCPU.h"
+#include "DataHandlerMapCPU.h"
+#include "BlockDescriptor.h"
 
 #include <stdexcept>
 #include <utility>
@@ -31,7 +33,7 @@ namespace elsa
 
     template <typename data_t>
     DataContainer<data_t>::DataContainer(const DataContainer<data_t>& other)
-        : _dataDescriptor{other._dataDescriptor->clone()}, _dataHandler{other._dataHandler}
+        : _dataDescriptor{other._dataDescriptor->clone()}, _dataHandler{other._dataHandler->clone()}
     {
     }
 
@@ -40,7 +42,12 @@ namespace elsa
     {
         if (this != &other) {
             _dataDescriptor = other._dataDescriptor->clone();
-            _dataHandler = other._dataHandler;
+
+            if (_dataHandler) {
+                *_dataHandler = *other._dataHandler;
+            } else {
+                _dataHandler = other._dataHandler->clone();
+            }
         }
 
         return *this;
@@ -57,10 +64,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator=(DataContainer<data_t>&& other) noexcept
+    DataContainer<data_t>& DataContainer<data_t>::operator=(DataContainer<data_t>&& other)
     {
         _dataDescriptor = std::move(other._dataDescriptor);
-        _dataHandler = std::move(other._dataHandler);
+        if (_dataHandler) {
+            *_dataHandler = std::move(*other._dataHandler);
+        } else {
+            _dataHandler = std::move(other._dataHandler);
+        }
 
         // leave other in a valid state
         other._dataDescriptor = nullptr;
@@ -84,27 +95,26 @@ namespace elsa
     template <typename data_t>
     data_t& DataContainer<data_t>::operator[](index_t index)
     {
-        detach();
         return (*_dataHandler)[index];
     }
 
     template <typename data_t>
     const data_t& DataContainer<data_t>::operator[](index_t index) const
     {
-        return (*_dataHandler)[index];
+        return static_cast<const DataHandler<data_t>&>(*_dataHandler)[index];
     }
 
     template <typename data_t>
     data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate)
     {
-        detach();
         return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
     template <typename data_t>
     const data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate) const
     {
-        return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
+        return static_cast<const DataHandler<data_t>&>(
+            *_dataHandler)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
     template <typename data_t>
@@ -164,7 +174,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(const DataContainer<data_t>& dc)
     {
-        detach();
         *_dataHandler += *dc._dataHandler;
         return *this;
     }
@@ -172,7 +181,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator-=(const DataContainer<data_t>& dc)
     {
-        detach();
         *_dataHandler -= *dc._dataHandler;
         return *this;
     }
@@ -180,7 +188,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator*=(const DataContainer<data_t>& dc)
     {
-        detach();
         *_dataHandler *= *dc._dataHandler;
         return *this;
     }
@@ -188,7 +195,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator/=(const DataContainer<data_t>& dc)
     {
-        detach();
         *_dataHandler /= *dc._dataHandler;
         return *this;
     }
@@ -196,7 +202,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(data_t scalar)
     {
-        detach();
         *_dataHandler += scalar;
         return *this;
     }
@@ -204,7 +209,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator-=(data_t scalar)
     {
-        detach();
         *_dataHandler -= scalar;
         return *this;
     }
@@ -212,7 +216,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator*=(data_t scalar)
     {
-        detach();
         *_dataHandler *= scalar;
         return *this;
     }
@@ -220,7 +223,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator/=(data_t scalar)
     {
-        detach();
         *_dataHandler /= scalar;
         return *this;
     }
@@ -228,7 +230,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator=(data_t scalar)
     {
-        detach();
         *_dataHandler = scalar;
         return *this;
     }
@@ -272,19 +273,67 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::detach()
+    DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i)
     {
-        if (_dataHandler.use_count() != 1) {
-#pragma omp barrier
-#pragma omp single
-            _dataHandler = _dataHandler->clone();
-        }
+        const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
+
+        if (!blockDesc)
+            throw std::logic_error("DataContainer: cannot get block from not-blocked container");
+
+        if (i >= blockDesc->getNumberOfBlocks() || i < 0)
+            throw std::invalid_argument("DataContainer: block index out of bounds");
+
+        index_t startIndex = blockDesc->getOffsetOfBlock(i);
+        const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
+        index_t blockSize = ithDesc.getNumberOfCoefficients();
+
+        return DataContainer<data_t>{ithDesc, _dataHandler->getBlock(startIndex, blockSize)};
+    }
+
+    template <typename data_t>
+    const DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i) const
+    {
+        const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
+
+        if (!blockDesc)
+            throw std::logic_error("DataContainer: cannot get block from not-blocked container");
+
+        if (i >= blockDesc->getNumberOfBlocks() || i < 0)
+            throw std::invalid_argument("DataContainer: block index out of bounds");
+
+        index_t startIndex = blockDesc->getOffsetOfBlock(i);
+        const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
+        index_t blockSize = ithDesc.getNumberOfCoefficients();
+
+        // getBlock() returns a pointer to non-const DH, but that's fine as it gets wrapped in a
+        // constant container
+        return DataContainer<data_t>{ithDesc, _dataHandler->getBlock(startIndex, blockSize)};
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor)
+    {
+        if (dataDescriptor.getNumberOfCoefficients() != getSize())
+            throw std::invalid_argument("DataContainer: view must have same size as container");
+
+        return DataContainer<data_t>{dataDescriptor, _dataHandler->getBlock(0, getSize())};
+    }
+
+    template <typename data_t>
+    const DataContainer<data_t>
+        DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor) const
+    {
+        if (dataDescriptor.getNumberOfCoefficients() != getSize())
+            throw std::invalid_argument("DataContainer: view must have same size as container");
+
+        // getBlock() returns a pointer to non-const DH, but that's fine as it gets wrapped in a
+        // constant container
+        return DataContainer<data_t>{dataDescriptor, _dataHandler->getBlock(0, getSize())};
     }
 
     template <typename data_t>
     typename DataContainer<data_t>::iterator DataContainer<data_t>::begin()
     {
-        detach();
         return iterator(&(*this)[0]);
     }
 
@@ -303,7 +352,6 @@ namespace elsa
     template <typename data_t>
     typename DataContainer<data_t>::iterator DataContainer<data_t>::end()
     {
-        detach();
         return iterator(&(*this)[0] + getSize());
     }
 
@@ -322,7 +370,6 @@ namespace elsa
     template <typename data_t>
     typename DataContainer<data_t>::reverse_iterator DataContainer<data_t>::rbegin()
     {
-        detach();
         return reverse_iterator(end());
     }
 
@@ -341,7 +388,6 @@ namespace elsa
     template <typename data_t>
     typename DataContainer<data_t>::reverse_iterator DataContainer<data_t>::rend()
     {
-        detach();
         return reverse_iterator(begin());
     }
 

@@ -30,7 +30,7 @@ SCENARIO("Constructing BlockDescriptors")
                 REQUIRE(bd.getNumberOfBlocks() == blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getIthDescriptor(i) == dd);
+                    REQUIRE(bd.getDescriptorOfBlock(i) == dd);
             }
 
             THEN("the new BlockDescriptor has the correct sizes")
@@ -61,7 +61,7 @@ SCENARIO("Constructing BlockDescriptors")
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getIthBlockOffset(i) == i * dd.getNumberOfCoefficients());
+                    REQUIRE(bd.getOffsetOfBlock(i) == i * dd.getNumberOfCoefficients());
             }
         }
     }
@@ -82,7 +82,7 @@ SCENARIO("Constructing BlockDescriptors")
                 REQUIRE(bd.getNumberOfBlocks() == blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getIthDescriptor(i) == dd);
+                    REQUIRE(bd.getDescriptorOfBlock(i) == dd);
             }
 
             THEN("the new BlockDescriptor has the correct sizes")
@@ -115,7 +115,7 @@ SCENARIO("Constructing BlockDescriptors")
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getIthBlockOffset(i) == i * dd.getNumberOfCoefficients());
+                    REQUIRE(bd.getOffsetOfBlock(i) == i * dd.getNumberOfCoefficients());
             }
         }
     }
@@ -136,7 +136,7 @@ SCENARIO("Constructing BlockDescriptors")
                 REQUIRE(bd.getNumberOfBlocks() == blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getIthDescriptor(i) == dd);
+                    REQUIRE(bd.getDescriptorOfBlock(i) == dd);
             }
 
             THEN("the new BlockDescriptor has the correct sizes")
@@ -171,7 +171,7 @@ SCENARIO("Constructing BlockDescriptors")
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getIthBlockOffset(i) == i * dd.getNumberOfCoefficients());
+                    REQUIRE(bd.getOffsetOfBlock(i) == i * dd.getNumberOfCoefficients());
             }
         }
     }

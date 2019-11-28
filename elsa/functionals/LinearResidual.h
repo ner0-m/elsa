@@ -97,7 +97,7 @@ namespace elsa
         std::unique_ptr<LinearOperator<data_t>> _operator{};
 
         /// the data vector b
-        std::unique_ptr<DataContainer<data_t>> _dataVector{};
+        std::unique_ptr<const DataContainer<data_t>> _dataVector{};
     };
 
 } // namespace elsa

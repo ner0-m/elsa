@@ -27,10 +27,7 @@ namespace elsa
         std::unique_ptr<Derived> clone() const { return std::unique_ptr<Derived>(cloneImpl()); }
 
         /// comparison operators
-        bool operator==(const Derived& other) const
-        {
-            return typeid(*this) == typeid(other) && isEqual(other);
-        }
+        bool operator==(const Derived& other) const { return isEqual(other); }
 
         bool operator!=(const Derived& other) const { return !(*this == other); }
 

@@ -33,12 +33,12 @@ namespace elsa
 
     index_t BlockDescriptor::getNumberOfBlocks() const { return _blockDescriptors.size(); }
 
-    const DataDescriptor& BlockDescriptor::getIthDescriptor(index_t i) const
+    const DataDescriptor& BlockDescriptor::getDescriptorOfBlock(index_t i) const
     {
         return *_blockDescriptors.at(i);
     }
 
-    index_t BlockDescriptor::getIthBlockOffset(elsa::index_t i) const
+    index_t BlockDescriptor::getOffsetOfBlock(elsa::index_t i) const
     {
         if (i < 0 || i >= _blockOffsets.size())
             throw std::invalid_argument("BlockDescriptor: index i is out of bounds");

@@ -9,76 +9,57 @@
 
 namespace elsa
 {
-    // forward declaration, allows mutual friending
+    /// forward declaration, allows mutual friending
     template <typename data_t>
-    class DataHandlerMapCPU;
-
-    // forward declaration for friend test function
-    template <typename data_t = real_t>
     class DataHandlerCPU;
-    // forward declaration, used for testing and defined in test file (declared as friend)
-    template <typename data_t>
-    int useCount(const DataHandlerCPU<data_t>&);
 
     /**
-     * \brief Class representing and owning a vector stored in CPU main memory (using
-     * Eigen::Matrix).
+     * \brief Class referencing a vector stored in CPU main memory, or a part thereof (using
+     * Eigen::Map)
      *
-     * \tparam data_t - data type that is stored, defaulting to real_t.
+     * \tparam data_t data type of vector
      *
      * \author David Frank - main code
-     * \author Tobias Lasser - modularization and modernization
-     * \author Nikola Dinev - integration of map and copy-on-write concepts
+     * \author Tobias Lasser - modularization, fixes
+     * \author Nikola Dinev - integration with the copy-on-write mechanism
      *
-     * The class implements copy-on-write. Therefore any non-const functions should call the
-     * detach() function first to trigger the copy-on-write mechanism.
+     * This class does not own or manage its own memory. It is bound to a DataHandlerCPU (the data
+     * owner) at its creation, and serves as a reference to a sequential block of memory owned by
+     * the DataHandlerCPU. As such, changes to the Map will affect the DataHandlerCPU and vice
+     * versa.
      *
-     * DataHandlerCPU and DataHandlerMapCPU are mutual friend classes allowing for the vectorization
-     * of arithmetic operations with the help of Eigen. A strong bidirectional link exists
-     * between the two classes. A Map is associated with the DataHandlerCPU from which it was
-     * created for the entirety of its lifetime. If the DataHandlerCPU starts managing a new vector
-     * (e.g. through a call to detach()), all associated Maps will also be updated.
+     * Maps do not support move assignment, and remain bound to the original data owner until
+     * destructed.
+     *
+     * Maps provide only limited support for copy-on-write. Unless the Map is referencing the
+     * entirety of the vector managed by the data owner, assigning to the Map or cloning will always
+     * trigger a deep copy.
+     *
+     * Cloning a Map produces a new DataHandlerCPU, managing a new chunk of memory. The contents of
+     * the memory are equivalent to the contents of the block referenced by the Map, but the two are
+     * not associated.
      */
-    template <typename data_t>
-    class DataHandlerCPU : public DataHandler<data_t>
+    template <typename data_t = real_t>
+    class DataHandlerMapCPU : public DataHandler<data_t>
     {
-        /// declare DataHandlerMapCPU as friend, allows the use of Eigen for improved performance
-        friend DataHandlerMapCPU<data_t>;
+        /// declare DataHandlerCPU as friend, allows the use of Eigen for improved performance
+        friend class DataHandlerCPU<data_t>;
 
     protected:
         /// convenience typedef for the Eigen::Matrix data vector
         using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
+        /// convenience typedef for the Eigen::Map
+        using DataMap_t = Eigen::Map<DataVector_t>;
 
     public:
-        /// delete default constructor (having no information makes no sense)
-        DataHandlerCPU() = delete;
+        /// copy constructor
+        DataHandlerMapCPU(const DataHandlerMapCPU<data_t>& other);
+
+        /// default move constructor
+        DataHandlerMapCPU(DataHandlerMapCPU<data_t>&& other) = default;
 
         /// default destructor
-        ~DataHandlerCPU() override;
-
-        /**
-         * \brief Constructor initializing an appropriately sized vector with zeros
-         *
-         * \param[in] size of the vector
-         * \param[in] initialize - set to false if you do not need initialization with zeros
-         * (default: true)
-         *
-         * \throw std::invalid_argument if the size is non-positive
-         */
-        explicit DataHandlerCPU(index_t size, bool initialize = true);
-
-        /**
-         * \brief Constructor initializing a data vector with a given vector
-         *
-         * \param[in] vector that is used for initializing the data
-         */
-        explicit DataHandlerCPU(DataVector_t vector);
-
-        /// copy constructor
-        DataHandlerCPU(const DataHandlerCPU<data_t>& other);
-
-        /// move constructor
-        DataHandlerCPU(DataHandlerCPU<data_t>&& other);
+        ~DataHandlerMapCPU() override;
 
         /// return the size of the vector
         index_t getSize() const override;
@@ -116,15 +97,6 @@ namespace elsa
         /// return a new DataHandler with element-wise logarithms of this one
         std::unique_ptr<DataHandler<data_t>> log() const override;
 
-        /// copy assign another DataHandlerCPU to this, other types handled in assign()
-        DataHandlerCPU<data_t>& operator=(const DataHandlerCPU<data_t>& v);
-
-        /// move assign another DataHandlerCPU to this, other types handled in assign()
-        DataHandlerCPU<data_t>& operator=(DataHandlerCPU<data_t>&& v);
-
-        /// lift copy and move assignment operators from base class
-        using DataHandler<data_t>::operator=;
-
         /// compute in-place element-wise addition of another vector v
         DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) override;
 
@@ -136,6 +108,14 @@ namespace elsa
 
         /// compute in-place element-wise division by another vector v
         DataHandler<data_t>& operator/=(const DataHandler<data_t>& v) override;
+
+        /// copy assign another DataHandlerMapCPU to this, other types handled in assign()
+        DataHandlerMapCPU<data_t>& operator=(const DataHandlerMapCPU<data_t>& v);
+
+        DataHandlerMapCPU<data_t>& operator=(DataHandlerMapCPU<data_t>&&) = default;
+
+        /// lift copy and move assignment operators from base class
+        using DataHandler<data_t>::operator=;
 
         /// compute in-place addition of a scalar
         DataHandler<data_t>& operator+=(data_t scalar) override;
@@ -162,15 +142,15 @@ namespace elsa
         std::unique_ptr<const DataHandler<data_t>>
             getBlock(index_t startIndex, index_t numberOfElements) const override;
 
-        /// used for testing only and defined in test file
-        friend int useCount<>(const DataHandlerCPU<data_t>& dh);
-
     protected:
-        /// the vector storing the data
-        std::shared_ptr<DataVector_t> _data;
+        /// vector mapping of the data
+        DataMap_t _map;
 
-        /// list of DataHandlerMaps referring to blocks of this
-        std::list<DataHandlerMapCPU<data_t>*> _associatedMaps;
+        /// pointer to the data-owning handler
+        DataHandlerCPU<data_t>* _dataOwner;
+
+        /// handle to this in the list of Maps associated with the data-owning handler
+        typename std::list<DataHandlerMapCPU<data_t>*>::iterator _handle;
 
         /// implement the polymorphic clone operation
         DataHandlerCPU<data_t>* cloneImpl() const override;
@@ -178,25 +158,19 @@ namespace elsa
         /// implement the polymorphic comparison operation
         bool isEqual(const DataHandler<data_t>& other) const override;
 
-        /// copy the data stored in other
         void assign(const DataHandler<data_t>& other) override;
 
-        /// move the data stored in other if other is of the same type, otherwise copy the data
         void assign(DataHandler<data_t>&& other) override;
 
     private:
-        /// creates the deep copy for the copy-on-write mechanism
-        void detach();
-
-        /// same as detach() but leaving an uninitialized block of numberOfElements elements
-        /// starting at index startIndex
-        void detachWithUninitializedBlock(index_t startIndex, index_t numberOfElements);
-
-        /// change the vector being handled
-        void attach(const std::shared_ptr<DataVector_t>& data);
-
-        /// change the vector being handled (rvalue version)
-        void attach(std::shared_ptr<DataVector_t>&& data);
+        /**
+         * \brief Construct a DataHandlerMapCPU referencing a sequential block of data owned by
+         * DataHandlerCPU
+         *
+         * \param[in] dataOwner pointer to the DataHandlerCPU owning the data vector
+         * \param[in] data pointer to start of segment
+         * \param[in] n number of elements in block
+         */
+        DataHandlerMapCPU(DataHandlerCPU<data_t>* dataOwner, data_t* data, index_t n);
     };
-
 } // namespace elsa

@@ -16,6 +16,7 @@ set(MODULE_HEADERS
         DataContainerIterator.h
         DataHandler.h
         DataHandlerCPU.h
+        DataHandlerMapCPU.h
         LinearOperator.h)
 
 # list all the code files of the module
@@ -24,6 +25,7 @@ set(MODULE_SOURCES
         BlockDescriptor.cpp
         DataContainer.cpp
         DataHandlerCPU.cpp
+        DataHandlerMapCPU.cpp
         LinearOperator.cpp)
 
 

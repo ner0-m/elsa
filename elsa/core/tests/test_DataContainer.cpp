@@ -10,12 +10,7 @@
 
 #include <catch2/catch.hpp>
 #include "DataContainer.h"
-
-template <typename data_t>
-int elsa::useCount(const DataContainer<data_t>& dc)
-{
-    return dc._dataHandler.use_count();
-}
+#include "BlockDescriptor.h"
 
 using namespace elsa;
 using namespace Catch::literals; // to enable 0.0_a approximate floats
@@ -402,110 +397,117 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments")
     }
 }
 
-SCENARIO("Testing the copy-on-write mechanism")
+SCENARIO("Testing creation of Maps through DataContainer")
 {
-    GIVEN("A random DataContainer")
+    GIVEN("a non-blocked container")
     {
-
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
         DataDescriptor desc(numCoeff);
+
         DataContainer dc(desc);
-        Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
+        const DataContainer constDc(desc);
 
-        for (index_t i = 0; i < dc.getSize(); ++i) {
-            dc[i] = randVec(i);
-        }
-
-        WHEN("const manipulating a copy constructed shallow copy")
+        WHEN("trying to reference a block")
         {
-            DataContainer dc2(dc);
-            dc + dc;
-            dc.sum();
-            dc.square();
-            dc.log();
-            dc.dot(dc);
-            dc.l1Norm();
-
-            THEN("the data is the same")
+            THEN("an exception occurs")
             {
-                REQUIRE(dc2 == dc);
-                REQUIRE(useCount(dc) == 2);
+                REQUIRE_THROWS(dc.getBlock(0));
+                REQUIRE_THROWS(constDc.getBlock(0));
             }
         }
 
-        WHEN("non-const manipulating a copy constructed shallow copy")
+        WHEN("creating a view")
         {
-            DataContainer dc2(dc);
-            REQUIRE(useCount(dc) == 2);
-            REQUIRE(useCount(dc2) == 2);
+            IndexVector_t numCoeff(1);
+            numCoeff << desc.getNumberOfCoefficients();
+            DataDescriptor linearDesc(numCoeff);
+            auto linearDc = dc.viewAs(linearDesc);
+            auto linearConstDc = constDc.viewAs(linearDesc);
 
-            THEN("copy-on-write is invoked")
+            THEN("view has the correct descriptor and data")
             {
-                dc2 += 2;
-                REQUIRE(dc2 != dc);
-                REQUIRE(useCount(dc2) == 1);
-                REQUIRE(useCount(dc) == 1);
+                REQUIRE(linearDesc == linearDc.getDataDescriptor());
+                REQUIRE(&linearDc[0] == &dc[0]);
+
+                REQUIRE(linearDesc == linearConstDc.getDataDescriptor());
+                REQUIRE(&linearConstDc[0] == &constDc[0]);
+
+                AND_THEN("view is not a shallow copy")
+                {
+                    const auto dcCopy = dc;
+                    const auto constDcCopy = constDc;
+
+                    linearDc[0] = 1;
+                    REQUIRE(&linearDc[0] == &dc[0]);
+                    REQUIRE(&linearDc[0] != &dcCopy[0]);
+
+                    linearConstDc[0] = 1;
+                    REQUIRE(&linearConstDc[0] == &constDc[0]);
+                    REQUIRE(&linearConstDc[0] != &constDcCopy[0]);
+                }
             }
+        }
+    }
 
-            THEN("copy-on-write is invoked")
-            {
-                dc2 += dc;
-                REQUIRE(dc2 != dc);
-                REQUIRE(useCount(dc2) == 1);
-                REQUIRE(useCount(dc) == 1);
-            }
+    GIVEN("a blocked container")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 52, 29;
+        DataDescriptor desc(numCoeff);
+        index_t numBlocks = 7;
+        BlockDescriptor blockDesc(numBlocks, desc);
 
-            THEN("copy-on-write is invoked")
-            {
-                dc2 -= 2;
-                REQUIRE(dc2 != dc);
-            }
+        DataContainer dc(blockDesc);
+        const DataContainer constDc(blockDesc);
 
-            THEN("copy-on-write is invoked")
+        WHEN("referencing a block")
+        {
+            THEN("block has the correct descriptor and data")
             {
-                dc2 -= dc;
-                REQUIRE(dc2 != dc);
-            }
+                for (index_t i = 0; i < numBlocks; i++) {
+                    auto dcBlock = dc.getBlock(i);
+                    const auto constDcBlock = constDc.getBlock(i);
 
-            THEN("copy-on-write is invoked")
-            {
-                dc2 /= 2;
-                REQUIRE(dc2 != dc);
-            }
+                    REQUIRE(dcBlock.getDataDescriptor() == blockDesc.getDescriptorOfBlock(i));
+                    REQUIRE(&dcBlock[0] == &dc[0] + blockDesc.getOffsetOfBlock(i));
 
-            THEN("copy-on-write is invoked")
-            {
-                dc2 /= dc;
-                REQUIRE(dc2 != dc);
-            }
-
-            THEN("copy-on-write is invoked")
-            {
-                dc2 *= 2;
-                REQUIRE(dc2 != dc);
-            }
-
-            THEN("copy-on-write is invoked")
-            {
-                dc2 *= dc;
-                REQUIRE(dc2 != dc);
-            }
-
-            THEN("copy-on-write is invoked")
-            {
-                dc[0] += 2;
-                REQUIRE(dc2 != dc);
+                    REQUIRE(constDcBlock.getDataDescriptor() == blockDesc.getDescriptorOfBlock(i));
+                    REQUIRE(&constDcBlock[0] == &constDc[0] + blockDesc.getOffsetOfBlock(i));
+                }
             }
         }
 
-        WHEN("manipulating a non-shallow-copied container")
+        WHEN("crating a view")
         {
-            for (index_t i = 0; i < dc.getSize(); ++i) {
-                dc[i] += 2;
-            }
+            IndexVector_t numCoeff(1);
+            numCoeff << blockDesc.getNumberOfCoefficients();
+            DataDescriptor linearDesc(numCoeff);
+            auto linearDc = dc.viewAs(linearDesc);
+            auto linearConstDc = constDc.viewAs(linearDesc);
 
-            THEN("copy-on-write should not be invoked") { REQUIRE(useCount(dc) == 1); }
+            THEN("view has the correct descriptor and data")
+            {
+                REQUIRE(linearDesc == linearDc.getDataDescriptor());
+                REQUIRE(&linearDc[0] == &dc[0]);
+
+                REQUIRE(linearDesc == linearConstDc.getDataDescriptor());
+                REQUIRE(&linearConstDc[0] == &constDc[0]);
+
+                AND_THEN("view is not a shallow copy")
+                {
+                    const auto dcCopy = dc;
+                    const auto constDcCopy = constDc;
+
+                    linearDc[0] = 1;
+                    REQUIRE(&linearDc[0] == &dc[0]);
+                    REQUIRE(&linearDc[0] != &dcCopy[0]);
+
+                    linearConstDc[0] = 1;
+                    REQUIRE(&linearConstDc[0] == &constDc[0]);
+                    REQUIRE(&linearConstDc[0] != &constDcCopy[0]);
+                }
+            }
         }
     }
 }

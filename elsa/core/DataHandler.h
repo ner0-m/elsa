@@ -12,6 +12,7 @@ namespace elsa
      *
      * \author David Frank - initial code
      * \author Tobias Lasser - modularization, modernization
+     * \author Nikola Dinev - add block support
      *
      * This abstract base class serves as an interface for data handlers, which encapsulate the
      * actual data being stored e.g. in main memory of the CPU or in various memory types of GPUs.
@@ -89,6 +90,36 @@ namespace elsa
         /// assign a scalar to all elements of the data vector
         virtual DataHandler<data_t>& operator=(data_t scalar) = 0;
 
+        /// copy assignment operator
+        DataHandler<data_t>& operator=(const DataHandler<data_t>& other)
+        {
+            if (other.getSize() != getSize())
+                throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+
+            assign(other);
+            return *this;
+        }
+
+        /// move assignment operator
+        DataHandler<data_t>& operator=(DataHandler<data_t>&& other)
+        {
+            if (other.getSize() != getSize())
+                throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+
+            assign(std::move(other));
+            return *this;
+        }
+
+        /// return a reference to the sequential block starting at startIndex and containing
+        /// numberOfElements elements
+        virtual std::unique_ptr<DataHandler<data_t>> getBlock(index_t startIndex,
+                                                              index_t numberOfElements) = 0;
+
+        /// return a const reference to the sequential block starting at startIndex and containing
+        /// numberOfElements elements
+        virtual std::unique_ptr<const DataHandler<data_t>>
+            getBlock(index_t startIndex, index_t numberOfElements) const = 0;
+
     protected:
         /// slow element-wise dot product fall-back for when DataHandler types do not match
         data_t slowDotProduct(const DataHandler<data_t>& v) const
@@ -126,6 +157,19 @@ namespace elsa
             for (index_t i = 0; i < getSize(); ++i)
                 (*this)[i] /= v[i];
         }
+
+        /// slow element-wise assignment fall-back for when DataHandler types do not match
+        void slowAssign(const DataHandler<data_t>& other)
+        {
+            for (index_t i = 0; i < getSize(); ++i)
+                (*this)[i] = other[i];
+        }
+
+        /// derived classes should override this method to implement copy assignment
+        virtual void assign(const DataHandler<data_t>& other) = 0;
+
+        /// derived classes should override this method to implement move assignment
+        virtual void assign(DataHandler<data_t>&& other) = 0;
     };
 
     /// element-wise addition of two DataHandlers
