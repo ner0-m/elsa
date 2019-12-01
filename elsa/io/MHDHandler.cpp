@@ -74,7 +74,7 @@ namespace elsa
         while (!metaFile.eof()) {
             // read next header line
             std::getline(metaFile, metaLine);
-            StringUtils::trim(metaLine);
+            metaLine = StringUtils::trim(metaLine);
 
             if (metaLine.length() == 0u)
                 continue;
@@ -86,11 +86,11 @@ namespace elsa
                     "MHD::readHeader: found non-empty line without name/value pair");
 
             std::string name = metaLine.substr(0, delim);
-            StringUtils::trim(name);
+            name = StringUtils::trim(name);
             std::string value = metaLine.substr(delim + 1);
-            StringUtils::trim(value);
+            value = StringUtils::trim(value);
 
-            StringUtils::toLower(name);
+            name = StringUtils::toLower(name);
             properties[name] = value;
         }
 
@@ -112,7 +112,7 @@ namespace elsa
         auto byteOrderIt = properties.find("elementbyteordermsb");
         if (byteOrderIt != properties.end()) {
             std::string byteOrderValue = byteOrderIt->second;
-            StringUtils::toLower(byteOrderValue);
+            byteOrderValue = StringUtils::toLower(byteOrderValue);
 
             if (byteOrderValue != "false" && byteOrderValue != "no")
                 throw std::runtime_error(

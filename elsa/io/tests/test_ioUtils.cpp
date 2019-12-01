@@ -11,21 +11,64 @@
 #include "elsa.h"
 
 using namespace elsa;
+using namespace std::string_literals;
 
 SCENARIO("testing the StringUtils")
 {
-    GIVEN("a string with whitespace at beginning/end")
+    GIVEN("A only Whitespace string")
     {
-        std::string testString{"   Test String   "};
+        auto testString = "   \t   "s;
 
         WHEN("trimming the string")
         {
-            StringUtils::trim(testString);
+            auto restultString = StringUtils::trim(testString);
 
             THEN("the string is trimmed")
             {
-                std::string expectedTrimmedString("Test String");
-                REQUIRE(testString == expectedTrimmedString);
+                REQUIRE(restultString == ""s);
+            }
+        }
+    }
+
+    GIVEN("a string with whitespace at beginning/end")
+    {
+        auto testString = "   Test String   "s;
+
+        WHEN("trimming the string")
+        {
+            auto restultString = StringUtils::trim(testString);
+
+            THEN("the string is trimmed")
+            {
+                REQUIRE(restultString == "Test String"s);
+            }
+        }
+    }
+    GIVEN("a string with whitespace at beginning")
+    {
+        auto testString = "   Test String"s;
+
+        WHEN("trimming the string")
+        {
+            auto restultString = StringUtils::trim(testString);
+
+            THEN("the string is trimmed")
+            {
+                REQUIRE(restultString == "Test String"s);
+            }
+        }
+    }
+    GIVEN("a string with whitespace at end")
+    {
+        auto testString = "Test String   "s;
+
+        WHEN("trimming the string")
+        {
+            auto restultString = StringUtils::trim(testString);
+
+            THEN("the string is trimmed")
+            {
+                REQUIRE(restultString == "Test String"s);
             }
         }
     }
@@ -36,23 +79,23 @@ SCENARIO("testing the StringUtils")
 
         WHEN("transforming the string to lower case")
         {
-            StringUtils::toLower(testString);
+            auto resultString = StringUtils::toLower(testString);
 
             THEN("the string is lower case")
             {
                 std::string expectedLowerCaseString("abcdefghijklm");
-                REQUIRE(testString == expectedLowerCaseString);
+                REQUIRE(resultString == expectedLowerCaseString);
             }
         }
 
         WHEN("transforming the string to upper case")
         {
-            StringUtils::toUpper(testString);
+            auto resultString = StringUtils::toUpper(testString);
 
             THEN("the string is upper case")
             {
                 std::string expectedUpperCaseString("ABCDEFGHIJKLM");
-                REQUIRE(testString == expectedUpperCaseString);
+                REQUIRE(resultString == expectedUpperCaseString);
             }
         }
     }

@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <string_view>
 
 namespace elsa
 {
@@ -14,17 +15,36 @@ namespace elsa
      *
      * \author Maximilian Hornung - initial code
      * \author Tobias Lasser - rewrite
+     * \author David Frank - Port to C++17 (usage of std::filesystem and std::string_view)
      */
     struct StringUtils {
     public:
+        /// trim whitespace from beginning
+        static constexpr std::string_view trimLeft(std::string_view str)
+        {
+            // TODO what is a whitespace? Only spaces, or also newline, tab and such?
+            str.remove_prefix(std::min(str.find_first_not_of(" \f\n\r\t\v"), str.size()));
+            return str;
+        }
+
+        /// trim whitespace from end
+        static constexpr std::string_view trimRight(std::string_view str)
+        {
+            str.remove_suffix(str.size() - str.find_last_not_of(" \f\n\r\t\v") - 1);
+            return str;
+        }
+
         /// trim whitespace from beginning/end of string
-        static void trim(std::string& str);
+        static constexpr std::string_view trim(std::string_view str)
+        {
+            return trimRight(trimLeft(str));
+        }
 
         /// convert string to lower case
-        static void toLower(std::string& str);
+        static std::string toLower(const std::string& str);
 
         /// convert string to upper case
-        static void toUpper(std::string& str);
+        static std::string toUpper(const std::string& str);
     };
 
     /**
@@ -46,7 +66,7 @@ namespace elsa
         enum class DataType { INT8, UINT8, INT16, UINT16, INT32, UINT32, FLOAT32, FLOAT64 };
 
         /// return the size in bytes for the respective DataType
-        static index_t getSizeOfDataType(DataType type);
+        static /* constexpr */ index_t getSizeOfDataType(DataType type);
 
         /// parse a data_t value from a string
         template <typename data_t>
@@ -70,7 +90,7 @@ namespace elsa
     struct FileSystemUtils {
     public:
         /// return the absolute path of path with respect to base
-        static std::string getAbsolutePath(std::string path, std::string base);
+        static std::string getAbsolutePath(std::string& path, std::string base);
     };
 
 } // namespace elsa
