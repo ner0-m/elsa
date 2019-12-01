@@ -100,16 +100,16 @@ namespace elsa
                 throw std::invalid_argument("failed reading name/value delimiter");
 
             std::string name = assignment.substr(0, delim);
-            StringUtils::trim(name);
+            name = StringUtils::trim(name);
 
             std::string value = assignment.substr(delim + 1);
-            StringUtils::trim(value);
+            value = StringUtils::trim(value);
 
             // remove quotes (if they exist)
             if (value[0] == value[value.size() - 1] && (value[0] == '\'' || value[0] == '\"'))
                 value = value.substr(1, value.size() - 2);
 
-            StringUtils::toLower(name);
+            name = StringUtils::toLower(name);
             properties[name] = value;
         }
         file.ignore(2); // end of header marker
@@ -148,7 +148,7 @@ namespace elsa
         auto byteorderIt = properties.find("byteorder");
         if (byteorderIt != properties.end()) {
             std::string byteorderValue = byteorderIt->second;
-            StringUtils::toLower(byteorderValue);
+            byteorderValue = StringUtils::toLower(byteorderValue);
 
             if (byteorderValue != "lowbytefirst")
                 throw std::runtime_error("EDF::parseHeader: unsupported byte order value");
@@ -159,7 +159,7 @@ namespace elsa
         auto datatypeIt = properties.find("datatype");
         if (datatypeIt != properties.end()) {
             std::string datatypeValue = datatypeIt->second;
-            StringUtils::toLower(datatypeValue);
+            datatypeValue = StringUtils::toLower(datatypeValue);
 
             if (datatypeValue == "signedbyte")
                 dataType = DataUtils::DataType::INT8;

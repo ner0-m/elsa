@@ -4,31 +4,24 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <iostream>
 
 namespace elsa
 {
-    void StringUtils::trim(std::string& str)
+    std::string StringUtils::toLower(const std::string& str)
     {
-        // trim whitespace from beginning
-        str.erase(str.begin(), std::find_if(str.begin(), str.end(),
-                                            [](int ch) { return std::isspace(ch) == 0; }));
-        // trim whitespace from end
-        str.erase(
-            std::find_if(str.rbegin(), str.rend(), [](int ch) { return std::isspace(ch) == 0; })
-                .base(),
-            str.end());
-    }
-
-    void StringUtils::toLower(std::string& str)
-    {
-        std::transform(str.begin(), str.end(), str.begin(),
+        auto lowerStr = str;
+        std::transform(str.cbegin(), str.cend(), lowerStr.begin(),
                        [](unsigned char c) { return std::tolower(c); });
+        return lowerStr;
     }
 
-    void StringUtils::toUpper(std::string& str)
+    std::string StringUtils::toUpper(const std::string& str)
     {
-        std::transform(str.begin(), str.end(), str.begin(),
+        auto upperStr = str;
+        std::transform(str.cbegin(), str.cend(), upperStr.begin(),
                        [](unsigned char c) { return std::toupper(c); });
+        return upperStr;
     }
 
     index_t DataUtils::getSizeOfDataType(DataUtils::DataType type)
@@ -55,6 +48,9 @@ namespace elsa
     template <typename data_t>
     data_t DataUtils::parse(const std::string& str)
     {
+        // this could be solved with from_chars in the <charconv> header, but it's not implemented
+        // in libstdc++ for GCC 9 and libc++ doesn't have it as well. So yeah, maybe in the future!
+
         data_t value;
         std::stringstream convert(str);
         convert >> value;
@@ -101,12 +97,13 @@ namespace elsa
             data[i] = static_cast<data_t>(ptr[i]);
     }
 
-    std::string FileSystemUtils::getAbsolutePath(std::string path, std::string base)
+    std::string FileSystemUtils::getAbsolutePath(std::string& path, std::string base)
     {
         // note: this should really be done with C++17 <filesystem>... if it were universally
         // available
 
         // split off filename at end
+
         auto found = base.find_last_of("/\\");
         if (found == std::string::npos)
             base = ".";
@@ -119,13 +116,15 @@ namespace elsa
         free(resolved);
 
         return (basePath + "/" + path);
+
+        // return std::filesystem::absolute(base);
     }
 
     // ------------------------------------------
     // explicit template instantiation
-    template float DataUtils::parse(const std::string&);
-    template double DataUtils::parse(const std::string&);
-    template index_t DataUtils::parse(const std::string&);
+    template float DataUtils::parse(const std::string& str);
+    template double DataUtils::parse(const std::string& str);
+    template index_t DataUtils::parse(const std::string& str);
 
     template std::vector<float> DataUtils::parseVector(const std::string&);
     template std::vector<double> DataUtils::parseVector(const std::string&);
