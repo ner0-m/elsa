@@ -1,6 +1,6 @@
 #pragma once
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "DataContainer.h"
 
 namespace elsa

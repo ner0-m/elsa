@@ -2,7 +2,7 @@
 
 // core
 #include <utility>
-#include "elsa.h"
+#include "elsaDefines.h"
 
 // geometry
 #include "Intersection.h"

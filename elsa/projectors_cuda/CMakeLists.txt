@@ -32,7 +32,6 @@ if (CMAKE_CUDA_COMPILER)
     # build the module library
     add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
     add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
-    add_dependencies(elsa ${ELSA_MODULE_TARGET_NAME})
 
     target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_projectors elsa_projector_kernels)
 
@@ -48,7 +47,8 @@ if (CMAKE_CUDA_COMPILER)
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17) 
     # set -fPIC
     set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
+    # set define to check cuda projectors in projects
+    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)
 
     # build the tests (if enabled)
     if(ELSA_TESTING)

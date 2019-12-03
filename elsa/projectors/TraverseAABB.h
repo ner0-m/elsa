@@ -1,6 +1,6 @@
 #pragma once
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "BoundingBox.h"
 
 #include <Eigen/Geometry>

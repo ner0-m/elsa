@@ -1,6 +1,6 @@
 #pragma once
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "DataHandler.h"
 
 #include <Eigen/Core>
@@ -173,4 +173,5 @@ namespace elsa
          */
         DataHandlerMapCPU(DataHandlerCPU<data_t>* dataOwner, data_t* data, index_t n);
     };
+
 } // namespace elsa

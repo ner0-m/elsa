@@ -1,13 +1,6 @@
 /// Elsa example program: basic 3d X-ray CT simulation and reconstruction using CUDA projectors
 
 #include "elsa.h"
-#include "PhantomGenerator.h"
-#include "CircleTrajectoryGenerator.h"
-#include "JosephsMethodCUDA.h"
-#include "EDFHandler.h"
-#include "GradientDescent.h"
-#include "WLSProblem.h"
-#include "Logger.h"
 
 #include <iostream>
 

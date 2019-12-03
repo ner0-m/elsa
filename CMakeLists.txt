@@ -84,6 +84,11 @@ if(ELSA_TESTING)
     enable_testing()
     add_subdirectory(thirdparty/Catch2)
 
+	add_custom_target(tests
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Build and run all the tests.")
+
     # add the CMake modules for automatic test discovery
     set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/thirdparty/Catch2/contrib" ${CMAKE_MODULE_PATH})
 

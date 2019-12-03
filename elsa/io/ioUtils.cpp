@@ -1,5 +1,5 @@
 #include "ioUtils.h"
-#include "elsa.h"
+#include "elsaDefines.h"
 
 #include <algorithm>
 #include <cctype>

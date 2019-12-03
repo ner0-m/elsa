@@ -102,7 +102,7 @@ set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES CUDA_STANDARD 14 POS
 #we only need the elsa.h header -> manually specify include directories
 target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC 
         $<TARGET_PROPERTY:elsa_core,INTERFACE_INCLUDE_DIRECTORIES>
-        $<INSTALL_INTERFACE:include/${ELSA_MODULE_NAME}>
+        $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # register the module

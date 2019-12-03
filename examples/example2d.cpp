@@ -1,13 +1,6 @@
 /// Elsa example program: basic 2d X-ray CT simulation and reconstruction
 
 #include "elsa.h"
-#include "PhantomGenerator.h"
-#include "CircleTrajectoryGenerator.h"
-#include "SiddonsMethod.h"
-#include "EDFHandler.h"
-#include "GradientDescent.h"
-#include "WLSProblem.h"
-#include "Logger.h"
 
 #include <iostream>
 

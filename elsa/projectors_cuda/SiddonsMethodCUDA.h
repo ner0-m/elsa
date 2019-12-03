@@ -2,7 +2,7 @@
 
 #include <cuda_runtime.h>
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "LinearOperator.h"
 #include "Geometry.h"
 #include "BoundingBox.h"

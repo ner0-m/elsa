@@ -1,6 +1,6 @@
 #pragma once
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "DataHandler.h"
 
 #include <Eigen/Core>

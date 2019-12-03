@@ -36,8 +36,7 @@ stages:
   script:
     - cd build
     - cmake -DELSA_CREATE_JUNIT_REPORTS=ON ..
-    - make
-    - ctest
+    - make -j4 tests
   artifacts:
     reports:
       junit: "build/test_reports/test_*.xml"
@@ -180,7 +179,7 @@ test-coverage:
     - mkdir -p build
     - cd build
     - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
-    - make all -j4
+    - make tests -j4
     - make test_coverage
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"

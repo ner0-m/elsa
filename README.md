@@ -23,7 +23,7 @@ Current testing includes gcc7, gcc9, and clang8.
 The main third party dependencies (Eigen3, spdlog, Catch2) are integrated via git submodules.
 
 For CUDA support, you need a CUDA capable graphics card as well as an installation of the CUDA toolkit.
-Current testing includes CUDA 9.1 and 9.2 combined with gcc7.
+Current testing includes CUDA 9.2 combined with gcc7.
 
 Compiling
 ---------
@@ -41,17 +41,21 @@ make install
 
 You can provide `-DCMAKE_INSTALL_PREFIX=folder` during the cmake step to select an installation destination other than the default (`/usr/local` on Unix).
 
-You can run the elsa unit tests by running (in the build folder):
+You can build and run the elsa unit tests by running (in the build folder):
 ```
-ctest
+make tests
 ```
 
 Building against the elsa library
 ---------------------------------
 
-When using the elsa library in your project, we advise using CMake as the build system. You can then include elsa via the `find_package(elsa)` statement and linking your target against the corresponding elsa modules, e.g. `target_link_libraries(myTarget elsa::core)`.
+When using the elsa library in your project, we suggest using CMake as the build system. 
+Then you can configure elsa via the `find_package(elsa)` statement and link your target against elsa with `target_link_libraries(myTarget elsa::all)`.
+Alternatively, you can link more specifically only against the required elsa modules, such as `target_link_libraries(myTarget elsa::core)`.
+In your source code, `#include "elsa.h"` to include all of elsa; alternatively, include only the header files you are actually using to minimize compilation times.
 
-As elsa depends on Eigen3 and spdlog, you will need to have these packages installed on your system, and you have to point CMake to those installations.
+As elsa depends on Eigen3 (version 3.3 or newer) and spdlog (version 1.0 or newer), you will need to have these packages installed on your system, and you have to point CMake to those installations.
+When using CUDA, your CMake should be version 3.14 or newer.
 
 Contributing
 ------------

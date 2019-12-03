@@ -1,6 +1,6 @@
 #pragma once
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "DataDescriptor.h"
 #include "DataHandler.h"
 #include "DataContainerIterator.h"

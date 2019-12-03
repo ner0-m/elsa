@@ -2,7 +2,8 @@
 
 include(CMakeFindDependencyMacro)
 find_dependency(Eigen3 3.3 NO_MODULE REQUIRED)
-find_dependency(Spdlog REQUIRED)
+find_dependency(spdlog REQUIRED)
+find_dependency(OpenMP QUIET)
 
 set(_supported_components @ELSA_REGISTERED_COMPONENTS@)
 

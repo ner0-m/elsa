@@ -1,6 +1,6 @@
 #pragma once
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "Cloneable.h"
 #include "DataDescriptor.h"
 #include "DataContainer.h"

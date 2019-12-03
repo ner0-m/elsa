@@ -9,7 +9,7 @@
 
 #include "cuda_runtime.h"
 #include "stdint.h"
-#include "elsa.h"
+#include "elsaDefines.h"
 
 namespace elsa {
 
