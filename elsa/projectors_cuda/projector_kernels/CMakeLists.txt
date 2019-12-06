@@ -66,11 +66,11 @@ else()
   set(TARGET_GPUS CUDA_ARCH_TYPES)
 endif()
 
-#fmad can reduce accuracy, but only gives a negligible boost to speed
-#use expt-relaxed-constexpr flag to suppress warnings caused by including the Eigen header
+# fmad can reduce accuracy, but only gives a negligible boost to speed
+# use expt-relaxed-constexpr flag to suppress warnings caused by including the Eigen header
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --fmad=false --expt-relaxed-constexpr")
 
-#set target GPU architectures
+# set target GPU architectures
 foreach(TARGET_GPU ${TARGET_GPUS})
   string(REPLACE "." "" TARGET_GPU ${TARGET_GPU})
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code arch=compute_${TARGET_GPU},code=[sm_${TARGET_GPU},compute_${TARGET_GPU}]")
@@ -95,18 +95,15 @@ set(MODULE_SOURCES
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-#CUDA doesn't support C++17, require C++14
+# CUDA doesn't support C++17, require C++14
 set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES CUDA_STANDARD 14 POSITION_INDEPENDENT_CODE ON)
 
-#CUDA doesn't support linking against a library built under the C++17 standard,
-#we only need the elsa.h header -> manually specify include directories
+# CUDA doesn't support linking against a library built under the C++17 standard,
+# we only need the elsa.h header -> manually specify include directories
 target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC 
         $<TARGET_PROPERTY:elsa_core,INTERFACE_INCLUDE_DIRECTORIES>
         $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
-# register the module
-registerComponent(${ELSA_MODULE_NAME})
-
-# install the module
+# install the kernels as a module
 InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
