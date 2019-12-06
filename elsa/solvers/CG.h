@@ -64,6 +64,10 @@ namespace elsa
         /// default destructor
         ~CG() override = default;
 
+    protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        CG(const CG<data_t>&) = default;
+
     private:
         /// the default number of iterations
         const index_t _defaultIterations{100};

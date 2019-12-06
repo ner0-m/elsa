@@ -20,7 +20,7 @@ namespace elsa
         auto [descriptor, dataType] = parseHeader(properties);
 
         // read in the data
-        DataContainer<data_t> dataContainer(descriptor);
+        DataContainer<data_t> dataContainer(*descriptor);
 
         if (dataType == DataUtils::DataType::UINT16)
             DataUtils::parseRawData<uint16_t, data_t>(file, dataContainer);
@@ -117,7 +117,7 @@ namespace elsa
         return properties;
     }
 
-    std::pair<DataDescriptor, DataUtils::DataType>
+    std::pair<std::unique_ptr<DataDescriptor>, DataUtils::DataType>
         EDF::parseHeader(const std::map<std::string, std::string>& properties)
     {
         // read the dimensions
@@ -208,10 +208,8 @@ namespace elsa
                 dimSpacingVec[i] = spacing[i];
         }
 
-        // the data descriptor condensed from the info
-        DataDescriptor dataDescriptor(dimSizeVec, dimSpacingVec);
-
-        return std::make_pair(dataDescriptor, dataType);
+        return std::make_pair(std::make_unique<DataDescriptor>(dimSizeVec, dimSpacingVec),
+                              dataType);
     }
 
     template <typename data_t>
@@ -225,7 +223,7 @@ namespace elsa
         file << "ByteOrder = LowByteFirst;\n";
         file << "DataType = " << getDataTypeName(data) << ";\n";
 
-        auto descriptor = data.getDataDescriptor();
+        auto& descriptor = data.getDataDescriptor();
 
         // write dimension and size
         for (std::size_t i = 0; i < descriptor.getNumberOfDimensions(); ++i)

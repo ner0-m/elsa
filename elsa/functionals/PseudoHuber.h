@@ -47,6 +47,9 @@ namespace elsa
         ~PseudoHuber() override = default;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        PseudoHuber(const PseudoHuber<data_t>&) = default;
+
         /// the evaluation of the Huber norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

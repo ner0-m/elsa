@@ -277,7 +277,7 @@ SCENARIO("Testing BinaryMethod")
 
         THEN("Domain descriptor is still the same")
         {
-            auto retDescriptor = op.getDomainDescriptor();
+            auto& retDescriptor = op.getDomainDescriptor();
 
             CHECK(retDescriptor.getNumberOfCoefficientsPerDimension()(0) == 5);
             CHECK(retDescriptor.getNumberOfCoefficientsPerDimension()(1) == 5);
@@ -285,7 +285,7 @@ SCENARIO("Testing BinaryMethod")
 
         THEN("Domain descriptor is still the same")
         {
-            auto retDescriptor = op.getRangeDescriptor();
+            auto& retDescriptor = op.getRangeDescriptor();
 
             CHECK(retDescriptor.getNumberOfCoefficientsPerDimension()(0) == 5);
             CHECK(retDescriptor.getNumberOfCoefficientsPerDimension()(1) == 1);

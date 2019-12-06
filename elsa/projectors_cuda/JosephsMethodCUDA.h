@@ -64,6 +64,9 @@ namespace elsa
         virtual ~JosephsMethodCUDA();
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        JosephsMethodCUDA(const JosephsMethodCUDA<data_t>&) = default;
+
         /// apply Joseph's method (i.e. forward projection)
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 

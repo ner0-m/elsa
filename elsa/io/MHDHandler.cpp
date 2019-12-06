@@ -25,7 +25,7 @@ namespace elsa
             throw std::runtime_error("MHD::read: can not read from '" + dataPath + "'");
 
         // read in the data
-        DataContainer<data_t> dataContainer(descriptor);
+        DataContainer<data_t> dataContainer(*descriptor);
 
         if (dataType == DataUtils::DataType::UINT16)
             DataUtils::parseRawData<uint16_t, data_t>(dataFile, dataContainer);
@@ -97,7 +97,7 @@ namespace elsa
         return properties;
     }
 
-    std::tuple<DataDescriptor, std::string, DataUtils::DataType>
+    std::tuple<std::unique_ptr<DataDescriptor>, std::string, DataUtils::DataType>
         MHD::parseHeader(const std::map<std::string, std::string>& properties)
     {
         // check the dimensions
@@ -183,17 +183,15 @@ namespace elsa
                 dimSpacing[i] = dimSpacingVec[i];
         }
 
-        // the data descriptor condensed form the info
-        DataDescriptor dataDescriptor(dimSizes, dimSpacing);
-
-        return std::make_tuple(dataDescriptor, rawDataPath, dataType);
+        return std::make_tuple(std::make_unique<DataDescriptor>(dimSizes, dimSpacing), rawDataPath,
+                               dataType);
     }
 
     template <typename data_t>
     void MHD::writeHeader(std::ofstream& metaFile, const DataContainer<data_t>& data,
                           std::string rawFilename)
     {
-        auto descriptor = data.getDataDescriptor();
+        auto& descriptor = data.getDataDescriptor();
 
         // write dimension, size and spacing
         metaFile << "NDims = " << descriptor.getNumberOfDimensions() << "\n";

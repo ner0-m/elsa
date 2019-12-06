@@ -42,6 +42,9 @@ namespace elsa
         ~L1Norm() override = default;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        L1Norm(const L1Norm<data_t>&) = default;
+
         /// the evaluation of the l1 norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

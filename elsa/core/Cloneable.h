@@ -31,6 +31,9 @@ namespace elsa
 
         bool operator!=(const Derived& other) const { return !(*this == other); }
 
+        /// delete implicitly declared copy assignment to prevent copy assignment of derived classes
+        Cloneable& operator=(const Cloneable&) = delete;
+
     protected:
         /// actual clone implementation method, abstract to force override in derived classes
         virtual Derived* cloneImpl() const = 0;
@@ -39,10 +42,8 @@ namespace elsa
         virtual bool isEqual(const Derived& other) const = 0;
 
         /// default copy constructor, protected to not be publicly available (but available for
-        /// cloneImpl)
+        /// cloneImpl()
         Cloneable(const Cloneable&) = default;
-        /// default copy assignment, protected to not be publicly available
-        Cloneable& operator=(const Cloneable&) = default;
     };
 
 } // namespace elsa

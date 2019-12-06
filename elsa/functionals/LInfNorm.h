@@ -42,6 +42,9 @@ namespace elsa
         ~LInfNorm() override = default;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        LInfNorm(const LInfNorm<data_t>&) = default;
+
         /// the evaluation of the linf norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

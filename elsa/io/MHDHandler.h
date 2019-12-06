@@ -46,7 +46,7 @@ namespace elsa
         static std::map<std::string, std::string> readHeader(std::ifstream& metaFile);
 
         /// parse the MHD header property map into a DataDescriptor and DataType
-        static std::tuple<DataDescriptor, std::string, DataUtils::DataType>
+        static std::tuple<std::unique_ptr<DataDescriptor>, std::string, DataUtils::DataType>
             parseHeader(const std::map<std::string, std::string>& properties);
 
         /// write the MHD header to file

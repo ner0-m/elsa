@@ -23,7 +23,7 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
 
         # build the GPU projector speed test program
         add_executable(speed_test speed_test.cpp)
-        target_link_libraries(speed_test elsa_generators elsa_projectors_cuda elsa_logging)
+        target_link_libraries(speed_test elsa::all)
         target_compile_features(speed_test PUBLIC cxx_std_17)
         add_dependencies(examples speed_test)
     endif()

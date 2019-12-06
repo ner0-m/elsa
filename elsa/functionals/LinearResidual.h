@@ -65,6 +65,9 @@ namespace elsa
         const DataContainer<data_t>& getDataVector() const;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        LinearResidual(const LinearResidual<data_t>&) = default;
+
         /// implement the polymorphic clone operation
         LinearResidual<data_t>* cloneImpl() const override;
 

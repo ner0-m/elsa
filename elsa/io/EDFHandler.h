@@ -43,7 +43,7 @@ namespace elsa
         static std::map<std::string, std::string> readHeader(std::ifstream& file);
 
         /// parse the EDF header property map into a DataDescriptor and DataType
-        static std::pair<DataDescriptor, DataUtils::DataType>
+        static std::pair<std::unique_ptr<DataDescriptor>, DataUtils::DataType>
             parseHeader(const std::map<std::string, std::string>& properties);
 
         /// write the EDF header to file

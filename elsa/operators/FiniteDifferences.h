@@ -64,6 +64,9 @@ namespace elsa
         ~FiniteDifferences() override = default;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        FiniteDifferences(const FiniteDifferences<data_t>&) = default;
+
         /// apply the finite differences operator
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 

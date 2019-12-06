@@ -46,6 +46,9 @@ namespace elsa
         const Scaling<data_t>& getWeightingOperator() const;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        WeightedL2NormPow2(const WeightedL2NormPow2<data_t>&) = default;
+
         /// the evaluation of the weighted, squared l2 norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

@@ -30,6 +30,10 @@ namespace elsa
         /// default destructor
         ~GradientDescent() override = default;
 
+    protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        GradientDescent(const GradientDescent<data_t>&) = default;
+
     private:
         /// the step size
         real_t _stepSize;
