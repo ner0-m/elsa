@@ -158,7 +158,7 @@ namespace elsa
         if (*_dataTerm != *other._dataTerm)
             return false;
 
-        for (index_t i = 0; i < _regTerms.size(); ++i)
+        for (std::size_t i = 0; i < _regTerms.size(); ++i)
             if (_regTerms.at(i) != other._regTerms.at(i))
                 return false;
 

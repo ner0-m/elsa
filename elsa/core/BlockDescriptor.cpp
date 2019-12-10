@@ -1,5 +1,6 @@
 #include "BlockDescriptor.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace elsa
@@ -31,11 +32,16 @@ namespace elsa
             _numberOfCoefficientsPerDimension.head(_numberOfDimensions - 1).prod();
     }
 
-    index_t BlockDescriptor::getNumberOfBlocks() const { return _blockDescriptors.size(); }
+    index_t BlockDescriptor::getNumberOfBlocks() const
+    {
+        return static_cast<index_t>(_blockDescriptors.size());
+    }
 
     const DataDescriptor& BlockDescriptor::getDescriptorOfBlock(index_t i) const
     {
-        return *_blockDescriptors.at(i);
+        // std::vector is using unsigned indices.. so oblige it
+        auto j = static_cast<decltype(_blockDescriptors)::size_type>(i);
+        return *_blockDescriptors.at(j);
     }
 
     index_t BlockDescriptor::getOffsetOfBlock(elsa::index_t i) const
@@ -69,9 +75,10 @@ namespace elsa
         if (_blockDescriptors.size() != otherBlock->_blockDescriptors.size())
             return false;
 
-        for (index_t i = 0; i < _blockDescriptors.size(); ++i)
-            if (*_blockDescriptors.at(i) != *otherBlock->_blockDescriptors.at(i))
-                return false;
+        if (!std::equal(_blockDescriptors.begin(), _blockDescriptors.end(),
+                        otherBlock->_blockDescriptors.begin(),
+                        [](const auto& i1, const auto& i2) { return *i1 == *i2; }))
+            return false;
 
         return _blockOffsets == otherBlock->_blockOffsets;
     }

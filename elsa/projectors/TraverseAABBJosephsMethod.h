@@ -125,9 +125,8 @@ namespace elsa
         /// compute the entry and exit points of ray r with the volume (aabb), returns the length of
         /// the intersection
         real_t calculateAABBIntersections(const Ray& ray);
-        /// select the closest voxel to the entry point (considering the ray direction and the
-        /// current positon)
-        void selectClosestVoxel(const RealVector_t& rd, const RealVector_t& currentPosition);
+        /// select the closest voxel to the entry point (considering the current position)
+        void selectClosestVoxel(const RealVector_t& currentPosition);
         /// check if the current index is still in the bounding box
         bool isCurrentPositionInAABB(index_t index) const;
         /// advances the traversal algorithm to the first sampling point

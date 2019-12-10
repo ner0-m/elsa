@@ -38,7 +38,7 @@ namespace elsa
 
         real_t angleIncrement = static_cast<real_t>(1.0) * arcDegrees / (numberOfPoses - 1.0);
         for (index_t i = 0; i < numberOfPoses; ++i) {
-            real_t angle = i * angleIncrement * pi / 180.0; // convert to radians
+            real_t angle = i * angleIncrement * pi_t / 180.0; // convert to radians
             if (dim == 2) {
                 Geometry geom(sourceToCenter, centerToDetector, angle, volumeDescriptor,
                               sinoDescriptor);

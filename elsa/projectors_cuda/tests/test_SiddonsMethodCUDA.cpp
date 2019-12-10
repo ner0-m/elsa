@@ -53,7 +53,7 @@ TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", SiddonsMet
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
         for (std::size_t i = 0; i < numImgs; i++) {
-            real_t angle = i * 2 * pi / 50;
+            real_t angle = i * 2 * pi_t / 50;
             geom.emplace_back(20 * volSize, volSize, angle, volumeDescriptor, sinoDescriptor);
         }
         TestType op(volumeDescriptor, sinoDescriptor, geom);
@@ -232,8 +232,8 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
 
         WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin")
         {
-            geom.emplace_back(20 * volSize, volSize, pi / 2, volumeDescriptor, sinoDescriptor, 0.0,
-                              0.0, volSize);
+            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
+                              0.0, 0.0, volSize);
 
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -253,8 +253,8 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
         WHEN("Tracing along a x-axis-aligned ray with a y-coordinate of origin beyond the bounding "
              "box")
         {
-            geom.emplace_back(20 * volSize, volSize, pi / 2, volumeDescriptor, sinoDescriptor, 0.0,
-                              0.0, -volSize);
+            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
+                              0.0, 0.0, -volSize);
 
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -290,8 +290,9 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
 
         const index_t numCases = 9;
         real_t alpha[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pi / 2, pi / 2, pi / 2};
-        real_t gamma[numCases] = {0.0, 0.0, 0.0, pi / 2, pi / 2, pi / 2, pi / 2, pi / 2, pi / 2};
+        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pi_t / 2, pi_t / 2, pi_t / 2};
+        real_t gamma[numCases] = {0.0,      0.0,      0.0,      pi_t / 2, pi_t / 2,
+                                  pi_t / 2, pi_t / 2, pi_t / 2, pi_t / 2};
         real_t offsetx[numCases] = {volSize, 0.0, volSize, 0.0, 0.0, 0.0, volSize, 0.0, volSize};
         real_t offsety[numCases] = {0.0, volSize, volSize, volSize, 0.0, volSize, 0.0, 0.0, 0.0};
         real_t offsetz[numCases] = {0.0, 0.0, 0.0, 0.0, volSize, volSize, 0.0, volSize, volSize};
@@ -342,7 +343,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         std::vector<Geometry> geom;
 
         const index_t numCases = 4;
-        const real_t angles[numCases] = {0.0, pi / 2, pi, 3 * pi / 2};
+        const real_t angles[numCases] = {0.0, pi_t / 2, pi_t, 3 * pi_t / 2};
         Eigen::Matrix<data_t, volSize * volSize, 1> backProj[2];
         backProj[1] << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
@@ -470,8 +471,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         std::vector<Geometry> geom;
 
         const index_t numCases = 6;
-        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, pi / 2, 3 * pi / 2};
-        real_t gamma[numCases] = {0.0, pi, pi / 2, 3 * pi / 2, pi / 2, 3 * pi / 2};
+        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, pi_t / 2, 3 * pi_t / 2};
+        real_t gamma[numCases] = {0.0, pi_t, pi_t / 2, 3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
         std::string al[numCases] = {"z", "-z", "x", "-x", "y", "-y"};
 
         Eigen::Matrix<data_t, volSize * volSize * volSize, 1> backProj[numCases];
@@ -654,11 +655,11 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         WHEN("Both x- and y-axis-aligned rays are present")
         {
             geom.emplace_back(20 * volSize, volSize, 0, volumeDescriptor, sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 90 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 90 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 180 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 180 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 270 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 270 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
 
             TestType op(volumeDescriptor, sinoDescriptor, geom);
@@ -708,8 +709,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
 
         WHEN("x-, y and z-axis-aligned rays are present")
         {
-            real_t beta[numImgs] = {0.0, 0.0, 0.0, 0.0, pi / 2, 3 * pi / 2};
-            real_t gamma[numImgs] = {0.0, pi, pi / 2, 3 * pi / 2, pi / 2, 3 * pi / 2};
+            real_t beta[numImgs] = {0.0, 0.0, 0.0, 0.0, pi_t / 2, 3 * pi_t / 2};
+            real_t gamma[numImgs] = {0.0, pi_t, pi_t / 2, 3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
 
             for (index_t i = 0; i < numImgs; i++)
                 geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, gamma[i],
@@ -773,7 +774,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -826,8 +827,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, sqrt(3));
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -867,8 +868,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              -sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, -sqrt(3));
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -906,8 +907,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
 
         WHEN("Projecting under an angle of 30 degrees and ray only intersects a single pixel")
         {
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              -2 - sqrt(3) / 2);
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, -2 - sqrt(3) / 2);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -940,7 +941,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -993,8 +995,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, sqrt(3));
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1035,8 +1037,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, -sqrt(3));
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1076,8 +1078,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("Projecting under an angle of 120 degrees and ray only intersects a single pixel")
         {
             // This is a special case that is handled separately in both forward and backprojection
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -2 - sqrt(3) / 2);
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, -2 - sqrt(3) / 2);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1126,7 +1128,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume")
         {
             // In this case the ray enters and exits the volume along the main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1166,8 +1168,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees enters through the right border")
         {
             // In this case the ray enters through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, 1);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, 1);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1206,8 +1208,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees exits through the left border")
         {
             // In this case the ray exit through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, -1);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, -1);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1246,8 +1248,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees only intersects a single voxel")
         {
             // special case - no interior voxels, entry and exit voxels are the same
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, -2);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, -2);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")

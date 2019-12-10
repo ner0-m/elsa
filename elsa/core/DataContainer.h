@@ -201,13 +201,13 @@ namespace elsa
         DataContainer<data_t> getBlock(index_t i);
 
         /// returns a const reference to the i-th block, wrapped in a DataContainer
-        const DataContainer<data_t> getBlock(index_t i) const;
+        DataContainer<data_t> getBlock(index_t i) const;
 
         /// return a view of this DataContainer with a different descriptor
         DataContainer<data_t> viewAs(const DataDescriptor& dataDescriptor);
 
         /// return a const view of this DataContainer with a different descriptor
-        const DataContainer<data_t> viewAs(const DataDescriptor& dataDescriptor) const;
+        DataContainer<data_t> viewAs(const DataDescriptor& dataDescriptor) const;
 
         /// iterator for DataContainer (random access and continuous)
         using iterator = DataContainerIterator<DataContainer<data_t>>;

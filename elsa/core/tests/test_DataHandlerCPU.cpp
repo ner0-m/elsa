@@ -12,7 +12,7 @@
 #include "DataHandlerMapCPU.h"
 
 template <typename data_t>
-int elsa::useCount(const DataHandlerCPU<data_t>& dh)
+long elsa::useCount(const DataHandlerCPU<data_t>& dh)
 {
     return dh._data.use_count();
 }
@@ -34,7 +34,7 @@ TEMPLATE_TEST_CASE("Scenario: Constructing DataHandlerCPU", "", float, double, i
             THEN("it has a zero vector")
             {
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == 0.0);
+                    REQUIRE(dh[i] == static_cast<TestType>(0));
             }
         }
 
@@ -467,9 +467,11 @@ TEMPLATE_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler
                     REQUIRE((*dhExp)[i] == Approx(static_cast<TestType>(std::exp(randVec(i)))));
 
                 auto dhLog = dh.log();
-                for (index_t i = 0; i < size; ++i)
+                for (index_t i = 0; i < size; ++i) {
+                    TestType logVal = static_cast<TestType>(std::log(randVec(i)));
                     if (randVec(i) > 0)
-                        REQUIRE((*dhLog)[i] == Approx(static_cast<TestType>(log(randVec(i)))));
+                        REQUIRE((*dhLog)[i] == Approx(logVal));
+                }
             }
 
             THEN("the element-wise binary vector operations work as expected")
@@ -556,7 +558,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler
 
             THEN("the element-wise assignment of a scalar works as expected")
             {
-                TestType scalar = std::is_integral_v<TestType> ? 47 : 47.11;
+                auto scalar = std::is_integral_v<TestType> ? TestType(47) : TestType(47.11);
 
                 dh = scalar;
                 for (index_t i = 0; i < size; ++i)
@@ -624,7 +626,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing the arithmetic operations with DataHandler
 
         THEN("the operations with a scalar work as expected")
         {
-            TestType scalar = std::is_integral_v<TestType> ? 5 : 4.7;
+            auto scalar = std::is_integral_v<TestType> ? TestType(5) : TestType(4.7);
 
             auto resultScalarPlus = scalar + dh;
             for (index_t i = 0; i < size; ++i)

@@ -51,7 +51,7 @@ TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", JosephsMet
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
         for (std::size_t i = 0; i < numImgs; i++) {
-            real_t angle = i * 2 * pi / 50;
+            real_t angle = i * 2 * pi_t / 50;
             geom.emplace_back(20 * volSize, volSize, angle, volumeDescriptor, sinoDescriptor);
         }
         TestType fast(volumeDescriptor, sinoDescriptor, geom);
@@ -269,8 +269,8 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
 
         WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin")
         {
-            geom.emplace_back(20 * volSize, volSize, pi / 2, volumeDescriptor, sinoDescriptor, 0.0,
-                              0.0, volSize);
+            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
+                              0.0, 0.0, volSize);
 
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
@@ -297,8 +297,8 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
         WHEN("Tracing along a x-axis-aligned ray with a y-coordinate of origin beyond the bounding "
              "box")
         {
-            geom.emplace_back(20 * volSize, volSize, pi / 2, volumeDescriptor, sinoDescriptor, 0.0,
-                              0.0, -volSize);
+            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
+                              0.0, 0.0, -volSize);
 
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
@@ -341,8 +341,9 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
 
         const index_t numCases = 9;
         real_t alpha[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pi / 2, pi / 2, pi / 2};
-        real_t gamma[numCases] = {0.0, 0.0, 0.0, pi / 2, pi / 2, pi / 2, pi / 2, pi / 2, pi / 2};
+        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pi_t / 2, pi_t / 2, pi_t / 2};
+        real_t gamma[numCases] = {0.0,      0.0,      0.0,      pi_t / 2, pi_t / 2,
+                                  pi_t / 2, pi_t / 2, pi_t / 2, pi_t / 2};
         real_t offsetx[numCases] = {-volSize, 0.0,      -volSize, 0.0,     0.0,
                                     0.0,      -volSize, 0.0,      -volSize};
         real_t offsety[numCases] = {0.0,      -volSize, -volSize, -volSize, 0.0,
@@ -403,7 +404,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
         std::vector<Geometry> geom;
 
         const index_t numCases = 4;
-        const real_t angles[numCases] = {0.0, pi / 2, pi, 3 * pi / 2};
+        const real_t angles[numCases] = {0.0, pi_t / 2, pi_t, 3 * pi_t / 2};
         Eigen::Matrix<data_t, Eigen::Dynamic, 1> backProj[2];
         backProj[0].resize(volSize * volSize);
         backProj[1].resize(volSize * volSize);
@@ -656,8 +657,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
         std::vector<Geometry> geom;
 
         const index_t numCases = 6;
-        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, pi / 2, 3 * pi / 2};
-        real_t gamma[numCases] = {0.0, pi, pi / 2, 3 * pi / 2, pi / 2, 3 * pi / 2};
+        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, pi_t / 2, 3 * pi_t / 2};
+        real_t gamma[numCases] = {0.0, pi_t, pi_t / 2, 3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
         std::string al[numCases] = {"z", "-z", "x", "-x", "y", "-y"};
 
         Eigen::Matrix<data_t, Eigen::Dynamic, 1> backProj[numCases];
@@ -990,11 +991,11 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
         WHEN("Both x- and y-axis-aligned rays are present")
         {
             geom.emplace_back(20 * volSize, volSize, 0, volumeDescriptor, sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 90 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 90 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 180 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 180 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 270 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 270 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
 
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
@@ -1052,8 +1053,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", JosephsMethodC
 
         WHEN("x-, y and z-axis-aligned rays are present")
         {
-            real_t beta[numImgs] = {0.0, 0.0, 0.0, 0.0, pi / 2, 3 * pi / 2};
-            real_t gamma[numImgs] = {0.0, pi, pi / 2, 3 * pi / 2, pi / 2, 3 * pi / 2};
+            real_t beta[numImgs] = {0.0, 0.0, 0.0, 0.0, pi_t / 2, 3 * pi_t / 2};
+            real_t gamma[numImgs] = {0.0, pi_t, pi_t / 2, 3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
 
             for (index_t i = 0; i < numImgs; i++)
                 geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, gamma[i],
@@ -1125,7 +1126,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction Weighting for all interpolated values should be the same
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor);
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
 
@@ -1181,7 +1182,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
                             const real_t angle =
                                 abs(atan((sqrt(3.0) * volSize * 10 - volSize / 2.0 + j)
                                          / (volSize * 10 + volSize / 2.0 - i))
-                                    - pi / 3);
+                                    - pi_t / 3);
                             const real_t len = volSize * 21 * tan(angle);
                             if (len < 1) {
                                 REQUIRE(volume((index_t) i, (index_t) j)
@@ -1200,8 +1201,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction First pixel should be weighted
             // differently
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, sqrt(3));
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
 
@@ -1254,8 +1255,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
                     fast.applyAdjoint(sino, volume);
                     for (real_t i = 0.5; i < volSize; i += 1) {
                         for (real_t j = 0.5; j < volSize; j += 1) {
-                            const real_t angle =
-                                abs(atan((40 * sqrt(3.0) - 2 + j) / (42 + sqrt(3.0) - i)) - pi / 3);
+                            const real_t angle = abs(
+                                atan((40 * sqrt(3.0) - 2 + j) / (42 + sqrt(3.0) - i)) - pi_t / 3);
                             const real_t len = 84 * tan(angle);
                             if (len < 1) {
                                 REQUIRE(volume((index_t) i, (index_t) j)
@@ -1274,8 +1275,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction Last pixel should be weighted
             // differently
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              -sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, -sqrt(3));
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
 
@@ -1327,8 +1328,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
 
                     for (real_t i = 0.5; i < volSize; i += 1) {
                         for (real_t j = 0.5; j < volSize; j += 1) {
-                            const real_t angle =
-                                abs(atan((40 * sqrt(3.0) - 2 + j) / (42 - sqrt(3.0) - i)) - pi / 3);
+                            const real_t angle = abs(
+                                atan((40 * sqrt(3.0) - 2 + j) / (42 - sqrt(3.0) - i)) - pi_t / 3);
                             const real_t len = 84 * tan(angle);
 
                             if (len < 1) {
@@ -1346,8 +1347,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
         WHEN("Projecting under an angle of 30 degrees and ray only intersects a single pixel")
         {
             // This is a special case that is handled separately in both forward and backprojection
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              -2 - sqrt(3) / 2);
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, -2 - sqrt(3) / 2);
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
 
@@ -1385,8 +1386,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
 
                     for (real_t i = 0.5; i < volSize; i += 1) {
                         for (real_t j = 0.5; j < volSize; j += 1) {
-                            const real_t angle = abs(
-                                atan((40 * sqrt(3.0) - 2 + j) / (40 - sqrt(3.0) / 2 - i)) - pi / 3);
+                            const real_t angle =
+                                abs(atan((40 * sqrt(3.0) - 2 + j) / (40 - sqrt(3.0) / 2 - i))
+                                    - pi_t / 3);
                             const real_t len = 84 * tan(angle);
 
                             if (len < 1) {
@@ -1405,7 +1407,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction Weighting for all interpolated values should be the same
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor);
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
 
@@ -1463,7 +1466,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
                     for (real_t i = 0.5; i < volSize; i += 1) {
                         for (real_t j = 0.5; j < volSize; j += 1) {
                             const real_t angle =
-                                abs(atan((sqrt(3.0) * 40 + 2 - i) / (42 - j)) - pi / 3);
+                                abs(atan((sqrt(3.0) * 40 + 2 - i) / (42 - j)) - pi_t / 3);
                             const real_t len = volSize * 21 * tan(angle);
                             if (len < 1) {
                                 REQUIRE(volume((index_t) i, (index_t) j)
@@ -1482,8 +1485,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction First pixel should be weighted
             // differently
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, sqrt(3));
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
 
@@ -1532,7 +1535,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
                     for (real_t i = 0.5; i < volSize; i += 1) {
                         for (real_t j = 0.5; j < volSize; j += 1) {
                             const real_t angle =
-                                abs(atan((sqrt(3.0) * 40 + 2 - i) / (42 + sqrt(3) - j)) - pi / 3);
+                                abs(atan((sqrt(3.0) * 40 + 2 - i) / (42 + sqrt(3) - j)) - pi_t / 3);
                             const real_t len = volSize * 21 * tan(angle);
                             if (len < 1) {
                                 REQUIRE(volume((index_t) i, (index_t) j)
@@ -1551,8 +1554,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction Last pixel should be weighted
             // differently
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, -sqrt(3));
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
 
@@ -1606,7 +1609,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
                     for (real_t i = 0.5; i < volSize; i += 1) {
                         for (real_t j = 0.5; j < volSize; j += 1) {
                             const real_t angle =
-                                abs(atan((sqrt(3.0) * 40 + 2 - i) / (42 - sqrt(3) - j)) - pi / 3);
+                                abs(atan((sqrt(3.0) * 40 + 2 - i) / (42 - sqrt(3) - j)) - pi_t / 3);
                             const real_t len = 84 * tan(angle);
 
                             if (len < 1) {
@@ -1624,8 +1627,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
         WHEN("Projecting under an angle of 120 degrees and ray only intersects a single pixel")
         {
             // This is a special case that is handled separately in both forward and backprojection
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -2 - sqrt(3) / 2);
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, -2 - sqrt(3) / 2);
             TestType fast(volumeDescriptor, sinoDescriptor, geom);
             TestType slow(volumeDescriptor, sinoDescriptor, geom, false);
 
@@ -1664,7 +1667,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
                     for (real_t i = 0.5; i < volSize; i += 1) {
                         for (real_t j = 0.5; j < volSize; j += 1) {
                             const real_t angle = abs(
-                                atan((sqrt(3.0) * 40 + 2 - i) / (40 - sqrt(3) / 2 - j)) - pi / 3);
+                                atan((sqrt(3.0) * 40 + 2 - i) / (40 - sqrt(3) / 2 - j)) - pi_t / 3);
                             const real_t len = 84 * tan(angle);
 
                             if (len < 1) {
@@ -1699,7 +1702,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume")
         {
             // In this case the ray enters and exits the volume along the main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6);
             TestType op(volumeDescriptor, sinoDescriptor, geom, false);
 
             THEN("The ray intersects the correct voxels")
@@ -1740,8 +1743,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
         {
             // getchar();
             // In this case the ray enters through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, 1);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, 1);
             TestType op(volumeDescriptor, sinoDescriptor, geom, false);
 
             THEN("The ray intersects the correct voxels")
@@ -1783,8 +1786,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees exits through the left border")
         {
             // In this case the ray exit through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, -1);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, -1);
             TestType op(volumeDescriptor, sinoDescriptor, geom, false);
 
             THEN("The ray intersects the correct voxels")
@@ -1826,8 +1829,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", JosephsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees only intersects a single voxel")
         {
             // special case - no interior voxels, entry and exit voxels are the same
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, -2);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, -2);
             TestType op(volumeDescriptor, sinoDescriptor, geom, false);
 
             THEN("The ray intersects the correct voxels")

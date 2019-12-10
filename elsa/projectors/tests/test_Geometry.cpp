@@ -65,7 +65,7 @@ SCENARIO("Testing 2D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                     RealVector_t pixel(1);
                     pixel << detPixel;
                     auto [ro, rd] = g.computeRayTo(pixel);
@@ -121,7 +121,7 @@ SCENARIO("Testing 2D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                     RealVector_t pixel(1);
                     pixel << detPixel;
                     auto [ro, rd] = g.computeRayTo(pixel);
@@ -139,7 +139,7 @@ SCENARIO("Testing 2D geometries")
 
         WHEN("testing geometry with 90 degree rotation and no offsets")
         {
-            real_t angle = pi / 2; // 90 degrees
+            real_t angle = pi_t / 2; // 90 degrees
             Geometry g(s2c, c2d, angle, ddVol, ddDet);
 
             THEN("a copy is the same")
@@ -178,7 +178,7 @@ SCENARIO("Testing 2D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                     RealVector_t pixel(1);
                     pixel << detPixel;
                     auto [ro, rd] = g.computeRayTo(pixel);
@@ -196,7 +196,7 @@ SCENARIO("Testing 2D geometries")
 
         WHEN("testing geometry with 45 degree rotation and offset center of rotation")
         {
-            real_t angle = pi / 4; // 45 degrees
+            real_t angle = pi_t / 4; // 45 degrees
             real_t cx = -1;
             real_t cy = 2;
             Geometry g(s2c, c2d, angle, ddVol, ddDet, 0, cx, cy);
@@ -242,7 +242,7 @@ SCENARIO("Testing 2D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                     RealVector_t pixel(1);
                     pixel << detPixel;
                     auto [ro, rd] = g.computeRayTo(pixel);
@@ -321,8 +321,8 @@ SCENARIO("Testing 3D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
+                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
                         auto [ro, rd] = g.computeRayTo(pixel);
@@ -392,8 +392,8 @@ SCENARIO("Testing 3D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
+                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
                         auto [ro, rd] = g.computeRayTo(pixel);
@@ -423,7 +423,7 @@ SCENARIO("Testing 3D geometries")
 
         WHEN("testing geometry with 90 degree rotation and no offsets")
         {
-            real_t angle = pi / 2;
+            real_t angle = pi_t / 2;
             Geometry g(s2c, c2d, ddVol, ddDet, angle);
 
             THEN("a copy is the same")
@@ -464,8 +464,8 @@ SCENARIO("Testing 3D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
+                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
                         auto [ro, rd] = g.computeRayTo(pixel);
@@ -495,8 +495,8 @@ SCENARIO("Testing 3D geometries")
 
         WHEN("testing geometry with 45/22.5 degree rotation and offset center of rotation")
         {
-            real_t angle1 = pi / 4;
-            real_t angle2 = pi / 2;
+            real_t angle1 = pi_t / 4;
+            real_t angle2 = pi_t / 2;
             RealVector_t offset(3);
             offset << 1, -2, -1;
             Geometry g(s2c, c2d, ddVol, ddDet, angle1, angle2, 0, 0, 0, offset[0], offset[1],
@@ -547,8 +547,8 @@ SCENARIO("Testing 3D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
+                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
                         auto [ro, rd] = g.computeRayTo(pixel);
@@ -579,9 +579,9 @@ SCENARIO("Testing 3D geometries")
 
         WHEN("testing geometry with 45/22.5/12.25 degree rotation as a rotation matrix")
         {
-            real_t angle1 = pi / 4;
-            real_t angle2 = pi / 2;
-            real_t angle3 = pi / 8;
+            real_t angle1 = pi_t / 4;
+            real_t angle2 = pi_t / 2;
+            real_t angle3 = pi_t / 8;
             RealMatrix_t rot1(3, 3);
             rot1 << std::cos(angle1), 0, std::sin(angle1), 0, 1, 0, -std::sin(angle1), 0,
                 std::cos(angle1);
@@ -634,8 +634,8 @@ SCENARIO("Testing 3D geometries")
             THEN("rays make sense")
             {
                 // test outer + central pixels
-                for (real_t detPixel1 : {0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : {0.5, 2.5, 4.5}) {
+                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
+                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
                         RealVector_t pixel(2);
                         pixel << detPixel1, detPixel2;
                         auto [ro, rd] = g.computeRayTo(pixel);

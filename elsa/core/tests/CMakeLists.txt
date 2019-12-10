@@ -5,6 +5,7 @@ include(CTest)
 include(Catch)
 
 # the actual tests
+ELSA_TEST(elsaDefines)
 ELSA_TEST(DataDescriptor)
 ELSA_TEST(BlockDescriptor)
 ELSA_TEST(DataContainer)

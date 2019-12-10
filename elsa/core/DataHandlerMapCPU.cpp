@@ -49,7 +49,6 @@ namespace elsa
     data_t& DataHandlerMapCPU<data_t>::operator[](index_t index)
     {
         _dataOwner->detach();
-
         return _map[index];
     }
 

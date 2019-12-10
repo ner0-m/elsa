@@ -83,8 +83,8 @@ namespace elsa
     template <typename raw_data_t, typename data_t>
     void DataUtils::parseRawData(std::ifstream& file, DataContainer<data_t>& data)
     {
-        index_t sizeInElements = data.getSize();
-        index_t sizeInBytes = sizeInElements * sizeof(raw_data_t);
+        auto sizeInElements = static_cast<std::size_t>(data.getSize());
+        auto sizeInBytes = static_cast<index_t>(sizeInElements * sizeof(raw_data_t));
 
         // allocate temporary storage
         auto ptr = std::make_unique<raw_data_t[]>(sizeInElements);
@@ -97,8 +97,8 @@ namespace elsa
             throw std::runtime_error("DataUtils::parseRawData: failed to read sufficient data");
 
         // perform a component-wise copy to the data container
-        for (index_t i = 0; i < sizeInElements; ++i)
-            data[i] = static_cast<data_t>(ptr[i]);
+        for (std::size_t i = 0; i < sizeInElements; ++i)
+            data[static_cast<index_t>(i)] = static_cast<data_t>(ptr[i]);
     }
 
     std::string FileSystemUtils::getAbsolutePath(std::string path, std::string base)

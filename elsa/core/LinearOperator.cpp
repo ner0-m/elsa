@@ -14,7 +14,8 @@ namespace elsa
 
     template <typename data_t>
     LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& other)
-        : _domainDescriptor{other._domainDescriptor->clone()},
+        : Cloneable<LinearOperator<data_t>>(),
+          _domainDescriptor{other._domainDescriptor->clone()},
           _rangeDescriptor{other._rangeDescriptor->clone()},
           _isLeaf{other._isLeaf},
           _isAdjoint{other._isAdjoint},

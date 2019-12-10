@@ -11,6 +11,8 @@
 
 using namespace elsa;
 
+static constexpr auto pi_d = pi<double>;
+
 SCENARIO("Drawing a rotated filled ellipse in 2d")
 {
     GIVEN("a volume and example ellipse parameters")
@@ -29,7 +31,7 @@ SCENARIO("Drawing a rotated filled ellipse in 2d")
             {
                 // check a few rotation angles
                 for (real_t angleDeg : {0, 18, 30, 45, 60, 72, 90}) {
-                    real_t angleRad = angleDeg * pi / 180.0;
+                    real_t angleRad = angleDeg * pi_d / 180.0;
 
                     dc = 0;
                     EllipseGenerator<real_t>::drawFilledEllipse2d(dc, 1.0, center, sizes, angleDeg);

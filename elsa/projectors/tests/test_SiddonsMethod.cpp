@@ -59,7 +59,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
         WHEN("We have a single ray with 180 degrees")
         {
-            geom.emplace_back(100, 5, 180 * pi / 180., domain, range);
+            geom.emplace_back(100, 5, 180 * pi_t / 180., domain, range);
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -79,7 +79,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
         WHEN("We have a single ray with 90 degrees")
         {
-            geom.emplace_back(100, 5, 90 * pi / 180., domain, range);
+            geom.emplace_back(100, 5, 90 * pi_t / 180., domain, range);
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -99,7 +99,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
         WHEN("We have a single ray with 270 degrees")
         {
-            geom.emplace_back(100, 5, 270 * pi / 180., domain, range);
+            geom.emplace_back(100, 5, 270 * pi_t / 180., domain, range);
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -121,7 +121,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
         // reconstruction is bad
         /*WHEN("We have a single ray with 45 degrees")
         {
-            geom.emplace_back(100, 5, 45 * pi / 180., domain, range);
+            geom.emplace_back(100, 5, 45 * pi_t / 180., domain, range);
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -148,7 +148,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
         WHEN("We have a single ray with 225 degrees")
         {
-            geom.emplace_back(100, 5, 225 * pi / 180., domain, range);
+            geom.emplace_back(100, 5, 225 * pi_t / 180., domain, range);
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -177,7 +177,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
         // geometry, to mirror stuff
         /*WHEN("We have a single ray with 135 degrees")
         {
-            geom.emplace_back(100, 5, 135 * pi / 180., domain, range);
+            geom.emplace_back(100, 5, 135 * pi_t / 180., domain, range);
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -223,7 +223,7 @@ SCENARIO("Calls to functions of super class")
         DataContainer sino(sinoDescriptor);
         std::vector<Geometry> geom;
         for (std::size_t i = 0; i < numImgs; i++) {
-            real_t angle = i * 2 * pi / 50;
+            real_t angle = static_cast<real_t>(i * 2) * pi_t / 50;
             geom.emplace_back(20 * volSize, volSize, angle, volumeDescriptor, sinoDescriptor);
         }
         SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
@@ -404,8 +404,8 @@ SCENARIO("Rays not intersecting the bounding box are present")
 
         WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin")
         {
-            geom.emplace_back(20 * volSize, volSize, pi / 2, volumeDescriptor, sinoDescriptor, 0.0,
-                              0.0, -volSize);
+            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
+                              0.0, 0.0, -volSize);
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -427,8 +427,8 @@ SCENARIO("Rays not intersecting the bounding box are present")
         WHEN("Tracing along a x-axis-aligned ray with a y-coordinate of origin beyond the bounding "
              "box")
         {
-            geom.emplace_back(20 * volSize, volSize, pi / 2, volumeDescriptor, sinoDescriptor, 0.0,
-                              0.0, volSize);
+            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
+                              0.0, 0.0, volSize);
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -466,8 +466,9 @@ SCENARIO("Rays not intersecting the bounding box are present")
 
         const index_t numCases = 9;
         real_t alpha[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pi / 2, pi / 2, pi / 2};
-        real_t gamma[numCases] = {0.0, 0.0, 0.0, pi / 2, pi / 2, pi / 2, pi / 2, pi / 2, pi / 2};
+        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pi_t / 2, pi_t / 2, pi_t / 2};
+        real_t gamma[numCases] = {0.0,      0.0,      0.0,      pi_t / 2, pi_t / 2,
+                                  pi_t / 2, pi_t / 2, pi_t / 2, pi_t / 2};
         real_t offsetx[numCases] = {volSize, 0.0, volSize, 0.0, 0.0, 0.0, volSize, 0.0, volSize};
         real_t offsety[numCases] = {0.0, volSize, volSize, volSize, 0.0, volSize, 0.0, 0.0, 0.0};
         real_t offsetz[numCases] = {0.0, 0.0, 0.0, 0.0, volSize, volSize, 0.0, volSize, volSize};
@@ -519,7 +520,7 @@ SCENARIO("Axis-aligned rays are present")
         std::vector<Geometry> geom;
 
         const index_t numCases = 4;
-        const real_t angles[numCases] = {0.0, pi / 2, pi, 3 * pi / 2};
+        const real_t angles[numCases] = {0.0, pi_t / 2, pi_t, 3 * pi_t / 2};
         RealVector_t backProj[2];
         backProj[0].resize(volSize * volSize);
         backProj[1].resize(volSize * volSize);
@@ -654,8 +655,8 @@ SCENARIO("Axis-aligned rays are present")
         std::vector<Geometry> geom;
 
         const index_t numCases = 6;
-        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, pi / 2, 3 * pi / 2};
-        real_t gamma[numCases] = {0.0, pi, pi / 2, 3 * pi / 2, pi / 2, 3 * pi / 2};
+        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, pi_t / 2, 3 * pi_t / 2};
+        real_t gamma[numCases] = {0.0, pi_t, pi_t / 2, 3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
         std::string al[numCases] = {"z", "-z", "x", "-x", "y", "-y"};
 
         RealVector_t backProj[numCases];
@@ -840,11 +841,11 @@ SCENARIO("Axis-aligned rays are present")
         WHEN("Both x- and y-axis-aligned rays are present")
         {
             geom.emplace_back(20 * volSize, volSize, 0, volumeDescriptor, sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 90 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 90 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 180 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 180 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 270 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 270 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
@@ -894,8 +895,8 @@ SCENARIO("Axis-aligned rays are present")
 
         WHEN("x-, y and z-axis-aligned rays are present")
         {
-            real_t beta[numImgs] = {0.0, 0.0, 0.0, 0.0, pi / 2, 3 * pi / 2};
-            real_t gamma[numImgs] = {0.0, pi, pi / 2, 3 * pi / 2, pi / 2, 3 * pi / 2};
+            real_t beta[numImgs] = {0.0, 0.0, 0.0, 0.0, pi_t / 2, 3 * pi_t / 2};
+            real_t gamma[numImgs] = {0.0, pi_t, pi_t / 2, 3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
 
             for (index_t i = 0; i < numImgs; i++)
                 geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, gamma[i],
@@ -957,7 +958,7 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor);
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -984,7 +985,7 @@ SCENARIO("Projection under an angle")
                     volume(2, 1) = 3;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(2 * sqrt(3) + 2));
+                    REQUIRE(sino[0] == Approx(2 * std::sqrt(3.f) + 2));
 
                     // on the other side of the center
                     volume = 0;
@@ -993,13 +994,14 @@ SCENARIO("Projection under an angle")
                     volume(0, 3) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(2 * sqrt(3) + 2));
+                    REQUIRE(sino[0] == Approx(2 * std::sqrt(3.f) + 2));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
-                    expected << 0, 0, 2 - 2 / sqrt(3), 4 / sqrt(3) - 2, 0, 0, 2 / sqrt(3), 0, 0,
-                        2 / sqrt(3), 0, 0, 4 / sqrt(3) - 2, 2 - 2 / sqrt(3), 0, 0;
+                    expected << 0, 0, 2 - 2 / std::sqrt(3.f), 4 / std::sqrt(3.f) - 2, 0, 0,
+                        2 / std::sqrt(3.f), 0, 0, 2 / std::sqrt(3.f), 0, 0, 4 / std::sqrt(3.f) - 2,
+                        2 - 2 / std::sqrt(3.f), 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
@@ -1011,8 +1013,8 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, std::sqrt(3.f));
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1035,13 +1037,13 @@ SCENARIO("Projection under an angle")
                     volume(2, 3) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(14 - 4 * std::sqrt(3.f)));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
-                    expected << 0, 0, 0, 0, 0, 0, 0, 4 - 2 * sqrt(3), 0, 0, 0, 2 / sqrt(3), 0, 0,
-                        2 - 2 / sqrt(3), 4 / sqrt(3) - 2;
+                    expected << 0, 0, 0, 0, 0, 0, 0, 4 - 2 * std::sqrt(3.f), 0, 0, 0,
+                        2 / std::sqrt(3.f), 0, 0, 2 - 2 / std::sqrt(3.f), 4 / std::sqrt(3.f) - 2;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
@@ -1053,8 +1055,8 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              -sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, -std::sqrt(3.f));
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1077,13 +1079,13 @@ SCENARIO("Projection under an angle")
                     volume(0, 2) = 4;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(14 - 4 * std::sqrt(3.f)));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
-                    expected << 4 / sqrt(3) - 2, 2 - 2 / sqrt(3), 0, 0, 2 / sqrt(3), 0, 0, 0,
-                        4 - 2 * sqrt(3), 0, 0, 0, 0, 0, 0, 0;
+                    expected << 4 / std::sqrt(3.f) - 2, 2 - 2 / std::sqrt(3.f), 0, 0,
+                        2 / std::sqrt(3.f), 0, 0, 0, 4 - 2 * std::sqrt(3.f), 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
@@ -1093,8 +1095,8 @@ SCENARIO("Projection under an angle")
 
         WHEN("Projecting under an angle of 30 degrees and ray only intersects a single pixel")
         {
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              -2 - sqrt(3) / 2);
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, -2 - std::sqrt(3.f) / 2);
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1111,12 +1113,12 @@ SCENARIO("Projection under an angle")
                     volume(0, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(1 / sqrt(3)));
+                    REQUIRE(sino[0] == Approx(1 / std::sqrt(3.f)));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
-                    expected << 1 / sqrt(3), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+                    expected << 1 / std::sqrt(3.f), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
@@ -1128,7 +1130,8 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor);
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1154,7 +1157,7 @@ SCENARIO("Projection under an angle")
                     volume(1, 1) = 3;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(2 * sqrt(3) + 2));
+                    REQUIRE(sino[0] == Approx(2 * std::sqrt(3.f) + 2));
 
                     // on the other side of the center
                     volume = 0;
@@ -1163,14 +1166,15 @@ SCENARIO("Projection under an angle")
                     volume(3, 3) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(2 * sqrt(3) + 2));
+                    REQUIRE(sino[0] == Approx(2 * std::sqrt(3.f) + 2));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
 
-                    expected << 4 / sqrt(3) - 2, 0, 0, 0, 2 - 2 / sqrt(3), 2 / sqrt(3), 0, 0, 0, 0,
-                        2 / sqrt(3), 2 - 2 / sqrt(3), 0, 0, 0, 4 / sqrt(3) - 2;
+                    expected << 4 / std::sqrt(3.f) - 2, 0, 0, 0, 2 - 2 / std::sqrt(3.f),
+                        2 / std::sqrt(3.f), 0, 0, 0, 0, 2 / std::sqrt(3.f), 2 - 2 / std::sqrt(3.f),
+                        0, 0, 0, 4 / std::sqrt(3.f) - 2;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
@@ -1182,8 +1186,8 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, std::sqrt(3.f));
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1206,14 +1210,14 @@ SCENARIO("Projection under an angle")
                     volume(2, 3) = 4;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(14 - 4 * std::sqrt(3.f)));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
 
-                    expected << 0, 0, 0, 0, 0, 0, 0, 0, 2 - 2 / sqrt(3), 0, 0, 0, 4 / sqrt(3) - 2,
-                        2 / sqrt(3), 4 - 2 * sqrt(3), 0;
+                    expected << 0, 0, 0, 0, 0, 0, 0, 0, 2 - 2 / std::sqrt(3.f), 0, 0, 0,
+                        4 / std::sqrt(3.f) - 2, 2 / std::sqrt(3.f), 4 - 2 * std::sqrt(3.f), 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
@@ -1225,8 +1229,8 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, -std::sqrt(3.f));
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1249,14 +1253,15 @@ SCENARIO("Projection under an angle")
                     volume(3, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(14 - 4 * std::sqrt(3.f)));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
 
-                    expected << 0, 4 - 2 * sqrt(3), 2 / sqrt(3), 4 / sqrt(3) - 2, 0, 0, 0,
-                        2 - 2 / sqrt(3), 0, 0, 0, 0, 0, 0, 0, 0;
+                    expected << 0, 4 - 2 * std::sqrt(3.f), 2 / std::sqrt(3.f),
+                        4 / std::sqrt(3.f) - 2, 0, 0, 0, 2 - 2 / std::sqrt(3.f), 0, 0, 0, 0, 0, 0,
+                        0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
@@ -1267,8 +1272,8 @@ SCENARIO("Projection under an angle")
         WHEN("Projecting under an angle of 120 degrees and ray only intersects a single pixel")
         {
             // This is a special case that is handled separately in both forward and backprojection
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -2 - sqrt(3) / 2);
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, -2 - std::sqrt(3.f) / 2);
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1285,12 +1290,12 @@ SCENARIO("Projection under an angle")
                     volume(3, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(1 / sqrt(3)).epsilon(0.005));
+                    REQUIRE(sino[0] == Approx(1 / std::sqrt(3.f)).epsilon(0.005));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
-                    expected << 0, 0, 0, 1 / sqrt(3), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+                    expected << 0, 0, 0, 1 / std::sqrt(3.f), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
@@ -1318,7 +1323,7 @@ SCENARIO("Projection under an angle")
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume")
         {
             // In this case the ray enters and exits the volume along the main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6);
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1340,14 +1345,14 @@ SCENARIO("Projection under an angle")
                     volume(1, 1, 2) = 2;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(3 * sqrt(3) - 1));
+                    REQUIRE(sino[0] == Approx(3 * std::sqrt(3.f) - 1));
 
                     sino[0] = 1;
-                    backProj << 0, 0, 0, 0, 1 - 1 / sqrt(3), sqrt(3) - 1, 0, 0, 0,
+                    backProj << 0, 0, 0, 0, 1 - 1 / std::sqrt(3.f), std::sqrt(3.f) - 1, 0, 0, 0,
 
-                        0, 0, 0, 0, 2 / sqrt(3), 0, 0, 0, 0,
+                        0, 0, 0, 0, 2 / std::sqrt(3.f), 0, 0, 0, 0,
 
-                        0, 0, 0, sqrt(3) - 1, 1 - 1 / sqrt(3), 0, 0, 0, 0;
+                        0, 0, 0, std::sqrt(3.f) - 1, 1 - 1 / std::sqrt(3.f), 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj)));
@@ -1358,8 +1363,8 @@ SCENARIO("Projection under an angle")
         WHEN("A ray with an angle of 30 degrees enters through the right border")
         {
             // In this case the ray enters through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, 1);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, 1);
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1380,14 +1385,14 @@ SCENARIO("Projection under an angle")
                     volume(2, 1, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(1 - 2 / sqrt(3) + 3 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(1 - 2 / std::sqrt(3.f) + 3 * std::sqrt(3.f)));
 
                     sino[0] = 1;
-                    backProj << 0, 0, 0, 0, 0, 1 - 1 / sqrt(3), 0, 0, 0,
+                    backProj << 0, 0, 0, 0, 0, 1 - 1 / std::sqrt(3.f), 0, 0, 0,
 
-                        0, 0, 0, 0, 0, 2 / sqrt(3), 0, 0, 0,
+                        0, 0, 0, 0, 0, 2 / std::sqrt(3.f), 0, 0, 0,
 
-                        0, 0, 0, 0, sqrt(3) - 1, 1 - 1 / sqrt(3), 0, 0, 0;
+                        0, 0, 0, 0, std::sqrt(3.f) - 1, 1 - 1 / std::sqrt(3.f), 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj)));
@@ -1398,8 +1403,8 @@ SCENARIO("Projection under an angle")
         WHEN("A ray with an angle of 30 degrees exits through the left border")
         {
             // In this case the ray exit through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, -1);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, -1);
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1420,14 +1425,14 @@ SCENARIO("Projection under an angle")
                     volume(0, 1, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(3 * sqrt(3) + 1 - 2 / sqrt(3)));
+                    REQUIRE(sino[0] == Approx(3 * std::sqrt(3.f) + 1 - 2 / std::sqrt(3.f)));
 
                     sino[0] = 1;
-                    backProj << 0, 0, 0, 1 - 1 / sqrt(3), sqrt(3) - 1, 0, 0, 0, 0,
+                    backProj << 0, 0, 0, 1 - 1 / std::sqrt(3.f), std::sqrt(3.f) - 1, 0, 0, 0, 0,
 
-                        0, 0, 0, 2 / sqrt(3), 0, 0, 0, 0, 0,
+                        0, 0, 0, 2 / std::sqrt(3.f), 0, 0, 0, 0, 0,
 
-                        0, 0, 0, 1 - 1 / sqrt(3), 0, 0, 0, 0, 0;
+                        0, 0, 0, 1 - 1 / std::sqrt(3.f), 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj)));
@@ -1438,8 +1443,8 @@ SCENARIO("Projection under an angle")
         WHEN("A ray with an angle of 30 degrees only intersects a single voxel")
         {
             // special case - no interior voxels, entry and exit voxels are the same
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, -2);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, -2);
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1455,10 +1460,10 @@ SCENARIO("Projection under an angle")
                     volume(0, 1, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(sqrt(3) - 1));
+                    REQUIRE(sino[0] == Approx(std::sqrt(3.f) - 1));
 
                     sino[0] = 1;
-                    backProj << 0, 0, 0, sqrt(3) - 1, 0, 0, 0, 0, 0,
+                    backProj << 0, 0, 0, std::sqrt(3.f) - 1, 0, 0, 0, 0, 0,
 
                         0, 0, 0, 0, 0, 0, 0, 0, 0,
 

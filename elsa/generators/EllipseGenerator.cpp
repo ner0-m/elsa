@@ -17,7 +17,7 @@ namespace elsa
                 "EllipseGenerator::drawFilledEllipse2d: can only work on 2d DataContainers");
 
         // convert to radians
-        auto angleRad = angle * pi / 180.0;
+        auto angleRad = angle * pi<double> / 180.0;
 
         // special case: circle or no rotation
         if (sizes[0] == sizes[1] || std::fmod(angle, 180.0) == 0) {
@@ -55,9 +55,9 @@ namespace elsa
         bool hasRotation = (std::abs(phi) + std::abs(theta) + std::abs(psi)) > 0;
 
         // convert to radians
-        auto phiRad = phi * pi / 180.0;
-        auto thetaRad = theta * pi / 180.0;
-        auto psiRad = psi * pi / 180.0;
+        auto phiRad = phi * pi<double> / 180.0;
+        auto thetaRad = theta * pi<double> / 180.0;
+        auto psiRad = psi * pi<double> / 180.0;
 
         auto cosPhi = std::cos(phiRad);
         auto sinPhi = std::sin(phiRad);

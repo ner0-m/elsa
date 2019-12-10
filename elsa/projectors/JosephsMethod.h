@@ -119,8 +119,9 @@ namespace elsa
          * angle \param[in] from index of the current vector position \param[in] to index of the
          * current result position \param[in] mainDirection specifies the main direction of the ray
          */
+        template <bool adjoint>
         void linear(const DataContainer<data_t>& vector, DataContainer<data_t>& result,
-                    const RealVector_t& fractionals, bool adjoint, int domainDim,
+                    const RealVector_t& fractionals, index_t domainDim,
                     const IndexVector_t& currentVoxel, float intersection, index_t from, index_t to,
                     int mainDirection) const;
 

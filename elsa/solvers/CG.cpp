@@ -64,7 +64,7 @@ namespace elsa
         Logger::get("CG")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}", "iteration", "deltaNew",
                                 "deltaZero", "epsilon", "objval");
 
-        for (std::size_t it = 0; it < iterations; ++it) {
+        for (index_t it = 0; it != iterations; ++it) {
             auto Ad = A ? A->apply(d) : d;
 
             data_t alpha = deltaNew / d.dot(Ad);

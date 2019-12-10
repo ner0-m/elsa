@@ -90,9 +90,9 @@ namespace elsa
         /// precompute some helper variables to optimize speed
         void precomputeHelpers();
 
-        std::vector<index_t> _coordDiff{};  /// precomputed helper for coordinate diffs
-        std::vector<index_t> _coordDelta{}; /// precomputed helper for coordinate deltas
-        std::vector<index_t> _dimCounter{}; /// precomputed helper for active dim counter
+        IndexVector_t _coordDiff;  /// precomputed helper for coordinate diffs
+        IndexVector_t _coordDelta; /// precomputed helper for coordinate deltas
+        IndexVector_t _dimCounter; /// precomputed helper for active dim counter
 
         /// the actual finite differences computations (with mode as template parameter for
         /// performance)

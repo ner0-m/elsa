@@ -18,7 +18,7 @@ namespace elsa
     class DataHandlerCPU;
     // forward declaration, used for testing and defined in test file (declared as friend)
     template <typename data_t>
-    int useCount(const DataHandlerCPU<data_t>&);
+    long useCount(const DataHandlerCPU<data_t>&);
 
     /**
      * \brief Class representing and owning a vector stored in CPU main memory (using
@@ -163,7 +163,7 @@ namespace elsa
             getBlock(index_t startIndex, index_t numberOfElements) const override;
 
         /// used for testing only and defined in test file
-        friend int useCount<>(const DataHandlerCPU<data_t>& dh);
+        friend long useCount<>(const DataHandlerCPU<data_t>& dh);
 
     protected:
         /// the vector storing the data

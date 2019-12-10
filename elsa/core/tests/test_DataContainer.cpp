@@ -151,12 +151,12 @@ SCENARIO("Element-wise access of DataContainers")
                 REQUIRE(dc(coord) == 0.0_a);
                 REQUIRE(dc(17, 4) == 0.0_a);
 
-                dc[index] = 2.2;
+                dc[index] = 2.2f;
                 REQUIRE(dc[index] == 2.2_a);
                 REQUIRE(dc(coord) == 2.2_a);
                 REQUIRE(dc(17, 4) == 2.2_a);
 
-                dc(coord) = 3.3;
+                dc(coord) = 3.3f;
                 REQUIRE(dc[index] == 3.3_a);
                 REQUIRE(dc(coord) == 3.3_a);
                 REQUIRE(dc(17, 4) == 3.3_a);
@@ -236,7 +236,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place addition of a scalar work as expected")
             {
-                float scalar = 923.41;
+                float scalar = 923.41f;
                 dc += scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) + scalar);
@@ -244,7 +244,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place subtraction of a scalar work as expected")
             {
-                float scalar = 74.165;
+                float scalar = 74.165f;
                 dc -= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) - scalar);
@@ -252,7 +252,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place multiplication with a scalar work as expected")
             {
-                float scalar = 12.69;
+                float scalar = 12.69f;
                 dc *= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) * scalar);
@@ -260,7 +260,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place division by a scalar work as expected")
             {
-                float scalar = 82.61;
+                float scalar = 82.61f;
                 dc /= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) / scalar);
@@ -268,7 +268,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the element-wise assignment of a scalar works as expected")
             {
-                float scalar = 123.45;
+                float scalar = 123.45f;
                 dc = scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == scalar);
@@ -359,7 +359,7 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments")
 
         THEN("the operations with a scalar work as expected")
         {
-            float scalar = 4.92;
+            float scalar = 4.92f;
 
             auto resultScalarPlus = scalar + dc;
             for (index_t i = 0; i < dc.getSize(); ++i)

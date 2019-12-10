@@ -107,14 +107,14 @@ namespace elsa
     template <typename data_t>
     data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate)
     {
-        return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
+        return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
     }
 
     template <typename data_t>
     const data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate) const
     {
         return static_cast<const DataHandler<data_t>&>(
-            *_dataHandler)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
+            *_dataHandler)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
     }
 
     template <typename data_t>
@@ -276,7 +276,6 @@ namespace elsa
     DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i)
     {
         const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
-
         if (!blockDesc)
             throw std::logic_error("DataContainer: cannot get block from not-blocked container");
 
@@ -291,10 +290,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    const DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i) const
+    DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i) const
     {
         const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
-
         if (!blockDesc)
             throw std::logic_error("DataContainer: cannot get block from not-blocked container");
 
@@ -320,8 +318,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    const DataContainer<data_t>
-        DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor) const
+    DataContainer<data_t> DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor) const
     {
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
             throw std::invalid_argument("DataContainer: view must have same size as container");

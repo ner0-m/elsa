@@ -11,8 +11,8 @@ namespace elsa
                                        const DataDescriptor& rangeDescriptor,
                                        const std::vector<Geometry>& geometryList)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
-          _geometryList{geometryList},
-          _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()}
+          _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()},
+          _geometryList{geometryList}
     {
         // sanity checks
         auto dim = _domainDescriptor->getNumberOfDimensions();
@@ -69,19 +69,18 @@ namespace elsa
     void BinaryMethod<data_t>::traverseVolume(const DataContainer<data_t>& vector,
                                               DataContainer<data_t>& result) const
     {
-        index_t maxIterations{0};
-        if (adjoint) {
-            maxIterations = vector.getSize();
+        const index_t maxIterations = adjoint ? vector.getSize() : result.getSize();
+
+        if constexpr (adjoint) {
             result = 0; // initialize volume to 0, because we are not going to hit every voxel!
-        } else
-            maxIterations = result.getSize();
+        }
 
         const auto rangeDim = _rangeDescriptor->getNumberOfDimensions();
 
         // --> loop either over every voxel that should be updated or every detector
         // cell that should be calculated
 #pragma omp parallel for
-        for (size_t rangeIndex = 0; rangeIndex < maxIterations; ++rangeIndex) {
+        for (index_t rangeIndex = 0; rangeIndex < maxIterations; ++rangeIndex) {
 
             // --> get the current ray to the detector center
             auto ray = computeRayToDetector(rangeIndex, rangeDim);
@@ -89,7 +88,7 @@ namespace elsa
             // --> setup traversal algorithm
             TraverseAABB traverse(_boundingBox, ray);
 
-            if (!adjoint)
+            if constexpr (!adjoint)
                 result[rangeIndex] = 0;
 
             while (traverse.isInBoundingBox()) {
@@ -98,7 +97,7 @@ namespace elsa
                     _domainDescriptor->getIndexFromCoordinate(traverse.getCurrentVoxel());
 
                 // --> update result depending on the operation performed
-                if (adjoint)
+                if constexpr (adjoint)
 #pragma omp atomic
                     result[dataIndexForCurrentVoxel] += vector[rangeIndex];
                 else

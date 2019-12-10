@@ -48,7 +48,7 @@ namespace elsa
 
     template <typename data_t>
     LinearOperator<data_t>
-        WeightedL2NormPow2<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
+        WeightedL2NormPow2<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
     {
         return leaf(*_weightingOp);
     }

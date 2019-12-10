@@ -25,7 +25,7 @@ option(ELSA_INSTALL "Enable generating the install targets for make install" ${E
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 
 option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
-option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when building (-Wall -Wextra)" OFF)
+option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when building (-Wall -Wextra)" ON)
 
 option(ELSA_SANITIZE_THREAD "Build elsa with thread sanitizers (TSAN)" OFF)
 option(ELSA_SANITIZE_ADDRESS "Build elsa with address and undefined-behavior sanitizers (ASAN and UBSAN)" OFF)

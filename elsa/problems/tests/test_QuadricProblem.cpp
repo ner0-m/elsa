@@ -34,7 +34,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
         numCoeff << 13, 11, 7;
         DataDescriptor dd{numCoeff};
 
-        data_t scaleFactor = 3.0;
+        auto scaleFactor = static_cast<data_t>(3.0);
         Scaling<data_t> scalingOp{dd, scaleFactor};
 
         Eigen::Matrix<data_t, -1, 1> randomData{dd.getNumberOfCoefficients()};
@@ -501,14 +501,14 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
 
                     // conversion of data terms already tested, fix to 0.5*||Ax-b||^2 for tikhonov
                     // problem tests
-                    data_t dataScaleFactor = 5.0;
+                    auto dataScaleFactor = static_cast<data_t>(5.0);
                     Scaling<data_t> dataScalingOp{dd, dataScaleFactor};
 
                     randomData.setRandom();
                     DataContainer<data_t> dataB{dd, randomData};
                     L2NormPow2<data_t> func{LinearResidual<data_t>{dataScalingOp, dataB}};
 
-                    data_t regWeight = 0.01;
+                    auto regWeight = static_cast<data_t>(0.01);
                     RegularizationTerm<data_t> reg{regWeight, *regTerm};
 
                     Problem<data_t> initialProb{func, reg};
@@ -584,14 +584,14 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
 
                     // conversion of data terms already tested, fix to 0.5*||Ax-b||^2 for tikhonov
                     // problem tests
-                    data_t dataScaleFactor = 5.0;
+                    auto dataScaleFactor = static_cast<data_t>(5.0);
                     Scaling<data_t> dataScalingOp{dd, dataScaleFactor};
 
                     randomData.setRandom();
                     DataContainer<data_t> dataB{dd, randomData};
                     L2NormPow2<data_t> func{LinearResidual<data_t>{dataScalingOp, dataB}};
 
-                    data_t regWeight = 0.01;
+                    auto regWeight = static_cast<data_t>(0.01);
                     RegularizationTerm<data_t> reg{regWeight, *regTerm};
 
                     Problem<data_t> initialProb{func, reg, x0};

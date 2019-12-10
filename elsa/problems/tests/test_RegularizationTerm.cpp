@@ -37,7 +37,7 @@ SCENARIO("Testing RegularizationTerm")
         numCoeff << 11, 17, 23;
         DataDescriptor dd(numCoeff);
 
-        real_t weight = 3.1;
+        auto weight = real_t{3.1f};
         L2NormPow2 functional(dd);
 
         RegularizationTerm regTerm(weight, functional);

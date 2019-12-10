@@ -24,12 +24,14 @@ public:
     }
 
 protected:
-    void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override
+    void applyImpl([[maybe_unused]] const DataContainer<data_t>& x,
+                   DataContainer<data_t>& Ax) const override
     {
         Ax = 1;
     }
 
-    void applyAdjointImpl(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override
+    void applyAdjointImpl([[maybe_unused]] const DataContainer<data_t>& y,
+                          DataContainer<data_t>& Aty) const override
     {
         Aty = 3;
     }

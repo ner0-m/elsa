@@ -110,7 +110,7 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
         bVec = bVec.cwiseProduct(bVec);
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
-        data_t lambda = 0.1;
+        auto lambda = static_cast<data_t>(0.1);
         Scaling<data_t> lambdaOp{dd, lambda};
 
         QuadricProblem<data_t> prob{scalingOp + lambdaOp, dcB, true};

@@ -61,7 +61,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Quadric<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t>
+        Quadric<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
     {
         if (_linearResidual.hasOperator())
             return leaf(_linearResidual.getOperator());

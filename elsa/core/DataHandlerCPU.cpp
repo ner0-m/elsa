@@ -398,7 +398,6 @@ namespace elsa
                         _data->data() + (map->_map.data() - oldData), map->getSize());
             }
         }
-        return;
     }
 
     template <typename data_t>

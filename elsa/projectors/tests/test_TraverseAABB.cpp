@@ -682,7 +682,7 @@ SCENARIO("Check that the first step into the 2D Volume is correct")
         WHEN("The ray direction has the biggest value on the y axis")
         {
             ro << 0, 0;
-            rd << 0.5, 0.7;
+            rd << 0.5f, 0.7f;
             rd.normalize();
 
             Ray r(ro, rd);
@@ -709,7 +709,7 @@ SCENARIO("Check that the first step into the 2D Volume is correct")
         WHEN("The ray direction has the biggest value on the x axis")
         {
             ro << 0, 0;
-            rd << 0.7, 0.5;
+            rd << 0.7f, 0.5f;
             rd.normalize();
 
             Ray r(ro, rd);
@@ -746,9 +746,9 @@ SCENARIO("Traverse_Volume_2D_EachPointIsTested")
     BoundingBox aabb(volumeDims);
 
     RealVector_t ro(dim);
-    ro << -168.274, -143.397;
+    ro << -168.274f, -143.397f;
     RealVector_t rd(dim);
-    rd << 0.761124909, 0.648605406;
+    rd << 0.761124909f, 0.648605406f;
     rd.normalize();
     Ray r(ro, rd);
 
@@ -784,9 +784,9 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
 
     GIVEN("a point at the bottom left of the volume and a ray with leading dimension x")
     {
-        ro << -168.274, -143.397;
+        ro << -168.274f, -143.397f;
 
-        rd << 0.761124909, 0.648605406;
+        rd << 0.761124909f, 0.648605406f;
         rd.normalize();
 
         Ray r(ro, rd);
@@ -812,7 +812,7 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
     {
         ro << 0, 0;
 
-        rd << 0.648605406, 0.761124909;
+        rd << 0.648605406f, 0.761124909f;
         rd.normalize();
 
         Ray r(ro, rd);
@@ -836,7 +836,7 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
 
     GIVEN("a ray going through the border of voxel column 0 and 1")
     {
-        ro << 1, -0.5;
+        ro << 1, -0.5f;
 
         rd << 0, 1;
         rd.normalize();
@@ -862,7 +862,7 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
 
     GIVEN("a ray going through the border of voxel row 0 and 1")
     {
-        ro << -0.5, 1;
+        ro << -0.5f, 1;
 
         rd << 1, 0;
         rd.normalize();
@@ -888,7 +888,7 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
 
     GIVEN("A ray going diagonally through the volume")
     {
-        ro << -0.5, -0.5;
+        ro << -0.5f, -0.5f;
 
         rd << 1, 1;
         rd.normalize();
@@ -914,7 +914,7 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
 
     GIVEN("A ray going diagonally through the volume")
     {
-        ro << -0.5, 32;
+        ro << -0.5f, 32;
 
         rd << 1, 1;
         rd.normalize();
@@ -940,9 +940,9 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
 
     GIVEN("A ray going diagonally through the volume")
     {
-        ro << -0.5, -0.5;
+        ro << -0.5f, -0.5f;
 
-        rd << 0.699428, 0.472203;
+        rd << 0.699428f, 0.472203f;
         rd.normalize();
 
         Ray r(ro, rd);
@@ -969,9 +969,9 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
         volumeDims << 64, 64;
         BoundingBox aabb(volumeDims);
 
-        ro << 32.0002823, 3232;
+        ro << 32.0002823f, 3232;
 
-        rd << -0.000723466626, -0.999999762;
+        rd << -0.000723466626f, -0.999999762f;
         rd.normalize();
 
         Ray r(ro, rd);

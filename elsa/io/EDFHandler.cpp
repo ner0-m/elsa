@@ -79,7 +79,7 @@ namespace elsa
             bool quotesSingle = false, quotesDouble = false;
             std::string assignment;
             while (!file.eof()) {
-                const char chr = file.get();
+                auto chr = static_cast<char>(file.get());
 
                 // abort on end-of-assignment
                 if (chr == ';' && !(quotesSingle || quotesDouble))
@@ -134,7 +134,7 @@ namespace elsa
 
             dim.push_back(DataUtils::parse<index_t>(dimIt->second));
         }
-        const std::size_t nDims = dim.size();
+        const auto nDims = static_cast<index_t>(dim.size());
         if (nDims == 0u)
             throw std::runtime_error("EDF::parseHeader: dimension information not found");
 
@@ -195,17 +195,17 @@ namespace elsa
         // convert size
         IndexVector_t dimSizeVec(nDims);
         for (index_t i = 0; i < nDims; ++i)
-            dimSizeVec[i] = dim[i];
+            dimSizeVec[i] = dim[static_cast<std::size_t>(i)];
         if (dimSizeVec.prod() * DataUtils::getSizeOfDataType(dataType) != size)
             throw std::runtime_error("EDF::parseHeader: size inconsistency");
 
         // convert spacing
         RealVector_t dimSpacingVec(RealVector_t::Ones(nDims));
         if (!spacing.empty()) {
-            if (spacing.size() != nDims)
+            if (nDims != static_cast<index_t>(spacing.size()))
                 throw std::runtime_error("EDF::parseHeader: spacing inconsistency");
             for (index_t i = 0; i < nDims; ++i)
-                dimSpacingVec[i] = spacing[i];
+                dimSpacingVec[i] = spacing[static_cast<std::size_t>(i)];
         }
 
         return std::make_pair(std::make_unique<DataDescriptor>(dimSizeVec, dimSpacingVec),
@@ -226,10 +226,12 @@ namespace elsa
         auto& descriptor = data.getDataDescriptor();
 
         // write dimension and size
-        for (std::size_t i = 0; i < descriptor.getNumberOfDimensions(); ++i)
+        for (index_t i = 0; i < descriptor.getNumberOfDimensions(); ++i)
             file << "Dim_" << (i + 1) << " = "
                  << descriptor.getNumberOfCoefficientsPerDimension()[i] << ";\n";
-        file << "Size = " << descriptor.getNumberOfCoefficients() * sizeof(data_t) << ";\n";
+        file << "Size = "
+             << descriptor.getNumberOfCoefficients() * static_cast<index_t>(sizeof(data_t))
+             << ";\n";
 
         // write spacing
         file << "Spacing =";
@@ -238,7 +240,7 @@ namespace elsa
         file << ";\n";
 
         // pad the header by adding spaces such that the header ends on a kilobyte boundary
-        std::size_t n = 1024;
+        index_t n = 1024;
         while (n < (static_cast<index_t>(file.tellp()) + 3))
             n += 1024;
         n -= static_cast<index_t>(file.tellp()) + 3;
@@ -252,38 +254,38 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::string EDF::getDataTypeName(const DataContainer<data_t>& data)
+    std::string EDF::getDataTypeName([[maybe_unused]] const DataContainer<data_t>& data)
     {
         throw std::invalid_argument("EDF::getDataTypeName: invalid/unsupported data type");
     }
 
     template <>
-    std::string EDF::getDataTypeName(const DataContainer<int8_t>& data)
+    std::string EDF::getDataTypeName([[maybe_unused]] const DataContainer<int8_t>& data)
     {
         return "SignedByte";
     }
     template <>
-    std::string EDF::getDataTypeName(const DataContainer<uint8_t>& data)
+    std::string EDF::getDataTypeName([[maybe_unused]] const DataContainer<uint8_t>& data)
     {
         return "UnsignedByte";
     }
     template <>
-    std::string EDF::getDataTypeName(const DataContainer<int16_t>& data)
+    std::string EDF::getDataTypeName([[maybe_unused]] const DataContainer<int16_t>& data)
     {
         return "SignedShort";
     }
     template <>
-    std::string EDF::getDataTypeName(const DataContainer<uint16_t>& data)
+    std::string EDF::getDataTypeName([[maybe_unused]] const DataContainer<uint16_t>& data)
     {
         return "UnsignedShort";
     }
     template <>
-    std::string EDF::getDataTypeName(const DataContainer<float>& data)
+    std::string EDF::getDataTypeName([[maybe_unused]] const DataContainer<float>& data)
     {
         return "FloatValue";
     }
     template <>
-    std::string EDF::getDataTypeName(const DataContainer<double>& data)
+    std::string EDF::getDataTypeName([[maybe_unused]] const DataContainer<double>& data)
     {
         return "DoubleValue";
     }

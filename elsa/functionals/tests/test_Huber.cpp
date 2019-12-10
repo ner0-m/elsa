@@ -66,10 +66,10 @@ SCENARIO("Testing the Huber norm functional")
                 for (index_t i = 0; i < dataVec.size(); ++i) {
                     real_t value = dataVec[i];
                     if (std::abs(value) <= delta) {
-                        trueValue += 0.5 * value * value;
+                        trueValue += 0.5f * value * value;
                         trueGrad[i] = value;
                     } else {
-                        trueValue += delta * (std::abs(value) - 0.5 * delta);
+                        trueValue += delta * (std::abs(value) - 0.5f * delta);
                         trueGrad[i] = (value > 0) ? delta : -delta;
                     }
                 }
@@ -136,10 +136,10 @@ SCENARIO("Testing the Huber norm functional")
                 for (index_t i = 0; i < dataVec.size(); ++i) {
                     real_t value = dataVec[i] - randomData[i];
                     if (std::abs(value) <= delta) {
-                        trueValue += 0.5 * value * value;
+                        trueValue += 0.5f * value * value;
                         trueGrad[i] = value;
                     } else {
-                        trueValue += delta * (std::abs(value) - 0.5 * delta);
+                        trueValue += delta * (std::abs(value) - 0.5f * delta);
                         trueGrad[i] = (value > 0) ? delta : -delta;
                     }
                 }
