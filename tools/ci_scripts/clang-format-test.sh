@@ -14,7 +14,7 @@ clang-format --version
 echo
 
 # perform clang-format on all cpp-files
-find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' | xargs clang-format -i -style=file $1
+find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format -i -style=file $1
 
 # check if something was modified
 notcorrectlist=`git status --porcelain | grep '^ M' | cut -c4-`
@@ -28,7 +28,7 @@ else
   git diff --stat $notcorrectlist
   echo "Please run"
   echo
-  echo "find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' | xargs clang-format -i -style=file $1"
+  echo "find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format -i -style=file $1"
   echo
   echo "to solve the issue."
   # cleanup changes in git
