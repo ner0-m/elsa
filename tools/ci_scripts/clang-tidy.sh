@@ -14,7 +14,7 @@ echo "clang-tidy checking changed files compared to target branch ${target_branc
 
 # function to check if C++ file (based on suffix)
 function checkCPP(){
-    if [[ $1 == *.cpp ]];then
+    if [[ -f $1 ]] && [[ $1 == *.cpp ]]; then
         return 0
     fi
     return 1
