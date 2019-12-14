@@ -62,6 +62,9 @@ if(ELSA_MASTER_PROJECT)
     set(Spdlog_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/spdlog")
     find_package(Spdlog REQUIRED)
     message(STATUS "Using spdlog submodule at ${Spdlog_INCLUDE_DIR}")
+
+    # setup Dnnl library
+    find_package(Dnnl)
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
 endif()
