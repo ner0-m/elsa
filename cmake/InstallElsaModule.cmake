@@ -5,6 +5,8 @@ function(InstallElsaModule ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_
         # This is required so that the exported target has the name core and not elsa_core
         set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES EXPORT_NAME ${ELSA_MODULE_NAME})
 
+        message(STATUS "Dependencies for ${ELSA_MODULE_TARGET_NAME}: ${ELSA_COMPONENT_DEPENDENCIES}")
+
         include(GNUInstallDirs)
         include(CMakePackageConfigHelpers)
 
