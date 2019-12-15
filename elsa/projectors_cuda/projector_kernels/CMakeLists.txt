@@ -80,6 +80,7 @@ endforeach()
 set(ELSA_MODULE_NAME projector_kernels)
 set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
 set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
+set(ELSA_COMPONENT_DEPENDENCIES " ")
 
 # list all the headers of the module
 set(MODULE_HEADERS
@@ -106,4 +107,4 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # install the kernels as a module
-InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${ELSA_COMPONENT_DEPENDENCIES}")

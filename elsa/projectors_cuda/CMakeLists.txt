@@ -18,6 +18,7 @@ if (CMAKE_CUDA_COMPILER)
     set(ELSA_MODULE_NAME projectors_cuda)
     set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
     set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
+    set(ELSA_COMPONENT_DEPENDENCIES "elsa_core;elsa_logging;elsa_projectors;elsa_projector_kernels")
 
     # list all the headers of the module
     set(MODULE_HEADERS
@@ -33,7 +34,7 @@ if (CMAKE_CUDA_COMPILER)
     add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
     add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_projectors elsa_projector_kernels)
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC ${ELSA_COMPONENT_DEPENDENCIES})
 
     target_include_directories(${ELSA_MODULE_TARGET_NAME}
             PUBLIC
@@ -60,7 +61,7 @@ if (CMAKE_CUDA_COMPILER)
     registerComponent(${ELSA_MODULE_NAME})
 
     # install the module
-    InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+    InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${ELSA_COMPONENT_DEPENDENCIES}")
 else()
     message(STATUS "CUDA compiler NOT found! CUDA support disabled")
 endif()
