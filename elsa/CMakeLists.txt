@@ -65,7 +65,7 @@ target_include_directories(elsa_all INTERFACE
 registerComponent(all)
 
 # install the all module and the elsa.h file
-InstallElsaModule(all elsa_all elsa_allTargets)
+InstallElsaModule(all elsa_all elsa_allTargets "${ELSA_REGISTERED_TARGETS}")
 install(FILES elsa.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/elsa/)
 

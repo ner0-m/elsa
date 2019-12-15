@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.9)
 set(ELSA_MODULE_NAME logging)
 set(ELSA_MODULE_TARGET_NAME elsa_logging)
 set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
+set(ELSA_COMPONENT_DEPENDENCIES " ")
 
 
 # list all the headers of the module
@@ -29,7 +30,7 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
 
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC spdlog::spdlog_header_only)
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC spdlog::spdlog_header_only ${ELSA_COMPONENT_DEPENDENCIES})
 
 # require C++17
 target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
@@ -47,4 +48,4 @@ endif(ELSA_TESTING)
 registerComponent(${ELSA_MODULE_NAME})
 
 # install the module
-InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${ELSA_COMPONENT_DEPENDENCIES}")

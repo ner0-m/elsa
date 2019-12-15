@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.9)
 set(ELSA_MODULE_NAME operators)
 set(ELSA_MODULE_TARGET_NAME elsa_operators)
 set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
+set(ELSA_COMPONENT_DEPENDENCIES "elsa_core;elsa_logging")
 
 
 # list all the headers of the module
@@ -23,7 +24,7 @@ set(MODULE_SOURCES
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging)
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC ${ELSA_COMPONENT_DEPENDENCIES})
 
 # use OpenMP is available
 find_package(OpenMP)
@@ -55,4 +56,4 @@ endif(ELSA_TESTING)
 registerComponent(${ELSA_MODULE_NAME})
 
 # install the module
-InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${ELSA_COMPONENT_DEPENDENCIES}")
