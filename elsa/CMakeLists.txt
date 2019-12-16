@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.9)
 
+macro(registerTarget name)
+    set(ELSA_REGISTERED_TARGETS "${ELSA_REGISTERED_TARGETS};elsa_${name}" PARENT_SCOPE)
+endmacro()
+
 # setup macro for component registration, so you can use find_package(elsa COMPONENT name)
 # also sets all target names
 macro(registerComponent name)
@@ -100,8 +104,10 @@ target_include_directories(elsa_all INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
 
+message(STATUS "registered targets: ${ELSA_REGISTERED_TARGETS}")
+
 # register the all "module"
-registerComponent(all)
+set(ELSA_REGISTERED_COMPONENTS "${ELSA_REGISTERED_COMPONENTS};all" PARENT_SCOPE)
 
 # install the all module and the elsa.h file
 InstallElsaModule(all elsa_all elsa_allTargets "${ELSA_REGISTERED_TARGETS}")

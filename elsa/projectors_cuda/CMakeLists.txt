@@ -33,6 +33,8 @@ if (CMAKE_CUDA_COMPILER)
 
     # set define to check cuda projectors in projects
     target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)
+
+    registerTarget(projectors_cuda)
 else()
     message(STATUS "CUDA compiler NOT found! CUDA support disabled")
 endif()
