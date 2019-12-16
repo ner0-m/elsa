@@ -20,9 +20,6 @@ function checkCPP(){
     return 1
 }
 
-apt-get update
-apt-get install clang-tidy-8 -y
-
 clang-tidy-8 --version
 echo
 

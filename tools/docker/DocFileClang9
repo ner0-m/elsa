@@ -1,10 +1,10 @@
-FROM gcc:6
+FROM clang:9
 MAINTAINER Tobias Lasser <lasser@in.tum.de>
-LABEL Description="gcc6 on Debian with cmake/git"
+LABEL Description="clang9 on Debian with cmake/git"
 
 # install wget
 RUN apt-get -qq update \
- && apt-get install -qqy wget
+ && apt-get install -qqy wget ca-certificates pkg-config
 
 # install ninja
 RUN apt-get install -qqy ninja-build
@@ -21,9 +21,17 @@ RUN wget https://cmake.org/files/v${cmake_version_short}/${cmake_dir}.tar.gz \
  && tar -xvzf ${cmake_dir}.tar.gz \
  && rm ${cmake_dir}.tar.gz \
  && cd ${cmake_dir} \
+ && export CC=clang \
+ && export CXX=clang++ \
+ && export CXXFLAGS="-std=c++17 -stdlib=libc++" \
+ && export LDFLAGS="-lc++ -lc++abi" \
  && ./configure --parallel=28 \
  && make -j28 && make install \
  && cd .. && rm -rf ${cmake_dir} && ldconfig
+
+# fix libc++ paths
+RUN ln -sf /usr/local/lib/libc++.a /usr/lib/x86_64-linux-gnu/libc++.a \
+ && ln -sf /usr/local/lib/libc++.so.1.0 /usr/lib/x86_64-linux-gnu/libc++.so.1.0
 
 # install Intel MKL-DNN
 ARG mkldnn_version=1.1.1
@@ -39,4 +47,3 @@ RUN wget https://github.com/intel/mkl-dnn/archive/${mkldnn_folder}.tar.gz \
  && cd ../.. && rm -rf mkl-dnn-${mkldnn_version} && ldconfig
 
 CMD bash
-
