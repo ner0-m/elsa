@@ -106,5 +106,7 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC
         $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
+registerTarget(${ELSA_MODULE_NAME})
+
 # install the kernels as a module
 InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${ELSA_COMPONENT_DEPENDENCIES}")
