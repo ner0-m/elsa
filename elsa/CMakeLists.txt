@@ -104,8 +104,6 @@ target_include_directories(elsa_all INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
 
-message(STATUS "registered targets: ${ELSA_REGISTERED_TARGETS}")
-
 # register the all "module"
 set(ELSA_REGISTERED_COMPONENTS "${ELSA_REGISTERED_COMPONENTS};all" PARENT_SCOPE)
 
