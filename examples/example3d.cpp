@@ -17,7 +17,7 @@ void example3d()
     EDF::write(phantom, "3dphantom.edf");
 
     // generate circular trajectory
-    index_t noAngles{100}, arc{360};
+    index_t noAngles{180}, arc{360};
     auto [geometry, sinoDescriptor] = CircleTrajectoryGenerator::createTrajectory(
         noAngles, phantom.getDataDescriptor(), arc, size(0) * 100, size(0));
 
@@ -35,9 +35,9 @@ void example3d()
     WLSProblem problem(projector, sinogram);
 
     // solve the reconstruction problem
-    GradientDescent solver(problem, 1.0 / size.prod());
+    CG solver(problem);
 
-    index_t noIterations{50};
+    index_t noIterations{20};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of gradient descent",
                               noIterations);
     auto reconstruction = solver.solve(noIterations);
