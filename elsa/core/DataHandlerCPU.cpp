@@ -99,42 +99,6 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerCPU<data_t>::square() const
-    {
-        auto result = std::make_unique<DataHandlerCPU<data_t>>(getSize(), false);
-        *result->_data = _data->array().square();
-
-        return result;
-    }
-
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerCPU<data_t>::sqrt() const
-    {
-        auto result = std::make_unique<DataHandlerCPU<data_t>>(getSize(), false);
-        *result->_data = _data->array().sqrt();
-
-        return result;
-    }
-
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerCPU<data_t>::exp() const
-    {
-        auto result = std::make_unique<DataHandlerCPU<data_t>>(getSize(), false);
-        *result->_data = _data->array().exp();
-
-        return result;
-    }
-
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerCPU<data_t>::log() const
-    {
-        auto result = std::make_unique<DataHandlerCPU<data_t>>(getSize(), false);
-        *result->_data = _data->array().log();
-
-        return result;
-    }
-
-    template <typename data_t>
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
@@ -448,6 +412,19 @@ namespace elsa
         for (auto& map : _associatedMaps)
             new (&map->_map) Eigen::Map<DataVector_t>(_data->data() + (map->_map.data() - oldData),
                                                       map->getSize());
+    }
+
+    template <typename data_t>
+    typename DataHandlerCPU<data_t>::DataMap_t DataHandlerCPU<data_t>::accessData() const
+    {
+        return DataMap_t(&(_data->operator[](0)), getSize());
+    }
+
+    template <typename data_t>
+    typename DataHandlerCPU<data_t>::DataMap_t DataHandlerCPU<data_t>::accessData()
+    {
+        detach();
+        return DataMap_t(&(_data->operator[](0)), getSize());
     }
 
     // ------------------------------------------

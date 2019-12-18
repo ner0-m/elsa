@@ -215,20 +215,20 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the element-wise unary operations work as expected")
             {
-                auto dcSquare = dc.square();
+                DataContainer dcSquare = square(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dcSquare[i] == Approx(randVec(i) * randVec(i)));
 
-                auto dcSqrt = dc.sqrt();
+                DataContainer dcSqrt = sqrt(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     if (randVec(i) >= 0)
                         REQUIRE(dcSqrt[i] == Approx(std::sqrt(randVec(i))));
 
-                auto dcExp = dc.exp();
+                DataContainer dcExp = exp(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dcExp[i] == Approx(std::exp(randVec(i))));
 
-                auto dcLog = dc.log();
+                DataContainer dcLog = log(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     if (randVec(i) > 0)
                         REQUIRE(dcLog[i] == Approx(std::log(randVec(i))));
@@ -341,20 +341,20 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments")
         {
             auto resultPlus = dc + dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultPlus[i] == dc[i] + dc2[i]);
+                REQUIRE((resultPlus.eval())[i] == dc[i] + dc2[i]);
 
             auto resultMinus = dc - dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMinus[i] == dc[i] - dc2[i]);
+                REQUIRE((resultMinus.eval())[i] == dc[i] - dc2[i]);
 
             auto resultMult = dc * dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMult[i] == dc[i] * dc2[i]);
+                REQUIRE(resultMult.eval()[i] == dc[i] * dc2[i]);
 
             auto resultDiv = dc / dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 if (dc2[i] != 0)
-                    REQUIRE(resultDiv[i] == dc[i] / dc2[i]);
+                    REQUIRE(resultDiv.eval()[i] == Approx(dc[i] / dc2[i]));
         }
 
         THEN("the operations with a scalar work as expected")
@@ -363,36 +363,36 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments")
 
             auto resultScalarPlus = scalar + dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarPlus[i] == scalar + dc[i]);
+                REQUIRE(resultScalarPlus.eval()[i] == scalar + dc[i]);
 
             auto resultPlusScalar = dc + scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultPlusScalar[i] == dc[i] + scalar);
+                REQUIRE(resultPlusScalar.eval()[i] == dc[i] + scalar);
 
             auto resultScalarMinus = scalar - dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarMinus[i] == scalar - dc[i]);
+                REQUIRE(resultScalarMinus.eval()[i] == scalar - dc[i]);
 
             auto resultMinusScalar = dc - scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMinusScalar[i] == dc[i] - scalar);
+                REQUIRE(resultMinusScalar.eval()[i] == dc[i] - scalar);
 
             auto resultScalarMult = scalar * dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarMult[i] == scalar * dc[i]);
+                REQUIRE(resultScalarMult.eval()[i] == scalar * dc[i]);
 
             auto resultMultScalar = dc * scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMultScalar[i] == dc[i] * scalar);
+                REQUIRE(resultMultScalar.eval()[i] == dc[i] * scalar);
 
             auto resultScalarDiv = scalar / dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 if (dc[i] != 0)
-                    REQUIRE(resultScalarDiv[i] == scalar / dc[i]);
+                    REQUIRE(resultScalarDiv.eval()[i] == scalar / dc[i]);
 
             auto resultDivScalar = dc / scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultDivScalar[i] == dc[i] / scalar);
+                REQUIRE(resultDivScalar.eval()[i] == dc[i] / scalar);
         }
     }
 }
@@ -478,7 +478,7 @@ SCENARIO("Testing creation of Maps through DataContainer")
             }
         }
 
-        WHEN("crating a view")
+        WHEN("creating a view")
         {
             IndexVector_t numCoeff(1);
             numCoeff << blockDesc.getNumberOfCoefficients();

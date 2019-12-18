@@ -80,7 +80,13 @@ namespace elsa
             deltaNew = _preconditionerInverse ? r.dot(*s) : r.squaredL2Norm();
 
             // evaluate objective function as -0.5 * x^t[b + (b - Ax)]
-            data_t objVal = static_cast<data_t>(-0.5) * x.dot(b ? *b + r : r);
+            data_t objVal;
+            if (b == nullptr) {
+                objVal = static_cast<data_t>(-0.5) * x.dot(r);
+            } else {
+                objVal = static_cast<data_t>(-0.5) * x.dot(*b + r);
+            }
+
             Logger::get("CG")->info(" {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", it,
                                     std::sqrt(deltaNew), std::sqrt(deltaZero), _epsilon, objVal);
 

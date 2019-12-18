@@ -99,42 +99,6 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerMapCPU<data_t>::square() const
-    {
-        auto result = std::make_unique<DataHandlerCPU<data_t>>(getSize(), false);
-        *result->_data = _map.array().square();
-
-        return result;
-    }
-
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerMapCPU<data_t>::sqrt() const
-    {
-        auto result = std::make_unique<DataHandlerCPU<data_t>>(getSize(), false);
-        *result->_data = _map.array().sqrt();
-
-        return result;
-    }
-
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerMapCPU<data_t>::exp() const
-    {
-        auto result = std::make_unique<DataHandlerCPU<data_t>>(getSize(), false);
-        *result->_data = _map.array().exp();
-
-        return result;
-    }
-
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerMapCPU<data_t>::log() const
-    {
-        auto result = std::make_unique<DataHandlerCPU<data_t>>(getSize(), false);
-        *result->_data = _map.array().log();
-
-        return result;
-    }
-
-    template <typename data_t>
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
@@ -367,6 +331,19 @@ namespace elsa
     void DataHandlerMapCPU<data_t>::assign(DataHandler<data_t>&& other)
     {
         assign(other);
+    }
+
+    template <typename data_t>
+    typename DataHandlerMapCPU<data_t>::DataMap_t DataHandlerMapCPU<data_t>::accessData()
+    {
+        _dataOwner->detach();
+        return _map;
+    }
+
+    template <typename data_t>
+    typename DataHandlerMapCPU<data_t>::DataMap_t DataHandlerMapCPU<data_t>::accessData() const
+    {
+        return _map;
     }
 
     // ------------------------------------------

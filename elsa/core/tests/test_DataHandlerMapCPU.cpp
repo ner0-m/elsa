@@ -644,28 +644,6 @@ TEMPLATE_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler
             auto dhPtr = realDh.getBlock(0, size);
             auto& dh = static_cast<DataHandlerMapCPU<TestType>&>(*dhPtr);
 
-            THEN("the element-wise unary operations work as expected")
-            {
-                auto dhSquared = dh.square();
-                for (index_t i = 0; i < size; ++i)
-                    REQUIRE((*dhSquared)[i] == Approx(randVec(i) * randVec(i)));
-
-                auto dhSqrt = dh.sqrt();
-                for (index_t i = 0; i < size; ++i)
-                    if (randVec(i) >= 0)
-                        REQUIRE((*dhSqrt)[i]
-                                == Approx(static_cast<TestType>(std::sqrt(randVec(i)))));
-
-                auto dhExp = dh.exp();
-                for (index_t i = 0; i < size; ++i)
-                    REQUIRE((*dhExp)[i] == Approx(static_cast<TestType>(std::exp(randVec(i)))));
-
-                auto dhLog = dh.log();
-                for (index_t i = 0; i < size; ++i)
-                    if (randVec(i) > 0)
-                        REQUIRE((*dhLog)[i] == Approx(static_cast<TestType>(std::log(randVec(i)))));
-            }
-
             THEN("the element-wise binary vector operations work as expected")
             {
                 DataHandlerCPU<TestType> bigDh{2 * size};
@@ -762,108 +740,6 @@ TEMPLATE_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler
                 for (index_t i = 0; i < size; ++i)
                     REQUIRE(dh[i] == scalar);
             }
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("Scenario: Testing arithmetic operations with DataHandler arguments", "", float,
-                   double, index_t)
-{
-    GIVEN("some DataHandlers")
-    {
-        index_t size = 1095;
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec(size);
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec2(size);
-        randVec.setRandom();
-        randVec2.setRandom();
-        DataHandlerCPU realDh(randVec);
-        auto dhPtr = realDh.getBlock(0, size);
-        auto& dh = *dhPtr;
-        DataHandlerCPU realDh2(randVec2);
-        auto dh2Ptr = realDh2.getBlock(0, size);
-        auto& dh2 = *dh2Ptr;
-        DataHandlerCPU dhCPU(randVec2);
-
-        THEN("the binary element-wise operations work as expected")
-        {
-            DataHandlerCPU<TestType> bigDh{2 * size};
-
-            REQUIRE_THROWS(dh + bigDh);
-            REQUIRE_THROWS(dh - bigDh);
-            REQUIRE_THROWS(dh * bigDh);
-            REQUIRE_THROWS(dh / bigDh);
-
-            auto resultPlus = dh + dh2;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultPlus)[i] == dh[i] + dh2[i]);
-
-            resultPlus = dh + dhCPU;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultPlus)[i] == dh[i] + dhCPU[i]);
-
-            auto resultMinus = dh - dh2;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultMinus)[i] == dh[i] - dh2[i]);
-
-            resultMinus = dh - dhCPU;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultMinus)[i] == dh[i] - dhCPU[i]);
-
-            auto resultMult = dh * dh2;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultMult)[i] == dh[i] * dh2[i]);
-
-            resultMult = dh * dhCPU;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultMult)[i] == dh[i] * dhCPU[i]);
-
-            auto resultDiv = dh / dh2;
-            for (index_t i = 0; i < size; ++i)
-                if (dh2[i] != 0)
-                    REQUIRE((*resultDiv)[i] == dh[i] / dh2[i]);
-
-            resultDiv = dh / dhCPU;
-            for (index_t i = 0; i < size; ++i)
-                if (dh2[i] != 0)
-                    REQUIRE((*resultDiv)[i] == dh[i] / dhCPU[i]);
-        }
-
-        THEN("the operations with a scalar work as expected")
-        {
-            auto scalar = std::is_integral_v<TestType> ? TestType(4) : TestType(4.7);
-
-            auto resultScalarPlus = scalar + dh;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultScalarPlus)[i] == scalar + dh[i]);
-
-            auto resultPlusScalar = dh + scalar;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultPlusScalar)[i] == dh[i] + scalar);
-
-            auto resultScalarMinus = scalar - dh;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultScalarMinus)[i] == scalar - dh[i]);
-
-            auto resultMinusScalar = dh - scalar;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultMinusScalar)[i] == dh[i] - scalar);
-
-            auto resultScalarMult = scalar * dh;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultScalarMult)[i] == scalar * dh[i]);
-
-            auto resultMultScalar = dh * scalar;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultMultScalar)[i] == dh[i] * scalar);
-
-            auto resultScalarDiv = scalar / dh;
-            for (index_t i = 0; i < size; ++i)
-                if (dh[i] != 0)
-                    REQUIRE((*resultScalarDiv)[i] == scalar / dh[i]);
-
-            auto resultDivScalar = dh / scalar;
-            for (index_t i = 0; i < size; ++i)
-                REQUIRE((*resultDivScalar)[i] == dh[i] / scalar);
         }
     }
 }

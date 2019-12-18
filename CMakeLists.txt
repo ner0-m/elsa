@@ -19,6 +19,7 @@ endif ()
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
 option(ELSA_CREATE_JUNIT_REPORTS "Enable creating JUnit style reports when running tests" ON)
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
+option(ELSA_BENCHMARKS "Enable elsa benchmark test cases" OFF)
 
 option(GIT_SUBMODULE "Enable updating the submodules during build" ${ELSA_MASTER_PROJECT})
 option(ELSA_INSTALL "Enable generating the install targets for make install" ${ELSA_MASTER_PROJECT})
@@ -87,7 +88,7 @@ if(ELSA_TESTING)
     enable_testing()
     add_subdirectory(thirdparty/Catch2)
 
-	add_custom_target(tests
+    add_custom_target(tests
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Build and run all the tests.")

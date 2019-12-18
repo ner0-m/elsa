@@ -45,6 +45,18 @@ We use a testing style described as [Behaviour-Driven
 Development](https://github.com/catchorg/Catch2/blob/master/docs/tutorial.md#bdd-style) (BDD). Please
 follow this style when adding new tests.
 
+## Benchmarking
+You can use the catch testing framework to do [benchmarking
+](https://github.com/catchorg/Catch2/blob/master/docs/benchmarks.md). If so, add your benchmarking
+case following this template
+```cmake
+if(ELSA_BENCHMARKS)
+    ELSA_TEST(BenchmarkName)
+endif()
+```
+which ensures that the test case is only registered and build if the cmake option was
+enabled.
+
 ## Style Guide
 We use the tool `clang-format` to autoformat our code with the [given style
 file](.clang-format). Please make sure that your code is formatted accordingly, otherwise the CI

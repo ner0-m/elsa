@@ -17,7 +17,9 @@ set(MODULE_HEADERS
         DataHandler.h
         DataHandlerCPU.h
         DataHandlerMapCPU.h
-        LinearOperator.h)
+        LinearOperator.h
+        Expression.h
+        ExpressionPredicates.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES

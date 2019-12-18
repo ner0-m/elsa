@@ -48,6 +48,7 @@ namespace elsa
     protected:
         /// convenience typedef for the Eigen::Matrix data vector
         using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
+
         /// convenience typedef for the Eigen::Map
         using DataMap_t = Eigen::Map<DataVector_t>;
 
@@ -84,18 +85,6 @@ namespace elsa
 
         /// return the sum of all elements of the data vector
         data_t sum() const override;
-
-        /// return a new DataHandler with element-wise squared values of this one
-        std::unique_ptr<DataHandler<data_t>> square() const override;
-
-        /// return a new DataHandler with element-wise square roots of this one
-        std::unique_ptr<DataHandler<data_t>> sqrt() const override;
-
-        /// return a new DataHandler with element-wise exponentials of this one
-        std::unique_ptr<DataHandler<data_t>> exp() const override;
-
-        /// return a new DataHandler with element-wise logarithms of this one
-        std::unique_ptr<DataHandler<data_t>> log() const override;
 
         /// compute in-place element-wise addition of another vector v
         DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) override;
@@ -162,6 +151,12 @@ namespace elsa
 
         void assign(DataHandler<data_t>&& other) override;
 
+        /// return non-const version of the data
+        DataMap_t accessData() override;
+
+        /// return const version of the data
+        DataMap_t accessData() const override;
+
     private:
         /**
          * \brief Construct a DataHandlerMapCPU referencing a sequential block of data owned by
@@ -173,5 +168,4 @@ namespace elsa
          */
         DataHandlerMapCPU(DataHandlerCPU<data_t>* dataOwner, data_t* data, index_t n);
     };
-
 } // namespace elsa

@@ -3,7 +3,10 @@
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
 #include "DataHandler.h"
+#include "DataHandlerCPU.h"
+#include "DataHandlerMapCPU.h"
 #include "DataContainerIterator.h"
+#include "Expression.h"
 
 #include <memory>
 #include <type_traits>
@@ -18,6 +21,7 @@ namespace elsa
      * \author Tobias Lasser - rewrite, modularization, modernization
      * \author David Frank - added DataHandler concept, iterators
      * \author Nikola Dinev - add block support
+     * \author Jens Petit - expression templates
      *
      * \tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
      *
@@ -25,17 +29,12 @@ namespace elsa
      * be n-dimensional, and will be stored in memory in a linearized fashion. The information
      * on how this linearization is performed is provided by an associated DataDescriptor.
      */
-    template <typename data_t = real_t>
+    template <typename data_t>
     class DataContainer
     {
     public:
-        /**
-         * \brief type of the DataHandler used to store the actual data
-         *
-         * The following handler types are currently supported:
-         *    - CPU: data is stored as an Eigen::Matrix in CPU main memory
-         */
-        enum class DataHandlerType { CPU };
+        /// union of all possible handler raw pointers
+        using HandlerTypes_t = std::variant<DataHandlerCPU<data_t>*, DataHandlerMapCPU<data_t>*>;
 
         /// delete default constructor (without metadata there can be no valid container)
         DataContainer() = delete;
@@ -96,6 +95,37 @@ namespace elsa
          */
         DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
 
+        /**
+         * \brief Expression evaluation assignment for DataContainer
+         *
+         * \param[in] source expression to evaluate
+         *
+         * This evaluates an expression template term into the underlying data member of
+         * the DataHandler in use.
+         */
+        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
+        DataContainer<data_t>& operator=(Source const& source)
+        {
+            _dataHandler->accessData() = source.eval();
+
+            return *this;
+        }
+
+        /**
+         * \brief Expression constructor
+         *
+         * \param[in] source expression to evaluate
+         *
+         * It creates a new DataContainer out of an expression. For this the meta information which
+         * is saved in the expression is used.
+         */
+        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
+        DataContainer<data_t>(Source const& source)
+            : DataContainer<data_t>(source.getDataMetaInfo().first, source.eval(),
+                                    source.getDataMetaInfo().second)
+        {
+        }
+
         /// return the current DataDescriptor
         const DataDescriptor& getDataDescriptor() const;
 
@@ -140,6 +170,13 @@ namespace elsa
         /// return the dot product of this signal with the one from container other
         data_t dot(const DataContainer<data_t>& other) const;
 
+        /// return the dot product of this signal with the one from an expression
+        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
+        data_t dot(const Source& source) const
+        {
+            return (*this * source).eval().sum();
+        }
+
         /// return the squared l2 norm of this signal (dot product with itself)
         data_t squaredL2Norm() const;
 
@@ -152,29 +189,49 @@ namespace elsa
         /// return the sum of all elements of this signal
         data_t sum() const;
 
-        /// return a new DataContainer with element-wise squared values of this one
-        DataContainer<data_t> square() const;
-
-        /// return a new DataContainer with element-wise square roots of this one
-        DataContainer<data_t> sqrt() const;
-
-        /// return a new DataContainer with element-wise exponentials of this one
-        DataContainer<data_t> exp() const;
-
-        /// return a new DataContainer with element-wise logarithms of this one
-        DataContainer<data_t> log() const;
-
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
+
+        /// compute in-place element-wise addition with another expression
+        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
+        DataContainer<data_t>& operator+=(Source const& source)
+        {
+            *this = *this + source;
+            return *this;
+        }
 
         /// compute in-place element-wise subtraction of another container
         DataContainer<data_t>& operator-=(const DataContainer<data_t>& dc);
 
+        /// compute in-place element-wise subtraction with another expression
+        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
+        DataContainer<data_t>& operator-=(Source const& source)
+        {
+            *this = *this - source;
+            return *this;
+        }
+
         /// compute in-place element-wise multiplication with another container
         DataContainer<data_t>& operator*=(const DataContainer<data_t>& dc);
 
+        /// compute in-place element-wise multiplication with another expression
+        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
+        DataContainer<data_t>& operator*=(Source const& source)
+        {
+            *this = *this * source;
+            return *this;
+        }
+
         /// compute in-place element-wise division by another container
         DataContainer<data_t>& operator/=(const DataContainer<data_t>& dc);
+
+        /// compute in-place element-wise division with another expression
+        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
+        DataContainer<data_t>& operator/=(Source const& source)
+        {
+            *this = *this / source;
+            return *this;
+        }
 
         /// compute in-place addition of a scalar
         DataContainer<data_t>& operator+=(data_t scalar);
@@ -275,11 +332,25 @@ namespace elsa
         /// difference type for iterators
         using difference_type = std::ptrdiff_t;
 
+        /// returns the type of the DataHandler in use
+        DataHandlerType getDataHandlerType() const;
+
+        /// friend constexpr function to implement expression templates
+        template <class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
+        friend constexpr auto evaluateOrReturn(Operand const& operand);
+
     private:
+        /// returns the underlying derived handler as a raw pointer in a std::variant
+        HandlerTypes_t getHandlerPtr() const;
+
         /// the current DataDescriptor
         std::unique_ptr<DataDescriptor> _dataDescriptor;
+
         /// the current DataHandler
         std::unique_ptr<DataHandler<data_t>> _dataHandler;
+
+        /// the current DataHandlerType
+        DataHandlerType _dataHandlerType;
 
         /// factory method to create DataHandlers based on handlerType with perfect forwarding of
         /// constructor arguments
@@ -289,121 +360,136 @@ namespace elsa
 
         /// private constructor accepting a DataDescriptor and a DataHandler
         explicit DataContainer(const DataDescriptor& dataDescriptor,
-                               std::unique_ptr<DataHandler<data_t>> dataHandler);
+                               std::unique_ptr<DataHandler<data_t>> dataHandler,
+                               DataHandlerType dataType = DataHandlerType::CPU);
     };
 
-    /// element-wise addition of two DataContainers
-    template <typename data_t>
-    DataContainer<data_t> operator+(const DataContainer<data_t>& left,
-                                    const DataContainer<data_t>& right)
+    /// Multiplying two operands (including scalars)
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto operator*(LHS const& lhs, RHS const& rhs)
     {
-        DataContainer<data_t> result(left);
-        result += right;
-        return result;
+        if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
+            auto multiplication = [](auto const& left, auto const& right) {
+                return (left.array() * right.array()).matrix();
+            };
+            return Expression{multiplication, lhs, rhs};
+        } else if constexpr (isArithmetic<LHS>) {
+            auto multiplication = [](auto const& left, auto const& right) {
+                return (left * right.array()).matrix();
+            };
+            return Expression{multiplication, lhs, rhs};
+        } else if constexpr (isArithmetic<RHS>) {
+            auto multiplication = [](auto const& left, auto const& right) {
+                return (left.array() * right).matrix();
+            };
+            return Expression{multiplication, lhs, rhs};
+        } else {
+            auto multiplication = [](auto const& left, auto const& right) { return left * right; };
+            return Expression{multiplication, lhs, rhs};
+        }
     }
 
-    /// element-wise subtraction of two DataContainers
-    template <typename data_t>
-    DataContainer<data_t> operator-(const DataContainer<data_t>& left,
-                                    const DataContainer<data_t>& right)
+    /// Adding two operands (including scalars)
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto operator+(LHS const& lhs, RHS const& rhs)
     {
-        DataContainer<data_t> result(left);
-        result -= right;
-        return result;
+        if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
+            auto addition = [](auto const& left, auto const& right) { return left + right; };
+            return Expression{addition, lhs, rhs};
+        } else if constexpr (isArithmetic<LHS>) {
+            auto addition = [](auto const& left, auto const& right) {
+                return (left + right.array()).matrix();
+            };
+            return Expression{addition, lhs, rhs};
+        } else if constexpr (isArithmetic<RHS>) {
+            auto addition = [](auto const& left, auto const& right) {
+                return (left.array() + right).matrix();
+            };
+            return Expression{addition, lhs, rhs};
+        } else {
+            auto addition = [](auto const& left, auto const& right) { return left + right; };
+            return Expression{addition, lhs, rhs};
+        }
     }
 
-    /// element-wise multiplication of two DataContainers
-    template <typename data_t>
-    DataContainer<data_t> operator*(const DataContainer<data_t>& left,
-                                    const DataContainer<data_t>& right)
+    /// Subtracting two operands (including scalars)
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto operator-(LHS const& lhs, RHS const& rhs)
     {
-        DataContainer<data_t> result(left);
-        result *= right;
-        return result;
+        if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
+            auto subtraction = [](auto const& left, auto const& right) { return left - right; };
+            return Expression{subtraction, lhs, rhs};
+        } else if constexpr (isArithmetic<LHS>) {
+            auto subtraction = [](auto const& left, auto const& right) {
+                return (left - right.array()).matrix();
+            };
+            return Expression{subtraction, lhs, rhs};
+        } else if constexpr (isArithmetic<RHS>) {
+            auto subtraction = [](auto const& left, auto const& right) {
+                return (left.array() - right).matrix();
+            };
+            return Expression{subtraction, lhs, rhs};
+        } else {
+            auto subtraction = [](auto const& left, auto const& right) { return left - right; };
+            return Expression{subtraction, lhs, rhs};
+        }
     }
 
-    /// element-wise division of two DataContainers
-    template <typename data_t>
-    DataContainer<data_t> operator/(const DataContainer<data_t>& left,
-                                    const DataContainer<data_t>& right)
+    /// Dividing two operands (including scalars)
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto operator/(LHS const& lhs, RHS const& rhs)
     {
-        DataContainer<data_t> result(left);
-        result /= right;
-        return result;
+        if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
+            auto division = [](auto const& left, auto const& right) {
+                return (left.array() / right.array()).matrix();
+            };
+            return Expression{division, lhs, rhs};
+        } else if constexpr (isArithmetic<LHS>) {
+            auto division = [](auto const& left, auto const& right) {
+                return (left / right.array()).matrix();
+            };
+            return Expression{division, lhs, rhs};
+        } else if constexpr (isArithmetic<RHS>) {
+            auto division = [](auto const& left, auto const& right) {
+                return (left.array() / right).matrix();
+            };
+            return Expression{division, lhs, rhs};
+        } else {
+            auto division = [](auto const& left, auto const& right) { return left * right; };
+            return Expression{division, lhs, rhs};
+        }
     }
 
-    /// addition of DataContainer and scalar
-    template <typename data_t>
-    DataContainer<data_t> operator+(const DataContainer<data_t>& left, data_t right)
+    /// Element-wise square operation
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto square(Operand const& operand)
     {
-        DataContainer<data_t> result(left);
-        result += right;
-        return result;
+        auto square = [](auto const& operand) { return (operand.array().square()).matrix(); };
+        return Expression{square, operand};
     }
 
-    /// addition of scalar and DataContainer
-    template <typename data_t>
-    DataContainer<data_t> operator+(data_t left, const DataContainer<data_t>& right)
+    /// Element-wise square-root operation
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto sqrt(Operand const& operand)
     {
-        DataContainer<data_t> result(right);
-        result += left;
-        return result;
+        auto sqrt = [](auto const& operand) { return (operand.array().sqrt()).matrix(); };
+        return Expression{sqrt, operand};
     }
 
-    /// subtraction of scalar from DataContainer
-    template <typename data_t>
-    DataContainer<data_t> operator-(const DataContainer<data_t>& left, data_t right)
+    /// Element-wise exponenation operation with euler base
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto exp(Operand const& operand)
     {
-        DataContainer<data_t> result(left);
-        result -= right;
-        return result;
+        auto exp = [](auto const& operand) { return (operand.array().exp()).matrix(); };
+        return Expression{exp, operand};
     }
 
-    /// subtraction of DataContainer from scalar
-    template <typename data_t>
-    DataContainer<data_t> operator-(data_t left, const DataContainer<data_t>& right)
+    /// Element-wise natural logarithm
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto log(Operand const& operand)
     {
-        DataContainer<data_t> result(right);
-        result *= -1;
-        result += left;
-        return result;
-    }
-
-    /// multiplication of DataContainer and scalar
-    template <typename data_t>
-    DataContainer<data_t> operator*(const DataContainer<data_t>& left, data_t right)
-    {
-        DataContainer<data_t> result(left);
-        result *= right;
-        return result;
-    }
-
-    /// multiplication of scalar and DataContainer
-    template <typename data_t>
-    DataContainer<data_t> operator*(data_t left, const DataContainer<data_t>& right)
-    {
-        DataContainer<data_t> result(right);
-        result *= left;
-        return result;
-    }
-
-    /// division of DataContainer by scalar
-    template <typename data_t>
-    DataContainer<data_t> operator/(const DataContainer<data_t>& left, data_t right)
-    {
-        DataContainer<data_t> result(left);
-        result /= right;
-        return result;
-    }
-
-    /// division of DataContainer and scalar
-    template <typename data_t>
-    DataContainer<data_t> operator/(data_t left, const DataContainer<data_t>& right)
-    {
-        DataContainer<data_t> result(right);
-        result = left;
-        result /= right;
-        return result;
+        auto log = [](auto const& operand) { return (operand.array().log()).matrix(); };
+        return Expression{log, operand};
     }
 
 } // namespace elsa

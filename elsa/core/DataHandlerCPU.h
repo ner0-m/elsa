@@ -45,9 +45,15 @@ namespace elsa
         /// declare DataHandlerMapCPU as friend, allows the use of Eigen for improved performance
         friend DataHandlerMapCPU<data_t>;
 
+        /// used for testing only and defined in test file
+        friend long useCount<>(const DataHandlerCPU<data_t>& dh);
+
     protected:
         /// convenience typedef for the Eigen::Matrix data vector
         using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
+
+        /// convenience typedef for the Eigen::Map
+        using DataMap_t = Eigen::Map<DataVector_t>;
 
     public:
         /// delete default constructor (having no information makes no sense)
@@ -104,18 +110,6 @@ namespace elsa
         /// return the sum of all elements of the data vector
         data_t sum() const override;
 
-        /// return a new DataHandler with element-wise squared values of this one
-        std::unique_ptr<DataHandler<data_t>> square() const override;
-
-        /// return a new DataHandler with element-wise square roots of this one
-        std::unique_ptr<DataHandler<data_t>> sqrt() const override;
-
-        /// return a new DataHandler with element-wise exponentials of this one
-        std::unique_ptr<DataHandler<data_t>> exp() const override;
-
-        /// return a new DataHandler with element-wise logarithms of this one
-        std::unique_ptr<DataHandler<data_t>> log() const override;
-
         /// copy assign another DataHandlerCPU to this, other types handled in assign()
         DataHandlerCPU<data_t>& operator=(const DataHandlerCPU<data_t>& v);
 
@@ -162,9 +156,6 @@ namespace elsa
         std::unique_ptr<const DataHandler<data_t>>
             getBlock(index_t startIndex, index_t numberOfElements) const override;
 
-        /// used for testing only and defined in test file
-        friend long useCount<>(const DataHandlerCPU<data_t>& dh);
-
     protected:
         /// the vector storing the data
         std::shared_ptr<DataVector_t> _data;
@@ -183,6 +174,12 @@ namespace elsa
 
         /// move the data stored in other if other is of the same type, otherwise copy the data
         void assign(DataHandler<data_t>&& other) override;
+
+        /// return non-const version of data
+        DataMap_t accessData() override;
+
+        /// return const version of data
+        DataMap_t accessData() const override;
 
     private:
         /// creates the deep copy for the copy-on-write mechanism

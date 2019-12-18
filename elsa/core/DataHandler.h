@@ -2,6 +2,9 @@
 
 #include "elsaDefines.h"
 #include "Cloneable.h"
+#include "ExpressionPredicates.h"
+
+#include <Eigen/Core>
 
 namespace elsa
 {
@@ -26,6 +29,20 @@ namespace elsa
     template <typename data_t = real_t>
     class DataHandler : public Cloneable<DataHandler<data_t>>
     {
+        /// for enabling accessData()
+        template <class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
+        friend constexpr auto evaluateOrReturn(Operand const& operand);
+
+        /// for enabling accessData()
+        friend DataContainer<data_t>;
+
+    protected:
+        /// convenience typedef for the Eigen::Matrix data vector
+        using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
+
+        /// convenience typedef for the Eigen::Map
+        using DataMap_t = Eigen::Map<DataVector_t>;
+
     public:
         /// return the size of the stored data (i.e. number of elements in linearized data vector)
         virtual index_t getSize() const = 0;
@@ -50,18 +67,6 @@ namespace elsa
 
         /// return the sum of all elements of the data vector
         virtual data_t sum() const = 0;
-
-        /// return a new DataHandler with element-wise squared values of this one
-        virtual std::unique_ptr<DataHandler<data_t>> square() const = 0;
-
-        /// return a new DataHandler with element-wise square roots of this one
-        virtual std::unique_ptr<DataHandler<data_t>> sqrt() const = 0;
-
-        /// return a new DataHandler with element-wise exponentials of this one
-        virtual std::unique_ptr<DataHandler<data_t>> exp() const = 0;
-
-        /// return a new DataHandler with element-wise logarithms of this one
-        virtual std::unique_ptr<DataHandler<data_t>> log() const = 0;
 
         /// compute in-place element-wise addition of another vector v
         virtual DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) = 0;
@@ -170,120 +175,11 @@ namespace elsa
 
         /// derived classes should override this method to implement move assignment
         virtual void assign(DataHandler<data_t>&& other) = 0;
+
+        /// derived classes return underlying data
+        virtual DataMap_t accessData() = 0;
+
+        /// derived classes return underlying data
+        virtual DataMap_t accessData() const = 0;
     };
-
-    /// element-wise addition of two DataHandlers
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator+(const DataHandler<data_t>& left,
-                                                   const DataHandler<data_t>& right)
-    {
-        auto result = left.clone();
-        *result += right;
-        return result;
-    }
-
-    /// element-wise subtraction of two DataHandlers
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator-(const DataHandler<data_t>& left,
-                                                   const DataHandler<data_t>& right)
-    {
-        auto result = left.clone();
-        *result -= right;
-        return result;
-    }
-
-    /// element-wise multiplication of two DataHandlers
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator*(const DataHandler<data_t>& left,
-                                                   const DataHandler<data_t>& right)
-    {
-        auto result = left.clone();
-        *result *= right;
-        return result;
-    }
-
-    /// element-wise division of two DataHandlers
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator/(const DataHandler<data_t>& left,
-                                                   const DataHandler<data_t>& right)
-    {
-        auto result = left.clone();
-        *result /= right;
-        return result;
-    }
-
-    /// addition of DataHandler with scalar
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator+(data_t left, const DataHandler<data_t>& right)
-    {
-        auto result = right.clone();
-        *result += left;
-        return result;
-    }
-
-    /// addition of scalar with DataHandler
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator+(const DataHandler<data_t>& left, data_t right)
-    {
-        auto result = left.clone();
-        *result += right;
-        return result;
-    }
-
-    /// subtraction of DataHandler from scalar
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator-(data_t left, const DataHandler<data_t>& right)
-    {
-        auto result = right.clone();
-        *result *= -1;
-        *result += left;
-        return result;
-    }
-
-    /// subtraction of scalar from DataHandler
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator-(const DataHandler<data_t>& left, data_t right)
-    {
-        auto result = left.clone();
-        *result -= right;
-        return result;
-    }
-
-    /// multiplication of DataHandler with scalar
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator*(data_t left, const DataHandler<data_t>& right)
-    {
-        auto result = right.clone();
-        *result *= left;
-        return result;
-    }
-
-    /// multiplication of scalar with DataHandler
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator*(const DataHandler<data_t>& left, data_t right)
-    {
-        auto result = left.clone();
-        *result *= right;
-        return result;
-    }
-
-    /// division of scalar by DataHandler
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator/(data_t left, const DataHandler<data_t>& right)
-    {
-        auto result = right.clone();
-        *result = left;
-        *result /= right;
-        return result;
-    }
-
-    /// division of DataHandler by scalar
-    template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> operator/(const DataHandler<data_t>& left, data_t right)
-    {
-        auto result = left.clone();
-        *result /= right;
-        return result;
-    }
-
 } // namespace elsa

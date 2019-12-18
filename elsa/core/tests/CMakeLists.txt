@@ -12,3 +12,8 @@ ELSA_TEST(DataContainer)
 ELSA_TEST(DataHandlerCPU)
 ELSA_TEST(DataHandlerMapCPU)
 ELSA_TEST(LinearOperator)
+ELSA_TEST(ExpressionTemplates)
+
+if(ELSA_BENCHMARKS)
+    ELSA_TEST(BenchmarkExpressionTemplates)
+endif()

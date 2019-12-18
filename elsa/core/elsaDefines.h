@@ -31,4 +31,10 @@ namespace elsa
 
     /// global constexpr for the number pi
     constexpr auto pi_t = pi<real_t>;
+
+    /// type of the DataHandler used to store the actual data
+    enum class DataHandlerType {
+        CPU,    ///< data is stored as an Eigen::Matrix in CPU main memory
+        MAP_CPU ///< data is not explicitly stored, but using an Eigen::Map to refer to other
+    };
 } // namespace elsa
