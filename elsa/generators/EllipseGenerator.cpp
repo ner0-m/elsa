@@ -16,6 +16,10 @@ namespace elsa
             throw std::invalid_argument(
                 "EllipseGenerator::drawFilledEllipse2d: can only work on 2d DataContainers");
 
+        // don't draw anything if size is 0
+        if (sizes[0] == 0 && sizes[1] == 0)
+            return;
+
         // convert to radians
         auto angleRad = angle * pi<double> / 180.0;
 

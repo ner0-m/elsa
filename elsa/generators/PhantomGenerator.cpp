@@ -99,13 +99,13 @@ namespace elsa
     template <typename data_t>
     index_t PhantomGenerator<data_t>::scale(const DataDescriptor& dd, data_t value)
     {
-        return std::round(value * dd.getNumberOfCoefficientsPerDimension()[0] / 2);
+        return std::lround(value * (dd.getNumberOfCoefficientsPerDimension()[0] - 1) / 2.0f);
     }
 
     template <typename data_t>
     index_t PhantomGenerator<data_t>::scaleShift(const DataDescriptor& dd, data_t value)
     {
-        return std::round(value * dd.getNumberOfCoefficientsPerDimension()[0] / 2)
+        return std::lround(value * (dd.getNumberOfCoefficientsPerDimension()[0] - 1) / 2.0f)
                + (dd.getNumberOfCoefficientsPerDimension()[0] / 2);
     }
 
