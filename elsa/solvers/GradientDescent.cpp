@@ -15,7 +15,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>& GradientDescent<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t>& GradientDescent<data_t>::solveImpl(index_t iterations, std::function<bool(int,DataContainer<data_t>&)> trackOutput)
     {
         if (iterations == 0)
             iterations = _defaultIterations;
@@ -27,6 +27,10 @@ namespace elsa
             auto gradient = _problem->getGradient();
             gradient *= _stepSize;
             x -= gradient;
+            
+            if(trackOutput != NULL)
+                if(trackOutput(i,getCurrentSolution()))
+                    return getCurrentSolution();
         }
 
         return getCurrentSolution();

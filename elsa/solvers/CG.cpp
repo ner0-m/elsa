@@ -27,7 +27,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>& CG<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t>& CG<data_t>::solveImpl(index_t iterations, std::function<bool(int,DataContainer<data_t>& )> trackOutput)
     {
         if (iterations == 0)
             iterations = _defaultIterations;
@@ -103,6 +103,11 @@ namespace elsa
 
             const auto beta = deltaNew / deltaOld;
             d = beta * d + (_preconditionerInverse ? *s : r);
+            
+            //Track this iteration by executing the callback function if given
+            if(trackOutput != NULL)
+                if(trackOutput(it,getCurrentSolution()))
+                    return getCurrentSolution();
         }
 
         Logger::get("CG")->warn("Failed to reach convergence at {} iterations", iterations);

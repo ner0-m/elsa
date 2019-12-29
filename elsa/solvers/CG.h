@@ -85,10 +85,13 @@ namespace elsa
          *
          * \param[in] iterations number of iterations to execute (the default 0 value executes
          * _defaultIterations of iterations)
+         * \param[in] trackOutput a callback function, it should track the current state of solve, it is executed at the end of each iteration
+         * with the current number of iterations and the current solution as input 
+         * If it returns true the solve is immediatly canceled and the current solution is returned [default nullptr]
          *
          * \returns a reference to the current solution
          */
-        DataContainer<data_t>& solveImpl(index_t iterations) override;
+        DataContainer<data_t>& solveImpl(index_t iterations, std::function<bool(int, DataContainer<data_t>& )> trackOutput) override;
 
         /// implement the polymorphic clone operation
         CG<data_t>* cloneImpl() const override;
