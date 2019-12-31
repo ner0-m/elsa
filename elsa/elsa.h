@@ -60,3 +60,11 @@
 #include "solvers/Solver.h"
 #include "solvers/GradientDescent.h"
 #include "solvers/CG.h"
+
+// Ml headers
+#include "ml/Network.h"
+#include "ml/Layer.h"
+#include "ml/Relu.h"
+#include "ml/Conv.h"
+#include "ml/Pooling.h"
+#include "ml/RandomInitializer.h"

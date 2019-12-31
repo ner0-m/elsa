@@ -73,4 +73,3 @@ else()
                                     Dnnl_INCLUDE_DIR)
   mark_as_advanced(Dnnl_INCLUDE_DIR)
 endif()
-

@@ -48,6 +48,7 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
     add_subdirectory(projectors_cuda)
 endif(ELSA_BUILD_CUDA_PROJECTORS)
 add_subdirectory(generators)
+add_subdirectory(ml)
 
 
 # library to build and add all registered components of the library
