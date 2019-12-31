@@ -19,8 +19,8 @@ namespace elsa
         explicit ActivationLayer(const DataDescriptor& inputDescriptor)
             : Layer<data_t, _BackendTag>(inputDescriptor)
         {
-            _outputDescriptor = inputDescriptor;
-            _backend = std::make_shared<BackendLayerType>(inputDescriptor, _outputDescriptor);
+            _outputDescriptor = inputDescriptor.clone();
+            _backend = std::make_shared<BackendLayerType>(inputDescriptor, *_outputDescriptor);
         }
 
         void setAlpha(data_t alpha) const

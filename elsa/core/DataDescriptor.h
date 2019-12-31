@@ -107,9 +107,6 @@ namespace elsa
         /// vector containing the origin of the described volume (typically the center)
         RealVector_t _locationOfOrigin;
 
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        DataDescriptor(const DataDescriptor&) = default;
-
         /// implement the polymorphic clone operation
         DataDescriptor* cloneImpl() const override;
 

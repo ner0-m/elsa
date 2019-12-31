@@ -33,8 +33,8 @@ namespace elsa
                     / poolingStride[1]
                 + 1;
 
-        _outputDescriptor = DataDescriptor(outputDims);
-        _backend = std::make_shared<BackendLayerType>(inputDescriptor, _outputDescriptor,
+        _outputDescriptor = DataDescriptor(outputDims).clone();
+        _backend = std::make_shared<BackendLayerType>(inputDescriptor, *_outputDescriptor,
                                                       _poolingWindow, _poolingStride);
     }
 

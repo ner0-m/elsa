@@ -144,19 +144,19 @@ namespace elsa
     {
     }
 
-    template class DnnlAbs<float>;
-    template class DnnlActivationLayer<float>;
-    template class DnnlBoundedRelu<float>;
-    template class DnnlElu<float>;
-    template class DnnlExp<float>;
-    template class DnnlLinear<float>;
-    template class DnnlGelu<float>;
-    template class DnnlLogistic<float>;
-    template class DnnlRelu<float>;
-    template class DnnlSoftRelu<float>;
-    template class DnnlSqrt<float>;
-    template class DnnlSquare<float>;
-    template class DnnlSwish<float>;
-    template class DnnlTanh<float>;
+    template struct DnnlAbs<float>;
+    template struct DnnlActivationLayer<float>;
+    template struct DnnlBoundedRelu<float>;
+    template struct DnnlElu<float>;
+    template struct DnnlExp<float>;
+    template struct DnnlLinear<float>;
+    template struct DnnlGelu<float>;
+    template struct DnnlLogistic<float>;
+    template struct DnnlRelu<float>;
+    template struct DnnlSoftRelu<float>;
+    template struct DnnlSqrt<float>;
+    template struct DnnlSquare<float>;
+    template struct DnnlSwish<float>;
+    template struct DnnlTanh<float>;
 
 } // namespace elsa
