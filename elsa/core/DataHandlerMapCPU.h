@@ -142,6 +142,9 @@ namespace elsa
         std::unique_ptr<const DataHandler<data_t>>
             getBlock(index_t startIndex, index_t numberOfElements) const override;
 
+        virtual data_t* data() override { return _map.data(); }
+        virtual const data_t* data() const override { return _map.data(); }
+
     protected:
         /// vector mapping of the data
         DataMap_t _map;

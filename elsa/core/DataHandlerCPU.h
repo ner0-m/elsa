@@ -165,6 +165,9 @@ namespace elsa
         /// used for testing only and defined in test file
         friend int useCount<>(const DataHandlerCPU<data_t>& dh);
 
+        virtual data_t* data() override { return _data->data(); }
+        virtual const data_t* data() const override { return _data->data(); }
+
     protected:
         /// the vector storing the data
         std::shared_ptr<DataVector_t> _data;

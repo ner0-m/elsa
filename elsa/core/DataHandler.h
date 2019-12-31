@@ -120,6 +120,10 @@ namespace elsa
         virtual std::unique_ptr<const DataHandler<data_t>>
             getBlock(index_t startIndex, index_t numberOfElements) const = 0;
 
+        virtual data_t* data() = 0;
+        
+        virtual const data_t* data() const = 0;
+
     protected:
         /// slow element-wise dot product fall-back for when DataHandler types do not match
         data_t slowDotProduct(const DataHandler<data_t>& v) const
