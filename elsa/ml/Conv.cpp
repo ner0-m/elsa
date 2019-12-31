@@ -41,9 +41,9 @@ namespace elsa
                     / strideVector.coeff(1)
                 + 1;
 
-        _outputDescriptor = DataDescriptor(outputDims);
+        _outputDescriptor = DataDescriptor(outputDims).clone();
         _backend = std::make_shared<BackendLayerType>(
-            inputDescriptor, _outputDescriptor, weightsDescriptor, strideVector, paddingVector);
+            inputDescriptor, *_outputDescriptor, weightsDescriptor, strideVector, paddingVector);
         // std::static_pointer_cast<BackendLayerType>(_backend)->setInitializer(initializer);
     }
 

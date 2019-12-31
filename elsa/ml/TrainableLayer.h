@@ -32,10 +32,10 @@ namespace elsa
         using BaseType::_backend;
 
         /// \copydoc Layer::_weightsDescriptor
-        DataDescriptor _weightsDescriptor;
+        std::unique_ptr<DataDescriptor> _weightsDescriptor;
 
         /// \copydoc Layer::_biasDescriptor
-        DataDescriptor _biasDescriptor;
+        std::unique_ptr<DataDescriptor> _biasDescriptor;
     };
 
     template <typename data_t, MlBackend Backend>
@@ -44,23 +44,23 @@ namespace elsa
     template <typename data_t, MlBackend Backend>
     inline TrainableLayer<data_t, Backend>::TrainableLayer(const DataDescriptor& inputDescriptor,
                                                            const DataDescriptor& weightsDescriptor)
-        : Layer<data_t, Backend>(inputDescriptor), _weightsDescriptor(weightsDescriptor)
+        : Layer<data_t, Backend>(inputDescriptor), _weightsDescriptor(weightsDescriptor.clone())
     {
         IndexVector_t biasDims(1);
-        biasDims << _weightsDescriptor.getNumberOfCoefficientsPerDimension()[0];
-        _biasDescriptor = DataDescriptor(biasDims);
+        biasDims << _weightsDescriptor->getNumberOfCoefficientsPerDimension()[0];
+        _biasDescriptor = DataDescriptor(biasDims).clone();
     }
 
     template <typename data_t, MlBackend Backend>
     inline const DataDescriptor& TrainableLayer<data_t, Backend>::getWeightsDescriptor() const
     {
-        return _weightsDescriptor;
+        return *_weightsDescriptor;
     }
 
     template <typename data_t, MlBackend Backend>
     inline const DataDescriptor& TrainableLayer<data_t, Backend>::getBiasDescriptor() const
     {
-        return _biasDescriptor;
+        return *_biasDescriptor;
     }
 
 } // namespace elsa

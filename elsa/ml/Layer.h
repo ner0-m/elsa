@@ -55,10 +55,10 @@ namespace elsa
         void addPredecessor(std::shared_ptr<Layer<data_t, Backend>> predecessor);
 
         /// DataDescriptor for the layer's input
-        DataDescriptor _inputDescriptor;
+        std::unique_ptr<DataDescriptor> _inputDescriptor;
 
         /// DataDescriptor for the layer's output.
-        DataDescriptor _outputDescriptor;
+        std::unique_ptr<DataDescriptor> _outputDescriptor;
 
         std::vector<std::shared_ptr<Layer>> _successors;
         std::vector<std::shared_ptr<Layer>> _predecessors;
@@ -68,7 +68,7 @@ namespace elsa
 
     template <typename data_t, MlBackend Backend>
     Layer<data_t, Backend>::Layer(const DataDescriptor& inputDescriptor)
-        : _inputDescriptor(inputDescriptor)
+        : _inputDescriptor(inputDescriptor.clone())
     {
     }
 
@@ -95,13 +95,13 @@ namespace elsa
     template <typename data_t, MlBackend Backend>
     inline const DataDescriptor& Layer<data_t, Backend>::getInputDescriptor() const
     {
-        return _inputDescriptor;
+        return *_inputDescriptor;
     }
 
     template <typename data_t, MlBackend Backend>
     inline const DataDescriptor& Layer<data_t, Backend>::getOutputDescriptor() const
     {
-        return _outputDescriptor;
+        return *_outputDescriptor;
     }
 
     template <typename data_t, MlBackend Backend>
