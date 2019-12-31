@@ -47,12 +47,6 @@ namespace elsa
     public:
         static void setSeed(const std::optional<data_t>& seed = std::nullopt);
 
-        static void initialize(DataContainer<data_t>& data, Initializer initializer)
-        {
-            std::size_t size = data.getDataDescriptor().getNumberOfCoefficients();
-            initialize(data.data(), size, initializer);
-        }
-
         static void initialize(data_t* data, std::size_t size, Initializer initializer)
         {
             switch (initializer) {

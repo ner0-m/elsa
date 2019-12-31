@@ -275,10 +275,6 @@ namespace elsa
         /// difference type for iterators
         using difference_type = std::ptrdiff_t;
 
-        pointer data();
-
-        const_pointer data() const;
-
     private:
         /// the current DataDescriptor
         std::unique_ptr<DataDescriptor> _dataDescriptor;

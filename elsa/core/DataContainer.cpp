@@ -403,17 +403,6 @@ namespace elsa
         return const_reverse_iterator(cbegin());
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::pointer DataContainer<data_t>::data()
-    {
-        return _dataHandler->data();
-    }
-
-    template <typename data_t>
-    typename DataContainer<data_t>::const_pointer DataContainer<data_t>::data() const
-    {
-        return _dataHandler->data();
-    }
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
