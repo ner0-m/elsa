@@ -95,7 +95,6 @@ namespace elsa
 
         return coordinate;
     }
-
     DataDescriptor* DataDescriptor::cloneImpl() const { return new DataDescriptor(*this); }
 
     bool DataDescriptor::isEqual(const DataDescriptor& other) const
@@ -106,4 +105,5 @@ namespace elsa
                && (_locationOfOrigin == other._locationOfOrigin);
     }
 
+    bool DataDescriptor::operator==(const DataDescriptor& other) const { return isEqual(other); }
 } // namespace elsa

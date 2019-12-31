@@ -21,7 +21,7 @@ namespace elsa
     {
     public:
         /// delete default constructor (having no metadata is invalid)
-        DataDescriptor() = delete;
+        DataDescriptor() = default;
 
         /// default destructor
         ~DataDescriptor() override = default;
@@ -87,6 +87,8 @@ namespace elsa
          * Linearization is assumed to be done in order of the dimensions.
          */
         IndexVector_t getCoordinateFromIndex(index_t index) const;
+
+        bool operator==(const DataDescriptor& other) const;
 
     protected:
         /// Number of dimensions
