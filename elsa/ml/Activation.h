@@ -38,36 +38,214 @@ namespace elsa
         using BaseType::_backend;
     }; // namespace elsa
 
-#define ELSA_ACTIVATION_LAYER_DECLARATION(name)                                                  \
-    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>                 \
-    struct name final : public ActivationLayer<data_t, _BackendTag, name<data_t, _BackendTag>> { \
-        using BaseType = ActivationLayer<data_t, _BackendTag, name<data_t, _BackendTag>>;        \
-        using BackendLayerType = typename BaseType::BackendLayerType;                            \
-        static constexpr MlBackend BackendTag = _BackendTag;                                     \
-        explicit name(const DataDescriptor& inputDescriptor);                                    \
-    };                                                                                           \
-    namespace detail                                                                             \
-    {                                                                                            \
-        template <typename data_t>                                                               \
-        struct BackendSelector<name<data_t, MlBackend::Dnnl>> {                                  \
-            using Type = Dnnl##name<data_t>;                                                     \
-        };                                                                                       \
-    }
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Abs final : public ActivationLayer<data_t, _BackendTag, Abs<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Abs<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Abs(const DataDescriptor& inputDescriptor);
+    };
 
-    ELSA_ACTIVATION_LAYER_DECLARATION(Abs)
-    ELSA_ACTIVATION_LAYER_DECLARATION(BoundedRelu)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Elu)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Exp)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Linear)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Gelu)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Logistic)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Relu)
-    ELSA_ACTIVATION_LAYER_DECLARATION(SoftRelu)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Sqrt)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Square)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Swish)
-    ELSA_ACTIVATION_LAYER_DECLARATION(Tanh)
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Abs<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlAbs<data_t>;
+        };
+    } // namespace detail
 
-#undef ELSA_ACTIVATION_LAYER_DECLARATION
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct BoundedRelu final
+        : public ActivationLayer<data_t, _BackendTag, BoundedRelu<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, BoundedRelu<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit BoundedRelu(const DataDescriptor& inputDescriptor);
+    };
 
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<BoundedRelu<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlBoundedRelu<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Elu final : public ActivationLayer<data_t, _BackendTag, Elu<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Elu<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Elu(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Elu<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlElu<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Exp final : public ActivationLayer<data_t, _BackendTag, Exp<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Exp<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Exp(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Exp<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlExp<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Linear final : public ActivationLayer<data_t, _BackendTag, Linear<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Linear<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Linear(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Linear<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlLinear<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Gelu final : public ActivationLayer<data_t, _BackendTag, Gelu<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Gelu<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Gelu(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Gelu<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlGelu<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Logistic final
+        : public ActivationLayer<data_t, _BackendTag, Logistic<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Logistic<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Logistic(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Logistic<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlLogistic<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Relu final : public ActivationLayer<data_t, _BackendTag, Relu<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Relu<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Relu(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Relu<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlRelu<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct SoftRelu final
+        : public ActivationLayer<data_t, _BackendTag, SoftRelu<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, SoftRelu<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit SoftRelu(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<SoftRelu<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlSoftRelu<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Sqrt final : public ActivationLayer<data_t, _BackendTag, Sqrt<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Sqrt<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Sqrt(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Sqrt<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlSqrt<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Square final : public ActivationLayer<data_t, _BackendTag, Square<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Square<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Square(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Square<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlSquare<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Swish final : public ActivationLayer<data_t, _BackendTag, Swish<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Swish<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Swish(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Swish<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlSwish<data_t>;
+        };
+    } // namespace detail
+
+    template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
+    struct Tanh final : public ActivationLayer<data_t, _BackendTag, Tanh<data_t, _BackendTag>> {
+        using BaseType = ActivationLayer<data_t, _BackendTag, Tanh<data_t, _BackendTag>>;
+        using BackendLayerType = typename BaseType::BackendLayerType;
+        static constexpr MlBackend BackendTag = _BackendTag;
+        explicit Tanh(const DataDescriptor& inputDescriptor);
+    };
+
+    namespace detail
+    {
+        template <typename data_t>
+        struct BackendSelector<Tanh<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlTanh<data_t>;
+        };
+    } // namespace detail
 } // namespace elsa
