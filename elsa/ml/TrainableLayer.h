@@ -22,6 +22,8 @@ namespace elsa
         TrainableLayer(const DataDescriptor& inputDescriptor,
                        const DataDescriptor& weightsDescriptor);
 
+        TrainableLayer(const DataDescriptor& inputDescriptor);
+
         /// \copydoc Layer::_inputDescriptor
         using BaseType::_inputDescriptor;
 
@@ -49,6 +51,12 @@ namespace elsa
         IndexVector_t biasDims(1);
         biasDims << _weightsDescriptor->getNumberOfCoefficientsPerDimension()[0];
         _biasDescriptor = DataDescriptor(biasDims).clone();
+    }
+
+    template <typename data_t, MlBackend Backend>
+    inline TrainableLayer<data_t, Backend>::TrainableLayer(const DataDescriptor& inputDescriptor)
+        : Layer<data_t, Backend>(inputDescriptor)
+    {
     }
 
     template <typename data_t, MlBackend Backend>

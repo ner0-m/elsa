@@ -22,6 +22,27 @@ namespace elsa
     }
 
     template <typename data_t>
+    dnnl::memory::format_tag
+        DnnlLayer<data_t>::dataDescriptorToDnnlMemoryFormatTag(const DataDescriptor& desc,
+                                                               bool isInput)
+    {
+        using ft = dnnl::memory::format_tag;
+
+        switch (desc.getNumberOfDimensions()) {
+            case 2:
+                return (isInput ? ft::nc : ft::oi);
+            case 3:
+                return (isInput ? ft::ncw : ft::oiw);
+            case 4:
+                return (isInput ? ft::nchw : ft::oihw);
+            case 5:
+                return (isInput ? ft::ncdhw : ft::oidhw);
+            default:
+                return ft::undef;
+        }
+    }
+
+    template <typename data_t>
     DnnlLayer<data_t>::DnnlLayer(const DataDescriptor& inputDescriptor,
                                  const DataDescriptor& outputDescriptor)
         : _engine(std::make_shared<dnnl::engine>(dnnl::engine::kind::cpu, 0))
@@ -29,6 +50,8 @@ namespace elsa
         // Set source memory descriptor
         for (const auto& dim : inputDescriptor.getNumberOfCoefficientsPerDimension())
             _srcMemoryDimensions.push_back(dim);
+
+        _srcMemoryFormatTag = dataDescriptorToDnnlMemoryFormatTag(inputDescriptor, true);
 
         _srcMemoryDescriptor =
             dnnl::memory::desc({_srcMemoryDimensions}, _typeTag, dnnl::memory::format_tag::any);
@@ -61,8 +84,7 @@ namespace elsa
     void DnnlLayer<data_t>::setInput(const DataContainer<data_t>& input)
     {
         _srcMemory = std::make_shared<dnnl::memory>(
-            dnnl::memory::desc({{_srcMemoryDimensions}, _typeTag, dnnl::memory::format_tag::nchw}),
-            *_engine);
+            dnnl::memory::desc({{_srcMemoryDimensions}, _typeTag, _srcMemoryFormatTag}), *_engine);
         writeToDnnlMemory(input, *_srcMemory);
     }
 
@@ -90,8 +112,8 @@ namespace elsa
         if (_hasReorderedMemory) {
             // We reorder directly. Note that this could be relatively expensive and should be used
             // for reporting the final net output or for debugging purposes only
-            outMem = dnnl::memory(
-                {{_dstMemoryDimensions}, _typeTag, dnnl::memory::format_tag::nchw}, *_engine);
+            outMem =
+                dnnl::memory({{_dstMemoryDimensions}, _typeTag, _srcMemoryFormatTag}, *_engine);
             dnnl::stream s(*_engine);
             dnnl::reorder(_dstMemory, outMem)
                 .execute(s, {{DNNL_ARG_FROM, _dstMemory}, {DNNL_ARG_TO, outMem}});

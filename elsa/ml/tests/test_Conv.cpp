@@ -1,7 +1,6 @@
 #include <catch2/catch.hpp>
 #include <type_traits>
 #include <random>
-#include <iostream>
 
 #include "elsaDefines.h"
 #include "DataDescriptor.h"

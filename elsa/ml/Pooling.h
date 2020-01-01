@@ -11,6 +11,9 @@ namespace elsa
     class Pooling final : public Layer<data_t, _BackendTag>
     {
     public:
+        using BackendLayerType = typename detail::BackendSelector<Pooling>::Type;
+        using BaseType = Layer<data_t, _BackendTag>;
+
         /**
          * Constructor for a max pooling layer
          *
@@ -22,9 +25,6 @@ namespace elsa
                 const IndexVector_t& poolingStride);
 
     private:
-        using BaseType = Layer<data_t, _BackendTag>;
-        using BackendLayerType = typename detail::BackendSelector<Pooling>::Type;
-
         /// \copydoc Layer::_backend
         using BaseType::_backend;
 
