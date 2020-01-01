@@ -62,9 +62,9 @@
 #include "solvers/CG.h"
 
 // Ml headers
-#include "ml/Network.h"
 #include "ml/Layer.h"
-#include "ml/Relu.h"
+#include "ml/Activation.h"
 #include "ml/Conv.h"
 #include "ml/Pooling.h"
+#include "ml/Dense.h"
 #include "ml/RandomInitializer.h"

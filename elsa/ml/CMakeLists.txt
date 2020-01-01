@@ -15,13 +15,17 @@ endif(Dnnl_FOUND)
 if(ELSA_HAS_DNNL_BACKEND)
   set(ELSA_DNNL_BACKEND_HEADERS
       ${ELSA_DNNL_BACKEND_DIR}/DnnlLayer.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlTrainableLayer.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlConv.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlDense.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlPooling.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlActivation.h)
 
   set(ELSA_DNNL_BACKEND_SOURCES
       ${ELSA_DNNL_BACKEND_DIR}/DnnlLayer.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlTrainableLayer.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlConv.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlDense.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlPooling.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlActivation.cpp)
 
@@ -33,6 +37,7 @@ set(MODULE_HEADERS
     TrainableLayer.h
     Activation.h
     Conv.h
+    Dense.h
     Pooling.h
     RandomInitializer.h
     ${ELSA_DNNL_BACKEND_HEADERS})
@@ -41,6 +46,7 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     Activation.cpp
     Conv.cpp
+    Dense.cpp
     Pooling.cpp
     RandomInitializer.cpp
     ${ELSA_DNNL_BACKEND_SOURCES})

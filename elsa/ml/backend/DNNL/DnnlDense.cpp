@@ -1,39 +1,28 @@
-#include "DnnlConv.h"
+#include "DnnlDense.h"
 
 namespace elsa
 {
     template <typename data_t>
-    DnnlConv<data_t>::DnnlConv(const DataDescriptor& inputDescriptor,
-                               const DataDescriptor& outputDescriptor,
-                               const DataDescriptor& weightsDescriptor,
-                               const IndexVector_t& strideVector,
-                               const IndexVector_t& paddingVector)
+    DnnlDense<data_t>::DnnlDense(const DataDescriptor& inputDescriptor,
+                                 const DataDescriptor& outputDescriptor,
+                                 const DataDescriptor& weightsDescriptor)
         : DnnlTrainableLayer<data_t>(inputDescriptor, outputDescriptor, weightsDescriptor)
     {
-        for (const auto& dim : strideVector)
-            _strideDimensions.push_back(dim);
-
-        for (const auto& dim : paddingVector)
-            _paddingDimensions.push_back(dim);
     }
 
     template <typename data_t>
-    void DnnlConv<data_t>::compile()
+    void DnnlDense<data_t>::compile()
     {
         BaseType::compile();
-        auto desc = dnnl::convolution_forward::desc(
-            /* Propagation kind */ dnnl::prop_kind::forward,
-            /* Convolution algorithm */ dnnl::algorithm::convolution_auto,
+
+        auto desc = dnnl::inner_product_forward::desc(
+            /* Propagation kind */ dnnl::prop_kind::forward_inference,
             /* Source */ _srcMemoryDescriptor,
             /* Weights */ _weightsMemoryDescriptor,
             /* Bias */ _biasMemoryDescriptor,
-            /* Destination */ _dstMemoryDescriptor,
-            /* Strides for spatial dims */ _strideDimensions,
-            /* Dilation for spatial dims */ {0, 0},
-            /* Lower padding for spatial dims */ _paddingDimensions,
-            /* Higher padding for spatial dims */ _paddingDimensions);
+            /* Destination */ _dstMemoryDescriptor);
 
-        _forwardPrimitiveDescriptor = dnnl::convolution_forward::primitive_desc(desc, *_engine);
+        _forwardPrimitiveDescriptor = dnnl::inner_product_forward::primitive_desc(desc, *_engine);
 
         // Do we need to reorder?
         _reorderedSrcMemory = *_srcMemory;
@@ -57,7 +46,7 @@ namespace elsa
 
         _dstMemory = dnnl::memory(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
 
-        _forwardPrimitives.push_back(dnnl::convolution_forward(_forwardPrimitiveDescriptor));
+        _forwardPrimitives.push_back(dnnl::inner_product_forward(_forwardPrimitiveDescriptor));
 
         _forwardArguments.push_back({{DNNL_ARG_SRC, _reorderedSrcMemory},
                                      {DNNL_ARG_WEIGHTS, _reorderedWeightsMemory},
@@ -65,5 +54,5 @@ namespace elsa
                                      {DNNL_ARG_DST, _dstMemory}});
     }
 
-    template class DnnlConv<float>;
+    template class DnnlDense<float>;
 } // namespace elsa

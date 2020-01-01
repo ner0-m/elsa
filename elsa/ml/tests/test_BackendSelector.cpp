@@ -5,6 +5,7 @@
 #include "Activation.h"
 #include "Conv.h"
 #include "Pooling.h"
+#include "Dense.h"
 
 using namespace elsa;
 
@@ -41,4 +42,6 @@ TEST_CASE("BackendSelector", "elsa_ml")
                            DnnlConv<float>>);
     REQUIRE(std::is_same_v<typename detail::BackendSelector<Pooling<float, MlBackend::Dnnl>>::Type,
                            DnnlPooling<float>>);
+    REQUIRE(std::is_same_v<typename detail::BackendSelector<Dense<float, MlBackend::Dnnl>>::Type,
+                           DnnlDense<float>>);
 }

@@ -32,8 +32,6 @@ namespace elsa
         using BackendLayerBaseType =
             std::conditional_t<Backend == MlBackend::Dnnl, DnnlLayer<data_t>, std::false_type>;
 
-        Layer() = delete;
-
         /// The layer's input descriptor
         const DataDescriptor& getInputDescriptor() const;
 
@@ -50,6 +48,8 @@ namespace elsa
 
     protected:
         Layer(const DataDescriptor& inputDescriptor);
+
+        Layer(const Layer&) = delete;
 
         void addSuccessor(std::shared_ptr<Layer<data_t, Backend>> successor);
         void addPredecessor(std::shared_ptr<Layer<data_t, Backend>> predecessor);

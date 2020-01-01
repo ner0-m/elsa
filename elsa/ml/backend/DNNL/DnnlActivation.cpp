@@ -144,8 +144,9 @@ namespace elsa
     {
     }
 
+    template class DnnlActivationLayer<float>;
+
     template struct DnnlAbs<float>;
-    template struct DnnlActivationLayer<float>;
     template struct DnnlBoundedRelu<float>;
     template struct DnnlElu<float>;
     template struct DnnlExp<float>;

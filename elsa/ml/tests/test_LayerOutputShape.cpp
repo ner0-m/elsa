@@ -6,6 +6,7 @@
 #include "Activation.h"
 #include "Conv.h"
 #include "Pooling.h"
+#include "Dense.h"
 
 using namespace elsa;
 
@@ -72,6 +73,36 @@ TEST_CASE("LayerOutputShapes", "elsa_ml")
             outputVec << 32, 96, 27, 27;
             DataDescriptor outputDesc(outputVec);
             REQUIRE(pool.getOutputDescriptor() == outputDesc);
+        }
+    }
+
+    SECTION("Dense")
+    {
+        {
+            IndexVector_t inputVec(4);
+            inputVec << 32, 256, 6, 6;
+            DataDescriptor inputDesc(inputVec);
+
+            Dense<float> dense(inputDesc, 4096);
+
+            IndexVector_t outputVec(2);
+            outputVec << 32, 4096;
+            DataDescriptor outputDesc(outputVec);
+
+            REQUIRE(dense.getOutputDescriptor() == outputDesc);
+        }
+        {
+            IndexVector_t inputVec(2);
+            inputVec << 32, 4096;
+            DataDescriptor inputDesc(inputVec);
+
+            Dense<float> dense(inputDesc, 1000);
+
+            IndexVector_t outputVec(2);
+            outputVec << 32, 1000;
+            DataDescriptor outputDesc(outputVec);
+
+            REQUIRE(dense.getOutputDescriptor() == outputDesc);
         }
     }
 }
