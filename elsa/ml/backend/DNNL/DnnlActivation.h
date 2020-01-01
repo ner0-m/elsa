@@ -10,13 +10,11 @@ namespace elsa
         void setAlpha(data_t alpha);
         void setBeta(data_t beta);
 
-        virtual void compile() override;
+        void compile() override;
 
     protected:
         DnnlActivationLayer(const DataDescriptor& inputDescriptor,
                             const DataDescriptor& outputDescriptor, dnnl::algorithm algorithm);
-
-        // virtual void setInput(const DataContainer<data_t>& input) override;
 
         using BaseType = DnnlLayer<data_t>;
 
