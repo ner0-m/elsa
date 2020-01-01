@@ -2,45 +2,85 @@
 
 namespace elsa
 {
-#define ELSA_ACTIVATION_LAYER_IMPL(name)                                                   \
-    template <typename data_t, MlBackend _BackendTag>                                      \
-    name<data_t, _BackendTag>::name(const DataDescriptor& inputDescriptor)                 \
-        : ActivationLayer<data_t, _BackendTag, name<data_t, _BackendTag>>(inputDescriptor) \
-    {                                                                                      \
+    template <typename data_t, MlBackend _BackendTag>
+    Abs<data_t, _BackendTag>::Abs(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Abs<data_t, _BackendTag>>(inputDescriptor)
+    {
     }
 
-    ELSA_ACTIVATION_LAYER_IMPL(Abs)
-    ELSA_ACTIVATION_LAYER_IMPL(BoundedRelu)
-    ELSA_ACTIVATION_LAYER_IMPL(Elu)
-    ELSA_ACTIVATION_LAYER_IMPL(Exp)
-    ELSA_ACTIVATION_LAYER_IMPL(Linear)
-    ELSA_ACTIVATION_LAYER_IMPL(Gelu)
-    ELSA_ACTIVATION_LAYER_IMPL(Logistic)
-    ELSA_ACTIVATION_LAYER_IMPL(Relu)
-    ELSA_ACTIVATION_LAYER_IMPL(SoftRelu)
-    ELSA_ACTIVATION_LAYER_IMPL(Sqrt)
-    ELSA_ACTIVATION_LAYER_IMPL(Square)
-    ELSA_ACTIVATION_LAYER_IMPL(Swish)
-    ELSA_ACTIVATION_LAYER_IMPL(Tanh)
+    template <typename data_t, MlBackend _BackendTag>
+    BoundedRelu<data_t, _BackendTag>::BoundedRelu(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, BoundedRelu<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Elu<data_t, _BackendTag>::Elu(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Elu<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Exp<data_t, _BackendTag>::Exp(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Exp<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Linear<data_t, _BackendTag>::Linear(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Linear<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Gelu<data_t, _BackendTag>::Gelu(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Gelu<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Logistic<data_t, _BackendTag>::Logistic(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Logistic<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Relu<data_t, _BackendTag>::Relu(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Relu<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    SoftRelu<data_t, _BackendTag>::SoftRelu(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, SoftRelu<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Sqrt<data_t, _BackendTag>::Sqrt(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Sqrt<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Square<data_t, _BackendTag>::Square(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Square<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Swish<data_t, _BackendTag>::Swish(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Swish<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
+    template <typename data_t, MlBackend _BackendTag>
+    Tanh<data_t, _BackendTag>::Tanh(const DataDescriptor& inputDescriptor)
+        : ActivationLayer<data_t, _BackendTag, Tanh<data_t, _BackendTag>>(inputDescriptor)
+    {
+    }
 
-#undef ELSA_ACTIVATION_LAYER_IMPL
-
-#define ELSA_ACTIVATION_LAYER_INSTANTIATION(name) template struct name<float, MlBackend::Dnnl>;
-
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Abs)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(BoundedRelu)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Elu)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Exp)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Linear)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Gelu)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Logistic)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Relu)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(SoftRelu)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Sqrt)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Square)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Swish)
-    ELSA_ACTIVATION_LAYER_INSTANTIATION(Tanh)
-
-#undef ELSA_ACTIVATION_LAYER_INSTANTIATION
+    template struct Abs<float, MlBackend::Dnnl>;
+    template struct BoundedRelu<float, MlBackend::Dnnl>;
+    template struct Elu<float, MlBackend::Dnnl>;
+    template struct Exp<float, MlBackend::Dnnl>;
+    template struct Linear<float, MlBackend::Dnnl>;
+    template struct Gelu<float, MlBackend::Dnnl>;
+    template struct Logistic<float, MlBackend::Dnnl>;
+    template struct Relu<float, MlBackend::Dnnl>;
+    template struct SoftRelu<float, MlBackend::Dnnl>;
+    template struct Sqrt<float, MlBackend::Dnnl>;
+    template struct Square<float, MlBackend::Dnnl>;
+    template struct Swish<float, MlBackend::Dnnl>;
+    template struct Tanh<float, MlBackend::Dnnl>;
 
 } // namespace elsa
