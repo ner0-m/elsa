@@ -14,7 +14,7 @@ namespace elsa
         DnnlPooling(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor,
                     const IndexVector_t& poolingWindow, const IndexVector_t& poolingStride);
 
-        virtual void compile() override;
+        void compile() override;
 
     private:
         using BaseType = DnnlLayer<data_t>;
