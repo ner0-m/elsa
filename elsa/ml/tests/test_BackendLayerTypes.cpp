@@ -17,8 +17,8 @@ TEMPLATE_TEST_CASE("BackendLayerTypes", "elsa_ml", float)
 
         REQUIRE(
             std::is_same_v<typename Relu<TestType, Backend>::BackendLayerType, DnnlRelu<TestType>>);
-        REQUIRE(
-            std::is_same_v<typename ConvLayer<TestType, Backend>::BackendLayerType, DnnlConvLayer<TestType>>);
+        REQUIRE(std::is_same_v<typename ConvLayer<TestType, Backend>::BackendLayerType,
+                               DnnlConvLayer<TestType>>);
         REQUIRE(std::is_same_v<typename DenseLayer<TestType, Backend>::BackendLayerType,
                                DnnlDenseLayer<TestType>>);
         REQUIRE(std::is_same_v<typename PoolingLayer<TestType, Backend>::BackendLayerType,

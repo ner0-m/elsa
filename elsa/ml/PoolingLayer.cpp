@@ -4,8 +4,8 @@ namespace elsa
 {
     template <typename data_t, MlBackend _BackendTag>
     PoolingLayer<data_t, _BackendTag>::PoolingLayer(const DataDescriptor& inputDescriptor,
-                                          const IndexVector_t& poolingWindow,
-                                          const IndexVector_t& poolingStride)
+                                                    const IndexVector_t& poolingWindow,
+                                                    const IndexVector_t& poolingStride)
         : Layer<data_t, _BackendTag>(inputDescriptor),
           _poolingWindow(poolingWindow),
           _poolingStride(poolingStride)

@@ -38,10 +38,13 @@ TEST_CASE("BackendSelector", "elsa_ml")
                            DnnlSwish<float>>);
     REQUIRE(std::is_same_v<typename detail::BackendSelector<Tanh<float, MlBackend::Dnnl>>::Type,
                            DnnlTanh<float>>);
-    REQUIRE(std::is_same_v<typename detail::BackendSelector<ConvLayer<float, MlBackend::Dnnl>>::Type,
-                           DnnlConvLayer<float>>);
-    REQUIRE(std::is_same_v<typename detail::BackendSelector<PoolingLayer<float, MlBackend::Dnnl>>::Type,
-                           DnnlPoolingLayer<float>>);
-    REQUIRE(std::is_same_v<typename detail::BackendSelector<DenseLayer<float, MlBackend::Dnnl>>::Type,
-                           DnnlDenseLayer<float>>);
+    REQUIRE(
+        std::is_same_v<typename detail::BackendSelector<ConvLayer<float, MlBackend::Dnnl>>::Type,
+                       DnnlConvLayer<float>>);
+    REQUIRE(
+        std::is_same_v<typename detail::BackendSelector<PoolingLayer<float, MlBackend::Dnnl>>::Type,
+                       DnnlPoolingLayer<float>>);
+    REQUIRE(
+        std::is_same_v<typename detail::BackendSelector<DenseLayer<float, MlBackend::Dnnl>>::Type,
+                       DnnlDenseLayer<float>>);
 }

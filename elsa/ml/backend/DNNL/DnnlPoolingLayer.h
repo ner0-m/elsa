@@ -11,8 +11,9 @@ namespace elsa
     class DnnlPoolingLayer final : public DnnlLayer<data_t>
     {
     public:
-        DnnlPoolingLayer(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor,
-                    const IndexVector_t& poolingWindow, const IndexVector_t& poolingStride);
+        DnnlPoolingLayer(const DataDescriptor& inputDescriptor,
+                         const DataDescriptor& outputDescriptor, const IndexVector_t& poolingWindow,
+                         const IndexVector_t& poolingStride);
 
         void compile() override;
 
