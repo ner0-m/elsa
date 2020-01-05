@@ -108,10 +108,11 @@ TEST_CASE("Conv semantics", "elsa_ml")
 
         auto backend = conv.getBackend();
         backend->setInput(input);
+        backend->compile();
         std::static_pointer_cast<typename Conv<float>::BackendLayerType>(backend)->setWeights(
             weights);
         std::static_pointer_cast<typename Conv<float>::BackendLayerType>(backend)->setBias(bias);
-        backend->compile();
+
         auto engine = backend->getEngine();
         dnnl::stream s(*engine);
         backend->forwardPropagate(s);
@@ -154,21 +155,21 @@ TEST_CASE("Conv semantics", "elsa_ml")
         Eigen::VectorXf vec(1 * 1 * 6 * 6);
 
         // clang-format off
-    vec <<  // First channel
-            10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
-            10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
-            10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
-            10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
-            10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
-            10.f, 10.f, 10.f, 0.f, 0.f, 0.f;
+        vec <<  // First channel
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f;
         // clang-format on
         DataContainer<float> input(inputDesc, vec);
 
         Eigen::VectorXf vec2(1 * 1 * 3 * 3);
         // clang-format off
-     vec2 << 1.f, 0.f, -1.f,
-             1.f, 0.f, -1.f,
-             1.f, 0.f, -1.f;
+        vec2 << 1.f, 0.f, -1.f,
+                1.f, 0.f, -1.f,
+                1.f, 0.f, -1.f;
         // clang-format on
 
         DataContainer<float> weights(weightsDesc, vec2);
@@ -182,10 +183,11 @@ TEST_CASE("Conv semantics", "elsa_ml")
 
         auto backend = conv.getBackend();
         backend->setInput(input);
+        backend->compile();
         std::static_pointer_cast<typename Conv<float>::BackendLayerType>(backend)->setWeights(
             weights);
         std::static_pointer_cast<typename Conv<float>::BackendLayerType>(backend)->setBias(bias);
-        backend->compile();
+
         auto engine = backend->getEngine();
         dnnl::stream s(*engine);
         backend->forwardPropagate(s);

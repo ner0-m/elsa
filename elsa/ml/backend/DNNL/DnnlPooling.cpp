@@ -28,13 +28,14 @@ namespace elsa
 
         _workspaceMemory = dnnl::memory(_forwardPrimitiveDescriptor.workspace_desc(), *_engine);
 
-        _dstMemory = dnnl::memory(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
+        _dstMemory =
+            std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
 
         // TODO: Insert reorder
         _forwardPrimitives.push_back(dnnl::pooling_forward(_forwardPrimitiveDescriptor));
         _forwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory},
                                      {DNNL_ARG_WORKSPACE, _workspaceMemory},
-                                     {DNNL_ARG_DST, _dstMemory}});
+                                     {DNNL_ARG_DST, *_dstMemory}});
     }
 
     template class DnnlPooling<float>;

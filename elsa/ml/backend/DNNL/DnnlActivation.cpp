@@ -25,6 +25,8 @@ namespace elsa
     template <typename data_t>
     void DnnlActivationLayer<data_t>::compile()
     {
+        DnnlLayer<data_t>::compile();
+
         // Set forward primitive description
         auto desc = dnnl::eltwise_forward::desc(dnnl::prop_kind::forward, _algorithm,
                                                 _srcMemory->get_desc(), _alpha, _beta);
@@ -35,9 +37,10 @@ namespace elsa
         _forwardPrimitives.push_back(dnnl::eltwise_forward(_forwardPrimitiveDescriptor));
 
         // Set dst memory
-        _dstMemory = dnnl::memory(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
+        _dstMemory =
+            std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
 
-        _forwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory}, {DNNL_ARG_DST, _dstMemory}});
+        _forwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory}, {DNNL_ARG_DST, *_dstMemory}});
     }
 
     template <typename data_t>

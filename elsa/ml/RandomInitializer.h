@@ -8,11 +8,23 @@
 namespace elsa
 {
     enum class Initializer {
+        /**
+         * Uniform initialization
+         *
+         * Initialize data with random samples from a uniform distribution.
+         */
         Uniform,
 
         One,
 
         Zero,
+
+        /**
+         * Constant initialization
+         *
+         * Initialize data with constant values.
+         */
+        Constant,
 
         /**
          * Glorot normal initialization
@@ -47,24 +59,29 @@ namespace elsa
     public:
         static void setSeed(const std::optional<data_t>& seed = std::nullopt);
 
-        static void initialize(data_t* data, std::size_t size, Initializer initializer)
+        template <typename... ArgTypes>
+        static void initialize(data_t* data, std::size_t size, Initializer initializer,
+                               ArgTypes... args)
         {
             switch (initializer) {
                 case Initializer::Uniform:
-                    RandomInitializer::uniform(data, size);
+                    RandomInitializer::uniform(data, size, args...);
                     return;
                 case Initializer::One:
-                    RandomInitializer::one(data, size);
+                    RandomInitializer::one(data, size, args...);
                     return;
                 case Initializer::Zero:
-                    RandomInitializer::zero(data, size);
+                    RandomInitializer::zero(data, size, args...);
+                    return;
+                case Initializer::Constant:
+                    RandomInitializer::zero(data, size, args...);
                     return;
                 default:
                     throw std::invalid_argument("Unkown random initializer");
             }
         }
 
-    private:
+    protected:
         /// Unform random initialization
         static void uniform(data_t* data, std::size_t size);
 
@@ -110,4 +127,24 @@ namespace elsa
 
         static std::random_device _randomDevice;
     };
+
+    template <typename data_t>
+    struct ConstantInitializer final : public RandomInitializer<data_t> {
+        explicit ConstantInitializer(data_t value);
+        ConstantInitializer(data_t seed, data_t value);
+
+        /// \copydoc RandomInitializer::initialize
+        void initialize(data_t* data, std::size_t size) override;
+    };
+
+    template <typename data_t>
+    struct UniformInitializer final : public RandomInitializer<data_t> {
+        explicit UniformInitializer(data_t value);
+        UniformInitializer(data_t seed, data_t value);
+        UniformInitializer(data_t seed, data_t value, data_t lowerBound, data_t upperBound);
+
+        /// \copydoc RandomInitializer::initialize
+        void initialize(data_t* data, std::size_t size) override;
+    };
+
 } // namespace elsa

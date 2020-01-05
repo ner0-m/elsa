@@ -1,6 +1,5 @@
 
 #include "RandomInitializer.h"
-#include "Logger.h"
 
 namespace elsa
 {
@@ -23,7 +22,7 @@ namespace elsa
         UniformDistributionType dist(lowerBound, upperBound);
         std::mt19937_64 engine;
 
-        if (_seed.value_or(false))
+        if (_seed.has_value())
             engine = std::mt19937_64(_seed.value());
         else
             engine = std::mt19937_64(_randomDevice());

@@ -68,3 +68,4 @@
 #include "ml/Pooling.h"
 #include "ml/Dense.h"
 #include "ml/RandomInitializer.h"
+#include "ml/SequentialNetwork.h"

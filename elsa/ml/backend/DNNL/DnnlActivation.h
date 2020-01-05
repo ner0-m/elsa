@@ -7,9 +7,13 @@ namespace elsa
     class DnnlActivationLayer : public DnnlLayer<data_t>
     {
     public:
+        /// Set the layer's alpha parameter.
         void setAlpha(data_t alpha);
+
+        /// Set the layer's beta parameter.
         void setBeta(data_t beta);
 
+        /// \copydoc DnnlLayer::compile
         void compile() override;
 
     protected:

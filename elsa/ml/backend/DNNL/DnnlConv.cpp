@@ -7,8 +7,9 @@ namespace elsa
                                const DataDescriptor& outputDescriptor,
                                const DataDescriptor& weightsDescriptor,
                                const IndexVector_t& strideVector,
-                               const IndexVector_t& paddingVector)
-        : DnnlTrainableLayer<data_t>(inputDescriptor, outputDescriptor, weightsDescriptor)
+                               const IndexVector_t& paddingVector, Initializer initializer)
+        : DnnlTrainableLayer<data_t>(inputDescriptor, outputDescriptor, weightsDescriptor,
+                                     initializer)
     {
         for (const auto& dim : strideVector)
             _strideDimensions.push_back(dim);
@@ -55,14 +56,15 @@ namespace elsa
                 {{DNNL_ARG_FROM, _weightsMemory}, {DNNL_ARG_TO, _reorderedWeightsMemory}});
         }
 
-        _dstMemory = dnnl::memory(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
+        _dstMemory =
+            std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
 
         _forwardPrimitives.push_back(dnnl::convolution_forward(_forwardPrimitiveDescriptor));
 
         _forwardArguments.push_back({{DNNL_ARG_SRC, _reorderedSrcMemory},
                                      {DNNL_ARG_WEIGHTS, _reorderedWeightsMemory},
                                      {DNNL_ARG_BIAS, _biasMemory},
-                                     {DNNL_ARG_DST, _dstMemory}});
+                                     {DNNL_ARG_DST, *_dstMemory}});
     }
 
     template class DnnlConv<float>;

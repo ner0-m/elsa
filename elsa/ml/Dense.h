@@ -15,25 +15,18 @@ namespace elsa
         using BaseType::initializer;
 
         using BackendLayerType = typename detail::BackendSelector<Dense>::Type;
+
         /**
          * Construct a convolutional network layer
          *
          * \param[in] inputDescriptor DataDescriptor for the input data in either nchw or nchwd
          *  format
-         * \param[in] weightsDescriptor DataDescriptor for the convolution filters.
-         * \param[in] strideVector Vector containing convolution strides for each spatial dimension
-         * \param[in] paddingVector Vector containing padding for each spatial dimension
+         * \param[in] numNeurons Number of Neurons in the dense layer
+         * \param[in] initializer The initializer for the layer's weights and biases. This parameter
+         * is optional and defaults to Initializer::Uniform
          */
-        Dense(const DataDescriptor& inputDescriptor, int numNeurons);
-
-        // /// \copydoc Layer::forwardPropagate
-        // virtual void forwardPropagate(const DataContainer<data_t>& input) override;
-
-        // /// \copydoc Layer::backwardPropagate
-        // virtual void backwardPropagate(const DataContainer<data_t>& input) override;
-
-        // /// \copydoc TrainableLayer::updateTrainableParameters
-        // virtual void updateTrainableParameters() override;
+        Dense(const DataDescriptor& inputDescriptor, int numNeurons,
+              Initializer initializer = Initializer::Uniform);
 
     private:
         using BaseType::_backend;

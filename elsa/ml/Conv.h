@@ -25,7 +25,8 @@ namespace elsa
          * \param[in] paddingVector Vector containing padding for each spatial dimension
          */
         Conv(const DataDescriptor& inputDescriptor, const DataDescriptor& weightsDescriptor,
-             const IndexVector_t& strideVector, const IndexVector_t& paddingVector);
+             const IndexVector_t& strideVector, const IndexVector_t& paddingVector,
+             Initializer initializer = Initializer::Uniform);
 
         // /// \copydoc Layer::forwardPropagate
         // virtual void forwardPropagate(const DataContainer<data_t>& input) override;

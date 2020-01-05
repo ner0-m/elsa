@@ -14,6 +14,8 @@ namespace elsa
         using BackendLayerType = typename detail::BackendSelector<Pooling>::Type;
         using BaseType = Layer<data_t, _BackendTag>;
 
+        Pooling() = default;
+        
         /**
          * Constructor for a max pooling layer
          *
