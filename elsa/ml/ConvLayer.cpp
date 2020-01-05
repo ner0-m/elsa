@@ -1,12 +1,13 @@
-#include "Conv.h"
+#include "ConvLayer.h"
 
 namespace elsa
 {
     template <typename data_t, MlBackend _BackendTag>
-    Conv<data_t, _BackendTag>::Conv(const DataDescriptor& inputDescriptor,
-                                    const DataDescriptor& weightsDescriptor,
-                                    const IndexVector_t& strideVector,
-                                    const IndexVector_t& paddingVector, Initializer initializer)
+    ConvLayer<data_t, _BackendTag>::ConvLayer(const DataDescriptor& inputDescriptor,
+                                              const DataDescriptor& weightsDescriptor,
+                                              const IndexVector_t& strideVector,
+                                              const IndexVector_t& paddingVector,
+                                              Initializer initializer)
         : TrainableLayer<data_t, _BackendTag>(inputDescriptor, weightsDescriptor)
     {
         if (inputDescriptor.getNumberOfDimensions() != weightsDescriptor.getNumberOfDimensions())
@@ -47,5 +48,5 @@ namespace elsa
                                                       paddingVector, initializer);
     }
 
-    template class Conv<float, MlBackend::Dnnl>;
+    template class ConvLayer<float, MlBackend::Dnnl>;
 } // namespace elsa

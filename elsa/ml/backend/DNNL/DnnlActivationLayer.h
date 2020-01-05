@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DnnlLayer.h"
+
 namespace elsa
 {
     template <typename data_t>

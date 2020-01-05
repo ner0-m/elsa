@@ -4,7 +4,7 @@
 #include "DataContainer.h"
 #include "DataDescriptor.h"
 #include "Layer.h"
-#include "DnnlActivation.h"
+#include "DnnlActivationLayer.h"
 
 namespace elsa
 {
@@ -66,7 +66,10 @@ namespace elsa
         }
 
     protected:
+        /// \copydoc Layer::_outputDescriptor
         using BaseType::_outputDescriptor;
+
+        /// \copydoc Layer::_backend
         using BaseType::_backend;
     }; // namespace elsa
 
@@ -78,8 +81,9 @@ namespace elsa
      * `abs(x) = |x|`
      *
      * \tparam data_t Type for all coefficients used in the layer. This parameter is optional and
-     * defaults to real_t \tparam _BackendTag Tag to specify the layer's backend. This parameter is
-     * optional an defaults to MlBackend::Dnnl
+     * defaults to real_t.
+     * \tparam _BackendTag Tag to specify the layer's backend. This parameter is
+     * optional an defaults to MlBackend::Dnnl.
      */
     template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
     struct Abs final : public ActivationLayer<data_t, _BackendTag, Abs<data_t, _BackendTag>> {
@@ -91,11 +95,11 @@ namespace elsa
          * Construct an Abs activation layer by specifiying its input descriptor and alpha and beta
          * values.
          *
-         * \param[in] inputDescriptor Descriptor for the layer's input
+         * \param[in] inputDescriptor Descriptor for the layer's input.
          * \param[in] alpha Alpha parameter in the layer's activation function. This parameter is
-         * optional and defaults to 0
+         * optional and defaults to 0.
          * \param[in] beta Beta parameter in the layer's activation
-         * function. This parameter is optional and defaults to 0
+         * function. This parameter is optional and defaults to 0.
          *
          * \note Both, alpha and beta parameters are ignored by this layer.
          */
@@ -110,6 +114,18 @@ namespace elsa
         };
     } // namespace detail
 
+    /**
+     * A BoundesRelu activation layer.
+     *
+     * This layer perfoms element-wise boundes-relu on its input, i.e.,
+     *
+     * `boundedRelu(x) = |x|`
+     *
+     * \tparam data_t Type for all coefficients used in the layer. This parameter is optional and
+     * defaults to real_t.
+     * \tparam _BackendTag Tag to specify the layer's backend. This parameter is
+     * optional an defaults to MlBackend::Dnnl.
+     */
     template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
     struct BoundedRelu final
         : public ActivationLayer<data_t, _BackendTag, BoundedRelu<data_t, _BackendTag>> {

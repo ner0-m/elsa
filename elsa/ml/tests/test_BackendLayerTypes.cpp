@@ -2,10 +2,10 @@
 #include <type_traits>
 
 #include "elsaDefines.h"
-#include "Activation.h"
-#include "Conv.h"
-#include "Dense.h"
-#include "Pooling.h"
+#include "ActivationLayer.h"
+#include "ConvLayer.h"
+#include "DenseLayer.h"
+#include "PoolingLayer.h"
 
 using namespace elsa;
 
@@ -18,10 +18,10 @@ TEMPLATE_TEST_CASE("BackendLayerTypes", "elsa_ml", float)
         REQUIRE(
             std::is_same_v<typename Relu<TestType, Backend>::BackendLayerType, DnnlRelu<TestType>>);
         REQUIRE(
-            std::is_same_v<typename Conv<TestType, Backend>::BackendLayerType, DnnlConv<TestType>>);
-        REQUIRE(std::is_same_v<typename Dense<TestType, Backend>::BackendLayerType,
-                               DnnlDense<TestType>>);
-        REQUIRE(std::is_same_v<typename Pooling<TestType, Backend>::BackendLayerType,
-                               DnnlPooling<TestType>>);
+            std::is_same_v<typename ConvLayer<TestType, Backend>::BackendLayerType, DnnlConvLayer<TestType>>);
+        REQUIRE(std::is_same_v<typename DenseLayer<TestType, Backend>::BackendLayerType,
+                               DnnlDenseLayer<TestType>>);
+        REQUIRE(std::is_same_v<typename PoolingLayer<TestType, Backend>::BackendLayerType,
+                               DnnlPoolingLayer<TestType>>);
     }
 }

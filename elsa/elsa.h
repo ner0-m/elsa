@@ -63,9 +63,9 @@
 
 // Ml headers
 #include "ml/Layer.h"
-#include "ml/Activation.h"
-#include "ml/Conv.h"
-#include "ml/Pooling.h"
-#include "ml/Dense.h"
+#include "ml/ActivationLayer.h"
+#include "ml/ConvLayer.h"
+#include "ml/PoolingLayer.h"
+#include "ml/DenseLayer.h"
 #include "ml/RandomInitializer.h"
 #include "ml/SequentialNetwork.h"

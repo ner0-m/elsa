@@ -10,14 +10,15 @@
 namespace elsa
 {
     template <typename data_t>
-    class DnnlDense final : public DnnlTrainableLayer<data_t>
+    class DnnlDenseLayer final : public DnnlTrainableLayer<data_t>
     {
     public:
         /// \copydoc DnnlTrainableLayer::BaseType
         using BaseType = DnnlTrainableLayer<data_t>;
 
-        DnnlDense(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor,
-                  const DataDescriptor& weightsDescriptor, Initializer initializer);
+        DnnlDenseLayer(const DataDescriptor& inputDescriptor,
+                       const DataDescriptor& outputDescriptor,
+                       const DataDescriptor& weightsDescriptor, Initializer initializer);
 
         /// \copydoc DnnlTrainableLayer::compile
         void compile() override;

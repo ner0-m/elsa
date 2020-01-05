@@ -4,11 +4,11 @@
 
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
-#include "Dense.h"
+#include "DenseLayer.h"
 
 using namespace elsa;
 
-TEST_CASE("Dense semantics")
+TEST_CASE("DenseLayer semantics")
 {
     IndexVector_t inputVec(2);
     // One batch dimension and input size is 5
@@ -37,13 +37,13 @@ TEST_CASE("Dense semantics")
     biasValues << 1, 0, 1;
     DataContainer<float> bias(biasDesc, biasValues);
 
-    Dense<float> dense(inputDesc, 3);
+    DenseLayer<float> dense(inputDesc, 3);
 
     auto backend = dense.getBackend();
     backend->setInput(input);
     backend->compile();
-    std::static_pointer_cast<typename Dense<float>::BackendLayerType>(backend)->setWeights(weights);
-    std::static_pointer_cast<typename Dense<float>::BackendLayerType>(backend)->setBias(bias);
+    std::static_pointer_cast<typename DenseLayer<float>::BackendLayerType>(backend)->setWeights(weights);
+    std::static_pointer_cast<typename DenseLayer<float>::BackendLayerType>(backend)->setBias(bias);
 
     auto engine = backend->getEngine();
     dnnl::stream s(*engine);

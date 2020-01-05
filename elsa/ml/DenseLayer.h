@@ -3,18 +3,18 @@
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
 #include "TrainableLayer.h"
-#include "DnnlDense.h"
+#include "DnnlDenseLayer.h"
 
 namespace elsa
 {
     template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
-    class Dense final : public TrainableLayer<data_t, _BackendTag>
+    class DenseLayer final : public TrainableLayer<data_t, _BackendTag>
     {
     public:
         using BaseType = TrainableLayer<data_t, _BackendTag>;
         using BaseType::initializer;
 
-        using BackendLayerType = typename detail::BackendSelector<Dense>::Type;
+        using BackendLayerType = typename detail::BackendSelector<DenseLayer>::Type;
 
         /**
          * Construct a convolutional network layer
@@ -25,7 +25,7 @@ namespace elsa
          * \param[in] initializer The initializer for the layer's weights and biases. This parameter
          * is optional and defaults to Initializer::Uniform
          */
-        Dense(const DataDescriptor& inputDescriptor, int numNeurons,
+        DenseLayer(const DataDescriptor& inputDescriptor, int numNeurons,
               Initializer initializer = Initializer::Uniform);
 
     private:
@@ -49,8 +49,8 @@ namespace elsa
     namespace detail
     {
         template <typename data_t>
-        struct BackendSelector<Dense<data_t, MlBackend::Dnnl>> {
-            using Type = DnnlDense<data_t>;
+        struct BackendSelector<DenseLayer<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlDenseLayer<data_t>;
         };
     } // namespace detail
 } // namespace elsa

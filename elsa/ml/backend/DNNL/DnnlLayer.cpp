@@ -74,8 +74,20 @@ namespace elsa
             throw std::logic_error(
                 "Number of Dnnl primitives and number of primitive arguments must match");
 
-        for (index_t i = 0; i < _forwardPrimitives.size(); ++i) {
+        for (std::size_t i = 0; i < _forwardPrimitives.size(); ++i) {
             _forwardPrimitives[i].execute(executionStream, _forwardArguments[i]);
+        }
+    }
+
+    template <typename data_t>
+    void DnnlLayer<data_t>::backwardPropagate(dnnl::stream& executionStream)
+    {
+        if (_backwardPrimitives.size() != _backwardArguments.size())
+            throw std::logic_error(
+                "Number of Dnnl primitives and number of primitive arguments must match");
+
+        for (std::size_t i = 0; i < _backwardPrimitives.size(); ++i) {
+            _backwardPrimitives[i].execute(executionStream, _backwardArguments[i]);
         }
     }
 
@@ -102,9 +114,6 @@ namespace elsa
     template <typename data_t>
     void DnnlLayer<data_t>::setSourceMemory(std::shared_ptr<dnnl::memory> input)
     {
-        // Set source memory descriptor
-        // _srcMemoryDescriptor = input->get_desc();
-
         // Set source memory
         _srcMemory = input;
     }

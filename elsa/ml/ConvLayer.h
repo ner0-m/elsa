@@ -3,18 +3,18 @@
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
 #include "TrainableLayer.h"
-#include "DnnlConv.h"
+#include "DnnlConvLayer.h"
 
 namespace elsa
 {
     template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
-    class Conv final : public TrainableLayer<data_t, _BackendTag>
+    class ConvLayer final : public TrainableLayer<data_t, _BackendTag>
     {
     public:
         using BaseType = TrainableLayer<data_t, _BackendTag>;
         using BaseType::initializer;
 
-        using BackendLayerType = typename detail::BackendSelector<Conv>::Type;
+        using BackendLayerType = typename detail::BackendSelector<ConvLayer>::Type;
         /**
          * Construct a convolutional network layer
          *
@@ -24,9 +24,9 @@ namespace elsa
          * \param[in] strideVector Vector containing convolution strides for each spatial dimension
          * \param[in] paddingVector Vector containing padding for each spatial dimension
          */
-        Conv(const DataDescriptor& inputDescriptor, const DataDescriptor& weightsDescriptor,
-             const IndexVector_t& strideVector, const IndexVector_t& paddingVector,
-             Initializer initializer = Initializer::Uniform);
+        ConvLayer(const DataDescriptor& inputDescriptor, const DataDescriptor& weightsDescriptor,
+                  const IndexVector_t& strideVector, const IndexVector_t& paddingVector,
+                  Initializer initializer = Initializer::Uniform);
 
         // /// \copydoc Layer::forwardPropagate
         // virtual void forwardPropagate(const DataContainer<data_t>& input) override;
@@ -53,8 +53,8 @@ namespace elsa
     namespace detail
     {
         template <typename data_t>
-        struct BackendSelector<Conv<data_t, MlBackend::Dnnl>> {
-            using Type = DnnlConv<data_t>;
+        struct BackendSelector<ConvLayer<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlConvLayer<data_t>;
         };
     } // namespace detail
 } // namespace elsa

@@ -1,22 +1,23 @@
-#include "DnnlDense.h"
+#include "DnnlDenseLayer.h"
 
 namespace elsa
 {
     template <typename data_t>
-    DnnlDense<data_t>::DnnlDense(const DataDescriptor& inputDescriptor,
-                                 const DataDescriptor& outputDescriptor,
-                                 const DataDescriptor& weightsDescriptor, Initializer initializer)
+    DnnlDenseLayer<data_t>::DnnlDenseLayer(const DataDescriptor& inputDescriptor,
+                                           const DataDescriptor& outputDescriptor,
+                                           const DataDescriptor& weightsDescriptor,
+                                           Initializer initializer)
         : DnnlTrainableLayer<data_t>(inputDescriptor, outputDescriptor, weightsDescriptor,
                                      initializer)
     {
     }
 
     template <typename data_t>
-    void DnnlDense<data_t>::compile()
+    void DnnlDenseLayer<data_t>::compile()
     {
         BaseType::compile();
         auto desc = dnnl::inner_product_forward::desc(
-            /* Propagation kind */ dnnl::prop_kind::forward,
+            /* Propagation kind */ dnnl::prop_kind::forward_training,
             /* Source descriptor*/ _srcMemoryDescriptor,
             /* Weights memory descriptor*/ _weightsMemoryDescriptor,
             /* Bias memory descriptor*/ _biasMemoryDescriptor,
@@ -59,5 +60,5 @@ namespace elsa
                                      {DNNL_ARG_DST, *_dstMemory}});
     }
 
-    template class DnnlDense<float>;
+    template class DnnlDenseLayer<float>;
 } // namespace elsa

@@ -4,7 +4,7 @@
 
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
-#include "Activation.h"
+#include "ActivationLayer.h"
 
 using namespace elsa;
 
