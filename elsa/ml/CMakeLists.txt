@@ -16,19 +16,19 @@ if(ELSA_HAS_DNNL_BACKEND)
   set(ELSA_DNNL_BACKEND_HEADERS
       ${ELSA_DNNL_BACKEND_DIR}/DnnlLayer.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlTrainableLayer.h
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlConv.h
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlDense.h
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlPooling.h
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlActivation.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlConvLayer.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlDenseLayer.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlPoolingLayer.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlActivationLayer.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSequentialNetwork.h)
 
   set(ELSA_DNNL_BACKEND_SOURCES
       ${ELSA_DNNL_BACKEND_DIR}/DnnlLayer.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlTrainableLayer.cpp
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlConv.cpp
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlDense.cpp
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlPooling.cpp
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlActivation.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlConvLayer.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlDenseLayer.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlPoolingLayer.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlActivationLayer.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSequentialNetwork.cpp)
 
 endif()
@@ -37,20 +37,20 @@ endif()
 set(MODULE_HEADERS
     Layer.h
     TrainableLayer.h
-    Activation.h
-    Conv.h
-    Dense.h
-    Pooling.h
+    ActivationLayer.h
+    ConvLayer.h
+    DenseLayer.h
+    PoolingLayer.h
     RandomInitializer.h
     SequentialNetwork.h
     ${ELSA_DNNL_BACKEND_HEADERS})
 
 # list all the code files of the module
 set(MODULE_SOURCES
-    Activation.cpp
-    Conv.cpp
-    Dense.cpp
-    Pooling.cpp
+    ActivationLayer.cpp
+    ConvLayer.cpp
+    DenseLayer.cpp
+    PoolingLayer.cpp
     RandomInitializer.cpp
     SequentialNetwork.cpp
     ${ELSA_DNNL_BACKEND_SOURCES})

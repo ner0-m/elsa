@@ -3,10 +3,10 @@
 
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
-#include "Activation.h"
-#include "Conv.h"
-#include "Pooling.h"
-#include "Dense.h"
+#include "ActivationLayer.h"
+#include "ConvLayer.h"
+#include "PoolingLayer.h"
+#include "DenseLayer.h"
 
 using namespace elsa;
 
@@ -45,7 +45,7 @@ TEST_CASE("LayerOutputShapes", "elsa_ml")
             IndexVector_t paddingVec(2);
             paddingVec << 0, 0;
 
-            Conv<float> conv(inputDesc, weightsDesc, stridesVec, paddingVec);
+            ConvLayer<float> conv(inputDesc, weightsDesc, stridesVec, paddingVec);
 
             IndexVector_t outputVec(4);
             outputVec << 32, 96, 55, 55;
@@ -67,7 +67,7 @@ TEST_CASE("LayerOutputShapes", "elsa_ml")
             IndexVector_t poolingVec(2);
             poolingVec << 3, 3;
 
-            Pooling<float> pool(inputDesc, poolingVec, stridesVec);
+            PoolingLayer<float> pool(inputDesc, poolingVec, stridesVec);
 
             IndexVector_t outputVec(4);
             outputVec << 32, 96, 27, 27;
@@ -83,7 +83,7 @@ TEST_CASE("LayerOutputShapes", "elsa_ml")
             inputVec << 32, 256, 6, 6;
             DataDescriptor inputDesc(inputVec);
 
-            Dense<float> dense(inputDesc, 4096);
+            DenseLayer<float> dense(inputDesc, 4096);
 
             IndexVector_t outputVec(2);
             outputVec << 32, 4096;
@@ -96,7 +96,7 @@ TEST_CASE("LayerOutputShapes", "elsa_ml")
             inputVec << 32, 4096;
             DataDescriptor inputDesc(inputVec);
 
-            Dense<float> dense(inputDesc, 1000);
+            DenseLayer<float> dense(inputDesc, 1000);
 
             IndexVector_t outputVec(2);
             outputVec << 32, 1000;

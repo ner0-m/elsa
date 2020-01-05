@@ -10,14 +10,14 @@
 namespace elsa
 {
     template <typename data_t>
-    class DnnlConv final : public DnnlTrainableLayer<data_t>
+    class DnnlConvLayer final : public DnnlTrainableLayer<data_t>
     {
     public:
         using BaseType = DnnlTrainableLayer<data_t>;
 
-        DnnlConv(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor,
-                 const DataDescriptor& weightsDescriptor, const IndexVector_t& strideVector,
-                 const IndexVector_t& paddingVector, Initializer initializer);
+        DnnlConvLayer(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor,
+                      const DataDescriptor& weightsDescriptor, const IndexVector_t& strideVector,
+                      const IndexVector_t& paddingVector, Initializer initializer);
 
         void compile() override;
 

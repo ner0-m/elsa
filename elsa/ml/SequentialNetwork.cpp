@@ -22,7 +22,7 @@ namespace elsa
     SequentialNetwork<data_t, Backend>&
         SequentialNetwork<data_t, Backend>::addDenseLayer(int numNeurons, Initializer initializer)
     {
-        return addLayer<Dense<data_t, Backend>>(numNeurons, initializer);
+        return addLayer<DenseLayer<data_t, Backend>>(numNeurons, initializer);
     }
 
     template <typename data_t, MlBackend Backend>
@@ -30,7 +30,7 @@ namespace elsa
         SequentialNetwork<data_t, Backend>::addPoolingLayer(const IndexVector_t& poolingWindow,
                                                             const IndexVector_t& poolingStride)
     {
-        return addLayer<Pooling<data_t, Backend>>(poolingWindow, poolingStride);
+        return addLayer<PoolingLayer<data_t, Backend>>(poolingWindow, poolingStride);
     }
 
     template <typename data_t, MlBackend Backend>

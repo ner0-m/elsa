@@ -4,7 +4,7 @@
 
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
-#include "Pooling.h"
+#include "PoolingLayer.h"
 
 using namespace elsa;
 
@@ -21,7 +21,7 @@ TEST_CASE("Pooling semantics", "elsa_ml")
     IndexVector_t poolingVec(2);
     poolingVec << 2, 2;
 
-    Pooling<float> pool(inputDesc, poolingVec, stridesVec);
+    PoolingLayer<float> pool(inputDesc, poolingVec, stridesVec);
 
     Eigen::VectorXf vec(1 * 1 * 4 * 4);
     // clang-format off

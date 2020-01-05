@@ -1,9 +1,9 @@
-#include "Pooling.h"
+#include "PoolingLayer.h"
 
 namespace elsa
 {
     template <typename data_t, MlBackend _BackendTag>
-    Pooling<data_t, _BackendTag>::Pooling(const DataDescriptor& inputDescriptor,
+    PoolingLayer<data_t, _BackendTag>::PoolingLayer(const DataDescriptor& inputDescriptor,
                                           const IndexVector_t& poolingWindow,
                                           const IndexVector_t& poolingStride)
         : Layer<data_t, _BackendTag>(inputDescriptor),
@@ -38,6 +38,6 @@ namespace elsa
                                                       _poolingWindow, _poolingStride);
     }
 
-    template class Pooling<float>;
+    template class PoolingLayer<float>;
 
 } // namespace elsa

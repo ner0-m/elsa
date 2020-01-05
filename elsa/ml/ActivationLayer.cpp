@@ -1,4 +1,4 @@
-#include "Activation.h"
+#include "ActivationLayer.h"
 
 namespace elsa
 {

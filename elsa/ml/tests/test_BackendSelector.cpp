@@ -2,10 +2,10 @@
 #include <type_traits>
 
 #include "elsaDefines.h"
-#include "Activation.h"
-#include "Conv.h"
-#include "Pooling.h"
-#include "Dense.h"
+#include "ActivationLayer.h"
+#include "ConvLayer.h"
+#include "PoolingLayer.h"
+#include "DenseLayer.h"
 
 using namespace elsa;
 
@@ -38,10 +38,10 @@ TEST_CASE("BackendSelector", "elsa_ml")
                            DnnlSwish<float>>);
     REQUIRE(std::is_same_v<typename detail::BackendSelector<Tanh<float, MlBackend::Dnnl>>::Type,
                            DnnlTanh<float>>);
-    REQUIRE(std::is_same_v<typename detail::BackendSelector<Conv<float, MlBackend::Dnnl>>::Type,
-                           DnnlConv<float>>);
-    REQUIRE(std::is_same_v<typename detail::BackendSelector<Pooling<float, MlBackend::Dnnl>>::Type,
-                           DnnlPooling<float>>);
-    REQUIRE(std::is_same_v<typename detail::BackendSelector<Dense<float, MlBackend::Dnnl>>::Type,
-                           DnnlDense<float>>);
+    REQUIRE(std::is_same_v<typename detail::BackendSelector<ConvLayer<float, MlBackend::Dnnl>>::Type,
+                           DnnlConvLayer<float>>);
+    REQUIRE(std::is_same_v<typename detail::BackendSelector<PoolingLayer<float, MlBackend::Dnnl>>::Type,
+                           DnnlPoolingLayer<float>>);
+    REQUIRE(std::is_same_v<typename detail::BackendSelector<DenseLayer<float, MlBackend::Dnnl>>::Type,
+                           DnnlDenseLayer<float>>);
 }

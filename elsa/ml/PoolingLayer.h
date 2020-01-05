@@ -3,18 +3,18 @@
 #include "Layer.h"
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
-#include "DnnlPooling.h"
+#include "DnnlPoolingLayer.h"
 
 namespace elsa
 {
     template <typename data_t = real_t, MlBackend _BackendTag = MlBackend::Dnnl>
-    class Pooling final : public Layer<data_t, _BackendTag>
+    class PoolingLayer final : public Layer<data_t, _BackendTag>
     {
     public:
-        using BackendLayerType = typename detail::BackendSelector<Pooling>::Type;
+        using BackendLayerType = typename detail::BackendSelector<PoolingLayer>::Type;
         using BaseType = Layer<data_t, _BackendTag>;
 
-        Pooling() = default;
+        PoolingLayer() = default;
 
         /**
          * Constructor for a max pooling layer
@@ -23,7 +23,7 @@ namespace elsa
          * \param[in] poolingWindow
          * \param[in] poolingStride
          */
-        Pooling(const DataDescriptor& inputDescriptor, const IndexVector_t& poolingWindow,
+        PoolingLayer(const DataDescriptor& inputDescriptor, const IndexVector_t& poolingWindow,
                 const IndexVector_t& poolingStride);
 
     private:
@@ -46,8 +46,8 @@ namespace elsa
     namespace detail
     {
         template <typename data_t>
-        struct BackendSelector<Pooling<data_t, MlBackend::Dnnl>> {
-            using Type = DnnlPooling<data_t>;
+        struct BackendSelector<PoolingLayer<data_t, MlBackend::Dnnl>> {
+            using Type = DnnlPoolingLayer<data_t>;
         };
     } // namespace detail
 

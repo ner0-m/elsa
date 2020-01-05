@@ -10,8 +10,8 @@ namespace elsa
                                                    const DataDescriptor& weightsDescriptor,
                                                    Initializer initializer)
         : DnnlLayer<data_t>(inputDescriptor, outputDescriptor),
-          _initializer(initializer),
-          _weightsDescriptor(weightsDescriptor.clone())
+          _weightsDescriptor(weightsDescriptor.clone()),
+          _initializer(initializer)
     {
         for (const auto& dim : weightsDescriptor.getNumberOfCoefficientsPerDimension())
             _weightsDimensions.push_back(dim);

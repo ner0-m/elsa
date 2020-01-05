@@ -4,11 +4,11 @@
 
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
-#include "Conv.h"
+#include "ConvLayer.h"
 
 using namespace elsa;
 
-TEST_CASE("Conv semantics", "elsa_ml")
+TEST_CASE("ConvLayer semantics", "elsa_ml")
 {
     SECTION("Test 1")
     {
@@ -27,7 +27,7 @@ TEST_CASE("Conv semantics", "elsa_ml")
         IndexVector_t paddingVec(2);
         paddingVec << 1, 1;
 
-        Conv<float> conv(inputDesc, weightsDesc, stridesVec, paddingVec);
+        ConvLayer<float> conv(inputDesc, weightsDesc, stridesVec, paddingVec);
 
         REQUIRE(conv.getOutputDescriptor().getNumberOfDimensions() == 4);
 
@@ -109,9 +109,9 @@ TEST_CASE("Conv semantics", "elsa_ml")
         auto backend = conv.getBackend();
         backend->setInput(input);
         backend->compile();
-        std::static_pointer_cast<typename Conv<float>::BackendLayerType>(backend)->setWeights(
+        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setWeights(
             weights);
-        std::static_pointer_cast<typename Conv<float>::BackendLayerType>(backend)->setBias(bias);
+        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setBias(bias);
 
         auto engine = backend->getEngine();
         dnnl::stream s(*engine);
@@ -150,7 +150,7 @@ TEST_CASE("Conv semantics", "elsa_ml")
         IndexVector_t paddingVec(2);
         paddingVec << 0, 0;
 
-        Conv<float> conv(inputDesc, weightsDesc, stridesVec, paddingVec);
+        ConvLayer<float> conv(inputDesc, weightsDesc, stridesVec, paddingVec);
 
         Eigen::VectorXf vec(1 * 1 * 6 * 6);
 
@@ -184,9 +184,9 @@ TEST_CASE("Conv semantics", "elsa_ml")
         auto backend = conv.getBackend();
         backend->setInput(input);
         backend->compile();
-        std::static_pointer_cast<typename Conv<float>::BackendLayerType>(backend)->setWeights(
+        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setWeights(
             weights);
-        std::static_pointer_cast<typename Conv<float>::BackendLayerType>(backend)->setBias(bias);
+        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setBias(bias);
 
         auto engine = backend->getEngine();
         dnnl::stream s(*engine);

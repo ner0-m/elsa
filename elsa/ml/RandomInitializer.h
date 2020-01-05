@@ -57,6 +57,8 @@ namespace elsa
     class RandomInitializer final
     {
     public:
+        RandomInitializer() = default;
+        
         static void setSeed(const std::optional<data_t>& seed = std::nullopt);
 
         template <typename... ArgTypes>

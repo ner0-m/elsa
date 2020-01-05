@@ -1,4 +1,4 @@
-#include "DnnlActivation.h"
+#include "DnnlActivationLayer.h"
 
 namespace elsa
 {
@@ -28,7 +28,7 @@ namespace elsa
         DnnlLayer<data_t>::compile();
 
         // Set forward primitive description
-        auto desc = dnnl::eltwise_forward::desc(dnnl::prop_kind::forward, _algorithm,
+        auto desc = dnnl::eltwise_forward::desc(dnnl::prop_kind::forward_training, _algorithm,
                                                 _srcMemory->get_desc(), _alpha, _beta);
 
         _forwardPrimitiveDescriptor = dnnl::eltwise_forward::primitive_desc(desc, *_engine);

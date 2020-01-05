@@ -34,8 +34,11 @@ namespace elsa
     class DnnlLayer
     {
     public:
-        /// Execute this layer's forward primitive on executionStream
+        /// Execute this layer's forward primitives on executionStream
         virtual void forwardPropagate(dnnl::stream& executionStream);
+
+        /// Execute this layer's backward primitives on executionStream
+        virtual void backwardPropagate(dnnl::stream& executionStream);
 
         /**
          * Set this layer's input by passing a DataContainer.
@@ -173,12 +176,18 @@ namespace elsa
         /// Format that of Dnnl source memory
         dnnl::memory::format_tag _srcMemoryFormatTag;
 
-        /// Dnnl forward primitive
+        /// Dnnl forward primitives
         std::vector<dnnl::primitive> _forwardPrimitives;
+
+        /// Dnnl backward primitives
+        std::vector<dnnl::primitive> _backwardPrimitives;
 
         std::unique_ptr<DataDescriptor> _outputDescriptor;
 
         /// Dnnl forward arguments, i.e., arguments for executing primitives
         std::vector<std::unordered_map<int, dnnl::memory>> _forwardArguments;
+
+        /// Dnnl backward arguments, i.e., arguments for executing primitives
+        std::vector<std::unordered_map<int, dnnl::memory>> _backwardArguments;
     };
 } // namespace elsa

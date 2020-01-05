@@ -1,13 +1,14 @@
-#include "DnnlConv.h"
+#include "DnnlConvLayer.h"
 
 namespace elsa
 {
     template <typename data_t>
-    DnnlConv<data_t>::DnnlConv(const DataDescriptor& inputDescriptor,
-                               const DataDescriptor& outputDescriptor,
-                               const DataDescriptor& weightsDescriptor,
-                               const IndexVector_t& strideVector,
-                               const IndexVector_t& paddingVector, Initializer initializer)
+    DnnlConvLayer<data_t>::DnnlConvLayer(const DataDescriptor& inputDescriptor,
+                                         const DataDescriptor& outputDescriptor,
+                                         const DataDescriptor& weightsDescriptor,
+                                         const IndexVector_t& strideVector,
+                                         const IndexVector_t& paddingVector,
+                                         Initializer initializer)
         : DnnlTrainableLayer<data_t>(inputDescriptor, outputDescriptor, weightsDescriptor,
                                      initializer)
     {
@@ -19,11 +20,11 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlConv<data_t>::compile()
+    void DnnlConvLayer<data_t>::compile()
     {
         BaseType::compile();
         auto desc = dnnl::convolution_forward::desc(
-            /* Propagation kind */ dnnl::prop_kind::forward,
+            /* Propagation kind */ dnnl::prop_kind::forward_training,
             /* Convolution algorithm */ dnnl::algorithm::convolution_auto,
             /* Source */ _srcMemoryDescriptor,
             /* Weights */ _weightsMemoryDescriptor,
@@ -67,5 +68,5 @@ namespace elsa
                                      {DNNL_ARG_DST, *_dstMemory}});
     }
 
-    template class DnnlConv<float>;
+    template class DnnlConvLayer<float>;
 } // namespace elsa

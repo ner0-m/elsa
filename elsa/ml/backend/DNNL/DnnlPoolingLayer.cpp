@@ -1,9 +1,9 @@
-#include "DnnlPooling.h"
+#include "DnnlPoolingLayer.h"
 
 namespace elsa
 {
     template <typename data_t>
-    DnnlPooling<data_t>::DnnlPooling(const DataDescriptor& inputDescriptor,
+    DnnlPoolingLayer<data_t>::DnnlPoolingLayer(const DataDescriptor& inputDescriptor,
                                      const DataDescriptor& outputDescriptor,
                                      const IndexVector_t& poolingWindow,
                                      const IndexVector_t& poolingStride)
@@ -18,11 +18,17 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlPooling<data_t>::compile()
+    void DnnlPoolingLayer<data_t>::compile()
     {
         auto desc = dnnl::pooling_forward::desc(
-            dnnl::prop_kind::forward, dnnl::algorithm::pooling_max, _srcMemory->get_desc(),
-            _dstMemoryDescriptor, _poolingStride, _poolingWindow, _poolingPadding, _poolingPadding);
+            /* Propagation kind */ dnnl::prop_kind::forward,
+            /* Pooling algorithm */ dnnl::algorithm::pooling_max,
+            /* Source memory descriptor */ _srcMemory->get_desc(),
+            /* Destination memory descriptor */ _dstMemoryDescriptor,
+            /* Pooling strides */ _poolingStride,
+            /* Pooling window */ _poolingWindow,
+            /* Input padding for lower dims */ _poolingPadding,
+            /* Input padding for higher dims */ _poolingPadding);
 
         _forwardPrimitiveDescriptor = dnnl::pooling_forward::primitive_desc(desc, *_engine);
 
@@ -38,6 +44,6 @@ namespace elsa
                                      {DNNL_ARG_DST, *_dstMemory}});
     }
 
-    template class DnnlPooling<float>;
+    template class DnnlPoolingLayer<float>;
 
 } // namespace elsa

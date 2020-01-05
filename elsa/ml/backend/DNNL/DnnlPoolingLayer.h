@@ -8,10 +8,10 @@
 namespace elsa
 {
     template <typename data_t>
-    class DnnlPooling final : public DnnlLayer<data_t>
+    class DnnlPoolingLayer final : public DnnlLayer<data_t>
     {
     public:
-        DnnlPooling(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor,
+        DnnlPoolingLayer(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor,
                     const IndexVector_t& poolingWindow, const IndexVector_t& poolingStride);
 
         void compile() override;
