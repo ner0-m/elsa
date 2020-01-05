@@ -23,36 +23,87 @@ namespace elsa
         };
     } // namespace detail
 
+    /**
+     * A Dnnl network layer.
+     *
+     * This clase serves as base class for all Dnnl network layers.
+     *
+     * \param data_t Type of all coefficients used in the layer
+     */
     template <typename data_t>
     class DnnlLayer
     {
     public:
+        /// Execute this layer's forward primitive on executionStream
         virtual void forwardPropagate(dnnl::stream& executionStream);
 
+        /**
+         * Set this layer's input by passing a DataContainer.
+         *
+         * \note This performs a copy from the DataContainer to Dnnl memory and is therefore
+         * potentially expensive.
+         */
         virtual void setInput(const DataContainer<data_t>& input);
-        virtual void setInput(const dnnl::memory& input);
 
-        DataContainer<data_t> getOutput();
+        /// Set this layer's input memory by passing a pointer to another Dnnl memory
+        virtual void setSourceMemory(std::shared_ptr<dnnl::memory> input);
 
-        /// Compile the layer, i.e., construct all necessary layer logic based on arguments defined
-        /// beforehand
+        /**
+         * Get the layer's output by copying it into a DataContainer.
+         *
+         * If the layer reorders memory, it gets reordered again to match
+         * the layer's outputDescriptor.
+         */
+        DataContainer<data_t> getOutput() const;
+
+        /**
+         * Get a pointer to this layer's dnnl output memory.
+         *
+         * \note In case of reordering primitives the memory returned by this function can differ
+         * from what is expected. In other word, this function doesn't revert possible memory
+         * reordering and should therefore be used for internal purposes only but not for final
+         * reporting of layer outputs.
+         */
+        std::shared_ptr<dnnl::memory> getOutputMemory();
+
+        /// Compile this layer, i.e., construct all necessary layer logic based on arguments defined
+        /// beforehand.
         virtual void compile();
 
-        /// Return a pointer to the layer's execution engine
+        /// Return a pointer to this layer's execution engine.
         std::shared_ptr<dnnl::engine> getEngine() const;
 
+        /// Set the layer's execution engine
+        void setEngine(std::shared_ptr<dnnl::engine> engine);
+
     protected:
-        /// Construct a DnnlLayer by providing a DataDescriptor for its input and output
+        /**
+         * Tag to describe a proagation kind. For some primitives there can
+         * be a difference between forward inference and forward training.
+         */
+        enum PropagationKind { ForwardInference, ForwardTraining, Backward };
+
+        /// Construct a DnnlLayer by providing a data descriptors for its input and output
         DnnlLayer(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor);
 
+        /// Explicitly deleted copy constructor
         DnnlLayer(const DnnlLayer&) = delete;
 
+        /// Type of all coefficients in this layer, expressed as a Dnnl data-type tag
         static constexpr dnnl::memory::data_type _typeTag = detail::TypeToDnnlTypeTag<data_t>::tag;
 
-        /// Write the content of a DataContainer to Dnnl memory
+        /**
+         * Write the content of a DataContainer to Dnnl memory
+         *
+         * \note This performs a copy and is therefore potentially expensive.
+         */
         static void writeToDnnlMemory(const DataContainer<data_t>& data, dnnl::memory& memory);
 
-        /// Read the content from Dnnl memory into a DataContainer
+        /**
+         * Read the content from Dnnl memory into a DataContainer
+         *
+         * \note This performs a copy and is therefore potentially expensive.
+         */
         static void readFromDnnlMemory(DataContainer<data_t>& data, const dnnl::memory& memory);
 
         /**
@@ -69,9 +120,26 @@ namespace elsa
          *   | 5D        | ncdhw | oidhw   |
          *   +-----------+-------+---------+
          *
+         * where each letter has the following meaning:
+         *
+         *  Input case:
+         *  n: Number of batches
+         *  c: Number of input channels
+         *  d: Depth (spatial dimension)
+         *  h: Height (spatial dimension)
+         *  w: Width (spatial dimension)
+         *
+         *  Weights case:
+         *  o: Number if output channels, i.e., number of weights
+         *  i: Number of input channels
+         *  d: Depth (spatial dimension)
+         *  h: Height (spatial dimension)
+         *  w: Width (spatial dimension)
+         *
          * \param desc DataDescriptor to choose a format type tag
          * \param isInput True if the DataDescriptor descripes an input, false if it describes
          *        weights
+         * \return Dnnl memory format tag corresponding to the above table
          */
         static dnnl::memory::format_tag
             dataDescriptorToDnnlMemoryFormatTag(const DataDescriptor& desc, bool isInput);
@@ -82,6 +150,7 @@ namespace elsa
         /// The layer's Dnnl execution engine
         std::shared_ptr<dnnl::engine> _engine = nullptr;
 
+        /// Dimensions of this layer's source memory
         dnnl::memory::dims _srcMemoryDimensions;
 
         /// The layer's source memory descriptor
@@ -90,7 +159,7 @@ namespace elsa
         /// The layer's source memory after possible reordering
         dnnl::memory _reorderedSrcMemory;
 
-        /// The layer's destination memory
+        /// The layer's source memory
         std::shared_ptr<dnnl::memory> _srcMemory = nullptr;
 
         dnnl::memory::dims _dstMemoryDimensions;
@@ -99,13 +168,17 @@ namespace elsa
         dnnl::memory::desc _dstMemoryDescriptor;
 
         /// The layer's destination memory
-        dnnl::memory _dstMemory;
+        std::shared_ptr<dnnl::memory> _dstMemory;
 
+        /// Format that of Dnnl source memory
         dnnl::memory::format_tag _srcMemoryFormatTag;
 
         /// Dnnl forward primitive
         std::vector<dnnl::primitive> _forwardPrimitives;
 
+        std::unique_ptr<DataDescriptor> _outputDescriptor;
+        
+        /// Dnnl forward arguments, i.e., arguments for executing primitives
         std::vector<std::unordered_map<int, dnnl::memory>> _forwardArguments;
     };
 } // namespace elsa

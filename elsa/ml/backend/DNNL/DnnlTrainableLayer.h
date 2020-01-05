@@ -24,9 +24,13 @@ namespace elsa
         /// Type of this layer's base class
         using BaseType = DnnlLayer<data_t>;
 
+        /**
+         * Construct a trainable Dnnl network layer by passing a descriptor for its input, its
+         * output and weights and an initializer for its weights and biases.
+         */
         DnnlTrainableLayer(const DataDescriptor& inputDescriptor,
                            const DataDescriptor& outputDescriptor,
-                           const DataDescriptor& weightsDescriptor);
+                           const DataDescriptor& weightsDescriptor, Initializer initializer);
 
         /**
          * Set this layer's weights by passing a DataContainer.
@@ -46,39 +50,60 @@ namespace elsa
          */
         void setBias(const DataContainer<data_t>& bias);
 
-        /**
-         * Set this layer's initializer that is used for initializing the layer's
-         * weights and biases.
-         *
-         * \note This function must be used before DnnlTrainableLayer::compile
-         * to have an effect.
-         */
-        void setInitializer(Initializer initializer);
+        void compile() override;
 
     protected:
+        /// \copydoc DnnlLayer::_srcMemoryDescriptor
         using BaseType::_srcMemoryDescriptor;
+
+        /// \copydoc DnnlLayer::_reorderedSrcMemory
         using BaseType::_reorderedSrcMemory;
+
+        /// \copydoc DnnlLayer::_dstMemoryDescriptor
         using BaseType::_dstMemoryDescriptor;
+
+        /// \copydoc DnnlLayer::_engine
         using BaseType::_engine;
+
+        /// \copydoc DnnlLayer::_forwardPrimitives
         using BaseType::_forwardPrimitives;
+
+        /// \copydoc DnnlLayer::_dstMemory
         using BaseType::_dstMemory;
+
+        /// \copydoc DnnlLayer::_srcMemory
         using BaseType::_srcMemory;
+
+        /// \copydoc DnnlLayer::_forwardArguments
         using BaseType::_forwardArguments;
+
+        /// \copydoc DnnlLayer::_typeTag
         using BaseType::_typeTag;
+
+        /// \copydoc DnnlLayer::_hasReorderedMemory
         using BaseType::_hasReorderedMemory;
+
+        std::unique_ptr<DataDescriptor> _weightsDescriptor;
 
         /// The dimension of the convolutional layer's weights
         dnnl::memory::dims _weightsDimensions;
 
+        /// This layer's weights memory descriptor
         dnnl::memory::desc _weightsMemoryDescriptor;
+
+        /// This layer's weights memory
         dnnl::memory _weightsMemory;
+
+        /// This layer's weights memory after possible reordering
         dnnl::memory _reorderedWeightsMemory;
+
+        dnnl::memory::format_tag _weightsMemoryFormatTag;
 
         dnnl::memory::dims _biasDimensions;
         dnnl::memory::desc _biasMemoryDescriptor;
         dnnl::memory _biasMemory;
 
-        Initializer _initializer = Initializer::Uniform;
+        Initializer _initializer;
     };
 
 } // namespace elsa

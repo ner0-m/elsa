@@ -19,7 +19,8 @@ if(ELSA_HAS_DNNL_BACKEND)
       ${ELSA_DNNL_BACKEND_DIR}/DnnlConv.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlDense.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlPooling.h
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlActivation.h)
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlActivation.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlSequentialNetwork.h)
 
   set(ELSA_DNNL_BACKEND_SOURCES
       ${ELSA_DNNL_BACKEND_DIR}/DnnlLayer.cpp
@@ -27,7 +28,8 @@ if(ELSA_HAS_DNNL_BACKEND)
       ${ELSA_DNNL_BACKEND_DIR}/DnnlConv.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlDense.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlPooling.cpp
-      ${ELSA_DNNL_BACKEND_DIR}/DnnlActivation.cpp)
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlActivation.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlSequentialNetwork.cpp)
 
 endif()
 
@@ -40,6 +42,7 @@ set(MODULE_HEADERS
     Dense.h
     Pooling.h
     RandomInitializer.h
+    SequentialNetwork.h
     ${ELSA_DNNL_BACKEND_HEADERS})
 
 # list all the code files of the module
@@ -49,6 +52,7 @@ set(MODULE_SOURCES
     Dense.cpp
     Pooling.cpp
     RandomInitializer.cpp
+    SequentialNetwork.cpp
     ${ELSA_DNNL_BACKEND_SOURCES})
 
 # build the module library
@@ -62,8 +66,11 @@ target_include_directories(
   ${ELSA_MODULE_TARGET_NAME}
   PUBLIC $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-         $<BUILD_INTERFACE:${Dnnl_INCLUDE_DIR}>
          $<BUILD_INTERFACE:${ELSA_DNNL_BACKEND_DIR}>)
+
+# Include Dnnl library header as system to avoid warnings
+target_include_directories(${ELSA_MODULE_TARGET_NAME} SYSTEM
+                           PUBLIC $<BUILD_INTERFACE:${Dnnl_INCLUDE_DIR}>)
 
 # require C++17
 target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)

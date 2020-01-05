@@ -3,7 +3,8 @@
 namespace elsa
 {
     template <typename data_t, MlBackend _BackendTag>
-    Dense<data_t, _BackendTag>::Dense(const DataDescriptor& inputDescriptor, int numNeurons)
+    Dense<data_t, _BackendTag>::Dense(const DataDescriptor& inputDescriptor, int numNeurons,
+                                      Initializer initializer)
         : TrainableLayer<data_t, _BackendTag>(inputDescriptor), _numNeurons(numNeurons)
     {
         IndexVector_t weightsVec(inputDescriptor.getNumberOfDimensions());
@@ -30,7 +31,7 @@ namespace elsa
 
         _outputDescriptor = DataDescriptor(outputDims).clone();
         _backend = std::make_shared<BackendLayerType>(inputDescriptor, *_outputDescriptor,
-                                                      *_weightsDescriptor);
+                                                      *_weightsDescriptor, initializer);
     }
 
     template class Dense<float, MlBackend::Dnnl>;

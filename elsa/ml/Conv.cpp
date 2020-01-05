@@ -6,7 +6,7 @@ namespace elsa
     Conv<data_t, _BackendTag>::Conv(const DataDescriptor& inputDescriptor,
                                     const DataDescriptor& weightsDescriptor,
                                     const IndexVector_t& strideVector,
-                                    const IndexVector_t& paddingVector)
+                                    const IndexVector_t& paddingVector, Initializer initializer)
         : TrainableLayer<data_t, _BackendTag>(inputDescriptor, weightsDescriptor)
     {
         if (inputDescriptor.getNumberOfDimensions() != weightsDescriptor.getNumberOfDimensions())
@@ -42,9 +42,9 @@ namespace elsa
                 + 1;
 
         _outputDescriptor = DataDescriptor(outputDims).clone();
-        _backend = std::make_shared<BackendLayerType>(
-            inputDescriptor, *_outputDescriptor, weightsDescriptor, strideVector, paddingVector);
-        // std::static_pointer_cast<BackendLayerType>(_backend)->setInitializer(initializer);
+        _backend = std::make_shared<BackendLayerType>(inputDescriptor, *_outputDescriptor,
+                                                      weightsDescriptor, strideVector,
+                                                      paddingVector, initializer);
     }
 
     template class Conv<float, MlBackend::Dnnl>;
