@@ -4,68 +4,91 @@ namespace elsa
 {
     template <typename data_t, MlBackend _BackendTag>
     Abs<data_t, _BackendTag>::Abs(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Abs<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+        : ActivationLayer<data_t, _BackendTag, Abs<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                         beta)
     {
     }
 
     template <typename data_t, MlBackend _BackendTag>
-    BoundedRelu<data_t, _BackendTag>::BoundedRelu(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, BoundedRelu<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    BoundedRelu<data_t, _BackendTag>::BoundedRelu(const DataDescriptor& inputDescriptor,
+                                                  data_t alpha, data_t beta)
+        : ActivationLayer<data_t, _BackendTag, BoundedRelu<data_t, _BackendTag>>(inputDescriptor,
+                                                                                 alpha, beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
     Elu<data_t, _BackendTag>::Elu(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Elu<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+        : ActivationLayer<data_t, _BackendTag, Elu<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                         beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
     Exp<data_t, _BackendTag>::Exp(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Exp<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+        : ActivationLayer<data_t, _BackendTag, Exp<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                         beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    Linear<data_t, _BackendTag>::Linear(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Linear<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    Linear<data_t, _BackendTag>::Linear(const DataDescriptor& inputDescriptor, data_t alpha,
+                                        data_t beta)
+        : ActivationLayer<data_t, _BackendTag, Linear<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                            beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    Gelu<data_t, _BackendTag>::Gelu(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Gelu<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    Gelu<data_t, _BackendTag>::Gelu(const DataDescriptor& inputDescriptor, data_t alpha,
+                                    data_t beta)
+        : ActivationLayer<data_t, _BackendTag, Gelu<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                          beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    Logistic<data_t, _BackendTag>::Logistic(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Logistic<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    Logistic<data_t, _BackendTag>::Logistic(const DataDescriptor& inputDescriptor, data_t alpha,
+                                            data_t beta)
+        : ActivationLayer<data_t, _BackendTag, Logistic<data_t, _BackendTag>>(inputDescriptor,
+                                                                              alpha, beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    Relu<data_t, _BackendTag>::Relu(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Relu<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    Relu<data_t, _BackendTag>::Relu(const DataDescriptor& inputDescriptor, data_t alpha,
+                                    data_t beta)
+        : ActivationLayer<data_t, _BackendTag, Relu<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                          beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    SoftRelu<data_t, _BackendTag>::SoftRelu(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, SoftRelu<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    SoftRelu<data_t, _BackendTag>::SoftRelu(const DataDescriptor& inputDescriptor, data_t alpha,
+                                            data_t beta)
+        : ActivationLayer<data_t, _BackendTag, SoftRelu<data_t, _BackendTag>>(inputDescriptor,
+                                                                              alpha, beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    Sqrt<data_t, _BackendTag>::Sqrt(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Sqrt<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    Sqrt<data_t, _BackendTag>::Sqrt(const DataDescriptor& inputDescriptor, data_t alpha,
+                                    data_t beta)
+        : ActivationLayer<data_t, _BackendTag, Sqrt<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                          beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    Square<data_t, _BackendTag>::Square(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Square<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    Square<data_t, _BackendTag>::Square(const DataDescriptor& inputDescriptor, data_t alpha,
+                                        data_t beta)
+        : ActivationLayer<data_t, _BackendTag, Square<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                            beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    Swish<data_t, _BackendTag>::Swish(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Swish<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    Swish<data_t, _BackendTag>::Swish(const DataDescriptor& inputDescriptor, data_t alpha,
+                                      data_t beta)
+        : ActivationLayer<data_t, _BackendTag, Swish<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                           beta)
     {
     }
     template <typename data_t, MlBackend _BackendTag>
-    Tanh<data_t, _BackendTag>::Tanh(const DataDescriptor& inputDescriptor, data_t alpha, data_t beta)
-        : ActivationLayer<data_t, _BackendTag, Tanh<data_t, _BackendTag>>(inputDescriptor, alpha, beta)
+    Tanh<data_t, _BackendTag>::Tanh(const DataDescriptor& inputDescriptor, data_t alpha,
+                                    data_t beta)
+        : ActivationLayer<data_t, _BackendTag, Tanh<data_t, _BackendTag>>(inputDescriptor, alpha,
+                                                                          beta)
     {
     }
 

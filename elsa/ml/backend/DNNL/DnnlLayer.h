@@ -177,7 +177,7 @@ namespace elsa
         std::vector<dnnl::primitive> _forwardPrimitives;
 
         std::unique_ptr<DataDescriptor> _outputDescriptor;
-        
+
         /// Dnnl forward arguments, i.e., arguments for executing primitives
         std::vector<std::unordered_map<int, dnnl::memory>> _forwardArguments;
     };

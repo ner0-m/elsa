@@ -27,8 +27,3 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
     add_dependencies(examples speed_test)
   endif()
 endif()
-
-add_executable(exampleSequentialNetwork exampleSequentialNetwork.cpp)
-target_link_libraries(exampleSequentialNetwork elsa::all)
-target_compile_features(exampleSequentialNetwork PUBLIC cxx_std_17)
-add_dependencies(examples exampleSequentialNetwork)
