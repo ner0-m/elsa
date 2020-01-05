@@ -24,7 +24,7 @@ namespace elsa
          * \param[in] poolingStride
          */
         PoolingLayer(const DataDescriptor& inputDescriptor, const IndexVector_t& poolingWindow,
-                const IndexVector_t& poolingStride);
+                     const IndexVector_t& poolingStride);
 
     private:
         /// \copydoc Layer::_backend

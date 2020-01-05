@@ -4,9 +4,9 @@ namespace elsa
 {
     template <typename data_t>
     DnnlPoolingLayer<data_t>::DnnlPoolingLayer(const DataDescriptor& inputDescriptor,
-                                     const DataDescriptor& outputDescriptor,
-                                     const IndexVector_t& poolingWindow,
-                                     const IndexVector_t& poolingStride)
+                                               const DataDescriptor& outputDescriptor,
+                                               const IndexVector_t& poolingWindow,
+                                               const IndexVector_t& poolingStride)
         : DnnlLayer<data_t>(inputDescriptor, outputDescriptor)
     {
         for (const auto& dim : poolingWindow) {

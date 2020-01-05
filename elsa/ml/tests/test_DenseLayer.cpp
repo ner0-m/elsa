@@ -42,7 +42,8 @@ TEST_CASE("DenseLayer semantics")
     auto backend = dense.getBackend();
     backend->setInput(input);
     backend->compile();
-    std::static_pointer_cast<typename DenseLayer<float>::BackendLayerType>(backend)->setWeights(weights);
+    std::static_pointer_cast<typename DenseLayer<float>::BackendLayerType>(backend)->setWeights(
+        weights);
     std::static_pointer_cast<typename DenseLayer<float>::BackendLayerType>(backend)->setBias(bias);
 
     auto engine = backend->getEngine();

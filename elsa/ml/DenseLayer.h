@@ -26,7 +26,7 @@ namespace elsa
          * is optional and defaults to Initializer::Uniform
          */
         DenseLayer(const DataDescriptor& inputDescriptor, int numNeurons,
-              Initializer initializer = Initializer::Uniform);
+                   Initializer initializer = Initializer::Uniform);
 
     private:
         using BaseType::_backend;

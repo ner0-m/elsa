@@ -111,7 +111,8 @@ TEST_CASE("ConvLayer semantics", "elsa_ml")
         backend->compile();
         std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setWeights(
             weights);
-        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setBias(bias);
+        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setBias(
+            bias);
 
         auto engine = backend->getEngine();
         dnnl::stream s(*engine);
@@ -186,7 +187,8 @@ TEST_CASE("ConvLayer semantics", "elsa_ml")
         backend->compile();
         std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setWeights(
             weights);
-        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setBias(bias);
+        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setBias(
+            bias);
 
         auto engine = backend->getEngine();
         dnnl::stream s(*engine);
