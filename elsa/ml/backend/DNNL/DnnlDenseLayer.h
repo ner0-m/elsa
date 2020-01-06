@@ -75,6 +75,9 @@ namespace elsa
         /// \copydoc DnnlTrainableLayer::_hasReorderedMemory
         using BaseType::_hasReorderedMemory;
 
+        using BaseType::_fanInOut;
+
+
         dnnl::inner_product_forward::primitive_desc _forwardPrimitiveDescriptor;
     };
 } // namespace elsa
