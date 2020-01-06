@@ -104,6 +104,7 @@ namespace elsa
         dnnl::memory _biasMemory;
 
         Initializer _initializer;
+        typename RandomInitializer<data_t>::FanPairType _fanInOut;
     };
 
 } // namespace elsa
