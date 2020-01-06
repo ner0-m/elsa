@@ -19,9 +19,9 @@ namespace elsa
                       const DataDescriptor& weightsDescriptor, const IndexVector_t& strideVector,
                       const IndexVector_t& paddingVector, Initializer initializer);
 
-        void compile() override;
-
     private:
+        void compileForwardStream() override;
+
         using BaseType::_weightsDimensions;
         using BaseType::_weightsMemoryDescriptor;
         using BaseType::_weightsMemory;

@@ -15,9 +15,9 @@ namespace elsa
                          const DataDescriptor& outputDescriptor, const IndexVector_t& poolingWindow,
                          const IndexVector_t& poolingStride);
 
-        void compile() override;
-
     private:
+        void compileForwardStream() override;
+
         using BaseType = DnnlLayer<data_t>;
 
         using BaseType::_engine;

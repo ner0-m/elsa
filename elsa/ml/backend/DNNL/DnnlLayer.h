@@ -24,6 +24,12 @@ namespace elsa
     } // namespace detail
 
     /**
+     * Tag to describe a proagation kind. For some primitives there can
+     * be a difference between forward inference and forward training.
+     */
+    enum PropagationKind { Forward, Backward, Full };
+
+    /**
      * A Dnnl network layer.
      *
      * This clase serves as base class for all Dnnl network layers.
@@ -51,6 +57,10 @@ namespace elsa
         /// Set this layer's input memory by passing a pointer to another Dnnl memory
         virtual void setSourceMemory(std::shared_ptr<dnnl::memory> input);
 
+        void setGradientDestinationMemory(std::shared_ptr<dnnl::memory> gradient);
+
+        std::shared_ptr<dnnl::memory> setGradientDestinationMemory();
+
         /**
          * Get the layer's output by copying it into a DataContainer.
          *
@@ -71,7 +81,7 @@ namespace elsa
 
         /// Compile this layer, i.e., construct all necessary layer logic based on arguments defined
         /// beforehand.
-        virtual void compile();
+        void compile(PropagationKind propagation = PropagationKind::Forward);
 
         /// Return a pointer to this layer's execution engine.
         std::shared_ptr<dnnl::engine> getEngine() const;
@@ -80,12 +90,6 @@ namespace elsa
         void setEngine(std::shared_ptr<dnnl::engine> engine);
 
     protected:
-        /**
-         * Tag to describe a proagation kind. For some primitives there can
-         * be a difference between forward inference and forward training.
-         */
-        enum PropagationKind { ForwardInference, ForwardTraining, Backward };
-
         /// Construct a DnnlLayer by providing a data descriptors for its input and output
         DnnlLayer(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor);
 
@@ -94,6 +98,9 @@ namespace elsa
 
         /// Type of all coefficients in this layer, expressed as a Dnnl data-type tag
         static constexpr dnnl::memory::data_type _typeTag = detail::TypeToDnnlTypeTag<data_t>::tag;
+
+        virtual void compileBackwardStream() {}
+        virtual void compileForwardStream() {}
 
         /**
          * Write the content of a DataContainer to Dnnl memory
@@ -189,5 +196,11 @@ namespace elsa
 
         /// Dnnl backward arguments, i.e., arguments for executing primitives
         std::vector<std::unordered_map<int, dnnl::memory>> _backwardArguments;
+
+        dnnl::memory::desc _gradientDstMemoryDescriptor;
+        std::shared_ptr<dnnl::memory> _gradientDstMemory;
+
+        dnnl::memory::desc _gradientSrcMemoryDescriptor;
+        dnnl::memory _gradientSrcMemory;
     };
 } // namespace elsa

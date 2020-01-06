@@ -20,9 +20,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlConvLayer<data_t>::compile()
+    void DnnlConvLayer<data_t>::compileForwardStream()
     {
-        BaseType::compile();
+        BaseType::compileForwardStream();
         auto desc = dnnl::convolution_forward::desc(
             /* Propagation kind */ dnnl::prop_kind::forward_training,
             /* Convolution algorithm */ dnnl::algorithm::convolution_auto,

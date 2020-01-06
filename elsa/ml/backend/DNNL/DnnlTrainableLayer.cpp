@@ -49,7 +49,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlTrainableLayer<data_t>::compile()
+    void DnnlTrainableLayer<data_t>::compileForwardStream()
     {
         // Construct weights memory and initialize it
         _weightsMemory =

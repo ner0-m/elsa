@@ -65,6 +65,12 @@ namespace elsa
 
         _dstMemoryDescriptor =
             dnnl::memory::desc({_dstMemoryDimensions}, _typeTag, dnnl::memory::format_tag::any);
+
+        // // Set diff src memory descriptor
+        // _diffSrcMemoryDescriptor = _srcMemoryDescriptor;
+
+        // // Set diff dst memory descriptor
+        // _diffDstMemoryDescriptor = _dstMemoryDescriptor;
     }
 
     template <typename data_t>
@@ -146,12 +152,27 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlLayer<data_t>::compile()
+    void DnnlLayer<data_t>::compile(PropagationKind propagation)
     {
-        if (!_srcMemory)
-            throw std::logic_error("Dnnl source memory must not be null");
         if (!_engine)
-            throw std::logic_error("Dnnl engine must not be null");
+            throw std::logic_error("Failed to compile layer: Dnnl engine is null");
+        if (!_srcMemory)
+            throw std::logic_error("Failed to compile layer: Dnnl source memory is null");
+
+        switch (propagation) {
+            case PropagationKind::Forward:
+                compileForwardStream();
+                break;
+            case PropagationKind::Backward:
+                compileBackwardStream();
+                break;
+            case PropagationKind::Full:
+                compileForwardStream();
+                compileBackwardStream();
+                break;
+            default:
+                throw std::invalid_argument("Failed to compile layer: Unkown propagation kind");
+        }
     }
 
     template <typename data_t>

@@ -1,5 +1,5 @@
 #include "DnnlActivationLayer.h"
-
+#include <iostream>
 namespace elsa
 {
     template <typename data_t>
@@ -23,10 +23,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlActivationLayer<data_t>::compile()
+    void DnnlActivationLayer<data_t>::compileBackwardStream()
     {
-        DnnlLayer<data_t>::compile();
+        throw std::logic_error("Unimplemented");
+    }
 
+    template <typename data_t>
+    void DnnlActivationLayer<data_t>::compileForwardStream()
+    {
         // Set forward primitive description
         auto desc = dnnl::eltwise_forward::desc(dnnl::prop_kind::forward_training, _algorithm,
                                                 _srcMemory->get_desc(), _alpha, _beta);

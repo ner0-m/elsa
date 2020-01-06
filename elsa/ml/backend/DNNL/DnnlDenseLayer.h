@@ -20,10 +20,9 @@ namespace elsa
                        const DataDescriptor& outputDescriptor,
                        const DataDescriptor& weightsDescriptor, Initializer initializer);
 
-        /// \copydoc DnnlTrainableLayer::compile
-        void compile() override;
-
     private:
+        void compileForwardStream() override;
+
         /// \copydoc DnnlTrainableLayer::_weightsDimensions
         using BaseType::_weightsDimensions;
 
