@@ -25,7 +25,35 @@ namespace elsa
     template <typename data_t>
     void DnnlActivationLayer<data_t>::compileBackwardStream()
     {
-        throw std::logic_error("Unimplemented");
+        auto desc = dnnl::eltwise_backward::desc(
+            /* Element-wise algorithm */ _algorithm,
+            /* Gradient dst memory descriptor */ _gradientDstMemoryDescriptor,
+            /* Source memory descriptor */ _srcMemory->get_desc(),
+            /* Alpha parameter */ _alpha,
+            /* Beta parameter */ _beta);
+
+        _backwardPrimitiveDescriptor =
+            dnnl::eltwise_backward::primitive_desc(desc, *_engine, _forwardPrimitiveDescriptor);
+
+        // Reorder if necessary
+        _reorderedGradientDstMemory = *_gradientDstMemory;
+        if (_reorderedGradientDstMemory.get_desc()
+            != _backwardPrimitiveDescriptor.diff_dst_desc()) {
+            _reorderedGradientDstMemory =
+                dnnl::memory(_backwardPrimitiveDescriptor.diff_dst_desc(), *_engine);
+            _backwardPrimitives.push_back(
+                dnnl::reorder(*_gradientDstMemory, _reorderedGradientDstMemory));
+            _backwardArguments.push_back(
+                {{DNNL_ARG_FROM, *_gradientDstMemory}, {DNNL_ARG_TO, _reorderedGradientDstMemory}});
+        }
+
+        std::cout << "Here am I (at " << __PRETTY_FUNCTION__ << ":" << __LINE__ << "). Send me.\n";
+
+        _gradientSrcMemory = dnnl::memory(_backwardPrimitiveDescriptor.diff_dst_desc(), *_engine);
+        _backwardPrimitives.push_back(dnnl::eltwise_backward(_backwardPrimitiveDescriptor));
+        _backwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory},
+                                      {DNNL_ARG_DIFF_DST, _reorderedGradientDstMemory},
+                                      {DNNL_ARG_DIFF_SRC, _gradientSrcMemory}});
     }
 
     template <typename data_t>

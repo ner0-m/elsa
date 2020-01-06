@@ -30,11 +30,19 @@ namespace elsa
         using BaseType::_srcMemory;
         using BaseType::_forwardArguments;
         using BaseType::_forwardPrimitives;
+        using BaseType::_gradientDstMemoryDescriptor;
+        using BaseType::_reorderedGradientDstMemory;
+        using BaseType::_gradientDstMemory;
+        using BaseType::_backwardPrimitives;
+        using BaseType::_backwardArguments;
+        using BaseType::_gradientSrcMemory;
 
         dnnl::algorithm _algorithm;
 
         /// Primitive descriptor for element-wise forward propagation
         dnnl::eltwise_forward::primitive_desc _forwardPrimitiveDescriptor;
+
+        dnnl::eltwise_backward::primitive_desc _backwardPrimitiveDescriptor;
 
         data_t _alpha;
         data_t _beta;

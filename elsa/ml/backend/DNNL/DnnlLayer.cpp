@@ -1,4 +1,5 @@
 #include "DnnlLayer.h"
+#include <iostream>
 
 namespace elsa
 {
@@ -45,7 +46,8 @@ namespace elsa
     DnnlLayer<data_t>::DnnlLayer(const DataDescriptor& inputDescriptor,
                                  const DataDescriptor& outputDescriptor)
         : _engine(std::make_shared<dnnl::engine>(dnnl::engine::kind::cpu, 0)),
-          _outputDescriptor(outputDescriptor.clone())
+          _outputDescriptor(outputDescriptor.clone()),
+          _inputDescriptor(inputDescriptor.clone())
     {
         // Set source memory descriptor
         for (const auto& dim : inputDescriptor.getNumberOfCoefficientsPerDimension())
@@ -66,11 +68,11 @@ namespace elsa
         _dstMemoryDescriptor =
             dnnl::memory::desc({_dstMemoryDimensions}, _typeTag, dnnl::memory::format_tag::any);
 
-        // // Set diff src memory descriptor
-        // _diffSrcMemoryDescriptor = _srcMemoryDescriptor;
+        // Set diff src memory descriptor
+        _gradientSrcMemoryDescriptor = _srcMemoryDescriptor;
 
-        // // Set diff dst memory descriptor
-        // _diffDstMemoryDescriptor = _dstMemoryDescriptor;
+        // Set diff dst memory descriptor
+        _gradientDstMemoryDescriptor = _dstMemoryDescriptor;
     }
 
     template <typename data_t>
@@ -95,6 +97,16 @@ namespace elsa
         for (std::size_t i = 0; i < _backwardPrimitives.size(); ++i) {
             _backwardPrimitives[i].execute(executionStream, _backwardArguments[i]);
         }
+
+        std::cout << "_backwardPrimitives.size() = " << _backwardPrimitives.size() << "\n";
+        std::cout << "Raw data\n";
+        for (int i = 0; i < 16; ++i) {
+            std::cout << static_cast<data_t*>(_gradientSrcMemory.get_data_handle())[i] << "\n";
+        }
+        std::cout << "\n";
+
+        for (int i = 0; i < 16; ++i)
+            std::cout << static_cast<data_t*>(_gradientDstMemory->get_data_handle())[i] << "\n";
     }
 
     template <typename data_t>
@@ -179,6 +191,23 @@ namespace elsa
     std::shared_ptr<dnnl::memory> DnnlLayer<data_t>::getOutputMemory()
     {
         return _dstMemory;
+    }
+
+    template <typename data_t>
+    void DnnlLayer<data_t>::setOutputGradient(const DataContainer<data_t>& gradient)
+    {
+        _gradientDstMemory = std::make_shared<dnnl::memory>(
+            dnnl::memory::desc({{_dstMemoryDimensions}, _typeTag, _srcMemoryFormatTag}), *_engine);
+        writeToDnnlMemory(gradient, *_gradientDstMemory);
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DnnlLayer<data_t>::getInputGradient() const
+    {
+        DataContainer<data_t> output(*_inputDescriptor);
+        // Write reordered memory to output DataContainer. This performs a copy.
+        readFromDnnlMemory(output, _gradientSrcMemory);
+        return output;
     }
 
     template class DnnlLayer<float>;
