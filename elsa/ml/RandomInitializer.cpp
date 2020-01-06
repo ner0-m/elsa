@@ -83,16 +83,20 @@ namespace elsa
     void RandomInitializer<data_t>::normal(data_t* data, index_t size, data_t variance,
                                            data_t stddev)
     {
-        NormalDistributionType dist(variance, stddev);
-        std::mt19937_64 engine;
+        if constexpr (std::is_same_v<std::false_type, NormalDistributionType>) {
+            throw std::logic_error("Cannot use normal distribution with the given data-type");
+        } else {
+            NormalDistributionType dist(variance, stddev);
+            std::mt19937_64 engine;
 
-        if (_seed.has_value())
-            engine = std::mt19937_64(_seed.value());
-        else
-            engine = std::mt19937_64(_randomDevice());
+            if (_seed.has_value())
+                engine = std::mt19937_64(_seed.value());
+            else
+                engine = std::mt19937_64(_randomDevice());
 
-        for (index_t i = 0; i < size; ++i)
-            data[i] = dist(engine);
+            for (index_t i = 0; i < size; ++i)
+                data[i] = dist(engine);
+        }
     }
 
     template class RandomInitializer<float>;

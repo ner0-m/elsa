@@ -9,14 +9,6 @@ namespace elsa
 {
     enum class Initializer {
         /**
-         * Uniform initialization
-         *
-         * Initialize data with random samples from a uniform distribution in
-         * the interval [-1, 1].
-         */
-        Uniform,
-
-        /**
          * One initialization
          *
          * Initialize data with 1
@@ -31,14 +23,21 @@ namespace elsa
         Zero,
 
         /**
-         * Glorot normal initialization
+         * Uniform initialization
          *
-         * Initialize data  with random samples from a normal distribution
-         * centered on variance 0 and standard deviation
-         *
-         * `sqrt(2 / (fanIn + fanOut))`
+         * Initialize data with random samples from a uniform distribution in
+         * the interval [-1, 1].
          */
-        GlorotNormal,
+        Uniform,
+
+        /**
+         * Normal initialization
+         *
+         * Initialize data with random samples from a standard normal
+         * distribution, i.e., a normal distribution with mean 0 and
+         * standard deviation 1.
+         */
+        Normal,
 
         /**
          * Glorot uniform initialization
@@ -51,16 +50,18 @@ namespace elsa
         GlorotUniform,
 
         /**
-         * Normal initialization
+         * Glorot normal initialization
          *
-         * Initialize data with random samples from a standard normal
-         * distribution, i.e., a normal distribution with mean 0 and
-         * standard deviation 1.
+         * Initialize data  with random samples from a normal distribution
+         * centered on variance 0 and standard deviation
+         *
+         * `sqrt(2 / (fanIn + fanOut))`
          */
-        Normal,
+        GlorotNormal,
 
         HeNormal,
         HeUniform,
+
         LeCunNormal,
         LeCunUniform
     };
@@ -85,14 +86,14 @@ namespace elsa
                                [[maybe_unused]] const FanPairType& fanInOut)
         {
             switch (initializer) {
-                case Initializer::Uniform:
-                    RandomInitializer::uniform(data, size, -1, 1);
-                    return;
                 case Initializer::One:
                     RandomInitializer::one(data, size);
                     return;
                 case Initializer::Zero:
                     RandomInitializer::zero(data, size);
+                    return;
+                case Initializer::Uniform:
+                    RandomInitializer::uniform(data, size, -1, 1);
                     return;
                 case Initializer::GlorotUniform:
                     RandomInitializer::glorotUniform(data, size, fanInOut);
@@ -111,6 +112,7 @@ namespace elsa
         /// Unform random initialization
         static void uniform(data_t* data, index_t size);
 
+        /// Unform random initialization bounded to an interval
         static void uniform(data_t* data, index_t size, data_t lowerBound, data_t upperBound);
 
         /// Initialization with a given constant value
@@ -147,10 +149,12 @@ namespace elsa
          */
         static void glorotNormal(data_t* data, index_t size, const FanPairType&);
 
+        /// Type of the uniform distribution depending on the data-type used
         using UniformDistributionType =
             std::conditional_t<std::is_integral_v<data_t>, std::uniform_int_distribution<data_t>,
                                std::uniform_real_distribution<data_t>>;
 
+        /// Type of the uniform distribution depending on the data-type used
         using NormalDistributionType =
             std::conditional_t<std::is_floating_point_v<data_t>, std::normal_distribution<data_t>,
                                std::false_type>;
