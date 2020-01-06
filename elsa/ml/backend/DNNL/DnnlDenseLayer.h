@@ -77,7 +77,6 @@ namespace elsa
 
         using BaseType::_fanInOut;
 
-
         dnnl::inner_product_forward::primitive_desc _forwardPrimitiveDescriptor;
     };
 } // namespace elsa
