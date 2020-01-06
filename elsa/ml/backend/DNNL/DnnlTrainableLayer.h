@@ -50,9 +50,9 @@ namespace elsa
          */
         void setBias(const DataContainer<data_t>& bias);
 
-        void compile() override;
-
     protected:
+        void compileForwardStream() override;
+
         /// \copydoc DnnlLayer::_srcMemoryDescriptor
         using BaseType::_srcMemoryDescriptor;
 

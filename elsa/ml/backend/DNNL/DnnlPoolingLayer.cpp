@@ -18,7 +18,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlPoolingLayer<data_t>::compile()
+    void DnnlPoolingLayer<data_t>::compileForwardStream()
     {
         auto desc = dnnl::pooling_forward::desc(
             /* Propagation kind */ dnnl::prop_kind::forward,

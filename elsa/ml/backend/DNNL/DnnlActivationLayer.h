@@ -14,12 +14,12 @@ namespace elsa
         /// Set the layer's beta parameter.
         void setBeta(data_t beta);
 
-        /// \copydoc DnnlLayer::compile
-        void compile() override;
-
     protected:
         DnnlActivationLayer(const DataDescriptor& inputDescriptor,
                             const DataDescriptor& outputDescriptor, dnnl::algorithm algorithm);
+
+        void compileBackwardStream() override;
+        void compileForwardStream() override;
 
         using BaseType = DnnlLayer<data_t>;
 

@@ -13,9 +13,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlDenseLayer<data_t>::compile()
+    void DnnlDenseLayer<data_t>::compileForwardStream()
     {
-        BaseType::compile();
+        BaseType::compileForwardStream();
         auto desc = dnnl::inner_product_forward::desc(
             /* Propagation kind */ dnnl::prop_kind::forward_training,
             /* Source descriptor*/ _srcMemoryDescriptor,
