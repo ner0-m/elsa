@@ -52,14 +52,14 @@ namespace elsa
          * \note This performs a copy from the DataContainer to Dnnl memory and is therefore
          * potentially expensive.
          */
-        virtual void setInput(const DataContainer<data_t>& input);
+        void setInput(const DataContainer<data_t>& input);
+
+        void setOutputGradient(const DataContainer<data_t>& gradient);
+
+        DataContainer<data_t> getInputGradient() const;
 
         /// Set this layer's input memory by passing a pointer to another Dnnl memory
         virtual void setSourceMemory(std::shared_ptr<dnnl::memory> input);
-
-        void setGradientDestinationMemory(std::shared_ptr<dnnl::memory> gradient);
-
-        std::shared_ptr<dnnl::memory> setGradientDestinationMemory();
 
         /**
          * Get the layer's output by copying it into a DataContainer.
@@ -100,6 +100,7 @@ namespace elsa
         static constexpr dnnl::memory::data_type _typeTag = detail::TypeToDnnlTypeTag<data_t>::tag;
 
         virtual void compileBackwardStream() {}
+
         virtual void compileForwardStream() {}
 
         /**
@@ -183,6 +184,9 @@ namespace elsa
         /// Format that of Dnnl source memory
         dnnl::memory::format_tag _srcMemoryFormatTag;
 
+        /// Format that of Dnnl destination memory
+        dnnl::memory::format_tag _dstMemoryFormatTag;
+
         /// Dnnl forward primitives
         std::vector<dnnl::primitive> _forwardPrimitives;
 
@@ -190,6 +194,8 @@ namespace elsa
         std::vector<dnnl::primitive> _backwardPrimitives;
 
         std::unique_ptr<DataDescriptor> _outputDescriptor;
+
+        std::unique_ptr<DataDescriptor> _inputDescriptor;
 
         /// Dnnl forward arguments, i.e., arguments for executing primitives
         std::vector<std::unordered_map<int, dnnl::memory>> _forwardArguments;
@@ -199,6 +205,7 @@ namespace elsa
 
         dnnl::memory::desc _gradientDstMemoryDescriptor;
         std::shared_ptr<dnnl::memory> _gradientDstMemory;
+        dnnl::memory _reorderedGradientDstMemory;
 
         dnnl::memory::desc _gradientSrcMemoryDescriptor;
         dnnl::memory _gradientSrcMemory;
