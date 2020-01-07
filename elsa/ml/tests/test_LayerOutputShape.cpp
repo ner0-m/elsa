@@ -1,5 +1,4 @@
 #include <catch2/catch.hpp>
-#include <type_traits>
 
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
@@ -7,6 +6,7 @@
 #include "ConvLayer.h"
 #include "PoolingLayer.h"
 #include "DenseLayer.h"
+#include "SoftmaxLayer.h"
 
 using namespace elsa;
 
@@ -21,9 +21,9 @@ TEMPLATE_TEST_CASE("ActivationLayerOutputShapes", "elsa_ml", (Abs<float, MlBacke
     IndexVector_t vec(4);
     vec << 1, 2, 3, 4;
     DataDescriptor inputDesc(vec);
-    // Relu doesn't alter the input shape
-    TestType relu(inputDesc);
-    REQUIRE(relu.getOutputDescriptor() == inputDesc);
+    // Activations don't alter the input shape
+    TestType layer(inputDesc);
+    REQUIRE(layer.getOutputDescriptor() == inputDesc);
 }
 
 TEST_CASE("LayerOutputShapes", "elsa_ml")
@@ -103,6 +103,17 @@ TEST_CASE("LayerOutputShapes", "elsa_ml")
             DataDescriptor outputDesc(outputVec);
 
             REQUIRE(dense.getOutputDescriptor() == outputDesc);
+        }
+    }
+
+    SECTION("Softmax")
+    {
+        {
+            IndexVector_t vec(4);
+            vec << 1, 2, 3, 4;
+            DataDescriptor inputDesc(vec);
+            SoftmaxLayer layer(inputDesc);
+            REQUIRE(layer.getOutputDescriptor() == inputDesc);
         }
     }
 }
