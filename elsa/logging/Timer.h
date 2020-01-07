@@ -17,7 +17,7 @@ namespace elsa
      * This class provides logging of timing using the guard pattern. It stores the current  time
      * upon creation, and outputs a log message with time elapsed on destruction.
      */
-    template <class Duration = std::chrono::milliseconds, class Clock = std::chrono::system_clock>
+    template <class Duration = std::chrono::milliseconds, class Clock = std::chrono::steady_clock>
     class Timer
     {
     public:
