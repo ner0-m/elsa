@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DnnlLayer.h"
+#include "DataDescriptor.h"
 
 namespace elsa
 {

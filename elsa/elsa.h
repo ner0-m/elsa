@@ -67,5 +67,6 @@
 #include "ml/ConvLayer.h"
 #include "ml/PoolingLayer.h"
 #include "ml/DenseLayer.h"
+#include "ml/SoftmaxLayer.h"
 #include "ml/RandomInitializer.h"
 #include "ml/SequentialNetwork.h"

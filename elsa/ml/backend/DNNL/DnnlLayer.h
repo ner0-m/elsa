@@ -40,6 +40,8 @@ namespace elsa
     class DnnlLayer
     {
     public:
+        virtual ~DnnlLayer() = default;
+
         /// Execute this layer's forward primitives on executionStream
         virtual void forwardPropagate(dnnl::stream& executionStream);
 

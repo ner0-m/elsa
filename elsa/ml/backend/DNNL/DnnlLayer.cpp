@@ -1,5 +1,4 @@
 #include "DnnlLayer.h"
-#include <iostream>
 
 namespace elsa
 {
@@ -97,16 +96,6 @@ namespace elsa
         for (std::size_t i = 0; i < _backwardPrimitives.size(); ++i) {
             _backwardPrimitives[i].execute(executionStream, _backwardArguments[i]);
         }
-
-        std::cout << "_backwardPrimitives.size() = " << _backwardPrimitives.size() << "\n";
-        std::cout << "Raw data\n";
-        for (int i = 0; i < 16; ++i) {
-            std::cout << static_cast<data_t*>(_gradientSrcMemory.get_data_handle())[i] << "\n";
-        }
-        std::cout << "\n";
-
-        for (int i = 0; i < 16; ++i)
-            std::cout << static_cast<data_t*>(_gradientDstMemory->get_data_handle())[i] << "\n";
     }
 
     template <typename data_t>
