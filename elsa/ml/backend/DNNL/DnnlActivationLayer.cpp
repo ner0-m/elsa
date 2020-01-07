@@ -1,5 +1,5 @@
 #include "DnnlActivationLayer.h"
-#include <iostream>
+
 namespace elsa
 {
     template <typename data_t>
@@ -46,8 +46,6 @@ namespace elsa
             _backwardArguments.push_back(
                 {{DNNL_ARG_FROM, *_gradientDstMemory}, {DNNL_ARG_TO, _reorderedGradientDstMemory}});
         }
-
-        std::cout << "Here am I (at " << __PRETTY_FUNCTION__ << ":" << __LINE__ << "). Send me.\n";
 
         _gradientSrcMemory = dnnl::memory(_backwardPrimitiveDescriptor.diff_dst_desc(), *_engine);
         _backwardPrimitives.push_back(dnnl::eltwise_backward(_backwardPrimitiveDescriptor));

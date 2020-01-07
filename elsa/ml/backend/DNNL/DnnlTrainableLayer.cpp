@@ -1,5 +1,4 @@
 #include "DnnlTrainableLayer.h"
-#include <iostream>
 
 namespace elsa
 {

@@ -1,6 +1,6 @@
 
 #include "RandomInitializer.h"
-#include <iostream>
+
 namespace elsa
 {
     template <typename data_t>
