@@ -31,6 +31,7 @@ namespace elsa
             auto newLogger =
                 std::make_shared<spdlog::logger>(name, begin(sinkVector), end(sinkVector));
             newLogger->set_level(convertLevelToSpdlog(getInstance()._level));
+//            newLogger->disable_backtrace();
             getInstance()._loggers[name] = newLogger;
         }
 
@@ -46,6 +47,22 @@ namespace elsa
                 logger->sinks().push_back(
                     std::make_shared<spdlog::sinks::basic_file_sink_st>(*getInstance()._fileName));
         }
+    }
+    
+    void Logger::addCustomSink(spdlog::sink_ptr sink, std::string logger_name)
+    {
+        // Add the new sink to the target logger 
+       getInstance().get(logger_name)->sinks().push_back(std::move(sink));
+    }
+    
+    void Logger::clearMap()
+    {
+        getInstance()._loggers.clear();
+    }
+    
+    const bool Logger::isEmpty()
+    {
+        return getInstance()._loggers.empty();
     }
 
     Logger& Logger::getInstance()

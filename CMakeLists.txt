@@ -59,7 +59,7 @@ if(ELSA_MASTER_PROJECT)
     message(STATUS "Using eigen3 submodule at ${EIGEN3_INCLUDE_DIR}")
 
     # setup spdlog Library
-    set(Spdlog_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/spdlog")
+    # set(Spdlog_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/spdlog")
     find_package(Spdlog REQUIRED)
     message(STATUS "Using spdlog submodule at ${Spdlog_INCLUDE_DIR}")
 else()
