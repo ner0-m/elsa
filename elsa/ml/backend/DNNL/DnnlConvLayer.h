@@ -21,6 +21,7 @@ namespace elsa
 
     private:
         void compileForwardStream() override;
+        void compileBackwardStream() override;
 
         using BaseType::_weightsDimensions;
         using BaseType::_weightsMemoryDescriptor;
@@ -40,6 +41,18 @@ namespace elsa
         using BaseType::_typeTag;
         using BaseType::_hasReorderedMemory;
 
+        using BaseType::_backwardPrimitives;
+        using BaseType::_backwardArguments;
+        using BaseType::_gradientSrcMemoryDescriptor;
+        using BaseType::_gradientDstMemoryDescriptor;
+        using BaseType::_gradientWeightsMemory;
+        using BaseType::_reorderedGradientWeightsMemory;
+        using BaseType::_gradientWeightsMemoryDescriptor;
+        using BaseType::_reorderedGradientDstMemory;
+        using BaseType::_gradientBiasMemory;
+        using BaseType::_gradientBiasMemoryDescriptor;
+        using BaseType::_gradientSrcMemory;
+        using BaseType::_gradientDstMemory;
         Initializer _initializer = Initializer::Uniform;
 
         dnnl::memory::dims _paddingDimensions;
@@ -47,5 +60,7 @@ namespace elsa
         dnnl::memory::dims _strideDimensions;
 
         dnnl::convolution_forward::primitive_desc _forwardPrimitiveDescriptor;
+        dnnl::convolution_backward_weights::primitive_desc _backwardWeightsPrimitiveDescriptor;
+        dnnl::convolution_backward_data::primitive_desc _backwardPrimitiveDescriptor;
     };
 } // namespace elsa

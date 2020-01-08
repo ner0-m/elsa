@@ -115,6 +115,7 @@ namespace elsa
     {
         _srcMemory = std::make_shared<dnnl::memory>(
             dnnl::memory::desc({{_srcMemoryDimensions}, _typeTag, _srcMemoryFormatTag}), *_engine);
+
         writeToDnnlMemory(input, *_srcMemory);
     }
 
@@ -159,6 +160,11 @@ namespace elsa
             throw std::logic_error("Failed to compile layer: Dnnl engine is null");
         if (!_srcMemory)
             throw std::logic_error("Failed to compile layer: Dnnl source memory is null");
+
+        // If a primitve cannot reorder memory it has to rely on the memory description provided by
+        // its input. Note that this case always works but may result in worse performance
+        if (!_mayReorderMemory)
+            _srcMemoryDescriptor = _srcMemory->get_desc();
 
         switch (propagation) {
             case PropagationKind::Forward:

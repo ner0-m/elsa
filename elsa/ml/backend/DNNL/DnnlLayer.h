@@ -160,6 +160,10 @@ namespace elsa
         /// Flag to indicate whether the execution of the primitive has reordered memory.
         bool _hasReorderedMemory = false;
 
+        /// Flag to indicate whether the execution of a primitve may reoder memory for better
+        /// performance
+        bool _mayReorderMemory = false;
+
         /// The layer's Dnnl execution engine
         std::shared_ptr<dnnl::engine> _engine = nullptr;
 
