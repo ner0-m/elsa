@@ -68,5 +68,70 @@ namespace elsa
                                      {DNNL_ARG_DST, *_dstMemory}});
     }
 
+    template <typename data_t>
+    void DnnlConvLayer<data_t>::compileBackwardStream()
+    {
+        BaseType::compileBackwardStream();
+
+        // Back propagate weights
+
+        // Backward descriptor for weights backprop
+        auto weightsBackDesc = dnnl::convolution_backward_weights::desc(
+            dnnl::algorithm::convolution_auto, _gradientSrcMemoryDescriptor,
+            _gradientWeightsMemoryDescriptor, _gradientBiasMemoryDescriptor,
+            _gradientDstMemoryDescriptor, _strideDimensions, _paddingDimensions,
+            _paddingDimensions);
+
+        // Backward primitive descriptor for weights backprop
+        _backwardWeightsPrimitiveDescriptor = dnnl::convolution_backward_weights::primitive_desc(
+            weightsBackDesc, *_engine, _forwardPrimitiveDescriptor);
+
+        // Do we need reorder for gradient src memory?
+        _gradientSrcMemory = *_srcMemory;
+        if (_backwardWeightsPrimitiveDescriptor.src_desc() != _gradientSrcMemory.get_desc()) {
+            _gradientSrcMemory =
+                dnnl::memory(_backwardWeightsPrimitiveDescriptor.src_desc(), *_engine);
+            _backwardPrimitives.push_back(dnnl::reorder(*_srcMemory, _gradientSrcMemory));
+            _backwardArguments.push_back(
+                {{DNNL_ARG_FROM, *_srcMemory}, {DNNL_ARG_TO, _gradientSrcMemory}});
+        }
+
+        // Do we need reorder for gradient dst memory?
+        _reorderedGradientDstMemory = *_gradientDstMemory;
+
+        if (_reorderedGradientDstMemory.get_desc()
+            != _backwardWeightsPrimitiveDescriptor.diff_dst_desc()) {
+            _reorderedGradientDstMemory =
+                dnnl::memory(_backwardWeightsPrimitiveDescriptor.diff_dst_desc(), *_engine);
+            _backwardPrimitives.push_back(
+                dnnl::reorder(*_gradientDstMemory, _reorderedGradientDstMemory));
+            _backwardArguments.push_back(
+                {{DNNL_ARG_FROM, *_gradientDstMemory}, {DNNL_ARG_TO, _reorderedGradientDstMemory}});
+        }
+
+        _backwardPrimitives.push_back(
+            dnnl::convolution_backward_weights(_backwardWeightsPrimitiveDescriptor));
+        _backwardArguments.push_back({{DNNL_ARG_SRC, _gradientSrcMemory},
+                                      {DNNL_ARG_DIFF_DST, _reorderedGradientDstMemory},
+                                      {DNNL_ARG_DIFF_BIAS, _gradientBiasMemory}});
+
+        // Do we need reorder for gradient weights memory?
+        _reorderedGradientWeightsMemory = _gradientWeightsMemory;
+        if (_backwardWeightsPrimitiveDescriptor.diff_weights_desc()
+            != _gradientWeightsMemory.get_desc()) {
+            _reorderedGradientWeightsMemory =
+                dnnl::memory(_backwardWeightsPrimitiveDescriptor.diff_weights_desc(), *_engine);
+            _backwardArguments.back().insert(
+                {DNNL_ARG_DIFF_WEIGHTS, _reorderedGradientWeightsMemory});
+
+            _backwardPrimitives.push_back(
+                dnnl::reorder(_reorderedGradientWeightsMemory, _gradientWeightsMemory));
+            _backwardArguments.push_back({{DNNL_ARG_FROM, _reorderedGradientWeightsMemory},
+                                          {DNNL_ARG_TO, _gradientWeightsMemory}});
+        } else {
+            _backwardArguments.back().insert({DNNL_ARG_DIFF_WEIGHTS, _gradientWeightsMemory});
+        }
+    }
+
     template class DnnlConvLayer<float>;
 } // namespace elsa

@@ -21,6 +21,7 @@ if(ELSA_HAS_DNNL_BACKEND)
       ${ELSA_DNNL_BACKEND_DIR}/DnnlPoolingLayer.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlActivationLayer.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSoftmaxLayer.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlLRNLayer.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSequentialNetwork.h)
 
   set(ELSA_DNNL_BACKEND_SOURCES
@@ -31,6 +32,7 @@ if(ELSA_HAS_DNNL_BACKEND)
       ${ELSA_DNNL_BACKEND_DIR}/DnnlPoolingLayer.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlActivationLayer.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSoftmaxLayer.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlLRNLayer.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSequentialNetwork.cpp)
 
 endif()
@@ -45,6 +47,7 @@ set(MODULE_HEADERS
     PoolingLayer.h
     RandomInitializer.h
     SoftmaxLayer.h
+    LRNLayer.h
     SequentialNetwork.h
     ${ELSA_DNNL_BACKEND_HEADERS})
 
@@ -56,6 +59,7 @@ set(MODULE_SOURCES
     PoolingLayer.cpp
     RandomInitializer.cpp
     SoftmaxLayer.cpp
+    LRNLayer.cpp
     SequentialNetwork.cpp
     ${ELSA_DNNL_BACKEND_SOURCES})
 

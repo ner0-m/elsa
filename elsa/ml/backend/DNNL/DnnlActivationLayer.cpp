@@ -28,7 +28,7 @@ namespace elsa
         auto desc = dnnl::eltwise_backward::desc(
             /* Element-wise algorithm */ _algorithm,
             /* Gradient dst memory descriptor */ _gradientDstMemoryDescriptor,
-            /* Source memory descriptor */ _srcMemory->get_desc(),
+            /* Source memory descriptor */ _srcMemoryDescriptor,
             /* Alpha parameter */ _alpha,
             /* Beta parameter */ _beta);
 
@@ -59,7 +59,7 @@ namespace elsa
     {
         // Set forward primitive description
         auto desc = dnnl::eltwise_forward::desc(dnnl::prop_kind::forward_training, _algorithm,
-                                                _srcMemory->get_desc(), _alpha, _beta);
+                                                _srcMemoryDescriptor, _alpha, _beta);
 
         _forwardPrimitiveDescriptor = dnnl::eltwise_forward::primitive_desc(desc, *_engine);
 

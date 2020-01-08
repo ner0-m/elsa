@@ -18,6 +18,8 @@ TEMPLATE_TEST_CASE("BackendLayerTypes", "elsa_ml", float)
 
         // clang-format off
         REQUIRE(std::is_same_v<typename Relu         <TestType, Backend>::BackendLayerType, DnnlRelu<TestType>>);
+        REQUIRE(std::is_same_v<typename Abs          <TestType, Backend>::BackendLayerType, DnnlAbs<TestType>>);
+        REQUIRE(std::is_same_v<typename Swish        <TestType, Backend>::BackendLayerType, DnnlSwish<TestType>>);
         REQUIRE(std::is_same_v<typename ConvLayer    <TestType, Backend>::BackendLayerType, DnnlConvLayer<TestType>>);
         REQUIRE(std::is_same_v<typename DenseLayer   <TestType, Backend>::BackendLayerType, DnnlDenseLayer<TestType>>);
         REQUIRE(std::is_same_v<typename PoolingLayer <TestType, Backend>::BackendLayerType, DnnlPoolingLayer<TestType>>);

@@ -60,5 +60,11 @@ namespace elsa
                                      {DNNL_ARG_DST, *_dstMemory}});
     }
 
+    template <typename data_t>
+    void DnnlDenseLayer<data_t>::compileBackwardStream()
+    {
+      
+    }
+
     template class DnnlDenseLayer<float>;
 } // namespace elsa

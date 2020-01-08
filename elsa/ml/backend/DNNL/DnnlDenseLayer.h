@@ -23,6 +23,8 @@ namespace elsa
     private:
         void compileForwardStream() override;
 
+        void compileBackwardStream() override;
+
         /// \copydoc DnnlTrainableLayer::_weightsDimensions
         using BaseType::_weightsDimensions;
 

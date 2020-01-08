@@ -50,8 +50,12 @@ namespace elsa
          */
         void setBias(const DataContainer<data_t>& bias);
 
+        DataContainer<data_t> getGradientWeights() const;
+        DataContainer<data_t> getGradientBias() const;
+
     protected:
         void compileForwardStream() override;
+        void compileBackwardStream() override;
 
         /// \copydoc DnnlLayer::_srcMemoryDescriptor
         using BaseType::_srcMemoryDescriptor;
@@ -83,7 +87,16 @@ namespace elsa
         /// \copydoc DnnlLayer::_hasReorderedMemory
         using BaseType::_hasReorderedMemory;
 
+        using BaseType::_gradientSrcMemoryDescriptor;
+        using BaseType::_gradientDstMemoryDescriptor;
+        using BaseType::_reorderedGradientDstMemory;
+        using BaseType::_gradientDstMemory;
+        using BaseType::_backwardPrimitives;
+        using BaseType::_backwardArguments;
+        using BaseType::_gradientSrcMemory;
+
         std::unique_ptr<DataDescriptor> _weightsDescriptor;
+        std::unique_ptr<DataDescriptor> _biasDescriptor;
 
         /// The dimension of the convolutional layer's weights
         dnnl::memory::dims _weightsDimensions;
@@ -105,6 +118,13 @@ namespace elsa
 
         Initializer _initializer;
         typename RandomInitializer<data_t>::FanPairType _fanInOut;
+
+        dnnl::memory _gradientWeightsMemory;
+        dnnl::memory _reorderedGradientWeightsMemory;
+        dnnl::memory::desc _gradientWeightsMemoryDescriptor;
+
+        dnnl::memory _gradientBiasMemory;
+        dnnl::memory::desc _gradientBiasMemoryDescriptor;
     };
 
 } // namespace elsa

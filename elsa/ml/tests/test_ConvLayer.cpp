@@ -8,7 +8,7 @@
 
 using namespace elsa;
 
-TEST_CASE("ConvLayer semantics", "elsa_ml")
+TEST_CASE("ConvLayer forward", "elsa_ml")
 {
     SECTION("Test 1")
     {
@@ -207,5 +207,96 @@ TEST_CASE("ConvLayer semantics", "elsa_ml")
 
         for (int i = 0; i < 16; ++i)
             REQUIRE(output[i] == required[i]);
+    }
+}
+
+TEST_CASE("ConvLayer backward", "elsa_ml")
+{
+    SECTION("Test 1")
+    {
+        IndexVector_t inputVec(4);
+        inputVec << 1, 1, 6, 6;
+        DataDescriptor inputDesc(inputVec);
+
+        IndexVector_t weightsVec(4);
+        weightsVec << 1, 1, 3, 3;
+        DataDescriptor weightsDesc(weightsVec);
+
+        IndexVector_t stridesVec(2);
+        stridesVec << 1, 1;
+
+        IndexVector_t paddingVec(2);
+        paddingVec << 0, 0;
+
+        ConvLayer<float> conv(inputDesc, weightsDesc, stridesVec, paddingVec);
+
+        Eigen::VectorXf vec(1 * 1 * 6 * 6);
+
+        // clang-format off
+        vec <<  // First channel
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f,
+                10.f, 10.f, 10.f, 0.f, 0.f, 0.f;
+        // clang-format on
+        DataContainer<float> input(inputDesc, vec);
+
+        Eigen::VectorXf vec2(1 * 1 * 3 * 3);
+        // clang-format off
+        vec2 << 1.f, 0.f, -1.f,
+                1.f, 0.f, -1.f,
+                1.f, 0.f, -1.f;
+        // clang-format on
+
+        DataContainer<float> weights(weightsDesc, vec2);
+
+        Eigen::VectorXf vec3(1);
+        vec3 << 0;
+        IndexVector_t biasVec(1);
+        biasVec << 1;
+        DataDescriptor biasDesc(biasVec);
+        DataContainer<float> bias(biasDesc, vec3);
+
+        Eigen::VectorXf outputGrad(16);
+        // clang-format off
+        outputGrad << // First channel
+                    0, 30, 30, 0,
+                    0, 30, 30, 0,
+                    0, 30, 30, 0,
+                    0, 30, 30, 0;
+        // clang-format on
+
+        DataContainer<float> outputGradient(conv.getOutputDescriptor(), outputGrad);
+
+        auto backend = conv.getBackend();
+        backend->setInput(input);
+        backend->setOutputGradient(outputGradient);
+
+        backend->compile(PropagationKind::Full);
+        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setWeights(
+            weights);
+        std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setBias(
+            bias);
+
+        auto engine = backend->getEngine();
+        dnnl::stream s(*engine);
+        backend->forwardPropagate(s);
+        s.wait();
+        auto output = backend->getOutput();
+        backend->backwardPropagate(s);
+        auto gradientWeights =
+            std::static_pointer_cast<typename decltype(conv)::BackendLayerType>(backend)
+                ->getGradientWeights();
+
+        REQUIRE(gradientWeights.getDataDescriptor() == weightsDesc);
+
+        Eigen::VectorXf required(1 * 1 * 3 * 3);
+
+        required << 2400, 1200, 0, 2400, 1200, 0, 2400, 1200, 0;
+
+        for (index_t i = 0; i < 1 * 1 * 3 * 3; ++i)
+            REQUIRE(gradientWeights[i] == Approx(required[i]));
     }
 }
