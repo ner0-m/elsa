@@ -63,7 +63,6 @@ namespace elsa
     template <typename data_t>
     void DnnlDenseLayer<data_t>::compileBackwardStream()
     {
-      
     }
 
     template class DnnlDenseLayer<float>;
