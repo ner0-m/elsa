@@ -1,5 +1,24 @@
 #include "TraverseSiddonsCUDA.cuh"
 
+constexpr uint32_t MAX_THREADS_PER_BLOCK =
+    elsa::TraverseSiddonsCUDA<float, 3>::MAX_THREADS_PER_BLOCK;
+
+template <typename data_t, uint32_t size>
+struct EasyAccessSharedArray {
+    data_t* const __restrict__ _p;
+
+    __device__ EasyAccessSharedArray(data_t* p) : _p{p + threadIdx.x} {}
+
+    __device__ __forceinline__ const data_t& operator[](uint32_t index) const
+    {
+        return _p[index * MAX_THREADS_PER_BLOCK];
+    }
+
+    __device__ __forceinline__ data_t& operator[](uint32_t index)
+    {
+        return _p[index * MAX_THREADS_PER_BLOCK];
+    }
+};
 /**
  * \brief General square matrix-vector multiplication
  *
@@ -59,7 +78,7 @@ __device__ __forceinline__ void pointAt(const real_t* const __restrict__ ro,
 /// unaffected)
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point,
-                                               const uint32_t* const __restrict__ boxMax)
+                                               const EasyAccessSharedArray<uint32_t, dim>& boxMax)
 {
 #pragma unroll
     for (int i = 0; i < dim; i++) {
@@ -71,10 +90,11 @@ __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point,
 /// determines the voxel that contains a point, if the point is on a border the voxel in the ray
 /// direction is favored
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ bool
-    closestVoxel(const real_t* const __restrict__ point, const uint32_t* const __restrict__ boxMax,
-                 uint32_t* const __restrict__ voxelCoord, const real_t* const __restrict__ rd,
-                 const int* const __restrict__ stepDir)
+__device__ __forceinline__ bool closestVoxel(const real_t* const __restrict__ point,
+                                             const EasyAccessSharedArray<uint32_t, dim>& boxMax,
+                                             EasyAccessSharedArray<uint32_t, dim>& voxelCoord,
+                                             const real_t* const __restrict__ rd,
+                                             const EasyAccessSharedArray<int, dim>& stepDir)
 {
 #pragma unroll
     for (int i = 0; i < dim; i++) {
@@ -90,7 +110,7 @@ __device__ __forceinline__ bool
 /// initializes stepDir with the sign of rd
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void initStepDirection(const real_t* const __restrict__ rd,
-                                                  int* const __restrict__ stepDir)
+                                                  EasyAccessSharedArray<int, dim>& stepDir)
 {
 #pragma unroll
     for (int i = 0; i < dim; i++)
@@ -100,8 +120,8 @@ __device__ __forceinline__ void initStepDirection(const real_t* const __restrict
 /// initialize step sizes considering the ray direcion
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void initDelta(const real_t* const __restrict__ rd,
-                                          const int* const __restrict__ stepDir,
-                                          real_t* const __restrict__ delta)
+                                          const EasyAccessSharedArray<int, dim>& stepDir,
+                                          EasyAccessSharedArray<real_t, dim>& delta)
 {
 #pragma unroll
     for (int i = 0; i < dim; i++) {
@@ -112,9 +132,10 @@ __device__ __forceinline__ void initDelta(const real_t* const __restrict__ rd,
 
 /// initialize maximum step parameters considering the ray direction
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void
-    initMax(const real_t* const __restrict__ rd, const uint32_t* const __restrict__ currentVoxel,
-            const real_t* const __restrict__ point, real_t* const __restrict__ tmax)
+__device__ __forceinline__ void initMax(const real_t* const __restrict__ rd,
+                                        const EasyAccessSharedArray<uint32_t, dim>& currentVoxel,
+                                        const real_t* const __restrict__ point,
+                                        EasyAccessSharedArray<real_t, dim>& tmax)
 {
     real_t nextBoundary;
 #pragma unroll
@@ -130,7 +151,7 @@ __device__ __forceinline__ void
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool
     box_intersect(const real_t* const __restrict__ ro, const real_t* const __restrict__ rd,
-                  const uint32_t* const __restrict__ boxMax, real_t& tmin)
+                  const EasyAccessSharedArray<uint32_t, dim>& boxMax, real_t& tmin)
 {
     real_t invDir = 1.0f / rd[0];
 
@@ -166,7 +187,7 @@ __device__ __forceinline__ bool
 
 /// returns the index of the smallest element in an array
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ uint32_t minIndex(const real_t* const __restrict__ tmax)
+__device__ __forceinline__ uint32_t minIndex(const EasyAccessSharedArray<real_t, dim>& tmax)
 {
     uint32_t index = 0;
     real_t min = tmax[0];
@@ -183,9 +204,9 @@ __device__ __forceinline__ uint32_t minIndex(const real_t* const __restrict__ tm
 
 /// checks whether the voxel lies inside the AABB
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ bool isVoxelInVolume(const uint32_t* const __restrict__ currentVoxel,
-                                                const uint32_t* const __restrict__ boxMax,
-                                                const uint32_t& index)
+__device__ __forceinline__ bool
+    isVoxelInVolume(const EasyAccessSharedArray<uint32_t, dim>& currentVoxel,
+                    const EasyAccessSharedArray<uint32_t, dim>& boxMax, const uint32_t& index)
 {
     return currentVoxel[index] < boxMax[index];
 }
@@ -193,11 +214,11 @@ __device__ __forceinline__ bool isVoxelInVolume(const uint32_t* const __restrict
 /// updates the traversal algorithm, after update the current position will be the exit point from
 /// current voxel
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ real_t updateTraverse(uint32_t* const __restrict__ currentVoxel,
-                                                 const int* const __restrict__ stepDir,
-                                                 const real_t* const __restrict__ tdelta,
-                                                 real_t* const __restrict__ tmax, real_t& texit,
-                                                 uint32_t& index)
+__device__ __forceinline__ real_t updateTraverse(EasyAccessSharedArray<uint32_t, dim>& currentVoxel,
+                                                 const EasyAccessSharedArray<int, dim>& stepDir,
+                                                 const EasyAccessSharedArray<real_t, dim>& tdelta,
+                                                 EasyAccessSharedArray<real_t, dim>& tmax,
+                                                 real_t& texit, uint32_t& index)
 {
     real_t tentry = texit;
 
@@ -237,36 +258,39 @@ template <typename data_t, bool adjoint, uint32_t dim>
 __global__ void __launch_bounds__(elsa::TraverseSiddonsCUDA<data_t, dim>::MAX_THREADS_PER_BLOCK)
     traverseVolume(int8_t* const __restrict__ volume, const uint64_t volumePitch,
                    int8_t* const __restrict__ sinogram, const uint64_t sinogramPitch,
-                   const int8_t* const __restrict__ rayOrigins, const uint32_t originPitch,
-                   const int8_t* const __restrict__ projInv, const uint32_t projPitch,
-                   const typename elsa::TraverseSiddonsCUDA<data_t, dim>::BoundingBox boxMax)
+                   const uint32_t sinogramOffsetX, const int8_t* const __restrict__ rayOrigins,
+                   const uint32_t originPitch, const int8_t* const __restrict__ projInv,
+                   const uint32_t projPitch,
+                   const typename elsa::TraverseSiddonsCUDA<data_t, dim>::BoundingBox boundingBox)
 {
-    using namespace elsa;
-    const int8_t* const projInvPtr =
-        dim == 3 ? projInv + (blockIdx.z * blockDim.x + threadIdx.x) * projPitch * 3
-                 : projInv + (blockIdx.y * blockDim.x + threadIdx.x) * projPitch * 2;
+    using real_t = elsa::real_t;
 
-    const real_t* const rayOrigin =
-        dim == 3 ? (real_t*) (rayOrigins + (blockIdx.z * blockDim.x + threadIdx.x) * originPitch)
-                 : (real_t*) (rayOrigins + (blockIdx.y * blockDim.x + threadIdx.x) * originPitch);
+    const int8_t* const projInvPtr = projInv + blockIdx.x * projPitch * dim;
+
+    const real_t* const rayOrigin = (real_t*) (rayOrigins + blockIdx.x * originPitch);
+
+    const uint32_t xCoord = sinogramOffsetX + blockDim.x * blockIdx.z + threadIdx.x;
+
+    data_t* sinogramPtr =
+        ((data_t*) (sinogram + (blockIdx.x * gridDim.y + blockIdx.y) * sinogramPitch) + xCoord);
 
     // homogenous pixel coordinates
     real_t pixelCoord[dim];
-    pixelCoord[0] = blockIdx.x + 0.5f;
+    pixelCoord[0] = xCoord + 0.5f;
     pixelCoord[dim - 1] = 1.0f;
     if (dim == 3)
-        pixelCoord[dim - 2] = blockIdx.y + 0.5f;
+        pixelCoord[1] = blockIdx.y + 0.5f;
 
-    data_t* sinogramPtr =
-        dim == 3 ? (data_t*) (sinogram
-                              + ((blockIdx.z * blockDim.x + threadIdx.x) * gridDim.y + blockIdx.y)
-                                    * sinogramPitch)
-                       + blockIdx.x
-                 : (data_t*) (sinogram + (blockIdx.y * blockDim.x + threadIdx.x) * sinogramPitch)
-                       + blockIdx.x;
+    __shared__ uint32_t currentVoxelsShared[MAX_THREADS_PER_BLOCK * dim];
+    __shared__ int stepDirsShared[MAX_THREADS_PER_BLOCK * dim];
+    __shared__ real_t tdeltasShared[MAX_THREADS_PER_BLOCK * dim];
+    __shared__ real_t tmaxsShared[MAX_THREADS_PER_BLOCK * dim];
+    __shared__ uint32_t boxMaxsShared[MAX_THREADS_PER_BLOCK * dim];
 
-    if (!adjoint)
-        *sinogramPtr = 0.0f;
+    EasyAccessSharedArray<uint32_t, dim> boxMax{boxMaxsShared};
+#pragma unroll
+    for (uint32_t i = 0; i < dim; i++)
+        boxMax[i] = boundingBox[i];
 
     // compute ray direction
     real_t rd[dim];
@@ -275,21 +299,22 @@ __global__ void __launch_bounds__(elsa::TraverseSiddonsCUDA<data_t, dim>::MAX_TH
 
     // find volume intersections
     real_t tmin;
-    if (!box_intersect<real_t, dim>(rayOrigin, rd, boxMax.max, tmin))
+    if (!box_intersect<real_t, dim>(rayOrigin, rd, boxMax, tmin))
         return;
 
     real_t entryPoint[dim];
     pointAt<real_t, dim>(rayOrigin, rd, tmin, entryPoint);
-    projectOntoBox<real_t, dim>(entryPoint, boxMax.max);
+    projectOntoBox<real_t, dim>(entryPoint, boxMax);
 
-    int stepDir[dim];
+    EasyAccessSharedArray<int, dim> stepDir{stepDirsShared};
     initStepDirection<real_t, dim>(rd, stepDir);
 
-    uint32_t currentVoxel[dim];
-    if (!closestVoxel<real_t, dim>(entryPoint, boxMax.max, currentVoxel, rd, stepDir))
+    EasyAccessSharedArray<uint32_t, dim> currentVoxel{currentVoxelsShared};
+    if (!closestVoxel<real_t, dim>(entryPoint, boxMax, currentVoxel, rd, stepDir))
         return;
 
-    real_t tdelta[dim], tmax[dim];
+    EasyAccessSharedArray<real_t, dim> tdelta{tdeltasShared};
+    EasyAccessSharedArray<real_t, dim> tmax{tmaxsShared};
     initDelta<real_t, dim>(rd, stepDir, tdelta);
     initMax<real_t, dim>(rd, currentVoxel, entryPoint, tmax);
 
@@ -298,10 +323,10 @@ __global__ void __launch_bounds__(elsa::TraverseSiddonsCUDA<data_t, dim>::MAX_TH
     real_t pixelValue = 0.0f;
 
     data_t* volumeXPtr =
-        dim == 3
-            ? (data_t*) (volume + (boxMax[1] * currentVoxel[2] + currentVoxel[1]) * volumePitch)
-                  + currentVoxel[0]
-            : (data_t*) (volume + currentVoxel[1] * volumePitch) + currentVoxel[0];
+        dim == 3 ? (data_t*) (volume
+                              + (boundingBox[1] * currentVoxel[2] + currentVoxel[1]) * volumePitch)
+                       + currentVoxel[0]
+                 : (data_t*) (volume + currentVoxel[1] * volumePitch) + currentVoxel[0];
     do {
         real_t d = updateTraverse<real_t, dim>(currentVoxel, stepDir, tdelta, tmax, texit, index);
         if (adjoint)
@@ -311,42 +336,88 @@ __global__ void __launch_bounds__(elsa::TraverseSiddonsCUDA<data_t, dim>::MAX_TH
 
         volumeXPtr =
             dim == 3
-                ? (data_t*) (volume + (boxMax[1] * currentVoxel[2] + currentVoxel[1]) * volumePitch)
+                ? (data_t*) (volume
+                             + (boundingBox[1] * currentVoxel[2] + currentVoxel[1]) * volumePitch)
                       + currentVoxel[0]
                 : (data_t*) (volume + currentVoxel[1] * volumePitch) + currentVoxel[0];
-    } while (isVoxelInVolume<real_t, dim>(currentVoxel, boxMax.max, index));
+    } while (isVoxelInVolume<real_t, dim>(currentVoxel, boxMax, index));
 
-    if (!adjoint) {
+    if (!adjoint)
         *sinogramPtr = pixelValue;
-    }
 }
 
 namespace elsa
 {
     template <typename data_t, uint32_t dim>
     void TraverseSiddonsCUDA<data_t, dim>::traverseForward(
-        const dim3 blocks, const int threads, int8_t* const __restrict__ volume,
+        const dim3 sinogramDims, const int threads, int8_t* const __restrict__ volume,
         const uint64_t volumePitch, int8_t* const __restrict__ sinogram,
         const uint64_t sinogramPitch, const int8_t* const __restrict__ rayOrigins,
         const uint32_t originPitch, const int8_t* const __restrict__ projInv,
-        const uint32_t projPitch, const BoundingBox& boxMax, cudaStream_t stream)
+        const uint32_t projPitch, const BoundingBox& boundingBox)
     {
-        traverseVolume<data_t, false, dim>
-            <<<blocks, threads, 0, stream>>>(volume, volumePitch, sinogram, sinogramPitch,
-                                             rayOrigins, originPitch, projInv, projPitch, boxMax);
+        uint32_t numImgBlocks = sinogramDims.z / threads;
+        uint32_t remaining = sinogramDims.z % threads;
+        uint32_t offset = numImgBlocks * threads;
+
+        if (numImgBlocks > 0) {
+            const dim3 grid(sinogramDims.x, sinogramDims.y, numImgBlocks);
+            traverseVolume<data_t, false, dim>
+                <<<grid, threads>>>(volume, volumePitch, sinogram, sinogramPitch, 0, rayOrigins,
+                                    originPitch, projInv, projPitch, boundingBox);
+        }
+
+        if (remaining > 0) {
+            cudaStream_t remStream;
+            if (cudaStreamCreate(&remStream) != cudaSuccess)
+                throw std::logic_error(
+                    "TraverseSiddonsCUDA: Couldn't create stream for remaining images");
+
+            const dim3 grid(sinogramDims.x, sinogramDims.y, 1);
+            traverseVolume<data_t, false, dim><<<grid, remaining, 0, remStream>>>(
+                volume, volumePitch, sinogram, sinogramPitch, offset, rayOrigins, originPitch,
+                projInv, projPitch, boundingBox);
+
+            if (cudaStreamDestroy(remStream) != cudaSuccess)
+                throw std::logic_error("TraverseSiddonsCUDA: Couldn't destroy GPU stream; This may "
+                                       "cause problems later.");
+        }
     }
 
     template <typename data_t, uint32_t dim>
     void TraverseSiddonsCUDA<data_t, dim>::traverseAdjoint(
-        const dim3 blocks, const int threads, int8_t* const __restrict__ volume,
+        const dim3 sinogramDims, const int threads, int8_t* const __restrict__ volume,
         const uint64_t volumePitch, int8_t* const __restrict__ sinogram,
         const uint64_t sinogramPitch, const int8_t* const __restrict__ rayOrigins,
         const uint32_t originPitch, const int8_t* const __restrict__ projInv,
-        const uint32_t projPitch, const BoundingBox& boxMax, cudaStream_t stream)
+        const uint32_t projPitch, const BoundingBox& boundingBox)
     {
-        traverseVolume<data_t, true, dim>
-            <<<blocks, threads, 0, stream>>>(volume, volumePitch, sinogram, sinogramPitch,
-                                             rayOrigins, originPitch, projInv, projPitch, boxMax);
+        uint32_t numImgBlocks = sinogramDims.z / threads;
+        uint32_t remaining = sinogramDims.z % threads;
+        uint32_t offset = numImgBlocks * threads;
+
+        if (numImgBlocks > 0) {
+            const dim3 grid(sinogramDims.x, sinogramDims.y, numImgBlocks);
+            traverseVolume<data_t, true, dim>
+                <<<grid, threads>>>(volume, volumePitch, sinogram, sinogramPitch, 0, rayOrigins,
+                                    originPitch, projInv, projPitch, boundingBox);
+        }
+
+        if (remaining > 0) {
+            cudaStream_t remStream;
+            if (cudaStreamCreate(&remStream) != cudaSuccess)
+                throw std::logic_error(
+                    "TraverseSiddonsCUDA: Couldn't create stream for remaining images");
+
+            const dim3 grid(sinogramDims.x, sinogramDims.y, 1);
+            traverseVolume<data_t, true, dim><<<grid, remaining, 0, remStream>>>(
+                volume, volumePitch, sinogram, sinogramPitch, offset, rayOrigins, originPitch,
+                projInv, projPitch, boundingBox);
+
+            if (cudaStreamDestroy(remStream) != cudaSuccess)
+                throw std::logic_error("TraverseSiddonsCUDA: Couldn't destroy GPU stream; This may "
+                                       "cause problems later.");
+        }
     }
 
     // ------------------------------------------

@@ -52,7 +52,7 @@ namespace elsa
                           const std::vector<Geometry>& geometryList);
 
         /// destructor
-        ~SiddonsMethodCUDA();
+        ~SiddonsMethodCUDA() override;
 
     protected:
         /// default copy constructor, hidden from non-derived classes to prevent potential slicing
@@ -79,7 +79,8 @@ namespace elsa
         std::vector<Geometry> _geometryList;
 
         /// threads per block used in the kernel execution configuration
-        const int _threadsPerBlock = TraverseSiddonsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
+        static const unsigned int THREADS_PER_BLOCK =
+            TraverseSiddonsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
 
         /// inverse of of projection matrices; stored column-wise on GPU
         cudaPitchedPtr _projInvMatrices;

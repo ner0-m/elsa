@@ -30,67 +30,67 @@ namespace elsa
         if (sizes.size() == 2) {
             EllipseGenerator<data_t>::drawFilledEllipse2d(dc, 1.0,
                                                           {scaleShift(dd, 0), scaleShift(dd, 0)},
-                                                          {scale(dd, 0.69), scale(dd, 0.92)}, 0);
+                                                          {scale(dd, 0.69f), scale(dd, 0.92f)}, 0);
             EllipseGenerator<data_t>::drawFilledEllipse2d(
-                dc, -0.8, {scaleShift(dd, 0), scaleShift(dd, -0.0184)},
-                {scale(dd, 0.6624), scale(dd, 0.8740)}, 0);
-            EllipseGenerator<data_t>::drawFilledEllipse2d(dc, -0.2,
-                                                          {scaleShift(dd, 0.22), scaleShift(dd, 0)},
-                                                          {scale(dd, 0.11), scale(dd, 0.31)}, -18);
+                dc, -0.8f, {scaleShift(dd, 0), scaleShift(dd, -0.0184f)},
+                {scale(dd, 0.6624f), scale(dd, 0.8740f)}, 0);
             EllipseGenerator<data_t>::drawFilledEllipse2d(
-                dc, -0.2, {scaleShift(dd, -0.22), scaleShift(dd, 0)},
-                {scale(dd, 0.16), scale(dd, 0.41)}, 18);
-            EllipseGenerator<data_t>::drawFilledEllipse2d(dc, 0.1,
-                                                          {scaleShift(dd, 0), scaleShift(dd, 0.35)},
-                                                          {scale(dd, 0.21), scale(dd, 0.25)}, 0);
-            EllipseGenerator<data_t>::drawFilledEllipse2d(dc, 0.1,
-                                                          {scaleShift(dd, 0), scaleShift(dd, 0.1)},
-                                                          {scale(dd, 0.046), scale(dd, 0.046)}, 0);
-            EllipseGenerator<data_t>::drawFilledEllipse2d(dc, 0.1,
-                                                          {scaleShift(dd, 0), scaleShift(dd, -0.1)},
-                                                          {scale(dd, 0.046), scale(dd, 0.046)}, 0);
+                dc, -0.2f, {scaleShift(dd, 0.22f), scaleShift(dd, 0)},
+                {scale(dd, 0.11f), scale(dd, 0.31f)}, -18);
             EllipseGenerator<data_t>::drawFilledEllipse2d(
-                dc, 0.1, {scaleShift(dd, -0.08), scaleShift(dd, -0.605)},
-                {scale(dd, 0.046), scale(dd, 0.023)}, 0);
+                dc, -0.2f, {scaleShift(dd, -0.22f), scaleShift(dd, 0)},
+                {scale(dd, 0.16f), scale(dd, 0.41f)}, 18);
             EllipseGenerator<data_t>::drawFilledEllipse2d(
-                dc, 0.1, {scaleShift(dd, 0), scaleShift(dd, -0.606)},
-                {scale(dd, 0.023), scale(dd, 0.023)}, 0);
+                dc, 0.1f, {scaleShift(dd, 0), scaleShift(dd, 0.35f)},
+                {scale(dd, 0.21f), scale(dd, 0.25)}, 0);
             EllipseGenerator<data_t>::drawFilledEllipse2d(
-                dc, 0.1, {scaleShift(dd, 0.06), scaleShift(dd, -0.605)},
-                {scale(dd, 0.023), scale(dd, 0.046)}, 0);
+                dc, 0.1f, {scaleShift(dd, 0), scaleShift(dd, 0.1f)},
+                {scale(dd, 0.046f), scale(dd, 0.046f)}, 0);
+            EllipseGenerator<data_t>::drawFilledEllipse2d(
+                dc, 0.1f, {scaleShift(dd, 0), scaleShift(dd, -0.1f)},
+                {scale(dd, 0.046f), scale(dd, 0.046f)}, 0);
+            EllipseGenerator<data_t>::drawFilledEllipse2d(
+                dc, 0.1f, {scaleShift(dd, -0.08f), scaleShift(dd, -0.605f)},
+                {scale(dd, 0.046f), scale(dd, 0.023f)}, 0);
+            EllipseGenerator<data_t>::drawFilledEllipse2d(
+                dc, 0.1f, {scaleShift(dd, 0), scaleShift(dd, -0.606f)},
+                {scale(dd, 0.023f), scale(dd, 0.023f)}, 0);
+            EllipseGenerator<data_t>::drawFilledEllipse2d(
+                dc, 0.1f, {scaleShift(dd, 0.06f), scaleShift(dd, -0.605f)},
+                {scale(dd, 0.023f), scale(dd, 0.046f)}, 0);
         }
 
         if (sizes.size() == 3) {
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
                 dc, 1.0, {scaleShift(dd, 0), scaleShift(dd, 0), scaleShift(dd, 0)},
-                {scale(dd, 0.69), scale(dd, 0.92), scale(dd, 0.81)}, 0, 0, 0);
+                {scale(dd, 0.69f), scale(dd, 0.92f), scale(dd, 0.81f)}, 0, 0, 0);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, -0.8, {scaleShift(dd, 0), scaleShift(dd, -0.0184), scaleShift(dd, 0)},
-                {scale(dd, 0.6624), scale(dd, 0.874), scale(dd, 0.78)}, 0, 0, 0);
+                dc, -0.8f, {scaleShift(dd, 0), scaleShift(dd, -0.0184f), scaleShift(dd, 0)},
+                {scale(dd, 0.6624f), scale(dd, 0.874f), scale(dd, 0.78f)}, 0, 0, 0);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, -0.2, {scaleShift(dd, 0.22), scaleShift(dd, 0), scaleShift(dd, 0)},
-                {scale(dd, 0.11), scale(dd, 0.31), scale(dd, 0.22)}, -18, 0, 10);
+                dc, -0.2f, {scaleShift(dd, 0.22f), scaleShift(dd, 0), scaleShift(dd, 0)},
+                {scale(dd, 0.11f), scale(dd, 0.31f), scale(dd, 0.22f)}, -18, 0, 10);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, -0.2, {scaleShift(dd, -0.22), scaleShift(dd, 0), scaleShift(dd, 0)},
-                {scale(dd, 0.16), scale(dd, 0.41), scale(dd, 0.28)}, 18, 0, 10);
+                dc, -0.2f, {scaleShift(dd, -0.22f), scaleShift(dd, 0), scaleShift(dd, 0)},
+                {scale(dd, 0.16f), scale(dd, 0.41f), scale(dd, 0.28f)}, 18, 0, 10);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, 0.1, {scaleShift(dd, 0), scaleShift(dd, 0.35), scaleShift(dd, -0.15)},
-                {scale(dd, 0.21), scale(dd, 0.25), scale(dd, 0.41)}, 0, 0, 0);
+                dc, 0.1f, {scaleShift(dd, 0), scaleShift(dd, 0.35f), scaleShift(dd, -0.15f)},
+                {scale(dd, 0.21f), scale(dd, 0.25f), scale(dd, 0.41f)}, 0, 0, 0);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, 0.1, {scaleShift(dd, 0), scaleShift(dd, 0.1), scaleShift(dd, 0.25)},
-                {scale(dd, 0.046), scale(dd, 0.046), scale(dd, 0.05)}, 0, 0, 0);
+                dc, 0.1f, {scaleShift(dd, 0), scaleShift(dd, 0.1f), scaleShift(dd, 0.25f)},
+                {scale(dd, 0.046f), scale(dd, 0.046f), scale(dd, 0.05f)}, 0, 0, 0);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, 0.1, {scaleShift(dd, 0), scaleShift(dd, -0.1), scaleShift(dd, 0.25)},
-                {scale(dd, 0.046), scale(dd, 0.046), scale(dd, 0.05)}, 0, 0, 0);
+                dc, 0.1f, {scaleShift(dd, 0), scaleShift(dd, -0.1f), scaleShift(dd, 0.25f)},
+                {scale(dd, 0.046f), scale(dd, 0.046f), scale(dd, 0.05f)}, 0, 0, 0);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, 0.1, {scaleShift(dd, -0.08), scaleShift(dd, -0.605), scaleShift(dd, 0)},
-                {scale(dd, 0.046), scale(dd, 0.023), scale(dd, 0.05)}, 0, 0, 0);
+                dc, 0.1f, {scaleShift(dd, -0.08f), scaleShift(dd, -0.605f), scaleShift(dd, 0)},
+                {scale(dd, 0.046f), scale(dd, 0.023f), scale(dd, 0.05f)}, 0, 0, 0);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, 0.1, {scaleShift(dd, 0), scaleShift(dd, -0.606), scaleShift(dd, 0)},
-                {scale(dd, 0.023), scale(dd, 0.023), scale(dd, 0.02)}, 0, 0, 0);
+                dc, 0.1f, {scaleShift(dd, 0), scaleShift(dd, -0.606f), scaleShift(dd, 0)},
+                {scale(dd, 0.023f), scale(dd, 0.023f), scale(dd, 0.02f)}, 0, 0, 0);
             EllipseGenerator<data_t>::drawFilledEllipsoid3d(
-                dc, 0.1, {scaleShift(dd, 0.06), scaleShift(dd, -0.605), scaleShift(dd, 0)},
-                {scale(dd, 0.023), scale(dd, 0.046), scale(dd, 0.02)}, 0, 0, 0);
+                dc, 0.1f, {scaleShift(dd, 0.06f), scaleShift(dd, -0.605f), scaleShift(dd, 0)},
+                {scale(dd, 0.023f), scale(dd, 0.046f), scale(dd, 0.02f)}, 0, 0, 0);
         }
 
         return dc;
@@ -99,13 +99,16 @@ namespace elsa
     template <typename data_t>
     index_t PhantomGenerator<data_t>::scale(const DataDescriptor& dd, data_t value)
     {
-        return std::lround(value * (dd.getNumberOfCoefficientsPerDimension()[0] - 1) / 2.0f);
+        return std::lround(
+            value * static_cast<data_t>(dd.getNumberOfCoefficientsPerDimension()[0] - 1) / 2.0f);
     }
 
     template <typename data_t>
     index_t PhantomGenerator<data_t>::scaleShift(const DataDescriptor& dd, data_t value)
     {
-        return std::lround(value * (dd.getNumberOfCoefficientsPerDimension()[0] - 1) / 2.0f)
+        return std::lround(value
+                           * static_cast<data_t>(dd.getNumberOfCoefficientsPerDimension()[0] - 1)
+                           / 2.0f)
                + (dd.getNumberOfCoefficientsPerDimension()[0] / 2);
     }
 

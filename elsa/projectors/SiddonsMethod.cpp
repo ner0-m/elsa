@@ -3,6 +3,7 @@
 #include "TraverseAABB.h"
 
 #include <stdexcept>
+#include <type_traits>
 
 namespace elsa
 {
@@ -119,7 +120,8 @@ namespace elsa
         auto detectorCoord = _rangeDescriptor->getCoordinateFromIndex(detectorIndex);
 
         // center of detector pixel is 0.5 units away from the corresponding detector coordinates
-        auto geometry = _geometryList.at(detectorCoord(dimension - 1));
+        auto geometry =
+            _geometryList.at(std::make_unsigned_t<index_t>(detectorCoord(dimension - 1)));
         auto [ro, rd] = geometry.computeRayTo(
             detectorCoord.block(0, 0, dimension - 1, 1).template cast<real_t>().array() + 0.5);
 

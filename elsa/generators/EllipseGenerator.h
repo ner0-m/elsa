@@ -32,8 +32,8 @@ namespace elsa
          * \param[in] sizes the radii (horizontal/vertical) of the ellipse
          * \param[in] angle rotation angle of the ellipse in degrees (with respect to y axis)
          */
-        static void drawFilledEllipse2d(DataContainer<data_t>& dc, data_t amplitude, Vec2 center,
-                                        Vec2 sizes, data_t angle);
+        static void drawFilledEllipse2d(DataContainer<data_t>& dc, data_t amplitude,
+                                        Vec2 const& center, Vec2 sizes, data_t angle);
 
         /**
          * \brief Draw a rotated, filled 3d ellipsoid
@@ -66,7 +66,7 @@ namespace elsa
          * For Drawing Ellipses".
          */
         static void drawShearedFilledEllipse2d(DataContainer<data_t>& dc, data_t amplitude,
-                                               Vec2 center, Vec2 sizes, Vec2 shear);
+                                               Vec2 const& center, Vec2 sizes, Vec2 const& shear);
 
         /**
          * \brief draw sheared 2d line pairs for ellipses

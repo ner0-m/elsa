@@ -1,14 +1,33 @@
 #include "TraverseJosephsCUDA.cuh"
 
-/**
- * \brief General square matrix-vector multiplication
- *
- * important: always use byte pointers for multidimensional arrays
- */
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void
-    gesqmv(const int8_t* const __restrict__ matrix, const real_t* const __restrict__ vector,
-           real_t* const __restrict__ result, const uint32_t matrixPitch)
+#include <type_traits>
+
+constexpr uint32_t MAX_THREADS_PER_BLOCK =
+    elsa::TraverseJosephsCUDA<float, 3>::MAX_THREADS_PER_BLOCK;
+
+template <typename data_t, uint32_t size>
+struct EasyAccessSharedArray {
+    data_t* const __restrict__ _p;
+
+    __device__ EasyAccessSharedArray(data_t* p) : _p{p + threadIdx.x} {}
+
+    __device__ __forceinline__ const data_t& operator[](uint32_t index) const
+    {
+        return _p[index * MAX_THREADS_PER_BLOCK];
+    }
+
+    __device__ __forceinline__ data_t& operator[](uint32_t index)
+    {
+        return _p[index * MAX_THREADS_PER_BLOCK];
+    }
+};
+
+template <typename real_t, uint32_t dim, typename Array,
+          typename = std::enable_if_t<std::is_same<Array, EasyAccessSharedArray<real_t, dim>>::value
+                                      || std::is_same<Array, real_t*>::value>>
+__device__ __forceinline__ void gesqmv(const int8_t* const __restrict__ matrix,
+                                       const real_t* const __restrict__ vector, Array result,
+                                       const uint32_t matrixPitch)
 {
     // initialize result vector
     real_t* columnPtr = (real_t*) matrix;
@@ -30,47 +49,53 @@ __device__ __forceinline__ void
 
 /// determine reverse norm of vector of length 2 or 3 using device inbuilt functions
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ real_t rnorm(real_t* const __restrict__ vector)
+__device__ __forceinline__ real_t rnorm(const EasyAccessSharedArray<real_t, dim>& vector)
 {
     if (dim == 3)
         return rnorm3d(vector[0], vector[1], vector[2]);
     else if (dim == 2)
         return rhypot(vector[0], vector[1]);
-    else
-        return -1.0;
+    else {
+        real_t acc = vector[0];
+#pragma unroll
+        for (uint32_t i = 1; i < dim; i++)
+            acc += vector[i];
+
+        return acc;
+    }
 }
 
 /// normalizes a vector of length 2 or 3 using device inbuilt norm
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void normalize(real_t* const __restrict__ vector)
+__device__ __forceinline__ void normalize(EasyAccessSharedArray<real_t, dim>& vector)
 {
     real_t rn = rnorm<real_t, dim>(vector);
 
 #pragma unroll
-    for (int i = 0; i < dim; i++) {
+    for (uint32_t i = 0; i < dim; i++) {
         vector[i] *= rn;
     }
 }
 
 /// calculates the point at a distance delta from the ray origin ro in direction rd
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void pointAt(const real_t* const __restrict__ ro,
-                                        const real_t* const __restrict__ rd, const real_t delta,
-                                        real_t* const __restrict__ result)
+__device__ __forceinline__ void
+    pointAt(const real_t* const __restrict__ ro, const EasyAccessSharedArray<real_t, dim>& rd,
+            const real_t delta, EasyAccessSharedArray<real_t, dim>& result)
 {
 #pragma unroll
-    for (int i = 0; i < dim; i++)
+    for (uint32_t i = 0; i < dim; i++)
         result[i] = delta * rd[i] + ro[i];
 }
 
 /// projects a point onto the bounding box by clipping (points inside the bounding box are
 /// unaffected)
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point,
-                                               const real_t* const __restrict__ boxMax)
+__device__ __forceinline__ void projectOntoBox(EasyAccessSharedArray<real_t, dim>& point,
+                                               const EasyAccessSharedArray<real_t, dim>& boxMax)
 {
 #pragma unroll
-    for (int i = 0; i < dim; i++) {
+    for (uint32_t i = 0; i < dim; i++) {
         point[i] = point[i] < 0.0f ? 0.0f : point[i];
         point[i] = point[i] > boxMax[i] ? boxMax[i] : point[i];
     }
@@ -79,12 +104,13 @@ __device__ __forceinline__ void projectOntoBox(real_t* const __restrict__ point,
 /// determines the voxel that contains a point, if the point is on a border the voxel in the ray
 /// direction is favored
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ bool
-    closestVoxel(const real_t* const __restrict__ point, const real_t* const __restrict__ boxMax,
-                 uint32_t* const __restrict__ voxelCoord, const real_t* const __restrict__ rd)
+__device__ __forceinline__ bool closestVoxel(const EasyAccessSharedArray<real_t, dim>& point,
+                                             const EasyAccessSharedArray<real_t, dim>& boxMax,
+                                             EasyAccessSharedArray<uint32_t, dim>& voxelCoord,
+                                             const EasyAccessSharedArray<real_t, dim>& rd)
 {
 #pragma unroll
-    for (int i = 0; i < dim; i++) {
+    for (uint32_t i = 0; i < dim; i++) {
         // point has been projected onto box => point[i]>=0, can use uint32_t
         uint32_t fl = trunc(point[i]);
         // for Joseph's also consider rays running along the "left" boundary
@@ -95,34 +121,22 @@ __device__ __forceinline__ bool
     return true;
 }
 
-/// initializes stepDir with the sign of rd
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void initStepDirection(const real_t* const __restrict__ rd,
-                                                  int* const __restrict__ stepDir)
-{
-#pragma unroll
-    for (int i = 0; i < dim; i++)
-        stepDir[i] = ((rd[i] > 0.0f) - (rd[i] < 0.0f));
-}
-
 /// initialize step sizes considering the ray direcion
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void initDelta(const real_t* const __restrict__ rd,
-                                          const int* const __restrict__ stepDir,
-                                          real_t* const __restrict__ delta)
+__device__ __forceinline__ void initDelta(const EasyAccessSharedArray<real_t, dim> rd,
+                                          EasyAccessSharedArray<real_t, dim> delta)
 {
 #pragma unroll
-    for (int i = 0; i < dim; i++) {
-        real_t d = stepDir[i] / rd[i];
+    for (uint32_t i = 0; i < dim; i++) {
+        real_t d = ((rd[i] > 0.0f) - (rd[i] < 0.0f)) / rd[i];
         delta[i] = rd[i] >= -__FLT_EPSILON__ && rd[i] <= __FLT_EPSILON__ ? __FLT_MAX__ : d;
     }
 }
 
-/// find intersection points of ray with AABB
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ bool
-    box_intersect(const real_t* const __restrict__ ro, const real_t* const __restrict__ rd,
-                  const real_t* const __restrict__ boxMax, real_t& tmin, real_t& tmax)
+    boxIntersect(const real_t* const __restrict__ ro, const EasyAccessSharedArray<real_t, dim>& rd,
+                 const EasyAccessSharedArray<real_t, dim>& boxMax, real_t& tmin, real_t& tmax)
 {
     real_t invDir = 1.0f / rd[0];
 
@@ -139,7 +153,7 @@ __device__ __forceinline__ bool
     tmax = invDir >= 0 ? t2 : t1;
 
 #pragma unroll
-    for (int i = 1; i < dim; ++i) {
+    for (uint32_t i = 1; i < dim; ++i) {
         invDir = 1.0f / rd[i];
 
         t1 = -ro[i] * invDir;
@@ -158,13 +172,13 @@ __device__ __forceinline__ bool
 
 /// returns the index of the smallest element in an array
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ uint32_t minIndex(const real_t* const __restrict__ array)
+__device__ __forceinline__ uint32_t minIndex(const EasyAccessSharedArray<real_t, dim>& array)
 {
     uint32_t index = 0;
     real_t min = array[0];
 
 #pragma unroll
-    for (int i = 1; i < dim; i++) {
+    for (uint32_t i = 1; i < dim; i++) {
         bool cond = array[i] < min;
         index = cond ? i : index;
         min = cond ? array[i] : min;
@@ -175,13 +189,13 @@ __device__ __forceinline__ uint32_t minIndex(const real_t* const __restrict__ ar
 
 /// return the index of the element with the maximum absolute value in array
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ uint32_t maxAbsIndex(const real_t* const __restrict__ array)
+__device__ __forceinline__ uint32_t maxAbsIndex(const EasyAccessSharedArray<real_t, dim>& array)
 {
     uint32_t index = 0;
     real_t max = fabs(array[0]);
 
 #pragma unroll
-    for (int i = 1; i < dim; i++) {
+    for (uint32_t i = 1; i < dim; i++) {
         bool cond = fabs(array[i]) > max;
         index = cond ? i : index;
         max = cond ? fabs(array[i]) : max;
@@ -190,25 +204,25 @@ __device__ __forceinline__ uint32_t maxAbsIndex(const real_t* const __restrict__
     return index;
 }
 
-/// currentPosition is advanced by dist in direction rd
 template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void updateTraverse(real_t* const __restrict__ currentPosition,
-                                               const real_t* const __restrict__ rd,
+__device__ __forceinline__ void updateTraverse(EasyAccessSharedArray<real_t, dim>& p,
+                                               const EasyAccessSharedArray<real_t, dim>& rd,
                                                const real_t dist)
 {
 #pragma unroll
     for (uint32_t i = 0; i < dim; i++)
-        currentPosition[i] += rd[i] * dist;
+        p[i] += rd[i] * dist;
 }
 
 /// convenience function for texture fetching
-template <typename data_t, uint dim>
-__device__ __forceinline__ data_t tex(cudaTextureObject_t texObj, const elsa::real_t* const p)
+template <typename real_t, uint32_t dim>
+__device__ __forceinline__ real_t tex(cudaTextureObject_t texObj,
+                                      const EasyAccessSharedArray<elsa::real_t, dim> p)
 {
     if (dim == 3)
-        return tex3D<data_t>(texObj, p[0], p[1], p[2]);
+        return tex3D<real_t>(texObj, p[0], p[1], p[2]);
     else
-        return tex2D<data_t>(texObj, p[0], p[1]);
+        return tex2D<real_t>(texObj, p[0], p[1]);
 }
 
 /// fetches double at position (x,y) from 2D texture
@@ -221,7 +235,7 @@ __device__ __forceinline__ double tex2Dd(cudaTextureObject_t texObj, const float
 /// template specialization for double texture fetches
 template <>
 __device__ __forceinline__ double tex<double, 2>(cudaTextureObject_t texObj,
-                                                 const elsa::real_t* const p)
+                                                 const EasyAccessSharedArray<elsa::real_t, 2> p)
 {
     elsa::real_t x = p[0] - 0.5f;
     elsa::real_t y = p[1] - 0.5f;
@@ -244,7 +258,7 @@ __device__ __forceinline__ double tex<double, 2>(cudaTextureObject_t texObj,
 
 /// fetches double at position (x,y,z) from 3D texture
 __device__ __forceinline__ double tex3Dd(cudaTextureObject_t texObj, const float x, const float y,
-                                         const elsa::real_t z)
+                                         const float z)
 {
     uint2 rt = tex3D<uint2>(texObj, x, y, z);
     return __hiloint2double(rt.y, rt.x);
@@ -253,7 +267,7 @@ __device__ __forceinline__ double tex3Dd(cudaTextureObject_t texObj, const float
 /// template specialization for double texture fetches
 template <>
 __device__ __forceinline__ double tex<double, 3>(cudaTextureObject_t texObj,
-                                                 const elsa::real_t* const p)
+                                                 const EasyAccessSharedArray<elsa::real_t, 3> p)
 {
     elsa::real_t x = p[0] - 0.5f;
     elsa::real_t y = p[1] - 0.5f;
@@ -286,44 +300,47 @@ __device__ __forceinline__ double tex<double, 3>(cudaTextureObject_t texObj,
            (1 - a) * b * c * T[0][1][1] + a * b * c * T[1][1][1];
 }
 
-template <typename data_t, uint dim>
+template <typename data_t, uint32_t dim>
 __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_THREADS_PER_BLOCK)
-    traverseForwardKernel(cudaTextureObject_t volume, int8_t* const __restrict__ sinogram,
-                          const uint64_t sinogramPitch, const int8_t* const __restrict__ rayOrigins,
-                          const uint32_t originPitch, const int8_t* const __restrict__ projInv,
-                          const uint32_t projPitch,
-                          const typename elsa::TraverseJosephsCUDA<data_t, dim>::BoundingBox boxMax)
+    traverseForwardKernel(
+        cudaTextureObject_t volume, int8_t* const __restrict__ sinogram,
+        const uint64_t sinogramPitch, const uint32_t sinogramOffsetX,
+        const int8_t* const __restrict__ rayOrigins, const uint32_t originPitch,
+        const int8_t* const __restrict__ projInv, const uint32_t projPitch,
+        const typename elsa::TraverseJosephsCUDA<data_t, dim>::BoundingBox boundingBox)
 {
 
     using real_t = elsa::real_t;
 
-    const int8_t* const projInvPtr =
-        dim == 3 ? projInv + (blockIdx.z * blockDim.x + threadIdx.x) * projPitch * 3
-                 : projInv + (blockIdx.y * blockDim.x + threadIdx.x) * projPitch * 2;
+    const int8_t* const projInvPtr = projInv + blockIdx.x * projPitch * dim;
 
-    const real_t* const rayOrigin =
-        dim == 3 ? (real_t*) (rayOrigins + (blockIdx.z * blockDim.x + threadIdx.x) * originPitch)
-                 : (real_t*) (rayOrigins + (blockIdx.y * blockDim.x + threadIdx.x) * originPitch);
+    const real_t* const rayOrigin = (real_t*) (rayOrigins + blockIdx.x * originPitch);
+
+    const uint32_t xCoord = sinogramOffsetX + blockDim.x * blockIdx.z + threadIdx.x;
 
     data_t* sinogramPtr =
-        dim == 3 ? ((data_t*) (sinogram
-                               + ((blockIdx.z * blockDim.x + threadIdx.x) * gridDim.y + blockIdx.y)
-                                     * sinogramPitch)
-                    + blockIdx.x)
-                 : ((data_t*) (sinogram + (blockIdx.y * blockDim.x + threadIdx.x) * sinogramPitch)
-                    + blockIdx.x);
+        ((data_t*) (sinogram + (blockIdx.x * gridDim.y + blockIdx.y) * sinogramPitch) + xCoord);
 
     *sinogramPtr = 0;
 
     // homogenous pixel coordinates
     real_t pixelCoord[dim];
-    pixelCoord[0] = blockIdx.x + 0.5f;
+    pixelCoord[0] = xCoord + 0.5f;
     pixelCoord[dim - 1] = 1.0f;
     if (dim == 3)
-        pixelCoord[dim - 2] = blockIdx.y + 0.5f;
+        pixelCoord[1] = blockIdx.y + 0.5f;
+
+    __shared__ real_t currentPositionsShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ real_t rayDirectionsShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ real_t boxMaxsShared[dim * MAX_THREADS_PER_BLOCK];
+
+    EasyAccessSharedArray<real_t, dim> boxMax{boxMaxsShared};
+#pragma unroll
+    for (uint32_t i = 0; i < dim; ++i)
+        boxMax[i] = boundingBox[i];
 
     // compute ray direction
-    real_t rd[dim];
+    EasyAccessSharedArray<real_t, dim> rd{rayDirectionsShared};
     gesqmv<real_t, dim>(projInvPtr, pixelCoord, rd, projPitch);
 
     // determine main direction
@@ -336,15 +353,15 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
 
 // normalize ray direction to have length 1/-1 in the main direction
 #pragma unroll
-    for (int i = 0; i < dim; ++i)
+    for (uint32_t i = 0; i < dim; ++i)
         rd[i] /= rdMax;
 
     // find volume intersections
     real_t tmin, tmax;
-    if (!box_intersect<real_t, dim>(rayOrigin, rd, boxMax.max, tmin, tmax))
+    if (!boxIntersect<real_t, dim>(rayOrigin, rd, boxMax, tmin, tmax))
         return;
 
-    real_t currentPosition[dim];
+    EasyAccessSharedArray<real_t, dim> currentPosition{currentPositionsShared};
     pointAt<real_t, dim>(rayOrigin, rd, tmin, currentPosition);
 
     // truncate as currentPosition is non-negative
@@ -455,60 +472,71 @@ double tex2DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, elsa::re
 
 // TODO: check if sorting can be used to make this even faster
 template <typename data_t, uint32_t dim>
-__global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_THREADS_PER_BLOCK)
+__global__ void __launch_bounds__(MAX_THREADS_PER_BLOCK)
     traverseAdjointFastKernel(int8_t* const __restrict__ volume, const uint64_t volumePitch,
+                              const uint32_t volumeOffsetX, const uint32_t steps,
                               cudaTextureObject_t sinogram,
                               const int8_t* const __restrict__ rayOrigins,
                               const uint32_t originPitch, const int8_t* const __restrict__ proj,
-                              const uint32_t projPitch, const uint32_t numAngles,
-                              const uint32_t offset)
+                              const uint32_t projPitch, const uint32_t numAngles)
 {
 
     using real_t = elsa::real_t;
 
-    int x = blockIdx.x;
-    int y = dim == 3 ? blockIdx.y : blockIdx.y * blockDim.x + threadIdx.x;
-    int z = dim == 3 ? blockIdx.z * blockDim.x + threadIdx.x : 0;
-
-    data_t& voxelRef =
-        *(data_t*) (volume + x * sizeof(data_t) + y * volumePitch + z * volumePitch * gridDim.y);
+    int x = volumeOffsetX + threadIdx.x;
+    int y = blockIdx.y;
+    int z = blockIdx.x;
 
     real_t voxelCenter[dim];
     voxelCenter[0] = x + 0.5f;
-    if (dim == 3) {
-        voxelCenter[dim - 2] = y + 0.5f;
-        voxelCenter[dim - 1] = z + offset + 0.5f;
-    } else {
-        voxelCenter[1] = y + offset + 0.5f;
-    }
+    voxelCenter[1] = y + 0.5f;
+    if (dim == 3)
+        voxelCenter[dim - 1] = z + 0.5f;
 
-    data_t val = 0.0f;
+    extern __shared__ real_t valuesShared[];
+
+    EasyAccessSharedArray<real_t, 1> values{valuesShared};
+    for (uint32_t step = 0; step < steps; ++step)
+        values[step] = 0;
+
     for (uint i = 0; i < numAngles; i++) {
         const int8_t* const projPtr = proj + i * projPitch * dim;
         const real_t* const rayOrigin = (real_t*) (rayOrigins + i * originPitch);
 
-        // compute ray direction
+        voxelCenter[0] = x + 0.5f;
+
         real_t rd[dim];
 #pragma unroll
         for (uint j = 0; j < dim; j++)
             rd[j] = voxelCenter[j] - rayOrigin[j];
 
-        real_t pixelCoord[dim];
+        // compute ray direction
+        for (uint32_t step = 0; step < steps; ++step) {
 
-        gesqmv<real_t, dim>(projPtr, rd, pixelCoord, projPitch);
+            real_t pixelCoord[dim];
+            gesqmv<real_t, dim>(projPtr, rd, pixelCoord, projPitch);
 
-        // convert to homogenous coordinates
-        pixelCoord[0] /= pixelCoord[dim - 1];
+            // convert to homogenous coordinates
+            pixelCoord[0] /= pixelCoord[dim - 1];
 
-        if (dim == 3) {
-            pixelCoord[1] /= pixelCoord[dim - 1];
-            val += tex2DLayered<data_t>(sinogram, pixelCoord[0], pixelCoord[1], i);
-        } else {
-            val += tex1DLayered<data_t>(sinogram, pixelCoord[0], i);
+            if (dim == 3) {
+                pixelCoord[1] /= pixelCoord[dim - 1];
+                values[step] += tex2DLayered<data_t>(sinogram, pixelCoord[0], pixelCoord[1], i);
+            } else {
+                values[step] += tex1DLayered<data_t>(sinogram, pixelCoord[0], i);
+            }
+
+            voxelCenter[0] += blockDim.x;
+            rd[0] += blockDim.x;
         }
     }
 
-    voxelRef = val;
+    for (uint32_t step = 0; step < steps; ++step) {
+        int x = volumeOffsetX + step * blockDim.x + threadIdx.x;
+        data_t& voxelRef = *(data_t*) (volume + x * sizeof(data_t) + y * volumePitch
+                                       + z * volumePitch * gridDim.y);
+        voxelRef = values[step];
+    }
 }
 
 /*
@@ -537,11 +565,11 @@ __device__ __forceinline__ double atomicAdd(double* address, double val)
 /// backprojects the weighted sinogram value to a given pixel
 template <typename data_t, uint dim>
 __device__ __forceinline__ void
-    backproject2(int8_t* const __restrict__ volume, const uint64_t* const __restrict__ p,
-                 uint32_t* const __restrict__ voxelCoord,
-                 const elsa::real_t* const __restrict__ voxelCoordf,
-                 const typename elsa::TraverseJosephsCUDA<data_t, dim>::BoundingBox& boxMax,
-                 const elsa::real_t* const __restrict__ frac, const data_t weightedVal)
+    backproject2(int8_t* const __restrict__ volume, const EasyAccessSharedArray<uint64_t, dim>& p,
+                 EasyAccessSharedArray<uint32_t, dim>& voxelCoord,
+                 const EasyAccessSharedArray<elsa::real_t, dim>& voxelCoordf,
+                 const EasyAccessSharedArray<elsa::real_t, dim>& boxMax,
+                 const EasyAccessSharedArray<elsa::real_t, dim>& frac, const data_t weightedVal)
 {
 
     data_t* volumeXPtr = (data_t*) (volume + p[0] * voxelCoord[0] + p[1] * voxelCoord[1]);
@@ -558,11 +586,11 @@ __device__ __forceinline__ void
 /// backprojects the weighted sinogram value to a given voxel
 template <typename data_t, uint dim>
 __device__ __forceinline__ void
-    backproject4(int8_t* const __restrict__ volume, const uint64_t* const __restrict__ p,
-                 uint32_t* const __restrict__ voxelCoord,
-                 const elsa::real_t* const __restrict__ voxelCoordf,
-                 const typename elsa::TraverseJosephsCUDA<data_t, dim>::BoundingBox& boxMax,
-                 const elsa::real_t* const __restrict__ frac, const data_t weightedVal)
+    backproject4(int8_t* const __restrict__ volume, const EasyAccessSharedArray<uint64_t, dim>& p,
+                 EasyAccessSharedArray<uint32_t, dim>& voxelCoord,
+                 const EasyAccessSharedArray<elsa::real_t, dim>& voxelCoordf,
+                 const EasyAccessSharedArray<elsa::real_t, dim>& boxMax,
+                 const EasyAccessSharedArray<elsa::real_t, dim>& frac, const data_t weightedVal)
 {
     data_t* volumeXPtr =
         (data_t*) (volume + p[0] * voxelCoord[0] + p[1] * voxelCoord[1] + p[2] * voxelCoord[2]);
@@ -595,11 +623,11 @@ __device__ __forceinline__ void
 /// convenience method for backprojecting to a given pixel/voxel
 template <typename data_t, uint dim>
 __device__ __forceinline__ void
-    backproject(int8_t* const __restrict__ volume, const uint64_t* const __restrict__ p,
-                uint32_t* const __restrict__ voxelCoord,
-                const elsa::real_t* const __restrict__ voxelCoordf,
-                const typename elsa::TraverseJosephsCUDA<data_t, dim>::BoundingBox& boxMax,
-                const elsa::real_t* const __restrict__ frac, const data_t weightedVal)
+    backproject(int8_t* const __restrict__ volume, const EasyAccessSharedArray<uint64_t, dim>& p,
+                EasyAccessSharedArray<uint32_t, dim>& voxelCoord,
+                const EasyAccessSharedArray<elsa::real_t, dim>& voxelCoordf,
+                const EasyAccessSharedArray<elsa::real_t, dim>& boxMax,
+                const EasyAccessSharedArray<elsa::real_t, dim>& frac, const data_t weightedVal)
 {
     if (dim == 3)
         backproject4<data_t, dim>(volume, p, voxelCoord, voxelCoordf, boxMax, frac, weightedVal);
@@ -620,64 +648,70 @@ template <typename data_t, uint dim>
 __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_THREADS_PER_BLOCK)
     traverseAdjointKernel(int8_t* const __restrict__ volume, const uint64_t volumePitch,
                           const int8_t* const __restrict__ sinogram, const uint64_t sinogramPitch,
+                          const uint32_t sinogramOffsetX,
                           const int8_t* const __restrict__ rayOrigins, const uint32_t originPitch,
                           const int8_t* const __restrict__ projInv, const uint32_t projPitch,
-                          typename elsa::TraverseJosephsCUDA<data_t, dim>::BoundingBox boxMax)
+                          typename elsa::TraverseJosephsCUDA<data_t, dim>::BoundingBox boundingBox)
 {
 
     using real_t = elsa::real_t;
 
-    const int8_t* const projInvPtr =
-        dim == 3 ? projInv + (blockIdx.z * blockDim.x + threadIdx.x) * projPitch * 3
-                 : projInv + (blockIdx.y * blockDim.x + threadIdx.x) * projPitch * 2;
+    const int8_t* const projInvPtr = projInv + blockIdx.x * projPitch * dim;
 
-    const real_t* const rayOrigin =
-        dim == 3 ? (real_t*) (rayOrigins + (blockIdx.z * blockDim.x + threadIdx.x) * originPitch)
-                 : (real_t*) (rayOrigins + (blockIdx.y * blockDim.x + threadIdx.x) * originPitch);
+    const real_t* const rayOrigin = (real_t*) (rayOrigins + blockIdx.x * originPitch);
 
-    const data_t sinogramVal =
-        dim == 3 ? *((data_t*) (sinogram
-                                + ((blockIdx.z * blockDim.x + threadIdx.x) * gridDim.y + blockIdx.y)
-                                      * sinogramPitch)
-                     + blockIdx.x)
-                 : *((data_t*) (sinogram + (blockIdx.y * blockDim.x + threadIdx.x) * sinogramPitch)
-                     + blockIdx.x);
+    const uint32_t xCoord = sinogramOffsetX + blockDim.x * blockIdx.z + threadIdx.x;
+
+    data_t& sinogramVal =
+        *((data_t*) (sinogram + (blockIdx.x * gridDim.y + blockIdx.y) * sinogramPitch) + xCoord);
 
     // homogenous pixel coordinates
     real_t pixelCoord[dim];
-    pixelCoord[0] = blockIdx.x + 0.5f;
+    pixelCoord[0] = xCoord + 0.5f;
     pixelCoord[dim - 1] = 1.0f;
     if (dim == 3)
         pixelCoord[1] = blockIdx.y + 0.5f;
 
+    __shared__ real_t currentPositionsShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ real_t rayDirectionsShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ uint32_t voxelCoordsShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ real_t voxelCoordfsShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ real_t fracsShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ real_t tdeltasShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ uint64_t permutationsShared[dim * MAX_THREADS_PER_BLOCK];
+    __shared__ real_t boxMaxsShared[dim * MAX_THREADS_PER_BLOCK];
+
+    EasyAccessSharedArray<real_t, dim> boxMax{boxMaxsShared};
+#pragma unroll
+    for (uint32_t i = 0; i < dim; ++i)
+        boxMax[i] = boundingBox[i];
+
     // compute ray direction
-    real_t rd[dim];
+    EasyAccessSharedArray<real_t, dim> rd{rayDirectionsShared};
     gesqmv<real_t, dim>(projInvPtr, pixelCoord, rd, projPitch);
     normalize<real_t, dim>(rd);
 
     // find volume intersections
     real_t tmin, tmax;
-    if (!box_intersect<real_t, dim>(rayOrigin, rd, boxMax.max, tmin, tmax))
+    if (!boxIntersect<real_t, dim>(rayOrigin, rd, boxMax, tmin, tmax))
         return;
 
-    int stepDir[dim];
-    real_t tdelta[dim];
-    initStepDirection<real_t, dim>(rd, stepDir);
-    initDelta<real_t, dim>(rd, stepDir, tdelta);
+    EasyAccessSharedArray<real_t, dim> tdelta{tdeltasShared};
+    initDelta<real_t, dim>(rd, tdelta);
 
-    real_t currentPosition[dim];
+    EasyAccessSharedArray<real_t, dim> currentPosition{currentPositionsShared};
     pointAt<real_t, dim>(rayOrigin, rd, tmin, currentPosition);
-    projectOntoBox<real_t, dim>(currentPosition, boxMax.max);
+    projectOntoBox<real_t, dim>(currentPosition, boxMax);
 
-    uint32_t voxelCoord[dim];
-    if (!closestVoxel<real_t, dim>(currentPosition, boxMax.max, voxelCoord, rd))
+    EasyAccessSharedArray<uint32_t, dim> voxelCoord{voxelCoordsShared};
+    if (!closestVoxel<real_t, dim>(currentPosition, boxMax, voxelCoord, rd))
         return;
 
     // determine primary direction
     uint32_t idx = minIndex<real_t, dim>(tdelta);
-    const int s = stepDir[idx];
+    const int s = ((rd[idx] > 0.0f) - (rd[idx] < 0.0f));
 
-    uint64_t permutation[dim];
+    EasyAccessSharedArray<uint64_t, dim> permutation{permutationsShared};
     permutation[0] = sizeof(data_t);
     permutation[1] = volumePitch;
     if (dim == 3)
@@ -695,7 +729,8 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
 
     real_t intersectionLength = tmax - tmin;
 
-    real_t voxelCoordf[dim], frac[dim];
+    EasyAccessSharedArray<real_t, dim> voxelCoordf{voxelCoordfsShared};
+    EasyAccessSharedArray<real_t, dim> frac{fracsShared};
 
     // subtract 0.5 from current position to get voxel coordinates
     for (uint i = 0; i < dim; i++) {
@@ -838,40 +873,107 @@ namespace elsa
 
     template <typename data_t, uint32_t dim>
     void TraverseJosephsCUDA<data_t, dim>::traverseForward(
-        const dim3 blocks, const int threads, cudaTextureObject_t volume,
-        int8_t* const __restrict__ sinogram, const uint64_t sinogramPitch,
-        const int8_t* const __restrict__ rayOrigins, const uint32_t originPitch,
-        const int8_t* const __restrict__ projInv, const uint32_t projPitch,
-        const BoundingBox& boxMax, const cudaStream_t stream)
+        dim3 sinogramDims, int threads, cudaTextureObject_t volume, int8_t* __restrict__ sinogram,
+        uint64_t sinogramPitch, const int8_t* __restrict__ rayOrigins, uint32_t originPitch,
+        const int8_t* __restrict__ projInv, uint32_t projPitch, const BoundingBox& boxMax)
     {
-        traverseForwardKernel<data_t, dim><<<blocks, threads, 0, stream>>>(
-            volume, sinogram, sinogramPitch, rayOrigins, originPitch, projInv, projPitch, boxMax);
+        uint32_t numImageBlocks = sinogramDims.z / threads;
+        uint32_t remaining = sinogramDims.z % threads;
+        uint32_t offset = numImageBlocks * threads;
+
+        if (numImageBlocks > 0) {
+            dim3 grid(sinogramDims.x, sinogramDims.y, numImageBlocks);
+            traverseForwardKernel<data_t, dim><<<grid, threads>>>(volume, sinogram, sinogramPitch,
+                                                                  0, rayOrigins, originPitch,
+                                                                  projInv, projPitch, boxMax);
+        }
+
+        if (remaining > 0) {
+            cudaStream_t remStream;
+
+            if (cudaStreamCreate(&remStream) != cudaSuccess)
+                throw std::logic_error(
+                    "TraverseJosephsCUDA: Couldn't create stream for remaining images");
+
+            dim3 grid(sinogramDims.x, sinogramDims.y, 1);
+            traverseForwardKernel<data_t, dim><<<grid, remaining, 0, remStream>>>(
+                volume, sinogram, sinogramPitch, offset, rayOrigins, originPitch, projInv,
+                projPitch, boxMax);
+
+            if (cudaStreamDestroy(remStream) != cudaSuccess)
+                throw std::logic_error("TraverseJosephsCUDA: Couldn't destroy cudaStream object");
+        }
     }
 
     template <typename data_t, uint32_t dim>
     void TraverseJosephsCUDA<data_t, dim>::traverseAdjoint(
-        const dim3 blocks, const int threads, int8_t* const __restrict__ volume,
-        const uint64_t volumePitch, const int8_t* const __restrict__ sinogram,
-        const uint64_t sinogramPitch, const int8_t* const __restrict__ rayOrigins,
-        const uint32_t originPitch, const int8_t* const __restrict__ projInv,
-        const uint32_t projPitch, const BoundingBox& boxMax, const cudaStream_t stream)
+        dim3 sinogramDims, int threads, int8_t* __restrict__ volume, uint64_t volumePitch,
+        const int8_t* __restrict__ sinogram, uint64_t sinogramPitch,
+        const int8_t* __restrict__ rayOrigins, uint32_t originPitch,
+        const int8_t* __restrict__ projInv, uint32_t projPitch, const BoundingBox& boxMax)
     {
-        traverseAdjointKernel<data_t, dim>
-            <<<blocks, threads, 0, stream>>>(volume, volumePitch, sinogram, sinogramPitch,
-                                             rayOrigins, originPitch, projInv, projPitch, boxMax);
+        uint32_t numImageBlocks = sinogramDims.z / threads;
+        uint32_t remaining = sinogramDims.z % threads;
+        uint32_t offset = numImageBlocks * threads;
+
+        if (numImageBlocks > 0) {
+            dim3 grid(sinogramDims.x, sinogramDims.y, numImageBlocks);
+            traverseAdjointKernel<data_t, dim>
+                <<<grid, threads>>>(volume, volumePitch, sinogram, sinogramPitch, 0, rayOrigins,
+                                    originPitch, projInv, projPitch, boxMax);
+        }
+
+        if (remaining > 0) {
+            cudaStream_t remStream;
+
+            if (cudaStreamCreate(&remStream) != cudaSuccess)
+                throw std::logic_error(
+                    "TraverseJosephsCUDA: Couldn't create stream for remaining images");
+
+            dim3 grid(sinogramDims.x, sinogramDims.y, 1);
+            traverseAdjointKernel<data_t, dim><<<grid, remaining, 0, remStream>>>(
+                volume, volumePitch, sinogram, sinogramPitch, offset, rayOrigins, originPitch,
+                projInv, projPitch, boxMax);
+
+            if (cudaStreamDestroy(remStream) != cudaSuccess)
+                throw std::logic_error("TraverseJosephsCUDA: Couldn't destroy cudaStream object");
+        }
     }
 
     template <typename data_t, uint32_t dim>
     void TraverseJosephsCUDA<data_t, dim>::traverseAdjointFast(
-        const dim3 blocks, const int threads, int8_t* const __restrict__ volume,
-        const uint64_t volumePitch, cudaTextureObject_t sinogram,
-        const int8_t* const __restrict__ rayOrigins, const uint32_t originPitch,
-        const int8_t* const __restrict__ proj, const uint32_t projPitch, const uint32_t numAngles,
-        const uint32_t zOffset, const cudaStream_t stream)
+        dim3 volumeDims, int threads, int8_t* __restrict__ volume, uint64_t volumePitch,
+        cudaTextureObject_t sinogram, const int8_t* __restrict__ rayOrigins, uint32_t originPitch,
+        const int8_t* __restrict__ proj, uint32_t projPitch, uint32_t numAngles)
     {
-        traverseAdjointFastKernel<data_t, dim>
-            <<<blocks, threads, 0, stream>>>(volume, volumePitch, sinogram, rayOrigins, originPitch,
-                                             proj, projPitch, numAngles, zOffset);
+        uint32_t numImageBlocks = volumeDims.z / threads;
+        uint32_t remaining = volumeDims.z % threads;
+        uint32_t offset = numImageBlocks * threads;
+
+        if (numImageBlocks > 0) {
+            dim3 grid(volumeDims.x, volumeDims.y, 1);
+            traverseAdjointFastKernel<data_t, dim>
+                <<<grid, threads, numImageBlocks * MAX_THREADS_PER_BLOCK * sizeof(data_t)>>>(
+                    volume, volumePitch, 0, numImageBlocks, sinogram, rayOrigins, originPitch, proj,
+                    projPitch, numAngles);
+        }
+
+        if (remaining > 0) {
+            cudaStream_t remStream;
+
+            if (cudaStreamCreate(&remStream) != cudaSuccess)
+                throw std::logic_error(
+                    "TraverseJosephsCUDA: Couldn't create stream for remaining images");
+
+            dim3 grid(volumeDims.x, volumeDims.y, 1);
+            traverseAdjointFastKernel<data_t, dim>
+                <<<grid, threads, remaining * sizeof(data_t), remStream>>>(
+                    volume, volumePitch, offset, 1, sinogram, rayOrigins, originPitch, proj,
+                    projPitch, numAngles);
+
+            if (cudaStreamDestroy(remStream) != cudaSuccess)
+                throw std::logic_error("TraverseJosephsCUDA: Couldn't destroy cudaStream object");
+        }
     }
 
     // template instantiations

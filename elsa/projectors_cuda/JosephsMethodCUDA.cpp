@@ -10,12 +10,12 @@ namespace elsa
                                                  const std::vector<Geometry>& geometryList,
                                                  bool fast)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
-          _geometryList{geometryList},
           _boundingBox{_domainDescriptor->getNumberOfCoefficientsPerDimension()},
+          _geometryList{geometryList},
           _fast{fast}
     {
-        auto dim = _domainDescriptor->getNumberOfDimensions();
-        if (dim != _rangeDescriptor->getNumberOfDimensions()) {
+        auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
+        if (dim != static_cast<std::size_t>(_rangeDescriptor->getNumberOfDimensions())) {
             throw std::logic_error(
                 std::string("JosephsMethodCUDA: domain and range dimension need to match"));
         }
@@ -24,34 +24,34 @@ namespace elsa
             throw std::logic_error("JosephsMethodCUDA: only supporting 2d/3d operations");
         }
 
-        if (_geometryList.empty()) {
+        if (geometryList.empty()) {
             throw std::logic_error("JosephsMethodCUDA: geometry list was empty");
         }
 
         // allocate device memory and copy ray origins and the inverse of projection matrices to
         // device
-        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, _geometryList.size());
+        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, geometryList.size());
 
         if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t),
-                            _geometryList.size())
+                            geometryList.size())
             != cudaSuccess)
             throw std::bad_alloc();
+
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = _geometryList.size();
+        _rayOrigins.ysize = geometryList.size();
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();
 
-        if (fast)
-            if (cudaMalloc3D(&_projMatrices, extent) != cudaSuccess)
-                throw std::bad_alloc();
+        if (_fast && cudaMalloc3D(&_projMatrices, extent) != cudaSuccess)
+            throw std::bad_alloc();
 
-        index_t projPitch = _projInvMatrices.pitch;
-        int8_t* rayBasePtr = (int8_t*) _rayOrigins.ptr;
-        index_t rayPitch = _rayOrigins.pitch;
-        for (index_t i = 0; i < _geometryList.size(); i++) {
-            RealMatrix_t P = _geometryList[i].getInverseProjectionMatrix().block(0, 0, dim, dim);
-            int8_t* slice = (int8_t*) _projInvMatrices.ptr + i * projPitch * dim;
+        auto projPitch = _projInvMatrices.pitch;
+        auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
+        auto rayPitch = _rayOrigins.pitch;
+        for (std::size_t i = 0; i < geometryList.size(); i++) {
+            RealMatrix_t P = geometryList[i].getInverseProjectionMatrix().block(0, 0, dim, dim);
+            auto* slice = (int8_t*) _projInvMatrices.ptr + i * projPitch * dim;
 
             // transfer inverse of projection matrix
             if (cudaMemcpy2D(slice, projPitch, P.data(), dim * sizeof(real_t), dim * sizeof(real_t),
@@ -62,19 +62,20 @@ namespace elsa
 
             // transfer projection matrix if _fast flag is set
             if (_fast) {
-                P = _geometryList[i].getProjectionMatrix().block(0, 0, dim, dim);
+                P = geometryList[i].getProjectionMatrix().block(0, 0, dim, dim);
                 slice = (int8_t*) _projMatrices.ptr + i * projPitch * dim;
                 if (cudaMemcpy2D(slice, projPitch, P.data(), dim * sizeof(real_t),
                                  dim * sizeof(real_t), dim, cudaMemcpyHostToDevice)
                     != cudaSuccess)
-                    throw std::logic_error("JosephsMethodCUDA: Could not transfer inverse "
+                    throw std::logic_error("JosephsMethodCUDA: Could not transfer "
                                            "projection matrices to GPU.");
             }
 
             int8_t* rayPtr = rayBasePtr + i * rayPitch;
             // get ray origin using direct inverse
-            RealVector_t ro = -_geometryList[i].getInverseProjectionMatrix().block(0, 0, dim, dim)
-                              * _geometryList[i].getProjectionMatrix().block(0, dim, dim, 1);
+            RealVector_t ro =
+                -geometryList[i].getInverseProjectionMatrix().block(0, 0, dim, dim)
+                * geometryList[i].getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
             // transfer ray origin
             if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyHostToDevice)
                 != cudaSuccess)
@@ -100,13 +101,13 @@ namespace elsa
     template <typename data_t>
     JosephsMethodCUDA<data_t>* JosephsMethodCUDA<data_t>::cloneImpl() const
     {
-        // TODO: Currently only need Geometry vector stored internally for cloning, try removing it
-        return new JosephsMethodCUDA(*_domainDescriptor, *_rangeDescriptor, _geometryList, _fast);
+        return new JosephsMethodCUDA(*this);
     }
 
     template <typename data_t>
     bool JosephsMethodCUDA<data_t>::isEqual(const LinearOperator<data_t>& other) const
     {
+        // TODO: only need Geometry vector stored internally for comparisons, use kernels instead
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
@@ -137,111 +138,57 @@ namespace elsa
         index_t dim = _domainDescriptor->getNumberOfDimensions();
         IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
 
-        int numImgBlocks = rangeDims(dim - 1) / _threadsPerBlock;
-        int remaining = rangeDims(dim - 1) % _threadsPerBlock;
+        auto rangeDimsui = rangeDims.template cast<unsigned int>();
 
         if (dim == 3) {
             cudaExtent sinoExt =
-                make_cudaExtent(rangeDims[0] * sizeof(data_t), rangeDims[1], rangeDims[2]);
+                make_cudaExtent(rangeDimsui[0] * sizeof(data_t), rangeDimsui[1], rangeDimsui[2]);
             if (cudaMalloc3D(&dsinoPtr, sinoExt) != cudaSuccess)
                 throw std::bad_alloc();
 
             IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
             typename TraverseJosephsCUDA<data_t, 3>::BoundingBox boxMax;
-            boxMax.max[0] = bmax[0];
-            boxMax.max[1] = bmax[1];
-            boxMax.max[2] = bmax[2];
+            boxMax._max[0] = static_cast<real_t>(bmax[0]);
+            boxMax._max[1] = static_cast<real_t>(bmax[1]);
+            boxMax._max[2] = static_cast<real_t>(bmax[2]);
 
             // synchronize because we are using multiple streams
             cudaDeviceSynchronize();
-
             // perform projection
-            if (numImgBlocks > 0) {
-                const dim3 grid(rangeDims(0), rangeDims(1), numImgBlocks);
-                const int threads = _threadsPerBlock;
-                TraverseJosephsCUDA<data_t, 3>::traverseForward(
-                    grid, threads, volumeTex, (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch,
-                    (int8_t*) _rayOrigins.ptr, _rayOrigins.pitch, (int8_t*) _projInvMatrices.ptr,
-                    _projInvMatrices.pitch, boxMax);
-            }
-
-            if (remaining > 0) {
-                cudaStream_t remStream;
-                if (cudaStreamCreate(&remStream) != cudaSuccess)
-                    throw std::logic_error(
-                        "JosephsMethodCUDA::apply: Couldn't create stream for remaining images");
-                const dim3 grid(rangeDims(0), rangeDims(1), 1);
-                const int threads = remaining;
-                int8_t* imgPtr = (int8_t*) dsinoPtr.ptr
-                                 + numImgBlocks * _threadsPerBlock * dsinoPtr.pitch * rangeDims(1);
-                int8_t* rayPtr =
-                    (int8_t*) _rayOrigins.ptr + numImgBlocks * _threadsPerBlock * _rayOrigins.pitch;
-                int8_t* matrixPtr =
-                    (int8_t*) _projInvMatrices.ptr
-                    + numImgBlocks * _threadsPerBlock * _projInvMatrices.pitch * dim;
-                TraverseJosephsCUDA<data_t, 3>::traverseForward(
-                    grid, threads, volumeTex, imgPtr, dsinoPtr.pitch, rayPtr, _rayOrigins.pitch,
-                    matrixPtr, _projInvMatrices.pitch, boxMax, remStream);
-
-                if (cudaStreamDestroy(remStream) != cudaSuccess)
-                    Logger::get("JosephsMethodCUDA")
-                        ->error("Couldn't destroy CUDA stream; This may cause problems later.");
-            }
-
+            const dim3 sinogramDims(rangeDimsui[2], rangeDimsui[1], rangeDimsui[0]);
+            TraverseJosephsCUDA<data_t, 3>::traverseForward(
+                sinogramDims, THREADS_PER_BLOCK, volumeTex, (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch,
+                (int8_t*) _rayOrigins.ptr, static_cast<uint32_t>(_rayOrigins.pitch),
+                (int8_t*) _projInvMatrices.ptr, static_cast<uint32_t>(_projInvMatrices.pitch),
+                boxMax);
             cudaDeviceSynchronize();
+
             // retrieve results from GPU
             copy3DDataContainer<cudaMemcpyDeviceToHost, false>((void*) &Ax[0], dsinoPtr, sinoExt);
         } else {
-            if (cudaMallocPitch(&dsinoPtr.ptr, &dsinoPtr.pitch, rangeDims[0] * sizeof(data_t),
-                                rangeDims[1])
+            if (cudaMallocPitch(&dsinoPtr.ptr, &dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t),
+                                rangeDimsui[1])
                 != cudaSuccess)
                 throw std::bad_alloc();
 
             IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
             typename TraverseJosephsCUDA<data_t, 2>::BoundingBox boxMax;
-            boxMax.max[0] = bmax[0];
-            boxMax.max[1] = bmax[1];
+            boxMax._max[0] = static_cast<real_t>(bmax[0]);
+            boxMax._max[1] = static_cast<real_t>(bmax[1]);
 
             // synchronize because we are using multiple streams
             cudaDeviceSynchronize();
-
-            // perform projection
-            if (numImgBlocks > 0) {
-                const dim3 grid(rangeDims(0), numImgBlocks);
-                const int threads = _threadsPerBlock;
-                TraverseJosephsCUDA<data_t, 2>::traverseForward(
-                    grid, threads, volumeTex, (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch,
-                    (int8_t*) _rayOrigins.ptr, _rayOrigins.pitch, (int8_t*) _projInvMatrices.ptr,
-                    _projInvMatrices.pitch, boxMax);
-            }
-
-            if (remaining > 0) {
-                cudaStream_t remStream;
-                if (cudaStreamCreate(&remStream) != cudaSuccess)
-                    throw std::logic_error(
-                        "JosephsMethodCUDA::apply: Couldn't create stream for remaining images");
-                const dim3 grid(rangeDims(0), 1);
-                const int threads = remaining;
-                int8_t* imgPtr =
-                    (int8_t*) dsinoPtr.ptr + numImgBlocks * _threadsPerBlock * dsinoPtr.pitch;
-                int8_t* rayPtr =
-                    (int8_t*) _rayOrigins.ptr + numImgBlocks * _threadsPerBlock * _rayOrigins.pitch;
-                int8_t* matrixPtr =
-                    (int8_t*) _projInvMatrices.ptr
-                    + numImgBlocks * _threadsPerBlock * _projInvMatrices.pitch * dim;
-                TraverseJosephsCUDA<data_t, 2>::traverseForward(
-                    grid, threads, volumeTex, imgPtr, dsinoPtr.pitch, rayPtr, _rayOrigins.pitch,
-                    matrixPtr, _projInvMatrices.pitch, boxMax, remStream);
-
-                if (cudaStreamDestroy(remStream) != cudaSuccess)
-                    Logger::get("JosephsMethodCUDA")
-                        ->error("Couldn't destroy CUDA stream; This may cause problems later.");
-            }
-
+            const dim3 sinogramDims(rangeDimsui[1], 1, rangeDimsui[0]);
+            TraverseJosephsCUDA<data_t, 2>::traverseForward(
+                sinogramDims, THREADS_PER_BLOCK, volumeTex, (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch,
+                (int8_t*) _rayOrigins.ptr, static_cast<uint32_t>(_rayOrigins.pitch),
+                (int8_t*) _projInvMatrices.ptr, static_cast<uint32_t>(_projInvMatrices.pitch),
+                boxMax);
             cudaDeviceSynchronize();
+
             // retrieve results from GPU
-            if (cudaMemcpy2D((void*) &Ax[0], rangeDims[0] * sizeof(data_t), dsinoPtr.ptr,
-                             dsinoPtr.pitch, rangeDims[0] * sizeof(data_t), rangeDims[1],
+            if (cudaMemcpy2D((void*) &Ax[0], rangeDimsui[0] * sizeof(data_t), dsinoPtr.ptr,
+                             dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t), rangeDimsui[1],
                              cudaMemcpyDeviceToHost)
                 != cudaSuccess)
                 throw std::logic_error(
@@ -268,16 +215,18 @@ namespace elsa
         Timer<> timeguard("JosephsMethodCUDA", "applyAdjoint");
 
         // allocate memory for volume
-        auto coeffsPerDim = _domainDescriptor->getNumberOfCoefficientsPerDimension();
-        index_t dim = _domainDescriptor->getNumberOfDimensions();
+        auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
+        auto domainDimsui = domainDims.template cast<unsigned int>();
 
-        int numImgBlocks = coeffsPerDim(dim - 1) / _threadsPerBlock;
-        int remaining = coeffsPerDim(dim - 1) % _threadsPerBlock;
+        auto rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
+        auto rangeDimsui = rangeDims.template cast<unsigned int>();
+
+        index_t dim = _domainDescriptor->getNumberOfDimensions();
 
         cudaPitchedPtr dvolumePtr;
         if (dim == 3) {
             cudaExtent volExt =
-                make_cudaExtent(coeffsPerDim[0] * sizeof(data_t), coeffsPerDim[1], coeffsPerDim[2]);
+                make_cudaExtent(domainDimsui[0] * sizeof(data_t), domainDimsui[1], domainDimsui[2]);
             if (cudaMalloc3D(&dvolumePtr, volExt) != cudaSuccess)
                 throw std::bad_alloc();
 
@@ -286,39 +235,14 @@ namespace elsa
                 auto [sinoTex, sino] = copyTextureToGPU<cudaArrayLayered>(y);
 
                 cudaDeviceSynchronize();
-                if (numImgBlocks > 0) {
-                    const dim3 grid(coeffsPerDim(0), coeffsPerDim(1), numImgBlocks);
-                    const int threads = _threadsPerBlock;
+                const dim3 volumeDims(domainDimsui[2], domainDimsui[1], domainDimsui[0]);
+                const int threads = THREADS_PER_BLOCK;
 
-                    TraverseJosephsCUDA<data_t, 3>::traverseAdjointFast(
-                        grid, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch, sinoTex,
-                        (int8_t*) _rayOrigins.ptr, _rayOrigins.pitch, (int8_t*) _projMatrices.ptr,
-                        _projMatrices.pitch,
-                        _rangeDescriptor->getNumberOfCoefficientsPerDimension()(2));
-                }
-
-                if (remaining > 0) {
-                    cudaStream_t remStream;
-                    if (cudaStreamCreate(&remStream) != cudaSuccess)
-                        throw std::logic_error("Couldn't create stream for remaining images");
-                    const dim3 grid(coeffsPerDim(0), coeffsPerDim(1), 1);
-                    const int threads = remaining;
-                    int8_t* volPtr =
-                        (int8_t*) dvolumePtr.ptr
-                        + numImgBlocks * _threadsPerBlock * dvolumePtr.pitch * coeffsPerDim(1);
-
-                    TraverseJosephsCUDA<data_t, 3>::traverseAdjointFast(
-                        grid, threads, volPtr, dvolumePtr.pitch, sinoTex, (int8_t*) _rayOrigins.ptr,
-                        _rayOrigins.pitch, (int8_t*) _projMatrices.ptr, _projMatrices.pitch,
-                        _rangeDescriptor->getNumberOfCoefficientsPerDimension()(2),
-                        numImgBlocks * _threadsPerBlock, remStream);
-
-                    if (cudaStreamDestroy(remStream) != cudaSuccess)
-                        Logger::get("JosephsMethodCUDA")
-                            ->error("Couldn't destroy GPU stream; This may cause problems later.");
-                }
-
-                // synchonize because we are using multiple streams
+                TraverseJosephsCUDA<data_t, 3>::traverseAdjointFast(
+                    volumeDims, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch, sinoTex,
+                    (int8_t*) _rayOrigins.ptr, static_cast<uint32_t>(_rayOrigins.pitch),
+                    (int8_t*) _projMatrices.ptr, static_cast<uint32_t>(_projMatrices.pitch),
+                    rangeDimsui[2]);
                 cudaDeviceSynchronize();
 
                 if (cudaDestroyTextureObject(sinoTex) != cudaSuccess)
@@ -334,9 +258,8 @@ namespace elsa
                                            "zero-initialize volume on GPU.");
 
                 cudaPitchedPtr dsinoPtr;
-                IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
-                cudaExtent sinoExt =
-                    make_cudaExtent(rangeDims[0] * sizeof(data_t), rangeDims[1], rangeDims[2]);
+                cudaExtent sinoExt = make_cudaExtent(rangeDimsui[0] * sizeof(data_t),
+                                                     rangeDimsui[1], rangeDimsui[2]);
 
                 if (cudaMalloc3D(&dsinoPtr, sinoExt) != cudaSuccess)
                     throw std::bad_alloc();
@@ -344,52 +267,21 @@ namespace elsa
                 copy3DDataContainer<cudaMemcpyHostToDevice>((void*) &y[0], dsinoPtr, sinoExt);
 
                 // perform projection
-                int numImgBlocks = rangeDims(2) / _threadsPerBlock;
-                int remaining = rangeDims(2) % _threadsPerBlock;
 
                 IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
                 typename TraverseJosephsCUDA<data_t, 3>::BoundingBox boxMax;
-                boxMax.max[0] = bmax[0];
-                boxMax.max[1] = bmax[1];
-                boxMax.max[2] = bmax[2];
+                boxMax._max[0] = static_cast<real_t>(bmax[0]);
+                boxMax._max[1] = static_cast<real_t>(bmax[1]);
+                boxMax._max[2] = static_cast<real_t>(bmax[2]);
+
                 // synchronize because we are using multiple streams
                 cudaDeviceSynchronize();
-                if (numImgBlocks > 0) {
-                    const dim3 grid(rangeDims(0), rangeDims(1), numImgBlocks);
-                    const int threads = _threadsPerBlock;
-                    TraverseJosephsCUDA<data_t, 3>::traverseAdjoint(
-                        grid, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                        (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                        _rayOrigins.pitch, (int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
-                        boxMax);
-                }
-
-                if (remaining > 0) {
-                    cudaStream_t remStream;
-                    if (cudaStreamCreate(&remStream) != cudaSuccess)
-                        throw std::logic_error("JosephsMethodCUDA::applyAdjoint: Couldn't create "
-                                               "stream for remaining images");
-
-                    const dim3 grid(rangeDims(0), rangeDims(1), 1);
-                    const int threads = remaining;
-                    int8_t* imgPtr =
-                        (int8_t*) dsinoPtr.ptr
-                        + numImgBlocks * _threadsPerBlock * dsinoPtr.pitch * rangeDims(1);
-                    int8_t* rayPtr = (int8_t*) _rayOrigins.ptr
-                                     + numImgBlocks * _threadsPerBlock * _rayOrigins.pitch;
-                    int8_t* matrixPtr =
-                        (int8_t*) _projInvMatrices.ptr
-                        + numImgBlocks * _threadsPerBlock * _projInvMatrices.pitch * 3;
-                    TraverseJosephsCUDA<data_t, 3>::traverseAdjoint(
-                        grid, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch, imgPtr,
-                        dsinoPtr.pitch, rayPtr, _rayOrigins.pitch, matrixPtr,
-                        _projInvMatrices.pitch, boxMax, remStream);
-
-                    if (cudaStreamDestroy(remStream) != cudaSuccess)
-                        Logger::get("JosephsMethodCUDA")
-                            ->error("Couldn't destroy GPU stream; This may cause problems later.");
-                }
-
+                const dim3 sinogramDims(rangeDimsui[2], rangeDimsui[1], rangeDimsui[0]);
+                TraverseJosephsCUDA<data_t, 3>::traverseAdjoint(
+                    sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
+                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
+                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
+                    static_cast<uint32_t>(_projInvMatrices.pitch), boxMax);
                 // synchonize because we are using multiple streams
                 cudaDeviceSynchronize();
 
@@ -403,7 +295,7 @@ namespace elsa
             copy3DDataContainer<cudaMemcpyDeviceToHost, false>((void*) &Aty[0], dvolumePtr, volExt);
         } else {
             if (cudaMallocPitch(&dvolumePtr.ptr, &dvolumePtr.pitch,
-                                coeffsPerDim[0] * sizeof(data_t), coeffsPerDim[1])
+                                domainDimsui[0] * sizeof(data_t), domainDimsui[1])
                 != cudaSuccess)
                 throw std::bad_alloc();
 
@@ -412,39 +304,14 @@ namespace elsa
                 auto [sinoTex, sino] = copyTextureToGPU<cudaArrayLayered>(y);
 
                 cudaDeviceSynchronize();
-                if (numImgBlocks > 0) {
-                    const dim3 grid(coeffsPerDim(0), numImgBlocks);
-                    const int threads = _threadsPerBlock;
+                const dim3 volumeDims(1, domainDimsui[1], domainDimsui[0]);
+                const int threads = THREADS_PER_BLOCK;
 
-                    TraverseJosephsCUDA<data_t, 2>::traverseAdjointFast(
-                        grid, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch, sinoTex,
-                        (int8_t*) _rayOrigins.ptr, _rayOrigins.pitch, (int8_t*) _projMatrices.ptr,
-                        _projMatrices.pitch,
-                        _rangeDescriptor->getNumberOfCoefficientsPerDimension()(dim - 1));
-                }
-
-                if (remaining > 0) {
-                    cudaStream_t remStream;
-                    if (cudaStreamCreate(&remStream) != cudaSuccess)
-                        throw std::logic_error("JosephsMethodCUDA::applyAdjoint: Couldn't create "
-                                               "stream for remaining images");
-                    const dim3 grid(coeffsPerDim(0), 1);
-                    const int threads = remaining;
-                    int8_t* volPtr = (int8_t*) dvolumePtr.ptr
-                                     + numImgBlocks * _threadsPerBlock * dvolumePtr.pitch;
-
-                    TraverseJosephsCUDA<data_t, 2>::traverseAdjointFast(
-                        grid, threads, volPtr, dvolumePtr.pitch, sinoTex, (int8_t*) _rayOrigins.ptr,
-                        _rayOrigins.pitch, (int8_t*) _projMatrices.ptr, _projMatrices.pitch,
-                        _rangeDescriptor->getNumberOfCoefficientsPerDimension()(dim - 1),
-                        numImgBlocks * _threadsPerBlock, remStream);
-
-                    if (cudaStreamDestroy(remStream) != cudaSuccess)
-                        Logger::get("JosephsMethodCUDA")
-                            ->error("Couldn't destroy GPU stream; This may cause problems later.");
-                }
-
-                // synchonize because we are using multiple streams
+                TraverseJosephsCUDA<data_t, 2>::traverseAdjointFast(
+                    volumeDims, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch, sinoTex,
+                    (int8_t*) _rayOrigins.ptr, static_cast<uint32_t>(_rayOrigins.pitch),
+                    (int8_t*) _projMatrices.ptr, static_cast<uint32_t>(_projMatrices.pitch),
+                    rangeDimsui[dim - 1]);
                 cudaDeviceSynchronize();
 
                 if (cudaDestroyTextureObject(sinoTex) != cudaSuccess)
@@ -456,70 +323,39 @@ namespace elsa
                         ->error("Couldn't free GPU memory; This may cause problems later.");
             } else {
                 if (cudaMemset2DAsync(dvolumePtr.ptr, dvolumePtr.pitch, 0,
-                                      coeffsPerDim[0] * sizeof(data_t), coeffsPerDim[1])
+                                      domainDimsui[0] * sizeof(data_t), domainDimsui[1])
                     != cudaSuccess)
                     throw std::logic_error("JosephsMethodCUDA::applyAdjoint: Could not "
                                            "zero-initialize volume on GPU.");
 
                 cudaPitchedPtr dsinoPtr;
                 IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
-                if (cudaMallocPitch(&dsinoPtr.ptr, &dsinoPtr.pitch, rangeDims[0] * sizeof(data_t),
-                                    rangeDims[1])
+                if (cudaMallocPitch(&dsinoPtr.ptr, &dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t),
+                                    rangeDimsui[1])
                     != cudaSuccess)
                     throw std::bad_alloc();
 
                 if (cudaMemcpy2DAsync(dsinoPtr.ptr, dsinoPtr.pitch, (void*) &y[0],
-                                      rangeDims[0] * sizeof(data_t), rangeDims[0] * sizeof(data_t),
-                                      rangeDims[1], cudaMemcpyHostToDevice)
+                                      rangeDimsui[0] * sizeof(data_t),
+                                      rangeDimsui[0] * sizeof(data_t), rangeDimsui[1],
+                                      cudaMemcpyHostToDevice)
                     != cudaSuccess)
                     throw std::logic_error(
                         "JosephsMethodCUDA::applyAdjoint: Couldn't transfer sinogram to GPU.");
 
-                // perform backprojection
-                int numImgBlocks = rangeDims(dim - 1) / _threadsPerBlock;
-                int remaining = rangeDims(dim - 1) % _threadsPerBlock;
-
                 IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
                 typename TraverseJosephsCUDA<data_t, 2>::BoundingBox boxMax;
-                boxMax.max[0] = bmax[0];
-                boxMax.max[1] = bmax[1];
+                boxMax._max[0] = static_cast<real_t>(bmax[0]);
+                boxMax._max[1] = static_cast<real_t>(bmax[1]);
                 // synchronize because we are using multiple streams
                 cudaDeviceSynchronize();
-                if (numImgBlocks > 0) {
-                    const dim3 grid(rangeDims(0), numImgBlocks);
-                    const int threads = _threadsPerBlock;
-                    TraverseJosephsCUDA<data_t, 2>::traverseAdjoint(
-                        grid, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                        (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                        _rayOrigins.pitch, (int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
-                        boxMax);
-                }
-
-                if (remaining > 0) {
-                    cudaStream_t remStream;
-                    if (cudaStreamCreate(&remStream) != cudaSuccess)
-                        throw std::logic_error("JosephsMethodCUDA::applyAdjoint: Couldn't create "
-                                               "stream for remaining images");
-
-                    const dim3 grid(rangeDims(0), 1);
-                    const int threads = remaining;
-                    int8_t* imgPtr =
-                        (int8_t*) dsinoPtr.ptr + numImgBlocks * _threadsPerBlock * dsinoPtr.pitch;
-                    int8_t* rayPtr = (int8_t*) _rayOrigins.ptr
-                                     + numImgBlocks * _threadsPerBlock * _rayOrigins.pitch;
-                    int8_t* matrixPtr =
-                        (int8_t*) _projInvMatrices.ptr
-                        + numImgBlocks * _threadsPerBlock * _projInvMatrices.pitch * dim;
-                    TraverseJosephsCUDA<data_t, 2>::traverseAdjoint(
-                        grid, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch, imgPtr,
-                        dsinoPtr.pitch, rayPtr, _rayOrigins.pitch, matrixPtr,
-                        _projInvMatrices.pitch, boxMax, remStream);
-
-                    if (cudaStreamDestroy(remStream) != cudaSuccess)
-                        Logger::get("JosephsMethodCUDA")
-                            ->error("Couldn't destroy GPU stream; This may cause problems later.");
-                }
-
+                const dim3 sinogramDims(rangeDimsui[1], 1, rangeDimsui[0]);
+                const int threads = THREADS_PER_BLOCK;
+                TraverseJosephsCUDA<data_t, 2>::traverseAdjoint(
+                    sinogramDims, threads, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
+                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
+                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
+                    static_cast<uint32_t>(_projInvMatrices.pitch), boxMax);
                 // synchonize because we are using multiple streams
                 cudaDeviceSynchronize();
 
@@ -530,8 +366,8 @@ namespace elsa
             }
 
             // retrieve results from GPU
-            if (cudaMemcpy2D((void*) &Aty[0], coeffsPerDim[0] * sizeof(data_t), dvolumePtr.ptr,
-                             dvolumePtr.pitch, sizeof(data_t) * coeffsPerDim[0], coeffsPerDim[1],
+            if (cudaMemcpy2D((void*) &Aty[0], domainDimsui[0] * sizeof(data_t), dvolumePtr.ptr,
+                             dvolumePtr.pitch, sizeof(data_t) * domainDimsui[0], domainDimsui[1],
                              cudaMemcpyDeviceToHost)
                 != cudaSuccess)
                 throw std::logic_error(
@@ -545,20 +381,63 @@ namespace elsa
     }
 
     template <typename data_t>
+    JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other)
+        : LinearOperator<data_t>(*other._domainDescriptor, *other._rangeDescriptor),
+          _boundingBox{other._boundingBox},
+          _geometryList{other._geometryList},
+          _fast{other._fast}
+    {
+        auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
+        auto numAngles = static_cast<std::size_t>(
+            _rangeDescriptor->getNumberOfCoefficientsPerDimension()[static_cast<index_t>(dim) - 1]);
+
+        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, numAngles);
+
+        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t), numAngles)
+            != cudaSuccess)
+            throw std::bad_alloc();
+
+        _rayOrigins.xsize = dim;
+        _rayOrigins.ysize = _geometryList.size();
+
+        if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
+            throw std::bad_alloc();
+
+        if (cudaMemcpyAsync(_projInvMatrices.ptr, other._projInvMatrices.ptr,
+                            _projInvMatrices.pitch * dim * numAngles, cudaMemcpyDeviceToDevice)
+            != cudaSuccess)
+            throw std::logic_error(
+                "JosephsMethodCUDA: Could not transfer inverse projection matrices to GPU.");
+
+        if (cudaMemcpyAsync(_rayOrigins.ptr, other._rayOrigins.ptr, _rayOrigins.pitch * numAngles,
+                            cudaMemcpyDeviceToDevice)
+            != cudaSuccess)
+            throw std::logic_error("JosephsMethodCUDA: Could not transfer ray origins to GPU.");
+
+        if (_fast) {
+            if (cudaMalloc3D(&_projMatrices, extent) != cudaSuccess)
+                throw std::bad_alloc();
+
+            if (cudaMemcpyAsync(_projMatrices.ptr, other._projMatrices.ptr,
+                                _projMatrices.pitch * dim * numAngles, cudaMemcpyDeviceToDevice)
+                != cudaSuccess)
+                throw std::logic_error(
+                    "JosephsMethodCUDA: Could not transfer projection matrices to GPU.");
+        }
+    }
+
+    template <typename data_t>
     template <cudaMemcpyKind direction, bool async>
     void JosephsMethodCUDA<data_t>::copy3DDataContainer(void* hostData,
                                                         const cudaPitchedPtr& gpuData,
                                                         const cudaExtent& extent) const
     {
-        cudaMemcpy3DParms cpyParams = {0};
+        cudaMemcpy3DParms cpyParams = {};
         cpyParams.extent = extent;
         cpyParams.kind = direction;
 
-        cudaPitchedPtr tmp = {0};
-        tmp.ptr = hostData;
-        tmp.pitch = extent.width;
-        tmp.xsize = extent.width;
-        tmp.ysize = extent.height;
+        cudaPitchedPtr tmp =
+            make_cudaPitchedPtr(hostData, extent.width, extent.width, extent.height);
 
         if (direction == cudaMemcpyHostToDevice) {
             cpyParams.dstPtr = gpuData;
@@ -585,7 +464,8 @@ namespace elsa
         JosephsMethodCUDA<data_t>::copyTextureToGPU(const DataContainer<data_t>& hostData) const
     {
         // transfer volume as texture
-        auto coeffsPerDim = hostData.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+        auto domainDims = hostData.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+        auto domainDimsui = domainDims.template cast<unsigned int>();
 
         cudaArray* volume;
         cudaTextureObject_t volumeTex = 0;
@@ -603,14 +483,14 @@ namespace elsa
 
         if (hostData.getDataDescriptor().getNumberOfDimensions() == 3) {
             cudaExtent volumeExtent =
-                make_cudaExtent(coeffsPerDim[0], coeffsPerDim[1], coeffsPerDim[2]);
+                make_cudaExtent(domainDimsui[0], domainDimsui[1], domainDimsui[2]);
             if (cudaMalloc3DArray(&volume, &channelDesc, volumeExtent, flags) != cudaSuccess)
                 throw std::bad_alloc();
-            cudaMemcpy3DParms cpyParams = {0};
+            cudaMemcpy3DParms cpyParams = {};
             cpyParams.srcPtr.ptr = (void*) &hostData[0];
-            cpyParams.srcPtr.pitch = coeffsPerDim[0] * sizeof(data_t);
-            cpyParams.srcPtr.xsize = coeffsPerDim[0] * sizeof(data_t);
-            cpyParams.srcPtr.ysize = coeffsPerDim[1];
+            cpyParams.srcPtr.pitch = domainDimsui[0] * sizeof(data_t);
+            cpyParams.srcPtr.xsize = domainDimsui[0] * sizeof(data_t);
+            cpyParams.srcPtr.ysize = domainDimsui[1];
             cpyParams.dstArray = volume;
             cpyParams.extent = volumeExtent;
             cpyParams.kind = cudaMemcpyHostToDevice;
@@ -623,17 +503,17 @@ namespace elsa
             if (flags == cudaArrayLayered) {
 
                 // must be allocated as a 3D Array of height 0
-                cudaExtent volumeExtent = make_cudaExtent(coeffsPerDim[0], 0, coeffsPerDim[1]);
+                cudaExtent volumeExtent = make_cudaExtent(domainDimsui[0], 0, domainDimsui[1]);
                 if (cudaMalloc3DArray(&volume, &channelDesc, volumeExtent, flags) != cudaSuccess)
                     throw std::bad_alloc();
 
                 // adjust height to 1 for copy
                 volumeExtent.height = 1;
-                cudaMemcpy3DParms cpyParams = {0};
+                cudaMemcpy3DParms cpyParams = {};
                 cpyParams.srcPos = make_cudaPos(0, 0, 0);
                 cpyParams.dstPos = make_cudaPos(0, 0, 0);
                 cpyParams.srcPtr = make_cudaPitchedPtr(
-                    (void*) &hostData[0], coeffsPerDim[0] * sizeof(data_t), coeffsPerDim[0], 1);
+                    (void*) &hostData[0], domainDimsui[0] * sizeof(data_t), domainDimsui[0], 1);
                 cpyParams.dstArray = volume;
                 cpyParams.extent = volumeExtent;
                 cpyParams.kind = cudaMemcpyHostToDevice;
@@ -642,13 +522,13 @@ namespace elsa
                     throw std::logic_error(
                         "JosephsMethodCUDA::copyTextureToGPU: Could not transfer data to GPU.");
             } else {
-                if (cudaMallocArray(&volume, &channelDesc, coeffsPerDim[0], coeffsPerDim[1], flags)
+                if (cudaMallocArray(&volume, &channelDesc, domainDimsui[0], domainDimsui[1], flags)
                     != cudaSuccess)
                     throw std::bad_alloc();
 
                 if (cudaMemcpy2DToArrayAsync(
-                        volume, 0, 0, &hostData[0], coeffsPerDim[0] * sizeof(data_t),
-                        coeffsPerDim[0] * sizeof(data_t), coeffsPerDim[1], cudaMemcpyHostToDevice)
+                        volume, 0, 0, &hostData[0], domainDimsui[0] * sizeof(data_t),
+                        domainDimsui[0] * sizeof(data_t), domainDimsui[1], cudaMemcpyHostToDevice)
                     != cudaSuccess)
                     throw std::logic_error(
                         "JosephsMethodCUDA::copyTextureToGPU: Could not transfer data to GPU.");
@@ -669,7 +549,7 @@ namespace elsa
         texDesc.readMode = cudaReadModeElementType;
         texDesc.normalizedCoords = 0;
 
-        if (cudaCreateTextureObject(&volumeTex, &resDesc, &texDesc, NULL) != cudaSuccess)
+        if (cudaCreateTextureObject(&volumeTex, &resDesc, &texDesc, nullptr) != cudaSuccess)
             throw std::logic_error("Couldn't create texture object");
 
         return std::pair<cudaTextureObject_t, cudaArray*>(volumeTex, volume);
