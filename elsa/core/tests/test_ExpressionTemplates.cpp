@@ -41,7 +41,7 @@ std::string type_name()
     return r;
 }
 
-SCENARIO("Expression templates")
+TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
 {
     GIVEN("Three random data containers")
     {
@@ -50,15 +50,15 @@ SCENARIO("Expression templates")
         IndexVector_t numCoeff(3);
         numCoeff << dimension, dimension, dimension;
         DataDescriptor desc(numCoeff);
-        DataContainer dc(desc);
-        DataContainer dc2(desc);
-        DataContainer dc3(desc);
-        DataContainer result(desc);
+        DataContainer<TestType> dc(desc);
+        DataContainer<TestType> dc2(desc);
+        DataContainer<TestType> dc3(desc);
+        DataContainer<TestType> result(desc);
 
         for (index_t i = 0; i < dc.getSize(); ++i) {
-            dc[i] = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 100.0));
-            dc2[i] = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 100.0));
-            dc3[i] = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 100.0));
+            dc[i] = static_cast<TestType>(rand()) / (static_cast<TestType>(RAND_MAX / 100.0));
+            dc2[i] = static_cast<TestType>(rand()) / (static_cast<TestType>(RAND_MAX / 100.0));
+            dc3[i] = static_cast<TestType>(rand()) / (static_cast<TestType>(RAND_MAX / 100.0));
         }
 
         WHEN("using auto with an expression")
@@ -94,9 +94,23 @@ SCENARIO("Expression templates")
 
         WHEN("Constructing a new DataContainer out of an expression")
         {
-            DataContainer newDC = dc * dc2 + dc3 / dc2;
+            THEN("the type is a DataContainer again")
+            {
+                DataContainer newDC = dc * dc2 + dc3 / dc2;
+                INFO(type_name<decltype(newDC)>());
+            }
 
-            THEN("the type is a DataContainer again") { INFO(type_name<decltype(newDC)>()); }
+            THEN("the type is a DataContainer again")
+            {
+                DataContainer newDC2 = 2.8 * dc2;
+                INFO(type_name<decltype(newDC2)>());
+            }
+
+            THEN("the type is a DataContainer again")
+            {
+                DataContainer newDC2 = dc2 * 2.8;
+                INFO(type_name<decltype(newDC2)>());
+            }
         }
     }
 

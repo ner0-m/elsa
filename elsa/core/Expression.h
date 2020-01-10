@@ -55,6 +55,9 @@ namespace elsa
         /// type which bundles the meta information to create a new DataContainer
         using MetaInfo_t = std::pair<DataDescriptor const&, DataHandlerType>;
 
+        /// indicates data type is used in the expression
+        using data_t = typename GetOperandsDataType<Operands...>::data_t;
+
         /// Constructor
         Expression(Callable func, Operands const&... args)
             : _callable(func), _args(args...), _dataMetaInfo(initDescriptor(args...))

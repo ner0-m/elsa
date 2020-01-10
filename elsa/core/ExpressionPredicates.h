@@ -72,4 +72,35 @@ namespace elsa
     constexpr bool isBinaryOpOk = (isDcOrExpr<LHS> && isDcOrExpr<RHS>)
                                   || (isDcOrExpr<LHS> && isArithmetic<RHS>)
                                   || (isArithmetic<LHS> && isDcOrExpr<RHS>);
+
+    /// Default case to infer data_t of any operand
+    template <typename Operand>
+    struct GetOperandDataType {
+        using data_t = real_t;
+    };
+
+    /// Partial specialization to infer data_t from DataContainer
+    template <typename data_type>
+    struct GetOperandDataType<DataContainer<data_type>> {
+        using data_t = data_type;
+    };
+
+    /// Partial specialization to infer data_t from Expression
+    template <typename Callable, typename... Operands>
+    struct GetOperandDataType<Expression<Callable, Operands...>> {
+        using data_t = typename Expression<Callable, Operands...>::data_t;
+    };
+
+    /* Uses the data type used in the first or last operand depending on whether the first operand
+     * is an anrithmetic type
+     */
+    template <typename... Operands>
+    struct GetOperandsDataType {
+        using data_t = std::conditional_t<
+            isArithmetic<std::tuple_element_t<0, std::tuple<Operands...>>>,
+            std::tuple_element_t<sizeof...(Operands) - 1,
+                                 std::tuple<typename GetOperandDataType<Operands>::data_t...>>,
+            std::tuple_element_t<0, std::tuple<typename GetOperandDataType<Operands>::data_t...>>>;
+    };
+
 } // namespace elsa

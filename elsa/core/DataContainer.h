@@ -364,6 +364,10 @@ namespace elsa
                                DataHandlerType dataType = DataHandlerType::CPU);
     };
 
+    /// User-defined template argument deduction guide for the expression based constructor
+    template <typename Source>
+    DataContainer(Source const& source)->DataContainer<typename Source::data_t>;
+
     /// Multiplying two operands (including scalars)
     template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
     auto operator*(LHS const& lhs, RHS const& rhs)
