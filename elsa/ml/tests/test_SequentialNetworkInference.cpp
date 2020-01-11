@@ -14,9 +14,7 @@ TEST_CASE("SequentialNetwork Inference", "elsa_ml")
     inputVec << 2, 5;
     DataDescriptor inputDesc(inputVec);
 
-    Eigen::VectorXf inputValues(2 * 5);
-    inputValues << /* First batch */ 1.f, -2.f, 1.f, 1.f, 5.f,
-        /*  Second batch */ 1.5f, -4.f, 3.123f, 1.f, -100.f;
+    Eigen::VectorXf inputValues = Eigen::VectorXf::Random(2 * 5);
 
     DataContainer<float> input(inputDesc, inputValues);
 
@@ -24,12 +22,14 @@ TEST_CASE("SequentialNetwork Inference", "elsa_ml")
 
     // Add network layers
     model
-        // Dense layer with 5 neurons and all weights/biases are 1
+        // Dense layer with 3 neurons and all weights/biases are 1
         .addDenseLayer(3, Initializer::One)
         // Relu layer with negative slope 0.5
         .addActivationLayer(Activation::Relu, .5f)
-        // Dense layer with 2 neurons and all weights/biases are 1
-        .addDenseLayer(5, Initializer::One);
+        // // Dense layer with 5 neurons and all weights/biases are 1
+        .addDenseLayer(5, Initializer::One)
+        // Linear activation layer
+        .addActivationLayer(Activation::Linear, .65f, .123f);
 
     model.compile();
 
@@ -42,22 +42,24 @@ TEST_CASE("SequentialNetwork Inference", "elsa_ml")
     Eigen::VectorXf biasRequired1 = Eigen::VectorXf::Ones(3);
     Eigen::VectorXf biasRequired2 = Eigen::VectorXf::Ones(5);
 
-    Eigen::VectorXf firstBatchInput(5);
-    firstBatchInput << 1.f, -2.f, 1.f, 1.f, 5.f;
-    Eigen::VectorXf secondBatchInput(5);
-    secondBatchInput << 1.5f, -4.f, 3.123f, 1.f, -100.f;
+    Eigen::VectorXf firstBatchInput = inputValues.head(5);
+    Eigen::VectorXf secondBatchInput = inputValues.tail(5);
+
     Eigen::VectorXf firstBatchRequired =
-        weightsRequired2
-            * (weightsRequired1 * firstBatchInput + biasRequired1).unaryExpr([](float coeff) {
-                  return (coeff < 0) ? (.5f * coeff) : (coeff);
-              })
-        + biasRequired2;
+        (weightsRequired2
+             * (weightsRequired1 * firstBatchInput + biasRequired1).unaryExpr([](float coeff) {
+                   return (coeff < 0) ? (.5f * coeff) : (coeff);
+               })
+         + biasRequired2)
+            .unaryExpr([](float coeff) { return .65f * coeff + .123f; });
+
     Eigen::VectorXf secondBatchRequired =
-        weightsRequired2
-            * (weightsRequired1 * secondBatchInput + biasRequired1).unaryExpr([](float coeff) {
-                  return (coeff < 0) ? (.5f * coeff) : (coeff);
-              })
-        + biasRequired2;
+        (weightsRequired2
+             * (weightsRequired1 * secondBatchInput + biasRequired1).unaryExpr([](float coeff) {
+                   return (coeff < 0) ? (.5f * coeff) : (coeff);
+               })
+         + biasRequired2)
+            .unaryExpr([](float coeff) { return .65f * coeff + .123f; });
 
     for (int i = 0; i < 5; ++i)
         REQUIRE(firstBatchRequired[i] == output[i]);

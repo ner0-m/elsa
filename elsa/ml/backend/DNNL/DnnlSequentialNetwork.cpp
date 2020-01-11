@@ -19,15 +19,15 @@ namespace elsa
         for (auto&& layer : *_layerStack)
             layer.getBackend()->setEngine(_engine);
 
-        for (std::size_t i = 1; i < _layerStack->size(); ++i) {
-            auto backend = _layerStack->at(i).getBackend();
+        // for (std::size_t i = 1; i < _layerStack->size(); ++i) {
+        //     auto backend = _layerStack->at(i).getBackend();
 
-            // Set layer's source memory (and source memory descriptor) to previous layer's output
-            // memory
-            auto prevBackend = _layerStack->at(i - 1).getBackend();
-            auto prevOutputMem = prevBackend->getOutputMemory();
-            backend->setSourceMemory(prevOutputMem);
-        }
+        //     // Set layer's source memory (and source memory descriptor) to previous layer's output
+        //     // memory
+        //     auto prevBackend = _layerStack->at(i - 1).getBackend();
+        //     auto prevOutputMem = prevBackend->getOutputMemory();
+        //     backend->setSourceMemory(prevOutputMem);
+        // }
         _isCompiled = true;
     }
 
