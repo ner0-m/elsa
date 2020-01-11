@@ -24,6 +24,8 @@ namespace elsa
         _input.descriptor =
             dnnl::memory::desc({_input.dimensions}, _typeTag, dnnl::memory::format_tag::any);
 
+        _inputGradient.descriptor = _input.descriptor;
+
         // Set destination memory descriptor
         for (const auto& dim : outputDescriptor.getNumberOfCoefficientsPerDimension())
             _output.dimensions.push_back(dim);
@@ -32,15 +34,10 @@ namespace elsa
 
         _output.descriptor =
             dnnl::memory::desc({_output.dimensions}, _typeTag, dnnl::memory::format_tag::any);
+        _outputGradient.descriptor = _output.descriptor;
 
         _output.formatTag = dataDescriptorToDnnlMemoryFormatTag(outputDescriptor, true);
         _outputGradient.formatTag = _output.formatTag;
-
-        // Set diff src memory descriptor
-        _inputGradient.descriptor = _input.descriptor;
-
-        // Set diff dst memory descriptor
-        _outputGradient.descriptor = _output.descriptor;
     }
 
     template <typename data_t>
@@ -89,9 +86,8 @@ namespace elsa
             throw std::logic_error(
                 "Number of Dnnl primitives and number of primitive arguments must match");
 
-        for (std::size_t i = 0; i < _forwardStream.primitives.size(); ++i) {
+        for (std::size_t i = 0; i < _forwardStream.primitives.size(); ++i)
             _forwardStream.primitives[i].execute(executionStream, _forwardStream.arguments[i]);
-        }
     }
 
     template <typename data_t>
@@ -101,10 +97,9 @@ namespace elsa
             throw std::logic_error(
                 "Number of Dnnl primitives and number of primitive arguments must match");
 
-        for (std::size_t i = 0; i < _backwardStream.primitives.size(); ++i) {
+        for (std::size_t i = 0; i < _backwardStream.primitives.size(); ++i)
             _backwardStream.primitives[i].execute(executionStream, _backwardStream.arguments[i]);
-        }
-    }
+    } // namespace elsa
 
     template <typename data_t>
     std::shared_ptr<dnnl::engine> DnnlLayer<data_t>::getEngine() const
@@ -174,7 +169,7 @@ namespace elsa
         // the pointers of described end effective memory
         if (!_input.canBeReordered) {
             _input.effectiveMemory = _input.describedMemory;
-             _input.descriptor = _input.describedMemory->get_desc();
+            _input.descriptor = _input.describedMemory->get_desc();
         }
 
         switch (propagation) {
@@ -196,10 +191,7 @@ namespace elsa
     template <typename data_t>
     std::shared_ptr<dnnl::memory> DnnlLayer<data_t>::getOutputMemory()
     {
-        if (_output.wasReordered) {
-            return _output.effectiveMemory;
-        } else
-            return _output.describedMemory;
+        return _output.effectiveMemory;
     }
 
     template <typename data_t>
@@ -218,9 +210,36 @@ namespace elsa
             throw std::logic_error("Cannot get input gradient because it is empty");
 
         DataContainer<data_t> output(*_inputDescriptor);
+        dnnl::memory outMem;
+        if (_inputGradient.effectiveMemory->get_desc() != _inputGradient.descriptor) {
+            outMem = dnnl::memory({{_inputGradient.dimensions}, _typeTag, _inputGradient.formatTag},
+                                  *_engine);
+            dnnl::stream execStream(*_engine);
+            dnnl::reorder(*_inputGradient.effectiveMemory, outMem)
+                .execute(execStream,
+                         {{DNNL_ARG_FROM, *_inputGradient.effectiveMemory}, {DNNL_ARG_TO, outMem}});
+            execStream.wait();
+        }
+
         // Write reordered memory to output DataContainer. This performs a copy.
-        readFromDnnlMemory(output, *_inputGradient.effectiveMemory);
+        readFromDnnlMemory(output, outMem);
         return output;
+    }
+
+    template <typename data_t>
+    void DnnlLayer<data_t>::reorderMemory(const dnnl::memory::desc& memoryDesc,
+                                          DnnlLayer<data_t>::DnnlMemory& memory,
+                                          DnnlLayer<data_t>::PropagationStream& stream)
+    {
+        memory.effectiveMemory = memory.describedMemory;
+        if (memory.describedMemory->get_desc() != memoryDesc) {
+            memory.wasReordered = true;
+            memory.effectiveMemory = std::make_shared<dnnl::memory>(memoryDesc, *_engine);
+            stream.primitives.push_back(
+                dnnl::reorder(*memory.describedMemory, *memory.effectiveMemory));
+            stream.arguments.push_back(
+                {{DNNL_ARG_FROM, *memory.describedMemory}, {DNNL_ARG_TO, *memory.effectiveMemory}});
+        }
     }
 
     template class DnnlLayer<float>;

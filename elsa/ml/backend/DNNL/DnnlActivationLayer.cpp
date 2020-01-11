@@ -22,6 +22,12 @@ namespace elsa
         _beta = beta;
     }
 
+    static void validateDnnlMemory(std::shared_ptr<dnnl::memory> mem)
+    {
+        assert(mem && "Pointer to memory cannot be null");
+        assert(mem->get_desc().get_size() && "Memory cannot have size 0,");
+    }
+
     template <typename data_t>
     void DnnlActivationLayer<data_t>::compileBackwardStream()
     {
@@ -36,19 +42,16 @@ namespace elsa
             dnnl::eltwise_backward::primitive_desc(desc, *_engine, _forwardPrimitiveDescriptor);
 
         // Reorder if necessary
-        _outputGradient.effectiveMemory = _outputGradient.describedMemory;
-        if (_outputGradient.describedMemory->get_desc()
-            != _backwardPrimitiveDescriptor.diff_dst_desc()) {
-            _outputGradient.effectiveMemory = std::make_shared<dnnl::memory>(
-                _backwardPrimitiveDescriptor.diff_dst_desc(), *_engine);
-            _backwardStream.primitives.push_back(
-                dnnl::reorder(*_outputGradient.describedMemory, *_outputGradient.effectiveMemory));
-            _backwardStream.arguments.push_back({{DNNL_ARG_FROM, *_outputGradient.describedMemory},
-                                                 {DNNL_ARG_TO, *_outputGradient.effectiveMemory}});
-        }
+        this->reorderMemory(_backwardPrimitiveDescriptor.diff_dst_desc(), _outputGradient,
+                            _backwardStream);
 
         _inputGradient.effectiveMemory =
             std::make_shared<dnnl::memory>(_backwardPrimitiveDescriptor.diff_src_desc(), *_engine);
+
+        validateDnnlMemory(_input.effectiveMemory);
+        validateDnnlMemory(_outputGradient.effectiveMemory);
+        validateDnnlMemory(_inputGradient.effectiveMemory);
+
         _backwardStream.primitives.push_back(dnnl::eltwise_backward(_backwardPrimitiveDescriptor));
         _backwardStream.arguments.push_back({{DNNL_ARG_SRC, *_input.effectiveMemory},
                                              {DNNL_ARG_DIFF_DST, *_outputGradient.effectiveMemory},

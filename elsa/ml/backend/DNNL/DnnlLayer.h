@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 #include <memory>
-
+#include "Logger.h"
 #include "elsaDefines.h"
 #include "DataContainer.h"
 #include "DataDescriptor.h"
@@ -92,6 +92,37 @@ namespace elsa
         void setEngine(std::shared_ptr<dnnl::engine> engine);
 
     protected:
+        struct DnnlMemory {
+            /// Memory dimensions
+            dnnl::memory::dims dimensions;
+
+            /// Memory descriptor
+            dnnl::memory::desc descriptor;
+
+            /// Pointer to memory that was described during layer construction
+            std::shared_ptr<dnnl::memory> describedMemory = nullptr;
+
+            /// Pointer to memory that was possibly reordered during execution of
+            /// a primitve
+            std::shared_ptr<dnnl::memory> effectiveMemory = nullptr;
+
+            /// Dnnl format that for memoryDescriptor
+            dnnl::memory::format_tag formatTag;
+
+            /// Flag to indicate whether this memory has been reordered by a
+            /// primitive
+            bool wasReordered = false;
+
+            /// Flag to indicate whether this memory could be reordered by a
+            /// primitive
+            bool canBeReordered = false;
+        };
+
+        struct PropagationStream {
+            std::vector<dnnl::primitive> primitives;
+            std::vector<std::unordered_map<int, dnnl::memory>> arguments;
+        };
+
         /// Construct a DnnlLayer by providing a data descriptors for its input and output
         DnnlLayer(const DataDescriptor& inputDescriptor, const DataDescriptor& outputDescriptor);
 
@@ -100,6 +131,10 @@ namespace elsa
 
         /// Type of all coefficients in this layer, expressed as a Dnnl data-type tag
         static constexpr dnnl::memory::data_type _typeTag = detail::TypeToDnnlTypeTag<data_t>::tag;
+
+        /// Reorders memory from described to effective if memoryDesc differs from memory.get_desc()
+        void reorderMemory(const dnnl::memory::desc& memoryDesc, DnnlMemory& memory,
+                           PropagationStream& stream);
 
         virtual void compileBackwardStream() {}
 
@@ -156,37 +191,6 @@ namespace elsa
          */
         static dnnl::memory::format_tag
             dataDescriptorToDnnlMemoryFormatTag(const DataDescriptor& desc, bool isInput);
-
-        struct DnnlMemory {
-            /// Memory dimensions
-            dnnl::memory::dims dimensions;
-
-            /// Memory descriptor
-            dnnl::memory::desc descriptor;
-
-            /// Pointer to memory that was described during layer construction
-            std::shared_ptr<dnnl::memory> describedMemory = nullptr;
-
-            /// Pointer to memory that was possibly reordered during execution of
-            /// a primitve
-            std::shared_ptr<dnnl::memory> effectiveMemory = nullptr;
-
-            /// Dnnl format that for memoryDescriptor
-            dnnl::memory::format_tag formatTag;
-
-            /// Flag to indicate whether this memory has been reordered by a
-            /// primitive
-            bool wasReordered = false;
-
-            /// Flag to indicate whether this memory could be reordered by a
-            /// primitive
-            bool canBeReordered = false;
-        };
-
-        struct PropagationStream {
-            std::vector<dnnl::primitive> primitives;
-            std::vector<std::unordered_map<int, dnnl::memory>> arguments;
-        };
 
         PropagationStream _forwardStream;
         PropagationStream _backwardStream;

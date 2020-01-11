@@ -101,6 +101,9 @@ namespace elsa
         auto biasDesc =
             dnnl::memory::desc({_biasGradient.dimensions}, _typeTag, _biasGradient.formatTag);
         _biasGradient.describedMemory = std::make_shared<dnnl::memory>(biasDesc, *_engine);
+
+        // Bias can never be reordered
+        _biasGradient.effectiveMemory = _biasGradient.describedMemory;
     }
 
     template <typename data_t>
