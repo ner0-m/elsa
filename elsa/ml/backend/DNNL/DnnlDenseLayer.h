@@ -24,60 +24,30 @@ namespace elsa
         void compileForwardStream() override;
 
         void compileBackwardStream() override;
+        void compileBackwardDataStream();
+        void compileBackwardWeightsStream();
 
-        /// \copydoc DnnlTrainableLayer::_weightsDimensions
-        using BaseType::_weightsDimensions;
-
-        /// \copydoc DnnlTrainableLayer::_weightsMemoryDescriptor
-        using BaseType::_weightsMemoryDescriptor;
-
-        /// \copydoc DnnlTrainableLayer::_weightsMemory
-        using BaseType::_weightsMemory;
-
-        /// \copydoc DnnlTrainableLayer::_reorderedWeightsMemory
-        using BaseType::_reorderedWeightsMemory;
-
-        /// \copydoc DnnlTrainableLayer::_biasDimensions
-        using BaseType::_biasDimensions;
-
-        /// \copydoc DnnlTrainableLayer::_biasMemoryDescriptor
-        using BaseType::_biasMemoryDescriptor;
-
-        /// \copydoc DnnlTrainableLayer::_biasMemory
-        using BaseType::_biasMemory;
-
-        /// \copydoc DnnlTrainableLayer::_srcMemoryDescriptor
-        using BaseType::_srcMemoryDescriptor;
-
-        /// \copydoc DnnlTrainableLayer::_reorderedSrcMemory
-        using BaseType::_reorderedSrcMemory;
-
-        /// \copydoc DnnlTrainableLayer::_dstMemoryDescriptor
-        using BaseType::_dstMemoryDescriptor;
-
-        /// \copydoc DnnlTrainableLayer::_engine
-        using BaseType::_engine;
-
-        /// \copydoc DnnlTrainableLayer::_forwardPrimitives
-        using BaseType::_forwardPrimitives;
-
-        /// \copydoc DnnlTrainableLayer::_dstMemory
-        using BaseType::_dstMemory;
-
-        /// \copydoc DnnlTrainableLayer::_srcMemory
-        using BaseType::_srcMemory;
-
-        /// \copydoc DnnlTrainableLayer::_forwardArguments
-        using BaseType::_forwardArguments;
-
-        /// \copydoc DnnlTrainableLayer::_typeTag
         using BaseType::_typeTag;
 
-        /// \copydoc DnnlTrainableLayer::_hasReorderedMemory
-        using BaseType::_hasReorderedMemory;
+        using BaseType::_engine;
 
-        using BaseType::_fanInOut;
+        using BaseType::_input;
+        using BaseType::_inputGradient;
+
+        using BaseType::_output;
+        using BaseType::_outputGradient;
+
+        using BaseType::_forwardStream;
+        using BaseType::_backwardStream;
+
+        using BaseType::_weights;
+        using BaseType::_weightsGradient;
+
+        using BaseType::_bias;
+        using BaseType::_biasGradient;
 
         dnnl::inner_product_forward::primitive_desc _forwardPrimitiveDescriptor;
+        dnnl::inner_product_backward_data::primitive_desc _backwardDataPrimitiveDescriptor;
+        dnnl::inner_product_backward_weights::primitive_desc _backwardWeightsPrimitiveDescriptor;
     };
 } // namespace elsa

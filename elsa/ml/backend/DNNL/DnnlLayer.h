@@ -157,6 +157,46 @@ namespace elsa
         static dnnl::memory::format_tag
             dataDescriptorToDnnlMemoryFormatTag(const DataDescriptor& desc, bool isInput);
 
+        struct DnnlMemory {
+            /// Memory dimensions
+            dnnl::memory::dims dimensions;
+
+            /// Memory descriptor
+            dnnl::memory::desc descriptor;
+
+            /// Pointer to memory that was described during layer construction
+            std::shared_ptr<dnnl::memory> describedMemory = nullptr;
+
+            /// Pointer to memory that was possibly reordered during execution of
+            /// a primitve
+            std::shared_ptr<dnnl::memory> effectiveMemory = nullptr;
+
+            /// Dnnl format that for memoryDescriptor
+            dnnl::memory::format_tag formatTag;
+
+            /// Flag to indicate whether this memory has been reordered by a
+            /// primitive
+            bool wasReordered = false;
+
+            /// Flag to indicate whether this memory could be reordered by a
+            /// primitive
+            bool canBeReordered = false;
+        };
+
+        struct PropagationStream {
+            std::vector<dnnl::primitive> primitives;
+            std::vector<std::unordered_map<int, dnnl::memory>> arguments;
+        };
+
+        PropagationStream _forwardStream;
+        PropagationStream _backwardStream;
+
+        DnnlMemory _input;
+        DnnlMemory _inputGradient;
+
+        DnnlMemory _output;
+        DnnlMemory _outputGradient;
+
         /// Flag to indicate whether the execution of the primitive has reordered memory.
         bool _hasReorderedMemory = false;
 

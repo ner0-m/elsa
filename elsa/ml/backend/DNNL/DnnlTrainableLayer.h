@@ -57,74 +57,32 @@ namespace elsa
         void compileForwardStream() override;
         void compileBackwardStream() override;
 
-        /// \copydoc DnnlLayer::_srcMemoryDescriptor
-        using BaseType::_srcMemoryDescriptor;
+        using DnnlMemory = typename BaseType::DnnlMemory;
 
-        /// \copydoc DnnlLayer::_reorderedSrcMemory
-        using BaseType::_reorderedSrcMemory;
-
-        /// \copydoc DnnlLayer::_dstMemoryDescriptor
-        using BaseType::_dstMemoryDescriptor;
-
-        /// \copydoc DnnlLayer::_engine
-        using BaseType::_engine;
-
-        /// \copydoc DnnlLayer::_forwardPrimitives
-        using BaseType::_forwardPrimitives;
-
-        /// \copydoc DnnlLayer::_dstMemory
-        using BaseType::_dstMemory;
-
-        /// \copydoc DnnlLayer::_srcMemory
-        using BaseType::_srcMemory;
-
-        /// \copydoc DnnlLayer::_forwardArguments
-        using BaseType::_forwardArguments;
-
-        /// \copydoc DnnlLayer::_typeTag
         using BaseType::_typeTag;
 
-        /// \copydoc DnnlLayer::_hasReorderedMemory
-        using BaseType::_hasReorderedMemory;
+        using BaseType::_engine;
 
-        using BaseType::_gradientSrcMemoryDescriptor;
-        using BaseType::_gradientDstMemoryDescriptor;
-        using BaseType::_reorderedGradientDstMemory;
-        using BaseType::_gradientDstMemory;
-        using BaseType::_backwardPrimitives;
-        using BaseType::_backwardArguments;
-        using BaseType::_gradientSrcMemory;
+        using BaseType::_input;
+        using BaseType::_inputGradient;
+
+        using BaseType::_output;
+        using BaseType::_outputGradient;
+
+        using BaseType::_forwardStream;
+        using BaseType::_backwardStream;
+
+        DnnlMemory _weights;
+        DnnlMemory _weightsGradient;
+
+        DnnlMemory _bias;
+        DnnlMemory _biasGradient;
 
         std::unique_ptr<DataDescriptor> _weightsDescriptor;
         std::unique_ptr<DataDescriptor> _biasDescriptor;
 
-        /// The dimension of the convolutional layer's weights
-        dnnl::memory::dims _weightsDimensions;
-
-        /// This layer's weights memory descriptor
-        dnnl::memory::desc _weightsMemoryDescriptor;
-
-        /// This layer's weights memory
-        dnnl::memory _weightsMemory;
-
-        /// This layer's weights memory after possible reordering
-        dnnl::memory _reorderedWeightsMemory;
-
-        dnnl::memory::format_tag _weightsMemoryFormatTag;
-
-        dnnl::memory::dims _biasDimensions;
-        dnnl::memory::desc _biasMemoryDescriptor;
-        dnnl::memory _biasMemory;
-
         Initializer _initializer;
         typename RandomInitializer<data_t>::FanPairType _fanInOut;
-
-        dnnl::memory _gradientWeightsMemory;
-        dnnl::memory _reorderedGradientWeightsMemory;
-        dnnl::memory::desc _gradientWeightsMemoryDescriptor;
-
-        dnnl::memory _gradientBiasMemory;
-        dnnl::memory::desc _gradientBiasMemoryDescriptor;
     };
 
 } // namespace elsa

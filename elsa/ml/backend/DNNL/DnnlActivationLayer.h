@@ -24,29 +24,27 @@ namespace elsa
 
         using BaseType = DnnlLayer<data_t>;
 
+        using BaseType::_input;
+        using BaseType::_inputGradient;
+
+        using BaseType::_output;
+        using BaseType::_outputGradient;
+
+        using BaseType::_forwardStream;
+        using BaseType::_backwardStream;
+
         using BaseType::_engine;
-        using BaseType::_srcMemoryDescriptor;
-        using BaseType::_dstMemoryDescriptor;
-        using BaseType::_dstMemory;
-        using BaseType::_srcMemory;
-        using BaseType::_forwardArguments;
-        using BaseType::_forwardPrimitives;
-        using BaseType::_gradientDstMemoryDescriptor;
-        using BaseType::_reorderedGradientDstMemory;
-        using BaseType::_gradientDstMemory;
-        using BaseType::_backwardPrimitives;
-        using BaseType::_backwardArguments;
-        using BaseType::_gradientSrcMemory;
 
         dnnl::algorithm _algorithm;
 
         /// Primitive descriptor for element-wise forward propagation
         dnnl::eltwise_forward::primitive_desc _forwardPrimitiveDescriptor;
 
+        /// Primitive descriptor for element-wise backward propagation
         dnnl::eltwise_backward::primitive_desc _backwardPrimitiveDescriptor;
 
-        data_t _alpha;
-        data_t _beta;
+        data_t _alpha = static_cast<data_t>(0);
+        data_t _beta = static_cast<data_t>(0);
     };
 
     template <typename data_t>

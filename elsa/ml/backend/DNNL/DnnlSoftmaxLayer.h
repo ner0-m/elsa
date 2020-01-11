@@ -16,13 +16,16 @@ namespace elsa
 
         using BaseType = DnnlLayer<data_t>;
 
+        using BaseType::_input;
+        using BaseType::_inputGradient;
+
+        using BaseType::_output;
+        using BaseType::_outputGradient;
+
+        using BaseType::_forwardStream;
+        using BaseType::_backwardStream;
+
         using BaseType::_engine;
-        using BaseType::_srcMemoryDescriptor;
-        using BaseType::_dstMemoryDescriptor;
-        using BaseType::_dstMemory;
-        using BaseType::_srcMemory;
-        using BaseType::_forwardArguments;
-        using BaseType::_forwardPrimitives;
 
         int _softmaxAxis;
 

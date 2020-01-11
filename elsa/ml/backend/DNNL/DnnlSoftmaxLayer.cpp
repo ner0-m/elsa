@@ -14,17 +14,18 @@ namespace elsa
     void DnnlSoftmaxLayer<data_t>::compileForwardStream()
     {
         auto desc = dnnl::softmax_forward::desc(dnnl::prop_kind::forward_training,
-                                                _srcMemory->get_desc(), _softmaxAxis);
+                                                _input.descriptor, _softmaxAxis);
 
         _forwardPrimitiveDescriptor = dnnl::softmax_forward::primitive_desc(desc, *_engine);
 
         // Set forward primitive
-        _forwardPrimitives.push_back(dnnl::softmax_forward(_forwardPrimitiveDescriptor));
+        _forwardStream.primitives.push_back(dnnl::softmax_forward(_forwardPrimitiveDescriptor));
 
-        _dstMemory =
+        _output.effectiveMemory =
             std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
 
-        _forwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory}, {DNNL_ARG_DST, *_dstMemory}});
+        _forwardStream.arguments.push_back(
+            {{DNNL_ARG_SRC, *_input.effectiveMemory}, {DNNL_ARG_DST, *_output.effectiveMemory}});
     }
 
     template class DnnlSoftmaxLayer<float>;

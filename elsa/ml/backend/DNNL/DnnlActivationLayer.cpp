@@ -27,8 +27,8 @@ namespace elsa
     {
         auto desc = dnnl::eltwise_backward::desc(
             /* Element-wise algorithm */ _algorithm,
-            /* Gradient dst memory descriptor */ _gradientDstMemoryDescriptor,
-            /* Source memory descriptor */ _srcMemoryDescriptor,
+            /* Gradient dst memory descriptor */ _outputGradient.descriptor,
+            /* Source memory descriptor */ _input.descriptor,
             /* Alpha parameter */ _alpha,
             /* Beta parameter */ _beta);
 
@@ -36,22 +36,23 @@ namespace elsa
             dnnl::eltwise_backward::primitive_desc(desc, *_engine, _forwardPrimitiveDescriptor);
 
         // Reorder if necessary
-        _reorderedGradientDstMemory = *_gradientDstMemory;
-        if (_reorderedGradientDstMemory.get_desc()
+        _outputGradient.effectiveMemory = _outputGradient.describedMemory;
+        if (_outputGradient.describedMemory->get_desc()
             != _backwardPrimitiveDescriptor.diff_dst_desc()) {
-            _reorderedGradientDstMemory =
-                dnnl::memory(_backwardPrimitiveDescriptor.diff_dst_desc(), *_engine);
-            _backwardPrimitives.push_back(
-                dnnl::reorder(*_gradientDstMemory, _reorderedGradientDstMemory));
-            _backwardArguments.push_back(
-                {{DNNL_ARG_FROM, *_gradientDstMemory}, {DNNL_ARG_TO, _reorderedGradientDstMemory}});
+            _outputGradient.effectiveMemory = std::make_shared<dnnl::memory>(
+                _backwardPrimitiveDescriptor.diff_dst_desc(), *_engine);
+            _backwardStream.primitives.push_back(
+                dnnl::reorder(*_outputGradient.describedMemory, *_outputGradient.effectiveMemory));
+            _backwardStream.arguments.push_back({{DNNL_ARG_FROM, *_outputGradient.describedMemory},
+                                                 {DNNL_ARG_TO, *_outputGradient.effectiveMemory}});
         }
 
-        _gradientSrcMemory = dnnl::memory(_backwardPrimitiveDescriptor.diff_dst_desc(), *_engine);
-        _backwardPrimitives.push_back(dnnl::eltwise_backward(_backwardPrimitiveDescriptor));
-        _backwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory},
-                                      {DNNL_ARG_DIFF_DST, _reorderedGradientDstMemory},
-                                      {DNNL_ARG_DIFF_SRC, _gradientSrcMemory}});
+        _inputGradient.effectiveMemory =
+            std::make_shared<dnnl::memory>(_backwardPrimitiveDescriptor.diff_src_desc(), *_engine);
+        _backwardStream.primitives.push_back(dnnl::eltwise_backward(_backwardPrimitiveDescriptor));
+        _backwardStream.arguments.push_back({{DNNL_ARG_SRC, *_input.effectiveMemory},
+                                             {DNNL_ARG_DIFF_DST, *_outputGradient.effectiveMemory},
+                                             {DNNL_ARG_DIFF_SRC, *_inputGradient.effectiveMemory}});
     }
 
     template <typename data_t>
@@ -59,18 +60,19 @@ namespace elsa
     {
         // Set forward primitive description
         auto desc = dnnl::eltwise_forward::desc(dnnl::prop_kind::forward_training, _algorithm,
-                                                _srcMemoryDescriptor, _alpha, _beta);
+                                                _input.descriptor, _alpha, _beta);
 
         _forwardPrimitiveDescriptor = dnnl::eltwise_forward::primitive_desc(desc, *_engine);
 
         // Set forward primitive
-        _forwardPrimitives.push_back(dnnl::eltwise_forward(_forwardPrimitiveDescriptor));
+        _forwardStream.primitives.push_back(dnnl::eltwise_forward(_forwardPrimitiveDescriptor));
 
-        // Set dst memory
-        _dstMemory =
+        // Set output memory. Since no activation layer can reorder we set effective memory directly
+        _output.effectiveMemory =
             std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
 
-        _forwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory}, {DNNL_ARG_DST, *_dstMemory}});
+        _forwardStream.arguments.push_back(
+            {{DNNL_ARG_SRC, *_input.effectiveMemory}, {DNNL_ARG_DST, *_output.effectiveMemory}});
     }
 
     template <typename data_t>
