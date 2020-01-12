@@ -12,7 +12,7 @@ namespace elsa
           _weightsDescriptor(weightsDescriptor.clone()),
           _initializer(initializer)
     {
-        BaseType::_mayReorderMemory = true;
+        _input.canBeReordered = true;
 
         // Set the layer's fan-in and fan-out. This is needed for random initialization of weights
         // and biases

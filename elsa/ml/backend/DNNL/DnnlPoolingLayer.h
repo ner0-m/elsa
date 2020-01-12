@@ -17,6 +17,7 @@ namespace elsa
 
     private:
         void compileForwardStream() override;
+        void compileBackwardStream() override;
 
         using BaseType = DnnlLayer<data_t>;
         using DnnlMemory = typename BaseType::DnnlMemory;
@@ -32,11 +33,14 @@ namespace elsa
 
         using BaseType::_engine;
 
+        using BaseType::_typeTag;
+
         dnnl::memory::dims _poolingStride;
         dnnl::memory::dims _poolingWindow;
         dnnl::memory::dims _poolingPadding;
         DnnlMemory _workspaceMemory;
 
         dnnl::pooling_forward::primitive_desc _forwardPrimitiveDescriptor;
+        dnnl::pooling_backward::primitive_desc _backwardPrimitiveDescriptor;
     };
 } // namespace elsa
