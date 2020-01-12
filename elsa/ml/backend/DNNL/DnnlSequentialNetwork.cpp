@@ -16,19 +16,10 @@ namespace elsa
         if (_layerStack->empty())
             throw std::logic_error("Cannot compile network because it contains no layers");
 
+        // Set engine for all layers
         for (auto&& layer : *_layerStack)
             layer.getBackend()->setEngine(_engine);
 
-        // for (std::size_t i = 1; i < _layerStack->size(); ++i) {
-        //     auto backend = _layerStack->at(i).getBackend();
-
-        //     // Set layer's source memory (and source memory descriptor) to previous layer's
-        //     output
-        //     // memory
-        //     auto prevBackend = _layerStack->at(i - 1).getBackend();
-        //     auto prevOutputMem = prevBackend->getOutputMemory();
-        //     backend->setSourceMemory(prevOutputMem);
-        // }
         _isCompiled = true;
     }
 
@@ -61,8 +52,9 @@ namespace elsa
         dnnl::stream execStream(*_engine);
 
         // Perform layer-wise forward-propagation
-        for (std::size_t i = 0; i < _layerStack->size(); ++i)
+        for (std::size_t i = 0; i < _layerStack->size(); ++i) {
             _layerStack->at(i).getBackend()->forwardPropagate(execStream);
+        }
 
         execStream.wait();
     }

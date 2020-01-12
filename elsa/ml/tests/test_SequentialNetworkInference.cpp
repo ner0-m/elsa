@@ -33,21 +33,19 @@ TEST_CASE("SequentialNetwork Inference", "elsa_ml")
 
     model.compile();
 
+    // First forward propagation
     model.forwardPropagate(input);
-
     auto output = model.getOutput();
 
+    // Calculate expected output
     Eigen::MatrixXf weightsRequired1 = Eigen::MatrixXf::Ones(3, 5);
     Eigen::MatrixXf weightsRequired2 = Eigen::MatrixXf::Ones(5, 3);
     Eigen::VectorXf biasRequired1 = Eigen::VectorXf::Ones(3);
     Eigen::VectorXf biasRequired2 = Eigen::VectorXf::Ones(5);
 
-    Eigen::VectorXf firstBatchInput = inputValues.head(5);
-    Eigen::VectorXf secondBatchInput = inputValues.tail(5);
-
     Eigen::VectorXf firstBatchRequired =
         (weightsRequired2
-             * (weightsRequired1 * firstBatchInput + biasRequired1).unaryExpr([](float coeff) {
+             * (weightsRequired1 * inputValues.head(5) + biasRequired1).unaryExpr([](float coeff) {
                    return (coeff < 0) ? (.5f * coeff) : (coeff);
                })
          + biasRequired2)
@@ -55,7 +53,67 @@ TEST_CASE("SequentialNetwork Inference", "elsa_ml")
 
     Eigen::VectorXf secondBatchRequired =
         (weightsRequired2
-             * (weightsRequired1 * secondBatchInput + biasRequired1).unaryExpr([](float coeff) {
+             * (weightsRequired1 * inputValues.tail(5) + biasRequired1).unaryExpr([](float coeff) {
+                   return (coeff < 0) ? (.5f * coeff) : (coeff);
+               })
+         + biasRequired2)
+            .unaryExpr([](float coeff) { return .65f * coeff + .123f; });
+
+    for (int i = 0; i < 5; ++i)
+        REQUIRE(firstBatchRequired[i] == Approx(output[i]));
+
+    for (int i = 5; i < 10; ++i)
+        REQUIRE(secondBatchRequired[i - 5] == Approx(output[i]));
+
+    // Second forward propagation
+    inputValues.setRandom(2 * 5);
+    input = DataContainer<float>(inputDesc, inputValues);
+
+    model.forwardPropagate(input);
+    output = model.getOutput();
+
+    // Calculate expected output
+    firstBatchRequired =
+        (weightsRequired2
+             * (weightsRequired1 * inputValues.head(5) + biasRequired1).unaryExpr([](float coeff) {
+                   return (coeff < 0) ? (.5f * coeff) : (coeff);
+               })
+         + biasRequired2)
+            .unaryExpr([](float coeff) { return .65f * coeff + .123f; });
+
+    secondBatchRequired =
+        (weightsRequired2
+             * (weightsRequired1 * inputValues.tail(5) + biasRequired1).unaryExpr([](float coeff) {
+                   return (coeff < 0) ? (.5f * coeff) : (coeff);
+               })
+         + biasRequired2)
+            .unaryExpr([](float coeff) { return .65f * coeff + .123f; });
+
+    for (int i = 0; i < 5; ++i)
+        REQUIRE(firstBatchRequired[i] == Approx(output[i]));
+
+    for (int i = 5; i < 10; ++i)
+        REQUIRE(secondBatchRequired[i - 5] == Approx(output[i]));
+
+    // Third forward propagation
+    inputValues.setRandom(2 * 5);
+    input = DataContainer<float>(inputDesc, inputValues);
+
+    model.forwardPropagate(input);
+    output = model.getOutput();
+
+    // Calculate expected output
+    firstBatchRequired =
+        (weightsRequired2
+             * (weightsRequired1 * inputValues.head(5) + biasRequired1).unaryExpr([](float coeff) {
+                   return (coeff < 0) ? (.5f * coeff) : (coeff);
+               })
+         + biasRequired2)
+            .unaryExpr([](float coeff) { return .65f * coeff + .123f; });
+
+    secondBatchRequired =
+        (weightsRequired2
+             * (weightsRequired1 * inputValues.tail(5) + biasRequired1).unaryExpr([](float coeff) {
                    return (coeff < 0) ? (.5f * coeff) : (coeff);
                })
          + biasRequired2)

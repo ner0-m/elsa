@@ -5,9 +5,9 @@ namespace elsa
     template <typename data_t>
     DnnlLayer<data_t>::DnnlLayer(const DataDescriptor& inputDescriptor,
                                  const DataDescriptor& outputDescriptor)
-        : _engine(std::make_shared<dnnl::engine>(dnnl::engine::kind::cpu, 0)),
-          _outputDescriptor(outputDescriptor.clone()),
-          _inputDescriptor(inputDescriptor.clone())
+        : _outputDescriptor(outputDescriptor.clone()),
+          _inputDescriptor(inputDescriptor.clone()),
+          _engine(std::make_shared<dnnl::engine>(dnnl::engine::kind::cpu, 0))
     {
         // Set source memory descriptor
         for (const auto& dim : inputDescriptor.getNumberOfCoefficientsPerDimension())
@@ -116,8 +116,11 @@ namespace elsa
     template <typename data_t>
     void DnnlLayer<data_t>::setInput(const DataContainer<data_t>& input)
     {
-        _input.describedMemory = std::make_shared<dnnl::memory>(
-            dnnl::memory::desc({{_input.dimensions}, _typeTag, _input.formatTag}), *_engine);
+        // If no input has been set yet we allocate
+        if (!_input.describedMemory) {
+            _input.describedMemory = std::make_shared<dnnl::memory>(
+                dnnl::memory::desc({{_input.dimensions}, _typeTag, _input.formatTag}), *_engine);
+        }
 
         writeToDnnlMemory(input, *_input.describedMemory);
     }
@@ -174,14 +177,18 @@ namespace elsa
 
         switch (propagation) {
             case PropagationKind::Forward:
-                compileForwardStream();
+                if (!_forwardStream.isCompiled)
+                    compileForwardStream();
                 break;
             case PropagationKind::Backward:
-                compileBackwardStream();
+                if (!_backwardStream.isCompiled)
+                    compileBackwardStream();
                 break;
             case PropagationKind::Full:
-                compileForwardStream();
-                compileBackwardStream();
+                if (!_forwardStream.isCompiled)
+                    compileForwardStream();
+                if (!_backwardStream.isCompiled)
+                    compileBackwardStream();
                 break;
             default:
                 throw std::invalid_argument("Failed to compile layer: Unkown propagation kind");
