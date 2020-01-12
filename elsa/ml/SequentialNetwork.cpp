@@ -19,6 +19,65 @@ namespace elsa
     }
 
     template <typename data_t, MlBackend Backend>
+    DataDescriptor SequentialNetwork<data_t, Backend>::getOutputDescriptor() const
+    {
+        if (_layerStack.empty())
+            throw std::logic_error(
+                "Cannot return network output descriptor because network contains no layers");
+
+        return _layerStack.back().getOutputDescriptor();
+    }
+
+    template <typename data_t, MlBackend Backend>
+    DataDescriptor SequentialNetwork<data_t, Backend>::getInputDescriptor() const
+    {
+        return *_inputDescriptor;
+    }
+
+    template <typename data_t, MlBackend Backend>
+    std::size_t SequentialNetwork<data_t, Backend>::getNumberOfLayers() const
+    {
+        return _layerStack.size();
+    }
+
+    template <typename data_t, MlBackend Backend>
+    void SequentialNetwork<data_t, Backend>::forwardPropagate(const DataContainer<data_t>& input)
+    {
+        if (!_backend)
+            throw std::logic_error("Cannot forward propagate because the network has not been "
+                                   "compiled. Use SequentialNetwork::compile.");
+
+        _backend->forwardPropagate(input);
+
+        _isPropagated = true;
+    }
+
+    template <typename data_t, MlBackend Backend>
+    DataContainer<data_t> SequentialNetwork<data_t, Backend>::getOutput() const
+    {
+        if (_layerStack.empty())
+            throw std::logic_error("Cannot get network output: The network contains not layers");
+
+        if (!_isPropagated)
+            throw std::logic_error("Cannot get network output: No input has been propagated");
+
+        // The network's output is the last layer's output
+        return _backend->getOutput();
+    }
+
+    template <typename data_t, MlBackend Backend>
+    void SequentialNetwork<data_t, Backend>::compile()
+    {
+        if (_layerStack.empty()) {
+            throw std::logic_error("Cannot compile network: Network contains not layers");
+        }
+        _backend = std::make_unique<BackendNetworkType>(&_layerStack);
+        _backend->compile();
+    }
+
+    // Functions to add network layers
+
+    template <typename data_t, MlBackend Backend>
     SequentialNetwork<data_t, Backend>&
         SequentialNetwork<data_t, Backend>::addDenseLayer(int numNeurons, Initializer initializer)
     {
@@ -71,53 +130,18 @@ namespace elsa
     }
 
     template <typename data_t, MlBackend Backend>
-    DataDescriptor SequentialNetwork<data_t, Backend>::getOutputDescriptor() const
+    SequentialNetwork<data_t, Backend>& SequentialNetwork<data_t, Backend>::addSoftmaxLayer()
     {
-        if (_layerStack.empty())
-            throw std::logic_error(
-                "Cannot return network output descriptor because network contains no layers");
-
-        return _layerStack.back().getOutputDescriptor();
+        return addLayer<SoftmaxLayer<data_t, Backend>>();
     }
 
     template <typename data_t, MlBackend Backend>
-    DataDescriptor SequentialNetwork<data_t, Backend>::getInputDescriptor() const
+    SequentialNetwork<data_t, Backend>& SequentialNetwork<data_t, Backend>::addConvLayer(
+        const DataDescriptor& weightsDescriptor, const IndexVector_t& strideVector,
+        const IndexVector_t& paddingVector, Initializer initializer)
     {
-        return *_inputDescriptor;
-    }
-
-    template <typename data_t, MlBackend Backend>
-    std::size_t SequentialNetwork<data_t, Backend>::getNumberOfLayers() const
-    {
-        return _layerStack.size();
-    }
-
-    template <typename data_t, MlBackend Backend>
-    void SequentialNetwork<data_t, Backend>::forwardPropagate(const DataContainer<data_t>& input)
-    {
-        if (!_backend)
-            throw std::logic_error("Cannot forward propagate because the network has not been "
-                                   "compiled. Use SequentialNetwork::compile.");
-
-        _backend->forwardPropagate(input);
-    }
-
-    template <typename data_t, MlBackend Backend>
-    DataContainer<data_t> SequentialNetwork<data_t, Backend>::getOutput() const
-    {
-        if (_layerStack.empty())
-            throw std::logic_error(
-                "Cannot get network output because the network contains not layers");
-
-        // The network's output is the last layer's output
-        return _backend->getOutput();
-    }
-
-    template <typename data_t, MlBackend Backend>
-    void SequentialNetwork<data_t, Backend>::compile()
-    {
-        _backend = std::make_unique<BackendNetworkType>(&_layerStack);
-        _backend->compile();
+        return addLayer<ConvLayer<data_t, Backend>>(weightsDescriptor, strideVector, paddingVector,
+                                                    initializer);
     }
 
     template class SequentialNetwork<float, MlBackend::Dnnl>;

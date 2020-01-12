@@ -11,6 +11,7 @@
 #include "PoolingLayer.h"
 #include "ConvLayer.h"
 #include "DenseLayer.h"
+#include "SoftmaxLayer.h"
 #include "RandomInitializer.h"
 #include "DnnlSequentialNetwork.h"
 
@@ -36,6 +37,7 @@ namespace elsa
          * Add a dense layer to the network.
          *
          * \param[in] numNeurons Number of neurons of the dense layer
+         *
          * \return A reference to the network to allow method chaining
          */
         SequentialNetwork<data_t, Backend>&
@@ -45,7 +47,8 @@ namespace elsa
          * Add a pooling layer to the network.
          *
          * \param[in] poolingWindow Pooling window of the pooling layer
-         * \param[in] poonlingStide Pooling stride of the pooling layer
+         * \param[in] poonlingStide Pooling stride of the pooling layer+
+         *
          * \return A reference to the network to allow method chaining
          */
         SequentialNetwork<data_t, Backend>& addPoolingLayer(const IndexVector_t& poolingWindow,
@@ -61,10 +64,33 @@ namespace elsa
          * \param[in] beta Beta parameter for the activation function. If the
          *            activation function doesn't use this parameter it is ignored. This parameter
          * is optional and defaults to 0.
+         *
          * \return A reference to the network to allow method chaining
          */
         SequentialNetwork<data_t, Backend>& addActivationLayer(Activation activation,
                                                                data_t alpha = 0, data_t beta = 0);
+
+        /**
+         * Add a convolution layer to the network
+         *
+         * \param[in] weightsDescriptor Descriptor for the layer's weights
+         * \param[in] strideVector Vector describing the stride for each spatial dimension
+         * \param[in] paddingVector Vector describing padding for each spatial dimension
+         * \param[in] initializer The layer's initializer
+         *
+         * \return A reference to the network to allow method chaining
+         */
+        SequentialNetwork<data_t, Backend>&
+            addConvLayer(const DataDescriptor& weightsDescriptor, const IndexVector_t& strideVector,
+                         const IndexVector_t& paddingVector,
+                         Initializer initializer = Initializer::Uniform);
+
+        /**
+         * Add a softmax layer to the network
+         *
+         * \return A reference to the network to allow method chaining
+         */
+        SequentialNetwork<data_t, Backend>& addSoftmaxLayer();
 
         /**
          * Get the network's output descriptor.
@@ -79,8 +105,14 @@ namespace elsa
         /// Get the number of layers in the network
         std::size_t getNumberOfLayers() const;
 
+        /// Forward propagate input through all network layers
         void forwardPropagate(const DataContainer<data_t>& input);
 
+        /**
+         * Get network output
+         *
+         * \note This function throws if the output contains no layers
+         */
         DataContainer<data_t> getOutput() const;
 
         void compile();
@@ -111,9 +143,17 @@ namespace elsa
             return *this;
         }
 
+        /// The networks input descriptor
         std::unique_ptr<DataDescriptor> _inputDescriptor;
+
+        /// A vector containing all network layer
         std::vector<Layer<data_t, Backend>> _layerStack;
+
+        /// A pointer to this layer's backend
         std::unique_ptr<BackendNetworkType> _backend = nullptr;
+
+        // Flag to indicate that an input has been propagated through the network
+        bool _isPropagated = false;
     };
 
     namespace detail
