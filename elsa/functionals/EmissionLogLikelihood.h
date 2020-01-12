@@ -64,13 +64,13 @@ namespace elsa
          */
         EmissionLogLikelihood(const Residual<data_t>& residual, const DataContainer<data_t>& y);
 
+        /// make copy constructor deletion explicit
+        EmissionLogLikelihood(const EmissionLogLikelihood<data_t>&) = delete;
+
         /// default destructor
         ~EmissionLogLikelihood() override = default;
 
     protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        EmissionLogLikelihood(const EmissionLogLikelihood<data_t>&) = default;
-
         /// the evaluation of the emission log-likelihood
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

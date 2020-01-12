@@ -11,6 +11,7 @@
 #include "Scaling.h"
 #include "L2NormPow2.h"
 #include "WeightedL2NormPow2.h"
+#include "Huber.h"
 #include "Logger.h"
 
 #include <array>
@@ -254,6 +255,19 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
         data_t weightFactor = 2.0;
         Scaling<data_t> weightingOp{dd, weightFactor};
 
+        WHEN("trying to convert a problem with a non-quadric non-wls data term")
+        {
+            Problem prob{Huber<data_t>{dd}};
+            THEN("an exception is thrown") { REQUIRE_THROWS(QuadricProblem{prob}); }
+        }
+
+        WHEN("trying to convert a problem with a non-quadric non-wls regularization term")
+        {
+            Problem prob{L2NormPow2<data_t>{dd},
+                         RegularizationTerm{static_cast<data_t>(0.5), Huber<data_t>{dd}}};
+            THEN("an exception is thrown") { REQUIRE_THROWS(QuadricProblem{prob}); }
+        }
+
         WHEN("converting an optimization problem that has only a quadric data term")
         {
             randomData.setRandom();
@@ -319,7 +333,64 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
             }
         }
 
+        randomData.setRandom();
+        DataContainer<data_t> x0{dd, randomData};
+
+        Scaling A{dd, static_cast<data_t>(2.0)};
+        randomData.setRandom();
+        DataContainer<data_t> b{dd, randomData};
+
         std::vector<std::unique_ptr<Functional<data_t>>> dataTerms;
+        dataTerms.push_back(std::make_unique<Quadric<data_t>>(dd));
+        dataTerms.push_back(std::make_unique<Quadric<data_t>>(A));
+        dataTerms.push_back(std::make_unique<Quadric<data_t>>(b));
+        dataTerms.push_back(std::make_unique<Quadric<data_t>>(A, b));
+
+        Scaling L{dd, static_cast<data_t>(0.5)};
+        randomData.setRandom();
+        DataContainer c{dd, randomData};
+
+        std::vector<std::unique_ptr<Quadric<data_t>>> regFunc;
+        regFunc.push_back(std::make_unique<Quadric<data_t>>(dd));
+        regFunc.push_back(std::make_unique<Quadric<data_t>>(A));
+        regFunc.push_back(std::make_unique<Quadric<data_t>>(b));
+        regFunc.push_back(std::make_unique<Quadric<data_t>>(A, b));
+
+        std::array descriptions = {"has no operator and no vector", "has an operator but no vector",
+                                   "has no operator, but has a vector",
+                                   "has an operator and a vector"};
+
+        for (std::size_t i = 0; i < dataTerms.size(); i++) {
+            for (std::size_t j = 0; j < regFunc.size(); j++) {
+                WHEN(std::string(
+                         "Calling the conversion constructor on an OptimizationProblem with only "
+                         "quadric terms. The data term ")
+                     + descriptions[i] + ". The regularization term " + descriptions[j])
+                {
+
+                    RegularizationTerm reg{static_cast<data_t>(0.25), *regFunc[j]};
+                    Problem prob{*dataTerms[i], reg, x0};
+
+                    QuadricProblem converted{prob};
+
+                    THEN("the problem can be converted and all operations yield the same result as "
+                         "for the initial problem")
+                    {
+
+                        REQUIRE(converted.evaluate() == Approx(prob.evaluate()));
+
+                        DataContainer<data_t> gradDiff =
+                            prob.getGradient() - converted.getGradient();
+                        REQUIRE(gradDiff.squaredL2Norm()
+                                == Approx(0).margin(std::numeric_limits<data_t>::epsilon()));
+
+                        REQUIRE(prob.getHessian().apply(x0) == converted.getHessian().apply(x0));
+                    }
+                }
+            }
+        }
+
+        dataTerms.clear();
         dataTerms.push_back(std::move(std::make_unique<L2NormPow2<data_t>>(dd)));
         dataTerms.push_back(
             std::move(std::make_unique<L2NormPow2<data_t>>(LinearResidual<data_t>{scalingOp})));
@@ -336,8 +407,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
             LinearResidual<data_t>{scalingOp, dc}, weightingOp)));
 
         for (const auto& dataTerm : dataTerms) {
-            const LinearResidual<data_t>& res =
-                static_cast<const LinearResidual<data_t>&>(dataTerm->getResidual());
+            const auto& res = static_cast<const LinearResidual<data_t>&>(dataTerm->getResidual());
             const auto isWeighted = dynamic_cast<const WeightedL2NormPow2<data_t>*>(dataTerm.get());
             std::string probType = isWeighted ? "wls problem" : "ls problem";
 
@@ -482,7 +552,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
             }
 
             for (const auto& regTerm : dataTerms) {
-                const LinearResidual<data_t>& res =
+                const auto& res =
                     static_cast<const LinearResidual<data_t>&>(regTerm->getResidual());
                 const auto isWeighted =
                     dynamic_cast<const WeightedL2NormPow2<data_t>*>(regTerm.get());

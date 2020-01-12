@@ -59,6 +59,9 @@ namespace elsa
          */
         explicit Quadric(const DataDescriptor& domainDescriptor);
 
+        /// make copy constructor deletion explicit
+        Quadric(const Quadric<data_t>&) = delete;
+
         /// default destructor
         ~Quadric() override = default;
 
@@ -67,9 +70,6 @@ namespace elsa
         const LinearResidual<data_t>& getGradientExpression() const;
 
     protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        Quadric(const Quadric<data_t>&) = default;
-
         /// the evaluation of the Quadric functional
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

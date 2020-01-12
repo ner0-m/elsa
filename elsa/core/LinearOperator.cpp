@@ -227,16 +227,21 @@ namespace elsa
     template <typename data_t>
     bool LinearOperator<data_t>::isEqual(const LinearOperator<data_t>& other) const
     {
+        if (typeid(other) != typeid(*this))
+            return false;
+
         if (*_domainDescriptor != *other._domainDescriptor
             || *_rangeDescriptor != *other._rangeDescriptor)
             return false;
 
+        if (_isLeaf ^ other._isLeaf || _isComposite ^ other._isComposite)
+            return false;
+
         if (_isLeaf)
-            return other._isLeaf && (_isAdjoint == other._isAdjoint) && (*_lhs == *other._lhs);
+            return (_isAdjoint == other._isAdjoint) && (*_lhs == *other._lhs);
 
         if (_isComposite)
-            return other._isComposite && _mode == other._mode && (*_lhs == *other._lhs)
-                   && (*_rhs == *other._rhs);
+            return _mode == other._mode && (*_lhs == *other._lhs) && (*_rhs == *other._rhs);
 
         return true;
     }
@@ -256,8 +261,14 @@ namespace elsa
     template <typename data_t>
     LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& lhs,
                                            const LinearOperator<data_t>& rhs, CompositeMode mode)
-        : _domainDescriptor{rhs.getDomainDescriptor().clone()},
-          _rangeDescriptor{lhs.getRangeDescriptor().clone()},
+        : _domainDescriptor{mode == CompositeMode::MULT
+                                ? rhs.getDomainDescriptor().clone()
+                                : DataDescriptor::bestCommon(*lhs._domainDescriptor,
+                                                             *rhs._domainDescriptor)},
+          _rangeDescriptor{
+              mode == CompositeMode::MULT
+                  ? lhs.getRangeDescriptor().clone()
+                  : DataDescriptor::bestCommon(*lhs._rangeDescriptor, *rhs._rangeDescriptor)},
           _lhs{lhs.clone()},
           _rhs{rhs.clone()},
           _isComposite{true},
@@ -266,16 +277,13 @@ namespace elsa
         // sanity check the descriptors
         switch (_mode) {
             case CompositeMode::ADD:
-                // for addition, both domains and ranges should match
-                if (_lhs->getDomainDescriptor() != _rhs->getDomainDescriptor()
-                    || _lhs->getRangeDescriptor() != _rhs->getRangeDescriptor())
-                    throw std::invalid_argument(
-                        "LinearOperator: composite add domain/range mismatch");
+                /// feasibility checked by bestCommon()
                 break;
 
             case CompositeMode::MULT:
                 // for multiplication, domain of _lhs should match range of _rhs
-                if (_lhs->getDomainDescriptor() != _rhs->getRangeDescriptor())
+                if (_lhs->getDomainDescriptor().getNumberOfCoefficients()
+                    != _rhs->getRangeDescriptor().getNumberOfCoefficients())
                     throw std::invalid_argument(
                         "LinearOperator: composite mult domain/range mismatch");
                 break;

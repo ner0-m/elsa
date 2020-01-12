@@ -38,13 +38,13 @@ namespace elsa
          */
         explicit LInfNorm(const Residual<data_t>& residual);
 
+        /// make copy constructor deletion explicit
+        LInfNorm(const LInfNorm<data_t>&) = delete;
+
         /// default destructor
         ~LInfNorm() override = default;
 
     protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        LInfNorm(const LInfNorm<data_t>&) = default;
-
         /// the evaluation of the linf norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

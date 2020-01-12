@@ -43,7 +43,7 @@ SCENARIO("Create a Circular Trajectory")
 
                 real_t angle = static_cast<real_t>(1.0) * static_cast<real_t>(halfCircular)
                                / real_t(numberOfAngles - 1);
-                for (int i = 0; i < numberOfAngles; ++i) {
+                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
                     Geometry tmpGeom(sourceToCenter, centerToDetector, currAngle, desc, *sdesc);
 
@@ -77,7 +77,7 @@ SCENARIO("Create a Circular Trajectory")
 
                 real_t angle = static_cast<real_t>(1.0) * static_cast<real_t>(halfCircular)
                                / static_cast<real_t>(numberOfAngles - 1);
-                for (int i = 0; i < numberOfAngles; ++i) {
+                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
                     Geometry tmpGeom(sourceToCenter, centerToDetector, currAngle, desc, *sdesc);
 
@@ -119,7 +119,7 @@ SCENARIO("Create a Circular Trajectory")
 
                 real_t angleInc = 1.0f * static_cast<real_t>(halfCircular)
                                   / static_cast<real_t>(numberOfAngles - 1);
-                for (int i = 0; i < numberOfAngles; ++i) {
+                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
                     Geometry tmpGeom(sourceToCenter, centerToDetector, desc, *sdesc, angle);
 
@@ -153,7 +153,7 @@ SCENARIO("Create a Circular Trajectory")
 
                 real_t angleInc = 1.0f * static_cast<real_t>(halfCircular)
                                   / static_cast<real_t>(numberOfAngles - 1);
-                for (int i = 0; i < numberOfAngles; ++i) {
+                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
                     Geometry tmpGeom(sourceToCenter, centerToDetector, desc, *sdesc, angle);
 

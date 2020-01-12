@@ -1,0 +1,388 @@
+/**
+ * \file test_PartitionDescriptor.cpp
+ *
+ * \brief Tests for PartitionDescriptor class
+ *
+ * \author Nikola Dinev
+ */
+
+#include <catch2/catch.hpp>
+#include "PartitionDescriptor.h"
+#include <stdexcept>
+
+using namespace elsa;
+
+SCENARIO("Constructing PartitionDescriptors")
+{
+    GIVEN("a 1D descriptor")
+    {
+        DataDescriptor dd(IndexVector_t::Constant(1, 10));
+
+        WHEN("partitioning it into 1 blocks")
+        {
+            REQUIRE_THROWS(PartitionDescriptor(dd, 1));
+            REQUIRE_THROWS(PartitionDescriptor(dd, IndexVector_t::Constant(1, 10)));
+        }
+
+        WHEN("partitioning it into more blocks than the size of the last dimension")
+        {
+            REQUIRE_THROWS(PartitionDescriptor(dd, 11));
+            REQUIRE_THROWS(PartitionDescriptor(dd, IndexVector_t::Ones(11)));
+            REQUIRE_THROWS(PartitionDescriptor(dd, IndexVector_t::Zero(11)));
+        }
+
+        WHEN("partitioning it into 5 blocks with equal sizes")
+        {
+            index_t blocks = 5;
+            PartitionDescriptor bd(dd, blocks);
+
+            THEN("the partitioned descriptor has the same number of coefficients and spacing per "
+                 "dimension as the original")
+            {
+                REQUIRE(dd.getNumberOfCoefficientsPerDimension()
+                        == bd.getNumberOfCoefficientsPerDimension());
+                REQUIRE(dd.getSpacingPerDimension() == bd.getSpacingPerDimension());
+            }
+
+            THEN("there are 5 blocks of the correct size")
+            {
+                REQUIRE(bd.getNumberOfBlocks() == blocks);
+
+                DataDescriptor bd0(IndexVector_t::Constant(1, 2), dd.getSpacingPerDimension());
+                for (index_t i = 0; i < blocks; ++i)
+                    REQUIRE(bd.getDescriptorOfBlock(i) == bd0);
+
+                REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
+            }
+
+            THEN("the block offsets are correct")
+            {
+                for (index_t i = 0; i < blocks; ++i)
+                    REQUIRE(bd.getOffsetOfBlock(i) == i * dd.getNumberOfCoefficients() / blocks);
+
+                REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
+            }
+
+            THEN("original and partitioned descriptor are not equal")
+            {
+                REQUIRE(bd != dd);
+                REQUIRE(dd != bd);
+            }
+        }
+
+        WHEN("partitioning it into 5 blocks with chosen sizes")
+        {
+            index_t blocks = 5;
+            IndexVector_t split(blocks);
+            split << 1, 2, 3, 1, 3;
+            PartitionDescriptor bd(dd, split);
+
+            THEN("the partitioned descriptor has the same number of coefficients and spacing per "
+                 "dimension as the original")
+            {
+                REQUIRE(dd.getNumberOfCoefficientsPerDimension()
+                        == bd.getNumberOfCoefficientsPerDimension());
+                REQUIRE(dd.getSpacingPerDimension() == bd.getSpacingPerDimension());
+            }
+
+            THEN("there are 5 blocks of the correct size")
+            {
+                REQUIRE(bd.getNumberOfBlocks() == blocks);
+
+                for (index_t i = 0; i < blocks; ++i) {
+                    REQUIRE(bd.getDescriptorOfBlock(i).getNumberOfDimensions() == 1);
+                    REQUIRE(bd.getDescriptorOfBlock(i).getNumberOfCoefficients() == split[i]);
+                    REQUIRE(bd.getDescriptorOfBlock(i).getSpacingPerDimension()
+                            == bd.getSpacingPerDimension());
+                }
+
+                REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
+            }
+
+            THEN("the block offsets are correct")
+            {
+                for (index_t i = 0; i < blocks; ++i)
+                    REQUIRE(bd.getOffsetOfBlock(i) == split.head(i).sum());
+
+                REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
+            }
+
+            THEN("original and partitioned descriptor are not equal")
+            {
+                REQUIRE(bd != dd);
+                REQUIRE(dd != bd);
+            }
+        }
+    }
+
+    GIVEN("a 2D descriptor with blocks")
+    {
+        IndexVector_t sizeVector(2);
+        sizeVector << 11, 102;
+        DataDescriptor dd(sizeVector);
+
+        IndexVector_t coeffs(2);
+        coeffs << 11, 10;
+        DataDescriptor bd0(coeffs, dd.getSpacingPerDimension());
+
+        coeffs[1] = 11;
+        DataDescriptor bdn(coeffs, dd.getSpacingPerDimension());
+
+        WHEN("partitioning it into 10 blocks")
+        {
+            index_t blocks = 10;
+            PartitionDescriptor bd(dd, blocks);
+
+            THEN("the partitioned descriptor has the same number of coefficients and spacing per "
+                 "dimension as the original")
+            {
+                REQUIRE(dd.getNumberOfCoefficientsPerDimension()
+                        == bd.getNumberOfCoefficientsPerDimension());
+                REQUIRE(dd.getSpacingPerDimension() == bd.getSpacingPerDimension());
+            }
+
+            THEN("there are 10 blocks of the correct size")
+            {
+                REQUIRE(bd.getNumberOfBlocks() == blocks);
+
+                for (index_t i = 0; i < blocks - 2; ++i)
+                    REQUIRE(bd.getDescriptorOfBlock(i) == bd0);
+
+                for (index_t i = blocks - 2; i < blocks; ++i)
+                    REQUIRE(bd.getDescriptorOfBlock(i) == bdn);
+
+                REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
+            }
+
+            THEN("the block offsets are correct")
+            {
+                index_t size0 = bd0.getNumberOfCoefficients();
+                index_t sizen = bdn.getNumberOfCoefficients();
+                for (index_t i = 0; i < blocks - 2; ++i)
+                    REQUIRE(bd.getOffsetOfBlock(i) == i * size0);
+
+                for (index_t i = 0; i < 2; ++i)
+                    REQUIRE(bd.getOffsetOfBlock(blocks - 2 + i)
+                            == (blocks - 2) * size0 + i * sizen);
+
+                REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
+            }
+
+            THEN("original and partitioned descriptor are not equal")
+            {
+                REQUIRE(bd != dd);
+                REQUIRE(dd != bd);
+            }
+        }
+
+        WHEN("partitioning it into 10 blocks with chosen sizes")
+        {
+            index_t blocks = 10;
+            IndexVector_t split(blocks);
+            split << 1, 2, 3, 4, 5, 6, 7, 8, 9, 57;
+            PartitionDescriptor bd(dd, split);
+
+            THEN("the partitioned descriptor has the same number of coefficients and spacing per "
+                 "dimension as the original")
+            {
+                REQUIRE(dd.getNumberOfCoefficientsPerDimension()
+                        == bd.getNumberOfCoefficientsPerDimension());
+                REQUIRE(dd.getSpacingPerDimension() == bd.getSpacingPerDimension());
+            }
+
+            THEN("there are 10 blocks of the correct size")
+            {
+                REQUIRE(bd.getNumberOfBlocks() == blocks);
+
+                for (index_t i = 0; i < blocks; i++) {
+                    auto coeffsPerDim = dd.getNumberOfCoefficientsPerDimension();
+                    coeffsPerDim[1] = split[i];
+
+                    REQUIRE(bd.getDescriptorOfBlock(i).getNumberOfCoefficientsPerDimension()
+                            == coeffsPerDim);
+
+                    REQUIRE(bd.getDescriptorOfBlock(i).getSpacingPerDimension()
+                            == bd.getSpacingPerDimension());
+                }
+
+                REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
+            }
+
+            THEN("the block offsets are correct")
+            {
+                for (index_t i = 0; i < blocks; i++)
+                    REQUIRE(bd.getOffsetOfBlock(i) == sizeVector[0] * split.head(i).sum());
+
+                REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
+            }
+
+            THEN("original and partitioned descriptor are not equal")
+            {
+                REQUIRE(bd != dd);
+                REQUIRE(dd != bd);
+            }
+        }
+    }
+
+    GIVEN("a 3D descriptor with blocks")
+    {
+        IndexVector_t sizeVector(3);
+        sizeVector << 101, 42, 750;
+        DataDescriptor dd(sizeVector);
+
+        sizeVector[2] = 30;
+        DataDescriptor bd0(sizeVector);
+        WHEN("creating 25 blocks")
+        {
+            index_t blocks = 25;
+            PartitionDescriptor bd(dd, blocks);
+
+            THEN("the partitioned descriptor has the same number of coefficients and spacing per "
+                 "dimension as the original")
+            {
+                REQUIRE(dd.getNumberOfCoefficientsPerDimension()
+                        == bd.getNumberOfCoefficientsPerDimension());
+                REQUIRE(dd.getSpacingPerDimension() == bd.getSpacingPerDimension());
+            }
+
+            THEN("there are 25 blocks of the correct size")
+            {
+                REQUIRE(bd.getNumberOfBlocks() == blocks);
+
+                for (index_t i = 0; i < blocks; ++i)
+                    REQUIRE(bd.getDescriptorOfBlock(i) == bd0);
+
+                REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
+            }
+
+            THEN("the block offsets are correct")
+            {
+                for (index_t i = 0; i < blocks; ++i)
+                    REQUIRE(bd.getOffsetOfBlock(i) == i * bd0.getNumberOfCoefficients());
+
+                REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
+            }
+
+            THEN("original and partitioned descriptor are not equal")
+            {
+                REQUIRE(bd != dd);
+                REQUIRE(dd != bd);
+            }
+        }
+
+        WHEN("creating 25 blocks with chosen sizes")
+        {
+            index_t blocks = 25;
+            IndexVector_t split = IndexVector_t::Constant(blocks, 30);
+            split.head(10).array() = 40;
+            split.tail(10).array() = 20;
+            PartitionDescriptor bd(dd, split);
+
+            THEN("the partitioned descriptor has the same number of coefficients and spacing per "
+                 "dimension as the original")
+            {
+                REQUIRE(dd.getNumberOfCoefficientsPerDimension()
+                        == bd.getNumberOfCoefficientsPerDimension());
+                REQUIRE(dd.getSpacingPerDimension() == bd.getSpacingPerDimension());
+            }
+
+            THEN("there are 25 blocks of the correct size")
+            {
+                REQUIRE(bd.getNumberOfBlocks() == blocks);
+
+                for (index_t i = 0; i < blocks; ++i) {
+                    auto coeffsPerDim = sizeVector;
+                    coeffsPerDim[2] = split[i];
+
+                    REQUIRE(bd.getDescriptorOfBlock(i).getSpacingPerDimension()
+                            == dd.getSpacingPerDimension());
+                    REQUIRE(bd.getDescriptorOfBlock(i).getNumberOfCoefficientsPerDimension()
+                            == coeffsPerDim);
+                }
+
+                REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
+            }
+
+            THEN("the block offsets are correct")
+            {
+                for (index_t i = 0; i < blocks; ++i)
+                    REQUIRE(bd.getOffsetOfBlock(i)
+                            == sizeVector.head(2).prod() * split.head(i).sum());
+
+                REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
+            }
+
+            THEN("original and partitioned descriptor are not equal")
+            {
+                REQUIRE(bd != dd);
+                REQUIRE(dd != bd);
+            }
+        }
+    }
+}
+
+SCENARIO("Cloning PartitionDescriptors")
+{
+    GIVEN("a 1D PartitionDescriptor")
+    {
+        IndexVector_t sizeVector(1);
+        sizeVector << 3891;
+        DataDescriptor dd(sizeVector);
+        index_t blocks = 21;
+
+        WHEN("cloning the descriptor")
+        {
+            PartitionDescriptor bd(dd, blocks);
+            auto bdClone = bd.clone();
+
+            THEN("it's a real clone")
+            {
+                REQUIRE(bdClone.get() != &bd);
+                REQUIRE(dynamic_cast<PartitionDescriptor*>(bdClone.get()));
+                REQUIRE(*bdClone == bd);
+            }
+        }
+    }
+
+    GIVEN("a 2D PartitionDescriptor")
+    {
+        IndexVector_t sizeVector(2);
+        sizeVector << 43, 112;
+        DataDescriptor dd(sizeVector);
+        index_t blocks = 77;
+
+        WHEN("cloning the descriptor")
+        {
+            PartitionDescriptor bd(dd, blocks);
+            auto bdClone = bd.clone();
+
+            THEN("it's a real clone")
+            {
+                REQUIRE(bdClone.get() != &bd);
+                REQUIRE(dynamic_cast<PartitionDescriptor*>(bdClone.get()));
+                REQUIRE(*bdClone == bd);
+            }
+        }
+    }
+
+    GIVEN("a 3D PartitionDescriptor")
+    {
+        IndexVector_t sizeVector(3);
+        sizeVector << 47, 11, 53;
+        DataDescriptor dd(sizeVector);
+        index_t blocks = 13;
+
+        WHEN("cloning the descriptor")
+        {
+            PartitionDescriptor bd(dd, blocks);
+            auto bdClone = bd.clone();
+
+            THEN("it's a real clone")
+            {
+                REQUIRE(bdClone.get() != &bd);
+                REQUIRE(dynamic_cast<PartitionDescriptor*>(bdClone.get()));
+                REQUIRE(*bdClone == bd);
+            }
+        }
+    }
+}

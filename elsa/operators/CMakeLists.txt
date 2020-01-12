@@ -10,13 +10,15 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 set(MODULE_HEADERS
         Identity.h
         Scaling.h
-        FiniteDifferences.h)
+        FiniteDifferences.h
+        BlockLinearOperator.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         Identity.cpp
         Scaling.cpp
-        FiniteDifferences.cpp)
+        FiniteDifferences.cpp
+        BlockLinearOperator.cpp)
 
 
 # build the module library

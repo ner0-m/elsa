@@ -43,13 +43,13 @@ namespace elsa
         explicit PseudoHuber(const Residual<data_t>& residual,
                              real_t delta = static_cast<real_t>(1));
 
+        /// make copy constructor deletion explicit
+        PseudoHuber(const PseudoHuber<data_t>&) = delete;
+
         /// default destructor
         ~PseudoHuber() override = default;
 
     protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        PseudoHuber(const PseudoHuber<data_t>&) = default;
-
         /// the evaluation of the Huber norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

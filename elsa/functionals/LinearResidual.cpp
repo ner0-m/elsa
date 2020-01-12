@@ -38,7 +38,7 @@ namespace elsa
           _operator{A.clone()},
           _dataVector{std::make_unique<DataContainer<data_t>>(b)}
     {
-        if (A.getRangeDescriptor() != b.getDataDescriptor())
+        if (A.getRangeDescriptor().getNumberOfCoefficients() != b.getSize())
             throw std::invalid_argument("LinearResidual: A and b do not match");
     }
 

@@ -61,12 +61,11 @@ namespace elsa
         CG(const Problem<data_t>& problem, const LinearOperator<data_t>& preconditionerInverse,
            data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
+        /// make copy constructor deletion explicit
+        CG(const CG<data_t>&) = delete;
+
         /// default destructor
         ~CG() override = default;
-
-    protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        CG(const CG<data_t>&) = default;
 
     private:
         /// the default number of iterations

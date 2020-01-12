@@ -10,7 +10,7 @@
 
 #include <catch2/catch.hpp>
 #include "DataContainer.h"
-#include "BlockDescriptor.h"
+#include "IdenticalBlocksDescriptor.h"
 
 using namespace elsa;
 using namespace Catch::literals; // to enable 0.0_a approximate floats
@@ -456,7 +456,7 @@ SCENARIO("Testing creation of Maps through DataContainer")
         numCoeff << 52, 29;
         DataDescriptor desc(numCoeff);
         index_t numBlocks = 7;
-        BlockDescriptor blockDesc(numBlocks, desc);
+        IdenticalBlocksDescriptor blockDesc(numBlocks, desc);
 
         DataContainer dc(blockDesc);
         const DataContainer constDc(blockDesc);

@@ -19,8 +19,8 @@ namespace elsa
           _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
     {
         // sanity check
-        if (residual.getDomainDescriptor() != weightingOp.getDomainDescriptor()
-            || residual.getRangeDescriptor() != weightingOp.getRangeDescriptor())
+        if (residual.getRangeDescriptor().getNumberOfCoefficients()
+            != weightingOp.getDomainDescriptor().getNumberOfCoefficients())
             throw std::invalid_argument(
                 "WeightedL2NormPow2: sizes of residual and weighting operator do not match");
     }

@@ -39,6 +39,9 @@ namespace elsa
          */
         WeightedL2NormPow2(const Residual<data_t>& residual, const Scaling<data_t>& weightingOp);
 
+        /// make copy constructor deletion explicit
+        WeightedL2NormPow2(const WeightedL2NormPow2<data_t>&) = delete;
+
         /// default destructor
         ~WeightedL2NormPow2() override = default;
 
@@ -46,9 +49,6 @@ namespace elsa
         const Scaling<data_t>& getWeightingOperator() const;
 
     protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        WeightedL2NormPow2(const WeightedL2NormPow2<data_t>&) = default;
-
         /// the evaluation of the weighted, squared l2 norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

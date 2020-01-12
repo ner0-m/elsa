@@ -73,13 +73,13 @@ namespace elsa
         TransmissionLogLikelihood(const Residual<data_t>& residual, const DataContainer<data_t>& y,
                                   const DataContainer<data_t>& b);
 
+        /// make copy constructor deletion explicit
+        TransmissionLogLikelihood(const TransmissionLogLikelihood<data_t>&) = delete;
+
         /// default destructor
         ~TransmissionLogLikelihood() override = default;
 
     protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        TransmissionLogLikelihood(const TransmissionLogLikelihood<data_t>&) = default;
-
         /// the evaluation of the transmission log-likelihood
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

@@ -282,7 +282,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i) const
+    const DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i) const
     {
         const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
         if (!blockDesc)
@@ -312,7 +312,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor) const
+    const DataContainer<data_t>
+        DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor) const
     {
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
             throw std::invalid_argument("DataContainer: view must have same size as container");

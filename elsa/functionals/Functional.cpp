@@ -33,7 +33,7 @@ namespace elsa
     template <typename data_t>
     data_t Functional<data_t>::evaluate(const DataContainer<data_t>& x)
     {
-        if (x.getDataDescriptor() != getDomainDescriptor())
+        if (x.getSize() != getDomainDescriptor().getNumberOfCoefficients())
             throw std::invalid_argument(
                 "Functional::evaluate: argument size does not match functional");
 
@@ -59,8 +59,8 @@ namespace elsa
     void Functional<data_t>::getGradient(const DataContainer<data_t>& x,
                                          DataContainer<data_t>& result)
     {
-        if (x.getDataDescriptor() != getDomainDescriptor()
-            || result.getDataDescriptor() != _residual->getDomainDescriptor())
+        if (x.getSize() != getDomainDescriptor().getNumberOfCoefficients()
+            || result.getSize() != _residual->getDomainDescriptor().getNumberOfCoefficients())
             throw std::invalid_argument(
                 "Functional::getGradient: argument sizes do not match functional");
 

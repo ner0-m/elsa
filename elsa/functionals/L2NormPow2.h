@@ -37,13 +37,13 @@ namespace elsa
          */
         explicit L2NormPow2(const Residual<data_t>& residual);
 
+        /// make copy constructor deletion explicit
+        L2NormPow2(const L2NormPow2<data_t>&) = delete;
+
         /// default destructor
         ~L2NormPow2() override = default;
 
     protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        L2NormPow2(const L2NormPow2<data_t>&) = default;
-
         /// the evaluation of the l2 norm (squared)
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 

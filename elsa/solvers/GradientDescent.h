@@ -27,12 +27,11 @@ namespace elsa
          */
         GradientDescent(const Problem<data_t>& problem, real_t stepSize);
 
+        /// make copy constructor deletion explicit
+        GradientDescent(const GradientDescent<data_t>&) = delete;
+
         /// default destructor
         ~GradientDescent() override = default;
-
-    protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        GradientDescent(const GradientDescent<data_t>&) = default;
 
     private:
         /// the step size

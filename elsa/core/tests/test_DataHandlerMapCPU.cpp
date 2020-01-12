@@ -1,5 +1,5 @@
 /**
- * \file test_DataHandlerMap.cpp
+ * \file test_DataHandlerMapCPU.cpp
  *
  * \brief Tests for DataHandlerMapCPU class
  *

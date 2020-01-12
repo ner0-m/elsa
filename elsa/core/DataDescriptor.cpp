@@ -1,6 +1,7 @@
 #include "DataDescriptor.h"
 
 #include <stdexcept>
+#include <algorithm>
 
 namespace elsa
 {
@@ -96,10 +97,60 @@ namespace elsa
         return coordinate;
     }
 
+    std::unique_ptr<DataDescriptor>
+        DataDescriptor::bestCommon(const std::vector<const DataDescriptor*>& descList)
+    {
+        if (descList.empty())
+            throw std::invalid_argument("DataDescriptor::bestCommon: descriptor list empty");
+
+        const auto& firstDesc = *descList[0];
+        auto coeffs = firstDesc.getNumberOfCoefficientsPerDimension();
+        auto size = firstDesc.getNumberOfCoefficients();
+        auto spacing = firstDesc.getSpacingPerDimension();
+
+        bool allSame =
+            std::all_of(descList.begin(), descList.end(),
+                        [&firstDesc](const DataDescriptor* d) { return *d == firstDesc; });
+        if (allSame)
+            return firstDesc.clone();
+
+        bool allSameCoeffs =
+            std::all_of(descList.begin(), descList.end(), [&coeffs](const DataDescriptor* d) {
+                return d->getNumberOfCoefficientsPerDimension().size() == coeffs.size()
+                       && d->getNumberOfCoefficientsPerDimension() == coeffs;
+            });
+
+        if (allSameCoeffs) {
+            bool allSameSpacing =
+                std::all_of(descList.begin(), descList.end(), [&spacing](const DataDescriptor* d) {
+                    return d->getSpacingPerDimension() == spacing;
+                });
+            if (allSameSpacing) {
+                return std::make_unique<DataDescriptor>(coeffs, spacing);
+            } else {
+                return std::make_unique<DataDescriptor>(coeffs);
+            }
+        }
+
+        bool allSameSize =
+            std::all_of(descList.begin(), descList.end(), [size](const DataDescriptor* d) {
+                return d->getNumberOfCoefficients() == size;
+            });
+
+        if (!allSameSize)
+            throw std::invalid_argument(
+                "DataDescriptor::bestCommon: descriptor sizes do not match");
+
+        return std::make_unique<DataDescriptor>(IndexVector_t::Constant(1, size));
+    }
+
     DataDescriptor* DataDescriptor::cloneImpl() const { return new DataDescriptor(*this); }
 
     bool DataDescriptor::isEqual(const DataDescriptor& other) const
     {
+        if (typeid(other) != typeid(*this))
+            return false;
+
         return (_numberOfDimensions == other._numberOfDimensions)
                && (_numberOfCoefficientsPerDimension == other._numberOfCoefficientsPerDimension)
                && (_spacingPerDimension == other._spacingPerDimension)

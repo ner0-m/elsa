@@ -11,6 +11,7 @@ set(MODULE_HEADERS
         RegularizationTerm.h
         Problem.h
         WLSProblem.h
+        TikhonovProblem.h
         QuadricProblem.h)
 
 # list all the code files of the module
@@ -18,6 +19,7 @@ set(MODULE_SOURCES
         RegularizationTerm.cpp
         Problem.cpp
         WLSProblem.cpp
+        TikhonovProblem.cpp
         QuadricProblem.cpp)
 
 

@@ -37,6 +37,9 @@ namespace elsa
          */
         Scaling(const DataDescriptor& descriptor, const DataContainer<data_t>& scaleFactors);
 
+        /// make copy constructor deletion explicit
+        Scaling(const Scaling<data_t>&) = delete;
+
         /// default destructor
         ~Scaling() override = default;
 
@@ -50,9 +53,6 @@ namespace elsa
         const DataContainer<data_t>& getScaleFactors() const;
 
     protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        Scaling(const Scaling<data_t>&) = default;
-
         /// apply the scaling operation
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 

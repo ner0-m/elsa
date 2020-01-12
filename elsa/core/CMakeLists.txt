@@ -12,6 +12,9 @@ set(MODULE_HEADERS
         Cloneable.h
         DataDescriptor.h
         BlockDescriptor.h
+        IdenticalBlocksDescriptor.h
+        PartitionDescriptor.h
+        RandomBlocksDescriptor.h
         DataContainer.h
         DataContainerIterator.h
         DataHandler.h
@@ -24,7 +27,9 @@ set(MODULE_HEADERS
 # list all the code files of the module
 set(MODULE_SOURCES
         DataDescriptor.cpp
-        BlockDescriptor.cpp
+        RandomBlocksDescriptor.cpp
+        IdenticalBlocksDescriptor.cpp
+        PartitionDescriptor.cpp
         DataContainer.cpp
         DataHandlerCPU.cpp
         DataHandlerMapCPU.cpp

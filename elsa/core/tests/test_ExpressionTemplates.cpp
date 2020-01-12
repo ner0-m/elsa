@@ -11,7 +11,7 @@
 #include <catch2/catch.hpp>
 #include <iostream>
 #include "DataContainer.h"
-#include "BlockDescriptor.h"
+#include "IdenticalBlocksDescriptor.h"
 #include <typeinfo>
 #include <cstdlib>
 #include <ctime>
@@ -200,7 +200,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
         DataDescriptor desc(numCoeff);
 
         index_t numBlocks = 7;
-        BlockDescriptor blockDesc(numBlocks, desc);
+        IdenticalBlocksDescriptor blockDesc(numBlocks, desc);
 
         DataContainer dc(blockDesc);
 

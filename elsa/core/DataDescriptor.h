@@ -3,6 +3,8 @@
 #include "elsaDefines.h"
 #include "Cloneable.h"
 
+#include <vector>
+
 namespace elsa
 {
 
@@ -40,8 +42,8 @@ namespace elsa
          * \brief Constructor for DataDescriptor, accepts dimension, size and spacing
          *
          * \param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
-         * per dimension, (dimension is set implicitly from the size of the vector) \param[in]
-         * spacingPerDimension vector containing the spacing per dimension
+         * per dimension, (dimension is set implicitly from the size of the vector)
+         * \param[in] spacingPerDimension vector containing the spacing per dimension
          *
          * \throw std::invalid_argument if any number of coefficients is non-positive,
          *        or sizes of numberOfCoefficientsPerDimension and spacingPerDimension do not match
@@ -88,6 +90,35 @@ namespace elsa
          */
         IndexVector_t getCoordinateFromIndex(index_t index) const;
 
+        /**
+         * \brief Finds the descriptor with the same number of coefficients as the descriptors in
+         * the list that retains as much information as possible
+         *
+         * \param[in] descriptorList a vector of plain pointers to DataDescriptor
+         *
+         * \return std::unique_ptr<DataDescriptor> the best common descriptor
+         *
+         * \throw std::invalid_argument if the vector is empty or the descriptors in the vector
+         * don't all have the same size
+         *
+         * If all descriptors are equal, a clone of the first descriptor in the list is returned.
+         * If all descriptors have a common base descriptor, that data descriptor is returned.
+         * If the base descriptors only differ in spacing, the base descriptor with a uniform
+         * spacing of 1 is returned.
+         * Otherwise, the linearized descriptor with a spacing of 1 is returned.
+         */
+        static std::unique_ptr<DataDescriptor>
+            bestCommon(const std::vector<const DataDescriptor*>& descriptorList);
+
+        /// convenience overload for invoking bestCommon() with a number of const DataDescriptor&
+        template <
+            typename... DescriptorType,
+            typename = std::enable_if_t<(std::is_base_of_v<DataDescriptor, DescriptorType> && ...)>>
+        static std::unique_ptr<DataDescriptor> bestCommon(const DescriptorType&... descriptors)
+        {
+            return bestCommon(std::vector{static_cast<const DataDescriptor*>(&descriptors)...});
+        }
+
     protected:
         /// Number of dimensions
         index_t _numberOfDimensions;
@@ -107,6 +138,9 @@ namespace elsa
 
         /// default copy constructor, hidden from non-derived classes to prevent potential slicing
         DataDescriptor(const DataDescriptor&) = default;
+
+        /// default move constructor, hidden from non-derived classes to prevent potential slicing
+        DataDescriptor(DataDescriptor&&) = default;
 
         /// implement the polymorphic clone operation
         DataDescriptor* cloneImpl() const override;

@@ -5,6 +5,9 @@
 #include "core/DataContainer.h"
 #include "core/DataDescriptor.h"
 #include "core/LinearOperator.h"
+#include "core/IdenticalBlocksDescriptor.h"
+#include "core/PartitionDescriptor.h"
+#include "core/RandomBlocksDescriptor.h"
 
 // Functional headers
 #include "functionals/Functional.h"
@@ -37,12 +40,14 @@
 #include "operators/Identity.h"
 #include "operators/Scaling.h"
 #include "operators/FiniteDifferences.h"
+#include "operators/BlockLinearOperator.h"
 
 // Problem headers
 #include "problems/Problem.h"
 #include "problems/RegularizationTerm.h"
 #include "problems/QuadricProblem.h"
 #include "problems/WLSProblem.h"
+#include "problems/TikhonovProblem.h"
 
 // Projector headers
 #include "projectors/Geometry.h"

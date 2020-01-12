@@ -1,7 +1,7 @@
 /**
- * \file test_OptimizationProblem.cpp
+ * \file test_Problem.cpp
  *
- * \brief Tests for the OptimizationProblem class
+ * \brief Tests for the Problem class
  *
  * \author David Frank - initial code
  * \author Tobias Lasser - rewrite
