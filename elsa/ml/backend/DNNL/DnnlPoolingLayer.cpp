@@ -23,8 +23,8 @@ namespace elsa
         auto desc = dnnl::pooling_forward::desc(
             /* Propagation kind */ dnnl::prop_kind::forward,
             /* Pooling algorithm */ dnnl::algorithm::pooling_max,
-            /* Source memory descriptor */ _srcMemory->get_desc(),
-            /* Destination memory descriptor */ _dstMemoryDescriptor,
+            /* Source memory descriptor */ _input.descriptor,
+            /* Destination memory descriptor */ _output.descriptor,
             /* Pooling strides */ _poolingStride,
             /* Pooling window */ _poolingWindow,
             /* Input padding for lower dims */ _poolingPadding,
@@ -32,16 +32,17 @@ namespace elsa
 
         _forwardPrimitiveDescriptor = dnnl::pooling_forward::primitive_desc(desc, *_engine);
 
-        _workspaceMemory = dnnl::memory(_forwardPrimitiveDescriptor.workspace_desc(), *_engine);
+        _workspaceMemory.effectiveMemory =
+            std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.workspace_desc(), *_engine);
 
-        _dstMemory =
+        _output.effectiveMemory =
             std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
 
         // TODO: Insert reorder
-        _forwardPrimitives.push_back(dnnl::pooling_forward(_forwardPrimitiveDescriptor));
-        _forwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory},
-                                     {DNNL_ARG_WORKSPACE, _workspaceMemory},
-                                     {DNNL_ARG_DST, *_dstMemory}});
+        _forwardStream.primitives.push_back(dnnl::pooling_forward(_forwardPrimitiveDescriptor));
+        _forwardStream.arguments.push_back({{DNNL_ARG_SRC, *_input.effectiveMemory},
+                                            {DNNL_ARG_WORKSPACE, *_workspaceMemory.effectiveMemory},
+                                            {DNNL_ARG_DST, *_output.effectiveMemory}});
     }
 
     template class DnnlPoolingLayer<float>;
