@@ -53,6 +53,8 @@ namespace elsa
                                             {DNNL_ARG_WEIGHTS, *_weights.effectiveMemory},
                                             {DNNL_ARG_BIAS, *_bias.effectiveMemory},
                                             {DNNL_ARG_DST, *_output.effectiveMemory}});
+
+        _forwardStream.isCompiled = true;
     }
 
     template <typename data_t>
@@ -61,6 +63,7 @@ namespace elsa
         BaseType::compileBackwardStream();
         compileBackwardWeightsStream();
         compileBackwardDataStream();
+        _backwardStream.isCompiled = true;
     }
 
     template <typename data_t>

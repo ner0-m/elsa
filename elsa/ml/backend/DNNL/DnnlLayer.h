@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <memory>
+
 #include "elsaDefines.h"
 #include "DataContainer.h"
 #include "DataDescriptor.h"
@@ -57,6 +58,7 @@ namespace elsa
 
         void setOutputGradient(const DataContainer<data_t>& gradient);
 
+        /// Get this layer's input gradient
         DataContainer<data_t> getInputGradient() const;
 
         /// Set this layer's input memory by passing a pointer to another Dnnl memory
@@ -118,8 +120,14 @@ namespace elsa
         };
 
         struct PropagationStream {
+            /// Vector of primitives this propagation stream consists of
             std::vector<dnnl::primitive> primitives;
+
+            /// Vector of arguments this propagation stream consists of
             std::vector<std::unordered_map<int, dnnl::memory>> arguments;
+
+            /// Flag to indicate whether this propagation stream has been compiled
+            bool isCompiled = false;
         };
 
         /// Construct a DnnlLayer by providing a data descriptors for its input and output
@@ -135,8 +143,10 @@ namespace elsa
         void reorderMemory(const dnnl::memory::desc& memoryDesc, DnnlMemory& memory,
                            PropagationStream& stream);
 
+        /// Compile this layer's backward stream
         virtual void compileBackwardStream() {}
 
+        /// Compile this layer's forward stream
         virtual void compileForwardStream() {}
 
         /**
@@ -191,72 +201,31 @@ namespace elsa
         static dnnl::memory::format_tag
             dataDescriptorToDnnlMemoryFormatTag(const DataDescriptor& desc, bool isInput);
 
+        /// This layer's forward propagation stream
         PropagationStream _forwardStream;
+
+        /// This layer's backward propagation stream
         PropagationStream _backwardStream;
 
+        /// This layer's input memory
         DnnlMemory _input;
+
+        /// This layer's input gradient memory
         DnnlMemory _inputGradient;
 
+        /// This layer's output memory
         DnnlMemory _output;
+
+        /// This layer's output gradient memory
         DnnlMemory _outputGradient;
 
-        /// Flag to indicate whether the execution of the primitive has reordered memory.
-        bool _hasReorderedMemory = false;
-
-        /// Flag to indicate whether the execution of a primitve may reoder memory for better
-        /// performance
-        bool _mayReorderMemory = false;
-
-        /// The layer's Dnnl execution engine
-        std::shared_ptr<dnnl::engine> _engine = nullptr;
-
-        /// Dimensions of this layer's source memory
-        dnnl::memory::dims _srcMemoryDimensions;
-
-        /// The layer's source memory descriptor
-        dnnl::memory::desc _srcMemoryDescriptor;
-
-        /// The layer's source memory after possible reordering
-        dnnl::memory _reorderedSrcMemory;
-
-        /// The layer's source memory
-        std::shared_ptr<dnnl::memory> _srcMemory = nullptr;
-
-        dnnl::memory::dims _dstMemoryDimensions;
-
-        /// The layer's destination memory descriptor
-        dnnl::memory::desc _dstMemoryDescriptor;
-
-        /// The layer's destination memory
-        std::shared_ptr<dnnl::memory> _dstMemory;
-
-        /// Format that of Dnnl source memory
-        dnnl::memory::format_tag _srcMemoryFormatTag;
-
-        /// Format that of Dnnl destination memory
-        dnnl::memory::format_tag _dstMemoryFormatTag;
-
-        /// Dnnl forward primitives
-        std::vector<dnnl::primitive> _forwardPrimitives;
-
-        /// Dnnl backward primitives
-        std::vector<dnnl::primitive> _backwardPrimitives;
-
+        /// This layer's output DataDescriptor
         std::unique_ptr<DataDescriptor> _outputDescriptor;
 
+        /// This layer's input DataDescriptor
         std::unique_ptr<DataDescriptor> _inputDescriptor;
 
-        /// Dnnl forward arguments, i.e., arguments for executing primitives
-        std::vector<std::unordered_map<int, dnnl::memory>> _forwardArguments;
-
-        /// Dnnl backward arguments, i.e., arguments for executing primitives
-        std::vector<std::unordered_map<int, dnnl::memory>> _backwardArguments;
-
-        dnnl::memory::desc _gradientDstMemoryDescriptor;
-        std::shared_ptr<dnnl::memory> _gradientDstMemory;
-        dnnl::memory _reorderedGradientDstMemory;
-
-        dnnl::memory::desc _gradientSrcMemoryDescriptor;
-        dnnl::memory _gradientSrcMemory;
+        /// This layer's Dnnl execution engine
+        std::shared_ptr<dnnl::engine> _engine = nullptr;
     };
 } // namespace elsa

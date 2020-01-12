@@ -1,5 +1,4 @@
 #include "DnnlPoolingLayer.h"
-#include "Logger.h"
 
 namespace elsa
 {
@@ -58,6 +57,8 @@ namespace elsa
         } else {
             _forwardStream.arguments.back().insert({DNNL_ARG_DST, *_output.effectiveMemory});
         }
+
+        _forwardStream.isCompiled = true;
     }
 
     static void validateDnnlMemory(std::shared_ptr<dnnl::memory> mem)
@@ -95,6 +96,8 @@ namespace elsa
             {{DNNL_ARG_DIFF_DST, *_outputGradient.effectiveMemory},
              {DNNL_ARG_DIFF_SRC, *_inputGradient.effectiveMemory},
              {DNNL_ARG_WORKSPACE, *_workspaceMemory.effectiveMemory}});
+
+        _backwardStream.isCompiled = true;
     }
 
     template class DnnlPoolingLayer<float>;

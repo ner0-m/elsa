@@ -55,7 +55,6 @@ TEST_CASE("Pooling semantics", "elsa_ml")
 
     SECTION("Backward")
     {
-        // Example from http://cs231n.github.io/convolutional-networks/
         IndexVector_t inputVec(4);
         inputVec << 1, 1, 4, 4;
         DataDescriptor inputDesc(inputVec);

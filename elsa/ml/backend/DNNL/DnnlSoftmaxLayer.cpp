@@ -26,6 +26,26 @@ namespace elsa
 
         _forwardStream.arguments.push_back(
             {{DNNL_ARG_SRC, *_input.effectiveMemory}, {DNNL_ARG_DST, *_output.effectiveMemory}});
+
+        _forwardStream.isCompiled = true;
+    }
+
+    template <typename data_t>
+    void DnnlSoftmaxLayer<data_t>::compileBackwardStream()
+    {
+        auto desc = dnnl::softmax_backward::desc(_inputGradient.descriptor, _input.descriptor,
+                                                 _softmaxAxis);
+
+        _backwardPrimitiveDescriptor =
+            dnnl::softmax_backward::primitive_desc(desc, *_engine, _forwardPrimitiveDescriptor);
+
+        _inputGradient.effectiveMemory =
+            std::make_shared<dnnl::memory>(_backwardPrimitiveDescriptor.diff_src_desc(), *_engine);
+
+        _backwardStream.primitives.push_back(dnnl::softmax_backward(_backwardPrimitiveDescriptor));
+        _backwardStream.arguments.push_back({{DNNL_ARG_SRC, *_input.effectiveMemory},
+                                             {DNNL_ARG_DIFF_SRC, *_inputGradient.effectiveMemory}});
+        _backwardStream.isCompiled = true;
     }
 
     template class DnnlSoftmaxLayer<float>;

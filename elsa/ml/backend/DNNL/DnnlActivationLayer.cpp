@@ -56,6 +56,8 @@ namespace elsa
         _backwardStream.arguments.push_back({{DNNL_ARG_SRC, *_input.effectiveMemory},
                                              {DNNL_ARG_DIFF_DST, *_outputGradient.effectiveMemory},
                                              {DNNL_ARG_DIFF_SRC, *_inputGradient.effectiveMemory}});
+
+        _backwardStream.isCompiled = true;
     }
 
     template <typename data_t>
@@ -76,6 +78,8 @@ namespace elsa
 
         _forwardStream.arguments.push_back(
             {{DNNL_ARG_SRC, *_input.effectiveMemory}, {DNNL_ARG_DST, *_output.effectiveMemory}});
+
+        _forwardStream.isCompiled = true;
     }
 
     template <typename data_t>

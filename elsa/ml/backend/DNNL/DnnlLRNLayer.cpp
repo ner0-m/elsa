@@ -17,23 +17,26 @@ namespace elsa
         auto desc = dnnl::lrn_forward::desc(
             /* Propagation kind */ dnnl::prop_kind::forward,
             /* LRN algorithm */ dnnl::algorithm::lrn_across_channels,
-            /* Source memory descirptor */ _srcMemory->get_desc(),
+            /* Input memory descirptor */ _input.descriptor,
             /* Local size to regularize */ _localSize,
             /* Parameters */ _alpha, _beta, _k);
 
         _forwardPrimitiveDescriptor = dnnl::lrn_forward::primitive_desc(desc, *_engine);
 
         // Set forward primitive
-        _forwardPrimitives.push_back(dnnl::lrn_forward(_forwardPrimitiveDescriptor));
+        _forwardStream.primitives.push_back(dnnl::lrn_forward(_forwardPrimitiveDescriptor));
 
-        _workspaceMemory = dnnl::memory(_forwardPrimitiveDescriptor.workspace_desc(), *_engine);
+        _workspace.effectiveMemory =
+            std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.workspace_desc(), *_engine);
 
-        _dstMemory =
+        _output.effectiveMemory =
             std::make_shared<dnnl::memory>(_forwardPrimitiveDescriptor.dst_desc(), *_engine);
 
-        _forwardArguments.push_back({{DNNL_ARG_SRC, *_srcMemory},
-                                     {DNNL_ARG_DST, *_dstMemory},
-                                     {DNNL_ARG_WORKSPACE, _workspaceMemory}});
+        _forwardStream.arguments.push_back({{DNNL_ARG_SRC, *_input.effectiveMemory},
+                                            {DNNL_ARG_DST, *_output.effectiveMemory},
+                                            {DNNL_ARG_WORKSPACE, *_workspace.effectiveMemory}});
+
+        _forwardStream.isCompiled = true;
     }
 
     template class DnnlLRNLayer<float>;
