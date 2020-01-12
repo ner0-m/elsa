@@ -22,7 +22,8 @@ namespace elsa
         // for (std::size_t i = 1; i < _layerStack->size(); ++i) {
         //     auto backend = _layerStack->at(i).getBackend();
 
-        //     // Set layer's source memory (and source memory descriptor) to previous layer's output
+        //     // Set layer's source memory (and source memory descriptor) to previous layer's
+        //     output
         //     // memory
         //     auto prevBackend = _layerStack->at(i - 1).getBackend();
         //     auto prevOutputMem = prevBackend->getOutputMemory();
