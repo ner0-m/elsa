@@ -143,10 +143,11 @@ TEST_CASE("SequentialNetwork Failtest", "elsa_ml")
     REQUIRE_THROWS_WITH(model.compile(), "Cannot compile network: Network contains not layers");
 
     // Empty network should throw when asked for output descriptor or output
-    REQUIRE_THROWS_WITH(model.getOutputDescriptor(),
-                     "Cannot return network output descriptor because network contains no layers");
+    REQUIRE_THROWS_WITH(
+        model.getOutputDescriptor(),
+        "Cannot return network output descriptor because network contains no layers");
     REQUIRE_THROWS_WITH(model.getOutput(),
-                     "Cannot get network output: The network contains not layers");
+                        "Cannot get network output: The network contains not layers");
 
     // Add network layers
     model
@@ -160,8 +161,10 @@ TEST_CASE("SequentialNetwork Failtest", "elsa_ml")
         .addActivationLayer(Activation::Linear, .65f, .123f);
 
     // Cannot get output without prior propagation
-    REQUIRE_THROWS_WITH(model.getOutput(), "Cannot get network output: No input has been propagated");
+    REQUIRE_THROWS_WITH(model.getOutput(),
+                        "Cannot get network output: No input has been propagated");
 
     // Forward propagation without previous network compilation should throw
-    REQUIRE_THROWS_WITH(model.forwardPropagate(input), Catch::Contains("Use SequentialNetwork::compile"));
+    REQUIRE_THROWS_WITH(model.forwardPropagate(input),
+                        Catch::Contains("Use SequentialNetwork::compile"));
 }
