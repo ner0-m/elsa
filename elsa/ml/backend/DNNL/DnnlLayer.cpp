@@ -140,7 +140,7 @@ namespace elsa
         // If memory has been reordered, we have to check whether output
         // memory needs to be also reordered
         auto outMem = *_output.effectiveMemory;
-        if (_hasReorderedMemory) {
+        if (_output.wasReordered) {
             // We reorder directly and open a new execution stream for this. Note that this could be
             // relatively expensive and should be used for reporting the final net output or for
             // debugging purposes only

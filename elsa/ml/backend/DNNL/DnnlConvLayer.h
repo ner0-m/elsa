@@ -21,46 +21,36 @@ namespace elsa
 
     private:
         void compileForwardStream() override;
+
         void compileBackwardStream() override;
+        void compileBackwardDataStream();
+        void compileBackwardWeightsStream();
 
-        // using BaseType::_weightsDimensions;
-        // using BaseType::_weightsMemoryDescriptor;
-        // using BaseType::_weightsMemory;
-        // using BaseType::_reorderedWeightsMemory;
-        // using BaseType::_biasDimensions;
-        // using BaseType::_biasMemoryDescriptor;
-        // using BaseType::_biasMemory;
-        // using BaseType::_srcMemoryDescriptor;
-        // using BaseType::_reorderedSrcMemory;
-        // using BaseType::_dstMemoryDescriptor;
-        // using BaseType::_engine;
-        // using BaseType::_forwardPrimitives;
-        // using BaseType::_dstMemory;
-        // using BaseType::_srcMemory;
-        // using BaseType::_forwardArguments;
-        // using BaseType::_typeTag;
-        // using BaseType::_hasReorderedMemory;
+        using BaseType::_typeTag;
 
-        // using BaseType::_backwardPrimitives;
-        // using BaseType::_backwardArguments;
-        // using BaseType::_gradientSrcMemoryDescriptor;
-        // using BaseType::_gradientDstMemoryDescriptor;
-        // using BaseType::_gradientWeightsMemory;
-        // using BaseType::_reorderedGradientWeightsMemory;
-        // using BaseType::_gradientWeightsMemoryDescriptor;
-        // using BaseType::_reorderedGradientDstMemory;
-        // using BaseType::_gradientBiasMemory;
-        // using BaseType::_gradientBiasMemoryDescriptor;
-        // using BaseType::_gradientSrcMemory;
-        // using BaseType::_gradientDstMemory;
-        // Initializer _initializer = Initializer::Uniform;
+        using BaseType::_engine;
 
-        // dnnl::memory::dims _paddingDimensions;
+        using BaseType::_input;
+        using BaseType::_inputGradient;
 
-        // dnnl::memory::dims _strideDimensions;
+        using BaseType::_output;
+        using BaseType::_outputGradient;
 
-        // dnnl::convolution_forward::primitive_desc _forwardPrimitiveDescriptor;
-        // dnnl::convolution_backward_weights::primitive_desc _backwardWeightsPrimitiveDescriptor;
-        // dnnl::convolution_backward_data::primitive_desc _backwardPrimitiveDescriptor;
+        using BaseType::_forwardStream;
+        using BaseType::_backwardStream;
+
+        using BaseType::_weights;
+        using BaseType::_weightsGradient;
+
+        using BaseType::_bias;
+        using BaseType::_biasGradient;
+
+        dnnl::memory::dims _paddingDimensions;
+
+        dnnl::memory::dims _strideDimensions;
+
+        dnnl::convolution_forward::primitive_desc _forwardPrimitiveDescriptor;
+        dnnl::convolution_backward_weights::primitive_desc _backwardWeightsPrimitiveDescriptor;
+        dnnl::convolution_backward_data::primitive_desc _backwardDataPrimitiveDescriptor;
     };
 } // namespace elsa

@@ -289,14 +289,27 @@ TEST_CASE("ConvLayer backward", "elsa_ml")
         auto gradientWeights =
             std::static_pointer_cast<typename decltype(conv)::BackendLayerType>(backend)
                 ->getGradientWeights();
-
+        auto gradientBias =
+            std::static_pointer_cast<typename decltype(conv)::BackendLayerType>(backend)
+                ->getGradientBias();
+        auto gradientInput = backend->getInputGradient();
         REQUIRE(gradientWeights.getDataDescriptor() == weightsDesc);
+        REQUIRE(gradientBias.getDataDescriptor() == biasDesc);
 
-        Eigen::VectorXf required(1 * 1 * 3 * 3);
+        Eigen::VectorXf requiredWeightsGradient(1 * 1 * 3 * 3);
 
-        required << 2400, 1200, 0, 2400, 1200, 0, 2400, 1200, 0;
+        requiredWeightsGradient << 2400, 1200, 0, 2400, 1200, 0, 2400, 1200, 0;
 
         for (index_t i = 0; i < 1 * 1 * 3 * 3; ++i)
-            REQUIRE(gradientWeights[i] == Approx(required[i]));
+            REQUIRE(gradientWeights[i] == Approx(requiredWeightsGradient[i]));
+
+        REQUIRE(gradientBias[0] == outputGradient.sum());
+
+        Eigen::VectorXf requiredInputGradient(1 * 1 * 6 * 6);
+        requiredInputGradient << 0, 30, 30, -30, -30, 0, 0, 60, 60, -60, -60, 0, 0, 90, 90, -90,
+            -90, 0, 0, 90, 90, -90, -90, 0, 0, 60, 60, -60, -60, 0, 0, 30, 30, -30, -30, 0;
+
+        for (index_t i = 0; i < 1 * 1 * 6 * 6; ++i)
+            REQUIRE(gradientInput[i] == Approx(requiredInputGradient[i]));
     }
 }

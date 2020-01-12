@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include <memory>
-#include "Logger.h"
 #include "elsaDefines.h"
 #include "DataContainer.h"
 #include "DataDescriptor.h"
