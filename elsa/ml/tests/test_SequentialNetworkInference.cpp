@@ -62,8 +62,8 @@ TEST_CASE("SequentialNetwork Inference", "elsa_ml")
             .unaryExpr([](float coeff) { return .65f * coeff + .123f; });
 
     for (int i = 0; i < 5; ++i)
-        REQUIRE(firstBatchRequired[i] == output[i]);
+        REQUIRE(firstBatchRequired[i] == Approx(output[i]));
 
     for (int i = 5; i < 10; ++i)
-        REQUIRE(secondBatchRequired[i - 5] == output[i]);
+        REQUIRE(secondBatchRequired[i - 5] == Approx(output[i]));
 }
