@@ -12,6 +12,7 @@ namespace elsa
     {
         if ((poolingStride.array() <= 0).any())
             throw std::invalid_argument("Pooling stride must not be 0");
+            
         if (_poolingWindow.size() != _poolingStride.size())
             throw std::invalid_argument(
                 "Dimensions of pooling stride and pooling window must match");

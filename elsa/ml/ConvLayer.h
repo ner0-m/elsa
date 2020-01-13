@@ -28,14 +28,14 @@ namespace elsa
                   const IndexVector_t& strideVector, const IndexVector_t& paddingVector,
                   Initializer initializer = Initializer::Uniform);
 
-        // /// \copydoc Layer::forwardPropagate
-        // virtual void forwardPropagate(const DataContainer<data_t>& input) override;
+        ConvLayer(const DataDescriptor& inputDescriptor, index_t numFilters,
+                  const IndexVector_t& weightsVector, const IndexVector_t& strideVector,
+                  const IndexVector_t& paddingVector,
+                  Initializer initializer = Initializer::Uniform);
 
-        // /// \copydoc Layer::backwardPropagate
-        // virtual void backwardPropagate(const DataContainer<data_t>& input) override;
-
-        // /// \copydoc TrainableLayer::updateTrainableParameters
-        // virtual void updateTrainableParameters() override;
+        ConvLayer(const DataDescriptor& inputDescriptor, index_t numFilters,
+                  const IndexVector_t& weightsVector,
+                  Initializer initializer = Initializer::Uniform);
 
     private:
         using BaseType::_backend;

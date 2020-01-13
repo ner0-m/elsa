@@ -33,7 +33,11 @@ namespace elsa
         using BackendLayerBaseType =
             std::conditional_t<Backend == MlBackend::Dnnl, DnnlLayer<data_t>, std::false_type>;
 
+        Layer() = default;
+
         Layer(Layer&& other) = default;
+
+        Layer<data_t, Backend>& operator=(Layer&& other) = default;
 
         /// The layer's input descriptor
         const DataDescriptor& getInputDescriptor() const;
@@ -41,28 +45,16 @@ namespace elsa
         /// The layer's output descriptor
         const DataDescriptor& getOutputDescriptor() const;
 
-        /// Get a vector with pointers to layers that are successors to the current layer
-        const auto& getSuccessors() const;
-
-        /// Get a vector with pointers to layers that are predecessor to the current layer
-        const auto& getPredecessors() const;
-
         std::shared_ptr<BackendLayerBaseType> getBackend();
 
     protected:
-        Layer(const DataDescriptor& inputDescriptor);
-
-        void addSuccessor(std::shared_ptr<Layer<data_t, Backend>> successor);
-        void addPredecessor(std::shared_ptr<Layer<data_t, Backend>> predecessor);
+        explicit Layer(const DataDescriptor& inputDescriptor);
 
         /// DataDescriptor for the layer's input
         std::unique_ptr<DataDescriptor> _inputDescriptor;
 
         /// DataDescriptor for the layer's output.
         std::unique_ptr<DataDescriptor> _outputDescriptor;
-
-        std::vector<std::shared_ptr<Layer>> _successors;
-        std::vector<std::shared_ptr<Layer>> _predecessors;
 
         std::shared_ptr<BackendLayerBaseType> _backend;
     };
@@ -71,26 +63,6 @@ namespace elsa
     Layer<data_t, Backend>::Layer(const DataDescriptor& inputDescriptor)
         : _inputDescriptor(inputDescriptor.clone())
     {
-    }
-
-    template <typename data_t, MlBackend Backend>
-    inline void
-        Layer<data_t, Backend>::addSuccessor(std::shared_ptr<Layer<data_t, Backend>> successor)
-    {
-        if (!successor)
-            throw std::invalid_argument("Pointer to successor layer is null");
-
-        _successors.push_back(successor);
-    }
-
-    template <typename data_t, MlBackend Backend>
-    inline void
-        Layer<data_t, Backend>::addPredecessor(std::shared_ptr<Layer<data_t, Backend>> predecessor)
-    {
-        if (!predecessor)
-            throw std::invalid_argument("Pointer to predecessor layer is null");
-
-        _predecessors.push_back(predecessor);
     }
 
     template <typename data_t, MlBackend Backend>
@@ -113,5 +85,4 @@ namespace elsa
             throw std::logic_error("Missing layer backend");
         return _backend;
     }
-
 } // namespace elsa

@@ -19,10 +19,16 @@ namespace elsa
     protected:
         using BaseType = Layer<data_t, Backend>;
 
+        TrainableLayer() = default;
+
+        TrainableLayer(TrainableLayer&&) = default;
+
+        TrainableLayer<data_t, Backend>& operator=(TrainableLayer&&) = default;
+
         TrainableLayer(const DataDescriptor& inputDescriptor,
                        const DataDescriptor& weightsDescriptor);
 
-        TrainableLayer(const DataDescriptor& inputDescriptor);
+        explicit TrainableLayer(const DataDescriptor& inputDescriptor);
 
         /// \copydoc Layer::_inputDescriptor
         using BaseType::_inputDescriptor;

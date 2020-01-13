@@ -44,7 +44,6 @@ TEST_CASE("ConvLayer forward", "elsa_ml")
         REQUIRE(conv.getOutputDescriptor().getNumberOfCoefficientsPerDimension()[3] == 3);
 
         Eigen::VectorXf vec(1 * 3 * 5 * 5);
-
         // clang-format off
         vec <<  // First channel
             1, 2, 1, 1, 1,
@@ -151,7 +150,7 @@ TEST_CASE("ConvLayer forward", "elsa_ml")
         IndexVector_t paddingVec(2);
         paddingVec << 0, 0;
 
-        ConvLayer<float> conv(inputDesc, weightsDesc, stridesVec, paddingVec);
+        ConvLayer<float> conv(inputDesc, 1, IndexVector_t::Constant(2, 3), stridesVec, paddingVec);
 
         Eigen::VectorXf vec(1 * 1 * 6 * 6);
 

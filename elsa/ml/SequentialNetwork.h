@@ -85,6 +85,15 @@ namespace elsa
                          const IndexVector_t& paddingVector,
                          Initializer initializer = Initializer::Uniform);
 
+        SequentialNetwork<data_t, Backend>&
+            addConvLayer(index_t numFilters, const IndexVector_t& weightsVector,
+                         const IndexVector_t& strideVector, const IndexVector_t& paddingVector,
+                         Initializer initializer = Initializer::Uniform);
+
+        SequentialNetwork<data_t, Backend>&
+            addConvLayer(index_t numFilters, const IndexVector_t& weightsVector,
+                         Initializer initializer = Initializer::Uniform);
+
         /**
          * Add a softmax layer to the network
          *

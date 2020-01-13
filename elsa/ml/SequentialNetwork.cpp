@@ -6,6 +6,10 @@ namespace elsa
     SequentialNetwork<data_t, Backend>::SequentialNetwork(const DataDescriptor& inputDescriptor)
         : _inputDescriptor(inputDescriptor.clone())
     {
+        // We currently only support floats
+        static_assert(std::is_same_v<data_t, float>,
+                      "SequentialNetwork currently only supports data-type float");
+
         // If we receive 1D input, we artificially add a leading batch dimension of 1
         if (_inputDescriptor->getNumberOfDimensions() == 1) {
             IndexVector_t inputVec(2);
@@ -142,6 +146,22 @@ namespace elsa
     {
         return addLayer<ConvLayer<data_t, Backend>>(weightsDescriptor, strideVector, paddingVector,
                                                     initializer);
+    }
+
+    template <typename data_t, MlBackend Backend>
+    SequentialNetwork<data_t, Backend>& SequentialNetwork<data_t, Backend>::addConvLayer(
+        index_t numFilters, const IndexVector_t& weightsVector, const IndexVector_t& strideVector,
+        const IndexVector_t& paddingVector, Initializer initializer)
+    {
+        return addLayer<ConvLayer<data_t, Backend>>(numFilters, weightsVector, strideVector,
+                                                    paddingVector, initializer);
+    }
+
+    template <typename data_t, MlBackend Backend>
+    SequentialNetwork<data_t, Backend>& SequentialNetwork<data_t, Backend>::addConvLayer(
+        index_t numFilters, const IndexVector_t& weightsVector, Initializer initializer)
+    {
+        return addLayer<ConvLayer<data_t, Backend>>(numFilters, weightsVector, initializer);
     }
 
     template class SequentialNetwork<float, MlBackend::Dnnl>;
