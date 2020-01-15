@@ -42,9 +42,6 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 set(DEFAULT_BUILD_TYPE "Release")
 include(SetDefaultBuildType)
 
-# set where to install the exports/targets
-set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake)
-
 
 # ------------ dependencies ------------
 # ------------
@@ -69,6 +66,13 @@ if(ELSA_MASTER_PROJECT)
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
 endif()
+
+
+# set where to install the exports/targets
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
+
 
 # include the InstallElsaModule function
 include(InstallElsaModule)
