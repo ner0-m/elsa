@@ -99,6 +99,7 @@ namespace elsa
         void setEngine(std::shared_ptr<dnnl::engine> engine);
 
         virtual void initialize() {}
+
     protected:
         struct DnnlMemory {
             /// Memory dimensions

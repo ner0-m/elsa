@@ -204,6 +204,5 @@ TEST_CASE("DenseLayer semantics")
 
         for (int i = 0; i < 3; ++i)
             REQUIRE(biasGradient[i] == Approx(outputGradient[i]));
-
     }
 }

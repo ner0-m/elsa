@@ -32,7 +32,7 @@ TEST_CASE("FixedLayer", "elsa_ml")
 
         auto phantom2 = projector.applyAdjoint(sinogram);
 
-        FixedLayer layer(*sinoDescriptor ,projector);
+        FixedLayer layer(*sinoDescriptor, projector);
 
         // The layer's input descriptor is the operator's range descriptor
         REQUIRE(layer.getInputDescriptor() == projector.getRangeDescriptor());
@@ -55,7 +55,7 @@ TEST_CASE("FixedLayer", "elsa_ml")
         auto output = backend->getOutput();
 
         for (index_t i = 0; i < output.getDataDescriptor().getNumberOfCoefficients(); ++i)
-          REQUIRE(output[i] == Approx(phantom2[i]));
+            REQUIRE(output[i] == Approx(phantom2[i]));
     }
 
     SECTION("Backward semantics")

@@ -87,5 +87,4 @@ namespace elsa
         return true;
     }
 
-
 } // namespace elsa
