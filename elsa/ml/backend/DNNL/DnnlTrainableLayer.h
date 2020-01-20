@@ -4,6 +4,7 @@
 #include "DataDescriptor.h"
 #include "DataContainer.h"
 #include "RandomInitializer.h"
+#include "Optimizer.h"
 
 #include "dnnl.hpp"
 
@@ -50,18 +51,22 @@ namespace elsa
          */
         void setBias(const DataContainer<data_t>& bias);
 
-        /// Get this layer's weights gradient as a DataContainer.
+        /// Get this layer's weights gradient as sa DataContainer.
         DataContainer<data_t> getGradientWeights() const;
 
         /// Get this layer's bias gradient as a DataContainer.
         DataContainer<data_t> getGradientBias() const;
 
+        void updateTrainableParameters(data_t learningRate);
+
+        void initialize() override;
+
     protected:
         /// \copydoc DnnlLayer::compileForwardStream
-        void compileForwardStream() override;
+        virtual void compileForwardStream();
 
         /// \copydoc DnnlLayer::compileBackwardStream
-        void compileBackwardStream() override;
+        virtual void compileBackwardStream();
 
         using DnnlMemory = typename BaseType::DnnlMemory;
 
@@ -113,6 +118,9 @@ namespace elsa
         /// This layer's fanIn/fanOut pair that is used during random initialization of weights and
         /// biases
         typename RandomInitializer<data_t>::FanPairType _fanInOut;
+
+        AdamOptimizer<data_t> _weightsOptimizer;
+        AdamOptimizer<data_t> _biasOptimizer;
     };
 
 } // namespace elsa

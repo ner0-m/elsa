@@ -106,6 +106,7 @@ TEST_CASE("ConvLayer forward", "elsa_ml")
         DataContainer<float> bias(biasDesc, vec3);
 
         auto backend = conv.getBackend();
+        backend->initialize();
         backend->setInput(input);
         backend->compile();
         std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setWeights(
@@ -182,6 +183,7 @@ TEST_CASE("ConvLayer forward", "elsa_ml")
         DataContainer<float> bias(biasDesc, vec3);
 
         auto backend = conv.getBackend();
+        backend->initialize();
         backend->setInput(input);
         backend->compile();
         std::static_pointer_cast<typename ConvLayer<float>::BackendLayerType>(backend)->setWeights(
@@ -270,6 +272,7 @@ TEST_CASE("ConvLayer backward", "elsa_ml")
         DataContainer<float> outputGradient(conv.getOutputDescriptor(), outputGrad);
 
         auto backend = conv.getBackend();
+        backend->initialize();
         backend->setInput(input);
         backend->setOutputGradient(outputGradient);
 

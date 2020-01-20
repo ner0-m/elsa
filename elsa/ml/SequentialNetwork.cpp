@@ -29,7 +29,7 @@ namespace elsa
             throw std::logic_error(
                 "Cannot return network output descriptor because network contains no layers");
 
-        return _layerStack.back().getOutputDescriptor();
+        return _layerStack.back()->getOutputDescriptor();
     }
 
     template <typename data_t, MlBackend Backend>
@@ -75,8 +75,30 @@ namespace elsa
         if (_layerStack.empty()) {
             throw std::logic_error("Cannot compile network: Network contains not layers");
         }
-        _backend = std::make_unique<BackendNetworkType>(&_layerStack);
-        _backend->compile();
+        _backend = std::make_unique<BackendNetworkType>(_layerStack);
+        _backend->compile(_loss);
+    }
+
+    template <typename data_t, MlBackend Backend>
+    SequentialNetwork<data_t, Backend>& SequentialNetwork<data_t, Backend>::setLoss(Loss loss)
+    {
+        _loss = loss;
+        return *this;
+    }
+
+    template <typename data_t, MlBackend Backend>
+    std::vector<data_t>
+        SequentialNetwork<data_t, Backend>::train(const DataContainer<data_t>& input,
+                                                  const DataContainer<data_t>& label)
+    {
+        return _backend->train(input, label);
+    }
+
+    template <typename data_t, MlBackend Backend>
+    std::shared_ptr<Layer<data_t, Backend>>
+        SequentialNetwork<data_t, Backend>::getLayer(const index_t index)
+    {
+        return _layerStack.at(index);
     }
 
     // Functions to add network layers
@@ -162,6 +184,21 @@ namespace elsa
         index_t numFilters, const IndexVector_t& weightsVector, Initializer initializer)
     {
         return addLayer<ConvLayer<data_t, Backend>>(numFilters, weightsVector, initializer);
+    }
+
+    template <typename data_t, MlBackend Backend>
+    SequentialNetwork<data_t, Backend>&
+        SequentialNetwork<data_t, Backend>::addFixedLayer(const JosephsMethod<data_t>& op)
+    {
+        return addLayer<FixedLayer<data_t, Backend>>(op);
+    }
+
+    template <typename data_t, MlBackend Backend>
+    SequentialNetwork<data_t, Backend>&
+        SequentialNetwork<data_t, Backend>::addLRNLayer(index_t localSize, data_t alpha,
+                                                        data_t beta, data_t k)
+    {
+        return addLayer<LRNLayer<data_t, Backend>>(localSize, alpha, beta, k);
     }
 
     template class SequentialNetwork<float, MlBackend::Dnnl>;

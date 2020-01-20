@@ -63,6 +63,7 @@ TEST_CASE("DenseLayer semantics")
         DenseLayer<float> dense(inputDesc, 3);
 
         auto backend = dense.getBackend();
+        backend->initialize();
         backend->setInput(input);
         backend->compile();
         std::static_pointer_cast<typename DenseLayer<float>::BackendLayerType>(backend)->setWeights(
@@ -113,6 +114,7 @@ TEST_CASE("DenseLayer semantics")
         DenseLayer<float> dense(inputDesc, 64);
 
         auto backend = dense.getBackend();
+        backend->initialize();
         backend->setInput(input);
         backend->compile();
         std::static_pointer_cast<typename DenseLayer<float>::BackendLayerType>(backend)->setWeights(
@@ -167,6 +169,7 @@ TEST_CASE("DenseLayer semantics")
         DenseLayer<float> dense(inputDesc, 3);
 
         auto backend = dense.getBackend();
+        backend->initialize();
         backend->setInput(input);
         backend->setOutputGradient(outputGradient);
         auto engine = backend->getEngine();
@@ -201,5 +204,6 @@ TEST_CASE("DenseLayer semantics")
 
         for (int i = 0; i < 3; ++i)
             REQUIRE(biasGradient[i] == Approx(outputGradient[i]));
+
     }
 }

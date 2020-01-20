@@ -1,8 +1,7 @@
 #include "DnnlTrainableLayer.h"
-
+#include <iostream>
 namespace elsa
 {
-
     template <typename data_t>
     DnnlTrainableLayer<data_t>::DnnlTrainableLayer(const DataDescriptor& inputDescriptor,
                                                    const DataDescriptor& outputDescriptor,
@@ -13,6 +12,8 @@ namespace elsa
           _initializer(initializer)
     {
         _input.canBeReordered = true;
+
+        _weightsOptimizer = AdamOptimizer<data_t>(_weightsDescriptor->getNumberOfCoefficients());
 
         // Set the layer's fan-in and fan-out. This is needed for random initialization of weights
         // and biases
@@ -40,6 +41,8 @@ namespace elsa
         biasVec << _weights.dimensions[0];
 
         _biasDescriptor = DataDescriptor(biasVec).clone();
+
+        _biasOptimizer = AdamOptimizer<data_t>(_biasDescriptor->getNumberOfCoefficients());
 
         // Set weights bias information
         _bias.dimensions.push_back(_weights.dimensions[0]);
@@ -69,7 +72,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlTrainableLayer<data_t>::compileForwardStream()
+    void DnnlTrainableLayer<data_t>::initialize()
     {
         // Construct weights memory and initialize it
         auto weightsDesc = dnnl::memory::desc({_weights.dimensions}, _typeTag, _weights.formatTag);
@@ -79,7 +82,7 @@ namespace elsa
             static_cast<data_t*>(_weights.describedMemory->get_data_handle()),
             _weightsDescriptor->getNumberOfCoefficients(), _initializer, _fanInOut);
 
-        // Construct bias memory and initialize it
+        // Construct bias memory and initialize it with zero
         auto biasDesc = dnnl::memory::desc({_bias.dimensions}, _typeTag, _bias.formatTag);
         _bias.describedMemory = std::make_shared<dnnl::memory>(biasDesc, *_engine);
 
@@ -89,6 +92,11 @@ namespace elsa
 
         // Bias can never be reordered
         _bias.effectiveMemory = _bias.describedMemory;
+    }
+
+    template <typename data_t>
+    void DnnlTrainableLayer<data_t>::compileForwardStream()
+    {
     }
 
     template <typename data_t>
@@ -120,6 +128,30 @@ namespace elsa
         DataContainer<data_t> output(*_biasDescriptor);
         this->readFromDnnlMemory(output, *_biasGradient.effectiveMemory);
         return output;
+    }
+
+    template <typename data_t>
+    void DnnlTrainableLayer<data_t>::updateTrainableParameters(data_t learningRate)
+    {
+        // ++_weightsOptimizer;
+        // ++_biasOptimizer;
+        // Update weights
+        auto weightsMem = static_cast<data_t*>(_weights.describedMemory->get_data_handle());
+
+        auto weightsGradientMem =
+            static_cast<data_t*>(_weightsGradient.effectiveMemory->get_data_handle());
+        for (index_t i = 0; i < _weightsDescriptor->getNumberOfCoefficients(); ++i)
+            weightsMem[i] -= learningRate * weightsGradientMem[i];
+        // weightsMem[i] -= _weightsOptimizer.getUpdateValue(weightsGradientMem[i], i);
+
+        // Update bias
+        auto biasMem = static_cast<data_t*>(_bias.describedMemory->get_data_handle());
+        auto biasGradientMem =
+            static_cast<data_t*>(_biasGradient.effectiveMemory->get_data_handle());
+
+        for (index_t i = 0; i < _biasDescriptor->getNumberOfCoefficients(); ++i)
+            biasMem[i] -= learningRate * biasGradientMem[i];
+        // biasMem[i] -= _biasOptimizer.getUpdateValue(biasGradientMem[i], i);
     }
 
     template class DnnlTrainableLayer<float>;

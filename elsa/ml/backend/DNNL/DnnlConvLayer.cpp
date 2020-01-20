@@ -66,7 +66,6 @@ namespace elsa
                                             {DNNL_ARG_WEIGHTS, *_weights.effectiveMemory},
                                             {DNNL_ARG_BIAS, *_bias.effectiveMemory},
                                             {DNNL_ARG_DST, *_output.effectiveMemory}});
-
         _forwardStream.isCompiled = true;
     }
 
@@ -146,6 +145,7 @@ namespace elsa
              {DNNL_ARG_DIFF_DST, *_outputGradient.effectiveMemory}});
 
         _weightsGradient.effectiveMemory = _weightsGradient.describedMemory;
+        validateDnnlMemory(_weightsGradient.effectiveMemory);
         if (_weightsGradient.describedMemory->get_desc()
             != _backwardWeightsPrimitiveDescriptor.diff_weights_desc()) {
             _weightsGradient.wasReordered = true;

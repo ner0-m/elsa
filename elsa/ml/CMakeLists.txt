@@ -22,6 +22,8 @@ if(ELSA_HAS_DNNL_BACKEND)
       ${ELSA_DNNL_BACKEND_DIR}/DnnlActivationLayer.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSoftmaxLayer.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlLRNLayer.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlFixedLayer.h
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlLoss.h
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSequentialNetwork.h)
 
   set(ELSA_DNNL_BACKEND_SOURCES
@@ -33,8 +35,9 @@ if(ELSA_HAS_DNNL_BACKEND)
       ${ELSA_DNNL_BACKEND_DIR}/DnnlActivationLayer.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSoftmaxLayer.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlLRNLayer.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlFixedLayer.cpp
+      ${ELSA_DNNL_BACKEND_DIR}/DnnlLoss.cpp
       ${ELSA_DNNL_BACKEND_DIR}/DnnlSequentialNetwork.cpp)
-
 endif()
 
 # list all the headers of the module
@@ -48,7 +51,9 @@ set(MODULE_HEADERS
     RandomInitializer.h
     SoftmaxLayer.h
     LRNLayer.h
+    FixedLayer.h
     SequentialNetwork.h
+    Optimizer.h
     ${ELSA_DNNL_BACKEND_HEADERS})
 
 # list all the code files of the module
@@ -60,7 +65,9 @@ set(MODULE_SOURCES
     RandomInitializer.cpp
     SoftmaxLayer.cpp
     LRNLayer.cpp
+    FixedLayer.cpp
     SequentialNetwork.cpp
+    Optimizer.cpp
     ${ELSA_DNNL_BACKEND_SOURCES})
 
 # build the module library
@@ -68,7 +75,7 @@ add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 # add_library(elsa::${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ALIAS)
 
 target_link_libraries(${ELSA_MODULE_TARGET_NAME}
-                      PUBLIC elsa_core elsa_logging ${Dnnl_LIB})
+                      PUBLIC elsa_core elsa_logging elsa_generators elsa_projectors ${Dnnl_LIB})
 
 target_include_directories(
   ${ELSA_MODULE_TARGET_NAME}

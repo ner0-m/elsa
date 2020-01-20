@@ -1,5 +1,7 @@
 #pragma once
 
+#include <random>
+
 #include "elsaDefines.h"
 #include "DataContainer.h"
 
@@ -32,6 +34,18 @@ namespace elsa
          * Warning: the 3D version is currently very inefficient to compute (cubic algorithm).
          */
         static DataContainer<data_t> createModifiedSheppLogan(IndexVector_t sizes);
+
+        /**
+         * \brief Create a Shepp-Logan-like phantom with randomized sizes and positions for the
+         * inner ellipsis in 2d.
+         *
+         * \param[in] sizes a 2d vector indicating the requested size (has to be square!)
+         * \param[in] randomSeed a random seed for the random number generator
+         *
+         * \returns DataContainer of specified size containing the phantom.
+         */
+        static DataContainer<data_t>
+            createRandomizedSheppLogan(IndexVector_t sizes, std::mt19937_64& mersenneTwisterEngine);
 
     private:
         /// scale sizes from [0,1] to the (square) phantom size, producing indices (integers)

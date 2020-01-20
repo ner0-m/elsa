@@ -36,5 +36,5 @@ namespace elsa
         struct BackendSelector<SoftmaxLayer<data_t, MlBackend::Dnnl>> {
             using Type = DnnlSoftmaxLayer<data_t>;
         };
-    }; // namespace detail
+    } // namespace detail
 } // namespace elsa

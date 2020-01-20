@@ -37,6 +37,11 @@ namespace elsa
                   const IndexVector_t& weightsVector,
                   Initializer initializer = Initializer::Uniform);
 
+        void setWeights(const DataContainer<data_t>& weights) override
+        {
+            std::static_pointer_cast<BackendLayerType>(_backend)->setWeights(weights);
+        }
+
     private:
         using BaseType::_backend;
 

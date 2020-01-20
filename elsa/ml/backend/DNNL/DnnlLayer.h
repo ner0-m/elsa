@@ -2,7 +2,8 @@
 
 #include <unordered_map>
 #include <memory>
-#include <iostream>
+
+#include <string>
 
 #include "elsaDefines.h"
 #include "DataContainer.h"
@@ -62,8 +63,12 @@ namespace elsa
         /// Get this layer's input gradient
         DataContainer<data_t> getInputGradient() const;
 
+        std::shared_ptr<dnnl::memory> getInputGradientMemory();
+
         /// Set this layer's input memory by passing a pointer to another Dnnl memory
-        virtual void setSourceMemory(std::shared_ptr<dnnl::memory> input);
+        void setInputMemory(std::shared_ptr<dnnl::memory> input);
+
+        void setOutputGradientMemory(std::shared_ptr<dnnl::memory> outputGradient);
 
         /**
          * Get the layer's output by copying it into a DataContainer.
@@ -93,6 +98,7 @@ namespace elsa
         /// Set the layer's execution engine
         void setEngine(std::shared_ptr<dnnl::engine> engine);
 
+        virtual void initialize() {}
     protected:
         struct DnnlMemory {
             /// Memory dimensions
@@ -201,6 +207,8 @@ namespace elsa
          */
         static dnnl::memory::format_tag
             dataDescriptorToDnnlMemoryFormatTag(const DataDescriptor& desc, bool isInput);
+
+        static std::string dnnlMemoryFormatTagToString(dnnl::memory::format_tag tag);
 
         /// This layer's forward propagation stream
         PropagationStream _forwardStream;

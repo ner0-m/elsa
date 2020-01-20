@@ -76,26 +76,38 @@ namespace elsa
                                               const IndexVector_t& paddingVector,
                                               Initializer initializer)
     {
+        // Special case of 2D input: We assume the user specified h and w of
+        // an nchw input format and extend the input descriptor
+        std::unique_ptr<DataDescriptor> inputDesc;
+        if (inputDescriptor.getNumberOfDimensions() == 2) {
+            IndexVector_t vec(4);
+            vec << 1, 1, inputDescriptor.getNumberOfCoefficientsPerDimension()[0],
+                inputDescriptor.getNumberOfCoefficientsPerDimension()[1];
+            inputDesc = DataDescriptor(vec).clone();
+        } else {
+            inputDesc = inputDescriptor.clone();
+        }
+
         index_t numSpatialDims = spatialFilterVector.size();
         if (strideVector.size() != numSpatialDims || paddingVector.size() != numSpatialDims)
             throw std::invalid_argument(
                 "Spatial dimensions of filters, strides and padding must match");
 
-        IndexVector_t weightsVec(inputDescriptor.getNumberOfDimensions());
+        IndexVector_t weightsVec(inputDesc->getNumberOfDimensions());
 
         // Num filters
         weightsVec[0] = numFilters;
 
         // Num input channels
-        weightsVec[1] = inputDescriptor.getNumberOfCoefficientsPerDimension()[1];
+        weightsVec[1] = inputDesc->getNumberOfCoefficientsPerDimension()[1];
 
         // Spatial dims
         for (index_t i = 0; i < spatialFilterVector.size(); ++i)
             weightsVec[i + 2] = spatialFilterVector[i];
 
         DataDescriptor weightsDesc(weightsVec);
-        *this = ConvLayer<data_t, _BackendTag>(inputDescriptor, weightsDesc, strideVector,
-                                               paddingVector, initializer);
+        *this = ConvLayer<data_t, _BackendTag>(*inputDesc, weightsDesc, strideVector, paddingVector,
+                                               initializer);
     }
 
     template <typename data_t, MlBackend _BackendTag>

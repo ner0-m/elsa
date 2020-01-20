@@ -16,6 +16,10 @@ namespace elsa
         const DataDescriptor& getWeightsDescriptor() const;
         const DataDescriptor& getBiasDescriptor() const;
 
+        virtual void setWeights(const DataContainer<data_t>& weights) {}
+
+        bool isTrainable() const override;
+
     protected:
         using BaseType = Layer<data_t, Backend>;
 
@@ -76,5 +80,12 @@ namespace elsa
     {
         return *_biasDescriptor;
     }
+
+    template <typename data_t, MlBackend Backend>
+    inline bool TrainableLayer<data_t, Backend>::isTrainable() const
+    {
+        return true;
+    }
+
 
 } // namespace elsa

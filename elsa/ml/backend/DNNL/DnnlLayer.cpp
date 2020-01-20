@@ -1,4 +1,6 @@
 #include "DnnlLayer.h"
+#include "Logger.h"
+#include <sstream>
 
 namespace elsa
 {
@@ -80,6 +82,35 @@ namespace elsa
     }
 
     template <typename data_t>
+    std::string DnnlLayer<data_t>::dnnlMemoryFormatTagToString(dnnl::memory::format_tag tag)
+    {
+
+        auto formatStr = [](const std::string& input, const std::string& weights) {
+            std::stringstream ss;
+            ss << "dnnl::memory:format_tag::" << input
+               << " (input), dnnl::memory:format_tag::" << weights << " (weights)";
+            return ss.str();
+        };
+
+        using ft = dnnl::memory::format_tag;
+
+        switch (tag) {
+            case ft::undef:
+                return formatStr("undef", "undef");
+            case ft::nc:
+                return formatStr("nc", "oi");
+            case ft::ncw:
+                return formatStr("ncw", "oiw");
+            case ft::nchw:
+                return formatStr("nchw", "oihw");
+            case ft::ncdhw:
+                return formatStr("ncdhw", "oidhw");
+            default:
+                throw std::invalid_argument("Unkown memory format tag");
+        }
+    }
+
+    template <typename data_t>
     void DnnlLayer<data_t>::forwardPropagate(dnnl::stream& executionStream)
     {
         if (_forwardStream.primitives.size() != _forwardStream.arguments.size())
@@ -126,10 +157,27 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlLayer<data_t>::setSourceMemory(std::shared_ptr<dnnl::memory> input)
+    void DnnlLayer<data_t>::setOutputGradient(const DataContainer<data_t>& gradient)
     {
+        _outputGradient.describedMemory = std::make_shared<dnnl::memory>(
+            dnnl::memory::desc({{_outputGradient.dimensions}, _typeTag, _outputGradient.formatTag}),
+            *_engine);
+        writeToDnnlMemory(gradient, *_outputGradient.describedMemory);
+    }
+
+    template <typename data_t>
+    void DnnlLayer<data_t>::setInputMemory(std::shared_ptr<dnnl::memory> input)
+    {
+
         // Set source memory
         _input.describedMemory = input;
+    }
+
+    template <typename data_t>
+    void DnnlLayer<data_t>::setOutputGradientMemory(std::shared_ptr<dnnl::memory> outputGradient)
+    {
+        // Set source memory
+        _outputGradient.describedMemory = outputGradient;
     }
 
     template <typename data_t>
@@ -187,8 +235,9 @@ namespace elsa
             case PropagationKind::Full:
                 if (!_forwardStream.isCompiled)
                     compileForwardStream();
-                if (!_backwardStream.isCompiled)
+                if (!_backwardStream.isCompiled) {
                     compileBackwardStream();
+                }
                 break;
             default:
                 throw std::invalid_argument("Failed to compile layer: Unkown propagation kind");
@@ -202,12 +251,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DnnlLayer<data_t>::setOutputGradient(const DataContainer<data_t>& gradient)
+    std::shared_ptr<dnnl::memory> DnnlLayer<data_t>::getInputGradientMemory()
     {
-        _outputGradient.describedMemory = std::make_shared<dnnl::memory>(
-            dnnl::memory::desc({{_outputGradient.dimensions}, _typeTag, _outputGradient.formatTag}),
-            *_engine);
-        writeToDnnlMemory(gradient, *_outputGradient.describedMemory);
+        return _inputGradient.effectiveMemory;
     }
 
     template <typename data_t>

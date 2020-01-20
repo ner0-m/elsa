@@ -11,7 +11,9 @@
 #include "PoolingLayer.h"
 #include "ConvLayer.h"
 #include "DenseLayer.h"
+#include "FixedLayer.h"
 #include "SoftmaxLayer.h"
+#include "LRNLayer.h"
 #include "RandomInitializer.h"
 #include "DnnlSequentialNetwork.h"
 
@@ -85,21 +87,51 @@ namespace elsa
                          const IndexVector_t& paddingVector,
                          Initializer initializer = Initializer::Uniform);
 
+        /**
+         * Add a convolution layer to the network
+         *
+         * \param[in] numFilters The number of convolution filters
+         * \param[in] weightsVector The spatial dimensions of each filter
+         * \param[in] strideVector Vector describing the stride for each spatial dimension
+         * \param[in] paddingVector Vector describing padding for each spatial dimension
+         * \param[in] initializer The layer's initializer
+         *
+         * \return A reference to the network to allow method chaining
+         */
         SequentialNetwork<data_t, Backend>&
             addConvLayer(index_t numFilters, const IndexVector_t& weightsVector,
                          const IndexVector_t& strideVector, const IndexVector_t& paddingVector,
                          Initializer initializer = Initializer::Uniform);
 
+        /**
+         * Add a convolution layer to the network
+         *
+         * \param[in] numFilters The number of convolution filters
+         * \param[in] weightsVector The spatial dimensions of each filter
+         * \param[in] initializer The layer's initializer
+         *
+         * \note This assumes convolution strides of the filters' sizes and no padding
+         *
+         * \return A reference to the network to allow method chaining
+         */
         SequentialNetwork<data_t, Backend>&
             addConvLayer(index_t numFilters, const IndexVector_t& weightsVector,
                          Initializer initializer = Initializer::Uniform);
 
+        SequentialNetwork<data_t, Backend>& addFixedLayer(const JosephsMethod<data_t>& op);
+
+        SequentialNetwork<data_t, Backend>& addLRNLayer(index_t localSize,
+                                                        data_t alpha = static_cast<data_t>(1),
+                                                        data_t beta = static_cast<data_t>(1),
+                                                        data_t k = static_cast<data_t>(1));
         /**
          * Add a softmax layer to the network
          *
          * \return A reference to the network to allow method chaining
          */
         SequentialNetwork<data_t, Backend>& addSoftmaxLayer();
+
+        SequentialNetwork<data_t, Backend>& setLoss(Loss loss);
 
         /**
          * Get the network's output descriptor.
@@ -117,6 +149,9 @@ namespace elsa
         /// Forward propagate input through all network layers
         void forwardPropagate(const DataContainer<data_t>& input);
 
+        std::vector<data_t> train(const DataContainer<data_t>& input,
+                                  const DataContainer<data_t>& label);
+
         /**
          * Get network output
          *
@@ -125,6 +160,8 @@ namespace elsa
         DataContainer<data_t> getOutput() const;
 
         void compile();
+
+        std::shared_ptr<Layer<data_t, Backend>> getLayer(const index_t index);
 
     private:
         /**
@@ -143,10 +180,10 @@ namespace elsa
             // descriptor. Otherwise we use the last layer's output descriptor as an input
             // descriptor.
             if (_layerStack.empty()) {
-                _layerStack.emplace_back(LayerType(*_inputDescriptor, args...));
+                _layerStack.emplace_back(std::make_shared<LayerType>(*_inputDescriptor, args...));
             } else {
-                auto outputDesc = _layerStack.back().getOutputDescriptor();
-                _layerStack.emplace_back(LayerType(outputDesc, args...));
+                auto outputDesc = _layerStack.back()->getOutputDescriptor();
+                _layerStack.emplace_back(std::make_shared<LayerType>(outputDesc, args...));
             }
 
             return *this;
@@ -156,13 +193,16 @@ namespace elsa
         std::unique_ptr<DataDescriptor> _inputDescriptor;
 
         /// A vector containing all network layer
-        std::vector<Layer<data_t, Backend>> _layerStack;
+        std::vector<std::shared_ptr<Layer<data_t, Backend>>> _layerStack;
 
         /// A pointer to this layer's backend
         std::unique_ptr<BackendNetworkType> _backend = nullptr;
 
-        // Flag to indicate that an input has been propagated through the network
+        /// Flag to indicate that an input has been propagated through the network
         bool _isPropagated = false;
+
+        /// The networks loss function
+        Loss _loss = Loss::MeanSquareError;
     };
 
     namespace detail

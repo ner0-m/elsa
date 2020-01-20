@@ -39,5 +39,34 @@ namespace elsa
         _forwardStream.isCompiled = true;
     }
 
+    template <typename data_t>
+    void DnnlLRNLayer<data_t>::compileBackwardStream()
+    {
+        auto desc = dnnl::lrn_backward::desc(
+            /* LRN algorithm */ dnnl::algorithm::lrn_across_channels,
+            /* Input memory descriptor */ _input.descriptor,
+            /* Output gradient memory descriptor */ _outputGradient.descriptor,
+            /* Local size to regularize */ _localSize,
+            /* Parameters */ _alpha, _beta, _k);
+
+        _backwardPrimitiveDescriptor =
+            dnnl::lrn_backward::primitive_desc(desc, *_engine, _forwardPrimitiveDescriptor);
+
+        _inputGradient.effectiveMemory =
+            std::make_shared<dnnl::memory>(_backwardPrimitiveDescriptor.diff_src_desc(), *_engine);
+
+        this->reorderMemory(_backwardPrimitiveDescriptor.diff_dst_desc(), _outputGradient,
+                            _backwardStream);
+
+        // Set forward primitive
+        _backwardStream.primitives.push_back(dnnl::lrn_backward(_backwardPrimitiveDescriptor));
+        _backwardStream.arguments.push_back({{DNNL_ARG_SRC, *_input.effectiveMemory},
+                                             {DNNL_ARG_DIFF_DST, *_outputGradient.effectiveMemory},
+                                             {DNNL_ARG_DIFF_SRC, *_inputGradient.effectiveMemory},
+                                             {DNNL_ARG_WORKSPACE, *_workspace.effectiveMemory}});
+
+        _backwardStream.isCompiled = true;
+    }
+
     template class DnnlLRNLayer<float>;
-}; // namespace elsa
+} // namespace elsa

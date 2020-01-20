@@ -33,6 +33,12 @@ namespace elsa
         using BackendLayerBaseType =
             std::conditional_t<Backend == MlBackend::Dnnl, DnnlLayer<data_t>, std::false_type>;
 
+        virtual bool isTrainable() const;
+
+        virtual bool isOperator() const;
+
+        virtual ~Layer() = default;
+
         Layer() = default;
 
         Layer(Layer&& other) = default;
@@ -58,6 +64,18 @@ namespace elsa
 
         std::shared_ptr<BackendLayerBaseType> _backend;
     };
+
+    template <typename data_t, MlBackend Backend>
+    bool Layer<data_t, Backend>::isTrainable() const
+    {
+        return false;
+    }
+
+    template <typename data_t, MlBackend Backend>
+    bool Layer<data_t, Backend>::isOperator() const
+    {
+        return false;
+    }
 
     template <typename data_t, MlBackend Backend>
     Layer<data_t, Backend>::Layer(const DataDescriptor& inputDescriptor)

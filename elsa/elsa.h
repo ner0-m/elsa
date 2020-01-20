@@ -69,4 +69,6 @@
 #include "ml/DenseLayer.h"
 #include "ml/SoftmaxLayer.h"
 #include "ml/RandomInitializer.h"
+#include "ml/FixedLayer.h"
+#include "ml/LRNLayer.h"
 #include "ml/SequentialNetwork.h"

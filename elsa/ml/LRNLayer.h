@@ -39,5 +39,5 @@ namespace elsa
         struct BackendSelector<LRNLayer<data_t, MlBackend::Dnnl>> {
             using Type = DnnlLRNLayer<data_t>;
         };
-    }; // namespace detail
+    } // namespace detail
 } // namespace elsa

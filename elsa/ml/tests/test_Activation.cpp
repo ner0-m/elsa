@@ -275,7 +275,7 @@ TEST_CASE("Linear semantics", "elsa_ml")
         s.wait();
         auto inputGradient = backend->getInputGradient();
 
-        auto f_der = [&alpha](const auto& coeff) { return alpha; };
+        auto f_der = [&alpha]([[maybe_unused]] const auto& coeff) { return alpha; };
 
         for (int i = 0; i < inputGradient.getDataDescriptor().getNumberOfCoefficients(); ++i)
             REQUIRE(inputGradient[i] == Approx(f_der(input[i]) * outputGradient[i]).epsilon(0.001));

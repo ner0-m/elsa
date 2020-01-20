@@ -3,6 +3,7 @@
 #include <random>
 #include <type_traits>
 #include <optional>
+
 #include "DataContainer.h"
 
 namespace elsa
@@ -40,26 +41,53 @@ namespace elsa
         Normal,
 
         /**
+         * Truncated normal initialization
+         *
+         * Initialize data with random samples from a truncated standard normal
+         * distribution, i.e., a normal distribution with mean 0 and standard deviation 1
+         * where values with a distance of greater than 2 standard deviations from the mean are
+         * discarded.
+         */
+        TruncatedNormal,
+
+        /**
          * Glorot uniform initialization
          *
          * Initialize a data container with a random samples from a uniform
          * distribution on the interval
          *
-         *      `[-sqrt(6 / (fan_in + fan_out)), sqrt(6 / (fan_in + fan_out))]`
+         *      `[-sqrt(6 / (fanIn + fanOut)), sqrt(6 / (fanIn + fanOut))]`
          */
         GlorotUniform,
 
         /**
          * Glorot normal initialization
          *
-         * Initialize data  with random samples from a normal distribution
-         * centered on variance 0 and standard deviation
+         * Initialize data with random samples from a truncated normal distribution
+         * with mean 0 and stddev
          *
          * `sqrt(2 / (fanIn + fanOut))`
          */
         GlorotNormal,
 
+        /**
+         * He normal initialization
+         *
+         * Initialize data with random samples from a truncated normal distribution
+         * with mean 0 and stddev
+         *
+         * `sqrt(2 / (fanIn)`
+         */
         HeNormal,
+
+        /**
+         * He uniform initialization
+         *
+         * Initialize a data container with a random samples from a uniform
+         * distribution on the interval
+         *
+         *      `[-sqrt(6 / fanIn), sqrt(6 / fanIn)]`
+         */
         HeUniform,
 
         LeCunNormal,
@@ -98,10 +126,20 @@ namespace elsa
                 case Initializer::GlorotUniform:
                     RandomInitializer::glorotUniform(data, size, fanInOut);
                     return;
+                case Initializer::HeUniform:
+                    RandomInitializer::heUniform(data, size, fanInOut);
+                    return;
                 case Initializer::Normal:
                     RandomInitializer::normal(data, size, 0, 1);
+                    return;
+                case Initializer::TruncatedNormal:
+                    RandomInitializer::truncatedNormal(data, size, 0, 1);
+                    return;
                 case Initializer::GlorotNormal:
                     RandomInitializer::glorotNormal(data, size, fanInOut);
+                    return;
+                case Initializer::HeNormal:
+                    RandomInitializer::heNormal(data, size, fanInOut);
                     return;
                 default:
                     throw std::invalid_argument("Unkown random initializer");
@@ -127,7 +165,15 @@ namespace elsa
          *
          * Initialize data with random samples from a normal distribution.
          */
-        static void normal(data_t* data, index_t size, data_t variance, data_t stddev);
+        static void normal(data_t* data, index_t size, data_t mean, data_t stddev);
+
+        /**
+         * Truncated Normal distribution
+         *
+         * Initialize data with random samples from a normal distribution but discard if values have
+         * a distance of more than 2 x stddev from mean.
+         */
+        static void truncatedNormal(data_t* data, index_t size, data_t mean, data_t stddev);
 
         /**
          * Glorot uniform initialization
@@ -142,12 +188,32 @@ namespace elsa
         /**
          * Glorot normal initialization
          *
-         * Initialize data  with random samples from a normal distribution
+         * Initialize data  with random samples from a truncated normal distribution
          * centered on mean 0 and standard deviation
          *
          * `sqrt(2 / (fanIn + fanOut))`
          */
         static void glorotNormal(data_t* data, index_t size, const FanPairType&);
+
+        /**
+         * He normal initialization
+         *
+         * Initialize data  with random samples from a truncated normal distribution
+         * centered on mean 0 and standard deviation
+         *
+         * `sqrt(2 / fanIn)`
+         */
+        static void heNormal(data_t* data, index_t size, const FanPairType&);
+
+        /**
+         * Glorot uniform initialization
+         *
+         * Initialize data with random samples from a uniform distribution on
+         * the interval
+         *
+         *      `[-sqrt(6 / fanIn), sqrt(6 / fanIn)]`
+         */
+        static void heUniform(data_t* data, index_t size, const FanPairType&);
 
         /// Type of the uniform distribution depending on the data-type used
         using UniformDistributionType =
