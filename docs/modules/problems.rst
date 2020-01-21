@@ -19,8 +19,15 @@ WLSProblem
 
 .. doxygenclass:: elsa::WLSProblem
 
+TikhonovProblem
+===============
+
+.. doxygenclass:: elsa::TikhonovProblem
+
 QuadricProblem
-===================
+==============
 
 .. doxygenclass:: elsa::QuadricProblem
+
+
 

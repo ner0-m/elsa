@@ -19,6 +19,21 @@ BlockDescriptor
 
 .. doxygenclass:: elsa::BlockDescriptor
 
+IdenticalBlocksDescriptor
+=========================
+
+.. doxygenclass:: elsa::IdenticalBlocksDescriptor
+
+PartitionDescriptor
+===================
+
+.. doxygenclass:: elsa::PartitionDescriptor
+
+RandomBlocksDescriptor
+======================
+
+.. doxygenclass:: elsa::RandomBlocksDescriptor
+
 DataContainer
 =============
 
