@@ -57,13 +57,13 @@ namespace elsa
         virtual data_t dot(const DataHandler<data_t>& v) const = 0;
 
         /// return the squared l2 norm of the data vector (dot product with itself)
-        virtual data_t squaredL2Norm() const = 0;
+        virtual GetFloatingPointType_t<data_t> squaredL2Norm() const = 0;
 
         /// return the l1 norm of the data vector (sum of absolute values)
-        virtual data_t l1Norm() const = 0;
+        virtual GetFloatingPointType_t<data_t> l1Norm() const = 0;
 
         /// return the linf norm of the data vector (maximum of absolute values)
-        virtual data_t lInfNorm() const = 0;
+        virtual GetFloatingPointType_t<data_t> lInfNorm() const = 0;
 
         /// return the sum of all elements of the data vector
         virtual data_t sum() const = 0;

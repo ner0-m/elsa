@@ -26,3 +26,14 @@ SCENARIO("Testing PI")
         REQUIRE(pi<double> == 3.14159265358979323846);
     }
 }
+
+SCENARIO("Testing compile-time predicates")
+{
+    static_assert(std::is_same_v<float, GetFloatingPointType_t<std::complex<float>>>);
+    static_assert(std::is_same_v<double, GetFloatingPointType_t<std::complex<double>>>);
+    static_assert(std::is_same_v<double, GetFloatingPointType_t<double>>);
+    static_assert(std::is_same_v<float, GetFloatingPointType_t<float>>);
+    static_assert(!std::is_same_v<float, GetFloatingPointType_t<double>>);
+
+    REQUIRE(true);
+}

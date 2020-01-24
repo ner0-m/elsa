@@ -37,4 +37,21 @@ namespace elsa
         CPU,    ///< data is stored as an Eigen::Matrix in CPU main memory
         MAP_CPU ///< data is not explicitly stored, but using an Eigen::Map to refer to other
     };
+
+    /// base case for deducing floating point type of std::complex
+    template <typename T>
+    struct GetFloatingPointType {
+        using type = T;
+    };
+
+    /// partial specialization to derive correct floating point type
+    template <typename T>
+    struct GetFloatingPointType<std::complex<T>> {
+        using type = T;
+    };
+
+    /// helper typedef to facilitate usage
+    template <typename T>
+    using GetFloatingPointType_t = typename GetFloatingPointType<T>::type;
+
 } // namespace elsa

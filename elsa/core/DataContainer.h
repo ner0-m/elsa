@@ -178,13 +178,13 @@ namespace elsa
         }
 
         /// return the squared l2 norm of this signal (dot product with itself)
-        data_t squaredL2Norm() const;
+        GetFloatingPointType_t<data_t> squaredL2Norm() const;
 
         /// return the l1 norm of this signal (sum of absolute values)
-        data_t l1Norm() const;
+        GetFloatingPointType_t<data_t> l1Norm() const;
 
         /// return the linf norm of this signal (maximum of absolute values)
-        data_t lInfNorm() const;
+        GetFloatingPointType_t<data_t> lInfNorm() const;
 
         /// return the sum of all elements of this signal
         data_t sum() const;
