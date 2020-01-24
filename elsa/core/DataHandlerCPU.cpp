@@ -13,7 +13,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandlerCPU<data_t>::DataHandlerCPU(DataVector_t vector)
+    DataHandlerCPU<data_t>::DataHandlerCPU(DataVector_t const& vector)
         : _data{std::make_shared<DataVector_t>(vector)}
     {
     }

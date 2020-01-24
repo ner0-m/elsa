@@ -78,7 +78,7 @@ namespace elsa
          *
          * \param[in] vector that is used for initializing the data
          */
-        explicit DataHandlerCPU(DataVector_t vector);
+        explicit DataHandlerCPU(DataVector_t const& vector);
 
         /// copy constructor
         DataHandlerCPU(const DataHandlerCPU<data_t>& other);
