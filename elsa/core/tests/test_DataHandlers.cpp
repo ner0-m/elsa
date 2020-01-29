@@ -1,10 +1,11 @@
 /**
- * \file test_DataHandlerCPU.cpp
+ * \file test_DataHandlers.cpp
  *
- * \brief Tests for DataHandlerCPU class
+ * \brief Common tests for DataHandlers class
  *
  * \author David Frank - initial code
  * \author Tobias Lasser - rewrite and code coverage
+ * \author Jens Petit - refactoring to general DataHandler test
  */
 
 #include <catch2/catch.hpp>
@@ -19,30 +20,33 @@ long elsa::useCount(const DataHandlerCPU<data_t>& dh)
 
 using namespace elsa;
 
-TEMPLATE_TEST_CASE("Scenario: Constructing DataHandlerCPU", "", float, double, index_t)
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandlerCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
 {
+    using data_t = typename TestType::value_type;
+
     GIVEN("a certain size")
     {
         index_t size = 314;
 
         WHEN("constructing with zeros")
         {
-            const DataHandlerCPU<TestType> dh{size};
+            const TestType dh{size};
 
             THEN("it has the correct size") { REQUIRE(size == dh.getSize()); }
 
             THEN("it has a zero vector")
             {
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == static_cast<TestType>(0));
+                    REQUIRE(dh[i] == static_cast<data_t>(0));
             }
         }
 
         WHEN("constructing with a given vector")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
-            const DataHandlerCPU dh{randVec};
+            const TestType dh{randVec};
 
             for (index_t i = 0; i < size; ++i)
                 REQUIRE(dh[i] == randVec(i));
@@ -50,10 +54,10 @@ TEMPLATE_TEST_CASE("Scenario: Constructing DataHandlerCPU", "", float, double, i
 
         WHEN("copy constructing")
         {
-            const DataHandlerCPU<TestType> dh{size};
+            const TestType dh{size};
             const auto dhView = dh.getBlock(0, size);
 
-            DataHandlerCPU dh2 = dh;
+            TestType dh2 = dh;
 
             THEN("a shallow copy is created")
             {
@@ -63,23 +67,23 @@ TEMPLATE_TEST_CASE("Scenario: Constructing DataHandlerCPU", "", float, double, i
                 const auto dh2View = dh2.getBlock(0, size);
                 AND_THEN("associated maps are not transferred")
                 {
-                    dh2[0] = 1;
-                    REQUIRE(dh2[0] == 1);
-                    REQUIRE((*dhView)[0] == 0);
-                    REQUIRE((*dh2View)[0] == 1);
+                    dh2[0] = data_t(1);
+                    REQUIRE(dh2[0] == data_t(1));
+                    REQUIRE((*dhView)[0] == data_t(0));
+                    REQUIRE((*dh2View)[0] == data_t(1));
                 }
             }
         }
 
         WHEN("move constructing")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
-            DataHandlerCPU dh{randVec};
+            TestType dh{randVec};
             const auto dhView = dh.getBlock(0, size);
-            DataHandlerCPU<TestType> testDh{randVec};
+            TestType testDh{randVec};
 
-            const DataHandlerCPU dh2 = std::move(dh);
+            const TestType dh2 = std::move(dh);
 
             THEN("data and associated maps are moved to the new handler")
             {
@@ -91,19 +95,22 @@ TEMPLATE_TEST_CASE("Scenario: Constructing DataHandlerCPU", "", float, double, i
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Testing equality operator on DataHandlerCPU", "", float, double,
-                   index_t)
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler", "",
+                           (DataHandlerCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
 {
-    GIVEN("some DataHandlerCPU")
+    using data_t = typename TestType::value_type;
+
+    GIVEN("some DataHandler")
     {
         index_t size = 314;
-        Eigen::VectorX<TestType> randVec{size};
+        Eigen::VectorX<data_t> randVec{size};
         randVec.setRandom();
-        const DataHandlerCPU dh{randVec};
+        const TestType dh{randVec};
 
         WHEN("comparing to a handler with a different size")
         {
-            const DataHandlerCPU<TestType> dh2{size + 1};
+            const TestType dh2{size + 1};
             THEN("the result is false")
             {
                 REQUIRE_FALSE(dh == dh2);
@@ -123,7 +130,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing equality operator on DataHandlerCPU", "", 
 
         WHEN("comparing to a deep copy or a view of the deep copy")
         {
-            const DataHandlerCPU dh2{randVec};
+            const TestType dh2{randVec};
             THEN("the result is true")
             {
                 REQUIRE(dh == dh2);
@@ -134,7 +141,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing equality operator on DataHandlerCPU", "", 
         WHEN("comparing to a handler or map with different data")
         {
             randVec[0] += 1;
-            const DataHandlerCPU dh2{randVec};
+            const TestType dh2{randVec};
             THEN("the result is false")
             {
                 REQUIRE_FALSE(dh == dh2);
@@ -144,24 +151,27 @@ TEMPLATE_TEST_CASE("Scenario: Testing equality operator on DataHandlerCPU", "", 
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, index_t)
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHandlerCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
 {
+    using data_t = typename TestType::value_type;
+
     GIVEN("a DataHandlerCPU with an associated map")
     {
         index_t size = 314;
-        DataHandlerCPU<TestType> dh{size};
+        DataHandlerCPU<data_t> dh{size};
         auto dhMap = dh.getBlock(size / 2, size / 3);
 
         WHEN("copy assigning")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
             const DataHandlerCPU dh2{randVec};
             const auto dh2Map = dh2.getBlock(size / 2, size / 3);
 
             THEN("sizes must match")
             {
-                const DataHandlerCPU<TestType> bigDh{2 * size};
+                const DataHandlerCPU<data_t> bigDh{2 * size};
                 REQUIRE_THROWS(dh = bigDh);
             }
 
@@ -176,7 +186,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
 
         WHEN("move assigning")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
             DataHandlerCPU dh2{randVec};
             const auto dh2View = dh2.getBlock(0, size);
@@ -184,7 +194,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
 
             THEN("sizes must match")
             {
-                DataHandlerCPU<TestType> bigDh{2 * size};
+                DataHandlerCPU<data_t> bigDh{2 * size};
                 REQUIRE_THROWS(dh = std::move(bigDh));
             }
 
@@ -202,16 +212,16 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
 
         WHEN("copy assigning a DataHandlerCPU through base pointers")
         {
-            DataHandler<TestType>* dhPtr = &dh;
-            Eigen::VectorX<TestType> randVec{size};
+            DataHandler<data_t>* dhPtr = &dh;
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
-            const auto dh2Ptr = std::make_unique<const DataHandlerCPU<TestType>>(randVec);
+            const auto dh2Ptr = std::make_unique<const DataHandlerCPU<data_t>>(randVec);
             const auto dh2Map = dh2Ptr->getBlock(size / 2, size / 3);
 
             THEN("sizes must match")
             {
-                std::unique_ptr<DataHandler<TestType>> bigDh =
-                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
+                std::unique_ptr<DataHandler<data_t>> bigDh =
+                    std::make_unique<DataHandlerCPU<data_t>>(2 * size);
                 REQUIRE_THROWS(*dhPtr = *bigDh);
             }
 
@@ -230,11 +240,11 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
 
         WHEN("copy assigning a partial DataHandlerMapCPU through base pointers")
         {
-            DataHandler<TestType>* dhPtr = &dh;
+            DataHandler<data_t>* dhPtr = &dh;
             const auto dhCopy = dh;
-            Eigen::VectorX<TestType> randVec{2 * size};
+            Eigen::VectorX<data_t> randVec{2 * size};
             randVec.setRandom();
-            const DataHandlerCPU<TestType> dh2{randVec};
+            const DataHandlerCPU<data_t> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
 
             THEN("sizes must match")
@@ -256,17 +266,17 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
 
         WHEN("copy assigning a full DataHandlerMapCPU (aka a view) through base pointers")
         {
-            DataHandler<TestType>* dhPtr = &dh;
-            Eigen::VectorX<TestType> randVec{size};
+            DataHandler<data_t>* dhPtr = &dh;
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
-            const DataHandlerCPU<TestType> dh2{randVec};
+            const DataHandlerCPU<data_t> dh2{randVec};
             const auto dh2View = dh2.getBlock(0, size);
             const auto dh2Map = dh2.getBlock(size / 2, size / 3);
 
             THEN("sizes must match")
             {
-                std::unique_ptr<DataHandler<TestType>> bigDh =
-                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
+                std::unique_ptr<DataHandler<data_t>> bigDh =
+                    std::make_unique<DataHandlerCPU<data_t>>(2 * size);
                 auto bigDhView = bigDh->getBlock(0, 2 * size);
                 REQUIRE_THROWS(*dhPtr = *bigDhView);
             }
@@ -286,18 +296,18 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
 
         WHEN("move assigning a DataHandlerCPU through base pointers")
         {
-            DataHandler<TestType>* dhPtr = &dh;
-            Eigen::VectorX<TestType> randVec{size};
+            DataHandler<data_t>* dhPtr = &dh;
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
-            std::unique_ptr<DataHandler<TestType>> dh2Ptr =
-                std::make_unique<DataHandlerCPU<TestType>>(randVec);
+            std::unique_ptr<DataHandler<data_t>> dh2Ptr =
+                std::make_unique<DataHandlerCPU<data_t>>(randVec);
             const auto dh2View = dh2Ptr->getBlock(0, size);
-            DataHandlerCPU<TestType> testDh{randVec};
+            DataHandlerCPU<data_t> testDh{randVec};
 
             THEN("sizes must match")
             {
-                std::unique_ptr<DataHandler<TestType>> bigDh =
-                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
+                std::unique_ptr<DataHandler<data_t>> bigDh =
+                    std::make_unique<DataHandlerCPU<data_t>>(2 * size);
                 REQUIRE_THROWS(*dhPtr = std::move(*bigDh));
             }
 
@@ -315,11 +325,11 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
 
         WHEN("\"move\" assigning a partial DataHandlerMapCPU through base pointers")
         {
-            DataHandler<TestType>* dhPtr = &dh;
+            DataHandler<data_t>* dhPtr = &dh;
             const auto dhCopy = dh;
-            Eigen::VectorX<TestType> randVec{2 * size};
+            Eigen::VectorX<data_t> randVec{2 * size};
             randVec.setRandom();
-            DataHandlerCPU<TestType> dh2{randVec};
+            DataHandlerCPU<data_t> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
 
             THEN("sizes must match")
@@ -340,17 +350,17 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
 
         WHEN("\"move\" assigning a full DataHandlerMapCPU (aka a view) through base pointers")
         {
-            DataHandler<TestType>* dhPtr = &dh;
-            Eigen::VectorX<TestType> randVec{size};
+            DataHandler<data_t>* dhPtr = &dh;
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
-            DataHandlerCPU<TestType> dh2{randVec};
+            DataHandlerCPU<data_t> dh2{randVec};
             const auto dh2View = dh2.getBlock(0, size);
             const auto dh2Map = dh2.getBlock(size / 2, size / 3);
 
             THEN("sizes must match")
             {
-                const std::unique_ptr<const DataHandler<TestType>> bigDh =
-                    std::make_unique<const DataHandlerCPU<TestType>>(2 * size);
+                const std::unique_ptr<const DataHandler<data_t>> bigDh =
+                    std::make_unique<const DataHandlerCPU<data_t>>(2 * size);
                 REQUIRE_THROWS(*dhPtr = std::move(*bigDh->getBlock(0, 2 * size)));
             }
 
@@ -369,12 +379,12 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", float, double, i
     }
 }
 
-SCENARIO("Cloning DataHandlerCPU")
+TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>)
 {
-    GIVEN("some DataHandlerCPU")
+    GIVEN("some DataHandler")
     {
         index_t size = 728;
-        DataHandlerCPU dh(size);
+        TestType dh(size);
 
         WHEN("cloning")
         {
@@ -396,41 +406,44 @@ SCENARIO("Cloning DataHandlerCPU")
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Testing the reduction operations of DataHandlerCPU", "", float,
-                   double, index_t)
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHandler", "",
+                           (DataHandlerCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
 {
-    GIVEN("some DataHandlerCPU")
+    using data_t = typename TestType::value_type;
+
+    GIVEN("some DataHandler")
     {
         index_t size = 284;
 
         WHEN("putting in some random data")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::VectorX<data_t> randVec{size};
             randVec.setRandom();
-            DataHandlerCPU dh(randVec);
+            TestType dh(randVec);
 
             THEN("the reductions work as expected")
             {
-                REQUIRE(dh.sum() == Approx(randVec.sum()));
+                REQUIRE(dh.sum() == randVec.sum());
                 REQUIRE(dh.l1Norm() == Approx(randVec.array().abs().sum()));
                 REQUIRE(dh.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
                 REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()));
 
-                Eigen::VectorX<TestType> randVec2 = Eigen::VectorX<TestType>::Random(size);
-                DataHandlerCPU dh2(randVec2);
+                Eigen::VectorX<data_t> randVec2 = Eigen::VectorX<data_t>::Random(size);
+                TestType dh2(randVec2);
 
-                REQUIRE(dh.dot(dh2) == Approx(randVec.dot(randVec2)));
+                REQUIRE(std::abs(dh.dot(dh2) - randVec.dot(randVec2)) == Approx(0.f));
 
                 auto dhMap = dh2.getBlock(0, dh2.getSize());
 
-                REQUIRE(dh.dot(*dhMap) == Approx(randVec.dot(randVec2)));
+                REQUIRE(std::abs(dh.dot(*dhMap) - randVec.dot(randVec2)) == Approx(0.f));
             }
 
             THEN("the dot product expects correctly sized arguments")
             {
                 index_t wrongSize = size - 1;
-                Eigen::VectorX<TestType> randVec2 = Eigen::VectorX<TestType>::Random(wrongSize);
-                DataHandlerCPU dh2(randVec2);
+                Eigen::VectorX<data_t> randVec2 = Eigen::VectorX<data_t>::Random(wrongSize);
+                TestType dh2(randVec2);
 
                 REQUIRE_THROWS_AS(dh.dot(dh2), std::invalid_argument);
             }
@@ -438,28 +451,31 @@ TEMPLATE_TEST_CASE("Scenario: Testing the reduction operations of DataHandlerCPU
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Testing the element-wise operations of DataHandlerCPU", "", float,
-                   double, index_t)
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler", "",
+                           (DataHandlerCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
 {
-    GIVEN("some DataHandlerCPU")
+    using data_t = typename TestType::value_type;
+
+    GIVEN("some DataHandler")
     {
         index_t size = 567;
 
         WHEN("putting in some random data")
         {
-            Eigen::VectorX<TestType> randVec = Eigen::VectorX<TestType>::Random(size);
-            DataHandlerCPU dh(randVec);
+            Eigen::VectorX<data_t> randVec = Eigen::VectorX<data_t>::Random(size);
+            TestType dh(randVec);
 
             THEN("the element-wise binary vector operations work as expected")
             {
-                DataHandlerCPU oldDh = dh;
+                TestType oldDh = dh;
 
-                Eigen::VectorX<TestType> randVec2 = Eigen::VectorX<TestType>::Random(size);
-                DataHandlerCPU dh2(randVec2);
+                Eigen::VectorX<data_t> randVec2 = Eigen::VectorX<data_t>::Random(size);
+                TestType dh2(randVec2);
 
                 auto dhMap = dh2.getBlock(0, dh2.getSize());
 
-                DataHandlerCPU<TestType> bigDh{size + 1};
+                TestType bigDh{size + 1};
                 REQUIRE_THROWS(dh += bigDh);
                 REQUIRE_THROWS(dh -= bigDh);
                 REQUIRE_THROWS(dh *= bigDh);
@@ -497,20 +513,20 @@ TEMPLATE_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler
                 dh = oldDh;
                 dh /= dh2;
                 for (index_t i = 0; i < size; ++i)
-                    if (dh2[i] != 0)
-                        REQUIRE(dh[i] == oldDh[i] / dh2[i]);
+                    if (dh2[i] != data_t(0))
+                        REQUIRE(std::abs(dh[i] - oldDh[i] / dh2[i]) == Approx(0).margin(0.00001));
 
                 dh = oldDh;
                 dh /= *dhMap;
                 for (index_t i = 0; i < size; ++i)
-                    if (dh2[i] != 0)
-                        REQUIRE(dh[i] == oldDh[i] / dh2[i]);
+                    if (dh2[i] != data_t(0))
+                        REQUIRE(std::abs(dh[i] - oldDh[i] / dh2[i]) == Approx(0).margin(0.00001));
             }
 
             THEN("the element-wise binary scalar operations work as expected")
             {
-                DataHandlerCPU oldDh = dh;
-                TestType scalar = std::is_integral_v<TestType> ? 3 : 3.5;
+                TestType oldDh = dh;
+                data_t scalar = std::is_integral_v<data_t> ? 3 : 3.5;
 
                 dh += scalar;
                 for (index_t i = 0; i < size; ++i)
@@ -529,12 +545,12 @@ TEMPLATE_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler
                 dh = oldDh;
                 dh /= scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] / scalar);
+                    REQUIRE(std::abs(dh[i] - oldDh[i] / scalar) == Approx(0).margin(0.00001));
             }
 
             THEN("the element-wise assignment of a scalar works as expected")
             {
-                auto scalar = std::is_integral_v<TestType> ? TestType(47) : TestType(47.11);
+                auto scalar = std::is_integral_v<data_t> ? data_t(47) : data_t(47.11f);
 
                 dh = scalar;
                 for (index_t i = 0; i < size; ++i)
@@ -544,13 +560,16 @@ TEMPLATE_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Referencing blocks of DataHandlerCPU", "", float, double, index_t)
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandler", "", (DataHandlerCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
 {
-    GIVEN("some DataHandlerCPU")
+    using data_t = typename TestType::value_type;
+
+    GIVEN("some DataHandler")
     {
         index_t size = 728;
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> dataVec(size);
-        DataHandlerCPU dh(dataVec);
+        Eigen::Matrix<data_t, Eigen::Dynamic, 1> dataVec(size);
+        TestType dh(dataVec);
 
         WHEN("getting the reference to a block")
         {
@@ -581,17 +600,19 @@ TEMPLATE_TEST_CASE("Scenario: Referencing blocks of DataHandlerCPU", "", float, 
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "", float, double, index_t)
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "", (DataHandlerCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
 {
+    using data_t = typename TestType::value_type;
+
     GIVEN("A random DataContainer")
     {
-
-        Eigen::VectorX<TestType> randVec = Eigen::VectorX<TestType>::Random(42);
-        DataHandlerCPU dh{randVec};
+        Eigen::VectorX<data_t> randVec = Eigen::VectorX<data_t>::Random(42);
+        TestType dh{randVec};
 
         WHEN("const manipulating a copy constructed shallow copy")
         {
-            DataHandlerCPU dh2 = dh;
+            TestType dh2 = dh;
 
             THEN("the data is the same")
             {
@@ -602,7 +623,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "", float, d
 
         WHEN("non-const manipulating a copy constructed shallow copy")
         {
-            DataHandlerCPU dh2 = dh;
+            TestType dh2 = dh;
             REQUIRE(useCount(dh) == 2);
             REQUIRE(useCount(dh2) == 2);
 

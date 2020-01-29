@@ -44,6 +44,9 @@ namespace elsa
         using DataMap_t = Eigen::Map<DataVector_t>;
 
     public:
+        /// convenience typedef to access data type that is internally stored
+        using value_type = data_t;
+
         /// return the size of the stored data (i.e. number of elements in linearized data vector)
         virtual index_t getSize() const = 0;
 
