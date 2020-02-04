@@ -1,6 +1,6 @@
 #include "PartitionDescriptor.h"
 
-#include <map>
+#include <unordered_map>
 
 namespace elsa
 {
@@ -58,7 +58,7 @@ namespace elsa
             throw std::invalid_argument("PartitionDescriptor: cumulative size of partitioned "
                                         "descriptor does not match size of original descriptor");
 
-        std::map<index_t, std::size_t> sizeToIndex;
+        std::unordered_map<index_t, index_t> sizeToIndex;
         _blockOffsets[0] = 0;
         for (index_t i = 0; i < getNumberOfBlocks(); i++) {
             auto it = sizeToIndex.find(slicesInBlock[i]);

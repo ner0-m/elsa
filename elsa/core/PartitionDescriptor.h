@@ -1,5 +1,4 @@
 #include "BlockDescriptor.h"
-
 namespace elsa
 {
     /**
@@ -67,7 +66,7 @@ namespace elsa
 
     protected:
         /// maps a block index to the index of the corresponding descriptor in _blockDescriptors
-        Eigen::VectorX<std::size_t> _indexMap;
+        IndexVector_t _indexMap;
 
         /// vector of unique DataDescriptors describing the individual blocks
         std::vector<std::unique_ptr<DataDescriptor>> _blockDescriptors;
