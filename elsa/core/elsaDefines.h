@@ -33,7 +33,7 @@ namespace elsa
     constexpr auto pi_t = pi<real_t>;
 
     /// type of the DataHandler used to store the actual data
-    enum class DataHandlerType {
+    enum DataHandlerType {
         CPU,    ///< data is stored as an Eigen::Matrix in CPU main memory
         MAP_CPU ///< data is not explicitly stored, but using an Eigen::Map to refer to other
     };
@@ -53,5 +53,12 @@ namespace elsa
     /// helper typedef to facilitate usage
     template <typename T>
     using GetFloatingPointType_t = typename GetFloatingPointType<T>::type;
+
+    template <int test>
+    struct Test {
+        std::conditional_t<(test > 0), float, double> _member{0};
+    };
+
+    static Test<DataHandlerType::MAP_CPU> arr;
 
 } // namespace elsa

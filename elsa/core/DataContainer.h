@@ -29,10 +29,12 @@ namespace elsa
      * be n-dimensional, and will be stored in memory in a linearized fashion. The information
      * on how this linearization is performed is provided by an associated DataDescriptor.
      */
-    template <typename data_t>
+    template <typename data_t, int handler_t>
     class DataContainer
     {
     public:
+        using DCType = DataContainer<data_t, handler_t>;
+
         /// union of all possible handler raw pointers
         using HandlerTypes_t = std::variant<DataHandlerCPU<data_t>*, DataHandlerMapCPU<data_t>*>;
 
@@ -64,14 +66,14 @@ namespace elsa
          *
          * \param[in] other DataContainer to copy
          */
-        DataContainer(const DataContainer<data_t>& other);
+        DataContainer(const DCType& other);
 
         /**
          * \brief copy assignment for DataContainer
          *
          * \param[in] other DataContainer to copy
          */
-        DataContainer<data_t>& operator=(const DataContainer<data_t>& other);
+        DataContainer<data_t, handler_t>& operator=(const DataContainer<data_t, handler_t>& other);
 
         /**
          * \brief Move constructor for DataContainer
@@ -82,7 +84,7 @@ namespace elsa
          * fulfilled for any member functions, the object should not be used. After move- or copy-
          * assignment, this is possible again.
          */
-        DataContainer(DataContainer<data_t>&& other) noexcept;
+        DataContainer(DataContainer<data_t, handler_t>&& other) noexcept;
 
         /**
          * \brief Move assignment for DataContainer
@@ -93,7 +95,7 @@ namespace elsa
          * fulfilled for any member functions, the object should not be used. After move- or copy-
          * assignment, this is possible again.
          */
-        DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
+        DataContainer<data_t, handler_t>& operator=(DataContainer<data_t, handler_t>&& other);
 
         /**
          * \brief Expression evaluation assignment for DataContainer
@@ -104,7 +106,7 @@ namespace elsa
          * the DataHandler in use.
          */
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator=(Source const& source)
+        DataContainer<data_t, handler_t>& operator=(Source const& source)
         {
             _dataHandler->accessData() = source.eval();
 
@@ -120,9 +122,9 @@ namespace elsa
          * is saved in the expression is used.
          */
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>(Source const& source)
-            : DataContainer<data_t>(source.getDataMetaInfo().first, source.eval(),
-                                    source.getDataMetaInfo().second)
+        DataContainer<data_t, handler_t>(Source const& source)
+            : DataContainer<data_t, handler_t>(source.getDataMetaInfo().first, source.eval(),
+                                               source.getDataMetaInfo().second)
         {
         }
 
@@ -168,7 +170,7 @@ namespace elsa
         }
 
         /// return the dot product of this signal with the one from container other
-        data_t dot(const DataContainer<data_t>& other) const;
+        data_t dot(const DataContainer<data_t, handler_t>& other) const;
 
         /// return the dot product of this signal with the one from an expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
@@ -190,87 +192,87 @@ namespace elsa
         data_t sum() const;
 
         /// compute in-place element-wise addition of another container
-        DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
+        DataContainer<data_t, handler_t>& operator+=(const DataContainer<data_t, handler_t>& dc);
 
         /// compute in-place element-wise addition with another expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator+=(Source const& source)
+        DataContainer<data_t, handler_t>& operator+=(Source const& source)
         {
             *this = *this + source;
             return *this;
         }
 
         /// compute in-place element-wise subtraction of another container
-        DataContainer<data_t>& operator-=(const DataContainer<data_t>& dc);
+        DataContainer<data_t, handler_t>& operator-=(const DataContainer<data_t, handler_t>& dc);
 
         /// compute in-place element-wise subtraction with another expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator-=(Source const& source)
+        DataContainer<data_t, handler_t>& operator-=(Source const& source)
         {
             *this = *this - source;
             return *this;
         }
 
         /// compute in-place element-wise multiplication with another container
-        DataContainer<data_t>& operator*=(const DataContainer<data_t>& dc);
+        DataContainer<data_t, handler_t>& operator*=(const DataContainer<data_t, handler_t>& dc);
 
         /// compute in-place element-wise multiplication with another expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator*=(Source const& source)
+        DataContainer<data_t, handler_t>& operator*=(Source const& source)
         {
             *this = *this * source;
             return *this;
         }
 
         /// compute in-place element-wise division by another container
-        DataContainer<data_t>& operator/=(const DataContainer<data_t>& dc);
+        DataContainer<data_t, handler_t>& operator/=(const DataContainer<data_t, handler_t>& dc);
 
         /// compute in-place element-wise division with another expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator/=(Source const& source)
+        DataContainer<data_t, handler_t>& operator/=(Source const& source)
         {
             *this = *this / source;
             return *this;
         }
 
         /// compute in-place addition of a scalar
-        DataContainer<data_t>& operator+=(data_t scalar);
+        DataContainer<data_t, handler_t>& operator+=(data_t scalar);
 
         /// compute in-place subtraction of a scalar
-        DataContainer<data_t>& operator-=(data_t scalar);
+        DataContainer<data_t, handler_t>& operator-=(data_t scalar);
 
         /// compute in-place multiplication with a scalar
-        DataContainer<data_t>& operator*=(data_t scalar);
+        DataContainer<data_t, handler_t>& operator*=(data_t scalar);
 
         /// compute in-place division by a scalar
-        DataContainer<data_t>& operator/=(data_t scalar);
+        DataContainer<data_t, handler_t>& operator/=(data_t scalar);
 
         /// assign a scalar to the DataContainer
-        DataContainer<data_t>& operator=(data_t scalar);
+        DataContainer<data_t, handler_t>& operator=(data_t scalar);
 
         /// comparison with another DataContainer
-        bool operator==(const DataContainer<data_t>& other) const;
+        bool operator==(const DataContainer<data_t, handler_t>& other) const;
 
         /// comparison with another DataContainer
-        bool operator!=(const DataContainer<data_t>& other) const;
+        bool operator!=(const DataContainer<data_t, handler_t>& other) const;
 
         /// returns a reference to the i-th block, wrapped in a DataContainer
-        DataContainer<data_t> getBlock(index_t i);
+        DataContainer<data_t, handler_t> getBlock(index_t i);
 
         /// returns a const reference to the i-th block, wrapped in a DataContainer
-        const DataContainer<data_t> getBlock(index_t i) const;
+        const DataContainer<data_t, handler_t> getBlock(index_t i) const;
 
         /// return a view of this DataContainer with a different descriptor
-        DataContainer<data_t> viewAs(const DataDescriptor& dataDescriptor);
+        DataContainer<data_t, handler_t> viewAs(const DataDescriptor& dataDescriptor);
 
         /// return a const view of this DataContainer with a different descriptor
-        const DataContainer<data_t> viewAs(const DataDescriptor& dataDescriptor) const;
+        const DataContainer<data_t, handler_t> viewAs(const DataDescriptor& dataDescriptor) const;
 
         /// iterator for DataContainer (random access and continuous)
-        using iterator = DataContainerIterator<DataContainer<data_t>>;
+        using iterator = DataContainerIterator<DataContainer<data_t, handler_t>>;
 
         /// const iterator for DataContainer (random access and continuous)
-        using const_iterator = ConstDataContainerIterator<DataContainer<data_t>>;
+        using const_iterator = ConstDataContainerIterator<DataContainer<data_t, handler_t>>;
 
         /// alias for reverse iterator
         using reverse_iterator = std::reverse_iterator<iterator>;
@@ -347,7 +349,10 @@ namespace elsa
         std::unique_ptr<DataDescriptor> _dataDescriptor;
 
         /// the current DataHandler
-        std::unique_ptr<DataHandler<data_t>> _dataHandler;
+        std::unique_ptr<std::conditional_t<(handler_t == DataHandlerType::CPU
+                                            || handler_t == DataHandlerType::MAP_CPU),
+                                           DataHandler<data_t>, DataHandler<data_t>>>
+            _dataHandler;
 
         /// the current DataHandlerType
         DataHandlerType _dataHandlerType;

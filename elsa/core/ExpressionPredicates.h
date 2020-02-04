@@ -28,7 +28,7 @@ namespace elsa
     constexpr bool isArithmetic = std::is_arithmetic_v<T> || isComplex<T>;
 
     /// forward declaration for predicates and friend test function
-    template <typename data_t = real_t>
+    template <typename data_t = real_t, int handler_t = DataHandlerType::CPU>
     class DataContainer;
 
     /// Base case inheriting false

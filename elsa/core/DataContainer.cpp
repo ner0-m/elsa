@@ -9,19 +9,19 @@
 namespace elsa
 {
 
-    template <typename data_t>
-    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor,
-                                         DataHandlerType handlerType)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>::DataContainer(const DataDescriptor& dataDescriptor,
+                                                    DataHandlerType handlerType)
         : _dataDescriptor{dataDescriptor.clone()},
           _dataHandler{createDataHandler(handlerType, _dataDescriptor->getNumberOfCoefficients())},
           _dataHandlerType{handlerType}
     {
     }
 
-    template <typename data_t>
-    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor,
-                                         const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
-                                         DataHandlerType handlerType)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>::DataContainer(
+        const DataDescriptor& dataDescriptor, const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
+        DataHandlerType handlerType)
         : _dataDescriptor{dataDescriptor.clone()},
           _dataHandler{createDataHandler(handlerType, _dataDescriptor->getNumberOfCoefficients())},
           _dataHandlerType{handlerType}
@@ -33,16 +33,17 @@ namespace elsa
             (*_dataHandler)[i] = data[i];
     }
 
-    template <typename data_t>
-    DataContainer<data_t>::DataContainer(const DataContainer<data_t>& other)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>::DataContainer(const DataContainer<data_t, handler_t>& other)
         : _dataDescriptor{other._dataDescriptor->clone()},
           _dataHandler{other._dataHandler->clone()},
           _dataHandlerType{other._dataHandlerType}
     {
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator=(const DataContainer<data_t>& other)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::
+        operator=(const DataContainer<data_t, handler_t>& other)
     {
         if (this != &other) {
             _dataDescriptor = other._dataDescriptor->clone();
@@ -59,8 +60,9 @@ namespace elsa
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>::DataContainer(DataContainer<data_t>&& other) noexcept
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>::DataContainer(
+        DataContainer<data_t, handler_t>&& other) noexcept
         : _dataDescriptor{std::move(other._dataDescriptor)},
           _dataHandler{std::move(other._dataHandler)},
           _dataHandlerType{std::move(other._dataHandlerType)}
@@ -70,8 +72,9 @@ namespace elsa
         other._dataHandler = nullptr;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator=(DataContainer<data_t>&& other)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::
+        operator=(DataContainer<data_t, handler_t>&& other)
     {
         _dataDescriptor = std::move(other._dataDescriptor);
 
@@ -90,140 +93,146 @@ namespace elsa
         return *this;
     }
 
-    template <typename data_t>
-    const DataDescriptor& DataContainer<data_t>::getDataDescriptor() const
+    template <typename data_t, int handler_t>
+    const DataDescriptor& DataContainer<data_t, handler_t>::getDataDescriptor() const
     {
         return *_dataDescriptor;
     }
 
-    template <typename data_t>
-    index_t DataContainer<data_t>::getSize() const
+    template <typename data_t, int handler_t>
+    index_t DataContainer<data_t, handler_t>::getSize() const
     {
         return _dataHandler->getSize();
     }
 
-    template <typename data_t>
-    data_t& DataContainer<data_t>::operator[](index_t index)
+    template <typename data_t, int handler_t>
+    data_t& DataContainer<data_t, handler_t>::operator[](index_t index)
     {
         return (*_dataHandler)[index];
     }
 
-    template <typename data_t>
-    const data_t& DataContainer<data_t>::operator[](index_t index) const
+    template <typename data_t, int handler_t>
+    const data_t& DataContainer<data_t, handler_t>::operator[](index_t index) const
     {
         return static_cast<const DataHandler<data_t>&>(*_dataHandler)[index];
     }
 
-    template <typename data_t>
-    data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate)
+    template <typename data_t, int handler_t>
+    data_t& DataContainer<data_t, handler_t>::operator()(IndexVector_t coordinate)
     {
         return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
     }
 
-    template <typename data_t>
-    const data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate) const
+    template <typename data_t, int handler_t>
+    const data_t& DataContainer<data_t, handler_t>::operator()(IndexVector_t coordinate) const
     {
         return static_cast<const DataHandler<data_t>&>(
             *_dataHandler)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
     }
 
-    template <typename data_t>
-    data_t DataContainer<data_t>::dot(const DataContainer<data_t>& other) const
+    template <typename data_t, int handler_t>
+    data_t
+        DataContainer<data_t, handler_t>::dot(const DataContainer<data_t, handler_t>& other) const
     {
         return _dataHandler->dot(*other._dataHandler);
     }
 
-    template <typename data_t>
-    GetFloatingPointType_t<data_t> DataContainer<data_t>::squaredL2Norm() const
+    template <typename data_t, int handler_t>
+    GetFloatingPointType_t<data_t> DataContainer<data_t, handler_t>::squaredL2Norm() const
     {
         return _dataHandler->squaredL2Norm();
     }
 
-    template <typename data_t>
-    GetFloatingPointType_t<data_t> DataContainer<data_t>::l1Norm() const
+    template <typename data_t, int handler_t>
+    GetFloatingPointType_t<data_t> DataContainer<data_t, handler_t>::l1Norm() const
     {
         return _dataHandler->l1Norm();
     }
 
-    template <typename data_t>
-    GetFloatingPointType_t<data_t> DataContainer<data_t>::lInfNorm() const
+    template <typename data_t, int handler_t>
+    GetFloatingPointType_t<data_t> DataContainer<data_t, handler_t>::lInfNorm() const
     {
         return _dataHandler->lInfNorm();
     }
 
-    template <typename data_t>
-    data_t DataContainer<data_t>::sum() const
+    template <typename data_t, int handler_t>
+    data_t DataContainer<data_t, handler_t>::sum() const
     {
         return _dataHandler->sum();
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator+=(const DataContainer<data_t>& dc)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::
+        operator+=(const DataContainer<data_t, handler_t>& dc)
     {
         *_dataHandler += *dc._dataHandler;
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator-=(const DataContainer<data_t>& dc)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::
+        operator-=(const DataContainer<data_t, handler_t>& dc)
     {
         *_dataHandler -= *dc._dataHandler;
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator*=(const DataContainer<data_t>& dc)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::
+        operator*=(const DataContainer<data_t, handler_t>& dc)
     {
         *_dataHandler *= *dc._dataHandler;
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator/=(const DataContainer<data_t>& dc)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::
+        operator/=(const DataContainer<data_t, handler_t>& dc)
     {
         *_dataHandler /= *dc._dataHandler;
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator+=(data_t scalar)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::operator+=(data_t scalar)
     {
         *_dataHandler += scalar;
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator-=(data_t scalar)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::operator-=(data_t scalar)
     {
         *_dataHandler -= scalar;
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator*=(data_t scalar)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::operator*=(data_t scalar)
     {
         *_dataHandler *= scalar;
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator/=(data_t scalar)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::operator/=(data_t scalar)
     {
         *_dataHandler /= scalar;
         return *this;
     }
 
-    template <typename data_t>
-    DataContainer<data_t>& DataContainer<data_t>::operator=(data_t scalar)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>& DataContainer<data_t, handler_t>::operator=(data_t scalar)
     {
         *_dataHandler = scalar;
         return *this;
     }
 
-    template <typename data_t>
+    template <typename data_t, int handler_t>
     template <typename... Args>
     std::unique_ptr<DataHandler<data_t>>
-        DataContainer<data_t>::createDataHandler(DataHandlerType handlerType, Args&&... args)
+        DataContainer<data_t, handler_t>::createDataHandler(DataHandlerType handlerType,
+                                                            Args&&... args)
     {
         switch (handlerType) {
             case DataHandlerType::CPU:
@@ -235,18 +244,19 @@ namespace elsa
         }
     }
 
-    template <typename data_t>
-    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor,
-                                         std::unique_ptr<DataHandler<data_t>> dataHandler,
-                                         DataHandlerType dataType)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>::DataContainer(
+        const DataDescriptor& dataDescriptor, std::unique_ptr<DataHandler<data_t>> dataHandler,
+        DataHandlerType dataType)
         : _dataDescriptor{dataDescriptor.clone()},
           _dataHandler{std::move(dataHandler)},
           _dataHandlerType{dataType}
     {
     }
 
-    template <typename data_t>
-    bool DataContainer<data_t>::operator==(const DataContainer<data_t>& other) const
+    template <typename data_t, int handler_t>
+    bool DataContainer<data_t, handler_t>::
+        operator==(const DataContainer<data_t, handler_t>& other) const
     {
         if (*_dataDescriptor != *other._dataDescriptor)
             return false;
@@ -257,14 +267,15 @@ namespace elsa
         return true;
     }
 
-    template <typename data_t>
-    bool DataContainer<data_t>::operator!=(const DataContainer<data_t>& other) const
+    template <typename data_t, int handler_t>
+    bool DataContainer<data_t, handler_t>::
+        operator!=(const DataContainer<data_t, handler_t>& other) const
     {
         return !(*this == other);
     }
 
-    template <typename data_t>
-    DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t> DataContainer<data_t, handler_t>::getBlock(index_t i)
     {
         const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
         if (!blockDesc)
@@ -277,12 +288,13 @@ namespace elsa
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
         index_t blockSize = ithDesc.getNumberOfCoefficients();
 
-        return DataContainer<data_t>{ithDesc, _dataHandler->getBlock(startIndex, blockSize),
-                                     DataHandlerType::MAP_CPU};
+        return DataContainer<data_t, handler_t>{
+            ithDesc, _dataHandler->getBlock(startIndex, blockSize), DataHandlerType::MAP_CPU};
     }
 
-    template <typename data_t>
-    const DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i) const
+    template <typename data_t, int handler_t>
+    const DataContainer<data_t, handler_t>
+        DataContainer<data_t, handler_t>::getBlock(index_t i) const
     {
         const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
         if (!blockDesc)
@@ -297,109 +309,121 @@ namespace elsa
 
         // getBlock() returns a pointer to non-const DH, but that's fine as it gets wrapped in a
         // constant container
-        return DataContainer<data_t>{ithDesc, _dataHandler->getBlock(startIndex, blockSize),
-                                     DataHandlerType::MAP_CPU};
+        return DataContainer<data_t, handler_t>{
+            ithDesc, _dataHandler->getBlock(startIndex, blockSize), DataHandlerType::MAP_CPU};
     }
 
-    template <typename data_t>
-    DataContainer<data_t> DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor)
+    template <typename data_t, int handler_t>
+    DataContainer<data_t, handler_t>
+        DataContainer<data_t, handler_t>::viewAs(const DataDescriptor& dataDescriptor)
     {
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
             throw std::invalid_argument("DataContainer: view must have same size as container");
 
-        return DataContainer<data_t>{dataDescriptor, _dataHandler->getBlock(0, getSize()),
-                                     DataHandlerType::MAP_CPU};
+        return DataContainer<data_t, handler_t>{
+            dataDescriptor, _dataHandler->getBlock(0, getSize()), DataHandlerType::MAP_CPU};
     }
 
-    template <typename data_t>
-    const DataContainer<data_t>
-        DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor) const
+    template <typename data_t, int handler_t>
+    const DataContainer<data_t, handler_t>
+        DataContainer<data_t, handler_t>::viewAs(const DataDescriptor& dataDescriptor) const
     {
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
             throw std::invalid_argument("DataContainer: view must have same size as container");
 
         // getBlock() returns a pointer to non-const DH, but that's fine as it gets wrapped in a
         // constant container
-        return DataContainer<data_t>{dataDescriptor, _dataHandler->getBlock(0, getSize()),
-                                     DataHandlerType::MAP_CPU};
+        return DataContainer<data_t, handler_t>{
+            dataDescriptor, _dataHandler->getBlock(0, getSize()), DataHandlerType::MAP_CPU};
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::iterator DataContainer<data_t>::begin()
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::iterator DataContainer<data_t, handler_t>::begin()
     {
         return iterator(&(*this)[0]);
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::const_iterator DataContainer<data_t>::begin() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::const_iterator
+        DataContainer<data_t, handler_t>::begin() const
     {
         return cbegin();
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::const_iterator DataContainer<data_t>::cbegin() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::const_iterator
+        DataContainer<data_t, handler_t>::cbegin() const
     {
         return const_iterator(&(*this)[0]);
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::iterator DataContainer<data_t>::end()
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::iterator DataContainer<data_t, handler_t>::end()
     {
         return iterator(&(*this)[0] + getSize());
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::const_iterator DataContainer<data_t>::end() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::const_iterator
+        DataContainer<data_t, handler_t>::end() const
     {
         return cend();
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::const_iterator DataContainer<data_t>::cend() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::const_iterator
+        DataContainer<data_t, handler_t>::cend() const
     {
         return const_iterator(&(*this)[0] + getSize());
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::reverse_iterator DataContainer<data_t>::rbegin()
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::reverse_iterator
+        DataContainer<data_t, handler_t>::rbegin()
     {
         return reverse_iterator(end());
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::rbegin() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::const_reverse_iterator
+        DataContainer<data_t, handler_t>::rbegin() const
     {
         return crbegin();
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::crbegin() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::const_reverse_iterator
+        DataContainer<data_t, handler_t>::crbegin() const
     {
         return const_reverse_iterator(cend());
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::reverse_iterator DataContainer<data_t>::rend()
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::reverse_iterator
+        DataContainer<data_t, handler_t>::rend()
     {
         return reverse_iterator(begin());
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::rend() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::const_reverse_iterator
+        DataContainer<data_t, handler_t>::rend() const
     {
         return crend();
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::crend() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::const_reverse_iterator
+        DataContainer<data_t, handler_t>::crend() const
     {
         return const_reverse_iterator(cbegin());
     }
 
-    template <typename data_t>
-    typename DataContainer<data_t>::HandlerTypes_t DataContainer<data_t>::getHandlerPtr() const
+    template <typename data_t, int handler_t>
+    typename DataContainer<data_t, handler_t>::HandlerTypes_t
+        DataContainer<data_t, handler_t>::getHandlerPtr() const
     {
-        DataContainer<data_t>::HandlerTypes_t handler;
+        DataContainer<data_t, handler_t>::HandlerTypes_t handler;
 
         if (_dataHandlerType == DataHandlerType::CPU) {
             handler = static_cast<DataHandlerCPU<data_t>*>(_dataHandler.get());
@@ -412,8 +436,8 @@ namespace elsa
         return handler;
     }
 
-    template <typename data_t>
-    DataHandlerType DataContainer<data_t>::getDataHandlerType() const
+    template <typename data_t, int handler_t>
+    DataHandlerType DataContainer<data_t, handler_t>::getDataHandlerType() const
     {
         return _dataHandlerType;
     }
