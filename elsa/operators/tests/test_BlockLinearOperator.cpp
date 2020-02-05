@@ -396,7 +396,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator applyAdjoint", "", float, doub
         DataDescriptor rangeDesc(rangeIndex);
 
         const index_t n = rangeDesc.getNumberOfCoefficients();
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> rangeVec(n);
+        Eigen::VectorX<TestType> rangeVec(n);
         rangeVec.topRows(n / 3).setConstant(5);
         rangeVec.middleRows(n / 3, 2 * n / 3).setConstant(7);
         rangeVec.bottomRows(n / 3).setOnes();

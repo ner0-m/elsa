@@ -27,12 +27,12 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with one regularization te
         numCoeff << 23, 47;
         DataDescriptor dd(numCoeff);
 
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> scaling(dd.getNumberOfCoefficients());
+        Eigen::VectorX<TestType> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
         DataContainer<TestType> dcScaling(dd, scaling);
         Scaling scaleOp(dd, dcScaling);
 
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> dataVec(dd.getNumberOfCoefficients());
+        Eigen::VectorX<TestType> dataVec(dd.getNumberOfCoefficients());
         dataVec.setRandom();
         DataContainer<TestType> dcData(dd, dataVec);
 
@@ -101,7 +101,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with one regularization te
 
         WHEN("setting up the TikhonovProblem with x0")
         {
-            Eigen::Matrix<TestType, Eigen::Dynamic, 1> x0Vec(dd.getNumberOfCoefficients());
+            Eigen::VectorX<TestType> x0Vec(dd.getNumberOfCoefficients());
             x0Vec.setRandom();
             DataContainer<TestType> dcX0(dd, x0Vec);
 
@@ -154,12 +154,12 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with several regularizatio
         numCoeff << 17, 33, 52;
         DataDescriptor dd(numCoeff);
 
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> scaling(dd.getNumberOfCoefficients());
+        Eigen::VectorX<TestType> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
         DataContainer<TestType> dcScaling(dd, scaling);
         Scaling scaleOp(dd, dcScaling);
 
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> dataVec(dd.getNumberOfCoefficients());
+        Eigen::VectorX<TestType> dataVec(dd.getNumberOfCoefficients());
         dataVec.setRandom();
         DataContainer<TestType> dcData(dd, dataVec);
 
@@ -228,7 +228,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with several regularizatio
 
         WHEN("setting up the TikhonovProblem with x0")
         {
-            Eigen::Matrix<TestType, Eigen::Dynamic, 1> x0Vec(dd.getNumberOfCoefficients());
+            Eigen::VectorX<TestType> x0Vec(dd.getNumberOfCoefficients());
             x0Vec.setRandom();
             DataContainer<TestType> dcX0(dd, x0Vec);
 
