@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 
 #include <list>
+#include <memory>
 
 namespace elsa
 {
@@ -42,11 +43,21 @@ namespace elsa
     template <typename data_t>
     class DataHandlerCPU : public DataHandler<data_t>
     {
+        /// for enabling accessData()
+        template <class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
+        friend constexpr auto evaluateOrReturn(Operand const& operand);
+
         /// declare DataHandlerMapCPU as friend, allows the use of Eigen for improved performance
         friend DataHandlerMapCPU<data_t>;
 
         /// used for testing only and defined in test file
         friend long useCount<>(const DataHandlerCPU<data_t>& dh);
+
+        /// for enabling accessData()
+        friend DataContainer<data_t, 0>;
+        friend DataContainer<data_t, 1>;
+        friend DataContainer<data_t, 2>;
+
 
     protected:
         /// convenience typedef for the Eigen::Matrix data vector
@@ -60,7 +71,7 @@ namespace elsa
         DataHandlerCPU() = delete;
 
         /// default destructor
-        ~DataHandlerCPU() override;
+        ~DataHandlerCPU();
 
         /**
          * \brief Constructor initializing an appropriately sized vector with zeros
@@ -148,14 +159,14 @@ namespace elsa
 
         /// return a reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
-        std::unique_ptr<DataHandler<data_t>> getBlock(index_t startIndex,
-                                                      index_t numberOfElements) override;
+        DataHandlerMapCPU<data_t> getBlock(index_t startIndex, index_t numberOfElements);
 
         /// return a const reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
-        std::unique_ptr<const DataHandler<data_t>>
-            getBlock(index_t startIndex, index_t numberOfElements) const override;
+        const DataHandlerMapCPU<data_t> getBlock(index_t startIndex, index_t numberOfElements) const;
 
+        /// implement the polymorphic comparison operation
+        bool operator==(DataHandler<data_t> const& other) const override;
     protected:
         /// the vector storing the data
         std::shared_ptr<DataVector_t> _data;
@@ -164,10 +175,7 @@ namespace elsa
         std::list<DataHandlerMapCPU<data_t>*> _associatedMaps;
 
         /// implement the polymorphic clone operation
-        DataHandlerCPU<data_t>* cloneImpl() const override;
-
-        /// implement the polymorphic comparison operation
-        bool isEqual(const DataHandler<data_t>& other) const override;
+        DataHandlerCPU<data_t>* cloneImpl() const;
 
         /// copy the data stored in other
         void assign(const DataHandler<data_t>& other) override;

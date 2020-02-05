@@ -37,8 +37,8 @@ namespace elsa
     };
 
     /// Partial specialization which inherits true
-    template <typename data_t>
-    struct IsDataContainerType<DataContainer<data_t>> : std::true_type {
+    template <typename data_t, int handler_t>
+    struct IsDataContainerType<DataContainer<data_t, handler_t>> : std::true_type {
     };
 
     /// Predicate to check Operand
@@ -80,8 +80,8 @@ namespace elsa
     };
 
     /// Partial specialization to infer data_t from DataContainer
-    template <typename data_type>
-    struct GetOperandDataType<DataContainer<data_type>> {
+    template <typename data_type, int handler_t>
+    struct GetOperandDataType<DataContainer<data_type, handler_t>> {
         using data_t = data_type;
     };
 

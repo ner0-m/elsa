@@ -247,18 +247,17 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>> DataHandlerCPU<data_t>::getBlock(index_t startIndex,
+    DataHandlerMapCPU<data_t> DataHandlerCPU<data_t>::getBlock(index_t startIndex,
                                                                           index_t numberOfElements)
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
             throw std::invalid_argument("DataHandler: requested block out of bounds");
 
-        return std::unique_ptr<DataHandlerMapCPU<data_t>>{
-            new DataHandlerMapCPU{this, _data->data() + startIndex, numberOfElements}};
+        return DataHandlerMapCPU{this, _data->data() + startIndex, numberOfElements};
     }
 
     template <typename data_t>
-    std::unique_ptr<const DataHandler<data_t>>
+    const DataHandlerMapCPU<data_t>
         DataHandlerCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
@@ -268,18 +267,11 @@ namespace elsa
         // Eigen objects
         auto mutableThis = const_cast<DataHandlerCPU<data_t>*>(this);
         auto mutableData = const_cast<data_t*>(_data->data() + startIndex);
-        return std::unique_ptr<const DataHandlerMapCPU<data_t>>{
-            new DataHandlerMapCPU{mutableThis, mutableData, numberOfElements}};
+        return DataHandlerMapCPU{mutableThis, mutableData, numberOfElements};
     }
 
     template <typename data_t>
-    DataHandlerCPU<data_t>* DataHandlerCPU<data_t>::cloneImpl() const
-    {
-        return new DataHandlerCPU<data_t>(*this);
-    }
-
-    template <typename data_t>
-    bool DataHandlerCPU<data_t>::isEqual(const DataHandler<data_t>& other) const
+    bool DataHandlerCPU<data_t>::operator==(DataHandler<data_t> const& other) const
     {
         if (const auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&other)) {
 

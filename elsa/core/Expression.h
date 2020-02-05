@@ -27,7 +27,7 @@ namespace elsa
     template <class Operand, std::enable_if_t<isDataContainer<Operand>, int> = 0>
     constexpr auto evaluateOrReturn(Operand const& operand)
     {
-        return operand._dataHandler->accessData();
+        return operand._dataHandler.accessData();
     }
 
     /// Type trait which decides if const lvalue reference or not

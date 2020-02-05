@@ -45,6 +45,15 @@ namespace elsa
         /// declare DataHandlerCPU as friend, allows the use of Eigen for improved performance
         friend class DataHandlerCPU<data_t>;
 
+        /// for enabling accessData()
+        friend DataContainer<data_t, 0>;
+        friend DataContainer<data_t, 1>;
+        friend DataContainer<data_t, 2>;
+
+        /// for enabling accessData()
+        template <class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
+        friend constexpr auto evaluateOrReturn(Operand const& operand);
+
     protected:
         /// convenience typedef for the Eigen::Matrix data vector
         using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
@@ -60,7 +69,7 @@ namespace elsa
         DataHandlerMapCPU(DataHandlerMapCPU<data_t>&& other) = default;
 
         /// default destructor
-        ~DataHandlerMapCPU() override;
+        ~DataHandlerMapCPU();
 
         /// return the size of the vector
         index_t getSize() const override;
@@ -123,13 +132,14 @@ namespace elsa
 
         /// return a reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
-        std::unique_ptr<DataHandler<data_t>> getBlock(index_t startIndex,
-                                                      index_t numberOfElements) override;
+        DataHandlerMapCPU<data_t> getBlock(index_t startIndex, index_t numberOfElements);
 
         /// return a const reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
-        std::unique_ptr<const DataHandler<data_t>>
-            getBlock(index_t startIndex, index_t numberOfElements) const override;
+        const DataHandlerMapCPU<data_t> getBlock(index_t startIndex, index_t numberOfElements) const;
+
+        /// implement the polymorphic comparison operation
+        bool operator==(DataHandler<data_t> const& other) const override;
 
     protected:
         /// vector mapping of the data
@@ -142,10 +152,7 @@ namespace elsa
         typename std::list<DataHandlerMapCPU<data_t>*>::iterator _handle;
 
         /// implement the polymorphic clone operation
-        DataHandlerCPU<data_t>* cloneImpl() const override;
-
-        /// implement the polymorphic comparison operation
-        bool isEqual(const DataHandler<data_t>& other) const override;
+        DataHandlerCPU<data_t>* cloneImpl() const;
 
         void assign(const DataHandler<data_t>& other) override;
 

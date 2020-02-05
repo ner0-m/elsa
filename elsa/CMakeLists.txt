@@ -37,17 +37,17 @@ endif()
 
 # add the elsa modules
 add_subdirectory(core)
-add_subdirectory(logging)
-add_subdirectory(io)
-add_subdirectory(operators)
-add_subdirectory(functionals)
-add_subdirectory(problems)
-add_subdirectory(solvers)
-add_subdirectory(projectors)
+#add_subdirectory(logging)
+#add_subdirectory(io)
+#add_subdirectory(operators)
+#add_subdirectory(functionals)
+#add_subdirectory(problems)
+#add_subdirectory(solvers)
+#add_subdirectory(projectors)
 if(ELSA_BUILD_CUDA_PROJECTORS)
-    add_subdirectory(projectors_cuda)
+    #add_subdirectory(projectors_cuda)
 endif(ELSA_BUILD_CUDA_PROJECTORS)
-add_subdirectory(generators)
+#add_subdirectory(generators)
 
 
 # library to build and add all registered components of the library

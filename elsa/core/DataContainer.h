@@ -33,10 +33,7 @@ namespace elsa
     class DataContainer
     {
     public:
-        using DCType = DataContainer<data_t, handler_t>;
-
-        /// union of all possible handler raw pointers
-        using HandlerTypes_t = std::variant<DataHandlerCPU<data_t>*, DataHandlerMapCPU<data_t>*>;
+        using DataContainer_t = DataContainer<data_t, handler_t>;
 
         /// delete default constructor (without metadata there can be no valid container)
         DataContainer() = delete;
@@ -47,8 +44,7 @@ namespace elsa
          * \param[in] dataDescriptor containing the associated metadata
          * \param[in] handlerType the data handler (default: CPU)
          */
-        explicit DataContainer(const DataDescriptor& dataDescriptor,
-                               DataHandlerType handlerType = DataHandlerType::CPU);
+        explicit DataContainer(const DataDescriptor& dataDescriptor);
 
         /**
          * \brief Constructor for DataContainer, initializing it with a DataVector
@@ -58,22 +54,21 @@ namespace elsa
          * \param[in] handlerType the data handler (default: CPU)
          */
         DataContainer(const DataDescriptor& dataDescriptor,
-                      const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
-                      DataHandlerType handlerType = DataHandlerType::CPU);
+                      const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data);
 
         /**
          * \brief Copy constructor for DataContainer
          *
          * \param[in] other DataContainer to copy
          */
-        DataContainer(const DCType& other);
+        DataContainer(const DataContainer_t& other);
 
         /**
          * \brief copy assignment for DataContainer
          *
          * \param[in] other DataContainer to copy
          */
-        DataContainer<data_t, handler_t>& operator=(const DataContainer<data_t, handler_t>& other);
+        DataContainer_t& operator=(const DataContainer_t& other);
 
         /**
          * \brief Move constructor for DataContainer
@@ -84,7 +79,7 @@ namespace elsa
          * fulfilled for any member functions, the object should not be used. After move- or copy-
          * assignment, this is possible again.
          */
-        DataContainer(DataContainer<data_t, handler_t>&& other) noexcept;
+        DataContainer(DataContainer_t&& other) noexcept;
 
         /**
          * \brief Move assignment for DataContainer
@@ -95,7 +90,7 @@ namespace elsa
          * fulfilled for any member functions, the object should not be used. After move- or copy-
          * assignment, this is possible again.
          */
-        DataContainer<data_t, handler_t>& operator=(DataContainer<data_t, handler_t>&& other);
+        DataContainer_t& operator=(DataContainer_t&& other);
 
         /**
          * \brief Expression evaluation assignment for DataContainer
@@ -106,9 +101,9 @@ namespace elsa
          * the DataHandler in use.
          */
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t, handler_t>& operator=(Source const& source)
+        DataContainer_t& operator=(Source const& source)
         {
-            _dataHandler->accessData() = source.eval();
+            _dataHandler.accessData() = source.eval();
 
             return *this;
         }
@@ -123,8 +118,7 @@ namespace elsa
          */
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
         DataContainer<data_t, handler_t>(Source const& source)
-            : DataContainer<data_t, handler_t>(source.getDataMetaInfo().first, source.eval(),
-                                               source.getDataMetaInfo().second)
+            : DataContainer<data_t, handler_t>(source.getDataMetaInfo().first, source.eval())
         {
         }
 
@@ -170,7 +164,7 @@ namespace elsa
         }
 
         /// return the dot product of this signal with the one from container other
-        data_t dot(const DataContainer<data_t, handler_t>& other) const;
+        data_t dot(const DataContainer_t& other) const;
 
         /// return the dot product of this signal with the one from an expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
@@ -192,87 +186,87 @@ namespace elsa
         data_t sum() const;
 
         /// compute in-place element-wise addition of another container
-        DataContainer<data_t, handler_t>& operator+=(const DataContainer<data_t, handler_t>& dc);
+        DataContainer_t& operator+=(const DataContainer_t& dc);
 
         /// compute in-place element-wise addition with another expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t, handler_t>& operator+=(Source const& source)
+        DataContainer_t& operator+=(Source const& source)
         {
             *this = *this + source;
             return *this;
         }
 
         /// compute in-place element-wise subtraction of another container
-        DataContainer<data_t, handler_t>& operator-=(const DataContainer<data_t, handler_t>& dc);
+        DataContainer_t& operator-=(const DataContainer_t& dc);
 
         /// compute in-place element-wise subtraction with another expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t, handler_t>& operator-=(Source const& source)
+        DataContainer_t& operator-=(Source const& source)
         {
             *this = *this - source;
             return *this;
         }
 
         /// compute in-place element-wise multiplication with another container
-        DataContainer<data_t, handler_t>& operator*=(const DataContainer<data_t, handler_t>& dc);
+        DataContainer_t& operator*=(const DataContainer_t& dc);
 
         /// compute in-place element-wise multiplication with another expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t, handler_t>& operator*=(Source const& source)
+        DataContainer_t& operator*=(Source const& source)
         {
             *this = *this * source;
             return *this;
         }
 
         /// compute in-place element-wise division by another container
-        DataContainer<data_t, handler_t>& operator/=(const DataContainer<data_t, handler_t>& dc);
+        DataContainer_t& operator/=(const DataContainer_t& dc);
 
         /// compute in-place element-wise division with another expression
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t, handler_t>& operator/=(Source const& source)
+        DataContainer_t& operator/=(Source const& source)
         {
             *this = *this / source;
             return *this;
         }
 
         /// compute in-place addition of a scalar
-        DataContainer<data_t, handler_t>& operator+=(data_t scalar);
+        DataContainer_t& operator+=(data_t scalar);
 
         /// compute in-place subtraction of a scalar
-        DataContainer<data_t, handler_t>& operator-=(data_t scalar);
+        DataContainer_t& operator-=(data_t scalar);
 
         /// compute in-place multiplication with a scalar
-        DataContainer<data_t, handler_t>& operator*=(data_t scalar);
+        DataContainer_t& operator*=(data_t scalar);
 
         /// compute in-place division by a scalar
-        DataContainer<data_t, handler_t>& operator/=(data_t scalar);
+        DataContainer_t& operator/=(data_t scalar);
 
         /// assign a scalar to the DataContainer
-        DataContainer<data_t, handler_t>& operator=(data_t scalar);
+        DataContainer_t& operator=(data_t scalar);
 
         /// comparison with another DataContainer
-        bool operator==(const DataContainer<data_t, handler_t>& other) const;
+        bool operator==(const DataContainer_t& other) const;
 
         /// comparison with another DataContainer
-        bool operator!=(const DataContainer<data_t, handler_t>& other) const;
+        bool operator!=(const DataContainer_t& other) const;
 
         /// returns a reference to the i-th block, wrapped in a DataContainer
-        DataContainer<data_t, handler_t> getBlock(index_t i);
+        DataContainer<data_t, DataHandlerType::MAP_CPU> getBlock(index_t i);
 
         /// returns a const reference to the i-th block, wrapped in a DataContainer
-        const DataContainer<data_t, handler_t> getBlock(index_t i) const;
+        const DataContainer<data_t, DataHandlerType::MAP_CPU> getBlock(index_t i) const;
 
         /// return a view of this DataContainer with a different descriptor
-        DataContainer<data_t, handler_t> viewAs(const DataDescriptor& dataDescriptor);
+        DataContainer<data_t, DataHandlerType::MAP_CPU> viewAs(const DataDescriptor& dataDescriptor);
 
         /// return a const view of this DataContainer with a different descriptor
-        const DataContainer<data_t, handler_t> viewAs(const DataDescriptor& dataDescriptor) const;
+        const DataContainer<data_t, DataHandlerType::MAP_CPU> viewAs(const DataDescriptor& dataDescriptor) const;
 
         /// iterator for DataContainer (random access and continuous)
-        using iterator = DataContainerIterator<DataContainer<data_t, handler_t>>;
+        using iterator = DataContainerIterator<DataContainer_t>;
 
         /// const iterator for DataContainer (random access and continuous)
-        using const_iterator = ConstDataContainerIterator<DataContainer<data_t, handler_t>>;
+        using const_iterator = ConstDataContainerIterator<DataContainer_t>;
 
         /// alias for reverse iterator
         using reverse_iterator = std::reverse_iterator<iterator>;
@@ -341,32 +335,16 @@ namespace elsa
         template <class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
-    private:
-        /// returns the underlying derived handler as a raw pointer in a std::variant
-        HandlerTypes_t getHandlerPtr() const;
+        /// private constructor accepting a DataDescriptor and a DataHandler
+        explicit DataContainer(const DataDescriptor& dataDescriptor, DataHandlerMapCPU<data_t> dataHandler);
 
+    private:
         /// the current DataDescriptor
         std::unique_ptr<DataDescriptor> _dataDescriptor;
 
         /// the current DataHandler
-        std::unique_ptr<std::conditional_t<(handler_t == DataHandlerType::CPU
-                                            || handler_t == DataHandlerType::MAP_CPU),
-                                           DataHandler<data_t>, DataHandler<data_t>>>
-            _dataHandler;
-
-        /// the current DataHandlerType
-        DataHandlerType _dataHandlerType;
-
-        /// factory method to create DataHandlers based on handlerType with perfect forwarding of
-        /// constructor arguments
-        template <typename... Args>
-        std::unique_ptr<DataHandler<data_t>> createDataHandler(DataHandlerType handlerType,
-                                                               Args&&... args);
-
-        /// private constructor accepting a DataDescriptor and a DataHandler
-        explicit DataContainer(const DataDescriptor& dataDescriptor,
-                               std::unique_ptr<DataHandler<data_t>> dataHandler,
-                               DataHandlerType dataType = DataHandlerType::CPU);
+        std::conditional_t<(handler_t == DataHandlerType::MAP_CPU), DataHandlerMapCPU<data_t>,
+                           DataHandlerCPU<data_t>> _dataHandler;
     };
 
     /// User-defined template argument deduction guide for the expression based constructor

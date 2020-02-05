@@ -242,19 +242,17 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::unique_ptr<DataHandler<data_t>>
+    DataHandlerMapCPU<data_t>
         DataHandlerMapCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements)
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
             throw std::invalid_argument("DataHandler: requested block out of bounds");
 
-        return std::unique_ptr<DataHandlerMapCPU<data_t>>(
-            new DataHandlerMapCPU{_dataOwner, _map.data() + startIndex, numberOfElements});
+        return DataHandlerMapCPU{_dataOwner, _map.data() + startIndex, numberOfElements};
     }
 
     template <typename data_t>
-    std::unique_ptr<const DataHandler<data_t>>
-        DataHandlerMapCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
+    const DataHandlerMapCPU<data_t> DataHandlerMapCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
             throw std::invalid_argument("DataHandler: requested block out of bounds");
@@ -262,8 +260,7 @@ namespace elsa
         // using a const_cast here is fine as long as the DataHandlers never expose the internal
         // Eigen objects
         auto mutableData = const_cast<data_t*>(_map.data() + startIndex);
-        return std::unique_ptr<const DataHandlerMapCPU<data_t>>(
-            new DataHandlerMapCPU{_dataOwner, mutableData, numberOfElements});
+        return DataHandlerMapCPU{_dataOwner, mutableData, numberOfElements};
     }
 
     template <typename data_t>
@@ -277,7 +274,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    bool DataHandlerMapCPU<data_t>::isEqual(const DataHandler<data_t>& other) const
+    bool DataHandlerMapCPU<data_t>::operator==(DataHandler<data_t> const& other) const
     {
         if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU*>(&other)) {
 
