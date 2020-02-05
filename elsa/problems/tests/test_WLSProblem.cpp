@@ -31,7 +31,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
         numCoeff << 7, 13;
         DataDescriptor dd(numCoeff);
 
-        Eigen::VectorX<TestType> bVec(dd.getNumberOfCoefficients());
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
         DataContainer<TestType> dcB(dd, bVec);
 
@@ -64,7 +64,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
         WHEN("setting up a ls problem with x0")
         {
-            Eigen::VectorX<TestType> x0Vec(dd.getNumberOfCoefficients());
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> x0Vec(dd.getNumberOfCoefficients());
             x0Vec.setRandom();
             DataContainer<TestType> dcX0(dd, x0Vec);
 
@@ -97,13 +97,13 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
         numCoeff << 7, 13, 17;
         DataDescriptor dd(numCoeff);
 
-        Eigen::VectorX<TestType> bVec(dd.getNumberOfCoefficients());
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
         DataContainer<TestType> dcB(dd, bVec);
 
         Identity<TestType> idOp(dd);
 
-        Eigen::VectorX<TestType> weightsVec(dd.getNumberOfCoefficients());
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> weightsVec(dd.getNumberOfCoefficients());
         weightsVec.setRandom();
         DataContainer dcWeights(dd, weightsVec);
         Scaling scaleOp(dd, dcWeights);
@@ -136,7 +136,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
         WHEN("setting up a wls problem with x0")
         {
-            Eigen::VectorX<TestType> x0Vec(dd.getNumberOfCoefficients());
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> x0Vec(dd.getNumberOfCoefficients());
             x0Vec.setRandom();
             DataContainer<TestType> dcX0(dd, x0Vec);
 
@@ -228,7 +228,8 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
         Scaling<TestType> W1{desc, static_cast<TestType>(-3.0)};
 
-        Eigen::VectorX<TestType> anisotropicW = Eigen::VectorX<TestType>::Constant(343, 1);
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> anisotropicW =
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Constant(343, 1);
         anisotropicW[256] = -3.0;
 
         Scaling<TestType> W2{desc, DataContainer(desc, anisotropicW)};
@@ -275,7 +276,8 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
         Scaling<TestType> W1{desc, static_cast<TestType>(-3.0)};
 
-        Eigen::VectorX<TestType> anisotropicW = Eigen::VectorX<TestType>::Constant(343, 1);
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> anisotropicW =
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Constant(343, 1);
         anisotropicW[256] = -3.0;
 
         Scaling<TestType> W2{desc, DataContainer(desc, anisotropicW)};
@@ -306,13 +308,15 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
     GIVEN("an OptimizationProblem with only (w)ls terms")
     {
         DataDescriptor desc{IndexVector_t::Constant(1, 343)};
-        Eigen::VectorX<TestType> vec = Eigen::VectorX<TestType>::Random(343);
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec =
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343);
         DataContainer<TestType> b{desc, vec};
 
         Scaling<TestType> A{desc, static_cast<TestType>(2.0)};
 
         Scaling<TestType> isoW{desc, static_cast<TestType>(3.0)};
-        Eigen::VectorX<TestType> vecW = Eigen::abs(Eigen::VectorX<TestType>::Random(343).array());
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> vecW =
+            Eigen::abs(Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343).array());
         DataContainer<TestType> dcW{desc, vecW};
         Scaling<TestType> nonIsoW{desc, dcW};
 
@@ -327,14 +331,15 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
         dataTerms.push_back(
             std::make_unique<WeightedL2NormPow2<TestType>>(LinearResidual{A, b}, nonIsoW));
 
-        Eigen::VectorX<TestType> regVec = Eigen::VectorX<TestType>::Random(343);
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> regVec =
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343);
         DataContainer<TestType> bReg{desc, regVec};
 
         Scaling<TestType> AReg{desc, static_cast<TestType>(0.25)};
 
         Scaling<TestType> isoWReg{desc, static_cast<TestType>(1.5)};
-        Eigen::VectorX<TestType> vecWReg =
-            Eigen::abs(Eigen::VectorX<TestType>::Random(343).array());
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> vecWReg =
+            Eigen::abs(Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343).array());
         DataContainer<TestType> dcWReg{desc, vecWReg};
         Scaling<TestType> nonIsoWReg{desc, dcWReg};
 
@@ -365,7 +370,8 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
                 WHEN(std::string("The data term ") + descriptions[i] + ". The regularization term "
                      + descriptions[j])
                 {
-                    Eigen::VectorX<TestType> xVec = Eigen::VectorX<TestType>::Random(343);
+                    Eigen::Matrix<TestType, Eigen::Dynamic, 1> xVec =
+                        Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343);
                     DataContainer<TestType> x{desc, xVec};
                     Problem prob{*dataTerms[i], *regTerms[j], x};
 
@@ -388,7 +394,8 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
     GIVEN("a TikhonovProblem with L2 regularization")
     {
         DataDescriptor desc{IndexVector_t::Constant(1, 343)};
-        Eigen::VectorX<TestType> vec = Eigen::VectorX<TestType>::Random(343);
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec =
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343);
         DataContainer<TestType> b{desc, vec};
 
         Scaling<TestType> A{desc, static_cast<TestType>(2.0)};
