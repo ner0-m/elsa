@@ -27,7 +27,7 @@ TEMPLATE_TEST_CASE("Scenario: Constructing DataHandlerMapCPU", "", float, double
 
         WHEN("constructing with a given vector")
         {
-            Eigen::VectorX<TestType> randVec{size * 2};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size * 2};
             randVec.setRandom();
             const DataHandlerCPU<TestType> dh{randVec};
             const auto dhMap = dh.getBlock(size / 3, size / 3);
@@ -43,7 +43,7 @@ TEMPLATE_TEST_CASE("Scenario: Constructing DataHandlerMapCPU", "", float, double
 
         WHEN("copy constructing")
         {
-            Eigen::VectorX<TestType> randVec{size * 2};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size * 2};
             randVec.setRandom();
             const DataHandlerCPU<TestType> dh{randVec};
             const auto dhMap = dh.getBlock(size / 3, size / 3);
@@ -67,7 +67,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing equality operator on DataHandlerMapCPU", "
     GIVEN("some DataHandlerMapCPU")
     {
         index_t size = 314;
-        Eigen::VectorX<TestType> randVec{size};
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
         randVec.setRandom();
         const DataHandlerCPU realDh{randVec};
         const auto dhPtr = realDh.getBlock(0, size);
@@ -153,7 +153,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
 
         WHEN("copy assigning a DataHandlerCPU through base pointers")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
             randVec.setRandom();
             const std::unique_ptr<const DataHandler<TestType>> dh2Ptr =
                 std::make_unique<const DataHandlerCPU<TestType>>(randVec);
@@ -183,7 +183,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
         WHEN("copy assigning a partial DataHandlerMapCPU through base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::VectorX<TestType> randVec{2 * size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{2 * size};
             randVec.setRandom();
             const DataHandlerCPU<TestType> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -211,7 +211,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
         WHEN("copy assigning a full DataHandlerMapCPU (aka a view) through base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
             randVec.setRandom();
             const DataHandlerCPU<TestType> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -238,7 +238,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
 
         WHEN("\"move\" assigning a DataHandlerMapCPU through base pointers")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
             randVec.setRandom();
             const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
                 std::make_unique<DataHandlerCPU<TestType>>(randVec);
@@ -268,7 +268,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
         WHEN("\"move\" assigning a partial DataHandlerMapCPU through base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::VectorX<TestType> randVec{2 * size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{2 * size};
             randVec.setRandom();
             DataHandlerCPU<TestType> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -296,7 +296,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
         WHEN("\"move\" assigning a full DataHandlerMapCPU (aka a view) through base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
             randVec.setRandom();
             DataHandlerCPU<TestType> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -358,7 +358,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
 
         WHEN("copy assigning a DataHandlerMapCPU through base pointers")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
             randVec.setRandom();
             const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
                 std::make_unique<DataHandlerCPU<TestType>>(randVec);
@@ -386,7 +386,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
         WHEN("copy assigning a partial DataHandlerMapCPU through base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::VectorX<TestType> randVec{2 * size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{2 * size};
             randVec.setRandom();
             const DataHandlerCPU<TestType> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -413,7 +413,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
 
         WHEN("copy assigning a full DataHandlerMapCPU (aka a view) through base pointers")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
             randVec.setRandom();
             const DataHandlerCPU<TestType> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -440,7 +440,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
 
         WHEN("\"move\" assigning a DataHandlerCPU through base pointers")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
             randVec.setRandom();
             const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
                 std::make_unique<DataHandlerCPU<TestType>>(randVec);
@@ -468,7 +468,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
         WHEN("\"move\" assigning a partial DataHandlerMapCPU through base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::VectorX<TestType> randVec{2 * size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{2 * size};
             randVec.setRandom();
             DataHandlerCPU<TestType> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -495,7 +495,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
 
         WHEN("\"move\" assigning a full DataHandlerMapCPU (aka a view) through base pointers")
         {
-            Eigen::VectorX<TestType> randVec{size};
+            Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{size};
             randVec.setRandom();
             DataHandlerCPU<TestType> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
