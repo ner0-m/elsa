@@ -40,6 +40,15 @@ namespace elsa
         /// enable file logging
         static void enableFileLogging(std::string filename);
 
+        /// add a given sink pointer to the sink list of a target logger
+        static void addCustomSink(spdlog::sink_ptr sink, std::string logger_name);
+
+        /// delete every Logger initialized so far
+        static void clearMap();
+
+        /// returns true if the _loggers map is empty
+        static bool isEmpty();
+
     private:
         /// returns the singleton instance of Logger
         static Logger& getInstance();

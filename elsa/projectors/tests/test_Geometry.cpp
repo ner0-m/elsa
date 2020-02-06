@@ -666,9 +666,9 @@ SCENARIO("Testing 3D geometries")
         }
         
         WHEN("testing geometry from projection matrix with 45/22.5/12.25 degree rotation") {
-            real_t angle1 = pi / 4;
-            real_t angle2 = pi / 2;
-            real_t angle3 = pi / 8;
+            real_t angle1 = pi_t / 4;
+            real_t angle2 = pi_t / 2;
+            real_t angle3 = pi_t / 8;
             RealMatrix_t rot1(3, 3);
             rot1 << std::cos(angle1), 0, std::sin(angle1), 0, 1, 0, -std::sin(angle1), 0, std::cos(angle1);
             RealMatrix_t rot2(3, 3);

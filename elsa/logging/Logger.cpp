@@ -60,7 +60,7 @@ namespace elsa
         getInstance()._loggers.clear();
     }
     
-    const bool Logger::isEmpty()
+    bool Logger::isEmpty()
     {
         return getInstance()._loggers.empty();
     }
