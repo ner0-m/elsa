@@ -37,9 +37,9 @@ endif()
 
 # add the elsa modules
 add_subdirectory(core)
-#add_subdirectory(logging)
-#add_subdirectory(io)
-#add_subdirectory(operators)
+add_subdirectory(logging)
+add_subdirectory(io)
+add_subdirectory(operators)
 #add_subdirectory(functionals)
 #add_subdirectory(problems)
 #add_subdirectory(solvers)

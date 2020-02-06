@@ -242,8 +242,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandlerMapCPU<data_t>
-        DataHandlerMapCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements)
+    DataHandlerMapCPU<data_t> DataHandlerMapCPU<data_t>::getBlock(index_t startIndex,
+                                                                  index_t numberOfElements)
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
             throw std::invalid_argument("DataHandler: requested block out of bounds");
@@ -252,7 +252,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    const DataHandlerMapCPU<data_t> DataHandlerMapCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
+    const DataHandlerMapCPU<data_t>
+        DataHandlerMapCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
             throw std::invalid_argument("DataHandler: requested block out of bounds");

@@ -136,7 +136,8 @@ namespace elsa
 
         /// return a const reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
-        const DataHandlerMapCPU<data_t> getBlock(index_t startIndex, index_t numberOfElements) const;
+        const DataHandlerMapCPU<data_t> getBlock(index_t startIndex,
+                                                 index_t numberOfElements) const;
 
         /// implement the polymorphic comparison operation
         bool operator==(DataHandler<data_t> const& other) const override;

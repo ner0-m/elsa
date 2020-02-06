@@ -45,12 +45,9 @@ namespace elsa
         using DataMap_t = Eigen::Map<DataVector_t>;
 
     public:
-
         virtual bool operator==(DataHandler const& other) const = 0;
 
-        bool operator!=(DataHandler const& other) const {
-            return !this->operator==(other);
-        }
+        bool operator!=(DataHandler const& other) const { return !this->operator==(other); }
 
         /// convenience typedef to access data type that is internally stored
         using value_type = data_t;
@@ -128,11 +125,12 @@ namespace elsa
 
         /// return a reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
-        ///virtual DataHandlerMapCPU<data_t> getBlock(index_t startIndex,
+        /// virtual DataHandlerMapCPU<data_t> getBlock(index_t startIndex,
 
         /// return a const reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
-        ///virtual const DataHandlerMapCPU<data_t> getBlock(index_t startIndex, index_t numberOfElements) const = 0;
+        /// virtual const DataHandlerMapCPU<data_t> getBlock(index_t startIndex, index_t
+        /// numberOfElements) const = 0;
 
     protected:
         /// slow element-wise dot product fall-back for when DataHandler types do not match

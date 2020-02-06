@@ -58,7 +58,6 @@ namespace elsa
         friend DataContainer<data_t, 1>;
         friend DataContainer<data_t, 2>;
 
-
     protected:
         /// convenience typedef for the Eigen::Matrix data vector
         using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
@@ -163,10 +162,12 @@ namespace elsa
 
         /// return a const reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
-        const DataHandlerMapCPU<data_t> getBlock(index_t startIndex, index_t numberOfElements) const;
+        const DataHandlerMapCPU<data_t> getBlock(index_t startIndex,
+                                                 index_t numberOfElements) const;
 
         /// implement the polymorphic comparison operation
         bool operator==(DataHandler<data_t> const& other) const override;
+
     protected:
         /// the vector storing the data
         std::shared_ptr<DataVector_t> _data;

@@ -71,7 +71,8 @@ namespace elsa
          *
          * Please note: this method uses apply(x, Ax) to perform the actual operation.
          */
-        DataContainer<data_t> apply(const DataContainer<data_t>& x) const;
+        template <int handler_t>
+        DataContainer<data_t> apply(const DataContainer<data_t, handler_t>& x) const;
 
         /**
          * \brief apply the operator A to an element in the operator's domain
@@ -83,7 +84,9 @@ namespace elsa
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
          * function overloading a virtual one [apply with one vs. two arguments]).
          */
-        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
+        template <int handler_t>
+        void apply(const DataContainer<data_t, handler_t>& x,
+                   DataContainer<data_t, handler_t>& Ax) const;
 
         /**
          * \brief apply the adjoint of operator A to an element of the operator's range
@@ -95,7 +98,8 @@ namespace elsa
          *
          * Please note: this method uses applyAdjoint(y, Aty) to perform the actual operation.
          */
-        DataContainer<data_t> applyAdjoint(const DataContainer<data_t>& y) const;
+        template <int handler_t>
+        DataContainer<data_t> applyAdjoint(const DataContainer<data_t, handler_t>& y) const;
 
         /**
          * \brief apply the adjoint of operator A to an element of the operator's range
@@ -107,7 +111,9 @@ namespace elsa
          * derived classes. (Why is this method not virtual itself? Because you cannot have a
          * non-virtual function overloading a virtual one [applyAdjoint with one vs. two args]).
          */
-        void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const;
+        template <int handler_t>
+        void applyAdjoint(const DataContainer<data_t, handler_t>& y,
+                          DataContainer<data_t, handler_t>& Aty) const;
 
         /// friend operator+ to support composition of LinearOperators (and its derivatives)
         friend LinearOperator<data_t> operator+(const LinearOperator<data_t>& lhs,

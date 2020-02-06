@@ -257,10 +257,12 @@ namespace elsa
         const DataContainer<data_t, DataHandlerType::MAP_CPU> getBlock(index_t i) const;
 
         /// return a view of this DataContainer with a different descriptor
-        DataContainer<data_t, DataHandlerType::MAP_CPU> viewAs(const DataDescriptor& dataDescriptor);
+        DataContainer<data_t, DataHandlerType::MAP_CPU>
+            viewAs(const DataDescriptor& dataDescriptor);
 
         /// return a const view of this DataContainer with a different descriptor
-        const DataContainer<data_t, DataHandlerType::MAP_CPU> viewAs(const DataDescriptor& dataDescriptor) const;
+        const DataContainer<data_t, DataHandlerType::MAP_CPU>
+            viewAs(const DataDescriptor& dataDescriptor) const;
 
         /// iterator for DataContainer (random access and continuous)
         using iterator = DataContainerIterator<DataContainer_t>;
@@ -336,7 +338,8 @@ namespace elsa
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
         /// private constructor accepting a DataDescriptor and a DataHandler
-        explicit DataContainer(const DataDescriptor& dataDescriptor, DataHandlerMapCPU<data_t> dataHandler);
+        explicit DataContainer(const DataDescriptor& dataDescriptor,
+                               DataHandlerMapCPU<data_t> dataHandler);
 
     private:
         /// the current DataDescriptor
@@ -344,7 +347,8 @@ namespace elsa
 
         /// the current DataHandler
         std::conditional_t<(handler_t == DataHandlerType::MAP_CPU), DataHandlerMapCPU<data_t>,
-                           DataHandlerCPU<data_t>> _dataHandler;
+                           DataHandlerCPU<data_t>>
+            _dataHandler;
     };
 
     /// User-defined template argument deduction guide for the expression based constructor

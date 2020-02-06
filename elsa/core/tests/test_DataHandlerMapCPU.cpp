@@ -151,174 +151,175 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
             }
         }
 
-//        WHEN("copy assigning a DataHandlerCPU through base pointers")
-//        {
-//            Eigen::VectorX<TestType> randVec{size};
-//            randVec.setRandom();
-//            const std::unique_ptr<const DataHandler<TestType>> dh2Ptr =
-//                std::make_unique<const DataHandlerCPU<TestType>>(randVec);
-//
-//            THEN("sizes must match")
-//            {
-//                const std::unique_ptr<DataHandler<TestType>> bigDh =
-//                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
-//                REQUIRE_THROWS(dhMap = bigDh);
-//            }
-//
-//            const auto dhCopy = dh;
-//            dhMap = dh2Ptr;
-//            THEN("a deep copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 1);
-//                REQUIRE(useCount(dhCopy) == 1);
-//
-//                for (index_t i = 0; i < size; i++)
-//                    REQUIRE(dh[i] == (dh2Ptr)[i]);
-//
-//                REQUIRE(dhMap == dh2Ptr);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//            }
-//        }
-//
-//        WHEN("copy assigning a partial DataHandlerMapCPU through base pointers")
-//        {
-//            const auto dhCopy = dh;
-//            Eigen::VectorX<TestType> randVec{2 * size};
-//            randVec.setRandom();
-//            const DataHandlerCPU<TestType> dh2{randVec};
-//            const auto dh2Map = dh2.getBlock(0, size);
-//
-//            THEN("sizes must match")
-//            {
-//                const auto bigDh = dh2.getBlock(0, 2 * size);
-//                REQUIRE_THROWS(dhMap = bigDh);
-//            }
-//
-//            dhMap = dh2Map;
-//            THEN("a deep copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 1);
-//                REQUIRE(useCount(dhCopy) == 1);
-//
-//                for (index_t i = 0; i < size; i++)
-//                    REQUIRE(dh[i] == dh2[i]);
-//
-//                REQUIRE(dhMap == dh2Map);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//            }
-//        }
-//
-//        WHEN("copy assigning a full DataHandlerMapCPU (aka a view) through base pointers")
-//        {
-//            const auto dhCopy = dh;
-//            Eigen::VectorX<TestType> randVec{size};
-//            randVec.setRandom();
-//            const DataHandlerCPU<TestType> dh2{randVec};
-//            const auto dh2Map = dh2.getBlock(0, size);
-//
-//            THEN("sizes must match")
-//            {
-//                const std::unique_ptr<DataHandler<TestType>> bigDh =
-//                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
-//                REQUIRE_THROWS(dhMap = bigDh.getBlock(0, 2 * size));
-//            }
-//
-//            dhMap = dh2Map;
-//            THEN("a deep copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 1);
-//                REQUIRE(useCount(dhCopy) == 1);
-//
-//                for (index_t i = 0; i < size; i++)
-//                    REQUIRE(dh[i] == dh2[i]);
-//
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//            }
-//        }
-//
-//        WHEN("\"move\" assigning a DataHandlerMapCPU through base pointers")
-//        {
-//            Eigen::VectorX<TestType> randVec{size};
-//            randVec.setRandom();
-//            const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
-//                std::make_unique<DataHandlerCPU<TestType>>(randVec);
-//
-//            THEN("sizes must match")
-//            {
-//                const std::unique_ptr<DataHandler<TestType>> bigDh =
-//                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
-//                REQUIRE_THROWS(dhMap = std::move(bigDh));
-//            }
-//
-//            const auto dhCopy = dh;
-//            dhMap = std::move(dh2Ptr);
-//            THEN("a deep copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 1);
-//                REQUIRE(useCount(dhCopy) == 1);
-//
-//                for (index_t i = 0; i < size; i++)
-//                    REQUIRE(dh[i] == (dh2Ptr)[i]);
-//
-//                REQUIRE(dhMap == dh2Ptr);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//            }
-//        }
-//
-//        WHEN("\"move\" assigning a partial DataHandlerMapCPU through base pointers")
-//        {
-//            const auto dhCopy = dh;
-//            Eigen::VectorX<TestType> randVec{2 * size};
-//            randVec.setRandom();
-//            DataHandlerCPU<TestType> dh2{randVec};
-//            const auto dh2Map = dh2.getBlock(0, size);
-//
-//            THEN("sizes must match")
-//            {
-//                const auto bigDh = dh2.getBlock(0, 2 * size);
-//                REQUIRE_THROWS(dhMap = std::move(bigDh));
-//            }
-//
-//            dhMap = std::move(dh2Map);
-//            THEN("a deep copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 1);
-//                REQUIRE(useCount(dhCopy) == 1);
-//
-//                for (index_t i = 0; i < size; i++)
-//                    REQUIRE(dh[i] == dh2[i]);
-//
-//                REQUIRE(dhMap == dh2Map);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//            }
-//        }
-//
-//        WHEN("\"move\" assigning a full DataHandlerMapCPU (aka a view) through base pointers")
-//        {
-//            const auto dhCopy = dh;
-//            Eigen::VectorX<TestType> randVec{size};
-//            randVec.setRandom();
-//            DataHandlerCPU<TestType> dh2{randVec};
-//            const auto dh2Map = dh2.getBlock(0, size);
-//
-//            THEN("sizes must match")
-//            {
-//                const DataHandlerCPU<TestType> bigDh(2 * size);
-//                REQUIRE_THROWS(dhMap = std::move(bigDh.getBlock(0, 2 * size)));
-//            }
-//
-//            dhMap = std::move(dh2Map);
-//            THEN("a deep copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 1);
-//                REQUIRE(useCount(dhCopy) == 1);
-//
-//                for (index_t i = 0; i < size; i++)
-//                    REQUIRE(dh[i] == dh2[i]);
-//
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//            }
-//        }
+        //        WHEN("copy assigning a DataHandlerCPU through base pointers")
+        //        {
+        //            Eigen::VectorX<TestType> randVec{size};
+        //            randVec.setRandom();
+        //            const std::unique_ptr<const DataHandler<TestType>> dh2Ptr =
+        //                std::make_unique<const DataHandlerCPU<TestType>>(randVec);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const std::unique_ptr<DataHandler<TestType>> bigDh =
+        //                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
+        //                REQUIRE_THROWS(dhMap = bigDh);
+        //            }
+        //
+        //            const auto dhCopy = dh;
+        //            dhMap = dh2Ptr;
+        //            THEN("a deep copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 1);
+        //                REQUIRE(useCount(dhCopy) == 1);
+        //
+        //                for (index_t i = 0; i < size; i++)
+        //                    REQUIRE(dh[i] == (dh2Ptr)[i]);
+        //
+        //                REQUIRE(dhMap == dh2Ptr);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("copy assigning a partial DataHandlerMapCPU through base pointers")
+        //        {
+        //            const auto dhCopy = dh;
+        //            Eigen::VectorX<TestType> randVec{2 * size};
+        //            randVec.setRandom();
+        //            const DataHandlerCPU<TestType> dh2{randVec};
+        //            const auto dh2Map = dh2.getBlock(0, size);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const auto bigDh = dh2.getBlock(0, 2 * size);
+        //                REQUIRE_THROWS(dhMap = bigDh);
+        //            }
+        //
+        //            dhMap = dh2Map;
+        //            THEN("a deep copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 1);
+        //                REQUIRE(useCount(dhCopy) == 1);
+        //
+        //                for (index_t i = 0; i < size; i++)
+        //                    REQUIRE(dh[i] == dh2[i]);
+        //
+        //                REQUIRE(dhMap == dh2Map);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("copy assigning a full DataHandlerMapCPU (aka a view) through base pointers")
+        //        {
+        //            const auto dhCopy = dh;
+        //            Eigen::VectorX<TestType> randVec{size};
+        //            randVec.setRandom();
+        //            const DataHandlerCPU<TestType> dh2{randVec};
+        //            const auto dh2Map = dh2.getBlock(0, size);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const std::unique_ptr<DataHandler<TestType>> bigDh =
+        //                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
+        //                REQUIRE_THROWS(dhMap = bigDh.getBlock(0, 2 * size));
+        //            }
+        //
+        //            dhMap = dh2Map;
+        //            THEN("a deep copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 1);
+        //                REQUIRE(useCount(dhCopy) == 1);
+        //
+        //                for (index_t i = 0; i < size; i++)
+        //                    REQUIRE(dh[i] == dh2[i]);
+        //
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("\"move\" assigning a DataHandlerMapCPU through base pointers")
+        //        {
+        //            Eigen::VectorX<TestType> randVec{size};
+        //            randVec.setRandom();
+        //            const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
+        //                std::make_unique<DataHandlerCPU<TestType>>(randVec);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const std::unique_ptr<DataHandler<TestType>> bigDh =
+        //                    std::make_unique<DataHandlerCPU<TestType>>(2 * size);
+        //                REQUIRE_THROWS(dhMap = std::move(bigDh));
+        //            }
+        //
+        //            const auto dhCopy = dh;
+        //            dhMap = std::move(dh2Ptr);
+        //            THEN("a deep copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 1);
+        //                REQUIRE(useCount(dhCopy) == 1);
+        //
+        //                for (index_t i = 0; i < size; i++)
+        //                    REQUIRE(dh[i] == (dh2Ptr)[i]);
+        //
+        //                REQUIRE(dhMap == dh2Ptr);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("\"move\" assigning a partial DataHandlerMapCPU through base pointers")
+        //        {
+        //            const auto dhCopy = dh;
+        //            Eigen::VectorX<TestType> randVec{2 * size};
+        //            randVec.setRandom();
+        //            DataHandlerCPU<TestType> dh2{randVec};
+        //            const auto dh2Map = dh2.getBlock(0, size);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const auto bigDh = dh2.getBlock(0, 2 * size);
+        //                REQUIRE_THROWS(dhMap = std::move(bigDh));
+        //            }
+        //
+        //            dhMap = std::move(dh2Map);
+        //            THEN("a deep copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 1);
+        //                REQUIRE(useCount(dhCopy) == 1);
+        //
+        //                for (index_t i = 0; i < size; i++)
+        //                    REQUIRE(dh[i] == dh2[i]);
+        //
+        //                REQUIRE(dhMap == dh2Map);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("\"move\" assigning a full DataHandlerMapCPU (aka a view) through base
+        //        pointers")
+        //        {
+        //            const auto dhCopy = dh;
+        //            Eigen::VectorX<TestType> randVec{size};
+        //            randVec.setRandom();
+        //            DataHandlerCPU<TestType> dh2{randVec};
+        //            const auto dh2Map = dh2.getBlock(0, size);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const DataHandlerCPU<TestType> bigDh(2 * size);
+        //                REQUIRE_THROWS(dhMap = std::move(bigDh.getBlock(0, 2 * size)));
+        //            }
+        //
+        //            dhMap = std::move(dh2Map);
+        //            THEN("a deep copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 1);
+        //                REQUIRE(useCount(dhCopy) == 1);
+        //
+        //                for (index_t i = 0; i < size; i++)
+        //                    REQUIRE(dh[i] == dh2[i]);
+        //
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //            }
+        //        }
     }
 
     GIVEN("a full DataHandlerMapCPU (aka a view)")
@@ -355,169 +356,170 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
             }
         }
 
-//        WHEN("copy assigning a DataHandlerMapCPU through base pointers")
-//        {
-//            Eigen::VectorX<TestType> randVec{size};
-//            randVec.setRandom();
-//            const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
-//                std::make_unique<DataHandlerCPU<TestType>>(randVec);
-//
-//            THEN("sizes must match")
-//            {
-//                const DataHandlerCPU<TestType> bigDh(2 * size);
-//                REQUIRE_THROWS(dhMap = bigDh);
-//            }
-//
-//            dhMap = dh2Ptr;
-//            THEN("a shallow copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 2);
-//                REQUIRE(dh == dh2Ptr);
-//                REQUIRE(dhMap == dh2Ptr);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//                dh[0] = 1;
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//                REQUIRE(&dh[0] != &(dh2Ptr)[0]);
-//            }
-//        }
-//
-//        WHEN("copy assigning a partial DataHandlerMapCPU through base pointers")
-//        {
-//            const auto dhCopy = dh;
-//            Eigen::VectorX<TestType> randVec{2 * size};
-//            randVec.setRandom();
-//            const DataHandlerCPU<TestType> dh2{randVec};
-//            const auto dh2Map = dh2.getBlock(0, size);
-//
-//            THEN("sizes must match")
-//            {
-//                const auto bigDh = dh2.getBlock(0, 2 * size);
-//                REQUIRE_THROWS(dhMap = bigDh);
-//            }
-//
-//            dhMap = dh2Map;
-//            THEN("a deep copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 1);
-//                REQUIRE(useCount(dhCopy) == 1);
-//
-//                for (index_t i = 0; i < size; i++)
-//                    REQUIRE(dh[i] == dh2[i]);
-//
-//                REQUIRE(dhMap == dh2Map);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//            }
-//        }
-//
-//        WHEN("copy assigning a full DataHandlerMapCPU (aka a view) through base pointers")
-//        {
-//            Eigen::VectorX<TestType> randVec{size};
-//            randVec.setRandom();
-//            const DataHandlerCPU<TestType> dh2{randVec};
-//            const auto dh2Map = dh2.getBlock(0, size);
-//
-//            THEN("sizes must match")
-//            {
-//                const DataHandlerCPU<TestType> bigDh(2 * size);
-//                REQUIRE_THROWS(dhMap = bigDh.getBlock(0, 2 * size));
-//            }
-//
-//            dhMap = dh2Map;
-//            THEN("a shallow copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 2);
-//                REQUIRE(dh == dh2);
-//                REQUIRE(dhMap == dh2Map);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//                dh[0] = 1;
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//                REQUIRE(&dh[0] != &dh2[0]);
-//            }
-//        }
-//
-//        WHEN("\"move\" assigning a DataHandlerCPU through base pointers")
-//        {
-//            Eigen::VectorX<TestType> randVec{size};
-//            randVec.setRandom();
-//            const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
-//                std::make_unique<DataHandlerCPU<TestType>>(randVec);
-//
-//            THEN("sizes must match")
-//            {
-//                const DataHandlerCPU<TestType> bigDh(2 * size);
-//                REQUIRE_THROWS(dhMap = std::move(bigDh));
-//            }
-//
-//            dhMap = std::move(dh2Ptr);
-//            THEN("a shallow copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 2);
-//                REQUIRE(dh == dh2Ptr);
-//                REQUIRE(dhMap == dh2Ptr);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//                dh[0] = 1;
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//                REQUIRE(&dh[0] != &(dh2Ptr)[0]);
-//            }
-//        }
-//
-//        WHEN("\"move\" assigning a partial DataHandlerMapCPU through base pointers")
-//        {
-//            const auto dhCopy = dh;
-//            Eigen::VectorX<TestType> randVec{2 * size};
-//            randVec.setRandom();
-//            DataHandlerCPU<TestType> dh2{randVec};
-//            const auto dh2Map = dh2.getBlock(0, size);
-//
-//            THEN("sizes must match")
-//            {
-//                const auto bigDh = dh2.getBlock(0, 2 * size);
-//                REQUIRE_THROWS(dhMap = std::move(bigDh));
-//            }
-//
-//            dhMap = std::move(dh2Map);
-//            THEN("a deep copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 1);
-//                REQUIRE(useCount(dhCopy) == 1);
-//
-//                for (index_t i = 0; i < size; i++)
-//                    REQUIRE(dh[i] == dh2[i]);
-//
-//                REQUIRE(dhMap == dh2Map);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//            }
-//        }
-//
-//        WHEN("\"move\" assigning a full DataHandlerMapCPU (aka a view) through base pointers")
-//        {
-//            Eigen::VectorX<TestType> randVec{size};
-//            randVec.setRandom();
-//            DataHandlerCPU<TestType> dh2{randVec};
-//            const auto dh2Map = dh2.getBlock(0, size);
-//
-//            THEN("sizes must match")
-//            {
-//                const DataHandlerCPU<TestType> bigDh(2 * size);
-//                REQUIRE_THROWS(dhMap = std::move(bigDh.getBlock(0, 2 * size)));
-//            }
-//
-//            dhMap = std::move(dh2Map);
-//            THEN("a shallow copy is performed")
-//            {
-//                REQUIRE(useCount(dh) == 2);
-//                REQUIRE(dh == dh2);
-//                REQUIRE(dhMap == dh2Map);
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//                dh[0] = 1;
-//                REQUIRE(&(dhMap)[0] == &dh[0]);
-//                REQUIRE(&dh[0] != &dh2[0]);
-//            }
-//        }
+        //        WHEN("copy assigning a DataHandlerMapCPU through base pointers")
+        //        {
+        //            Eigen::VectorX<TestType> randVec{size};
+        //            randVec.setRandom();
+        //            const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
+        //                std::make_unique<DataHandlerCPU<TestType>>(randVec);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const DataHandlerCPU<TestType> bigDh(2 * size);
+        //                REQUIRE_THROWS(dhMap = bigDh);
+        //            }
+        //
+        //            dhMap = dh2Ptr;
+        //            THEN("a shallow copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 2);
+        //                REQUIRE(dh == dh2Ptr);
+        //                REQUIRE(dhMap == dh2Ptr);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //                dh[0] = 1;
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //                REQUIRE(&dh[0] != &(dh2Ptr)[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("copy assigning a partial DataHandlerMapCPU through base pointers")
+        //        {
+        //            const auto dhCopy = dh;
+        //            Eigen::VectorX<TestType> randVec{2 * size};
+        //            randVec.setRandom();
+        //            const DataHandlerCPU<TestType> dh2{randVec};
+        //            const auto dh2Map = dh2.getBlock(0, size);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const auto bigDh = dh2.getBlock(0, 2 * size);
+        //                REQUIRE_THROWS(dhMap = bigDh);
+        //            }
+        //
+        //            dhMap = dh2Map;
+        //            THEN("a deep copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 1);
+        //                REQUIRE(useCount(dhCopy) == 1);
+        //
+        //                for (index_t i = 0; i < size; i++)
+        //                    REQUIRE(dh[i] == dh2[i]);
+        //
+        //                REQUIRE(dhMap == dh2Map);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("copy assigning a full DataHandlerMapCPU (aka a view) through base pointers")
+        //        {
+        //            Eigen::VectorX<TestType> randVec{size};
+        //            randVec.setRandom();
+        //            const DataHandlerCPU<TestType> dh2{randVec};
+        //            const auto dh2Map = dh2.getBlock(0, size);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const DataHandlerCPU<TestType> bigDh(2 * size);
+        //                REQUIRE_THROWS(dhMap = bigDh.getBlock(0, 2 * size));
+        //            }
+        //
+        //            dhMap = dh2Map;
+        //            THEN("a shallow copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 2);
+        //                REQUIRE(dh == dh2);
+        //                REQUIRE(dhMap == dh2Map);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //                dh[0] = 1;
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //                REQUIRE(&dh[0] != &dh2[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("\"move\" assigning a DataHandlerCPU through base pointers")
+        //        {
+        //            Eigen::VectorX<TestType> randVec{size};
+        //            randVec.setRandom();
+        //            const std::unique_ptr<DataHandler<TestType>> dh2Ptr =
+        //                std::make_unique<DataHandlerCPU<TestType>>(randVec);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const DataHandlerCPU<TestType> bigDh(2 * size);
+        //                REQUIRE_THROWS(dhMap = std::move(bigDh));
+        //            }
+        //
+        //            dhMap = std::move(dh2Ptr);
+        //            THEN("a shallow copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 2);
+        //                REQUIRE(dh == dh2Ptr);
+        //                REQUIRE(dhMap == dh2Ptr);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //                dh[0] = 1;
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //                REQUIRE(&dh[0] != &(dh2Ptr)[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("\"move\" assigning a partial DataHandlerMapCPU through base pointers")
+        //        {
+        //            const auto dhCopy = dh;
+        //            Eigen::VectorX<TestType> randVec{2 * size};
+        //            randVec.setRandom();
+        //            DataHandlerCPU<TestType> dh2{randVec};
+        //            const auto dh2Map = dh2.getBlock(0, size);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const auto bigDh = dh2.getBlock(0, 2 * size);
+        //                REQUIRE_THROWS(dhMap = std::move(bigDh));
+        //            }
+        //
+        //            dhMap = std::move(dh2Map);
+        //            THEN("a deep copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 1);
+        //                REQUIRE(useCount(dhCopy) == 1);
+        //
+        //                for (index_t i = 0; i < size; i++)
+        //                    REQUIRE(dh[i] == dh2[i]);
+        //
+        //                REQUIRE(dhMap == dh2Map);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //            }
+        //        }
+        //
+        //        WHEN("\"move\" assigning a full DataHandlerMapCPU (aka a view) through base
+        //        pointers")
+        //        {
+        //            Eigen::VectorX<TestType> randVec{size};
+        //            randVec.setRandom();
+        //            DataHandlerCPU<TestType> dh2{randVec};
+        //            const auto dh2Map = dh2.getBlock(0, size);
+        //
+        //            THEN("sizes must match")
+        //            {
+        //                const DataHandlerCPU<TestType> bigDh(2 * size);
+        //                REQUIRE_THROWS(dhMap = std::move(bigDh.getBlock(0, 2 * size)));
+        //            }
+        //
+        //            dhMap = std::move(dh2Map);
+        //            THEN("a shallow copy is performed")
+        //            {
+        //                REQUIRE(useCount(dh) == 2);
+        //                REQUIRE(dh == dh2);
+        //                REQUIRE(dhMap == dh2Map);
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //                dh[0] = 1;
+        //                REQUIRE(&(dhMap)[0] == &dh[0]);
+        //                REQUIRE(&dh[0] != &dh2[0]);
+        //            }
+        //        }
     }
 }
 
-//TEMPLATE_TEST_CASE("Scenario: Cloning DataHandlerMapCPU", "", float, double, index_t)
+// TEMPLATE_TEST_CASE("Scenario: Cloning DataHandlerMapCPU", "", float, double, index_t)
 //{
 //    GIVEN("a full DataHandlerMapCPU (aka a view)")
 //    {
