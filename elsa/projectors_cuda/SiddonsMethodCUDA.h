@@ -2,7 +2,7 @@
 
 #include <cuda_runtime.h>
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "LinearOperator.h"
 #include "Geometry.h"
 #include "BoundingBox.h"
@@ -52,9 +52,12 @@ namespace elsa
                           const std::vector<Geometry>& geometryList);
 
         /// destructor
-        ~SiddonsMethodCUDA();
+        ~SiddonsMethodCUDA() override;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        SiddonsMethodCUDA(const SiddonsMethodCUDA<data_t>&) = default;
+
         /// apply Siddon's method (i.e. forward projection)
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
@@ -76,7 +79,8 @@ namespace elsa
         std::vector<Geometry> _geometryList;
 
         /// threads per block used in the kernel execution configuration
-        const int _threadsPerBlock = TraverseSiddonsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
+        static const unsigned int THREADS_PER_BLOCK =
+            TraverseSiddonsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
 
         /// inverse of of projection matrices; stored column-wise on GPU
         cudaPitchedPtr _projInvMatrices;

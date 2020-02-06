@@ -59,6 +59,9 @@ namespace elsa
          */
         explicit Quadric(const DataDescriptor& domainDescriptor);
 
+        /// make copy constructor deletion explicit
+        Quadric(const Quadric<data_t>&) = delete;
+
         /// default destructor
         ~Quadric() override = default;
 

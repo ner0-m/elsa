@@ -36,7 +36,7 @@ namespace elsa
          *
          * Please note: the sinogram size/spacing will match the volume size/spacing.
          */
-        static std::pair<std::vector<Geometry>, DataDescriptor>
+        static std::pair<std::vector<Geometry>, std::unique_ptr<DataDescriptor>>
             createTrajectory(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
                              index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector);
     };

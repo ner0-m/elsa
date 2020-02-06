@@ -11,6 +11,8 @@
 
 using namespace elsa;
 
+static constexpr auto pi_d = pi<real_t>;
+
 SCENARIO("Drawing a rotated filled ellipse in 2d")
 {
     GIVEN("a volume and example ellipse parameters")
@@ -28,8 +30,8 @@ SCENARIO("Drawing a rotated filled ellipse in 2d")
             THEN("the ellipse mostly matches the efficient one")
             {
                 // check a few rotation angles
-                for (real_t angleDeg : {0, 18, 30, 45, 60, 72, 90}) {
-                    real_t angleRad = angleDeg * pi / 180.0;
+                for (real_t angleDeg : {0.0f, 18.0f, 30.0f, 45.0f, 60.0f, 72.0f, 90.0f}) {
+                    real_t angleRad = angleDeg * pi_d / 180.0f;
 
                     dc = 0;
                     EllipseGenerator<real_t>::drawFilledEllipse2d(dc, 1.0, center, sizes, angleDeg);
@@ -38,15 +40,17 @@ SCENARIO("Drawing a rotated filled ellipse in 2d")
 
                     for (index_t x = 0; x < numCoeff[0]; ++x) {
                         for (index_t y = 0; y < numCoeff[1]; ++y) {
-                            real_t aPart = (x - center[0]) * std::cos(angleRad)
-                                           + (y - center[1]) * std::sin(angleRad);
+                            real_t aPart =
+                                static_cast<real_t>(x - center[0]) * std::cos(angleRad)
+                                + static_cast<real_t>(y - center[1]) * std::sin(angleRad);
                             aPart *= aPart;
-                            aPart /= sizes[0] * sizes[0];
+                            aPart /= static_cast<real_t>(sizes[0] * sizes[0]);
 
-                            real_t bPart = -(x - center[0]) * std::sin(angleRad)
-                                           + (y - center[1]) * std::cos(angleRad);
+                            real_t bPart =
+                                -static_cast<real_t>(x - center[0]) * std::sin(angleRad)
+                                + static_cast<real_t>(y - center[1]) * std::cos(angleRad);
                             bPart *= bPart;
-                            bPart /= sizes[1] * sizes[1];
+                            bPart /= static_cast<real_t>(sizes[1] * sizes[1]);
 
                             IndexVector_t coord(2);
                             coord[0] = x;
@@ -61,8 +65,9 @@ SCENARIO("Drawing a rotated filled ellipse in 2d")
                             }
                         }
                     }
-                    REQUIRE((static_cast<real_t>(wrongPixelCounter) / sizes.prod())
-                            < 0.11); // 11% isn't great... :(
+                    REQUIRE(
+                        (static_cast<real_t>(wrongPixelCounter) / static_cast<real_t>(sizes.prod()))
+                        < 0.11); // 11% isn't great... :(
                 }
             }
         }

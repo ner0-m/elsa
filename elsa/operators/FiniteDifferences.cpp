@@ -16,8 +16,11 @@ namespace elsa
                                                  const BooleanVector_t& activeDims, DiffType type)
         : LinearOperator<data_t>(domainDescriptor,
                                  domainDescriptor), // setting range in body of constructor
+          _type{type},
           _activeDims{activeDims},
-          _type{type}
+          _coordDiff{activeDims.size()},
+          _coordDelta{activeDims.size()},
+          _dimCounter{activeDims.size()}
     {
         // build the range descriptor of appropriate size
         IndexVector_t coefficients(domainDescriptor.getNumberOfDimensions() + 1);
@@ -41,14 +44,14 @@ namespace elsa
         index_t deltaTmp = 1;
         int count = -1;
         for (index_t ic = 0; ic < this->getDomainDescriptor().getNumberOfDimensions(); ++ic) {
-            _coordDiff.push_back(numberOfCoefficients.head(ic).prod());
+            _coordDiff[ic] = numberOfCoefficients.head(ic).prod();
 
             deltaTmp *= numberOfCoefficients[ic];
-            _coordDelta.push_back(deltaTmp);
+            _coordDelta[ic] = deltaTmp;
 
             if (_activeDims[ic])
                 ++count;
-            _dimCounter.push_back(count);
+            _dimCounter[ic] = count;
         }
     }
 
@@ -109,7 +112,7 @@ namespace elsa
             - IndexVector_t::Ones(this->getRangeDescriptor().getNumberOfDimensions());
 
 #pragma omp parallel
-        for (int currDim = 0; currDim < numDim; ++currDim) {
+        for (long currDim = 0; currDim < numDim; ++currDim) {
             if (!_activeDims[currDim])
                 continue;
 
@@ -159,7 +162,7 @@ namespace elsa
         IndexVector_t decrementedCoefficients = numberOfCoefficients - IndexVector_t::Ones(numDim);
 
 #pragma omp parallel
-        for (index_t currDim = 0; currDim < numDim; ++currDim) {
+        for (long currDim = 0; currDim < numDim; ++currDim) {
             if (!_activeDims[currDim])
                 continue;
 

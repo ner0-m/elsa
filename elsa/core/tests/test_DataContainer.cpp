@@ -10,12 +10,7 @@
 
 #include <catch2/catch.hpp>
 #include "DataContainer.h"
-
-template <typename data_t>
-int elsa::useCount(const DataContainer<data_t>& dc)
-{
-    return dc._dataHandler.use_count();
-}
+#include "IdenticalBlocksDescriptor.h"
 
 using namespace elsa;
 using namespace Catch::literals; // to enable 0.0_a approximate floats
@@ -156,12 +151,12 @@ SCENARIO("Element-wise access of DataContainers")
                 REQUIRE(dc(coord) == 0.0_a);
                 REQUIRE(dc(17, 4) == 0.0_a);
 
-                dc[index] = 2.2;
+                dc[index] = 2.2f;
                 REQUIRE(dc[index] == 2.2_a);
                 REQUIRE(dc(coord) == 2.2_a);
                 REQUIRE(dc(17, 4) == 2.2_a);
 
-                dc(coord) = 3.3;
+                dc(coord) = 3.3f;
                 REQUIRE(dc[index] == 3.3_a);
                 REQUIRE(dc(coord) == 3.3_a);
                 REQUIRE(dc(17, 4) == 3.3_a);
@@ -220,20 +215,20 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the element-wise unary operations work as expected")
             {
-                auto dcSquare = dc.square();
+                DataContainer dcSquare = square(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dcSquare[i] == Approx(randVec(i) * randVec(i)));
 
-                auto dcSqrt = dc.sqrt();
+                DataContainer dcSqrt = sqrt(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     if (randVec(i) >= 0)
                         REQUIRE(dcSqrt[i] == Approx(std::sqrt(randVec(i))));
 
-                auto dcExp = dc.exp();
+                DataContainer dcExp = exp(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dcExp[i] == Approx(std::exp(randVec(i))));
 
-                auto dcLog = dc.log();
+                DataContainer dcLog = log(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     if (randVec(i) > 0)
                         REQUIRE(dcLog[i] == Approx(std::log(randVec(i))));
@@ -241,7 +236,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place addition of a scalar work as expected")
             {
-                float scalar = 923.41;
+                float scalar = 923.41f;
                 dc += scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) + scalar);
@@ -249,7 +244,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place subtraction of a scalar work as expected")
             {
-                float scalar = 74.165;
+                float scalar = 74.165f;
                 dc -= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) - scalar);
@@ -257,7 +252,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place multiplication with a scalar work as expected")
             {
-                float scalar = 12.69;
+                float scalar = 12.69f;
                 dc *= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) * scalar);
@@ -265,7 +260,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place division by a scalar work as expected")
             {
-                float scalar = 82.61;
+                float scalar = 82.61f;
                 dc /= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) / scalar);
@@ -273,7 +268,7 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the element-wise assignment of a scalar works as expected")
             {
-                float scalar = 123.45;
+                float scalar = 123.45f;
                 dc = scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == scalar);
@@ -346,166 +341,173 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments")
         {
             auto resultPlus = dc + dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultPlus[i] == dc[i] + dc2[i]);
+                REQUIRE((resultPlus.eval())[i] == dc[i] + dc2[i]);
 
             auto resultMinus = dc - dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMinus[i] == dc[i] - dc2[i]);
+                REQUIRE((resultMinus.eval())[i] == dc[i] - dc2[i]);
 
             auto resultMult = dc * dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMult[i] == dc[i] * dc2[i]);
+                REQUIRE(resultMult.eval()[i] == dc[i] * dc2[i]);
 
             auto resultDiv = dc / dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 if (dc2[i] != 0)
-                    REQUIRE(resultDiv[i] == dc[i] / dc2[i]);
+                    REQUIRE(resultDiv.eval()[i] == Approx(dc[i] / dc2[i]));
         }
 
         THEN("the operations with a scalar work as expected")
         {
-            float scalar = 4.92;
+            float scalar = 4.92f;
 
             auto resultScalarPlus = scalar + dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarPlus[i] == scalar + dc[i]);
+                REQUIRE(resultScalarPlus.eval()[i] == scalar + dc[i]);
 
             auto resultPlusScalar = dc + scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultPlusScalar[i] == dc[i] + scalar);
+                REQUIRE(resultPlusScalar.eval()[i] == dc[i] + scalar);
 
             auto resultScalarMinus = scalar - dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarMinus[i] == scalar - dc[i]);
+                REQUIRE(resultScalarMinus.eval()[i] == scalar - dc[i]);
 
             auto resultMinusScalar = dc - scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMinusScalar[i] == dc[i] - scalar);
+                REQUIRE(resultMinusScalar.eval()[i] == dc[i] - scalar);
 
             auto resultScalarMult = scalar * dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarMult[i] == scalar * dc[i]);
+                REQUIRE(resultScalarMult.eval()[i] == scalar * dc[i]);
 
             auto resultMultScalar = dc * scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMultScalar[i] == dc[i] * scalar);
+                REQUIRE(resultMultScalar.eval()[i] == dc[i] * scalar);
 
             auto resultScalarDiv = scalar / dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 if (dc[i] != 0)
-                    REQUIRE(resultScalarDiv[i] == scalar / dc[i]);
+                    REQUIRE(resultScalarDiv.eval()[i] == scalar / dc[i]);
 
             auto resultDivScalar = dc / scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultDivScalar[i] == dc[i] / scalar);
+                REQUIRE(resultDivScalar.eval()[i] == dc[i] / scalar);
         }
     }
 }
 
-SCENARIO("Testing the copy-on-write mechanism")
+SCENARIO("Testing creation of Maps through DataContainer")
 {
-    GIVEN("A random DataContainer")
+    GIVEN("a non-blocked container")
     {
-
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
         DataDescriptor desc(numCoeff);
+
         DataContainer dc(desc);
-        Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
+        const DataContainer constDc(desc);
 
-        for (index_t i = 0; i < dc.getSize(); ++i) {
-            dc[i] = randVec(i);
-        }
-
-        WHEN("const manipulating a copy constructed shallow copy")
+        WHEN("trying to reference a block")
         {
-            DataContainer dc2(dc);
-            dc + dc;
-            dc.sum();
-            dc.square();
-            dc.log();
-            dc.dot(dc);
-            dc.l1Norm();
-
-            THEN("the data is the same")
+            THEN("an exception occurs")
             {
-                REQUIRE(dc2 == dc);
-                REQUIRE(useCount(dc) == 2);
+                REQUIRE_THROWS(dc.getBlock(0));
+                REQUIRE_THROWS(constDc.getBlock(0));
             }
         }
 
-        WHEN("non-const manipulating a copy constructed shallow copy")
+        WHEN("creating a view")
         {
-            DataContainer dc2(dc);
-            REQUIRE(useCount(dc) == 2);
-            REQUIRE(useCount(dc2) == 2);
+            IndexVector_t numCoeff(1);
+            numCoeff << desc.getNumberOfCoefficients();
+            DataDescriptor linearDesc(numCoeff);
+            auto linearDc = dc.viewAs(linearDesc);
+            auto linearConstDc = constDc.viewAs(linearDesc);
 
-            THEN("copy-on-write is invoked")
+            THEN("view has the correct descriptor and data")
             {
-                dc2 += 2;
-                REQUIRE(dc2 != dc);
-                REQUIRE(useCount(dc2) == 1);
-                REQUIRE(useCount(dc) == 1);
+                REQUIRE(linearDesc == linearDc.getDataDescriptor());
+                REQUIRE(&linearDc[0] == &dc[0]);
+
+                REQUIRE(linearDesc == linearConstDc.getDataDescriptor());
+                REQUIRE(&linearConstDc[0] == &constDc[0]);
+
+                AND_THEN("view is not a shallow copy")
+                {
+                    const auto dcCopy = dc;
+                    const auto constDcCopy = constDc;
+
+                    linearDc[0] = 1;
+                    REQUIRE(&linearDc[0] == &dc[0]);
+                    REQUIRE(&linearDc[0] != &dcCopy[0]);
+
+                    linearConstDc[0] = 1;
+                    REQUIRE(&linearConstDc[0] == &constDc[0]);
+                    REQUIRE(&linearConstDc[0] != &constDcCopy[0]);
+                }
             }
+        }
+    }
 
-            THEN("copy-on-write is invoked")
-            {
-                dc2 += dc;
-                REQUIRE(dc2 != dc);
-                REQUIRE(useCount(dc2) == 1);
-                REQUIRE(useCount(dc) == 1);
-            }
+    GIVEN("a blocked container")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 52, 29;
+        DataDescriptor desc(numCoeff);
+        index_t numBlocks = 7;
+        IdenticalBlocksDescriptor blockDesc(numBlocks, desc);
 
-            THEN("copy-on-write is invoked")
-            {
-                dc2 -= 2;
-                REQUIRE(dc2 != dc);
-            }
+        DataContainer dc(blockDesc);
+        const DataContainer constDc(blockDesc);
 
-            THEN("copy-on-write is invoked")
+        WHEN("referencing a block")
+        {
+            THEN("block has the correct descriptor and data")
             {
-                dc2 -= dc;
-                REQUIRE(dc2 != dc);
-            }
+                for (index_t i = 0; i < numBlocks; i++) {
+                    auto dcBlock = dc.getBlock(i);
+                    const auto constDcBlock = constDc.getBlock(i);
 
-            THEN("copy-on-write is invoked")
-            {
-                dc2 /= 2;
-                REQUIRE(dc2 != dc);
-            }
+                    REQUIRE(dcBlock.getDataDescriptor() == blockDesc.getDescriptorOfBlock(i));
+                    REQUIRE(&dcBlock[0] == &dc[0] + blockDesc.getOffsetOfBlock(i));
 
-            THEN("copy-on-write is invoked")
-            {
-                dc2 /= dc;
-                REQUIRE(dc2 != dc);
-            }
-
-            THEN("copy-on-write is invoked")
-            {
-                dc2 *= 2;
-                REQUIRE(dc2 != dc);
-            }
-
-            THEN("copy-on-write is invoked")
-            {
-                dc2 *= dc;
-                REQUIRE(dc2 != dc);
-            }
-
-            THEN("copy-on-write is invoked")
-            {
-                dc[0] += 2;
-                REQUIRE(dc2 != dc);
+                    REQUIRE(constDcBlock.getDataDescriptor() == blockDesc.getDescriptorOfBlock(i));
+                    REQUIRE(&constDcBlock[0] == &constDc[0] + blockDesc.getOffsetOfBlock(i));
+                }
             }
         }
 
-        WHEN("manipulating a non-shallow-copied container")
+        WHEN("creating a view")
         {
-            for (index_t i = 0; i < dc.getSize(); ++i) {
-                dc[i] += 2;
-            }
+            IndexVector_t numCoeff(1);
+            numCoeff << blockDesc.getNumberOfCoefficients();
+            DataDescriptor linearDesc(numCoeff);
+            auto linearDc = dc.viewAs(linearDesc);
+            auto linearConstDc = constDc.viewAs(linearDesc);
 
-            THEN("copy-on-write should not be invoked") { REQUIRE(useCount(dc) == 1); }
+            THEN("view has the correct descriptor and data")
+            {
+                REQUIRE(linearDesc == linearDc.getDataDescriptor());
+                REQUIRE(&linearDc[0] == &dc[0]);
+
+                REQUIRE(linearDesc == linearConstDc.getDataDescriptor());
+                REQUIRE(&linearConstDc[0] == &constDc[0]);
+
+                AND_THEN("view is not a shallow copy")
+                {
+                    const auto dcCopy = dc;
+                    const auto constDcCopy = constDc;
+
+                    linearDc[0] = 1;
+                    REQUIRE(&linearDc[0] == &dc[0]);
+                    REQUIRE(&linearDc[0] != &dcCopy[0]);
+
+                    linearConstDc[0] = 1;
+                    REQUIRE(&linearConstDc[0] == &constDc[0]);
+                    REQUIRE(&linearConstDc[0] != &constDcCopy[0]);
+                }
+            }
         }
     }
 }

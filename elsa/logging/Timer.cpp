@@ -19,6 +19,6 @@ namespace elsa
 
     // ------------------------------------------
     // explicit template instantiation
-    template class Timer<std::chrono::milliseconds, std::chrono::system_clock>;
+    template class Timer<std::chrono::milliseconds, std::chrono::steady_clock>;
 
 } // namespace elsa

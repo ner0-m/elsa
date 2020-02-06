@@ -19,13 +19,14 @@ endif ()
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
 option(ELSA_CREATE_JUNIT_REPORTS "Enable creating JUnit style reports when running tests" ON)
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
+option(ELSA_BENCHMARKS "Enable elsa benchmark test cases" OFF)
 
 option(GIT_SUBMODULE "Enable updating the submodules during build" ${ELSA_MASTER_PROJECT})
 option(ELSA_INSTALL "Enable generating the install targets for make install" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 
 option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
-option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when building (-Wall -Wextra)" OFF)
+option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when building (-Wall -Wextra)" ON)
 
 option(ELSA_SANITIZE_THREAD "Build elsa with thread sanitizers (TSAN)" OFF)
 option(ELSA_SANITIZE_ADDRESS "Build elsa with address and undefined-behavior sanitizers (ASAN and UBSAN)" OFF)
@@ -40,9 +41,6 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 # set default built type to "Release" (if no other specified)
 set(DEFAULT_BUILD_TYPE "Release")
 include(SetDefaultBuildType)
-
-# set where to install the exports/targets
-set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake)
 
 
 # ------------ dependencies ------------
@@ -59,12 +57,22 @@ if(ELSA_MASTER_PROJECT)
     message(STATUS "Using eigen3 submodule at ${EIGEN3_INCLUDE_DIR}")
 
     # setup spdlog Library
-    # set(Spdlog_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/spdlog")
+    set(Spdlog_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/spdlog")
     find_package(Spdlog REQUIRED)
     message(STATUS "Using spdlog submodule at ${Spdlog_INCLUDE_DIR}")
+
+    # setup Dnnl library
+    find_package(Dnnl)
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
 endif()
+
+
+# set where to install the exports/targets
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
+
 
 # include the InstallElsaModule function
 include(InstallElsaModule)
@@ -83,6 +91,11 @@ if(ELSA_TESTING)
 
     enable_testing()
     add_subdirectory(thirdparty/Catch2)
+
+    add_custom_target(tests
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Build and run all the tests.")
 
     # add the CMake modules for automatic test discovery
     set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/thirdparty/Catch2/contrib" ${CMAKE_MODULE_PATH})

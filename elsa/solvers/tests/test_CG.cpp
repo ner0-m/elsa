@@ -57,8 +57,10 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
                 {
                     auto solution = solver.solve(dd.getNumberOfCoefficients());
 
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+
                     // should have converged for the given number of iterations
-                    REQUIRE((scalingOp.apply(solution) - dcB).squaredL2Norm()
+                    REQUIRE((resultsDifference).squaredL2Norm()
                             <= epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
@@ -81,8 +83,10 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
                     // a perfect preconditioner should allow for convergence in a single step
                     auto solution = solver.solve(1);
 
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+
                     // should have converged for the given number of iterations
-                    REQUIRE((scalingOp.apply(solution) - dcB).squaredL2Norm()
+                    REQUIRE((resultsDifference).squaredL2Norm()
                             <= epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
@@ -110,7 +114,7 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
         bVec = bVec.cwiseProduct(bVec);
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
-        data_t lambda = 0.1;
+        auto lambda = static_cast<data_t>(0.1);
         Scaling<data_t> lambdaOp{dd, lambda};
 
         QuadricProblem<data_t> prob{scalingOp + lambdaOp, dcB, true};
@@ -132,8 +136,11 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
                 {
                     auto solution = solver.solve(dd.getNumberOfCoefficients());
 
+                    DataContainer<data_t> resultsDifference =
+                        (scalingOp + lambdaOp).apply(solution) - dcB;
+
                     // should have converged for the given number of iterations
-                    REQUIRE(((scalingOp + lambdaOp).apply(solution) - dcB).squaredL2Norm()
+                    REQUIRE(resultsDifference.squaredL2Norm()
                             <= epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
@@ -156,8 +163,11 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
                     // a perfect preconditioner should allow for convergence in a single step
                     auto solution = solver.solve(1);
 
+                    DataContainer<data_t> resultsDifference =
+                        (scalingOp + lambdaOp).apply(solution) - dcB;
+
                     // should have converged for the given number of iterations
-                    REQUIRE(((scalingOp + lambdaOp).apply(solution) - dcB).squaredL2Norm()
+                    REQUIRE(resultsDifference.squaredL2Norm()
                             <= epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }

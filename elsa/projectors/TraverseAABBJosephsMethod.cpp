@@ -16,7 +16,7 @@ namespace elsa
         if (!isInBoundingBox())
             return;
 
-        selectClosestVoxel(rt.direction(), _entryPoint);
+        selectClosestVoxel(_entryPoint);
 
         // exit direction stored in _exitDirection
         (_exitPoint - (_aabb._max - _aabb._min) / 2).cwiseAbs().maxCoeff(&_exitDirection);
@@ -44,7 +44,7 @@ namespace elsa
             //*0.5 because a change of 1 spacing corresponds to a change of
             // fractionals from -0.5 to 0.5  0.5 or -0.5 = voxel border is still
             // ok
-            if (fabs(_fractionals(i)) > 0.5) {
+            if (std::abs(_fractionals(i)) > 0.5) {
                 _fractionals(i) -= _stepDirection(i);
                 _currentPos(i) += _stepDirection(i);
                 // --> is the traverse algorithm still in the bounding box?
@@ -56,7 +56,7 @@ namespace elsa
                 if (_isInAABB) {
                     // now ignore main direction
                     _nextStep.cwiseAbs().maxCoeff(&_ignoreDirection);
-                    _nextStep /= fabs(_nextStep(_ignoreDirection));
+                    _nextStep /= std::abs(_nextStep(_ignoreDirection));
                     _fractionals(_ignoreDirection) = 0;
                     _intersectionLength = _nextStep.norm();
                     _stage = INTERIOR;
@@ -76,7 +76,7 @@ namespace elsa
                     _ignoreDirection = _exitDirection;
                     // move to last sampling point
                     RealVector_t currentPosition = _exitPoint - _intersectionLength * _nextStep / 2;
-                    selectClosestVoxel(_nextStep, currentPosition);
+                    selectClosestVoxel(currentPosition);
                     initFractionals(currentPosition);
                     _isInAABB = true;
                     _stage = LAST;
@@ -96,7 +96,8 @@ namespace elsa
     void TraverseAABBJosephsMethod::initFractionals(const RealVector_t& currentPosition)
     {
         for (int i = 0; i < _aabb._dim; i++)
-            _fractionals(i) = (fabs(currentPosition(i)) - _currentPos(i) - 0.5);
+            _fractionals(i) =
+                static_cast<real_t>(std::abs(currentPosition(i)) - _currentPos(i) - 0.5);
     }
 
     void TraverseAABBJosephsMethod::moveToFirstSamplingPoint(const RealVector_t& rd,
@@ -106,11 +107,11 @@ namespace elsa
         rd.cwiseAbs().maxCoeff(&_ignoreDirection);
 
         // find distance to next plane orthogonal to main direction
-        int nextBoundary = _currentPos(_ignoreDirection);
+        auto nextBoundary = static_cast<int>(_currentPos(_ignoreDirection));
         if (_stepDirection(_ignoreDirection) > 0)
             nextBoundary += 1;
-        real_t distToBoundary =
-            (nextBoundary - _entryPoint[_ignoreDirection]) / rd[_ignoreDirection];
+        real_t distToBoundary = (static_cast<real_t>(nextBoundary) - _entryPoint[_ignoreDirection])
+                                / rd[_ignoreDirection];
 
         // intialize _nextStep as the step for interior pixels
         _nextStep(_ignoreDirection) = _stepDirection(_ignoreDirection);
@@ -136,7 +137,7 @@ namespace elsa
             _nextStep = _nextStep / 2 + _nextStep * (distToBoundary / (2 * _nextStep.norm()));
             _intersectionLength = distToBoundary;
         }
-        selectClosestVoxel(rd, currentPosition);
+        selectClosestVoxel(currentPosition);
 
         // init fractionals
         initFractionals(currentPosition);
@@ -147,12 +148,11 @@ namespace elsa
         return _currentPos(index) < _aabb._max(index) && _currentPos(index) >= _aabb._min(index);
     }
 
-    void TraverseAABBJosephsMethod::selectClosestVoxel(const RealVector_t& rd,
-                                                       const RealVector_t& currentPosition)
+    void TraverseAABBJosephsMethod::selectClosestVoxel(const RealVector_t& currentPosition)
     {
         RealVector_t lowerCorner = currentPosition.array().floor();
         lowerCorner =
-            ((lowerCorner.array() == currentPosition.array()) && (_stepDirection.array() < 0.0)
+            (((lowerCorner.array() == currentPosition.array()) && (_stepDirection.array() < 0.0))
              || currentPosition.array() == _aabb._max.array())
                 .select(lowerCorner.array() - 1, lowerCorner);
 
@@ -180,7 +180,7 @@ namespace elsa
 
     real_t TraverseAABBJosephsMethod::calculateAABBIntersections(const Ray& ray)
     {
-        real_t tmin, tmax;
+        real_t tmin;
 
         // --> calculate intersection parameter and if the volume is hit
         auto opt = Intersection::withRay(_aabb, ray);

@@ -9,15 +9,19 @@ namespace elsa
 {
     template <typename data_t>
     void EllipseGenerator<data_t>::drawFilledEllipse2d(DataContainer<data_t>& dc, data_t amplitude,
-                                                       Vec2 center, Vec2 sizes, data_t angle)
+                                                       Vec2 const& center, Vec2 sizes, data_t angle)
     {
         // sanity check
         if (dc.getDataDescriptor().getNumberOfDimensions() != 2)
             throw std::invalid_argument(
                 "EllipseGenerator::drawFilledEllipse2d: can only work on 2d DataContainers");
 
+        // don't draw anything if size is 0
+        if (sizes[0] == 0 && sizes[1] == 0)
+            return;
+
         // convert to radians
-        auto angleRad = angle * pi / 180.0;
+        auto angleRad = angle * pi<double> / 180.0f;
 
         // special case: circle or no rotation
         if (sizes[0] == sizes[1] || std::fmod(angle, 180.0) == 0) {
@@ -26,13 +30,15 @@ namespace elsa
         }
 
         // convert rotation by angle into shearing
-        data_t theta = std::atan2(-sizes[1] * std::tan(angleRad), sizes[0]);
+        auto theta = std::atan2(static_cast<real_t>(-sizes[1]) * std::tan(angleRad), sizes[0]);
 
         Vec2 shear;
-        shear[0] = std::floor((sizes[0] * std::cos(theta) * std::cos(angleRad))
-                              - (sizes[1] * std::sin(theta) * std::sin(angleRad)));
-        shear[1] = std::floor((sizes[0] * std::cos(theta) * std::sin(angleRad))
-                              + (sizes[1] * std::sin(theta) * std::cos(angleRad)));
+        shear[0] = static_cast<index_t>(
+            std::floor((static_cast<real_t>(sizes[0]) * std::cos(theta) * std::cos(angleRad))
+                       - (static_cast<real_t>(sizes[1]) * std::sin(theta) * std::sin(angleRad))));
+        shear[1] = static_cast<index_t>(
+            std::floor((static_cast<real_t>(sizes[0]) * std::cos(theta) * std::sin(angleRad))
+                       + (static_cast<real_t>(sizes[1]) * std::sin(theta) * std::cos(angleRad))));
 
         Vec2 shearedSizes;
         shearedSizes[0] = std::abs(shear[0]);
@@ -55,9 +61,9 @@ namespace elsa
         bool hasRotation = (std::abs(phi) + std::abs(theta) + std::abs(psi)) > 0;
 
         // convert to radians
-        auto phiRad = phi * pi / 180.0;
-        auto thetaRad = theta * pi / 180.0;
-        auto psiRad = psi * pi / 180.0;
+        auto phiRad = phi * pi<double> / 180.0;
+        auto thetaRad = theta * pi<double> / 180.0;
+        auto psiRad = psi * pi<double> / 180.0;
 
         auto cosPhi = std::cos(phiRad);
         auto sinPhi = std::sin(phiRad);
@@ -67,18 +73,18 @@ namespace elsa
         auto sinPsi = std::sin(psiRad);
 
         // setup ZXZ Euler rotation matrix
-        Eigen::Matrix<data_t, 3, 3> R;
-        R(0, 0) = cosPhi * cosPsi - cosTheta * sinPhi * sinPsi;
-        R(0, 1) = cosPsi * sinPhi + cosPhi * cosTheta * sinPsi;
-        R(0, 2) = sinTheta * sinPsi;
+        Eigen::Matrix<data_t, 3, 3> rot;
+        rot(0, 0) = static_cast<real_t>(cosPhi * cosPsi - cosTheta * sinPhi * sinPsi);
+        rot(0, 1) = static_cast<real_t>(cosPsi * sinPhi + cosPhi * cosTheta * sinPsi);
+        rot(0, 2) = static_cast<real_t>(sinTheta * sinPsi);
 
-        R(1, 0) = -cosPhi * sinPsi - cosTheta * cosPsi * sinPhi;
-        R(1, 1) = cosPhi * cosTheta * cosPsi - sinPhi * sinPsi;
-        R(1, 2) = cosPsi * sinTheta;
+        rot(1, 0) = static_cast<real_t>(-cosPhi * sinPsi - cosTheta * cosPsi * sinPhi);
+        rot(1, 1) = static_cast<real_t>(cosPhi * cosTheta * cosPsi - sinPhi * sinPsi);
+        rot(1, 2) = static_cast<real_t>(cosPsi * sinTheta);
 
-        R(2, 0) = sinPhi * sinTheta;
-        R(2, 1) = -cosPhi * sinTheta;
-        R(2, 2) = cosTheta;
+        rot(2, 0) = static_cast<real_t>(sinPhi * sinTheta);
+        rot(2, 1) = static_cast<real_t>(-cosPhi * sinTheta);
+        rot(2, 2) = static_cast<real_t>(cosTheta);
 
         // enables safe early abort
         index_t maxSize = sizes.maxCoeff();
@@ -116,14 +122,23 @@ namespace elsa
                     index_t zc = z - center[2];
 
                     // check ellipsoid equation
-                    data_t aPart = (hasRotation) ? xc * R(0, 0) + yc * R(0, 1) + zc * R(0, 2) : xc;
-                    aPart *= aPart / asq;
+                    data_t aPart = (hasRotation) ? static_cast<data_t>(xc) * rot(0, 0)
+                                                       + static_cast<data_t>(yc) * rot(0, 1)
+                                                       + static_cast<data_t>(zc) * rot(0, 2)
+                                                 : static_cast<data_t>(xc);
+                    aPart *= aPart / static_cast<data_t>(asq);
 
-                    data_t bPart = (hasRotation) ? xc * R(1, 0) + yc * R(1, 1) + zc * R(1, 2) : yc;
-                    bPart *= bPart / bsq;
+                    data_t bPart = (hasRotation) ? static_cast<data_t>(xc) * rot(1, 0)
+                                                       + static_cast<data_t>(yc) * rot(1, 1)
+                                                       + static_cast<data_t>(zc) * rot(1, 2)
+                                                 : static_cast<data_t>(yc);
+                    bPart *= bPart / static_cast<data_t>(bsq);
 
-                    data_t cPart = (hasRotation) ? xc * R(2, 0) + yc * R(2, 1) + zc * R(2, 2) : zc;
-                    cPart *= cPart / csq;
+                    data_t cPart = (hasRotation) ? static_cast<data_t>(xc) * rot(2, 0)
+                                                       + static_cast<data_t>(yc) * rot(2, 1)
+                                                       + static_cast<data_t>(zc) * rot(2, 2)
+                                                 : static_cast<data_t>(zc);
+                    cPart *= cPart / static_cast<data_t>(csq);
 
                     if (aPart + bPart + cPart <= 1.0)
                         dc(idx) += amplitude;
@@ -134,15 +149,15 @@ namespace elsa
 
     template <typename data_t>
     void EllipseGenerator<data_t>::drawShearedFilledEllipse2d(DataContainer<data_t>& dc,
-                                                              data_t amplitude, Vec2 center,
-                                                              Vec2 sizes, Vec2 shear)
+                                                              data_t amplitude, Vec2 const& center,
+                                                              Vec2 sizes, Vec2 const& shear)
     {
         auto twoSizeXSquared = 2 * sizes[0] * sizes[0];
         auto twoSizeYSquared = 2 * sizes[1] * sizes[1];
 
         // setup first ellipse part where major axis of "advance" is the y axis
         auto x = sizes[0];
-        auto y = 0;
+        index_t y = 0;
 
         auto xChange = sizes[1] * sizes[1] * (1 - 2 * sizes[0]);
         auto yChange = sizes[0] * sizes[0];

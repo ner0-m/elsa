@@ -5,9 +5,11 @@
 
 namespace elsa
 {
-    std::pair<std::vector<Geometry>, DataDescriptor> CircleTrajectoryGenerator::createTrajectory(
-        index_t numberOfPoses, const DataDescriptor& volumeDescriptor, index_t arcDegrees,
-        real_t sourceToCenter, real_t centerToDetector)
+    std::pair<std::vector<Geometry>, std::unique_ptr<DataDescriptor>>
+        CircleTrajectoryGenerator::createTrajectory(index_t numberOfPoses,
+                                                    const DataDescriptor& volumeDescriptor,
+                                                    index_t arcDegrees, real_t sourceToCenter,
+                                                    real_t centerToDetector)
     {
         // sanity check
         auto dim = volumeDescriptor.getNumberOfDimensions();
@@ -34,9 +36,11 @@ namespace elsa
 
         std::vector<Geometry> geometryList;
 
-        real_t angleIncrement = static_cast<real_t>(1.0) * arcDegrees / (numberOfPoses - 1.0);
+        real_t angleIncrement = static_cast<real_t>(1.0f) * static_cast<real_t>(arcDegrees)
+                                / (static_cast<real_t>(numberOfPoses) - 1.0f);
         for (index_t i = 0; i < numberOfPoses; ++i) {
-            real_t angle = i * angleIncrement * pi / 180.0; // convert to radians
+            real_t angle =
+                static_cast<real_t>(i) * angleIncrement * pi_t / 180.0f; // convert to radians
             if (dim == 2) {
                 Geometry geom(sourceToCenter, centerToDetector, angle, volumeDescriptor,
                               sinoDescriptor);
@@ -48,7 +52,7 @@ namespace elsa
             }
         }
 
-        return std::make_pair(geometryList, sinoDescriptor);
+        return std::make_pair(geometryList, sinoDescriptor.clone());
     }
 
 } // namespace elsa

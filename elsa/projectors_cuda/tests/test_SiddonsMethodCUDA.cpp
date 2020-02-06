@@ -4,6 +4,8 @@
 #include "SiddonsMethod.h"
 #include "Geometry.h"
 
+#include <array>
+
 using namespace elsa;
 
 /*
@@ -52,8 +54,8 @@ TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", SiddonsMet
         volume = 1;
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
-        for (std::size_t i = 0; i < numImgs; i++) {
-            real_t angle = i * 2 * pi / 50;
+        for (index_t i = 0; i < numImgs; i++) {
+            real_t angle = static_cast<real_t>(i) * 2 * pi_t / 50;
             geom.emplace_back(20 * volSize, volSize, angle, volumeDescriptor, sinoDescriptor);
         }
         TestType op(volumeDescriptor, sinoDescriptor, geom);
@@ -232,8 +234,8 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
 
         WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin")
         {
-            geom.emplace_back(20 * volSize, volSize, pi / 2, volumeDescriptor, sinoDescriptor, 0.0,
-                              0.0, volSize);
+            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
+                              0.0, 0.0, volSize);
 
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -253,8 +255,8 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
         WHEN("Tracing along a x-axis-aligned ray with a y-coordinate of origin beyond the bounding "
              "box")
         {
-            geom.emplace_back(20 * volSize, volSize, pi / 2, volumeDescriptor, sinoDescriptor, 0.0,
-                              0.0, -volSize);
+            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
+                              0.0, 0.0, -volSize);
 
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -289,16 +291,22 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
         std::vector<Geometry> geom;
 
         const index_t numCases = 9;
-        real_t alpha[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, pi / 2, pi / 2, pi / 2};
-        real_t gamma[numCases] = {0.0, 0.0, 0.0, pi / 2, pi / 2, pi / 2, pi / 2, pi / 2, pi / 2};
-        real_t offsetx[numCases] = {volSize, 0.0, volSize, 0.0, 0.0, 0.0, volSize, 0.0, volSize};
-        real_t offsety[numCases] = {0.0, volSize, volSize, volSize, 0.0, volSize, 0.0, 0.0, 0.0};
-        real_t offsetz[numCases] = {0.0, 0.0, 0.0, 0.0, volSize, volSize, 0.0, volSize, volSize};
-        std::string neg[numCases] = {"x", "y", "x and y", "y", "z", "y and z", "x", "z", "x and z"};
-        std::string ali[numCases] = {"z", "z", "z", "x", "x", "x", "y", "y", "y"};
+        std::array<real_t, numCases> alpha = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+        std::array<real_t, numCases> beta = {0.0, 0.0,      0.0,      0.0,     0.0,
+                                             0.0, pi_t / 2, pi_t / 2, pi_t / 2};
+        std::array<real_t, numCases> gamma = {0.0,      0.0,      0.0,      pi_t / 2, pi_t / 2,
+                                              pi_t / 2, pi_t / 2, pi_t / 2, pi_t / 2};
+        std::array<real_t, numCases> offsetx = {volSize, 0.0,     volSize, 0.0,    0.0,
+                                                0.0,     volSize, 0.0,     volSize};
+        std::array<real_t, numCases> offsety = {0.0,     volSize, volSize, volSize, 0.0,
+                                                volSize, 0.0,     0.0,     0.0};
+        std::array<real_t, numCases> offsetz = {0.0,     0.0, 0.0,     0.0,    volSize,
+                                                volSize, 0.0, volSize, volSize};
+        std::array<std::string, numCases> neg = {"x",       "y", "x and y", "y",      "z",
+                                                 "y and z", "x", "z",       "x and z"};
+        std::array<std::string, numCases> ali = {"z", "z", "z", "x", "x", "x", "y", "y", "y"};
 
-        for (int i = 0; i < numCases; i++) {
+        for (std::size_t i = 0; i < numCases; i++) {
             WHEN("Tracing along a " + ali[i] + "-axis-aligned ray with negative " + neg[i]
                  + "-coodinate of origin")
             {
@@ -342,13 +350,13 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         std::vector<Geometry> geom;
 
         const index_t numCases = 4;
-        const real_t angles[numCases] = {0.0, pi / 2, pi, 3 * pi / 2};
+        const std::array<real_t, numCases> angles = {0.0, pi_t / 2, pi_t, 3 * pi_t / 2};
         Eigen::Matrix<data_t, volSize * volSize, 1> backProj[2];
         backProj[1] << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
         backProj[0] << 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0;
 
-        for (index_t i = 0; i < numCases; i++) {
+        for (std::size_t i = 0; i < numCases; i++) {
             WHEN("An axis-aligned ray with an angle of " + std::to_string(angles[i])
                  + " radians passes through the center of a pixel")
             {
@@ -470,9 +478,10 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         std::vector<Geometry> geom;
 
         const index_t numCases = 6;
-        real_t beta[numCases] = {0.0, 0.0, 0.0, 0.0, pi / 2, 3 * pi / 2};
-        real_t gamma[numCases] = {0.0, pi, pi / 2, 3 * pi / 2, pi / 2, 3 * pi / 2};
-        std::string al[numCases] = {"z", "-z", "x", "-x", "y", "-y"};
+        std::array<real_t, numCases> beta = {0.0, 0.0, 0.0, 0.0, pi_t / 2, 3 * pi_t / 2};
+        std::array<real_t, numCases> gamma = {0.0,          pi_t,     pi_t / 2,
+                                              3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
+        std::array<std::string, numCases> al = {"z", "-z", "x", "-x", "y", "-y"};
 
         Eigen::Matrix<data_t, volSize * volSize * volSize, 1> backProj[numCases];
 
@@ -494,7 +503,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
 
             0, 0, 0, 0, 1, 0, 0, 0, 0;
 
-        for (index_t i = 0; i < numCases; i++) {
+        for (std::size_t i = 0; i < numCases; i++) {
             WHEN("A " + al[i] + "-axis-aligned ray passes through the center of a pixel")
             {
                 geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, gamma[i],
@@ -526,8 +535,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
             }
         }
 
-        real_t offsetx[numCases];
-        real_t offsety[numCases];
+        std::array<real_t, numCases> offsetx;
+        std::array<real_t, numCases> offsety;
 
         offsetx[0] = volSize / 2.0;
         offsetx[3] = -(volSize / 2.0);
@@ -568,7 +577,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         al[4] = "top border";
         al[5] = "top right edge";
 
-        for (index_t i = 0; i < numCases / 2; i++) {
+        for (std::size_t i = 0; i < numCases / 2; i++) {
             WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume")
             {
                 // x-ray source must be very far from the volume center to make testing of the op
@@ -610,7 +619,7 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
             }
         }
 
-        for (index_t i = numCases / 2; i < numCases; i++) {
+        for (std::size_t i = numCases / 2; i < numCases; i++) {
             WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume")
             {
                 // x-ray source must be very far from the volume center to make testing of the op
@@ -654,11 +663,11 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         WHEN("Both x- and y-axis-aligned rays are present")
         {
             geom.emplace_back(20 * volSize, volSize, 0, volumeDescriptor, sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 90 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 90 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 180 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 180 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 270 * pi / 180., volumeDescriptor,
+            geom.emplace_back(20 * volSize, volSize, 270 * pi_t / 180., volumeDescriptor,
                               sinoDescriptor);
 
             TestType op(volumeDescriptor, sinoDescriptor, geom);
@@ -708,8 +717,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
 
         WHEN("x-, y and z-axis-aligned rays are present")
         {
-            real_t beta[numImgs] = {0.0, 0.0, 0.0, 0.0, pi / 2, 3 * pi / 2};
-            real_t gamma[numImgs] = {0.0, pi, pi / 2, 3 * pi / 2, pi / 2, 3 * pi / 2};
+            real_t beta[numImgs] = {0.0, 0.0, 0.0, 0.0, pi_t / 2, 3 * pi_t / 2};
+            real_t gamma[numImgs] = {0.0, pi_t, pi_t / 2, 3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
 
             for (index_t i = 0; i < numImgs; i++)
                 geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, gamma[i],
@@ -755,6 +764,10 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                    SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
+
+    real_t sqrt3r = std::sqrt(static_cast<real_t>(3));
+    data_t sqrt3d = std::sqrt(static_cast<data_t>(3));
+
     GIVEN("A 2D setting with a single ray")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -773,7 +786,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -798,7 +811,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(2, 1) = 3;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(2 * sqrt(3) + 2));
+                    REQUIRE(sino[0] == Approx(2 * sqrt3d + 2));
 
                     // on the other side of the center
                     volume = 0;
@@ -807,17 +820,17 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(0, 3) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(2 * sqrt(3) + 2));
+                    REQUIRE(sino[0] == Approx(2 * sqrt3d + 2));
 
                     sino[0] = 1;
 
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
-                    expected << 0, 0, 2 - 2 / sqrt(3), 4 / sqrt(3) - 2, 0, 0, 2 / sqrt(3), 0, 0,
-                        2 / sqrt(3), 0, 0, 4 / sqrt(3) - 2, 2 - 2 / sqrt(3), 0, 0;
+                    expected << 0, 0, 2 - 2 / sqrt3d, 4 / sqrt3d - 2, 0, 0, 2 / sqrt3d, 0, 0,
+                        2 / sqrt3d, 0, 0, 4 / sqrt3d - 2, 2 - 2 / sqrt3d, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                     0.0001));
+                                     static_cast<real_t>(0.0001)));
                 }
             }
         }
@@ -826,8 +839,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, sqrt3r);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -849,13 +862,13 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(2, 3) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt3d));
 
                     sino[0] = 1;
 
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
-                    expected << 0, 0, 0, 0, 0, 0, 0, 4 - 2 * sqrt(3), 0, 0, 0, 2 / sqrt(3), 0, 0,
-                        2 - 2 / sqrt(3), 4 / sqrt(3) - 2;
+                    expected << 0, 0, 0, 0, 0, 0, 0, 4 - 2 * sqrt3d, 0, 0, 0, 2 / sqrt3d, 0, 0,
+                        2 - 2 / sqrt3d, 4 / sqrt3d - 2;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
@@ -867,8 +880,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              -sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, -sqrt3r);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -890,13 +903,13 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(0, 2) = 4;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt3d));
 
                     sino[0] = 1;
 
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
-                    expected << 4 / sqrt(3) - 2, 2 - 2 / sqrt(3), 0, 0, 2 / sqrt(3), 0, 0, 0,
-                        4 - 2 * sqrt(3), 0, 0, 0, 0, 0, 0, 0;
+                    expected << 4 / sqrt3d - 2, 2 - 2 / sqrt3d, 0, 0, 2 / sqrt3d, 0, 0, 0,
+                        4 - 2 * sqrt3d, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
@@ -906,8 +919,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
 
         WHEN("Projecting under an angle of 30 degrees and ray only intersects a single pixel")
         {
-            geom.emplace_back(volSize * 20, volSize, -pi / 6, volumeDescriptor, sinoDescriptor, 0.0,
-                              -2 - sqrt(3) / 2);
+            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
+                              0.0, -2 - sqrt3r / 2);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -923,12 +936,12 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(0, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(1 / sqrt(3)));
+                    REQUIRE(sino[0] == Approx(1 / sqrt3d));
 
                     sino[0] = 1;
 
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
-                    expected << 1 / sqrt(3), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+                    expected << 1 / sqrt3d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
@@ -940,7 +953,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -965,7 +979,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(1, 1) = 3;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(2 * sqrt(3) + 2));
+                    REQUIRE(sino[0] == Approx(2 * sqrt3d + 2));
 
                     // on the other side of the center
                     volume = 0;
@@ -974,14 +988,14 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(3, 3) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(2 * sqrt(3) + 2));
+                    REQUIRE(sino[0] == Approx(2 * sqrt3d + 2));
 
                     sino[0] = 1;
 
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
 
-                    expected << 4 / sqrt(3) - 2, 0, 0, 0, 2 - 2 / sqrt(3), 2 / sqrt(3), 0, 0, 0, 0,
-                        2 / sqrt(3), 2 - 2 / sqrt(3), 0, 0, 0, 4 / sqrt(3) - 2;
+                    expected << 4 / sqrt3d - 2, 0, 0, 0, 2 - 2 / sqrt3d, 2 / sqrt3d, 0, 0, 0, 0,
+                        2 / sqrt3d, 2 - 2 / sqrt3d, 0, 0, 0, 4 / sqrt3d - 2;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
@@ -993,8 +1007,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, sqrt3r);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1016,14 +1030,14 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(2, 3) = 4;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt3d));
 
                     sino[0] = 1;
 
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
 
-                    expected << 0, 0, 0, 0, 0, 0, 0, 0, 2 - 2 / sqrt(3), 0, 0, 0, 4 / sqrt(3) - 2,
-                        2 / sqrt(3), 4 - 2 * sqrt(3), 0;
+                    expected << 0, 0, 0, 0, 0, 0, 0, 0, 2 - 2 / sqrt3d, 0, 0, 0, 4 / sqrt3d - 2,
+                        2 / sqrt3d, 4 - 2 * sqrt3d, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
@@ -1035,8 +1049,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         {
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -sqrt(3));
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, -sqrt3r);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1058,14 +1072,14 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(3, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(14 - 4 * sqrt3d));
 
                     sino[0] = 1;
 
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
 
-                    expected << 0, 4 - 2 * sqrt(3), 2 / sqrt(3), 4 / sqrt(3) - 2, 0, 0, 0,
-                        2 - 2 / sqrt(3), 0, 0, 0, 0, 0, 0, 0, 0;
+                    expected << 0, 4 - 2 * sqrt3d, 2 / sqrt3d, 4 / sqrt3d - 2, 0, 0, 0,
+                        2 - 2 / sqrt3d, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
@@ -1076,8 +1090,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("Projecting under an angle of 120 degrees and ray only intersects a single pixel")
         {
             // This is a special case that is handled separately in both forward and backprojection
-            geom.emplace_back(volSize * 20, volSize, -2 * pi / 3, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -2 - sqrt(3) / 2);
+            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
+                              sinoDescriptor, 0.0, 0.0, -2 - sqrt3r / 2);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1093,12 +1107,12 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(3, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(1 / sqrt(3)).epsilon(0.005));
+                    REQUIRE(sino[0] == Approx(1 / sqrt3d).epsilon(0.005));
 
                     sino[0] = 1;
 
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
-                    expected << 0, 0, 0, 1 / sqrt(3), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+                    expected << 0, 0, 0, 1 / sqrt3d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
@@ -1126,7 +1140,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume")
         {
             // In this case the ray enters and exits the volume along the main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1148,14 +1162,14 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(1, 1, 2) = 2;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(3 * sqrt(3) - 1));
+                    REQUIRE(sino[0] == Approx(3 * sqrt3d - 1));
 
                     sino[0] = 1;
-                    backProj << 0, 0, 0, 0, 1 - 1 / sqrt(3), sqrt(3) - 1, 0, 0, 0,
+                    backProj << 0, 0, 0, 0, 1 - 1 / sqrt3d, sqrt3d - 1, 0, 0, 0,
 
-                        0, 0, 0, 0, 2 / sqrt(3), 0, 0, 0, 0,
+                        0, 0, 0, 0, 2 / sqrt3d, 0, 0, 0, 0,
 
-                        0, 0, 0, sqrt(3) - 1, 1 - 1 / sqrt(3), 0, 0, 0, 0;
+                        0, 0, 0, sqrt3d - 1, 1 - 1 / sqrt3d, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
@@ -1166,8 +1180,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees enters through the right border")
         {
             // In this case the ray enters through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, 1);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, 1);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1188,14 +1202,14 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(2, 1, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(1 - 2 / sqrt(3) + 3 * sqrt(3)));
+                    REQUIRE(sino[0] == Approx(1 - 2 / sqrt3d + 3 * sqrt3d));
 
                     sino[0] = 1;
-                    backProj << 0, 0, 0, 0, 0, 1 - 1 / sqrt(3), 0, 0, 0,
+                    backProj << 0, 0, 0, 0, 0, 1 - 1 / sqrt3d, 0, 0, 0,
 
-                        0, 0, 0, 0, 0, 2 / sqrt(3), 0, 0, 0,
+                        0, 0, 0, 0, 0, 2 / sqrt3d, 0, 0, 0,
 
-                        0, 0, 0, 0, sqrt(3) - 1, 1 - 1 / sqrt(3), 0, 0, 0;
+                        0, 0, 0, 0, sqrt3d - 1, 1 - 1 / sqrt3d, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
@@ -1206,8 +1220,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees exits through the left border")
         {
             // In this case the ray exit through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, -1);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, -1);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1228,14 +1242,14 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(0, 1, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(3 * sqrt(3) + 1 - 2 / sqrt(3)));
+                    REQUIRE(sino[0] == Approx(3 * sqrt3d + 1 - 2 / sqrt3d));
 
                     sino[0] = 1;
-                    backProj << 0, 0, 0, 1 - 1 / sqrt(3), sqrt(3) - 1, 0, 0, 0, 0,
+                    backProj << 0, 0, 0, 1 - 1 / sqrt3d, sqrt3d - 1, 0, 0, 0, 0,
 
-                        0, 0, 0, 2 / sqrt(3), 0, 0, 0, 0, 0,
+                        0, 0, 0, 2 / sqrt3d, 0, 0, 0, 0, 0,
 
-                        0, 0, 0, 1 - 1 / sqrt(3), 0, 0, 0, 0, 0;
+                        0, 0, 0, 1 - 1 / sqrt3d, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
@@ -1246,8 +1260,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         WHEN("A ray with an angle of 30 degrees only intersects a single voxel")
         {
             // special case - no interior voxels, entry and exit voxels are the same
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi / 6, 0.0,
-                              0.0, 0.0, 0.0, -2);
+            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
+                              0.0, 0.0, 0.0, 0.0, -2);
             TestType op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1263,10 +1277,10 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(0, 1, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(sqrt(3) - 1));
+                    REQUIRE(sino[0] == Approx(sqrt3d - 1));
 
                     sino[0] = 1;
-                    backProj << 0, 0, 0, sqrt(3) - 1, 0, 0, 0, 0, 0,
+                    backProj << 0, 0, 0, sqrt3d - 1, 0, 0, 0, 0, 0,
 
                         0, 0, 0, 0, 0, 0, 0, 0, 0,
 

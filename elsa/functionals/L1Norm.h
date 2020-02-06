@@ -38,6 +38,9 @@ namespace elsa
          */
         explicit L1Norm(const Residual<data_t>& residual);
 
+        /// make copy constructor deletion explicit
+        L1Norm(const L1Norm<data_t>&) = delete;
+
         /// default destructor
         ~L1Norm() override = default;
 

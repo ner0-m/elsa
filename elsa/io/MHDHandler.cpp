@@ -25,7 +25,7 @@ namespace elsa
             throw std::runtime_error("MHD::read: can not read from '" + dataPath + "'");
 
         // read in the data
-        DataContainer<data_t> dataContainer(descriptor);
+        DataContainer<data_t> dataContainer(*descriptor);
 
         if (dataType == DataUtils::DataType::UINT16)
             DataUtils::parseRawData<uint16_t, data_t>(dataFile, dataContainer);
@@ -97,12 +97,12 @@ namespace elsa
         return properties;
     }
 
-    std::tuple<DataDescriptor, std::string, DataUtils::DataType>
+    std::tuple<std::unique_ptr<DataDescriptor>, std::string, DataUtils::DataType>
         MHD::parseHeader(const std::map<std::string, std::string>& properties)
     {
         // check the dimensions
         auto nDimsIt = properties.find("ndims");
-        std::size_t nDims;
+        index_t nDims;
         if (nDimsIt != properties.end())
             nDims = DataUtils::parse<index_t>(nDimsIt->second);
         else
@@ -157,7 +157,7 @@ namespace elsa
         auto dimSizeIt = properties.find("dimsize");
         if (dimSizeIt != properties.end()) {
             dimSizeVec = DataUtils::parseVector<index_t>(dimSizeIt->second);
-            if (dimSizeVec.size() != nDims)
+            if (static_cast<index_t>(dimSizeVec.size()) != nDims)
                 throw std::runtime_error("MHD::parseHeader: dimension size mismatch");
         } else
             throw std::runtime_error("MHD::parseHeader: tag 'dim size' not found");
@@ -167,33 +167,31 @@ namespace elsa
         auto dimSpacingIt = properties.find("elementspacing");
         if (dimSpacingIt != properties.end()) {
             dimSpacingVec = DataUtils::parseVector<real_t>(dimSpacingIt->second);
-            if (dimSpacingVec.size() != nDims)
+            if (static_cast<index_t>(dimSpacingVec.size()) != nDims)
                 throw std::runtime_error("MHD::parseHeader: spacing size mismatch");
         }
 
         // convert size
         IndexVector_t dimSizes(nDims);
         for (index_t i = 0; i < nDims; ++i)
-            dimSizes[i] = dimSizeVec[i];
+            dimSizes[i] = dimSizeVec[static_cast<std::size_t>(i)];
 
         // convert spacing
         RealVector_t dimSpacing(RealVector_t::Ones(nDims));
         if (!dimSpacingVec.empty()) {
             for (index_t i = 0; i < nDims; ++i)
-                dimSpacing[i] = dimSpacingVec[i];
+                dimSpacing[i] = dimSpacingVec[static_cast<std::size_t>(i)];
         }
 
-        // the data descriptor condensed form the info
-        DataDescriptor dataDescriptor(dimSizes, dimSpacing);
-
-        return std::make_tuple(dataDescriptor, rawDataPath, dataType);
+        return std::make_tuple(std::make_unique<DataDescriptor>(dimSizes, dimSpacing), rawDataPath,
+                               dataType);
     }
 
     template <typename data_t>
     void MHD::writeHeader(std::ofstream& metaFile, const DataContainer<data_t>& data,
                           std::string rawFilename)
     {
-        auto descriptor = data.getDataDescriptor();
+        auto& descriptor = data.getDataDescriptor();
 
         // write dimension, size and spacing
         metaFile << "NDims = " << descriptor.getNumberOfDimensions() << "\n";
@@ -213,38 +211,38 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::string MHD::getDataTypeName(const DataContainer<data_t>& data)
+    std::string MHD::getDataTypeName([[maybe_unused]] const DataContainer<data_t>& data)
     {
         throw std::invalid_argument("MHD::getDataTypeName: invalid/unsupported data type");
     }
 
     template <>
-    std::string MHD::getDataTypeName(const DataContainer<int8_t>& data)
+    std::string MHD::getDataTypeName([[maybe_unused]] const DataContainer<int8_t>& data)
     {
         return "MET_CHAR";
     }
     template <>
-    std::string MHD::getDataTypeName(const DataContainer<uint8_t>& data)
+    std::string MHD::getDataTypeName([[maybe_unused]] const DataContainer<uint8_t>& data)
     {
         return "MET_UCHAR";
     }
     template <>
-    std::string MHD::getDataTypeName(const DataContainer<int16_t>& data)
+    std::string MHD::getDataTypeName([[maybe_unused]] const DataContainer<int16_t>& data)
     {
         return "MET_SHORT";
     }
     template <>
-    std::string MHD::getDataTypeName(const DataContainer<uint16_t>& data)
+    std::string MHD::getDataTypeName([[maybe_unused]] const DataContainer<uint16_t>& data)
     {
         return "MET_USHORT";
     }
     template <>
-    std::string MHD::getDataTypeName(const DataContainer<float>& data)
+    std::string MHD::getDataTypeName([[maybe_unused]] const DataContainer<float>& data)
     {
         return "MET_FLOAT";
     }
     template <>
-    std::string MHD::getDataTypeName(const DataContainer<double>& data)
+    std::string MHD::getDataTypeName([[maybe_unused]] const DataContainer<double>& data)
     {
         return "MET_DOUBLE";
     }

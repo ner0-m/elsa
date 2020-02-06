@@ -23,7 +23,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void L2NormPow2<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void L2NormPow2<data_t>::getGradientInPlaceImpl([[maybe_unused]] DataContainer<data_t>& Rx)
     {
         // gradient is Rx itself (no need for self-assignment)
     }

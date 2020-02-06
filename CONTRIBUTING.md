@@ -45,14 +45,27 @@ We use a testing style described as [Behaviour-Driven
 Development](https://github.com/catchorg/Catch2/blob/master/docs/tutorial.md#bdd-style) (BDD). Please
 follow this style when adding new tests.
 
+## Benchmarking
+You can use the catch testing framework to do [benchmarking
+](https://github.com/catchorg/Catch2/blob/master/docs/benchmarks.md). If so, add your benchmarking
+case following this template
+```cmake
+if(ELSA_BENCHMARKS)
+    ELSA_TEST(BenchmarkName)
+endif()
+```
+which ensures that the test case is only registered and build if the cmake option was
+enabled.
+
 ## Style Guide
 We use the tool `clang-format` to autoformat our code with the [given style
 file](.clang-format). Please make sure that your code is formatted accordingly, otherwise the CI
 will fail in the first stage. You can either execute
 ```
-find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' | xargs clang-format -i -style=file $1
+find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' | xargs clang-format-8 -i -style=file $1
 ```
-in the root folder, setup a git hook or integrate `clang-format` into your IDE.
+in the root folder, setup a git hook or integrate `clang-format` into your IDE. Note that we
+currently use version 8.0.0, different versions might produce errors.
 
 ## Linting
 We use `clang-tidy` with the enabled checks specified in [the configuration file](.clang-tidy). Note

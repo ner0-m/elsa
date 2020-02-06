@@ -29,8 +29,8 @@ SCENARIO("Create a Circular Trajectory")
         WHEN("We create a half circular trajectory for this scenario")
         {
             index_t halfCircular = 180;
-            index_t diffCenterSource = s * 100;
-            index_t diffCenterDetector = s;
+            auto diffCenterSource = static_cast<real_t>(s * 100);
+            auto diffCenterDetector = static_cast<real_t>(s);
 
             auto [geomList, sdesc] = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
@@ -41,10 +41,11 @@ SCENARIO("Create a Circular Trajectory")
                 const real_t sourceToCenter = diffCenterSource;
                 const real_t centerToDetector = diffCenterDetector;
 
-                real_t angle = (1.0 / (numberOfAngles - 1)) * halfCircular;
-                for (int i = 0; i < numberOfAngles; ++i) {
-                    real_t currAngle = i * angle * pi / 180.0;
-                    Geometry tmpGeom(sourceToCenter, centerToDetector, currAngle, desc, sdesc);
+                real_t angle = static_cast<real_t>(1.0) * static_cast<real_t>(halfCircular)
+                               / real_t(numberOfAngles - 1);
+                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
+                    real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
+                    Geometry tmpGeom(sourceToCenter, centerToDetector, currAngle, desc, *sdesc);
 
                     REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
                             == Approx(0));
@@ -62,8 +63,8 @@ SCENARIO("Create a Circular Trajectory")
         WHEN("We create a full circular trajectory for this scenario")
         {
             index_t halfCircular = 359;
-            index_t diffCenterSource = s * 100;
-            index_t diffCenterDetector = s;
+            auto diffCenterSource = static_cast<real_t>(s * 100);
+            auto diffCenterDetector = static_cast<real_t>(s);
 
             auto [geomList, sdesc] = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
@@ -74,10 +75,11 @@ SCENARIO("Create a Circular Trajectory")
                 const real_t sourceToCenter = diffCenterSource;
                 const real_t centerToDetector = diffCenterDetector;
 
-                real_t angle = (1.0 / (numberOfAngles - 1)) * halfCircular;
-                for (int i = 0; i < numberOfAngles; ++i) {
-                    real_t currAngle = i * angle * pi / 180.0;
-                    Geometry tmpGeom(sourceToCenter, centerToDetector, currAngle, desc, sdesc);
+                real_t angle = static_cast<real_t>(1.0) * static_cast<real_t>(halfCircular)
+                               / static_cast<real_t>(numberOfAngles - 1);
+                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
+                    real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
+                    Geometry tmpGeom(sourceToCenter, centerToDetector, currAngle, desc, *sdesc);
 
                     REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
                             == Approx(0));
@@ -103,8 +105,8 @@ SCENARIO("Create a Circular Trajectory")
         WHEN("We create a half circular trajectory for this scenario")
         {
             index_t halfCircular = 180;
-            index_t diffCenterSource = s * 100;
-            index_t diffCenterDetector = s;
+            auto diffCenterSource = static_cast<real_t>(s * 100);
+            auto diffCenterDetector = static_cast<real_t>(s);
 
             auto [geomList, sdesc] = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
@@ -115,10 +117,11 @@ SCENARIO("Create a Circular Trajectory")
                 const real_t sourceToCenter = diffCenterSource;
                 const real_t centerToDetector = diffCenterDetector;
 
-                real_t angleInc = 1.0 * halfCircular / (numberOfAngles - 1);
-                for (int i = 0; i < numberOfAngles; ++i) {
-                    real_t angle = i * angleInc * pi / 180.0;
-                    Geometry tmpGeom(sourceToCenter, centerToDetector, desc, sdesc, angle);
+                real_t angleInc = 1.0f * static_cast<real_t>(halfCircular)
+                                  / static_cast<real_t>(numberOfAngles - 1);
+                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
+                    real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
+                    Geometry tmpGeom(sourceToCenter, centerToDetector, desc, *sdesc, angle);
 
                     REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
                             == Approx(0));
@@ -136,8 +139,8 @@ SCENARIO("Create a Circular Trajectory")
         WHEN("We create a full circular trajectory for this scenario")
         {
             index_t halfCircular = 359;
-            index_t diffCenterSource = s * 100;
-            index_t diffCenterDetector = s;
+            auto diffCenterSource = static_cast<real_t>(s * 100);
+            auto diffCenterDetector = static_cast<real_t>(s);
 
             auto [geomList, sdesc] = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
@@ -148,10 +151,11 @@ SCENARIO("Create a Circular Trajectory")
                 const real_t sourceToCenter = diffCenterSource;
                 const real_t centerToDetector = diffCenterDetector;
 
-                real_t angleInc = 1.0 * halfCircular / (numberOfAngles - 1);
-                for (int i = 0; i < numberOfAngles; ++i) {
-                    real_t angle = i * angleInc * pi / 180.0;
-                    Geometry tmpGeom(sourceToCenter, centerToDetector, desc, sdesc, angle);
+                real_t angleInc = 1.0f * static_cast<real_t>(halfCircular)
+                                  / static_cast<real_t>(numberOfAngles - 1);
+                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
+                    real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
+                    Geometry tmpGeom(sourceToCenter, centerToDetector, desc, *sdesc, angle);
 
                     REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
                             == Approx(0));

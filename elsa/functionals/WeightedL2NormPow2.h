@@ -39,6 +39,9 @@ namespace elsa
          */
         WeightedL2NormPow2(const Residual<data_t>& residual, const Scaling<data_t>& weightingOp);
 
+        /// make copy constructor deletion explicit
+        WeightedL2NormPow2(const WeightedL2NormPow2<data_t>&) = delete;
+
         /// default destructor
         ~WeightedL2NormPow2() override = default;
 

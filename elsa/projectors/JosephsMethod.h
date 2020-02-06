@@ -62,6 +62,9 @@ namespace elsa
         ~JosephsMethod() = default;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        JosephsMethod(const JosephsMethod<data_t>&) = default;
+
         /// apply Joseph's method (i.e. forward projection)
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
@@ -106,18 +109,22 @@ namespace elsa
         /**
          * \brief  Linear interpolation, works in any dimension
          *
+         * \tparam adjoint true for backward projection, false for forward
+         *
          * \param[in] vector the input DataContainer
          * \param[out] result DataContainer for results
          * \param[in] fractionals the fractional numbers used in the interpolation
-         * \param[in] adjoint true for backward projection, false for forward
          * \param[in] domainDim number of dimensions
          * \param[in] currentVoxel coordinates of voxel for interpolation
          * \param[in] intersection weighting for the interpolated values depending on the incidence
-         * angle \param[in] from index of the current vector position \param[in] to index of the
-         * current result position \param[in] mainDirection specifies the main direction of the ray
+         * angle
+         * \param[in] from index of the current vector position
+         * \param[in] to index of the current result position
+         * \param[in] mainDirection specifies the main direction of the ray
          */
+        template <bool adjoint>
         void linear(const DataContainer<data_t>& vector, DataContainer<data_t>& result,
-                    const RealVector_t& fractionals, bool adjoint, int domainDim,
+                    const RealVector_t& fractionals, index_t domainDim,
                     const IndexVector_t& currentVoxel, float intersection, index_t from, index_t to,
                     int mainDirection) const;
 

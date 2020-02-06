@@ -27,7 +27,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>& CG<data_t>::solveImpl(index_t iterations, std::function<bool(int,DataContainer<data_t>& )> trackOutput)
+    DataContainer<data_t>& CG<data_t>::solveImpl(index_t iterations)
     {
         if (iterations == 0)
             iterations = _defaultIterations;
@@ -64,7 +64,7 @@ namespace elsa
         Logger::get("CG")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}", "iteration", "deltaNew",
                                 "deltaZero", "epsilon", "objval");
 
-        for (std::size_t it = 0; it < iterations; ++it) {
+        for (index_t it = 0; it != iterations; ++it) {
             auto Ad = A ? A->apply(d) : d;
 
             data_t alpha = deltaNew / d.dot(Ad);
@@ -80,7 +80,13 @@ namespace elsa
             deltaNew = _preconditionerInverse ? r.dot(*s) : r.squaredL2Norm();
 
             // evaluate objective function as -0.5 * x^t[b + (b - Ax)]
-            data_t objVal = static_cast<data_t>(-0.5) * x.dot(b ? *b + r : r);
+            data_t objVal;
+            if (b == nullptr) {
+                objVal = static_cast<data_t>(-0.5) * x.dot(r);
+            } else {
+                objVal = static_cast<data_t>(-0.5) * x.dot(*b + r);
+            }
+
             Logger::get("CG")->info(" {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", it,
                                     std::sqrt(deltaNew), std::sqrt(deltaZero), _epsilon, objVal);
 
@@ -103,11 +109,6 @@ namespace elsa
 
             const auto beta = deltaNew / deltaOld;
             d = beta * d + (_preconditionerInverse ? *s : r);
-            
-            //Track this iteration by executing the callback function if given
-            if(trackOutput != NULL)
-                if(trackOutput(it,getCurrentSolution()))
-                    return getCurrentSolution();
         }
 
         Logger::get("CG")->warn("Failed to reach convergence at {} iterations", iterations);

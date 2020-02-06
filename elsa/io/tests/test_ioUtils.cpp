@@ -8,7 +8,7 @@
 
 #include <catch2/catch.hpp>
 #include "ioUtils.h"
-#include "elsa.h"
+#include "elsaDefines.h"
 
 using namespace elsa;
 

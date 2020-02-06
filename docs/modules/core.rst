@@ -9,7 +9,6 @@ Core Type Declarations
 
 .. doxygenfile:: elsa.h
 
-
 DataDescriptor
 ==============
 
@@ -20,18 +19,30 @@ BlockDescriptor
 
 .. doxygenclass:: elsa::BlockDescriptor
 
+IdenticalBlocksDescriptor
+=========================
+
+.. doxygenclass:: elsa::IdenticalBlocksDescriptor
+
+PartitionDescriptor
+===================
+
+.. doxygenclass:: elsa::PartitionDescriptor
+
+RandomBlocksDescriptor
+======================
+
+.. doxygenclass:: elsa::RandomBlocksDescriptor
+
 DataContainer
 =============
-
 
 .. doxygenclass:: elsa::DataContainer
 
 LinearOperator
 ==============
 
-
 .. doxygenclass:: elsa::LinearOperator
-
 
 
 Implementation Details
@@ -42,7 +53,6 @@ Cloneable
 
 .. doxygenclass:: elsa::Cloneable
 
-
 DataHandler
 -----------
 
@@ -52,3 +62,9 @@ DataHandlerCPU
 --------------
 
 .. doxygenclass:: elsa::DataHandlerCPU
+
+Expression
+----------
+.. mdinclude:: expression_templates.md
+
+.. doxygenclass:: elsa::Expression

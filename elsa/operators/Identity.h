@@ -29,6 +29,9 @@ namespace elsa
         ~Identity() override = default;
 
     protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        Identity(const Identity<data_t>&) = default;
+
         /**
          * \brief apply the identity operator A to x, i.e. Ax = x
          *

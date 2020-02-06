@@ -34,8 +34,8 @@ namespace elsa
     template <typename data_t>
     void Residual<data_t>::evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result)
     {
-        if (x.getDataDescriptor() != getDomainDescriptor()
-            || result.getDataDescriptor() != getRangeDescriptor())
+        if (x.getSize() != getDomainDescriptor().getNumberOfCoefficients()
+            || result.getSize() != getRangeDescriptor().getNumberOfCoefficients())
             throw std::invalid_argument("Residual::evaluate: argument sizes do not match residual");
 
         evaluateImpl(x, result);

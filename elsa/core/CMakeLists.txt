@@ -8,22 +8,31 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 
 # list all the headers of the module
 set(MODULE_HEADERS
-        elsa.h
+        elsaDefines.h
         Cloneable.h
         DataDescriptor.h
         BlockDescriptor.h
+        IdenticalBlocksDescriptor.h
+        PartitionDescriptor.h
+        RandomBlocksDescriptor.h
         DataContainer.h
         DataContainerIterator.h
         DataHandler.h
         DataHandlerCPU.h
-        LinearOperator.h)
+        DataHandlerMapCPU.h
+        LinearOperator.h
+        Expression.h
+        ExpressionPredicates.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         DataDescriptor.cpp
-        BlockDescriptor.cpp
+        RandomBlocksDescriptor.cpp
+        IdenticalBlocksDescriptor.cpp
+        PartitionDescriptor.cpp
         DataContainer.cpp
         DataHandlerCPU.cpp
+        DataHandlerMapCPU.cpp
         LinearOperator.cpp)
 
 
@@ -31,6 +40,15 @@ set(MODULE_SOURCES
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 add_dependencies(elsa ${ELSA_MODULE_TARGET_NAME})
+
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Eigen3::Eigen)
+
+# use OpenMP is available
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Eigen3::Eigen)
 

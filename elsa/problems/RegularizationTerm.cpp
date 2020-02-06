@@ -29,22 +29,17 @@ namespace elsa
     }
 
     template <typename data_t>
-    RegularizationTerm<data_t>::RegularizationTerm(RegularizationTerm<data_t>&& other)
+    RegularizationTerm<data_t>::RegularizationTerm(RegularizationTerm<data_t>&& other) noexcept
         : _weight{std::move(other._weight)}, _functional{std::move(other._functional)}
     {
-        // make sure we leave other in a valid state (since we do not check for empty pointers!)
-        other._functional = std::make_unique<L1Norm<data_t>>(_functional->getDomainDescriptor());
     }
 
     template <typename data_t>
     RegularizationTerm<data_t>& RegularizationTerm<data_t>::
-        operator=(RegularizationTerm<data_t>&& other)
+        operator=(RegularizationTerm<data_t>&& other) noexcept
     {
         _weight = std::move(other._weight);
         _functional = std::move(other._functional);
-
-        // make sure we leave other in a valid state (since we do not check for empty pointers!)
-        other._functional = std::make_unique<L1Norm<data_t>>(_functional->getDomainDescriptor());
 
         return *this;
     }

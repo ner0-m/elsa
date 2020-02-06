@@ -11,6 +11,7 @@ set(MODULE_HEADERS
         RegularizationTerm.h
         Problem.h
         WLSProblem.h
+        TikhonovProblem.h
         QuadricProblem.h)
 
 # list all the code files of the module
@@ -18,13 +19,13 @@ set(MODULE_SOURCES
         RegularizationTerm.cpp
         Problem.cpp
         WLSProblem.cpp
+        TikhonovProblem.cpp
         QuadricProblem.cpp)
 
 
 # build the module library
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
-add_dependencies(elsa ${ELSA_MODULE_TARGET_NAME})
 
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_operators elsa_functionals)
 

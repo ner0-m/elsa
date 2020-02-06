@@ -12,6 +12,7 @@ namespace elsa
      * \author Jakob Vogel - initial code
      * \author Matthias Wieczorek - rewrite
      * \author Tobias Lasser - another rewrite, modernization
+     * \author Nikola Dinev - added conversion constructor
      *
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
@@ -63,6 +64,18 @@ namespace elsa
          */
         WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b);
 
+        /**
+         * \brief Constructor for converting a general optimization problem to a WLS problem
+         *
+         * \param[in] problem the problem to be converted
+         *
+         * Only problems that consist exclusively of (Weighted)L2NormPow2 terms can be converted.
+         * The (Weighted)L2NormPow2 should be acting on a LinearResidual.
+         *
+         * Acts as a copy constructor if the supplied optimization problem is a quadric problem.
+         */
+        explicit WLSProblem(const Problem<data_t>& problem);
+
         /// default destructor
         ~WLSProblem() override = default;
 
@@ -70,7 +83,8 @@ namespace elsa
         /// implement the polymorphic clone operation
         WLSProblem<data_t>* cloneImpl() const override;
 
-        /// implement the polymorphic comparison operation
-        bool isEqual(const Problem<data_t>& other) const override;
+    private:
+        /// converts an optimization problem to a (Weighted)L2NormPow2 functional
+        static std::unique_ptr<Functional<data_t>> wlsFromProblem(const Problem<data_t>& problem);
     };
 } // namespace elsa

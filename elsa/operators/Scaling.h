@@ -37,6 +37,9 @@ namespace elsa
          */
         Scaling(const DataDescriptor& descriptor, const DataContainer<data_t>& scaleFactors);
 
+        /// make copy constructor deletion explicit
+        Scaling(const Scaling<data_t>&) = delete;
+
         /// default destructor
         ~Scaling() override = default;
 
@@ -71,7 +74,7 @@ namespace elsa
         data_t _scaleFactor;
 
         /// anisotropic scaling factors
-        std::unique_ptr<DataContainer<data_t>> _scaleFactors{};
+        std::unique_ptr<const DataContainer<data_t>> _scaleFactors{};
     };
 
 } // namespace elsa

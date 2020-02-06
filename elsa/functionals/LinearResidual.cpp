@@ -24,8 +24,8 @@ namespace elsa
     LinearResidual<data_t>::LinearResidual(const LinearOperator<data_t>& A)
         : Residual<data_t>(A.getDomainDescriptor(), A.getRangeDescriptor()),
           _hasOperator{true},
-          _operator{A.clone()},
-          _hasDataVector{false}
+          _hasDataVector{false},
+          _operator{A.clone()}
     {
     }
 
@@ -34,11 +34,11 @@ namespace elsa
                                            const DataContainer<data_t>& b)
         : Residual<data_t>(A.getDomainDescriptor(), A.getRangeDescriptor()),
           _hasOperator{true},
-          _operator{A.clone()},
           _hasDataVector{true},
+          _operator{A.clone()},
           _dataVector{std::make_unique<DataContainer<data_t>>(b)}
     {
-        if (A.getRangeDescriptor() != b.getDataDescriptor())
+        if (A.getRangeDescriptor().getNumberOfCoefficients() != b.getSize())
             throw std::invalid_argument("LinearResidual: A and b do not match");
     }
 
@@ -132,7 +132,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> LinearResidual<data_t>::getJacobianImpl(const DataContainer<data_t>& x)
+    LinearOperator<data_t>
+        LinearResidual<data_t>::getJacobianImpl([[maybe_unused]] const DataContainer<data_t>& x)
     {
         if (_hasOperator)
             return leaf(*_operator);

@@ -48,7 +48,8 @@ if (CMAKE_CUDA_COMPILER)
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17) 
     # set -fPIC
     set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
+    # set define to check cuda projectors in projects
+    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)
 
     # build the tests (if enabled)
     if(ELSA_TESTING)

@@ -32,12 +32,25 @@ stages:
       - build/
     expire_in: 30 mins
 
+.buildjob_script_clang:
+  script: &buildjob_clang
+    - mkdir -p build
+    - cd build
+    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - ninja -j 8 
+
+.buildjob_script_normal:
+  script: &buildjob_normal
+    - mkdir -p build
+    - cd build
+    - cmake .. -GNinja
+    - ninja -j 8
+
 .job_template: &test_job_artifact
   script:
     - cd build
-    - cmake -DELSA_CREATE_JUNIT_REPORTS=ON ..
-    - make
-    - ctest
+    - cmake -GNinja -DELSA_CREATE_JUNIT_REPORTS=ON ..
+    - ninja tests -j 8
   artifacts:
     reports:
       junit: "build/test_reports/test_*.xml"
@@ -57,7 +70,7 @@ clang-format:
 
 clang-tidy:
   stage: static-test
-  image: elsa/cuda:9.2
+  image: elsa/clang-tidy:8
   script:
     ./tools/ci_scripts/clang-tidy.sh
   tags:
@@ -71,11 +84,7 @@ clang-tidy:
 build-ubuntu:
   <<: *build_job_artifact
   image: elsa/ubuntu:18.04
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake ..
-    - make -j4
+  script: *buildjob_normal
   tags:
     - linux
     - elsa
@@ -83,11 +92,7 @@ build-ubuntu:
 build-gcc9:
   <<: *build_job_artifact
   image: elsa/gcc:9
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake ..
-    - make -j4
+  script: *buildjob_normal
   tags:
     - linux
     - elsa
@@ -96,11 +101,7 @@ build-gcc9:
 build-clang8:
   <<: *build_job_artifact
   image: elsa/clang:8
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake .. -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - make -j4
+  script: *buildjob_clang
   tags:
     - linux
     - elsa
@@ -109,11 +110,7 @@ build-clang8:
 build-cuda92:
   <<: *build_job_artifact
   image: elsa/cuda:9.2
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake ..
-    - make -j4
+  script: *buildjob_normal
   tags:
     - linux
     - elsa
@@ -174,14 +171,13 @@ test-coverage:
   <<: *nightly_job
   stage: coverage
   image: elsa/cuda:9.2
+  dependencies: []
   script:
-    - apt-get update
-    - apt-get install -y lcov
     - mkdir -p build
     - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
-    - make all -j4
-    - make test_coverage
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
+    - ninja tests -j 8
+    - ninja test_coverage -j 8
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
     paths:
@@ -243,10 +239,11 @@ deploy-docs:
   script:
     - mkdir -p build
     - cd build
-    - cmake ..
-    - make docs
+    - cmake .. -GNinja
+    - ninja docs
     - cp -r docs/sphinx/* /var/www/ip/elsadocs/
     - cd ..
     - cp -r build/test_coverage/* /var/www/ip/elsacoverage/
   tags:
     - elsa-docs-deploy
+

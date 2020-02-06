@@ -10,11 +10,13 @@ namespace elsa
         : _dataTerm{dataTerm.clone()}, _regTerms{regTerms}, _currentSolution{x0}
     {
         // sanity checks
-        if (_dataTerm->getDomainDescriptor() != this->_currentSolution.getDataDescriptor())
+        if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
+            != this->_currentSolution.getSize())
             throw std::invalid_argument("Problem: domain of dataTerm and solution do not match");
 
         for (auto& regTerm : _regTerms) {
-            if (dataTerm.getDomainDescriptor() != regTerm.getFunctional().getDomainDescriptor())
+            if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
+                != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
                 throw std::invalid_argument(
                     "Problem: one of the reg terms' domain does not match the data term's");
         }
@@ -29,7 +31,8 @@ namespace elsa
     {
         // sanity check
         for (auto& regTerm : _regTerms) {
-            if (dataTerm.getDomainDescriptor() != regTerm.getFunctional().getDomainDescriptor())
+            if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
+                != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
                 throw std::invalid_argument(
                     "Problem: one of the reg terms' domain does not match the data term's");
         }
@@ -42,10 +45,12 @@ namespace elsa
         : _dataTerm{dataTerm.clone()}, _regTerms{regTerm}, _currentSolution{x0}
     {
         // sanity checks
-        if (_dataTerm->getDomainDescriptor() != this->_currentSolution.getDataDescriptor())
+        if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
+            != this->_currentSolution.getSize())
             throw std::invalid_argument("Problem: domain of dataTerm and solution do not match");
 
-        if (dataTerm.getDomainDescriptor() != regTerm.getFunctional().getDomainDescriptor())
+        if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
+            != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
             throw std::invalid_argument(
                 "Problem: one of the reg terms' domain does not match the data term's");
     }
@@ -58,7 +63,8 @@ namespace elsa
           _currentSolution{dataTerm.getDomainDescriptor()}
     {
         // sanity check
-        if (dataTerm.getDomainDescriptor() != regTerm.getFunctional().getDomainDescriptor())
+        if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
+            != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
             throw std::invalid_argument(
                 "Problem: one of the reg terms' domain does not match the data term's");
     }
@@ -68,7 +74,8 @@ namespace elsa
         : _dataTerm{dataTerm.clone()}, _currentSolution{x0}
     {
         // sanity check
-        if (_dataTerm->getDomainDescriptor() != this->_currentSolution.getDataDescriptor())
+        if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
+            != this->_currentSolution.getSize())
             throw std::invalid_argument("Problem: domain of dataTerm and solution do not match");
     }
 
@@ -80,7 +87,8 @@ namespace elsa
 
     template <typename data_t>
     Problem<data_t>::Problem(const Problem<data_t>& problem)
-        : _dataTerm{problem._dataTerm->clone()},
+        : Cloneable<Problem<data_t>>(),
+          _dataTerm{problem._dataTerm->clone()},
           _regTerms{problem._regTerms},
           _currentSolution{problem._currentSolution}
     {
@@ -152,13 +160,19 @@ namespace elsa
     template <typename data_t>
     bool Problem<data_t>::isEqual(const Problem<data_t>& other) const
     {
+        if (typeid(*this) != typeid(other))
+            return false;
+
         if (_currentSolution != other._currentSolution)
             return false;
 
         if (*_dataTerm != *other._dataTerm)
             return false;
 
-        for (index_t i = 0; i < _regTerms.size(); ++i)
+        if (_regTerms.size() != other._regTerms.size())
+            return false;
+
+        for (std::size_t i = 0; i < _regTerms.size(); ++i)
             if (_regTerms.at(i) != other._regTerms.at(i))
                 return false;
 

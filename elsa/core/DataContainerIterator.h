@@ -50,7 +50,7 @@ namespace elsa::detail
             return *this;
         }
         /// postfix increment operator
-        self_type operator++(int)
+        self_type operator++(int) &
         {
             auto i = *this;
             ++_ptr;
@@ -64,7 +64,7 @@ namespace elsa::detail
             return *this;
         }
         /// postfix decrement operator
-        self_type operator--(int)
+        self_type operator--(int) &
         {
             auto i = *this;
             --_ptr;
@@ -165,7 +165,7 @@ namespace elsa::detail
             return *this;
         }
         /// postfix increment operator
-        self_type operator++(int)
+        self_type operator++(int) &
         {
             auto i = *this;
             ++_ptr;
@@ -179,7 +179,7 @@ namespace elsa::detail
             return *this;
         }
         /// postfix decrement operator
-        self_type operator--(int)
+        self_type operator--(int) &
         {
             auto i = *this;
             --_ptr;

@@ -3,6 +3,7 @@
 #include "TraverseAABBJosephsMethod.h"
 
 #include <stdexcept>
+#include <type_traits>
 
 namespace elsa
 {
@@ -12,8 +13,8 @@ namespace elsa
                                          const std::vector<Geometry>& geometryList,
                                          Interpolation interpolation)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
-          _geometryList{geometryList},
           _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()},
+          _geometryList{geometryList},
           _interpolation{interpolation}
     {
         auto dim = _domainDescriptor->getNumberOfDimensions();
@@ -73,10 +74,10 @@ namespace elsa
     void JosephsMethod<data_t>::traverseVolume(const DataContainer<data_t>& vector,
                                                DataContainer<data_t>& result) const
     {
-        if (adjoint)
+        if constexpr (adjoint)
             result = 0;
 
-        const index_t sizeOfRange = _rangeDescriptor->getNumberOfCoefficients();
+        const auto sizeOfRange = _rangeDescriptor->getNumberOfCoefficients();
         const auto rangeDim = _rangeDescriptor->getNumberOfDimensions();
 
         // iterate over all rays
@@ -87,7 +88,7 @@ namespace elsa
             // --> setup traversal algorithm
             TraverseAABBJosephsMethod traverse(_boundingBox, ray);
 
-            if (!adjoint)
+            if constexpr (!adjoint)
                 result[ir] = 0;
 
             // Make steps through the volume
@@ -97,27 +98,34 @@ namespace elsa
                 float intersection = traverse.getIntersectionLength();
 
                 // to avoid code duplicates for apply and applyAdjoint
-                index_t from;
-                index_t to;
-                if (adjoint) {
-                    to = _domainDescriptor->getIndexFromCoordinate(currentVoxel);
-                    from = ir;
-                } else {
-                    to = ir;
-                    from = _domainDescriptor->getIndexFromCoordinate(currentVoxel);
-                }
+                auto [to, from] = [&]() {
+                    const auto curVoxIndex =
+                        _domainDescriptor->getIndexFromCoordinate(currentVoxel);
+                    return adjoint ? std::pair{curVoxIndex, ir} : std::pair{ir, curVoxIndex};
+                }();
+
+                // #dfrank: This supresses a clang-tidy warning:
+                // "error: reference to local binding 'to' declared in enclosing
+                // context [clang-diagnostic-error]", which seems to be based on
+                // clang-8, and a bug in the standard, as structured bindings are not
+                // "real" variables, but only references. I'm not sure why a warning is
+                // generated though
+                auto tmpTo = to;
+                auto tmpFrom = from;
 
                 switch (_interpolation) {
                     case Interpolation::LINEAR:
-                        linear(vector, result, traverse.getFractionals(), adjoint, rangeDim,
-                               currentVoxel, intersection, from, to, traverse.getIgnoreDirection());
+                        linear<adjoint>(vector, result, traverse.getFractionals(), rangeDim,
+                                        currentVoxel, intersection, from, to,
+                                        traverse.getIgnoreDirection());
                         break;
                     case Interpolation::NN:
-                        if (adjoint) {
+                        if constexpr (adjoint) {
 #pragma omp atomic
-                            result[to] += intersection * vector[from];
+                            // NOLINTNEXTLINE
+                            result[tmpTo] += intersection * vector[tmpFrom];
                         } else {
-                            result[to] += intersection * vector[from];
+                            result[tmpTo] += intersection * vector[tmpFrom];
                         }
                         break;
                 }
@@ -135,7 +143,8 @@ namespace elsa
         auto detectorCoord = _rangeDescriptor->getCoordinateFromIndex(detectorIndex);
 
         // center of detector pixel is 0.5 units away from the corresponding detector coordinates
-        auto geometry = _geometryList.at(detectorCoord(dimension - 1));
+        auto geometry =
+            _geometryList.at(std::make_unsigned_t<index_t>(detectorCoord(dimension - 1)));
         auto [ro, rd] = geometry.computeRayTo(
             detectorCoord.block(0, 0, dimension - 1, 1).template cast<real_t>().array() + 0.5);
 
@@ -143,29 +152,31 @@ namespace elsa
     }
 
     template <typename data_t>
+    template <bool adjoint>
     void JosephsMethod<data_t>::linear(const DataContainer<data_t>& vector,
                                        DataContainer<data_t>& result,
-                                       const RealVector_t& fractionals, bool adjoint, int domainDim,
+                                       const RealVector_t& fractionals, index_t domainDim,
                                        const IndexVector_t& currentVoxel, float intersection,
                                        index_t from, index_t to, int mainDirection) const
     {
-        float weight = intersection;
+        data_t weight = intersection;
         IndexVector_t interpol = currentVoxel;
 
         // handle diagonal if 3D
         if (domainDim == 3) {
             for (int i = 0; i < domainDim; i++) {
                 if (i != mainDirection) {
-                    weight *= fabs(fractionals(i));
+                    weight *= std::abs(fractionals(i));
                     interpol(i) += (fractionals(i) < 0.0) ? -1 : 1;
                     // mirror values at border if outside the volume
-                    if (interpol(i) < _boundingBox._min(i) || interpol(i) > _boundingBox._max(i))
-                        interpol(i) = _boundingBox._min(i);
-                    else if (interpol(i) == _boundingBox._max(i))
-                        interpol(i) = _boundingBox._max(i) - 1;
+                    auto interpolVal = static_cast<real_t>(interpol(i));
+                    if (interpolVal < _boundingBox._min(i) || interpolVal > _boundingBox._max(i))
+                        interpol(i) = static_cast<index_t>(_boundingBox._min(i));
+                    else if (interpolVal == _boundingBox._max(i))
+                        interpol(i) = static_cast<index_t>(_boundingBox._max(i)) - 1;
                 }
             }
-            if (adjoint) {
+            if constexpr (adjoint) {
 #pragma omp atomic
                 result(interpol) += weight * vector[from];
             } else {
@@ -175,8 +186,8 @@ namespace elsa
 
         // handle current voxel
         weight = intersection * (1 - fractionals.array().abs()).prod()
-                 / (1 - fabs(fractionals(mainDirection)));
-        if (adjoint) {
+                 / (1 - std::abs(fractionals(mainDirection)));
+        if constexpr (adjoint) {
 #pragma omp atomic
             result[to] += weight * vector[from];
         } else {
@@ -186,17 +197,18 @@ namespace elsa
         // handle neighbors not along the main direction
         for (int i = 0; i < domainDim; i++) {
             if (i != mainDirection) {
-                float weightn = weight * fabs(fractionals(i)) / (1 - fabs(fractionals(i)));
+                data_t weightn = weight * std::abs(fractionals(i)) / (1 - std::abs(fractionals(i)));
                 interpol = currentVoxel;
                 interpol(i) += (fractionals(i) < 0.0) ? -1 : 1;
 
                 // mirror values at border if outside the volume
-                if (interpol(i) < _boundingBox._min(i) || interpol(i) > _boundingBox._max(i))
-                    interpol(i) = _boundingBox._min(i);
-                else if (interpol(i) == _boundingBox._max(i))
-                    interpol(i) = _boundingBox._max(i) - 1;
+                auto interpolVal = static_cast<real_t>(interpol(i));
+                if (interpolVal < _boundingBox._min(i) || interpolVal > _boundingBox._max(i))
+                    interpol(i) = static_cast<index_t>(_boundingBox._min(i));
+                else if (interpolVal == _boundingBox._max(i))
+                    interpol(i) = static_cast<index_t>(_boundingBox._max(i)) - 1;
 
-                if (adjoint) {
+                if constexpr (adjoint) {
 #pragma omp atomic
                     result(interpol) += weightn * vector[from];
                 } else {

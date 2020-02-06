@@ -38,7 +38,7 @@ SCENARIO("Solving a simple linear problem")
 
         WHEN("setting up a gd solver")
         {
-            GradientDescent solver(prob, 0.1);
+            GradientDescent solver(prob, 0.1f);
 
             THEN("the clone works correctly")
             {

@@ -41,9 +41,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    QuadricProblem<data_t>::QuadricProblem(const Problem<data_t>& optimizationProblem)
-        : Problem<data_t>{*quadricFromProblem(optimizationProblem),
-                          optimizationProblem.getCurrentSolution()}
+    QuadricProblem<data_t>::QuadricProblem(const Problem<data_t>& problem)
+        : Problem<data_t>{*quadricFromProblem(problem), problem.getCurrentSolution()}
     {
         // sanity checks are done in the member constructors already
     }
@@ -52,16 +51,6 @@ namespace elsa
     QuadricProblem<data_t>* QuadricProblem<data_t>::cloneImpl() const
     {
         return new QuadricProblem(*this);
-    }
-
-    template <typename data_t>
-    bool QuadricProblem<data_t>::isEqual(const Problem<data_t>& other) const
-    {
-        if (!Problem<data_t>::isEqual(other))
-            return false;
-
-        auto otherQP = dynamic_cast<const QuadricProblem*>(&other);
-        return static_cast<bool>(otherQP);
     }
 
     template <typename data_t>
@@ -115,7 +104,7 @@ namespace elsa
                                                                lambda * W.getScaleFactor());
             else
                 lambdaWPtr = std::make_unique<Scaling<data_t>>(W.getDomainDescriptor(),
-                                                               lambda * W.getScaleFactor());
+                                                               lambda * W.getScaleFactors());
 
             const auto& lambdaW = *lambdaWPtr;
 
@@ -174,7 +163,7 @@ namespace elsa
             return std::unique_ptr<Quadric<data_t>>{
                 static_cast<Quadric<data_t>*>(functional.clone().release())};
         } else {
-            std::unique_ptr<LinearOperator<data_t>> quadricOp;
+            std::unique_ptr<LinearOperator<data_t>> dataTermOp;
             std::unique_ptr<DataContainer<data_t>> quadricVec;
 
             // convert data term
@@ -182,18 +171,16 @@ namespace elsa
                 const LinearResidual<data_t>& residual = trueFunctionalPtr->getGradientExpression();
 
                 if (residual.hasOperator()) {
-                    quadricOp = std::make_unique<LinearOperator<data_t>>(residual.getOperator());
+                    dataTermOp = residual.getOperator().clone();
                 } else {
-                    quadricOp = std::make_unique<Identity<data_t>>(residual.getDomainDescriptor());
+                    dataTermOp = std::make_unique<Identity<data_t>>(residual.getDomainDescriptor());
                 }
 
                 if (residual.hasDataVector()) {
                     quadricVec = std::make_unique<DataContainer<data_t>>(residual.getDataVector());
                 }
-            }
-
-            if (const auto trueFunctionalPtr =
-                    dynamic_cast<const L2NormPow2<data_t>*>(&functional)) {
+            } else if (const auto trueFunctionalPtr =
+                           dynamic_cast<const L2NormPow2<data_t>*>(&functional)) {
                 const auto residualPtr =
                     dynamic_cast<const LinearResidual<data_t>*>(&trueFunctionalPtr->getResidual());
                 if (!residualPtr)
@@ -202,14 +189,14 @@ namespace elsa
 
                 if (residualPtr->hasOperator()) {
                     const auto& A = residualPtr->getOperator();
-                    quadricOp = std::make_unique<LinearOperator<data_t>>(adjoint(A) * A);
+                    dataTermOp = std::make_unique<LinearOperator<data_t>>(adjoint(A) * A);
 
                     if (residualPtr->hasDataVector()) {
                         quadricVec = std::make_unique<DataContainer<data_t>>(
                             A.applyAdjoint(residualPtr->getDataVector()));
                     }
                 } else {
-                    quadricOp =
+                    dataTermOp =
                         std::make_unique<Identity<data_t>>(residualPtr->getDomainDescriptor());
 
                     if (residualPtr->hasDataVector()) {
@@ -229,14 +216,14 @@ namespace elsa
 
                 if (residualPtr->hasOperator()) {
                     const auto& A = residualPtr->getOperator();
-                    quadricOp = std::make_unique<LinearOperator<data_t>>(adjoint(A) * W * A);
+                    dataTermOp = std::make_unique<LinearOperator<data_t>>(adjoint(A) * W * A);
 
                     if (residualPtr->hasDataVector()) {
                         quadricVec = std::make_unique<DataContainer<data_t>>(
                             A.applyAdjoint(W.apply(residualPtr->getDataVector())));
                     }
                 } else {
-                    quadricOp = W.clone();
+                    dataTermOp = W.clone();
 
                     if (residualPtr->hasDataVector()) {
                         quadricVec = std::make_unique<DataContainer<data_t>>(
@@ -244,14 +231,30 @@ namespace elsa
                     }
                 }
             } else {
-                throw std::logic_error("Quadric problem: can only convert functionals of type "
+                throw std::logic_error("QuadricProblem: can only convert functionals of type "
                                        "(Weighted)L2NormPow2 to Quadric");
             }
 
+            if (problem.getRegularizationTerms().empty()) {
+                if (!quadricVec) {
+                    return std::make_unique<Quadric<data_t>>(*dataTermOp);
+                } else {
+                    return std::make_unique<Quadric<data_t>>(*dataTermOp, *quadricVec);
+                }
+            }
+
             // add regularization terms
-            for (const RegularizationTerm<data_t>& regTerm : problem.getRegularizationTerms()) {
+            LinearOperator<data_t> quadricOp{dataTermOp->getDomainDescriptor(),
+                                             dataTermOp->getRangeDescriptor()};
+
+            for (std::size_t i = 0; i < problem.getRegularizationTerms().size(); i++) {
+                const auto& regTerm = problem.getRegularizationTerms()[i];
                 LinearResidual<data_t> residual = getGradientExpression(regTerm);
-                *quadricOp = *quadricOp + residual.getOperator();
+
+                if (i == 0)
+                    quadricOp = (*dataTermOp + residual.getOperator());
+                else
+                    quadricOp = quadricOp + residual.getOperator();
 
                 if (residual.hasDataVector()) {
                     if (!quadricVec)
@@ -263,9 +266,9 @@ namespace elsa
             }
 
             if (!quadricVec) {
-                return std::make_unique<Quadric<data_t>>(*quadricOp);
+                return std::make_unique<Quadric<data_t>>(quadricOp);
             } else {
-                return std::make_unique<Quadric<data_t>>(*quadricOp, *quadricVec);
+                return std::make_unique<Quadric<data_t>>(quadricOp, *quadricVec);
             }
         }
     }

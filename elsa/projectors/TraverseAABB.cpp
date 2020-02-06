@@ -14,7 +14,7 @@ namespace elsa
         initStepDirection(r.direction());
 
         // select the initial voxel (closest to the entry point)
-        selectClosestVoxel(r.direction());
+        selectClosestVoxel();
 
         // initialize the step sizes for the step parameter
         initDelta(r.direction());
@@ -65,7 +65,7 @@ namespace elsa
     void TraverseAABB::calculateAABBIntersections(const TraverseAABB::Ray& r)
     {
         // entry and exit point parameters
-        real_t tmin, tmax;
+        real_t tmin;
 
         // --> calculate intersection parameter and if the volume is hit
         auto opt = Intersection::withRay(_aabb, r);
@@ -91,7 +91,7 @@ namespace elsa
         _stepDirection = rd.array().sign();
     }
 
-    void TraverseAABB::selectClosestVoxel(const RealVector_t& rd)
+    void TraverseAABB::selectClosestVoxel()
     {
         RealVector_t lowerCorner = _entryPoint.array().floor();
         lowerCorner =

@@ -27,12 +27,12 @@ namespace elsa
         std::unique_ptr<Derived> clone() const { return std::unique_ptr<Derived>(cloneImpl()); }
 
         /// comparison operators
-        bool operator==(const Derived& other) const
-        {
-            return typeid(*this) == typeid(other) && isEqual(other);
-        }
+        bool operator==(const Derived& other) const { return isEqual(other); }
 
         bool operator!=(const Derived& other) const { return !(*this == other); }
+
+        /// delete implicitly declared copy assignment to prevent copy assignment of derived classes
+        Cloneable& operator=(const Cloneable&) = delete;
 
     protected:
         /// actual clone implementation method, abstract to force override in derived classes
@@ -42,10 +42,8 @@ namespace elsa
         virtual bool isEqual(const Derived& other) const = 0;
 
         /// default copy constructor, protected to not be publicly available (but available for
-        /// cloneImpl)
+        /// cloneImpl()
         Cloneable(const Cloneable&) = default;
-        /// default copy assignment, protected to not be publicly available
-        Cloneable& operator=(const Cloneable&) = default;
     };
 
 } // namespace elsa

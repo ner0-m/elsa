@@ -4,7 +4,7 @@
 
 #include <cuda_runtime.h>
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "LinearOperator.h"
 #include "Geometry.h"
 #include "BoundingBox.h"
@@ -61,9 +61,12 @@ namespace elsa
                           const std::vector<Geometry>& geometryList, bool fast = true);
 
         /// destructor
-        virtual ~JosephsMethodCUDA();
+        ~JosephsMethodCUDA() override;
 
     protected:
+        /// copy constructor, used for cloning
+        JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other);
+
         /// apply Joseph's method (i.e. forward projection)
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
@@ -85,7 +88,8 @@ namespace elsa
         std::vector<Geometry> _geometryList;
 
         /// threads per block used in the kernel execution configuration
-        const int _threadsPerBlock = TraverseJosephsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
+        static const unsigned int THREADS_PER_BLOCK =
+            TraverseJosephsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
 
         /// flag specifying which version of the backward projection should be used
         const bool _fast;

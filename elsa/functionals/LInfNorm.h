@@ -38,6 +38,9 @@ namespace elsa
          */
         explicit LInfNorm(const Residual<data_t>& residual);
 
+        /// make copy constructor deletion explicit
+        LInfNorm(const LInfNorm<data_t>&) = delete;
+
         /// default destructor
         ~LInfNorm() override = default;
 

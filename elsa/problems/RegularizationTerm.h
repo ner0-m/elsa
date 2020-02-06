@@ -37,10 +37,10 @@ namespace elsa
         RegularizationTerm<data_t>& operator=(const RegularizationTerm<data_t>& other);
 
         /// move constructor
-        RegularizationTerm(RegularizationTerm<data_t>&& other);
+        RegularizationTerm(RegularizationTerm<data_t>&& other) noexcept;
 
         /// move assignment
-        RegularizationTerm<data_t>& operator=(RegularizationTerm<data_t>&& other);
+        RegularizationTerm<data_t>& operator=(RegularizationTerm<data_t>&& other) noexcept;
 
         /// the default destructor
         ~RegularizationTerm() = default;

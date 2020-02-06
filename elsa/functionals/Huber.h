@@ -42,6 +42,9 @@ namespace elsa
          */
         explicit Huber(const Residual<data_t>& residual, real_t delta = static_cast<real_t>(1e-6));
 
+        /// make copy constructor deletion explicit
+        Huber(const Huber<data_t>&) = delete;
+
         /// default destructor
         ~Huber() override = default;
 

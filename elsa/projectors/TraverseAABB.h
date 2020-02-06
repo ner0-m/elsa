@@ -1,6 +1,6 @@
 #pragma once
 
-#include "elsa.h"
+#include "elsaDefines.h"
 #include "BoundingBox.h"
 
 #include <Eigen/Geometry>
@@ -86,15 +86,13 @@ namespace elsa
         /// constant vector containing the maximum number
         const RealVector_t _MAX{
             RealVector_t(_aabb._dim).setConstant(std::numeric_limits<real_t>::max())};
-        /// constant to decide whether we are in next voxel
-        const real_t _NEXT_VOXEL_THRESHOLD{0.01};
 
         /// compute the entry and exit points of ray r with the volume (aabb)
         void calculateAABBIntersections(const Ray& r);
         /// setup the step directions (which is basically the sign of the ray direction rd)
         void initStepDirection(const RealVector_t& rd);
-        /// select the closest voxel to the entry point (considering the ray direction rd)
-        void selectClosestVoxel(const RealVector_t& rd);
+        /// select the closest voxel to the entry point
+        void selectClosestVoxel();
         /// setup the step sizes considering the ray direction rd
         void initDelta(const RealVector_t& rd);
         /// setup the maximum step parameters considering the ray direction rd

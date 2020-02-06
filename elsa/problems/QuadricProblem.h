@@ -81,7 +81,7 @@ namespace elsa
         /**
          * \brief Constructor for converting a general optimization problem to a quadric one
          *
-         * \param[in] optimizationProblem the problem to be converted
+         * \param[in] problem the problem to be converted
          *
          * Only problems that consist exclusively of Quadric and (Weighted)L2NormPow2 terms
          * can be converted. If (Weighted)L2NormPow2 terms are present, they should be acting
@@ -89,14 +89,11 @@ namespace elsa
          *
          * Acts as a copy constructor if the supplied optimization problem is a quadric problem.
          */
-        explicit QuadricProblem(const Problem<data_t>& optimizationProblem);
+        explicit QuadricProblem(const Problem<data_t>& problem);
 
     protected:
         /// implement the polymorphic clone operation
         QuadricProblem<data_t>* cloneImpl() const override;
-
-        /// implement the polymorphic comparison operation
-        bool isEqual(const Problem<data_t>& other) const override;
 
     private:
         /// lift from base class

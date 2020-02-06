@@ -37,6 +37,9 @@ namespace elsa
          */
         explicit L2NormPow2(const Residual<data_t>& residual);
 
+        /// make copy constructor deletion explicit
+        L2NormPow2(const L2NormPow2<data_t>&) = delete;
+
         /// default destructor
         ~L2NormPow2() override = default;
 

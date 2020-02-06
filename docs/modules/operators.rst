@@ -18,3 +18,8 @@ FiniteDifferences
 =================
 
 .. doxygenclass:: elsa::FiniteDifferences
+
+BlockLinearOperator
+===================
+
+.. doxygenclass:: elsa::BlockLinearOperator
