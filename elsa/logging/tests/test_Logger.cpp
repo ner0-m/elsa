@@ -88,42 +88,39 @@ SCENARIO("Using Loggers")
                 REQUIRE(true);
             }
         }
-        
+
         WHEN("Adding Custom Sink")
         {
             spdlog::sink_ptr custom_sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
-            Logger::addCustomSink(custom_sink,name);
+            Logger::addCustomSink(custom_sink, name);
             auto otherLogger = Logger::get("other");
-            
+
             THEN("The sink is only added to one specific Logger")
             {
-                REQUIRE(testLogger->sinks().size() == otherLogger->sinks().size()+1);
+                REQUIRE(testLogger->sinks().size() == otherLogger->sinks().size() + 1);
             }
-            
+
             THEN("We can add multiple sinks to one Logger")
             {
                 int num_sinks = testLogger->sinks().size();
-                spdlog::sink_ptr new_custom_sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
-                Logger::addCustomSink(new_custom_sink,name);
-                
-                REQUIRE(testLogger->sinks().size() == num_sinks+1);
+                spdlog::sink_ptr new_custom_sink =
+                    std::make_shared<spdlog::sinks::stdout_color_sink_st>();
+                Logger::addCustomSink(new_custom_sink, name);
+
+                REQUIRE(testLogger->sinks().size() == num_sinks + 1);
             }
-           
+
             THEN("actually logging works")
             {
                 testLogger->info("This is another warning");
                 REQUIRE(true);
             }
-            
         }
-        
+
         WHEN("Clearing the logger map")
         {
             Logger::clearMap();
-            THEN("The size of the map is 0")
-            {
-                REQUIRE(Logger::isEmpty());
-            }
+            THEN("The size of the map is 0") { REQUIRE(Logger::isEmpty()); }
             THEN("One can insert new loggers with new sinks")
             {
                 testLogger = Logger::get(name);
