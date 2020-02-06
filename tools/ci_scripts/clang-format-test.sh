@@ -2,9 +2,6 @@
 
 # Applies clang-format
 
-git clean -n
-git status --untracked-files=no --porcelain
-
 # check that we are in a clean state in order to prevent accidential changes
 if [ ! -z "$(git status --untracked-files=no  --porcelain)" ]; then
   echo "Script must be applied on a clean git state"
