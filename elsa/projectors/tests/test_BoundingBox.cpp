@@ -17,8 +17,8 @@ SCENARIO("Testing 2d AABB")
     {
         // setup
         std::size_t dim = 2;
-        size_t x = 10;
-        size_t y = 15;
+        index_t x = 10;
+        index_t y = 15;
         IndexVector_t volumeDims(dim);
         volumeDims << x, y;
 
@@ -69,9 +69,9 @@ SCENARIO("Testing 3D aabb")
     {
         // setup
         size_t dim = 3;
-        size_t x = 10;
-        size_t y = 15;
-        size_t z = 20;
+        index_t x = 10;
+        index_t y = 15;
+        index_t z = 20;
         IndexVector_t volumeDims(dim);
         volumeDims << x, y, z;
 

@@ -41,8 +41,8 @@ SCENARIO("Construction of a 2D traversal object")
 {
     // setup
     size_t dim = 2;
-    size_t x = 3;
-    size_t y = 3;
+    index_t x = 3;
+    index_t y = 3;
     IndexVector_t volumeDims(dim);
     volumeDims << x, y;
 
@@ -537,9 +537,9 @@ SCENARIO("Traverse a minimal 3D volume of size 1x1x1")
 {
     // setup
     size_t dim = 3;
-    size_t x = 1;
-    size_t y = 1;
-    size_t z = 1;
+    index_t x = 1;
+    index_t y = 1;
+    index_t z = 1;
     IndexVector_t volumeDims(dim);
     volumeDims << x, y, z;
 
@@ -579,8 +579,8 @@ SCENARIO("Traverse a 2D volume and only check that the endpoint is correct")
 {
     // setup
     size_t dim = 2;
-    size_t x = 10;
-    size_t y = 10;
+    index_t x = 10;
+    index_t y = 10;
     IndexVector_t volumeDims(dim);
     volumeDims << x, y;
 
@@ -667,8 +667,8 @@ SCENARIO("Traverse a 3D Volume diagonally")
 SCENARIO("Check that the first step into the 2D Volume is correct")
 {
     size_t dim = 2;
-    size_t x = 5;
-    size_t y = 5;
+    index_t x = 5;
+    index_t y = 5;
     IndexVector_t volumeDims(dim);
     volumeDims << x, y;
 
@@ -739,8 +739,8 @@ SCENARIO("Traverse_Volume_2D_EachPointIsTested")
 {
     // setup
     size_t dim = 2;
-    size_t x = 128;
-    size_t y = 128;
+    index_t x = 128;
+    index_t y = 128;
     IndexVector_t volumeDims(dim);
     volumeDims << x, y;
     BoundingBox aabb(volumeDims);
@@ -773,8 +773,8 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
     // TODO Then make some harder ones
     // setup
     size_t dim = 2;
-    size_t x = 128;
-    size_t y = 128;
+    index_t x = 128;
+    index_t y = 128;
     IndexVector_t volumeDims(dim);
     volumeDims << x, y;
     BoundingBox aabb(volumeDims);
