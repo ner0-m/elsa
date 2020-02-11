@@ -1,6 +1,7 @@
 #include "PartitionDescriptor.h"
 
 #include <unordered_map>
+#include <type_traits>
 
 namespace elsa
 {
@@ -66,10 +67,11 @@ namespace elsa
 
             if (it != sizeToIndex.end()) {
                 _indexMap[i] = it->second;
-                numCoeffs = _blockDescriptors[it->second]->getNumberOfCoefficients();
+                auto index = std::make_unsigned_t<index_t>(it->second);
+                numCoeffs = _blockDescriptors[index]->getNumberOfCoefficients();
             } else {
                 sizeToIndex.insert({slicesInBlock[i], _blockDescriptors.size()});
-                _indexMap[i] = _blockDescriptors.size();
+                _indexMap[i] = std::make_signed_t<long>(_blockDescriptors.size());
                 _blockDescriptors.push_back(generateDescriptorOfPartition(slicesInBlock[i]));
                 numCoeffs = _blockDescriptors.back()->getNumberOfCoefficients();
             }
@@ -93,7 +95,8 @@ namespace elsa
         if (i < 0 || i >= getNumberOfBlocks())
             throw std::invalid_argument("BlockDescriptor: index i is out of bounds");
 
-        return *_blockDescriptors[_indexMap[i]];
+        auto index = std::make_unsigned_t<long>(_indexMap[i]);
+        return *_blockDescriptors[index];
     }
 
     index_t PartitionDescriptor::getOffsetOfBlock(index_t i) const
