@@ -20,9 +20,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>& Solver<data_t>::solve(index_t iterations)
+    DataContainer<data_t>& Solver<data_t>::solve(index_t iterations, std::function<bool(int,DataContainer<data_t>&)> trackOutput)
     {
-        return solveImpl(iterations);
+        return solveImpl(iterations, trackOutput);
     }
 
     template <typename data_t>
