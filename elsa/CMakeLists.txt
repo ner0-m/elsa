@@ -16,6 +16,8 @@ macro(ELSA_TEST NAME)
     target_link_libraries(test_${NAME} PRIVATE Catch2::Catch2 ${ELSA_MODULE_TARGET_NAME})
     # enable C++17
     target_compile_features(test_${NAME} PUBLIC cxx_std_17)
+    # include helpers
+    target_include_directories(test_${NAME} PRIVATE ${CMAKE_SOURCE_DIR}/elsa/test_routines/)
 
     # if we use JUnit reporter handle arguments
     if(${ELSA_CREATE_JUNIT_REPORTS})

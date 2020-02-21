@@ -11,6 +11,7 @@
 #include <catch2/catch.hpp>
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
+#include "testHelpers.h"
 
 template <typename data_t>
 long elsa::useCount(const DataHandlerCPU<data_t>& dh)
@@ -433,11 +434,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1>::Random(size);
                 TestType dh2(randVec2);
 
-                REQUIRE(std::abs(dh.dot(dh2) - randVec.dot(randVec2)) == Approx(0.f));
+                REQUIRE(checkSameNumbers(dh.dot(dh2), randVec.dot(randVec2)));
 
                 auto dhMap = dh2.getBlock(0, dh2.getSize());
 
-                REQUIRE(std::abs(dh.dot(*dhMap) - randVec.dot(randVec2)) == Approx(0.f));
+                REQUIRE(checkSameNumbers(dh.dot(*dhMap), randVec.dot(randVec2)));
             }
 
             THEN("the dot product expects correctly sized arguments")
@@ -518,13 +519,13 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
                 dh /= dh2;
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
-                        REQUIRE(std::abs(dh[i] - oldDh[i] / dh2[i]) == Approx(0).margin(0.00001));
+                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
 
                 dh = oldDh;
                 dh /= *dhMap;
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
-                        REQUIRE(std::abs(dh[i] - oldDh[i] / dh2[i]) == Approx(0).margin(0.00001));
+                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
             }
 
             THEN("the element-wise binary scalar operations work as expected")
@@ -549,7 +550,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
                 dh = oldDh;
                 dh /= scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(std::abs(dh[i] - oldDh[i] / scalar) == Approx(0).margin(0.00001));
+                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] / scalar));
             }
 
             THEN("the element-wise assignment of a scalar works as expected")
