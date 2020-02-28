@@ -164,3 +164,14 @@ if(ELSA_INSTALL)
     # ...but we rely on the paths in the installed version. sigh. commented out for now.
     #export(PACKAGE elsa)
 endif(ELSA_INSTALL)
+
+
+##
+# Add uninstall target
+# Remove all headers, library and CMake files, which where copied to the install location
+
+add_custom_target(uninstall
+    COMMAND ${CMAKE_COMMAND} -P "${PROJECT_SOURCE_DIR}/cmake/Uninstall.cmake"
+    COMMENT "Uninstalling elsa (Removing all installed files)"
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt"
+    )

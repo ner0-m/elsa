@@ -1,0 +1,49 @@
+# Take the base image with CMake and Intel MKL
+FROM elsa/base-cmake:latest as build
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+MAINTAINER David Frank <dfrank@in.tum.de>
+
+LABEL Description="GCC image on Debian with cmake/git"
+
+ARG COMPILER_VERSION=9
+
+RUN apt-get update \
+ && apt-get --no-install-recommends  install build-essential software-properties-common -qqy \
+ && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
+ && apt-get update \
+ && apt-get --no-install-recommends  install gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} -qqy \
+ && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${COMPILER_VERSION} 100 --slave /usr/bin/g++ g++ /usr/bin/g++-${COMPILER_VERSION} \
+ && update-alternatives --config gcc && ldconfig
+
+ENV CC="gcc"
+ENV CXX="g++"
+
+FROM build as build-dnnl
+
+# Intel DNNL Versions
+ARG DNNL_VERSION=1.1.1
+
+RUN /tmp/scripts/install_inteldnnl.sh ${DNNL_VERSION}
+
+# Final stage with GCC and DNNL installed
+FROM build
+
+COPY --from=build-dnnl /tmp/dnnl_install /usr/local/
+
+# setup conan home directory, to be in the cache of our CI pipeline
+ENV CONAN_USER_HOME=/cache
+
+# setup conan for gcc
+RUN conan profile new default --detect \
+ && conan profile update settings.compiler.libcxx=libstdc++11 default \
+ && conan profile update settings.compiler.cppstd=17 default \
+ && conan profile update env.CC=gcc default \
+ && conan profile update env.CXX=g++ default \
+ && conan profile update env.CONAN_CMAKE_GENERATOR=Ninja default \
+ && conan profile show default
+
+# Add test scripts
+ADD tests/ /tmp/tests/
+
+CMD bash
+

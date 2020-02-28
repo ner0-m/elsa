@@ -6,12 +6,21 @@ stages:
 - sanitizer
 - docs
 
+### variables ###
+
+variables:
+  ANALYSIS_IMAGE: "elsa/static-analysis:8"
+  GCC_IMAGE: "elsa/gcc:9"
+  CLANG_IMAGE: "elsa/clang:9"
+  CUDA_IMAGE: "elsa/cuda:10.2"
+  UBUNTU_IMAGE: "elsa/ubuntu:18.04"
+  
+
 ### job templates ###
 
 .job_template: &nightly_job
   only:
     - schedules
-
 
 .job_template: &build_job
   stage: compile
@@ -37,20 +46,20 @@ stages:
     - mkdir -p build
     - cd build
     - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja -j 8 
+    - ninja 
 
 .buildjob_script_normal:
   script: &buildjob_normal
     - mkdir -p build
     - cd build
     - cmake .. -GNinja
-    - ninja -j 8
+    - ninja
 
 .job_template: &test_job_artifact
   script:
     - cd build
     - cmake -GNinja -DELSA_CREATE_JUNIT_REPORTS=ON ..
-    - ninja tests -j 8
+    - ninja tests
   artifacts:
     reports:
       junit: "build/test_reports/test_*.xml"
@@ -60,7 +69,7 @@ stages:
 
 clang-format:
   stage: static-test
-  image: elsa/clang:8
+  image: $ANALYSIS_IMAGE
   script:
     ./tools/ci_scripts/clang-format-test.sh
   tags:
@@ -70,7 +79,7 @@ clang-format:
 
 clang-tidy:
   stage: static-test
-  image: elsa/clang-tidy:8
+  image: $ANALYSIS_IMAGE
   script:
     ./tools/ci_scripts/clang-tidy.sh
   tags:
@@ -83,33 +92,33 @@ clang-tidy:
 
 build-ubuntu:
   <<: *build_job_artifact
-  image: elsa/ubuntu:18.04
+  image: $UBUNTU_IMAGE
   script: *buildjob_normal
   tags:
     - linux
     - elsa
 
-build-gcc9:
+build-gcc:
   <<: *build_job_artifact
-  image: elsa/gcc:9
+  image: $GCC_IMAGE
   script: *buildjob_normal
   tags:
     - linux
     - elsa
     - gcc
     
-build-clang8:
+build-clang:
   <<: *build_job_artifact
-  image: elsa/clang:8
+  image: $CLANG_IMAGE
   script: *buildjob_clang
   tags:
     - linux
     - elsa
     - clang
 
-build-cuda92:
+build-cuda:
   <<: *build_job_artifact
-  image: elsa/cuda:9.2
+  image: $CUDA_IMAGE
   script: *buildjob_normal
   tags:
     - linux
@@ -123,41 +132,41 @@ build-cuda92:
 test-ubuntu:
   <<: *test_job_artifact
   stage: test
-  image: elsa/ubuntu:18.04
+  image: $UBUNTU_IMAGE
   dependencies: 
     - build-ubuntu
   tags:
     - linux
     - elsa
 
-test-gcc9:
+test-gcc:
   <<: *test_job_artifact
   stage: test
-  image: elsa/gcc:9
+  image: $GCC_IMAGE
   dependencies:
-    - build-gcc9
+    - build-gcc
   tags:
     - linux
     - elsa
     - gcc
     
-test-clang8:
+test-clang:
   <<: *test_job_artifact
   stage: test
-  image: elsa/clang:8
+  image: $CLANG_IMAGE
   dependencies:
-    - build-clang8
+    - build-clang
   tags:
     - linux
     - elsa
     - clang
 
-test-cuda92:
+test-cuda:
   <<: *test_job_artifact
   stage: test
-  image: elsa/cuda:9.2
+  image: $CUDA_IMAGE
   dependencies:
-    - build-cuda92
+    - build-cuda
   tags:
     - linux
     - elsa
@@ -170,14 +179,14 @@ test-cuda92:
 test-coverage:
   <<: *nightly_job
   stage: coverage
-  image: elsa/cuda:9.2
+  image: $CUDA_IMAGE
   dependencies: []
   script:
     - mkdir -p build
     - cd build
     - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
-    - ninja tests -j 8
-    - ninja test_coverage -j 8
+    - ninja tests
+    - ninja test_coverage
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
     paths:
@@ -189,13 +198,12 @@ test-coverage:
     - gcc
     - cuda
 
-
 ### Sanitizers ###
 
 #thread-sanitizer:
 #  <<: *nightly_job
 #  stage: sanitizer
-#  image: elsa/cuda:9.2
+#  image: $CUDA_IMAGE
 #  script:
 #    - mkdir -p build
 #    - cd build
@@ -213,7 +221,7 @@ test-coverage:
 #address-sanitizer:
 #  <<: *nightly_job
 #  stage: sanitizer
-#  image: elsa/cuda:9.2
+#  image: $CUDA_IMAGE
 #  script:
 #    - mkdir -p build
 #    - cd build
@@ -246,4 +254,36 @@ deploy-docs:
     - cp -r build/test_coverage/* /var/www/ip/elsacoverage/
   tags:
     - elsa-docs-deploy
+
+
+### build, test and deploy docker images ###
+.deploy-docker:
+  image: elsa/base:latest
+  <<: *nightly_job
+  stage: docker
+  script:
+    - cd tools/docker
+    - ./buildDockerContainers.sh
+
+### Test jobs ###
+
+# These jobs, are for local build and test all in one job, should not be run with pipeline
+
+.all-clang:
+  image: $UBUNTU_IMAGE
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - ninja
+    - ninja tests
+
+.all-gcc:
+  image: $GCC_IMAGE
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -GNinja
+    - ninja
+    - ninja tests
 

@@ -1,0 +1,84 @@
+# Provide an argument to choose the compiler version from the command line
+ARG CUDA_VERSION=10.2
+
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu18.04 as base
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+LABEL Description="Cuda develop with cmake/git and clang"
+
+ADD scripts/ /tmp/scripts/
+RUN /tmp/scripts/install_base.sh
+RUN apt-get update -qq && apt-get --no-install-recommends install -qq swig libncurses5-dev libedit-dev libpthread-stubs0-dev lcov \
+  && rm -rf /var/lib/apt/lists/*
+
+FROM base as build-cmake
+
+# CMake version
+ARG CMAKE_VERSION=3.16
+ARG CMAKE_VERSION_PATCH=4
+ARG CMAKE_DIR=cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}
+
+RUN bash /tmp/scripts/install_cmake.sh "${CMAKE_VERSION}" "${CMAKE_DIR}"
+
+FROM base as cmake
+COPY --from=build-cmake /tmp/cmake-install /usr/local
+
+FROM cmake as clone-clang
+
+ARG CLANG_VERSION=9.0.1
+ARG CLANG_TAG=llvmorg-${CLANG_VERSION}
+
+RUN git clone --depth 1 --branch ${CLANG_TAG} https://github.com/llvm/llvm-project.git /tmp/llvm_project/
+
+FROM cmake as configure-clang
+COPY --from=clone-clang /tmp/llvm_project/ /tmp/llvm_project/
+
+RUN mkdir -p /tmp/llvm_build/ && mkdir -p /tmp/llvm_install/ \
+  && cmake -S /tmp/llvm_project/llvm/ -B /tmp/llvm_build/ -GNinja -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
+           -DCMAKE_INSTALL_PREFIX=/tmp/llvm_install/ -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=host -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON
+
+### Build LLVM/clang
+FROM cmake as build-clang
+COPY --from=configure-clang /tmp/llvm_project/ /tmp/llvm_project/
+COPY --from=configure-clang /tmp/llvm_build/ /tmp/llvm_build/
+
+# install a reduced version of clang (due to LLVM_INSTALL_TOOLCHAIN_ONLY=ON)
+WORKDIR /tmp/llvm_build/
+RUN ninja install
+WORKDIR /
+
+### Set base for clang ###
+FROM cmake as clang
+COPY --from=build-clang /tmp/llvm_install/ /usr/local/
+
+# Set enviorment variables
+ENV CC="/usr/local/bin/clang"
+ENV CXX="/usr/local/bin/clang++"
+ENV PATH="$PATH:/usr/local/bin/"
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/:/usr/local/lib/"
+
+FROM clang as build-dnnl
+ARG DNNL_VERSION=1.1.1
+RUN /tmp/scripts/install_inteldnnl.sh ${DNNL_VERSION}
+
+FROM clang as dnnl
+COPY --from=build-dnnl /tmp/dnnl_install/ /usr/local/
+
+ADD tests/ /tmp/tests/
+
+ENV CC="gcc"
+ENV CXX="g++"
+
+# setup conan home directory, to be in the cache of our CI pipeline
+ENV CONAN_USER_HOME=/cache
+
+# setup conan for clang
+RUN conan profile new default --detect \
+ && conan profile update settings.compiler.libcxx=libc++ default \
+ && conan profile update settings.compiler.cppstd=17 default \
+ && conan profile update env.CC=clang default \
+ && conan profile update env.CXX=clang++ default \
+ && conan profile update env.CONAN_CMAKE_GENERATOR=Ninja default \
+ && conan profile show default
+
+CMD bash
+

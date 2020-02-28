@@ -1,0 +1,43 @@
+# Provide an argument to choose the compiler version from the command line
+ARG UBUNTU_VERSION=latest
+
+FROM ubuntu:${UBUNTU_VERSION} as base
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+LABEL Description="default Ubuntu 18.04 with build essentials"
+
+# install build tools, cmake, git, ninja
+RUN apt-get -qq update \
+    && DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -qqy g++ gcc ca-certificates wget git cmake ninja-build python3-pip python3-setuptools python3-dev \
+    && pip3 install wheel \
+    && pip3 install conan numpy \
+    && rm -rf /var/lib/apt/lists/*
+
+ADD tests/ /tmp/tests/
+ADD scripts/ /tmp/scripts
+
+ENV CC=gcc
+ENV CXX=g++
+
+FROM base as build-dnnl
+
+ARG DNNL_VERSION=1.1.1
+
+RUN ./tmp/scripts/install_inteldnnl.sh ${DNNL_VERSION}
+
+FROM base
+
+COPY --from=build-dnnl /tmp/dnnl_install /usr/local/
+
+# setup conan home directory, to be in the cache of our CI pipeline
+ENV CONAN_USER_HOME=/cache
+
+# setup conan for gcc
+RUN conan profile new default --detect \
+ && conan profile update settings.compiler.libcxx=libstdc++11 default \
+ && conan profile update settings.compiler.cppstd=17 default \
+ && conan profile update env.CC=gcc default \
+ && conan profile update env.CXX=g++ default \
+ && conan profile update env.CONAN_CMAKE_GENERATOR=Ninja default \
+ && conan profile show default
+
+CMD bash

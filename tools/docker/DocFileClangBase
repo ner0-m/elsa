@@ -1,0 +1,77 @@
+### Clone step of LLVM/clang ###
+FROM elsa/base-cmake:latest as clone
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+MAINTAINER David Frank <dfrank@in.tum.de>
+
+LABEL Description="Clang image based on Ubuntu"
+
+# Provide an argument to choose the compiler version from the command line
+ARG COMPILER_VERSION
+ARG CLANG_TAG=llvmorg-${COMPILER_VERSION}
+
+# Clone llvm-project with the specific tag
+RUN git clone --depth 1 --branch ${CLANG_TAG} https://github.com/llvm/llvm-project.git /tmp/llvm_project/
+
+### Configuration step of LLVM/clang ###
+FROM elsa/base-cmake:latest as configure
+COPY --from=clone /tmp/llvm_project/ /tmp/llvm_project/
+
+RUN mkdir -p /tmp/llvm_build/ && mkdir -p /tmp/llvm_install/ \
+  && cmake -S /tmp/llvm_project/llvm/ -B /tmp/llvm_build/ -GNinja -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
+           -DCMAKE_INSTALL_PREFIX=/tmp/llvm_install/ -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=host -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON
+
+### Build LLVM/clang
+FROM elsa/base-cmake:latest as build
+COPY --from=configure /tmp/llvm_project/ /tmp/llvm_project/
+COPY --from=configure /tmp/llvm_build/ /tmp/llvm_build/
+
+
+# install a reduced version of clang (due to LLVM_INSTALL_TOOLCHAIN_ONLY=ON)
+WORKDIR /tmp/llvm_build/
+RUN ninja install
+WORKDIR /
+
+### Set base for clang ###
+FROM elsa/base-cmake:latest as base
+COPY --from=build /tmp/llvm_install/ /usr/local/
+
+# Set environment variables
+ENV CC="/usr/local/bin/clang"
+ENV CXX="/usr/local/bin/clang++"
+ENV PATH="$PATH:/usr/local/bin/"
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/:/usr/local/lib/"
+
+### Download, configure, build and install Intel DNNL
+FROM base as build-dnnl
+
+# Intel DNNL Versions
+ARG DNNL_VERSION=1.1.1
+
+# Add test scripts
+ADD scripts/ /tmp/scripts/
+
+# Run install script for DNNL
+RUN ./tmp/scripts/install_inteldnnl.sh ${DNNL_VERSION}
+
+### Final stage ###
+FROM base
+
+# Copy Intel DNNL over
+COPY --from=build-dnnl /tmp/dnnl_install /usr/local/
+
+# setup conan home directory, to be in the cache of our CI pipeline
+ENV CONAN_USER_HOME=/cache
+
+# setup conan for clang
+RUN conan profile new default --detect \
+ && conan profile update settings.compiler.libcxx=libc++ default \
+ && conan profile update settings.compiler.cppstd=17 default \
+ && conan profile update env.CC=clang default \
+ && conan profile update env.CXX=clang++ default \
+ && conan profile update env.CONAN_CMAKE_GENERATOR=Ninja default \
+ && conan profile show default
+
+# Add test scripts
+ADD tests/ /tmp/tests/
+
+CMD bash

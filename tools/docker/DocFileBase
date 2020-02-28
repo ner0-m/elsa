@@ -1,0 +1,14 @@
+FROM ubuntu:18.04 as base
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+MAINTAINER David Frank <dfrank@in.tum.de>
+
+LABEL Description="Base image for elsa build system (git, wget, ninja)"
+
+ADD scripts/ /tmp/scripts/
+ADD tests/ /tmp/tests/
+
+ENV DEBIAN_FRONTEND=noninteractive 
+
+RUN /tmp/scripts/install_base.sh
+
+CMD bash

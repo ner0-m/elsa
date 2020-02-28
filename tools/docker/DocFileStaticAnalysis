@@ -1,0 +1,9 @@
+FROM elsa/base-cmake:latest
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+MAINTAINER David Frank <dfrank@in.tum.de>
+
+LABEL Description="Image for static analysis tools (clang-tidy, clang-format)"
+
+RUN apt-get -qq update \
+  && apt-get --no-install-recommends install -qqy clang-tidy-8 clang-format-8 \
+  && rm -rf /var/lib/apt/lists/* 

@@ -1,0 +1,17 @@
+FROM elsa/base:latest as builder
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+MAINTAINER David Frank <dfrank@in.tum.de>
+
+LABEL Description="CMake-Base image for elsa build system"
+
+# install CMAKE
+ARG CMAKE_VERSION=3.16
+ARG CMAKE_VERSION_PATCH=4
+ARG CMAKE_DIR=cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}
+
+RUN bash /tmp/scripts/install_cmake.sh "${CMAKE_VERSION}" "${CMAKE_DIR}"
+
+FROM elsa/base:latest
+COPY --from=builder /tmp/cmake-install /usr/local
+
+CMD bash
