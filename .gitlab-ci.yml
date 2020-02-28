@@ -255,15 +255,19 @@ deploy-docs:
   tags:
     - elsa-docs-deploy
 
-
 ### build, test and deploy docker images ###
-.deploy-docker:
-  image: elsa/base:latest
-  <<: *nightly_job
+
+deploy-docker-images:
+  # <<: *nightly_job  
+  dependencies:
+    - deploy-docs
   stage: docker
   script:
     - cd tools/docker
-    - ./buildDockerContainers.sh
+    - sudo ./buildDockerContainers.sh # we run sudo, the runner is configured to not ask for password for docker calls
+  tags:
+    - elsa
+    - shell
 
 ### Test jobs ###
 
