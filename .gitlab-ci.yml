@@ -259,7 +259,7 @@ deploy-docs:
 ### build, test and deploy docker images ###
 
 deploy-docker-images:
-  # <<: *nightly_job  
+  <<: *nightly_job  
   dependencies:
     - deploy-docs
   stage: docker
