@@ -5,6 +5,7 @@ stages:
 - coverage
 - sanitizer
 - docs
+- docker
 
 ### variables ###
 
