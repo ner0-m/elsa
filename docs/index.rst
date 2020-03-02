@@ -7,6 +7,12 @@
    self
 
 .. toctree::
+   :caption: Tools
+   :maxdepth: 2
+
+   tools/infrastructure
+
+.. toctree::
    :caption: Modules
    :maxdepth: 2
 
