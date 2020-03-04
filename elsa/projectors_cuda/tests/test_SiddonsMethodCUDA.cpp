@@ -110,7 +110,9 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
             THEN("Result is zero")
             {
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
             }
         }
 
@@ -122,7 +124,9 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
             THEN("Result is zero")
             {
                 op.applyAdjoint(sino, volume);
-                REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                DataContainer<data_t> zero(volumeDescriptor);
+                zero = 0;
+                REQUIRE(volume == zero);
             }
         }
     }
@@ -152,7 +156,9 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
             THEN("Result is zero")
             {
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
             }
         }
 
@@ -164,7 +170,9 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
             THEN("Result is zero")
             {
                 op.applyAdjoint(sino, volume);
-                REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                DataContainer<data_t> zero(volumeDescriptor);
+                zero = 0;
+                REQUIRE(volume == zero);
             }
         }
     }
@@ -201,12 +209,16 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
             THEN("Result of forward projection is zero")
             {
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                    DataContainer<data_t> zero(volumeDescriptor);
+                    zero = 0;
+                    REQUIRE(volume == zero);
                 }
             }
         }
@@ -222,12 +234,16 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
             THEN("Result of forward projection is zero")
             {
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                    DataContainer<data_t> zero(volumeDescriptor);
+                    zero = 0;
+                    REQUIRE(volume == zero);
                 }
             }
         }
@@ -242,12 +258,16 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
             THEN("Result of forward projection is zero")
             {
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                    DataContainer<data_t> zero(sinoDescriptor);
+                    zero = 0;
+                    REQUIRE(sino == zero);
                 }
             }
         }
@@ -263,12 +283,16 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
             THEN("Result of forward projection is zero")
             {
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                    DataContainer<data_t> zero(volumeDescriptor);
+                    zero = 0;
+                    REQUIRE(volume == zero);
                 }
             }
         }
@@ -318,12 +342,16 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
                 THEN("Result of forward projection is zero")
                 {
                     op.apply(volume, sino);
-                    REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                    DataContainer<data_t> zero(sinoDescriptor);
+                    zero = 0;
+                    REQUIRE(sino == zero);
 
                     AND_THEN("Result of backprojection is zero")
                     {
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                        DataContainer<data_t> zero(volumeDescriptor);
+                        zero = 0;
+                        REQUIRE(volume == zero);
                     }
                 }
             }
@@ -431,7 +459,9 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
                     sino[0] = 1;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                    DataContainer<data_t> zero(volumeDescriptor);
+                    zero = 0;
+                    REQUIRE(volume == zero);
                 }
             }
         }
@@ -639,7 +669,9 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
                         sino[0] = 1;
                         op.applyAdjoint(sino, volume);
 
-                        REQUIRE(volume == DataContainer<data_t>(volumeDescriptor));
+                        DataContainer<data_t> zero(volumeDescriptor);
+                        zero = 0;
+                        REQUIRE(volume == zero);
                     }
                 }
             }
@@ -802,7 +834,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(2, 2) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -852,7 +886,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(2, 3) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -893,7 +929,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(0, 2) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -929,7 +967,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(0, 0) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -970,7 +1010,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(1, 2) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1020,7 +1062,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(2, 3) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1062,7 +1106,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(3, 1) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1100,7 +1146,9 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(3, 0) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino == DataContainer<data_t>(sinoDescriptor));
+                DataContainer<data_t> zero(sinoDescriptor);
+                zero = 0;
+                REQUIRE(sino == zero);
 
                 AND_THEN("The correct weighting is applied")
                 {

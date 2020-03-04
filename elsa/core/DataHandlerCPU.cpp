@@ -5,11 +5,9 @@ namespace elsa
 {
 
     template <typename data_t>
-    DataHandlerCPU<data_t>::DataHandlerCPU(index_t size, bool initialize)
+    DataHandlerCPU<data_t>::DataHandlerCPU(index_t size)
         : _data(std::make_shared<DataVector_t>(size))
     {
-        if (initialize)
-            _data->setZero();
     }
 
     template <typename data_t>

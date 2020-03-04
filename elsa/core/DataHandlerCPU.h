@@ -63,15 +63,15 @@ namespace elsa
         ~DataHandlerCPU() override;
 
         /**
-         * \brief Constructor initializing an appropriately sized vector with zeros
+         * \brief Constructor initializing an appropriately sized vector
+         *
+         * Note that the values will not be initialized and therefore contain undefined values.
          *
          * \param[in] size of the vector
-         * \param[in] initialize - set to false if you do not need initialization with zeros
-         * (default: true)
          *
          * \throw std::invalid_argument if the size is non-positive
          */
-        explicit DataHandlerCPU(index_t size, bool initialize = true);
+        explicit DataHandlerCPU(index_t size);
 
         /**
          * \brief Constructor initializing a data vector with a given vector

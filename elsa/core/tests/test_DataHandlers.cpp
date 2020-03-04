@@ -30,17 +30,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
     {
         index_t size = 314;
 
-        WHEN("constructing with zeros")
+        WHEN("constructing")
         {
             const TestType dh{size};
 
             THEN("it has the correct size") { REQUIRE(size == dh.getSize()); }
-
-            THEN("it has a zero vector")
-            {
-                for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == static_cast<data_t>(0));
-            }
         }
 
         WHEN("constructing with a given vector")
@@ -55,7 +49,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
 
         WHEN("copy constructing")
         {
-            const TestType dh{size};
+            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+            randVec.setRandom();
+            const TestType dh{randVec};
             const auto dhView = dh.getBlock(0, size);
 
             TestType dh2 = dh;
@@ -70,7 +66,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
                 {
                     dh2[0] = data_t(1);
                     REQUIRE(dh2[0] == data_t(1));
-                    REQUIRE((*dhView)[0] == data_t(0));
+                    REQUIRE((*dhView)[0] == randVec[0]);
                     REQUIRE((*dh2View)[0] == data_t(1));
                 }
             }

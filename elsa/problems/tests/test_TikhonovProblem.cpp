@@ -79,6 +79,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with one regularization te
             THEN("the TikhonovProblem behaves as expected")
             {
                 DataContainer<TestType> dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == Approx(0.5 * dataVec.squaredNorm()));
@@ -205,6 +206,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with several regularizatio
             THEN("the TikhonovProblem behaves as expected")
             {
                 DataContainer<TestType> dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == Approx(0.5 * dataVec.squaredNorm()));

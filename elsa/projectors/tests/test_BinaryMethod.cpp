@@ -500,6 +500,7 @@ SCENARIO("Output DataContainer is not zero initialized")
                 op.apply(volume, sino);
 
                 DataContainer zero(sinoDescriptor);
+                zero = 0;
                 REQUIRE(sino == zero);
             }
         }
@@ -514,6 +515,7 @@ SCENARIO("Output DataContainer is not zero initialized")
                 op.applyAdjoint(sino, volume);
 
                 DataContainer zero(volumeDescriptor);
+                zero = 0;
                 REQUIRE(volume == zero);
             }
         }
@@ -548,6 +550,7 @@ SCENARIO("Output DataContainer is not zero initialized")
                 op.apply(volume, sino);
 
                 DataContainer zero(sinoDescriptor);
+                zero = 0;
                 REQUIRE(sino == zero);
             }
         }
@@ -562,6 +565,7 @@ SCENARIO("Output DataContainer is not zero initialized")
                 op.applyAdjoint(sino, volume);
 
                 DataContainer zero(volumeDescriptor);
+                zero = 0;
                 REQUIRE(volume == zero);
             }
         }
@@ -600,6 +604,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                 op.apply(volume, sino);
 
                 DataContainer zeroSino(sinoDescriptor);
+                zeroSino = 0;
                 REQUIRE(sino == zeroSino);
 
                 AND_THEN("Result of backprojection is zero")
@@ -607,6 +612,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                     op.applyAdjoint(sino, volume);
 
                     DataContainer zeroVolume(volumeDescriptor);
+                    zeroVolume = 0;
                     REQUIRE(volume == zeroVolume);
                 }
             }
@@ -625,6 +631,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                 op.apply(volume, sino);
 
                 DataContainer zeroSino(sinoDescriptor);
+                zeroSino = 0;
                 REQUIRE(sino == zeroSino);
 
                 AND_THEN("Result of backprojection is zero")
@@ -632,6 +639,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                     op.applyAdjoint(sino, volume);
 
                     DataContainer zeroVolume(volumeDescriptor);
+                    zeroVolume = 0;
                     REQUIRE(volume == zeroVolume);
                 }
             }
@@ -649,6 +657,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                 op.apply(volume, sino);
 
                 DataContainer zeroSino(sinoDescriptor);
+                zeroSino = 0;
                 REQUIRE(sino == zeroSino);
 
                 AND_THEN("Result of backprojection is zero")
@@ -656,6 +665,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                     op.applyAdjoint(sino, volume);
 
                     DataContainer zeroVolume(volumeDescriptor);
+                    zeroVolume = 0;
                     REQUIRE(volume == zeroVolume);
                 }
             }
@@ -674,6 +684,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                 op.apply(volume, sino);
 
                 DataContainer zeroSino(sinoDescriptor);
+                zeroSino = 0;
                 REQUIRE(sino == zeroSino);
 
                 AND_THEN("Result of backprojection is zero")
@@ -681,6 +692,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                     op.applyAdjoint(sino, volume);
 
                     DataContainer zeroVolume(volumeDescriptor);
+                    zeroVolume = 0;
                     REQUIRE(volume == zeroVolume);
                 }
             }
@@ -731,6 +743,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                     op.apply(volume, sino);
 
                     DataContainer zeroSino(sinoDescriptor);
+                    zeroSino = 0;
                     REQUIRE(sino == zeroSino);
 
                     AND_THEN("Result of backprojection is zero")
@@ -738,6 +751,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
                         op.applyAdjoint(sino, volume);
 
                         DataContainer zeroVolume(volumeDescriptor);
+                        zeroVolume = 0;
                         REQUIRE(volume == zeroVolume);
                     }
                 }
@@ -860,6 +874,7 @@ SCENARIO("Axis-aligned rays are present")
                     op.applyAdjoint(sino, volume);
 
                     DataContainer zero(volumeDescriptor);
+                    zero = 0;
                     REQUIRE(volume == zero);
                 }
             }
@@ -1078,8 +1093,9 @@ SCENARIO("Axis-aligned rays are present")
                     {
                         sino[0] = 1;
                         op.applyAdjoint(sino, volume);
-
-                        REQUIRE(volume == DataContainer(volumeDescriptor));
+                        DataContainer zero(volumeDescriptor);
+                        zero = 0;
+                        REQUIRE(volume == zero);
                     }
                 }
             }
@@ -1260,6 +1276,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
 
                 DataContainer sZero(sinoDescriptor);
+                sZero = 0;
                 REQUIRE(sino == sZero);
 
                 AND_THEN("The correct weighting is applied")
@@ -1322,6 +1339,7 @@ SCENARIO("Projection under an angle")
 
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
+                sZero = 0;
                 REQUIRE(sino == sZero);
 
                 AND_THEN("The correct weighting is applied")
@@ -1373,6 +1391,7 @@ SCENARIO("Projection under an angle")
 
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
+                sZero = 0;
                 REQUIRE(sino == sZero);
 
                 AND_THEN("The correct weighting is applied")
@@ -1416,6 +1435,7 @@ SCENARIO("Projection under an angle")
 
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
+                sZero = 0;
                 REQUIRE(sino == sZero);
 
                 AND_THEN("The correct weighting is applied")
@@ -1469,6 +1489,7 @@ SCENARIO("Projection under an angle")
 
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
+                sZero = 0;
                 REQUIRE(sino == sZero);
 
                 AND_THEN("The correct weighting is applied")
@@ -1531,6 +1552,7 @@ SCENARIO("Projection under an angle")
 
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
+                sZero = 0;
                 REQUIRE(sino == sZero);
 
                 AND_THEN("The correct weighting is applied")
@@ -1583,6 +1605,7 @@ SCENARIO("Projection under an angle")
 
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
+                sZero = 0;
                 REQUIRE(sino == sZero);
 
                 AND_THEN("The correct weighting is applied")
@@ -1628,6 +1651,7 @@ SCENARIO("Projection under an angle")
 
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
+                sZero = 0;
                 REQUIRE(sino == sZero);
 
                 AND_THEN("The correct weighting is applied")

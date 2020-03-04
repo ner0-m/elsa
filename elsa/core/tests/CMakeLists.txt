@@ -18,4 +18,5 @@ ELSA_TEST(ExpressionTemplates)
 
 if(ELSA_BENCHMARKS)
     ELSA_TEST(BenchmarkExpressionTemplates)
+    ELSA_TEST(BenchmarkDataContainerConstruction)
 endif()

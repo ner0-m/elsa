@@ -61,6 +61,8 @@ namespace elsa
     {
         Timer<> timeguard("FiniteDifferences", "apply");
 
+        Ax = 0;
+
         switch (_type) {
             case DiffType::FORWARD:
                 applyHelper(x, Ax, DiffType::FORWARD);
@@ -81,6 +83,8 @@ namespace elsa
                                                      DataContainer<data_t>& Aty) const
     {
         Timer<> timeguard("FiniteDifferences", "applyAdjoint");
+
+        Aty = 0;
 
         switch (_type) {
             case DiffType::FORWARD:

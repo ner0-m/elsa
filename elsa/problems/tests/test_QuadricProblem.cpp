@@ -59,6 +59,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
             THEN("the problem behaves as expected")
             {
                 DataContainer<data_t> dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == 0);
@@ -128,6 +129,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
             THEN("the problem behaves as expected")
             {
                 DataContainer<data_t> dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == 0);
@@ -197,6 +199,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
             THEN("the problem behaves as expected")
             {
                 DataContainer<data_t> dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == 0);
@@ -433,13 +436,14 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
 
                     AND_THEN("the problem behaves as expected")
                     {
-                        REQUIRE(prob.getCurrentSolution() == DataContainer<data_t>{dd});
+                        DataContainer<data_t> zero{dd};
+                        zero = 0;
+                        REQUIRE(prob.getCurrentSolution() == zero);
 
                         REQUIRE(prob.evaluate() == 0);
 
-                        DataContainer<data_t> grad = res.hasDataVector()
-                                                         ? static_cast<data_t>(-1.0) * dc
-                                                         : DataContainer<data_t>{dd};
+                        DataContainer<data_t> grad =
+                            res.hasDataVector() ? static_cast<data_t>(-1.0) * dc : zero;
                         if (res.hasDataVector() && res.hasOperator())
                             grad *= scaleFactor;
                         if (res.hasDataVector() && isWeighted)
@@ -594,7 +598,9 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
 
                         AND_THEN("the problem behaves as expected")
                         {
-                            REQUIRE(prob.getCurrentSolution() == DataContainer<data_t>{dd});
+                            DataContainer<data_t> zero{dd};
+                            zero = 0;
+                            REQUIRE(prob.getCurrentSolution() == zero);
 
                             REQUIRE(prob.evaluate() == 0);
 

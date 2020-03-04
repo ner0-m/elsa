@@ -52,6 +52,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
             THEN("the problem behaves as expected")
             {
                 DataContainer<TestType> dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == Approx(0.5 * bVec.squaredNorm()));
@@ -123,6 +124,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
             THEN("the problem behaves as expected")
             {
                 DataContainer<TestType> dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate()
@@ -153,6 +155,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
             THEN("the problem behaves as expected")
             {
                 DataContainer<TestType> dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcX0);
 
                 REQUIRE(

@@ -36,6 +36,8 @@ namespace elsa
                 throw std::invalid_argument(
                     "Problem: one of the reg terms' domain does not match the data term's");
         }
+
+        _currentSolution = 0;
     }
 
     template <typename data_t>
@@ -67,6 +69,8 @@ namespace elsa
             != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
             throw std::invalid_argument(
                 "Problem: one of the reg terms' domain does not match the data term's");
+
+        _currentSolution = 0;
     }
 
     template <typename data_t>
@@ -83,6 +87,7 @@ namespace elsa
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm)
         : _dataTerm{dataTerm.clone()}, _currentSolution{dataTerm.getDomainDescriptor()}
     {
+        _currentSolution = 0;
     }
 
     template <typename data_t>

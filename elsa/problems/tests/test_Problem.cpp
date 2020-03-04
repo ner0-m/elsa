@@ -51,6 +51,7 @@ SCENARIO("Testing Problem without regularization")
             THEN("the problem behaves as expected")
             {
                 DataContainer dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == Approx(0.5 * dataVec.squaredNorm()));
@@ -140,6 +141,7 @@ SCENARIO("Testing Problem with one regularization term")
             THEN("the problem behaves as expected")
             {
                 DataContainer dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == Approx(0.5 * dataVec.squaredNorm()));
@@ -236,6 +238,7 @@ SCENARIO("Testing Problem with several regularization terms")
             THEN("the problem behaves as expected")
             {
                 DataContainer dcZero(dd);
+                dcZero = 0;
                 REQUIRE(prob.getCurrentSolution() == dcZero);
 
                 REQUIRE(prob.evaluate() == Approx(0.5 * dataVec.squaredNorm()));

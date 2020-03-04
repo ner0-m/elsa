@@ -147,10 +147,6 @@ SCENARIO("Element-wise access of DataContainers")
 
             THEN("it works as expected when using indices/coordinates")
             {
-                REQUIRE(dc[index] == 0.0_a);
-                REQUIRE(dc(coord) == 0.0_a);
-                REQUIRE(dc(17, 4) == 0.0_a);
-
                 dc[index] = 2.2f;
                 REQUIRE(dc[index] == 2.2_a);
                 REQUIRE(dc(coord) == 2.2_a);

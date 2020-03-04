@@ -5,12 +5,14 @@ Checks:          '-*,
                   llvm-namespace-comment,
                   modernize-*,
                   -modernize-use-nodiscard,
+                  -modernize-avoid-c-arrays,
                   readability-*,
                   -readability-else-after-return,
                   -readability-braces-around-statements,
                   -readability-magic-numbers,
                   -readability-uppercase-literal-suffix,
-                  -readability-isolate-declaration'
+                  -readability-isolate-declaration,
+                  -readability-function-size'
 HeaderFilterRegex: 'elsa/elsa'
 AnalyzeTemporaryDtors: false
 CheckOptions:

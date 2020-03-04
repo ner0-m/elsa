@@ -93,9 +93,10 @@ namespace elsa
             rangeDescList.push_back(regTermResidual->getRangeDescriptor().clone());
         }
 
-        // problem is convertible, allocate memory and start building block op
+        // problem is convertible, allocate memory, set to zero and start building block op
         RandomBlocksDescriptor dataVecDesc{rangeDescList};
         DataContainer<data_t> dataVec{dataVecDesc};
+        dataVec = 0;
         std::vector<std::unique_ptr<LinearOperator<data_t>>> opList(0);
 
         // add block corresponding to data term
