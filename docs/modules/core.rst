@@ -1,3 +1,5 @@
+.. _elsacore:
+
 *********
 elsa core
 *********
@@ -8,6 +10,8 @@ Core Type Declarations
 ======================
 
 .. doxygenfile:: elsa.h
+
+.. _elsacore_datadescriptor:
 
 DataDescriptor
 ==============
@@ -33,6 +37,8 @@ RandomBlocksDescriptor
 ======================
 
 .. doxygenclass:: elsa::RandomBlocksDescriptor
+
+.. _elsacore_datacontainer:
 
 DataContainer
 =============
@@ -62,6 +68,8 @@ DataHandlerCPU
 --------------
 
 .. doxygenclass:: elsa::DataHandlerCPU
+
+.. _elsacore_expression:
 
 Expression
 ----------
