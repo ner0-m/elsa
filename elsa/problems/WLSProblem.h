@@ -17,7 +17,7 @@ namespace elsa
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a weighted least squares optimization problem, i.e.
-     * \f$ \argmin_x \frac{1}{2} \| Ax - b \|_{W,2}^2 \f$, where \f$ W \f$ is a weighting (scaling)
+     * \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} \| Ax - b \|_{W,2}^2 \f$, where \f$ W \f$ is a weighting (scaling)
      * operator, \f$ A \f$ is a linear operator and \f$ b \f$ is a data vector.
      */
     template <typename data_t = real_t>

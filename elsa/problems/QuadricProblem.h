@@ -16,7 +16,7 @@ namespace elsa
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a quadric problem, i.e.
-     * \f$ \argmin_x \frac{1}{2} x^tAx - x^tb \f$
+     * \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} x^tAx - x^tb \f$
      * where \f$ A \f$ is a symmetric positive-definite operator and \f$ b \f$ is a data vector.
      */
     template <typename data_t = real_t>
@@ -32,8 +32,8 @@ namespace elsa
          * \param[in] spdA flag whether A is symmetric positive-definite
          *
          * Sets up the quadric problem
-         * \f$ \argmin_x \frac{1}{2} x^tAx - x^tb \f$ if \f$ A \f$ is spd, and
-         * \f$ \argmin_x \frac{1}{2} x^tA^tAx - x^tA^tb \f$ if \f$ A \f$ is not spd
+         * \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} x^tAx - x^tb \f$ if \f$ A \f$ is spd, and
+         * \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} x^tA^tAx - x^tA^tb \f$ if \f$ A \f$ is not spd
          *
          * \warning A must be nonsingular even if it is not spd.
          *
@@ -52,8 +52,8 @@ namespace elsa
          * \param[in] spdA flag whether A is symmetric positive-definite
          *
          * Sets up the quadric problem
-         * \f$ \argmin_x \frac{1}{2} x^tAx - x^tb \f$ if \f$ A \f$ is spd, and
-         * \f$ \argmin_x \frac{1}{2} x^tA^tAx - x^tA^tb \f$ if \f$ A \f$ is not spd
+         * \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} x^tAx - x^tb \f$ if \f$ A \f$ is spd, and
+         * \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} x^tA^tAx - x^tA^tb \f$ if \f$ A \f$ is not spd
          *
          * \warning A must be nonsingular even if it is not spd.
          *

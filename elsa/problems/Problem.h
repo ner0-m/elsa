@@ -18,7 +18,7 @@ namespace elsa
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a generic optimization problem, which consists of a data term and
-     * (optionally) of one (or many) regularization terms, \f$ \argmin_x D(x) + \sum_{i=1}^n
+     * (optionally) of one (or many) regularization terms, \f$ \underset{x}{\operatorname{argmin}} D(x) + \sum_{i=1}^n
      * \lambda_i R(x) \f$. Here, the data term \f$ D(x) \f$ is represented through a Functional (or
      * it derivatives), the regularization terms are represented by RegularizationTerms, which
      * encapsulate regularization parameters \f$ \lambda_i \f$ (scalar values) and the actual

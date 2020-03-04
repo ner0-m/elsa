@@ -13,16 +13,16 @@ namespace elsa
      *
      * This class represents a Tikhonov regularized weighted least squares problem.
      * Some common examples are:
-     * - \f$ \argmin_x \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| x \|_2^2 \f$
-     * - \f$ \argmin_x \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| x - x^* \|_2^2 \f$
-     * - \f$ \argmin_x \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| Lx \|_2^2 \f$
-     * - \f$ \argmin_x \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| L(x - x^*) \|_2^2 \f$,
+     * - \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| x \|_2^2 \f$
+     * - \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| x - x^* \|_2^2 \f$
+     * - \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| Lx \|_2^2 \f$
+     * - \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| L(x - x^*) \|_2^2 \f$,
      * where \f$ A \f$ is a linear operator and \f$ b \f$ and \f$ x^* \f$ are data vectors,
      * \f$ \lambda \f$ is the regularization weight, and \f$ L \f$ is a discretized differential
      * operator.
      *
      * This class supports a wider range of problems - any problem of the form
-     * \f$ \argmin_x \frac{1}{2} \| Ax - b \|_{W,2}^2 + \sum_{i=1}^n \lambda_i \| B_ix - x^*_i
+     * \f$ \underset{x}{\operatorname{argmin}} \frac{1}{2} \| Ax - b \|_{W,2}^2 + \sum_{i=1}^n \lambda_i \| B_ix - x^*_i
      * \|_{V_i,2}^2 \f$ is considered a Tikhonov problem. Here \f$ A \f$ and \f$ B_i \f$ are linear
      * operators, \f$ b \f$ and \f$ x^*_i \f$ are data vectors, \f$ \lambda_i \f$ are the
      * regularization weights, and \f$ W \f$ and \f$ V_i \f$ are scaling operators.
