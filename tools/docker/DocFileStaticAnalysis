@@ -1,9 +1,28 @@
-FROM elsa/base-cmake:latest
+# Provide an argument to choose the compiler version from the command line
+ARG CUDA_VERSION=10.2
+
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu18.04 as base
 MAINTAINER Tobias Lasser <lasser@in.tum.de>
 MAINTAINER David Frank <dfrank@in.tum.de>
 
 LABEL Description="Image for static analysis tools (clang-tidy, clang-format)"
 
 RUN apt-get -qq update \
-  && apt-get --no-install-recommends install -qqy clang-tidy-8 clang-format-8 \
+  && apt-get --no-install-recommends install -qqy build-essential wget git ca-certificates ninja-build libssl-dev clang-tidy-8 clang-format-8 \
   && rm -rf /var/lib/apt/lists/* 
+
+FROM base as build-cmake
+
+# CMake version
+ARG CMAKE_VERSION=3.16
+ARG CMAKE_VERSION_PATCH=4
+ARG CMAKE_DIR=cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}
+
+ADD scripts/ /tmp/scripts/
+
+RUN bash /tmp/scripts/install_cmake.sh "${CMAKE_VERSION}" "${CMAKE_DIR}"
+
+FROM base as cmake
+COPY --from=build-cmake /tmp/cmake-install /usr/local
+
+ADD tests/ /tmp/tests/

@@ -146,7 +146,8 @@ echo "...done."
 ### Build Static Analysis image ###
 
 echo "Building docker image static-analysis..."
-docker build $docker_arguments -t staging/static-analysis:8 -f DocFileStaticAnalysis .
+docker build $docker_arguments -t staging/static-analysis:8 -f DocFileStaticAnalysis --build-arg CUDA_VERSION=${cuda_version} \
+             --build-arg CMAKE_VERSION=${cmake_version} --build-arg CMAKE_VERSION_PATCH=${cmake_patch_version} .
 echo "...done."
 
 ./tests/test_template.sh "static-analysis" "8" "test_static-analysis.sh" --network=$network_mode
