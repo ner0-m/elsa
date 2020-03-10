@@ -29,12 +29,9 @@ SCENARIO("Constructing DataContainers")
 
             THEN("it has the correct DataDescriptor") { REQUIRE(dc.getDataDescriptor() == desc); }
 
-            THEN("it has a zero data vector of correct size")
+            THEN("it has a data vector of correct size")
             {
                 REQUIRE(dc.getSize() == desc.getNumberOfCoefficients());
-
-                for (index_t i = 0; i < desc.getNumberOfCoefficients(); ++i)
-                    REQUIRE(dc[i] == 0.0);
             }
         }
 

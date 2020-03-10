@@ -122,6 +122,7 @@ TEMPLATE_TEST_CASE("Scenario: Assigning to DataHandlerMapCPU", "", float, double
     {
         index_t size = 314;
         DataHandlerCPU<TestType> dh{2 * size};
+        dh = 0;
         const auto dhMap = dh.getBlock(0, size);
 
         WHEN("copy assigning")
