@@ -34,7 +34,7 @@ COPY --from=clone-clang /tmp/llvm_project/ /tmp/llvm_project/
 
 RUN mkdir -p /tmp/llvm_build/ && mkdir -p /tmp/llvm_install/ \
   && cmake -S /tmp/llvm_project/llvm/ -B /tmp/llvm_build/ -GNinja -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
-           -DCMAKE_INSTALL_PREFIX=/tmp/llvm_install/ -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=host -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON
+           -DCMAKE_INSTALL_PREFIX=/tmp/llvm_install/ -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD="host;NVPTX" -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON
 
 ### Build LLVM/clang
 FROM cmake as build-clang
@@ -64,9 +64,6 @@ FROM clang as dnnl
 COPY --from=build-dnnl /tmp/dnnl_install/ /usr/local/
 
 ADD tests/ /tmp/tests/
-
-ENV CC="gcc"
-ENV CXX="g++"
 
 # setup conan home directory, to be in the cache of our CI pipeline
 ENV CONAN_USER_HOME=/cache
