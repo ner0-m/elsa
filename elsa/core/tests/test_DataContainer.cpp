@@ -11,12 +11,38 @@
 #include <catch2/catch.hpp>
 #include "DataContainer.h"
 #include "IdenticalBlocksDescriptor.h"
+#include "testHelpers.h"
 
 using namespace elsa;
 using namespace Catch::literals; // to enable 0.0_a approximate floats
 
-SCENARIO("Constructing DataContainers")
+// Provides object to be used with TEMPLATE_PRODUCT_TEST_CASE, necessary because enum cannot be
+// passed directly
+template <typename T>
+struct TestHelperGPU {
+    static const DataHandlerType handler_t = DataHandlerType::GPU;
+    using data_t = T;
+};
+
+// Provides object to be used with TEMPLATE_PRODUCT_TEST_CASE, necessary because enum cannot be
+// passed directly
+template <typename T>
+struct TestHelperCPU {
+    static const DataHandlerType handler_t = DataHandlerType::CPU;
+    using data_t = T;
+};
+
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "",
+                           (TestHelperCPU, TestHelperGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHelperCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
+    using data_t = typename TestType::data_t;
+
     GIVEN("a DataDescriptor")
     {
         IndexVector_t numCoeff(3);
@@ -25,7 +51,7 @@ SCENARIO("Constructing DataContainers")
 
         WHEN("constructing an empty DataContainer")
         {
-            DataContainer dc(desc);
+            DataContainer<data_t> dc(desc, TestType::handler_t);
 
             THEN("it has the correct DataDescriptor") { REQUIRE(dc.getDataDescriptor() == desc); }
 
@@ -37,10 +63,10 @@ SCENARIO("Constructing DataContainers")
 
         WHEN("constructing an initialized DataContainer")
         {
-            RealVector_t data(desc.getNumberOfCoefficients());
+            Eigen::Matrix<data_t, Eigen::Dynamic, 1> data{desc.getNumberOfCoefficients()};
             data.setRandom();
 
-            DataContainer dc(desc, data);
+            DataContainer<data_t> dc(desc, data, TestType::handler_t);
 
             THEN("it has the correct DataDescriptor") { REQUIRE(dc.getDataDescriptor() == desc); }
 
@@ -60,8 +86,9 @@ SCENARIO("Constructing DataContainers")
         numCoeff << 32, 57;
         DataDescriptor desc(numCoeff);
 
-        DataContainer otherDc(desc);
-        Eigen::VectorXf randVec = Eigen::VectorXf::Random(otherDc.getSize());
+        DataContainer<data_t> otherDc(desc, TestType::handler_t);
+        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{otherDc.getSize()};
+        randVec.setRandom();
         for (index_t i = 0; i < otherDc.getSize(); ++i)
             otherDc[i] = randVec(i);
 
@@ -80,7 +107,7 @@ SCENARIO("Constructing DataContainers")
 
         WHEN("copy assigning")
         {
-            DataContainer dc(desc);
+            DataContainer<data_t> dc(desc, TestType::handler_t);
             dc = otherDc;
 
             THEN("it copied correctly")
@@ -112,7 +139,7 @@ SCENARIO("Constructing DataContainers")
         {
             DataContainer oldOtherDc(otherDc);
 
-            DataContainer dc(desc);
+            DataContainer<data_t> dc(desc, TestType::handler_t);
             dc = std::move(otherDc);
 
             THEN("it moved correctly")
@@ -127,14 +154,23 @@ SCENARIO("Constructing DataContainers")
     }
 }
 
-SCENARIO("Element-wise access of DataContainers")
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Element-wise access of DataContainers", "",
+                           (TestHelperCPU, TestHelperGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Element-wise access of DataContainers", "", (TestHelperCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
+    using data_t = typename TestType::data_t;
+
     GIVEN("a DataContainer")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
         DataDescriptor desc(numCoeff);
-        DataContainer dc(desc);
+        DataContainer<data_t> dc(desc, TestType::handler_t);
 
         WHEN("accessing the elements")
         {
@@ -144,65 +180,88 @@ SCENARIO("Element-wise access of DataContainers")
 
             THEN("it works as expected when using indices/coordinates")
             {
-                dc[index] = 2.2f;
-                REQUIRE(dc[index] == 2.2_a);
-                REQUIRE(dc(coord) == 2.2_a);
-                REQUIRE(dc(17, 4) == 2.2_a);
+                dc[index] = data_t(2.2f);
+                REQUIRE(dc[index] == data_t(2.2f));
+                REQUIRE(dc(coord) == data_t(2.2f));
+                REQUIRE(dc(17, 4) == data_t(2.2f));
 
-                dc(coord) = 3.3f;
-                REQUIRE(dc[index] == 3.3_a);
-                REQUIRE(dc(coord) == 3.3_a);
-                REQUIRE(dc(17, 4) == 3.3_a);
+                dc(coord) = data_t(3.3f);
+                REQUIRE(dc[index] == data_t(3.3f));
+                REQUIRE(dc(coord) == data_t(3.3f));
+                REQUIRE(dc(17, 4) == data_t(3.3f));
             }
         }
     }
 }
 
-SCENARIO("Testing the reduction operations of DataContainer")
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataContainer", "",
+                           (TestHelperCPU, TestHelperGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataContainer", "",
+                           (TestHelperCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
+    using data_t = typename TestType::data_t;
+
     GIVEN("a DataContainer")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 11, 73, 45;
         DataDescriptor desc(numCoeff);
-        DataContainer dc(desc);
+        DataContainer<data_t> dc(desc, TestType::handler_t);
 
         WHEN("putting in some random data")
         {
-            Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
+            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{dc.getSize()};
+            randVec.setRandom();
             for (index_t i = 0; i < dc.getSize(); ++i)
                 dc[i] = randVec(i);
 
             THEN("the reductions work as expected")
             {
-                REQUIRE(dc.sum() == Approx(randVec.sum()));
-                REQUIRE(dc.l1Norm() == Approx(randVec.array().abs().sum()));
-                REQUIRE(dc.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
-                REQUIRE(dc.squaredL2Norm() == Approx(randVec.squaredNorm()));
+                REQUIRE(checkSameNumbers(dc.sum(), randVec.sum()));
+                REQUIRE(checkSameNumbers(dc.l1Norm(), randVec.array().abs().sum()));
+                REQUIRE(checkSameNumbers(dc.lInfNorm(), randVec.array().abs().maxCoeff()));
+                REQUIRE(checkSameNumbers(dc.squaredL2Norm(), randVec.squaredNorm()));
 
-                Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(dc.getSize());
-                DataContainer dc2(desc);
+                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2{dc.getSize()};
+                randVec2.setRandom();
+                DataContainer<data_t> dc2(desc, TestType::handler_t);
                 for (index_t i = 0; i < dc2.getSize(); ++i)
                     dc2[i] = randVec2(i);
 
-                REQUIRE(dc.dot(dc2) == Approx(randVec.dot(randVec2)));
+                REQUIRE(checkSameNumbers(dc.dot(dc2), randVec.dot(randVec2), 10));
             }
         }
     }
 }
 
-SCENARIO("Testing the element-wise operations of DataContainer")
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataContainer", "",
+                           (TestHelperCPU, TestHelperGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataContainer", "",
+                           (TestHelperCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
+    using data_t = typename TestType::data_t;
+
     GIVEN("a DataContainer")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
         DataDescriptor desc(numCoeff);
-        DataContainer dc(desc);
+        DataContainer<data_t> dc(desc, TestType::handler_t);
 
         WHEN("putting in some random data")
         {
-            Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
+            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{dc.getSize()};
+            randVec.setRandom();
             for (index_t i = 0; i < dc.getSize(); ++i)
                 dc[i] = randVec(i);
 
@@ -210,26 +269,28 @@ SCENARIO("Testing the element-wise operations of DataContainer")
             {
                 DataContainer dcSquare = square(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dcSquare[i] == Approx(randVec(i) * randVec(i)));
-
-                DataContainer dcSqrt = sqrt(dc);
+                    REQUIRE(checkSameNumbers(dcSquare[i], randVec.array().square()[i], 10));
+                DataContainer dcSqrt = sqrt(dcSquare);
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    if (randVec(i) >= 0)
-                        REQUIRE(dcSqrt[i] == Approx(std::sqrt(randVec(i))));
+                    REQUIRE(checkSameNumbers(dcSqrt[i], randVec.array().square().sqrt()[i]));
 
-                DataContainer dcExp = exp(dc);
-                for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dcExp[i] == Approx(std::exp(randVec(i))));
+                // do exponent check only for floating point types as for integer will likely lead
+                // to overflow due to random init over full value range
+                if constexpr (!std::is_integral_v<data_t>) {
+                    DataContainer dcExp = exp(dc);
+                    for (index_t i = 0; i < dc.getSize(); ++i)
+                        REQUIRE(checkSameNumbers(dcExp[i], randVec.array().exp()[i]));
+                }
 
-                DataContainer dcLog = log(dc);
+                DataContainer dcLog = log(dcSquare);
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    if (randVec(i) > 0)
-                        REQUIRE(dcLog[i] == Approx(std::log(randVec(i))));
+                    REQUIRE(checkSameNumbers(dcLog[i], randVec.array().square().log()[i], 100));
             }
+
+            auto scalar = static_cast<data_t>(923.41f);
 
             THEN("the binary in-place addition of a scalar work as expected")
             {
-                float scalar = 923.41f;
                 dc += scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) + scalar);
@@ -237,7 +298,6 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place subtraction of a scalar work as expected")
             {
-                float scalar = 74.165f;
                 dc -= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) - scalar);
@@ -245,7 +305,6 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place multiplication with a scalar work as expected")
             {
-                float scalar = 12.69f;
                 dc *= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == randVec(i) * scalar);
@@ -253,15 +312,13 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
             THEN("the binary in-place division by a scalar work as expected")
             {
-                float scalar = 82.61f;
                 dc /= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == randVec(i) / scalar);
+                    REQUIRE(checkSameNumbers(dc[i], randVec(i) / scalar));
             }
 
             THEN("the element-wise assignment of a scalar works as expected")
             {
-                float scalar = 123.45f;
                 dc = scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(dc[i] == scalar);
@@ -270,12 +327,14 @@ SCENARIO("Testing the element-wise operations of DataContainer")
 
         WHEN("having two containers with random data")
         {
-            Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
+            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{dc.getSize()};
+            randVec.setRandom();
             for (index_t i = 0; i < dc.getSize(); ++i)
                 dc[i] = randVec(i);
 
-            Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(dc.getSize());
-            DataContainer dc2(desc);
+            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2{dc.getSize()};
+            randVec2.setRandom();
+            DataContainer<data_t> dc2(desc, TestType::handler_t);
             for (index_t i = 0; i < dc2.getSize(); ++i)
                 dc2[i] = randVec2[i];
 
@@ -297,33 +356,46 @@ SCENARIO("Testing the element-wise operations of DataContainer")
             {
                 dc *= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == randVec(i) * randVec2(i));
+                    REQUIRE(checkSameNumbers(dc[i], randVec(i) * randVec2(i), 100));
             }
 
             THEN("the element-wise in-place division works as expected")
             {
                 dc /= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    if (dc2[i] != 0)
-                        REQUIRE(dc[i] == randVec(i) / randVec2(i));
+                    if (dc2[i] != data_t(0))
+                        REQUIRE(checkSameNumbers(dc[i], randVec(i) / randVec2(i), 10));
             }
         }
     }
 }
 
-SCENARIO("Testing the arithmetic operations with DataContainer arguments")
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE(
+    "Scenario: Testing the arithmetic operations with DataContainer arguments", "",
+    (TestHelperCPU, TestHelperGPU),
+    (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
+TEMPLATE_PRODUCT_TEST_CASE(
+    "Scenario: Testing the arithmetic operations with DataContainer arguments", "", (TestHelperCPU),
+    (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
+    using data_t = typename TestType::data_t;
+
     GIVEN("some DataContainers")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
         DataDescriptor desc(numCoeff);
 
-        DataContainer dc(desc);
-        DataContainer dc2(desc);
+        DataContainer<data_t> dc(desc, TestType::handler_t);
+        DataContainer<data_t> dc2(desc, TestType::handler_t);
 
-        Eigen::VectorXf randVec = Eigen::VectorXf::Random(dc.getSize());
-        Eigen::VectorXf randVec2 = Eigen::VectorXf::Random(dc.getSize());
+        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{dc.getSize()};
+        randVec.setRandom();
+        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2{dc.getSize()};
+        randVec2.setRandom();
 
         for (index_t i = 0; i < dc.getSize(); ++i) {
             dc[i] = randVec(i);
@@ -332,74 +404,84 @@ SCENARIO("Testing the arithmetic operations with DataContainer arguments")
 
         THEN("the binary element-wise operations work as expected")
         {
-            auto resultPlus = dc + dc2;
+            DataContainer resultPlus = dc + dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE((resultPlus.eval())[i] == dc[i] + dc2[i]);
+                REQUIRE(resultPlus[i] == dc[i] + dc2[i]);
 
-            auto resultMinus = dc - dc2;
+            DataContainer resultMinus = dc - dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE((resultMinus.eval())[i] == dc[i] - dc2[i]);
+                REQUIRE(resultMinus[i] == dc[i] - dc2[i]);
 
-            auto resultMult = dc * dc2;
+            DataContainer resultMult = dc * dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMult.eval()[i] == dc[i] * dc2[i]);
+                REQUIRE(checkSameNumbers(resultMult[i], dc[i] * dc2[i], 100));
 
-            auto resultDiv = dc / dc2;
+            DataContainer resultDiv = dc / dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                if (dc2[i] != 0)
-                    REQUIRE(resultDiv.eval()[i] == Approx(dc[i] / dc2[i]));
+                if (dc2[i] != data_t(0))
+                    REQUIRE(checkSameNumbers(resultDiv[i], dc[i] / dc2[i], 1000));
         }
 
         THEN("the operations with a scalar work as expected")
         {
-            float scalar = 4.92f;
+            data_t scalar = static_cast<data_t>(4.92f);
 
-            auto resultScalarPlus = scalar + dc;
+            DataContainer resultScalarPlus = scalar + dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarPlus.eval()[i] == scalar + dc[i]);
+                REQUIRE(resultScalarPlus[i] == scalar + dc[i]);
 
-            auto resultPlusScalar = dc + scalar;
+            DataContainer resultPlusScalar = dc + scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultPlusScalar.eval()[i] == dc[i] + scalar);
+                REQUIRE(resultPlusScalar[i] == dc[i] + scalar);
 
-            auto resultScalarMinus = scalar - dc;
+            DataContainer resultScalarMinus = scalar - dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarMinus.eval()[i] == scalar - dc[i]);
+                REQUIRE(resultScalarMinus[i] == scalar - dc[i]);
 
-            auto resultMinusScalar = dc - scalar;
+            DataContainer resultMinusScalar = dc - scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMinusScalar.eval()[i] == dc[i] - scalar);
+                REQUIRE(resultMinusScalar[i] == dc[i] - scalar);
 
-            auto resultScalarMult = scalar * dc;
+            DataContainer resultScalarMult = scalar * dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarMult.eval()[i] == scalar * dc[i]);
+                REQUIRE(resultScalarMult[i] == scalar * dc[i]);
 
-            auto resultMultScalar = dc * scalar;
+            DataContainer resultMultScalar = dc * scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMultScalar.eval()[i] == dc[i] * scalar);
+                REQUIRE(resultMultScalar[i] == dc[i] * scalar);
 
-            auto resultScalarDiv = scalar / dc;
+            DataContainer resultScalarDiv = scalar / dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                if (dc[i] != 0)
-                    REQUIRE(resultScalarDiv.eval()[i] == scalar / dc[i]);
+                if (dc[i] != data_t(0))
+                    REQUIRE(checkSameNumbers(resultScalarDiv[i], scalar / dc[i]));
 
-            auto resultDivScalar = dc / scalar;
+            DataContainer resultDivScalar = dc / scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultDivScalar.eval()[i] == dc[i] / scalar);
+                REQUIRE(checkSameNumbers(resultDivScalar[i], dc[i] / scalar));
         }
     }
 }
 
-SCENARIO("Testing creation of Maps through DataContainer")
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataContainer", "",
+                           (TestHelperCPU, TestHelperGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataContainer", "",
+                           (TestHelperCPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
+    using data_t = typename TestType::data_t;
+
     GIVEN("a non-blocked container")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
         DataDescriptor desc(numCoeff);
 
-        DataContainer dc(desc);
-        const DataContainer constDc(desc);
+        DataContainer<data_t> dc(desc, TestType::handler_t);
+        const DataContainer<data_t> constDc(desc, TestType::handler_t);
 
         WHEN("trying to reference a block")
         {
@@ -451,8 +533,8 @@ SCENARIO("Testing creation of Maps through DataContainer")
         index_t numBlocks = 7;
         IdenticalBlocksDescriptor blockDesc(numBlocks, desc);
 
-        DataContainer dc(blockDesc);
-        const DataContainer constDc(blockDesc);
+        DataContainer<data_t> dc(blockDesc, TestType::handler_t);
+        const DataContainer<data_t> constDc(blockDesc, TestType::handler_t);
 
         WHEN("referencing a block")
         {

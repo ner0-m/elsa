@@ -1,7 +1,8 @@
 #pragma once
 
 #include <type_traits>
-#include <complex.h>
+#include <complex>
+#include "elsaDefines.h"
 
 /**
  * \brief comparing two number types for approximate equality for complex and regular number
@@ -13,15 +14,22 @@
  * The CHECK(...) assertion in the function ensures that the values are reported when the test fails
  */
 template <typename T>
-bool checkSameNumbers(T right, T left)
+bool checkSameNumbers(T left, T right, int epsilonFactor = 1)
 {
+    using numericalBaseType = elsa::GetFloatingPointType_t<T>;
+
+    numericalBaseType eps = std::numeric_limits<numericalBaseType>::epsilon()
+                            * static_cast<numericalBaseType>(epsilonFactor)
+                            * static_cast<numericalBaseType>(100);
+
     if constexpr (std::is_same_v<T,
                                  std::complex<float>> || std::is_same_v<T, std::complex<double>>) {
-        CHECK(Approx(right.real()) == left.real());
-        CHECK(Approx(right.imag()) == left.imag());
-        return Approx(right.real()) == left.real() && Approx(right.imag()) == left.imag();
+        CHECK(Approx(left.real()).epsilon(eps) == right.real());
+        CHECK(Approx(left.imag()).epsilon(eps) == right.imag());
+        return Approx(left.real()).epsilon(eps) == right.real()
+               && Approx(left.imag()).epsilon(eps) == right.imag();
     } else {
-        CHECK(Approx(right) == left);
-        return Approx(right) == left;
+        CHECK(Approx(left).epsilon(eps) == right);
+        return Approx(left).epsilon(eps) == right;
     }
 }

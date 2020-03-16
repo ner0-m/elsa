@@ -13,16 +13,35 @@
 #include "DataHandlerMapCPU.h"
 #include "testHelpers.h"
 
+#ifdef ELSA_CUDA_VECTOR
+#include "DataHandlerGPU.h"
+#include "DataHandlerMapGPU.h"
+#endif
+
 template <typename data_t>
 long elsa::useCount(const DataHandlerCPU<data_t>& dh)
 {
     return dh._data.use_count();
 }
 
+#ifdef ELSA_CUDA_VECTOR
+template <typename data_t>
+long elsa::useCount(const DataHandlerGPU<data_t>& dh)
+{
+    return dh._data.use_count();
+}
+#endif
+
 using namespace elsa;
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "",
+                           (DataHandlerCPU, DataHandlerGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
 TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandlerCPU),
                            (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
     using data_t = typename TestType::value_type;
 
@@ -92,9 +111,15 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
     }
 }
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler", "",
+                           (DataHandlerCPU, DataHandlerGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
 TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler", "",
                            (DataHandlerCPU),
                            (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
     using data_t = typename TestType::value_type;
 
@@ -148,8 +173,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler",
     }
 }
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "",
+                           (DataHandlerCPU, DataHandlerGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
 TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHandlerCPU),
                            (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
     using data_t = typename TestType::value_type;
 
@@ -376,7 +407,12 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
     }
 }
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>,
+                   DataHandlerGPU<float>)
+#else
 TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>)
+#endif
 {
     GIVEN("some DataHandler")
     {
@@ -403,9 +439,15 @@ TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>)
     }
 }
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHandler", "",
+                           (DataHandlerCPU, DataHandlerGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
 TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHandler", "",
                            (DataHandlerCPU),
                            (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
     using data_t = typename TestType::value_type;
 
@@ -421,7 +463,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
 
             THEN("the reductions work as expected")
             {
-                REQUIRE(dh.sum() == randVec.sum());
+                REQUIRE(checkSameNumbers(dh.sum(), randVec.sum()));
                 REQUIRE(dh.l1Norm() == Approx(randVec.array().abs().sum()));
                 REQUIRE(dh.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
                 REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()));
@@ -450,9 +492,15 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
     }
 }
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler", "",
+                           (DataHandlerCPU, DataHandlerGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
 TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler", "",
                            (DataHandlerCPU),
                            (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
     using data_t = typename TestType::value_type;
 
@@ -504,24 +552,26 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
                 dh = oldDh;
                 dh *= dh2;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] * dh2[i]);
+                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] * dh2[i]));
 
                 dh = oldDh;
                 dh *= *dhMap;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] * dh2[i]);
+                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] * dh2[i]));
 
                 dh = oldDh;
                 dh /= dh2;
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
+                        // due to floating point arithmetic less precision
+                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i], 100));
 
                 dh = oldDh;
                 dh /= *dhMap;
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
+                        // due to floating point arithmetic less precision
+                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i], 100));
             }
 
             THEN("the element-wise binary scalar operations work as expected")
@@ -561,8 +611,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
     }
 }
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandler", "",
+                           (DataHandlerCPU, DataHandlerGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
 TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandler", "", (DataHandlerCPU),
                            (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
     using data_t = typename TestType::value_type;
 
@@ -601,8 +657,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandler", "", (D
     }
 }
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "",
+                           (DataHandlerCPU, DataHandlerGPU),
+                           (float, double, std::complex<float>, std::complex<double>, index_t))
+#else
 TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "", (DataHandlerCPU),
                            (float, double, std::complex<float>, std::complex<double>, index_t))
+#endif
 {
     using data_t = typename TestType::value_type;
 

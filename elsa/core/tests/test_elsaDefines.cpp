@@ -7,6 +7,7 @@
  */
 
 #include <catch2/catch.hpp>
+#include <iostream>
 #include "elsaDefines.h"
 
 using namespace elsa;
@@ -36,4 +37,16 @@ SCENARIO("Testing compile-time predicates")
     static_assert(!std::is_same_v<float, GetFloatingPointType_t<double>>);
 
     REQUIRE(true);
+}
+
+SCENARIO("Printing default handler type")
+{
+    switch (defaultHandlerType) {
+        case DataHandlerType::CPU:
+            std::cout << "CPU" << std::endl;
+            break;
+        case DataHandlerType::GPU:
+            std::cout << "GPU" << std::endl;
+            break;
+    }
 }

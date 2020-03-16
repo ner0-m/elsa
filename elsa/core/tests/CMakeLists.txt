@@ -12,7 +12,7 @@ ELSA_TEST(PartitionDescriptor)
 ELSA_TEST(RandomBlocksDescriptor)
 ELSA_TEST(DataContainer)
 ELSA_TEST(DataHandlers)
-ELSA_TEST(DataHandlerMapCPU)
+ELSA_TEST(DataHandlerMap)
 ELSA_TEST(LinearOperator)
 ELSA_TEST(ExpressionTemplates)
 
