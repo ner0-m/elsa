@@ -69,7 +69,7 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> LinearOperator<data_t>::apply(const DataContainer<data_t>& x) const
     {
-        DataContainer<data_t> result(*_rangeDescriptor);
+        DataContainer<data_t> result(*_rangeDescriptor, x.getDataHandlerType());
         apply(x, result);
         return result;
     }
@@ -129,7 +129,7 @@ namespace elsa
                     throw std::invalid_argument(
                         "LinearOperator::apply: incorrect input/output sizes for mult leaf");
 
-                DataContainer<data_t> temp(_rhs->getRangeDescriptor());
+                DataContainer<data_t> temp(_rhs->getRangeDescriptor(), x.getDataHandlerType());
                 _rhs->apply(x, temp);
                 _lhs->apply(temp, Ax);
                 return;
@@ -142,7 +142,7 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> LinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y) const
     {
-        DataContainer<data_t> result(*_domainDescriptor);
+        DataContainer<data_t> result(*_domainDescriptor, y.getDataHandlerType());
         applyAdjoint(y, result);
         return result;
     }
@@ -202,7 +202,7 @@ namespace elsa
                     throw std::invalid_argument(
                         "LinearOperator::applyAdjoint: incorrect input/output sizes for mult leaf");
 
-                DataContainer<data_t> temp(_lhs->getDomainDescriptor());
+                DataContainer<data_t> temp(_lhs->getDomainDescriptor(), y.getDataHandlerType());
                 _lhs->applyAdjoint(y, temp);
                 _rhs->applyAdjoint(temp, Aty);
                 return;

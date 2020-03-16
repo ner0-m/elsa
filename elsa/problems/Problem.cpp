@@ -62,7 +62,7 @@ namespace elsa
                              const RegularizationTerm<data_t>& regTerm)
         : _dataTerm{dataTerm.clone()},
           _regTerms{regTerm},
-          _currentSolution{dataTerm.getDomainDescriptor()}
+          _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType}
     {
         // sanity check
         if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
@@ -85,7 +85,8 @@ namespace elsa
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm)
-        : _dataTerm{dataTerm.clone()}, _currentSolution{dataTerm.getDomainDescriptor()}
+        : _dataTerm{dataTerm.clone()},
+          _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType}
     {
         _currentSolution = 0;
     }
@@ -193,7 +194,8 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> Problem<data_t>::getGradient()
     {
-        DataContainer<data_t> result(_currentSolution.getDataDescriptor());
+        DataContainer<data_t> result(_currentSolution.getDataDescriptor(),
+                                     _currentSolution.getDataHandlerType());
         getGradient(result);
         return result;
     }
