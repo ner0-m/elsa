@@ -35,6 +35,17 @@ set(MODULE_SOURCES
         DataHandlerMapCPU.cpp
         LinearOperator.cpp)
 
+if(${ELSA_CUDA_VECTOR})
+    set(MODULE_HEADERS
+        ${MODULE_HEADERS}
+        DataHandlerGPU.h
+        DataHandlerMapGPU.h)
+
+    set(MODULE_SOURCES
+        ${MODULE_SOURCES}
+        DataHandlerGPU.cpp
+        DataHandlerMapGPU.cpp)
+endif()
 
 # build the module library
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
@@ -48,6 +59,10 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
+# link Quickvec for DataHandlerGPU
+if(ELSA_CUDA_VECTOR AND Quickvec_FOUND)
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Quickvec::quickvec)
+endif()
 
 target_include_directories(${ELSA_MODULE_TARGET_NAME}
         PUBLIC

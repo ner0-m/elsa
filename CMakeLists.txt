@@ -31,6 +31,7 @@ option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when buildin
 option(ELSA_SANITIZE_THREAD "Build elsa with thread sanitizers (TSAN)" OFF)
 option(ELSA_SANITIZE_ADDRESS "Build elsa with address and undefined-behavior sanitizers (ASAN and UBSAN)" OFF)
 
+option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
 
 # ------------ general setup -----------
 # ------------
@@ -63,6 +64,12 @@ if(ELSA_MASTER_PROJECT)
 
     # setup Dnnl library
     find_package(Dnnl)
+
+    if(ELSA_CUDA_VECTOR)
+        find_package(CUDA REQUIRED)
+        find_package(Quickvec REQUIRED)
+        message(STATUS "Using Quickvec submodule at ${Quickvec_INCLUDE_DIR}")
+    endif()
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
 endif()
@@ -76,6 +83,32 @@ set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
 # include the InstallElsaModule function
 include(InstallElsaModule)
+
+
+# ------------ setup VectorCUDA --------
+# ------------
+if(ELSA_CUDA_VECTOR)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+
+    include(CheckLanguage)
+    check_language(CUDA)
+
+    if (CMAKE_CUDA_COMPILER AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        enable_language(CUDA)
+
+        message(STATUS "CUDA support enabled")
+        message(STATUS "Enabling DataHandlerGPU")
+        message(STATUS "The default container type will be on the GPU")
+
+        add_definitions(-DELSA_CUDA_VECTOR)
+        add_subdirectory(thirdparty/quickvec)
+    else()
+        message(STATUS "CUDA compiler not found or not compiling with clang!")
+        message(STATUS "Compiling without a DataHandlerGPU")
+        message(STATUS "The default container type will be CPU")
+        set(ELSA_CUDA_VECTOR OFF)
+    endif()
+endif()
 
 
 # ------------ setup testing -----------

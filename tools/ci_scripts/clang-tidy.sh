@@ -5,7 +5,7 @@ exit_flag=false
 # for compilation database
 mkdir -p build
 cd build
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_CUDA_VECTOR=ON
 cd ..
 
 target_branch="master"
@@ -28,11 +28,11 @@ filelist=`git diff origin/${target_branch} --name-only`
 
 # check list of files
 for f in $filelist; do
-    if checkCPP $f; then
+    # check if .cpp file and in compilation DB
+    if checkCPP $f && [[ -n $(grep $f build/compile_commands.json) ]]; then
         echo "Checking matching file ${f}"
-        # apply the clang-format script
         touch output.txt
-        clang-tidy-8 -p=build ${f} > output.txt
+        clang-tidy-8 -p=build ${f} --extra-arg=--cuda-host-only > output.txt
         # decide if error or warning fail
         if [[ -n $(grep "warning: " output.txt) ]] || [[ -n $(grep "error: " output.txt) ]]; then
             echo ""

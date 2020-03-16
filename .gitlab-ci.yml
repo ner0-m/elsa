@@ -14,7 +14,8 @@ variables:
   CLANG_IMAGE: "elsa/clang:9"
   CUDA_IMAGE: "elsa/cuda:10.2"
   UBUNTU_IMAGE: "elsa/ubuntu:18.04"
-  
+  GPU_ONLY_IMAGE: "elsa/cuda:10.0"
+
 
 ### job templates ###
 
@@ -24,11 +25,11 @@ variables:
 
 .job_template: &build_job
   stage: compile
-  cache: 
+  cache:
     key: "$CI_JOB_NAME"
     paths:
       - build/
-      
+
 .job_template: &build_job_artifact
   stage: compile
   cache:
@@ -46,7 +47,7 @@ variables:
     - mkdir -p build
     - cd build
     - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja 
+    - ninja
 
 .buildjob_script_normal:
   script: &buildjob_normal
@@ -106,7 +107,7 @@ build-gcc:
     - linux
     - elsa
     - gcc
-    
+
 build-clang:
   <<: *build_job_artifact
   image: $CLANG_IMAGE
@@ -126,6 +127,20 @@ build-cuda:
     - gcc
     - cuda
 
+build-gpu-only:
+  <<: *build_job_artifact
+  image: $GPU_ONLY_IMAGE
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
+    - ninja
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+
 
 ### test jobs ###
 
@@ -133,7 +148,7 @@ test-ubuntu:
   <<: *test_job_artifact
   stage: test
   image: $UBUNTU_IMAGE
-  dependencies: 
+  dependencies:
     - build-ubuntu
   tags:
     - linux
@@ -149,7 +164,7 @@ test-gcc:
     - linux
     - elsa
     - gcc
-    
+
 test-clang:
   <<: *test_job_artifact
   stage: test
@@ -167,6 +182,28 @@ test-cuda:
   image: $CUDA_IMAGE
   dependencies:
     - build-cuda
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+
+test-gpu-only:
+  stage: test
+  image: $GPU_ONLY_IMAGE
+  dependencies:
+    - build-gpu-only
+  script:
+    - cd build
+    - cmake -GNinja -DELSA_CREATE_JUNIT_REPORTS=ON ..
+    - ninja tests
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    paths:
+      - build/
+    expire_in: 30 mins
+    reports:
+      junit: "build/test_reports/test_*.xml"
   tags:
     - linux
     - elsa
@@ -198,7 +235,21 @@ test-coverage:
     - gcc
     - cuda
 
+
 ### Sanitizers ###
+
+cuda-memcheck:
+  stage: sanitizer
+  image: $GPU_ONLY_IMAGE
+  script:
+    ./tools/ci_scripts/cuda-memcheck.sh
+  dependencies:
+    - test-gpu-only
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
 
 #thread-sanitizer:
 #  <<: *nightly_job
