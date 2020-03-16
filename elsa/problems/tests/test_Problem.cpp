@@ -89,7 +89,11 @@ SCENARIO("Testing Problem without regularization")
                                   * (scaling.array() * x0Vec.array() - dataVec.array())
                                         .matrix()
                                         .squaredNorm()));
-                REQUIRE(prob.getGradient() == dcScaling * (dcScaling * dcX0 - dcData));
+
+                DataContainer gradientDirect = dcScaling * (dcScaling * dcX0 - dcData);
+                auto gradient = prob.getGradient();
+                for (index_t i = 0; i < gradientDirect.getSize(); ++i)
+                    REQUIRE(gradient[i] == Approx(gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
@@ -179,8 +183,12 @@ SCENARIO("Testing Problem with one regularization term")
                     0.5
                     * (scaling.array() * x0Vec.array() - dataVec.array()).matrix().squaredNorm();
                 REQUIRE(prob.evaluate() == Approx(valueData + weight * 0.5 * x0Vec.squaredNorm()));
-                REQUIRE(prob.getGradient()
-                        == dcScaling * (dcScaling * dcX0 - dcData) + weight * dcX0);
+
+                DataContainer gradientDirect =
+                    dcScaling * (dcScaling * dcX0 - dcData) + weight * dcX0;
+                auto gradient = prob.getGradient();
+                for (index_t i = 0; i < gradient.getSize(); ++i)
+                    REQUIRE(gradient[i] == Approx(gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
@@ -279,9 +287,12 @@ SCENARIO("Testing Problem with several regularization terms")
                 REQUIRE(prob.evaluate()
                         == Approx(valueData + weight1 * 0.5 * x0Vec.squaredNorm()
                                   + weight2 * 0.5 * x0Vec.squaredNorm()));
-                REQUIRE(prob.getGradient()
-                        == dcScaling * (dcScaling * dcX0 - dcData) + weight1 * dcX0
-                               + weight2 * dcX0);
+
+                auto gradient = prob.getGradient();
+                DataContainer gradientDirect =
+                    dcScaling * (dcScaling * dcX0 - dcData) + weight1 * dcX0 + weight2 * dcX0;
+                for (index_t i = 0; i < gradient.getSize(); ++i)
+                    REQUIRE(gradient[i] == Approx(gradientDirect[i]).margin(0.00001));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);

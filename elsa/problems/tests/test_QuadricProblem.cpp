@@ -93,7 +93,11 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                 REQUIRE(prob.evaluate()
                         == Approx(static_cast<data_t>(0.5 * scaleFactor) * x0.squaredL2Norm()
                                   - x0.dot(dc)));
-                REQUIRE(prob.getGradient() == scaleFactor * x0 - dc);
+
+                auto gradient = prob.getGradient();
+                DataContainer gradientDirect = scaleFactor * x0 - dc;
+                for (index_t i = 0; i < gradient.getSize(); ++i)
+                    REQUIRE(gradient[i] == Approx(gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 REQUIRE(hessian == leaf(scalingOp));
@@ -163,7 +167,11 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                 REQUIRE(prob.evaluate()
                         == Approx(static_cast<data_t>(0.5 * scaleFactor) * x0.squaredL2Norm()
                                   - x0.dot(dc)));
-                REQUIRE(prob.getGradient() == scaleFactor * x0 - dc);
+
+                auto gradient = prob.getGradient();
+                DataContainer gradientDirect = scaleFactor * x0 - dc;
+                for (index_t i = 0; i < gradient.getSize(); ++i)
+                    REQUIRE(gradient[i] == Approx(gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 REQUIRE(hessian == leaf(scalingOp));
@@ -234,7 +242,11 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                         == Approx(static_cast<data_t>(0.5 * scaleFactor * scaleFactor)
                                       * x0.squaredL2Norm()
                                   - scaleFactor * x0.dot(dc)));
-                REQUIRE(prob.getGradient() == scaleFactor * (scaleFactor * x0) - scaleFactor * dc);
+
+                auto gradient = prob.getGradient();
+                DataContainer gradientDirect = scaleFactor * (scaleFactor * x0) - scaleFactor * dc;
+                for (index_t i = 0; i < gradient.getSize(); ++i)
+                    REQUIRE(gradient[i] == Approx(gradientDirect[i]).margin(0.00001));
 
                 auto hessian = prob.getHessian();
                 REQUIRE(hessian == leaf(adjoint(scalingOp) * scalingOp));
@@ -497,15 +509,22 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                                             == Approx(0.5 * scaleFactor * scaleFactor * weightFactor
                                                           * x0.squaredL2Norm()
                                                       - scaleFactor * weightFactor * x0.dot(dc)));
-                                    REQUIRE(prob.getGradient()
-                                            == scaleFactor * (weightFactor * (scaleFactor * x0))
-                                                   - scaleFactor * (weightFactor * dc));
+                                    auto gradient = prob.getGradient();
+                                    DataContainer gradientDirect =
+                                        scaleFactor * (weightFactor * (scaleFactor * x0))
+                                        - scaleFactor * (weightFactor * dc);
+                                    for (index_t i = 0; i < gradient.getSize(); ++i)
+                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
                                 } else {
                                     REQUIRE(prob.evaluate()
                                             == Approx(0.5 * scaleFactor * scaleFactor * weightFactor
                                                       * x0.squaredL2Norm()));
-                                    REQUIRE(prob.getGradient()
-                                            == scaleFactor * (weightFactor * (scaleFactor * x0)));
+
+                                    auto gradient = prob.getGradient();
+                                    DataContainer gradientDirect =
+                                        scaleFactor * (weightFactor * (scaleFactor * x0));
+                                    for (index_t i = 0; i < gradient.getSize(); ++i)
+                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
                                 }
                                 REQUIRE(prob.getHessian()
                                         == leaf(adjoint(scalingOp) * weightingOp * scalingOp));
@@ -519,7 +538,11 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                                 } else {
                                     REQUIRE(prob.evaluate()
                                             == Approx(0.5 * weightFactor * x0.squaredL2Norm()));
-                                    REQUIRE(prob.getGradient() == weightFactor * x0);
+
+                                    auto gradient = prob.getGradient();
+                                    DataContainer gradientDirect = weightFactor * x0;
+                                    for (index_t i = 0; i < gradient.getSize(); ++i)
+                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
                                 }
                                 REQUIRE(prob.getHessian() == leaf(weightingOp));
                             }
@@ -530,13 +553,19 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                                             == Approx(0.5 * scaleFactor * scaleFactor
                                                           * x0.squaredL2Norm()
                                                       - scaleFactor * x0.dot(dc)));
-                                    REQUIRE(prob.getGradient()
-                                            == scaleFactor * (scaleFactor * x0) - scaleFactor * dc);
+                                    auto gradient = prob.getGradient();
+                                    DataContainer gradientDirect =
+                                        scaleFactor * (scaleFactor * x0) - scaleFactor * dc;
+                                    for (index_t i = 0; i < gradient.getSize(); ++i)
+                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
                                 } else {
                                     REQUIRE(prob.evaluate()
                                             == Approx(0.5 * scaleFactor * scaleFactor
                                                       * x0.squaredL2Norm()));
-                                    REQUIRE(prob.getGradient() == scaleFactor * (scaleFactor * x0));
+                                    auto gradient = prob.getGradient();
+                                    DataContainer gradientDirect = scaleFactor * (scaleFactor * x0);
+                                    for (index_t i = 0; i < gradient.getSize(); ++i)
+                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
                                 }
                                 REQUIRE(prob.getHessian() == leaf(adjoint(scalingOp) * scalingOp));
                             } else {
@@ -731,7 +760,11 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                                 }
                             }
                             REQUIRE(prob.evaluate() == Approx(0.5 * x0.dot(Ax) - x0.dot(b)));
-                            REQUIRE(prob.getGradient() == Ax - b);
+
+                            auto gradient = prob.getGradient();
+                            DataContainer gradientDirect = Ax - b;
+                            for (index_t i = 0; i < gradient.getSize(); ++i)
+                                REQUIRE(gradient[i] == Approx(gradientDirect[i]));
                         }
                     }
                 }

@@ -86,7 +86,7 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE((resultsDifference).squaredL2Norm()
+                    REQUIRE(Approx((resultsDifference).squaredL2Norm()).margin(0.00001)
                             <= epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
