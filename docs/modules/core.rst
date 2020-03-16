@@ -63,6 +63,12 @@ DataHandlerCPU
 
 .. doxygenclass:: elsa::DataHandlerCPU
 
+DataHandlerGPU
+--------------
+
+.. mdinclude:: data_handler_GPU.md
+.. doxygenclass:: elsa::DataHandlerGPU
+
 Expression
 ----------
 .. mdinclude:: expression_templates.md
