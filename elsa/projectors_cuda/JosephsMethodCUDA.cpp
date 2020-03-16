@@ -434,7 +434,15 @@ namespace elsa
     {
         cudaMemcpy3DParms cpyParams = {};
         cpyParams.extent = extent;
-        cpyParams.kind = direction;
+
+        cudaPointerAttributes ptrAttributes;
+        // if host data is a cuda pointer it must be managed unified memory -> internal copy
+        if (cudaPointerGetAttributes(&ptrAttributes, hostData) == cudaSuccess) {
+            Logger::get("JosephsMethodCUDA")->debug("Use internal GPU copy");
+            cpyParams.kind = cudaMemcpyDeviceToDevice;
+        } else {
+            cpyParams.kind = direction;
+        }
 
         cudaPitchedPtr tmp =
             make_cudaPitchedPtr(hostData, extent.width, extent.width, extent.height);
@@ -493,7 +501,15 @@ namespace elsa
             cpyParams.srcPtr.ysize = domainDimsui[1];
             cpyParams.dstArray = volume;
             cpyParams.extent = volumeExtent;
-            cpyParams.kind = cudaMemcpyHostToDevice;
+
+            // if host data is a cuda pointer it must be managed unified memory -> internal copy
+            cudaPointerAttributes ptrAttributes;
+            if (cudaPointerGetAttributes(&ptrAttributes, (void*) &hostData[0]) == cudaSuccess) {
+                Logger::get("JosephsMethodCUDA")->debug("Internal GPU copy of texture");
+                cpyParams.kind = cudaMemcpyDeviceToDevice;
+            } else {
+                cpyParams.kind = cudaMemcpyHostToDevice;
+            }
 
             if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
                 throw std::logic_error(
