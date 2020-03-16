@@ -8,6 +8,11 @@
 #include "DataContainerIterator.h"
 #include "Expression.h"
 
+#ifdef ELSA_CUDA_VECTOR
+#include "DataHandlerGPU.h"
+#include "DataHandlerMapGPU.h"
+#endif
+
 #include <memory>
 #include <type_traits>
 
@@ -33,9 +38,6 @@ namespace elsa
     class DataContainer
     {
     public:
-        /// union of all possible handler raw pointers
-        using HandlerTypes_t = std::variant<DataHandlerCPU<data_t>*, DataHandlerMapCPU<data_t>*>;
-
         /// delete default constructor (without metadata there can be no valid container)
         DataContainer() = delete;
 
@@ -46,7 +48,7 @@ namespace elsa
          * \param[in] handlerType the data handler (default: CPU)
          */
         explicit DataContainer(const DataDescriptor& dataDescriptor,
-                               DataHandlerType handlerType = DataHandlerType::CPU);
+                               DataHandlerType handlerType = defaultHandlerType);
 
         /**
          * \brief Constructor for DataContainer, initializing it with a DataVector
@@ -57,7 +59,7 @@ namespace elsa
          */
         DataContainer(const DataDescriptor& dataDescriptor,
                       const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
-                      DataHandlerType handlerType = DataHandlerType::CPU);
+                      DataHandlerType handlerType = defaultHandlerType);
 
         /**
          * \brief Copy constructor for DataContainer
@@ -106,7 +108,21 @@ namespace elsa
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
         DataContainer<data_t>& operator=(Source const& source)
         {
-            _dataHandler->accessData() = source.eval();
+            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(_dataHandler.get())) {
+                handler->accessData() = source.template eval<false>();
+            } else if (auto handler =
+                           dynamic_cast<DataHandlerMapCPU<data_t>*>(_dataHandler.get())) {
+                handler->accessData() = source.template eval<false>();
+#ifdef ELSA_CUDA_VECTOR
+            } else if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(_dataHandler.get())) {
+                handler->accessData().eval(source.template eval<true>());
+            } else if (auto handler =
+                           dynamic_cast<DataHandlerMapGPU<data_t>*>(_dataHandler.get())) {
+                handler->accessData().eval(source.template eval<true>());
+#endif
+            } else {
+                throw std::logic_error("Unknown handler type");
+            }
 
             return *this;
         }
@@ -121,9 +137,9 @@ namespace elsa
          */
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
         DataContainer<data_t>(Source const& source)
-            : DataContainer<data_t>(source.getDataMetaInfo().first, source.eval(),
-                                    source.getDataMetaInfo().second)
+            : DataContainer<data_t>(source.getDataMetaInfo().first, source.getDataMetaInfo().second)
         {
+            this->operator=(source);
         }
 
         /// return the current DataDescriptor
@@ -174,7 +190,23 @@ namespace elsa
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
         data_t dot(const Source& source) const
         {
-            return (*this * source).eval().sum();
+            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(_dataHandler.get())) {
+                return (*this * source).template eval<false>().sum();
+            } else if (auto handler =
+                           dynamic_cast<DataHandlerMapCPU<data_t>*>(_dataHandler.get())) {
+                return (*this * source).template eval<false>().sum();
+#ifdef ELSA_CUDA_VECTOR
+            } else if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(_dataHandler.get())) {
+                DataContainer temp = (*this * source);
+                return temp.sum();
+            } else if (auto handler =
+                           dynamic_cast<DataHandlerMapGPU<data_t>*>(_dataHandler.get())) {
+                DataContainer temp = (*this * source);
+                return temp.sum();
+#endif
+            } else {
+                throw std::logic_error("Unknown handler type");
+            }
         }
 
         /// return the squared l2 norm of this signal (dot product with itself)
@@ -336,13 +368,10 @@ namespace elsa
         DataHandlerType getDataHandlerType() const;
 
         /// friend constexpr function to implement expression templates
-        template <class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
+        template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
     private:
-        /// returns the underlying derived handler as a raw pointer in a std::variant
-        HandlerTypes_t getHandlerPtr() const;
-
         /// the current DataDescriptor
         std::unique_ptr<DataDescriptor> _dataDescriptor;
 
@@ -361,35 +390,49 @@ namespace elsa
         /// private constructor accepting a DataDescriptor and a DataHandler
         explicit DataContainer(const DataDescriptor& dataDescriptor,
                                std::unique_ptr<DataHandler<data_t>> dataHandler,
-                               DataHandlerType dataType = DataHandlerType::CPU);
+                               DataHandlerType dataType = defaultHandlerType);
     };
 
     /// User-defined template argument deduction guide for the expression based constructor
     template <typename Source>
     DataContainer(Source const& source)->DataContainer<typename Source::data_t>;
 
+    /// Collects callable lambdas for later dispatch
+    template <typename... Ts>
+    struct Callables : Ts... {
+        using Ts::operator()...;
+    };
+
+    /// Class template deduction guide
+    template <typename... Ts>
+    Callables(Ts...)->Callables<Ts...>;
+
     /// Multiplying two operands (including scalars)
     template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
     auto operator*(LHS const& lhs, RHS const& rhs)
     {
+        auto multiplicationGPU = [](auto const& left, auto const& right, bool /**/) {
+            return left * right;
+        };
+
         if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
             auto multiplication = [](auto const& left, auto const& right) {
                 return (left.array() * right.array()).matrix();
             };
-            return Expression{multiplication, lhs, rhs};
+            return Expression{Callables{multiplication, multiplicationGPU}, lhs, rhs};
         } else if constexpr (isArithmetic<LHS>) {
             auto multiplication = [](auto const& left, auto const& right) {
                 return (left * right.array()).matrix();
             };
-            return Expression{multiplication, lhs, rhs};
+            return Expression{Callables{multiplication, multiplicationGPU}, lhs, rhs};
         } else if constexpr (isArithmetic<RHS>) {
             auto multiplication = [](auto const& left, auto const& right) {
                 return (left.array() * right).matrix();
             };
-            return Expression{multiplication, lhs, rhs};
+            return Expression{Callables{multiplication, multiplicationGPU}, lhs, rhs};
         } else {
             auto multiplication = [](auto const& left, auto const& right) { return left * right; };
-            return Expression{multiplication, lhs, rhs};
+            return Expression{Callables{multiplication, multiplicationGPU}, lhs, rhs};
         }
     }
 
@@ -397,22 +440,26 @@ namespace elsa
     template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
     auto operator+(LHS const& lhs, RHS const& rhs)
     {
+        auto additionGPU = [](auto const& left, auto const& right, bool /**/) {
+            return left + right;
+        };
+
         if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
             auto addition = [](auto const& left, auto const& right) { return left + right; };
-            return Expression{addition, lhs, rhs};
+            return Expression{Callables{addition, additionGPU}, lhs, rhs};
         } else if constexpr (isArithmetic<LHS>) {
             auto addition = [](auto const& left, auto const& right) {
                 return (left + right.array()).matrix();
             };
-            return Expression{addition, lhs, rhs};
+            return Expression{Callables{addition, additionGPU}, lhs, rhs};
         } else if constexpr (isArithmetic<RHS>) {
             auto addition = [](auto const& left, auto const& right) {
                 return (left.array() + right).matrix();
             };
-            return Expression{addition, lhs, rhs};
+            return Expression{Callables{addition, additionGPU}, lhs, rhs};
         } else {
             auto addition = [](auto const& left, auto const& right) { return left + right; };
-            return Expression{addition, lhs, rhs};
+            return Expression{Callables{addition, additionGPU}, lhs, rhs};
         }
     }
 
@@ -420,22 +467,26 @@ namespace elsa
     template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
     auto operator-(LHS const& lhs, RHS const& rhs)
     {
+        auto subtractionGPU = [](auto const& left, auto const& right, bool /**/) {
+            return left - right;
+        };
+
         if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
             auto subtraction = [](auto const& left, auto const& right) { return left - right; };
-            return Expression{subtraction, lhs, rhs};
+            return Expression{Callables{subtraction, subtractionGPU}, lhs, rhs};
         } else if constexpr (isArithmetic<LHS>) {
             auto subtraction = [](auto const& left, auto const& right) {
                 return (left - right.array()).matrix();
             };
-            return Expression{subtraction, lhs, rhs};
+            return Expression{Callables{subtraction, subtractionGPU}, lhs, rhs};
         } else if constexpr (isArithmetic<RHS>) {
             auto subtraction = [](auto const& left, auto const& right) {
                 return (left.array() - right).matrix();
             };
-            return Expression{subtraction, lhs, rhs};
+            return Expression{Callables{subtraction, subtractionGPU}, lhs, rhs};
         } else {
             auto subtraction = [](auto const& left, auto const& right) { return left - right; };
-            return Expression{subtraction, lhs, rhs};
+            return Expression{Callables{subtraction, subtractionGPU}, lhs, rhs};
         }
     }
 
@@ -443,24 +494,28 @@ namespace elsa
     template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
     auto operator/(LHS const& lhs, RHS const& rhs)
     {
+        auto divisionGPU = [](auto const& left, auto const& right, bool /**/) {
+            return left / right;
+        };
+
         if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
             auto division = [](auto const& left, auto const& right) {
                 return (left.array() / right.array()).matrix();
             };
-            return Expression{division, lhs, rhs};
+            return Expression{Callables{division, divisionGPU}, lhs, rhs};
         } else if constexpr (isArithmetic<LHS>) {
             auto division = [](auto const& left, auto const& right) {
                 return (left / right.array()).matrix();
             };
-            return Expression{division, lhs, rhs};
+            return Expression{Callables{division, divisionGPU}, lhs, rhs};
         } else if constexpr (isArithmetic<RHS>) {
             auto division = [](auto const& left, auto const& right) {
                 return (left.array() / right).matrix();
             };
-            return Expression{division, lhs, rhs};
+            return Expression{Callables{division, divisionGPU}, lhs, rhs};
         } else {
-            auto division = [](auto const& left, auto const& right) { return left * right; };
-            return Expression{division, lhs, rhs};
+            auto division = [](auto const& left, auto const& right) { return left / right; };
+            return Expression{Callables{division, divisionGPU}, lhs, rhs};
         }
     }
 
@@ -469,7 +524,12 @@ namespace elsa
     auto square(Operand const& operand)
     {
         auto square = [](auto const& operand) { return (operand.array().square()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto squareGPU = [](auto const& operand, bool /**/) { return quickvec::square(operand); };
+        return Expression{Callables{square, squareGPU}, operand};
+#else
         return Expression{square, operand};
+#endif
     }
 
     /// Element-wise square-root operation
@@ -477,7 +537,12 @@ namespace elsa
     auto sqrt(Operand const& operand)
     {
         auto sqrt = [](auto const& operand) { return (operand.array().sqrt()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto sqrtGPU = [](auto const& operand, bool /**/) { return quickvec::sqrt(operand); };
+        return Expression{Callables{sqrt, sqrtGPU}, operand};
+#else
         return Expression{sqrt, operand};
+#endif
     }
 
     /// Element-wise exponenation operation with euler base
@@ -485,7 +550,12 @@ namespace elsa
     auto exp(Operand const& operand)
     {
         auto exp = [](auto const& operand) { return (operand.array().exp()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto expGPU = [](auto const& operand, bool /**/) { return quickvec::exp(operand); };
+        return Expression{Callables{exp, expGPU}, operand};
+#else
         return Expression{exp, operand};
+#endif
     }
 
     /// Element-wise natural logarithm
@@ -493,7 +563,12 @@ namespace elsa
     auto log(Operand const& operand)
     {
         auto log = [](auto const& operand) { return (operand.array().log()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto logGPU = [](auto const& operand, bool /**/) { return quickvec::log(operand); };
+        return Expression{Callables{log, logGPU}, operand};
+#else
         return Expression{log, operand};
+#endif
     }
 
 } // namespace elsa

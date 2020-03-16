@@ -6,28 +6,56 @@
 #include <optional>
 #include "DataDescriptor.h"
 #include "ExpressionPredicates.h"
+#include "DataHandlerCPU.h"
+#include "DataHandlerMapCPU.h"
+
+#ifdef ELSA_CUDA_VECTOR
+#include "DataHandlerGPU.h"
+#endif
 
 namespace elsa
 {
     /// Compile time switch to select to recursively evaluate for expression type
-    template <class Operand, std::enable_if_t<isExpression<Operand>, int> = 0>
+    template <bool GPU, class Operand, std::enable_if_t<isExpression<Operand>, int> = 0>
     constexpr auto evaluateOrReturn(Operand const& operand)
     {
-        return operand.eval();
+        return operand.template eval<GPU>();
     }
 
     /// Compile time switch to return-by-value of arithmetic types
-    template <class Operand, std::enable_if_t<isArithmetic<Operand>, int> = 0>
+    template <bool GPU, class Operand, std::enable_if_t<isArithmetic<Operand>, int> = 0>
     constexpr auto evaluateOrReturn(Operand const operand)
     {
         return operand;
     }
 
     /// Compile time switch to return data in container
-    template <class Operand, std::enable_if_t<isDataContainer<Operand>, int> = 0>
+    template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int> = 0>
     constexpr auto evaluateOrReturn(Operand const& operand)
     {
-        return operand._dataHandler->accessData();
+        using data_t = typename Operand::value_type;
+
+        if constexpr (GPU) {
+#ifdef ELSA_CUDA_VECTOR
+            if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(operand._dataHandler.get())) {
+                return handler->accessData();
+            } else if (auto handler =
+                           dynamic_cast<DataHandlerMapGPU<data_t>*>(operand._dataHandler.get())) {
+                return handler->accessData();
+            } else {
+                throw std::logic_error("Unknown handler type");
+            }
+#endif
+        } else {
+            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(operand._dataHandler.get())) {
+                return handler->accessData();
+            } else if (auto handler =
+                           dynamic_cast<DataHandlerMapCPU<data_t>*>(operand._dataHandler.get())) {
+                return handler->accessData();
+            } else {
+                throw std::logic_error("Unknown handler type");
+            }
+        }
     }
 
     /// Type trait which decides if const lvalue reference or not
@@ -65,13 +93,19 @@ namespace elsa
         }
 
         /// Evaluates the expression
+        template <bool GPU = false>
         auto eval() const
         {
             // generic lambda for evaluating tree, we need this to get a pack again out of the tuple
             auto const callCallable = [this](Operands const&... args) {
                 // here evaluateOrReturn is called on each Operand within args as the unpacking
                 // takes place after the fcn call
-                return _callable(evaluateOrReturn(args)...);
+                // selects the right callable from the Callables struct with multiple lambdas
+                if constexpr (GPU) {
+                    return _callable(evaluateOrReturn<GPU>(args)..., GPU);
+                } else {
+                    return _callable(evaluateOrReturn<GPU>(args)...);
+                }
             };
             return std::apply(callCallable, _args);
         }

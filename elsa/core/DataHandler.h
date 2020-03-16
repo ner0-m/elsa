@@ -4,6 +4,10 @@
 #include "Cloneable.h"
 #include "ExpressionPredicates.h"
 
+#ifdef ELSA_CUDA_VECTOR
+#include "Quickvec.h"
+#endif
+
 #include <Eigen/Core>
 
 namespace elsa
@@ -29,13 +33,6 @@ namespace elsa
     template <typename data_t = real_t>
     class DataHandler : public Cloneable<DataHandler<data_t>>
     {
-        /// for enabling accessData()
-        template <class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
-        friend constexpr auto evaluateOrReturn(Operand const& operand);
-
-        /// for enabling accessData()
-        friend DataContainer<data_t>;
-
     protected:
         /// convenience typedef for the Eigen::Matrix data vector
         using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
@@ -178,11 +175,5 @@ namespace elsa
 
         /// derived classes should override this method to implement move assignment
         virtual void assign(DataHandler<data_t>&& other) = 0;
-
-        /// derived classes return underlying data
-        virtual DataMap_t accessData() = 0;
-
-        /// derived classes return underlying data
-        virtual DataMap_t accessData() const = 0;
     };
 } // namespace elsa

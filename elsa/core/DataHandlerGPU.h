@@ -2,8 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DataHandler.h"
-
-#include <Eigen/Core>
+#include "Quickvec.h"
 
 #include <list>
 
@@ -11,14 +10,14 @@ namespace elsa
 {
     // forward declaration, allows mutual friending
     template <typename data_t>
-    class DataHandlerMapCPU;
+    class DataHandlerMapGPU;
 
     // forward declaration for friend test function
     template <typename data_t = real_t>
-    class DataHandlerCPU;
+    class DataHandlerGPU;
     // forward declaration, used for testing and defined in test file (declared as friend)
     template <typename data_t>
-    long useCount(const DataHandlerCPU<data_t>& /*dh*/);
+    long useCount(const DataHandlerGPU<data_t>&);
 
     /**
      * \brief Class representing and owning a vector stored in CPU main memory (using
@@ -33,23 +32,23 @@ namespace elsa
      * The class implements copy-on-write. Therefore any non-const functions should call the
      * detach() function first to trigger the copy-on-write mechanism.
      *
-     * DataHandlerCPU and DataHandlerMapCPU are mutual friend classes allowing for the vectorization
+     * DataHandlerGPU and DataHandlerMapCPU are mutual friend classes allowing for the vectorization
      * of arithmetic operations with the help of Eigen. A strong bidirectional link exists
-     * between the two classes. A Map is associated with the DataHandlerCPU from which it was
-     * created for the entirety of its lifetime. If the DataHandlerCPU starts managing a new vector
+     * between the two classes. A Map is associated with the DataHandlerGPU from which it was
+     * created for the entirety of its lifetime. If the DataHandlerGPU starts managing a new vector
      * (e.g. through a call to detach()), all associated Maps will also be updated.
      */
     template <typename data_t>
-    class DataHandlerCPU : public DataHandler<data_t>
+    class DataHandlerGPU : public DataHandler<data_t>
     {
-        /// declare DataHandlerMapCPU as friend, allows the use of Eigen for improved performance
-        friend DataHandlerMapCPU<data_t>;
-
         /// for enabling accessData()
         friend DataContainer<data_t>;
 
+        /// declare DataHandlerMapGPU as friend, allows the use of Eigen for improved performance
+        friend DataHandlerMapGPU<data_t>;
+
         /// used for testing only and defined in test file
-        friend long useCount<>(const DataHandlerCPU<data_t>& dh);
+        friend long useCount<>(const DataHandlerGPU<data_t>& dh);
 
         /// friend constexpr function to implement expression templates
         template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
@@ -64,34 +63,40 @@ namespace elsa
 
     public:
         /// delete default constructor (having no information makes no sense)
-        DataHandlerCPU() = delete;
+        DataHandlerGPU() = delete;
 
         /// default destructor
-        ~DataHandlerCPU() override;
+        ~DataHandlerGPU() override;
 
         /**
-         * \brief Constructor initializing an appropriately sized vector
-         *
-         * Note that the values will not be initialized and therefore contain undefined values.
+         * \brief Constructor initializing an appropriately sized vector with zeros
          *
          * \param[in] size of the vector
+         * \param[in] initialize - set to false if you do not need initialization with zeros
+         * (default: true)
          *
          * \throw std::invalid_argument if the size is non-positive
          */
-        explicit DataHandlerCPU(index_t size);
+        explicit DataHandlerGPU(index_t size);
 
         /**
          * \brief Constructor initializing a data vector with a given vector
          *
          * \param[in] vector that is used for initializing the data
          */
-        explicit DataHandlerCPU(DataVector_t const& vector);
+        explicit DataHandlerGPU(DataVector_t const& vector);
 
+        /**
+         * \brief Constructor initializing a data vector with a given vector
+         *
+         * \param[in] vector that is used for initializing the data
+         */
+        explicit DataHandlerGPU(quickvec::Vector<data_t> const& vector);
         /// copy constructor
-        DataHandlerCPU(const DataHandlerCPU<data_t>& other);
+        DataHandlerGPU(const DataHandlerGPU<data_t>& other);
 
         /// move constructor
-        DataHandlerCPU(DataHandlerCPU<data_t>&& other);
+        DataHandlerGPU(DataHandlerGPU<data_t>&& other) noexcept;
 
         /// return the size of the vector
         index_t getSize() const override;
@@ -117,11 +122,11 @@ namespace elsa
         /// return the sum of all elements of the data vector
         data_t sum() const override;
 
-        /// copy assign another DataHandlerCPU to this, other types handled in assign()
-        DataHandlerCPU<data_t>& operator=(const DataHandlerCPU<data_t>& v);
+        /// copy assign another DataHandlerGPU
+        DataHandlerGPU<data_t>& operator=(const DataHandlerGPU<data_t>& v);
 
-        /// move assign another DataHandlerCPU to this, other types handled in assign()
-        DataHandlerCPU<data_t>& operator=(DataHandlerCPU<data_t>&& v);
+        /// move assign another DataHandlerGPU
+        DataHandlerGPU<data_t>& operator=(DataHandlerGPU<data_t>&& v);
 
         /// lift copy and move assignment operators from base class
         using DataHandler<data_t>::operator=;
@@ -157,7 +162,6 @@ namespace elsa
         /// numberOfElements elements
         std::unique_ptr<DataHandler<data_t>> getBlock(index_t startIndex,
                                                       index_t numberOfElements) override;
-
         /// return a const reference to the sequential block starting at startIndex and containing
         /// numberOfElements elements
         std::unique_ptr<const DataHandler<data_t>>
@@ -165,13 +169,13 @@ namespace elsa
 
     protected:
         /// the vector storing the data
-        std::shared_ptr<DataVector_t> _data;
+        std::shared_ptr<quickvec::Vector<data_t>> _data;
 
         /// list of DataHandlerMaps referring to blocks of this
-        std::list<DataHandlerMapCPU<data_t>*> _associatedMaps;
+        std::list<DataHandlerMapGPU<data_t>*> _associatedMaps;
 
         /// implement the polymorphic clone operation
-        DataHandlerCPU<data_t>* cloneImpl() const override;
+        DataHandlerGPU<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const DataHandler<data_t>& other) const override;
@@ -183,10 +187,10 @@ namespace elsa
         void assign(DataHandler<data_t>&& other) override;
 
         /// return non-const version of data
-        DataMap_t accessData();
+        quickvec::Vector<data_t> accessData();
 
         /// return const version of data
-        DataMap_t accessData() const;
+        quickvec::Vector<data_t> accessData() const;
 
     private:
         /// creates the deep copy for the copy-on-write mechanism
@@ -197,10 +201,9 @@ namespace elsa
         void detachWithUninitializedBlock(index_t startIndex, index_t numberOfElements);
 
         /// change the vector being handled
-        void attach(const std::shared_ptr<DataVector_t>& data);
+        void attach(const std::shared_ptr<quickvec::Vector<data_t>>& data);
 
         /// change the vector being handled (rvalue version)
-        void attach(std::shared_ptr<DataVector_t>&& data);
+        void attach(std::shared_ptr<quickvec::Vector<data_t>>&& data);
     };
-
 } // namespace elsa

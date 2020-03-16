@@ -5,24 +5,6 @@
 
 namespace elsa
 {
-    /// Remove cv qualifiers as well as reference of given type
-    // TODO: Replace with std::remove_cv_ref_t when C++20 available
-    template <typename T>
-    struct RemoveCvRef {
-        using type = std::remove_cv_t<std::remove_reference_t<T>>;
-    };
-
-    /// Helper to make type available
-    template <class T>
-    using RemoveCvRef_t = typename RemoveCvRef<T>::type;
-
-    /// Predicate to check if of complex type
-    template <typename T>
-    constexpr bool isComplex =
-        std::is_same_v<
-            RemoveCvRef_t<T>,
-            std::complex<float>> || std::is_same_v<RemoveCvRef_t<T>, std::complex<double>>;
-
     /// User defined is_arithmetic which includes complex numbers
     template <typename T>
     constexpr bool isArithmetic = std::is_arithmetic_v<T> || isComplex<T>;

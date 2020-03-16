@@ -3,6 +3,7 @@
 #include <complex>
 #include <cstddef>
 #include <Eigen/Core>
+#include <type_traits>
 
 namespace elsa
 {
@@ -34,9 +35,17 @@ namespace elsa
 
     /// type of the DataHandler used to store the actual data
     enum class DataHandlerType {
-        CPU,    ///< data is stored as an Eigen::Matrix in CPU main memory
-        MAP_CPU ///< data is not explicitly stored, but using an Eigen::Map to refer to other
+        CPU,     ///< data is stored as an Eigen::Matrix in CPU main memory
+        MAP_CPU, ///< data is not explicitly stored, but using an Eigen::Map to refer to other
+        GPU,     ///< data is stored as an raw array in the GPU memory
+        MAP_GPU  ///< data is not explicitley stored but mapped through a pointer
     };
+
+#ifdef ELSA_CUDA_VECTOR
+    constexpr DataHandlerType defaultHandlerType = DataHandlerType::GPU;
+#else
+    constexpr DataHandlerType defaultHandlerType = DataHandlerType::CPU;
+#endif
 
     /// base case for deducing floating point type of std::complex
     template <typename T>
@@ -54,4 +63,19 @@ namespace elsa
     template <typename T>
     using GetFloatingPointType_t = typename GetFloatingPointType<T>::type;
 
+    /// Remove cv qualifiers as well as reference of given type
+    // TODO: Replace with std::remove_cv_ref_t when C++20 available
+    template <typename T>
+    struct RemoveCvRef {
+        using type = std::remove_cv_t<std::remove_reference_t<T>>;
+    };
+
+    /// Helper to make type available
+    template <class T>
+    using RemoveCvRef_t = typename RemoveCvRef<T>::type;
+
+    /// Predicate to check if of complex type
+    template <typename T>
+    constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, std::complex<float>>::value
+                               || std::is_same<RemoveCvRef_t<T>, std::complex<double>>::value;
 } // namespace elsa

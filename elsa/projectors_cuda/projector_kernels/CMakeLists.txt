@@ -10,7 +10,7 @@ set(CUDA_ARCH_TYPES "Auto" CACHE STRING "Space-separated list of target GPU arch
 if ("${CUDA_ARCH_TYPES}" STREQUAL "Auto")
   CUDA_DETECT_INSTALLED_GPUS(TARGET_GPUS)
 else()
-  set(TARGET_GPUS CUDA_ARCH_TYPES)
+  set(TARGET_GPUS ${CUDA_ARCH_TYPES})
 endif()
 
 # fmad can reduce accuracy, but only gives a negligible boost to speed

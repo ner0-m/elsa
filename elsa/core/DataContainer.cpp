@@ -53,7 +53,7 @@ namespace elsa
                 _dataHandler = other._dataHandler->clone();
             }
 
-            _dataHandlerType = other._dataHandlerType;
+            // TODO: Check what to do with handler type if CPU copy assign to GPU type
         }
 
         return *this;
@@ -81,7 +81,7 @@ namespace elsa
             _dataHandler = std::move(other._dataHandler);
         }
 
-        _dataHandlerType = std::move(other._dataHandlerType);
+        // TODO: Check what to do with handler type if CPU move assign to GPU type
 
         // leave other in a valid state
         other._dataDescriptor = nullptr;
@@ -230,6 +230,12 @@ namespace elsa
                 return std::make_unique<DataHandlerCPU<data_t>>(std::forward<Args>(args)...);
             case DataHandlerType::MAP_CPU:
                 return std::make_unique<DataHandlerCPU<data_t>>(std::forward<Args>(args)...);
+#ifdef ELSA_CUDA_VECTOR
+            case DataHandlerType::GPU:
+                return std::make_unique<DataHandlerGPU<data_t>>(std::forward<Args>(args)...);
+            case DataHandlerType::MAP_GPU:
+                return std::make_unique<DataHandlerGPU<data_t>>(std::forward<Args>(args)...);
+#endif
             default:
                 throw std::invalid_argument("DataContainer: unknown handler type");
         }
@@ -277,8 +283,13 @@ namespace elsa
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
         index_t blockSize = ithDesc.getNumberOfCoefficients();
 
+        DataHandlerType newHandlerType = (_dataHandlerType == DataHandlerType::CPU
+                                          || _dataHandlerType == DataHandlerType::MAP_CPU)
+                                             ? DataHandlerType::MAP_CPU
+                                             : DataHandlerType::MAP_GPU;
+
         return DataContainer<data_t>{ithDesc, _dataHandler->getBlock(startIndex, blockSize),
-                                     DataHandlerType::MAP_CPU};
+                                     newHandlerType};
     }
 
     template <typename data_t>
@@ -295,10 +306,15 @@ namespace elsa
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
         index_t blockSize = ithDesc.getNumberOfCoefficients();
 
+        DataHandlerType newHandlerType = (_dataHandlerType == DataHandlerType::CPU
+                                          || _dataHandlerType == DataHandlerType::MAP_CPU)
+                                             ? DataHandlerType::MAP_CPU
+                                             : DataHandlerType::MAP_GPU;
+
         // getBlock() returns a pointer to non-const DH, but that's fine as it gets wrapped in a
         // constant container
         return DataContainer<data_t>{ithDesc, _dataHandler->getBlock(startIndex, blockSize),
-                                     DataHandlerType::MAP_CPU};
+                                     newHandlerType};
     }
 
     template <typename data_t>
@@ -307,8 +323,13 @@ namespace elsa
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
             throw std::invalid_argument("DataContainer: view must have same size as container");
 
+        DataHandlerType newHandlerType = (_dataHandlerType == DataHandlerType::CPU
+                                          || _dataHandlerType == DataHandlerType::MAP_CPU)
+                                             ? DataHandlerType::MAP_CPU
+                                             : DataHandlerType::MAP_GPU;
+
         return DataContainer<data_t>{dataDescriptor, _dataHandler->getBlock(0, getSize()),
-                                     DataHandlerType::MAP_CPU};
+                                     newHandlerType};
     }
 
     template <typename data_t>
@@ -318,10 +339,15 @@ namespace elsa
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
             throw std::invalid_argument("DataContainer: view must have same size as container");
 
+        DataHandlerType newHandlerType = (_dataHandlerType == DataHandlerType::CPU
+                                          || _dataHandlerType == DataHandlerType::MAP_CPU)
+                                             ? DataHandlerType::MAP_CPU
+                                             : DataHandlerType::MAP_GPU;
+
         // getBlock() returns a pointer to non-const DH, but that's fine as it gets wrapped in a
         // constant container
         return DataContainer<data_t>{dataDescriptor, _dataHandler->getBlock(0, getSize()),
-                                     DataHandlerType::MAP_CPU};
+                                     newHandlerType};
     }
 
     template <typename data_t>
@@ -394,22 +420,6 @@ namespace elsa
     typename DataContainer<data_t>::const_reverse_iterator DataContainer<data_t>::crend() const
     {
         return const_reverse_iterator(cbegin());
-    }
-
-    template <typename data_t>
-    typename DataContainer<data_t>::HandlerTypes_t DataContainer<data_t>::getHandlerPtr() const
-    {
-        DataContainer<data_t>::HandlerTypes_t handler;
-
-        if (_dataHandlerType == DataHandlerType::CPU) {
-            handler = static_cast<DataHandlerCPU<data_t>*>(_dataHandler.get());
-        }
-
-        if (_dataHandlerType == DataHandlerType::MAP_CPU) {
-            handler = static_cast<DataHandlerMapCPU<data_t>*>(_dataHandler.get());
-        }
-
-        return handler;
     }
 
     template <typename data_t>

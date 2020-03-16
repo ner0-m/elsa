@@ -2,6 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DataHandler.h"
+#include "Quickvec.h"
 
 #include <Eigen/Core>
 
@@ -11,21 +12,21 @@ namespace elsa
 {
     /// forward declaration, allows mutual friending
     template <typename data_t>
-    class DataHandlerCPU;
+    class DataHandlerGPU;
 
     /**
-     * \brief Class referencing a vector stored in CPU main memory, or a part thereof (using
-     * Eigen::Map)
+     * \brief Class referencing a vector stored in GPU main memory, or a part thereof
      *
      * \tparam data_t data type of vector
      *
      * \author David Frank - main code
      * \author Tobias Lasser - modularization, fixes
      * \author Nikola Dinev - integration with the copy-on-write mechanism
+     * \author Jens Petit - adaption of CPU version for GPU
      *
-     * This class does not own or manage its own memory. It is bound to a DataHandlerCPU (the data
+     * This class does not own or manage its own memory. It is bound to a DataHandlerGPU (the data
      * owner) at its creation, and serves as a reference to a sequential block of memory owned by
-     * the DataHandlerCPU. As such, changes to the Map will affect the DataHandlerCPU and vice
+     * the DataHandlerGPU. As such, changes to the Map will affect the DataHandlerGPU and vice
      * versa.
      *
      * Maps do not support move assignment, and remain bound to the original data owner until
@@ -35,15 +36,15 @@ namespace elsa
      * entirety of the vector managed by the data owner, assigning to the Map or cloning will always
      * trigger a deep copy.
      *
-     * Cloning a Map produces a new DataHandlerCPU, managing a new chunk of memory. The contents of
+     * Cloning a Map produces a new DataHandlerGPU, managing a new chunk of memory. The contents of
      * the memory are equivalent to the contents of the block referenced by the Map, but the two are
      * not associated.
      */
     template <typename data_t = real_t>
-    class DataHandlerMapCPU : public DataHandler<data_t>
+    class DataHandlerMapGPU : public DataHandler<data_t>
     {
-        /// declare DataHandlerCPU as friend, allows the use of Eigen for improved performance
-        friend class DataHandlerCPU<data_t>;
+        /// declare DataHandlerGPU as friend, allows the use of Eigen for improved performance
+        friend class DataHandlerGPU<data_t>;
 
         /// friend constexpr function to implement expression templates
         template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
@@ -52,22 +53,15 @@ namespace elsa
         /// for enabling accessData()
         friend DataContainer<data_t>;
 
-    protected:
-        /// convenience typedef for the Eigen::Matrix data vector
-        using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
-
-        /// convenience typedef for the Eigen::Map
-        using DataMap_t = Eigen::Map<DataVector_t>;
-
     public:
         /// copy constructor
-        DataHandlerMapCPU(const DataHandlerMapCPU<data_t>& other);
+        DataHandlerMapGPU(const DataHandlerMapGPU<data_t>& other);
 
         /// default move constructor
-        DataHandlerMapCPU(DataHandlerMapCPU<data_t>&& other) = default;
+        DataHandlerMapGPU(DataHandlerMapGPU<data_t>&& other) = default;
 
         /// default destructor
-        ~DataHandlerMapCPU() override;
+        ~DataHandlerMapGPU() override;
 
         /// return the size of the vector
         index_t getSize() const override;
@@ -105,10 +99,10 @@ namespace elsa
         /// compute in-place element-wise division by another vector v
         DataHandler<data_t>& operator/=(const DataHandler<data_t>& v) override;
 
-        /// copy assign another DataHandlerMapCPU to this, other types handled in assign()
-        DataHandlerMapCPU<data_t>& operator=(const DataHandlerMapCPU<data_t>& v);
+        /// copy assign another DataHandlerMapGPU to this, other types handled in assign()
+        DataHandlerMapGPU<data_t>& operator=(const DataHandlerMapGPU<data_t>& v);
 
-        DataHandlerMapCPU<data_t>& operator=(DataHandlerMapCPU<data_t>&&) = default;
+        DataHandlerMapGPU<data_t>& operator=(DataHandlerMapGPU<data_t>&&) = default;
 
         /// lift copy and move assignment operators from base class
         using DataHandler<data_t>::operator=;
@@ -140,16 +134,16 @@ namespace elsa
 
     protected:
         /// vector mapping of the data
-        DataMap_t _map;
+        quickvec::Vector<data_t> _map;
 
         /// pointer to the data-owning handler
-        DataHandlerCPU<data_t>* _dataOwner;
+        DataHandlerGPU<data_t>* _dataOwner;
 
         /// handle to this in the list of Maps associated with the data-owning handler
-        typename std::list<DataHandlerMapCPU<data_t>*>::iterator _handle;
+        typename std::list<DataHandlerMapGPU<data_t>*>::iterator _handle;
 
         /// implement the polymorphic clone operation
-        DataHandlerCPU<data_t>* cloneImpl() const override;
+        DataHandlerGPU<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const DataHandler<data_t>& other) const override;
@@ -159,20 +153,20 @@ namespace elsa
         void assign(DataHandler<data_t>&& other) override;
 
         /// return non-const version of the data
-        DataMap_t accessData();
+        quickvec::Vector<data_t> accessData();
 
         /// return const version of the data
-        DataMap_t accessData() const;
+        quickvec::Vector<data_t> accessData() const;
 
     private:
         /**
-         * \brief Construct a DataHandlerMapCPU referencing a sequential block of data owned by
-         * DataHandlerCPU
+         * \brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
+         * DataHandlerGPU
          *
-         * \param[in] dataOwner pointer to the DataHandlerCPU owning the data vector
+         * \param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
          * \param[in] data pointer to start of segment
          * \param[in] n number of elements in block
          */
-        DataHandlerMapCPU(DataHandlerCPU<data_t>* dataOwner, data_t* data, index_t n);
+        DataHandlerMapGPU(DataHandlerGPU<data_t>* dataOwner, data_t* data, index_t n);
     };
 } // namespace elsa
