@@ -47,13 +47,12 @@ namespace elsa
         if (this != &other) {
             _dataDescriptor = other._dataDescriptor->clone();
 
-            if (_dataHandler) {
+            if (_dataHandler && canAssign(other._dataHandlerType)) {
                 *_dataHandler = *other._dataHandler;
             } else {
                 _dataHandler = other._dataHandler->clone();
+                _dataHandlerType = other._dataHandlerType;
             }
-
-            // TODO: Check what to do with handler type if CPU copy assign to GPU type
         }
 
         return *this;
@@ -75,13 +74,12 @@ namespace elsa
     {
         _dataDescriptor = std::move(other._dataDescriptor);
 
-        if (_dataHandler) {
+        if (_dataHandler && canAssign(other._dataHandlerType)) {
             *_dataHandler = std::move(*other._dataHandler);
         } else {
             _dataHandler = std::move(other._dataHandler);
+            _dataHandlerType = std::move(other._dataHandlerType);
         }
-
-        // TODO: Check what to do with handler type if CPU move assign to GPU type
 
         // leave other in a valid state
         other._dataDescriptor = nullptr;
@@ -426,6 +424,71 @@ namespace elsa
     DataHandlerType DataContainer<data_t>::getDataHandlerType() const
     {
         return _dataHandlerType;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DataContainer<data_t>::loadToCPU()
+    {
+        if (_dataHandlerType == DataHandlerType::CPU
+            || _dataHandlerType == DataHandlerType::MAP_CPU) {
+            throw std::logic_error(
+                "DataContainer: cannot load data to CPU with already CPU based container");
+        }
+
+        DataContainer<data_t> dcCPU(*_dataDescriptor, DataHandlerType::CPU);
+
+        for (index_t i = 0; i < getSize(); i++) {
+            dcCPU[i] = this->operator[](i);
+        }
+
+        return dcCPU;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DataContainer<data_t>::loadToGPU()
+    {
+        if (_dataHandlerType == DataHandlerType::GPU
+            || _dataHandlerType == DataHandlerType::MAP_GPU) {
+            throw std::logic_error(
+                "DataContainer: cannot load data to GPU with already GPU based container");
+        }
+
+        DataContainer<data_t> dcGPU(*_dataDescriptor, DataHandlerType::GPU);
+
+        for (index_t i = 0; i < getSize(); i++) {
+            dcGPU[i] = this->operator[](i);
+        }
+
+        return dcGPU;
+    }
+
+    template <typename data_t>
+    bool DataContainer<data_t>::canAssign(DataHandlerType handlerType)
+    {
+        if (_dataHandlerType == DataHandlerType::CPU
+            || _dataHandlerType == DataHandlerType::MAP_CPU) {
+            switch (handlerType) {
+                case DataHandlerType::CPU:
+                    return true;
+                    break;
+                case DataHandlerType::MAP_CPU:
+                    return true;
+                    break;
+                default:
+                    return false;
+            }
+        } else {
+            switch (handlerType) {
+                case DataHandlerType::GPU:
+                    return true;
+                    break;
+                case DataHandlerType::MAP_GPU:
+                    return true;
+                    break;
+                default:
+                    return false;
+            }
+        }
     }
 
     // ------------------------------------------

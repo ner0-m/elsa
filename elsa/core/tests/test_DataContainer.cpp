@@ -587,6 +587,92 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
     }
 }
 
+#ifdef ELSA_CUDA_VECTOR
+TEMPLATE_TEST_CASE("Scenario: Testing loading data to GPU and vice versa.", "", float, double,
+                   std::complex<float>, std::complex<double>, index_t)
+{
+    GIVEN("A CPU DataContainer with random data")
+    {
+        IndexVector_t numCoeff(3);
+        numCoeff << 52, 7, 29;
+        DataDescriptor desc(numCoeff);
+
+        DataContainer<TestType> dcCPU(desc, DataHandlerType::CPU);
+        DataContainer<TestType> dcGPU(desc, DataHandlerType::GPU);
+
+        Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{dcCPU.getSize()};
+        randVec.setRandom();
+
+        for (index_t i = 0; i < dcCPU.getSize(); ++i) {
+            dcCPU[i] = randVec(i);
+            dcGPU[i] = randVec(i);
+        }
+
+        WHEN("Trying to call loadToCPU on CPU container")
+        {
+            THEN("Throws") { REQUIRE_THROWS(dcCPU.loadToCPU()); }
+        }
+
+        WHEN("Trying to call loadToGPU on GPU container")
+        {
+            THEN("Throws") { REQUIRE_THROWS(dcGPU.loadToGPU()); }
+        }
+
+        WHEN("Loading to GPU from CPU")
+        {
+            DataContainer dcGPU2 = dcCPU.loadToGPU();
+
+            REQUIRE(dcGPU2.getDataHandlerType() == DataHandlerType::GPU);
+
+            THEN("all elements have to be the same")
+            {
+                for (index_t i = 0; i < dcCPU.getSize(); ++i) {
+                    REQUIRE(dcGPU2[i] == dcGPU[i]);
+                }
+            }
+        }
+
+        WHEN("Loading to CPU from GPU")
+        {
+            DataContainer dcCPU2 = dcGPU.loadToCPU();
+
+            REQUIRE(dcCPU2.getDataHandlerType() == DataHandlerType::CPU);
+
+            THEN("all elements have to be the same")
+            {
+                for (index_t i = 0; i < dcCPU.getSize(); ++i) {
+                    REQUIRE(dcCPU2[i] == dcGPU[i]);
+                }
+            }
+        }
+
+        WHEN("copy-assigning a GPU to a CPU container")
+        {
+            dcCPU = dcGPU;
+
+            THEN("it should be a GPU container")
+            {
+                REQUIRE(dcCPU.getDataHandlerType() == DataHandlerType::GPU);
+            }
+
+            AND_THEN("they should be equal") { REQUIRE(dcCPU == dcGPU); }
+        }
+
+        WHEN("copy-assigning a CPU to a GPU container")
+        {
+            dcGPU = dcCPU;
+
+            THEN("it should be a GPU container")
+            {
+                REQUIRE(dcGPU.getDataHandlerType() == DataHandlerType::CPU);
+            }
+
+            AND_THEN("they should be equal") { REQUIRE(dcCPU == dcGPU); }
+        }
+    }
+}
+#endif
+
 SCENARIO("Testing iterators for DataContainer")
 {
     GIVEN("A 1D container")

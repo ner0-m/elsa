@@ -72,6 +72,10 @@ namespace elsa
          * \brief copy assignment for DataContainer
          *
          * \param[in] other DataContainer to copy
+         *
+         * Note that a copy assignment with a DataContainer on a different device (CPU vs GPU) will
+         * result in an "infectious" copy which means that afterwards the current container will use
+         * the same device as "other".
          */
         DataContainer<data_t>& operator=(const DataContainer<data_t>& other);
 
@@ -94,6 +98,10 @@ namespace elsa
          * The moved-from objects remains in a valid state. However, as preconditions are not
          * fulfilled for any member functions, the object should not be used. After move- or copy-
          * assignment, this is possible again.
+         *
+         * Note that a copy assignment with a DataContainer on a different device (CPU vs GPU) will
+         * result in an "infectious" copy which means that afterwards the current container will use
+         * the same device as "other".
          */
         DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
 
@@ -371,6 +379,26 @@ namespace elsa
         template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
+        /**
+         * \brief Factory function which returns GPU based DataContainers
+         *
+         * \return the GPU based DataContainer
+         *
+         * Note that if this function is called on a container which is already GPU based, it will
+         * throw an exception.
+         */
+        DataContainer loadToGPU();
+
+        /**
+         * \brief Factory function which returns CPU based DataContainers
+         *
+         * \return the CPU based DataContainer
+         *
+         * Note that if this function is called on a container which is already CPU based, it will
+         * throw an exception.
+         */
+        DataContainer loadToCPU();
+
     private:
         /// the current DataDescriptor
         std::unique_ptr<DataDescriptor> _dataDescriptor;
@@ -391,6 +419,20 @@ namespace elsa
         explicit DataContainer(const DataDescriptor& dataDescriptor,
                                std::unique_ptr<DataHandler<data_t>> dataHandler,
                                DataHandlerType dataType = defaultHandlerType);
+
+        /**
+         * \brief Helper function to indicate if a regular assignment or a clone should be performed
+         *
+         * \param[in] handlerType the member variable of the other container in
+         * copy-/move-assignment
+         *
+         * \return true if a regular assignment of the pointed to DataHandlers should be done
+         *
+         * An assignment operation with a DataContainer which does not use the same device (CPU /
+         * GPU) has to be handled differently. This helper function indicates if a regular
+         * assignment should be performed or not.
+         */
+        bool canAssign(DataHandlerType handlerType);
     };
 
     /// User-defined template argument deduction guide for the expression based constructor
