@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <complex>
+#include <random>
 #include "elsaDefines.h"
 
 /**
@@ -32,4 +33,39 @@ bool checkSameNumbers(T left, T right, int epsilonFactor = 1)
         CHECK(Approx(left).epsilon(eps) == right);
         return Approx(left).epsilon(eps) == right;
     }
+}
+
+/**
+ * \brief Generates a random Eigen matrix for different data_t types with integer values limited to
+ * a certain range
+ *
+ * \param[in] size the number of elements in the vector like matrix
+ *
+ * \tparam data_t the numerical type to use
+ *
+ * The integer range is chosen to be small, to allow multiplication with the values without running
+ * into overflow issues.
+ */
+template <typename data_t>
+auto generateRandomMatrix(elsa::index_t size)
+{
+    Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec(size);
+
+    if constexpr (std::is_integral_v<data_t>) {
+        std::random_device rd;
+        std::mt19937 eng(rd());
+        std::uniform_int_distribution<> distr(-100, 100);
+
+        for (elsa::index_t i = 0; i < size; ++i) {
+            data_t num = distr(eng);
+            // remove zeros as this leads to errors when dividing
+            if (num == 0)
+                num = 1;
+            randVec[i] = num;
+        }
+    } else {
+        randVec.setRandom();
+    }
+
+    return randVec;
 }

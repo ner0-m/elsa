@@ -199,7 +199,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHan
 
             THEN("a deep copy is performed")
             {
-                const TestType dh2{size};
+                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+                randVec.setRandom();
+                const TestType dh2{randVec};
                 const auto dh2Map = dh2.getBlock(0, size);
                 const auto& dh2MapRef =
                     static_cast<const typename MapToHandler<TestType>::map&>(*dh2Map);
@@ -667,8 +669,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataHa
 
         WHEN("putting in some random data")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec(size * 2);
-            randVec.setRandom();
+            auto randVec = generateRandomMatrix<data_t>(size * 2);
             TestType realDh(randVec);
             auto dhPtr = realDh.getBlock(size / 3, size);
             auto& dh = *dhPtr;
@@ -683,8 +684,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataHa
                 REQUIRE(checkSameNumbers(dh.squaredL2Norm(),
                                          randVec.middleRows(size / 3, size).squaredNorm()));
 
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2(size);
-                randVec2.setRandom();
+                auto randVec2 = generateRandomMatrix<data_t>(size);
                 TestType realDh2(randVec2);
                 auto dh2Ptr = realDh2.getBlock(0, size);
                 auto& dh2 = *dh2Ptr;
@@ -727,9 +727,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
         WHEN("putting in some random data")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec(size);
-            randVec.setRandom();
+            auto randVec = generateRandomMatrix<data_t>(size);
             TestType realDh(randVec);
+
             auto dhPtr = realDh.getBlock(0, size);
             auto& dh = static_cast<typename MapToHandler<TestType>::map&>(*dhPtr);
 
@@ -746,8 +746,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
                 auto oldDhPtr = realOldDh.getBlock(0, size);
                 auto& oldDh = static_cast<typename MapToHandler<TestType>::map&>(*oldDhPtr);
 
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2(size);
-                randVec2.setRandom();
+                auto randVec2 = generateRandomMatrix<data_t>(size);
+
                 TestType dhCPU(randVec2);
                 auto dh2Ptr = dhCPU.getBlock(0, size);
                 auto& dh2 = *dh2Ptr;

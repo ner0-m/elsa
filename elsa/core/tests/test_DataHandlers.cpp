@@ -418,6 +418,7 @@ TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>)
     {
         index_t size = 728;
         TestType dh(size);
+        dh = 1.0f;
 
         WHEN("cloning")
         {
@@ -432,7 +433,7 @@ TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>)
 
                 REQUIRE(dhClone->getSize() == dh.getSize());
 
-                dh[0] = 1;
+                dh[0] = 2.f;
                 REQUIRE(dh != *dhClone);
             }
         }
