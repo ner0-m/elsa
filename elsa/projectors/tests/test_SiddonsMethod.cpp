@@ -2,19 +2,16 @@
 
 #include "SiddonsMethod.h"
 #include "Geometry.h"
+#include "Logger.h"
+#include "testHelpers.h"
 
 using namespace elsa;
 
-bool isApprox(const DataContainer<real_t>& x, const DataContainer<real_t>& y,
-              real_t prec = Eigen::NumTraits<real_t>::dummy_precision())
-{
-    DataContainer<real_t> z = x;
-    z -= y;
-    return sqrt(z.squaredL2Norm()) <= prec * sqrt(std::min(x.squaredL2Norm(), y.squaredL2Norm()));
-}
-
 SCENARIO("Testing SiddonsMethod projector with only one ray")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     IndexVector_t sizeDomain(2);
     sizeDomain << 5, 5;
 
@@ -206,6 +203,9 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
 SCENARIO("Calls to functions of super class")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A projector")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -253,6 +253,9 @@ SCENARIO("Calls to functions of super class")
 
 SCENARIO("Output DataContainer is not zero initialized")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A 2D setting")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -279,7 +282,7 @@ SCENARIO("Output DataContainer is not zero initialized")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
             }
         }
 
@@ -293,7 +296,7 @@ SCENARIO("Output DataContainer is not zero initialized")
                 op.applyAdjoint(sino, volume);
                 DataContainer zero(volumeDescriptor);
                 zero = 0;
-                REQUIRE(volume == zero);
+                REQUIRE(isApprox(volume, zero, epsilon));
             }
         }
     }
@@ -325,7 +328,7 @@ SCENARIO("Output DataContainer is not zero initialized")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
             }
         }
 
@@ -339,7 +342,7 @@ SCENARIO("Output DataContainer is not zero initialized")
                 op.applyAdjoint(sino, volume);
                 DataContainer zero(volumeDescriptor);
                 zero = 0;
-                REQUIRE(volume == zero);
+                REQUIRE(isApprox(volume, zero, epsilon));
             }
         }
     }
@@ -347,6 +350,9 @@ SCENARIO("Output DataContainer is not zero initialized")
 
 SCENARIO("Rays not intersecting the bounding box are present")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A 2D setting")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -375,14 +381,14 @@ SCENARIO("Rays not intersecting the bounding box are present")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
                     DataContainer zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(volume == zero);
+                    REQUIRE(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -400,14 +406,14 @@ SCENARIO("Rays not intersecting the bounding box are present")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
                     DataContainer zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(volume == zero);
+                    REQUIRE(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -424,14 +430,14 @@ SCENARIO("Rays not intersecting the bounding box are present")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
                     DataContainer zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(volume == zero);
+                    REQUIRE(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -449,14 +455,14 @@ SCENARIO("Rays not intersecting the bounding box are present")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
                     DataContainer zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(volume == zero);
+                    REQUIRE(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -504,14 +510,14 @@ SCENARIO("Rays not intersecting the bounding box are present")
                     op.apply(volume, sino);
                     DataContainer zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(sino == zero);
+                    REQUIRE(isApprox(sino, zero, epsilon));
 
                     AND_THEN("Result of backprojection is zero")
                     {
                         op.applyAdjoint(sino, volume);
                         DataContainer zero(volumeDescriptor);
                         zero = 0;
-                        REQUIRE(volume == zero);
+                        REQUIRE(isApprox(volume, zero, epsilon));
                     }
                 }
             }
@@ -521,6 +527,9 @@ SCENARIO("Rays not intersecting the bounding box are present")
 
 SCENARIO("Axis-aligned rays are present")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A 2D setting with a single ray")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -621,7 +630,7 @@ SCENARIO("Axis-aligned rays are present")
                     op.applyAdjoint(sino, volume);
                     DataContainer zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(volume == zero);
+                    REQUIRE(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -835,7 +844,7 @@ SCENARIO("Axis-aligned rays are present")
 
                         DataContainer zero(volumeDescriptor);
                         zero = 0;
-                        REQUIRE(volume == zero);
+                        REQUIRE(isApprox(volume, zero, epsilon));
                     }
                 }
             }
@@ -958,6 +967,9 @@ SCENARIO("Axis-aligned rays are present")
 
 SCENARIO("Projection under an angle")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A 2D setting with a single ray")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -995,7 +1007,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                CHECK(std::abs(sino[0]) <= Approx(0.0001f).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1047,7 +1059,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1066,7 +1078,7 @@ SCENARIO("Projection under an angle")
                         2 / std::sqrt(3.f), 0, 0, 2 - 2 / std::sqrt(3.f), 4 / std::sqrt(3.f) - 2;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected), epsilon));
                 }
             }
         }
@@ -1090,7 +1102,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1128,7 +1140,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1143,7 +1155,7 @@ SCENARIO("Projection under an angle")
                     expected << 1 / std::sqrt(3.f), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected), epsilon));
                 }
             }
         }
@@ -1171,7 +1183,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                CHECK(std::abs(sino[0]) <= Approx(0.0001f).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1224,7 +1236,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1244,7 +1256,7 @@ SCENARIO("Projection under an angle")
                         4 / std::sqrt(3.f) - 2, 2 / std::sqrt(3.f), 4 - 2 * std::sqrt(3.f), 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected), epsilon));
                 }
             }
         }
@@ -1268,7 +1280,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1309,14 +1321,14 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
                     volume(3, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(1 / std::sqrt(3.f)).epsilon(0.005));
+                    REQUIRE(sino[0] == Approx(1 / std::sqrt(3.f)).epsilon(epsilon));
 
                     sino[0] = 1;
 
@@ -1324,7 +1336,7 @@ SCENARIO("Projection under an angle")
                     expected << 0, 0, 0, 1 / std::sqrt(3.f), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, expected), epsilon));
                 }
             }
         }
@@ -1381,7 +1393,7 @@ SCENARIO("Projection under an angle")
                         0, 0, 0, std::sqrt(3.f) - 1, 1 - 1 / std::sqrt(3.f), 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj)));
+                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj), epsilon));
                 }
             }
         }
@@ -1451,7 +1463,9 @@ SCENARIO("Projection under an angle")
                     volume(0, 1, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(3 * std::sqrt(3.f) + 1 - 2 / std::sqrt(3.f)));
+                    REQUIRE(
+                        sino[0]
+                        == Approx(3 * std::sqrt(3.f) + 1 - 2 / std::sqrt(3.f)).epsilon(epsilon));
 
                     sino[0] = 1;
                     backProj << 0, 0, 0, 1 - 1 / std::sqrt(3.f), std::sqrt(3.f) - 1, 0, 0, 0, 0,
@@ -1461,7 +1475,7 @@ SCENARIO("Projection under an angle")
                         0, 0, 0, 1 - 1 / std::sqrt(3.f), 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj)));
+                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj), epsilon));
                 }
             }
         }
@@ -1486,7 +1500,7 @@ SCENARIO("Projection under an angle")
                     volume(0, 1, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(std::sqrt(3.f) - 1));
+                    REQUIRE(sino[0] == Approx(std::sqrt(3.f) - 1).epsilon(epsilon));
 
                     sino[0] = 1;
                     backProj << 0, 0, 0, std::sqrt(3.f) - 1, 0, 0, 0, 0, 0,
@@ -1496,7 +1510,7 @@ SCENARIO("Projection under an angle")
                         0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj)));
+                    REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj), epsilon));
                 }
             }
         }

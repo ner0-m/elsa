@@ -3,29 +3,12 @@
 #include "SiddonsMethodCUDA.h"
 #include "SiddonsMethod.h"
 #include "Geometry.h"
+#include "testHelpers.h"
+#include "Logger.h"
 
 #include <array>
 
 using namespace elsa;
-
-/*
- * checks whether two DataContainer<data_t>s contain approximately the same data using the same
- * method as Eigen
- * https://eigen.tuxfamily.org/dox/classEigen_1_1DenseBase.html#ae8443357b808cd393be1b51974213f9c
- *
- * precision depends on the global elsa::real_t parameter, as the majority of the error is produced
- * by the traversal algorithm (which is executed with real_t precision regardless of the
- * DataContainer type)
- *
- */
-template <typename data_t>
-bool isApprox(const DataContainer<data_t>& x, const DataContainer<data_t>& y,
-              real_t prec = Eigen::NumTraits<real_t>::dummy_precision())
-{
-    DataContainer<data_t> z = x;
-    z -= y;
-    return sqrt(z.squaredL2Norm()) <= prec * sqrt(std::min(x.squaredL2Norm(), y.squaredL2Norm()));
-}
 
 /*
  * this function declaration can be used in conjunction with decltype to deduce the
@@ -39,6 +22,9 @@ constexpr data_t return_data_t(const T<data_t>&);
 TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", SiddonsMethodCUDA<float>,
                    SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A projector")
     {
@@ -71,11 +57,11 @@ TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", SiddonsMet
             {
                 op.apply(volume, sino);
                 opClone->apply(volume, sinoClone);
-                REQUIRE(isApprox(sino, sinoClone));
+                REQUIRE(isApprox<data_t>(sino, sinoClone, epsilon));
 
                 op.applyAdjoint(sino, volume);
                 opClone->applyAdjoint(sino, volumeClone);
-                REQUIRE(isApprox(volume, volumeClone));
+                REQUIRE(isApprox<data_t>(volume, volumeClone, epsilon));
             }
         }
     }
@@ -85,6 +71,9 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
                    SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
                    SiddonsMethod<double>)
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A 2D setting")
     {
@@ -112,7 +101,7 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
             }
         }
 
@@ -126,7 +115,7 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
                 op.applyAdjoint(sino, volume);
                 DataContainer<data_t> zero(volumeDescriptor);
                 zero = 0;
-                REQUIRE(volume == zero);
+                REQUIRE(isApprox(volume, zero, epsilon));
             }
         }
     }
@@ -158,7 +147,7 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
             }
         }
 
@@ -172,7 +161,7 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
                 op.applyAdjoint(sino, volume);
                 DataContainer<data_t> zero(volumeDescriptor);
                 zero = 0;
-                REQUIRE(volume == zero);
+                REQUIRE(isApprox(volume, zero, epsilon));
             }
         }
     }
@@ -182,6 +171,9 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
                    SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
                    SiddonsMethod<double>)
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A 2D setting")
     {
@@ -211,14 +203,14 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
                     DataContainer<data_t> zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(volume == zero);
+                    REQUIRE(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -236,14 +228,14 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
                     DataContainer<data_t> zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(volume == zero);
+                    REQUIRE(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -260,14 +252,14 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                CHECK(isApprox(sino, zero, epsilon));
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
-                    DataContainer<data_t> zero(sinoDescriptor);
+                    DataContainer<data_t> zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(sino == zero);
+                    CHECK(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -285,14 +277,14 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("Result of backprojection is zero")
                 {
                     op.applyAdjoint(sino, volume);
                     DataContainer<data_t> zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(volume == zero);
+                    REQUIRE(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -344,14 +336,14 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(sino == zero);
+                    REQUIRE(isApprox(sino, zero, epsilon));
 
                     AND_THEN("Result of backprojection is zero")
                     {
                         op.applyAdjoint(sino, volume);
                         DataContainer<data_t> zero(volumeDescriptor);
                         zero = 0;
-                        REQUIRE(volume == zero);
+                        REQUIRE(isApprox(volume, zero, epsilon));
                     }
                 }
             }
@@ -362,6 +354,9 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
 TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodCUDA<float>,
                    SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     GIVEN("A 2D setting with a single ray")
     {
@@ -795,6 +790,9 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
 TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<float>,
                    SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     using data_t = decltype(return_data_t(std::declval<TestType>()));
 
     real_t sqrt3r = std::sqrt(static_cast<real_t>(3));
@@ -836,7 +834,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -864,7 +862,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                     static_cast<real_t>(0.0001)));
+                                     epsilon));
                 }
             }
         }
@@ -888,7 +886,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -907,7 +905,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         2 - 2 / sqrt3d, 4 / sqrt3d - 2;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
+                                     epsilon));
                 }
             }
         }
@@ -931,7 +930,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -950,7 +949,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         4 - 2 * sqrt3d, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
+                                     epsilon));
                 }
             }
         }
@@ -969,7 +969,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(isApprox(sino, zero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -984,7 +984,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     expected << 1 / sqrt3d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
+                                     epsilon));
                 }
             }
         }
@@ -1012,7 +1013,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1040,7 +1041,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         2 / sqrt3d, 2 - 2 / sqrt3d, 0, 0, 0, 4 / sqrt3d - 2;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
+                                     epsilon));
                 }
             }
         }
@@ -1064,7 +1066,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1084,7 +1086,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         2 / sqrt3d, 4 - 2 * sqrt3d, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
+                                     epsilon));
                 }
             }
         }
@@ -1108,7 +1111,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1128,7 +1131,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         2 - 2 / sqrt3d, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
+                                     epsilon));
                 }
             }
         }
@@ -1148,7 +1152,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 op.apply(volume, sino);
                 DataContainer<data_t> zero(sinoDescriptor);
                 zero = 0;
-                REQUIRE(sino == zero);
+                REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1163,7 +1167,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     expected << 0, 0, 0, 1 / sqrt3d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
+                                     epsilon));
                 }
             }
         }
@@ -1210,7 +1215,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(1, 1, 2) = 2;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(3 * sqrt3d - 1));
+                    REQUIRE(sino[0] == Approx(3 * sqrt3d - 1).epsilon(epsilon));
 
                     sino[0] = 1;
                     backProj << 0, 0, 0, 0, 1 - 1 / sqrt3d, sqrt3d - 1, 0, 0, 0,
@@ -1220,7 +1225,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         0, 0, 0, sqrt3d - 1, 1 - 1 / sqrt3d, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj),
+                                     epsilon));
                 }
             }
         }
@@ -1241,7 +1247,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(1, 1, 2) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino[0] == Approx(0).margin(1e-5));
+                REQUIRE(sino[0] == Approx(0).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1260,7 +1266,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         0, 0, 0, 0, sqrt3d - 1, 1 - 1 / sqrt3d, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj),
+                                     epsilon));
                 }
             }
         }
@@ -1281,7 +1288,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(0, 1, 2) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino[0] == Approx(0).margin(1e-5));
+                REQUIRE(sino[0] == Approx(0).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1290,7 +1297,7 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                     volume(0, 1, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(3 * sqrt3d + 1 - 2 / sqrt3d));
+                    REQUIRE(sino[0] == Approx(3 * sqrt3d + 1 - 2 / sqrt3d).epsilon(epsilon));
 
                     sino[0] = 1;
                     backProj << 0, 0, 0, 1 - 1 / sqrt3d, sqrt3d - 1, 0, 0, 0, 0,
@@ -1300,7 +1307,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         0, 0, 0, 1 - 1 / sqrt3d, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj),
+                                     epsilon));
                 }
             }
         }
@@ -1318,14 +1326,14 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                 volume(0, 1, 0) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino[0] == Approx(0).margin(1e-5));
+                REQUIRE(sino[0] == Approx(0).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
                     volume(0, 1, 0) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(sqrt3d - 1));
+                    REQUIRE(sino[0] == Approx(sqrt3d - 1).epsilon(epsilon));
 
                     sino[0] = 1;
                     backProj << 0, 0, 0, sqrt3d - 1, 0, 0, 0, 0, 0,
@@ -1335,7 +1343,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
                         0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
+                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj),
+                                     epsilon));
                 }
             }
         }

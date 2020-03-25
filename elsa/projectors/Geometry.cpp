@@ -148,14 +148,9 @@ namespace elsa
         RealVector_t homP(_objectDimension);
         homP << p, 1;
 
-        // solve for ray direction
-        RealVector_t rd = (_P.block(0, 0, _objectDimension, _objectDimension))
-                              .colPivHouseholderQr()
-                              .solve(homP)
-                              .normalized();
-        rd.normalize();
-
-        return std::make_pair(ro, rd);
+        // multiplication of inverse projection matrix and homogeneous detector coordinate
+        auto rd = (_Pinv * homP).normalized();
+        return std::make_pair(ro, rd.head(_objectDimension));
     }
 
     const RealMatrix_t& Geometry::getProjectionMatrix() const { return _P; }

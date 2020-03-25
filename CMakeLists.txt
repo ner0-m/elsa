@@ -119,35 +119,42 @@ if(NOT ELSA_MASTER_PROJECT)
     set(ELSA_TESTING OFF)
 endif(NOT ELSA_MASTER_PROJECT)
 
-if(ELSA_TESTING)
-    message(STATUS "elsa testing is enabled")
+if(ELSA_TESTING OR ELSA_BENCHMARKS)
 
     enable_testing()
     add_subdirectory(thirdparty/Catch2)
 
-    add_custom_target(tests
-        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Build and run all the tests.")
-
     # add the CMake modules for automatic test discovery
     set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/thirdparty/Catch2/contrib" ${CMAKE_MODULE_PATH})
 
-    if(ELSA_COVERAGE)
-        message(STATUS "elsa test coverage is enabled")
+    if(ELSA_TESTING)
+        message(STATUS "elsa testing is enabled")
 
-        include(CodeCoverage)
-        APPEND_COVERAGE_COMPILER_FLAGS()
-        set(COVERAGE_LCOV_EXCLUDES '${PROJECT_SOURCE_DIR}/thirdparty/*' '/usr/*')
-        SETUP_TARGET_FOR_COVERAGE_LCOV(NAME test_coverage EXECUTABLE ctest)
+        add_custom_target(tests
+            COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Build and run all the tests.")
+        if(ELSA_COVERAGE)
+            message(STATUS "elsa test coverage is enabled")
 
-    else(ELSA_COVERAGE)
-        message(STATUS "elsa test coverage is disabled")
-    endif(ELSA_COVERAGE)
+            include(CodeCoverage)
+            APPEND_COVERAGE_COMPILER_FLAGS()
+            set(COVERAGE_LCOV_EXCLUDES '${PROJECT_SOURCE_DIR}/thirdparty/*' '/usr/*')
+            SETUP_TARGET_FOR_COVERAGE_LCOV(NAME test_coverage EXECUTABLE ctest)
 
-else(ELSA_TESTING)
+        else(ELSA_COVERAGE)
+            message(STATUS "elsa test coverage is disabled")
+        endif(ELSA_COVERAGE)
+    endif(ELSA_TESTING)
+
+    if (ELSA_BENCHMARKS)
+        message(STATUS "elsa benchmarks are enabled")
+        add_subdirectory(benchmarks)
+    endif(ELSA_BENCHMARKS)
+
+else(ELSA_TESTING OR ELSA_BENCHMARKS)
     message(STATUS "    elsa testing is disabled")
-endif(ELSA_TESTING)
+endif(ELSA_TESTING OR ELSA_BENCHMARKS)
 
 
 # ------------ add code/docs -----------

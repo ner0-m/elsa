@@ -10,11 +10,16 @@
 
 #include <catch2/catch.hpp>
 #include "BinaryMethod.h"
+#include "Logger.h"
+#include "testHelpers.h"
 
 using namespace elsa;
 
 SCENARIO("Testing BinaryMethod with only one ray")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     IndexVector_t sizeDomain(2);
     sizeDomain << 5, 5;
 
@@ -142,7 +147,7 @@ SCENARIO("Testing BinaryMethod with only one ray")
                 op.applyAdjoint(dataRange, AtAx);
 
                 auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9;
+                cmp << 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9;
                 DataContainer tmpCmp(domain, cmp);
 
                 REQUIRE(tmpCmp == AtAx);
@@ -168,7 +173,7 @@ SCENARIO("Testing BinaryMethod with only one ray")
                 // std::cout << AtAx.getData().format(CommaInitFmt) << "\n\n";
 
                 auto cmp = RealVector_t(sizeDomain.prod());
-                cmp << 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9;
+                cmp << 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 9;
                 DataContainer tmpCmp(domain, cmp);
 
                 REQUIRE(tmpCmp == AtAx);
@@ -179,6 +184,9 @@ SCENARIO("Testing BinaryMethod with only one ray")
 
 SCENARIO("Testing BinaryMethod with only 1 rays for 4 angles")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     IndexVector_t sizeDomain(2);
     sizeDomain << 5, 5;
 
@@ -251,6 +259,9 @@ SCENARIO("Testing BinaryMethod with only 1 rays for 4 angles")
 
 SCENARIO("Testing BinaryMethod")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     IndexVector_t sizeDomain(2);
     sizeDomain << 5, 5;
 
@@ -422,6 +433,9 @@ SCENARIO("Testing BinaryMethod")
 
 SCENARIO("Calls to functions of super class")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A projector")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -471,6 +485,9 @@ SCENARIO("Calls to functions of super class")
 
 SCENARIO("Output DataContainer is not zero initialized")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A 2D setting")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -574,6 +591,9 @@ SCENARIO("Output DataContainer is not zero initialized")
 
 SCENARIO("Rays not intersecting the bounding box are present")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A 2D setting")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -762,6 +782,9 @@ SCENARIO("Rays not intersecting the bounding box are present")
 
 SCENARIO("Axis-aligned rays are present")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A 2D setting with a single ray")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -1227,6 +1250,9 @@ SCENARIO("Axis-aligned rays are present")
 
 SCENARIO("Projection under an angle")
 {
+    // Turn logger of
+    Logger::setLevel(Logger::LogLevel::OFF);
+
     GIVEN("A 2D setting with a single ray")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
@@ -1252,61 +1278,49 @@ SCENARIO("Projection under an angle")
 
             THEN("Ray intersects the correct pixels")
             {
+                /* Our volume: with left top being (0, 0) and bottom right (3,3)
+                0, 0, 1, 1,
+                0, 1, 1, 0,
+                0, 1, 0, 0,
+                1, 1, 0, 0
+                 */
                 volume = 1;
-                IndexVector_t coord(2);
-                coord << 3, 0;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 2, 0;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 2, 1;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-
-                // volume(2,2) hit because of numerical errors during traversal
-                coord << 2, 2;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 1, 2;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 1, 3;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 0, 3;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-
-                // volume(2,2 is possibly also hit due to numerical errors)
+                volume(3, 0) = 0;
+                volume(2, 0) = 0;
+                volume(2, 1) = 0;
+                volume(1, 1) = 0;
+                volume(1, 2) = 0;
+                volume(1, 3) = 0;
+                volume(0, 3) = 0;
 
                 op.apply(volume, sino);
 
                 DataContainer sZero(sinoDescriptor);
                 sZero = 0;
-                REQUIRE(sino == sZero);
+                CHECK(std::abs(sino[0]) <= Approx(0.0001f).epsilon(epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
-                    coord << 3, 0;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 1;
-                    coord << 2, 0;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 2;
-                    coord << 2, 1;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 3;
+                    volume(3, 0) = 1;
+                    volume(2, 0) = 2;
+                    volume(2, 1) = 3;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(6));
+                    CHECK(sino[0] == Approx(6));
 
                     // on the other side of the center
                     volume = 0;
-                    coord << 1, 2;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 3;
-                    coord << 1, 3;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 2;
-                    coord << 0, 3;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 1;
+                    volume(1, 2) = 3;
+                    volume(1, 3) = 2;
+                    volume(0, 3) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(6));
+                    CHECK(sino[0] == Approx(6));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
-                    expected << 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0;
+                    expected << 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0;
 
                     op.applyAdjoint(sino, volume);
 
@@ -1340,7 +1354,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
                 sZero = 0;
-                REQUIRE(sino == sZero);
+                CHECK(isApprox(sino, sZero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1392,7 +1406,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
                 sZero = 0;
-                REQUIRE(sino == sZero);
+                CHECK(isApprox(sino, sZero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1415,7 +1429,7 @@ SCENARIO("Projection under an angle")
                     DataContainer resVolume(volumeDescriptor, expected);
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(volume == resVolume);
+                    REQUIRE(isApprox(volume, resVolume));
                 }
             }
         }
@@ -1436,7 +1450,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
                 sZero = 0;
-                REQUIRE(sino == sZero);
+                CHECK(isApprox(sino, sZero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1469,62 +1483,47 @@ SCENARIO("Projection under an angle")
             THEN("Ray intersects the correct pixels")
             {
                 volume = 1;
-                IndexVector_t coord(2);
-                coord << 0, 0;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 0, 1;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 1, 1;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-
-                // volume(1,2) hit due to numerical error
-                coord << 1, 2;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 2, 2;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 3, 2;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
-                coord << 3, 3;
-                volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 0;
+                volume(0, 0) = 0;
+                volume(0, 1) = 0;
+                volume(1, 1) = 0;
+                volume(2, 1) = 0;
+                volume(2, 2) = 0;
+                volume(3, 2) = 0;
+                volume(3, 3) = 0;
 
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
                 sZero = 0;
-                REQUIRE(sino == sZero);
+                CHECK(isApprox(sino, sZero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
-                    coord << 0, 0;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 1;
-                    coord << 0, 1;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 2;
-                    coord << 1, 1;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 3;
+                    volume = 0;
+                    volume(0, 0) = 3;
+                    volume(0, 1) = 2;
+                    volume(1, 1) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(6));
+                    CHECK(sino[0] == Approx(6));
 
                     // on the other side of the center
                     volume = 0;
-                    coord << 2, 2;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 3;
-                    coord << 3, 2;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 2;
-                    coord << 3, 3;
-                    volume[volumeDescriptor.getIndexFromCoordinate(coord)] = 1;
+                    volume(2, 2) = 3;
+                    volume(3, 2) = 2;
+                    volume(3, 3) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(6));
+                    CHECK(sino[0] == Approx(6));
 
                     sino[0] = 1;
 
                     RealVector_t expected(volSize * volSize);
 
-                    expected << 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1;
+                    expected << 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1;
                     DataContainer resVolume(volumeDescriptor, expected);
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(volume == resVolume);
+                    CHECK(volume == resVolume);
                 }
             }
         }
@@ -1553,7 +1552,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
                 sZero = 0;
-                REQUIRE(sino == sZero);
+                CHECK(isApprox(sino, sZero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1606,7 +1605,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
                 sZero = 0;
-                REQUIRE(sino == sZero);
+                CHECK(isApprox(sino, sZero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1652,7 +1651,7 @@ SCENARIO("Projection under an angle")
                 op.apply(volume, sino);
                 DataContainer sZero(sinoDescriptor);
                 sZero = 0;
-                REQUIRE(sino == sZero);
+                CHECK(isApprox(sino, sZero, epsilon));
 
                 AND_THEN("The correct weighting is applied")
                 {

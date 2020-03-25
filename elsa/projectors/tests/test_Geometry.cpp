@@ -129,8 +129,9 @@ SCENARIO("Testing 2D geometries")
                     auto c = g.getCameraCenter();
                     REQUIRE((ro - c).sum() == Approx(0));
 
-                    real_t factor =
-                        (std::abs(rd[0]) > 0) ? ((pixel[0] - ro[0] - px) / rd[0]) : (s2c + c2d);
+                    real_t factor = (std::abs(rd[0]) >= Approx(0.001))
+                                        ? ((pixel[0] - ro[0] - px) / rd[0])
+                                        : (s2c + c2d);
                     real_t detCoordY = ro[1] + factor * rd[1];
                     REQUIRE(detCoordY == Approx(ddVol.getLocationOfOrigin()[1] + c2d));
                 }

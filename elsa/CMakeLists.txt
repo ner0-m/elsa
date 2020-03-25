@@ -13,7 +13,7 @@ macro(ELSA_TEST NAME)
     # create the test executable
     add_executable(test_${NAME} EXCLUDE_FROM_ALL test_${NAME}.cpp test_main.cpp)
     # add catch and the corresponding elsa library
-    target_link_libraries(test_${NAME} PRIVATE Catch2::Catch2 ${ELSA_MODULE_TARGET_NAME})
+    target_link_libraries(test_${NAME} PRIVATE Catch2::Catch2 ${ELSA_MODULE_TARGET_NAME} elsa::test_routines)
     # enable C++17
     target_compile_features(test_${NAME} PUBLIC cxx_std_17)
     # include helpers
@@ -50,6 +50,7 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
     add_subdirectory(projectors_cuda)
 endif(ELSA_BUILD_CUDA_PROJECTORS)
 add_subdirectory(generators)
+add_subdirectory(test_routines)
 
 
 # library to build and add all registered components of the library
