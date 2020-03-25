@@ -2,8 +2,8 @@ stages:
 - static-test
 - compile
 - test
-- coverage
 - sanitizer
+- coverage
 - docs
 
 ### variables ###
@@ -211,31 +211,6 @@ test-gpu-only:
     - cuda
 
 
-### test coverage ###
-
-test-coverage:
-  <<: *nightly_job
-  stage: coverage
-  image: $CUDA_IMAGE
-  dependencies: []
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
-    - ninja tests
-    - ninja test_coverage
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
-    paths:
-      - build/test_coverage/
-    expire_in: 30 mins
-  tags:
-    - linux
-    - elsa
-    - gcc
-    - cuda
-
-
 ### sanitizers ###
 
 cuda-memcheck:
@@ -292,6 +267,31 @@ sanitize-memsan:
   tags:
     - linux
     - elsa
+    - cuda
+
+
+### test coverage ###
+
+test-coverage:
+  <<: *nightly_job
+  stage: coverage
+  image: $CUDA_IMAGE
+  dependencies: []
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
+    - ninja tests
+    - ninja test_coverage
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
+    paths:
+      - build/test_coverage/
+    expire_in: 30 mins
+  tags:
+    - linux
+    - elsa
+    - gcc
     - cuda
 
 
