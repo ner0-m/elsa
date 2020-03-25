@@ -28,10 +28,13 @@ option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
 option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when building (-Wall -Wextra)" ON)
 
-option(ELSA_SANITIZE_THREAD "Build elsa with thread sanitizers (TSAN)" OFF)
-option(ELSA_SANITIZE_ADDRESS "Build elsa with address and undefined-behavior sanitizers (ASAN and UBSAN)" OFF)
-
 option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
+
+set(ELSA_SANITIZER
+        "" CACHE STRING
+        "Compile with a sanitizer. Options are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak, 'Address;Undefined'"
+        )
+
 
 # ------------ general setup -----------
 # ------------
@@ -111,6 +114,13 @@ if(ELSA_CUDA_VECTOR)
 endif()
 
 
+# ------------ setup tools -----------
+# ------------
+
+# Includes clang-format, clang-tidy, cmake-format, and sanitizers
+include(Tools)
+
+
 # ------------ setup testing -----------
 # ------------
 
@@ -155,6 +165,7 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
 else(ELSA_TESTING OR ELSA_BENCHMARKS)
     message(STATUS "    elsa testing is disabled")
 endif(ELSA_TESTING OR ELSA_BENCHMARKS)
+
 
 
 # ------------ add code/docs -----------

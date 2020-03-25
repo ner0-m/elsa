@@ -236,7 +236,7 @@ test-coverage:
     - cuda
 
 
-### Sanitizers ###
+### sanitizers ###
 
 cuda-memcheck:
   stage: sanitizer
@@ -251,41 +251,48 @@ cuda-memcheck:
     - gcc
     - cuda
 
-#thread-sanitizer:
-#  <<: *nightly_job
-#  stage: sanitizer
-#  image: $CUDA_IMAGE
-#  script:
-#    - mkdir -p build
-#    - cd build
-#    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZE_THREAD=ON ..
-#    - make all -j4
-#    - ctest # let's run tests for now, we should run apps though as well!
-#  dependencies:
-#    - test-cuda92
-#  tags:
-#    - linux
-#    - elsa
-#    - gcc
-#    - cuda
-#
-#address-sanitizer:
-#  <<: *nightly_job
-#  stage: sanitizer
-#  image: $CUDA_IMAGE
-#  script:
-#    - mkdir -p build
-#    - cd build
-#    - cmake -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZE_ADDRESS=ON ..
-#    - make all -j4
-#    - ctest # let's run tests for now, we should run apps though as well!
-#  dependencies:
-#    - test-cuda92
-#  tags:
-#    - linux
-#    - elsa
-#    - gcc
-#    - cuda
+sanitize-asan-ubsan:
+  <<: *nightly_job
+  stage: sanitizer
+  image: $CUDA_IMAGE
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
+    - ninja tests
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+
+sanitize-tsan:
+  <<: *nightly_job
+  stage: sanitizer
+  image: $CUDA_IMAGE
+  script:
+    - mkdir -p build
+    - cd build
+    - CC=clang CXX=clang cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Thread" ..
+    - ninja tests
+  tags:
+    - linux
+    - elsa
+    - cuda
+
+sanitize-memsan:
+  <<: *nightly_job
+  stage: sanitizer
+  image: $CUDA_IMAGE
+  script:
+    - mkdir -p build
+    - cd build
+    - CC=clang CXX=clang cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Memory" ..
+    - ninja tests
+  tags:
+    - linux
+    - elsa
+    - cuda
 
 
 ### deploy docs and coverage report ###
@@ -321,7 +328,7 @@ deploy-docs:
 # These jobs, are for local build and test all in one job, should not be run with pipeline
 
 .all-clang:
-  image: $UBUNTU_IMAGE
+  image: $CLANG_IMAGE
   script:
     - mkdir -p build
     - cd build

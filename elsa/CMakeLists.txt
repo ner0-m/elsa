@@ -30,13 +30,6 @@ macro(ELSA_TEST NAME)
     catch_discover_tests(test_${NAME} TEST_SPEC ${ELSA_JUNIT_ARGUMENTS})
 endmacro(ELSA_TEST)
 
-
-# add sanitizers if in debug mode
-if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    include(${PROJECT_SOURCE_DIR}/cmake/Sanitizers.cmake)
-endif()
-
-
 # add the elsa modules
 add_subdirectory(core)
 add_subdirectory(logging)
