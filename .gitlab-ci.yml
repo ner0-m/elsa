@@ -226,47 +226,20 @@ cuda-memcheck:
     - gcc
     - cuda
 
-sanitize-asan-ubsan:
+asan-ubsan:
   <<: *nightly_job
   stage: sanitizer
   image: $CUDA_IMAGE
   script:
     - mkdir -p build
     - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
+    - rm -f CMakeCache.txt # remove cache, as we sometimes get the wrong cache
+    - cmake -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
     - ninja tests
   tags:
     - linux
     - elsa
     - gcc
-    - cuda
-
-sanitize-tsan:
-  <<: *nightly_job
-  stage: sanitizer
-  image: $CUDA_IMAGE
-  script:
-    - mkdir -p build
-    - cd build
-    - CC=clang CXX=clang cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Thread" ..
-    - ninja tests
-  tags:
-    - linux
-    - elsa
-    - cuda
-
-sanitize-memsan:
-  <<: *nightly_job
-  stage: sanitizer
-  image: $CUDA_IMAGE
-  script:
-    - mkdir -p build
-    - cd build
-    - CC=clang CXX=clang cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Memory" ..
-    - ninja tests
-  tags:
-    - linux
-    - elsa
     - cuda
 
 

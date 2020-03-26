@@ -13,6 +13,8 @@
 #include "IdenticalBlocksDescriptor.h"
 #include "testHelpers.h"
 
+#include <type_traits>
+
 using namespace elsa;
 using namespace Catch::literals; // to enable 0.0_a approximate floats
 
@@ -43,6 +45,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
 {
     using data_t = typename TestType::data_t;
 
+    INFO("Testing type: " << TypeName_v<const data_t>);
+
     GIVEN("a DataDescriptor")
     {
         IndexVector_t numCoeff(3);
@@ -63,8 +67,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
 
         WHEN("constructing an initialized DataContainer")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> data{desc.getNumberOfCoefficients()};
-            data.setRandom();
+            auto data = generateRandomMatrix<data_t>(desc.getNumberOfCoefficients());
 
             DataContainer<data_t> dc(desc, data, TestType::handler_t);
 
@@ -87,8 +90,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
         DataDescriptor desc(numCoeff);
 
         DataContainer<data_t> otherDc(desc, TestType::handler_t);
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{otherDc.getSize()};
-        randVec.setRandom();
+
+        auto randVec = generateRandomMatrix<data_t>(otherDc.getSize());
         for (index_t i = 0; i < otherDc.getSize(); ++i)
             otherDc[i] = randVec(i);
 
@@ -165,6 +168,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Element-wise access of DataContainers", ""
 {
     using data_t = typename TestType::data_t;
 
+    INFO("Testing type: " << TypeName_v<const data_t>);
+
     GIVEN("a DataContainer")
     {
         IndexVector_t numCoeff(2);
@@ -206,19 +211,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataCo
 {
     using data_t = typename TestType::data_t;
 
+    INFO("Testing type: " << TypeName_v<const data_t>);
+
     GIVEN("a DataContainer")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 11, 73, 45;
         DataDescriptor desc(numCoeff);
-        DataContainer<data_t> dc(desc, TestType::handler_t);
 
         WHEN("putting in some random data")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{dc.getSize()};
-            randVec.setRandom();
-            for (index_t i = 0; i < dc.getSize(); ++i)
-                dc[i] = randVec(i);
+            auto [dc, randVec] = generateRandomContainer<data_t>(desc, TestType::handler_t);
 
             THEN("the reductions work as expected")
             {
@@ -227,13 +230,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataCo
                 REQUIRE(checkSameNumbers(dc.lInfNorm(), randVec.array().abs().maxCoeff()));
                 REQUIRE(checkSameNumbers(dc.squaredL2Norm(), randVec.squaredNorm()));
 
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2{dc.getSize()};
-                randVec2.setRandom();
-                DataContainer<data_t> dc2(desc, TestType::handler_t);
-                for (index_t i = 0; i < dc2.getSize(); ++i)
-                    dc2[i] = randVec2(i);
+                auto [dc2, randVec2] = generateRandomContainer<data_t>(desc, TestType::handler_t);
 
-                REQUIRE(checkSameNumbers(dc.dot(dc2), randVec.dot(randVec2), 10));
+                REQUIRE(checkSameNumbers(dc.dot(dc2), randVec.dot(randVec2)));
             }
         }
     }
@@ -251,25 +250,23 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 {
     using data_t = typename TestType::data_t;
 
+    INFO("Testing type: " << TypeName_v<const data_t>);
+
     GIVEN("a DataContainer")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
         DataDescriptor desc(numCoeff);
-        DataContainer<data_t> dc(desc, TestType::handler_t);
 
         WHEN("putting in some random data")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{dc.getSize()};
-            randVec.setRandom();
-            for (index_t i = 0; i < dc.getSize(); ++i)
-                dc[i] = randVec(i);
+            auto [dc, randVec] = generateRandomContainer<data_t>(desc, TestType::handler_t);
 
             THEN("the element-wise unary operations work as expected")
             {
                 DataContainer dcSquare = square(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(checkSameNumbers(dcSquare[i], randVec.array().square()[i], 10));
+                    REQUIRE(checkSameNumbers(dcSquare[i], randVec.array().square()[i]));
                 DataContainer dcSqrt = sqrt(dcSquare);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE(checkSameNumbers(dcSqrt[i], randVec.array().square().sqrt()[i]));
@@ -284,7 +281,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
                 DataContainer dcLog = log(dcSquare);
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(checkSameNumbers(dcLog[i], randVec.array().square().log()[i], 100));
+                    REQUIRE(checkSameNumbers(dcLog[i], randVec.array().square().log()[i]));
             }
 
             auto scalar = static_cast<data_t>(923.41f);
@@ -327,16 +324,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
         WHEN("having two containers with random data")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{dc.getSize()};
-            randVec.setRandom();
-            for (index_t i = 0; i < dc.getSize(); ++i)
-                dc[i] = randVec(i);
-
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2{dc.getSize()};
-            randVec2.setRandom();
-            DataContainer<data_t> dc2(desc, TestType::handler_t);
-            for (index_t i = 0; i < dc2.getSize(); ++i)
-                dc2[i] = randVec2[i];
+            auto [dc, randVec] = generateRandomContainer<data_t>(desc, TestType::handler_t);
+            auto [dc2, randVec2] = generateRandomContainer<data_t>(desc, TestType::handler_t);
 
             THEN("the element-wise in-place addition works as expected")
             {
@@ -356,7 +345,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
             {
                 dc *= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(checkSameNumbers(dc[i], randVec(i) * randVec2(i), 100));
+                    REQUIRE(checkSameNumbers(dc[i], randVec(i) * randVec2(i)));
             }
 
             THEN("the element-wise in-place division works as expected")
@@ -364,7 +353,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
                 dc /= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     if (dc2[i] != data_t(0))
-                        REQUIRE(checkSameNumbers(dc[i], randVec(i) / randVec2(i), 10));
+                        REQUIRE(checkSameNumbers(dc[i], randVec(i) / randVec2(i)));
             }
         }
     }
@@ -383,24 +372,16 @@ TEMPLATE_PRODUCT_TEST_CASE(
 {
     using data_t = typename TestType::data_t;
 
+    INFO("Testing type: " << TypeName_v<const data_t>);
+
     GIVEN("some DataContainers")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
         DataDescriptor desc(numCoeff);
 
-        DataContainer<data_t> dc(desc, TestType::handler_t);
-        DataContainer<data_t> dc2(desc, TestType::handler_t);
-
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{dc.getSize()};
-        randVec.setRandom();
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2{dc.getSize()};
-        randVec2.setRandom();
-
-        for (index_t i = 0; i < dc.getSize(); ++i) {
-            dc[i] = randVec(i);
-            dc2[i] = randVec2(i);
-        }
+        auto [dc, randVec] = generateRandomContainer<data_t>(desc, TestType::handler_t);
+        auto [dc2, randVec2] = generateRandomContainer<data_t>(desc, TestType::handler_t);
 
         THEN("the binary element-wise operations work as expected")
         {
@@ -414,12 +395,12 @@ TEMPLATE_PRODUCT_TEST_CASE(
 
             DataContainer resultMult = dc * dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(checkSameNumbers(resultMult[i], dc[i] * dc2[i], 100));
+                REQUIRE(checkSameNumbers(resultMult[i], dc[i] * dc2[i]));
 
             DataContainer resultDiv = dc / dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 if (dc2[i] != data_t(0))
-                    REQUIRE(checkSameNumbers(resultDiv[i], dc[i] / dc2[i], 1000));
+                    REQUIRE(checkSameNumbers(resultDiv[i], dc[i] / dc2[i]));
         }
 
         THEN("the operations with a scalar work as expected")
@@ -473,6 +454,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
 #endif
 {
     using data_t = typename TestType::data_t;
+
+    INFO("Testing type: " << TypeName_v<const data_t>);
 
     GIVEN("a non-blocked container")
     {
@@ -600,8 +583,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing loading data to GPU and vice versa.", "", 
         DataContainer<TestType> dcCPU(desc, DataHandlerType::CPU);
         DataContainer<TestType> dcGPU(desc, DataHandlerType::GPU);
 
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec{dcCPU.getSize()};
-        randVec.setRandom();
+        auto randVec = generateRandomMatrix<TestType>(dcCPU.getSize());
 
         for (index_t i = 0; i < dcCPU.getSize(); ++i) {
             dcCPU[i] = randVec(i);

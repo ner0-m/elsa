@@ -786,14 +786,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
                         // due to floating point arithmetic less precision
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i], 100));
+                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
 
                 dh = oldDh;
                 dh /= dhCPU;
                 for (index_t i = 0; i < size; ++i)
                     if (dhCPU[i] != data_t(0))
                         // due to floating point arithmetic less precision
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dhCPU[i], 100));
+                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dhCPU[i]));
             }
 
             THEN("the element-wise binary scalar operations work as expected")

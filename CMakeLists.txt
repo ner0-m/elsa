@@ -113,8 +113,7 @@ if(ELSA_CUDA_VECTOR)
     endif()
 endif()
 
-
-# ------------ setup tools -----------
+# ------------ Setup Tools -----------
 # ------------
 
 # Includes clang-format, clang-tidy, cmake-format, and sanitizers
@@ -143,6 +142,7 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
         add_custom_target(tests
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            USES_TERMINAL
             COMMENT "Build and run all the tests.")
         if(ELSA_COVERAGE)
             message(STATUS "elsa test coverage is enabled")

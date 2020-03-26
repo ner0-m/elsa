@@ -4,6 +4,7 @@
 #include <complex>
 #include <random>
 #include "elsaDefines.h"
+#include "DataDescriptor.h"
 
 #include <iomanip>
 #include <limits>
@@ -27,23 +28,17 @@ namespace elsa
      * fails
      */
     template <typename T>
-    bool checkSameNumbers(T left, T right, int epsilonFactor = 1)
+    bool checkSameNumbers(T left, T right)
     {
-        using numericalBaseType = elsa::GetFloatingPointType_t<T>;
-
-        numericalBaseType eps = std::numeric_limits<numericalBaseType>::epsilon()
-                                * static_cast<numericalBaseType>(epsilonFactor)
-                                * static_cast<numericalBaseType>(100);
-
         if constexpr (std::is_same_v<
                           T, std::complex<float>> || std::is_same_v<T, std::complex<double>>) {
-            CHECK(Approx(left.real()).epsilon(eps) == right.real());
-            CHECK(Approx(left.imag()).epsilon(eps) == right.imag());
-            return Approx(left.real()).epsilon(eps) == right.real()
-                   && Approx(left.imag()).epsilon(eps) == right.imag();
+            CHECK(Approx(left.real()).margin(epsilon) == right.real());
+            CHECK(Approx(left.imag()).margin(epsilon) == right.imag());
+            return Approx(left.real()).margin(epsilon) == right.real()
+                   && Approx(left.imag()).margin(epsilon) == right.imag();
         } else {
-            CHECK(Approx(left).epsilon(eps) == right);
-            return Approx(left).epsilon(eps) == right;
+            CHECK(Approx(left).margin(epsilon) == right);
+            return Approx(left).margin(epsilon) == right;
         }
     }
 
@@ -59,17 +54,27 @@ namespace elsa
      * running into overflow issues.
      */
     template <typename data_t>
-    auto generateRandomMatrix(elsa::index_t size)
+    auto generateRandomMatrix(const index_t size)
     {
         Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec(size);
 
         if constexpr (std::is_integral_v<data_t>) {
+            // Define range depending on signed or unsigned type
+            const auto [rangeBegin, rangeEnd] = []() -> std::tuple<data_t, data_t> {
+                if constexpr (std::is_signed_v<data_t>) {
+                    return {-100, 100};
+                } else {
+                    return {1, 100};
+                }
+            }();
+
             std::random_device rd;
             std::mt19937 eng(rd());
-            std::uniform_int_distribution<> distr(-100, 100);
+            std::uniform_int_distribution<data_t> distr(rangeBegin, rangeEnd);
 
-            for (elsa::index_t i = 0; i < size; ++i) {
+            for (index_t i = 0; i < size; ++i) {
                 data_t num = distr(eng);
+
                 // remove zeros as this leads to errors when dividing
                 if (num == 0)
                     num = 1;
@@ -80,6 +85,29 @@ namespace elsa
         }
 
         return randVec;
+    }
+
+    /**
+     * \brief generate a random eigen vector and a DataContainer with the same data. Specifically
+     * take index_t into consideration and scale the random eigen vector, to not generate overflows
+     *
+     * \tparam data_t Value type of DataContainers
+     * \param desc First DataContainer
+     * \param handlerType Second DataContainer
+     *
+     * \return a pair of a DataContainer and eigen vector, of same size and the same values
+     */
+    template <typename data_t>
+    std::tuple<DataContainer<data_t>, Eigen::Matrix<data_t, Eigen::Dynamic, 1>>
+        generateRandomContainer(const DataDescriptor& desc, DataHandlerType handlerType)
+    {
+        auto containerSize = desc.getNumberOfCoefficients();
+
+        auto randVec = generateRandomMatrix<data_t>(containerSize);
+
+        auto dc = DataContainer<data_t>(desc, randVec, handlerType);
+
+        return {dc, randVec};
     }
 
     /**
@@ -108,4 +136,74 @@ namespace elsa
         data_t rhs = prec * std::sqrt(std::min(x.squaredL2Norm(), y.squaredL2Norm()));
         return lhs <= rhs;
     }
+
+    /**
+     * \brief Wrapper to remove const, volatile and reference of a type
+     */
+    template <typename T>
+    using UnqualifiedType_t =
+        typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+
+    /**
+     * \brief Helper to give types a name, this is used to print information during testing
+     *
+     * \tparam T type that should be given a name
+     * \tparam Dummy dummy, to be used to enable or disable specific specializations
+     */
+    template <typename T, typename Dummy = void>
+    struct TypeName;
+
+    /**
+     * \brief specialization to specify a name for index_t
+     * \tparam T [const] [volatile] index_t[&] should be accepted
+     */
+    template <typename T>
+    struct TypeName<T, std::enable_if_t<std::is_same_v<index_t, UnqualifiedType_t<T>>>> {
+        static constexpr char name[] = "index_t";
+    };
+
+    /**
+     * \brief specialization to specify a name for float
+     * \tparam T [const] [volatile] float[&] should be accepted
+     */
+    template <typename T>
+    struct TypeName<T, std::enable_if_t<std::is_same_v<float, UnqualifiedType_t<T>>>> {
+        static constexpr char name[] = "float";
+    };
+
+    /**
+     * \brief specialization to specify a name for double
+     * \tparam T [const] [volatile] double[&] should be accepted
+     */
+    template <typename T>
+    struct TypeName<T, std::enable_if_t<std::is_same_v<double, UnqualifiedType_t<T>>>> {
+        static constexpr char name[] = "double";
+    };
+
+    /**
+     * \brief specialization to specify a name for complex<float>
+     * \tparam T [const] [volatile] complex<float>[&] should be accepted
+     */
+    template <typename T>
+    struct TypeName<T,
+                    std::enable_if_t<std::is_same_v<std::complex<float>, UnqualifiedType_t<T>>>> {
+        static constexpr char name[] = "complex<float>";
+    };
+
+    /**
+     * \brief specialization to specify a name for complex<double>
+     * \tparam T [const] [volatile] complex<double>[&] should be accepted
+     */
+    template <typename T>
+    struct TypeName<T,
+                    std::enable_if_t<std::is_same_v<std::complex<double>, UnqualifiedType_t<T>>>> {
+        static constexpr char name[] = "complex<double>";
+    };
+
+    /**
+     * \brief Quick access to TypeName<UnqualifiedType>::name
+     * \tparam T a type
+     */
+    template <typename T>
+    static constexpr auto TypeName_v = TypeName<UnqualifiedType_t<T>>::name;
 } // namespace elsa

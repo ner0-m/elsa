@@ -13,6 +13,8 @@
 #include "DataHandlerMapCPU.h"
 #include "testHelpers.h"
 
+#include <iostream>
+
 #ifdef ELSA_CUDA_VECTOR
 #include "DataHandlerGPU.h"
 #include "DataHandlerMapGPU.h"
@@ -58,8 +60,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
 
         WHEN("constructing with a given vector")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+            auto randVec = generateRandomMatrix<data_t>(size);
             const TestType dh{randVec};
 
             for (index_t i = 0; i < size; ++i)
@@ -68,8 +69,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
 
         WHEN("copy constructing")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+            auto randVec = generateRandomMatrix<data_t>(size);
             const TestType dh{randVec};
             const auto dhView = dh.getBlock(0, size);
 
@@ -93,8 +93,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
 
         WHEN("move constructing")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+            auto randVec = generateRandomMatrix<data_t>(size);
             TestType dh{randVec};
             const auto dhView = dh.getBlock(0, size);
             TestType testDh{randVec};
@@ -125,9 +124,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler",
 
     GIVEN("some DataHandler")
     {
-        index_t size = 314;
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-        randVec.setRandom();
+        const index_t size = 314;
+        auto randVec = generateRandomMatrix<data_t>(size);
         const TestType dh{randVec};
 
         WHEN("comparing to a handler with a different size")
@@ -186,14 +184,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
 
     GIVEN("a DataHandlerCPU with an associated map")
     {
-        index_t size = 314;
+        const index_t size = 314;
         DataHandlerCPU<data_t> dh{size};
         auto dhMap = dh.getBlock(size / 2, size / 3);
 
         WHEN("copy assigning")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+
+            auto randVec = generateRandomMatrix<data_t>(size);
             const DataHandlerCPU dh2{randVec};
             const auto dh2Map = dh2.getBlock(size / 2, size / 3);
 
@@ -214,8 +212,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
 
         WHEN("move assigning")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+            auto randVec = generateRandomMatrix<data_t>(size);
             DataHandlerCPU dh2{randVec};
             const auto dh2View = dh2.getBlock(0, size);
             DataHandlerCPU testDh{randVec};
@@ -241,8 +238,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
         WHEN("copy assigning a DataHandlerCPU through base pointers")
         {
             DataHandler<data_t>* dhPtr = &dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+
+            auto randVec = generateRandomMatrix<data_t>(size);
             const auto dh2Ptr = std::make_unique<const DataHandlerCPU<data_t>>(randVec);
             const auto dh2Map = dh2Ptr->getBlock(size / 2, size / 3);
 
@@ -270,8 +267,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
         {
             DataHandler<data_t>* dhPtr = &dh;
             const auto dhCopy = dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{2 * size};
-            randVec.setRandom();
+
+            auto randVec = generateRandomMatrix<data_t>(2 * size);
             const DataHandlerCPU<data_t> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
 
@@ -295,8 +292,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
         WHEN("copy assigning a full DataHandlerMapCPU (aka a view) through base pointers")
         {
             DataHandler<data_t>* dhPtr = &dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+
+            auto randVec = generateRandomMatrix<data_t>(size);
             const DataHandlerCPU<data_t> dh2{randVec};
             const auto dh2View = dh2.getBlock(0, size);
             const auto dh2Map = dh2.getBlock(size / 2, size / 3);
@@ -325,8 +322,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
         WHEN("move assigning a DataHandlerCPU through base pointers")
         {
             DataHandler<data_t>* dhPtr = &dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+
+            auto randVec = generateRandomMatrix<data_t>(size);
             std::unique_ptr<DataHandler<data_t>> dh2Ptr =
                 std::make_unique<DataHandlerCPU<data_t>>(randVec);
             const auto dh2View = dh2Ptr->getBlock(0, size);
@@ -355,8 +352,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
         {
             DataHandler<data_t>* dhPtr = &dh;
             const auto dhCopy = dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{2 * size};
-            randVec.setRandom();
+
+            auto randVec = generateRandomMatrix<data_t>(2 * size);
             DataHandlerCPU<data_t> dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
 
@@ -379,8 +376,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
         WHEN("\"move\" assigning a full DataHandlerMapCPU (aka a view) through base pointers")
         {
             DataHandler<data_t>* dhPtr = &dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+
+            auto randVec = generateRandomMatrix<data_t>(size);
             DataHandlerCPU<data_t> dh2{randVec};
             const auto dh2View = dh2.getBlock(0, size);
             const auto dh2Map = dh2.getBlock(size / 2, size / 3);
@@ -454,12 +451,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
 
     GIVEN("some DataHandler")
     {
-        index_t size = 284;
+        index_t size = 16;
 
         WHEN("putting in some random data")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
+            auto randVec = generateRandomMatrix<data_t>(size);
             TestType dh(randVec);
 
             THEN("the reductions work as expected")
@@ -469,8 +465,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
                 REQUIRE(dh.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
                 REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()));
 
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2 =
-                    Eigen::Matrix<data_t, Eigen::Dynamic, 1>::Random(size);
+                auto randVec2 = generateRandomMatrix<data_t>(size);
                 TestType dh2(randVec2);
 
                 REQUIRE(checkSameNumbers(dh.dot(dh2), randVec.dot(randVec2)));
@@ -483,8 +478,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
             THEN("the dot product expects correctly sized arguments")
             {
                 index_t wrongSize = size - 1;
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2 =
-                    Eigen::Matrix<data_t, Eigen::Dynamic, 1>::Random(wrongSize);
+
+                auto randVec2 = generateRandomMatrix<data_t>(wrongSize);
                 TestType dh2(randVec2);
 
                 REQUIRE_THROWS_AS(dh.dot(dh2), std::invalid_argument);
@@ -511,16 +506,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
         WHEN("putting in some random data")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec =
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1>::Random(size);
+            auto randVec = generateRandomMatrix<data_t>(size);
             TestType dh(randVec);
 
             THEN("the element-wise binary vector operations work as expected")
             {
                 TestType oldDh = dh;
 
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2 =
-                    Eigen::Matrix<data_t, Eigen::Dynamic, 1>::Random(size);
+                auto randVec2 = generateRandomMatrix<data_t>(size);
                 TestType dh2(randVec2);
 
                 auto dhMap = dh2.getBlock(0, dh2.getSize());
@@ -565,14 +558,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
                         // due to floating point arithmetic less precision
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i], 100));
+                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
 
                 dh = oldDh;
                 dh /= *dhMap;
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
                         // due to floating point arithmetic less precision
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i], 100));
+                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
             }
 
             THEN("the element-wise binary scalar operations work as expected")
@@ -669,10 +662,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "", 
 {
     using data_t = typename TestType::value_type;
 
+    const index_t size = 42;
+
     GIVEN("A random DataContainer")
     {
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec =
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1>::Random(42);
+        auto randVec = generateRandomMatrix<data_t>(size);
         TestType dh{randVec};
 
         WHEN("const manipulating a copy constructed shallow copy")
