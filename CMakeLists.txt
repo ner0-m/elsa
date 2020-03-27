@@ -30,6 +30,8 @@ option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when buildin
 
 option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
 
+option(ELSA_CLANG_TIDY "Build with clang-tidy check enabled" OFF)
+
 set(ELSA_SANITIZER
         "" CACHE STRING
         "Compile with a sanitizer. Options are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak, 'Address;Undefined'"
@@ -119,6 +121,25 @@ endif()
 # Includes clang-format, clang-tidy, cmake-format, and sanitizers
 include(Tools)
 
+# Glob usually is not recommended, but if we add a file here, We have to rerun
+# CMake anyway, so it's not too bad
+file(
+        GLOB_RECURSE
+        ALL_CODE_FILES
+        ${PROJECT_SOURCE_DIR}/elsa/*.[ch]pp
+        ${PROJECT_SOURCE_DIR}/elsa/*.[ch]
+        ${PROJECT_SOURCE_DIR}/benchmarks/*.[ch]pp
+        ${PROJECT_SOURCE_DIR}/benchmarks/*.[ch]
+        ${PROJECT_SOURCE_DIR}/examples/*.[ch]pp
+        ${PROJECT_SOURCE_DIR}/examples/*.[ch]
+        ${PROJECT_SOURCE_DIR}/tools/*.[ch]pp
+        ${PROJECT_SOURCE_DIR}/tools/*.[ch])
+
+clang_format(format-cxx ${ALL_CODE_FILES})
+
+if(${ELSA_CLANG_TIDY})
+    clang_tidy("--extra-arg=--cuda-host-only" "-export-fixes=${PROJECT_BINARY_DIR}/clang-tidy-fix.txt")
+endif()
 
 # ------------ setup testing -----------
 # ------------
@@ -144,6 +165,9 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             USES_TERMINAL
             COMMENT "Build and run all the tests.")
+
+        add_custom_target(build-tests
+            COMMENT "Build all the tests.")
         if(ELSA_COVERAGE)
             message(STATUS "elsa test coverage is enabled")
 

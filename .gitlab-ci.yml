@@ -82,7 +82,14 @@ clang-tidy:
   stage: static-test
   image: $ANALYSIS_IMAGE
   script:
-    ./tools/ci_scripts/clang-tidy.sh
+    - mkdir -p build
+    - cd build
+    - cmake .. -GNinja -DELSA_CLANG_TIDY=ON -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON
+    - ninja build-tests
+  artifacts: 
+    paths:
+    - build/clang-tidy-fix.txt
+    expire_in: 1 week
   tags:
     - linux
     - elsa

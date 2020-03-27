@@ -18,13 +18,16 @@ macro(ELSA_TEST NAME)
     target_compile_features(test_${NAME} PUBLIC cxx_std_17)
     # include helpers
     target_include_directories(test_${NAME} PRIVATE ${CMAKE_SOURCE_DIR}/elsa/test_routines/)
+    
+    # add dependencies
+    add_dependencies(tests test_${NAME})
+    add_dependencies(build-tests test_${NAME})
 
     # if we use JUnit reporter handle arguments
     if(${ELSA_CREATE_JUNIT_REPORTS})
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/test_reports)
         set(ELSA_JUNIT_ARGUMENTS "-r junit" "-o ${PROJECT_BINARY_DIR}/test_reports/test_${NAME}.xml")
     endif(${ELSA_CREATE_JUNIT_REPORTS})
-    add_dependencies(tests test_${NAME})
 
     # let Catch discover and register all the test cases
     catch_discover_tests(test_${NAME} TEST_SPEC ${ELSA_JUNIT_ARGUMENTS})
