@@ -128,6 +128,8 @@ file(
         ALL_CODE_FILES
         ${PROJECT_SOURCE_DIR}/elsa/*.[ch]pp
         ${PROJECT_SOURCE_DIR}/elsa/*.[ch]
+        ${PROJECT_SOURCE_DIR}/elsa/*.cu
+        ${PROJECT_SOURCE_DIR}/elsa/*.cuh
         ${PROJECT_SOURCE_DIR}/benchmarks/*.[ch]pp
         ${PROJECT_SOURCE_DIR}/benchmarks/*.[ch]
         ${PROJECT_SOURCE_DIR}/examples/*.[ch]pp
