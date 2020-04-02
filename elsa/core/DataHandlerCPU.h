@@ -13,6 +13,9 @@ namespace elsa
     template <typename data_t>
     class DataHandlerMapCPU;
 
+    template <typename data_t>
+    class DataHandlerRawMapCPU;
+
     // forward declaration for friend test function
     template <typename data_t = real_t>
     class DataHandlerCPU;
@@ -44,6 +47,8 @@ namespace elsa
     {
         /// declare DataHandlerMapCPU as friend, allows the use of Eigen for improved performance
         friend DataHandlerMapCPU<data_t>;
+
+        friend DataHandlerRawMapCPU<data_t>;
 
         /// for enabling accessData()
         friend DataContainer<data_t>;

@@ -42,6 +42,15 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor, data_t* data)
+        : _dataDescriptor{dataDescriptor.clone()},
+          _dataHandler{std::make_unique<DataHandlerRawMapCPU<data_t>>(
+              data, dataDescriptor.getNumberOfCoefficients())},
+          _dataHandlerType{DataHandlerType::RAW_MAP_CPU}
+    {
+    }
+
+    template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator=(const DataContainer<data_t>& other)
     {
         if (this != &other) {

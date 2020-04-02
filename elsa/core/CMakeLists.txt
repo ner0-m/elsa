@@ -20,6 +20,7 @@ set(MODULE_HEADERS
         DataHandler.h
         DataHandlerCPU.h
         DataHandlerMapCPU.h
+        DataHandlerRawMapCPU.h
         LinearOperator.h
         Expression.h
         ExpressionPredicates.h)
@@ -33,6 +34,7 @@ set(MODULE_SOURCES
         DataContainer.cpp
         DataHandlerCPU.cpp
         DataHandlerMapCPU.cpp
+        DataHandlerRawMapCPU.cpp
         LinearOperator.cpp)
 
 if(${ELSA_CUDA_VECTOR})

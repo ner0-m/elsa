@@ -35,10 +35,12 @@ namespace elsa
 
     /// type of the DataHandler used to store the actual data
     enum class DataHandlerType {
-        CPU,     ///< data is stored as an Eigen::Matrix in CPU main memory
-        MAP_CPU, ///< data is not explicitly stored, but using an Eigen::Map to refer to other
-        GPU,     ///< data is stored as an raw array in the GPU memory
-        MAP_GPU  ///< data is not explicitley stored but mapped through a pointer
+        CPU,         ///< data is stored as an Eigen::Matrix in CPU main memory
+        MAP_CPU,     ///< data is not explicitly stored, but using an Eigen::Map to refer to other
+        RAW_MAP_CPU, ///< data is not explicitly stored but using an Eigen::Map to refere to raw
+                     ///< memory
+        GPU,         ///< data is stored as an raw array in the GPU memory
+        MAP_GPU      ///< data is not explicitley stored but mapped through a pointer
     };
 
 #ifdef ELSA_CUDA_VECTOR

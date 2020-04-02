@@ -5,6 +5,7 @@
 #include "DataHandler.h"
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
+#include "DataHandlerRawMapCPU.h"
 #include "DataContainerIterator.h"
 #include "Expression.h"
 
@@ -60,6 +61,8 @@ namespace elsa
         DataContainer(const DataDescriptor& dataDescriptor,
                       const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
                       DataHandlerType handlerType = defaultHandlerType);
+
+        DataContainer(const DataDescriptor& DataDescriptor, data_t* data);
 
         /**
          * \brief Copy constructor for DataContainer
@@ -117,6 +120,9 @@ namespace elsa
         DataContainer<data_t>& operator=(Source const& source)
         {
             if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(_dataHandler.get())) {
+                handler->accessData() = source.template eval<false>();
+            } else if (auto handler =
+                           dynamic_cast<DataHandlerRawMapCPU<data_t>*>(_dataHandler.get())) {
                 handler->accessData() = source.template eval<false>();
             } else if (auto handler =
                            dynamic_cast<DataHandlerMapCPU<data_t>*>(_dataHandler.get())) {
