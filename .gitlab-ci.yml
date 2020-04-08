@@ -67,6 +67,7 @@ variables:
 
 before_script:
   - git submodule sync --recursive
+  - git submodule update --init
 
 ### static test ###
 
