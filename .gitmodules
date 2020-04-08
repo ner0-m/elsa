@@ -3,7 +3,7 @@
 	url = https://github.com/catchorg/Catch2.git
 [submodule "thirdparty/eigen3"]
 	path = thirdparty/eigen3
-	url = https://github.com/eigenteam/eigen-git-mirror
+	url = https://gitlab.com/libeigen/eigen.git
 [submodule "thirdparty/spdlog"]
 	path = thirdparty/spdlog
 	url = https://github.com/gabime/spdlog.git
