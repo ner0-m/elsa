@@ -65,6 +65,8 @@ variables:
     reports:
       junit: "build/test_reports/test_*.xml"
 
+before_script:
+  - git submodule sync --recursive
 
 ### static test ###
 
