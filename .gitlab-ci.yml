@@ -15,7 +15,7 @@ variables:
   CUDA_IMAGE: "elsa/cuda:10.2"
   UBUNTU_IMAGE: "elsa/ubuntu:18.04"
   GPU_ONLY_IMAGE: "elsa/cuda:10.0"
-
+  GIT_SUBMODULE_STRATEGY: normal
 
 ### job templates ###
 
@@ -64,11 +64,7 @@ variables:
   artifacts:
     reports:
       junit: "build/test_reports/test_*.xml"
-
-before_script:
-  - git submodule sync --recursive
-  - git submodule update --init
-
+      
 ### static test ###
 
 clang-format:
