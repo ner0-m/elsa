@@ -12,7 +12,7 @@ set(MODULE_HEADERS
 
 # list all the code files of the module
 set(MODULE_SOURCES
-        )
+        testHelpers.cpp)
 
 
 # build the module library
@@ -32,4 +32,4 @@ target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
 # set -fPIC
 set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# This is only used privately, so don't bother exporting it and installing it
+# This is only used privately for the tests, so we don't bother exporting it and installing it

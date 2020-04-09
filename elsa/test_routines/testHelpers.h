@@ -5,6 +5,7 @@
 #include <random>
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
+#include "DataContainer.h"
 
 #include <iomanip>
 #include <limits>
@@ -54,7 +55,7 @@ namespace elsa
      * running into overflow issues.
      */
     template <typename data_t>
-    auto generateRandomMatrix(const index_t size)
+    auto generateRandomMatrix(index_t size)
     {
         Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec(size);
 
@@ -109,7 +110,6 @@ namespace elsa
 
         return {dc, randVec};
     }
-
     /**
      * \brief Compares two DataContainers using their norm. Computes \f$ \sqrt{\| x - y \|_{2}^2}
      * \f$ and compares it to \f$ prec * \sqrt{min(\| x \|_{2}^2, \| y \|_{2}^2)} \f$. If the first
@@ -122,20 +122,8 @@ namespace elsa
      * @return true if the norms of the containers is approximate equal
      */
     template <typename data_t>
-    bool isApprox(const elsa::DataContainer<data_t>& x, const elsa::DataContainer<data_t>& y,
-                  real_t prec = Eigen::NumTraits<real_t>::dummy_precision())
-    {
-        // Check size is the same, don't throw an expection, as it is a programming error to pass
-        // containers with different size
-        assert(x.getSize() == y.getSize());
-
-        DataContainer<data_t> z = x;
-        z -= y;
-
-        data_t lhs = std::sqrt(z.squaredL2Norm());
-        data_t rhs = prec * std::sqrt(std::min(x.squaredL2Norm(), y.squaredL2Norm()));
-        return lhs <= rhs;
-    }
+    bool isApprox(const DataContainer<data_t>& x, const DataContainer<data_t>& y,
+                  real_t prec = Eigen::NumTraits<real_t>::dummy_precision());
 
     /**
      * \brief Wrapper to remove const, volatile and reference of a type
