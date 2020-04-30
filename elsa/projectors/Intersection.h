@@ -19,8 +19,8 @@ namespace elsa
 
         /// default constructor
         IntersectionResult()
-            : _tmin{std::numeric_limits<real_t>().infinity()},
-              _tmax{std::numeric_limits<real_t>().infinity()}
+            : _tmin{std::numeric_limits<real_t>::infinity()},
+              _tmax{std::numeric_limits<real_t>::infinity()}
         {
         }
 

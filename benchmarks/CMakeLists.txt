@@ -22,6 +22,7 @@ endmacro(ELSA_BENCHMARK)
 
 ELSA_BENCHMARK(RayGenerationBench)
 ELSA_BENCHMARK(Projectors)
+ELSA_BENCHMARK(Intersection)
 
 # Add a single executable for all benchmarks, as CTest removes a lot of the output
 add_executable(bench_all EXCLUDE_FROM_ALL bench_main.cpp ${BENCHMARK_SOURCES})
