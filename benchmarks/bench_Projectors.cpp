@@ -12,6 +12,7 @@
 
 #include "Logger.h"
 #include "elsaDefines.h"
+#include "VolumeDescriptor.h"
 #include "PhantomGenerator.h"
 #include "CircleTrajectoryGenerator.h"
 
@@ -29,7 +30,7 @@ void runProjector2D(index_t coeffsPerDim)
     // generate 2d phantom
     IndexVector_t size(2);
     size << coeffsPerDim, coeffsPerDim;
-    auto phantom = DataContainer_t(DataDescriptor(size));
+    auto phantom = DataContainer_t(VolumeDescriptor(size));
     phantom = 0;
 
     // generate circular trajectory
@@ -59,7 +60,7 @@ void runProjector3D(index_t coeffsPerDim)
     // generate 2d phantom
     IndexVector_t size(3);
     size << coeffsPerDim, coeffsPerDim, coeffsPerDim;
-    auto phantom = DataContainer_t(DataDescriptor(size));
+    auto phantom = DataContainer_t(VolumeDescriptor(size));
     phantom = 0;
 
     // generate circular trajectory

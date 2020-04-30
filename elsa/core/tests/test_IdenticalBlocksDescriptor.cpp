@@ -19,7 +19,7 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
     GIVEN("a 1D descriptor")
     {
         index_t size = 11;
-        DataDescriptor dd(IndexVector_t::Constant(1, size));
+        VolumeDescriptor dd(IndexVector_t::Constant(1, size));
 
         WHEN("creating 0 blocks") { REQUIRE_THROWS(IdenticalBlocksDescriptor(0, dd)); }
 
@@ -76,7 +76,7 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
             {
                 IndexVector_t monoCoeffs(2);
                 monoCoeffs << size, blocks;
-                DataDescriptor mono(monoCoeffs);
+                VolumeDescriptor mono(monoCoeffs);
                 REQUIRE(mono != bd);
                 REQUIRE(bd != mono);
             }
@@ -87,7 +87,7 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
     {
         IndexVector_t sizeVector(2);
         sizeVector << 11, 12;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
 
         WHEN("creating 10 blocks")
         {
@@ -144,7 +144,7 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
             {
                 IndexVector_t monoCoeffs(3);
                 monoCoeffs << sizeVector, blocks;
-                DataDescriptor mono(monoCoeffs);
+                VolumeDescriptor mono(monoCoeffs);
                 REQUIRE(mono != bd);
                 REQUIRE(bd != mono);
             }
@@ -153,7 +153,7 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                  "same dimensions, but with a different descriptor of each block")
             {
                 IndexVector_t coeffsBlock = dd.getNumberOfCoefficientsPerDimension();
-                DataDescriptor dd2(coeffsBlock.head(coeffsBlock.size() - 1));
+                VolumeDescriptor dd2(coeffsBlock.head(coeffsBlock.size() - 1));
                 IdenticalBlocksDescriptor dd3(coeffsBlock[coeffsBlock.size() - 1], dd2);
                 IdenticalBlocksDescriptor bd2(blocks, dd3);
                 REQUIRE(bd2 != bd);
@@ -166,7 +166,7 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
     {
         IndexVector_t sizeVector(3);
         sizeVector << 101, 42, 57;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
 
         WHEN("creating 25 blocks")
         {
@@ -225,7 +225,7 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
             {
                 IndexVector_t monoCoeffs(4);
                 monoCoeffs << sizeVector, blocks;
-                DataDescriptor mono(monoCoeffs);
+                VolumeDescriptor mono(monoCoeffs);
                 REQUIRE(mono != bd);
                 REQUIRE(bd != mono);
             }
@@ -234,7 +234,7 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                  "same dimensions, but with a different descriptor of each block")
             {
                 IndexVector_t coeffsBlock = dd.getNumberOfCoefficientsPerDimension();
-                DataDescriptor dd2(coeffsBlock.head(coeffsBlock.size() - 1));
+                VolumeDescriptor dd2(coeffsBlock.head(coeffsBlock.size() - 1));
                 IdenticalBlocksDescriptor dd3(coeffsBlock[coeffsBlock.size() - 1], dd2);
                 IdenticalBlocksDescriptor bd2(blocks, dd3);
                 REQUIRE(bd2 != bd);
@@ -250,7 +250,7 @@ SCENARIO("Cloning IdenticalBlocksDescriptors")
     {
         IndexVector_t sizeVector(1);
         sizeVector << 13;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
         index_t blocks = 21;
 
         WHEN("cloning the descriptor")
@@ -271,7 +271,7 @@ SCENARIO("Cloning IdenticalBlocksDescriptors")
     {
         IndexVector_t sizeVector(2);
         sizeVector << 43, 112;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
         index_t blocks = 77;
 
         WHEN("cloning the descriptor")
@@ -292,7 +292,7 @@ SCENARIO("Cloning IdenticalBlocksDescriptors")
     {
         IndexVector_t sizeVector(3);
         sizeVector << 47, 11, 53;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
         index_t blocks = 13;
 
         WHEN("cloning the descriptor")

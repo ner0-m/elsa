@@ -1,4 +1,5 @@
 #include "BlockDescriptor.h"
+#include "VolumeDescriptor.h"
 
 namespace elsa
 {
@@ -13,7 +14,7 @@ namespace elsa
      * for the indexing of the different blocks, and will always have a spacing of one and a number
      * of coefficients corresponding to the number of blocks.
      *
-     * This descriptor should be the prefferred choice when dealing with vector fields.
+     * This descriptor should be the preferred choice when dealing with vector fields.
      */
     class IdenticalBlocksDescriptor : public BlockDescriptor
     {
@@ -24,7 +25,7 @@ namespace elsa
          *
          *  \param[in] numberOfBlocks is the desired number of blocks
          *  \param[in] dataDescriptor is the descriptor that will be replicated numberOfBlocks
-         times
+         *  times
          * along a new dimension
          *
          *  \throw std::invalid_argument if numberOfBlocks is non-positive
@@ -61,6 +62,6 @@ namespace elsa
 
     private:
         /// generates the
-        DataDescriptor initBase(index_t numberOfBlocks, const DataDescriptor& dataDescriptor);
+        VolumeDescriptor initBase(index_t numberOfBlocks, const DataDescriptor& dataDescriptor);
     };
 } // namespace elsa

@@ -10,6 +10,7 @@
 
 #include <catch2/catch.hpp>
 #include "LinearOperator.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -51,8 +52,8 @@ SCENARIO("Constructing a LinearOperator")
         numCoeff << 47, 11;
         IndexVector_t numCoeff2(2);
         numCoeff2 << 31, 23;
-        DataDescriptor ddDomain(numCoeff);
-        DataDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(numCoeff2);
 
         WHEN("instantiating a LinearOperator")
         {
@@ -88,8 +89,8 @@ SCENARIO("Cloning LinearOperators")
         numCoeff << 23, 45, 67;
         IndexVector_t numCoeff2(2);
         numCoeff2 << 78, 90;
-        DataDescriptor ddDomain(numCoeff);
-        DataDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(numCoeff2);
         LinearOperator linOp(ddDomain, ddRange);
 
         WHEN("cloning the LinearOperator")
@@ -119,8 +120,8 @@ SCENARIO("Leaf LinearOperator")
         numCoeff << 12, 23;
         IndexVector_t numCoeff2(2);
         numCoeff2 << 34, 45;
-        DataDescriptor ddDomain(numCoeff);
-        DataDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(numCoeff2);
         MockOperator mockOp(ddDomain, ddRange);
 
         auto leafOp = leaf(mockOp);
@@ -179,8 +180,8 @@ SCENARIO("Leaf LinearOperator")
         numCoeff << 12, 23;
         IndexVector_t numCoeff2(2);
         numCoeff2 << 34, 45;
-        DataDescriptor ddDomain(numCoeff);
-        DataDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(numCoeff2);
         MockOperator mockOp(ddDomain, ddRange);
 
         auto adjointOp = adjoint(mockOp);
@@ -242,8 +243,8 @@ SCENARIO("Composite LinearOperator")
         numCoeff << 45, 67;
         IndexVector_t numCoeff2(2);
         numCoeff2 << 13, 48;
-        DataDescriptor ddDomain(numCoeff);
-        DataDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(numCoeff2);
 
         MockOperator op1(ddDomain, ddRange);
         MockOperator op2(ddDomain, ddRange);
@@ -306,9 +307,9 @@ SCENARIO("Composite LinearOperator")
         numCoeff2 << 15, 28;
         IndexVector_t numCoeff3(4);
         numCoeff3 << 7, 30, 83, 13;
-        DataDescriptor ddDomain(numCoeff);
-        DataDescriptor ddMiddle(numCoeff2);
-        DataDescriptor ddRange(numCoeff3);
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddMiddle(numCoeff2);
+        VolumeDescriptor ddRange(numCoeff3);
 
         MockOperator op1(ddDomain, ddMiddle);
         MockOperator op2(ddMiddle, ddRange);
@@ -371,9 +372,9 @@ SCENARIO("Composite LinearOperator")
         numCoeff2 << 16;
         IndexVector_t numCoeff3(3);
         numCoeff3 << 17, 38, 15;
-        DataDescriptor ddDomain(numCoeff);
-        DataDescriptor ddRange(numCoeff2);
-        DataDescriptor ddFinalRange(numCoeff3);
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddFinalRange(numCoeff3);
 
         MockOperator op1(ddDomain, ddRange);
         MockOperator op2(ddFinalRange, ddRange);

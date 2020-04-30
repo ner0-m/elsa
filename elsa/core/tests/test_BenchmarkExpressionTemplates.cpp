@@ -10,6 +10,7 @@
 
 #include <catch2/catch.hpp>
 #include "DataContainer.h"
+#include "VolumeDescriptor.h"
 #include <string>
 #include <cstdlib>
 
@@ -65,7 +66,7 @@ TEST_CASE("Expression benchmark using expression templates with n=" + std::to_st
 {
     IndexVector_t numCoeff(3);
     numCoeff << dimension, dimension, dimension;
-    DataDescriptor desc(numCoeff);
+    VolumeDescriptor desc(numCoeff);
     DataContainer dc(desc);
     DataContainer dc2(desc);
     DataContainer dc3(desc);
@@ -93,12 +94,13 @@ TEST_CASE("Expression benchmark using expression templates with n=" + std::to_st
     BENCHMARK("reduction") { dc.sum(); };
 }
 
+#ifdef ELSA_ENABLE_CUDA_VECTOR
 TEST_CASE("Expression benchmark using GPU expression templates with n=" + std::to_string(dimension)
           + "^3")
 {
     IndexVector_t numCoeff(3);
     numCoeff << dimension, dimension, dimension;
-    DataDescriptor desc(numCoeff);
+    VolumeDescriptor desc(numCoeff);
 
     DataContainer dc(desc, DataHandlerType::GPU);
     DataContainer dc2(desc, DataHandlerType::GPU);
@@ -140,7 +142,7 @@ TEST_CASE("Expression benchmark using GPU expression templates with n="
 
     IndexVector_t numCoeff(3);
     numCoeff << dimensionMemCritic, dimensionMemCritic, dimensionMemCritic;
-    DataDescriptor desc(numCoeff);
+    VolumeDescriptor desc(numCoeff);
 
     DataContainer dc(desc, randVec, DataHandlerType::GPU);
     DataContainer dc2(desc, randVec2, DataHandlerType::GPU);
@@ -156,3 +158,4 @@ TEST_CASE("Expression benchmark using GPU expression templates with n="
 
     BENCHMARK("Eigen: reduction") { return randVec.sum(); };
 }
+#endif // ELSA_ENABLE_CUDA_VECTOR

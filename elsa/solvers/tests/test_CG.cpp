@@ -12,6 +12,7 @@
 #include "Scaling.h"
 #include "Logger.h"
 #include "L2NormPow2.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -28,7 +29,7 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
     {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 24;
-        DataDescriptor dd{numCoeff};
+        VolumeDescriptor dd{numCoeff};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
@@ -104,7 +105,7 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
     {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 24;
-        DataDescriptor dd{numCoeff};
+        VolumeDescriptor dd{numCoeff};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();

@@ -13,6 +13,7 @@
 #include "Quadric.h"
 #include "Identity.h"
 #include "Scaling.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -22,7 +23,7 @@ SCENARIO("Testing the Quadric functional")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 11, 7;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         WHEN("instantiating")
         {
@@ -68,7 +69,7 @@ SCENARIO("Testing the Quadric functional")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 11, 7;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         Scaling scalingOp(dd, static_cast<real_t>(3.0));
 
@@ -117,7 +118,7 @@ SCENARIO("Testing the Quadric functional")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 11, 7;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
@@ -167,7 +168,7 @@ SCENARIO("Testing the Quadric functional")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 11, 7;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         Identity idOp(dd);
 

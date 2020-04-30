@@ -14,6 +14,7 @@
 #include "LinearOperator.h"
 #include "Scaling.h"
 #include "Identity.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -23,7 +24,7 @@ SCENARIO("Testing the PseudoHuber norm functional")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 34;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         real_t delta = 2;
 
@@ -84,7 +85,7 @@ SCENARIO("Testing the PseudoHuber norm functional")
         // linear residual
         IndexVector_t numCoeff(3);
         numCoeff << 3, 7, 11;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();

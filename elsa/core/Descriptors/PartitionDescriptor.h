@@ -1,4 +1,6 @@
 #include "BlockDescriptor.h"
+#include "VolumeDescriptor.h"
+
 namespace elsa
 {
     /**
@@ -11,8 +13,8 @@ namespace elsa
      * slices of the original descriptor, taken along its last dimension. This also means that the
      * number of coefficients per block can only vary in the last dimension.
      *
-     * The PartitionDescriptor has the same number of coefficients and spacing per dimension as the
-     * original.
+     * The PartitionDescriptor has the same dimension, the same number of coefficients and spacing
+     * per dimension as the original.
      */
     class PartitionDescriptor : public BlockDescriptor
     {
@@ -85,6 +87,7 @@ namespace elsa
 
     private:
         /// generates the descriptor of a partition containing numberOfSlices slices
-        std::unique_ptr<DataDescriptor> generateDescriptorOfPartition(index_t numberOfSlices) const;
+        std::unique_ptr<VolumeDescriptor>
+            generateDescriptorOfPartition(index_t numberOfSlices) const;
     };
 } // namespace elsa

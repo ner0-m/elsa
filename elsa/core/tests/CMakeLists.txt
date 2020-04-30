@@ -6,7 +6,7 @@ include(Catch)
 
 # the actual tests
 ELSA_TEST(elsaDefines)
-ELSA_TEST(DataDescriptor)
+ELSA_TEST(VolumeDescriptor)
 ELSA_TEST(IdenticalBlocksDescriptor)
 ELSA_TEST(PartitionDescriptor)
 ELSA_TEST(RandomBlocksDescriptor)

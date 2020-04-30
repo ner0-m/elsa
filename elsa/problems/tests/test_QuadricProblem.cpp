@@ -13,6 +13,7 @@
 #include "WeightedL2NormPow2.h"
 #include "Huber.h"
 #include "Logger.h"
+#include "VolumeDescriptor.h"
 
 #include <array>
 
@@ -33,7 +34,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 11, 7;
-        DataDescriptor dd{numCoeff};
+        VolumeDescriptor dd{numCoeff};
 
         auto scaleFactor = static_cast<data_t>(3.0);
         Scaling<data_t> scalingOp{dd, scaleFactor};
@@ -109,7 +110,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 11, 7;
-        DataDescriptor dd{numCoeff};
+        VolumeDescriptor dd{numCoeff};
 
         data_t scaleFactor = 3.0;
         Scaling<data_t> scalingOp{dd, scaleFactor};
@@ -183,7 +184,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 11, 7;
-        DataDescriptor dd{numCoeff};
+        VolumeDescriptor dd{numCoeff};
 
         data_t scaleFactor = -3.0;
         Scaling<data_t> scalingOp{dd, scaleFactor};
@@ -258,7 +259,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 11, 7;
-        DataDescriptor dd{numCoeff};
+        VolumeDescriptor dd{numCoeff};
 
         data_t scaleFactor = -3.0;
         Scaling<data_t> scalingOp{dd, scaleFactor};

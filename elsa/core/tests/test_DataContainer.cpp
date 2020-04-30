@@ -12,6 +12,7 @@
 #include "DataContainer.h"
 #include "IdenticalBlocksDescriptor.h"
 #include "testHelpers.h"
+#include "VolumeDescriptor.h"
 
 #include <type_traits>
 
@@ -51,7 +52,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
     {
         IndexVector_t numCoeff(3);
         numCoeff << 17, 47, 91;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         WHEN("constructing an empty DataContainer")
         {
@@ -87,7 +88,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
     {
         IndexVector_t numCoeff(2);
         numCoeff << 32, 57;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         DataContainer<data_t> otherDc(desc, TestType::handler_t);
 
@@ -174,7 +175,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Element-wise access of DataContainers", ""
     {
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
         DataContainer<data_t> dc(desc, TestType::handler_t);
 
         WHEN("accessing the elements")
@@ -217,7 +218,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataCo
     {
         IndexVector_t numCoeff(3);
         numCoeff << 11, 73, 45;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         WHEN("putting in some random data")
         {
@@ -256,7 +257,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
     {
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         WHEN("putting in some random data")
         {
@@ -378,7 +379,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
     {
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         auto [dc, randVec] = generateRandomContainer<data_t>(desc, TestType::handler_t);
         auto [dc2, randVec2] = generateRandomContainer<data_t>(desc, TestType::handler_t);
@@ -461,7 +462,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
     {
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         DataContainer<data_t> dc(desc, TestType::handler_t);
         const DataContainer<data_t> constDc(desc, TestType::handler_t);
@@ -479,7 +480,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
         {
             IndexVector_t numCoeff(1);
             numCoeff << desc.getNumberOfCoefficients();
-            DataDescriptor linearDesc(numCoeff);
+            VolumeDescriptor linearDesc(numCoeff);
             auto linearDc = dc.viewAs(linearDesc);
             auto linearConstDc = constDc.viewAs(linearDesc);
 
@@ -512,7 +513,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
     {
         IndexVector_t numCoeff(2);
         numCoeff << 52, 29;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
         index_t numBlocks = 7;
         IdenticalBlocksDescriptor blockDesc(numBlocks, desc);
 
@@ -540,7 +541,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
         {
             IndexVector_t numCoeff(1);
             numCoeff << blockDesc.getNumberOfCoefficients();
-            DataDescriptor linearDesc(numCoeff);
+            VolumeDescriptor linearDesc(numCoeff);
             auto linearDc = dc.viewAs(linearDesc);
             auto linearConstDc = constDc.viewAs(linearDesc);
 
@@ -578,7 +579,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing loading data to GPU and vice versa.", "", 
     {
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         DataContainer<TestType> dcCPU(desc, DataHandlerType::CPU);
         DataContainer<TestType> dcGPU(desc, DataHandlerType::GPU);
@@ -662,7 +663,7 @@ SCENARIO("Testing iterators for DataContainer")
         constexpr index_t size = 20;
         IndexVector_t numCoeff(1);
         numCoeff << size;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         DataContainer dc1(desc);
         DataContainer dc2(desc);
@@ -720,7 +721,7 @@ SCENARIO("Testing iterators for DataContainer")
         constexpr index_t size = 20;
         IndexVector_t numCoeff(2);
         numCoeff << size, size;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         DataContainer dc1(desc);
 
@@ -775,7 +776,7 @@ SCENARIO("Testing iterators for DataContainer")
         constexpr index_t size = 20;
         IndexVector_t numCoeff(3);
         numCoeff << size, size, size;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         DataContainer dc1(desc);
 

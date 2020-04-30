@@ -10,6 +10,7 @@
 #include <catch2/catch.hpp>
 #include "LinearResidual.h"
 #include "Identity.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -49,7 +50,7 @@ SCENARIO("Trivial LinearResidual")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 11, 33, 55;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         WHEN("instantiating")
         {
@@ -94,7 +95,7 @@ SCENARIO("LinearResidual with just a data vector")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 18, 36;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
@@ -143,11 +144,11 @@ SCENARIO("LinearResidual with just an operator")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 11, 33, 55;
-        DataDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddDomain(numCoeff);
 
         IndexVector_t numCoeff2(2);
         numCoeff2 << 18, 36;
-        DataDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddRange(numCoeff2);
 
         MockOperator mockOp(ddDomain, ddRange);
 
@@ -193,10 +194,10 @@ SCENARIO("LinearResidual with operator and data")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 11, 33, 55;
-        DataDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddDomain(numCoeff);
         IndexVector_t numCoeff2(2);
         numCoeff2 << 18, 36;
-        DataDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddRange(numCoeff2);
 
         MockOperator mockOp(ddDomain, ddRange);
 

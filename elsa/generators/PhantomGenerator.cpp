@@ -1,6 +1,7 @@
 #include "PhantomGenerator.h"
 #include "EllipseGenerator.h"
 #include "Logger.h"
+#include "VolumeDescriptor.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -24,7 +25,7 @@ namespace elsa
         Logger::get("PhantomGenerator")
             ->info("creating modified Shepp Logan phantom of size {}^{}", sizes[0], sizes.size());
 
-        DataDescriptor dd(sizes);
+        VolumeDescriptor dd(sizes);
         DataContainer<data_t> dc(dd);
 
         if (sizes.size() == 2) {

@@ -8,6 +8,7 @@
 
 #include <catch2/catch.hpp>
 #include "RandomBlocksDescriptor.h"
+#include "VolumeDescriptor.h"
 #include <stdexcept>
 
 using namespace elsa;
@@ -31,7 +32,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
         offsets[0] = 0;
         for (index_t i = 0; i < blocks; i++) {
             index_t n = 1 + std::rand() % 100;
-            descriptors.push_back(std::make_unique<DataDescriptor>(IndexVector_t::Constant(1, n)));
+            descriptors.emplace_back(
+                std::make_unique<VolumeDescriptor>(IndexVector_t::Constant(1, n)));
             size += n;
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + n;
@@ -76,7 +78,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                  "dimensions")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
-                DataDescriptor dd(size);
+                VolumeDescriptor dd(size);
                 REQUIRE(bd != dd);
                 REQUIRE(dd != bd);
             }
@@ -85,7 +87,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                  "size but a different number of blocks")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
-                DataDescriptor dd(size);
+                VolumeDescriptor dd(size);
                 std::vector<std::unique_ptr<DataDescriptor>> vec;
                 vec.push_back(dd.clone());
                 RandomBlocksDescriptor bd2(vec);
@@ -146,7 +148,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
         for (index_t i = 0; i < blocks; i++) {
             IndexVector_t coeffs(2);
             coeffs << 1 + std::rand() % 100, 1 + std::rand() % 100;
-            descriptors.push_back(std::make_unique<DataDescriptor>(coeffs));
+            descriptors.emplace_back(std::make_unique<VolumeDescriptor>(coeffs));
             size += coeffs.prod();
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + coeffs.prod();
@@ -191,7 +193,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                  "dimensions")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
-                DataDescriptor dd(size);
+                VolumeDescriptor dd(size);
                 REQUIRE(bd != dd);
                 REQUIRE(dd != bd);
             }
@@ -200,7 +202,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                  "size but a different number of blocks")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
-                DataDescriptor dd(size);
+                VolumeDescriptor dd(size);
                 std::vector<std::unique_ptr<DataDescriptor>> vec;
                 vec.push_back(dd.clone());
                 RandomBlocksDescriptor bd2(vec);
@@ -213,7 +215,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
             {
                 std::vector<std::unique_ptr<DataDescriptor>> descriptors2;
                 for (const auto& desc : descriptors) {
-                    auto linearized = std::make_unique<DataDescriptor>(
+                    auto linearized = std::make_unique<VolumeDescriptor>(
                         IndexVector_t::Constant(1, desc->getNumberOfCoefficients()));
                     descriptors2.push_back(std::move(linearized));
                 }
@@ -279,7 +281,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
             for (int j = 0; j < coeffs.size(); j++)
                 coeffs[j] = 1 + std::abs(coeffs[j]) % 100;
 
-            descriptors.push_back(std::make_unique<DataDescriptor>(coeffs));
+            descriptors.emplace_back(std::make_unique<VolumeDescriptor>(coeffs));
             size += coeffs.prod();
 
             if (i != blocks - 1)
@@ -325,7 +327,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                  "dimensions")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
-                DataDescriptor dd(size);
+                VolumeDescriptor dd(size);
                 REQUIRE(bd != dd);
                 REQUIRE(dd != bd);
             }
@@ -334,7 +336,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                  "size but a different number of blocks")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
-                DataDescriptor dd(size);
+                VolumeDescriptor dd(size);
                 std::vector<std::unique_ptr<DataDescriptor>> vec;
                 vec.push_back(dd.clone());
                 RandomBlocksDescriptor bd2(vec);
@@ -347,7 +349,7 @@ SCENARIO("Constructing RandomBlocksDescriptors")
             {
                 std::vector<std::unique_ptr<DataDescriptor>> descriptors2;
                 for (const auto& desc : descriptors) {
-                    auto linearized = std::make_unique<DataDescriptor>(
+                    auto linearized = std::make_unique<VolumeDescriptor>(
                         IndexVector_t::Constant(1, desc->getNumberOfCoefficients()));
                     descriptors2.push_back(std::move(linearized));
                 }
@@ -412,7 +414,8 @@ SCENARIO("Cloning RandomBlocksDescriptors")
         offsets[0] = 0;
         for (index_t i = 0; i < blocks; i++) {
             index_t n = 1 + std::rand() % 100;
-            descriptors.push_back(std::make_unique<DataDescriptor>(IndexVector_t::Constant(1, n)));
+            descriptors.emplace_back(
+                std::make_unique<VolumeDescriptor>(IndexVector_t::Constant(1, n)));
             size += n;
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + n;
@@ -443,7 +446,7 @@ SCENARIO("Cloning RandomBlocksDescriptors")
         for (index_t i = 0; i < blocks; i++) {
             IndexVector_t coeffs(2);
             coeffs << 1 + std::rand() % 100, 1 + std::rand() % 100;
-            descriptors.push_back(std::make_unique<DataDescriptor>(coeffs));
+            descriptors.emplace_back(std::make_unique<VolumeDescriptor>(coeffs));
             size += coeffs.prod();
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + coeffs.prod();
@@ -477,7 +480,7 @@ SCENARIO("Cloning RandomBlocksDescriptors")
             for (int j = 0; j < coeffs.size(); j++)
                 coeffs[j] = 1 + std::abs(coeffs[j]) % 100;
 
-            descriptors.push_back(std::make_unique<DataDescriptor>(coeffs));
+            descriptors.emplace_back(std::make_unique<VolumeDescriptor>(coeffs));
             size += coeffs.prod();
 
             if (i != blocks - 1)

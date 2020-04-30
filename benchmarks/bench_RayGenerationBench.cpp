@@ -9,6 +9,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 
 #include <catch2/catch.hpp>
+#include "VolumeDescriptor.h"
 #include "Geometry.h"
 #include <string>
 #include <cstdlib>
@@ -47,11 +48,11 @@ TEST_CASE("Ray generation for 2D")
 {
     IndexVector_t volCoeff(2);
     volCoeff << 5, 5;
-    DataDescriptor ddVol(volCoeff);
+    VolumeDescriptor ddVol(volCoeff);
 
     IndexVector_t detCoeff(1);
     detCoeff << 5;
-    DataDescriptor ddDet(detCoeff);
+    VolumeDescriptor ddDet(detCoeff);
 
     real_t s2c = 10;
     real_t c2d = 4;
@@ -98,11 +99,11 @@ TEST_CASE("Ray generation for 3D")
 {
     IndexVector_t volCoeff(3);
     volCoeff << 5, 5, 5;
-    DataDescriptor ddVol(volCoeff);
+    VolumeDescriptor ddVol(volCoeff);
 
     IndexVector_t detCoeff(2);
     detCoeff << 5, 5;
-    DataDescriptor ddDet(detCoeff);
+    VolumeDescriptor ddDet(detCoeff);
 
     real_t s2c = 10;
     real_t c2d = 4;

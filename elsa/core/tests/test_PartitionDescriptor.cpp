@@ -8,6 +8,7 @@
 
 #include <catch2/catch.hpp>
 #include "PartitionDescriptor.h"
+#include "VolumeDescriptor.h"
 #include <stdexcept>
 
 using namespace elsa;
@@ -16,7 +17,7 @@ SCENARIO("Constructing PartitionDescriptors")
 {
     GIVEN("a 1D descriptor")
     {
-        DataDescriptor dd(IndexVector_t::Constant(1, 10));
+        VolumeDescriptor dd(IndexVector_t::Constant(1, 10));
 
         WHEN("partitioning it into 1 blocks")
         {
@@ -48,7 +49,7 @@ SCENARIO("Constructing PartitionDescriptors")
             {
                 REQUIRE(bd.getNumberOfBlocks() == blocks);
 
-                DataDescriptor bd0(IndexVector_t::Constant(1, 2), dd.getSpacingPerDimension());
+                VolumeDescriptor bd0(IndexVector_t::Constant(1, 2), dd.getSpacingPerDimension());
                 for (index_t i = 0; i < blocks; ++i)
                     REQUIRE(bd.getDescriptorOfBlock(i) == bd0);
 
@@ -119,14 +120,14 @@ SCENARIO("Constructing PartitionDescriptors")
     {
         IndexVector_t sizeVector(2);
         sizeVector << 11, 102;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
 
         IndexVector_t coeffs(2);
         coeffs << 11, 10;
-        DataDescriptor bd0(coeffs, dd.getSpacingPerDimension());
+        VolumeDescriptor bd0(coeffs, dd.getSpacingPerDimension());
 
         coeffs[1] = 11;
-        DataDescriptor bdn(coeffs, dd.getSpacingPerDimension());
+        VolumeDescriptor bdn(coeffs, dd.getSpacingPerDimension());
 
         WHEN("partitioning it into 10 blocks")
         {
@@ -228,10 +229,10 @@ SCENARIO("Constructing PartitionDescriptors")
     {
         IndexVector_t sizeVector(3);
         sizeVector << 101, 42, 750;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
 
         sizeVector[2] = 30;
-        DataDescriptor bd0(sizeVector);
+        VolumeDescriptor bd0(sizeVector);
         WHEN("creating 25 blocks")
         {
             index_t blocks = 25;
@@ -327,7 +328,7 @@ SCENARIO("Cloning PartitionDescriptors")
     {
         IndexVector_t sizeVector(1);
         sizeVector << 3891;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
         index_t blocks = 21;
 
         WHEN("cloning the descriptor")
@@ -348,7 +349,7 @@ SCENARIO("Cloning PartitionDescriptors")
     {
         IndexVector_t sizeVector(2);
         sizeVector << 43, 112;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
         index_t blocks = 77;
 
         WHEN("cloning the descriptor")
@@ -369,7 +370,7 @@ SCENARIO("Cloning PartitionDescriptors")
     {
         IndexVector_t sizeVector(3);
         sizeVector << 47, 11, 53;
-        DataDescriptor dd(sizeVector);
+        VolumeDescriptor dd(sizeVector);
         index_t blocks = 13;
 
         WHEN("cloning the descriptor")

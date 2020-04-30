@@ -9,6 +9,7 @@
 
 #include <catch2/catch.hpp>
 #include "FiniteDifferences.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -18,11 +19,11 @@ SCENARIO("Constructing a FiniteDifferences operator")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 143, 48;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         IndexVector_t rangeCoeffs(3);
         rangeCoeffs << 143, 48, 2;
-        DataDescriptor ddRange(rangeCoeffs);
+        VolumeDescriptor ddRange(rangeCoeffs);
 
         WHEN("instantiating a FiniteDifferences operator")
         {
@@ -55,7 +56,7 @@ SCENARIO("Testing FiniteDifferences in 1D")
     {
         IndexVector_t numCoeff(1);
         numCoeff << 5;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
         RealVector_t data(dd.getNumberOfCoefficients());
         data << 30, 3, 2, -1, 7;
 
@@ -129,7 +130,7 @@ SCENARIO("Testing FiniteDifferences in 2D")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 4, 4;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
         RealVector_t data(dd.getNumberOfCoefficients());
         data << 16, 5, 9, 4, 2, 11, 7, 14, 3, 10, 6, 15, 13, 8, 12, 1;
         DataContainer dc(dd, data);
@@ -190,7 +191,7 @@ SCENARIO("Testing FiniteDifferences in 2D with not all dimensions active")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 4, 4;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
         RealVector_t data(dd.getNumberOfCoefficients());
         data << 16, 5, 9, 4, 2, 11, 7, 14, 3, 10, 6, 15, 13, 8, 12, 1;
         DataContainer dc(dd, data);

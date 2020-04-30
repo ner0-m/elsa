@@ -1,5 +1,6 @@
 #include "MHDHandler.h"
 #include "Logger.h"
+#include "VolumeDescriptor.h"
 
 #include <stdexcept>
 
@@ -183,8 +184,8 @@ namespace elsa
                 dimSpacing[i] = dimSpacingVec[static_cast<std::size_t>(i)];
         }
 
-        return std::make_tuple(std::make_unique<DataDescriptor>(dimSizes, dimSpacing), rawDataPath,
-                               dataType);
+        return std::make_tuple(std::make_unique<VolumeDescriptor>(dimSizes, dimSpacing),
+                               rawDataPath, dataType);
     }
 
     template <typename data_t>

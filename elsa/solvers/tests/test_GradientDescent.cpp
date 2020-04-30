@@ -14,6 +14,7 @@
 #include "LinearResidual.h"
 #include "L2NormPow2.h"
 #include "Logger.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -26,7 +27,7 @@ SCENARIO("Solving a simple linear problem")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 24;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
@@ -66,7 +67,7 @@ SCENARIO("Solving a Tikhonov optimization problem")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 24;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();

@@ -20,6 +20,7 @@
 #include "TikhonovProblem.h"
 #include "BlockLinearOperator.h"
 #include "RandomBlocksDescriptor.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -29,7 +30,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
     {
         IndexVector_t numCoeff(2);
         numCoeff << 7, 13;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
@@ -96,7 +97,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
     {
         IndexVector_t numCoeff(3);
         numCoeff << 7, 13, 17;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
@@ -173,7 +174,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
     GIVEN("an optimization problem with only a (w)ls data term")
     {
-        DataDescriptor desc{IndexVector_t::Constant(1, 343)};
+        VolumeDescriptor desc{IndexVector_t::Constant(1, 343)};
 
         Scaling<TestType> W{desc, static_cast<TestType>(3.0)};
 
@@ -200,7 +201,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
     GIVEN("an optimization problem with a non-(w)ls data term")
     {
-        DataDescriptor desc{IndexVector_t::Constant(1, 343)};
+        VolumeDescriptor desc{IndexVector_t::Constant(1, 343)};
 
         Quadric<TestType> quadric{desc};
         Problem prob{quadric};
@@ -213,7 +214,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
     GIVEN("an optimization problem with a non-(w)ls regularization term")
     {
-        DataDescriptor desc{IndexVector_t::Constant(1, 343)};
+        VolumeDescriptor desc{IndexVector_t::Constant(1, 343)};
 
         Quadric<TestType> quadric{desc};
         RegularizationTerm regTerm{static_cast<TestType>(5), quadric};
@@ -227,7 +228,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
     GIVEN("an optimization problem with a wls data term that has negative weighting factors")
     {
-        DataDescriptor desc{IndexVector_t::Constant(1, 343)};
+        VolumeDescriptor desc{IndexVector_t::Constant(1, 343)};
 
         Scaling<TestType> W1{desc, static_cast<TestType>(-3.0)};
 
@@ -275,7 +276,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
     GIVEN("an optimization problem with a (w)ls regularization term that has negative weighting "
           "factors")
     {
-        DataDescriptor desc{IndexVector_t::Constant(1, 343)};
+        VolumeDescriptor desc{IndexVector_t::Constant(1, 343)};
 
         Scaling<TestType> W1{desc, static_cast<TestType>(-3.0)};
 
@@ -310,7 +311,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
     GIVEN("an OptimizationProblem with only (w)ls terms")
     {
-        DataDescriptor desc{IndexVector_t::Constant(1, 343)};
+        VolumeDescriptor desc{IndexVector_t::Constant(1, 343)};
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec =
             Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343);
         DataContainer<TestType> b{desc, vec};
@@ -396,7 +397,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
     GIVEN("a TikhonovProblem with L2 regularization")
     {
-        DataDescriptor desc{IndexVector_t::Constant(1, 343)};
+        VolumeDescriptor desc{IndexVector_t::Constant(1, 343)};
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec =
             Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343);
         DataContainer<TestType> b{desc, vec};

@@ -8,6 +8,7 @@
 
 #include <catch2/catch.hpp>
 #include "Identity.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -17,7 +18,7 @@ SCENARIO("Constructing an Identity operator")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 13, 45, 28;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         WHEN("instantiating an Identity operator")
         {
@@ -50,7 +51,7 @@ SCENARIO("Using Identity")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 11, 13;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
         DataContainer input(dd);
         input = 3.3f;
 

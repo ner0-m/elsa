@@ -5,6 +5,7 @@
 #include <catch2/catch.hpp>
 #include "RegularizationTerm.h"
 #include "L2NormPow2.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -14,7 +15,7 @@ SCENARIO("Testing RegularizationTerm")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 7, 16;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         real_t weight = 2.5;
         L2NormPow2 functional(dd);
@@ -35,7 +36,7 @@ SCENARIO("Testing RegularizationTerm")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 11, 17, 23;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         auto weight = real_t{3.1f};
         L2NormPow2 functional(dd);

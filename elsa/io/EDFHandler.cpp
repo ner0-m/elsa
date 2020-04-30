@@ -1,5 +1,6 @@
 #include "EDFHandler.h"
 #include "Logger.h"
+#include "VolumeDescriptor.h"
 
 #include <stdexcept>
 
@@ -208,7 +209,7 @@ namespace elsa
                 dimSpacingVec[i] = spacing[static_cast<std::size_t>(i)];
         }
 
-        return std::make_pair(std::make_unique<DataDescriptor>(dimSizeVec, dimSpacingVec),
+        return std::make_pair(std::make_unique<VolumeDescriptor>(dimSizeVec, dimSpacingVec),
                               dataType);
     }
 

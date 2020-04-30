@@ -12,6 +12,7 @@
 #include "WeightedL2NormPow2.h"
 #include "LinearResidual.h"
 #include "Identity.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -21,7 +22,7 @@ SCENARIO("Testing the weighted, squared l2 norm functional")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 7, 17;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t scalingData(dd.getNumberOfCoefficients());
         scalingData.setRandom();
@@ -74,7 +75,7 @@ SCENARIO("Testing the weighted, squared l2 norm functional")
         // linear residual
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();

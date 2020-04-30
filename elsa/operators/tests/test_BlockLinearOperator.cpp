@@ -4,6 +4,7 @@
 #include "PartitionDescriptor.h"
 #include "RandomBlocksDescriptor.h"
 #include "BlockLinearOperator.h"
+#include "VolumeDescriptor.h"
 #include "Identity.h"
 #include "Scaling.h"
 
@@ -17,11 +18,11 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
     index_t rows = 6, cols = 8;
     IndexVector_t size2D(2);
     size2D << rows, cols;
-    DataDescriptor dd{size2D};
+    VolumeDescriptor dd{size2D};
 
     auto sizeBlock = size2D;
     sizeBlock[1] *= 2;
-    DataDescriptor bdBase{sizeBlock};
+    VolumeDescriptor bdBase{sizeBlock};
     PartitionDescriptor bd{bdBase, 2};
 
     GIVEN("an empty operator list")
@@ -81,7 +82,7 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
         WHEN("creating a BlockLinearOperator with user specified descriptors from it")
         {
             IdenticalBlocksDescriptor bd2{2, dd};
-            DataDescriptor ddLinearized{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
+            VolumeDescriptor ddLinearized{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
             BlockLinearOperator<TestType> blockOp1{bd2, ddLinearized, ops, BlockType::COL};
             BlockLinearOperator<TestType> blockOp2{ddLinearized, bd2, ops, BlockType::ROW};
 
@@ -134,7 +135,7 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
     GIVEN("a list of operators with different number of dimensions")
     {
         auto iop1 = std::make_unique<Identity<TestType>>(dd);
-        DataDescriptor ddLinearized{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
+        VolumeDescriptor ddLinearized{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
         auto iop2 = std::make_unique<Identity<TestType>>(ddLinearized);
         std::vector<std::unique_ptr<LinearOperator<TestType>>> ops(0);
         ops.push_back(std::move(iop1->clone()));
@@ -172,7 +173,7 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
         WHEN("creating a BlockLinearOperator with user specified descriptors from it")
         {
             IdenticalBlocksDescriptor bd2{2, dd};
-            DataDescriptor ddLinearized{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
+            VolumeDescriptor ddLinearized{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
             BlockLinearOperator<TestType> blockOp1{bd2, dd, ops, BlockType::COL};
             BlockLinearOperator<TestType> blockOp2{dd, bd2, ops, BlockType::ROW};
 
@@ -246,7 +247,7 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
           "but different spacing")
     {
         auto iop1 = std::make_unique<Identity<TestType>>(dd);
-        DataDescriptor dds2{size2D, dd.getSpacingPerDimension() * 2};
+        VolumeDescriptor dds2{size2D, dd.getSpacingPerDimension() * 2};
         auto iop2 = std::make_unique<Identity<TestType>>(dds2);
         std::vector<std::unique_ptr<LinearOperator<TestType>>> ops(0);
         ops.push_back(std::move(iop1->clone()));
@@ -287,7 +288,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator apply", "", float, double)
     {
         IndexVector_t domainIndex(2);
         domainIndex << rows, cols;
-        DataDescriptor domainDesc(domainIndex);
+        VolumeDescriptor domainDesc(domainIndex);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec(domainDesc.getNumberOfCoefficients());
         vec << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -299,7 +300,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator apply", "", float, double)
         {
             IndexVector_t rangeIndex(2);
             rangeIndex << rows, cols * numBlks;
-            DataDescriptor rangeDesc(rangeIndex);
+            VolumeDescriptor rangeDesc(rangeIndex);
             DataContainer<TestType> range(rangeDesc);
 
             TestType scale1 = 2.f;
@@ -337,7 +338,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator apply", "", float, double)
     {
         IndexVector_t blockIndex(2);
         blockIndex << rows, cols;
-        DataDescriptor blockDesc(blockIndex);
+        VolumeDescriptor blockDesc(blockIndex);
         IdenticalBlocksDescriptor domainDesc(numBlks, blockDesc);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec(domainDesc.getNumberOfCoefficients());
@@ -355,7 +356,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator apply", "", float, double)
         {
             IndexVector_t rangeIndex(2);
             rangeIndex << rows, cols;
-            DataDescriptor rangeDesc(rangeIndex);
+            VolumeDescriptor rangeDesc(rangeIndex);
             DataContainer<TestType> range(rangeDesc);
 
             float scale1 = 2.f;
@@ -393,7 +394,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator applyAdjoint", "", float, doub
     {
         IndexVector_t rangeIndex(2);
         rangeIndex << rows, cols * numBlks;
-        DataDescriptor rangeDesc(rangeIndex);
+        VolumeDescriptor rangeDesc(rangeIndex);
 
         const index_t n = rangeDesc.getNumberOfCoefficients();
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> rangeVec(n);
@@ -407,7 +408,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator applyAdjoint", "", float, doub
         {
             IndexVector_t domainIndex(2);
             domainIndex << rows, cols;
-            DataDescriptor domainDesc(domainIndex);
+            VolumeDescriptor domainDesc(domainIndex);
 
             TestType scale1 = 2.f;
             TestType scale2 = 3.f;
@@ -435,7 +436,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator applyAdjoint", "", float, doub
     {
         IndexVector_t rangeIndex(2);
         rangeIndex << rows, cols;
-        DataDescriptor rangeDesc(rangeIndex);
+        VolumeDescriptor rangeDesc(rangeIndex);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec(rangeDesc.getNumberOfCoefficients());
         vec << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -485,7 +486,7 @@ TEMPLATE_TEST_CASE("Scenario: Cloning BlockLinearOperator", "", float, double)
     {
         IndexVector_t domainIndex(2);
         domainIndex << rows, cols;
-        DataDescriptor domainDesc(domainIndex);
+        VolumeDescriptor domainDesc(domainIndex);
 
         TestType scale1 = 2.f;
         TestType scale2 = 3.f;
@@ -515,7 +516,7 @@ TEMPLATE_TEST_CASE("Scenario: Cloning BlockLinearOperator", "", float, double)
     {
         IndexVector_t rangeIndex(2);
         rangeIndex << rows, cols;
-        DataDescriptor rangeDesc(rangeIndex);
+        VolumeDescriptor rangeDesc(rangeIndex);
 
         TestType scale1 = 2.f;
         TestType scale2 = 3.f;
@@ -550,7 +551,7 @@ TEMPLATE_TEST_CASE("Scenario: Comparing BlockLinearOperators", "", float, double
     {
         IndexVector_t domainIndex(2);
         domainIndex << rows, cols;
-        DataDescriptor domainDesc(domainIndex);
+        VolumeDescriptor domainDesc(domainIndex);
 
         TestType scale1 = 2.f;
         TestType scale2 = 3.f;

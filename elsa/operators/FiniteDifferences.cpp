@@ -1,5 +1,6 @@
 #include "FiniteDifferences.h"
 #include "Timer.h"
+#include "VolumeDescriptor.h"
 
 namespace elsa
 {
@@ -30,7 +31,7 @@ namespace elsa
         RealVector_t spacing(domainDescriptor.getNumberOfDimensions() + 1);
         spacing << domainDescriptor.getSpacingPerDimension(), 1;
 
-        this->_rangeDescriptor = std::make_unique<DataDescriptor>(coefficients, spacing);
+        this->_rangeDescriptor = std::make_unique<VolumeDescriptor>(coefficients, spacing);
 
         precomputeHelpers();
     }

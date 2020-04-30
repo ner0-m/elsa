@@ -123,11 +123,11 @@ namespace elsa
         return _blockOffsets == otherBlock->_blockOffsets;
     }
 
-    std::unique_ptr<DataDescriptor>
+    std::unique_ptr<VolumeDescriptor>
         PartitionDescriptor::generateDescriptorOfPartition(index_t numberOfSlices) const
     {
         auto coeffsPerDim = getNumberOfCoefficientsPerDimension();
         coeffsPerDim[_numberOfDimensions - 1] = numberOfSlices;
-        return std::make_unique<DataDescriptor>(coeffsPerDim, getSpacingPerDimension());
+        return std::make_unique<VolumeDescriptor>(coeffsPerDim, getSpacingPerDimension());
     }
 } // namespace elsa

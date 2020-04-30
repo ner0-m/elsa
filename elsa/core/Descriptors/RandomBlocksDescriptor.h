@@ -16,7 +16,9 @@ namespace elsa
      * There are no restrictions whatsoever imposed on the descriptors of different blocks.
      * Different blocks may even have different number of dimensions.
      *
-     * The full descriptor will always be one-dimensional, and with a spacing of one.
+     * The full descriptor will always be one-dimensional, and with a spacing of one. The size of it
+     * will be the sum of the sizes of all the descriptors, i.e. the sizes returned by
+     * DataDescriptor::getNumberOfCoefficients() for each descriptor in the list.
      */
     class RandomBlocksDescriptor : public BlockDescriptor
     {

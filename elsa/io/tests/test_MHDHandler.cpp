@@ -8,6 +8,7 @@
 
 #include <catch2/catch.hpp>
 #include "MHDHandler.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -17,7 +18,7 @@ SCENARIO("Reading and write data with MHDHandler")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 11, 17;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
         DataContainer dc(dd);
         dc = 1;
 

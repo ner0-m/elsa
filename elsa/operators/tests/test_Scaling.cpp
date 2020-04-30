@@ -10,6 +10,7 @@
 
 #include <catch2/catch.hpp>
 #include "Scaling.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -19,7 +20,7 @@ SCENARIO("Constructing a Scaling operator")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 11, 17;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         WHEN("instantiating an isotropic scaling operator")
         {
@@ -80,7 +81,7 @@ SCENARIO("Using a Scaling operator")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 34, 13;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
         DataContainer input(dd);
         real_t inputScalar{2.5f};
         input = inputScalar;

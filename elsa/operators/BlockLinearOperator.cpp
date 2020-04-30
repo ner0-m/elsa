@@ -1,6 +1,7 @@
 #include "BlockLinearOperator.h"
 #include "PartitionDescriptor.h"
 #include "RandomBlocksDescriptor.h"
+#include "DescriptorUtils.h"
 
 #include <algorithm>
 
@@ -204,7 +205,7 @@ namespace elsa
 
         switch (blockType) {
             case BlockType::ROW:
-                return DataDescriptor::bestCommon(vec);
+                return bestCommon(vec);
 
             case BlockType::COL:
                 return bestBlockDescriptor(vec);
@@ -228,7 +229,7 @@ namespace elsa
                 return bestBlockDescriptor(vec);
 
             case BlockType::COL:
-                return DataDescriptor::bestCommon(vec);
+                return bestCommon(vec);
 
             default:
                 throw std::invalid_argument("BlockLinearOpearator: unsupported block type");
@@ -273,10 +274,10 @@ namespace elsa
 
             coeffs[numDims - 1] = lastDimSplit.sum();
             if (allSameSpacing) {
-                DataDescriptor tmp(coeffs, spacing);
+                VolumeDescriptor tmp(coeffs, spacing);
                 return std::make_unique<PartitionDescriptor>(tmp, lastDimSplit);
             } else {
-                DataDescriptor tmp(coeffs);
+                VolumeDescriptor tmp(coeffs);
                 return std::make_unique<PartitionDescriptor>(tmp, lastDimSplit);
             }
         }

@@ -1,10 +1,11 @@
 #include "RandomBlocksDescriptor.h"
+#include "VolumeDescriptor.h"
 
 namespace elsa
 {
     RandomBlocksDescriptor::RandomBlocksDescriptor(
         const std::vector<std::unique_ptr<DataDescriptor>>& blockDescriptors)
-        : BlockDescriptor{DataDescriptor{determineSize(blockDescriptors)}},
+        : BlockDescriptor{VolumeDescriptor{determineSize(blockDescriptors)}},
           _blockDescriptors(0),
           _blockOffsets{blockDescriptors.size()}
     {
@@ -19,7 +20,7 @@ namespace elsa
 
     RandomBlocksDescriptor::RandomBlocksDescriptor(
         std::vector<std::unique_ptr<DataDescriptor>>&& blockDescriptors)
-        : BlockDescriptor{DataDescriptor{determineSize(blockDescriptors)}},
+        : BlockDescriptor{VolumeDescriptor{determineSize(blockDescriptors)}},
           _blockDescriptors{std::move(blockDescriptors)},
           _blockOffsets{_blockDescriptors.size()}
     {

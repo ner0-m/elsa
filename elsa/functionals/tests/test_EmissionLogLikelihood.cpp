@@ -14,6 +14,7 @@
 #include "LinearResidual.h"
 #include "Scaling.h"
 #include "Identity.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -23,7 +24,7 @@ SCENARIO("Testing the EmissionLogLikelihood functional")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 9, 15, 19;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t y(dd.getNumberOfCoefficients());
         y.setRandom();
@@ -133,7 +134,7 @@ SCENARIO("Testing the EmissionLogLikelihood functional")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 3, 15, 21;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t resData(dd.getNumberOfCoefficients());
         resData.setRandom();

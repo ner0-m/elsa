@@ -10,6 +10,7 @@
 
 #include <catch2/catch.hpp>
 #include "DataContainer.h"
+#include "VolumeDescriptor.h"
 #include <string>
 #include <cstdlib>
 
@@ -20,7 +21,7 @@ TEST_CASE("DataContainer construction benchmark")
     const index_t dim = 1024;
     IndexVector_t numCoeff(3);
     numCoeff << dim, dim, dim;
-    DataDescriptor desc(numCoeff);
+    VolumeDescriptor desc(numCoeff);
 
     BENCHMARK("only allocating")
     {

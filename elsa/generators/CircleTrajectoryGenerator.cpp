@@ -1,5 +1,6 @@
 #include "CircleTrajectoryGenerator.h"
 #include "Logger.h"
+#include "VolumeDescriptor.h"
 
 #include <stdexcept>
 
@@ -32,7 +33,7 @@ namespace elsa
             spacing << volumeDescriptor.getSpacingPerDimension()[0],
                 volumeDescriptor.getSpacingPerDimension()[1], 1;
         }
-        DataDescriptor sinoDescriptor(coeffs, spacing);
+        VolumeDescriptor sinoDescriptor(coeffs, spacing);
 
         std::vector<Geometry> geometryList;
 

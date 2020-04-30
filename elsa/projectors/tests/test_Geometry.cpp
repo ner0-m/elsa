@@ -8,6 +8,7 @@
 
 #include <catch2/catch.hpp>
 #include "Geometry.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -17,11 +18,11 @@ SCENARIO("Testing 2D geometries")
     {
         IndexVector_t volCoeff(2);
         volCoeff << 5, 5;
-        DataDescriptor ddVol(volCoeff);
+        VolumeDescriptor ddVol(volCoeff);
 
         IndexVector_t detCoeff(1);
         detCoeff << 5;
-        DataDescriptor ddDet(detCoeff);
+        VolumeDescriptor ddDet(detCoeff);
 
         real_t s2c = 10;
         real_t c2d = 4;
@@ -273,11 +274,11 @@ SCENARIO("Testing 3D geometries")
     {
         IndexVector_t volCoeff(3);
         volCoeff << 5, 5, 5;
-        DataDescriptor ddVol(volCoeff);
+        VolumeDescriptor ddVol(volCoeff);
 
         IndexVector_t detCoeff(2);
         detCoeff << 5, 5;
-        DataDescriptor ddDet(detCoeff);
+        VolumeDescriptor ddDet(detCoeff);
 
         real_t s2c = 10;
         real_t c2d = 4;

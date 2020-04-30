@@ -12,6 +12,7 @@
 #include "Huber.h"
 #include "LinearResidual.h"
 #include "Identity.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -21,7 +22,7 @@ SCENARIO("Testing the Huber norm functional")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 7, 16, 29;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         real_t delta = 10;
 
@@ -91,7 +92,7 @@ SCENARIO("Testing the Huber norm functional")
         // linear residual
         IndexVector_t numCoeff(2);
         numCoeff << 47, 11;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();

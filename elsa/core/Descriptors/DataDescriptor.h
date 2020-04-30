@@ -9,15 +9,18 @@ namespace elsa
 {
 
     /**
-     * \brief Class representing metadata for linearized n-dimensional signal stored in memory
+     * \brief Base class for representing metadata for linearized n-dimensional signal stored in
+     * memory
      *
      * \author Matthias Wieczorek - initial code
      * \author Tobias Lasser - modularization, modernization
      * \author Maximilian Hornung - various enhancements
+     * \author David Frank - inheritance restructuring
      *
-     * This class provides metadata about a signal that is stored in memory (typically a
-     * DataContainer). This signal can be n-dimensional, and will be stored in memory in a
-     * linearized fashion.
+     * This class provides an interface for metadata about a signal that is stored in memory. This
+     * base class provides other descriptor subclasses with a fundamental interface to access the
+     * important parameters (i.e. dimensionality, size and spacing) of the metadata.
+     *
      */
     class DataDescriptor : public Cloneable<DataDescriptor>
     {
@@ -25,8 +28,8 @@ namespace elsa
         /// delete default constructor (having no metadata is invalid)
         DataDescriptor() = delete;
 
-        /// default destructor
-        ~DataDescriptor() override = default;
+        /// Pure virtual destructor
+        virtual ~DataDescriptor() = 0;
 
         /**
          * \brief Constructor for DataDescriptor, accepts dimension and size
@@ -90,35 +93,6 @@ namespace elsa
          */
         IndexVector_t getCoordinateFromIndex(index_t index) const;
 
-        /**
-         * \brief Finds the descriptor with the same number of coefficients as the descriptors in
-         * the list that retains as much information as possible
-         *
-         * \param[in] descriptorList a vector of plain pointers to DataDescriptor
-         *
-         * \return std::unique_ptr<DataDescriptor> the best common descriptor
-         *
-         * \throw std::invalid_argument if the vector is empty or the descriptors in the vector
-         * don't all have the same size
-         *
-         * If all descriptors are equal, a clone of the first descriptor in the list is returned.
-         * If all descriptors have a common base descriptor, that data descriptor is returned.
-         * If the base descriptors only differ in spacing, the base descriptor with a uniform
-         * spacing of 1 is returned.
-         * Otherwise, the linearized descriptor with a spacing of 1 is returned.
-         */
-        static std::unique_ptr<DataDescriptor>
-            bestCommon(const std::vector<const DataDescriptor*>& descriptorList);
-
-        /// convenience overload for invoking bestCommon() with a number of const DataDescriptor&
-        template <
-            typename... DescriptorType,
-            typename = std::enable_if_t<(std::is_base_of_v<DataDescriptor, DescriptorType> && ...)>>
-        static std::unique_ptr<DataDescriptor> bestCommon(const DescriptorType&... descriptors)
-        {
-            return bestCommon(std::vector{static_cast<const DataDescriptor*>(&descriptors)...});
-        }
-
     protected:
         /// Number of dimensions
         index_t _numberOfDimensions;
@@ -141,9 +115,6 @@ namespace elsa
 
         /// default move constructor, hidden from non-derived classes to prevent potential slicing
         DataDescriptor(DataDescriptor&&) = default;
-
-        /// implement the polymorphic clone operation
-        DataDescriptor* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const DataDescriptor& other) const override;

@@ -1,4 +1,5 @@
 #include "IdenticalBlocksDescriptor.h"
+#include "VolumeDescriptor.h"
 
 namespace elsa
 {
@@ -48,8 +49,8 @@ namespace elsa
         return true;
     }
 
-    DataDescriptor IdenticalBlocksDescriptor::initBase(index_t numberOfBlocks,
-                                                       const DataDescriptor& dataDescriptor)
+    VolumeDescriptor IdenticalBlocksDescriptor::initBase(index_t numberOfBlocks,
+                                                         const DataDescriptor& dataDescriptor)
     {
         if (numberOfBlocks < 1)
             throw std::invalid_argument(
@@ -63,6 +64,6 @@ namespace elsa
         numberOfCoeffs[numDim - 1] = numberOfBlocks;
         spacingOfCoeffs[numDim - 1] = 1;
 
-        return DataDescriptor(numberOfCoeffs, spacingOfCoeffs);
+        return VolumeDescriptor(numberOfCoeffs, spacingOfCoeffs);
     }
 } // namespace elsa

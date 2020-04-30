@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <typeinfo>
 
+#include "DescriptorUtils.h"
+
 namespace elsa
 {
     template <typename data_t>
@@ -263,12 +265,10 @@ namespace elsa
                                            const LinearOperator<data_t>& rhs, CompositeMode mode)
         : _domainDescriptor{mode == CompositeMode::MULT
                                 ? rhs.getDomainDescriptor().clone()
-                                : DataDescriptor::bestCommon(*lhs._domainDescriptor,
-                                                             *rhs._domainDescriptor)},
-          _rangeDescriptor{
-              mode == CompositeMode::MULT
-                  ? lhs.getRangeDescriptor().clone()
-                  : DataDescriptor::bestCommon(*lhs._rangeDescriptor, *rhs._rangeDescriptor)},
+                                : bestCommon(*lhs._domainDescriptor, *rhs._domainDescriptor)},
+          _rangeDescriptor{mode == CompositeMode::MULT
+                               ? lhs.getRangeDescriptor().clone()
+                               : bestCommon(*lhs._rangeDescriptor, *rhs._rangeDescriptor)},
           _lhs{lhs.clone()},
           _rhs{rhs.clone()},
           _isComposite{true},

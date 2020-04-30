@@ -13,6 +13,7 @@
 #include "Scaling.h"
 #include "LinearResidual.h"
 #include "L2NormPow2.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -22,7 +23,7 @@ SCENARIO("Testing Problem without regularization")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 17, 23;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
@@ -111,7 +112,7 @@ SCENARIO("Testing Problem with one regularization term")
         // least squares data term
         IndexVector_t numCoeff(2);
         numCoeff << 23, 47;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
@@ -207,7 +208,7 @@ SCENARIO("Testing Problem with several regularization terms")
         // least squares data term
         IndexVector_t numCoeff(3);
         numCoeff << 17, 33, 52;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();

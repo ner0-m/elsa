@@ -8,6 +8,7 @@
 
 #include <catch2/catch.hpp>
 #include "EllipseGenerator.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -19,7 +20,7 @@ SCENARIO("Drawing a rotated filled ellipse in 2d")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 200, 200;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
         DataContainer dc(dd);
 
         Eigen::Matrix<index_t, 2, 1> center{100, 100};
@@ -80,7 +81,7 @@ SCENARIO("Drawing a rotated filled ellipsoid in 3d")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 64, 64, 64;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
         DataContainer dc(dd);
 
         Eigen::Matrix<index_t, 3, 1> center{32, 32, 32};

@@ -14,6 +14,7 @@
 #include "L2NormPow2.h"
 #include "L1Norm.h"
 #include "TikhonovProblem.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -25,7 +26,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with one regularization te
         // least squares data term
         IndexVector_t numCoeff(2);
         numCoeff << 23, 47;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
@@ -158,7 +159,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with several regularizatio
         // least squares data term
         IndexVector_t numCoeff(3);
         numCoeff << 17, 33, 52;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();

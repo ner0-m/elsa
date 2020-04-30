@@ -5,6 +5,7 @@
 #include "Geometry.h"
 #include "testHelpers.h"
 #include "Logger.h"
+#include "VolumeDescriptor.h"
 
 #include <array>
 
@@ -34,8 +35,8 @@ TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", SiddonsMet
         const index_t numImgs = 50;
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         volume = 1;
         DataContainer<data_t> sino(sinoDescriptor);
@@ -83,8 +84,8 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
         const index_t numImgs = 1;
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
@@ -128,8 +129,8 @@ TEMPLATE_TEST_CASE("Scenario: Output DataContainer<data_t> is not zero initializ
         const index_t numImgs = 1;
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
@@ -183,8 +184,8 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
         const index_t numImgs = 1;
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         volume = 1;
@@ -298,8 +299,8 @@ TEMPLATE_TEST_CASE("Scenario: Rays not intersecting the bounding box are present
         const index_t numImgs = 1;
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         volume = 1;
@@ -366,8 +367,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         const index_t numImgs = 1;
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
@@ -496,8 +497,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         const index_t numImgs = 1;
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
@@ -681,8 +682,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         const index_t numImgs = 4;
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
@@ -736,8 +737,8 @@ TEMPLATE_TEST_CASE("Scenario: Axis-aligned rays are present", "", SiddonsMethodC
         const index_t numImgs = 6;
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
@@ -806,8 +807,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         const index_t numImgs = 1;
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;
@@ -1182,8 +1183,8 @@ TEMPLATE_TEST_CASE("Scenario: Projection under an angle", "", SiddonsMethodCUDA<
         const index_t numImgs = 1;
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
-        DataDescriptor volumeDescriptor(volumeDims);
-        DataDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer<data_t> volume(volumeDescriptor);
         DataContainer<data_t> sino(sinoDescriptor);
         std::vector<Geometry> geom;

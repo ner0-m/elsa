@@ -12,6 +12,7 @@
 #include "LInfNorm.h"
 #include "LinearResidual.h"
 #include "Identity.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -21,7 +22,7 @@ SCENARIO("Testing the linf norm functional")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 8, 15;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         WHEN("instantiating")
         {
@@ -63,7 +64,7 @@ SCENARIO("Testing the linf norm functional")
     {
         IndexVector_t numCoeff(3);
         numCoeff << 3, 7, 13;
-        DataDescriptor dd(numCoeff);
+        VolumeDescriptor dd(numCoeff);
 
         RealVector_t randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();

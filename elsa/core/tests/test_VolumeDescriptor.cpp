@@ -1,7 +1,7 @@
 /**
- * \file test_DataDescriptor.cpp
+ * \file test_VolumeDescriptor.cpp
  *
- * \brief Tests for DataDescriptor class
+ * \brief Tests for VolumeDescriptor class
  *
  * \author Matthias Wieczorek - initial code
  * \author David Frank - rewrite to use Catch and BDD
@@ -10,14 +10,15 @@
  */
 
 #include <catch2/catch.hpp>
-#include "DataDescriptor.h"
+#include "VolumeDescriptor.h"
 #include "PartitionDescriptor.h"
+#include "DescriptorUtils.h"
 #include <stdexcept>
 #include <iostream>
 
 using namespace elsa;
 
-SCENARIO("Constructing DataDescriptors")
+SCENARIO("Constructing VolumeDescriptors")
 {
     GIVEN("various 1D descriptor sizes")
     {
@@ -35,7 +36,7 @@ SCENARIO("Constructing DataDescriptors")
 
         WHEN("using a valid number of coefficients and no spacing")
         {
-            DataDescriptor dd(validNumCoeff);
+            VolumeDescriptor dd(validNumCoeff);
 
             THEN("everything is set correctly")
             {
@@ -52,7 +53,7 @@ SCENARIO("Constructing DataDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(invalidNumCoeff), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
             }
         }
 
@@ -60,14 +61,14 @@ SCENARIO("Constructing DataDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(invalidNumCoeff, validSpacing),
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff, validSpacing),
                                   std::invalid_argument);
             }
         }
 
         WHEN("using a valid number of coefficients and spacing")
         {
-            DataDescriptor dd(validNumCoeff, validSpacing);
+            VolumeDescriptor dd(validNumCoeff, validSpacing);
 
             THEN("everything is set correctly")
             {
@@ -85,7 +86,7 @@ SCENARIO("Constructing DataDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(validNumCoeff, invalidSpacing),
+                REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
                                   std::invalid_argument);
             }
         }
@@ -107,7 +108,7 @@ SCENARIO("Constructing DataDescriptors")
 
         WHEN("using a valid number of coefficients and no spacing")
         {
-            DataDescriptor dd(validNumCoeff);
+            VolumeDescriptor dd(validNumCoeff);
 
             THEN("everything is set correctly")
             {
@@ -124,7 +125,7 @@ SCENARIO("Constructing DataDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(invalidNumCoeff), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
             }
         }
 
@@ -135,14 +136,14 @@ SCENARIO("Constructing DataDescriptors")
 
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(invalidNumCoeff2, validSpacing),
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff2, validSpacing),
                                   std::invalid_argument);
             }
         }
 
         WHEN("using a valid number of coefficients and spacing")
         {
-            DataDescriptor dd(validNumCoeff, validSpacing);
+            VolumeDescriptor dd(validNumCoeff, validSpacing);
 
             THEN("everything is set correctly")
             {
@@ -160,7 +161,7 @@ SCENARIO("Constructing DataDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(validNumCoeff, invalidSpacing),
+                REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
                                   std::invalid_argument);
             }
         }
@@ -182,7 +183,7 @@ SCENARIO("Constructing DataDescriptors")
 
         WHEN("using a valid number of coefficients and no spacing")
         {
-            DataDescriptor dd(validNumCoeff);
+            VolumeDescriptor dd(validNumCoeff);
 
             THEN("everything is set correctly")
             {
@@ -199,7 +200,7 @@ SCENARIO("Constructing DataDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(invalidNumCoeff), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
             }
         }
 
@@ -207,14 +208,14 @@ SCENARIO("Constructing DataDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(invalidNumCoeff, validSpacing),
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff, validSpacing),
                                   std::invalid_argument);
             }
         }
 
         WHEN("using a valid number of coefficients and spacing")
         {
-            DataDescriptor dd(validNumCoeff, validSpacing);
+            VolumeDescriptor dd(validNumCoeff, validSpacing);
 
             THEN("everything is set correctly")
             {
@@ -232,24 +233,24 @@ SCENARIO("Constructing DataDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataDescriptor(validNumCoeff, invalidSpacing),
+                REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
                                   std::invalid_argument);
             }
         }
     }
 }
 
-SCENARIO("Cloning DataDescriptors")
+SCENARIO("Cloning VolumeDescriptors")
 {
     GIVEN("1D descriptors")
     {
         IndexVector_t numCoeffs = IndexVector_t::Constant(1, 17);
         RealVector_t spacing = RealVector_t::Constant(1, 2.75);
 
-        DataDescriptor dd(numCoeffs);
-        DataDescriptor ddWithSpacing(numCoeffs, spacing);
+        VolumeDescriptor dd(numCoeffs);
+        VolumeDescriptor ddWithSpacing(numCoeffs, spacing);
 
-        WHEN("cloning the DataDescriptor")
+        WHEN("cloning the VolumeDescriptor")
         {
             auto ddClone = dd.clone();
             auto ddWithSpacingClone = ddWithSpacing.clone();
@@ -273,10 +274,10 @@ SCENARIO("Cloning DataDescriptors")
         RealVector_t spacing(2);
         spacing << 1.5, 3.5;
 
-        DataDescriptor dd(numCoeffs);
-        DataDescriptor ddWithSpacing(numCoeffs, spacing);
+        VolumeDescriptor dd(numCoeffs);
+        VolumeDescriptor ddWithSpacing(numCoeffs, spacing);
 
-        WHEN("cloning the DataDescriptor")
+        WHEN("cloning the VolumeDescriptor")
         {
             auto ddClone = dd.clone();
             auto ddWithSpacingClone = ddWithSpacing.clone();
@@ -300,10 +301,10 @@ SCENARIO("Cloning DataDescriptors")
         RealVector_t spacing(3);
         spacing << 1.5, 3.5, 5.5;
 
-        DataDescriptor dd(numCoeffs);
-        DataDescriptor ddWithSpacing(numCoeffs, spacing);
+        VolumeDescriptor dd(numCoeffs);
+        VolumeDescriptor ddWithSpacing(numCoeffs, spacing);
 
-        WHEN("cloning the DataDescriptor")
+        WHEN("cloning the VolumeDescriptor")
         {
             auto ddClone = dd.clone();
             auto ddWithSpacingClone = ddWithSpacing.clone();
@@ -327,7 +328,7 @@ SCENARIO("Coordinates and indices")
         IndexVector_t numCoeffs(1);
         numCoeffs << 11;
 
-        DataDescriptor dd(numCoeffs);
+        VolumeDescriptor dd(numCoeffs);
 
         WHEN("converting coordinates to indices")
         {
@@ -371,7 +372,7 @@ SCENARIO("Coordinates and indices")
         IndexVector_t numCoeffs(2);
         numCoeffs << 11, 15;
 
-        DataDescriptor dd(numCoeffs);
+        VolumeDescriptor dd(numCoeffs);
 
         WHEN("converting coordinates to indices")
         {
@@ -430,7 +431,7 @@ SCENARIO("Coordinates and indices")
         IndexVector_t numCoeffs(3);
         numCoeffs << 9, 13, 17;
 
-        DataDescriptor dd(numCoeffs);
+        VolumeDescriptor dd(numCoeffs);
 
         WHEN("converting coordinates to indices")
         {
@@ -500,13 +501,13 @@ SCENARIO("Finding the best common descriptor")
     IndexVector_t numCoeffs(3);
     numCoeffs << 9, 13, 17;
 
-    DataDescriptor dd{numCoeffs};
+    VolumeDescriptor dd{numCoeffs};
 
     GIVEN("an empty descriptor list")
     {
         THEN("trying to determine the best common descriptor throws an error")
         {
-            REQUIRE_THROWS_AS(DataDescriptor::bestCommon(std::vector<const DataDescriptor*>{}),
+            REQUIRE_THROWS_AS(bestCommon(std::vector<const DataDescriptor*>{}),
                               std::invalid_argument);
         }
     }
@@ -516,8 +517,8 @@ SCENARIO("Finding the best common descriptor")
         PartitionDescriptor pd{dd, 5};
         THEN("the best common descriptor is the descriptor itself")
         {
-            auto common1 = DataDescriptor::bestCommon(dd);
-            auto common2 = DataDescriptor::bestCommon(pd);
+            auto common1 = bestCommon(dd);
+            auto common2 = bestCommon(pd);
 
             REQUIRE(*common1 == dd);
             REQUIRE(*common2 == pd);
@@ -531,7 +532,7 @@ SCENARIO("Finding the best common descriptor")
 
         THEN("the best common descriptor is the same as the input descriptors")
         {
-            auto common = DataDescriptor::bestCommon(pd1, pd2);
+            auto common = bestCommon(pd1, pd2);
             REQUIRE(pd1 == *common);
             REQUIRE(pd2 == *common);
         }
@@ -543,8 +544,8 @@ SCENARIO("Finding the best common descriptor")
 
         THEN("the best common descriptor is the base descriptor")
         {
-            auto common1 = DataDescriptor::bestCommon(pd, dd);
-            auto common2 = DataDescriptor::bestCommon(dd, pd);
+            auto common1 = bestCommon(pd, dd);
+            auto common2 = bestCommon(dd, pd);
 
             REQUIRE(*common1 == dd);
             REQUIRE(*common2 == dd);
@@ -553,16 +554,16 @@ SCENARIO("Finding the best common descriptor")
 
     GIVEN("a PartitionDescriptor and its base but with different spacing")
     {
-        DataDescriptor dds2{numCoeffs, dd.getSpacingPerDimension() * 2};
+        VolumeDescriptor dds2{numCoeffs, dd.getSpacingPerDimension() * 2};
         PartitionDescriptor pd{dd, 5};
         PartitionDescriptor pds2{dds2, 5};
 
         THEN("the best common descriptor is the base descriptor with default spacing")
         {
-            auto common1 = DataDescriptor::bestCommon(pd, dds2);
-            auto common2 = DataDescriptor::bestCommon(dds2, pd);
-            auto common3 = DataDescriptor::bestCommon(pds2, dd);
-            auto common4 = DataDescriptor::bestCommon(dd, pds2);
+            auto common1 = bestCommon(pd, dds2);
+            auto common2 = bestCommon(dds2, pd);
+            auto common3 = bestCommon(pds2, dd);
+            auto common4 = bestCommon(dd, pds2);
 
             REQUIRE(*common1 == dd);
             REQUIRE(*common2 == dd);
@@ -573,11 +574,11 @@ SCENARIO("Finding the best common descriptor")
 
     GIVEN("two equal non-block descriptors")
     {
-        DataDescriptor dd2{numCoeffs};
+        VolumeDescriptor dd2{numCoeffs};
 
         THEN("the best common descriptor is the same as the input descriptors")
         {
-            auto common = DataDescriptor::bestCommon(dd, dd2);
+            auto common = bestCommon(dd, dd2);
 
             REQUIRE(*common == dd);
         }
@@ -585,13 +586,13 @@ SCENARIO("Finding the best common descriptor")
 
     GIVEN("two non-block descriptors that differ only in spacing")
     {
-        DataDescriptor dds2{numCoeffs, dd.getSpacingPerDimension() * 2};
-        DataDescriptor dds3{numCoeffs, dd.getSpacingPerDimension() * 3};
+        VolumeDescriptor dds2{numCoeffs, dd.getSpacingPerDimension() * 2};
+        VolumeDescriptor dds3{numCoeffs, dd.getSpacingPerDimension() * 3};
 
         THEN("the best common descriptor is the base descriptor with default spacing")
         {
-            auto common1 = DataDescriptor::bestCommon(dds2, dds3);
-            auto common2 = DataDescriptor::bestCommon(dds3, dds2);
+            auto common1 = bestCommon(dds2, dds3);
+            auto common2 = bestCommon(dds3, dds2);
 
             REQUIRE(*common1 == dd);
             REQUIRE(*common2 == dd);
@@ -604,18 +605,18 @@ SCENARIO("Finding the best common descriptor")
         IndexVector_t numCoeffs2 = numCoeffs.reverse();
 
         std::cout << numCoeffs2.transpose() << std::endl;
-        DataDescriptor dd2{numCoeffs2};
-        DataDescriptor dds2{numCoeffs, dd.getSpacingPerDimension() * 2};
-        DataDescriptor dd2s2{numCoeffs2, dd2.getSpacingPerDimension() * 2};
+        VolumeDescriptor dd2{numCoeffs2};
+        VolumeDescriptor dds2{numCoeffs, dd.getSpacingPerDimension() * 2};
+        VolumeDescriptor dd2s2{numCoeffs2, dd2.getSpacingPerDimension() * 2};
 
         THEN("the best common descriptor is the linearized descriptor with default spacing")
         {
-            auto common1 = DataDescriptor::bestCommon(dd2, dd);
-            auto common2 = DataDescriptor::bestCommon(dd, dd2);
-            auto common3 = DataDescriptor::bestCommon(dds2, dd2s2);
-            auto common4 = DataDescriptor::bestCommon(dd2s2, dds2);
+            auto common1 = bestCommon(dd2, dd);
+            auto common2 = bestCommon(dd, dd2);
+            auto common3 = bestCommon(dds2, dd2s2);
+            auto common4 = bestCommon(dd2s2, dds2);
 
-            DataDescriptor expected{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
+            VolumeDescriptor expected{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
             REQUIRE(*common1 == expected);
             REQUIRE(*common2 == expected);
             REQUIRE(*common3 == expected);
@@ -627,14 +628,14 @@ SCENARIO("Finding the best common descriptor")
     {
         IndexVector_t numCoeffs2 = numCoeffs.head(numCoeffs.size() - 1);
         numCoeffs2[numCoeffs2.size() - 1] *= numCoeffs[numCoeffs.size() - 1];
-        DataDescriptor dd2{numCoeffs2};
+        VolumeDescriptor dd2{numCoeffs2};
 
         THEN("the best common descriptor is the linearized descriptor with default spacing")
         {
-            auto common1 = DataDescriptor::bestCommon(dd2, dd);
-            auto common2 = DataDescriptor::bestCommon(dd, dd2);
+            auto common1 = bestCommon(dd2, dd);
+            auto common2 = bestCommon(dd, dd2);
 
-            DataDescriptor expected{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
+            VolumeDescriptor expected{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
             REQUIRE(*common1 == expected);
             REQUIRE(*common2 == expected);
         }
@@ -644,12 +645,12 @@ SCENARIO("Finding the best common descriptor")
     {
         IndexVector_t numCoeffs2 = numCoeffs;
         numCoeffs2[0] += 1;
-        DataDescriptor dd2{numCoeffs2};
+        VolumeDescriptor dd2{numCoeffs2};
 
         THEN("trying to determine the best common descriptor throws an error")
         {
-            REQUIRE_THROWS_AS(DataDescriptor::bestCommon(dd2, dd), std::invalid_argument);
-            REQUIRE_THROWS_AS(DataDescriptor::bestCommon(dd, dd2), std::invalid_argument);
+            REQUIRE_THROWS_AS(bestCommon(dd2, dd), std::invalid_argument);
+            REQUIRE_THROWS_AS(bestCommon(dd, dd2), std::invalid_argument);
         }
     }
 }

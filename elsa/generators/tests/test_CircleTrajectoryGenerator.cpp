@@ -12,6 +12,7 @@
 
 #include "CircleTrajectoryGenerator.h"
 #include "Logger.h"
+#include "VolumeDescriptor.h"
 
 using namespace elsa;
 
@@ -24,7 +25,7 @@ SCENARIO("Create a Circular Trajectory")
         index_t numberOfAngles = 256;
         IndexVector_t volSize(2);
         volSize << s, s;
-        DataDescriptor desc{volSize};
+        VolumeDescriptor desc{volSize};
 
         WHEN("We create a half circular trajectory for this scenario")
         {
@@ -100,7 +101,7 @@ SCENARIO("Create a Circular Trajectory")
         index_t numberOfAngles = 256;
         IndexVector_t volSize(3);
         volSize << s, s, s;
-        DataDescriptor desc{volSize};
+        VolumeDescriptor desc{volSize};
 
         WHEN("We create a half circular trajectory for this scenario")
         {

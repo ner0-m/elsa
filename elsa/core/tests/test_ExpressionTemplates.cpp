@@ -49,7 +49,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
 
         IndexVector_t numCoeff(3);
         numCoeff << dimension, dimension, dimension;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
         DataContainer<TestType> dc(desc);
         DataContainer<TestType> dc2(desc);
         DataContainer<TestType> dc3(desc);
@@ -118,7 +118,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
     {
         IndexVector_t numCoeff(3);
         numCoeff << dimension, dimension, dimension;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
         DataContainer<TestType> dc1(desc);
         DataContainer<TestType> dc2(desc);
         DataContainer<TestType> dc3(desc);
@@ -197,7 +197,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
     {
         IndexVector_t numCoeff(2);
         numCoeff << 52, 29;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         index_t numBlocks = 7;
         IdenticalBlocksDescriptor blockDesc(numBlocks, desc);
@@ -259,7 +259,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
     {
         IndexVector_t numCoeff(3);
         numCoeff << 52, 7, 29;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
 
         DataContainer<TestType> dc(desc);
 
@@ -272,7 +272,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
 
             IndexVector_t numCoeff(1);
             numCoeff << desc.getNumberOfCoefficients();
-            DataDescriptor linearDesc(numCoeff);
+            VolumeDescriptor linearDesc(numCoeff);
             auto linearDc = dc.viewAs(linearDesc);
 
             DataContainer result =
@@ -303,7 +303,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
 
         IndexVector_t numCoeff(3);
         numCoeff << dimension, dimension, dimension;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
         DataContainer<TestType> dc(desc, DataHandlerType::GPU);
         DataContainer<TestType> dc2(desc, DataHandlerType::GPU);
         DataContainer<TestType> dc3(desc, DataHandlerType::GPU);
@@ -375,7 +375,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
     {
         IndexVector_t numCoeff(3);
         numCoeff << dimension, dimension, dimension;
-        DataDescriptor desc(numCoeff);
+        VolumeDescriptor desc(numCoeff);
         DataContainer dc1(desc, DataHandlerType::GPU);
         DataContainer dc2(desc, DataHandlerType::GPU);
         DataContainer dc3(desc, DataHandlerType::GPU);
