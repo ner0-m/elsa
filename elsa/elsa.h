@@ -1,67 +1,67 @@
 #pragma once
 
 // Core headers
-#include "core/elsaDefines.h"
-#include "core/DataContainer.h"
-#include "core/DataDescriptor.h"
-#include "core/LinearOperator.h"
-#include "core/IdenticalBlocksDescriptor.h"
-#include "core/PartitionDescriptor.h"
-#include "core/RandomBlocksDescriptor.h"
+#include "elsaDefines.h"
+#include "DataContainer.h"
+#include "DataDescriptor.h"
+#include "LinearOperator.h"
+#include "IdenticalBlocksDescriptor.h"
+#include "PartitionDescriptor.h"
+#include "RandomBlocksDescriptor.h"
 
 // Functional headers
-#include "functionals/Functional.h"
-#include "functionals/Residual.h"
-#include "functionals/LinearResidual.h"
-#include "functionals/Huber.h"
-#include "functionals/L1Norm.h"
-#include "functionals/L2NormPow2.h"
-#include "functionals/WeightedL2NormPow2.h"
-#include "functionals/LInfNorm.h"
-#include "functionals/PseudoHuber.h"
-#include "functionals/Quadric.h"
-#include "functionals/EmissionLogLikelihood.h"
-#include "functionals/TransmissionLogLikelihood.h"
+#include "Functional.h"
+#include "Residual.h"
+#include "LinearResidual.h"
+#include "Huber.h"
+#include "L1Norm.h"
+#include "L2NormPow2.h"
+#include "WeightedL2NormPow2.h"
+#include "LInfNorm.h"
+#include "PseudoHuber.h"
+#include "Quadric.h"
+#include "EmissionLogLikelihood.h"
+#include "TransmissionLogLikelihood.h"
 
 // Generators headers
-#include "generators/PhantomGenerator.h"
-#include "generators/CircleTrajectoryGenerator.h"
+#include "PhantomGenerator.h"
+#include "CircleTrajectoryGenerator.h"
 
 // IO headers
-#include "io/EDFHandler.h"
-#include "io/MHDHandler.h"
+#include "EDFHandler.h"
+#include "MHDHandler.h"
 
 // Logging headers
-#include "logging/Logger.h"
-#include "logging/LogGuard.h"
-#include "logging/Timer.h"
+#include "Logger.h"
+#include "LogGuard.h"
+#include "Timer.h"
 
 // Operator headers
-#include "operators/Identity.h"
-#include "operators/Scaling.h"
-#include "operators/FiniteDifferences.h"
-#include "operators/BlockLinearOperator.h"
+#include "Identity.h"
+#include "Scaling.h"
+#include "FiniteDifferences.h"
+#include "BlockLinearOperator.h"
 
 // Problem headers
-#include "problems/Problem.h"
-#include "problems/RegularizationTerm.h"
-#include "problems/QuadricProblem.h"
-#include "problems/WLSProblem.h"
-#include "problems/TikhonovProblem.h"
+#include "Problem.h"
+#include "RegularizationTerm.h"
+#include "QuadricProblem.h"
+#include "WLSProblem.h"
+#include "TikhonovProblem.h"
 
 // Projector headers
-#include "projectors/Geometry.h"
-#include "projectors/BinaryMethod.h"
-#include "projectors/JosephsMethod.h"
-#include "projectors/SiddonsMethod.h"
+#include "Geometry.h"
+#include "BinaryMethod.h"
+#include "JosephsMethod.h"
+#include "SiddonsMethod.h"
 
 // CUDA projectors
 #ifdef ELSA_CUDA_PROJECTORS
-#include "projectors_cuda/SiddonsMethodCUDA.h"
-#include "projectors_cuda/JosephsMethodCUDA.h"
+#include "SiddonsMethodCUDA.h"
+#include "JosephsMethodCUDA.h"
 #endif
 
 // Solver headers
-#include "solvers/Solver.h"
-#include "solvers/GradientDescent.h"
-#include "solvers/CG.h"
+#include "Solver.h"
+#include "GradientDescent.h"
+#include "CG.h"
