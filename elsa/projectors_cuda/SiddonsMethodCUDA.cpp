@@ -27,7 +27,7 @@ namespace elsa
             throw std::logic_error("SiddonsMethodCUDA: geometry list was empty");
         }
 
-        const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
+        const auto numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
 
         // allocate device memory and copy ray origins and the inverse of the significant part of
         // projection matrices to device
