@@ -6,7 +6,6 @@ include(Catch)
 
 
 # the actual tests
-ELSA_TEST(Geometry)
 ELSA_TEST(BoundingBox)
 ELSA_TEST(Intersection)
 ELSA_TEST(TraverseAABB)

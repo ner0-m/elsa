@@ -18,6 +18,8 @@ using namespace elsa;
 
 SCENARIO("Create a Circular Trajectory")
 {
+    using namespace geometry;
+
     index_t s = 64;
 
     GIVEN("A 2D descriptor and 256 angles")
@@ -46,7 +48,11 @@ SCENARIO("Create a Circular Trajectory")
                                / real_t(numberOfAngles - 1);
                 for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
-                    Geometry tmpGeom(sourceToCenter, centerToDetector, currAngle, desc, *sdesc);
+                    Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
+                                     CenterOfRotationToDetector{centerToDetector},
+                                     Radian{currAngle}, VolumeData2D{volSize},
+                                     SinogramData2D{sdesc->getSpacingPerDimension(),
+                                                    sdesc->getLocationOfOrigin()});
 
                     REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
                             == Approx(0));
@@ -80,7 +86,12 @@ SCENARIO("Create a Circular Trajectory")
                                / static_cast<real_t>(numberOfAngles - 1);
                 for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
-                    Geometry tmpGeom(sourceToCenter, centerToDetector, currAngle, desc, *sdesc);
+
+                    Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
+                                     CenterOfRotationToDetector{centerToDetector},
+                                     Radian{currAngle}, VolumeData2D{volSize},
+                                     SinogramData2D{sdesc->getSpacingPerDimension(),
+                                                    sdesc->getLocationOfOrigin()});
 
                     REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
                             == Approx(0));
@@ -122,7 +133,14 @@ SCENARIO("Create a Circular Trajectory")
                                   / static_cast<real_t>(numberOfAngles - 1);
                 for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
-                    Geometry tmpGeom(sourceToCenter, centerToDetector, desc, *sdesc, angle);
+                    // Geometry tmpGeom(sourceToCenter, centerToDetector, desc, *sdesc, angle);
+
+                    Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
+                                     CenterOfRotationToDetector{centerToDetector},
+                                     VolumeData3D{volSize},
+                                     SinogramData3D{sdesc->getSpacingPerDimension(),
+                                                    sdesc->getLocationOfOrigin()},
+                                     RotationAngles3D{Gamma{angle}});
 
                     REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
                             == Approx(0));
@@ -156,7 +174,13 @@ SCENARIO("Create a Circular Trajectory")
                                   / static_cast<real_t>(numberOfAngles - 1);
                 for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
-                    Geometry tmpGeom(sourceToCenter, centerToDetector, desc, *sdesc, angle);
+
+                    Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
+                                     CenterOfRotationToDetector{centerToDetector},
+                                     VolumeData3D{volSize},
+                                     SinogramData3D{sdesc->getSpacingPerDimension(),
+                                                    sdesc->getLocationOfOrigin()},
+                                     RotationAngles3D{Gamma{angle}});
 
                     REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
                             == Approx(0));

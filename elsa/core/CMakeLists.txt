@@ -24,7 +24,9 @@ set(MODULE_HEADERS
         Handlers/DataHandlerMapCPU.h
         LinearOperator.h
         Expression.h
-        ExpressionPredicates.h)
+        ExpressionPredicates.h
+        Geometry.h
+        StrongTypes.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -37,7 +39,9 @@ set(MODULE_SOURCES
         DataContainer.cpp
         Handlers/DataHandlerCPU.cpp
         Handlers/DataHandlerMapCPU.cpp
-        LinearOperator.cpp)
+        LinearOperator.cpp
+        Geometry.cpp
+        StrongTypes.cpp)
 
 if(${ELSA_CUDA_VECTOR})
     set(MODULE_HEADERS

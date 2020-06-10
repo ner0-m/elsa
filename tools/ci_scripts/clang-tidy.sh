@@ -26,6 +26,8 @@ echo
 # Retrieve list of files that were changed in source branch with respect to master (target branch)
 filelist=`git diff origin/${target_branch} --name-only`
 
+filesWithErrors=()
+
 # check list of files
 for f in $filelist; do
     # check if .cpp file and in compilation DB
@@ -41,15 +43,21 @@ for f in $filelist; do
             grep --color -E '^|warning: |error: ' output.txt
             if [[ -n $(grep "error: " output.txt) ]]; then
                 exit_flag=true
+                filesWithErrors=( "${filesWithErrors[@]}" $f )
             fi
         else
-            echo -e "\033[1;32m\xE2\x9C\x93 passed:\033[0m $1";
+            echo -e "\033[1;32m\xE2\x9C\x93 passed file $f\033[0m $1";
         fi
         rm output.txt
     fi
 done
 
+
 if [ "$exit_flag" = true ]; then
+    echo "Error in file(s):"
+    for f in "${filesWithErrors[@]}"; do
+        echo "$f"
+    done
     exit -1
 fi
 

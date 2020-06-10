@@ -8,7 +8,6 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 
 # list all the headers of the module
 set(MODULE_HEADERS
-        Geometry.h
         BoundingBox.h
         Intersection.h
         TraverseAABB.h
@@ -19,7 +18,6 @@ set(MODULE_HEADERS
 
 # list all the code files of the module
 set(MODULE_SOURCES
-        Geometry.cpp
         BoundingBox.cpp
         Intersection.cpp
         TraverseAABB.cpp

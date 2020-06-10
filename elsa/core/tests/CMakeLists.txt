@@ -15,6 +15,8 @@ ELSA_TEST(DataHandlers)
 ELSA_TEST(DataHandlerMap)
 ELSA_TEST(LinearOperator)
 ELSA_TEST(ExpressionTemplates)
+ELSA_TEST(Geometry)
+ELSA_TEST(StrongTypes)
 
 if(ELSA_BENCHMARKS)
     ELSA_TEST(BenchmarkExpressionTemplates)

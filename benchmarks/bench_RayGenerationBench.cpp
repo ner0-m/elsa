@@ -15,6 +15,8 @@
 #include <cstdlib>
 
 using namespace elsa;
+using namespace elsa::geometry;
+
 static const index_t dimension = 2;
 
 void iterate2D(const Geometry& geo)
@@ -48,18 +50,20 @@ TEST_CASE("Ray generation for 2D")
 {
     IndexVector_t volCoeff(2);
     volCoeff << 5, 5;
-    VolumeDescriptor ddVol(volCoeff);
 
-    IndexVector_t detCoeff(1);
-    detCoeff << 5;
-    VolumeDescriptor ddDet(detCoeff);
+    IndexVector_t detCoeff(2);
+    detCoeff << 5, 1;
 
     real_t s2c = 10;
     real_t c2d = 4;
 
+    auto volData = VolumeData2D{Size2D{volCoeff}};
+    auto sinoData = SinogramData2D{Size2D{detCoeff}};
+
     GIVEN("Geometry without offset and rotation")
     {
-        Geometry g(s2c, c2d, 0, ddVol, ddDet);
+        Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{0},
+                   std::move(volData), std::move(sinoData));
 
         // test outer + central pixels
         iterate2D(g);
@@ -67,8 +71,8 @@ TEST_CASE("Ray generation for 2D")
 
     GIVEN("Geometry with offset but no rotation")
     {
-        real_t offset = 2;
-        Geometry g(s2c, c2d, 0, ddVol, ddDet, offset);
+        Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{0},
+                   std::move(volData), std::move(sinoData), PrincipalPointOffset{2});
 
         // test outer + central pixels
         iterate2D(g);
@@ -76,8 +80,8 @@ TEST_CASE("Ray generation for 2D")
 
     GIVEN("Geometry at 90°, but no offset")
     {
-        real_t angle = pi_t / 2; // 90 degrees
-        Geometry g(s2c, c2d, angle, ddVol, ddDet);
+        Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{90},
+                   std::move(volData), std::move(sinoData));
 
         // test outer + central pixels
         iterate2D(g);
@@ -85,10 +89,9 @@ TEST_CASE("Ray generation for 2D")
 
     GIVEN("Geometry at 45° with offset")
     {
-        real_t angle = pi_t / 4; // 45 degrees
-        real_t cx = -1;
-        real_t cy = 2;
-        Geometry g(s2c, c2d, angle, ddVol, ddDet, 0, cx, cy);
+        Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{45},
+                   std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
+                   RotationOffset2D{-1, 2});
 
         // test outer + central pixels
         iterate2D(g);
@@ -101,16 +104,20 @@ TEST_CASE("Ray generation for 3D")
     volCoeff << 5, 5, 5;
     VolumeDescriptor ddVol(volCoeff);
 
-    IndexVector_t detCoeff(2);
-    detCoeff << 5, 5;
+    IndexVector_t detCoeff(3);
+    detCoeff << 5, 5, 1;
     VolumeDescriptor ddDet(detCoeff);
 
     real_t s2c = 10;
     real_t c2d = 4;
 
+    auto volData = VolumeData3D{Size3D{volCoeff}};
+    auto sinoData = SinogramData3D{Size3D{detCoeff}};
+
     GIVEN("Geometry without offset and rotation")
     {
-        Geometry g(s2c, c2d, ddVol, ddDet, 0);
+        Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                   std::move(volData), std::move(sinoData), RotationAngles3D{Gamma(0)});
 
         // test outer + central pixels
         iterate3D(g);
@@ -118,9 +125,9 @@ TEST_CASE("Ray generation for 3D")
 
     GIVEN("Geometry with offset but no rotation")
     {
-        real_t px = -1;
-        real_t py = 3;
-        Geometry g(s2c, c2d, ddVol, ddDet, 0, 0, 0, px, py);
+        Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                   std::move(volData), std::move(sinoData), RotationAngles3D{Gamma{0}},
+                   PrincipalPointOffset2D{0, 0}, RotationOffset3D{-1, 3, 0});
 
         // test outer + central pixels
         iterate3D(g);
@@ -128,8 +135,8 @@ TEST_CASE("Ray generation for 3D")
 
     GIVEN("Geometry at 90°, but no offset")
     {
-        real_t angle = pi_t / 2;
-        Geometry g(s2c, c2d, ddVol, ddDet, angle);
+        Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                   std::move(volData), std::move(sinoData), RotationAngles3D{Gamma{pi_t / 2}});
 
         // test outer + central pixels
         iterate3D(g);
@@ -139,11 +146,11 @@ TEST_CASE("Ray generation for 3D")
     {
         real_t angle1 = pi_t / 4;
         real_t angle2 = pi_t / 2;
-        RealVector_t offset(3);
-        offset << 1, -2, -1;
-        Geometry g(s2c, c2d, ddVol, ddDet, angle1, angle2, 0, 0, 0, offset[0], offset[1],
-                   offset[2]);
 
+        Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                   std::move(volData), std::move(sinoData),
+                   RotationAngles3D{Gamma{angle1}, Beta{angle2}}, PrincipalPointOffset2D{0, 0},
+                   RotationOffset3D{1, -2, -1});
         // test outer + central pixels
         iterate3D(g);
     }

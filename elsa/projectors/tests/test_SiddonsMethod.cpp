@@ -7,6 +7,7 @@
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace elsa::geometry;
 
 SCENARIO("Testing SiddonsMethod projector with only one ray")
 {
@@ -21,6 +22,11 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
     auto domain = VolumeDescriptor(sizeDomain);
     auto range = VolumeDescriptor(sizeRange);
+
+    auto stc = SourceToCenterOfRotation{100};
+    auto ctr = CenterOfRotationToDetector{5};
+    auto volData = VolumeData2D{Size2D{sizeDomain}};
+    auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
     Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "",
                                  " << ", ";");
@@ -37,7 +43,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
         WHEN("We have a single ray with 0 degrees")
         {
-            geom.emplace_back(100, 5, 0, domain, range);
+            geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -57,7 +63,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
         WHEN("We have a single ray with 180 degrees")
         {
-            geom.emplace_back(100, 5, 180 * pi_t / 180., domain, range);
+            geom.emplace_back(stc, ctr, Degree{180}, std::move(volData), std::move(sinoData));
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -77,7 +83,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
         WHEN("We have a single ray with 90 degrees")
         {
-            geom.emplace_back(100, 5, 90 * pi_t / 180., domain, range);
+            geom.emplace_back(stc, ctr, Degree{90}, std::move(volData), std::move(sinoData));
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -97,7 +103,7 @@ SCENARIO("Testing SiddonsMethod projector with only one ray")
 
         WHEN("We have a single ray with 270 degrees")
         {
-            geom.emplace_back(100, 5, 270 * pi_t / 180., domain, range);
+            geom.emplace_back(stc, ctr, Degree{270}, std::move(volData), std::move(sinoData));
             auto op = SiddonsMethod(domain, range, geom);
 
             THEN("A^t A x should be close to the original data")
@@ -222,10 +228,15 @@ SCENARIO("Calls to functions of super class")
         randomStuff.setRandom();
         DataContainer volume(volumeDescriptor, randomStuff);
         DataContainer sino(sinoDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+
         std::vector<Geometry> geom;
         for (std::size_t i = 0; i < numImgs; i++) {
             real_t angle = static_cast<real_t>(i * 2) * pi_t / 50;
-            geom.emplace_back(20 * volSize, volSize, angle, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(stc, ctr, Radian{angle}, VolumeData2D{Size2D{volumeDims}},
+                              SinogramData2D{Size2D{sinoDims}});
         }
         SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -269,8 +280,15 @@ SCENARIO("Output DataContainer is not zero initialized")
         VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+        auto volData = VolumeData2D{Size2D{volumeDims}};
+        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+
         std::vector<Geometry> geom;
-        geom.emplace_back(20 * volSize, volSize, 0.0, volumeDescriptor, sinoDescriptor);
+        geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
+
         SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
         WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
@@ -314,9 +332,16 @@ SCENARIO("Output DataContainer is not zero initialized")
         VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
-        std::vector<Geometry> geom;
 
-        geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, 0);
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+        auto volData = VolumeData3D{Size3D{volumeDims}};
+        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+
+        std::vector<Geometry> geom;
+        geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                          RotationAngles3D{Gamma{0}});
+
         SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
         WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
@@ -368,12 +393,18 @@ SCENARIO("Rays not intersecting the bounding box are present")
         DataContainer sino(sinoDescriptor);
         volume = 1;
         sino = 1;
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+        auto volData = VolumeData2D{Size2D{volumeDims}};
+        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+
         std::vector<Geometry> geom;
 
         WHEN("Tracing along a y-axis-aligned ray with a negative x-coordinate of origin")
         {
-            geom.emplace_back(20 * volSize, volSize, 0.0, volumeDescriptor, sinoDescriptor, 0.0,
-                              -volSize);
+            geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
+                              PrincipalPointOffset{}, RotationOffset2D{-volSize, 0});
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -397,8 +428,8 @@ SCENARIO("Rays not intersecting the bounding box are present")
         WHEN("Tracing along a y-axis-aligned ray with a x-coordinate of origin beyond the bounding "
              "box")
         {
-            geom.emplace_back(20 * volSize, volSize, 0.0, volumeDescriptor, sinoDescriptor, 0.0,
-                              volSize);
+            geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
+                              PrincipalPointOffset{}, RotationOffset2D{volSize, 0});
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -421,8 +452,8 @@ SCENARIO("Rays not intersecting the bounding box are present")
 
         WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin")
         {
-            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, -volSize);
+            geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData), std::move(sinoData),
+                              PrincipalPointOffset{}, RotationOffset2D{0, -volSize});
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -446,8 +477,8 @@ SCENARIO("Rays not intersecting the bounding box are present")
         WHEN("Tracing along a x-axis-aligned ray with a y-coordinate of origin beyond the bounding "
              "box")
         {
-            geom.emplace_back(20 * volSize, volSize, pi_t / 2, volumeDescriptor, sinoDescriptor,
-                              0.0, 0.0, volSize);
+            geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData), std::move(sinoData),
+                              PrincipalPointOffset{}, RotationOffset2D{0, volSize});
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -483,6 +514,12 @@ SCENARIO("Rays not intersecting the bounding box are present")
         DataContainer sino(sinoDescriptor);
         volume = 1;
         sino = 1;
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+        auto volData = VolumeData3D{Size3D{volumeDims}};
+        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+
         std::vector<Geometry> geom;
 
         const index_t numCases = 9;
@@ -500,9 +537,10 @@ SCENARIO("Rays not intersecting the bounding box are present")
             WHEN("Tracing along a " + ali[i] + "-axis-aligned ray with negative " + neg[i]
                  + "-coodinate of origin")
             {
-                geom.emplace_back(20 * volSize, volSize, volumeDescriptor, sinoDescriptor, gamma[i],
-                                  beta[i], alpha[i], 0.0, 0.0, -offsetx[i], -offsety[i],
-                                  -offsetz[i]);
+                geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                                  RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}, Alpha{alpha[i]}},
+                                  PrincipalPointOffset2D{0, 0},
+                                  RotationOffset3D{-offsetx[i], -offsety[i], -offsetz[i]});
 
                 SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -543,6 +581,12 @@ SCENARIO("Axis-aligned rays are present")
         VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+        auto volData = VolumeData2D{Size2D{volumeDims}};
+        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+
         std::vector<Geometry> geom;
 
         const index_t numCases = 4;
@@ -558,8 +602,8 @@ SCENARIO("Axis-aligned rays are present")
             WHEN("An axis-aligned ray with an angle of " + std::to_string(angles[i])
                  + " radians passes through the center of a pixel")
             {
-                geom.emplace_back(volSize * 20, volSize, angles[i], volumeDescriptor,
-                                  sinoDescriptor);
+                geom.emplace_back(stc, ctr, Radian{angles[i]}, std::move(volData),
+                                  std::move(sinoData));
                 SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
                 THEN("The result of projecting through a pixel is exactly the pixel value")
                 {
@@ -587,8 +631,9 @@ SCENARIO("Axis-aligned rays are present")
 
         WHEN("A y-axis-aligned ray runs along a voxel boundary")
         {
-            geom.emplace_back(volSize * 2000, volSize, 0.0, volumeDescriptor, sinoDescriptor, 0.0,
-                              -0.5);
+            geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
+                              std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
+                              RotationOffset2D{-0.5, 0});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
             THEN("The result of projecting through a pixel is the value of the pixel with the "
                  "higher index")
@@ -614,8 +659,10 @@ SCENARIO("Axis-aligned rays are present")
         {
             // For Siddon's values in the range [0,boxMax) are considered, a ray running along
             // boxMax should be ignored
-            geom.emplace_back(volSize * 2000, volSize, 0.0, volumeDescriptor, sinoDescriptor, 0.0,
-                              (volSize * 0.5));
+
+            geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
+                              std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
+                              RotationOffset2D{volSize * 0.5, 0});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The result of projecting is zero")
@@ -679,6 +726,12 @@ SCENARIO("Axis-aligned rays are present")
         VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+        auto volData = VolumeData3D{Size3D{volumeDims}};
+        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+
         std::vector<Geometry> geom;
 
         const index_t numCases = 6;
@@ -711,8 +764,8 @@ SCENARIO("Axis-aligned rays are present")
         for (index_t i = 0; i < numCases; i++) {
             WHEN("A " + al[i] + "-axis-aligned ray passes through the center of a pixel")
             {
-                geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, gamma[i],
-                                  beta[i]);
+                geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                                  RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
                 SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
                 THEN("The result of projecting through a voxel is exactly the voxel value")
                 {
@@ -786,8 +839,10 @@ SCENARIO("Axis-aligned rays are present")
             {
                 // x-ray source must be very far from the volume center to make testing of the op
                 // backprojection simpler
-                geom.emplace_back(volSize * 2000, volSize, volumeDescriptor, sinoDescriptor, 0.0,
-                                  0.0, 0.0, 0.0, 0.0, -offsetx[i], -offsety[i]);
+                geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, std::move(volData),
+                                  std::move(sinoData), RotationAngles3D{Gamma{0}},
+                                  PrincipalPointOffset2D{0, 0},
+                                  RotationOffset3D{-offsetx[i], -offsety[i], 0});
                 SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
                 THEN("The result of projecting through a voxel is exactly the voxel's value")
                 {
@@ -828,8 +883,10 @@ SCENARIO("Axis-aligned rays are present")
             {
                 // x-ray source must be very far from the volume center to make testing of the op
                 // backprojection simpler
-                geom.emplace_back(volSize * 2000, volSize, volumeDescriptor, sinoDescriptor, 0.0,
-                                  0.0, 0.0, 0.0, 0.0, -offsetx[i], -offsety[i]);
+                geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, std::move(volData),
+                                  std::move(sinoData), RotationAngles3D{Gamma{0}},
+                                  PrincipalPointOffset2D{0, 0},
+                                  RotationOffset3D{-offsetx[i], -offsety[i], 0});
                 SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
                 THEN("The result of projecting is zero")
                 {
@@ -864,17 +921,22 @@ SCENARIO("Axis-aligned rays are present")
         VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+
         std::vector<Geometry> geom;
 
         WHEN("Both x- and y-axis-aligned rays are present")
         {
-            geom.emplace_back(20 * volSize, volSize, 0, volumeDescriptor, sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 90 * pi_t / 180., volumeDescriptor,
-                              sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 180 * pi_t / 180., volumeDescriptor,
-                              sinoDescriptor);
-            geom.emplace_back(20 * volSize, volSize, 270 * pi_t / 180., volumeDescriptor,
-                              sinoDescriptor);
+            geom.emplace_back(stc, ctr, Degree{0}, VolumeData2D{Size2D{volumeDims}},
+                              SinogramData2D{Size2D{sinoDims}});
+            geom.emplace_back(stc, ctr, Degree{90}, VolumeData2D{Size2D{volumeDims}},
+                              SinogramData2D{Size2D{sinoDims}});
+            geom.emplace_back(stc, ctr, Degree{180}, VolumeData2D{Size2D{volumeDims}},
+                              SinogramData2D{Size2D{sinoDims}});
+            geom.emplace_back(stc, ctr, Degree{270}, VolumeData2D{Size2D{volumeDims}},
+                              SinogramData2D{Size2D{sinoDims}});
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -919,6 +981,10 @@ SCENARIO("Axis-aligned rays are present")
         VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+
         std::vector<Geometry> geom;
 
         WHEN("x-, y and z-axis-aligned rays are present")
@@ -927,8 +993,9 @@ SCENARIO("Axis-aligned rays are present")
             real_t gamma[numImgs] = {0.0, pi_t, pi_t / 2, 3 * pi_t / 2, pi_t / 2, 3 * pi_t / 2};
 
             for (index_t i = 0; i < numImgs; i++)
-                geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, gamma[i],
-                                  beta[i]);
+                geom.emplace_back(stc, ctr, VolumeData3D{Size3D{volumeDims}},
+                                  SinogramData3D{Size3D{sinoDims}},
+                                  RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
 
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
@@ -983,13 +1050,19 @@ SCENARIO("Projection under an angle")
         VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+        auto volData = VolumeData2D{Size2D{volumeDims}};
+        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+
         std::vector<Geometry> geom;
 
         WHEN("Projecting under an angle of 30 degrees and ray goes through center of volume")
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
-            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor);
+            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData));
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1045,8 +1118,8 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
-                              0.0, std::sqrt(3.f));
+            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
+                              PrincipalPointOffset{0}, RotationOffset2D{std::sqrt(3.f), 0});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1088,8 +1161,8 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
-                              0.0, -std::sqrt(3.f));
+            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
+                              PrincipalPointOffset{0}, RotationOffset2D{-std::sqrt(3.f), 0});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1129,8 +1202,9 @@ SCENARIO("Projection under an angle")
 
         WHEN("Projecting under an angle of 30 degrees and ray only intersects a single pixel")
         {
-            geom.emplace_back(volSize * 20, volSize, -pi_t / 6, volumeDescriptor, sinoDescriptor,
-                              0.0, -2 - std::sqrt(3.f) / 2);
+            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
+                              PrincipalPointOffset{0},
+                              RotationOffset2D{-2 - std::sqrt(3.f) / 2, 0});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1165,8 +1239,8 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
-                              sinoDescriptor);
+            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
+                              std::move(sinoData));
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1222,8 +1296,9 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
-                              sinoDescriptor, 0.0, 0.0, std::sqrt(3.f));
+            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
+                              std::move(sinoData), PrincipalPointOffset{0},
+                              RotationOffset2D{0, std::sqrt(3.f)});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1266,8 +1341,9 @@ SCENARIO("Projection under an angle")
         {
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction
-            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
-                              sinoDescriptor, 0.0, 0.0, -std::sqrt(3.f));
+            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
+                              std::move(sinoData), PrincipalPointOffset{0},
+                              RotationOffset2D{0, -std::sqrt(3.f)});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1310,8 +1386,9 @@ SCENARIO("Projection under an angle")
         WHEN("Projecting under an angle of 120 degrees and ray only intersects a single pixel")
         {
             // This is a special case that is handled separately in both forward and backprojection
-            geom.emplace_back(volSize * 20, volSize, -2 * pi_t / 3, volumeDescriptor,
-                              sinoDescriptor, 0.0, 0.0, -2 - std::sqrt(3.f) / 2);
+            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
+                              std::move(sinoData), PrincipalPointOffset{0},
+                              RotationOffset2D{0, -2 - std::sqrt(3.f) / 2});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("Ray intersects the correct pixels")
@@ -1355,6 +1432,12 @@ SCENARIO("Projection under an angle")
         VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * volSize};
+        auto ctr = CenterOfRotationToDetector{volSize};
+        auto volData = VolumeData3D{Size3D{volumeDims}};
+        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+
         std::vector<Geometry> geom;
 
         RealVector_t backProj(volSize * volSize * volSize);
@@ -1362,7 +1445,8 @@ SCENARIO("Projection under an angle")
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume")
         {
             // In this case the ray enters and exits the volume along the main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6);
+            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                              RotationAngles3D{Gamma{pi_t / 6}});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1402,8 +1486,9 @@ SCENARIO("Projection under an angle")
         WHEN("A ray with an angle of 30 degrees enters through the right border")
         {
             // In this case the ray enters through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
-                              0.0, 0.0, 0.0, 0.0, 1);
+            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                              RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
+                              RotationOffset3D{1, 0, 0});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1442,8 +1527,9 @@ SCENARIO("Projection under an angle")
         WHEN("A ray with an angle of 30 degrees exits through the left border")
         {
             // In this case the ray exit through a border orthogonal to a non-main direction
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
-                              0.0, 0.0, 0.0, 0.0, -1);
+            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                              RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
+                              RotationOffset3D{-1, 0, 0});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")
@@ -1484,8 +1570,9 @@ SCENARIO("Projection under an angle")
         WHEN("A ray with an angle of 30 degrees only intersects a single voxel")
         {
             // special case - no interior voxels, entry and exit voxels are the same
-            geom.emplace_back(volSize * 20, volSize, volumeDescriptor, sinoDescriptor, pi_t / 6,
-                              0.0, 0.0, 0.0, 0.0, -2);
+            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                              RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
+                              RotationOffset3D{-2, 0, 0});
             SiddonsMethod op(volumeDescriptor, sinoDescriptor, geom);
 
             THEN("The ray intersects the correct voxels")

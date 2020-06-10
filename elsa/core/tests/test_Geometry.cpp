@@ -14,14 +14,15 @@ using namespace elsa;
 
 SCENARIO("Testing 2D geometries")
 {
+    using namespace geometry;
     GIVEN("some 2D setup")
     {
         IndexVector_t volCoeff(2);
         volCoeff << 5, 5;
         VolumeDescriptor ddVol(volCoeff);
 
-        IndexVector_t detCoeff(1);
-        detCoeff << 5;
+        IndexVector_t detCoeff(2);
+        detCoeff << 5, 1;
         VolumeDescriptor ddDet(detCoeff);
 
         real_t s2c = 10;
@@ -29,7 +30,8 @@ SCENARIO("Testing 2D geometries")
 
         WHEN("testing geometry without rotation/offsets")
         {
-            Geometry g(s2c, c2d, 0, ddVol, ddDet);
+            Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Radian{0},
+                       VolumeData2D{Size2D{volCoeff}}, SinogramData2D{Size2D{detCoeff}});
 
             THEN("a copy is the same")
             {
@@ -85,7 +87,10 @@ SCENARIO("Testing 2D geometries")
         WHEN("testing geometry without rotation but with principal point offset")
         {
             real_t px = 2;
-            Geometry g(s2c, c2d, 0, ddVol, ddDet, px);
+
+            Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Radian{0},
+                       VolumeData2D{Size2D{volCoeff}}, SinogramData2D{Size2D{detCoeff}},
+                       PrincipalPointOffset{px});
 
             THEN("a copy is the same")
             {
@@ -141,8 +146,8 @@ SCENARIO("Testing 2D geometries")
 
         WHEN("testing geometry with 90 degree rotation and no offsets")
         {
-            real_t angle = pi_t / 2; // 90 degrees
-            Geometry g(s2c, c2d, angle, ddVol, ddDet);
+            Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{90},
+                       VolumeData2D{Size2D{volCoeff}}, SinogramData2D{Size2D{detCoeff}});
 
             THEN("a copy is the same")
             {
@@ -201,7 +206,11 @@ SCENARIO("Testing 2D geometries")
             real_t angle = pi_t / 4; // 45 degrees
             real_t cx = -1;
             real_t cy = 2;
-            Geometry g(s2c, c2d, angle, ddVol, ddDet, 0, cx, cy);
+
+            Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                       Radian{angle}, VolumeData2D{Size2D{volCoeff}},
+                       SinogramData2D{Size2D{detCoeff}}, PrincipalPointOffset{0},
+                       RotationOffset2D{cx, cy});
 
             THEN("a copy is the same")
             {
@@ -270,14 +279,15 @@ SCENARIO("Testing 2D geometries")
 
 SCENARIO("Testing 3D geometries")
 {
+    using namespace geometry;
     GIVEN("some 3D setup")
     {
         IndexVector_t volCoeff(3);
         volCoeff << 5, 5, 5;
         VolumeDescriptor ddVol(volCoeff);
 
-        IndexVector_t detCoeff(2);
-        detCoeff << 5, 5;
+        IndexVector_t detCoeff(3);
+        detCoeff << 5, 5, 1;
         VolumeDescriptor ddDet(detCoeff);
 
         real_t s2c = 10;
@@ -285,7 +295,9 @@ SCENARIO("Testing 3D geometries")
 
         WHEN("testing geometry without rotation/offsets")
         {
-            Geometry g(s2c, c2d, ddVol, ddDet, 0);
+            Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                       VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                       RotationAngles3D{Radian{0}, Radian{0}, Radian{0}});
 
             THEN("a copy is the same")
             {
@@ -356,7 +368,11 @@ SCENARIO("Testing 3D geometries")
         {
             real_t px = -1;
             real_t py = 3;
-            Geometry g(s2c, c2d, ddVol, ddDet, 0, 0, 0, px, py);
+
+            Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                       VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                       RotationAngles3D{Radian{0}, Radian{0}, Radian{0}},
+                       PrincipalPointOffset2D{px, py});
 
             THEN("a copy is the same")
             {
@@ -426,7 +442,10 @@ SCENARIO("Testing 3D geometries")
         WHEN("testing geometry with 90 degree rotation and no offsets")
         {
             real_t angle = pi_t / 2;
-            Geometry g(s2c, c2d, ddVol, ddDet, angle);
+
+            Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                       VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                       RotationAngles3D{Radian{angle}, Radian{0}, Radian{0}});
 
             THEN("a copy is the same")
             {
@@ -501,8 +520,11 @@ SCENARIO("Testing 3D geometries")
             real_t angle2 = pi_t / 2;
             RealVector_t offset(3);
             offset << 1, -2, -1;
-            Geometry g(s2c, c2d, ddVol, ddDet, angle1, angle2, 0, 0, 0, offset[0], offset[1],
-                       offset[2]);
+
+            Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                       VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                       RotationAngles3D{Radian{angle1}, Radian{angle2}, Radian{0}},
+                       PrincipalPointOffset2D{0, 0}, RotationOffset3D{offset});
 
             THEN("a copy is the same")
             {

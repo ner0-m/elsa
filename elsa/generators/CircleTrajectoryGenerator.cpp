@@ -12,6 +12,9 @@ namespace elsa
                                                     index_t arcDegrees, real_t sourceToCenter,
                                                     real_t centerToDetector)
     {
+        // pull in geometry namespace, to reduce cluttering
+        using namespace geometry;
+
         // sanity check
         auto dim = volumeDescriptor.getNumberOfDimensions();
 
@@ -33,6 +36,7 @@ namespace elsa
             spacing << volumeDescriptor.getSpacingPerDimension()[0],
                 volumeDescriptor.getSpacingPerDimension()[1], 1;
         }
+
         VolumeDescriptor sinoDescriptor(coeffs, spacing);
 
         std::vector<Geometry> geometryList;
@@ -43,12 +47,19 @@ namespace elsa
             real_t angle =
                 static_cast<real_t>(i) * angleIncrement * pi_t / 180.0f; // convert to radians
             if (dim == 2) {
-                Geometry geom(sourceToCenter, centerToDetector, angle, volumeDescriptor,
-                              sinoDescriptor);
+                Geometry geom(SourceToCenterOfRotation{sourceToCenter},
+                              CenterOfRotationToDetector{centerToDetector}, Radian{angle},
+                              VolumeData2D{volumeDescriptor.getSpacingPerDimension(),
+                                           volumeDescriptor.getLocationOfOrigin()},
+                              SinogramData2D{Size2D{coeffs}, Spacing2D{spacing}});
                 geometryList.push_back(geom);
             } else {
-                Geometry geom(sourceToCenter, centerToDetector, volumeDescriptor, sinoDescriptor,
-                              angle);
+                Geometry geom(SourceToCenterOfRotation{sourceToCenter},
+                              CenterOfRotationToDetector{centerToDetector},
+                              VolumeData3D{volumeDescriptor.getSpacingPerDimension(),
+                                           volumeDescriptor.getLocationOfOrigin()},
+                              SinogramData3D{Size3D{coeffs}, Spacing3D{spacing}},
+                              RotationAngles3D{Radian{angle}, Radian{0}, Radian{0}});
                 geometryList.push_back(geom);
             }
         }

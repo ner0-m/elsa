@@ -7,10 +7,12 @@
 
 namespace elsa
 {
-    Geometry::Geometry(real_t sourceToCenterOfRotation, real_t centerOfRotationToDetector,
-                       real_t angle, const DataDescriptor& volumeDescriptor,
-                       const DataDescriptor& sinoDescriptor, real_t offset,
-                       real_t centerOfRotationOffsetX, real_t centerOfRotationOffsetY)
+    using namespace geometry;
+
+    Geometry::Geometry(SourceToCenterOfRotation sourceToCenterOfRotation,
+                       CenterOfRotationToDetector centerOfRotationToDetector, Radian angle,
+                       VolumeData2D&& volData, SinogramData2D&& sinoData,
+                       PrincipalPointOffset offset, RotationOffset2D centerOfRotOffset)
         : _objectDimension{2},
           _P{RealMatrix_t::Identity(2, 2 + 1)},
           _Pinv{RealMatrix_t::Identity(2 + 1, 2)},
@@ -20,35 +22,36 @@ namespace elsa
           _S{RealMatrix_t::Identity(2 + 1, 2 + 1)},
           _C{RealVector_t::Zero(2)}
     {
+        auto [volSpacing, volOrigin] = std::move(volData);
+        auto [sinoSpacing, sinoOrigin] = std::move(sinoData);
+
         // setup rotation matrix _R
         real_t c = std::cos(angle);
         real_t s = std::sin(angle);
         _R << c, -s, s, c;
 
         // setup scaling matrix _S
-        _S << volumeDescriptor.getSpacingPerDimension()[0], 0, 0, 0,
-            volumeDescriptor.getSpacingPerDimension()[1], 0, 0, 0, 1;
+        _S << volSpacing[0], 0, 0, 0, volSpacing[1], 0, 0, 0, 1;
 
         // set the translation _t
-        RealVector_t centerOfRotationOffset(_objectDimension);
-        centerOfRotationOffset << centerOfRotationOffsetX, centerOfRotationOffsetY;
+        // auto centerOfRotationOffset = static_cast<RealVector_t>(centerOfRotOffset);
+        // centerOfRotationOffset << centerOfRotationOffsetX, centerOfRotationOffsetY;
 
-        _t = _R * (-centerOfRotationOffset - volumeDescriptor.getLocationOfOrigin());
+        _t = _R * (-centerOfRotOffset.get() - volOrigin);
         _t[_objectDimension - 1] += sourceToCenterOfRotation;
 
         // set the intrinsic parameters _K
-        real_t alpha = sinoDescriptor.getSpacingPerDimension()[0];
+        real_t alpha = sinoSpacing[0];
         _K << (sourceToCenterOfRotation + centerOfRotationToDetector) / alpha,
-            (sinoDescriptor.getLocationOfOrigin()[0] / alpha + offset), 0, 1;
+            (sinoOrigin[0] / alpha + offset), 0, 1;
 
         buildMatrices();
     }
 
-    Geometry::Geometry(real_t sourceToCenterOfRotation, real_t centerOfRotationToDetector,
-                       const DataDescriptor& volumeDescriptor, const DataDescriptor& sinoDescriptor,
-                       real_t gamma, real_t beta, real_t alpha, real_t px, real_t py,
-                       real_t centerOfRotationOffsetX, real_t centerOfRotationOffsetY,
-                       real_t centerOfRotationOffsetZ)
+    Geometry::Geometry(SourceToCenterOfRotation sourceToCenterOfRotation,
+                       CenterOfRotationToDetector centerOfRotationToDetector,
+                       VolumeData3D&& volData, SinogramData3D&& sinoData, RotationAngles3D angles,
+                       PrincipalPointOffset2D offset, RotationOffset3D centerOfRotOffset)
         : _objectDimension{3},
           _P{RealMatrix_t::Identity(3, 3 + 1)},
           _Pinv{RealMatrix_t::Identity(3 + 1, 3)},
@@ -58,6 +61,13 @@ namespace elsa
           _S{RealMatrix_t::Identity(3 + 1, 3 + 1)},
           _C{RealVector_t::Zero(3)}
     {
+        auto [volSpacing, volOrigin] = std::move(volData);
+        auto [sinoSpacing, sinoOrigin] = std::move(sinoData);
+
+        real_t alpha = angles.alpha();
+        real_t beta = angles.beta();
+        real_t gamma = angles.gamma();
+
         // setup rotation matrix
         real_t ca = std::cos(alpha);
         real_t sa = std::sin(alpha);
@@ -72,26 +82,24 @@ namespace elsa
              * (RealMatrix_t(3, 3) << ca, 0, sa, 0, 1, 0, -sa, 0, ca).finished();
 
         // setup scaling matrix _S
-        _S << volumeDescriptor.getSpacingPerDimension()[0], 0, 0, 0, 0,
-            volumeDescriptor.getSpacingPerDimension()[1], 0, 0, 0, 0,
-            volumeDescriptor.getSpacingPerDimension()[2], 0, 0, 0, 0, 1;
+        _S << volSpacing[0], 0, 0, 0, 0, volSpacing[1], 0, 0, 0, 0, volSpacing[2], 0, 0, 0, 0, 1;
 
         // setup the translation _t
-        RealVector_t centerOfRotationOffset(_objectDimension);
-        centerOfRotationOffset << centerOfRotationOffsetX, centerOfRotationOffsetY,
-            centerOfRotationOffsetZ;
+        // RealVector_t centerOfRotationOffset(_objectDimension);
+        // centerOfRotationOffset << centerOfRotationOffsetX, centerOfRotationOffsetY,
+        //     centerOfRotationOffsetZ;
 
-        _t = _R * (-centerOfRotationOffset - volumeDescriptor.getLocationOfOrigin());
+        _t = _R * (-centerOfRotOffset.get() - volOrigin);
         _t(_objectDimension - 1) += sourceToCenterOfRotation;
 
         // setup the intrinsic parameters _K
-        real_t alpha1 = sinoDescriptor.getSpacingPerDimension()[0];
-        real_t alpha2 = sinoDescriptor.getSpacingPerDimension()[1];
+        real_t alpha1 = sinoSpacing[0];
+        real_t alpha2 = sinoSpacing[1];
 
         _K << (sourceToCenterOfRotation + centerOfRotationToDetector) / alpha1, 0,
-            sinoDescriptor.getLocationOfOrigin()[0] / alpha1 + px, 0,
+            sinoOrigin[0] / alpha1 + offset[0], 0,
             (sourceToCenterOfRotation + centerOfRotationToDetector) / alpha2,
-            sinoDescriptor.getLocationOfOrigin()[1] / alpha2 + py, 0, 0, 1;
+            sinoOrigin[1] / alpha2 + offset[1], 0, 0, 1;
 
         buildMatrices();
     }
