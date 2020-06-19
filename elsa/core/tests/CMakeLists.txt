@@ -18,6 +18,7 @@ ELSA_TEST(ExpressionTemplates)
 ELSA_TEST(Geometry)
 ELSA_TEST(StrongTypes)
 ELSA_TEST(PlanarDetectorDescriptor)
+ELSA_TEST(CurvedDetectorDescriptor)
 
 if(ELSA_BENCHMARKS)
     ELSA_TEST(BenchmarkExpressionTemplates)

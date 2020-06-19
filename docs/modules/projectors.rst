@@ -4,11 +4,6 @@ elsa projectors
 
 .. contents:: Table of Contents
 
-Geometry
-========
-
-.. doxygenclass:: elsa::Geometry
-
 BinaryMethod
 ============
 

@@ -51,7 +51,6 @@ namespace elsa
          *
          * \param[in] domainDescriptor describing the domain of the operator (the volume)
          * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
-         * \param[in] geometryList vector containing the geometries for the acquisition poses
          * \param[in] fast performs fast backward projection if set, otherwise matched; forward
          * projection is unaffected
          *

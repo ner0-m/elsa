@@ -46,6 +46,29 @@ SCENARIO("Testing 2D PlanarDetectorDescriptor")
             THEN("Geometry is equal") { CHECK((geom) == g); }
         }
 
+        WHEN("Generating rays for the principal point")
+        {
+            RealVector_t pixel(1);
+            pixel << 2.5f;
+
+            auto ray = desc.computeRayFromDetectorCoord(pixel, 0);
+
+            const auto ro = ray.origin();
+            const auto rd = ray.direction();
+
+            const auto pp = g.getPrincipalPoint();
+            const auto source = g.getCameraCenter();
+
+            CHECK((ro - source).sum() == Approx(0));
+
+            auto expectedRd = (pp - source).normalized();
+
+            CHECK((rd - expectedRd).sum() == Approx(0));
+
+            std::cout << "rd:\n" << rd << "\n";
+            std::cout << "expected rd:\n" << expectedRd << "\n";
+        }
+
         WHEN("Generating rays for detecor pixels 0, 2 and 4")
         {
             for (real_t detPixel : std::initializer_list<real_t>{0, 2, 4}) {
