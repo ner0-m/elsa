@@ -269,6 +269,8 @@ namespace elsa
 
                 constexpr operator real_t() { return _x; }
 
+                constexpr real_t get() const { return _x; }
+
             private:
                 real_t _x;
             };
@@ -351,6 +353,7 @@ namespace elsa
 
             using Base::Base;
             using Base::operator real_t;
+            using Base::get;
         };
 
         /// Strong Type for Geometry construction (Distance Center of Rotation to Principal point)
@@ -361,6 +364,7 @@ namespace elsa
 
             using Base::Base;
             using Base::operator real_t;
+            using Base::get;
         };
 
         /// Strong Type for Geometry construction (1D Principal point offset)
@@ -371,6 +375,7 @@ namespace elsa
 
             using Base::Base;
             using Base::operator real_t;
+            using Base::get;
         };
 
         /// Strong Type for Geometry construction (2D Principal point offset)
@@ -491,6 +496,19 @@ namespace elsa
                     IndexVector_t coeffs = size.get();
                     _locationOfOrigin = static_cast<real_t>(0.5)
                                         * (coeffs.cast<real_t>().array() * _spacing.array());
+                }
+
+                /// Constructor from Strong type Spacing and OriginShift
+                GeometryData(Coefficients<Size> size, OriginShift<Size> origin)
+                    : _spacing(Vector::Ones(Size)), _locationOfOrigin(Size)
+                {
+                    IndexVector_t coeffs = size.get();
+
+                    // Calculate origin with middle of size (including spacing) plus origin shift
+                    // (which is assumed to be in spacing)
+                    _locationOfOrigin = static_cast<real_t>(0.5)
+                                            * (coeffs.cast<real_t>().array() * _spacing.array())
+                                        + origin.get().array();
                 }
 
                 /// Constructor from Strong type Spacing and OriginShift

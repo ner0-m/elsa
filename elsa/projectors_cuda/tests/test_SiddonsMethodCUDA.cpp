@@ -9,6 +9,7 @@
 #include "PlanarDetectorDescriptor.h"
 #include "testHelpers.h"
 
+#include <optional>
 #include <array>
 
 using namespace elsa;
@@ -158,7 +159,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
             WHEN("Tracing along a y-axis-aligned ray with a negative x-coordinate of origin")
             {
                 geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
-                                  PrincipalPointOffset{}, RotationOffset2D{volSize, 0});
+                                  std::nullopt, PrincipalPointOffset{},
+                                  RotationOffset2D{volSize, 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -188,7 +190,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                  "bounding box")
             {
                 geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
-                                  PrincipalPointOffset{}, RotationOffset2D{-volSize, 0});
+                                  std::nullopt, PrincipalPointOffset{},
+                                  RotationOffset2D{-volSize, 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -217,7 +220,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
             WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin")
             {
                 geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData),
-                                  std::move(sinoData), PrincipalPointOffset{},
+                                  std::move(sinoData), std::nullopt, PrincipalPointOffset{},
                                   RotationOffset2D{0, volSize});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -248,7 +251,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                  "bounding box")
             {
                 geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData),
-                                  std::move(sinoData), PrincipalPointOffset{},
+                                  std::move(sinoData), std::nullopt, PrincipalPointOffset{},
                                   RotationOffset2D{0, -volSize});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -340,7 +343,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
         WHEN("A y-axis-aligned ray runs along the left voxel boundary")
         {
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
-                              std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
+                              std::move(volData), std::move(sinoData), std::nullopt,PrincipalPointOffset{0},
                               RotationOffset2D{-0.5, 0});
              
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -374,7 +377,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
             // For Siddons's values in the range [0,boxMax) are considered, a ray running along
             // boxMax should be ignored
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
-                              std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
+                              std::move(volData), std::move(sinoData), std::nullopt,PrincipalPointOffset{0},
                               RotationOffset2D{volSize * 0.5, 0});
              
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -412,8 +415,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
         WHEN("A y-axis-aligned ray runs along the left volume boundary")
         {
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
-                              std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
-                              RotationOffset2D{-volSize * 0.5, 0});
+                              std::move(volData), std::move(sinoData), std::nullopt,
+                              PrincipalPointOffset{0}, RotationOffset2D{-volSize * 0.5, 0});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer<data_t> sino(sinoDescriptor);
@@ -543,7 +546,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                 // enters through a border not along the main direction First pixel should be
                 // weighted differently
                 geom.emplace_back(stc, ctr, angle, std::move(volData), std::move(sinoData),
-                                  PrincipalPointOffset{0}, RotationOffset2D{sqrt3r, 0});
+                                  std::nullopt, PrincipalPointOffset{0},
+                                  RotationOffset2D{sqrt3r, 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -596,7 +600,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                 // In this case the ray enters through a border along the main ray direction, but
                 // exits through a border not along the main direction
                 geom.emplace_back(stc, ctr, angle, std::move(volData), std::move(sinoData),
-                                  PrincipalPointOffset{0}, RotationOffset2D{-sqrt3r, 0});
+                                  std::nullopt, PrincipalPointOffset{0},
+                                  RotationOffset2D{-sqrt3r, 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -647,7 +652,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
             WHEN("A ray only intersects a single pixel")
             {
                 geom.emplace_back(stc, ctr, angle, std::move(volData), std::move(sinoData),
-                                  PrincipalPointOffset{0}, RotationOffset2D{-2 - sqrt3r / 2, 0});
+                                  std::nullopt, PrincipalPointOffset{0},
+                                  RotationOffset2D{-2 - sqrt3r / 2, 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -762,7 +768,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                 // In this case the ray exits through a border along the main ray direction, but
                 // enters through a border not along the main direction
                 geom.emplace_back(stc, ctr, angle, std::move(volData), std::move(sinoData),
-                                  PrincipalPointOffset{0}, RotationOffset2D{0, std::sqrt(3.f)});
+                                  std::nullopt, PrincipalPointOffset{0},
+                                  RotationOffset2D{0, std::sqrt(3.f)});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -816,7 +823,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                 // In this case the ray enters through a border along the main ray direction, but
                 // exits through a border not along the main direction
                 geom.emplace_back(stc, ctr, angle, std::move(volData), std::move(sinoData),
-                                  PrincipalPointOffset{0}, RotationOffset2D{0, -std::sqrt(3.f)});
+                                  std::nullopt, PrincipalPointOffset{0},
+                                  RotationOffset2D{0, -std::sqrt(3.f)});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -867,7 +875,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                 // This is a special case that is handled separately in both forward and
                 // backprojection
                 geom.emplace_back(stc, ctr, angle, std::move(volData), std::move(sinoData),
-                                  PrincipalPointOffset{0},
+                                  std::nullopt, PrincipalPointOffset{0},
                                   RotationOffset2D{0, -2 - std::sqrt(3.f) / 2});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -1182,7 +1190,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
                     // op backprojection simpler
                     geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr,
                                       std::move(volData), std::move(sinoData),
-                                      RotationAngles3D{Gamma{0}}, PrincipalPointOffset2D{0, 0},
+                                      RotationAngles3D{Gamma{0}}, std::nullopt,
+                                      PrincipalPointOffset2D{0, 0},
                                       RotationOffset3D{-offsetx[i], -offsety[i], 0});
 
                     PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -1231,7 +1240,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
                     // op backprojection simpler
                     geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr,
                                       std::move(volData), std::move(sinoData),
-                                      RotationAngles3D{Gamma{0}}, PrincipalPointOffset2D{0, 0},
+                                      RotationAngles3D{Gamma{0}}, std::nullopt,
+                                      PrincipalPointOffset2D{0, 0},
                                       RotationOffset3D{-offsetx[i], -offsety[i], 0});
 
                     PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -1319,8 +1329,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
                 // In this case the ray enters through a border orthogonal to a non-main
                 // direction
                 geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
-                                  RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
-                                  RotationOffset3D{1, 0, 0});
+                                  RotationAngles3D{Gamma{pi_t / 6}}, std::nullopt,
+                                  PrincipalPointOffset2D{0, 0}, RotationOffset3D{1, 0, 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -1366,8 +1376,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
             {
                 // In this case the ray exit through a border orthogonal to a non-main direction
                 geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
-                                  RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
-                                  RotationOffset3D{-1, 0, 0});
+                                  RotationAngles3D{Gamma{pi_t / 6}}, std::nullopt,
+                                  PrincipalPointOffset2D{0, 0}, RotationOffset3D{-1, 0, 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -1413,8 +1423,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
             {
                 // special case - no interior voxels, entry and exit voxels are the same
                 geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
-                                  RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
-                                  RotationOffset3D{-2, 0, 0});
+                                  RotationAngles3D{Gamma{pi_t / 6}}, std::nullopt,
+                                  PrincipalPointOffset2D{0, 0}, RotationOffset3D{-2, 0, 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
@@ -1504,7 +1514,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
                     geom.emplace_back(
                         stc, ctr, std::move(volData), std::move(sinoData),
                         RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}, Alpha{alpha[i]}},
-                        PrincipalPointOffset2D{0, 0},
+                        std::nullopt, PrincipalPointOffset2D{0, 0},
                         RotationOffset3D{-offsetx[i], -offsety[i], -offsetz[i]});
 
                     PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);

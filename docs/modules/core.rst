@@ -38,6 +38,27 @@ DataContainer
 =============
 
 .. doxygenclass:: elsa::DataContainer
+ 
+DetectorDescriptor
+=============
+
+.. doxygenclass:: elsa::DetectorDescriptor
+
+PlanarDetectorDescriptor
+=============
+
+.. doxygenclass:: elsa::PlanarDetectorDescriptor
+
+CurvedDetectorDescriptor
+=============
+
+.. doxygenclass:: elsa::CurvedDetectorDescriptor
+ 
+Geometry
+=============
+
+.. doxygenclass:: elsa::Geometry
+ 
 
 LinearOperator
 ==============
