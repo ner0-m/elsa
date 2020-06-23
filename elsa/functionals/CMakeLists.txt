@@ -61,6 +61,12 @@ if(ELSA_TESTING)
     add_subdirectory(tests)
 endif(ELSA_TESTING)
 
+if (ELSA_BUILD_PYTHON_BINDINGS)
+        GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
+                ${CMAKE_CURRENT_BINARY_DIR}/bind_${ELSA_MODULE_NAME}.cpp
+                ""
+                ${MODULE_SOURCES})
+endif()
 
 # register the module
 registerComponent(${ELSA_MODULE_NAME})

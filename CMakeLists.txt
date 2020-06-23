@@ -26,6 +26,7 @@ option(ELSA_INSTALL "Enable generating the install targets for make install" ${E
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 
 option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
+option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (required libclang-dev)" ON)
 option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when building (-Wall -Wextra)" ON)
 
 option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
@@ -87,6 +88,7 @@ set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 # include the InstallElsaModule function
 include(InstallElsaModule)
 
+add_subdirectory(thirdparty/pybind11)
 
 # ------------ setup VectorCUDA --------
 # ------------
@@ -170,6 +172,11 @@ endif(ELSA_TESTING OR ELSA_BENCHMARKS)
 
 # ------------ add code/docs -----------
 # ------------
+
+# the bindings generator should be added before elsa, as we check whether the target can be built
+if (ELSA_BUILD_PYTHON_BINDINGS)
+    add_subdirectory(tools/bindings_generation EXCLUDE_FROM_ALL)
+endif()
 
 # the elsa library
 add_subdirectory(elsa)

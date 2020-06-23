@@ -89,6 +89,28 @@ target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
 # set -fPIC
 set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+if (ELSA_BUILD_PYTHON_BINDINGS)
+    set(BINDINGS_SOURCES ${MODULE_SOURCES}
+        Descriptors/DataDescriptor.h
+        Descriptors/DescriptorUtils.h
+        Descriptors/VolumeDescriptor.h
+        Descriptors/BlockDescriptor.h
+        Descriptors/IdenticalBlocksDescriptor.h
+        Descriptors/PartitionDescriptor.h
+        Descriptors/RandomBlocksDescriptor.h
+        Geometry.h)
+        
+    list(FILTER BINDINGS_SOURCES EXCLUDE REGEX DataHandler.*.cpp)
+    list(FILTER BINDINGS_SOURCES EXCLUDE REGEX .*Descriptor.*.cpp)
+    list(FILTER BINDINGS_SOURCES EXCLUDE REGEX Geometry.cpp)
+    list(FILTER BINDINGS_SOURCES EXCLUDE REGEX StrongTypes.cpp)
+    
+
+    GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
+            ${CMAKE_CURRENT_BINARY_DIR}/bind_${ELSA_MODULE_NAME}.cpp
+            bindings_hints.hpp
+            ${BINDINGS_SOURCES})
+endif()
 
 # build the tests (if enabled)
 if(ELSA_TESTING)

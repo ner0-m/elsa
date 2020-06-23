@@ -75,6 +75,8 @@ namespace elsa
         /// default destructor
         ~BlockLinearOperator() override = default;
 
+        BlockLinearOperator& operator=(BlockLinearOperator&) = delete;
+
         /// return the operator corresponding to the i-th block of the matrix
         const LinearOperator<data_t>& getIthOperator(index_t i) const;
 
