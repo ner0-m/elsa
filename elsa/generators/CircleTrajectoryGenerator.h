@@ -2,6 +2,8 @@
 
 #include "Geometry.h"
 
+#include "DetectorDescriptor.h"
+
 #include <vector>
 #include <utility>
 
@@ -35,8 +37,11 @@ namespace elsa
          * For example: 3 poses over a 180 arc will yield: 0, 90, 180 degrees.
          *
          * Please note: the sinogram size/spacing will match the volume size/spacing.
+         *
+         * TODO: Make it possible to return either PlanarDetectorDescriptor, or
+         * CurvedDetectorDescriptor
          */
-        static std::pair<std::vector<Geometry>, std::unique_ptr<DataDescriptor>>
+        static std::unique_ptr<DetectorDescriptor>
             createTrajectory(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
                              index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector);
     };

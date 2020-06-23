@@ -248,9 +248,9 @@ namespace elsa
             }
 
             /// Access to gamma
-            constexpr Radian gamma() const { return operator[](0); }
+            constexpr Radian gamma() const { return operator[](0u); }
             /// Access to beta
-            constexpr Radian beta() const { return operator[](1); }
+            constexpr Radian beta() const { return operator[](1u); }
             /// Access to alpha
             constexpr Radian alpha() const { return operator[](2); }
         };

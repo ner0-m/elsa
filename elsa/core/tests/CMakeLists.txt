@@ -17,6 +17,7 @@ ELSA_TEST(LinearOperator)
 ELSA_TEST(ExpressionTemplates)
 ELSA_TEST(Geometry)
 ELSA_TEST(StrongTypes)
+ELSA_TEST(PlanarDetectorDescriptor)
 
 if(ELSA_BENCHMARKS)
     ELSA_TEST(BenchmarkExpressionTemplates)

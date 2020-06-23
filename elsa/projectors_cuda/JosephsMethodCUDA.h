@@ -8,6 +8,8 @@
 #include "LinearOperator.h"
 #include "Geometry.h"
 #include "BoundingBox.h"
+#include "VolumeDescriptor.h"
+#include "DetectorDescriptor.h"
 
 #include "TraverseJosephsCUDA.cuh"
 
@@ -56,9 +58,8 @@ namespace elsa
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
-        JosephsMethodCUDA(const DataDescriptor& domainDescriptor,
-                          const DataDescriptor& rangeDescriptor,
-                          const std::vector<Geometry>& geometryList, bool fast = true);
+        JosephsMethodCUDA(const VolumeDescriptor& domainDescriptor,
+                          const DetectorDescriptor& rangeDescriptor, bool fast = true);
 
         /// destructor
         ~JosephsMethodCUDA() override;
@@ -84,8 +85,11 @@ namespace elsa
         /// the bounding box of the volume
         BoundingBox _boundingBox;
 
-        /// the geometry list
-        std::vector<Geometry> _geometryList;
+        /// Reference to DetectorDescriptor stored in LinearOperator
+        DetectorDescriptor& _detectorDescriptor;
+
+        /// Reference to VolumeDescriptor stored in LinearOperator
+        VolumeDescriptor& _volumeDescriptor;
 
         /// threads per block used in the kernel execution configuration
         static const unsigned int THREADS_PER_BLOCK =

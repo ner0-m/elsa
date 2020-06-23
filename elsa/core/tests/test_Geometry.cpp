@@ -64,24 +64,6 @@ SCENARIO("Testing 2D geometries")
                 REQUIRE((c[0] - o[0]) == Approx(0));
                 REQUIRE((c[1] - o[1] + s2c) == Approx(0));
             }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    RealVector_t pixel(1);
-                    pixel << detPixel;
-                    auto [ro, rd] = g.computeRayTo(pixel);
-
-                    auto c = g.getCameraCenter();
-                    REQUIRE((ro - c).sum() == Approx(0));
-
-                    real_t factor =
-                        (std::abs(rd[0]) > 0) ? ((pixel[0] - ro[0]) / rd[0]) : (s2c + c2d);
-                    real_t detCoordY = ro[1] + factor * rd[1];
-                    REQUIRE(detCoordY == Approx(ddVol.getLocationOfOrigin()[1] + c2d));
-                }
-            }
         }
 
         WHEN("testing geometry without rotation but with principal point offset")
@@ -123,25 +105,6 @@ SCENARIO("Testing 2D geometries")
                 REQUIRE((c[0] - o[0]) == Approx(0));
                 REQUIRE((c[1] - o[1] + s2c) == Approx(0));
             }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    RealVector_t pixel(1);
-                    pixel << detPixel;
-                    auto [ro, rd] = g.computeRayTo(pixel);
-
-                    auto c = g.getCameraCenter();
-                    REQUIRE((ro - c).sum() == Approx(0));
-
-                    real_t factor = (std::abs(rd[0]) >= Approx(0.001))
-                                        ? ((pixel[0] - ro[0] - px) / rd[0])
-                                        : (s2c + c2d);
-                    real_t detCoordY = ro[1] + factor * rd[1];
-                    REQUIRE(detCoordY == Approx(ddVol.getLocationOfOrigin()[1] + c2d));
-                }
-            }
         }
 
         WHEN("testing geometry with 90 degree rotation and no offsets")
@@ -180,24 +143,6 @@ SCENARIO("Testing 2D geometries")
 
                 REQUIRE((c[0] - o[0] + s2c) == Approx(0));
                 REQUIRE((c[1] - o[1]) == Approx(0).margin(0.000001));
-            }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    RealVector_t pixel(1);
-                    pixel << detPixel;
-                    auto [ro, rd] = g.computeRayTo(pixel);
-
-                    auto c = g.getCameraCenter();
-                    REQUIRE((ro - c).sum() == Approx(0));
-
-                    real_t factor =
-                        (std::abs(rd[1]) > 0.0000001) ? ((ro[1] - pixel[0]) / rd[1]) : (s2c + c2d);
-                    real_t detCoordX = ro[0] + factor * rd[0];
-                    REQUIRE(detCoordX == Approx(ddVol.getLocationOfOrigin()[0] + c2d));
-                }
             }
         }
 
@@ -248,30 +193,6 @@ SCENARIO("Testing 2D geometries")
 
                 REQUIRE((c[0] - newX) == Approx(0).margin(0.000001));
                 REQUIRE((c[1] - newY) == Approx(0).margin(0.000001));
-            }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    RealVector_t pixel(1);
-                    pixel << detPixel;
-                    auto [ro, rd] = g.computeRayTo(pixel);
-
-                    auto c = g.getCameraCenter();
-                    REQUIRE((ro - c).sum() == Approx(0.0));
-
-                    auto o = ddVol.getLocationOfOrigin();
-                    RealVector_t detCoordWorld(2);
-                    detCoordWorld << detPixel - o[0], c2d;
-                    RealVector_t rotD = g.getRotationMatrix().transpose() * detCoordWorld;
-                    rotD[0] += o[0] + cx;
-                    rotD[1] += o[1] + cy;
-
-                    real_t factor = (rotD[0] - ro[0]) / rd[0]; // rd[0] won't be 0 here!
-                    real_t detCoord = ro[1] + factor * rd[1];
-                    REQUIRE(detCoord == Approx(rotD[1]));
-                }
             }
         }
     }
@@ -331,37 +252,6 @@ SCENARIO("Testing 3D geometries")
                 REQUIRE((c[1] - o[1]) == Approx(0));
                 REQUIRE((c[2] - o[2] + s2c) == Approx(0));
             }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                        RealVector_t pixel(2);
-                        pixel << detPixel1, detPixel2;
-                        auto [ro, rd] = g.computeRayTo(pixel);
-
-                        auto c = g.getCameraCenter();
-                        REQUIRE((ro - c).sum() == Approx(0));
-
-                        auto o = ddVol.getLocationOfOrigin();
-                        RealVector_t detCoordWorld(3);
-                        detCoordWorld << detPixel1 - o[0], detPixel2 - o[1], c2d;
-                        RealVector_t rotD = g.getRotationMatrix().transpose() * detCoordWorld + o;
-
-                        real_t factor = 0;
-                        if (std::abs(rd[0]) > 0)
-                            factor = (rotD[0] - ro[0]) / rd[0];
-                        else if (std::abs(rd[1]) > 0)
-                            factor = (rotD[1] - ro[1]) / rd[1];
-                        else if (std::abs(rd[2]) > 0)
-                            factor = (rotD[2] - ro[2] / rd[2]);
-                        REQUIRE((ro[0] + factor * rd[0]) == Approx(rotD[0]));
-                        REQUIRE((ro[1] + factor * rd[1]) == Approx(rotD[1]));
-                        REQUIRE((ro[2] + factor * rd[2]) == Approx(rotD[2]));
-                    }
-                }
-            }
         }
 
         WHEN("testing geometry without rotation but with principal point offsets")
@@ -406,37 +296,6 @@ SCENARIO("Testing 3D geometries")
                 REQUIRE((c[1] - o[1]) == Approx(0));
                 REQUIRE((c[2] - o[2] + s2c) == Approx(0));
             }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                        RealVector_t pixel(2);
-                        pixel << detPixel1, detPixel2;
-                        auto [ro, rd] = g.computeRayTo(pixel);
-
-                        auto c = g.getCameraCenter();
-                        REQUIRE((ro - c).sum() == Approx(0));
-
-                        auto o = ddVol.getLocationOfOrigin();
-                        RealVector_t detCoordWorld(3);
-                        detCoordWorld << detPixel1 - o[0] - px, detPixel2 - o[1] - py, c2d;
-                        RealVector_t rotD = g.getRotationMatrix().transpose() * detCoordWorld + o;
-
-                        real_t factor = 0;
-                        if (std::abs(rd[0]) > 0)
-                            factor = (rotD[0] - ro[0]) / rd[0];
-                        else if (std::abs(rd[1]) > 0)
-                            factor = (rotD[1] - ro[1]) / rd[1];
-                        else if (std::abs(rd[2]) > 0)
-                            factor = (rotD[2] - ro[2] / rd[2]);
-                        REQUIRE((ro[0] + factor * rd[0]) == Approx(rotD[0]));
-                        REQUIRE((ro[1] + factor * rd[1]) == Approx(rotD[1]));
-                        REQUIRE((ro[2] + factor * rd[2]) == Approx(rotD[2]));
-                    }
-                }
-            }
         }
 
         WHEN("testing geometry with 90 degree rotation and no offsets")
@@ -480,37 +339,6 @@ SCENARIO("Testing 3D geometries")
                 REQUIRE((c[0] - o[0] - s2c) == Approx(0));
                 REQUIRE((c[1] - o[1]) == Approx(0).margin(0.000001));
                 REQUIRE((c[2] - o[2]) == Approx(0).margin(0.000001));
-            }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                        RealVector_t pixel(2);
-                        pixel << detPixel1, detPixel2;
-                        auto [ro, rd] = g.computeRayTo(pixel);
-
-                        auto c = g.getCameraCenter();
-                        REQUIRE((ro - c).sum() == Approx(0));
-
-                        auto o = ddVol.getLocationOfOrigin();
-                        RealVector_t detCoordWorld(3);
-                        detCoordWorld << detPixel1 - o[0], detPixel2 - o[1], c2d;
-                        RealVector_t rotD = g.getRotationMatrix().transpose() * detCoordWorld + o;
-
-                        real_t factor = 0;
-                        if (std::abs(rd[0]) > 0)
-                            factor = (rotD[0] - ro[0]) / rd[0];
-                        else if (std::abs(rd[1]) > 0)
-                            factor = (rotD[1] - ro[1]) / rd[1];
-                        else if (std::abs(rd[2]) > 0)
-                            factor = (rotD[2] - ro[2] / rd[2]);
-                        REQUIRE((ro[0] + factor * rd[0]) == Approx(rotD[0]));
-                        REQUIRE((ro[1] + factor * rd[1]) == Approx(rotD[1]));
-                        REQUIRE((ro[2] + factor * rd[2]) == Approx(rotD[2]));
-                    }
-                }
             }
         }
 
@@ -567,38 +395,6 @@ SCENARIO("Testing 3D geometries")
 
                 REQUIRE((rotSrc - c).sum() == Approx(0).margin(0.000001));
             }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                        RealVector_t pixel(2);
-                        pixel << detPixel1, detPixel2;
-                        auto [ro, rd] = g.computeRayTo(pixel);
-
-                        auto c = g.getCameraCenter();
-                        REQUIRE((ro - c).sum() == Approx(0));
-
-                        auto o = ddVol.getLocationOfOrigin();
-                        RealVector_t detCoordWorld(3);
-                        detCoordWorld << detPixel1 - o[0], detPixel2 - o[1], c2d;
-                        RealVector_t rotD =
-                            g.getRotationMatrix().transpose() * detCoordWorld + o + offset;
-
-                        real_t factor = 0;
-                        if (std::abs(rd[0]) > 0.000001)
-                            factor = (rotD[0] - ro[0]) / rd[0];
-                        else if (std::abs(rd[1]) > 0.000001)
-                            factor = (rotD[1] - ro[1]) / rd[1];
-                        else if (std::abs(rd[2]) > 0.000001)
-                            factor = (rotD[2] - ro[2] / rd[2]);
-                        REQUIRE((ro[0] + factor * rd[0]) == Approx(rotD[0]));
-                        REQUIRE((ro[1] + factor * rd[1]) == Approx(rotD[1]));
-                        REQUIRE((ro[2] + factor * rd[2]) == Approx(rotD[2]));
-                    }
-                }
-            }
         }
 
         WHEN("testing geometry with 45/22.5/12.25 degree rotation as a rotation matrix")
@@ -653,37 +449,6 @@ SCENARIO("Testing 3D geometries")
                 RealVector_t rotSrc = g.getRotationMatrix().transpose() * src + o;
 
                 REQUIRE((rotSrc - c).sum() == Approx(0).margin(0.00001));
-            }
-
-            THEN("rays make sense")
-            {
-                // test outer + central pixels
-                for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                    for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-                        RealVector_t pixel(2);
-                        pixel << detPixel1, detPixel2;
-                        auto [ro, rd] = g.computeRayTo(pixel);
-
-                        auto c = g.getCameraCenter();
-                        REQUIRE((ro - c).sum() == Approx(0));
-
-                        auto o = ddVol.getLocationOfOrigin();
-                        RealVector_t detCoordWorld(3);
-                        detCoordWorld << detPixel1 - o[0], detPixel2 - o[1], c2d;
-                        RealVector_t rotD = g.getRotationMatrix().transpose() * detCoordWorld + o;
-
-                        real_t factor = 0;
-                        if (std::abs(rd[0]) > 0.000001)
-                            factor = (rotD[0] - ro[0]) / rd[0];
-                        else if (std::abs(rd[1]) > 0.000001)
-                            factor = (rotD[1] - ro[1]) / rd[1];
-                        else if (std::abs(rd[2]) > 0.000001)
-                            factor = (rotD[2] - ro[2] / rd[2]);
-                        REQUIRE((ro[0] + factor * rd[0]) == Approx(rotD[0]));
-                        REQUIRE((ro[1] + factor * rd[1]) == Approx(rotD[1]));
-                        REQUIRE((ro[2] + factor * rd[2]) == Approx(rotD[2]));
-                    }
-                }
             }
         }
     }

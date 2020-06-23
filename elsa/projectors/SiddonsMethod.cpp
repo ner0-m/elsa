@@ -8,12 +8,12 @@
 namespace elsa
 {
     template <typename data_t>
-    SiddonsMethod<data_t>::SiddonsMethod(const DataDescriptor& domainDescriptor,
-                                         const DataDescriptor& rangeDescriptor,
-                                         const std::vector<Geometry>& geometryList)
+    SiddonsMethod<data_t>::SiddonsMethod(const VolumeDescriptor& domainDescriptor,
+                                         const DetectorDescriptor& rangeDescriptor)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
           _boundingBox(domainDescriptor.getNumberOfCoefficientsPerDimension()),
-          _geometryList{geometryList}
+          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
+          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor))
     {
         auto dim = _domainDescriptor->getNumberOfDimensions();
         if (dim != _rangeDescriptor->getNumberOfDimensions()) {
@@ -24,7 +24,7 @@ namespace elsa
             throw std::logic_error("SiddonsMethod: only supporting 2d/3d operations");
         }
 
-        if (_geometryList.empty()) {
+        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
             throw std::logic_error("SiddonsMethod: geometry list was empty");
         }
     }
@@ -48,7 +48,7 @@ namespace elsa
     template <typename data_t>
     SiddonsMethod<data_t>* SiddonsMethod<data_t>::cloneImpl() const
     {
-        return new SiddonsMethod(*_domainDescriptor, *_rangeDescriptor, _geometryList);
+        return new SiddonsMethod(_volumeDescriptor, _detectorDescriptor);
     }
 
     template <typename data_t>
@@ -59,9 +59,6 @@ namespace elsa
 
         auto otherSM = dynamic_cast<const SiddonsMethod*>(&other);
         if (!otherSM)
-            return false;
-
-        if (_geometryList != otherSM->_geometryList)
             return false;
 
         return true;
@@ -78,14 +75,12 @@ namespace elsa
             result = 0; // initialize volume to 0, because we are not going to hit every voxel!
         }
 
-        const auto rangeDim = _rangeDescriptor->getNumberOfDimensions();
-
         // --> loop either over every voxel that should  updated or every detector
         // cell that should be calculated
 #pragma omp parallel for
         for (index_t rangeIndex = 0; rangeIndex < maxIterations; ++rangeIndex) {
             // --> get the current ray to the detector center
-            auto ray = computeRayToDetector(rangeIndex, rangeDim);
+            const auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
 
             // --> setup traversal algorithm
             TraverseAABB traverse(_boundingBox, ray);
@@ -111,21 +106,6 @@ namespace elsa
                     _domainDescriptor->getIndexFromCoordinate(traverse.getCurrentVoxel());
             }
         }
-    }
-
-    template <typename data_t>
-    typename SiddonsMethod<data_t>::Ray
-        SiddonsMethod<data_t>::computeRayToDetector(index_t detectorIndex, index_t dimension) const
-    {
-        auto detectorCoord = _rangeDescriptor->getCoordinateFromIndex(detectorIndex);
-
-        // center of detector pixel is 0.5 units away from the corresponding detector coordinates
-        auto geometry =
-            _geometryList.at(std::make_unsigned_t<index_t>(detectorCoord(dimension - 1)));
-        auto [ro, rd] = geometry.computeRayTo(
-            detectorCoord.block(0, 0, dimension - 1, 1).template cast<real_t>().array() + 0.5);
-
-        return Ray(ro, rd);
     }
 
     // ------------------------------------------

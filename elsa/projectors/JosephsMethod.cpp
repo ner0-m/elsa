@@ -8,13 +8,13 @@
 namespace elsa
 {
     template <typename data_t>
-    JosephsMethod<data_t>::JosephsMethod(const DataDescriptor& domainDescriptor,
-                                         const DataDescriptor& rangeDescriptor,
-                                         const std::vector<Geometry>& geometryList,
+    JosephsMethod<data_t>::JosephsMethod(const VolumeDescriptor& domainDescriptor,
+                                         const DetectorDescriptor& rangeDescriptor,
                                          Interpolation interpolation)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
           _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()},
-          _geometryList{geometryList},
+          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
+          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor)),
           _interpolation{interpolation}
     {
         auto dim = _domainDescriptor->getNumberOfDimensions();
@@ -26,7 +26,7 @@ namespace elsa
             throw std::invalid_argument("JosephsMethod: domain and range dimension need to match");
         }
 
-        if (_geometryList.empty()) {
+        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
             throw std::invalid_argument("JosephsMethod: geometry list was empty");
         }
     }
@@ -50,7 +50,7 @@ namespace elsa
     template <typename data_t>
     JosephsMethod<data_t>* JosephsMethod<data_t>::cloneImpl() const
     {
-        return new JosephsMethod(*_domainDescriptor, *_rangeDescriptor, _geometryList);
+        return new JosephsMethod(_volumeDescriptor, _detectorDescriptor, _interpolation);
     }
 
     template <typename data_t>
@@ -61,9 +61,6 @@ namespace elsa
 
         auto otherJM = dynamic_cast<const JosephsMethod*>(&other);
         if (!otherJM)
-            return false;
-
-        if (_geometryList != otherJM->_geometryList || _interpolation != otherJM->_interpolation)
             return false;
 
         return true;
@@ -83,7 +80,7 @@ namespace elsa
         // iterate over all rays
 #pragma omp parallel for
         for (index_t ir = 0; ir < sizeOfRange; ir++) {
-            Ray ray = computeRayToDetector(ir, rangeDim);
+            const auto ray = _detectorDescriptor.computeRayFromDetectorCoord(ir);
 
             // --> setup traversal algorithm
             TraverseAABBJosephsMethod traverse(_boundingBox, ray);
@@ -134,21 +131,6 @@ namespace elsa
                 traverse.updateTraverse();
             }
         }
-    }
-
-    template <typename data_t>
-    typename JosephsMethod<data_t>::Ray
-        JosephsMethod<data_t>::computeRayToDetector(index_t detectorIndex, index_t dimension) const
-    {
-        auto detectorCoord = _rangeDescriptor->getCoordinateFromIndex(detectorIndex);
-
-        // center of detector pixel is 0.5 units away from the corresponding detector coordinates
-        auto geometry =
-            _geometryList.at(std::make_unsigned_t<index_t>(detectorCoord(dimension - 1)));
-        auto [ro, rd] = geometry.computeRayTo(
-            detectorCoord.block(0, 0, dimension - 1, 1).template cast<real_t>().array() + 0.5);
-
-        return Ray(ro, rd);
     }
 
     template <typename data_t>

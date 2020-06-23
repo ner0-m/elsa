@@ -110,18 +110,6 @@ namespace elsa
                  real_t centerOfRotationOffsetZ = static_cast<real_t>(0.0));
 
         /**
-         * @brief Compute a ray (ray origin and ray direction) that hits the specified point p on
-         * the detector
-         *
-         * @param[in] p point p on detector
-         *
-         * @returns pair of <ro, rd>, where ro = ray origin and rd = ray direction
-         *
-         * Computation are done using the projection matrix.
-         */
-        std::pair<RealVector_t, RealVector_t> computeRayTo(const RealVector_t& p) const;
-
-        /**
          * @brief Return the projection matrix
          *
          * @returns projection matrix

@@ -5,13 +5,13 @@
 namespace elsa
 {
     template <typename data_t>
-    JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const DataDescriptor& domainDescriptor,
-                                                 const DataDescriptor& rangeDescriptor,
-                                                 const std::vector<Geometry>& geometryList,
+    JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const VolumeDescriptor& domainDescriptor,
+                                                 const DetectorDescriptor& rangeDescriptor,
                                                  bool fast)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
           _boundingBox{_domainDescriptor->getNumberOfCoefficientsPerDimension()},
-          _geometryList{geometryList},
+          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
+          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor)),
           _fast{fast}
     {
         auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
@@ -24,21 +24,22 @@ namespace elsa
             throw std::logic_error("JosephsMethodCUDA: only supporting 2d/3d operations");
         }
 
-        if (geometryList.empty()) {
+        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
             throw std::logic_error("JosephsMethodCUDA: geometry list was empty");
         }
 
+        const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
+
         // allocate device memory and copy ray origins and the inverse of projection matrices to
         // device
-        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, geometryList.size());
+        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, numGeometry);
 
-        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t),
-                            geometryList.size())
+        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t), numGeometry)
             != cudaSuccess)
             throw std::bad_alloc();
 
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = geometryList.size();
+        _rayOrigins.ysize = numGeometry;
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();
@@ -49,8 +50,14 @@ namespace elsa
         auto projPitch = _projInvMatrices.pitch;
         auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
         auto rayPitch = _rayOrigins.pitch;
-        for (std::size_t i = 0; i < geometryList.size(); i++) {
-            RealMatrix_t P = geometryList[i].getInverseProjectionMatrix().block(0, 0, dim, dim);
+
+        for (index_t i = 0; i < numGeometry; i++) {
+            auto geometry = _detectorDescriptor.getGeometryAt(i);
+
+            if (!geometry)
+                throw std::logic_error("JosephsMethodCUDA: Access not existing geometry pose");
+
+            RealMatrix_t P = geometry->getInverseProjectionMatrix().block(0, 0, dim, dim);
             auto* slice = (int8_t*) _projInvMatrices.ptr + i * projPitch * dim;
 
             // transfer inverse of projection matrix
@@ -62,7 +69,7 @@ namespace elsa
 
             // transfer projection matrix if _fast flag is set
             if (_fast) {
-                P = geometryList[i].getProjectionMatrix().block(0, 0, dim, dim);
+                P = geometry->getProjectionMatrix().block(0, 0, dim, dim);
                 slice = (int8_t*) _projMatrices.ptr + i * projPitch * dim;
                 if (cudaMemcpy2D(slice, projPitch, P.data(), dim * sizeof(real_t),
                                  dim * sizeof(real_t), dim, cudaMemcpyHostToDevice)
@@ -74,8 +81,8 @@ namespace elsa
             int8_t* rayPtr = rayBasePtr + i * rayPitch;
             // get ray origin using direct inverse
             RealVector_t ro =
-                -geometryList[i].getInverseProjectionMatrix().block(0, 0, dim, dim)
-                * geometryList[i].getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
+                -geometry->getInverseProjectionMatrix().block(0, 0, dim, dim)
+                * geometry->getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
             // transfer ray origin
             if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyHostToDevice)
                 != cudaSuccess)
@@ -113,9 +120,6 @@ namespace elsa
 
         auto otherJM = dynamic_cast<const JosephsMethodCUDA*>(&other);
         if (!otherJM)
-            return false;
-
-        if (_geometryList != otherJM->_geometryList || _fast != otherJM->_fast)
             return false;
 
         if (_fast != otherJM->_fast)
@@ -384,7 +388,8 @@ namespace elsa
     JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other)
         : LinearOperator<data_t>(*other._domainDescriptor, *other._rangeDescriptor),
           _boundingBox{other._boundingBox},
-          _geometryList{other._geometryList},
+          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
+          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor)),
           _fast{other._fast}
     {
         auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
@@ -398,7 +403,7 @@ namespace elsa
             throw std::bad_alloc();
 
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = _geometryList.size();
+        _rayOrigins.ysize = _detectorDescriptor.getNumberOfGeometryPoses();
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();

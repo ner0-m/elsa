@@ -66,22 +66,28 @@ int main()
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
         // generate circular trajectory with numAngles angles over 360 degrees
-        auto [geom, sinoDescriptor] = CircleTrajectoryGenerator::createTrajectory(
+        auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
             numAngles, volumeDescriptor, 360, 30.0f * size, 2.0f * size);
+
+        // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns
+        // a VolumeDescriptor
 
         // setup and run test for fast Joseph's
         Logger::get("Setup")->info("Fast unmatched Joseph's:\n");
-        auto josephsFast = JosephsMethodCUDA(volumeDescriptor, *sinoDescriptor, geom);
+        auto josephsFast = JosephsMethodCUDA(
+            dynamic_cast<const VolumeDescriptor&>(volumeDescriptor), *sinoDescriptor);
         testExecutionSpeed(josephsFast, phantom, numIters);
 
         // setup and run test for slow Joseph's
         Logger::get("Setup")->info("Slow matched Joseph's:\n");
-        auto josephsSlow = JosephsMethodCUDA(volumeDescriptor, *sinoDescriptor, geom, false);
+        auto josephsSlow = JosephsMethodCUDA(
+            dynamic_cast<const VolumeDescriptor&>(volumeDescriptor), *sinoDescriptor, false);
         testExecutionSpeed(josephsSlow, phantom, numIters);
 
         // setup and run test for Siddon's
         Logger::get("Setup")->info("Siddon's:\n");
-        auto siddons = SiddonsMethodCUDA(volumeDescriptor, *sinoDescriptor, geom);
+        auto siddons = SiddonsMethodCUDA(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
+                                         *sinoDescriptor);
         testExecutionSpeed(siddons, phantom, numIters);
     }
 }

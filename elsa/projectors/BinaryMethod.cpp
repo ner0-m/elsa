@@ -8,12 +8,12 @@
 namespace elsa
 {
     template <typename data_t>
-    BinaryMethod<data_t>::BinaryMethod(const DataDescriptor& domainDescriptor,
-                                       const DataDescriptor& rangeDescriptor,
-                                       const std::vector<Geometry>& geometryList)
+    BinaryMethod<data_t>::BinaryMethod(const VolumeDescriptor& domainDescriptor,
+                                       const DetectorDescriptor& rangeDescriptor)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
           _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()},
-          _geometryList{geometryList}
+          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
+          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor))
     {
         // sanity checks
         auto dim = _domainDescriptor->getNumberOfDimensions();
@@ -23,8 +23,8 @@ namespace elsa
         if (dim != _rangeDescriptor->getNumberOfDimensions())
             throw std::invalid_argument("BinaryMethod: domain and range dimension need to match");
 
-        if (_geometryList.empty())
-            throw std::invalid_argument("BinaryMethod: geometry list was empty");
+        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0)
+            throw std::invalid_argument("BinaryMethod: rangeDescriptor without any geometry");
     }
 
     template <typename data_t>
@@ -46,7 +46,7 @@ namespace elsa
     template <typename data_t>
     BinaryMethod<data_t>* BinaryMethod<data_t>::cloneImpl() const
     {
-        return new BinaryMethod(*_domainDescriptor, *_rangeDescriptor, _geometryList);
+        return new BinaryMethod(_volumeDescriptor, _detectorDescriptor);
     }
 
     template <typename data_t>
@@ -57,9 +57,6 @@ namespace elsa
 
         auto otherBM = dynamic_cast<const BinaryMethod*>(&other);
         if (!otherBM)
-            return false;
-
-        if (_geometryList != otherBM->_geometryList)
             return false;
 
         return true;
@@ -76,15 +73,13 @@ namespace elsa
             result = 0; // initialize volume to 0, because we are not going to hit every voxel!
         }
 
-        const auto rangeDim = _rangeDescriptor->getNumberOfDimensions();
-
         // --> loop either over every voxel that should be updated or every detector
         // cell that should be calculated
 #pragma omp parallel for
         for (index_t rangeIndex = 0; rangeIndex < maxIterations; ++rangeIndex) {
 
-            // --> get the current ray to the detector center
-            auto ray = computeRayToDetector(rangeIndex, rangeDim);
+            // --> get the current ray to the detector center (from reference to DetectorDescriptor)
+            auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
 
             // --> setup traversal algorithm
             TraverseAABB traverse(_boundingBox, ray);
@@ -107,21 +102,6 @@ namespace elsa
                 traverse.updateTraverse();
             }
         } // end for
-    }
-
-    template <typename data_t>
-    typename BinaryMethod<data_t>::Ray
-        BinaryMethod<data_t>::computeRayToDetector(index_t detectorIndex, index_t dimension) const
-    {
-        auto detectorCoord = _rangeDescriptor->getCoordinateFromIndex(detectorIndex);
-
-        // center of detector pixel is 0.5 units away from the corresponding detector coordinates
-        auto geometry =
-            _geometryList.at(std::make_unsigned_t<index_t>(detectorCoord(dimension - 1)));
-        auto [ro, rd] = geometry.computeRayTo(
-            detectorCoord.block(0, 0, dimension - 1, 1).template cast<real_t>().array() + 0.5);
-
-        return Ray(ro, rd);
     }
 
     // ------------------------------------------

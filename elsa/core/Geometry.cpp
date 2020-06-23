@@ -147,20 +147,6 @@ namespace elsa
         buildMatrices();
     }
 
-    std::pair<RealVector_t, RealVector_t> Geometry::computeRayTo(const RealVector_t& p) const
-    {
-        // the ray origin is always the camera center
-        RealVector_t ro = _C;
-
-        // homogeneous coordinates [p;1] - p is in detector space
-        RealVector_t homP(_objectDimension);
-        homP << p, 1;
-
-        // multiplication of inverse projection matrix and homogeneous detector coordinate
-        auto rd = (_Pinv * homP).normalized();
-        return std::make_pair(ro, rd.head(_objectDimension));
-    }
-
     const RealMatrix_t& Geometry::getProjectionMatrix() const { return _P; }
 
     const RealMatrix_t& Geometry::getInverseProjectionMatrix() const { return _Pinv; }

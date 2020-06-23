@@ -4,6 +4,9 @@
 #include "Geometry.h"
 #include "BoundingBox.h"
 
+#include "VolumeDescriptor.h"
+#include "DetectorDescriptor.h"
+
 #include <vector>
 #include <utility>
 
@@ -43,13 +46,15 @@ namespace elsa
          *
          * \param[in] domainDescriptor describing the domain of the operator (the volume)
          * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
-         * \param[in] geometryList vector containing the geometries for the acquisition poses
          *
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
-        BinaryMethod(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor,
-                     const std::vector<Geometry>& geometryList);
+        // BinaryMethod(const DataDescriptor& domainDescriptor, const DataDescriptor&
+        // rangeDescriptor, const std::vector<Geometry>& geometryList);
+
+        BinaryMethod(const VolumeDescriptor& domainDescriptor,
+                     const DetectorDescriptor& rangeDescriptor);
 
         /// default destructor
         ~BinaryMethod() override = default;
@@ -75,8 +80,11 @@ namespace elsa
         /// the bounding box of the volume
         BoundingBox _boundingBox;
 
-        /// the geometry list
-        std::vector<Geometry> _geometryList;
+        /// Reference to DetectorDescriptor stored in LinearOperator
+        DetectorDescriptor& _detectorDescriptor;
+
+        /// Reference to VolumeDescriptor stored in LinearOperator
+        VolumeDescriptor& _volumeDescriptor;
 
         /// the traversal routine (for both apply/applyAdjoint)
         template <bool adjoint>
@@ -85,16 +93,6 @@ namespace elsa
 
         /// convenience typedef for ray
         using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
-
-        /**
-         * \brief computes the ray to the middle of the detector element
-         *
-         * \param[in] detectorIndex the index of the detector element
-         * \param[in] dimension the dimension of the detector (1 or 2)
-         *
-         * \returns the ray
-         */
-        Ray computeRayToDetector(index_t detectorIndex, index_t dimension) const;
 
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;

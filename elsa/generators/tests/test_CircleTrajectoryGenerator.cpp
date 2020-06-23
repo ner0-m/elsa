@@ -35,7 +35,7 @@ SCENARIO("Create a Circular Trajectory")
             auto diffCenterSource = static_cast<real_t>(s * 100);
             auto diffCenterDetector = static_cast<real_t>(s);
 
-            auto [geomList, sdesc] = CircleTrajectoryGenerator::createTrajectory(
+            auto sdesc = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
@@ -54,15 +54,17 @@ SCENARIO("Create a Circular Trajectory")
                                      SinogramData2D{sdesc->getSpacingPerDimension(),
                                                     sdesc->getLocationOfOrigin()});
 
-                    REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
+                    auto geom = sdesc->getGeometryAt(i);
+                    CHECK(geom);
+
+                    REQUIRE((tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm()
                             == Approx(0));
-                    REQUIRE(
-                        (tmpGeom.getProjectionMatrix() - geomList[i].getProjectionMatrix()).norm()
-                        == Approx(0).margin(0.0000001));
-                    REQUIRE((tmpGeom.getInverseProjectionMatrix()
-                             - geomList[i].getInverseProjectionMatrix())
-                                .norm()
+                    REQUIRE((tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm()
                             == Approx(0).margin(0.0000001));
+                    REQUIRE(
+                        (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
+                            .norm()
+                        == Approx(0).margin(0.0000001));
                 }
             }
         }
@@ -73,7 +75,7 @@ SCENARIO("Create a Circular Trajectory")
             auto diffCenterSource = static_cast<real_t>(s * 100);
             auto diffCenterDetector = static_cast<real_t>(s);
 
-            auto [geomList, sdesc] = CircleTrajectoryGenerator::createTrajectory(
+            auto sdesc = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
@@ -93,15 +95,17 @@ SCENARIO("Create a Circular Trajectory")
                                      SinogramData2D{sdesc->getSpacingPerDimension(),
                                                     sdesc->getLocationOfOrigin()});
 
-                    REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
+                    auto geom = sdesc->getGeometryAt(i);
+                    CHECK(geom);
+
+                    REQUIRE((tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm()
                             == Approx(0));
-                    REQUIRE(
-                        (tmpGeom.getProjectionMatrix() - geomList[i].getProjectionMatrix()).norm()
-                        == Approx(0).margin(0.0000001));
-                    REQUIRE((tmpGeom.getInverseProjectionMatrix()
-                             - geomList[i].getInverseProjectionMatrix())
-                                .norm()
+                    REQUIRE((tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm()
                             == Approx(0).margin(0.0000001));
+                    REQUIRE(
+                        (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
+                            .norm()
+                        == Approx(0).margin(0.0000001));
                 }
             }
         }
@@ -120,7 +124,7 @@ SCENARIO("Create a Circular Trajectory")
             auto diffCenterSource = static_cast<real_t>(s * 100);
             auto diffCenterDetector = static_cast<real_t>(s);
 
-            auto [geomList, sdesc] = CircleTrajectoryGenerator::createTrajectory(
+            auto sdesc = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
@@ -133,7 +137,6 @@ SCENARIO("Create a Circular Trajectory")
                                   / static_cast<real_t>(numberOfAngles - 1);
                 for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
                     real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
-                    // Geometry tmpGeom(sourceToCenter, centerToDetector, desc, *sdesc, angle);
 
                     Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
                                      CenterOfRotationToDetector{centerToDetector},
@@ -142,26 +145,28 @@ SCENARIO("Create a Circular Trajectory")
                                                     sdesc->getLocationOfOrigin()},
                                      RotationAngles3D{Gamma{angle}});
 
-                    REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
+                    auto geom = sdesc->getGeometryAt(i);
+                    CHECK(geom);
+
+                    REQUIRE((tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm()
                             == Approx(0));
-                    REQUIRE(
-                        (tmpGeom.getProjectionMatrix() - geomList[i].getProjectionMatrix()).norm()
-                        == Approx(0).margin(0.0000001));
-                    REQUIRE((tmpGeom.getInverseProjectionMatrix()
-                             - geomList[i].getInverseProjectionMatrix())
-                                .norm()
+                    REQUIRE((tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm()
                             == Approx(0).margin(0.0000001));
+                    REQUIRE(
+                        (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
+                            .norm()
+                        == Approx(0).margin(0.0000001));
                 }
             }
         }
 
         WHEN("We create a full circular trajectory for this scenario")
         {
-            index_t halfCircular = 359;
-            auto diffCenterSource = static_cast<real_t>(s * 100);
-            auto diffCenterDetector = static_cast<real_t>(s);
+            const index_t halfCircular = 359;
+            const auto diffCenterSource = static_cast<real_t>(s * 100);
+            const auto diffCenterDetector = static_cast<real_t>(s);
 
-            auto [geomList, sdesc] = CircleTrajectoryGenerator::createTrajectory(
+            auto sdesc = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
@@ -182,15 +187,17 @@ SCENARIO("Create a Circular Trajectory")
                                                     sdesc->getLocationOfOrigin()},
                                      RotationAngles3D{Gamma{angle}});
 
-                    REQUIRE((tmpGeom.getCameraCenter() - geomList[i].getCameraCenter()).norm()
+                    auto geom = sdesc->getGeometryAt(i);
+                    CHECK(geom);
+
+                    REQUIRE((tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm()
                             == Approx(0));
-                    REQUIRE(
-                        (tmpGeom.getProjectionMatrix() - geomList[i].getProjectionMatrix()).norm()
-                        == Approx(0).margin(0.0000001));
-                    REQUIRE((tmpGeom.getInverseProjectionMatrix()
-                             - geomList[i].getInverseProjectionMatrix())
-                                .norm()
+                    REQUIRE((tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm()
                             == Approx(0).margin(0.0000001));
+                    REQUIRE(
+                        (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
+                            .norm()
+                        == Approx(0).margin(0.0000001));
                 }
             }
         }

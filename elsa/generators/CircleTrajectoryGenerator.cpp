@@ -1,16 +1,15 @@
 #include "CircleTrajectoryGenerator.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
+#include "PlanarDetectorDescriptor.h"
 
 #include <stdexcept>
 
 namespace elsa
 {
-    std::pair<std::vector<Geometry>, std::unique_ptr<DataDescriptor>>
-        CircleTrajectoryGenerator::createTrajectory(index_t numberOfPoses,
-                                                    const DataDescriptor& volumeDescriptor,
-                                                    index_t arcDegrees, real_t sourceToCenter,
-                                                    real_t centerToDetector)
+    std::unique_ptr<DetectorDescriptor> CircleTrajectoryGenerator::createTrajectory(
+        index_t numberOfPoses, const DataDescriptor& volumeDescriptor, index_t arcDegrees,
+        real_t sourceToCenter, real_t centerToDetector)
     {
         // pull in geometry namespace, to reduce cluttering
         using namespace geometry;
@@ -37,8 +36,6 @@ namespace elsa
                 volumeDescriptor.getSpacingPerDimension()[1], 1;
         }
 
-        VolumeDescriptor sinoDescriptor(coeffs, spacing);
-
         std::vector<Geometry> geometryList;
 
         real_t angleIncrement = static_cast<real_t>(1.0f) * static_cast<real_t>(arcDegrees)
@@ -64,7 +61,7 @@ namespace elsa
             }
         }
 
-        return std::make_pair(geometryList, sinoDescriptor.clone());
+        return std::make_unique<PlanarDetectorDescriptor>(coeffs, spacing, geometryList);
     }
 
 } // namespace elsa

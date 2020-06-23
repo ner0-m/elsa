@@ -13,6 +13,8 @@ set(MODULE_HEADERS
         Descriptors/DataDescriptor.h
         Descriptors/DescriptorUtils.h
         Descriptors/VolumeDescriptor.h
+        Descriptors/DetectorDescriptor.h
+        Descriptors/PlanarDetectorDescriptor.h
         Descriptors/BlockDescriptor.h
         Descriptors/IdenticalBlocksDescriptor.h
         Descriptors/PartitionDescriptor.h
@@ -32,9 +34,11 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
         Descriptors/DataDescriptor.cpp
         Descriptors/VolumeDescriptor.cpp
+        Descriptors/PlanarDetectorDescriptor.cpp
         Descriptors/RandomBlocksDescriptor.cpp
         Descriptors/DescriptorUtils.cpp
         Descriptors/IdenticalBlocksDescriptor.cpp
+        Descriptors/DetectorDescriptor.cpp
         Descriptors/PartitionDescriptor.cpp
         DataContainer.cpp
         Handlers/DataHandlerCPU.cpp

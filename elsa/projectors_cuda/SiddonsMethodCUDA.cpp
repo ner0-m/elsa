@@ -6,12 +6,12 @@
 namespace elsa
 {
     template <typename data_t>
-    SiddonsMethodCUDA<data_t>::SiddonsMethodCUDA(const DataDescriptor& domainDescriptor,
-                                                 const DataDescriptor& rangeDescriptor,
-                                                 const std::vector<Geometry>& geometryList)
+    SiddonsMethodCUDA<data_t>::SiddonsMethodCUDA(const VolumeDescriptor& domainDescriptor,
+                                                 const DetectorDescriptor& rangeDescriptor)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
           _boundingBox(_domainDescriptor->getNumberOfCoefficientsPerDimension()),
-          _geometryList(geometryList)
+          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
+          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor))
     {
         auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
         if (dim != static_cast<std::size_t>(_rangeDescriptor->getNumberOfDimensions())) {
@@ -23,20 +23,21 @@ namespace elsa
             throw std::logic_error("SiddonsMethodCUDA: only supporting 2d/3d operations");
         }
 
-        if (geometryList.empty()) {
+        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
             throw std::logic_error("SiddonsMethodCUDA: geometry list was empty");
         }
 
+        const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
+
         // allocate device memory and copy ray origins and the inverse of the significant part of
         // projection matrices to device
-        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, geometryList.size());
+        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, numGeometry);
 
-        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t),
-                            geometryList.size())
+        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t), numGeometry)
             != cudaSuccess)
             throw std::bad_alloc();
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = geometryList.size();
+        _rayOrigins.ysize = numGeometry;
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();
@@ -45,8 +46,14 @@ namespace elsa
         auto projPitch = _projInvMatrices.pitch;
         auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
         auto rayPitch = _rayOrigins.pitch;
-        for (std::size_t i = 0; i < geometryList.size(); i++) {
-            RealMatrix_t P = geometryList[i].getInverseProjectionMatrix().block(0, 0, dim, dim);
+
+        for (index_t i = 0; i < numGeometry; i++) {
+            auto geometry = _detectorDescriptor.getGeometryAt(i);
+
+            if (!geometry)
+                throw std::logic_error("JosephsMethodCUDA: Access not existing geometry pose");
+
+            RealMatrix_t P = geometry->getInverseProjectionMatrix().block(0, 0, dim, dim);
             int8_t* slice = projPtr + i * projPitch * dim;
             // CUDA also uses a column-major representation, directly transfer matrix
             // transfer inverse of projection matrix
@@ -59,8 +66,7 @@ namespace elsa
             int8_t* rayPtr = rayBasePtr + i * rayPitch;
             // get camera center using direct inverse
             RealVector_t ro =
-                -P
-                * geometryList[i].getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
+                -P * geometry->getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
             // transfer ray origin
             if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyHostToDevice)
                 != cudaSuccess)
@@ -81,7 +87,7 @@ namespace elsa
     template <typename data_t>
     SiddonsMethodCUDA<data_t>* SiddonsMethodCUDA<data_t>::cloneImpl() const
     {
-        return new SiddonsMethodCUDA<data_t>(*_domainDescriptor, *_rangeDescriptor, _geometryList);
+        return new SiddonsMethodCUDA<data_t>(_volumeDescriptor, _detectorDescriptor);
     }
 
     template <typename data_t>
@@ -110,9 +116,6 @@ namespace elsa
 
         auto otherSM = dynamic_cast<const SiddonsMethodCUDA*>(&other);
         if (!otherSM)
-            return false;
-
-        if (_geometryList != otherSM->_geometryList)
             return false;
 
         return true;

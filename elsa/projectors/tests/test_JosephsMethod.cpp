@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "testHelpers.h"
 #include "VolumeDescriptor.h"
+#include "PlanarDetectorDescriptor.h"
 
 using namespace elsa;
 using namespace elsa::geometry;
@@ -44,7 +45,10 @@ SCENARIO("Testing BinaryVoxelTraversal with only one ray")
         WHEN("We have a single ray with 0 degrees")
         {
             geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
-            auto op = JosephsMethod(domain, range, geom);
+
+            auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+
+            auto op = JosephsMethod(domain, detectorDesc);
 
             THEN("A^t A x should be close to the original data")
             {
@@ -66,7 +70,10 @@ SCENARIO("Testing BinaryVoxelTraversal with only one ray")
         WHEN("We have a single ray with 180 degrees")
         {
             geom.emplace_back(stc, ctr, Degree{180}, std::move(volData), std::move(sinoData));
-            auto op = JosephsMethod(domain, range, geom);
+
+            auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+
+            auto op = JosephsMethod(domain, detectorDesc);
 
             THEN("A^t A x should be close to the original data")
             {
@@ -88,7 +95,10 @@ SCENARIO("Testing BinaryVoxelTraversal with only one ray")
         WHEN("We have a single ray with 90 degrees")
         {
             geom.emplace_back(stc, ctr, Degree{90}, std::move(volData), std::move(sinoData));
-            auto op = JosephsMethod(domain, range, geom);
+
+            auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+
+            auto op = JosephsMethod(domain, detectorDesc);
 
             THEN("A^t A x should be close to the original data")
             {
@@ -110,7 +120,10 @@ SCENARIO("Testing BinaryVoxelTraversal with only one ray")
         WHEN("We have a single ray with 270 degrees")
         {
             geom.emplace_back(stc, ctr, Degree{270}, std::move(volData), std::move(sinoData));
-            auto op = JosephsMethod(domain, range, geom);
+
+            auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+
+            auto op = JosephsMethod(domain, detectorDesc);
 
             THEN("A^t A x should be close to the original data")
             {
@@ -132,7 +145,10 @@ SCENARIO("Testing BinaryVoxelTraversal with only one ray")
         WHEN("We have a single ray with 45 degrees")
         {
             geom.emplace_back(stc, ctr, Degree{45}, std::move(volData), std::move(sinoData));
-            auto op = JosephsMethod(domain, range, geom);
+
+            auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+
+            auto op = JosephsMethod(domain, detectorDesc);
 
             THEN("A^t A x should be close to the original data")
             {
@@ -152,7 +168,10 @@ SCENARIO("Testing BinaryVoxelTraversal with only one ray")
         WHEN("We have a single ray with 225 degrees")
         {
             geom.emplace_back(stc, ctr, Degree{225}, std::move(volData), std::move(sinoData));
-            auto op = JosephsMethod(domain, range, geom);
+
+            auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+
+            auto op = JosephsMethod(domain, detectorDesc);
 
             THEN("A^t A x should be close to the original data")
             {
@@ -213,7 +232,9 @@ SCENARIO("Testing JosephsMethod with only 4 ray")
                               SinogramData2D{Size2D{sizeRange}});
             geom.emplace_back(stc, ctr, Degree{270}, VolumeData2D{Size2D{sizeDomain}},
                               SinogramData2D{Size2D{sizeRange}});
-            auto op = JosephsMethod(domain, range, geom);
+
+            auto detectorDesc = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = JosephsMethod(domain, detectorDesc);
 
             THEN("A^t A x should be close to the original data")
             {
@@ -246,11 +267,9 @@ SCENARIO("Calls to functions of super class")
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+
         DataContainer volume(volumeDescriptor);
         volume = 0;
-        DataContainer sino(sinoDescriptor);
-        sino = 0;
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -262,7 +281,11 @@ SCENARIO("Calls to functions of super class")
                               SinogramData2D{Size2D{sinoDims}});
         }
 
-        JosephsMethod op(volumeDescriptor, sinoDescriptor, geom);
+        PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+        DataContainer sino(sinoDescriptor);
+        sino = 0;
+
+        JosephsMethod op(volumeDescriptor, sinoDescriptor);
 
         WHEN("Projector is cloned")
         {
@@ -302,9 +325,7 @@ SCENARIO("Output DataContainer is not zero initialized")
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -313,8 +334,11 @@ SCENARIO("Output DataContainer is not zero initialized")
 
         std::vector<Geometry> geom;
         geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
-        JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
-                         JosephsMethod<>::Interpolation::LINEAR);
+
+        PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+        DataContainer sino(sinoDescriptor);
+
+        JosephsMethod op(volumeDescriptor, sinoDescriptor, JosephsMethod<>::Interpolation::LINEAR);
 
         WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
         {
@@ -356,9 +380,7 @@ SCENARIO("Output DataContainer is not zero initialized")
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -369,8 +391,11 @@ SCENARIO("Output DataContainer is not zero initialized")
 
         geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                           RotationAngles3D{Gamma{0}});
-        JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
-                         JosephsMethod<>::Interpolation::LINEAR);
+        PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+
+        JosephsMethod op(volumeDescriptor, sinoDescriptor, JosephsMethod<>::Interpolation::LINEAR);
+
+        DataContainer sino(sinoDescriptor);
 
         WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
         {
@@ -416,11 +441,8 @@ SCENARIO("Rays not intersecting the bounding box are present")
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
         volume = 1;
-        sino = 1;
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -434,7 +456,11 @@ SCENARIO("Rays not intersecting the bounding box are present")
             geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{}, RotationOffset2D{volSize, 0});
 
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+            sino = 1;
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Result of forward projection is zero")
@@ -460,7 +486,11 @@ SCENARIO("Rays not intersecting the bounding box are present")
             geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{}, RotationOffset2D{-volSize, 0});
 
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+            sino = 1;
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Result of forward projection is zero")
@@ -485,7 +515,11 @@ SCENARIO("Rays not intersecting the bounding box are present")
             geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{}, RotationOffset2D{0, volSize});
 
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+            sino = 1;
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Result of forward projection is zero")
@@ -511,7 +545,11 @@ SCENARIO("Rays not intersecting the bounding box are present")
             geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{}, RotationOffset2D{0, -volSize});
 
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+            sino = 1;
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Result of forward projection is zero")
@@ -541,11 +579,8 @@ SCENARIO("Rays not intersecting the bounding box are present")
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
         volume = 1;
-        sino = 1;
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -573,7 +608,11 @@ SCENARIO("Rays not intersecting the bounding box are present")
                                   PrincipalPointOffset2D{0, 0},
                                   RotationOffset3D{-offsetx[i], -offsety[i], -offsetz[i]});
 
-                JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+                PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+                DataContainer sino(sinoDescriptor);
+                sino = 1;
+
+                JosephsMethod op(volumeDescriptor, sinoDescriptor,
                                  JosephsMethod<>::Interpolation::LINEAR);
 
                 THEN("Result of forward projection is zero")
@@ -610,9 +649,7 @@ SCENARIO("Axis-aligned rays are present")
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -637,7 +674,10 @@ SCENARIO("Axis-aligned rays are present")
                 geom.emplace_back(stc, ctr, Radian{angles[i]}, std::move(volData),
                                   std::move(sinoData));
 
-                JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+                PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+                DataContainer sino(sinoDescriptor);
+
+                JosephsMethod op(volumeDescriptor, sinoDescriptor,
                                  JosephsMethod<>::Interpolation::LINEAR);
                 THEN("The result of projecting through a pixel is exactly the pixel value")
                 {
@@ -678,7 +718,11 @@ SCENARIO("Axis-aligned rays are present")
                 geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{angles[i]},
                                   std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                                   RotationOffset2D{-offsetx[i], -offsety[i]});
-                JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+                PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+                DataContainer sino(sinoDescriptor);
+
+                JosephsMethod op(volumeDescriptor, sinoDescriptor,
                                  JosephsMethod<>::Interpolation::LINEAR);
                 THEN("The result of projecting through a pixel is the interpolated value between "
                      "the two pixels closest to the ray")
@@ -711,7 +755,11 @@ SCENARIO("Axis-aligned rays are present")
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
                               std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{volSize * 0.5, 0});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom);
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor);
 
             THEN("The result of projecting through a pixel is exactly the pixel's value (we mirror "
                  "values at the border for the purpose of interpolation)")
@@ -742,7 +790,10 @@ SCENARIO("Axis-aligned rays are present")
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
                               std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{-volSize / 2.0, 0});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom);
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor);
 
             THEN("The result of projecting through a pixel is exactly the pixel's value (we mirror "
                  "values at the border for the purpose of interpolation)")
@@ -776,9 +827,7 @@ SCENARIO("Axis-aligned rays are present")
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -818,8 +867,13 @@ SCENARIO("Axis-aligned rays are present")
             {
                 geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
-                JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+                PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+                DataContainer sino(sinoDescriptor);
+
+                JosephsMethod op(volumeDescriptor, sinoDescriptor,
                                  JosephsMethod<>::Interpolation::LINEAR);
+
                 THEN("The result of projecting through a voxel is exactly the voxel value")
                 {
                     for (index_t j = 0; j < volSize; j++) {
@@ -875,8 +929,13 @@ SCENARIO("Axis-aligned rays are present")
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}},
                                   PrincipalPointOffset2D{0, 0},
                                   RotationOffset3D{-offsetx[i], -offsety[i], -offsetz[i]});
-                JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+                PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+                DataContainer sino(sinoDescriptor);
+
+                JosephsMethod op(volumeDescriptor, sinoDescriptor,
                                  JosephsMethod<>::Interpolation::LINEAR);
+
                 THEN("The result of projecting through a voxel is the interpolated value between "
                      "the four voxels nearest to the ray")
                 {
@@ -970,7 +1029,12 @@ SCENARIO("Axis-aligned rays are present")
                                   std::move(sinoData), RotationAngles3D{Gamma{0}},
                                   PrincipalPointOffset2D{0, 0},
                                   RotationOffset3D{-offsetx[i], -offsety[i], 0});
-                JosephsMethod op(volumeDescriptor, sinoDescriptor, geom);
+
+                PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+                DataContainer sino(sinoDescriptor);
+
+                JosephsMethod op(volumeDescriptor, sinoDescriptor);
+
                 THEN("The result of projecting through a voxel is exactly the voxel's value (we "
                      "mirror values at the border for the purpose of interpolation)")
                 {
@@ -1024,9 +1088,7 @@ SCENARIO("Axis-aligned rays are present")
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -1045,7 +1107,10 @@ SCENARIO("Axis-aligned rays are present")
                                   SinogramData3D{Size3D{sinoDims}},
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
 
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Values are accumulated correctly along each ray's path")
@@ -1096,9 +1161,7 @@ SCENARIO("Projection under an angle")
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -1112,7 +1175,11 @@ SCENARIO("Projection under an angle")
             // In this case the ray enters and exits the volume through the borders along the main
             // direction Weighting for all interpolated values should be the same
             geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData));
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             real_t weight = static_cast<real_t>(2 / std::sqrt(3.f));
@@ -1168,7 +1235,11 @@ SCENARIO("Projection under an angle")
             // differently
             geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{0}, RotationOffset2D{std::sqrt(3.f), 0});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Ray intersects the correct pixels")
@@ -1222,7 +1293,11 @@ SCENARIO("Projection under an angle")
             // differently
             geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{0}, RotationOffset2D{-std::sqrt(3.f), 0});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Ray intersects the correct pixels")
@@ -1271,7 +1346,11 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{0},
                               RotationOffset2D{-2 - std::sqrt(3.f) / 2, 0});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Ray intersects the correct pixels")
@@ -1308,7 +1387,11 @@ SCENARIO("Projection under an angle")
             // direction Weighting for all interpolated values should be the same
             geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
                               std::move(sinoData));
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             real_t weight = 2 / std::sqrt(3.f);
@@ -1366,7 +1449,11 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
                               std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{0, std::sqrt(3.f)});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Ray intersects the correct pixels")
@@ -1418,7 +1505,11 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
                               std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{0, -std::sqrt(3.f)});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Ray intersects the correct pixels")
@@ -1468,7 +1559,11 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
                               std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{0, -2 - std::sqrt(3.f) / 2});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("Ray intersects the correct pixels")
@@ -1509,9 +1604,7 @@ SCENARIO("Projection under an angle")
         volumeDims << volSize, volSize, volSize;
         sinoDims << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
         DataContainer volume(volumeDescriptor);
-        DataContainer sino(sinoDescriptor);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
@@ -1527,7 +1620,11 @@ SCENARIO("Projection under an angle")
             // In this case the ray enters and exits the volume along the main direction
             geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                               RotationAngles3D{Gamma{pi_t / 6}});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("The ray intersects the correct voxels")
@@ -1571,7 +1668,11 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{1, 0, 0});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("The ray intersects the correct voxels")
@@ -1617,7 +1718,11 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{-1, 0, 0});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("The ray intersects the correct voxels")
@@ -1663,7 +1768,11 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{-2, 0, 0});
-            JosephsMethod op(volumeDescriptor, sinoDescriptor, geom,
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor,
                              JosephsMethod<>::Interpolation::LINEAR);
 
             THEN("The ray intersects the correct voxels")

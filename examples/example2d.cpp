@@ -12,18 +12,23 @@ void example2d()
     IndexVector_t size(2);
     size << 128, 128;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+    auto& volumeDescriptor = phantom.getDataDescriptor();
 
     // write the phantom out
     EDF::write(phantom, "2dphantom.edf");
 
     // generate circular trajectory
-    index_t noAngles{180}, arc{360};
-    auto [geometry, sinoDescriptor] = CircleTrajectoryGenerator::createTrajectory(
-        noAngles, phantom.getDataDescriptor(), arc, size(0) * 100, size(0));
+    index_t numAngles{180}, arc{360};
+    auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
+        numAngles, phantom.getDataDescriptor(), arc, size(0) * 100, size(0));
+
+    // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
+    // VolumeDescriptor
 
     // setup operator for 2d X-ray transform
     Logger::get("Info")->info("Simulating sinogram using Siddon's method");
-    SiddonsMethod projector(phantom.getDataDescriptor(), *sinoDescriptor, geometry);
+    SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
+                            *sinoDescriptor);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);

@@ -13,6 +13,9 @@
 #include "Logger.h"
 #include "testHelpers.h"
 #include "VolumeDescriptor.h"
+#include "PlanarDetectorDescriptor.h"
+
+#include "testHelpers.h"
 
 using namespace elsa;
 using namespace elsa::geometry;
@@ -29,7 +32,7 @@ SCENARIO("Testing BinaryMethod with only one ray")
     sizeRange << 1, 1;
 
     auto domain = VolumeDescriptor(sizeDomain);
-    auto range = VolumeDescriptor(sizeRange);
+    // auto range = VolumeDescriptor(sizeRange);
 
     auto stc = SourceToCenterOfRotation{100};
     auto ctr = CenterOfRotationToDetector{5};
@@ -46,14 +49,15 @@ SCENARIO("Testing BinaryMethod with only one ray")
         auto dataDomain = DataContainer(domain);
         dataDomain = 1;
 
-        auto dataRange = DataContainer(range);
-        dataRange = 0;
-
         WHEN("We have a single ray with 0 degrees")
         {
             geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
 
-            auto op = BinaryMethod(domain, range, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(domain, range);
+
+            auto dataRange = DataContainer(range);
+            dataRange = 0;
 
             THEN("A^t A x should be close to the original data")
             {
@@ -77,7 +81,11 @@ SCENARIO("Testing BinaryMethod with only one ray")
         {
             geom.emplace_back(stc, ctr, Degree{180}, std::move(volData), std::move(sinoData));
 
-            auto op = BinaryMethod(domain, range, geom);
+            // auto op = BinaryMethod(domain, range, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(domain, range);
+            auto dataRange = DataContainer(range);
+            dataRange = 0;
 
             THEN("A^t A x should be close to the original data")
             {
@@ -101,7 +109,11 @@ SCENARIO("Testing BinaryMethod with only one ray")
         {
             geom.emplace_back(stc, ctr, Degree{90}, std::move(volData), std::move(sinoData));
 
-            auto op = BinaryMethod(domain, range, geom);
+            // auto op = BinaryMethod(domain, range, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(domain, range);
+            auto dataRange = DataContainer(range);
+            dataRange = 0;
 
             THEN("A^t A x should be close to the original data")
             {
@@ -125,7 +137,11 @@ SCENARIO("Testing BinaryMethod with only one ray")
         {
             geom.emplace_back(stc, ctr, Degree{270}, std::move(volData), std::move(sinoData));
 
-            auto op = BinaryMethod(domain, range, geom);
+            // auto op = BinaryMethod(domain, range, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(domain, range);
+            auto dataRange = DataContainer(range);
+            dataRange = 0;
 
             THEN("A^t A x should be close to the original data")
             {
@@ -149,7 +165,11 @@ SCENARIO("Testing BinaryMethod with only one ray")
         {
             geom.emplace_back(stc, ctr, Degree{45}, std::move(volData), std::move(sinoData));
 
-            auto op = BinaryMethod(domain, range, geom);
+            // auto op = BinaryMethod(domain, range, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(domain, range);
+            auto dataRange = DataContainer(range);
+            dataRange = 0;
 
             THEN("A^t A x should be close to the original data")
             {
@@ -170,7 +190,12 @@ SCENARIO("Testing BinaryMethod with only one ray")
         {
             geom.emplace_back(stc, ctr, Degree{225}, std::move(volData), std::move(sinoData));
 
-            auto op = BinaryMethod(domain, range, geom);
+            // auto op = BinaryMethod(domain, range, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(domain, range);
+
+            auto dataRange = DataContainer(range);
+            dataRange = 0;
 
             // This test case is a little awkward, but the Problem is inside of Geometry, with tiny
             // rounding erros this will not give exactly a ray with direction of (1/1), rather
@@ -207,7 +232,7 @@ SCENARIO("Testing BinaryMethod with only 1 rays for 4 angles")
     sizeRange << 1, 4;
 
     auto domain = VolumeDescriptor(sizeDomain);
-    auto range = VolumeDescriptor(sizeRange);
+    // auto range = VolumeDescriptor(sizeRange);
 
     auto stc = SourceToCenterOfRotation{100};
     auto ctr = CenterOfRotationToDetector{5};
@@ -224,9 +249,6 @@ SCENARIO("Testing BinaryMethod with only 1 rays for 4 angles")
         auto dataDomain = DataContainer(domain);
         dataDomain = 1;
 
-        auto dataRange = DataContainer(range);
-        dataRange = 0;
-
         WHEN("We have a single ray with 0, 90, 180, 270 degrees")
         {
             geom.emplace_back(stc, ctr, Degree{0}, VolumeData2D{Size2D{sizeDomain}},
@@ -238,7 +260,12 @@ SCENARIO("Testing BinaryMethod with only 1 rays for 4 angles")
             geom.emplace_back(stc, ctr, Degree{270}, VolumeData2D{Size2D{sizeDomain}},
                               SinogramData2D{Size2D{sizeRange}});
 
-            auto op = BinaryMethod(domain, range, geom);
+            // auto op = BinaryMethod(domain, range, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(domain, range);
+
+            auto dataRange = DataContainer(range);
+            dataRange = 0;
 
             THEN("A^t A x should be close to the original data")
             {
@@ -292,7 +319,7 @@ SCENARIO("Testing BinaryMethod")
     sizeRange << 5, 1;
 
     auto domain = VolumeDescriptor(sizeDomain);
-    auto range = VolumeDescriptor(sizeRange);
+    // auto range = VolumeDescriptor(sizeRange);
 
     auto stc = SourceToCenterOfRotation{100};
     auto ctr = CenterOfRotationToDetector{5};
@@ -307,7 +334,9 @@ SCENARIO("Testing BinaryMethod")
         std::vector<Geometry> geom;
         geom.emplace_back(stc, ctr, Degree{0}, std::move(volData), std::move(sinoData));
 
-        auto op = BinaryMethod(domain, range, geom);
+        // auto op = BinaryMethod(domain, range, geom);
+        auto range = PlanarDetectorDescriptor(sizeRange, geom);
+        auto op = BinaryMethod(domain, range);
 
         //        THEN("It is not spd")
         //        {
@@ -346,7 +375,7 @@ SCENARIO("Testing BinaryMethod")
 
                 RealVector_t res = RealVector_t::Constant(sizeRange.prod(), 1, 5);
                 DataContainer tmpRes(range, res);
-                REQUIRE(tmpRes == dataRange);
+                REQUIRE(isApprox(tmpRes, dataRange));
 
                 op.applyAdjoint(dataRange, AtAx);
 
@@ -364,7 +393,9 @@ SCENARIO("Testing BinaryMethod")
         std::vector<Geometry> geom;
         geom.emplace_back(stc, ctr, Degree{180}, std::move(volData), std::move(sinoData));
 
-        auto op = BinaryMethod(domain, range, geom);
+        // auto op = BinaryMethod(domain, range, geom);
+        auto range = PlanarDetectorDescriptor(sizeRange, geom);
+        auto op = BinaryMethod(domain, range);
 
         THEN("A^t A x should be close to the original data")
         {
@@ -380,7 +411,7 @@ SCENARIO("Testing BinaryMethod")
 
             RealVector_t res = RealVector_t::Constant(sizeRange.prod(), 1, 5);
             DataContainer tmpRes(range, res);
-            REQUIRE(tmpRes == dataRange);
+            REQUIRE(isApprox(tmpRes, dataRange));
 
             op.applyAdjoint(dataRange, AtAx);
 
@@ -397,7 +428,9 @@ SCENARIO("Testing BinaryMethod")
         std::vector<Geometry> geom;
         geom.emplace_back(stc, ctr, Degree{90}, std::move(volData), std::move(sinoData));
 
-        auto op = BinaryMethod(domain, range, geom);
+        // auto op = BinaryMethod(domain, range, geom);
+        auto range = PlanarDetectorDescriptor(sizeRange, geom);
+        auto op = BinaryMethod(domain, range);
 
         THEN("A^t A x should be close to the original data")
         {
@@ -413,7 +446,7 @@ SCENARIO("Testing BinaryMethod")
 
             RealVector_t res = RealVector_t::Constant(sizeRange.prod(), 1, 5);
             DataContainer tmpRes(range, res);
-            REQUIRE(tmpRes == dataRange);
+            REQUIRE(isApprox(tmpRes, dataRange));
 
             op.applyAdjoint(dataRange, AtAx);
 
@@ -430,7 +463,9 @@ SCENARIO("Testing BinaryMethod")
         std::vector<Geometry> geom;
         geom.emplace_back(stc, ctr, Degree{270}, std::move(volData), std::move(sinoData));
 
-        auto op = BinaryMethod(domain, range, geom);
+        // auto op = BinaryMethod(domain, range, geom);
+        auto range = PlanarDetectorDescriptor(sizeRange, geom);
+        auto op = BinaryMethod(domain, range);
 
         THEN("A^t A x should be close to the original data")
         {
@@ -446,7 +481,7 @@ SCENARIO("Testing BinaryMethod")
 
             RealVector_t res = RealVector_t::Constant(sizeRange.prod(), 1, 5);
             DataContainer tmpRes(range, res);
-            REQUIRE(tmpRes == dataRange);
+            REQUIRE(isApprox(tmpRes, dataRange));
 
             op.applyAdjoint(dataRange, AtAx);
 
@@ -466,14 +501,14 @@ SCENARIO("Calls to functions of super class")
 
     GIVEN("A projector")
     {
-        IndexVector_t volumeDims(2), sinoDims(2);
+        IndexVector_t volumeDims(2), sizeRange(2);
         const index_t volSize = 50;
         const index_t detectorSize = 50;
         const index_t numImgs = 50;
         volumeDims << volSize, volSize;
-        sinoDims << detectorSize, numImgs;
+        sizeRange << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
 
         RealVector_t randomStuff(volumeDescriptor.getNumberOfCoefficients());
         randomStuff.setRandom();
@@ -487,9 +522,11 @@ SCENARIO("Calls to functions of super class")
         for (index_t i = 0; i < numImgs; i++) {
             auto angle = static_cast<real_t>(i * 2) * pi_t / 50;
             geom.emplace_back(stc, ctr, Radian{angle}, VolumeData2D{Size2D{volumeDims}},
-                              SinogramData2D{Size2D{sinoDims}});
+                              SinogramData2D{Size2D{sizeRange}});
         }
-        BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+        // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+        auto range = PlanarDetectorDescriptor(sizeRange, geom);
+        auto op = BinaryMethod(volumeDescriptor, range);
 
         WHEN("Projector is cloned")
         {
@@ -522,14 +559,14 @@ SCENARIO("Output DataContainer is not zero initialized")
 
     GIVEN("A 2D setting")
     {
-        IndexVector_t volumeDims(2), sinoDims(2);
+        IndexVector_t volumeDims(2), sizeRange(2);
         const index_t volSize = 5;
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
         volumeDims << volSize, volSize;
-        sinoDims << detectorSize, numImgs;
+        sizeRange << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
 
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
@@ -537,12 +574,14 @@ SCENARIO("Output DataContainer is not zero initialized")
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
         auto volData = VolumeData2D{Size2D{volumeDims}};
-        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+        auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
         std::vector<Geometry> geom;
         geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
 
-        BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+        // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+        auto range = PlanarDetectorDescriptor(sizeRange, geom);
+        auto op = BinaryMethod(volumeDescriptor, range);
 
         WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
         {
@@ -577,19 +616,19 @@ SCENARIO("Output DataContainer is not zero initialized")
 
     GIVEN("A 3D setting")
     {
-        IndexVector_t volumeDims(3), sinoDims(3);
+        IndexVector_t volumeDims(3), sizeRange(3);
         const index_t volSize = 3;
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
         volumeDims << volSize, volSize, volSize;
-        sinoDims << detectorSize, detectorSize, numImgs;
+        sizeRange << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
         auto volData = VolumeData3D{Size3D{volumeDims}};
-        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+        auto sinoData = SinogramData3D{Size3D{sizeRange}};
 
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
@@ -598,7 +637,9 @@ SCENARIO("Output DataContainer is not zero initialized")
         geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                           RotationAngles3D{Gamma{0}});
 
-        BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+        // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+        auto range = PlanarDetectorDescriptor(sizeRange, geom);
+        auto op = BinaryMethod(volumeDescriptor, range);
 
         WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
         {
@@ -639,19 +680,19 @@ SCENARIO("Rays not intersecting the bounding box are present")
 
     GIVEN("A 2D setting")
     {
-        IndexVector_t volumeDims(2), sinoDims(2);
+        IndexVector_t volumeDims(2), sizeRange(2);
         const index_t volSize = 5;
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
         volumeDims << volSize, volSize;
-        sinoDims << detectorSize, numImgs;
+        sizeRange << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
         auto volData = VolumeData2D{Size2D{volumeDims}};
-        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+        auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
@@ -665,7 +706,9 @@ SCENARIO("Rays not intersecting the bounding box are present")
             geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{}, RotationOffset2D{-volSize, 0});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Result of forward projection is zero")
             {
@@ -692,7 +735,9 @@ SCENARIO("Rays not intersecting the bounding box are present")
             geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{}, RotationOffset2D{volSize, 0});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Result of forward projection is zero")
             {
@@ -718,7 +763,9 @@ SCENARIO("Rays not intersecting the bounding box are present")
             geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{}, RotationOffset2D{0, -volSize});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Result of forward projection is zero")
             {
@@ -745,7 +792,9 @@ SCENARIO("Rays not intersecting the bounding box are present")
             geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{}, RotationOffset2D{0, volSize});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Result of forward projection is zero")
             {
@@ -769,14 +818,14 @@ SCENARIO("Rays not intersecting the bounding box are present")
 
     GIVEN("A 3D setting")
     {
-        IndexVector_t volumeDims(3), sinoDims(3);
+        IndexVector_t volumeDims(3), sizeRange(3);
         const index_t volSize = 5;
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
         volumeDims << volSize, volSize, volSize;
-        sinoDims << detectorSize, detectorSize, numImgs;
+        sizeRange << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
 
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
@@ -786,7 +835,7 @@ SCENARIO("Rays not intersecting the bounding box are present")
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
         auto volData = VolumeData3D{Size3D{volumeDims}};
-        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+        auto sinoData = SinogramData3D{Size3D{sizeRange}};
 
         std::vector<Geometry> geom;
 
@@ -810,7 +859,9 @@ SCENARIO("Rays not intersecting the bounding box are present")
                                   PrincipalPointOffset2D{0, 0},
                                   RotationOffset3D{-offsetx[i], -offsety[i], -offsetz[i]});
 
-                BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                auto range = PlanarDetectorDescriptor(sizeRange, geom);
+                auto op = BinaryMethod(volumeDescriptor, range);
 
                 THEN("Result of forward projection is zero")
                 {
@@ -841,14 +892,14 @@ SCENARIO("Axis-aligned rays are present")
 
     GIVEN("A 2D setting with a single ray")
     {
-        IndexVector_t volumeDims(2), sinoDims(2);
+        IndexVector_t volumeDims(2), sizeRange(2);
         const index_t volSize = 5;
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
         volumeDims << volSize, volSize;
-        sinoDims << detectorSize, numImgs;
+        sizeRange << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
 
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
@@ -856,7 +907,7 @@ SCENARIO("Axis-aligned rays are present")
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
         auto volData = VolumeData2D{Size2D{volumeDims}};
-        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+        auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
         std::vector<Geometry> geom;
 
@@ -875,7 +926,9 @@ SCENARIO("Axis-aligned rays are present")
             {
                 geom.emplace_back(stc, ctr, Radian{angles[i]}, std::move(volData),
                                   std::move(sinoData));
-                BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                auto range = PlanarDetectorDescriptor(sizeRange, geom);
+                auto op = BinaryMethod(volumeDescriptor, range);
                 THEN("The result of projecting through a pixel is exactly the pixel value")
                 {
                     for (index_t j = 0; j < volSize; j++) {
@@ -912,7 +965,9 @@ SCENARIO("Axis-aligned rays are present")
                               std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{-0.5, 0});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
             THEN("The result of projecting through a pixel is the value of the pixel with the "
                  "higher index")
             {
@@ -946,7 +1001,9 @@ SCENARIO("Axis-aligned rays are present")
                               std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{volSize * 0.5, 0});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("The result of projecting is zero")
             {
@@ -975,7 +1032,9 @@ SCENARIO("Axis-aligned rays are present")
                               std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{-volSize / 2.0, 0});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
             THEN("The result of projecting through a pixel is exactly the pixel's value")
             {
                 for (index_t j = 0; j < volSize; j++) {
@@ -998,14 +1057,14 @@ SCENARIO("Axis-aligned rays are present")
 
     GIVEN("A 3D setting with a single ray")
     {
-        IndexVector_t volumeDims(3), sinoDims(3);
+        IndexVector_t volumeDims(3), sizeRange(3);
         const index_t volSize = 3;
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
         volumeDims << volSize, volSize, volSize;
-        sinoDims << detectorSize, detectorSize, numImgs;
+        sizeRange << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
 
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
@@ -1013,7 +1072,7 @@ SCENARIO("Axis-aligned rays are present")
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
         auto volData = VolumeData3D{Size3D{volumeDims}};
-        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+        auto sinoData = SinogramData3D{Size3D{sizeRange}};
 
         std::vector<Geometry> geom;
 
@@ -1050,7 +1109,9 @@ SCENARIO("Axis-aligned rays are present")
                 geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
 
-                BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                auto range = PlanarDetectorDescriptor(sizeRange, geom);
+                auto op = BinaryMethod(volumeDescriptor, range);
                 THEN("The result of projecting through a voxel is exactly the voxel value")
                 {
                     for (index_t j = 0; j < volSize; j++) {
@@ -1137,7 +1198,9 @@ SCENARIO("Axis-aligned rays are present")
                                   PrincipalPointOffset2D{0, 0},
                                   RotationOffset3D{-offsetx[i], -offsety[i], 0});
 
-                BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                auto range = PlanarDetectorDescriptor(sizeRange, geom);
+                auto op = BinaryMethod(volumeDescriptor, range);
                 THEN("The result of projecting through a voxel is exactly the voxel's value")
                 {
                     for (index_t j = 0; j < volSize; j++) {
@@ -1182,7 +1245,9 @@ SCENARIO("Axis-aligned rays are present")
                                   PrincipalPointOffset2D{0, 0},
                                   RotationOffset3D{-offsetx[i], -offsety[i], 0});
 
-                BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+                auto range = PlanarDetectorDescriptor(sizeRange, geom);
+                auto op = BinaryMethod(volumeDescriptor, range);
                 THEN("The result of projecting is zero")
                 {
                     volume = 1;
@@ -1205,14 +1270,14 @@ SCENARIO("Axis-aligned rays are present")
 
     GIVEN("A 2D setting with multiple projection angles")
     {
-        IndexVector_t volumeDims(2), sinoDims(2);
+        IndexVector_t volumeDims(2), sizeRange(2);
         const index_t volSize = 5;
         const index_t detectorSize = 1;
         const index_t numImgs = 4;
         volumeDims << volSize, volSize;
-        sinoDims << detectorSize, numImgs;
+        sizeRange << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
 
@@ -1224,15 +1289,17 @@ SCENARIO("Axis-aligned rays are present")
         WHEN("Both x- and y-axis-aligned rays are present")
         {
             geom.emplace_back(stc, ctr, Degree{0}, VolumeData2D{Size2D{volumeDims}},
-                              SinogramData2D{Size2D{sinoDims}});
+                              SinogramData2D{Size2D{sizeRange}});
             geom.emplace_back(stc, ctr, Degree{90}, VolumeData2D{Size2D{volumeDims}},
-                              SinogramData2D{Size2D{sinoDims}});
+                              SinogramData2D{Size2D{sizeRange}});
             geom.emplace_back(stc, ctr, Degree{180}, VolumeData2D{Size2D{volumeDims}},
-                              SinogramData2D{Size2D{sinoDims}});
+                              SinogramData2D{Size2D{sizeRange}});
             geom.emplace_back(stc, ctr, Degree{270}, VolumeData2D{Size2D{volumeDims}},
-                              SinogramData2D{Size2D{sinoDims}});
+                              SinogramData2D{Size2D{sizeRange}});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Values are accumulated correctly along each ray's path")
             {
@@ -1269,14 +1336,14 @@ SCENARIO("Axis-aligned rays are present")
 
     GIVEN("A 3D setting with multiple projection angles")
     {
-        IndexVector_t volumeDims(3), sinoDims(3);
+        IndexVector_t volumeDims(3), sizeRange(3);
         const index_t volSize = 3;
         const index_t detectorSize = 1;
         const index_t numImgs = 6;
         volumeDims << volSize, volSize, volSize;
-        sinoDims << detectorSize, detectorSize, numImgs;
+        sizeRange << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
 
@@ -1292,10 +1359,12 @@ SCENARIO("Axis-aligned rays are present")
 
             for (index_t i = 0; i < numImgs; i++)
                 geom.emplace_back(stc, ctr, VolumeData3D{Size3D{volumeDims}},
-                                  SinogramData3D{Size3D{sinoDims}},
+                                  SinogramData3D{Size3D{sizeRange}},
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
 
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Values are accumulated correctly along each ray's path")
             {
@@ -1343,14 +1412,14 @@ SCENARIO("Projection under an angle")
 
     GIVEN("A 2D setting with a single ray")
     {
-        IndexVector_t volumeDims(2), sinoDims(2);
+        IndexVector_t volumeDims(2), sizeRange(2);
         const index_t volSize = 4;
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
         volumeDims << volSize, volSize;
-        sinoDims << detectorSize, numImgs;
+        sizeRange << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
 
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
@@ -1358,7 +1427,7 @@ SCENARIO("Projection under an angle")
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
         auto volData = VolumeData2D{Size2D{volumeDims}};
-        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+        auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
         std::vector<Geometry> geom;
 
@@ -1367,7 +1436,9 @@ SCENARIO("Projection under an angle")
             // In this case the ray enters and exits the volume through the borders along the main
             // direction
             geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData));
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1429,7 +1500,9 @@ SCENARIO("Projection under an angle")
             // through a border not along the main direction
             geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{0}, RotationOffset2D{std::sqrt(3.f), 0});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1481,7 +1554,9 @@ SCENARIO("Projection under an angle")
             // through a border not along the main direction
             geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{0}, RotationOffset2D{-std::sqrt(3.f), 0});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1532,7 +1607,9 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
                               PrincipalPointOffset{0},
                               RotationOffset2D{-2 - std::sqrt(3.f) / 2, 0});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1572,7 +1649,9 @@ SCENARIO("Projection under an angle")
             // direction
             geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
                               std::move(sinoData));
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1629,7 +1708,9 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
                               std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{0, std::sqrt(3.f)});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1684,7 +1765,9 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
                               std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{0, -std::sqrt(3.f)});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1738,7 +1821,9 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
                               std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{0, -2 - std::sqrt(3.f) / 2});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1775,21 +1860,21 @@ SCENARIO("Projection under an angle")
 
     GIVEN("A 3D setting with a single ray")
     {
-        IndexVector_t volumeDims(3), sinoDims(3);
+        IndexVector_t volumeDims(3), sizeRange(3);
         const index_t volSize = 3;
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
         volumeDims << volSize, volSize, volSize;
-        sinoDims << detectorSize, detectorSize, numImgs;
+        sizeRange << detectorSize, detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
-        VolumeDescriptor sinoDescriptor(sinoDims);
+        VolumeDescriptor sinoDescriptor(sizeRange);
         DataContainer volume(volumeDescriptor);
         DataContainer sino(sinoDescriptor);
 
         auto stc = SourceToCenterOfRotation{20 * volSize};
         auto ctr = CenterOfRotationToDetector{volSize};
         auto volData = VolumeData3D{Size3D{volumeDims}};
-        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+        auto sinoData = SinogramData3D{Size3D{sizeRange}};
 
         std::vector<Geometry> geom;
 
@@ -1800,7 +1885,9 @@ SCENARIO("Projection under an angle")
             // In this case the ray enters and exits the volume along the main direction
             geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                               RotationAngles3D{Gamma{pi_t / 6}});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("The ray intersects the correct voxels")
             {
@@ -1853,7 +1940,9 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{1, 0, 0});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("The ray intersects the correct voxels")
             {
@@ -1903,7 +1992,9 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{-1, 0, 0});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("The ray intersects the correct voxels")
             {
@@ -1953,7 +2044,9 @@ SCENARIO("Projection under an angle")
             geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{-2, 0, 0});
-            BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            // BinaryMethod op(volumeDescriptor, sinoDescriptor, geom);
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BinaryMethod(volumeDescriptor, range);
 
             THEN("The ray intersects the correct voxels")
             {
