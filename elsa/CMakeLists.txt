@@ -50,6 +50,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                         ${ARGN}
                         --extra-arg=-I${PYTHON_INCLUDE_DIRS}
                         --extra-arg=-I${PYBIND11_INCLUDE_DIR}
+                        -p=${CMAKE_BINARY_DIR}
                         --hints=${HINTS_PATH}
                         -o=${BINDINGS_CODE_PATH}
                         --name=${TARGET_NAME}
