@@ -274,17 +274,18 @@ public:
         bool isAbstract = false;
 
         for (auto decl : declaration->decls()) {
-            if (dyn_cast<CXXMethodDecl>(decl)) {
-                auto method = dyn_cast<CXXMethodDecl>(decl);
-                parseMethod(method, *r);
-            } else if (dyn_cast<FunctionTemplateDecl>(decl)) {
-                const auto ftd = dyn_cast<FunctionTemplateDecl>(decl);
-                const auto method = dyn_cast<CXXMethodDecl>(ftd->getTemplatedDecl());
-                parseMethod(method, *r);
-                for (const auto spec : ftd->specializations()) {
-                    const auto method = dyn_cast<CXXMethodDecl>(spec);
-                    parseMethod(method, *r);
+            if (dyn_cast<UsingDecl>(decl)) {
+                for (auto shadow : dyn_cast<UsingDecl>(decl)->shadows()) {
+                    auto target = shadow->getTargetDecl();
+                    // ignore non-public shadows as well as copy constructors
+                    if (decl->getAccess() == AS_public
+                        && (dyn_cast<CXXConstructorDecl>(target) == nullptr
+                            || !dyn_cast<CXXConstructorDecl>(target)->isCopyConstructor())) {
+                        handleMemberDeclaration(target, *r);
+                    }
                 }
+            } else {
+                handleMemberDeclaration(decl, *r);
             }
         }
 
@@ -493,6 +494,22 @@ protected:
 
         // printStuff(declaration);
         return true;
+    }
+
+    void handleMemberDeclaration(Decl* decl, elsa::Module::Record& r)
+    {
+        if (dyn_cast<CXXMethodDecl>(decl)) {
+            auto method = dyn_cast<CXXMethodDecl>(decl);
+            parseMethod(method, r);
+        } else if (dyn_cast<FunctionTemplateDecl>(decl)) {
+            const auto ftd = dyn_cast<FunctionTemplateDecl>(decl);
+            const auto method = dyn_cast<CXXMethodDecl>(ftd->getTemplatedDecl());
+            parseMethod(method, r);
+            for (const auto spec : ftd->specializations()) {
+                const auto method = dyn_cast<CXXMethodDecl>(spec);
+                parseMethod(method, r);
+            }
+        }
     }
 
     std::string fileLocation(const TagDecl* declaration)
