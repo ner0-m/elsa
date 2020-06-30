@@ -2,6 +2,7 @@
 #include "Descriptors/VolumeDescriptor.h"
 #include "LinearOperator.h"
 #include "DescriptorUtils.h"
+#include "Geometry.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
@@ -201,6 +202,58 @@ namespace elsa
         //     };
     };
 
+    struct GeometryHints : public ClassHints<Geometry> {
+        template <typename type_, typename... options>
+        static void addCustomMethods(py::class_<type_, options...>& c)
+        {
+            // define custom constructors for the constructors accepting an rvalue reference
+            c.def(py::init([](geometry::SourceToCenterOfRotation sourceToCenterOfRotation,
+                              geometry::CenterOfRotationToDetector centerOfRotationToDetector,
+                              geometry::Radian angle, geometry::VolumeData2D volData,
+                              geometry::SinogramData2D sinoData,
+                              geometry::PrincipalPointOffset offset,
+                              geometry::RotationOffset2D centerOfRotOffset) {
+                      return std::make_unique<Geometry>(
+                          sourceToCenterOfRotation, centerOfRotationToDetector, angle,
+                          std::move(volData), std::move(sinoData), offset, centerOfRotOffset);
+                  }),
+                  py::arg("sourceToCenterOfRotation"), py::arg("centerOfRotationToDetector"),
+                  py::arg("angle"), py::arg("volData"), py::arg("sinoData"),
+                  py::arg("offset") = geometry::PrincipalPointOffset{0},
+                  py::arg("centerOfRotOffset") = geometry::RotationOffset2D{0, 0})
+                .def(py::init([](geometry::SourceToCenterOfRotation sourceToCenterOfRotation,
+                                 geometry::CenterOfRotationToDetector centerOfRotationToDetector,
+                                 geometry::VolumeData3D volData, geometry::SinogramData3D sinoData,
+                                 geometry::RotationAngles3D angles,
+                                 geometry::PrincipalPointOffset2D offset,
+                                 geometry::RotationOffset3D centerOfRotOffset) {
+                         return std::make_unique<Geometry>(sourceToCenterOfRotation,
+                                                           centerOfRotationToDetector,
+                                                           std::move(volData), std::move(sinoData),
+                                                           angles, offset, centerOfRotOffset);
+                     }),
+                     py::arg("sourceToCenterOfRotation"), py::arg("centerOfRotationToDetector"),
+                     py::arg("volData"), py::arg("sinoData"), py::arg("angles"),
+                     py::arg("offset") = geometry::PrincipalPointOffset2D{0, 0},
+                     py::arg("centerOfRotOffset") = geometry::RotationOffset3D{0, 0, 0});
+        }
+    };
+
+    template <typename TransparentClass>
+    struct TransparentClassHints : public ClassHints<TransparentClass> {
+
+        using Vector = std::remove_reference_t<decltype(std::declval<TransparentClass>().get())>;
+        using Scalar = decltype(std::declval<Vector>().sum());
+
+        template <typename type_, typename... options>
+        static void addCustomMethods(py::class_<type_, options...>& c)
+        {
+            c.def(py::init<Vector>())
+                .def("__getitem__",
+                     (Scalar(TransparentClass::*)(index_t i) const) & TransparentClass::operator[]);
+        }
+    };
+
     template struct DataContainerHints<float>;
     template struct DataContainerComplexHints<std::complex<float>>;
     template struct DataContainerHints<double>;
@@ -210,4 +263,10 @@ namespace elsa
     template struct LinearOperatorHints<double>;
     template struct LinearOperatorHints<std::complex<float>>;
     template struct LinearOperatorHints<std::complex<double>>;
+    template struct TransparentClassHints<geometry::Spacing2D>;
+    template struct TransparentClassHints<geometry::OriginShift2D>;
+    template struct TransparentClassHints<geometry::Coefficients<2>>;
+    template struct TransparentClassHints<geometry::Spacing3D>;
+    template struct TransparentClassHints<geometry::OriginShift3D>;
+    template struct TransparentClassHints<geometry::Coefficients<3>>;
 } // namespace elsa
