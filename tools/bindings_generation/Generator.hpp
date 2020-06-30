@@ -124,15 +124,6 @@ public:
         std::string qualifiedName = r.name;
 
         std::string additionalProps = "";
-        std::map<std::string, bool> hasOverloads;
-
-        for (const auto& [fId, f] : r.methods) {
-            if (hasOverloads.find(f.name) == hasOverloads.end()) {
-                hasOverloads.emplace(f.name, false);
-            } else {
-                hasOverloads[f.name] = true;
-            }
-        }
 
         if (classSupportsBufferProtocol(r, hints))
             additionalProps = ", py::buffer_protocol()";
@@ -199,17 +190,13 @@ public:
                         additionalProps = getReturnValuePolicyAsString(f);
 
                         def += "\"" + getPythonNameForMethod(f.name) + "\", ";
-                        if (!hasOverloads[f.name]) {
-                            outputFile << def << "&" << qualifiedName << "::" << f.name
-                                       << namesAndDefaults << additionalProps << ")";
-                        } else {
-                            outputFile << def << "(" << f.returnType << "("
-                                       << (f.isStatic ? "" : qualifiedName + "::") << "*)"
-                                       << "(" << types << ")" << (f.isConst ? " const" : "")
-                                       << f.refQualifier << ")("
-                                       << "&" << qualifiedName << "::" << f.name << ")"
-                                       << namesAndDefaults << additionalProps << ")";
-                        }
+
+                        outputFile << def << "(" << f.returnType << "("
+                                   << (f.isStatic ? "" : qualifiedName + "::") << "*)"
+                                   << "(" << types << ")" << (f.isConst ? " const" : "")
+                                   << f.refQualifier << ")("
+                                   << "&" << qualifiedName << "::" << f.name << ")"
+                                   << namesAndDefaults << additionalProps << ")";
                     }
                 }
             }

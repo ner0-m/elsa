@@ -601,8 +601,8 @@ public:
 
                 if (varDecl->getNameAsString() == "ignoreMethods") {
 
-                    auto constructExpr = dyn_cast<CXXConstructExpr>(
-                        varDecl->getInit()->IgnoreImplicit());
+                    auto constructExpr =
+                        dyn_cast<CXXConstructExpr>(varDecl->getInit()->IgnoreImplicit());
 
                     if (constructExpr) {
                         for (auto arg : constructExpr->arguments()) {
@@ -624,12 +624,11 @@ public:
                     }
                     // this may be just a single StringLiteral (and not packed in a
                     // CXXConstructExpr) when we are ignoring only a single method
-                    else if (dyn_cast<StringLiteral>(
-                                 varDecl->getInit()->IgnoreImplicit())) {
-                        auto methodName = dyn_cast<StringLiteral>(
-                                              varDecl->getInit()->IgnoreImplicit())
-                                              ->getString()
-                                              .str();
+                    else if (dyn_cast<StringLiteral>(varDecl->getInit()->IgnoreImplicit())) {
+                        auto methodName =
+                            dyn_cast<StringLiteral>(varDecl->getInit()->IgnoreImplicit())
+                                ->getString()
+                                .str();
                         classHints.ignoredMethods.insert(methodName);
                     } else {
                         assert(false && "ignoreMethods not inline initialized");
