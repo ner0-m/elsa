@@ -102,6 +102,8 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
         Descriptors/IdenticalBlocksDescriptor.h
         Descriptors/PartitionDescriptor.h
         Descriptors/RandomBlocksDescriptor.h
+        Descriptors/DetectorDescriptor.h
+        Descriptors/PlanarDetectorDescriptor.h
         Geometry.h)
         
     list(FILTER BINDINGS_SOURCES EXCLUDE REGEX DataHandler.*.cpp)
