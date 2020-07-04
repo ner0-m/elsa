@@ -7,6 +7,7 @@
 #  LLVM_CXXFLAGS - C++ compiler flags for files that include LLVM headers
 #  LLVM_INCLUDE_DIR - Directory containing LLVM headers
 #  LLVM_LIB_DIR - Directory containing LLVM libraries
+#  LLVM_SHARED_MODE - How the provided components can be collectively linked
 #
 
 find_program(LLVM_CONFIG
@@ -38,6 +39,11 @@ if (LLVM_CONFIG)
   execute_process(
     COMMAND ${LLVM_CONFIG} --libdir
     OUTPUT_VARIABLE LLVM_LIB_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  execute_process(
+    COMMAND ${LLVM_CONFIG} --shared-mode
+    OUTPUT_VARIABLE LLVM_SHARED_MODE
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   find_library(CLANG_CPP_LIBRARY NAMES clang-cpp PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)

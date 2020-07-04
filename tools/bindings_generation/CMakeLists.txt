@@ -11,8 +11,15 @@ else()
     add_executable(pybind11_generator Parser.cpp)
     target_compile_options(pybind11_generator PUBLIC ${LLVM_CXXFLAGS})
     target_compile_features(pybind11_generator PUBLIC cxx_std_17)
-    target_link_directories(pybind11_generator PUBLIC ${LLVM_LIB_DIR})
-    target_link_libraries(pybind11_generator LLVM clang-cpp stdc++fs)
+    target_include_directories(pybind11_generator PUBLIC ${LLVM_INCLUDE_DIR})
+
+    if (LLVM_SHARED_MODE STREQUAL "shared")
+        target_link_libraries(pybind11_generator ${LLVM_LIBRARY} ${CLANG_CPP_LIBRARY} stdc++fs)
+    elseif (LLVM_SHARED_MODE STREQUAL "static")
+        # all of the necessary LLVM components should already be statically linked in clang-cpp
+        # when LLVM_SHARED_MODE is static
+        target_link_libraries(pybind11_generator ${CLANG_CPP_LIBRARY} stdc++fs)
+    endif()
 
     file(WRITE ${PROJECT_BINARY_DIR}/elsa/__init__.py "")
 endif()

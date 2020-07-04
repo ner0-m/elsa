@@ -34,41 +34,41 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
     find_package(PythonLibs)
     if(PYTHONLIBS_FOUND)
         add_custom_target(pyelsa)
-
-        # macro for generation of the corresponding python module for the elsa target TARGET_NAME
-        # as a pre-build step the code for the python bindings will be generated and stored in BINDINGS_CODE_PATH
-        # the sources containing the public interface of TARGET_NAME should be specified as additional arguments
-        # you can omit a source file from the list to prevent the generation of bindings for that file
-        macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_PATH HINTS_PATH)
-            if (TARGET pybind11_generator)
-
-            get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
-                file(APPEND ${PROJECT_BINARY_DIR}/elsa/__init__.py "from .${CMAKE_CURRENT_LIST_DIR_LAST_PART} import *\n")
-
-                add_custom_command(OUTPUT ${BINDINGS_CODE_PATH}
-                    COMMAND ${PROJECT_BINARY_DIR}/tools/bindings_generation/pybind11_generator
-                        ${ARGN}
-                        --extra-arg=-I${PYTHON_INCLUDE_DIRS}
-                        --extra-arg=-I${PYBIND11_INCLUDE_DIR}
-                        -p=${CMAKE_BINARY_DIR}
-                        --hints=${HINTS_PATH}
-                        -o=${BINDINGS_CODE_PATH}
-                        --name=${TARGET_NAME}
-                    DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_PATH}
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-                    COMMENT "Generating bindings code for ${TARGET_NAME}"
-                    VERBATIM)
-
-                pybind11_add_module(py${TARGET_NAME} ${BINDINGS_CODE_PATH})
-                target_include_directories(py${TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/elsa/bindings/hints)
-                target_link_libraries(py${TARGET_NAME} PUBLIC ${TARGET_NAME})
-                target_compile_features(py${TARGET_NAME} PUBLIC cxx_std_17)
-                add_dependencies(pyelsa py${TARGET_NAME})
-            endif()
-        endmacro()
     else()
         message(STATUS "Couldn't find Python.h. Python bindings will not be generated.")
     endif()
+
+    # macro for generation of the corresponding python module for the elsa target TARGET_NAME
+    # as a pre-build step the code for the python bindings will be generated and stored in BINDINGS_CODE_PATH
+    # the sources containing the public interface of TARGET_NAME should be specified as additional arguments
+    # you can omit a source file from the list to prevent the generation of bindings for that file
+    macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_PATH HINTS_PATH)
+        if ((TARGET pyelsa) AND (TARGET pybind11_generator))
+
+            get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
+            file(APPEND ${PROJECT_BINARY_DIR}/elsa/__init__.py "from .${CMAKE_CURRENT_LIST_DIR_LAST_PART} import *\n")
+
+            add_custom_command(OUTPUT ${BINDINGS_CODE_PATH}
+                COMMAND ${PROJECT_BINARY_DIR}/tools/bindings_generation/pybind11_generator
+                    ${ARGN}
+                    --extra-arg=-I${PYTHON_INCLUDE_DIRS}
+                    --extra-arg=-I${PYBIND11_INCLUDE_DIR}
+                    -p=${CMAKE_BINARY_DIR}
+                    --hints=${HINTS_PATH}
+                    -o=${BINDINGS_CODE_PATH}
+                    --name=${TARGET_NAME}
+                DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_PATH}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                COMMENT "Generating bindings code for ${TARGET_NAME}"
+                VERBATIM)
+
+            pybind11_add_module(py${TARGET_NAME} ${BINDINGS_CODE_PATH})
+            target_include_directories(py${TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/elsa/bindings/hints)
+            target_link_libraries(py${TARGET_NAME} PUBLIC ${TARGET_NAME})
+            target_compile_features(py${TARGET_NAME} PUBLIC cxx_std_17)
+            add_dependencies(pyelsa py${TARGET_NAME})
+        endif()
+    endmacro()
 endif()
 
 
