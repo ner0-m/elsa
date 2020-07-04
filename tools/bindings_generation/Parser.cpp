@@ -765,7 +765,11 @@ int main(int argc, const char** argv)
         hintsParser.appendArgumentsAdjuster(optionsParser.getArgumentsAdjuster());
 
         auto factory = newFrontendActionFactory<HintsParserAction>();
-        hintsParser.run(factory.get());
+        int retCode = hintsParser.run(factory.get());
+
+        // fail with the corresponding error code when the hints file can't be parsed
+        if (retCode)
+            return retCode;
     }
 
     ClangTool tool(optionsParser.getCompilations(), optionsParser.getSourcePathList());
@@ -792,7 +796,13 @@ int main(int argc, const char** argv)
     }
 
     auto factory = newFrontendActionFactory<ModuleParserAction>();
-    tool.run(factory.get());
+    int retCode = tool.run(factory.get());
+
+    // fail with the corresponding error code when a file can't be parsed
+    if (retCode)
+        return retCode;
 
     Generator::generateBindingsForModule(m, outputDir);
+
+    return 0;
 }
