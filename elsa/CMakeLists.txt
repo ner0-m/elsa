@@ -44,6 +44,10 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
     # you can omit a source file from the list to prevent the generation of bindings for that file
     macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_PATH HINTS_PATH)
         if ((TARGET pyelsa) AND (TARGET pybind11_generator))
+            # generate a compile commands file
+            # ensures the same compilation flags are passed to clang when compiling the file
+            # as a component of elsa and when parsing it for bindings generation
+            set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
             get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
             file(APPEND ${PROJECT_BINARY_DIR}/elsa/__init__.py "from .${CMAKE_CURRENT_LIST_DIR_LAST_PART} import *\n")
