@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 find_package(LLVM)
 
 if (NOT LLVM_FOUND)
-    message(WARNING "LLVM not found. Python bindings will not be generated.")
+    message(WARNING "LLVM not found or components missing. Python bindings will not be generated.")
 elseif (LLVM_VERSION VERSION_LESS 9.0.0)
     message(WARNING "LLVM version ${LLVM_VERSION} found in directory ${LLVM_LIB_DIR}, "
                     "but at least 9.0.0 is required. Python bindings will not be generated.")

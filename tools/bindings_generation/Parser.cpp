@@ -734,32 +734,6 @@ public:
     }
 };
 
-class ModuleParserActionFactory : public clang::tooling::FrontendActionFactory
-{
-public:
-#if __clang_major__ >= 10
-    std::unique_ptr<FrontendAction> create() override
-    {
-        return std::make_unique<ModuleParserAction>();
-    }
-#else
-    FrontendAction* create() override { return new ModuleParserAction(); }
-#endif
-};
-
-class HintsParserActionFactory : public clang::tooling::FrontendActionFactory
-{
-public:
-#if __clang_major__ >= 10
-    std::unique_ptr<FrontendAction> create() override
-    {
-        return std::make_unique<HintsParserAction>();
-    }
-#else
-    FrontendAction* create() override { return new HintsParserAction(); }
-#endif
-};
-
 int main(int argc, const char** argv)
 {
     CommonOptionsParser optionsParser(argc, argv, bindingsOptions);
@@ -790,7 +764,7 @@ int main(int argc, const char** argv)
         ClangTool hintsParser(hints.getCompilations(), hints.getSourcePathList());
         hintsParser.appendArgumentsAdjuster(optionsParser.getArgumentsAdjuster());
 
-        auto factory = std::make_unique<HintsParserActionFactory>();
+        auto factory = newFrontendActionFactory<HintsParserAction>();
         hintsParser.run(factory.get());
     }
 
@@ -817,7 +791,7 @@ int main(int argc, const char** argv)
             m.path = m.path.substr(0, m.path.rfind("/"));
     }
 
-    auto factory = std::make_unique<ModuleParserActionFactory>();
+    auto factory = newFrontendActionFactory<ModuleParserAction>();
     tool.run(factory.get());
 
     Generator::generateBindingsForModule(m, outputDir);
