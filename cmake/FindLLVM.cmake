@@ -3,7 +3,7 @@
 # Defines the variables:
 #
 #  LLVM_FOUND - LLVM was found of the system
-#  LLVM_VERSION - LLVM version
+#  LLVM_VERSION - LLVM version (this is also an INTERNAL CACHE variable)
 #  LLVM_CXXFLAGS - C++ compiler flags for files that include LLVM headers
 #  LLVM_INCLUDE_DIR - Directory containing LLVM headers
 #  LLVM_LIB_DIR - Directory containing LLVM libraries
@@ -23,6 +23,8 @@ if (LLVM_CONFIG)
     OUTPUT_VARIABLE LLVM_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+  set(LLVM_VERSION ${LLVM_VERSION} CACHE INTERNAL "the LLVM version")
+  
   execute_process(
     COMMAND ${LLVM_CONFIG} --cxxflags
     OUTPUT_VARIABLE LLVM_CXXFLAGS

@@ -50,6 +50,8 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
             get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
+            get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
+
             file(APPEND ${PROJECT_BINARY_DIR}/elsa/__init__.py "from .${CMAKE_CURRENT_LIST_DIR_LAST_PART} import *\n")
 
             add_custom_command(OUTPUT ${BINDINGS_CODE_PATH}
@@ -57,6 +59,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     ${ARGN}
                     --extra-arg=-I${PYTHON_INCLUDE_DIRS}
                     --extra-arg=-I${PYBIND11_INCLUDE_DIR}
+                    --extra-arg=-I${LLVM_CONFIG_DIR}/../lib/clang/${LLVM_VERSION}/include
                     -p=${CMAKE_BINARY_DIR}
                     --hints=${HINTS_PATH}
                     -o=${BINDINGS_CODE_PATH}
