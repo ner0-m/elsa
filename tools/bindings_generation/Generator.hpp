@@ -95,19 +95,16 @@ public:
                    << "PYBIND11_MODULE(" << m.pythonName << ", m)\n"
                    << "{\n";
 
-        for (const auto& tag : m.tags) {
-            if (m.classHints.find(tag->name) != m.classHints.end()) {
-                const auto& hints = m.classHints.at(tag->name);
-                const auto& rec = static_cast<const elsa::Module::Record&>(*tag);
-                generateBindingsForRecord(rec, outputFile, initFile, &hints);
+        for (const auto& e : m.enums) {
+            generateBindingsForEnum(*e, outputFile);
+        }
+
+        for (const auto& r : m.records) {
+            if (m.classHints.find(r->name) != m.classHints.end()) {
+                const auto& hints = m.classHints.at(r->name);
+                generateBindingsForRecord(*r, outputFile, initFile, &hints);
             } else {
-                if (dynamic_cast<const elsa::Module ::Record*>(tag.get())) {
-                    const auto& rec = static_cast<const elsa::Module::Record&>(*tag);
-                    generateBindingsForRecord(rec, outputFile, initFile);
-                } else if (dynamic_cast<const elsa::Module::Enum*>(tag.get())) {
-                    const auto& e = static_cast<const elsa::Module::Enum&>(*tag);
-                    generateBindingsForEnum(e, outputFile);
-                }
+                generateBindingsForRecord(*r, outputFile, initFile);
             }
         }
 
@@ -147,8 +144,8 @@ public:
                 continue;
 
             // methods accepting rvalue references or unique_ptrs as parameters cannot be bound
-            // TODO: add warning for the case when a non-abstract class is left without any viable
-            // constructors
+            // TODO: add warning for the case when a non-abstract class is left without any
+            // viable constructors
             bool viable = true;
             for (const auto& param : f.params) {
                 if (param.type.rfind("&&") == param.type.length() - 2

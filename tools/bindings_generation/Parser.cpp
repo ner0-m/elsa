@@ -161,10 +161,16 @@ protected:
         }
     }
 
-    static std::map<std::string, elsa::Module::UserDefinedTag*> encounteredTags;
+    // encountered tags' typenames are added to the map as soon as encountered, but the pointer to
+    // the object remains a nullptr until the record is fully processed
+    static std::map<std::string, elsa::Module::Record*> encounteredRecords;
+    static std::map<std::string, elsa::Module::Enum*> encounteredEnums;
     ASTContext* context;
     PrintingPolicy printingPolicy;
 };
+
+std::map<std::string, elsa::Module::Record*> ParserBase::encounteredRecords = {};
+std::map<std::string, elsa::Module::Enum*> ParserBase::encounteredEnums = {};
 
 class ModuleParser : public RecursiveASTVisitor<ModuleParser>, public ParserBase
 {
@@ -231,7 +237,7 @@ public:
     {
 
         auto id = fullyQualifiedId(context->getEnumType(declaration));
-        if (encounteredTags.find(id) != encounteredTags.end())
+        if (encounteredEnums.find(id) != encounteredEnums.end())
             return;
 
         auto e = std::make_unique<elsa::Module::Enum>();
@@ -243,8 +249,8 @@ public:
             e->values.emplace(enumerator->getNameAsString(), enumerator->getInitVal().toString(10));
         }
 
-        m.tags.push_back(std::move(e));
-        encounteredTags.emplace(m.tags.back()->name, m.tags.back().get());
+        m.enums.push_back(std::move(e));
+        encounteredEnums.emplace(m.enums.back()->name, m.enums.back().get());
     }
 
     void parseRecord(CXXRecordDecl* declaration)
@@ -258,7 +264,7 @@ public:
 
         // register tag as encountered, nullptr as second argument means it is still not fully
         // processed
-        encounteredTags.emplace(id, nullptr);
+        encounteredRecords.emplace(id, nullptr);
         r->name = id;
         r->namespaceStrippedName = getNamespaceStrippedName(declaration);
 
@@ -289,10 +295,10 @@ public:
             }
         }
 
-        m.tags.push_back(std::move(r));
+        m.records.push_back(std::move(r));
 
         // update encountered tags pointer
-        encounteredTags[id] = m.tags.back().get();
+        encounteredRecords[id] = m.records.back().get();
 
         // register unencountered template type parameters
         if (auto ctsd = dyn_cast<ClassTemplateSpecializationDecl>(declaration)) {
@@ -318,7 +324,7 @@ public:
             }
 
             if (tparamsMatchDefaults)
-                m.tags.back()->alias = ctsd->getSpecializedTemplate()->getNameAsString();
+                m.records.back()->alias = ctsd->getSpecializedTemplate()->getNameAsString();
 
             for (int i = 0; i < ctsd->getTemplateArgs().size(); i++) {
                 if (ctsd->getTemplateArgs()[i].getKind() != TemplateArgument::ArgKind::Type)
@@ -401,10 +407,10 @@ protected:
         auto parent = method->getParent();
         auto id = fullyQualifiedId(context->getRecordType(parent));
 
-        auto it = encounteredTags.find(id);
-        if (it != encounteredTags.end()) {
+        auto it = encounteredRecords.find(id);
+        if (it != encounteredRecords.end()) {
             // we know this is a Record
-            auto r = static_cast<elsa::Module::Record*>(it->second);
+            auto r = it->second;
             if (r == nullptr)
                 return;
 
@@ -471,7 +477,7 @@ protected:
             return false;
         }
 
-        if (encounteredTags.find(id) != encounteredTags.end())
+        if (encounteredRecords.find(id) != encounteredRecords.end())
             return considerEncountered ? true : false;
 
         // otherwise, register in this module if declaration is contained in the module path or a
@@ -540,10 +546,6 @@ protected:
         return path;
     }
 };
-
-// encountered tags' typenames are added to the map as soon as encountered, but the pointer to the
-// object remains a nullptr until the record is fully processed
-std::map<std::string, elsa::Module::UserDefinedTag*> ParserBase::encounteredTags = {};
 
 class HintsParser : public clang::RecursiveASTVisitor<HintsParser>, public ParserBase
 {
