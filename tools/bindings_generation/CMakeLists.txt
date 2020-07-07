@@ -6,7 +6,7 @@ if (LIBCLANG_FOUND)
     add_executable(pybind11_generator Parser.cpp)
     target_compile_options(pybind11_generator PUBLIC ${LibClang_Flags})
     target_compile_features(pybind11_generator PUBLIC cxx_std_17)
-    target_link_libraries(pybind11_generator LLVM clang-cpp stdc++fs)
+    target_link_libraries(pybind11_generator PUBLIC LLVM clang-cpp stdc++fs)
 
     file(WRITE ${PROJECT_BINARY_DIR}/elsa/__init__.py "")
 else()
