@@ -14,11 +14,11 @@ else()
     target_include_directories(pybind11_generator PUBLIC ${LLVM_INCLUDE_DIR})
 
     if (LLVM_SHARED_MODE STREQUAL "shared")
-        target_link_libraries(pybind11_generator ${LLVM_LIBRARY} ${CLANG_CPP_LIBRARY} stdc++fs)
+        target_link_libraries(pybind11_generator PUBLIC ${LLVM_LIBRARY} ${CLANG_CPP_LIBRARY} stdc++fs)
     elseif (LLVM_SHARED_MODE STREQUAL "static")
         # all of the necessary LLVM components should already be statically linked in clang-cpp
         # when LLVM_SHARED_MODE is static
-        target_link_libraries(pybind11_generator ${CLANG_CPP_LIBRARY} stdc++fs)
+        target_link_libraries(pybind11_generator PUBLIC ${CLANG_CPP_LIBRARY} stdc++fs)
     endif()
 
     file(WRITE ${PROJECT_BINARY_DIR}/elsa/__init__.py "")
