@@ -13,6 +13,13 @@ else()
     target_compile_features(pybind11_generator PUBLIC cxx_std_17)
     target_include_directories(pybind11_generator PUBLIC ${LLVM_INCLUDE_DIR})
 
+    # linking fails if the generator is built using libc++ 
+    # force use of libstdc++ instead when compiling with clang
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(pybind11_generator PUBLIC -stdlib=libstdc++)
+        target_link_options(pybind11_generator PUBLIC -stdlib=libstdc++ -lstdc++)
+    endif()
+
     if (LLVM_SHARED_MODE STREQUAL "shared")
         target_link_libraries(pybind11_generator PUBLIC ${LLVM_LIBRARY} ${CLANG_CPP_LIBRARY} stdc++fs)
     elseif (LLVM_SHARED_MODE STREQUAL "static")

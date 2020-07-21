@@ -158,6 +158,7 @@ protected:
                 return elsa::Module::Function::RQ_RVAL;
             default:
                 assert(false && ("ref-qualifier kind not supported"));
+                return elsa::Module::Function::RQ_NONE;
         }
     }
 

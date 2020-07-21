@@ -51,12 +51,29 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
 
             get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
             get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
+            get_filename_component(LLVM_LIB_DIR ${LLVM_LIBRARY} DIRECTORY)
 
             file(APPEND ${PROJECT_BINARY_DIR}/elsa/__init__.py "from .${CMAKE_CURRENT_LIST_DIR_LAST_PART} import *\n")
 
+            # when compiling with libc++ as the STL, the path to the STL headers must be specified
+            set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX "")
+            get_target_property(TARGET_COMPILE_OPTIONS ${TARGET_NAME} COMPILE_OPTIONS)
+            if (CMAKE_CXX_FLAGS)
+                string(REPLACE " " ";" CXX_FLAGS_LIST ${CMAKE_CXX_FLAGS})
+            endif()
+
+            # search through the global and target specific compile options for the "-stdlib=libc++" flag
+            foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST TARGET_COMPILE_OPTIONS)
+                if (${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
+                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg-before=-cxx-isystem --extra-arg-before=${LLVM_LIB_DIR}/../include/c++/v1)
+                    break()
+                endif()
+            endforeach(COMPILE_OPTION)
+	    
             add_custom_command(OUTPUT ${BINDINGS_CODE_PATH}
                 COMMAND ${PROJECT_BINARY_DIR}/tools/bindings_generation/pybind11_generator
                     ${ARGN}
+                    ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX}
                     --extra-arg=-I${PYTHON_INCLUDE_DIRS}
                     --extra-arg=-I${PYBIND11_INCLUDE_DIR}
                     --extra-arg=-I${LLVM_CONFIG_DIR}/../lib/clang/${LLVM_VERSION}/include
