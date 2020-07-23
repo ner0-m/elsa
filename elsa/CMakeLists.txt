@@ -65,7 +65,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             # search through the global and target specific compile options for the "-stdlib=libc++" flag
             foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST TARGET_COMPILE_OPTIONS)
                 if (${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg-before=-cxx-isystem --extra-arg-before=${LLVM_LIB_DIR}/../include/c++/v1)
+                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg=-isystem --extra-arg=${LLVM_LIB_DIR}/../include/c++/v1)
                     break()
                 endif()
             endforeach(COMPILE_OPTION)
@@ -74,9 +74,10 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                 COMMAND ${PROJECT_BINARY_DIR}/tools/bindings_generation/pybind11_generator
                     ${ARGN}
                     ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX}
+                    --extra-arg=-isystem
+                    --extra-arg=${LLVM_CONFIG_DIR}/../lib/clang/${LLVM_VERSION}/include
                     --extra-arg=-I${PYTHON_INCLUDE_DIRS}
                     --extra-arg=-I${PYBIND11_INCLUDE_DIR}
-                    --extra-arg=-I${LLVM_CONFIG_DIR}/../lib/clang/${LLVM_VERSION}/include
                     -p=${CMAKE_BINARY_DIR}
                     --hints=${HINTS_PATH}
                     -o=${BINDINGS_CODE_PATH}
