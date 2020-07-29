@@ -17,7 +17,7 @@ namespace elsa
     namespace py = pybind11;
 
     struct EDFHints : public ClassHints<EDF> {
-        constexpr static std::tuple ignoreMethods = {"read"};
+        constexpr static std::array ignoreMethods = {"read"};
 
         template <typename type_, typename... options>
         static void addCustomMethods(py::class_<type_, options...>& c)
@@ -35,7 +35,7 @@ namespace elsa
     };
 
     struct MHDHints : public ClassHints<MHD> {
-        constexpr static std::tuple ignoreMethods = {"read"};
+        constexpr static std::array ignoreMethods = {"read"};
 
         template <typename type_, typename... options>
         static void addCustomMethods(py::class_<type_, options...>& c)

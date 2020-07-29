@@ -6,6 +6,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
+#include <pybind11/numpy.h>
 
 #include <functional>
 
@@ -103,7 +104,7 @@ namespace elsa
 
     template <typename data_t>
     struct DataContainerHints : public ClassHints<elsa::DataContainer<data_t>> {
-        constexpr static std::tuple ignoreMethods = {
+        constexpr static std::array ignoreMethods = {
             "operator()", "begin", "cbegin", "end", "cend", "rbegin", "crbegin", "rend", "crend"};
 
         template <typename type_, typename... options>
@@ -169,7 +170,7 @@ namespace elsa
 
     template <typename data_t>
     struct DataContainerComplexHints : public ClassHints<elsa::DataContainer<data_t>> {
-        constexpr static std::tuple ignoreMethods = {
+        constexpr static std::array ignoreMethods = {
             "operator()", "begin", "cbegin", "end", "cend", "rbegin", "crbegin", "rend", "crend"};
 
         template <typename type_, typename... options>

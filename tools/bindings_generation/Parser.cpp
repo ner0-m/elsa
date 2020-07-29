@@ -621,18 +621,16 @@ public:
 
                 if (varDecl->getNameAsString() == "ignoreMethods") {
 
-                    auto constructExpr =
-                        dyn_cast<CXXConstructExpr>(varDecl->getInit()->IgnoreImplicit());
+                    auto initListExpr = dyn_cast<InitListExpr>(
+                        dyn_cast<InitListExpr>(varDecl->getInit())->getInit(0)->IgnoreImplicit());
 
-                    if (constructExpr) {
-                        for (auto arg : constructExpr->arguments()) {
-                            while (!dyn_cast<StringLiteral>(arg)) {
-                                if (dyn_cast<Expr>(*arg->child_begin())) {
-                                    arg = dyn_cast<Expr>(*arg->child_begin());
-                                } else {
-                                    break;
-                                }
-                            }
+                    llvm::outs() << initListExpr->getNumInits() << "\n";
+                    initListExpr->getInit(0)->dump();
+
+                    if (initListExpr) {
+                        for (auto arg : initListExpr->inits()) {
+
+                            arg = arg->IgnoreImplicit();
 
                             if (!dyn_cast<StringLiteral>(arg))
                                 assert(false
