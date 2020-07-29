@@ -31,6 +31,11 @@ static llvm::cl::opt<std::string> pythonModuleName(
     "pyname", llvm::cl::cat(bindingsOptions),
     llvm::cl::desc("Name that should be given assigned to the generated python module. \"py\" "
                    "will be prepended to the value of the name option if not specified"));
+static llvm::cl::opt<bool> noModule(
+    "no-module", llvm::cl::cat(bindingsOptions),
+    llvm::cl::desc("When specified the code for module generation will be omited, instead only the "
+                   "binding definitions will be created. The definitions can later be added to an "
+                   "arbitrary module by calling add_definitions_<pyname>(module)."));
 
 static llvm::cl::extrahelp commonHelp(CommonOptionsParser::HelpMessage);
 
@@ -624,9 +629,6 @@ public:
                     auto initListExpr = dyn_cast<InitListExpr>(
                         dyn_cast<InitListExpr>(varDecl->getInit())->getInit(0)->IgnoreImplicit());
 
-                    llvm::outs() << initListExpr->getNumInits() << "\n";
-                    initListExpr->getInit(0)->dump();
-
                     if (initListExpr) {
                         for (auto arg : initListExpr->inits()) {
 
@@ -735,6 +737,8 @@ public:
 
 int main(int argc, const char** argv)
 {
+    noModule.setInitialValue(false);
+
     CommonOptionsParser optionsParser(argc, argv, bindingsOptions);
 
     assert((!moduleName.empty() || !pythonModuleName.empty())
@@ -751,6 +755,8 @@ int main(int argc, const char** argv)
         if (m.name.empty())
             m.name = m.pythonName;
     }
+
+    m.noPythonModule = noModule.getValue();
 
     if (!hintsPath.empty()) {
         const char* argv2[2];

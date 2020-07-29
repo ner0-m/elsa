@@ -69,13 +69,7 @@ public:
             outputPath = "bind_" + m.name + ".cpp";
 
         std::filesystem::path p(outputPath);
-        p = p.parent_path();
-        p.append("__init__.py");
-
         std::ofstream outputFile(outputPath);
-        std::ofstream initFile(p.c_str());
-
-        initFile << "from ." << m.pythonName << " import *\n";
 
         outputFile << "#include <pybind11/pybind11.h>\n";
         for (const auto& include : m.pybindIncludes)
@@ -92,7 +86,7 @@ public:
 
         outputFile << "\n"
                    << "namespace py = pybind11;\n\n"
-                   << "PYBIND11_MODULE(" << m.pythonName << ", m)\n"
+                   << "void add_definitions_" << m.pythonName << "(py::module& m)\n"
                    << "{\n";
 
         for (const auto& e : m.enums) {
@@ -102,9 +96,9 @@ public:
         for (const auto& r : m.records) {
             if (m.classHints.find(r->name) != m.classHints.end()) {
                 const auto& hints = m.classHints.at(r->name);
-                generateBindingsForRecord(*r, outputFile, initFile, &hints);
+                generateBindingsForRecord(*r, outputFile, &hints);
             } else {
-                generateBindingsForRecord(*r, outputFile, initFile);
+                generateBindingsForRecord(*r, outputFile);
             }
         }
 
@@ -112,10 +106,17 @@ public:
             outputFile << "\telsa::ModuleHints::addCustomFunctions(m);\n";
 
         outputFile << "}\n";
+
+        if (!m.noPythonModule) {
+            outputFile << "\n"
+                       << "PYBIND11_MODULE(" << m.pythonName << ", m)\n"
+                       << "{\n"
+                       << "\tadd_definitions_" << m.pythonName << "(m);\n"
+                       << "}";
+        }
     }
 
     static void generateBindingsForRecord(const elsa::Module::Record& r, std::ofstream& outputFile,
-                                          std::ofstream& initFile,
                                           const elsa::Module::ClassHints* hints = nullptr)
     {
         std::string qualifiedName = r.name;
@@ -215,8 +216,10 @@ public:
 
         outputFile << "\n";
 
+        // add alias
         if (r.alias != "")
-            initFile << r.alias << " = " << getPythonNameForTag(r.namespaceStrippedName) << "\n";
+            outputFile << "\tm.attr(\"" << r.alias << "\") = m.attr(\""
+                       << getPythonNameForTag(r.namespaceStrippedName) << "\");\n\n";
     }
 
     static void generateBindingsForEnum(const elsa::Module::Enum& e, std::ofstream& outputFile)

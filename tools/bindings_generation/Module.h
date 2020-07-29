@@ -85,6 +85,7 @@ namespace elsa
         std::vector<std::unique_ptr<Record>> records;
         std::set<std::string> includes;
         std::set<std::string> pybindIncludes;
+        bool noPythonModule;
 
         struct ModuleHints {
             // path to hints file, empty if none is specified
