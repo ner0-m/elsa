@@ -116,45 +116,32 @@ namespace elsa
         template <typename type_, typename... options>
         static void exposeBufferInfo(py::class_<type_, options...>& c)
         {
-            c.def(py::init([](py::buffer b) {
-                 py::buffer_info info = b.request();
+            c.def(
+                 py::init([](py::array_t<data_t, py::array::f_style | py::array::forcecast> array) {
+                     elsa::IndexVector_t coeffsPerDim(array.ndim());
 
-                 if (info.format != py::format_descriptor<data_t>::format())
-                     throw std::invalid_argument("Incompatible scalar types");
+                     for (index_t i = 0; i < coeffsPerDim.size(); i++)
+                         coeffsPerDim[i] = array.shape(static_cast<ssize_t>(i));
 
-                 elsa::IndexVector_t coeffsPerDim(info.ndim);
+                     auto map = Eigen::Map<const Eigen::Matrix<data_t, Eigen::Dynamic, 1>>(
+                         array.data(), coeffsPerDim.prod());
 
-                 ssize_t minStride = info.strides[0];
-                 for (std::size_t i = 0; i < static_cast<std::size_t>(info.ndim); i++) {
-                     if (info.strides[i] < minStride)
-                         minStride = info.strides[i];
+                     elsa::VolumeDescriptor dd{coeffsPerDim};
 
-                     coeffsPerDim[static_cast<elsa::index_t>(i)] =
-                         static_cast<elsa::index_t>(info.shape[i]);
-                 }
-
-                 if (static_cast<std::size_t>(minStride) / sizeof(data_t) != 1)
-                     throw std::invalid_argument("Cannot convert strided buffer to DataContainer");
-
-                 auto map = Eigen::Map<Eigen::Matrix<data_t, Eigen::Dynamic, 1>>(
-                     static_cast<data_t*>(info.ptr), coeffsPerDim.prod());
-
-                 elsa::VolumeDescriptor dd{coeffsPerDim};
-
-                 return std::make_unique<elsa::DataContainer<data_t>>(dd, map);
-             })).def_buffer([](elsa::DataContainer<data_t>& m) {
-                std::vector<ssize_t> dims, strides;
-                auto coeffsPerDim = m.getDataDescriptor().getNumberOfCoefficientsPerDimension();
-                ssize_t combined = 1;
-                for (int i = 0; i < coeffsPerDim.size(); i++) {
-                    dims.push_back(coeffsPerDim[i]);
-                    strides.push_back(combined * static_cast<ssize_t>(sizeof(data_t)));
-                    combined *= coeffsPerDim[i];
-                }
-                return py::buffer_info(
-                    &m[0], sizeof(data_t), py::format_descriptor<data_t>::format(),
-                    m.getDataDescriptor().getNumberOfDimensions(), coeffsPerDim, strides);
-            });
+                     return std::make_unique<elsa::DataContainer<data_t>>(dd, map);
+                 }))
+                .def_buffer([](elsa::DataContainer<data_t>& m) {
+                    std::vector<ssize_t> strides;
+                    auto coeffsPerDim = m.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+                    ssize_t combined = 1;
+                    for (int i = 0; i < coeffsPerDim.size(); i++) {
+                        strides.push_back(combined * static_cast<ssize_t>(sizeof(data_t)));
+                        combined *= coeffsPerDim[i];
+                    }
+                    return py::buffer_info(
+                        &m[0], sizeof(data_t), py::format_descriptor<data_t>::format(),
+                        m.getDataDescriptor().getNumberOfDimensions(), coeffsPerDim, strides);
+                });
         }
     };
 
