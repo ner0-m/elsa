@@ -1,3 +1,5 @@
+#include "hints_base.h"
+
 #include "EDFHandler.h"
 #include "MHDHandler.h"
 
@@ -7,10 +9,6 @@
 
 namespace elsa
 {
-    template <typename Class>
-    struct ClassHints {
-    };
-
     template <class Return, class... Args>
     using CustomMethod = std::pair<bool, std::function<Return(Args...)>>;
 

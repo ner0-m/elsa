@@ -113,8 +113,8 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
     
 
     GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
-            ${CMAKE_CURRENT_BINARY_DIR}/bind_${ELSA_MODULE_NAME}.cpp
-            bindings_hints.hpp
+            bind_${ELSA_MODULE_NAME}.cpp
+            ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/core_hints.hpp
             ${BINDINGS_SOURCES})
 endif()
 

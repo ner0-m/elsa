@@ -44,27 +44,17 @@ static elsa::Module m;
 class ParserBase
 {
 public:
-    // returns the lexically normal path similarly to std::filesystem::path::lexically_normal
-    static std::string lexicallyNormalPathFallback(std::string path)
+    static std::string lexicallyNormalPath(std::string path)
     {
-        while (path.find("..") != std::string::npos) {
-            auto posDots = path.find("..");
 
-            std::size_t eraseEnd = posDots + 2;
-            std::size_t numDots = 1;
-            while (path.rfind("..", posDots) == posDots - 3) {
-                posDots = path.rfind("..", posDots);
-                numDots++;
-            }
+        std::filesystem::path p(path);
 
-            std::size_t eraseStart = posDots - 1;
-            for (int i = 0; i < numDots; i++)
-                eraseStart = path.rfind("/", eraseStart - 1);
-
-            path.erase(eraseStart, eraseEnd - eraseStart);
-        }
-
-        return path;
+        // normalize path so that it does not contain parent directory references (..)
+#if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
+        return ParserBase::lexicallyNormalPathFallback(p.generic_string());
+#else
+        return p.lexically_normal().generic_string();
+#endif
     }
 
 protected:
@@ -149,7 +139,7 @@ protected:
             location = declaration->getBeginLoc().printToString(context->getSourceManager());
         }
 
-        return location.substr(0, location.find(":"));
+        return lexicallyNormalPath(getAbsolutePath(location.substr(0, location.find(":"))));
     }
 
     std::string getRefQualifierString(RefQualifierKind refQual)
@@ -173,6 +163,30 @@ protected:
     static std::map<std::string, elsa::Module::Enum*> encounteredEnums;
     ASTContext* context;
     PrintingPolicy printingPolicy;
+
+private:
+    // returns the lexically normal path similarly to std::filesystem::path::lexically_normal
+    static std::string lexicallyNormalPathFallback(std::string path)
+    {
+        while (path.find("..") != std::string::npos) {
+            auto posDots = path.find("..");
+
+            std::size_t eraseEnd = posDots + 2;
+            std::size_t numDots = 1;
+            while (path.rfind("..", posDots) == posDots - 3) {
+                posDots = path.rfind("..", posDots);
+                numDots++;
+            }
+
+            std::size_t eraseStart = posDots - 1;
+            for (int i = 0; i < numDots; i++)
+                eraseStart = path.rfind("/", eraseStart - 1);
+
+            path.erase(eraseStart, eraseEnd - eraseStart);
+        }
+
+        return path;
+    }
 };
 
 std::map<std::string, elsa::Module::Record*> ParserBase::encounteredRecords = {};
@@ -780,23 +794,20 @@ int main(int argc, const char** argv)
     ClangTool tool(optionsParser.getCompilations(), optionsParser.getSourcePathList());
     tool.appendArgumentsAdjuster(optionsParser.getArgumentsAdjuster());
 
-    std::filesystem::path p(tooling::getAbsolutePath(optionsParser.getSourcePathList().front()));
+    std::filesystem::path p(ParserBase::lexicallyNormalPath(
+        tooling::getAbsolutePath(optionsParser.getSourcePathList().front())));
 
-// normalize path so that it does not contain parent directory references (..)
-#if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
-    m.path = ParserBase::lexicallyNormalPathFallback(p.generic_string());
-#else
-    m.path = p.parent_path().lexically_normal().c_str();
-#endif
+    m.path = p.parent_path().generic_string();
+
     // find the longest lexically normal common parent path for all specified source files
     for (std::size_t i = 1; i < optionsParser.getSourcePathList().size(); i++) {
-        std::filesystem::path p(tooling::getAbsolutePath(optionsParser.getSourcePathList()[i]));
-#if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
-        auto path = ParserBase::lexicallyNormalPathFallback(p.c_str());
-#else
-        std::string path = p.parent_path().lexically_normal().c_str();
-#endif
-        while (path.find(m.path) != 0)
+
+        std::filesystem::path p(ParserBase::lexicallyNormalPath(
+            tooling::getAbsolutePath(optionsParser.getSourcePathList()[i])));
+
+        std::string path = p.parent_path().generic_string();
+
+        while (m.path.size() > path.size() && m.path.find(path) == 0)
             m.path = m.path.substr(0, m.path.rfind("/"));
     }
 

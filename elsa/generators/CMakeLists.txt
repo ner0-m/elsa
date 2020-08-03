@@ -45,7 +45,7 @@ endif(ELSA_TESTING)
 
 if (ELSA_BUILD_PYTHON_BINDINGS)
         GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
-                ${CMAKE_CURRENT_BINARY_DIR}/bind_${ELSA_MODULE_NAME}.cpp
+                bind_${ELSA_MODULE_NAME}.cpp
                 ""
                 ${MODULE_SOURCES} CircleTrajectoryGenerator.h)
 endif()

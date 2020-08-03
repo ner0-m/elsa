@@ -56,6 +56,8 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC
         $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC cudart)
+
 # register the module
 registerComponent(${ELSA_MODULE_NAME})
 

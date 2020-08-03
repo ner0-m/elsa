@@ -33,16 +33,44 @@ endmacro(ELSA_TEST)
 if (ELSA_BUILD_PYTHON_BINDINGS)
     find_package(PythonLibs)
     if(PYTHONLIBS_FOUND)
-        add_custom_target(pyelsa)
+        set(ELSA_PYTHON_BINDINGS_PATH "${CMAKE_BINARY_DIR}/pyelsa" CACHE INTERNAL "Output directory for pybind11 modules")
+        
+        # remove __init__.py file if present
+        file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py)
+
+        if (CMAKE_CXX_FLAGS)
+            string(REPLACE " " ";" CXX_FLAGS_LIST ${CMAKE_CXX_FLAGS})
+        endif()
+
+        # always combine bindings in a single module if using libc++
+        foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST)
+            if (${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
+                set(ELSA_BINDINGS_IN_SINGLE_MODULE ON)
+            endif()
+        endforeach()
+
+        if (ELSA_BINDINGS_IN_SINGLE_MODULE)
+            # bind_elsa.cpp combines all bindings definitions into a single PYBIND11_MODULE
+            file(WRITE ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "#include <pybind11/pybind11.h>\n\n")
+
+            pybind11_add_module(pyelsa ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp)
+            set_target_properties(pyelsa PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ELSA_PYTHON_BINDINGS_PATH})
+            target_include_directories(pyelsa PUBLIC ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints)
+            target_link_libraries(pyelsa PUBLIC elsa::all)
+            target_compile_features(pyelsa PUBLIC cxx_std_17)
+        else()
+            add_custom_target(pyelsa)
+        endif()
     else()
         message(STATUS "Couldn't find Python.h. Python bindings will not be generated.")
     endif()
 
     # macro for generation of the corresponding python module for the elsa target TARGET_NAME
-    # as a pre-build step the code for the python bindings will be generated and stored in BINDINGS_CODE_PATH
+    # as a pre-build step the code for the python bindings will be generated and stored in the directory
+    # ELSA_PYTHON_BINDINGS_PATH under the name BINDINGS_CODE_FILENAME
     # the sources containing the public interface of TARGET_NAME should be specified as additional arguments
     # you can omit a source file from the list to prevent the generation of bindings for that file
-    macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_PATH HINTS_PATH)
+    macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
         if ((TARGET pyelsa) AND (TARGET pybind11_generator))
             # generate a compile commands file
             # ensures the same compilation flags are passed to clang when compiling the file
@@ -52,8 +80,6 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
             get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
             get_filename_component(LLVM_LIB_DIR ${LLVM_LIBRARY} DIRECTORY)
-
-            file(APPEND ${PROJECT_BINARY_DIR}/elsa/__init__.py "from .${CMAKE_CURRENT_LIST_DIR_LAST_PART} import *\n")
 
             # when compiling with libc++ as the STL, the path to the STL headers must be specified
             set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX "")
@@ -69,29 +95,49 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     break()
                 endif()
             endforeach(COMPILE_OPTION)
+
+            if (ELSA_BINDINGS_IN_SINGLE_MODULE)
+                set(NO_MODULE_FLAG --no-module)
+            endif()
+
+            set(PY_TARGET_NAME "py${TARGET_NAME}")
 	    
-            add_custom_command(OUTPUT ${BINDINGS_CODE_PATH}
-                COMMAND ${PROJECT_BINARY_DIR}/tools/bindings_generation/pybind11_generator
+            add_custom_command(OUTPUT ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
+                COMMAND pybind11_generator
                     ${ARGN}
                     ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX}
                     --extra-arg=-isystem
                     --extra-arg=${LLVM_CONFIG_DIR}/../lib/clang/${LLVM_VERSION}/include
                     --extra-arg=-I${PYTHON_INCLUDE_DIRS}
                     --extra-arg=-I${PYBIND11_INCLUDE_DIR}
+                    --extra-arg=-I${CMAKE_CURRENT_LIST_DIR}
                     -p=${CMAKE_BINARY_DIR}
                     --hints=${HINTS_PATH}
-                    -o=${BINDINGS_CODE_PATH}
-                    --name=${TARGET_NAME}
+                    -o=${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
+                    --pyname=${PY_TARGET_NAME}
+                    ${NO_MODULE_FLAG}
                 DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_PATH}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                 COMMENT "Generating bindings code for ${TARGET_NAME}"
                 VERBATIM)
+            
+            if (NOT ELSA_BINDINGS_IN_SINGLE_MODULE)
+                pybind11_add_module(${PY_TARGET_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME})
+                set_target_properties(${PY_TARGET_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ELSA_PYTHON_BINDINGS_PATH})
+                target_include_directories(${PY_TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints)
+                target_link_libraries(${PY_TARGET_NAME} PUBLIC ${TARGET_NAME})
+                target_compile_features(${PY_TARGET_NAME} PUBLIC cxx_std_17)
+                add_dependencies(pyelsa ${PY_TARGET_NAME})
 
-            pybind11_add_module(py${TARGET_NAME} ${BINDINGS_CODE_PATH})
-            target_include_directories(py${TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/elsa/bindings/hints)
-            target_link_libraries(py${TARGET_NAME} PUBLIC ${TARGET_NAME})
-            target_compile_features(py${TARGET_NAME} PUBLIC cxx_std_17)
-            add_dependencies(pyelsa py${TARGET_NAME})
+                file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "from .${PY_TARGET_NAME} import *\n")
+            else()
+                add_custom_target(${PY_TARGET_NAME} DEPENDS ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME})
+                add_dependencies(pyelsa ${PY_TARGET_NAME})
+
+                file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "#include \"${BINDINGS_CODE_FILENAME}\"\n")
+
+                set(ELSA_PYTHON_MODULES "${ELSA_PYTHON_MODULES};${PY_TARGET_NAME}" PARENT_SCOPE)
+            endif()
         endif()
     endmacro()
 endif()
@@ -112,6 +158,16 @@ endif(ELSA_BUILD_CUDA_PROJECTORS)
 add_subdirectory(generators)
 add_subdirectory(test_routines)
 
+if(ELSA_BUILD_PYTHON_BINDINGS AND ELSA_BINDINGS_IN_SINGLE_MODULE)
+    file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\nPYBIND11_MODULE(pyelsa, m)\n{\n")
+    list(REMOVE_ITEM ELSA_PYTHON_MODULES "")
+    foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\tadd_definitions_${PYMODULE}(m);\n")
+    endforeach()
+    file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "}\n")
+    
+    file(WRITE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "from .pyelsa import *")
+endif()
 
 # library to build and add all registered components of the library
 add_library(elsa_all INTERFACE)

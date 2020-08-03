@@ -1,3 +1,5 @@
+#include "hints_base.h"
+
 #include "DataContainer.h"
 #include "Descriptors/VolumeDescriptor.h"
 #include "LinearOperator.h"
@@ -12,10 +14,6 @@
 
 namespace elsa
 {
-    template <typename Class>
-    struct ClassHints {
-    };
-
     namespace py = pybind11;
 
     /// wrapper for variadic functions
