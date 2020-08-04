@@ -16,39 +16,29 @@ namespace elsa
 {
     namespace py = pybind11;
 
-    /// wrapper for variadic functions
-    template <typename T, std::size_t N, typename = std::make_index_sequence<N>>
-    struct invokeBestCommonVariadic;
+    class CoreHints : ModuleHints
+    {
+    private:
+        /// wrapper for variadic functions
+        template <typename T, std::size_t N, typename = std::make_index_sequence<N>>
+        struct invokeBestCommonVariadic;
 
-    template <typename T, std::size_t N, std::size_t... S>
-    struct invokeBestCommonVariadic<T, N, std::index_sequence<S...>> {
-        static auto exec(const py::args& args)
-        {
-            if (args.size() == N)
-                return elsa::bestCommon(args[S].template cast<T>()...);
+        template <typename T, std::size_t N, std::size_t... S>
+        struct invokeBestCommonVariadic<T, N, std::index_sequence<S...>> {
+            static auto exec(const py::args& args)
+            {
+                if (args.size() == N)
+                    return elsa::bestCommon(args[S].template cast<T>()...);
 
-            if constexpr (N > 1) {
-                return invokeBestCommonVariadic<T, N - 1>::exec(args);
-            } else {
-                throw(std::logic_error("Unsupported number of variadic arguments"));
-            }
+                if constexpr (N > 1) {
+                    return invokeBestCommonVariadic<T, N - 1>::exec(args);
+                } else {
+                    throw(std::logic_error("Unsupported number of variadic arguments"));
+                }
+            };
         };
-    };
 
-    template <typename data_t>
-    LinearOperator<data_t> adjointHelper(const LinearOperator<data_t>& op)
-    {
-        return adjoint(op);
-    }
-
-    template <typename data_t>
-    LinearOperator<data_t> leafHelper(const LinearOperator<data_t>& op)
-    {
-        return leaf(op);
-    }
-
-    // define global variables and functions in the module hints
-    struct ModuleHints {
+    public:
         static void addCustomFunctions(py::module& m)
         {
             m.def("adjoint", &adjointHelper<float>)
@@ -64,6 +54,19 @@ namespace elsa
             m.def("bestCommon", (std::unique_ptr<DataDescriptor>(*)(
                                     const std::vector<const DataDescriptor*>&))(&bestCommon))
                 .def("bestCommon", &invokeBestCommonVariadic<const DataDescriptor&, 10>::exec);
+        }
+
+    private:
+        template <typename data_t>
+        static LinearOperator<data_t> adjointHelper(const LinearOperator<data_t>& op)
+        {
+            return adjoint(op);
+        }
+
+        template <typename data_t>
+        static LinearOperator<data_t> leafHelper(const LinearOperator<data_t>& op)
+        {
+            return leaf(op);
         }
     };
 
@@ -101,7 +104,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    struct DataContainerHints : public ClassHints<elsa::DataContainer<data_t>> {
+    class DataContainerHints : public ClassHints<elsa::DataContainer<data_t>>
+    {
+    public:
         constexpr static std::array ignoreMethods = {
             "operator()", "begin", "cbegin", "end", "cend", "rbegin", "crbegin", "rend", "crend"};
 
@@ -144,8 +149,9 @@ namespace elsa
     };
 
     template <typename data_t>
-    struct LinearOperatorHints : public ClassHints<elsa::LinearOperator<data_t>> {
-
+    class LinearOperatorHints : public ClassHints<elsa::LinearOperator<data_t>>
+    {
+    public:
         template <typename type_, typename... options>
         static void addCustomMethods(py::class_<type_, options...>& c)
         {
@@ -154,7 +160,9 @@ namespace elsa
     };
 
     template <typename data_t>
-    struct DataContainerComplexHints : public ClassHints<elsa::DataContainer<data_t>> {
+    class DataContainerComplexHints : public ClassHints<elsa::DataContainer<data_t>>
+    {
+    public:
         constexpr static std::array ignoreMethods = {
             "operator()", "begin", "cbegin", "end", "cend", "rbegin", "crbegin", "rend", "crend"};
 
@@ -188,7 +196,9 @@ namespace elsa
         //     };
     };
 
-    struct GeometryHints : public ClassHints<Geometry> {
+    class GeometryHints : public ClassHints<Geometry>
+    {
+    public:
         template <typename type_, typename... options>
         static void addCustomMethods(py::class_<type_, options...>& c)
         {
@@ -226,8 +236,9 @@ namespace elsa
     };
 
     template <typename TransparentClass>
-    struct TransparentClassHints : public ClassHints<TransparentClass> {
-
+    class TransparentClassHints : public ClassHints<TransparentClass>
+    {
+    public:
         using Vector = std::remove_reference_t<decltype(std::declval<TransparentClass>().get())>;
         using Scalar = decltype(std::declval<Vector>().sum());
 
@@ -240,19 +251,19 @@ namespace elsa
         }
     };
 
-    template struct DataContainerHints<float>;
-    template struct DataContainerComplexHints<std::complex<float>>;
-    template struct DataContainerHints<double>;
-    template struct DataContainerComplexHints<std::complex<double>>;
-    template struct DataContainerHints<index_t>;
-    template struct LinearOperatorHints<float>;
-    template struct LinearOperatorHints<double>;
-    template struct LinearOperatorHints<std::complex<float>>;
-    template struct LinearOperatorHints<std::complex<double>>;
-    template struct TransparentClassHints<geometry::Spacing2D>;
-    template struct TransparentClassHints<geometry::OriginShift2D>;
-    template struct TransparentClassHints<geometry::Coefficients<2>>;
-    template struct TransparentClassHints<geometry::Spacing3D>;
-    template struct TransparentClassHints<geometry::OriginShift3D>;
-    template struct TransparentClassHints<geometry::Coefficients<3>>;
+    template class DataContainerHints<float>;
+    template class DataContainerComplexHints<std::complex<float>>;
+    template class DataContainerHints<double>;
+    template class DataContainerComplexHints<std::complex<double>>;
+    template class DataContainerHints<index_t>;
+    template class LinearOperatorHints<float>;
+    template class LinearOperatorHints<double>;
+    template class LinearOperatorHints<std::complex<float>>;
+    template class LinearOperatorHints<std::complex<double>>;
+    template class TransparentClassHints<geometry::Spacing2D>;
+    template class TransparentClassHints<geometry::OriginShift2D>;
+    template class TransparentClassHints<geometry::Coefficients<2>>;
+    template class TransparentClassHints<geometry::Spacing3D>;
+    template class TransparentClassHints<geometry::OriginShift3D>;
+    template class TransparentClassHints<geometry::Coefficients<3>>;
 } // namespace elsa

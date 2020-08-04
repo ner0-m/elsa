@@ -103,7 +103,7 @@ public:
         }
 
         if (m.moduleHints.definesGlobalCustomFunctions)
-            outputFile << "\telsa::ModuleHints::addCustomFunctions(m);\n";
+            outputFile << "\t" << m.moduleHints.moduleHintsName << "::addCustomFunctions(m);\n";
 
         outputFile << "}\n";
 

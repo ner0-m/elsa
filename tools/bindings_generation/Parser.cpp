@@ -593,11 +593,7 @@ public:
             return true;
 
         // we only care about ClassHints and ModuleHints
-        bool isModuleHints = false;
-        if (declaration->getNameAsString() == "ModuleHints") {
-            isModuleHints = true;
-        }
-
+        bool isModuleHintsDescendant = false;
         bool isClassHintsDescendant = false;
         CXXRecordDecl* hintsFor;
         if (declaration->hasDefinition()) {
@@ -609,18 +605,23 @@ public:
                         const auto ctsd = dyn_cast<ClassTemplateSpecializationDecl>(baseDecl);
                         hintsFor = ctsd->getTemplateArgs()[0].getAsType()->getAsCXXRecordDecl();
                         break;
+                    } else if (baseDecl->getNameAsString() == "ModuleHints") {
+                        isModuleHintsDescendant = true;
+                        break;
                     }
                 }
             }
         }
 
-        if (isModuleHints || isClassHintsDescendant) {
+        if (isModuleHintsDescendant || isClassHintsDescendant) {
             auto location = declaration->getBeginLoc().printToString(context->getSourceManager());
             m.moduleHints.includePath = location.substr(0, location.find(":"));
 
-            if (isModuleHints) {
+            if (isModuleHintsDescendant) {
                 for (auto method : declaration->methods()) {
                     if (method->getNameAsString() == "addCustomFunctions") {
+                        m.moduleHints.moduleHintsName =
+                            fullyQualifiedId(context->getRecordType(declaration));
                         m.moduleHints.definesGlobalCustomFunctions = true;
                     }
                 }

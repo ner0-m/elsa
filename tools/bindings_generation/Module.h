@@ -90,6 +90,7 @@ namespace elsa
         struct ModuleHints {
             // path to hints file, empty if none is specified
             std::string includePath;
+            std::string moduleHintsName;
             bool definesGlobalCustomFunctions{false};
         };
 

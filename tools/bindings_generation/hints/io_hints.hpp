@@ -9,12 +9,11 @@
 
 namespace elsa
 {
-    template <class Return, class... Args>
-    using CustomMethod = std::pair<bool, std::function<Return(Args...)>>;
-
     namespace py = pybind11;
 
-    struct EDFHints : public ClassHints<EDF> {
+    class EDFHints : public ClassHints<EDF>
+    {
+    public:
         constexpr static std::array ignoreMethods = {"read"};
 
         template <typename type_, typename... options>
@@ -32,7 +31,9 @@ namespace elsa
         }
     };
 
-    struct MHDHints : public ClassHints<MHD> {
+    class MHDHints : public ClassHints<MHD>
+    {
+    public:
         constexpr static std::array ignoreMethods = {"read"};
 
         template <typename type_, typename... options>
