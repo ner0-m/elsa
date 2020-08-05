@@ -1,3 +1,5 @@
+#include "hints_base.h"
+
 #include "EDFHandler.h"
 #include "MHDHandler.h"
 
@@ -7,17 +9,12 @@
 
 namespace elsa
 {
-    template <typename Class>
-    struct ClassHints {
-    };
-
-    template <class Return, class... Args>
-    using CustomMethod = std::pair<bool, std::function<Return(Args...)>>;
-
     namespace py = pybind11;
 
-    struct EDFHints : public ClassHints<EDF> {
-        constexpr static std::tuple ignoreMethods = {"read"};
+    class EDFHints : public ClassHints<EDF>
+    {
+    public:
+        constexpr static std::array ignoreMethods = {"read"};
 
         template <typename type_, typename... options>
         static void addCustomMethods(py::class_<type_, options...>& c)
@@ -34,8 +31,10 @@ namespace elsa
         }
     };
 
-    struct MHDHints : public ClassHints<MHD> {
-        constexpr static std::tuple ignoreMethods = {"read"};
+    class MHDHints : public ClassHints<MHD>
+    {
+    public:
+        constexpr static std::array ignoreMethods = {"read"};
 
         template <typename type_, typename... options>
         static void addCustomMethods(py::class_<type_, options...>& c)

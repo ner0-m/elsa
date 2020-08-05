@@ -31,6 +31,11 @@ static llvm::cl::opt<std::string> pythonModuleName(
     "pyname", llvm::cl::cat(bindingsOptions),
     llvm::cl::desc("Name that should be given assigned to the generated python module. \"py\" "
                    "will be prepended to the value of the name option if not specified"));
+static llvm::cl::opt<bool> noModule(
+    "no-module", llvm::cl::cat(bindingsOptions),
+    llvm::cl::desc("When specified the code for module generation will be omited, instead only the "
+                   "binding definitions will be created. The definitions can later be added to an "
+                   "arbitrary module by calling add_definitions_<pyname>(module)."));
 
 static llvm::cl::extrahelp commonHelp(CommonOptionsParser::HelpMessage);
 
@@ -39,27 +44,17 @@ static elsa::Module m;
 class ParserBase
 {
 public:
-    // returns the lexically normal path similarly to std::filesystem::path::lexically_normal
-    static std::string lexicallyNormalPathFallback(std::string path)
+    static std::string lexicallyNormalPath(std::string path)
     {
-        while (path.find("..") != std::string::npos) {
-            auto posDots = path.find("..");
 
-            std::size_t eraseEnd = posDots + 2;
-            std::size_t numDots = 1;
-            while (path.rfind("..", posDots) == posDots - 3) {
-                posDots = path.rfind("..", posDots);
-                numDots++;
-            }
+        std::filesystem::path p(path);
 
-            std::size_t eraseStart = posDots - 1;
-            for (int i = 0; i < numDots; i++)
-                eraseStart = path.rfind("/", eraseStart - 1);
-
-            path.erase(eraseStart, eraseEnd - eraseStart);
-        }
-
-        return path;
+        // normalize path so that it does not contain parent directory references (..)
+#if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
+        return ParserBase::lexicallyNormalPathFallback(p.generic_string());
+#else
+        return p.lexically_normal().generic_string();
+#endif
     }
 
 protected:
@@ -144,7 +139,7 @@ protected:
             location = declaration->getBeginLoc().printToString(context->getSourceManager());
         }
 
-        return location.substr(0, location.find(":"));
+        return lexicallyNormalPath(getAbsolutePath(location.substr(0, location.find(":"))));
     }
 
     std::string getRefQualifierString(RefQualifierKind refQual)
@@ -158,13 +153,44 @@ protected:
                 return elsa::Module::Function::RQ_RVAL;
             default:
                 assert(false && ("ref-qualifier kind not supported"));
+                return elsa::Module::Function::RQ_NONE;
         }
     }
 
-    static std::map<std::string, elsa::Module::UserDefinedTag*> encounteredTags;
+    // encountered tags' typenames are added to the map as soon as encountered, but the pointer to
+    // the object remains a nullptr until the record is fully processed
+    static std::map<std::string, elsa::Module::Record*> encounteredRecords;
+    static std::map<std::string, elsa::Module::Enum*> encounteredEnums;
     ASTContext* context;
     PrintingPolicy printingPolicy;
+
+private:
+    // returns the lexically normal path similarly to std::filesystem::path::lexically_normal
+    static std::string lexicallyNormalPathFallback(std::string path)
+    {
+        while (path.find("..") != std::string::npos) {
+            auto posDots = path.find("..");
+
+            std::size_t eraseEnd = posDots + 2;
+            std::size_t numDots = 1;
+            while (path.rfind("..", posDots) == posDots - 3) {
+                posDots = path.rfind("..", posDots);
+                numDots++;
+            }
+
+            std::size_t eraseStart = posDots - 1;
+            for (int i = 0; i < numDots; i++)
+                eraseStart = path.rfind("/", eraseStart - 1);
+
+            path.erase(eraseStart, eraseEnd - eraseStart);
+        }
+
+        return path;
+    }
 };
+
+std::map<std::string, elsa::Module::Record*> ParserBase::encounteredRecords = {};
+std::map<std::string, elsa::Module::Enum*> ParserBase::encounteredEnums = {};
 
 class ModuleParser : public RecursiveASTVisitor<ModuleParser>, public ParserBase
 {
@@ -231,7 +257,7 @@ public:
     {
 
         auto id = fullyQualifiedId(context->getEnumType(declaration));
-        if (encounteredTags.find(id) != encounteredTags.end())
+        if (encounteredEnums.find(id) != encounteredEnums.end())
             return;
 
         auto e = std::make_unique<elsa::Module::Enum>();
@@ -243,8 +269,8 @@ public:
             e->values.emplace(enumerator->getNameAsString(), enumerator->getInitVal().toString(10));
         }
 
-        m.tags.push_back(std::move(e));
-        encounteredTags.emplace(m.tags.back()->name, m.tags.back().get());
+        m.enums.push_back(std::move(e));
+        encounteredEnums.emplace(m.enums.back()->name, m.enums.back().get());
     }
 
     void parseRecord(CXXRecordDecl* declaration)
@@ -258,7 +284,7 @@ public:
 
         // register tag as encountered, nullptr as second argument means it is still not fully
         // processed
-        encounteredTags.emplace(id, nullptr);
+        encounteredRecords.emplace(id, nullptr);
         r->name = id;
         r->namespaceStrippedName = getNamespaceStrippedName(declaration);
 
@@ -274,24 +300,25 @@ public:
         bool isAbstract = false;
 
         for (auto decl : declaration->decls()) {
-            if (dyn_cast<CXXMethodDecl>(decl)) {
-                auto method = dyn_cast<CXXMethodDecl>(decl);
-                parseMethod(method, *r);
-            } else if (dyn_cast<FunctionTemplateDecl>(decl)) {
-                const auto ftd = dyn_cast<FunctionTemplateDecl>(decl);
-                const auto method = dyn_cast<CXXMethodDecl>(ftd->getTemplatedDecl());
-                parseMethod(method, *r);
-                for (const auto spec : ftd->specializations()) {
-                    const auto method = dyn_cast<CXXMethodDecl>(spec);
-                    parseMethod(method, *r);
+            if (dyn_cast<UsingDecl>(decl)) {
+                for (auto shadow : dyn_cast<UsingDecl>(decl)->shadows()) {
+                    auto target = shadow->getTargetDecl();
+                    // ignore non-public shadows as well as copy constructors
+                    if (decl->getAccess() == AS_public
+                        && (dyn_cast<CXXConstructorDecl>(target) == nullptr
+                            || !dyn_cast<CXXConstructorDecl>(target)->isCopyConstructor())) {
+                        handleMemberDeclaration(target, *r);
+                    }
                 }
+            } else {
+                handleMemberDeclaration(decl, *r);
             }
         }
 
-        m.tags.push_back(std::move(r));
+        m.records.push_back(std::move(r));
 
         // update encountered tags pointer
-        encounteredTags[id] = m.tags.back().get();
+        encounteredRecords[id] = m.records.back().get();
 
         // register unencountered template type parameters
         if (auto ctsd = dyn_cast<ClassTemplateSpecializationDecl>(declaration)) {
@@ -317,7 +344,7 @@ public:
             }
 
             if (tparamsMatchDefaults)
-                m.tags.back()->alias = ctsd->getSpecializedTemplate()->getNameAsString();
+                m.records.back()->alias = ctsd->getSpecializedTemplate()->getNameAsString();
 
             for (int i = 0; i < ctsd->getTemplateArgs().size(); i++) {
                 if (ctsd->getTemplateArgs()[i].getKind() != TemplateArgument::ArgKind::Type)
@@ -400,10 +427,10 @@ protected:
         auto parent = method->getParent();
         auto id = fullyQualifiedId(context->getRecordType(parent));
 
-        auto it = encounteredTags.find(id);
-        if (it != encounteredTags.end()) {
+        auto it = encounteredRecords.find(id);
+        if (it != encounteredRecords.end()) {
             // we know this is a Record
-            auto r = static_cast<elsa::Module::Record*>(it->second);
+            auto r = it->second;
             if (r == nullptr)
                 return;
 
@@ -470,11 +497,11 @@ protected:
             return false;
         }
 
-        if (encounteredTags.find(id) != encounteredTags.end())
+        if (encounteredRecords.find(id) != encounteredRecords.end())
             return considerEncountered ? true : false;
 
-        // otherwise, register in this module if declaration is contained in the module path or a
-        // template argument should be registered in this module
+        // otherwise, register in this module if declaration is contained in the module path or
+        // a template argument should be registered in this module
         if (fileLocation(declaration).find(m.path) != 0) {
             if (auto ctsd = dyn_cast<ClassTemplateSpecializationDecl>(declaration)) {
                 for (int i = 0; i < ctsd->getTemplateArgs().size(); i++) {
@@ -493,6 +520,22 @@ protected:
 
         // printStuff(declaration);
         return true;
+    }
+
+    void handleMemberDeclaration(Decl* decl, elsa::Module::Record& r)
+    {
+        if (dyn_cast<CXXMethodDecl>(decl)) {
+            auto method = dyn_cast<CXXMethodDecl>(decl);
+            parseMethod(method, r);
+        } else if (dyn_cast<FunctionTemplateDecl>(decl)) {
+            const auto ftd = dyn_cast<FunctionTemplateDecl>(decl);
+            const auto method = dyn_cast<CXXMethodDecl>(ftd->getTemplatedDecl());
+            parseMethod(method, r);
+            for (const auto spec : ftd->specializations()) {
+                const auto method = dyn_cast<CXXMethodDecl>(spec);
+                parseMethod(method, r);
+            }
+        }
     }
 
     std::string fileLocation(const TagDecl* declaration)
@@ -524,10 +567,6 @@ protected:
     }
 };
 
-// encountered tags' typenames are added to the map as soon as encountered, but the pointer to the
-// object remains a nullptr until the record is fully processed
-std::map<std::string, elsa::Module::UserDefinedTag*> ParserBase::encounteredTags = {};
-
 class HintsParser : public clang::RecursiveASTVisitor<HintsParser>, public ParserBase
 {
 public:
@@ -554,11 +593,7 @@ public:
             return true;
 
         // we only care about ClassHints and ModuleHints
-        bool isModuleHints = false;
-        if (declaration->getNameAsString() == "ModuleHints") {
-            isModuleHints = true;
-        }
-
+        bool isModuleHintsDescendant = false;
         bool isClassHintsDescendant = false;
         CXXRecordDecl* hintsFor;
         if (declaration->hasDefinition()) {
@@ -570,18 +605,23 @@ public:
                         const auto ctsd = dyn_cast<ClassTemplateSpecializationDecl>(baseDecl);
                         hintsFor = ctsd->getTemplateArgs()[0].getAsType()->getAsCXXRecordDecl();
                         break;
+                    } else if (baseDecl->getNameAsString() == "ModuleHints") {
+                        isModuleHintsDescendant = true;
+                        break;
                     }
                 }
             }
         }
 
-        if (isModuleHints || isClassHintsDescendant) {
+        if (isModuleHintsDescendant || isClassHintsDescendant) {
             auto location = declaration->getBeginLoc().printToString(context->getSourceManager());
             m.moduleHints.includePath = location.substr(0, location.find(":"));
 
-            if (isModuleHints) {
+            if (isModuleHintsDescendant) {
                 for (auto method : declaration->methods()) {
                     if (method->getNameAsString() == "addCustomFunctions") {
+                        m.moduleHints.moduleHintsName =
+                            fullyQualifiedId(context->getRecordType(declaration));
                         m.moduleHints.definesGlobalCustomFunctions = true;
                     }
                 }
@@ -601,18 +641,13 @@ public:
 
                 if (varDecl->getNameAsString() == "ignoreMethods") {
 
-                    auto constructExpr = dyn_cast<CXXConstructExpr>(
-                        varDecl->getInit()->IgnoreUnlessSpelledInSource());
+                    auto initListExpr = dyn_cast<InitListExpr>(
+                        dyn_cast<InitListExpr>(varDecl->getInit())->getInit(0)->IgnoreImplicit());
 
-                    if (constructExpr) {
-                        for (auto arg : constructExpr->arguments()) {
-                            while (!dyn_cast<StringLiteral>(arg)) {
-                                if (dyn_cast<Expr>(*arg->child_begin())) {
-                                    arg = dyn_cast<Expr>(*arg->child_begin());
-                                } else {
-                                    break;
-                                }
-                            }
+                    if (initListExpr) {
+                        for (auto arg : initListExpr->inits()) {
+
+                            arg = arg->IgnoreImplicit();
 
                             if (!dyn_cast<StringLiteral>(arg))
                                 assert(false
@@ -624,12 +659,11 @@ public:
                     }
                     // this may be just a single StringLiteral (and not packed in a
                     // CXXConstructExpr) when we are ignoring only a single method
-                    else if (dyn_cast<StringLiteral>(
-                                 varDecl->getInit()->IgnoreUnlessSpelledInSource())) {
-                        auto methodName = dyn_cast<StringLiteral>(
-                                              varDecl->getInit()->IgnoreUnlessSpelledInSource())
-                                              ->getString()
-                                              .str();
+                    else if (dyn_cast<StringLiteral>(varDecl->getInit()->IgnoreImplicit())) {
+                        auto methodName =
+                            dyn_cast<StringLiteral>(varDecl->getInit()->IgnoreImplicit())
+                                ->getString()
+                                .str();
                         classHints.ignoredMethods.insert(methodName);
                     } else {
                         assert(false && "ignoreMethods not inline initialized");
@@ -700,6 +734,13 @@ public:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& Compiler,
                                                           llvm::StringRef InFile) override
     {
+        // speed up parsing by skipping over function bodies
+        Compiler.getFrontendOpts().SkipFunctionBodies = true;
+
+        // workaround for omp bug in older clang versions(<10?). see
+        // https://github.com/clangd/clangd/issues/173
+
+        Compiler.getLangOpts().OpenMP = false;
         return std::unique_ptr<clang::ASTConsumer>(
             new ModuleParserConsumer(&Compiler.getASTContext()));
     }
@@ -711,39 +752,22 @@ public:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& Compiler,
                                                           llvm::StringRef InFile) override
     {
+        // speed up parsing by skipping over function bodies
+        Compiler.getFrontendOpts().SkipFunctionBodies = true;
+
+        // workaround for omp bug in older clang versions(<10?). see
+        // https://github.com/clangd/clangd/issues/173
+        Compiler.getLangOpts().OpenMP = false;
+
         return std::unique_ptr<clang::ASTConsumer>(
             new HintsParserConsumer(&Compiler.getASTContext()));
     }
 };
 
-class ModuleParserActionFactory : public clang::tooling::FrontendActionFactory
-{
-public:
-#if __clang_major__ >= 10
-    std::unique_ptr<FrontendAction> create() override
-    {
-        return std::make_unique<ModuleParserAction>();
-    }
-#else
-    FrontendAction* create() override { return new ModuleParserAction(); }
-#endif
-};
-
-class HintsParserActionFactory : public clang::tooling::FrontendActionFactory
-{
-public:
-#if __clang_major__ >= 10
-    std::unique_ptr<FrontendAction> create() override
-    {
-        return std::make_unique<HintsParserAction>();
-    }
-#else
-    FrontendAction* create() override { return new HintsParserAction(); }
-#endif
-};
-
 int main(int argc, const char** argv)
 {
+    noModule.setInitialValue(false);
+
     CommonOptionsParser optionsParser(argc, argv, bindingsOptions);
 
     assert((!moduleName.empty() || !pythonModuleName.empty())
@@ -761,6 +785,8 @@ int main(int argc, const char** argv)
             m.name = m.pythonName;
     }
 
+    m.noPythonModule = noModule.getValue();
+
     if (!hintsPath.empty()) {
         const char* argv2[2];
         argv2[0] = argv[0];
@@ -772,35 +798,42 @@ int main(int argc, const char** argv)
         ClangTool hintsParser(hints.getCompilations(), hints.getSourcePathList());
         hintsParser.appendArgumentsAdjuster(optionsParser.getArgumentsAdjuster());
 
-        auto factory = std::make_unique<HintsParserActionFactory>();
-        hintsParser.run(factory.get());
+        auto factory = newFrontendActionFactory<HintsParserAction>();
+        int retCode = hintsParser.run(factory.get());
+
+        // fail with the corresponding error code when the hints file can't be parsed
+        if (retCode)
+            return retCode;
     }
 
     ClangTool tool(optionsParser.getCompilations(), optionsParser.getSourcePathList());
     tool.appendArgumentsAdjuster(optionsParser.getArgumentsAdjuster());
 
-    std::filesystem::path p(tooling::getAbsolutePath(optionsParser.getSourcePathList().front()));
+    std::filesystem::path p(ParserBase::lexicallyNormalPath(
+        tooling::getAbsolutePath(optionsParser.getSourcePathList().front())));
 
-// normalize path so that it does not contain parent directory references (..)
-#if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
-    m.path = ParserBase::lexicallyNormalPathFallback(p.generic_string());
-#else
-    m.path = p.parent_path().lexically_normal().c_str();
-#endif
+    m.path = p.parent_path().generic_string();
+
     // find the longest lexically normal common parent path for all specified source files
     for (std::size_t i = 1; i < optionsParser.getSourcePathList().size(); i++) {
-        std::filesystem::path p(tooling::getAbsolutePath(optionsParser.getSourcePathList()[i]));
-#if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
-        auto path = ParserBase::lexicallyNormalPathFallback(p.c_str());
-#else
-        std::string path = p.parent_path().lexically_normal().c_str();
-#endif
-        while (path.find(m.path) != 0)
+
+        std::filesystem::path p(ParserBase::lexicallyNormalPath(
+            tooling::getAbsolutePath(optionsParser.getSourcePathList()[i])));
+
+        std::string path = p.parent_path().generic_string();
+
+        while (m.path.size() > path.size() && m.path.find(path) == 0)
             m.path = m.path.substr(0, m.path.rfind("/"));
     }
 
-    auto factory = std::make_unique<ModuleParserActionFactory>();
-    tool.run(factory.get());
+    auto factory = newFrontendActionFactory<ModuleParserAction>();
+    int retCode = tool.run(factory.get());
+
+    // fail with the corresponding error code when a file can't be parsed
+    if (retCode)
+        return retCode;
 
     Generator::generateBindingsForModule(m, outputDir);
+
+    return 0;
 }

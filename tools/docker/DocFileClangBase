@@ -18,7 +18,7 @@ COPY --from=clone /tmp/llvm_project/ /tmp/llvm_project/
 
 RUN mkdir -p /tmp/llvm_build/ && mkdir -p /tmp/llvm_install/ \
   && cmake -S /tmp/llvm_project/llvm/ -B /tmp/llvm_build/ -GNinja -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
-           -DCMAKE_INSTALL_PREFIX=/tmp/llvm_install/ -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=host -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON
+           -DCMAKE_INSTALL_PREFIX=/tmp/llvm_install/ -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=host -DLLVM_BUILD_LLVM_DYLIB=ON
 
 ### Build LLVM/clang
 FROM elsa/base-cmake:latest as build
@@ -26,7 +26,7 @@ COPY --from=configure /tmp/llvm_project/ /tmp/llvm_project/
 COPY --from=configure /tmp/llvm_build/ /tmp/llvm_build/
 
 
-# install a reduced version of clang (due to LLVM_INSTALL_TOOLCHAIN_ONLY=ON)
+# install clang and some related libraries and tools
 WORKDIR /tmp/llvm_build/
 RUN ninja install
 WORKDIR /

@@ -52,8 +52,6 @@ namespace elsa
             std::string name;
             std::string namespaceStrippedName;
             std::string alias;
-
-            virtual ~UserDefinedTag() = default;
         };
 
         // represents a class or struct
@@ -61,8 +59,6 @@ namespace elsa
             std::vector<std::string> bases;
             std::map<std::string, Function> methods;
             bool isAbstract;
-
-            ~Record() override = default;
         };
 
         struct Enum : public UserDefinedTag {
@@ -72,8 +68,6 @@ namespace elsa
             /// basis
             std::map<std::string, std::string> values;
             bool isScoped;
-
-            ~Enum() override = default;
         };
 
         struct ClassHints {
@@ -87,13 +81,16 @@ namespace elsa
         std::string name;
         std::string path;
         std::string pythonName;
-        std::vector<std::unique_ptr<UserDefinedTag>> tags;
+        std::vector<std::unique_ptr<Enum>> enums;
+        std::vector<std::unique_ptr<Record>> records;
         std::set<std::string> includes;
         std::set<std::string> pybindIncludes;
+        bool noPythonModule;
 
         struct ModuleHints {
             // path to hints file, empty if none is specified
             std::string includePath;
+            std::string moduleHintsName;
             bool definesGlobalCustomFunctions{false};
         };
 

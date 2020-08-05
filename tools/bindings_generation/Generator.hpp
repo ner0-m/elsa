@@ -69,13 +69,7 @@ public:
             outputPath = "bind_" + m.name + ".cpp";
 
         std::filesystem::path p(outputPath);
-        p = p.parent_path();
-        p.append("__init__.py");
-
         std::ofstream outputFile(outputPath);
-        std::ofstream initFile(p.c_str());
-
-        initFile << "from ." << m.pythonName << " import *\n";
 
         outputFile << "#include <pybind11/pybind11.h>\n";
         for (const auto& include : m.pybindIncludes)
@@ -92,47 +86,42 @@ public:
 
         outputFile << "\n"
                    << "namespace py = pybind11;\n\n"
-                   << "PYBIND11_MODULE(" << m.pythonName << ", m)\n"
+                   << "void add_definitions_" << m.pythonName << "(py::module& m)\n"
                    << "{\n";
 
-        for (const auto& tag : m.tags) {
-            if (m.classHints.find(tag->name) != m.classHints.end()) {
-                const auto& hints = m.classHints.at(tag->name);
-                const auto& rec = static_cast<const elsa::Module::Record&>(*tag);
-                generateBindingsForRecord(rec, outputFile, initFile, &hints);
+        for (const auto& e : m.enums) {
+            generateBindingsForEnum(*e, outputFile);
+        }
+
+        for (const auto& r : m.records) {
+            if (m.classHints.find(r->name) != m.classHints.end()) {
+                const auto& hints = m.classHints.at(r->name);
+                generateBindingsForRecord(*r, outputFile, &hints);
             } else {
-                if (dynamic_cast<const elsa::Module ::Record*>(tag.get())) {
-                    const auto& rec = static_cast<const elsa::Module::Record&>(*tag);
-                    generateBindingsForRecord(rec, outputFile, initFile);
-                } else if (dynamic_cast<const elsa::Module::Enum*>(tag.get())) {
-                    const auto& e = static_cast<const elsa::Module::Enum&>(*tag);
-                    generateBindingsForEnum(e, outputFile);
-                }
+                generateBindingsForRecord(*r, outputFile);
             }
         }
 
         if (m.moduleHints.definesGlobalCustomFunctions)
-            outputFile << "\telsa::ModuleHints::addCustomFunctions(m);\n";
+            outputFile << "\t" << m.moduleHints.moduleHintsName << "::addCustomFunctions(m);\n";
 
         outputFile << "}\n";
+
+        if (!m.noPythonModule) {
+            outputFile << "\n"
+                       << "PYBIND11_MODULE(" << m.pythonName << ", m)\n"
+                       << "{\n"
+                       << "\tadd_definitions_" << m.pythonName << "(m);\n"
+                       << "}";
+        }
     }
 
     static void generateBindingsForRecord(const elsa::Module::Record& r, std::ofstream& outputFile,
-                                          std::ofstream& initFile,
                                           const elsa::Module::ClassHints* hints = nullptr)
     {
         std::string qualifiedName = r.name;
 
         std::string additionalProps = "";
-        std::map<std::string, bool> hasOverloads;
-
-        for (const auto& [fId, f] : r.methods) {
-            if (hasOverloads.find(f.name) == hasOverloads.end()) {
-                hasOverloads.emplace(f.name, false);
-            } else {
-                hasOverloads[f.name] = true;
-            }
-        }
 
         if (classSupportsBufferProtocol(r, hints))
             additionalProps = ", py::buffer_protocol()";
@@ -156,8 +145,8 @@ public:
                 continue;
 
             // methods accepting rvalue references or unique_ptrs as parameters cannot be bound
-            // TODO: add warning for the case when a non-abstract class is left without any viable
-            // constructors
+            // TODO: add warning for the case when a non-abstract class is left without any
+            // viable constructors
             bool viable = true;
             for (const auto& param : f.params) {
                 if (param.type.rfind("&&") == param.type.length() - 2
@@ -199,17 +188,13 @@ public:
                         additionalProps = getReturnValuePolicyAsString(f);
 
                         def += "\"" + getPythonNameForMethod(f.name) + "\", ";
-                        if (!hasOverloads[f.name]) {
-                            outputFile << def << "&" << qualifiedName << "::" << f.name
-                                       << namesAndDefaults << additionalProps << ")";
-                        } else {
-                            outputFile << def << "(" << f.returnType << "("
-                                       << (f.isStatic ? "" : qualifiedName + "::") << "*)"
-                                       << "(" << types << ")" << (f.isConst ? " const" : "")
-                                       << f.refQualifier << ")("
-                                       << "&" << qualifiedName << "::" << f.name << ")"
-                                       << namesAndDefaults << additionalProps << ")";
-                        }
+
+                        outputFile << def << "(" << f.returnType << "("
+                                   << (f.isStatic ? "" : qualifiedName + "::") << "*)"
+                                   << "(" << types << ")" << (f.isConst ? " const" : "")
+                                   << f.refQualifier << ")("
+                                   << "&" << qualifiedName << "::" << f.name << ")"
+                                   << namesAndDefaults << additionalProps << ")";
                     }
                 }
             }
@@ -231,8 +216,10 @@ public:
 
         outputFile << "\n";
 
+        // add alias
         if (r.alias != "")
-            initFile << r.alias << " = " << getPythonNameForTag(r.namespaceStrippedName) << "\n";
+            outputFile << "\tm.attr(\"" << r.alias << "\") = m.attr(\""
+                       << getPythonNameForTag(r.namespaceStrippedName) << "\");\n\n";
     }
 
     static void generateBindingsForEnum(const elsa::Module::Enum& e, std::ofstream& outputFile)

@@ -43,8 +43,8 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
         list(FILTER BINDINGS_SOURCES EXCLUDE REGEX ioUtils.cpp)
         
         GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
-                ${CMAKE_CURRENT_BINARY_DIR}/bind_${ELSA_MODULE_NAME}.cpp
-                bindings_hints.hpp
+                bind_${ELSA_MODULE_NAME}.cpp
+                ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/io_hints.hpp
                 ${BINDINGS_SOURCES})
 endif()
 
