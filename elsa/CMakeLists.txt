@@ -76,6 +76,19 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             # ensures the same compilation flags are passed to clang when compiling the file
             # as a component of elsa and when parsing it for bindings generation
             set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+            
+            set(HINTS_FILE ${HINTS_PATH})
+            if (ELSA_CUDA_VECTOR)
+                if (NOT ${HINTS_PATH} STREQUAL "")
+                    get_filename_component(HINTS_NAME ${HINTS_PATH} NAME)
+                    get_filename_component(HINTS_CU_NAME ${HINTS_PATH} NAME_WE)
+                    set(HINTS_CU_NAME "${HINTS_CU_NAME}.cu")
+
+                    file(COPY ${HINTS_PATH} DESTINATION ${ELSA_PYTHON_BINDINGS_PATH})
+                    file(RENAME ${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_CU_NAME})
+                    set(HINTS_FILE "${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_CU_NAME}")
+                endif()
+            endif()
 
             get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
             get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
@@ -101,7 +114,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             endif()
 
             set(PY_TARGET_NAME "py${TARGET_NAME}")
-	    
+            
             add_custom_command(OUTPUT ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
                 COMMAND pybind11_generator
                     ${ARGN}
@@ -111,8 +124,12 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     --extra-arg=-I${PYTHON_INCLUDE_DIRS}
                     --extra-arg=-I${PYBIND11_INCLUDE_DIR}
                     --extra-arg=-I${CMAKE_CURRENT_LIST_DIR}
+                    --extra-arg=-I${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints
+                    --extra-arg=-std=c++17
+                    --extra-arg=-w
+                    --extra-arg=--cuda-host-only
                     -p=${CMAKE_BINARY_DIR}
-                    --hints=${HINTS_PATH}
+                    --hints=${HINTS_FILE}
                     -o=${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
                     --pyname=${PY_TARGET_NAME}
                     ${NO_MODULE_FLAG}

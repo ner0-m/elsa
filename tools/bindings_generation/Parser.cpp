@@ -500,8 +500,8 @@ protected:
         if (encounteredRecords.find(id) != encounteredRecords.end())
             return considerEncountered ? true : false;
 
-        // otherwise, register in this module if declaration is contained in the module path or a
-        // template argument should be registered in this module
+        // otherwise, register in this module if declaration is contained in the module path or
+        // a template argument should be registered in this module
         if (fileLocation(declaration).find(m.path) != 0) {
             if (auto ctsd = dyn_cast<ClassTemplateSpecializationDecl>(declaration)) {
                 for (int i = 0; i < ctsd->getTemplateArgs().size(); i++) {
@@ -734,6 +734,13 @@ public:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& Compiler,
                                                           llvm::StringRef InFile) override
     {
+        // speed up parsing by skipping over function bodies
+        Compiler.getFrontendOpts().SkipFunctionBodies = true;
+
+        // workaround for omp bug in older clang versions(<10?). see
+        // https://github.com/clangd/clangd/issues/173
+
+        Compiler.getLangOpts().OpenMP = false;
         return std::unique_ptr<clang::ASTConsumer>(
             new ModuleParserConsumer(&Compiler.getASTContext()));
     }
@@ -745,6 +752,13 @@ public:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& Compiler,
                                                           llvm::StringRef InFile) override
     {
+        // speed up parsing by skipping over function bodies
+        Compiler.getFrontendOpts().SkipFunctionBodies = true;
+
+        // workaround for omp bug in older clang versions(<10?). see
+        // https://github.com/clangd/clangd/issues/173
+        Compiler.getLangOpts().OpenMP = false;
+
         return std::unique_ptr<clang::ASTConsumer>(
             new HintsParserConsumer(&Compiler.getASTContext()));
     }
