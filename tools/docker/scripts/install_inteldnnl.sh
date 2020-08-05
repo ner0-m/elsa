@@ -36,7 +36,7 @@ if eval ${cxx} --version | grep -q clang; then
 fi
 
 ( wget https://github.com/intel/mkl-dnn/archive/${DNNL_DIR}.tar.gz \
-  && tar -xzf ${DNNL_DIR}.tar.gz && rm ${DNNL_DIR}.tar.gz && cd mkl-dnn-${DNNL_VERSION} \
+  && tar -xzf ${DNNL_DIR}.tar.gz && rm ${DNNL_DIR}.tar.gz && cd oneDNN-${DNNL_VERSION} \
   && mkdir -p build && cd build \
   && cmake .. ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release -GNinja -DCMAKE_INSTALL_PREFIX=/tmp/dnnl_install \
   && ninja && ninja install && ldconfig )
