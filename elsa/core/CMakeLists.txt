@@ -63,7 +63,7 @@ endif()
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Eigen3::Eigen)
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Eigen3::Eigen elsa_logging)
 
 # use OpenMP is available
 find_package(OpenMP)
