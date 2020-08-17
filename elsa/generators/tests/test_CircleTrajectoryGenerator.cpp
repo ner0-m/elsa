@@ -65,10 +65,10 @@ SCENARIO("Create a Circular Trajectory")
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
                             .norm()
                         == Approx(0).margin(0.0000001));
-                    REQUIRE((tmpGeom.getInverseProjectionMatrix()
-                             - geom->getInverseProjectionMatrix())
-                                .norm()
-                            == Approx(0).margin(0.0000001));
+                    REQUIRE(
+                        (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
+                            .norm()
+                        == Approx(0).margin(0.0000001));
                 }
             }
         }
@@ -110,10 +110,10 @@ SCENARIO("Create a Circular Trajectory")
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
                             .norm()
                         == Approx(0).margin(0.0000001));
-                    REQUIRE((tmpGeom.getInverseProjectionMatrix()
-                             - geom->getInverseProjectionMatrix())
-                                .norm()
-                            == Approx(0).margin(0.0000001));
+                    REQUIRE(
+                        (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
+                            .norm()
+                        == Approx(0).margin(0.0000001));
                 }
             }
         }
@@ -164,10 +164,10 @@ SCENARIO("Create a Circular Trajectory")
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
                             .norm()
                         == Approx(0).margin(0.0000001));
-                    REQUIRE((tmpGeom.getInverseProjectionMatrix()
-                             - geom->getInverseProjectionMatrix())
-                                .norm()
-                            == Approx(0).margin(0.0000001));
+                    REQUIRE(
+                        (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
+                            .norm()
+                        == Approx(0).margin(0.0000001));
                 }
             }
         }
@@ -210,10 +210,10 @@ SCENARIO("Create a Circular Trajectory")
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
                             .norm()
                         == Approx(0).margin(0.0000001));
-                    REQUIRE((tmpGeom.getInverseProjectionMatrix()
-                             - geom->getInverseProjectionMatrix())
-                                .norm()
-                            == Approx(0).margin(0.0000001));
+                    REQUIRE(
+                        (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
+                            .norm()
+                        == Approx(0).margin(0.0000001));
                 }
             }
         }

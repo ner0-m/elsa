@@ -225,7 +225,7 @@ namespace elsa
         /// build the principal point using the distance from source to detector center
         void buildPrincipalPoint(RealVector_t origin, real_t distance);
 
-        /// Calculate  
+        /// Calculate
         void calculateFanAngle(const RealVector_t& sinoOrigin);
     };
 } // namespace elsa
