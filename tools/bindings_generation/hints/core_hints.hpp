@@ -209,9 +209,10 @@ namespace elsa
                               geometry::SinogramData2D sinoData,
                               geometry::PrincipalPointOffset offset,
                               geometry::RotationOffset2D centerOfRotOffset) {
-                      return std::make_unique<Geometry>(
-                          sourceToCenterOfRotation, centerOfRotationToDetector, angle,
-                          std::move(volData), std::move(sinoData), offset, centerOfRotOffset);
+                      return std::make_unique<Geometry>(sourceToCenterOfRotation,
+                                                        centerOfRotationToDetector, angle,
+                                                        std::move(volData), std::move(sinoData),
+                                                        offset, std::nullopt, centerOfRotOffset);
                   }),
                   py::arg("sourceToCenterOfRotation"), py::arg("centerOfRotationToDetector"),
                   py::arg("angle"), py::arg("volData"), py::arg("sinoData"),
