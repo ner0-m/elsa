@@ -212,7 +212,7 @@ namespace elsa
                       return std::make_unique<Geometry>(sourceToCenterOfRotation,
                                                         centerOfRotationToDetector, angle,
                                                         std::move(volData), std::move(sinoData),
-                                                        offset, std::nullopt, centerOfRotOffset);
+                                                        std::nullopt, offset, centerOfRotOffset);
                   }),
                   py::arg("sourceToCenterOfRotation"), py::arg("centerOfRotationToDetector"),
                   py::arg("angle"), py::arg("volData"), py::arg("sinoData"),
