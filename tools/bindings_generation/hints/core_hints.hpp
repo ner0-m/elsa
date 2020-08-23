@@ -1,11 +1,12 @@
 #include "hints_base.h"
 
 #include "DataContainer.h"
-#include "Descriptors/VolumeDescriptor.h"
+#include "VolumeDescriptor.h"
 #include "LinearOperator.h"
 #include "DescriptorUtils.h"
 #include "Geometry.h"
-
+#include "CircleTrajectoryGenerator.h"
+ 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
