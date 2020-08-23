@@ -59,7 +59,7 @@ namespace elsa
 
         const auto theta = geom.getFanAngle();
 
-        const auto radius = (pp - source).norm(); // TODO scale it correctly
+        const auto radius = _scale * (pp - source).norm(); // TODO scale it correctly
 
         // Subtract scaled y-value from 1, to flip it, so a y-value of 0, is at the top and a
         // y-value of 1, at the bottom Then shift it by 0.5, so pixel value of 0.5 is at z == 0
