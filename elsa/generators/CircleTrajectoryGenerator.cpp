@@ -10,7 +10,8 @@ namespace elsa
 {
     std::unique_ptr<DetectorDescriptor> CircleTrajectoryGenerator::createTrajectory(
         index_t numberOfPoses, const DataDescriptor& volumeDescriptor, index_t arcDegrees,
-        real_t sourceToCenter, real_t centerToDetector, std::optional<TrajectoryWithCurvedDetector> createWithCurved)
+        real_t sourceToCenter, real_t centerToDetector,
+        std::optional<TrajectoryWithCurvedDetector> createWithCurved)
     {
         // pull in geometry namespace, to reduce cluttering
         using namespace geometry;
@@ -62,9 +63,9 @@ namespace elsa
             }
         }
 
-        if (createWithCurved) 
-            // TODO: this scaling is arbitary so far. We have to see if this is the format needed, or at least
-            // such that we can translate it into this format
+        if (createWithCurved)
+            // TODO: this scaling is arbitary so far. We have to see if this is the format needed,
+            // or at least such that we can translate it into this format
             return std::make_unique<CurvedDetectorDescriptor>(coeffs, spacing, geometryList, 1.0);
         else
             return std::make_unique<PlanarDetectorDescriptor>(coeffs, spacing, geometryList);
