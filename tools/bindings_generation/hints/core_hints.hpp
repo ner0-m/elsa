@@ -267,4 +267,5 @@ namespace elsa
     template class TransparentClassHints<geometry::Spacing3D>;
     template class TransparentClassHints<geometry::OriginShift3D>;
     template class TransparentClassHints<geometry::Coefficients<3>>;
+    template class TransparentClassHints<TrajectoryWithCurvedDetector>;
 } // namespace elsa
