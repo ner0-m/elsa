@@ -6,9 +6,14 @@
 
 #include <vector>
 #include <utility>
+#include <optional>
 
 namespace elsa
 {
+    /// Strong type to indicate that the trajectory should be constructed using a
+    /// `CurvedDetectorDescriptor`
+    struct TrajectoryWithCurvedDetector {
+    };
     /**
      * \brief Generator for traditional circular trajectories as used in X-ray Computed Tomography
      * (for 2d/3d).
@@ -41,9 +46,10 @@ namespace elsa
          * TODO: Make it possible to return either PlanarDetectorDescriptor, or
          * CurvedDetectorDescriptor
          */
-        static std::unique_ptr<DetectorDescriptor>
-            createTrajectory(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
-                             index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector);
+        static std::unique_ptr<DetectorDescriptor> createTrajectory(
+            index_t numberOfPoses, const DataDescriptor& volumeDescriptor, index_t arcDegrees,
+            real_t sourceToCenter, real_t centerToDetector,
+            std::optional<TrajectoryWithCurvedDetector> createWithCurved = std::nullopt);
     };
 
 } // namespace elsa
