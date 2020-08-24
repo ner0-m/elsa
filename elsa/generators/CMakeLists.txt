@@ -44,9 +44,10 @@ if(ELSA_TESTING)
 endif(ELSA_TESTING)
 
 if (ELSA_BUILD_PYTHON_BINDINGS)
+    message(STATUS "HEEELP ME") 
         GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
                 bind_${ELSA_MODULE_NAME}.cpp
-                ""
+                ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/generator_hints.hpp
                 ${MODULE_SOURCES} CircleTrajectoryGenerator.h)
 endif()
 
