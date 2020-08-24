@@ -40,6 +40,9 @@ namespace elsa
         /// enable file logging
         static void enableFileLogging(std::string filename);
 
+        /// flush all loggers
+        static void flush();
+
     private:
         /// returns the singleton instance of Logger
         static Logger& getInstance();

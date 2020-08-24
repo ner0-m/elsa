@@ -2,6 +2,7 @@
 
 #include "DataContainer.h"
 #include "Descriptors/VolumeDescriptor.h"
+#include "Descriptors/RandomBlocksDescriptor.h"
 #include "LinearOperator.h"
 #include "DescriptorUtils.h"
 #include "Geometry.h"
@@ -9,6 +10,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 #include <functional>
 
@@ -232,6 +234,24 @@ namespace elsa
                      py::arg("volData"), py::arg("sinoData"), py::arg("angles"),
                      py::arg("offset") = geometry::PrincipalPointOffset2D{0, 0},
                      py::arg("centerOfRotOffset") = geometry::RotationOffset3D{0, 0, 0});
+        }
+    };
+
+    class RandomBlocksDescriptorHints : public ClassHints<RandomBlocksDescriptor>
+    {
+    public:
+        template <typename type_, typename... options>
+        static void addCustomMethods(py::class_<type_, options...>& c)
+        {
+            // define custom constructors for the constructors accepting an rvalue reference
+            c.def(py::init([](std::vector<const DataDescriptor*>& blockDescriptors) {
+                std::vector<std::unique_ptr<DataDescriptor>> cloned;
+                for (const auto op : blockDescriptors) {
+                    cloned.push_back(op->clone());
+                }
+
+                return std::make_unique<RandomBlocksDescriptor>(std::move(cloned));
+            }));
         }
     };
 

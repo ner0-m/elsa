@@ -18,7 +18,7 @@ namespace elsa
      * scalar) and a term (represented as a Functional). It is just a light-weight wrapper with no
      * added functionality.
      */
-    template <typename data_t>
+    template <typename data_t = real_t>
     class RegularizationTerm
     {
     public:
