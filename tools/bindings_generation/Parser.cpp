@@ -403,7 +403,7 @@ public:
                         if (defaultArg && !defaultArg->isInstantiationDependent()
                             && !defaultArg->isValueDependent() && !defaultArg->isTypeDependent()
                             && defaultArg->EvaluateAsRValue(result, *context)
-                            && !result.hasSideEffects()) {
+                            && !result.hasSideEffects() && !result.Val.isStruct()) {
 
                             f.params.back().defaultValue =
                                 result.Val.getAsString(*context, param->getType());
@@ -464,9 +464,10 @@ protected:
         // do not register STL types but add necessary pybind includes
         if (context->getFullLoc(declaration->getBeginLoc()).isInSystemHeader()) {
 
-            auto inPybindSTL = {"std::vector<", "std::deque<",        "std::list<",
-                                "std::array<",  "std::set<",          "std::unordered_set<",
-                                "std::map<",    "std::unordered_map<"};
+            auto inPybindSTL = {"std::vector<", "std::deque<",         "std::list<",
+                                "std::array<",  "std::set<",           "std::unordered_set<",
+                                "std::map<",    "std::unordered_map<", "std::optional<",
+                                "std::variant<"};
 
             if (noFastQualId.find("std::complex<") == 0) {
                 m.pybindIncludes.insert("pybind11/complex.h");
