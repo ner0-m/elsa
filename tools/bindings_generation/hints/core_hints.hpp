@@ -5,7 +5,6 @@
 #include "LinearOperator.h"
 #include "DescriptorUtils.h"
 #include "Geometry.h"
-#include "CircleTrajectoryGenerator.h"
  
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
