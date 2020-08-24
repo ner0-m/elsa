@@ -303,9 +303,9 @@ deploy-docs:
     - cd build
     - cmake .. -GNinja
     - ninja docs
-    - cp -r docs/sphinx/* /var/www/ip/elsadocs/
+    - cp -r docs/sphinx/* /var/www/ciip/elsadocs/
     - cd ..
-    - cp -r build/test_coverage/* /var/www/ip/elsacoverage/
+    - cp -r build/test_coverage/* /var/www/ciip/elsacoverage/
   tags:
     - elsa-docs-deploy
 
