@@ -48,6 +48,14 @@ namespace elsa
         }
     }
 
+    void Logger::flush()
+    {
+        for (auto& [key, logger] : getInstance()._loggers) {
+            for (auto sink : logger->sinks())
+                sink->flush();
+        }
+    }
+
     Logger& Logger::getInstance()
     {
         static Logger instance;

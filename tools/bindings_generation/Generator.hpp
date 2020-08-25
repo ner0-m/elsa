@@ -150,7 +150,8 @@ public:
             bool viable = true;
             for (const auto& param : f.params) {
                 if (param.type.rfind("&&") == param.type.length() - 2
-                    || param.type.find("std::unique_ptr<") != std::string::npos) {
+                    || param.type.find("std::unique_ptr<") != std::string::npos
+                    || param.type.find("std::__1::unique_ptr<") != std::string::npos) {
                     viable = false;
                     break;
                 }

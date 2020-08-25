@@ -2,6 +2,9 @@
 
 #include "EDFHandler.h"
 #include "MHDHandler.h"
+#ifndef ELSA_BINDINGS_IN_SINGLE_MODULE
+#include "Logger.h"
+#endif
 
 #include <pybind11/pybind11.h>
 
@@ -10,6 +13,25 @@
 namespace elsa
 {
     namespace py = pybind11;
+
+#ifndef ELSA_BINDINGS_IN_SINGLE_MODULE
+    class IOHints : ModuleHints
+    {
+
+        struct LoggerIO : Logger {
+        };
+
+    public:
+        static void addCustomFunctions(py::module& m)
+        {
+            // expose Logger class
+            py::class_<LoggerIO>(m, "logger_pyelsa_io")
+                .def_static("setLevel", &LoggerIO::setLevel)
+                .def_static("enableFileLogging", &LoggerIO::enableFileLogging)
+                .def_static("flush", &LoggerIO::flush);
+        }
+    };
+#endif
 
     class EDFHints : public ClassHints<EDF>
     {

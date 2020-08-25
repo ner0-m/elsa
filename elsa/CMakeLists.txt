@@ -32,11 +32,12 @@ endmacro(ELSA_TEST)
 
 if (ELSA_BUILD_PYTHON_BINDINGS)
     find_package(PythonLibs)
-    if(PYTHONLIBS_FOUND)
+    if(PYTHONLIBS_FOUND AND (TARGET pybind11_generator))
         set(ELSA_PYTHON_BINDINGS_PATH "${CMAKE_BINARY_DIR}/pyelsa" CACHE INTERNAL "Output directory for pybind11 modules")
         
-        # remove __init__.py file if present
+        # remove __init__.py and logger.py files if present
         file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py)
+        file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/logger.py)
 
         if (CMAKE_CXX_FLAGS)
             string(REPLACE " " ";" CXX_FLAGS_LIST ${CMAKE_CXX_FLAGS})
@@ -45,7 +46,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
         # always combine bindings in a single module if using libc++
         foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST)
             if (${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                set(ELSA_BINDINGS_IN_SINGLE_MODULE ON)
+                set(ELSA_BINDINGS_IN_SINGLE_MODULE ON CACHE BOOL "Bindings compiled in single module as libc++ is used" FORCE)
             endif()
         endforeach()
 
@@ -60,6 +61,24 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             target_compile_features(pyelsa PUBLIC cxx_std_17)
         else()
             add_custom_target(pyelsa)
+        endif()
+
+        if (ELSA_TESTING)
+            file(COPY ${PROJECT_SOURCE_DIR}/tools/bindings_generation/tests DESTINATION ${PROJECT_BINARY_DIR}/pyelsa)
+
+            add_custom_target(test_pyelsa DEPENDS pyelsa)
+
+            add_custom_command(TARGET test_pyelsa 
+                PRE_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/tools/bindings_generation/tests/test_pyelsa.py
+                    ${PROJECT_BINARY_DIR}/pyelsa/tests
+                DEPENDS ${PROJECT_SOURCE_DIR}/tools/bindings_generation/tests/test_pyelsa.py)
+
+            add_dependencies(tests test_pyelsa)
+            
+            add_test(NAME test_pyelsa
+                COMMAND ${PYTHON_EXECUTABLE} -m unittest pyelsa/tests/test_pyelsa.py
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR})            
         endif()
     else()
         message(STATUS "Couldn't find Python.h. Python bindings will not be generated.")
@@ -78,17 +97,6 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
             
             set(HINTS_FILE ${HINTS_PATH})
-            if (ELSA_CUDA_VECTOR)
-                if (NOT ${HINTS_PATH} STREQUAL "")
-                    get_filename_component(HINTS_NAME ${HINTS_PATH} NAME)
-                    get_filename_component(HINTS_CU_NAME ${HINTS_PATH} NAME_WE)
-                    set(HINTS_CU_NAME "${HINTS_CU_NAME}.cu")
-
-                    file(COPY ${HINTS_PATH} DESTINATION ${ELSA_PYTHON_BINDINGS_PATH})
-                    file(RENAME ${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_CU_NAME})
-                    set(HINTS_FILE "${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_CU_NAME}")
-                endif()
-            endif()
 
             get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
             get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
@@ -114,6 +122,20 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             endif()
 
             set(PY_TARGET_NAME "py${TARGET_NAME}")
+
+            if (ELSA_CUDA_VECTOR)
+                if (NOT ${HINTS_PATH} STREQUAL "")
+                    get_filename_component(HINTS_NAME ${HINTS_PATH} NAME)
+                    get_filename_component(HINTS_CU_NAME ${HINTS_PATH} NAME_WE)
+                    set(HINTS_CU_NAME "${HINTS_CU_NAME}.cu")
+                    set(HINTS_FILE "${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_CU_NAME}")
+
+                    add_custom_command(OUTPUT ${HINTS_FILE}
+                        COMMAND ${CMAKE_COMMAND} -E copy ${HINTS_PATH} ${HINTS_FILE}
+                        DEPENDS ${HINTS_PATH}
+                    )
+                endif()
+            endif()
             
             add_custom_command(OUTPUT ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
                 COMMAND pybind11_generator
@@ -125,6 +147,8 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     --extra-arg=-I${PYBIND11_INCLUDE_DIR}
                     --extra-arg=-I${CMAKE_CURRENT_LIST_DIR}
                     --extra-arg=-I${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints
+                    --extra-arg=-I${PROJECT_SOURCE_DIR}/elsa/logging
+                    --extra-arg=-I${PROJECT_SOURCE_DIR}/thirdparty/spdlog/include
                     --extra-arg=-std=c++17
                     --extra-arg=-w
                     --extra-arg=--cuda-host-only
@@ -133,7 +157,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     -o=${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
                     --pyname=${PY_TARGET_NAME}
                     ${NO_MODULE_FLAG}
-                DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_PATH}
+                DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_FILE}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                 COMMENT "Generating bindings code for ${TARGET_NAME}"
                 VERBATIM)
@@ -152,9 +176,9 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                 add_dependencies(pyelsa ${PY_TARGET_NAME})
 
                 file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "#include \"${BINDINGS_CODE_FILENAME}\"\n")
-
-                set(ELSA_PYTHON_MODULES "${ELSA_PYTHON_MODULES};${PY_TARGET_NAME}" PARENT_SCOPE)
             endif()
+
+            set(ELSA_PYTHON_MODULES "${ELSA_PYTHON_MODULES};${PY_TARGET_NAME}" PARENT_SCOPE)
         endif()
     endmacro()
 endif()
@@ -175,15 +199,48 @@ endif(ELSA_BUILD_CUDA_PROJECTORS)
 add_subdirectory(generators)
 add_subdirectory(test_routines)
 
-if(ELSA_BUILD_PYTHON_BINDINGS AND ELSA_BINDINGS_IN_SINGLE_MODULE)
-    file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\nPYBIND11_MODULE(pyelsa, m)\n{\n")
-    list(REMOVE_ITEM ELSA_PYTHON_MODULES "")
-    foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\tadd_definitions_${PYMODULE}(m);\n")
-    endforeach()
-    file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "}\n")
-    
-    file(WRITE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "from .pyelsa import *")
+if(ELSA_BUILD_PYTHON_BINDINGS AND PYTHONLIBS_FOUND AND (TARGET pybind11_generator))
+    if (ELSA_BINDINGS_IN_SINGLE_MODULE)
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\nPYBIND11_MODULE(pyelsa, m)\n{\n")
+        list(REMOVE_ITEM ELSA_PYTHON_MODULES "")
+        foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
+            file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\tadd_definitions_${PYMODULE}(m);\n")
+        endforeach()
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "}\n")
+        
+        file(WRITE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "from .pyelsa import *")
+    else()
+        # when split in multiple modules provide a top level Logger interface
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "from . import *\n\n")
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "class Logger(object):\n")
+
+        # remove the empty item and core module from the list (core doesn't use logging)
+        list(REMOVE_ITEM ELSA_PYTHON_MODULES "")
+        list(FILTER ELSA_PYTHON_MODULES EXCLUDE REGEX ".*core.*")
+
+        # define setLevel function
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\tdef setLevel(level: LogLevel):\n")
+        foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
+            file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\t\tlogger_${PYMODULE}.setLevel(level)\n")
+        endforeach()
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\n")
+
+        # define enableFileLogging function
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\tdef enableFileLogging(filename: str):\n")
+        foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
+            file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\t\tlogger_${PYMODULE}.enableFileLogging(filename)\n")
+        endforeach()
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\n")
+        
+        # define flush function
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\tdef flush():\n")
+        foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
+            file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\t\tlogger_${PYMODULE}.flush()\n")
+        endforeach()
+
+        # add Logger to __init__.py file
+        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "\nfrom .logger import Logger\n")
+    endif()
 endif()
 
 # library to build and add all registered components of the library

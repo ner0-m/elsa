@@ -1,3 +1,5 @@
+#pragma once
+
 #include "BlockDescriptor.h"
 
 #include <vector>

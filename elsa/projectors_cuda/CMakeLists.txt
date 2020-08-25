@@ -33,7 +33,7 @@ if (CMAKE_CUDA_COMPILER)
     add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
     add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_projectors elsa_projector_kernels)
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_projectors elsa_projector_kernels ${CUDART_LIBRARY})
 
     target_include_directories(${ELSA_MODULE_TARGET_NAME}
             PUBLIC
@@ -58,7 +58,7 @@ if (CMAKE_CUDA_COMPILER)
     if (ELSA_BUILD_PYTHON_BINDINGS)
         GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
                 bind_${ELSA_MODULE_NAME}.cpp
-                ""
+                ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.hpp
                 ${MODULE_SOURCES})
     endif()
     
