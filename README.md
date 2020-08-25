@@ -11,7 +11,7 @@ CI Status (master)
 Documentation
 -------------
 
-The documentation is available [here](https://ip.campar.in.tum.de/elsadocs/).
+The documentation is available [here](https://ciip.in.tum.de/elsadocs/).
 
 
 Requirements
@@ -49,7 +49,7 @@ make tests
 Building against the elsa library
 ---------------------------------
 
-When using the elsa library in your project, we suggest using CMake as the build system. 
+When using the elsa library in your project, we suggest using CMake as the build system.
 Then you can configure elsa via the `find_package(elsa)` statement and link your target against elsa with `target_link_libraries(myTarget elsa::all)`.
 Alternatively, you can link more specifically only against the required elsa modules, such as `target_link_libraries(myTarget elsa::core)`.
 In your source code, `#include "elsa.h"` to include all of elsa; alternatively, include only the header files you are actually using to minimize compilation times.
@@ -59,7 +59,7 @@ When using CUDA, your CMake should be version 3.14 or newer.
 
 Contributing
 ------------
-To get involved, please see our [contributing page.](CONTRIBUTING.md)
+To get involved, please see our [contributing page](CONTRIBUTING.md).
 
 Contributors
 ------------
@@ -77,7 +77,8 @@ The **contributors** to elsa are:
 History
 -------
 
-elsa started its life as an internal library at the [Inverse Problems in Tomography](https://ip.campar.in.tum.de) group at the [Technical University in Munich](https://www.tum.de). This open-source version is a modernized and cleaned up version of our internal code and will contain most of its functionality, modulo some parts which we unfortunately cannot share (yet).
+elsa started its life as an internal library at the [Computational Imaging and Inverse Problems](https://ciip.in.tum.de) group at the [Technical University in Munich](https://www.tum.de).
+This open-source version is a modernized and cleaned up version of our internal code and will contain most of its functionality, modulo some parts which we unfortunately cannot share (yet).
 
 **Releases:**
 

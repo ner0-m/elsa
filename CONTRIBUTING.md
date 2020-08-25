@@ -83,4 +83,4 @@ make all -j4
 make test_coverage
 ```
 and then the results should be available at `build/test_coverage/index.html`. You can compare your
-local results to [the latest master coverage results](https://ip.campar.in.tum.de/elsacoverage/).
+local results to [the latest master coverage results](https://ciip.in.tum.de/elsacoverage/).
