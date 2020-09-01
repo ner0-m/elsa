@@ -23,6 +23,7 @@ echo
 # perform clang-format on all cpp-files
 find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-8 -i -style=file $1
 find benchmarks/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-8 -i -style=file $1
+find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-8 -i -style=file $1
 
 # check if something was modified
 notcorrectlist=`git status --porcelain | grep '^ M' | cut -c4-`
@@ -38,6 +39,7 @@ else
   echo
   echo "find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-8 -i -style=file $1"
   echo "find benchmarks/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format -i -style=file $1"
+  echo "find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format -i -style=file $1"
   echo
   echo "to solve the issue."
   # cleanup changes in git

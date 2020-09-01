@@ -10,6 +10,7 @@
 
 #include <catch2/catch.hpp>
 #include "VolumeDescriptor.h"
+#include "PlanarDetectorDescriptor.h"
 #include "Geometry.h"
 #include <string>
 #include <cstdlib>
@@ -17,30 +18,28 @@
 using namespace elsa;
 using namespace elsa::geometry;
 
-static const index_t dimension = 2;
-
-void iterate2D(const Geometry& geo)
+void iterate2D(const DetectorDescriptor& descriptor)
 {
-    for (real_t detPixel : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-        RealVector_t pixel(1);
-        pixel << detPixel;
+    for (auto detPixel : {0, 2, 4}) {
+        IndexVector_t pixel(2);
+        pixel << detPixel, 0; // 2nd dim is 0, as we access the 0th geometry pose
         BENCHMARK("Ray for detector at pixel " + std::to_string(detPixel))
         {
-            return geo.computeRayTo(pixel);
+            return descriptor.computeRayFromDetectorCoord(pixel);
         };
     }
 }
 
-void iterate3D(const Geometry& geo)
+void iterate3D(const DetectorDescriptor& descriptor)
 {
-    for (real_t detPixel1 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-        for (real_t detPixel2 : std::initializer_list<real_t>{0.5, 2.5, 4.5}) {
-            RealVector_t pixel(2);
-            pixel << detPixel1, detPixel2;
+    for (auto detPixel1 : {0, 2, 4}) {
+        for (auto detPixel2 : {0, 2, 4}) {
+            IndexVector_t pixel(3);
+            pixel << detPixel1, detPixel2, 0; // same as for 2d, last dim is for geometry access
             BENCHMARK("Ray for detector at pixel " + std::to_string(detPixel1) + "/"
                       + std::to_string(detPixel2))
             {
-                return geo.computeRayTo(pixel);
+                return descriptor.computeRayFromDetectorCoord(pixel);
             };
         }
     }
@@ -64,27 +63,30 @@ TEST_CASE("Ray generation for 2D")
     {
         Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{0},
                    std::move(volData), std::move(sinoData));
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
 
         // test outer + central pixels
-        iterate2D(g);
+        iterate2D(descriptor);
     }
 
     GIVEN("Geometry with offset but no rotation")
     {
         Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{0},
                    std::move(volData), std::move(sinoData), PrincipalPointOffset{2});
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
 
         // test outer + central pixels
-        iterate2D(g);
+        iterate2D(descriptor);
     }
 
     GIVEN("Geometry at 90°, but no offset")
     {
         Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{90},
                    std::move(volData), std::move(sinoData));
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
 
         // test outer + central pixels
-        iterate2D(g);
+        iterate2D(descriptor);
     }
 
     GIVEN("Geometry at 45° with offset")
@@ -92,9 +94,10 @@ TEST_CASE("Ray generation for 2D")
         Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d}, Degree{45},
                    std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                    RotationOffset2D{-1, 2});
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
 
         // test outer + central pixels
-        iterate2D(g);
+        iterate2D(descriptor);
     }
 }
 
@@ -118,9 +121,10 @@ TEST_CASE("Ray generation for 3D")
     {
         Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
                    std::move(volData), std::move(sinoData), RotationAngles3D{Gamma(0)});
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
 
         // test outer + central pixels
-        iterate3D(g);
+        iterate3D(descriptor);
     }
 
     GIVEN("Geometry with offset but no rotation")
@@ -128,18 +132,20 @@ TEST_CASE("Ray generation for 3D")
         Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
                    std::move(volData), std::move(sinoData), RotationAngles3D{Gamma{0}},
                    PrincipalPointOffset2D{0, 0}, RotationOffset3D{-1, 3, 0});
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
 
         // test outer + central pixels
-        iterate3D(g);
+        iterate3D(descriptor);
     }
 
     GIVEN("Geometry at 90°, but no offset")
     {
         Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
                    std::move(volData), std::move(sinoData), RotationAngles3D{Gamma{pi_t / 2}});
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
 
         // test outer + central pixels
-        iterate3D(g);
+        iterate3D(descriptor);
     }
 
     GIVEN("Geometry at 45°/22.5 with offset")
@@ -151,8 +157,10 @@ TEST_CASE("Ray generation for 3D")
                    std::move(volData), std::move(sinoData),
                    RotationAngles3D{Gamma{angle1}, Beta{angle2}}, PrincipalPointOffset2D{0, 0},
                    RotationOffset3D{1, -2, -1});
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
+
         // test outer + central pixels
-        iterate3D(g);
+        iterate3D(descriptor);
     }
 
     GIVEN("Geometry at 45/22.5/12.25 with offset")
@@ -177,7 +185,9 @@ TEST_CASE("Ray generation for 3D")
 
         Geometry g(s2c, c2d, ddVol, ddDet, R);
 
+        PlanarDetectorDescriptor descriptor(detCoeff, {g});
+
         // test outer + central pixels
-        iterate3D(g);
+        iterate3D(descriptor);
     }
 }

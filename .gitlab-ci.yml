@@ -64,15 +64,19 @@ variables:
   script: &buildjob_clang
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
+    - ninja build-benchmarks 
+    - ninja build-examples 
 
 .buildjob_script_normal:
   script: &buildjob_normal
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON
     - ninja
+    - ninja build-benchmarks 
+    - ninja build-examples 
 
 .job_template: &test_job_artifact
   <<: *run_always 
@@ -154,8 +158,10 @@ build-gpu-only:
   script:
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
     - ninja
+    - ninja build-benchmarks 
+    - ninja build-examples 
   tags:
     - linux
     - elsa

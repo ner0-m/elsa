@@ -35,11 +35,12 @@ void runProjector2D(index_t coeffsPerDim)
 
     // generate circular trajectory
     index_t noAngles{180}, arc{360};
-    auto [geometry, sinoDescriptor] = CircleTrajectoryGenerator::createTrajectory(
+    auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         noAngles, phantom.getDataDescriptor(), arc, 20, 20);
 
     // setup operator for 2d X-ray transform
-    Projector projector(phantom.getDataDescriptor(), *sinoDescriptor, geometry);
+    Projector projector(dynamic_cast<const VolumeDescriptor&>(phantom.getDataDescriptor()),
+                        *sinoDescriptor);
 
     DataContainer_t sinogram(*sinoDescriptor);
     BENCHMARK("Forward projection")
@@ -65,11 +66,12 @@ void runProjector3D(index_t coeffsPerDim)
 
     // generate circular trajectory
     index_t noAngles{180}, arc{360};
-    auto [geometry, sinoDescriptor] = CircleTrajectoryGenerator::createTrajectory(
+    auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         noAngles, phantom.getDataDescriptor(), arc, 20, 20);
 
     // setup operator for 2d X-ray transform
-    Projector projector(phantom.getDataDescriptor(), *sinoDescriptor, geometry);
+    Projector projector(dynamic_cast<const VolumeDescriptor&>(phantom.getDataDescriptor()),
+                        *sinoDescriptor);
 
     DataContainer_t sinogram(*sinoDescriptor);
     BENCHMARK("Forward projection")

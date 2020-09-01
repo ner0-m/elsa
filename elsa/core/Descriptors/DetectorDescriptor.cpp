@@ -42,6 +42,9 @@ namespace elsa
 
         auto dim = getNumberOfDimensions();
 
+        // Assume dimension of coord is equal to dimension of descriptor
+        assert(dim == coord.size());
+
         // Cast to real_t and shift to center of pixel
         auto detectorCoord = coord.head(dim - 1).template cast<real_t>().array() + 0.5;
 

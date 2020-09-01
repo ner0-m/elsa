@@ -132,7 +132,6 @@ if(NOT ELSA_MASTER_PROJECT)
 endif(NOT ELSA_MASTER_PROJECT)
 
 if(ELSA_TESTING OR ELSA_BENCHMARKS)
-
     enable_testing()
     add_subdirectory(thirdparty/Catch2)
 
@@ -142,8 +141,11 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
     if(ELSA_TESTING)
         message(STATUS "elsa testing is enabled")
 
+        # Run ctest to run all unit tests
+        # All tests are includes ass dependencies to this target, such that they get build
+        # schedule randomly that we don't start depending on some test order
         add_custom_target(tests
-            COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+            COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             USES_TERMINAL
             COMMENT "Build and run all the tests.")
@@ -159,12 +161,6 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             message(STATUS "elsa test coverage is disabled")
         endif(ELSA_COVERAGE)
     endif(ELSA_TESTING)
-
-    if (ELSA_BENCHMARKS)
-        message(STATUS "elsa benchmarks are enabled")
-        add_subdirectory(benchmarks)
-    endif(ELSA_BENCHMARKS)
-
 else(ELSA_TESTING OR ELSA_BENCHMARKS)
     message(STATUS "    elsa testing is disabled")
 endif(ELSA_TESTING OR ELSA_BENCHMARKS)
@@ -193,6 +189,12 @@ if(ELSA_BUILD_EXAMPLES)
     # the examples
     add_subdirectory(examples EXCLUDE_FROM_ALL)
 endif(ELSA_BUILD_EXAMPLES)
+ 
+# Add benchmarks after elsa code, such that CUDA is detected correctly and we just add it in the benchmarks 
+if (ELSA_BENCHMARKS)
+    message(STATUS "elsa benchmarks are enabled")
+    add_subdirectory(benchmarks)
+endif(ELSA_BENCHMARKS)
 
 
 # ------------ setup installation ------
