@@ -423,13 +423,13 @@ __device__ __forceinline__ double tex1DLayeredd(cudaTextureObject_t texObj, cons
 
 /// template specialization for layered texture fetches
 template <>
-double tex1DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, const int layer)
+double tex1DLayered<double>(cudaTextureObject_t texObj, float x, const int layer)
 {
     x = x - 0.5f;
 
-    elsa::real_t i = floor(x);
+    float i = floorf(x);
 
-    elsa::real_t a = x - i;
+    double a = x - i;
 
     double T[2];
     T[0] = tex1DLayeredd(texObj, i, layer);
@@ -448,17 +448,16 @@ __device__ __forceinline__ double tex2DLayeredd(cudaTextureObject_t texObj, cons
 
 /// template specialization for layered texture fetches
 template <>
-double tex2DLayered<double>(cudaTextureObject_t texObj, elsa::real_t x, elsa::real_t y,
-                            const int layer)
+double tex2DLayered<double>(cudaTextureObject_t texObj, float x, float y, const int layer)
 {
     x = x - 0.5f;
     y = y - 0.5f;
 
-    elsa::real_t i = floor(x);
-    elsa::real_t j = floor(y);
+    float i = floorf(x);
+    float j = floorf(y);
 
-    elsa::real_t a = x - i;
-    elsa::real_t b = y - j;
+    double a = x - i;
+    double b = y - j;
 
     double T[2][2];
     T[0][0] = tex2DLayeredd(texObj, i, j, layer);
