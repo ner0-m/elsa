@@ -1,4 +1,6 @@
 #include "JosephsMethodCUDA.h"
+#include "Intersection.h"
+#include "PlanarDetectorDescriptor.h"
 #include "LogGuard.h"
 #include "Timer.h"
 #include "TypeCasts.hpp"
@@ -9,7 +11,7 @@ namespace elsa
     JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const VolumeDescriptor& domainDescriptor,
                                                  const DetectorDescriptor& rangeDescriptor,
                                                  bool fast)
-        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+        : CUDAProjector<data_t>(domainDescriptor, rangeDescriptor),
           _boundingBox{_domainDescriptor->getNumberOfCoefficientsPerDimension()},
           _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
           _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor)),
@@ -105,6 +107,97 @@ namespace elsa
             if (cudaFree(_projMatrices.ptr) != cudaSuccess)
                 Logger::get("JosephsMethodCUDA")
                     ->error("Couldn't free GPU memory; This may cause problems later.");
+    }
+
+    template <typename data_t>
+    std::pair<std::unique_ptr<CUDAProjector<data_t>>, BoundingBox>
+        JosephsMethodCUDA<data_t>::constrainProjectionSpace(const IndexVector_t startCoordinate,
+                                                            const IndexVector_t endCoordinate)
+    {
+        const auto numDims = _domainDescriptor->getNumberOfDimensions();
+
+        if (startCoordinate.size() != numDims || endCoordinate.size() != numDims)
+            throw std::invalid_argument(
+                "JosephsMethodCUDA::constrainProjectionSpace: wrong number of dimensions");
+
+        if ((startCoordinate.array() > endCoordinate.array()).any())
+            throw std::invalid_argument("JosephsMethodCUDA::constrainProjectionSpace: start "
+                                        "coordinate cannot be larger than end coordinate");
+
+        const auto volumeCoeffsPerDim = _domainDescriptor->getNumberOfCoefficientsPerDimension();
+        const BoundingBox aabb(RealVector_t::Zero(numDims).array() + 0.5,
+                               volumeCoeffsPerDim.array().template cast<real_t>() - 0.5);
+
+        // corners of the image, pose coordinate kept for convenience
+        std::vector<IndexVector_t> corners;
+        corners.push_back(startCoordinate);
+        corners.push_back(endCoordinate.array() - 1);
+        if (numDims == 3) {
+            corners.push_back(startCoordinate);
+            corners.back()[1] = endCoordinate[1] - 1;
+            corners.push_back(endCoordinate.array() - 1);
+            corners.back()[1] = startCoordinate[1];
+        }
+
+        RealVector_t minSlice = volumeCoeffsPerDim.template cast<real_t>();
+        RealVector_t maxSlice = RealVector_t::Zero(numDims);
+        for (index_t i = startCoordinate[numDims - 1]; i < endCoordinate[numDims - 1]; i++) {
+            for (auto& corner : corners) {
+                corner[numDims - 1] = i;
+
+                Logger::get("JosephsMethodCUDA")
+                    ->debug("Corner: {} {} {}", corner[0], corner[1], corner[2]);
+                const auto ray = _detectorDescriptor.computeRayFromDetectorCoord(corner);
+
+                Logger::get("JosephsMethodCUDA")
+                    ->debug("\tray origin: {} {} {}", ray.origin()[0], ray.origin()[1],
+                            ray.origin()[2]);
+                Logger::get("JosephsMethodCUDA")
+                    ->debug("\tray direction: {} {} {}", ray.direction()[0], ray.direction()[1],
+                            ray.direction()[2]);
+
+                auto result = Intersection::withRay(aabb, ray);
+                if (result) {
+                    auto entryPoint = ray.pointAt(result->_tmin);
+                    auto exitPoint = ray.pointAt(result->_tmax);
+
+                    Logger::get("JosephsMethodCUDA")
+                        ->debug("\tentry point: {} {} {}", entryPoint[0], entryPoint[1],
+                                entryPoint[2]);
+
+                    Logger::get("JosephsMethodCUDA")
+                        ->debug("\texit point: {} {} {}", exitPoint[0], exitPoint[1], exitPoint[2]);
+
+                    entryPoint = (entryPoint.array() - 0.5).floor();
+                    exitPoint = (exitPoint.array() - 0.5).floor();
+                    minSlice = (entryPoint.array() < minSlice.array()).select(entryPoint, minSlice);
+                    minSlice = (exitPoint.array() < minSlice.array()).select(exitPoint, minSlice);
+                    entryPoint = entryPoint.array() + 1;
+                    exitPoint = exitPoint.array() + 1;
+                    maxSlice = (entryPoint.array() > maxSlice.array()).select(entryPoint, maxSlice);
+                    maxSlice = (exitPoint.array() > maxSlice.array()).select(exitPoint, maxSlice);
+                } else {
+                    Logger::get("JosephsMethodCUDA")->debug("no hit");
+                }
+            }
+        }
+
+        minSlice = (minSlice.array() < 0).select(RealVector_t::Zero(numDims), minSlice);
+        maxSlice = (maxSlice.array() >= volumeCoeffsPerDim.array().template cast<real_t>())
+                       .select(volumeCoeffsPerDim.array().template cast<real_t>() - 1, maxSlice);
+
+        std::vector<Geometry> traj;
+        for (index_t i = startCoordinate[numDims - 1]; i < endCoordinate[numDims - 1]; i++)
+            traj.push_back(*_detectorDescriptor.getGeometryAt(i));
+
+        PlanarDetectorDescriptor constrainedDetectorDesc(
+            endCoordinate - startCoordinate, _rangeDescriptor->getSpacingPerDimension(), traj);
+        VolumeDescriptor constrainedVolumeDesc(
+            (maxSlice - minSlice).array().template cast<index_t>() + 1,
+            _domainDescriptor->getSpacingPerDimension());
+        return {std::make_unique<JosephsMethodCUDA<data_t>>(constrainedVolumeDesc,
+                                                            constrainedDetectorDesc),
+                BoundingBox(minSlice, maxSlice)};
     }
 
     template <typename data_t>
@@ -390,7 +483,8 @@ namespace elsa
 
     template <typename data_t>
     JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other)
-        : LinearOperator<data_t>(*other._domainDescriptor, *other._rangeDescriptor),
+        : CUDAProjector<data_t>(static_cast<const VolumeDescriptor&>(*other._domainDescriptor),
+                                static_cast<const DetectorDescriptor&>(*other._rangeDescriptor)),
           _boundingBox{other._boundingBox},
           _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
           _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor)),

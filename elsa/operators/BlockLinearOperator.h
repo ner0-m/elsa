@@ -52,7 +52,7 @@ namespace elsa
          * based on the descriptors of the operators in the list. For the block descriptor, a
          * PartitionDescriptor is preferentially generated, if not possible a RandomBlocksDescriptor
          * is generated instead. For the non-block descriptor the best common descriptor is chosen
-         * (see DataDescriptor::bestCommon()).
+         * (see bestCommon()).
          */
         BlockLinearOperator(const OperatorList& ops, BlockType blockType);
 

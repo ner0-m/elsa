@@ -8,8 +8,10 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
     set(MODULE_HEADERS
         projector_kernels/TraverseSiddonsCUDA.cuh
         projector_kernels/TraverseJosephsCUDA.cuh
+        CUDAProjector.h
         SiddonsMethodCUDA.h
         JosephsMethodCUDA.h
+        # SplittingProjector.h
     )
 
     # list all the code files of the module
@@ -18,6 +20,7 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
         projector_kernels/TraverseJosephsCUDA.cu
         SiddonsMethodCUDA.cpp
         JosephsMethodCUDA.cpp
+        # SplittingProjector.cpp
     )
 
     list(

@@ -19,6 +19,8 @@ namespace elsa
          */
         BoundingBox(const IndexVector_t& volumeDimensions);
 
+        BoundingBox(const RealVector_t& boxMin, const RealVector_t& boxMax);
+
         /// the number of dimensions (2 or 3)
         index_t _dim;
         /// the front corner of the box

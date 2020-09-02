@@ -10,6 +10,7 @@
 #include "BoundingBox.h"
 #include "VolumeDescriptor.h"
 #include "DetectorDescriptor.h"
+#include "CUDAProjector.h"
 
 #include "TraverseJosephsCUDA.cuh"
 
@@ -43,7 +44,7 @@ namespace elsa
      * interpolation
      */
     template <typename data_t = real_t>
-    class JosephsMethodCUDA : public LinearOperator<data_t>
+    class JosephsMethodCUDA : public CUDAProjector<data_t>
     {
     public:
         /**
@@ -62,6 +63,10 @@ namespace elsa
 
         /// destructor
         ~JosephsMethodCUDA() override;
+
+        std::pair<std::unique_ptr<CUDAProjector<data_t>>, BoundingBox>
+            constrainProjectionSpace(const IndexVector_t startCoordinate,
+                                     const IndexVector_t endCoordinate) override;
 
     protected:
         /// copy constructor, used for cloning
