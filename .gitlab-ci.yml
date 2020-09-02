@@ -16,6 +16,18 @@ variables:
   UBUNTU_IMAGE: "elsa/ubuntu:18.04"
   GPU_ONLY_IMAGE: "elsa/cuda:10.0"
 
+### Cache setup ###
+
+# Caches should only be used for caching
+# between pipelines not jobs, artifacts should be prefered for that
+# Therefore, we cache the submodules, so that they don't have to be 
+# downloaded so frequently
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - thirdparty/
+    - .git/modules 
+
 
 ### job templates ###
 
@@ -58,13 +70,13 @@ variables:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     paths:
       - build/
-    expire_in: 30 mins
+    expire_in: 60 mins
 
 .buildjob_script_clang:
   script: &buildjob_clang
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
     - ninja build-benchmarks 
     - ninja build-examples 
@@ -73,7 +85,7 @@ variables:
   script: &buildjob_normal
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON
     - ninja
     - ninja build-benchmarks 
     - ninja build-examples 
@@ -82,9 +94,12 @@ variables:
   <<: *run_always 
   script:
     - cd build
-    - cmake -GNinja -DELSA_CREATE_JUNIT_REPORTS=ON ..
     - ninja tests
   artifacts:
+    name: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
+    paths:
+      - build/
+    expire_in: 60 mins
     reports:
       junit: "build/test_reports/test_*.xml"
 
@@ -216,22 +231,11 @@ test-cuda:
     - cuda
 
 test-gpu-only:
-  <<: *run_always 
+  <<: *test_job_artifact
   stage: test
   image: $GPU_ONLY_IMAGE
   dependencies:
     - build-gpu-only
-  script:
-    - cd build
-    - cmake -GNinja -DELSA_CREATE_JUNIT_REPORTS=ON ..
-    - ninja tests
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
-    paths:
-      - build/
-    expire_in: 30 mins
-    reports:
-      junit: "build/test_reports/test_*.xml"
   tags:
     - linux
     - elsa
@@ -259,6 +263,7 @@ asan-ubsan:
   <<: *run_on_merge_requests
   stage: sanitizer
   image: $CUDA_IMAGE
+  dependencies: [] 
   script:
     - mkdir -p build
     - cd build
@@ -278,18 +283,24 @@ test-coverage:
   <<: *run_on_merge_requests
   stage: coverage
   image: $CUDA_IMAGE
-  dependencies: []
+  dependencies: [] 
   script:
     - mkdir -p build
     - cd build
     - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
     - ninja tests
     - ninja test_coverage
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
+    paths:
+      - thirdparty/
+      - .git/modules 
+      - build/
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
     paths:
       - build/test_coverage/
-    expire_in: 30 mins
+    expire_in: 60 mins
   tags:
     - linux
     - elsa

@@ -1,6 +1,21 @@
 #!/bin/bash
 
 exit_flag=false
+ 
+target_branch="master"
+ 
+# Retrieve list of cpp-files that were changed in source branch with respect to master (target branch)
+filelist=($(git diff origin/${target_branch} --name-only | grep ".cpp"))
+ 
+
+if [[ "${#filelist[@]}" -eq "0" ]]; then
+    echo "==> No cpp files found"
+    echo "==> clang-tidy has nothing to do, stop early"
+    exit 0
+else
+    echo "==> Found ${#filelist[@]} cpp files"
+    echo "==> Let's start our clang-tidy check"
+fi
 
 # for compilation database
 mkdir -p build
@@ -8,7 +23,6 @@ cd build
 cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON
 cd ..
 
-target_branch="master"
 echo
 echo "clang-tidy checking changed files compared to target branch ${target_branch}"
 
@@ -23,8 +37,6 @@ function checkCPP(){
 clang-tidy-8 --version
 echo
 
-# Retrieve list of files that were changed in source branch with respect to master (target branch)
-filelist=`git diff origin/${target_branch} --name-only`
 
 filesWithErrors=()
 

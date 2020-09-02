@@ -51,6 +51,13 @@ include(SetDefaultBuildType)
 
 # ------------ dependencies ------------
 # ------------
+ 
+# Setup list of submodules for elsa
+list(APPEND ELSA_SUBMODULES Catch2 eigen3 pybind11 spdlog) 
+ 
+if(ELSA_CUDA_VECTOR) 
+    list(APPEND ELSA_SUBMODULES quickvec)
+endif(ELSA_CUDA_VECTOR)
 
 # only add the dependencies if elsa is stand-alone
 if(ELSA_MASTER_PROJECT)
