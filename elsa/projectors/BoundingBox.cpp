@@ -28,10 +28,13 @@ namespace elsa
         if (boxMin.size() != boxMax.size() || boxMin.size() < 2 || boxMin.size() > 3)
             throw std::invalid_argument("BoundingBox: can only deal with the 2d/3d cases");
 
-        // TODO: this only makes sense for the case of a box with integer dimensionss
+        if ((boxMax.array() <= boxMin.array()).any())
+            throw std::invalid_argument("BoundingBox: boxMin must be smaller than boxMan");
+
+        // TODO: this only makes sense for the case of a box with integer dimensions
         _voxelCoordToIndexVector[0] = 1;
-        _voxelCoordToIndexVector[1] = std::floor(boxMax[1] - boxMin[1]) + 1;
-        _voxelCoordToIndexVector[2] =
-            (std::floor(boxMax[2] - boxMax[2]) + 1) * _voxelCoordToIndexVector[1];
+        _voxelCoordToIndexVector[1] = static_cast<index_t>(std::floor(boxMax[1] - boxMin[1]) + 1);
+        _voxelCoordToIndexVector[2] = static_cast<index_t>((std::floor(boxMax[2] - boxMin[2]) + 1))
+                                      * _voxelCoordToIndexVector[1];
     }
 } // namespace elsa
