@@ -9,7 +9,7 @@ function(InstallElsaModule ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_
         # install the module
         install(TARGETS ${ELSA_MODULE_TARGET_NAME}
                 EXPORT ${ELSA_MODULE_EXPORT_TARGET}
-                INCLUDES DESTINATION include
+                # INCLUDES DESTINATION include
                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
                 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

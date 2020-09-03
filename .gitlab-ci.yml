@@ -31,7 +31,9 @@ cache:
 
 ### job templates ###
 
-# run job only if it's connected to a schedule 
+#### Schedule jobs ####
+
+# run job only only on schedules
 .job_template: &nightly_job
   only:
     - schedules
@@ -58,6 +60,7 @@ cache:
     - triggers
     - web
 
+#### Build job templates ####
        
 .job_template: &build_job_artifact
   <<: *run_always 
@@ -90,9 +93,11 @@ cache:
     - ninja build-benchmarks 
     - ninja build-examples 
 
-.job_template: &test_job_artifact
+#### Test job templates ####
+
+.testjob_template: &test_job_artifact
   <<: *run_always 
-  script:
+  script: 
     - cd build
     - ninja tests
   artifacts:
@@ -103,13 +108,45 @@ cache:
     reports:
       junit: "build/test_reports/test_*.xml"
 
+#### Install job templates ####
+ 
+.installjob_clang_anchors:
+  script: &installjob_script_clang
+    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
+    - cd /tmp/elsa_testing
+    - mkdir -p build/ && cd build/
+    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - ninja 
 
+.installjob_default_anchors:
+  script: &installjob_script
+    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
+    - cd /tmp/elsa_testing
+    - mkdir -p build/ && cd build/
+    - cmake .. -GNinja
+    - ninja 
+
+.installjob_anchors: &install_job
+  <<: *run_on_merge_requests 
+  before_script: &installjob_before_script
+    - cd build
+    - ninja install
+  cache: &install_cache
+    key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
+    paths:
+      - thirdparty/
+      - .git/modules 
+      - /tmp/elsa_testing 
+ 
 ### static test ###
 
 clang-format:
   <<: *run_always 
   stage: static-test
   image: $ANALYSIS_IMAGE
+  before_script:
+    - git submodule sync
+    - git submodule update --init
   script:
     ./tools/ci_scripts/clang-format-test.sh
   tags:
@@ -242,6 +279,60 @@ test-gpu-only:
     - gcc
     - cuda
 
+install-gcc:
+  <<: *install_job
+  stage: test
+  image: $GCC_IMAGE
+  dependencies:
+    - build-gcc
+  script: *installjob_script
+  tags:
+    - linux
+    - elsa
+    - gcc
+
+install-clang:
+  <<: *install_job
+  stage: test
+  image: $CLANG_IMAGE
+  dependencies:
+    - build-clang
+  script: *installjob_script_clang
+  tags:
+    - linux
+    - elsa
+    - clang
+
+install-cuda:
+  <<: *install_job
+  stage: test
+  image: $CUDA_IMAGE
+  dependencies:
+    - build-cuda
+  script: *installjob_script
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+
+install-gpu-only:
+  <<: *install_job
+  stage: test
+  image: $GPU_ONLY_IMAGE
+  dependencies:
+    - build-gpu-only
+  script: 
+    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
+    - cd /tmp/elsa_testing
+    - mkdir -p build/ && cd build/
+    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
+    - ninja
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
 
 ### sanitizers ###
 
@@ -342,19 +433,26 @@ deploy-docs:
 
 .all-clang:
   image: $CLANG_IMAGE
-  script:
+  script: 
     - mkdir -p build
     - cd build
     - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja
-    - ninja tests
+    - ninja install
+    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
+    - cd /tmp/elsa_testing
+    - mkdir -p build/ && cd build/
+    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - ninja 
 
 .all-gcc:
   image: $GCC_IMAGE
-  script:
+  script: 
     - mkdir -p build
     - cd build
     - cmake .. -GNinja
-    - ninja
-    - ninja tests
-
+    - ninja install
+    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
+    - cd /tmp/elsa_testing
+    - mkdir -p build/ && cd build/
+    - cmake .. -GNinja
+    - ninja 

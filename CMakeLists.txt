@@ -113,9 +113,13 @@ if(ELSA_CUDA_VECTOR)
         message(STATUS "Enabling DataHandlerGPU")
         message(STATUS "The default container type will be on the GPU")
 
+        set(ELSA_BUILD_WITH_QUICKVEC TRUE)
+        
         add_definitions(-DELSA_CUDA_VECTOR)
         add_subdirectory(thirdparty/quickvec)
     else()
+        set(ELSA_BUILD_WITH_QUICKVEC FALSE)
+
         message(STATUS "CUDA compiler not found or not compiling with clang!")
         message(STATUS "Compiling without a DataHandlerGPU")
         message(STATUS "The default container type will be CPU")
