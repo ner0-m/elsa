@@ -19,6 +19,12 @@ namespace elsa
          */
         BoundingBox(const IndexVector_t& volumeDimensions);
 
+        /**
+         * \brief Construct AABB starting at boxMin and ending at boxMax
+         *
+         * \param[in] boxMin start coordinate for each dimension
+         * \param[in] boxMax end coordinate for each dimension
+         */
         BoundingBox(const RealVector_t& boxMin, const RealVector_t& boxMax);
 
         /// the number of dimensions (2 or 3)
@@ -27,7 +33,5 @@ namespace elsa
         RealVector_t _min{_dim};
         /// the back corner of the box
         RealVector_t _max{_dim};
-        /// helper to convert coordinates to indices
-        IndexVector_t _voxelCoordToIndexVector{_dim};
     };
 } // namespace elsa
