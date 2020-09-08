@@ -98,9 +98,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             
             set(HINTS_FILE ${HINTS_PATH})
 
-            get_filename_component(CMAKE_CURRENT_LIST_DIR_LAST_PART ${CMAKE_CURRENT_LIST_DIR} NAME)
             get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
-            get_filename_component(LLVM_LIB_DIR ${LLVM_LIBRARY} DIRECTORY)
 
             # when compiling with libc++ as the STL, the path to the STL headers must be specified
             set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX "")
@@ -112,7 +110,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             # search through the global and target specific compile options for the "-stdlib=libc++" flag
             foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST TARGET_COMPILE_OPTIONS)
                 if (${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg=-isystem --extra-arg=${LLVM_LIB_DIR}/../include/c++/v1)
+                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg=-isystem --extra-arg=${LLVM_CONFIG_DIR}/../include/c++/v1)
                     break()
                 endif()
             endforeach(COMPILE_OPTION)
@@ -142,7 +140,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     ${ARGN}
                     ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX}
                     --extra-arg=-isystem
-                    --extra-arg=${LLVM_CONFIG_DIR}/../lib/clang/${LLVM_VERSION}/include
+                    --extra-arg=${CLANG_RESOURCE_DIR}/include
                     --extra-arg=-I${PYTHON_INCLUDE_DIRS}
                     --extra-arg=-I${PYBIND11_INCLUDE_DIR}
                     --extra-arg=-I${CMAKE_CURRENT_LIST_DIR}

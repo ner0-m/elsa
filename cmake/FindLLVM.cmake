@@ -3,11 +3,12 @@
 # Defines the variables:
 #
 #  LLVM_FOUND - LLVM was found of the system
-#  LLVM_VERSION - LLVM version (this is also an INTERNAL CACHE variable)
+#  LLVM_VERSION - LLVM version
 #  LLVM_CXXFLAGS - C++ compiler flags for files that include LLVM headers
 #  LLVM_INCLUDE_DIR - Directory containing LLVM headers
 #  LLVM_LIB_DIR - Directory containing LLVM libraries
 #  LLVM_SHARED_MODE - How the provided components can be collectively linked
+#  CLANG_RESOURCE_DIR - Clang resource directory pathname (this is also an INTERNAL CACHE variable)
 #
 
 find_program(LLVM_CONFIG
@@ -18,13 +19,28 @@ find_program(LLVM_CONFIG
   DOC "Path to llvm-config"
 )
 
+find_program(CLANG_EXECUTABLE
+  NAMES clang-10.0 clang100 clang-10
+  clang-9.0 clang90 clang-9
+  clang-8.0 clang80 clang-8
+  clang
+  DOC "Path to clang executable")
+
 if (LLVM_CONFIG)
+
+  if (CLANG_EXECUTABLE)
+    execute_process(
+      COMMAND ${CLANG_EXECUTABLE} -print-resource-dir
+      OUTPUT_VARIABLE CLANG_RESOURCE_DIR
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(CLANG_RESOURCE_DIR ${CLANG_RESOURCE_DIR} CACHE INTERNAL "path to Clang resource directory")
+  endif()
+
   execute_process(
     COMMAND ${LLVM_CONFIG} --version
     OUTPUT_VARIABLE LLVM_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-  set(LLVM_VERSION ${LLVM_VERSION} CACHE INTERNAL "the LLVM version")
   
   execute_process(
     COMMAND ${LLVM_CONFIG} --cxxflags
@@ -55,7 +71,12 @@ if (LLVM_CONFIG)
 
   if(NOT LLVM_VERSION VERSION_LESS "9.0")
     find_library(CLANG_CPP_LIBRARY NAMES clang-cpp PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
-    find_package_handle_standard_args(LLVM DEFAULT_MSG LLVM_LIB_DIR LLVM_INCLUDE_DIR LLVM_LIBRARY CLANG_CPP_LIBRARY)
+    find_package_handle_standard_args(LLVM VERSION_VAR LLVM_VERSION
+                                        REQUIRED_VARS CLANG_RESOURCE_DIR
+                                                      LLVM_LIB_DIR
+                                                      LLVM_INCLUDE_DIR
+                                                      LLVM_LIBRARY
+                                                      CLANG_CPP_LIBRARY)
   else()
     find_library(CLANG_AST_LIBRARY NAMES clangAST PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
     find_library(CLANG_BASIC_LIBRARY NAMES clangBasic PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
@@ -68,20 +89,23 @@ if (LLVM_CONFIG)
     find_library(CLANG_SERIALIZATION_LIBRARY NAMES clangSerialization PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
     find_library(CLANG_ANALYSIS_LIBRARY NAMES clangAnalysis PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
     find_library(CLANG_EDIT_LIBRARY NAMES clangEdit PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
-    find_package_handle_standard_args(LLVM DEFAULT_MSG LLVM_LIB_DIR LLVM_INCLUDE_DIR LLVM_LIBRARY 
-                                        CLANG_AST_LIBRARY 
-                                        CLANG_BASIC_LIBRARY
-                                        CLANG_FRONTEND_LIBRARY
-                                        CLANG_TOOLING_LIBRARY
-                                        CLANG_DRIVER_LIBRARY
-                                        CLANG_LEX_LIBRARY
-                                        CLANG_PARSE_LIBRARY
-                                        CLANG_SEMA_LIBRARY
-                                        CLANG_SERIALIZATION_LIBRARY
-                                        CLANG_ANALYSIS_LIBRARY
-                                        CLANG_EDIT_LIBRARY)
+    find_package_handle_standard_args(LLVM VERSION_VAR LLVM_VERSION
+                                         REQUIRED_VARS CLANG_RESOURCE_DIR
+                                                       LLVM_LIB_DIR
+                                                       LLVM_INCLUDE_DIR
+                                                       LLVM_LIBRARY 
+                                                       CLANG_AST_LIBRARY 
+                                                       CLANG_BASIC_LIBRARY
+                                                       CLANG_FRONTEND_LIBRARY
+                                                       CLANG_TOOLING_LIBRARY
+                                                       CLANG_DRIVER_LIBRARY
+                                                       CLANG_LEX_LIBRARY
+                                                       CLANG_PARSE_LIBRARY
+                                                       CLANG_SEMA_LIBRARY
+                                                       CLANG_SERIALIZATION_LIBRARY
+                                                       CLANG_ANALYSIS_LIBRARY
+                                                       CLANG_EDIT_LIBRARY)
   endif()
-
 else()
   message(WARNING "llvm-config could not be located")
 endif()
