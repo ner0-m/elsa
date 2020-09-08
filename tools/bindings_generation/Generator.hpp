@@ -116,7 +116,7 @@ public:
         }
     }
 
-    static void generateBindingsForRecord(const elsa::Module::Record& r, std::ofstream& outputFile,
+    static void generateBindingsForRecord(elsa::Module::Record& r, std::ofstream& outputFile,
                                           const elsa::Module::ClassHints* hints = nullptr)
     {
         std::string qualifiedName = r.name;
@@ -126,27 +126,22 @@ public:
         if (classSupportsBufferProtocol(r, hints))
             additionalProps = ", py::buffer_protocol()";
 
-        auto pythonName = getPythonNameForTag(r.namespaceStrippedName);
-        // py::class_<Class, Base1, Base2,...>(m, Class[, py::buffer_protocol()])
-        outputFile << "\tpy::class_<" << r.name;
-        for (auto& base : r.bases)
-            outputFile << ", " << base;
-        outputFile << "> " << pythonName << "(m, \"" << pythonName << "\"" << additionalProps
-                   << ");\n\t" << pythonName;
-
-        // define constructors and other methods
-        for (const auto& [fId, f] : r.methods) {
+        // first pass - remove non-viable member methods
+        for (auto it = r.methods.cbegin(); it != r.methods.cend();) {
+            const auto& fId = it->first;
+            const auto& f = it->second;
             // skip function templates
-            if (f.isTemplate)
+            if (f.isTemplate) {
+                it = r.methods.erase(it);
                 continue;
+            }
 
             // skip functions with an rvalue ref-qualifier
-            if (f.refQualifier == elsa::Module::Function::RQ_RVAL)
+            if (f.refQualifier == elsa::Module::Function::RQ_RVAL) {
+                it = r.methods.erase(it);
                 continue;
+            }
 
-            // methods accepting rvalue references or unique_ptrs as parameters cannot be bound
-            // TODO: add warning for the case when a non-abstract class is left without any
-            // viable constructors
             bool viable = true;
             for (const auto& param : f.params) {
                 if (param.type.rfind("&&") == param.type.length() - 2
@@ -156,9 +151,30 @@ public:
                     break;
                 }
             }
-            if (!viable)
+            if (!viable) {
+                it = r.methods.erase(it);
                 continue;
+            }
 
+            it++;
+        }
+
+        // display some warnings if no viable methods are left
+        // TODO: this will have to be adapted once we add support for member fields
+        if (r.methods.empty() && (!hints || !hints->definesCustomMethods))
+            std::cerr << "WARNING: No methods that can be exposed on the Python side for class "
+                      << r.name << std::endl;
+
+        auto pythonName = getPythonNameForTag(r.namespaceStrippedName);
+        // py::class_<Class, Base1, Base2,...>(m, Class[, py::buffer_protocol()])
+        outputFile << "\tpy::class_<" << r.name;
+        for (auto& base : r.bases)
+            outputFile << ", " << base;
+        outputFile << "> " << pythonName << "(m, \"" << pythonName << "\"" << additionalProps
+                   << ");" << (r.methods.empty() ? "" : ("\n\t" + pythonName));
+
+        // define constructors and other methods
+        for (const auto& [fId, f] : r.methods) {
             // convert default parameters to overloads
             for (std::size_t i = 0; i <= f.params.size() - f.posFirstNonBindableDefaultArg; i++) {
 
@@ -200,7 +216,8 @@ public:
                 }
             }
         }
-        outputFile << ";\n";
+        if (!r.methods.empty())
+            outputFile << ";\n";
 
         // add custom methods
         if (hints) {
