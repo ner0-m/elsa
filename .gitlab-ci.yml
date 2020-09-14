@@ -350,6 +350,7 @@ cuda-memcheck:
     - gcc
     - cuda
 
+# Be sure to run this job as a privaledged one 
 asan-ubsan:
   <<: *run_on_merge_requests
   stage: sanitizer
@@ -358,8 +359,7 @@ asan-ubsan:
   script:
     - mkdir -p build
     - cd build
-    - rm -f CMakeCache.txt # remove cache, as we sometimes get the wrong cache
-    - cmake -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
+    - cmake -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
     - ninja tests
   tags:
     - linux
