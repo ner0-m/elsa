@@ -188,6 +188,12 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
     if (ELSA_BINDINGS_IN_SINGLE_MODULE)
         add_definitions(-DELSA_BINDINGS_IN_SINGLE_MODULE)
     endif()
+     
+    # Warn if python bindings and code coverage is activated 
+    if(ELSA_COVERAGE)
+        message(WARNING "Python bindings are generated for a coverage build, consider turning one off (set \
+        either \"ELSA_BUILD_PYTHON_BINDINGS\" or \"ELSA_COVERAGE\"to OFF via command line") 
+    endif()
 endif()
 
 # the elsa library

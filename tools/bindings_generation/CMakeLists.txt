@@ -4,6 +4,8 @@ find_package(LLVM)
 
 if (NOT LLVM_FOUND)
     message(WARNING "LLVM not found or components missing. Python bindings will not be generated.")
+    # Set the to off again, so depending code have it updated 
+    set(ELSA_BUILD_PYTHON_BINDINGS OFF PARENT_SCOPE)
 else()
     add_executable(pybind11_generator Parser.cpp)
     target_compile_options(pybind11_generator PUBLIC ${LLVM_CXXFLAGS})
