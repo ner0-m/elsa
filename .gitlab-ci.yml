@@ -370,6 +370,7 @@ asan-ubsan:
 
 ### test coverage ###
 
+# Enforce GCC for test coverage, as our coverage only works with gcov and acts weird with clang 
 test-coverage:
   <<: *run_on_merge_requests
   stage: coverage
@@ -378,7 +379,7 @@ test-coverage:
   script:
     - mkdir -p build
     - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON ../
+    - CXX=g++ cmake .. -GNinja -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON 
     - ninja tests
     - ninja test_coverage
   cache:
