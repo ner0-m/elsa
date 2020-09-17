@@ -15,7 +15,7 @@ namespace elsa
         using namespace geometry;
 
         // sanity check
-        auto dim = volumeDescriptor.getNumberOfDimensions();
+        const auto dim = volumeDescriptor.getNumberOfDimensions();
 
         if (dim < 2 || dim > 3)
             throw std::invalid_argument("CircleTrajectoryGenerator: can only handle 2d/3d");
@@ -24,40 +24,55 @@ namespace elsa
             ->info("creating {}D trajectory with {} poses in an {} degree arc", dim, numberOfPoses,
                    arcDegrees);
 
-        IndexVector_t coeffs(dim);
-        RealVector_t spacing(dim);
-        if (dim == 2) {
-            coeffs << volumeDescriptor.getNumberOfCoefficientsPerDimension()[0], numberOfPoses;
-            spacing << volumeDescriptor.getSpacingPerDimension()[0], 1;
-        } else {
-            coeffs << volumeDescriptor.getNumberOfCoefficientsPerDimension()[0],
-                volumeDescriptor.getNumberOfCoefficientsPerDimension()[1], numberOfPoses;
-            spacing << volumeDescriptor.getSpacingPerDimension()[0],
-                volumeDescriptor.getSpacingPerDimension()[1], 1;
-        }
+        // Calculate size and spacing for each geometry pose using a IIFE
+        const auto [coeffs, spacing] = [&] {
+            IndexVector_t coeffs(dim);
+            RealVector_t spacing(dim);
 
-        std::vector<Geometry> geometryList;
+            // Scale coeffsPerDim by sqrt(2), this reduces undersampling of the corners, as the
+            // detector is larger than the volume. Cast back and forthe to reduce warnings...
+            const auto coeffsPerDim =
+                volumeDescriptor.getNumberOfCoefficientsPerDimension().template cast<real_t>();
+            constexpr real_t sqrt2 = std::sqrt(2.f);
+            const auto coeffsPerDimSclaed = (coeffsPerDim * sqrt2).template cast<index_t>();
 
-        real_t angleIncrement = static_cast<real_t>(1.0f) * static_cast<real_t>(arcDegrees)
-                                / (static_cast<real_t>(numberOfPoses) - 1.0f);
-        for (index_t i = 0; i < numberOfPoses; ++i) {
-            real_t angle =
-                static_cast<real_t>(i) * angleIncrement * pi_t / 180.0f; // convert to radians
+            const auto spacingPerDim = volumeDescriptor.getSpacingPerDimension();
+
             if (dim == 2) {
-                Geometry geom(SourceToCenterOfRotation{sourceToCenter},
-                              CenterOfRotationToDetector{centerToDetector}, Radian{angle},
-                              VolumeData2D{volumeDescriptor.getSpacingPerDimension(),
-                                           volumeDescriptor.getLocationOfOrigin()},
-                              SinogramData2D{Size2D{coeffs}, Spacing2D{spacing}});
-                geometryList.push_back(geom);
+                coeffs << coeffsPerDimSclaed[0], numberOfPoses;
+                spacing << spacingPerDim[0], 1;
             } else {
-                Geometry geom(SourceToCenterOfRotation{sourceToCenter},
-                              CenterOfRotationToDetector{centerToDetector},
-                              VolumeData3D{volumeDescriptor.getSpacingPerDimension(),
-                                           volumeDescriptor.getLocationOfOrigin()},
-                              SinogramData3D{Size3D{coeffs}, Spacing3D{spacing}},
-                              RotationAngles3D{Radian{angle}, Radian{0}, Radian{0}});
-                geometryList.push_back(geom);
+                coeffs << coeffsPerDimSclaed[0], coeffsPerDimSclaed[1], numberOfPoses;
+                spacing << spacingPerDim[0], spacingPerDim[1], 1;
+            }
+            // Return a pair, then split it using structured bindings
+            return std::pair{coeffs, spacing};
+        }();
+
+        // Create vector and reserve the necessary size, minor optimization such that no new
+        // allocations are necessary in the loop
+        std::vector<Geometry> geometryList;
+        geometryList.reserve(numberOfPoses);
+
+        const real_t angleIncrement =
+            static_cast<real_t>(arcDegrees) / (static_cast<real_t>(numberOfPoses) - 1.0f);
+        for (index_t i = 0; i < numberOfPoses; ++i) {
+            const Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
+            if (dim == 2) {
+                // Use emplace_back, then no copy is created 
+                geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
+                                          CenterOfRotationToDetector{centerToDetector},
+                                          Radian{angle},
+                                          VolumeData2D{volumeDescriptor.getSpacingPerDimension(),
+                                                       volumeDescriptor.getLocationOfOrigin()},
+                                          SinogramData2D{Size2D{coeffs}, Spacing2D{spacing}});
+            } else {
+                geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
+                                          CenterOfRotationToDetector{centerToDetector},
+                                          VolumeData3D{volumeDescriptor.getSpacingPerDimension(),
+                                                       volumeDescriptor.getLocationOfOrigin()},
+                                          SinogramData3D{Size3D{coeffs}, Spacing3D{spacing}},
+                                          RotationAngles3D{Radian{angle}, Radian{0}, Radian{0}});
             }
         }
 
