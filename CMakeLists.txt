@@ -47,7 +47,9 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 # set default built type to "Release" (if no other specified)
 set(DEFAULT_BUILD_TYPE "Release")
 include(SetDefaultBuildType)
-
+ 
+# Forbid extensions (such as gnu++) for this project 
+set(CMAKE_CXX_EXTENSIONS OFF) 
 
 # ------------ dependencies ------------
 # ------------
