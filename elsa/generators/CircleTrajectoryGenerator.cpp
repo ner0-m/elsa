@@ -33,7 +33,7 @@ namespace elsa
             // detector is larger than the volume. Cast back and forthe to reduce warnings...
             const auto coeffsPerDim =
                 volumeDescriptor.getNumberOfCoefficientsPerDimension().template cast<real_t>();
-            constexpr real_t sqrt2 = std::sqrt(2.f);
+            const real_t sqrt2 = std::sqrt(2.f);
             const auto coeffsPerDimSclaed = (coeffsPerDim * sqrt2).template cast<index_t>();
 
             const auto spacingPerDim = volumeDescriptor.getSpacingPerDimension();
