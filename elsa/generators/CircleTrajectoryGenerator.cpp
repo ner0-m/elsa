@@ -59,7 +59,7 @@ namespace elsa
         for (index_t i = 0; i < numberOfPoses; ++i) {
             const Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
             if (dim == 2) {
-                // Use emplace_back, then no copy is created 
+                // Use emplace_back, then no copy is created
                 geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
                                           CenterOfRotationToDetector{centerToDetector},
                                           Radian{angle},
