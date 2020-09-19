@@ -110,7 +110,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             # search through the global and target specific compile options for the "-stdlib=libc++" flag
             foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST TARGET_COMPILE_OPTIONS)
                 if (${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg=-isystem --extra-arg=${LLVM_CONFIG_DIR}/../include/c++/v1)
+                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg=-isystem --extra-arg=${LIBCXX_INCLUDE_DIR})
                     break()
                 endif()
             endforeach(COMPILE_OPTION)
