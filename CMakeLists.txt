@@ -186,10 +186,6 @@ endif(ELSA_TESTING OR ELSA_BENCHMARKS)
 # the bindings generator should be added before elsa, as we check whether the target can be built
 if (ELSA_BUILD_PYTHON_BINDINGS)
     add_subdirectory(tools/bindings_generation EXCLUDE_FROM_ALL)
-
-    if (ELSA_BINDINGS_IN_SINGLE_MODULE)
-        add_definitions(-DELSA_BINDINGS_IN_SINGLE_MODULE)
-    endif()
      
     # Warn if python bindings and code coverage is activated 
     if(ELSA_COVERAGE)

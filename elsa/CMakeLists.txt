@@ -57,6 +57,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             pybind11_add_module(pyelsa ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp)
             set_target_properties(pyelsa PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ELSA_PYTHON_BINDINGS_PATH})
             target_include_directories(pyelsa PUBLIC ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints)
+            target_compile_definitions(pyelsa PRIVATE ELSA_BINDINGS_IN_SINGLE_MODULE)
             target_link_libraries(pyelsa PUBLIC elsa::all)
             target_compile_features(pyelsa PUBLIC cxx_std_17)
         else()
@@ -116,7 +117,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             endforeach(COMPILE_OPTION)
 
             if (ELSA_BINDINGS_IN_SINGLE_MODULE)
-                set(NO_MODULE_FLAG --no-module)
+                set(SINGLE_MODULE_FLAGS --extra-arg=-DELSA_BINDINGS_IN_SINGLE_MODULE --no-module)
             endif()
 
             set(PY_TARGET_NAME "py${TARGET_NAME}")
@@ -154,7 +155,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     --hints=${HINTS_FILE}
                     -o=${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
                     --pyname=${PY_TARGET_NAME}
-                    ${NO_MODULE_FLAG}
+                    ${SINGLE_MODULE_FLAGS}
                 DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_FILE}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                 COMMENT "Generating bindings code for ${TARGET_NAME}"
