@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -u
+set -eux
 
 CMAKE_VERSION=$1
 CMAKE_DIR=$2

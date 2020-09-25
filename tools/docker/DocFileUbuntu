@@ -1,43 +1,36 @@
 # Provide an argument to choose the compiler version from the command line
-ARG UBUNTU_VERSION=latest
+ARG UBUNTU_VERSION=20.04
 
 FROM ubuntu:${UBUNTU_VERSION} as base
 MAINTAINER Tobias Lasser <lasser@in.tum.de>
-LABEL Description="default Ubuntu 18.04 with build essentials"
-
+MAINTAINER David Frank <frankd@in.tum.de> 
+LABEL Description="default Ubuntu 20.04 with build essentials"
+ 
+# Print some infos about the os 
+RUN cat /etc/os-release 
+  
 # install build tools, cmake, git, ninja
 RUN apt-get -qq update \
-    && DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -qqy g++ gcc ca-certificates wget git cmake ninja-build python3-pip python3-setuptools python3-dev \
-    && pip3 install wheel \
-    && pip3 install conan numpy \
+    && DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -qqy g++ gcc ca-certificates wget git \
+        cmake ninja-build python3-pip python3-setuptools python3-dev \
+    && pip3 install wheel numpy \
     && rm -rf /var/lib/apt/lists/*
 
-ADD tests/ /tmp/tests/
-ADD scripts/ /tmp/scripts
-
+# Be sure that we're using GCC as compiler 
 ENV CC=gcc
 ENV CXX=g++
+ 
+FROM base as build-onednn
 
-FROM base as build-dnnl
-
-ARG DNNL_VERSION=1.1.1
-
-RUN ./tmp/scripts/install_inteldnnl.sh ${DNNL_VERSION}
+# Add oneDNN install script 
+ADD scripts/install_intel-oneDNN.sh /tmp/scripts/install_intel-oneDNN.sh 
+ 
+ARG ONEDNN_VERSION=1.6.2
+RUN ./tmp/scripts/install_intel-oneDNN.sh ${ONEDNN_VERSION}
 
 FROM base
-
-COPY --from=build-dnnl /tmp/dnnl_install /usr/local/
-
-# setup conan home directory, to be in the cache of our CI pipeline
-ENV CONAN_USER_HOME=/cache
-
-# setup conan for gcc
-RUN conan profile new default --detect \
- && conan profile update settings.compiler.libcxx=libstdc++11 default \
- && conan profile update settings.compiler.cppstd=17 default \
- && conan profile update env.CC=gcc default \
- && conan profile update env.CXX=g++ default \
- && conan profile update env.CONAN_CMAKE_GENERATOR=Ninja default \
- && conan profile show default
+COPY --from=build-onednn /tmp/onednn_install /usr/local/
+ 
+ADD tests/test_elsa.sh /tmp/tests/test_elsa.sh
 
 CMD bash

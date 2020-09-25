@@ -2,4 +2,4 @@
 
 set -e
 
-cmake --version
+/tmp/cmake-install/bin/cmake --version

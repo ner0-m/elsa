@@ -1,9 +1,10 @@
 #!/bin/bash
 
-set -e
+set -eux
 
-DNNL_VERSION=$1
-DNNL_DIR=v${DNNL_VERSION}
+ONEDNN_VERSION=$1
+ONEDNN_TAR_NAME="v${ONEDNN_VERSION}"
+ONEDNN_DIR="oneDNN-${ONEDNN_VERSION}"
 
 # Check if we have clang or gcc
 if [ -n "$CC" ]; then
@@ -29,16 +30,18 @@ else
     exit 1
 fi
 
+# Don't bother with building examples and tests for installing the library 
+CMAKE_ARGS="-GNinja -DCMAKE_BUILD_TYPE=Release -DDNNL_BUILD_EXAMPLES=OFF -DDNNL_BUILD_TESTS=OFF"
+ 
 # If we have clang, use libc++ and link with c++abi
-CMAKE_ARGS=""
 if eval ${cxx} --version | grep -q clang; then
     CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi""
 fi
 
-( wget https://github.com/intel/mkl-dnn/archive/${DNNL_DIR}.tar.gz \
-  && tar -xzf ${DNNL_DIR}.tar.gz && rm ${DNNL_DIR}.tar.gz && cd oneDNN-${DNNL_VERSION} \
-  && mkdir -p build && cd build \
-  && cmake .. ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release -GNinja -DCMAKE_INSTALL_PREFIX=/tmp/dnnl_install \
+( wget https://github.com/intel/mkl-dnn/archive/${ONEDNN_TAR_NAME}.tar.gz && mkdir -p /tmp \
+  && tar -xzf ${ONEDNN_TAR_NAME}.tar.gz -C /tmp && rm ${ONEDNN_TAR_NAME}.tar.gz \
+  && mkdir -p /tmp/${ONEDNN_DIR}/build && cd /tmp/${ONEDNN_DIR}/build \
+  && cmake .. ${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=/tmp/onednn_install \
   && ninja && ninja install && ldconfig )
 
 if [ "$?" != "0" ] ; then

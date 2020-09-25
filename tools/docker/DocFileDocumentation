@@ -1,5 +1,6 @@
-FROM elsa/base-cmake:latest as base
+FROM elsa/cmake:20.04 as base
 MAINTAINER Tobias Lasser <lasser@in.tum.de>
+MAINTAINER David Frank <frankd@in.tum.de> 
 LABEL Description="Image with tools for building documentation"
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -7,6 +8,6 @@ RUN apt-get update \
   && apt-get --no-install-recommends install -qq doxygen graphviz \
   && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install -q sphinx breathe m2r sphinx_rtd_theme
+RUN pip3 install -q sphinx breathe m2r2 sphinx_rtd_theme
 
 CMD bash

@@ -1,17 +1,21 @@
-FROM elsa/base:latest as builder
+ARG UBUNTU_VERSION=20.04 
+ 
+FROM elsa/base:${UBUNTU_VERSION} as builder
 MAINTAINER Tobias Lasser <lasser@in.tum.de>
-MAINTAINER David Frank <dfrank@in.tum.de>
+MAINTAINER David Frank <frankd@in.tum.de>
 
 LABEL Description="CMake-Base image for elsa build system"
+ 
+# Add install scripts
+ADD scripts/install_cmake.sh /tmp/scripts/install_cmake.sh
 
 # install CMAKE
-ARG CMAKE_VERSION=3.16
-ARG CMAKE_VERSION_PATCH=4
+ARG CMAKE_VERSION
+ARG CMAKE_VERSION_PATCH
 ARG CMAKE_DIR=cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}
 
 RUN bash /tmp/scripts/install_cmake.sh "${CMAKE_VERSION}" "${CMAKE_DIR}"
 
-FROM elsa/base:latest
-COPY --from=builder /tmp/cmake-install /usr/local
-
+ADD tests/test_cmake.sh /tmp/tests/test_cmake.sh
+ 
 CMD bash

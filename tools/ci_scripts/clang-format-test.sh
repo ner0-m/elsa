@@ -2,6 +2,9 @@
 
 # Applies clang-format
 
+# set exit on error 
+set -e 
+ 
 # check that we are in a clean state in order to prevent accidential changes
 git status --untracked-files=no
 if [ ! -z "$(git status --untracked-files=no  --porcelain)" ]; then

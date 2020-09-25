@@ -5,16 +5,20 @@ stages:
 - sanitizer
 - coverage
 - docs
+- docker 
 
 ### variables ###
 
 variables:
-  ANALYSIS_IMAGE: "elsa/static-analysis:8"
-  GCC_IMAGE: "elsa/gcc:9"
-  CLANG_IMAGE: "elsa/clang:9"
+  CLANG_FORMAT_IMAGE: "elsa/clang-format:8"
+  CLANG_TIDY_IMAGE: "elsa/clang-tidy:8"
+  GCC_IMAGE: "elsa/gcc-pybinds:10"
+  CLANG9_IMAGE: "elsa/clang-pybinds:9"
+  CLANG10_IMAGE: "elsa/clang-pybinds:10"
   CUDA_IMAGE: "elsa/cuda:10.2"
-  UBUNTU_IMAGE: "elsa/ubuntu:18.04"
-  GPU_ONLY_IMAGE: "elsa/cuda:10.0"
+  UBUNTU_IMAGE: "elsa/ubuntu:20.04"
+  GPU_ONLY_IMAGE: "elsa/cuda-clang:10.0"
+  COVERAGE_IMAGE: "elsa/coverage:10.2"
 
 ### Cache setup ###
 
@@ -28,47 +32,31 @@ cache:
     - thirdparty/
     - .git/modules 
 
-
 ### job templates ###
 
 #### Schedule jobs ####
 
 # run job only only on schedules
 .job_template: &nightly_job
-  only:
-    - schedules
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "schedule"'
 
-# run job if conntect to a schedule, merge request or some other things
+# run job if connected to a schedule, merge request or some other things
 .job_template: &run_on_merge_requests
-  only:
-    - merge_requests
-    - schedules
-    - master
-    - web
-    - triggers
-    - api 
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - when: never
 
 # always run this job
 .job_template: &run_always
-  only:
-    - merge_requests
-    - branches
-    - tags
-    - api
-    - pushes
-    - schedules
-    - triggers
-    - web
+  rules:
+    - when: always
 
 #### Build job templates ####
        
 .job_template: &build_job_artifact
   <<: *run_always 
   stage: compile
-  cache:
-    key: "$CI_JOB_NAME"
-    paths:
-      - build/
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     paths:
@@ -143,10 +131,7 @@ cache:
 clang-format:
   <<: *run_always 
   stage: static-test
-  image: $ANALYSIS_IMAGE
-  before_script:
-    - git submodule sync
-    - git submodule update --init
+  image: $CLANG_FORMAT_IMAGE
   script:
     ./tools/ci_scripts/clang-format-test.sh
   tags:
@@ -157,7 +142,7 @@ clang-format:
 clang-tidy:
   <<: *run_always 
   stage: static-test
-  image: $ANALYSIS_IMAGE
+  image: $CLANG_TIDY_IMAGE
   script:
     ./tools/ci_scripts/clang-tidy.sh
   tags:
@@ -185,9 +170,18 @@ build-gcc:
     - elsa
     - gcc
 
-build-clang:
+build-clang9:
   <<: *build_job_artifact
-  image: $CLANG_IMAGE
+  image: $CLANG9_IMAGE
+  script: *buildjob_clang
+  tags:
+    - linux
+    - elsa
+    - clang
+
+build-clang10:
+  <<: *build_job_artifact
+  image: $CLANG10_IMAGE
   script: *buildjob_clang
   tags:
     - linux
@@ -244,12 +238,23 @@ test-gcc:
     - elsa
     - gcc
 
-test-clang:
+test-clang9:
   <<: *test_job_artifact
   stage: test
-  image: $CLANG_IMAGE
+  image: $CLANG9_IMAGE
   dependencies:
-    - build-clang
+    - build-clang9
+  tags:
+    - linux
+    - elsa
+    - clang
+
+test-clang10:
+  <<: *test_job_artifact
+  stage: test
+  image: $CLANG10_IMAGE
+  dependencies:
+    - build-clang10
   tags:
     - linux
     - elsa
@@ -291,12 +296,24 @@ install-gcc:
     - elsa
     - gcc
 
-install-clang:
+install-clang9:
   <<: *install_job
   stage: test
-  image: $CLANG_IMAGE
+  image: $CLANG9_IMAGE
   dependencies:
-    - build-clang
+    - build-clang9
+  script: *installjob_script_clang
+  tags:
+    - linux
+    - elsa
+    - clang
+
+install-clang10:
+  <<: *install_job
+  stage: test
+  image: $CLANG10_IMAGE
+  dependencies:
+    - build-clang10
   script: *installjob_script_clang
   tags:
     - linux
@@ -350,7 +367,7 @@ cuda-memcheck:
     - gcc
     - cuda
 
-# Be sure to run this job as a privaledged one 
+# Be sure to run this job with container which has privaledge mode set
 asan-ubsan:
   <<: *run_on_merge_requests
   stage: sanitizer
@@ -374,7 +391,7 @@ asan-ubsan:
 test-coverage:
   <<: *run_on_merge_requests
   stage: coverage
-  image: $CUDA_IMAGE
+  image: $COVERAGE_IMAGE
   dependencies: [] 
   script:
     - mkdir -p build
@@ -421,39 +438,41 @@ deploy-docs:
 
 ### build, test and deploy docker images ###
 .deploy-docker:
-  image: elsa/base:latest
   <<: *nightly_job
   stage: docker
+  dependencies: [] 
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "schedule"'
+    - changes:
+      - tools/docker/*
   script:
     - cd tools/docker
     - ./buildDockerContainers.sh
+  tags:
+    - elsa
+    - shell
+
 
 ### Test jobs ###
 
 # These jobs, are for local build and test all in one job, should not be run with pipeline
 
 .all-clang:
-  image: $CLANG_IMAGE
+  image: $CLANG9_IMAGE
+  rules:
+    - when: never
   script: 
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja install
-    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
-    - cd /tmp/elsa_testing
-    - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja 
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - ninja
+    - ninja tests
 
 .all-gcc:
   image: $GCC_IMAGE
+  rules:
+    - when: never
   script: 
-    - mkdir -p build
-    - cd build
-    - cmake .. -GNinja
-    - ninja install
-    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
-    - cd /tmp/elsa_testing
-    - mkdir -p build/ && cd build/
-    - cmake .. -GNinja
-    - ninja 
+    - *buildjob_normal
+    - ninja tests
+    - *installjob_script
