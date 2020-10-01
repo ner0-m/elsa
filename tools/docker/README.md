@@ -14,11 +14,11 @@ See `./buildDockerContainers.sh --help` for possible configuration options.
 
 Run the command:
 
-> docker build -t <namespace>/<image>:<version> -f <docker-file> [--build-arg <arguments>...] path/to/elsa/tools/docker
+> docker build -t &lt;namespace&gt;/&lt;image&gt;:&lt;version&gt; -f &lt;docker-file&gt; [--build-arg &lt;arguments&gt;...] path/to/elsa/tools/docker
 
 The test script assume the image to be in the namespace `staging`, then the image can be tested using
 
-> ./testDriver.sh [<options>] -- <image> <version> <script> [<arguments to test script>]
+> ./testDriver.sh [&lt;options&gt;] -- &lt;image&gt; &lt;version&gt; &lt;script&gt; [&lt;arguments to test script&gt;]
  
 See the section at the bottom. 
 
@@ -41,7 +41,7 @@ installed once the final compiler for the image is installed and the enviorment 
 All images that build on these, also contain oneDNN.
  
 All images that contain CMake install version 3.18.2 and all images installing ninja install ninja 1.10.1. Expect the
-ubuntu based image. this should be a vanilla version with only default packages, and therefore has CMake <FIIIILLL me>
+ubuntu based image. this should be a vanilla version with only default packages, and therefore has CMake &lt;3.18.2&gt;
 
 ## Overview of docker files
  
@@ -207,11 +207,11 @@ if there are any better ways to do it, feel free to change it.
 All tests are executed using the `testDriver.sh` file. This is not part of the docker images, but it takes care of
 some post and pre work before running the actual test script. Call it with
 
-> ./testDriver.sh [<options>] -- <image> <version> <script> [<arguments to test script>]
+> ./testDriver.sh [&lt;options&gt;] -- &lt;image&gt; &lt;version&gt; &lt;script&gt; [&lt;arguments to test script&gt;]
  
 Options include the docker network mode, privileged mode and if cuda should be enabled. The script then calls
 
-> docker run [<options>] -t staging/<image>:<version> bash /tmp/tests/<script> [<arguments to test script>]
+> docker run [&lt;options&gt;] -t staging/&lt;image&gt;:&lt;version&gt; bash /tmp/tests/&lt;script&gt; [&lt;arguments to test script&gt;]
  
 If the tests are run succesfully, the image will be transfered to `elsa/<image>:<version>`. 
  
@@ -228,3 +228,4 @@ All images have their own test scripts, and if it's a compiler image, then elsa 
   - `--build-cuda`, set CMake flag `ELSA_BUILD_CUDA_PROJECTORS` 
   - `--build-quickvec`, set CMake flag `ELSA_CUDA_VECTOR=ON` 
   - `--build-docs`, don't build elsa, just it's documentation
+
