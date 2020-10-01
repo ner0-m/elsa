@@ -20,7 +20,10 @@ SCENARIO("Create a Circular Trajectory")
 {
     using namespace geometry;
 
-    index_t s = 64;
+    const index_t s = 64;
+
+    // Detector size is the volume size scalled by the square root of 2
+    const auto expectedDetectorSize = static_cast<index_t>(s * std::sqrt(2));
 
     GIVEN("A 2D descriptor and 256 angles")
     {
@@ -37,6 +40,9 @@ SCENARIO("Create a Circular Trajectory")
 
             auto sdesc = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
+
+            // Check that the detector size is correct
+            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
                  "matrix")
@@ -77,6 +83,9 @@ SCENARIO("Create a Circular Trajectory")
 
             auto sdesc = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
+
+            // Check that the detector size is correct
+            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
                  "matrix")
@@ -127,6 +136,10 @@ SCENARIO("Create a Circular Trajectory")
             auto sdesc = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
+            // Check that the detector size is correct
+            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
+            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[1] == expectedDetectorSize);
+
             THEN("Every geomList in our list has the same camera center and the same projection "
                  "matrix")
             {
@@ -159,7 +172,6 @@ SCENARIO("Create a Circular Trajectory")
                 }
             }
         }
-
         WHEN("We create a full circular trajectory for this scenario")
         {
             const index_t halfCircular = 359;
@@ -168,6 +180,10 @@ SCENARIO("Create a Circular Trajectory")
 
             auto sdesc = CircleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
+
+            // Check that the detector size is correct
+            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
+            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[1] == expectedDetectorSize);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
                  "matrix")
