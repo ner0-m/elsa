@@ -10,7 +10,7 @@ stages:
 ### variables ###
 
 variables:
-  CLANG_FORMAT_IMAGE: "elsa/clang-format:8"
+  CLANG_FORMAT_IMAGE: "elsa/clang-format:10"
   CLANG_TIDY_IMAGE: "elsa/clang-tidy:8"
   GCC_IMAGE: "elsa/gcc-pybinds:10"
   CLANG9_IMAGE: "elsa/clang-pybinds:9"

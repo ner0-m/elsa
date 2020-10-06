@@ -14,20 +14,20 @@ fi
 
 echo
 
-if type clang-format-8 2>/dev/null; then
+if type clang-format-10 2>/dev/null; then
     echo "Checking formatting using the following clang-format version:"
-    clang-format-8 --version
+    clang-format-10 --version
 else
-    echo "clang-format-8 not correctly installed"
+    echo "clang-format-10 not correctly installed"
     exit 1
 fi
 
 echo
 
 # perform clang-format on all cpp-files
-find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-8 -i -style=file $1
-find benchmarks/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-8 -i -style=file $1
-find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-8 -i -style=file $1
+find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1
+find benchmarks/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1
+find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1
 
 # check if something was modified
 notcorrectlist=`git status --porcelain | grep '^ M' | cut -c4-`
@@ -41,9 +41,9 @@ else
   git diff --stat $notcorrectlist
   echo "Please run"
   echo
-  echo "find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-8 -i -style=file $1"
-  echo "find benchmarks/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format -i -style=file $1"
-  echo "find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format -i -style=file $1"
+  echo "find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1"
+  echo "find benchmarks/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1"
+  echo "find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1"
   echo
   echo "to solve the issue."
   # cleanup changes in git

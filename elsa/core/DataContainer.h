@@ -437,7 +437,7 @@ namespace elsa
 
     /// User-defined template argument deduction guide for the expression based constructor
     template <typename Source>
-    DataContainer(Source const& source)->DataContainer<typename Source::data_t>;
+    DataContainer(Source const& source) -> DataContainer<typename Source::data_t>;
 
     /// Collects callable lambdas for later dispatch
     template <typename... Ts>
@@ -447,7 +447,7 @@ namespace elsa
 
     /// Class template deduction guide
     template <typename... Ts>
-    Callables(Ts...)->Callables<Ts...>;
+    Callables(Ts...) -> Callables<Ts...>;
 
     /// Multiplying two operands (including scalars)
     template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>

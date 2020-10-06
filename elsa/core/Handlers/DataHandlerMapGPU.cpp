@@ -184,8 +184,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandlerMapGPU<data_t>& DataHandlerMapGPU<data_t>::
-        operator=(const DataHandlerMapGPU<data_t>& v)
+    DataHandlerMapGPU<data_t>&
+        DataHandlerMapGPU<data_t>::operator=(const DataHandlerMapGPU<data_t>& v)
     {
         if (v.getSize() != getSize())
             throw std::invalid_argument("DataHandler: assignment argument has wrong size");

@@ -17,8 +17,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    RegularizationTerm<data_t>& RegularizationTerm<data_t>::
-        operator=(const RegularizationTerm<data_t>& other)
+    RegularizationTerm<data_t>&
+        RegularizationTerm<data_t>::operator=(const RegularizationTerm<data_t>& other)
     {
         if (this != &other) {
             _weight = other._weight;
@@ -35,8 +35,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    RegularizationTerm<data_t>& RegularizationTerm<data_t>::
-        operator=(RegularizationTerm<data_t>&& other) noexcept
+    RegularizationTerm<data_t>&
+        RegularizationTerm<data_t>::operator=(RegularizationTerm<data_t>&& other) noexcept
     {
         _weight = std::move(other._weight);
         _functional = std::move(other._functional);

@@ -62,10 +62,12 @@ We use the tool `clang-format` to autoformat our code with the [given style
 file](.clang-format). Please make sure that your code is formatted accordingly, otherwise the CI
 will fail in the first stage. You can either execute
 ```
-find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' | xargs clang-format-8 -i -style=file $1
+find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' | xargs clang-format-10 -i -style=file $1
+find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' | xargs clang-format-10 -i -style=file $1
+find benchmark/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' | xargs clang-format-10 -i -style=file $1
 ```
 in the root folder, setup a git hook or integrate `clang-format` into your IDE. Note that we
-currently use version 8.0.0, different versions might produce errors.
+currently use version 10.0.0, different versions might produce errors.
 
 ## Linting
 We use `clang-tidy` with the enabled checks specified in [the configuration file](.clang-tidy). Note

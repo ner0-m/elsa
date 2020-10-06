@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# set exit on error
+# set -e
+ 
 exit_flag=false
  
 target_branch="master"
@@ -14,13 +17,14 @@ if [[ "${#filelist[@]}" -eq "0" ]]; then
     exit 0
 else
     echo "==> Found ${#filelist[@]} cpp files"
+    echo "==> ${filelist[*]}" 
     echo "==> Let's start our clang-tidy check"
 fi
 
 # for compilation database
 mkdir -p build
 cd build
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON
+cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
 cd ..
 
 echo
@@ -41,12 +45,13 @@ echo
 filesWithErrors=()
 
 # check list of files
-for f in $filelist; do
+for f in ${filelist[*]}; do
     # check if .cpp file and in compilation DB
     if checkCPP $f && [[ -n $(grep $f build/compile_commands.json) ]]; then
         echo "Checking matching file ${f}"
         touch output.txt
         clang-tidy-8 -p=build ${f} --extra-arg=--cuda-host-only > output.txt
+         
         # decide if error or warning fail
         if [[ -n $(grep "warning: " output.txt) ]] || [[ -n $(grep "error: " output.txt) ]]; then
             echo ""
@@ -56,11 +61,16 @@ for f in $filelist; do
             if [[ -n $(grep "error: " output.txt) ]]; then
                 exit_flag=true
                 filesWithErrors=( "${filesWithErrors[@]}" $f )
+                echo -e "\033[1;31m\xE2\x9C\x98 failed file $f\033[0m $1";
+            else
+                echo -e "\033[1;33m\xE2\x9C\x93 passed file $f with warnings\033[0m $1";
             fi
         else
             echo -e "\033[1;32m\xE2\x9C\x93 passed file $f\033[0m $1";
         fi
         rm output.txt
+    else
+        echo "$f not a C++ file or not in compilation database (compile_commands.json)"
     fi
 done
 

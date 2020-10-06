@@ -324,7 +324,7 @@ namespace elsa
                 operator Vector() const { return _vec; }
 
                 /// Conversion operator to Vector&& (rvalue reference)
-                operator Vector &&() { return std::move(_vec); }
+                operator Vector&&() { return std::move(_vec); }
 
                 /// Access to vector (const reference)
                 const Vector& get() & { return _vec; }
