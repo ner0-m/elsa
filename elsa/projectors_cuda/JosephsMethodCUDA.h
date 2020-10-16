@@ -1,18 +1,12 @@
 #pragma once
 
-#include <cstring>
+#include "TraverseJosephsCUDA.cuh"
 
-#include <cuda_runtime.h>
-
-#include "elsaDefines.h"
-#include "LinearOperator.h"
-#include "Geometry.h"
-#include "BoundingBox.h"
 #include "VolumeDescriptor.h"
 #include "DetectorDescriptor.h"
 #include "CUDAProjector.h"
 
-#include "TraverseJosephsCUDA.cuh"
+#include <cstring>
 
 namespace elsa
 {
@@ -62,11 +56,13 @@ namespace elsa
                           const DetectorDescriptor& rangeDescriptor, bool fast = true);
 
         /// destructor
-        ~JosephsMethodCUDA() override;
+        ~JosephsMethodCUDA() override = default;
 
-        std::pair<std::unique_ptr<CUDAProjector<data_t>>, BoundingBox>
-            constrainProjectionSpace(const IndexVector_t startCoordinate,
-                                     const IndexVector_t endCoordinate) override;
+        BoundingBox constrainProjectionSpace(const BoundingBox& aabb) const override;
+
+        void applyConstrained(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
+                              const BoundingBox& volumeBoundingBox,
+                              const BoundingBox& sinogramBoundingBox, int device) const override;
 
     protected:
         /// copy constructor, used for cloning
@@ -86,33 +82,25 @@ namespace elsa
         bool isEqual(const LinearOperator<data_t>& other) const override;
 
     private:
-        /// the bounding box of the volume
-        BoundingBox _boundingBox;
-
-        /// Reference to DetectorDescriptor stored in LinearOperator
-        DetectorDescriptor& _detectorDescriptor;
-
-        /// Reference to VolumeDescriptor stored in LinearOperator
-        VolumeDescriptor& _volumeDescriptor;
-
         /// threads per block used in the kernel execution configuration
         static const unsigned int THREADS_PER_BLOCK =
             TraverseJosephsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
 
+        /// object describing the 2D projection problem in CUDA variables
+        std::shared_ptr<TraverseJosephsCUDA<data_t, 2>> _traverse2D;
+
+        /// object describing the 3D projection problem in CUDA variables
+        std::shared_ptr<TraverseJosephsCUDA<data_t, 3>> _traverse3D;
+
         /// flag specifying which version of the backward projection should be used
         const bool _fast;
 
-        /// inverse of of projection matrices; stored column-wise on GPU
-        cudaPitchedPtr _projInvMatrices;
+        std::tuple<cudaTextureObject_t, cudaArray*, cudaPitchedPtr>
+            setupForwardGPU(const data_t* volumeData, const BoundingBox& volumeBoundingBox,
+                            const BoundingBox& sinogramBoundingBox) const;
 
-        /// projection matrices; stored column-wise on GPU
-        cudaPitchedPtr _projMatrices;
-
-        /// ray origins for each acquisition angle
-        cudaPitchedPtr _rayOrigins;
-
-        /// convenience typedef for cuda array flags
-        using cudaArrayFlags = unsigned int;
+        void retrieveResults(data_t* hostData, const cudaPitchedPtr& gpuData,
+                             const BoundingBox& aabb) const;
 
         enum class ContainerCpyKind { cpyContainerToRawGPU, cpyRawGPUToContainer };
         /**
@@ -136,6 +124,9 @@ namespace elsa
         void copy3DDataContainer(void* hostData, const cudaPitchedPtr& gpuData,
                                  const cudaExtent& extent) const;
 
+        /// convenience typedef for cuda array flags
+        using cudaArrayFlags = unsigned int;
+
         /**
          * @brief Copies the entire contents of DataContainer to the GPU texture memory
          *
@@ -147,11 +138,14 @@ namespace elsa
          * @returns a pair of the created texture object and its associated cudaArray
          */
         template <cudaArrayFlags flags = 0U>
-        std::pair<cudaTextureObject_t, cudaArray*>
-            copyTextureToGPU(const DataContainer<data_t>& hostData) const;
+        std::pair<cudaTextureObject_t, cudaArray*> copyTextureToGPU(const void* hostData,
+                                                                    const BoundingBox& aabb) const;
 
         /// lift from base class
-        using LinearOperator<data_t>::_domainDescriptor;
-        using LinearOperator<data_t>::_rangeDescriptor;
+        using CUDAProjector<data_t>::_volumeDescriptor;
+        using CUDAProjector<data_t>::_detectorDescriptor;
+        using CUDAProjector<data_t>::containerChunkToPinned;
+        using CUDAProjector<data_t>::pinnedToContainerChunk;
+        using CUDAProjector<data_t>::deviceLock;
     };
 } // namespace elsa

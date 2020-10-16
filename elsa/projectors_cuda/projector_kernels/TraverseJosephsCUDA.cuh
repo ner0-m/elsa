@@ -10,32 +10,38 @@
 
 #include <cstdint>
 
-#include <cuda_runtime.h>
-
-#include "elsaDefines.h"
+#include "elsaDefinesCUDA.cuh"
 
 namespace elsa
 {
 
     template <typename data_t = real_t, uint dim = 3>
-    struct TraverseJosephsCUDA {
+    class TraverseJosephsCUDA
+    {
+    public:
         constexpr static uint32_t MAX_THREADS_PER_BLOCK = 32;
 
-        /**
-         *  Allows for the bounding box to be passed to the kernel by value.
-         *  Kernel arguments are stored in constant memory, and should generally
-         *  provide faster access to the variables than via global memory.
-         */
-        struct BoundingBox {
-            // min is always 0
+        CUDA_HOST TraverseJosephsCUDA(const BoundingBoxCUDA<dim>& volumeBoundingBox,
+                                      const BoundingBoxCUDA<dim>& sinogramBoundingBox,
+                                      cudaPitchedPtr rayOrigins, cudaPitchedPtr projInvMatrices,
+                                      cudaPitchedPtr projMatrices = {0, 0, 0, 0})
+            : _volumeBoundingBox{volumeBoundingBox},
+              _sinogramBoundingBox{sinogramBoundingBox},
+              _projInvMatrices{projInvMatrices},
+              _projMatrices{projMatrices},
+              _rayOrigins{rayOrigins}
+        {
+        }
 
-            real_t _max[dim];
-            __device__ __forceinline__ const real_t& operator[](const uint32_t idx) const
-            {
-                return _max[idx];
-            }
-            __device__ __forceinline__ real_t& operator[](const uint32_t idx) { return _max[idx]; }
-        };
+        CUDA_HOST ~TraverseJosephsCUDA()
+        {
+            // Free CUDA resources
+            cudaFree(_rayOrigins.ptr);
+            cudaFree(_projInvMatrices.ptr);
+
+            if (_projMatrices.ptr != nullptr)
+                cudaFree(_projMatrices.ptr);
+        }
 
         /**
          * @brief Forward projection using Josephs's method
@@ -58,12 +64,12 @@ namespace elsa
          * @warning Interpolation mode for texture should be set to cudaFilterModePoint when working
          * with doubles.
          */
-        static void traverseForward(dim3 sinogramDims, int threads, cudaTextureObject_t volume,
-                                    int8_t* __restrict__ sinogram, uint64_t sinogramPitch,
-                                    const int8_t* __restrict__ rayOrigins, uint32_t originPitch,
-                                    const int8_t* __restrict__ projInv, uint32_t projPitch,
-                                    const BoundingBox& boundingBox);
+        CUDA_HOST void traverseForward(cudaTextureObject_t volume, cudaPitchedPtr& sinogram);
 
+        CUDA_HOST std::pair<cudaEvent_t, cudaEvent_t>
+            traverseForwardConstrained(cudaTextureObject_t volume, cudaPitchedPtr& sinogram,
+                                       const BoundingBoxCUDA<dim>& volumeBoundingBox,
+                                       const BoundingBoxCUDA<dim>& sinogramBoundingBox);
         /**
          * @brief Backward projection using Josephs's method
          *
@@ -86,11 +92,7 @@ namespace elsa
          * This is the matched version of the forward traversal. Considerably slower
          * as interpolation is performed in software.
          */
-        static void traverseAdjoint(dim3 sinogramDims, int threads, int8_t* __restrict__ volume,
-                                    uint64_t volumePitch, const int8_t* __restrict__ sinogram,
-                                    uint64_t sinogramPitch, const int8_t* __restrict__ rayOrigins,
-                                    uint32_t originPitch, const int8_t* __restrict__ projInv,
-                                    uint32_t projPitch, const BoundingBox& boundingBox);
+        CUDA_HOST void traverseAdjoint(cudaPitchedPtr& volume, const cudaPitchedPtr& sinogram);
 
         /**
          * @brief Approximation of backward projection for Josephs's method
@@ -113,10 +115,20 @@ namespace elsa
          * @warning Interpolation mode for texture should be set to cudaFilterModePoint when working
          * with doubles.
          */
-        static void traverseAdjointFast(dim3 volumeDims, int threads, int8_t* __restrict__ volume,
-                                        uint64_t volumePitch, cudaTextureObject_t sinogram,
-                                        const int8_t* __restrict__ rayOrigins, uint32_t originPitch,
-                                        const int8_t* __restrict__ proj, uint32_t projPitch,
-                                        uint32_t numAngles);
+        CUDA_HOST void traverseAdjointFast(cudaPitchedPtr& volume, cudaTextureObject_t sinogram);
+
+    private:
+        BoundingBoxCUDA<dim> _volumeBoundingBox;
+        BoundingBoxCUDA<dim> _sinogramBoundingBox;
+        unsigned int _threadsPerBlock = MAX_THREADS_PER_BLOCK;
+
+        /// inverse of of projection matrices; stored column-wise on GPU
+        cudaPitchedPtr _projInvMatrices;
+
+        /// projection matrices; stored column-wise on GPU
+        cudaPitchedPtr _projMatrices;
+
+        /// ray origins for each acquisition angle
+        cudaPitchedPtr _rayOrigins;
     };
 } // namespace elsa
