@@ -35,11 +35,8 @@ TEST_CASE("BoundingBox: Testing 2D AABB")
                 REQUIRE_UNARY(checkApproxEq(aabb._min(0), 0));
                 REQUIRE_UNARY(checkApproxEq(aabb._min(1), 0));
 
-                REQUIRE_UNARY(checkApproxEq(aabb._max(0), (real_t) x));
-                REQUIRE_UNARY(checkApproxEq(aabb._max(1), (real_t) y));
-
-                REQUIRE_UNARY(checkApproxEq(aabb._voxelCoordToIndexVector(0), 1));
-                REQUIRE_UNARY(checkApproxEq(aabb._voxelCoordToIndexVector(1), y));
+                REQUIRE(aabb._max(0) == (real_t) x);
+                REQUIRE(aabb._max(1) == (real_t) y);
             }
         }
 
@@ -55,11 +52,8 @@ TEST_CASE("BoundingBox: Testing 2D AABB")
                 REQUIRE_UNARY(checkApproxEq(aabbcopy._min(0), 0));
                 REQUIRE_UNARY(checkApproxEq(aabbcopy._min(1), 0));
 
-                REQUIRE_UNARY(checkApproxEq(aabbcopy._max(0), (real_t) x));
-                REQUIRE_UNARY(checkApproxEq(aabbcopy._max(1), (real_t) y));
-
-                REQUIRE_EQ(aabbcopy._voxelCoordToIndexVector(0), 1);
-                REQUIRE_EQ(aabbcopy._voxelCoordToIndexVector(1), y);
+                REQUIRE(aabbcopy._max(0) == (real_t) x);
+                REQUIRE(aabbcopy._max(1) == (real_t) y);
             }
         }
     }
@@ -89,13 +83,9 @@ TEST_CASE("BoundingBox: Testing 3D aabb")
                 REQUIRE_UNARY(checkApproxEq(aabb._min(1), 0));
                 REQUIRE_UNARY(checkApproxEq(aabb._min(2), 0));
 
-                REQUIRE_UNARY(checkApproxEq(aabb._max(0), (real_t) x));
-                REQUIRE_UNARY(checkApproxEq(aabb._max(1), (real_t) y));
-                REQUIRE_UNARY(checkApproxEq(aabb._max(2), (real_t) z));
-
-                REQUIRE_EQ(aabb._voxelCoordToIndexVector(0), 1);
-                REQUIRE_EQ(aabb._voxelCoordToIndexVector(1), y);
-                REQUIRE_EQ(aabb._voxelCoordToIndexVector(2), (z * z));
+                REQUIRE(aabb._max(0) == (real_t) x);
+                REQUIRE(aabb._max(1) == (real_t) y);
+                REQUIRE(aabb._max(2) == (real_t) z);
             }
         }
     }
