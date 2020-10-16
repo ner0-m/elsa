@@ -125,8 +125,9 @@ namespace elsa
                                         "coordinate cannot be larger than end coordinate");
 
         const auto volumeCoeffsPerDim = _domainDescriptor->getNumberOfCoefficientsPerDimension();
-        const BoundingBox aabb(RealVector_t::Zero(numDims).array() + 0.5,
-                               volumeCoeffsPerDim.array().template cast<real_t>() - 0.5);
+        RealVector_t minPoint = RealVector_t::Zero(numDims).array() + 0.5;
+        RealVector_t maxPoint = volumeCoeffsPerDim.array().template cast<real_t>() - 0.5;
+        const BoundingBox aabb(minPoint, maxPoint);
 
         // corners of the image, pose coordinate kept for convenience
         std::vector<IndexVector_t> corners;

@@ -25,7 +25,9 @@ namespace elsa
          * \param[in] boxMin start coordinate for each dimension
          * \param[in] boxMax end coordinate for each dimension
          */
-        BoundingBox(const RealVector_t& boxMin, const RealVector_t& boxMax);
+        template <typename Scalar>
+        BoundingBox(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& boxMin,
+                    const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& boxMax);
 
         /// the number of dimensions (2 or 3)
         index_t _dim;
