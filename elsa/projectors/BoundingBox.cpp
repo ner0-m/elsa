@@ -26,8 +26,8 @@ namespace elsa
         if (boxMin.size() < 2 || boxMin.size() > 3)
             throw std::invalid_argument("BoundingBox: can only deal with the 2d/3d cases");
 
-        if ((boxMax.array() <= boxMin.array()).any())
-            throw std::invalid_argument("BoundingBox: boxMin must be smaller than boxMan");
+        if ((boxMax.array() < boxMin.array()).any())
+            throw std::invalid_argument("BoundingBox: boxMin cannot be larger than boxMan");
     }
 
     template BoundingBox::BoundingBox(const IndexVector_t&, const IndexVector_t&);
