@@ -53,20 +53,33 @@ namespace elsa
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
         JosephsMethodCUDA(const VolumeDescriptor& domainDescriptor,
-                          const DetectorDescriptor& rangeDescriptor, bool fast = true);
+                          const DetectorDescriptor& rangeDescriptor, bool fast = true,
+                          int device = 0);
 
         /// destructor
         ~JosephsMethodCUDA() override = default;
 
         BoundingBox constrainProjectionSpace(const BoundingBox& aabb) const override;
 
+        std::unique_ptr<CUDAVariablesForward>
+            setupCUDAVariablesForwardConstrained(IndexVector_t chunkSizeDomain,
+                                                 IndexVector_t chunkSizeRange) const override;
+
         void applyConstrained(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
                               const BoundingBox& volumeBoundingBox,
-                              const BoundingBox& sinogramBoundingBox, int device) const override;
+                              const BoundingBox& sinogramBoundingBox,
+                              CUDAVariablesForward& cudaVars) const override;
 
     protected:
         /// copy constructor, used for cloning
         JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other);
+
+        std::unique_ptr<CUDAVariablesForward>
+            setupCUDAVariablesForward(IndexVector_t chunkSizeDomain,
+                                      IndexVector_t chunkSizeRange) const override;
+
+        void copyDataForward(const data_t* x, const BoundingBox& volumeBox,
+                             const CUDAVariablesForward& cudaVars) const;
 
         /// apply Joseph's method (i.e. forward projection)
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
@@ -95,12 +108,8 @@ namespace elsa
         /// flag specifying which version of the backward projection should be used
         const bool _fast;
 
-        std::tuple<cudaTextureObject_t, cudaArray*, cudaPitchedPtr>
-            setupForwardGPU(const data_t* volumeData, const BoundingBox& volumeBoundingBox,
-                            const BoundingBox& sinogramBoundingBox) const;
-
         void retrieveResults(data_t* hostData, const cudaPitchedPtr& gpuData,
-                             const BoundingBox& aabb) const;
+                             const BoundingBox& aabb, const cudaStream_t& stream) const;
 
         enum class ContainerCpyKind { cpyContainerToRawGPU, cpyRawGPUToContainer };
         /**
@@ -122,7 +131,7 @@ namespace elsa
          */
         template <ContainerCpyKind direction, bool async = true>
         void copy3DDataContainer(void* hostData, const cudaPitchedPtr& gpuData,
-                                 const cudaExtent& extent) const;
+                                 const cudaExtent& extent, const cudaStream_t& stream) const;
 
         /// convenience typedef for cuda array flags
         using cudaArrayFlags = unsigned int;
@@ -139,11 +148,17 @@ namespace elsa
          */
         template <cudaArrayFlags flags = 0U>
         std::pair<cudaTextureObject_t, cudaArray*> copyTextureToGPU(const void* hostData,
-                                                                    const BoundingBox& aabb) const;
+                                                                    const BoundingBox& aabb,
+                                                                    cudaStream_t stream) const;
+
+        template <unsigned int flags = 0U>
+        void copyTextureToGPUForward(const void* hostData, const BoundingBox& aabb,
+                                     cudaArray_t darray, cudaStream_t stream) const;
 
         /// lift from base class
         using CUDAProjector<data_t>::_volumeDescriptor;
         using CUDAProjector<data_t>::_detectorDescriptor;
+        using CUDAProjector<data_t>::_device;
         using CUDAProjector<data_t>::containerChunkToPinned;
         using CUDAProjector<data_t>::pinnedToContainerChunk;
         using CUDAProjector<data_t>::deviceLock;

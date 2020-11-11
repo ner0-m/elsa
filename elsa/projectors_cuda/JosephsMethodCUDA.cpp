@@ -8,10 +8,50 @@
 namespace elsa
 {
     template <typename data_t>
+    struct CUDAVariablesJosephsForward : public CUDAVariablesForward {
+        CUDAVariablesJosephsForward(TextureWrapper&& tex, CudaArrayWrapper&& arr,
+                                    PitchedPtrWrapper<data_t>&& ptr)
+            : CUDAVariablesForward(),
+              volumeTex(std::move(tex)),
+              dvolumeArr(std::move(arr)),
+              dsinoPtr(std::move(ptr))
+        {
+        }
+
+        CUDAVariablesJosephsForward(CUDAVariablesJosephsForward<data_t>&& other)
+            : CUDAVariablesForward(),
+              volumeTex(std::move(other.volumeTex)),
+              dvolumeArr(std::move(other.dvolumeArr)),
+              dsinoPtr(std::move(other.dsinoPtr))
+        {
+        }
+
+        TextureWrapper volumeTex;
+        CudaArrayWrapper dvolumeArr;
+        PitchedPtrWrapper<data_t> dsinoPtr;
+    };
+
+    template <typename data_t>
+    struct CUDAVariablesJosephsForwardConstrained : public CUDAVariablesJosephsForward<data_t> {
+        CUDAVariablesJosephsForwardConstrained(std::unique_ptr<CUDAVariablesForward>&& base,
+                                               PinnedArray<data_t>&& volume,
+                                               PinnedArray<data_t>&& sinogram)
+            : CUDAVariablesJosephsForward<data_t>(
+                dynamic_cast<CUDAVariablesJosephsForward<data_t>&&>(*base.release())),
+              pvolume(std::move(volume)),
+              psino(std::move(sinogram))
+        {
+        }
+
+        PinnedArray<data_t> pvolume;
+        PinnedArray<data_t> psino;
+    };
+
+    template <typename data_t>
     JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const VolumeDescriptor& domainDescriptor,
                                                  const DetectorDescriptor& rangeDescriptor,
-                                                 bool fast)
-        : CUDAProjector<data_t>(domainDescriptor, rangeDescriptor),
+                                                 bool fast, int device)
+        : CUDAProjector<data_t>(domainDescriptor, rangeDescriptor, device),
           _traverse2D{},
           _traverse3D{},
           _fast{fast}
@@ -32,6 +72,9 @@ namespace elsa
 
         const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
 
+        std::scoped_lock lock(deviceLock);
+        gpuErrchk(cudaSetDevice(_device));
+
         // allocate device memory and copy ray origins and the inverse of projection matrices to
         // device
         cudaPitchedPtr rayOrigins;
@@ -46,11 +89,10 @@ namespace elsa
         cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, asUnsigned(numGeometry));
         cudaPitchedPtr projInvMatrices;
         cudaPitchedPtr projMatrices;
-        if (cudaMalloc3D(&projInvMatrices, extent) != cudaSuccess)
-            throw std::bad_alloc();
+        gpuErrchk(cudaMalloc3D(&projInvMatrices, extent));
 
-        if (_fast && cudaMalloc3D(&projMatrices, extent) != cudaSuccess)
-            throw std::bad_alloc();
+        if (_fast)
+            gpuErrchk(cudaMalloc3D(&projMatrices, extent));
 
         auto projPitch = projInvMatrices.pitch;
         auto* rayBasePtr = (int8_t*) rayOrigins.ptr;
@@ -205,47 +247,77 @@ namespace elsa
     }
 
     template <typename data_t>
+    std::unique_ptr<CUDAVariablesForward>
+        JosephsMethodCUDA<data_t>::setupCUDAVariablesForward(IndexVector_t chunkSizeDomain,
+                                                             IndexVector_t chunkSizeRange) const
+    {
+        cudaChannelFormatDesc channelDesc;
+
+        if constexpr (sizeof(data_t) == 4)
+            channelDesc =
+                cudaCreateChannelDesc(sizeof(data_t) * 8, 0, 0, 0, cudaChannelFormatKindFloat);
+        else if (sizeof(data_t) == 8)
+            channelDesc = cudaCreateChannelDesc(32, 32, 0, 0, cudaChannelFormatKindSigned);
+        else
+            throw std::invalid_argument("JosephsMethodCUDA::copyTextureToGPU: only supports "
+                                        "DataContainer<data_t> with data_t of length 4 or 8 bytes");
+
+        cudaTextureDesc texDesc;
+        std::memset(&texDesc, 0, sizeof(texDesc));
+        texDesc.addressMode[0] = cudaAddressModeClamp;
+        texDesc.addressMode[1] = cudaAddressModeClamp;
+        texDesc.addressMode[2] = cudaAddressModeClamp;
+        texDesc.filterMode = sizeof(data_t) == 4 ? cudaFilterModeLinear : cudaFilterModePoint;
+        texDesc.readMode = cudaReadModeElementType;
+        texDesc.normalizedCoords = 0;
+
+        std::scoped_lock lock(deviceLock);
+        cudaSetDevice(_device);
+
+        CudaArrayWrapper arr(channelDesc, chunkSizeDomain);
+
+        return std::make_unique<CUDAVariablesJosephsForward<data_t>>(
+            TextureWrapper(arr, texDesc), std::move(arr),
+            PitchedPtrWrapper<data_t>(chunkSizeRange));
+    }
+
+    template <typename data_t>
+    std::unique_ptr<CUDAVariablesForward>
+        JosephsMethodCUDA<data_t>::setupCUDAVariablesForwardConstrained(
+            IndexVector_t chunkSizeDomain, IndexVector_t chunkSizeRange) const
+    {
+        return std::make_unique<CUDAVariablesJosephsForwardConstrained<data_t>>(
+            setupCUDAVariablesForward(chunkSizeDomain, chunkSizeRange),
+            PinnedArray<data_t>(chunkSizeDomain.prod()),
+            PinnedArray<data_t>(chunkSizeRange.prod()));
+    }
+
+    template <typename data_t>
     void JosephsMethodCUDA<data_t>::applyConstrained(const DataContainer<data_t>& x,
                                                      DataContainer<data_t>& Ax,
                                                      const BoundingBox& volumeBoundingBox,
                                                      const BoundingBox& sinogramBoundingBox,
-                                                     int device) const
+                                                     CUDAVariablesForward& cudaVars) const
     {
-        auto chunk = containerChunkToPinned(&x[0], _volumeDescriptor, volumeBoundingBox);
+        auto& cuVars = dynamic_cast<CUDAVariablesJosephsForwardConstrained<data_t>&>(cudaVars);
+
+        containerChunkToPinned(&x[0], cuVars.pvolume, _volumeDescriptor, volumeBoundingBox);
+
+        copyDataForward(cuVars.pvolume.get(), volumeBoundingBox, cuVars);
 
         std::unique_lock lock(deviceLock);
-        gpuErrchk(cudaSetDevice(device));
+        gpuErrchk(cudaSetDevice(_device));
 
-        auto [volumeTex, volume, dsinoPtr] =
-            setupForwardGPU(chunk.get(), volumeBoundingBox, sinogramBoundingBox);
-
-        cudaDeviceSynchronize();
         // assumes 3d
         auto [e1, e2] = _traverse3D->traverseForwardConstrained(
-            volumeTex, dsinoPtr, BoundingBoxCUDA<3>(volumeBoundingBox._min, volumeBoundingBox._max),
-            BoundingBoxCUDA<3>(sinogramBoundingBox._min, sinogramBoundingBox._max));
+            cuVars.volumeTex, cuVars.dsinoPtr,
+            BoundingBoxCUDA<3>(volumeBoundingBox._min, volumeBoundingBox._max),
+            BoundingBoxCUDA<3>(sinogramBoundingBox._min, sinogramBoundingBox._max), cuVars.stream);
 
         lock.unlock();
 
-        PinnedArray<data_t> result(
-            (sinogramBoundingBox._max - sinogramBoundingBox._min).template cast<index_t>().prod());
-
-        gpuErrchk(cudaEventSynchronize(e1));
-        gpuErrchk(cudaEventSynchronize(e2));
-        retrieveResults(result.get(), dsinoPtr, sinogramBoundingBox);
-        pinnedToContainerChunk(&Ax[0], _detectorDescriptor, result.get(), sinogramBoundingBox);
-
-        if (cudaDestroyTextureObject(volumeTex) != cudaSuccess)
-            Logger::get("JosephsMethodCUDA")
-                ->error("Couldn't destroy texture object; This may cause problems later.");
-
-        if (cudaFreeArray(volume) != cudaSuccess)
-            Logger::get("JosephsMethodCUDA")
-                ->error("Couldn't free GPU memory; This may cause problems later.");
-
-        if (cudaFree(dsinoPtr.ptr) != cudaSuccess)
-            Logger::get("JosephsMethodCUDA")
-                ->error("Couldn't free GPU memory; This may cause problems later.");
+        retrieveResults(cuVars.psino.get(), cuVars.dsinoPtr, sinogramBoundingBox, cuVars.stream);
+        pinnedToContainerChunk(&Ax[0], _detectorDescriptor, cuVars.psino, sinogramBoundingBox);
     }
 
     template <typename data_t>
@@ -276,36 +348,29 @@ namespace elsa
                                               DataContainer<data_t>& Ax) const
     {
         Timer timeGuard("JosephsMethodCUDA", "apply");
+        auto cudaVars =
+            setupCUDAVariablesForward(_volumeDescriptor.getNumberOfCoefficientsPerDimension(),
+                                      _detectorDescriptor.getNumberOfCoefficientsPerDimension());
 
-        auto [volumeTex, volume, dsinoPtr] = setupForwardGPU(
-            &x[0], BoundingBox(_volumeDescriptor.getNumberOfCoefficientsPerDimension()),
-            BoundingBox(_detectorDescriptor.getNumberOfCoefficientsPerDimension()));
+        auto& cuVars = static_cast<CUDAVariablesJosephsForward<data_t>&>(*cudaVars);
+
+        copyDataForward(&x[0], BoundingBox(_volumeDescriptor.getNumberOfCoefficientsPerDimension()),
+                        cuVars);
 
         // synchronize because we are using multiple streams
-        cudaDeviceSynchronize();
+        cudaStreamSynchronize(cuVars.stream);
         // perform projection
         if (_volumeDescriptor.getNumberOfDimensions() == 3) {
-            _traverse3D->traverseForward(volumeTex, dsinoPtr);
+            _traverse3D->traverseForward(cuVars.volumeTex, cuVars.dsinoPtr);
 
         } else {
-            _traverse2D->traverseForward(volumeTex, dsinoPtr);
+            _traverse2D->traverseForward(cuVars.volumeTex, cuVars.dsinoPtr);
         }
         cudaDeviceSynchronize();
 
-        retrieveResults(&Ax[0], dsinoPtr,
-                        BoundingBox(_detectorDescriptor.getNumberOfCoefficientsPerDimension()));
-
-        if (cudaDestroyTextureObject(volumeTex) != cudaSuccess)
-            Logger::get("JosephsMethodCUDA")
-                ->error("Couldn't destroy texture object; This may cause problems later.");
-
-        if (cudaFreeArray(volume) != cudaSuccess)
-            Logger::get("JosephsMethodCUDA")
-                ->error("Couldn't free GPU memory; This may cause problems later.");
-
-        if (cudaFree(dsinoPtr.ptr) != cudaSuccess)
-            Logger::get("JosephsMethodCUDA")
-                ->error("Couldn't free GPU memory; This may cause problems later.");
+        retrieveResults(&Ax[0], cuVars.dsinoPtr,
+                        BoundingBox(_detectorDescriptor.getNumberOfCoefficientsPerDimension()),
+                        (cudaStream_t) 0);
     }
 
     template <typename data_t>
@@ -334,7 +399,8 @@ namespace elsa
             if (_fast) {
                 auto [sinoTex, sino] = copyTextureToGPU<cudaArrayLayered>(
                     (const void*) &y[0],
-                    BoundingBox(_detectorDescriptor.getNumberOfCoefficientsPerDimension()));
+                    BoundingBox(_detectorDescriptor.getNumberOfCoefficientsPerDimension()),
+                    (cudaStream_t) 0);
 
                 cudaDeviceSynchronize();
                 _traverse3D->traverseAdjointFast(dvolumePtr, sinoTex);
@@ -359,8 +425,8 @@ namespace elsa
                 if (cudaMalloc3D(&dsinoPtr, sinoExt) != cudaSuccess)
                     throw std::bad_alloc();
 
-                copy3DDataContainer<ContainerCpyKind::cpyContainerToRawGPU>((void*) &y[0], dsinoPtr,
-                                                                            sinoExt);
+                copy3DDataContainer<ContainerCpyKind::cpyContainerToRawGPU>(
+                    (void*) &y[0], dsinoPtr, sinoExt, (cudaStream_t) 0);
 
                 // perform projection
 
@@ -377,9 +443,10 @@ namespace elsa
             }
 
             // retrieve results from GPU
-            copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, false>((void*) &Aty[0],
-                                                                               dvolumePtr, volExt);
+            copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, false>(
+                (void*) &Aty[0], dvolumePtr, volExt, (cudaStream_t) 0);
         } else {
+            // 2D case
             if (cudaMallocPitch(&dvolumePtr.ptr, &dvolumePtr.pitch,
                                 domainDimsui[0] * sizeof(data_t), domainDimsui[1])
                 != cudaSuccess)
@@ -389,7 +456,8 @@ namespace elsa
                 // transfer projections
                 auto [sinoTex, sino] = copyTextureToGPU<cudaArrayLayered>(
                     (const void*) &y[0],
-                    BoundingBox(_detectorDescriptor.getNumberOfCoefficientsPerDimension()));
+                    BoundingBox(_detectorDescriptor.getNumberOfCoefficientsPerDimension()),
+                    (cudaStream_t) 0);
 
                 cudaDeviceSynchronize();
                 _traverse2D->traverseAdjointFast(dvolumePtr, sinoTex);
@@ -461,54 +529,45 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::tuple<cudaTextureObject_t, cudaArray*, cudaPitchedPtr>
-        JosephsMethodCUDA<data_t>::setupForwardGPU(const data_t* volumeData,
-                                                   const BoundingBox& volumeBoundingBox,
-                                                   const BoundingBox& sinogramBoundingBox) const
+    void JosephsMethodCUDA<data_t>::copyDataForward(const data_t* volumeData,
+                                                    const BoundingBox& volumeBoundingBox,
+                                                    const CUDAVariablesForward& cudaVars) const
     {
+        const auto& cuVars = dynamic_cast<const CUDAVariablesJosephsForward<data_t>&>(cudaVars);
+
         // transfer volume as texture
-        auto [volumeTex, volume] = copyTextureToGPU((const void*) volumeData, volumeBoundingBox);
-
-        // allocate memory for projections
-        cudaPitchedPtr dsinoPtr;
-        auto rangeDimsui = (sinogramBoundingBox._max - sinogramBoundingBox._min)
-                               .template cast<unsigned int>()
-                               .eval();
-
-        if (sinogramBoundingBox._dim == 3) {
-            cudaExtent sinoExt =
-                make_cudaExtent(rangeDimsui[0] * sizeof(data_t), rangeDimsui[1], rangeDimsui[2]);
-            gpuErrchk(cudaMalloc3D(&dsinoPtr, sinoExt));
-        } else {
-            gpuErrchk(cudaMallocPitch(&dsinoPtr.ptr, &dsinoPtr.pitch,
-                                      rangeDimsui[0] * sizeof(data_t), rangeDimsui[1]));
-        }
-
-        return {volumeTex, volume, dsinoPtr};
+        copyTextureToGPUForward((const void*) volumeData, volumeBoundingBox, cuVars.dvolumeArr,
+                                cuVars.stream);
     }
 
     template <typename data_t>
     void JosephsMethodCUDA<data_t>::retrieveResults(data_t* hostData, const cudaPitchedPtr& gpuData,
-                                                    const BoundingBox& aabb) const
+                                                    const BoundingBox& aabb,
+                                                    const cudaStream_t& stream) const
     {
         auto dataDims = (aabb._max - aabb._min).template cast<size_t>().eval();
 
         if (aabb._dim == 3) {
             auto dataExt = make_cudaExtent(dataDims[0] * sizeof(data_t), dataDims[1], dataDims[2]);
-            copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, false>((void*) hostData,
-                                                                               gpuData, dataExt);
+            copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, false>(
+                (void*) hostData, gpuData, dataExt, stream);
         } else {
-            gpuErrchk(cudaMemcpy2D((void*) hostData, dataDims[0] * sizeof(data_t), gpuData.ptr,
-                                   gpuData.pitch, dataDims[0] * sizeof(data_t), dataDims[1],
-                                   cudaMemcpyDeviceToHost));
+            std::scoped_lock lock(deviceLock);
+            gpuErrchk(cudaSetDevice(_device));
+            gpuErrchk(cudaMemcpy2DAsync((void*) hostData, dataDims[0] * sizeof(data_t), gpuData.ptr,
+                                        gpuData.pitch, dataDims[0] * sizeof(data_t), dataDims[1],
+                                        cudaMemcpyDeviceToHost, stream));
         }
+
+        cudaStreamSynchronize(stream);
     }
 
     template <typename data_t>
     template <typename JosephsMethodCUDA<data_t>::ContainerCpyKind direction, bool async>
     void JosephsMethodCUDA<data_t>::copy3DDataContainer(void* hostData,
                                                         const cudaPitchedPtr& gpuData,
-                                                        const cudaExtent& extent) const
+                                                        const cudaExtent& extent,
+                                                        const cudaStream_t& stream) const
     {
         cudaMemcpy3DParms cpyParams = {};
         cpyParams.extent = extent;
@@ -524,20 +583,21 @@ namespace elsa
             cpyParams.dstPtr = tmp;
         }
 
-        if (async) {
-            if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
-                throw LogicError("Failed copying data between device and host");
-        } else {
-            if (cudaMemcpy3D(&cpyParams) != cudaSuccess)
-                throw LogicError("Failed copying data between device and host");
-        }
+        std::unique_lock lock(deviceLock);
+        gpuErrchk(cudaSetDevice(_device));
+
+        gpuErrchk(cudaMemcpy3DAsync(&cpyParams, stream));
+        lock.unlock();
+
+        if (!async)
+            cudaStreamSynchronize(stream);
     }
 
     template <typename data_t>
     template <unsigned int flags>
     std::pair<cudaTextureObject_t, cudaArray*>
-        JosephsMethodCUDA<data_t>::copyTextureToGPU(const void* hostData,
-                                                    const BoundingBox& aabb) const
+        JosephsMethodCUDA<data_t>::copyTextureToGPU(const void* hostData, const BoundingBox& aabb,
+                                                    cudaStream_t stream) const
     {
         // transfer volume as texture
         auto domainDims = aabb._max - aabb._min;
@@ -571,17 +631,17 @@ namespace elsa
             cpyParams.extent = volumeExtent;
             cpyParams.kind = cudaMemcpyDefault;
 
-            if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
+            if (cudaMemcpy3DAsync(&cpyParams, stream) != cudaSuccess)
                 throw LogicError(
                     "JosephsMethodCUDA::copyTextureToGPU: Could not transfer data to GPU.");
         } else {
+            // 2D case
             // CUDA has a very weird way of handling layered 1D arrays
             if (flags == cudaArrayLayered) {
 
                 // must be allocated as a 3D Array of height 0
                 cudaExtent volumeExtent = make_cudaExtent(domainDimsui[0], 0, domainDimsui[1]);
-                if (cudaMalloc3DArray(&volume, &channelDesc, volumeExtent, flags) != cudaSuccess)
-                    throw std::bad_alloc();
+                gpuErrchk(cudaMalloc3DArray(&volume, &channelDesc, volumeExtent, flags));
 
                 // adjust height to 1 for copy
                 volumeExtent.height = 1;
@@ -595,16 +655,17 @@ namespace elsa
                 cpyParams.extent = volumeExtent;
                 cpyParams.kind = cudaMemcpyDefault;
 
-                if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
+                if (cudaMemcpy3DAsync(&cpyParams, stream) != cudaSuccess)
                     throw LogicError(
                         "JosephsMethodCUDA::copyTextureToGPU: Could not transfer data to GPU.");
             } else {
                 gpuErrchk(cudaMallocArray(&volume, &channelDesc, domainDimsui[0], domainDimsui[1],
                                           flags));
 
-                if (cudaMemcpy2DToArrayAsync(
-                        volume, 0, 0, hostData, domainDimsui[0] * sizeof(data_t),
-                        domainDimsui[0] * sizeof(data_t), domainDimsui[1], cudaMemcpyDefault)
+                if (cudaMemcpy2DToArrayAsync(volume, 0, 0, hostData,
+                                             domainDimsui[0] * sizeof(data_t),
+                                             domainDimsui[0] * sizeof(data_t), domainDimsui[1],
+                                             cudaMemcpyDefault, stream)
                     != cudaSuccess)
                     throw LogicError(
                         "JosephsMethodCUDA::copyTextureToGPU: Could not transfer data to GPU.");
@@ -628,7 +689,75 @@ namespace elsa
         if (cudaCreateTextureObject(&volumeTex, &resDesc, &texDesc, nullptr) != cudaSuccess)
             throw LogicError("Couldn't create texture object");
 
-        return std::pair<cudaTextureObject_t, cudaArray*>(volumeTex, volume);
+        return {volumeTex, volume};
+    }
+
+    template <typename data_t>
+    template <unsigned int flags>
+    void JosephsMethodCUDA<data_t>::copyTextureToGPUForward(const void* hostData,
+                                                            const BoundingBox& aabb,
+                                                            cudaArray_t darray,
+                                                            cudaStream_t stream) const
+    {
+        // transfer volume as texture
+        auto domainDims = aabb._max - aabb._min;
+        auto domainDimsui = domainDims.template cast<unsigned int>();
+
+        std::scoped_lock lock(deviceLock);
+        gpuErrchk(cudaSetDevice(_device));
+        if (aabb._dim == 3) {
+            cudaExtent volumeExtent =
+                make_cudaExtent(domainDimsui[0], domainDimsui[1], domainDimsui[2]);
+
+            cudaMemcpy3DParms cpyParams;
+            cpyParams.srcPtr =
+                make_cudaPitchedPtr(const_cast<void*>(hostData), domainDimsui[0] * sizeof(data_t),
+                                    domainDimsui[0] * sizeof(data_t), domainDimsui[1]);
+            cpyParams.srcPos = make_cudaPos(0, 0, 0);
+            cpyParams.srcArray = 0;
+            cpyParams.dstPtr = {0, 0, 0, 0};
+            cpyParams.dstArray = darray;
+            cpyParams.dstPos = make_cudaPos(0, 0, 0);
+            cpyParams.extent = volumeExtent;
+
+            // if host data is a cuda pointer it must be managed unified memory -> internal copy
+            cudaPointerAttributes ptrAttributes;
+            if (cudaPointerGetAttributes(&ptrAttributes, hostData) == cudaSuccess) {
+                Logger::get("JosephsMethodCUDA")->debug("Internal GPU copy of texture");
+                cpyParams.kind = cudaMemcpyDeviceToDevice;
+            } else {
+                cpyParams.kind = cudaMemcpyHostToDevice;
+            }
+
+            gpuErrchk(cudaMemcpy3DAsync(&cpyParams, stream));
+
+        } else {
+            // CUDA has a very weird way of handling layered 1D arrays
+            if (flags == cudaArrayLayered) {
+
+                // must be allocated as a 3D Array of height 0
+                cudaExtent volumeExtent = make_cudaExtent(domainDimsui[0], 0, domainDimsui[1]);
+
+                // adjust height to 1 for copy
+                volumeExtent.height = 1;
+                cudaMemcpy3DParms cpyParams = {};
+                cpyParams.srcPos = make_cudaPos(0, 0, 0);
+                cpyParams.dstPos = make_cudaPos(0, 0, 0);
+                cpyParams.srcPtr =
+                    make_cudaPitchedPtr(const_cast<void*>(hostData),
+                                        domainDimsui[0] * sizeof(data_t), domainDimsui[0], 1);
+                cpyParams.dstArray = darray;
+                cpyParams.extent = volumeExtent;
+                cpyParams.kind = cudaMemcpyHostToDevice;
+
+                gpuErrchk(cudaMemcpy3DAsync(&cpyParams, stream));
+            } else {
+                gpuErrchk(cudaMemcpy2DToArrayAsync(
+                    darray, 0, 0, hostData, domainDimsui[0] * sizeof(data_t),
+                    domainDimsui[0] * sizeof(data_t), domainDimsui[1], cudaMemcpyHostToDevice,
+                    stream));
+            }
+        }
     }
 
     // ------------------------------------------

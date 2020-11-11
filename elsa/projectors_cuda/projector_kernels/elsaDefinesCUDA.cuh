@@ -145,29 +145,4 @@ namespace elsa
         }
     };
 
-    template <typename data_t>
-    class PinnedArray
-    {
-    public:
-        CUDA_HOST PinnedArray(index_t size)
-            : _ptr{allocate(size), [](data_t* ptr) { cudaFreeHost((void*) ptr); }}
-        {
-        }
-
-        CUDA_HOST data_t* get() const noexcept { return _ptr.get(); }
-
-        CUDA_HOST data_t& operator[](index_t i) const { return _ptr[i]; }
-
-    private:
-        CUDA_HOST data_t* allocate(index_t size)
-        {
-            data_t* pinnedMemory;
-            if (cudaMallocHost((void**) &pinnedMemory, size * sizeof(data_t)) != cudaSuccess)
-                throw std::logic_error("Pinned memory allocation failed");
-            return pinnedMemory;
-        }
-
-        std::unique_ptr<data_t[], void (*)(data_t*)> _ptr;
-    };
-
 } // namespace elsa

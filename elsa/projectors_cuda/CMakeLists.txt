@@ -9,6 +9,7 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
         projector_kernels/TraverseSiddonsCUDA.cuh
         projector_kernels/TraverseJosephsCUDA.cuh
         CUDAProjector.h
+        CUDAWrappers.h
         SiddonsMethodCUDA.h
         JosephsMethodCUDA.h
         SplittingProjector.h
@@ -52,7 +53,7 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
     # enable warnings that would indicate possible performance issues
     target_compile_options(
         ${ELSA_MODULE_TARGET_NAME}
-        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--fmad=false --expt-relaxed-constexpr -Wreorder -Xptxas=-warn-spills,-warn-lmem-usage>
+        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--fmad=false --expt-relaxed-constexpr --default-stream=per-thread -Wreorder -Xptxas=-warn-spills,-warn-lmem-usage>
     ) 
 
     # set define to check cuda projectors in projects

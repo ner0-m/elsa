@@ -31,21 +31,19 @@ namespace elsa
             const VolumeDescriptor& volumeDescriptor, const DetectorDescriptor& detectorDescriptor,
             const std::vector<int> targetDevices = makeIndexSequence(numAvailableDevices()))
             : LinearOperator<data_t>{volumeDescriptor, detectorDescriptor},
-              _projector(volumeDescriptor, detectorDescriptor),
-              _targetDevices(targetDevices),
+              _projectors(0),
               _partitioningForward{}
         {
-            int deviceCount = numAvailableDevices();
-            index_t sliceThickness = 8;
+            index_t sliceThickness = 16;
 
-            for (const int& targetDevice : targetDevices)
-                if (targetDevice >= deviceCount)
-                    throw std::invalid_argument("SplittingProjector: Tried to select device number "
-                                                + std::to_string(targetDevice) + " but only "
-                                                + std::to_string(deviceCount)
-                                                + " devices available");
+            for (const int& targetDevice : targetDevices) {
+                _projectors.push_back(std::make_unique<ProjectionMethod>(
+                    volumeDescriptor, detectorDescriptor, true, targetDevice));
+            }
 
             const auto detectorSize = detectorDescriptor.getNumberOfCoefficientsPerDimension();
+
+            RealVector_t maximal = RealVector_t::Zero(3);
             for (index_t i = 0; i < detectorSize[1]; i += sliceThickness) {
                 IndexVector_t startCoordinate(3);
                 startCoordinate << 0, i, 0;
@@ -54,13 +52,29 @@ namespace elsa
                     endCoordinate[1] = i + sliceThickness;
 
                 const BoundingBox sinoBox(startCoordinate, endCoordinate);
-                const auto volumeBox = _projector.constrainProjectionSpace(sinoBox);
+                const auto volumeBox = _projectors[0]->constrainProjectionSpace(sinoBox);
 
                 _partitioningForward.emplace_back(volumeBox, sinoBox);
+
+                RealVector_t size = volumeBox._max - volumeBox._min;
+                maximal = (size.array() > maximal.array()).select(size, maximal);
             }
+
+            for (auto& [volumeBox, sinoBox] : _partitioningForward)
+                volumeBox._max = volumeBox._min + maximal;
         }
 
+        ~SplittingProjector() override = default;
+
+        SplittingProjector<ProjectionMethod>&
+            operator=(SplittingProjector<ProjectionMethod>&) = delete;
+
     protected:
+        SplittingProjector(const SplittingProjector<ProjectionMethod>& other)
+            : LinearOperator<data_t>(other)
+        {
+        }
+
         /// apply forward projection
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override
         {
@@ -72,29 +86,45 @@ namespace elsa
             std::mutex sliceLock;
 
             std::vector<std::thread> schedulers(0);
-            for (const auto& i : _targetDevices)
-                schedulers.emplace_back(
-                    [this](const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
-                           std::vector<int>& slices, std::mutex& sliceLock, int device) {
-                        int sliceNum;
-                        while (true) {
-                            // select next slice
-                            {
-                                std::scoped_lock lock(sliceLock);
 
-                                if (slices.empty())
-                                    return;
+            auto scheduler = [this](const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
+                                    std::vector<int>& slices, std::mutex& sliceLock,
+                                    std::size_t i) {
+                IndexVector_t volumeChunkSize =
+                    (_partitioningForward[0].first._max - _partitioningForward[0].first._min)
+                        .template cast<index_t>();
 
-                                sliceNum = slices[slices.size() - 1];
-                                slices.pop_back();
-                            }
+                IndexVector_t sinoChunkSize =
+                    (_partitioningForward[0].second._max - _partitioningForward[0].second._min)
+                        .template cast<index_t>();
+                auto cudaVars = _projectors[i]->setupCUDAVariablesForwardConstrained(
+                    volumeChunkSize, sinoChunkSize);
 
-                            const auto& boxes = _partitioningForward[sliceNum];
+                int sliceNum;
+                while (true) {
+                    // select next slice
+                    {
+                        std::scoped_lock lock(sliceLock);
 
-                            _projector.applyConstrained(x, Ax, boxes.first, boxes.second, device);
-                        }
-                    },
-                    std::cref(x), std::ref(Ax), std ::ref(slices), std::ref(sliceLock), i);
+                        if (slices.empty())
+                            return;
+
+                        sliceNum = slices[slices.size() - 1];
+                        slices.pop_back();
+                    }
+
+                    const auto& boxes = _partitioningForward[sliceNum];
+
+                    _projectors[i]->applyConstrained(x, Ax, boxes.first, boxes.second, *cudaVars);
+                }
+            };
+
+            for (std::size_t i = 0; i < _projectors.size(); i++) {
+                schedulers.emplace_back(scheduler, std::cref(x), std::ref(Ax), std::ref(slices),
+                                        std::ref(sliceLock), i);
+                schedulers.emplace_back(scheduler, std::cref(x), std::ref(Ax), std::ref(slices),
+                                        std::ref(sliceLock), i);
+            }
 
             for (auto& scheduler : schedulers)
                 scheduler.join();
@@ -113,9 +143,7 @@ namespace elsa
         bool isEqual(const LinearOperator<data_t>& other) const override {}
 
     private:
-        ProjectionMethod _projector;
-
-        std::vector<int> _targetDevices;
+        std::vector<std::unique_ptr<ProjectionMethod>> _projectors;
 
         std::vector<std::pair<BoundingBox, BoundingBox>> _partitioningForward;
 
@@ -134,28 +162,6 @@ namespace elsa
                 indexSequence[i] = i;
 
             return indexSequence;
-        }
-
-        void sliceScheduler(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
-                            std::vector<int>& slices, std::mutex& sliceLock, int device)
-        {
-            int sliceNum;
-            while (true) {
-                // select next slice
-                {
-                    std::scoped_lock lock(sliceLock);
-
-                    if (slices.empty())
-                        return;
-
-                    sliceNum = slices[slices.size() - 1];
-                    slices.pop_back();
-                }
-
-                const auto& boxes = _partitioningForward[sliceNum];
-
-                _projector.applyConstrained(x, Ax, boxes.first, boxes.second, device);
-            }
         }
     };
 } // namespace elsa

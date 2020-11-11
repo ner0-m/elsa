@@ -878,7 +878,7 @@ namespace elsa
         TraverseJosephsCUDA<data_t, dim>::traverseForwardConstrained(
             cudaTextureObject_t volume, cudaPitchedPtr& sinogram,
             const BoundingBoxCUDA<dim>& volumeBoundingBox,
-            const BoundingBoxCUDA<dim>& sinogramBoundingBox)
+            const BoundingBoxCUDA<dim>& sinogramBoundingBox, const cudaStream_t& stream)
     {
         auto numImages = static_cast<unsigned int>(sinogramBoundingBox._max[dim - 1]
                                                    - sinogramBoundingBox._min[dim - 1]);
@@ -901,37 +901,23 @@ namespace elsa
             sinogramOffset.z = sinogramBoundingBox._min[2];
 
         cudaEvent_t e1, e2;
-        if (cudaEventCreate(&e1) != cudaSuccess || cudaEventCreate(&e2) != cudaSuccess)
-            throw std::logic_error("TraverseJosephsCUDA: Couldn't create synchronization event");
 
         if (numImageBlocks > 0) {
             dim3 grid(numImages, detectorSizeY, numImageBlocks);
-            traverseForwardKernel<data_t, dim><<<grid, _threadsPerBlock>>>(
+            traverseForwardKernel<data_t, dim><<<grid, _threadsPerBlock, 0, stream>>>(
                 volume, (int8_t*) sinogram.ptr, sinogram.pitch, (const int8_t*) _rayOrigins.ptr,
                 _rayOrigins.pitch, (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
                 volumeBoundingBox, sinogramOffset);
         }
-        cudaEventRecord(e1);
+
         if (remaining > 0) {
-            cudaStream_t remStream;
-
-            if (cudaStreamCreate(&remStream) != cudaSuccess)
-                throw std::logic_error(
-                    "TraverseJosephsCUDA: Couldn't create stream for remaining images");
-
             sinogramOffset.x += offset;
 
             dim3 grid(numImages, detectorSizeY, 1);
-            traverseForwardKernel<data_t, dim><<<grid, remaining, 0, remStream>>>(
+            traverseForwardKernel<data_t, dim><<<grid, remaining, 0, stream>>>(
                 volume, (int8_t*) sinogram.ptr, sinogram.pitch, (const int8_t*) _rayOrigins.ptr,
                 _rayOrigins.pitch, (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
                 volumeBoundingBox, sinogramOffset);
-            cudaEventRecord(e2, remStream);
-
-            if (cudaStreamDestroy(remStream) != cudaSuccess)
-                throw std::logic_error("TraverseJosephsCUDA: Couldn't destroy cudaStream object");
-        } else {
-            cudaEventRecord(e2);
         }
 
         return {e1, e2};

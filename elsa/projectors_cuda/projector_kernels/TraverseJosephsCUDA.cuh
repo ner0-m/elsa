@@ -38,9 +38,7 @@ namespace elsa
             // Free CUDA resources
             cudaFree(_rayOrigins.ptr);
             cudaFree(_projInvMatrices.ptr);
-
-            if (_projMatrices.ptr != nullptr)
-                cudaFree(_projMatrices.ptr);
+            cudaFree(_projMatrices.ptr);
         }
 
         /**
@@ -69,7 +67,8 @@ namespace elsa
         CUDA_HOST std::pair<cudaEvent_t, cudaEvent_t>
             traverseForwardConstrained(cudaTextureObject_t volume, cudaPitchedPtr& sinogram,
                                        const BoundingBoxCUDA<dim>& volumeBoundingBox,
-                                       const BoundingBoxCUDA<dim>& sinogramBoundingBox);
+                                       const BoundingBoxCUDA<dim>& sinogramBoundingBox,
+                                       const cudaStream_t& stream = (cudaStream_t) 0);
         /**
          * @brief Backward projection using Josephs's method
          *
