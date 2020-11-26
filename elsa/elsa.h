@@ -42,6 +42,11 @@
 #include "FiniteDifferences.h"
 #include "BlockLinearOperator.h"
 
+// Proximity Operator headers
+#include "ProximityOperator.h"
+#include "SoftThresholding.h"
+#include "HardThresholding.h"
+
 // Problem headers
 #include "Problem.h"
 #include "RegularizationTerm.h"

@@ -624,6 +624,115 @@ namespace elsa
         using SinogramData2D = SinogramData<2>; ///< 2D sinogram data alias for 2D geometry
         using SinogramData3D = SinogramData<3>; ///< 3D sinogram data alias for 3D geometry
 
+        /**
+         * @brief Strong type for a single value of type data_t used in proximity operators.
+         * Comparison, addition, subtraction are overridden by utilizing the private member
+         * _threshold.
+         * N.B. The threshold value is expected to be strictly greater than 0, otherwise an
+         * exception is thrown
+         *
+         * @tparam data_t data type of the threshold
+         */
+        template <typename data_t = real_t>
+        class Threshold
+        {
+        public:
+            explicit Threshold(data_t threshold) : _threshold(threshold)
+            {
+                if (threshold <= 0) {
+                    throw std::invalid_argument("threshold must be strictly greater than 0");
+                }
+            }
+
+            /// explicit casting operator
+            explicit operator data_t() const { return _threshold; }
+
+            /// return -Threshold
+            auto operator-() -> const data_t { return (data_t)(-_threshold); }
+
+            /// return computed subtraction
+            auto operator-(const data_t t) const -> data_t { return (data_t)(_threshold - t); }
+
+            /// return computed addition
+            auto operator+(const data_t t) const -> data_t { return (data_t)(_threshold + t); }
+
+            /// return computed less-than comparison
+            auto operator<(const data_t t) const -> bool { return _threshold < t; }
+
+            /// return computed less-than-equals comparison
+            auto operator<=(const data_t t) const -> bool { return !(*this > t); }
+
+            /// return computed greater-than comparison
+            auto operator>(const data_t t) const -> bool { return _threshold > t; }
+
+            /// return computed greater-than-equals comparison
+            auto operator>=(const data_t t) const -> bool { return !(*this < t); }
+
+            /// return computed equality comparison
+            auto operator==(const data_t t) const -> bool { return this->_threshold == t; }
+
+            /// return computed equality-negation comparison
+            auto operator!=(const data_t t) const -> bool { return !(*this == t); }
+
+        private:
+            data_t _threshold;
+        };
+
+        /// return computed subtraction of data_t with Threshold<data_t>
+        template <typename data_t = real_t>
+        auto operator-(const data_t a, const Threshold<data_t>& b) -> data_t
+        {
+            return (data_t)(-(b - a));
+        }
+
+        /// return computed addition of data_t with Threshold<data_t>
+        template <typename data_t = real_t>
+        auto operator+(const data_t a, const Threshold<data_t>& b) -> data_t
+        {
+            return (data_t)(b + a);
+        }
+
+        /// return computed greater-than comparison of data_t with Threshold<data_t>
+        template <typename data_t = real_t>
+        auto operator>(const data_t& a, const Threshold<data_t>& b) -> bool
+        {
+            return b < a;
+        }
+
+        /// return computed greater-than-equals comparison of data_t with Threshold<data_t>
+        template <typename data_t = real_t>
+        auto operator>=(const data_t& a, const Threshold<data_t>& b) -> bool
+        {
+            return b <= a;
+        }
+
+        /// return computed less-than comparison of data_t with Threshold<data_t>
+        template <typename data_t = real_t>
+        auto operator<(const data_t& a, const Threshold<data_t>& b) -> bool
+        {
+            return b > a;
+        }
+
+        /// return computed less-than-equals comparison of data_t with Threshold<data_t>
+        template <typename data_t = real_t>
+        auto operator<=(const data_t& a, const Threshold<data_t>& b) -> bool
+        {
+            return b >= a;
+        }
+
+        /// return computed equality comparison of data_t with Threshold<data_t>
+        template <typename data_t = real_t>
+        auto operator==(const data_t& a, const Threshold<data_t>& b) -> bool
+        {
+            return b == a;
+        }
+
+        /// return computed equality-negation comparison of data_t with Threshold<data_t>
+        template <typename data_t = real_t>
+        auto operator!=(const data_t& a, const Threshold<data_t>& b) -> bool
+        {
+            return b != a;
+        }
     } // namespace geometry
 } // namespace elsa
 

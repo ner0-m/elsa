@@ -475,3 +475,41 @@ SCENARIO("Testing SinogramData")
         }
     }
 }
+
+SCENARIO("Testing Threshold")
+{
+    using namespace geometry;
+
+    GIVEN("Valid arguments for Thresholds")
+    {
+        real_t one = 1;
+        real_t half = 1.0 / 2;
+        real_t nine = 9;
+
+        THEN("Overloaded relational operators are implemented correctly")
+        {
+            Threshold<real_t> tOne{one};
+            Threshold<real_t> tHalf{half};
+            Threshold<real_t> tNine{nine};
+
+            CHECK(tOne == one);
+            CHECK((nine - tOne) > tOne);
+            CHECK(nine >= tHalf);
+            CHECK(tNine != half);
+            CHECK(tHalf < (one + tNine));
+            CHECK((tHalf + half) <= (one + tNine));
+        }
+    }
+
+    GIVEN("Invalid arguments for Thresholds")
+    {
+        real_t zero = 0;
+        real_t neg1 = -1;
+
+        THEN("An exception is thrown as such Thresholds cannot be constructed")
+        {
+            CHECK_THROWS(Threshold<real_t>{zero});
+            CHECK_THROWS(Threshold<real_t>{neg1});
+        }
+    }
+}
