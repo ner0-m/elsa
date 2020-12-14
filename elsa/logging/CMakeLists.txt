@@ -29,6 +29,7 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
 
+# Add spdlog as header only libary
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC spdlog::spdlog_header_only)
 
 # require C++17

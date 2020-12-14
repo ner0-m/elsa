@@ -47,7 +47,7 @@ set(MODULE_SOURCES
         Geometry.cpp
         StrongTypes.cpp)
 
-if(${ELSA_CUDA_VECTOR})
+if(${ELSA_BUILD_WITH_QUICKVEC})
     set(MODULE_HEADERS
         ${MODULE_HEADERS}
         Handlers/DataHandlerGPU.h
@@ -72,7 +72,7 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 # link Quickvec for DataHandlerGPU
-if(ELSA_CUDA_VECTOR AND Quickvec_FOUND)
+if(${ELSA_BUILD_WITH_QUICKVEC})
     target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Quickvec::quickvec)
     target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
 endif()

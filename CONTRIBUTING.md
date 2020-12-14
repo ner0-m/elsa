@@ -37,6 +37,17 @@ blogpost](https://chris.beams.io/posts/git-commit/)):
 - Wrap the body at 72 characters
 - Use the body to explain what and why vs. how
 
+## Dependency Management
+
+As of December 2020, we switched to [CPM](https://github.com/TheLartians/CPM.cmake) for our dependency management.
+Hopefully, you don't really have to know and it doesn't get the way. See the [root CMakeLists.txt file](./CMakeLists.txt),
+as an example for our usage.
+
+It is recommended to set `CPM_SOURCE_CACHE` (see [here](https://github.com/TheLartians/CPM.cmake#cpm_source_cache) for
+more info). It's an environment variable, that will save all dependencies outside of the build directory and -
+for all projects using CPM - only one version of the dependency. This way no re-downloading is necessary. 
+Set it in your e.g. `.bashrc`.
+ 
 ## Testing
 You can run the elsa unit tests by running `ctest` in the build folder. To specify which tests run,
 filter with `ctest -R regular_expression`.

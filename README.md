@@ -20,7 +20,7 @@ Requirements
 elsa requires a **C++17 compliant compiler**, such as GCC, Clang or Microsoft Visual Studio in recent versions.
 Current testing includes gcc7, gcc9, and clang8.
 
-The main third party dependencies (Eigen3, spdlog, Catch2) are integrated via git submodules.
+The main third party dependencies (Eigen3, spdlog, Catch2) are integrated via [CPM](https://github.com/TheLartians/CPM.cmake).
 
 For CUDA support, you need a CUDA capable graphics card as well as an installation of the CUDA toolkit.
 Current testing includes CUDA 9.2 combined with gcc7.

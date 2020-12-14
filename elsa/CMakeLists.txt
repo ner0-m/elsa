@@ -147,7 +147,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     --extra-arg=-I${CMAKE_CURRENT_LIST_DIR}
                     --extra-arg=-I${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints
                     --extra-arg=-I${PROJECT_SOURCE_DIR}/elsa/logging
-                    --extra-arg=-I${PROJECT_SOURCE_DIR}/thirdparty/spdlog/include
+                    --extra-arg=-I${Spdlog_SOURCE_DIR}/include
                     --extra-arg=-std=c++17
                     --extra-arg=-w
                     --extra-arg=--cuda-host-only

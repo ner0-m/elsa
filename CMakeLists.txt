@@ -21,7 +21,6 @@ option(ELSA_CREATE_JUNIT_REPORTS "Enable creating JUnit style reports when runni
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
 option(ELSA_BENCHMARKS "Enable elsa benchmark test cases" OFF)
 
-option(GIT_SUBMODULE "Enable updating the submodules during build" ${ELSA_MASTER_PROJECT})
 option(ELSA_INSTALL "Enable generating the install targets for make install" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 
@@ -47,42 +46,82 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 # set default built type to "Release" (if no other specified)
 set(DEFAULT_BUILD_TYPE "Release")
 include(SetDefaultBuildType)
- 
-# Forbid extensions (such as gnu++) for this project 
-set(CMAKE_CXX_EXTENSIONS OFF) 
+
+# Forbid extensions (such as gnu++) for this project
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Include CPM dependency manager
+include(CPM)
 
 # ------------ dependencies ------------
 # ------------
- 
-# Setup list of submodules for elsa
-list(APPEND ELSA_SUBMODULES Catch2 eigen3 pybind11 spdlog) 
- 
-if(ELSA_CUDA_VECTOR) 
-    list(APPEND ELSA_SUBMODULES quickvec)
-endif(ELSA_CUDA_VECTOR)
 
 # only add the dependencies if elsa is stand-alone
 if(ELSA_MASTER_PROJECT)
-    # include the git submodule update
-    include(UpdateGitSubmodules)
-
     # setup Eigen Library
-    set(EIGEN3_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/eigen3")
-    find_package(Eigen3 3.3 REQUIRED)
-    message(STATUS "Using eigen3 submodule at ${EIGEN3_INCLUDE_DIR}")
+    CPMAddPackage(
+        NAME eigen3
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen
+        # Currently we're on a random master branch commit, until Eigen 3.4 will be released we kind of have to
+        # stick with it, see also https://gitlab.lrz.de/IP/elsa/-/issues/91 for a little discussion on it
+        GIT_TAG c1b0aea65
+        DOWNLOAD_ONLY YES  # Eigen's CMakelists are not intended for library use
+    )
+
+    # Add the Eigen library target to link against
+    if(eigen3_ADDED)
+        add_library(Eigen3::Eigen INTERFACE IMPORTED)
+        target_include_directories(Eigen3::Eigen INTERFACE ${eigen3_SOURCE_DIR})
+    endif()
 
     # setup spdlog Library
-    set(Spdlog_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/thirdparty/spdlog")
-    find_package(Spdlog REQUIRED)
-    message(STATUS "Using spdlog submodule at ${Spdlog_INCLUDE_DIR}")
+    CPMAddPackage(
+        NAME Spdlog
+        GITHUB_REPOSITORY gabime/spdlog
+        VERSION 1.7.0 # 1.7.0 Fallback if it dosen't work
+        OPTIONS "SPDLOG_INSTALL ON"
+    )
 
     # setup Dnnl library
     find_package(Dnnl)
 
+    # Adding quickvec
     if(ELSA_CUDA_VECTOR)
-        find_package(CUDA REQUIRED)
-        find_package(Quickvec REQUIRED)
-        message(STATUS "Using Quickvec submodule at ${Quickvec_INCLUDE_DIR}")
+        include(CheckLanguage)
+        check_language(CUDA)
+
+        if(CMAKE_CUDA_COMPILER)
+            enable_language(CUDA)
+            CPMAddPackage(
+                NAME Quickvec
+                GIT_REPOSITORY https://gitlab.lrz.de/IP/quickvec.git
+                GIT_TAG master
+            )
+
+            if(Quickvec_ADDED)
+                message(STATUS "CUDA support enabled")
+                message(STATUS "Enabling DataHandlerGPU")
+                message(STATUS "The default container type will be on the GPU")
+
+                set(ELSA_BUILD_WITH_QUICKVEC TRUE)
+                add_definitions(-DELSA_CUDA_VECTOR)
+            else()
+                message(STATUS "CUDA compiler not found or not compiling with clang!")
+                message(STATUS "Compiling without a DataHandlerGPU")
+                message(STATUS "The default container type will be CPU")
+
+                set(ELSA_BUILD_WITH_QUICKVEC FALSE)
+                set(ELSA_CUDA_VECTOR OFF)
+            endif()
+        endif()
+    endif()
+
+    if (${ELSA_BUILD_PYTHON_BINDINGS})
+        CPMAddPackage(
+            NAME pybind11
+            GITHUB_REPOSITORY pybind/pybind11
+            VERSION 2.6.0
+        )
     endif()
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
@@ -94,40 +133,8 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
-
 # include the InstallElsaModule function
 include(InstallElsaModule)
-
-add_subdirectory(thirdparty/pybind11)
-
-# ------------ setup VectorCUDA --------
-# ------------
-if(ELSA_CUDA_VECTOR)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-
-    include(CheckLanguage)
-    check_language(CUDA)
-
-    if (CMAKE_CUDA_COMPILER AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        enable_language(CUDA)
-
-        message(STATUS "CUDA support enabled")
-        message(STATUS "Enabling DataHandlerGPU")
-        message(STATUS "The default container type will be on the GPU")
-
-        set(ELSA_BUILD_WITH_QUICKVEC TRUE)
-        
-        add_definitions(-DELSA_CUDA_VECTOR)
-        add_subdirectory(thirdparty/quickvec)
-    else()
-        set(ELSA_BUILD_WITH_QUICKVEC FALSE)
-
-        message(STATUS "CUDA compiler not found or not compiling with clang!")
-        message(STATUS "Compiling without a DataHandlerGPU")
-        message(STATUS "The default container type will be CPU")
-        set(ELSA_CUDA_VECTOR OFF)
-    endif()
-endif()
 
 # ------------ Setup Tools -----------
 # ------------
@@ -146,10 +153,15 @@ endif(NOT ELSA_MASTER_PROJECT)
 
 if(ELSA_TESTING OR ELSA_BENCHMARKS)
     enable_testing()
-    add_subdirectory(thirdparty/Catch2)
+
+    CPMAddPackage(
+         NAME Catch2
+         GITHUB_REPOSITORY catchorg/Catch2
+         VERSION 2.10.1 # <-- Current, update to: 2.13.1
+    )
 
     # add the CMake modules for automatic test discovery
-    set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/thirdparty/Catch2/contrib" ${CMAKE_MODULE_PATH})
+    set(CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/contrib" ${CMAKE_MODULE_PATH})
 
     if(ELSA_TESTING)
         message(STATUS "elsa testing is enabled")
@@ -162,12 +174,17 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             USES_TERMINAL
             COMMENT "Build and run all the tests.")
+
         if(ELSA_COVERAGE)
             message(STATUS "elsa test coverage is enabled")
 
             include(CodeCoverage)
             APPEND_COVERAGE_COMPILER_FLAGS()
-            set(COVERAGE_LCOV_EXCLUDES '${PROJECT_SOURCE_DIR}/thirdparty/*' '/usr/*')
+            set(COVERAGE_LCOV_EXCLUDES
+                '${CPM_SOURCE_CACHE}/*'
+                '${PROJECT_BINARY_DIR}/_deps/'
+                '${PROJECT_SOURCE_DIR}/thirdparty/*'
+                '/usr/*')
             SETUP_TARGET_FOR_COVERAGE_LCOV(NAME test_coverage EXECUTABLE ctest)
 
         else(ELSA_COVERAGE)
@@ -178,19 +195,17 @@ else(ELSA_TESTING OR ELSA_BENCHMARKS)
     message(STATUS "    elsa testing is disabled")
 endif(ELSA_TESTING OR ELSA_BENCHMARKS)
 
-
-
 # ------------ add code/docs -----------
 # ------------
 
 # the bindings generator should be added before elsa, as we check whether the target can be built
 if (ELSA_BUILD_PYTHON_BINDINGS)
     add_subdirectory(tools/bindings_generation EXCLUDE_FROM_ALL)
-     
-    # Warn if python bindings and code coverage is activated 
+
+    # Warn if python bindings and code coverage is activated
     if(ELSA_COVERAGE)
         message(WARNING "Python bindings are generated for a coverage build, consider turning one off (set \
-        either \"ELSA_BUILD_PYTHON_BINDINGS\" or \"ELSA_COVERAGE\"to OFF via command line") 
+        either \"ELSA_BUILD_PYTHON_BINDINGS\" or \"ELSA_COVERAGE\"to OFF via command line")
     endif()
 endif()
 
@@ -200,12 +215,12 @@ add_subdirectory(elsa)
 # the documentation
 add_subdirectory(docs EXCLUDE_FROM_ALL)
 
+# the examples
 if(ELSA_BUILD_EXAMPLES)
-    # the examples
     add_subdirectory(examples EXCLUDE_FROM_ALL)
 endif(ELSA_BUILD_EXAMPLES)
- 
-# Add benchmarks after elsa code, such that CUDA is detected correctly and we just add it in the benchmarks 
+
+# Add benchmarks after elsa code, such that CUDA is detected correctly and we just add it in the benchmarks
 if (ELSA_BENCHMARKS)
     message(STATUS "elsa benchmarks are enabled")
     add_subdirectory(benchmarks)
