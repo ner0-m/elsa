@@ -80,11 +80,22 @@ namespace elsa
         /// Get the i-th geometry in the trajectory.
         std::optional<Geometry> getGeometryAt(const index_t index) const;
 
+        // TODO: provide cleaner interface (maybe combine the two methods into one)
+        IndexVector_t getCountOfPrincipalRaysPerMainDirection() const;
+
+        IndexVector_t getMainDirectionOfPrincipalRayPerPose() const;
+
     protected:
         /// implement the polymorphic comparison operation
         bool isEqual(const DataDescriptor& other) const override;
 
         /// List of geometry poses
         std::vector<Geometry> _geometry;
+
+        mutable std::optional<IndexVector_t> _countPrincipalRaysPerMainDir;
+        mutable std::optional<IndexVector_t> _mainDirectionOfPrincipalRayPerPose;
+
+    private:
+        void computeMainDirectionsOfPrincipalRays() const;
     };
 } // namespace elsa

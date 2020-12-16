@@ -72,6 +72,22 @@ namespace elsa
         return _geometry[i];
     }
 
+    IndexVector_t DetectorDescriptor::getCountOfPrincipalRaysPerMainDirection() const
+    {
+        if (!_countPrincipalRaysPerMainDir)
+            computeMainDirectionsOfPrincipalRays();
+
+        return *_countPrincipalRaysPerMainDir;
+    }
+
+    IndexVector_t DetectorDescriptor::getMainDirectionOfPrincipalRayPerPose() const
+    {
+        if (!_mainDirectionOfPrincipalRayPerPose)
+            computeMainDirectionsOfPrincipalRays();
+
+        return *_mainDirectionOfPrincipalRayPerPose;
+    }
+
     bool DetectorDescriptor::isEqual(const DataDescriptor& other) const
     {
         if (!DataDescriptor::isEqual(other))
@@ -85,5 +101,22 @@ namespace elsa
 
         return std::equal(std::cbegin(_geometry), std::cend(_geometry),
                           std::cbegin(otherBlock->_geometry));
+    }
+
+    void DetectorDescriptor::computeMainDirectionsOfPrincipalRays() const
+    {
+        const auto numDim = getNumberOfDimensions();
+        const auto numPoses = getNumberOfGeometryPoses();
+        RealVector_t detectorCenter = getNumberOfCoefficientsPerDimension().template cast<real_t>();
+        detectorCenter.conservativeResize(numDim - 1);
+        detectorCenter *= static_cast<real_t>(0.5);
+
+        _mainDirectionOfPrincipalRayPerPose = IndexVector_t(numPoses);
+        _countPrincipalRaysPerMainDir = IndexVector_t::Zero(numDim);
+        for (index_t i = 0; i < numPoses; i++) {
+            auto principalRay = computeRayFromDetectorCoord(detectorCenter, i);
+            principalRay.direction().maxCoeff(&(*_mainDirectionOfPrincipalRayPerPose)[i]);
+            (*_countPrincipalRaysPerMainDir)[(*_mainDirectionOfPrincipalRayPerPose)[i]]++;
+        }
     }
 } // namespace elsa
