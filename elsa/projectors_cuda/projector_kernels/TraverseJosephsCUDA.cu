@@ -7,7 +7,7 @@ constexpr uint32_t MAX_THREADS_PER_BLOCK =
 
 template <typename data_t, uint32_t size>
 __device__ elsa::EasyAccessSharedArray<data_t, size>::EasyAccessSharedArray(data_t* p)
-    : _p{p + threadIdx.x}
+    : _p{p + blockDim.z * blockDim.y * threadIdx.x + blockDim.z * threadIdx.y + threadIdx.z}
 {
 }
 
@@ -298,32 +298,103 @@ __device__ __forceinline__ double
            (1 - a) * b * c * T[0][1][1] + a * b * c * T[1][1][1];
 }
 
-template <typename data_t, uint32_t dim>
+enum ExecutionConfigurationType { X_Y_Z, X_Z_Y, Y_X_Z, Y_Z_X, Z_X_Y, Z_Y_X };
+
+template <ExecutionConfigurationType config>
+__device__ __forceinline__ uint3 getCoordinates()
+{
+    uint3 coord;
+    switch (config) {
+        case X_Y_Z:
+            coord.x = blockDim.x * blockIdx.x + threadIdx.x;
+            coord.y = blockDim.y * blockIdx.y + threadIdx.y;
+            coord.z = blockDim.z * blockIdx.z + threadIdx.z;
+            break;
+        case X_Z_Y:
+            coord.x = blockDim.x * blockIdx.x + threadIdx.x;
+            coord.z = blockDim.y * blockIdx.y + threadIdx.y;
+            coord.y = blockDim.z * blockIdx.z + threadIdx.z;
+            break;
+        case Y_X_Z:
+            coord.y = blockDim.x * blockIdx.x + threadIdx.x;
+            coord.x = blockDim.y * blockIdx.y + threadIdx.y;
+            coord.z = blockDim.z * blockIdx.z + threadIdx.z;
+            break;
+        case Y_Z_X:
+            coord.y = blockDim.x * blockIdx.x + threadIdx.x;
+            coord.z = blockDim.y * blockIdx.y + threadIdx.y;
+            coord.x = blockDim.z * blockIdx.z + threadIdx.z;
+            break;
+        case Z_X_Y:
+            coord.z = blockDim.x * blockIdx.x + threadIdx.x;
+            coord.x = blockDim.y * blockIdx.y + threadIdx.y;
+            coord.y = blockDim.z * blockIdx.z + threadIdx.z;
+            break;
+        case Z_Y_X:
+            coord.z = blockDim.x * blockIdx.x + threadIdx.x;
+            coord.y = blockDim.y * blockIdx.y + threadIdx.y;
+            coord.x = blockDim.z * blockIdx.z + threadIdx.z;
+            break;
+    }
+
+    return coord;
+}
+
+template <ExecutionConfigurationType config>
+__device__ __forceinline__ uint sinogramSizeY()
+{
+    switch (config) {
+        case X_Y_Z:
+        case Z_Y_X:
+            return blockDim.y * gridDim.y;
+        case Y_X_Z:
+        case Y_Z_X:
+            return blockDim.x * gridDim.x;
+        case X_Z_Y:
+        case Z_X_Y:
+            return blockDim.z * gridDim.z;
+    }
+
+    return 0;
+}
+
+template <typename data_t, uint32_t dim, ExecutionConfigurationType config = Z_Y_X>
 __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_THREADS_PER_BLOCK)
     traverseForwardKernel(cudaTextureObject_t volume, int8_t* const __restrict__ sinogram,
                           const uint64_t sinogramPitch, const int8_t* const __restrict__ rayOrigins,
                           const uint32_t originPitch, const int8_t* const __restrict__ projInv,
-                          const uint32_t projPitch, const elsa::BoundingBoxCUDA<dim> boundingBox,
-                          const dim3 sinogramTranslation = dim3{0, 0, 0})
+                          const uint32_t projPitch,
+                          const elsa::BoundingBoxCUDA<dim> volumeBoundingBox,
+                          const elsa::BoundingBoxCUDA<dim> sinogramBoundingBox)
 {
 
     using real_t = elsa::real_t;
 
-    const int8_t* const projInvPtr = projInv + blockIdx.x * projPitch * dim;
+    auto coord = getCoordinates<config>();
 
-    const real_t* const rayOrigin = (real_t*) (rayOrigins + blockIdx.x * originPitch);
-
-    const uint32_t xCoord = blockDim.x * blockIdx.z + threadIdx.x;
-
-    data_t* sinogramPtr =
-        ((data_t*) (sinogram + (blockIdx.x * gridDim.y + blockIdx.y) * sinogramPitch) + xCoord);
+    // immediately return if in padding region
+    if (coord.x >= sinogramBoundingBox._max[0] - sinogramBoundingBox._min[0]
+        || coord.y >= sinogramBoundingBox._max[1] - sinogramBoundingBox._min[1]
+        || coord.z >= sinogramBoundingBox._max[2] - sinogramBoundingBox._min[2])
+        return;
 
     // homogenous pixel coordinates
     real_t pixelCoord[dim];
-    pixelCoord[0] = xCoord + sinogramTranslation.x + 0.5f;
+    pixelCoord[0] = coord.x + sinogramBoundingBox._min[0] + 0.5f;
     pixelCoord[dim - 1] = 1.0f;
     if (dim == 3)
-        pixelCoord[1] = sinogramTranslation.y + blockIdx.y + 0.5f;
+        pixelCoord[1] = coord.y + sinogramBoundingBox._min[1] + 0.5f;
+
+    const int8_t* const projInvPtr =
+        projInv + (coord.z + static_cast<uint32_t>(sinogramBoundingBox._min[2])) * projPitch * dim;
+
+    const real_t* const rayOrigin =
+        (real_t*) (rayOrigins
+                   + (coord.z + static_cast<uint32_t>(sinogramBoundingBox._min[2])) * originPitch);
+
+    data_t* sinogramPtr =
+        ((data_t*) (sinogram + (coord.z * sinogramSizeY<config>() + coord.y) * sinogramPitch)
+         + coord.x);
 
     __shared__ real_t currentPositionsShared[dim * MAX_THREADS_PER_BLOCK];
     __shared__ real_t rayDirectionsShared[dim * MAX_THREADS_PER_BLOCK];
@@ -347,7 +418,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
 
     // find volume intersections
     real_t tmin, tmax;
-    if (!boxIntersect(rayOrigin, rd, boundingBox, tmin, tmax)) {
+    if (!boxIntersect(rayOrigin, rd, volumeBoundingBox, tmin, tmax)) {
         *sinogramPtr = 0;
         return;
     }
@@ -368,7 +439,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
 
 #pragma unroll
     for (uint32_t i = 0; i < dim; i++)
-        currentPosition[i] -= boundingBox._min[i];
+        currentPosition[i] -= volumeBoundingBox._min[i];
 
     // first plane intersection may lie outside the bounding box
     if (intersectionLength < minDelta) {
@@ -742,7 +813,8 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
 
     // first plane intersection may lie outside the bounding box
     if (intersectionLength < minDelta) {
-        // use midpoint of entire ray intersection with bounding box as a constant integration value
+        // use midpoint of entire ray intersection with bounding box as a constant integration
+        // value
         updateTraverse(currentPosition, rd, intersectionLength * 0.5f);
         for (uint i = 0; i < dim; i++) {
             voxelCoordf[i] = floorf(currentPosition[i]);
@@ -816,8 +888,8 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
     updateTraverse(currentPosition, rd, (tmax + minDelta - tmin) * 0.5f);
     for (uint32_t i = 1; i < dim; i++) {
         // for large volumes numerical errors sometimes cause currentPosition of the last voxel
-        // to lie outside boxMax although ideally it should not even exceed boxMax-0.5; currently
-        // solved by readjusting the coordinates if needed
+        // to lie outside boxMax although ideally it should not even exceed boxMax-0.5;
+        // currently solved by readjusting the coordinates if needed
         // TODO: try updating the traversal using pointAt() instead
         voxelCoordf[i] = floorf(currentPosition[i]);
         frac[i] = currentPosition[i] - voxelCoordf[i];
@@ -873,54 +945,70 @@ namespace elsa
         traverseForwardConstrained(volume, sinogram, _volumeBoundingBox, _sinogramBoundingBox);
     }
 
-    template <typename data_t, uint32_t dim>
-    std::pair<cudaEvent_t, cudaEvent_t>
-        TraverseJosephsCUDA<data_t, dim>::traverseForwardConstrained(
-            cudaTextureObject_t volume, cudaPitchedPtr& sinogram,
-            const BoundingBoxCUDA<dim>& volumeBoundingBox,
-            const BoundingBoxCUDA<dim>& sinogramBoundingBox, const cudaStream_t& stream)
+    template <uint32_t dim, ExecutionConfigurationType config>
+    dim3 getGrid(const BoundingBoxCUDA<dim>& boundingBox, dim3 threadsPerBlock)
     {
-        auto numImages = static_cast<unsigned int>(sinogramBoundingBox._max[dim - 1]
-                                                   - sinogramBoundingBox._min[dim - 1]);
+        auto numImages =
+            static_cast<uint32_t>(boundingBox._max[dim - 1] - boundingBox._min[dim - 1]);
 
-        auto detectorSizeX =
-            static_cast<unsigned int>(sinogramBoundingBox._max[0] - sinogramBoundingBox._min[0]);
+        auto detectorSizeX = static_cast<uint32_t>(boundingBox._max[0] - boundingBox._min[0]);
 
-        auto detectorSizeY = dim == 3 ? static_cast<unsigned int>(sinogramBoundingBox._max[1]
-                                                                  - sinogramBoundingBox._min[1])
-                                      : 1;
+        auto detectorSizeY =
+            dim == 3 ? static_cast<uint32_t>(boundingBox._max[1] - boundingBox._min[1]) : 1;
 
-        auto numImageBlocks = detectorSizeX / _threadsPerBlock;
-        auto remaining = detectorSizeX % _threadsPerBlock;
-        auto offset = numImageBlocks * _threadsPerBlock;
-
-        dim3 sinogramOffset;
-        sinogramOffset.x = sinogramBoundingBox._min[0];
-        sinogramOffset.y = sinogramBoundingBox._min[1];
-        if (dim == 3)
-            sinogramOffset.z = sinogramBoundingBox._min[2];
-
-        cudaEvent_t e1, e2;
-
-        if (numImageBlocks > 0) {
-            dim3 grid(numImages, detectorSizeY, numImageBlocks);
-            traverseForwardKernel<data_t, dim><<<grid, _threadsPerBlock, 0, stream>>>(
-                volume, (int8_t*) sinogram.ptr, sinogram.pitch, (const int8_t*) _rayOrigins.ptr,
-                _rayOrigins.pitch, (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
-                volumeBoundingBox, sinogramOffset);
+        dim3 grid;
+        switch (config) {
+            case X_Y_Z:
+                grid.x = detectorSizeX;
+                grid.y = detectorSizeY;
+                grid.z = numImages;
+                break;
+            case X_Z_Y:
+                grid.x = detectorSizeX;
+                grid.z = detectorSizeY;
+                grid.y = numImages;
+                break;
+            case Y_X_Z:
+                grid.y = detectorSizeX;
+                grid.x = detectorSizeY;
+                grid.z = numImages;
+                break;
+            case Y_Z_X:
+                grid.z = detectorSizeX;
+                grid.x = detectorSizeY;
+                grid.y = numImages;
+                break;
+            case Z_X_Y:
+                grid.y = detectorSizeX;
+                grid.z = detectorSizeY;
+                grid.x = numImages;
+                break;
+            case Z_Y_X:
+                grid.z = detectorSizeX;
+                grid.y = detectorSizeY;
+                grid.x = numImages;
+                break;
         }
 
-        if (remaining > 0) {
-            sinogramOffset.x += offset;
+        grid.x = std::ceil(grid.x * 1.0f / threadsPerBlock.x);
+        grid.y = std::ceil(grid.y * 1.0f / threadsPerBlock.y);
+        grid.z = std::ceil(grid.z * 1.0f / threadsPerBlock.z);
 
-            dim3 grid(numImages, detectorSizeY, 1);
-            traverseForwardKernel<data_t, dim><<<grid, remaining, 0, stream>>>(
-                volume, (int8_t*) sinogram.ptr, sinogram.pitch, (const int8_t*) _rayOrigins.ptr,
-                _rayOrigins.pitch, (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
-                volumeBoundingBox, sinogramOffset);
-        }
+        return grid;
+    }
 
-        return {e1, e2};
+    template <typename data_t, uint32_t dim>
+    void TraverseJosephsCUDA<data_t, dim>::traverseForwardConstrained(
+        cudaTextureObject_t volume, cudaPitchedPtr& sinogram,
+        const BoundingBoxCUDA<dim>& volumeBoundingBox,
+        const BoundingBoxCUDA<dim>& sinogramBoundingBox, const cudaStream_t& stream)
+    {
+        auto grid = getGrid<dim, Y_Z_X>(sinogramBoundingBox, _threadsPerBlock);
+
+        traverseForwardKernel<data_t, dim, Y_Z_X><<<grid, _threadsPerBlock, 0, stream>>>(
+            volume, (int8_t*) sinogram.ptr, sinogram.pitch, (const int8_t*) _rayOrigins.ptr,
+            _rayOrigins.pitch, (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
+            volumeBoundingBox, sinogramBoundingBox);
     }
 
     template <typename data_t, uint32_t dim>
@@ -937,9 +1025,9 @@ namespace elsa
                                                                   - _sinogramBoundingBox._min[1])
                                       : 1;
 
-        auto numImageBlocks = detectorSizeX / _threadsPerBlock;
-        auto remaining = detectorSizeX % _threadsPerBlock;
-        auto offset = numImageBlocks * _threadsPerBlock;
+        auto numImageBlocks = detectorSizeX / _threadsPerBlock.z;
+        auto remaining = detectorSizeX % _threadsPerBlock.z;
+        auto offset = numImageBlocks * _threadsPerBlock.z;
 
         if (numImageBlocks > 0) {
             dim3 grid(numImages, detectorSizeY, numImageBlocks);
@@ -978,9 +1066,9 @@ namespace elsa
                                                                 - _volumeBoundingBox._min[dim - 1])
                                     : 1;
 
-        uint32_t numImageBlocks = volumeSizeX / _threadsPerBlock;
-        uint32_t remaining = volumeSizeX % _threadsPerBlock;
-        uint32_t offset = numImageBlocks * _threadsPerBlock;
+        uint32_t numImageBlocks = volumeSizeX / _threadsPerBlock.z;
+        uint32_t remaining = volumeSizeX % _threadsPerBlock.z;
+        uint32_t offset = numImageBlocks * _threadsPerBlock.z;
 
         uint32_t numAngles =
             _sinogramBoundingBox._max[dim - 1] - _sinogramBoundingBox._min[dim - 1];

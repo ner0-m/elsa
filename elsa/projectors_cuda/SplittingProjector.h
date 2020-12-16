@@ -41,15 +41,37 @@ namespace elsa
                     volumeDescriptor, detectorDescriptor, true, targetDevice));
             }
 
-            const auto detectorSize = detectorDescriptor.getNumberOfCoefficientsPerDimension();
+            const auto sinoSize = detectorDescriptor.getNumberOfCoefficientsPerDimension();
+
+            IndexVector_t countMainDir =
+                detectorDescriptor.getCountOfPrincipalRaysPerMainDirection();
+
+            // axis of rotation
+            index_t aor;
+            countMainDir.minCoeff(&aor);
+            RealVector_t aorVecVol = RealVector_t::Zero(3);
+            aorVecVol[aor] = 1;
+            Logger::get("SplittingProjector")->debug("AOR is {}", aor);
+
+            // determine image split axis
+            index_t splitAxis;
+            const RealVector_t aorVecDet =
+                detectorDescriptor.getGeometryAt(0)->getRotationMatrix() * aorVecVol;
+
+            if (std::abs(aorVecDet[0]) >= std::abs(aorVecDet[1])) {
+                splitAxis = 0;
+            } else {
+                splitAxis = 1;
+            }
+            Logger::get("SplittingProjector")->debug("Splitting along image axis {}", splitAxis);
 
             RealVector_t maximal = RealVector_t::Zero(3);
-            for (index_t i = 0; i < detectorSize[1]; i += sliceThickness) {
-                IndexVector_t startCoordinate(3);
-                startCoordinate << 0, i, 0;
-                IndexVector_t endCoordinate = detectorSize;
-                if (i + sliceThickness <= detectorSize[1])
-                    endCoordinate[1] = i + sliceThickness;
+            for (index_t i = 0; i < sinoSize[splitAxis]; i += sliceThickness) {
+                IndexVector_t startCoordinate = IndexVector_t::Zero(3);
+                startCoordinate[splitAxis] = i;
+                IndexVector_t endCoordinate = sinoSize;
+                if (i + sliceThickness <= sinoSize[splitAxis])
+                    endCoordinate[splitAxis] = i + sliceThickness;
 
                 const BoundingBox sinoBox(startCoordinate, endCoordinate);
                 const auto volumeBox = _projectors[0]->constrainProjectionSpace(sinoBox);

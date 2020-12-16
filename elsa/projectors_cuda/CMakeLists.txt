@@ -54,7 +54,14 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
     target_compile_options(
         ${ELSA_MODULE_TARGET_NAME}
         PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--fmad=false --expt-relaxed-constexpr --default-stream=per-thread -Wreorder -Xptxas=-warn-spills,-warn-lmem-usage>
-    ) 
+    )
+
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(
+            ${ELSA_MODULE_TARGET_NAME}
+            PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: --device-debug
+        )
+    endif()
 
     # set define to check cuda projectors in projects
     target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)

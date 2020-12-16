@@ -64,11 +64,11 @@ namespace elsa
          */
         CUDA_HOST void traverseForward(cudaTextureObject_t volume, cudaPitchedPtr& sinogram);
 
-        CUDA_HOST std::pair<cudaEvent_t, cudaEvent_t>
-            traverseForwardConstrained(cudaTextureObject_t volume, cudaPitchedPtr& sinogram,
-                                       const BoundingBoxCUDA<dim>& volumeBoundingBox,
-                                       const BoundingBoxCUDA<dim>& sinogramBoundingBox,
-                                       const cudaStream_t& stream = (cudaStream_t) 0);
+        CUDA_HOST void traverseForwardConstrained(cudaTextureObject_t volume,
+                                                  cudaPitchedPtr& sinogram,
+                                                  const BoundingBoxCUDA<dim>& volumeBoundingBox,
+                                                  const BoundingBoxCUDA<dim>& sinogramBoundingBox,
+                                                  const cudaStream_t& stream = (cudaStream_t) 0);
         /**
          * @brief Backward projection using Josephs's method
          *
@@ -119,7 +119,7 @@ namespace elsa
     private:
         BoundingBoxCUDA<dim> _volumeBoundingBox;
         BoundingBoxCUDA<dim> _sinogramBoundingBox;
-        unsigned int _threadsPerBlock = MAX_THREADS_PER_BLOCK;
+        dim3 _threadsPerBlock{2, 2, 8};
 
         /// inverse of of projection matrices; stored column-wise on GPU
         cudaPitchedPtr _projInvMatrices;

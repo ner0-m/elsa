@@ -241,8 +241,11 @@ namespace elsa
                        .select(volumeCoeffsPerDim.array().template cast<real_t>(), maxSlice);
 
         Logger::get("JosephsMethodCUDA")
-            ->debug("Volume {} to {} is responsible for sino {} to {}", minSlice[1], maxSlice[1],
-                    sinogramAABB._min[1], sinogramAABB._max[1]);
+            ->debug("Volume ({}, {}, {}) to ({}, {}, {}) is responsible for sino ({}, {}, {}) to "
+                    "({}, {}, {})",
+                    minSlice[0], minSlice[1], minSlice[2], maxSlice[0], maxSlice[1], maxSlice[2],
+                    sinogramAABB._min[0], sinogramAABB._min[1], sinogramAABB._min[2],
+                    sinogramAABB._max[0], sinogramAABB._max[1], sinogramAABB._max[2]);
         return {minSlice, maxSlice};
     }
 
@@ -309,7 +312,7 @@ namespace elsa
         gpuErrchk(cudaSetDevice(_device));
 
         // assumes 3d
-        auto [e1, e2] = _traverse3D->traverseForwardConstrained(
+        _traverse3D->traverseForwardConstrained(
             cuVars.volumeTex, cuVars.dsinoPtr,
             BoundingBoxCUDA<3>(volumeBoundingBox._min, volumeBoundingBox._max),
             BoundingBoxCUDA<3>(sinogramBoundingBox._min, sinogramBoundingBox._max), cuVars.stream);
@@ -723,7 +726,7 @@ namespace elsa
             // if host data is a cuda pointer it must be managed unified memory -> internal copy
             cudaPointerAttributes ptrAttributes;
             if (cudaPointerGetAttributes(&ptrAttributes, hostData) == cudaSuccess) {
-                Logger::get("JosephsMethodCUDA")->debug("Internal GPU copy of texture");
+                // Logger::get("JosephsMethodCUDA")->debug("Internal GPU copy of texture");
                 cpyParams.kind = cudaMemcpyDeviceToDevice;
             } else {
                 cpyParams.kind = cudaMemcpyHostToDevice;

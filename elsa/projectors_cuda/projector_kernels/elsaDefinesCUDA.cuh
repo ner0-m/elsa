@@ -30,9 +30,9 @@ namespace elsa
     class VectorCUDA
     {
     public:
-        VectorCUDA(){};
+        CUDA_HOST_DEV VectorCUDA(){};
 
-        VectorCUDA(std::initializer_list<Scalar> l)
+        CUDA_HOST_DEV VectorCUDA(std::initializer_list<Scalar> l)
         {
             if (l.size() != dim) {
                 throw std::invalid_argument("VectorCUDA of size " + std::to_string(dim)

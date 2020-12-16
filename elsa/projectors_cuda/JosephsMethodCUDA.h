@@ -7,6 +7,7 @@
 #include "CUDAProjector.h"
 
 #include <cstring>
+#include <optional>
 
 namespace elsa
 {
@@ -95,6 +96,10 @@ namespace elsa
         bool isEqual(const LinearOperator<data_t>& other) const override;
 
     private:
+        static constexpr index_t PREFERRED_AOR = 2;
+
+        std::optional<index_t> _aor;
+
         /// threads per block used in the kernel execution configuration
         static const unsigned int THREADS_PER_BLOCK =
             TraverseJosephsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
