@@ -181,6 +181,8 @@ namespace elsa
 
         CUDA_HOST operator cudaPitchedPtr&() { return *pitchedPtr; };
 
+        CUDA_HOST cudaPitchedPtr* operator->() { return pitchedPtr.get(); };
+
     private:
         cudaPitchedPtr* allocate(IndexVector_t size)
         {

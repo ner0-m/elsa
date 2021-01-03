@@ -552,8 +552,10 @@ namespace elsa
 
         if (aabb._dim == 3) {
             auto dataExt = make_cudaExtent(dataDims[0] * sizeof(data_t), dataDims[1], dataDims[2]);
-            copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, false>(
-                (void*) hostData, gpuData, dataExt, stream);
+            auto gpuAdjusted =
+                make_cudaPitchedPtr(gpuData.ptr, gpuData.pitch, dataExt.width, dataExt.height);
+            copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, true>(
+                (void*) hostData, gpuAdjusted, dataExt, stream);
         } else {
             std::scoped_lock lock(deviceLock);
             gpuErrchk(cudaSetDevice(_device));
