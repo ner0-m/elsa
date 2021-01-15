@@ -7,3 +7,5 @@ include(Catch)
 # the actual tests
 ELSA_TEST(GradientDescent)
 ELSA_TEST(CG)
+ELSA_TEST(FGM)
+ELSA_TEST(OGM)

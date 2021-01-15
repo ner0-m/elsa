@@ -8,6 +8,8 @@
  */
 
 #include <catch2/catch.hpp>
+#include <iostream>
+#include <Logger.h>
 #include "Problem.h"
 #include "Identity.h"
 #include "Scaling.h"
@@ -19,6 +21,9 @@ using namespace elsa;
 
 SCENARIO("Testing Problem without regularization")
 {
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::WARN);
+
     GIVEN("some data term")
     {
         IndexVector_t numCoeff(2);
@@ -62,6 +67,8 @@ SCENARIO("Testing Problem without regularization")
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE(result[i] == Approx(scaling[i] * scaling[i] * dataVec[i]));
+
+                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f).margin(0.05));
             }
         }
 
@@ -100,6 +107,8 @@ SCENARIO("Testing Problem without regularization")
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE(result[i] == Approx(scaling[i] * scaling[i] * dataVec[i]));
+
+                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f).margin(0.05));
             }
         }
     }
@@ -107,6 +116,9 @@ SCENARIO("Testing Problem without regularization")
 
 SCENARIO("Testing Problem with one regularization term")
 {
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::WARN);
+
     GIVEN("some data term and some regularization term")
     {
         // least squares data term
@@ -157,6 +169,8 @@ SCENARIO("Testing Problem with one regularization term")
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE(result[i]
                             == Approx(scaling[i] * scaling[i] * dataVec[i] + weight * dataVec[i]));
+
+                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f + weight).margin(0.05));
             }
         }
 
@@ -196,6 +210,8 @@ SCENARIO("Testing Problem with one regularization term")
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE(result[i]
                             == Approx(scaling[i] * scaling[i] * dataVec[i] + weight * dataVec[i]));
+
+                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f + weight).margin(0.05));
             }
         }
     }
@@ -203,6 +219,9 @@ SCENARIO("Testing Problem with one regularization term")
 
 SCENARIO("Testing Problem with several regularization terms")
 {
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::WARN);
+
     GIVEN("some data term and several regularization terms")
     {
         // least squares data term
@@ -259,6 +278,9 @@ SCENARIO("Testing Problem with several regularization terms")
                     REQUIRE(result[i]
                             == Approx(scaling[i] * scaling[i] * dataVec[i] + weight1 * dataVec[i]
                                       + weight2 * dataVec[i]));
+
+                REQUIRE(prob.getLipschitzConstant(100)
+                        == Approx(1.0f + weight1 + weight2).margin(0.05));
             }
         }
 
@@ -301,6 +323,9 @@ SCENARIO("Testing Problem with several regularization terms")
                     REQUIRE(result[i]
                             == Approx(scaling[i] * scaling[i] * dataVec[i] + weight1 * dataVec[i]
                                       + weight2 * dataVec[i]));
+
+                REQUIRE(prob.getLipschitzConstant(100)
+                        == Approx(1.0f + weight1 + weight2).margin(0.05));
             }
         }
     }

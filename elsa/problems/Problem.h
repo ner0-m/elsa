@@ -140,7 +140,22 @@ namespace elsa
          * Please note: this method calls the method _getHessian that has to be overridden in
          * derived classes.
          */
-        LinearOperator<data_t> getHessian();
+        LinearOperator<data_t> getHessian() const;
+
+        /**
+         * \brief return the Lipschitz Constant of the problem at the current estimated solution
+         *
+         * \param[in] nIterations number of iterations to compute the lipschitz constant using
+         * power iteration.
+         *
+         * \returns data_t (the Lipschitz Constant)
+         *
+         * Please note: this method calls the method getLipschitzConstantImpl that has to be
+         * overridden in derived classes which want to provide a more specific way of computing
+         * the Lipschitz constant, e.g. by not using power iteration or where the hessian is already
+         * approximated as a diagonal matrix.
+         */
+        data_t getLipschitzConstant(index_t nIterations = 5) const;
 
     protected:
         /// the data term
@@ -162,7 +177,10 @@ namespace elsa
         virtual void getGradientImpl(DataContainer<data_t>& result);
 
         /// the getHessian method for the optimization problem
-        virtual LinearOperator<data_t> getHessianImpl();
+        virtual LinearOperator<data_t> getHessianImpl() const;
+
+        /// the getLipschitzConstant method for the optimization problem
+        virtual data_t getLipschitzConstantImpl(index_t nIterations) const;
 
         /// implement the polymorphic clone operation
         Problem<data_t>* cloneImpl() const override;

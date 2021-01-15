@@ -145,7 +145,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Problem<data_t>::getHessianImpl()
+    LinearOperator<data_t> Problem<data_t>::getHessianImpl() const
     {
         auto hessian = _dataTerm->getHessian(_currentSolution);
 
@@ -155,6 +155,23 @@ namespace elsa
         }
 
         return hessian;
+    }
+
+    template <typename data_t>
+    data_t Problem<data_t>::getLipschitzConstantImpl(index_t nIterations) const
+    {
+        // compute the Lipschitz Constant as the largest eigenvalue of the Hessian
+        const auto hessian = getHessian();
+        Eigen::Matrix<data_t, Eigen::Dynamic, 1> bVec(
+            hessian.getDomainDescriptor().getNumberOfCoefficients());
+        bVec.setOnes();
+        DataContainer<data_t> dcB(hessian.getDomainDescriptor(), bVec);
+        for (index_t i = 0; i < nIterations; i++) {
+            dcB = hessian.apply(dcB);
+            dcB = dcB / std::sqrt(dcB.dot(dcB));
+        }
+
+        return dcB.dot(hessian.apply(dcB)) / (dcB.dot(dcB));
     }
 
     template <typename data_t>
@@ -207,16 +224,25 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Problem<data_t>::getHessian()
+    LinearOperator<data_t> Problem<data_t>::getHessian() const
     {
         return getHessianImpl();
+    }
+
+    template <typename data_t>
+    data_t Problem<data_t>::getLipschitzConstant(index_t nIterations) const
+    {
+        return getLipschitzConstantImpl(nIterations);
     }
 
     // ------------------------------------------
     // explicit template instantiation
     template class Problem<float>;
+
     template class Problem<double>;
+
     template class Problem<std::complex<float>>;
+
     template class Problem<std::complex<double>>;
 
 } // namespace elsa

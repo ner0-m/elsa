@@ -5,50 +5,47 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a simple gradient descent solver with a fixed, given step size.
+     * \brief Class representing Nesterov's Fast Gradient Method.
      *
-     * \author Tobias Lasser - initial code
+     * \author Michael Loipführer - initial code
      *
      * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
-     * This class implements a simple gradient descent iterative solver with a fixed, given step
-     * size. No particular stopping rule is currently implemented (only a fixed number of
-     * iterations, default to 100).
+     * This class implements Nesterov's Fast Gradient Method. FGM is a first order method to
+     * efficiently optimize convex functions with Lipschitz-Continuous gradients.
+     *
+     * No particular stopping rule is currently implemented (only a fixed number of iterations,
+     * default to 100).
+     *
+     * References:
+     * https://doi.org/10.1007/s10107-015-0949-3
      */
     template <typename data_t = real_t>
-    class GradientDescent : public Solver<data_t>
+    class FGM : public Solver<data_t>
     {
     public:
         /**
-         * \brief Constructor for gradient descent, accepting a problem and a fixed step size
+         * \brief Constructor for FGM, accepting an optimization problem and, optionally, a value
+         * for epsilon
          *
          * \param[in] problem the problem that is supposed to be solved
-         * \param[in] stepSize the fixed step size to be used while solving
+         * \param[in] epsilon affects the stopping condition
          */
-        GradientDescent(const Problem<data_t>& problem, real_t stepSize);
-
-        /**
-         * \brief Constructor for gradient descent, accepting a problem. The step size will be
-         * computed as \f$ 1 \over L \f$ with \f$ L \f$ being the Lipschitz constant of the
-         * function.
-         *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] stepSize the fixed step size to be used while solving
-         */
-        GradientDescent(const Problem<data_t>& problem);
+        FGM(const Problem<data_t>& problem,
+            data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
-        GradientDescent(const GradientDescent<data_t>&) = delete;
+        FGM(const FGM<data_t>&) = delete;
 
         /// default destructor
-        ~GradientDescent() override = default;
+        ~FGM() override = default;
 
     private:
-        /// the step size
-        real_t _stepSize;
-
         /// the default number of iterations
         const index_t _defaultIterations{100};
+
+        /// variable affecting the stopping condition
+        data_t _epsilon;
 
         /// lift the base class method getCurrentSolution
         using Solver<data_t>::getCurrentSolution;
@@ -68,7 +65,7 @@ namespace elsa
         DataContainer<data_t>& solveImpl(index_t iterations) override;
 
         /// implement the polymorphic clone operation
-        GradientDescent<data_t>* cloneImpl() const override;
+        FGM<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Solver<data_t>& other) const override;

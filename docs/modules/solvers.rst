@@ -18,3 +18,14 @@ GradientDescent
 ===============
 
 .. doxygenclass:: elsa::GradientDescent
+
+Nesterov's Fast Gradient Method
+===============
+
+.. doxygenclass:: elsa::FGM
+
+Optimized Gradient Method
+===============
+
+.. doxygenclass:: elsa::OGM
+

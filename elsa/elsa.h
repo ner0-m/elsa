@@ -70,3 +70,5 @@
 #include "Solver.h"
 #include "GradientDescent.h"
 #include "CG.h"
+#include "FGM.h"
+#include "OGM.h"

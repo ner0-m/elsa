@@ -15,6 +15,14 @@ namespace elsa
     }
 
     template <typename data_t>
+    GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem)
+        : Solver<data_t>(problem)
+    {
+        this->_stepSize =
+            static_cast<real_t>(1.0) / static_cast<real_t>(problem.getLipschitzConstant());
+    }
+
+    template <typename data_t>
     DataContainer<data_t>& GradientDescent<data_t>::solveImpl(index_t iterations)
     {
         if (iterations == 0)
@@ -57,6 +65,7 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class GradientDescent<float>;
+
     template class GradientDescent<double>;
 
 } // namespace elsa

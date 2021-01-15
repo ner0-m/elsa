@@ -1,13 +1,14 @@
 /**
- * \file test_GradientDescent.cpp
+ * \file test_OGM.cpp
  *
- * \brief Tests for the GradientDescent class
+ * \brief Tests for the Optimized Gradient Method class
  *
- * \author Tobias Lasser - initial code
+ * \author Michael Loipführer - initial code
  */
 
 #include <catch2/catch.hpp>
-#include "GradientDescent.h"
+#include <iostream>
+#include "OGM.h"
 #include "WLSProblem.h"
 #include "Problem.h"
 #include "Identity.h"
@@ -21,8 +22,7 @@ using namespace elsa;
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", GradientDescent<float>,
-                   GradientDescent<double>)
+TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", OGM<float>, OGM<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
@@ -43,49 +43,25 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", GradientDesc
         WLSProblem prob(idOp, dcB);
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
-        WHEN("setting up a Gradient Descent solver with fixed step size")
+        WHEN("setting up a FGM solver")
         {
-            TestType solver{prob, 0.5};
+            TestType solver{prob, epsilon};
 
             THEN("the clone works correctly")
             {
-                auto gdClone = solver.clone();
+                auto fgmClone = solver.clone();
 
-                REQUIRE(gdClone.get() != &solver);
-                REQUIRE(*gdClone == solver);
+                REQUIRE(fgmClone.get() != &solver);
+                REQUIRE(*fgmClone == solver);
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(1000);
+                    auto solution = solver.solve(dd.getNumberOfCoefficients());
 
                     DataContainer<data_t> resultsDifference = solution - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
-                }
-            }
-        }
-
-        WHEN("setting up a Gradient Descent solver with lipschitz step size")
-        {
-            TestType solver{prob};
-
-            THEN("the clone works correctly")
-            {
-                auto gdClone = solver.clone();
-
-                REQUIRE(gdClone.get() != &solver);
-                REQUIRE(*gdClone == solver);
-
-                AND_THEN("it works as expected")
-                {
-                    auto solution = solver.solve(1000);
-
-                    DataContainer<data_t> resultsDifference = solution - dcB;
-
-                    // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
+                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(0.01)
                             <= epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
@@ -93,8 +69,7 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", GradientDesc
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", GradientDescent<float>,
-                   GradientDescent<double>)
+TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", OGM<float>, OGM<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
@@ -123,45 +98,20 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", GradientDescent<f
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
-        WHEN("setting up a Gradient Descent solver with fixed step size")
+        WHEN("setting up a FGM solver")
         {
-            TestType solver{prob, 0.5};
+            TestType solver{prob, epsilon};
 
             THEN("the clone works correctly")
             {
-                auto gdClone = solver.clone();
+                auto fgmClone = solver.clone();
 
-                REQUIRE(gdClone.get() != &solver);
-                REQUIRE(*gdClone == solver);
-
-                AND_THEN("it works as expected")
-                {
-                    auto solution = solver.solve(1000);
-
-                    DataContainer<data_t> resultsDifference = solution - dcB;
-
-                    // should have converged for the given number of iterations
-                    // does not converge to the optimal solution because of the regularization term
-                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
-                }
-            }
-        }
-
-        WHEN("setting up a Gradient Descent solver with lipschitz step size")
-        {
-            TestType solver{prob};
-
-            THEN("the clone works correctly")
-            {
-                auto gdClone = solver.clone();
-
-                REQUIRE(gdClone.get() != &solver);
-                REQUIRE(*gdClone == solver);
+                REQUIRE(fgmClone.get() != &solver);
+                REQUIRE(*fgmClone == solver);
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(1000);
+                    auto solution = solver.solve(dd.getNumberOfCoefficients());
 
                     DataContainer<data_t> resultsDifference = solution - dcB;
 
