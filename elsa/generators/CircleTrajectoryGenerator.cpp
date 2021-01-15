@@ -79,4 +79,64 @@ namespace elsa
         return std::make_unique<PlanarDetectorDescriptor>(coeffs, spacing, geometryList);
     }
 
+    std::unique_ptr<DetectorDescriptor> CircleTrajectoryGenerator::createTrajectoryFromSize(
+        index_t numberOfPoses, index_t detectorSize, const DataDescriptor& volumeDescriptor, index_t arcDegrees,
+        real_t sourceToCenter, real_t centerToDetector)
+    {
+        // pull in geometry namespace, to reduce cluttering
+        using namespace geometry;
+
+        // sanity check
+        const auto dim = volumeDescriptor.getNumberOfDimensions();
+
+        if (dim < 2 || dim > 3)
+            throw std::invalid_argument("CircleTrajectoryGenerator: can only handle 2d/3d");
+
+        Logger::get("CircleTrajectoryGenerator")
+            ->info("creating {}D trajectory with {} poses in an {} degree arc", dim, numberOfPoses,
+                arcDegrees);
+
+        IndexVector_t coeffs(dim);
+        RealVector_t spacing(dim);
+        if (dim == 2) {
+            // int next_power_of_two = std::pow(2, int(std::log2(volumeDescriptor.getNumberOfCoefficientsPerDimension()[0]))+1); 
+            coeffs << detectorSize, numberOfPoses;
+            spacing << volumeDescriptor.getSpacingPerDimension()[0], 1;
+        } else {
+            coeffs << detectorSize, detectorSize, numberOfPoses;
+            spacing << volumeDescriptor.getSpacingPerDimension()[0],
+                volumeDescriptor.getSpacingPerDimension()[1], 1;
+        }
+
+
+        // Create vector and reserve the necessary size, minor optimization such that no new
+        // allocations are necessary in the loop
+        std::vector<Geometry> geometryList;
+        geometryList.reserve(numberOfPoses);
+
+        const real_t angleIncrement =
+            static_cast<real_t>(arcDegrees) / (static_cast<real_t>(numberOfPoses) - 1.0f);
+        for (index_t i = 0; i < numberOfPoses; ++i) {
+            const Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
+            if (dim == 2) {
+                // Use emplace_back, then no copy is created
+                geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
+                                        CenterOfRotationToDetector{centerToDetector},
+                                        Radian{angle},
+                                        VolumeData2D{volumeDescriptor.getSpacingPerDimension(),
+                                                    volumeDescriptor.getLocationOfOrigin()},
+                                        SinogramData2D{Size2D{coeffs}, Spacing2D{spacing}});
+            } else {
+                geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
+                                        CenterOfRotationToDetector{centerToDetector},
+                                        VolumeData3D{volumeDescriptor.getSpacingPerDimension(),
+                                                    volumeDescriptor.getLocationOfOrigin()},
+                                        SinogramData3D{Size3D{coeffs}, Spacing3D{spacing}},
+                                        RotationAngles3D{Radian{angle}, Radian{0}, Radian{0}});
+            }
+        }
+
+        return std::make_unique<PlanarDetectorDescriptor>(coeffs, spacing, geometryList);
+    }
+
 } // namespace elsa

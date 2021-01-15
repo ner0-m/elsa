@@ -44,6 +44,10 @@ namespace elsa
         static std::unique_ptr<DetectorDescriptor>
             createTrajectory(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
                              index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector);
+
+        static std::unique_ptr<DetectorDescriptor>
+            createTrajectoryFromSize(index_t numberOfPoses, index_t detectorSize, const DataDescriptor& volumeDescriptor, index_t arcDegrees,
+        real_t sourceToCenter, real_t centerToDetector);
     };
 
 } // namespace elsa
