@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.9)
-
 # define a target for all examples
 add_custom_target(build-examples)
 

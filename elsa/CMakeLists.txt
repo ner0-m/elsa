@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.9)
-
 # setup macro for component registration, so you can use find_package(elsa COMPONENT name)
 # also sets all target names
 macro(registerComponent name)
