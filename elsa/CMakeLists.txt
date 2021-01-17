@@ -202,6 +202,7 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
 endif(ELSA_BUILD_CUDA_PROJECTORS)
 add_subdirectory(generators)
 add_subdirectory(test_routines)
+add_subdirectory(test_allmodules)
 
 if(ELSA_BUILD_PYTHON_BINDINGS AND PYTHONLIBS_FOUND AND (TARGET pybind11_generator))
     if (ELSA_BINDINGS_IN_SINGLE_MODULE)

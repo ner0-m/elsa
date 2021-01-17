@@ -10,13 +10,15 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 set(MODULE_HEADERS
         EllipseGenerator.h
         PhantomGenerator.h
-        CircleTrajectoryGenerator.h)
+        CircleTrajectoryGenerator.h
+        NoiseGenerators.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         EllipseGenerator.cpp
         PhantomGenerator.cpp
-        CircleTrajectoryGenerator.cpp)
+        CircleTrajectoryGenerator.cpp
+        NoiseGenerators.cpp)
 
 
 # build the module library

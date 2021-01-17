@@ -9,6 +9,7 @@ set(MODULE_HEADERS
         elsaDefines.h
         Cloneable.h
         Utilities/Badge.hpp
+        Utilities/Statistics.hpp
         Descriptors/DataDescriptor.h
         Descriptors/DescriptorUtils.h
         Descriptors/VolumeDescriptor.h
