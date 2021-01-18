@@ -53,6 +53,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Include CPM dependency manager
 include(CPM)
 
+# export compile_commands.json for language servers such as ccls
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # ------------ dependencies ------------
 # ------------
 
