@@ -42,7 +42,7 @@ namespace elsa
         DataContainer() = delete;
 
         /**
-         * \brief Constructor for empty DataContainer, initializing the data with zeros.
+         * \brief Constructor for empty DataContainer, no initialisation is performed
          *
          * \param[in] dataDescriptor containing the associated metadata
          * \param[in] handlerType the data handler (default: CPU)

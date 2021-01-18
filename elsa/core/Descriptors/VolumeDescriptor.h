@@ -27,7 +27,7 @@ namespace elsa
         ~VolumeDescriptor() override = default;
 
         /**
-         * \brief Constructor for DataDescriptor, accepts dimension and size
+         * \brief Constructor for DataDescriptor, accepts vector for coefficients per dimensions
          *
          * \param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
          * per dimension, (dimension is set implicitly from the size of the vector)
@@ -37,17 +37,42 @@ namespace elsa
         explicit VolumeDescriptor(IndexVector_t numberOfCoefficientsPerDimension);
 
         /**
-         * \brief Constructor for DataDescriptor, accepts dimension, size and spacing
+         * \brief Constructs VolumeDescriptor from initializer list for the coefficients per
+         * dimensions
+         *
+         * \param[in] numberOfCoefficientsPerDimension initializer list containing the number of
+         * coefficients per dimension (dimension is set implicitly from the size of the list)
+         *
+         * \throw std::invalid_argument if any number of coefficients is non-positive
+         */
+        explicit VolumeDescriptor(std::initializer_list<index_t> numberOfCoefficientsPerDimension);
+
+        /**
+         * \brief Constructor for DataDescriptor, accepts vectors for coefficients and spacing
          *
          * \param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
          * per dimension, (dimension is set implicitly from the size of the vector)
          * \param[in] spacingPerDimension vector containing the spacing per dimension
          *
-         * \throw std::invalid_argument if any number of coefficients is non-positive,
+         * \throw std::invalid_argument if any number of coefficients or spacing is non-positive,
          *        or sizes of numberOfCoefficientsPerDimension and spacingPerDimension do not match
          */
         explicit VolumeDescriptor(IndexVector_t numberOfCoefficientsPerDimension,
                                   RealVector_t spacingPerDimension);
+
+        /**
+         * \brief Constructs VolumeDescriptor from two initializer lists for coefficients and
+         * spacing
+         *
+         * \param[in] numberOfCoefficientsPerDimension initializer list containing the number of
+         * coefficients per dimension (dimension is set implicitly from the size of the list)
+         * \param[in] spacingPerDimension initializer list containing the spacing per dimension
+         *
+         * \throw std::invalid_argument if any number of coefficients or spacing is non-positive,
+         *        or sizes of numberOfCoefficientsPerDimension and spacingPerDimension do not match
+         */
+        explicit VolumeDescriptor(std::initializer_list<index_t> numberOfCoefficientsPerDimension,
+                                  std::initializer_list<real_t> spacingPerDimension);
 
     private:
         /// implement the polymorphic clone operation

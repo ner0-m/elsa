@@ -41,6 +41,8 @@ namespace elsa
         if (numberOfCoefficientsPerDimension.size() != spacingPerDimension.size())
             throw std::invalid_argument("DataDescriptor: mismatch between "
                                         "numberOfCoefficientsPerDimension and spacingPerDimension");
+        if ((spacingPerDimension.array() < 0).any())
+            throw std::invalid_argument("DataDescriptor: non-positive spacing not allowed");
 
         // set the origin at center
         _locationOfOrigin = static_cast<real_t>(0.5)

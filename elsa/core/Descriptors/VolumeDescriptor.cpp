@@ -16,6 +16,20 @@ namespace elsa
     {
     }
 
+    VolumeDescriptor::VolumeDescriptor(
+        std::initializer_list<index_t> numberOfCoefficientsPerDimension)
+        : DataDescriptor(IndexVector_t{numberOfCoefficientsPerDimension})
+    {
+    }
+
+    VolumeDescriptor::VolumeDescriptor(
+        std::initializer_list<index_t> numberOfCoefficientsPerDimension,
+        std::initializer_list<real_t> spacingPerDimension)
+        : DataDescriptor(IndexVector_t{numberOfCoefficientsPerDimension},
+                         RealVector_t{spacingPerDimension})
+    {
+    }
+
     VolumeDescriptor* VolumeDescriptor::cloneImpl() const
     {
         return new VolumeDescriptor(_numberOfCoefficientsPerDimension, _spacingPerDimension);

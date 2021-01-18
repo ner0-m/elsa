@@ -14,7 +14,6 @@
 #include "PartitionDescriptor.h"
 #include "DescriptorUtils.h"
 #include <stdexcept>
-#include <iostream>
 
 using namespace elsa;
 
@@ -22,21 +21,29 @@ SCENARIO("Constructing VolumeDescriptors")
 {
     GIVEN("various 1D descriptor sizes")
     {
-        IndexVector_t validNumCoeff(1);
-        validNumCoeff << 20;
-
-        RealVector_t validSpacing(1);
-        validSpacing << 2.5;
-
-        RealVector_t invalidSpacing(2);
-        invalidSpacing << 3.5, 1.5;
-
-        IndexVector_t invalidNumCoeff(1);
-        invalidNumCoeff << -10;
+        // Double {{ and }} needed!
+        IndexVector_t validNumCoeff{{20}};
+        RealVector_t validSpacing{{2.5}};
+        RealVector_t invalidSpacing{{3.5, 1.5}};
+        IndexVector_t invalidNumCoeff{{-10}};
 
         WHEN("using a valid number of coefficients and no spacing")
         {
-            VolumeDescriptor dd(validNumCoeff);
+            // Origin of volume
+            const RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
+
+            const VolumeDescriptor dd(validNumCoeff);
+
+            THEN("everything is set correctly")
+            {
+                REQUIRE(dd.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd.getSpacingPerDimension() == RealVector_t::Ones(1));
+                REQUIRE(dd.getLocationOfOrigin() == origin);
+            }
+
+            const VolumeDescriptor dd1({20});
 
             THEN("everything is set correctly")
             {
@@ -54,6 +61,7 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({-10}), std::invalid_argument);
             }
         }
 
@@ -61,24 +69,39 @@ SCENARIO("Constructing VolumeDescriptors")
         {
             THEN("an exception is thrown")
             {
+                // Try all possible combinations of constructors with initializer list
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff, validSpacing),
                                   std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({-10}, {2.5}), std::invalid_argument);
             }
         }
 
         WHEN("using a valid number of coefficients and spacing")
         {
-            VolumeDescriptor dd(validNumCoeff, validSpacing);
+            // Origin of volume
+            RealVector_t origin =
+                0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
+
+            const VolumeDescriptor dd1(validNumCoeff, validSpacing);
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd.getSpacingPerDimension() == validSpacing);
-                RealVector_t origin =
-                    0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
-                REQUIRE(dd.getLocationOfOrigin() == origin);
+                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd1.getSpacingPerDimension() == validSpacing);
+                REQUIRE(dd1.getLocationOfOrigin() == origin);
+            }
+
+            const VolumeDescriptor dd2({20}, {2.5});
+
+            THEN("everything is set correctly")
+            {
+                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd2.getSpacingPerDimension() == validSpacing);
+                REQUIRE(dd2.getLocationOfOrigin() == origin);
             }
         }
 
@@ -86,38 +109,47 @@ SCENARIO("Constructing VolumeDescriptors")
         {
             THEN("an exception is thrown")
             {
+                // Try all possible combinations of constructors
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
                                   std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {3.5, 1.5}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {-3.5}), std::invalid_argument);
             }
         }
     }
 
     GIVEN("various 2D descriptor sizes")
     {
-        IndexVector_t validNumCoeff(2);
-        validNumCoeff << 12, 15;
-
-        RealVector_t validSpacing(2);
-        validSpacing << 1.5, 2.5;
-
-        RealVector_t invalidSpacing(1);
-        invalidSpacing << 1.5;
-
-        IndexVector_t invalidNumCoeff(3);
-        invalidNumCoeff << 12, -1, 18;
+        IndexVector_t validNumCoeff{{12, 15}};
+        RealVector_t validSpacing{{1.5, 2.5}};
+        RealVector_t invalidSpacing{{1.5}};
+        IndexVector_t invalidNumCoeff{{12, -1, 18}};
 
         WHEN("using a valid number of coefficients and no spacing")
         {
-            VolumeDescriptor dd(validNumCoeff);
+            // Origin of volume
+            RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
+
+            const VolumeDescriptor dd1(validNumCoeff);
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd.getSpacingPerDimension() == RealVector_t::Ones(2));
-                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
-                REQUIRE(dd.getLocationOfOrigin() == origin);
+                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd1.getSpacingPerDimension() == RealVector_t::Ones(2));
+                REQUIRE(dd1.getLocationOfOrigin() == origin);
+            }
+
+            const VolumeDescriptor dd2({12, 15});
+
+            THEN("everything is set correctly")
+            {
+                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd2.getSpacingPerDimension() == RealVector_t::Ones(2));
+                REQUIRE(dd2.getLocationOfOrigin() == origin);
             }
         }
 
@@ -126,6 +158,8 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1, 18}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}), std::invalid_argument);
             }
         }
 
@@ -138,22 +172,37 @@ SCENARIO("Constructing VolumeDescriptors")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff2, validSpacing),
                                   std::invalid_argument);
+
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}, {1.5, 2.5}), std::invalid_argument);
             }
         }
 
         WHEN("using a valid number of coefficients and spacing")
         {
-            VolumeDescriptor dd(validNumCoeff, validSpacing);
+            // Origin of volume
+            RealVector_t origin =
+                0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
+
+            const VolumeDescriptor dd1(validNumCoeff, validSpacing);
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd.getSpacingPerDimension() == validSpacing);
-                RealVector_t origin =
-                    0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
-                REQUIRE(dd.getLocationOfOrigin() == origin);
+                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd1.getSpacingPerDimension() == validSpacing);
+                REQUIRE(dd1.getLocationOfOrigin() == origin);
+            }
+
+            const VolumeDescriptor dd2({12, 15}, {1.5, 2.5});
+
+            THEN("everything is set correctly")
+            {
+                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd2.getSpacingPerDimension() == validSpacing);
+                REQUIRE(dd2.getLocationOfOrigin() == origin);
             }
         }
 
@@ -163,36 +212,44 @@ SCENARIO("Constructing VolumeDescriptors")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
                                   std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {-1.5, 2.0}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {1.5, 2.0, 3.5}),
+                                  std::invalid_argument);
             }
         }
     }
 
     GIVEN("various 3D descriptor sizes")
     {
-        IndexVector_t validNumCoeff(3);
-        validNumCoeff << 12, 15, 25;
-
-        RealVector_t validSpacing(3);
-        validSpacing << 1.5, 2.5, 4.5;
-
-        RealVector_t invalidSpacing(2);
-        invalidSpacing << 1.5, 2.5;
-
-        IndexVector_t invalidNumCoeff(3);
-        invalidNumCoeff << 12, 15, -1;
+        IndexVector_t validNumCoeff{{12, 15, 25}};
+        RealVector_t validSpacing{{1.5, 2.5, 4.5}};
+        RealVector_t invalidSpacing{{1.5, 2.5}};
+        IndexVector_t invalidNumCoeff{{12, 15, -1}};
 
         WHEN("using a valid number of coefficients and no spacing")
         {
-            VolumeDescriptor dd(validNumCoeff);
+            RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
+
+            const VolumeDescriptor dd1(validNumCoeff);
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd.getSpacingPerDimension() == RealVector_t::Ones(3));
-                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
-                REQUIRE(dd.getLocationOfOrigin() == origin);
+                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd1.getSpacingPerDimension() == RealVector_t::Ones(3));
+                REQUIRE(dd1.getLocationOfOrigin() == origin);
+            }
+
+            const VolumeDescriptor dd2({12, 15, 25});
+
+            THEN("everything is set correctly")
+            {
+                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd2.getSpacingPerDimension() == RealVector_t::Ones(3));
+                REQUIRE(dd2.getLocationOfOrigin() == origin);
             }
         }
 
@@ -201,6 +258,7 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, -1}), std::invalid_argument);
             }
         }
 
@@ -210,22 +268,38 @@ SCENARIO("Constructing VolumeDescriptors")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff, validSpacing),
                                   std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, -1}, {1.5, 2.5, 4.5}),
+                                  std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {1.5, 2.5, 4.5}),
+                                  std::invalid_argument);
             }
         }
 
         WHEN("using a valid number of coefficients and spacing")
         {
-            VolumeDescriptor dd(validNumCoeff, validSpacing);
+            RealVector_t origin =
+                0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
+
+            const VolumeDescriptor dd1(validNumCoeff, validSpacing);
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd.getSpacingPerDimension() == validSpacing);
-                RealVector_t origin =
-                    0.5 * (validNumCoeff.cast<real_t>().array() * validSpacing.array());
-                REQUIRE(dd.getLocationOfOrigin() == origin);
+                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd1.getSpacingPerDimension() == validSpacing);
+                REQUIRE(dd1.getLocationOfOrigin() == origin);
+            }
+
+            const VolumeDescriptor dd2({12, 15, 25}, {1.5, 2.5, 4.5});
+
+            THEN("everything is set correctly")
+            {
+                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
+                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
+                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
+                REQUIRE(dd2.getSpacingPerDimension() == validSpacing);
+                REQUIRE(dd2.getLocationOfOrigin() == origin);
             }
         }
 
@@ -234,6 +308,10 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
+                                  std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, 25}, {1.5, 2.5}),
+                                  std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, 25}, {1.5, 2.5, -4.5}),
                                   std::invalid_argument);
             }
         }
@@ -244,11 +322,8 @@ SCENARIO("Cloning VolumeDescriptors")
 {
     GIVEN("1D descriptors")
     {
-        IndexVector_t numCoeffs = IndexVector_t::Constant(1, 17);
-        RealVector_t spacing = RealVector_t::Constant(1, 2.75);
-
-        VolumeDescriptor dd(numCoeffs);
-        VolumeDescriptor ddWithSpacing(numCoeffs, spacing);
+        VolumeDescriptor dd({1, 17});
+        VolumeDescriptor ddWithSpacing({1, 17}, {1, 2.75});
 
         WHEN("cloning the VolumeDescriptor")
         {
@@ -268,14 +343,8 @@ SCENARIO("Cloning VolumeDescriptors")
 
     GIVEN("2D descriptors")
     {
-        IndexVector_t numCoeffs(2);
-        numCoeffs << 20, 25;
-
-        RealVector_t spacing(2);
-        spacing << 1.5, 3.5;
-
-        VolumeDescriptor dd(numCoeffs);
-        VolumeDescriptor ddWithSpacing(numCoeffs, spacing);
+        VolumeDescriptor dd({20, 25});
+        VolumeDescriptor ddWithSpacing({20, 25}, {1.5, 3.5});
 
         WHEN("cloning the VolumeDescriptor")
         {
@@ -295,14 +364,8 @@ SCENARIO("Cloning VolumeDescriptors")
 
     GIVEN("3D descriptors")
     {
-        IndexVector_t numCoeffs(3);
-        numCoeffs << 20, 25, 30;
-
-        RealVector_t spacing(3);
-        spacing << 1.5, 3.5, 5.5;
-
-        VolumeDescriptor dd(numCoeffs);
-        VolumeDescriptor ddWithSpacing(numCoeffs, spacing);
+        VolumeDescriptor dd({20, 25, 30});
+        VolumeDescriptor ddWithSpacing({20, 25, 30}, {1.5, 3.5, 5.5});
 
         WHEN("cloning the VolumeDescriptor")
         {
@@ -325,8 +388,7 @@ SCENARIO("Coordinates and indices")
 {
     GIVEN("1D descriptors")
     {
-        IndexVector_t numCoeffs(1);
-        numCoeffs << 11;
+        IndexVector_t numCoeffs{{11}};
 
         VolumeDescriptor dd(numCoeffs);
 
@@ -369,9 +431,7 @@ SCENARIO("Coordinates and indices")
 
     GIVEN("2D descriptors")
     {
-        IndexVector_t numCoeffs(2);
-        numCoeffs << 11, 15;
-
+        IndexVector_t numCoeffs{{11, 15}};
         VolumeDescriptor dd(numCoeffs);
 
         WHEN("converting coordinates to indices")
@@ -428,9 +488,7 @@ SCENARIO("Coordinates and indices")
 
     GIVEN("3D descriptors")
     {
-        IndexVector_t numCoeffs(3);
-        numCoeffs << 9, 13, 17;
-
+        IndexVector_t numCoeffs{{9, 13, 17}};
         VolumeDescriptor dd(numCoeffs);
 
         WHEN("converting coordinates to indices")
@@ -498,9 +556,7 @@ SCENARIO("Coordinates and indices")
 
 SCENARIO("Finding the best common descriptor")
 {
-    IndexVector_t numCoeffs(3);
-    numCoeffs << 9, 13, 17;
-
+    IndexVector_t numCoeffs{{9, 13, 17}};
     VolumeDescriptor dd{numCoeffs};
 
     GIVEN("an empty descriptor list")
@@ -604,7 +660,6 @@ SCENARIO("Finding the best common descriptor")
     {
         IndexVector_t numCoeffs2 = numCoeffs.reverse();
 
-        std::cout << numCoeffs2.transpose() << std::endl;
         VolumeDescriptor dd2{numCoeffs2};
         VolumeDescriptor dds2{numCoeffs, dd.getSpacingPerDimension() * 2};
         VolumeDescriptor dd2s2{numCoeffs2, dd2.getSpacingPerDimension() * 2};
