@@ -27,6 +27,7 @@ namespace elsa
 
         VolumeDescriptor dd(sizes);
         DataContainer<data_t> dc(dd);
+        dc = 0;
 
         if (sizes.size() == 2) {
             EllipseGenerator<data_t>::drawFilledEllipse2d(dc, 1.0,
