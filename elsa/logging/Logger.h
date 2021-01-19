@@ -1,10 +1,11 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <string>
 
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/dist_sink.h>
 
 namespace elsa
 {
@@ -43,9 +44,18 @@ namespace elsa
         /// flush all loggers
         static void flush();
 
+        /// add a sink that writes to `std::ostream` (useful for testing)
+        static void addSink(std::ostream& os);
+
     private:
         /// returns the singleton instance of Logger
         static Logger& getInstance();
+
+        /// Static function initialising the sinks
+        static std::shared_ptr<spdlog::sinks::dist_sink_st> initSinks();
+
+        /// Return the sinks stored for the loggers
+        static std::shared_ptr<spdlog::sinks::dist_sink_st> sinks();
 
         /// the log level
         LogLevel _level{LogLevel::INFO};
@@ -54,10 +64,10 @@ namespace elsa
         static spdlog::level::level_enum convertLevelToSpdlog(LogLevel level);
 
         /// the file name for file logging (if enabled)
-        std::unique_ptr<std::string> _fileName{};
+        std::string _fileName{""};
 
         /// map storing the loggers identified by a string
-        std::map<std::string, std::shared_ptr<spdlog::logger>> _loggers;
+        std::unordered_map<std::string, std::shared_ptr<spdlog::logger>> _loggers;
 
         /// friend the LogGuard class to enable access to private methods
         friend class LogGuard;

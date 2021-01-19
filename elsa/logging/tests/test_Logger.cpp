@@ -8,8 +8,11 @@
 
 #include <catch2/catch.hpp>
 #include "Logger.h"
+#include <sstream>
 
 using namespace elsa;
+
+using namespace std::string_literals;
 
 SCENARIO("Using Loggers")
 {
@@ -56,25 +59,17 @@ SCENARIO("Using Loggers")
             }
         }
 
-        WHEN("actually logging")
-        {
-            testLogger->info("This is a test");
-            testLogger->warn("This is a warning test");
-
-            THEN("things didnt blow up... :-)") { REQUIRE(true); }
-        }
-
         WHEN("adding file logging")
         {
             std::string filename = "log.txt";
             Logger::enableFileLogging(filename);
 
-            THEN("file sink should be active") { REQUIRE(testLogger->sinks().size() == 2); }
+            THEN("We still should only have one sink") { REQUIRE(testLogger->sinks().size() == 1); }
 
             THEN("a new logger has file logging enabled")
             {
                 auto newLogger = Logger::get("fileLogger");
-                REQUIRE(newLogger->sinks().size() == 2);
+                REQUIRE(newLogger->sinks().size() == 1);
 
                 newLogger->info("This is an info");
                 REQUIRE(true);
@@ -86,5 +81,90 @@ SCENARIO("Using Loggers")
                 REQUIRE(true);
             }
         }
+    }
+
+    // Add buffer as sink to test the logging
+    std::stringstream buffer;
+
+    // Keep this flat, as it would at everything multiple times, which duplicates the messages
+    GIVEN("A logger at info level")
+    {
+        Logger::addSink(buffer);
+
+        Logger::setLevel(Logger::LogLevel::INFO);
+        auto logger = Logger::get("logger");
+
+        // Set pattern that we can easily check it
+        logger->set_pattern("%v");
+
+        // we expect there to be exactly 1 sink
+        REQUIRE(logger->sinks().size() == 1);
+
+        auto msg = "This is a test"s;
+        logger->info(msg);
+
+        // Get string from buffer
+        auto resultString = buffer.str();
+        REQUIRE(resultString == (msg + '\n'));
+
+        // reset buffer
+        buffer = std::stringstream();
+
+        msg = "This is a test"s;
+        logger->debug(msg);
+
+        // Get string from buffer
+        resultString = buffer.str();
+        REQUIRE(resultString == "");
+
+        // reset buffer
+        buffer = std::stringstream();
+
+        msg = "This is a warning"s;
+        logger->warn(msg);
+
+        resultString = buffer.str();
+        REQUIRE(resultString == (msg + '\n'));
+    }
+
+    GIVEN("A logger at debug level")
+    {
+        // reset buffer
+        buffer = std::stringstream();
+
+        Logger::setLevel(Logger::LogLevel::DEBUG);
+        auto logger = Logger::get("logger");
+
+        // Set pattern that we can easily check it
+        logger->set_pattern("%v");
+
+        // we expect there to be exactly 1 sink
+        REQUIRE(logger->sinks().size() == 1);
+
+        auto msg = "This is a test"s;
+        logger->info(msg);
+
+        // Get string from buffer
+        auto resultString = buffer.str();
+        REQUIRE(resultString == (msg + '\n'));
+
+        // reset buffer
+        buffer = std::stringstream();
+
+        msg = "This is a debug"s;
+        logger->debug(msg);
+
+        // Get string from buffer
+        resultString = buffer.str();
+        REQUIRE(resultString == (msg + '\n'));
+
+        // reset buffer
+        buffer = std::stringstream();
+
+        msg = "This is a warning"s;
+        logger->warn(msg);
+
+        resultString = buffer.str();
+        REQUIRE(resultString == (msg + '\n'));
     }
 }

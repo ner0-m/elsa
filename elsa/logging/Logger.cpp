@@ -2,6 +2,8 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/dist_sink.h>
+#include <spdlog/sinks/ostream_sink.h>
 
 namespace elsa
 {
@@ -17,19 +19,33 @@ namespace elsa
             logger->set_level(convertLevelToSpdlog(level));
     }
 
+    std::shared_ptr<spdlog::sinks::dist_sink_st> Logger::initSinks()
+    {
+        auto sink = std::make_shared<spdlog::sinks::dist_sink_st>();
+
+        // Add a console output sink
+        sink->add_sink(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+
+        // If a filename is set, also add a file output sink
+        if (getInstance()._fileName != "")
+            sink->add_sink(
+                std::make_shared<spdlog::sinks::basic_file_sink_st>(getInstance()._fileName));
+
+        return sink;
+    }
+
+    std::shared_ptr<spdlog::sinks::dist_sink_st> Logger::sinks()
+    {
+        static auto sink = initSinks();
+        return sink;
+    }
+
     std::shared_ptr<spdlog::logger> Logger::get(std::string name)
     {
+        // If we don't have sinks setup yet, initialize it
+
         if (getInstance()._loggers.count(name) == 0) {
-            std::vector<spdlog::sink_ptr> sinkVector;
-            sinkVector.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_st>());
-
-            // check if file logging is enabled
-            if (getInstance()._fileName)
-                sinkVector.push_back(
-                    std::make_shared<spdlog::sinks::basic_file_sink_st>(*getInstance()._fileName));
-
-            auto newLogger =
-                std::make_shared<spdlog::logger>(name, begin(sinkVector), end(sinkVector));
+            auto newLogger = std::make_shared<spdlog::logger>(name, sinks());
             newLogger->set_level(convertLevelToSpdlog(getInstance()._level));
             getInstance()._loggers[name] = newLogger;
         }
@@ -39,13 +55,12 @@ namespace elsa
 
     void Logger::enableFileLogging(std::string filename)
     {
-        getInstance()._fileName = std::make_unique<std::string>(filename);
-        for (auto& [key, logger] : getInstance()._loggers) {
-            // if there is less than two sinks, add a file sink
-            if (logger->sinks().size() < 2)
-                logger->sinks().push_back(
-                    std::make_shared<spdlog::sinks::basic_file_sink_st>(*getInstance()._fileName));
-        }
+        getInstance()._fileName = std::move(filename);
+
+        sinks()->add_sink(
+            std::make_shared<spdlog::sinks::basic_file_sink_st>(getInstance()._fileName));
+
+        // for (auto& [key, logger] : getInstance()._loggers) {}
     }
 
     void Logger::flush()
@@ -54,6 +69,17 @@ namespace elsa
             for (auto sink : logger->sinks())
                 sink->flush();
         }
+    }
+
+    void Logger::addSink(std::ostream& os)
+    {
+        sinks()->add_sink(std::make_shared<spdlog::sinks::ostream_sink_st>(os));
+        // for (auto& [key, logger] : getInstance()._loggers) {
+        //     auto distSink = dynamic_cast<spdlog::sinks::dist_sink_st*>(logger->sinks()[0].get());
+        //     if (distSink) {
+        //         distSink->add_sink(std::make_shared<spdlog::sinks::ostream_sink_st>(os));
+        //     }
+        // }
     }
 
     Logger& Logger::getInstance()
