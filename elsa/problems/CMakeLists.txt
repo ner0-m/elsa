@@ -54,7 +54,7 @@ endif(ELSA_TESTING)
 if (ELSA_BUILD_PYTHON_BINDINGS)
         GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
                 bind_${ELSA_MODULE_NAME}.cpp
-                ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.hpp
+                ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp
                 ${MODULE_SOURCES})
 endif()
 

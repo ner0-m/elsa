@@ -96,29 +96,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
     # you can omit a source file from the list to prevent the generation of bindings for that file
     macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
         if ((TARGET pyelsa) AND (TARGET pybind11_generator))
-            # generate a compile commands file
-            # ensures the same compilation flags are passed to clang when compiling the file
-            # as a component of elsa and when parsing it for bindings generation
-            set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
             set(HINTS_FILE ${HINTS_PATH})
-
-            get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
-
-            # when compiling with libc++ as the STL, the path to the STL headers must be specified
-            set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX "")
-            get_target_property(TARGET_COMPILE_OPTIONS ${TARGET_NAME} COMPILE_OPTIONS)
-            if (CMAKE_CXX_FLAGS)
-                string(REPLACE " " ";" CXX_FLAGS_LIST ${CMAKE_CXX_FLAGS})
-            endif()
-
-            # search through the global and target specific compile options for the "-stdlib=libc++" flag
-            foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST TARGET_COMPILE_OPTIONS)
-                if (${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg=-isystem --extra-arg=${LIBCXX_INCLUDE_DIR})
-                    break()
-                endif()
-            endforeach(COMPILE_OPTION)
 
             if (ELSA_BINDINGS_IN_SINGLE_MODULE)
                 set(SINGLE_MODULE_FLAGS --extra-arg=-DELSA_BINDINGS_IN_SINGLE_MODULE --no-module)
@@ -150,8 +128,6 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     --extra-arg=-I${PYBIND11_INCLUDE_DIR}
                     --extra-arg=-I${CMAKE_CURRENT_LIST_DIR}
                     --extra-arg=-I${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints
-                    --extra-arg=-I${PROJECT_SOURCE_DIR}/elsa/logging
-                    --extra-arg=-I${Spdlog_SOURCE_DIR}/include
                     --extra-arg=-std=c++17
                     --extra-arg=-w
                     --extra-arg=--cuda-host-only
@@ -166,7 +142,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                 VERBATIM)
 
             if (NOT ELSA_BINDINGS_IN_SINGLE_MODULE)
-                pybind11_add_module(${PY_TARGET_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME})
+                pybind11_add_module(${PY_TARGET_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME} ${HINTS_FILE})
                 set_target_properties(${PY_TARGET_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ELSA_PYTHON_BINDINGS_PATH})
                 target_include_directories(${PY_TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints)
                 target_link_libraries(${PY_TARGET_NAME} PUBLIC ${TARGET_NAME})
