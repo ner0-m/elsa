@@ -139,10 +139,6 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX}
                     --extra-arg=-isystem
                     --extra-arg=${CLANG_RESOURCE_DIR}/include
-                    --extra-arg=-I${PYTHON_INCLUDE_DIRS}
-                    --extra-arg=-I${PYBIND11_INCLUDE_DIR}
-                    --extra-arg=-I${CMAKE_CURRENT_LIST_DIR}
-                    --extra-arg=-I${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints
                     --extra-arg=-std=c++17
                     --extra-arg=-w
                     --extra-arg=--cuda-host-only
@@ -157,7 +153,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                 VERBATIM)
 
             if (NOT ELSA_BINDINGS_IN_SINGLE_MODULE)
-                pybind11_add_module(${PY_TARGET_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME} ${HINTS_FILE})
+                pybind11_add_module(${PY_TARGET_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME})
                 set_target_properties(${PY_TARGET_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ELSA_PYTHON_BINDINGS_PATH})
                 target_include_directories(${PY_TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints)
                 target_link_libraries(${PY_TARGET_NAME} PUBLIC ${TARGET_NAME})

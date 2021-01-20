@@ -42,4 +42,10 @@ else()
                                 ${LLVM_LIBRARY}
                                 stdc++fs)
     endif()
+
+    add_subdirectory(hints)
+    if (NOT ELSA_BUILD_PYTHON_BINDINGS)
+        # propagate to parent scope
+        set(ELSA_BUILD_PYTHON_BINDINGS OFF PARENT_SCORE)
+    endif()
 endif()
