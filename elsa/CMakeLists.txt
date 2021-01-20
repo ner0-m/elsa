@@ -98,6 +98,21 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
         if ((TARGET pyelsa) AND (TARGET pybind11_generator))
             set(HINTS_FILE ${HINTS_PATH})
 
+            # when compiling with libc++ as the STL, the path to the STL headers must be specified
+            set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX "")
+            get_target_property(TARGET_COMPILE_OPTIONS ${TARGET_NAME} COMPILE_OPTIONS)
+            if (CMAKE_CXX_FLAGS)
+                string(REPLACE " " ";" CXX_FLAGS_LIST ${CMAKE_CXX_FLAGS})
+            endif()
+
+            # search through the global and target specific compile options for the "-stdlib=libc++" flag
+            foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST TARGET_COMPILE_OPTIONS)
+                if (${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
+                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg=-isystem --extra-arg=${LIBCXX_INCLUDE_DIR})
+                    break()
+                endif()
+            endforeach(COMPILE_OPTION)
+
             if (ELSA_BINDINGS_IN_SINGLE_MODULE)
                 set(SINGLE_MODULE_FLAGS --extra-arg=-DELSA_BINDINGS_IN_SINGLE_MODULE --no-module)
             endif()
