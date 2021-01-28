@@ -1,0 +1,2 @@
+python_gitlab == 1.14.0
+gitlab == 1.0.2
