@@ -53,6 +53,7 @@
 #include "QuadricProblem.h"
 #include "WLSProblem.h"
 #include "TikhonovProblem.h"
+#include "LASSOProblem.h"
 
 // Projector headers
 #include "Geometry.h"
@@ -70,5 +71,7 @@
 #include "Solver.h"
 #include "GradientDescent.h"
 #include "CG.h"
+#include "ISTA.h"
+#include "FISTA.h"
 #include "FGM.h"
 #include "OGM.h"

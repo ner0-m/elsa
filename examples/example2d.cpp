@@ -37,18 +37,41 @@ void example2d()
     EDF::write(sinogram, "2dsinogram.edf");
 
     // setup reconstruction problem
-    WLSProblem problem(projector, sinogram);
+    WLSProblem wlsProblem(projector, sinogram);
 
     // solve the reconstruction problem
-    CG solver(problem);
+    CG cgSolver(wlsProblem);
 
     index_t noIterations{20};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of gradient descent",
                               noIterations);
-    auto reconstruction = solver.solve(noIterations);
+    auto cgReconstruction = cgSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(reconstruction, "2dreconstruction.edf");
+    EDF::write(cgReconstruction, "2dreconstruction_cg.edf");
+
+    L1Norm regFunc(projector.getDomainDescriptor());
+    RegularizationTerm regTerm(0.5f, regFunc);
+
+    LASSOProblem lassoProb(wlsProblem, regTerm);
+
+    // solve the reconstruction problem with ISTA
+    ISTA istaSolver(lassoProb);
+
+    Logger::get("Info")->info("Solving reconstruction using {} iterations of ISTA", noIterations);
+    auto istaReconstruction = istaSolver.solve(noIterations);
+
+    // write the reconstruction out
+    EDF::write(istaReconstruction, "2dreconstruction_ista.edf");
+
+    // solve the reconstruction problem with FISTA
+    FISTA fistaSolver(lassoProb);
+
+    Logger::get("Info")->info("Solving reconstruction using {} iterations of FISTA", noIterations);
+    auto fistaReconstruction = fistaSolver.solve(noIterations);
+
+    // write the reconstruction out
+    EDF::write(fistaReconstruction, "2dreconstruction_fista.edf");
 }
 
 int main()

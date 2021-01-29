@@ -9,6 +9,8 @@ set(MODULE_HEADERS
         Solver.h
         GradientDescent.h
         CG.h
+        ISTA.h
+        FISTA.h
         FGM.h
         OGM.h)
 
@@ -17,6 +19,8 @@ set(MODULE_SOURCES
         Solver.cpp
         GradientDescent.cpp
         CG.cpp
+        ISTA.cpp
+        FISTA.cpp
         FGM.cpp
         OGM.cpp)
 
@@ -25,7 +29,7 @@ set(MODULE_SOURCES
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_problems)
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_problems elsa_proximity_operators)
 
 target_include_directories(${ELSA_MODULE_TARGET_NAME}
         PUBLIC

@@ -19,5 +19,6 @@
    modules/solvers
    modules/projectors
    modules/projectors_cuda
+   modules/proximity_operators
    modules/generators
 

@@ -19,6 +19,16 @@ GradientDescent
 
 .. doxygenclass:: elsa::GradientDescent
 
+ISTA
+====
+
+.. doxygenclass:: elsa::ISTA
+
+FISTA
+=====
+
+.. doxygenclass:: elsa::FISTA
+
 Nesterov's Fast Gradient Method
 ===============
 
@@ -28,4 +38,3 @@ Optimized Gradient Method
 ===============
 
 .. doxygenclass:: elsa::OGM
-

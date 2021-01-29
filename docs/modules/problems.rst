@@ -29,5 +29,7 @@ QuadricProblem
 
 .. doxygenclass:: elsa::QuadricProblem
 
+LASSOProblem
+============
 
-
+.. doxygenclass:: elsa::LASSOProblem
