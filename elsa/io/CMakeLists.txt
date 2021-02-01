@@ -8,12 +8,14 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 set(MODULE_HEADERS
         EDFHandler.h
         MHDHandler.h
+        PGMHandler.h
         ioUtils.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         EDFHandler.cpp
         MHDHandler.cpp
+        PGMHandler.cpp
         ioUtils.cpp)
 
 

@@ -30,6 +30,7 @@
 // IO headers
 #include "EDFHandler.h"
 #include "MHDHandler.h"
+#include "PGMHandler.h"
 
 // Logging headers
 #include "Logger.h"
