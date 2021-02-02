@@ -1,9 +1,12 @@
 elsa - an elegant framework for tomographic reconstruction
 ==========================================================
 
-**elsa** is a modern, flexible C++ library intended for use in tomographic reconstruction. Currently, operators are implemented for X-ray Computed Tomography. Other imaging modalities can be supported by implementing appropriate operators.
+**elsa** is a modern, flexible C++ library intended for use in tomographic reconstruction. 
+Using concepts such as data containers, operators, and functionals, inverse problems can be modelled and then solved.
+**elsa** supports any imaging modality in general, but currently only implements forward models for X-ray Computed Tomography.
+Seamless GPU computing based on CUDA is supported, along with Python bindings for ease of use.
 
-CI Status (master)
+Continuous Integration status (master)
 ---------------
 ![Pipeline status (master)](https://gitlab.lrz.de/IP/elsa/badges/master/pipeline.svg)
 ![Coverage status (master)](https://gitlab.lrz.de/IP/elsa/badges/master/coverage.svg)
@@ -11,19 +14,20 @@ CI Status (master)
 Documentation
 -------------
 
-The documentation is available [here](https://ciip.in.tum.de/elsadocs/).
+The current documentation is available [here](https://ciip.in.tum.de/elsadocs/).
 
 
 Requirements
 ------------
 
-elsa requires a **C++17 compliant compiler**, such as GCC, Clang or Microsoft Visual Studio in recent versions.
-Current testing includes gcc7, gcc9, and clang8.
+elsa requires a **C++17 compliant compiler**, such as GCC or Clang in recent versions.
+Current testing includes Linux-based gcc 9, gcc 10, clang 9, and clang 10.
+The build process is controlled using CMake, version 3.14 or higher.
 
 The main third party dependencies (Eigen3, spdlog, Catch2) are integrated via [CPM](https://github.com/TheLartians/CPM.cmake).
 
 For CUDA support, you need a CUDA capable graphics card as well as an installation of the CUDA toolkit.
-Current testing includes CUDA 9.2 combined with gcc7.
+Current testing includes CUDA 10.2 combined with gcc 8 or clang 8.
 
 Compiling
 ---------
@@ -39,7 +43,7 @@ make
 make install
 ```
 
-You can provide `-DCMAKE_INSTALL_PREFIX=folder` during the cmake step to select an installation destination other than the default (`/usr/local` on Unix).
+You can provide `-DCMAKE_INSTALL_PREFIX=folder` during the cmake step to select an installation destination other than the default (`/usr/local` on Unix-like systems).
 
 You can build and run the elsa unit tests by running (in the build folder):
 ```
@@ -54,8 +58,7 @@ Then you can configure elsa via the `find_package(elsa)` statement and link your
 Alternatively, you can link more specifically only against the required elsa modules, such as `target_link_libraries(myTarget elsa::core)`.
 In your source code, `#include "elsa.h"` to include all of elsa; alternatively, include only the header files you are actually using to minimize compilation times.
 
-As elsa depends on Eigen3 (version 3.3 or newer) and spdlog (version 1.0 or newer), you will need to have these packages installed on your system, and you have to point CMake to those installations.
-When using CUDA, your CMake should be version 3.14 or newer.
+As elsa depends on Eigen3 (version 3.3.9 or newer) and spdlog (version 1.7 or newer), you will need to have these packages installed on your system, and you have to point CMake to those installations.
 
 Contributing
 ------------
@@ -73,14 +76,19 @@ The **contributors** to elsa are:
 - Maximilian Hornung
 - Nikola Dinev
 - Jens Petit
+- David Tellenbach
+- Jonas Jelten
+- Andi Braimllari
+- Michael Loipfuehrer
 
 History
 -------
 
-elsa started its life as an internal library at the [Computational Imaging and Inverse Problems](https://ciip.in.tum.de) group at the [Technical University in Munich](https://www.tum.de).
+elsa started its life as an internal library at the [Computational Imaging and Inverse Problems](https://ciip.in.tum.de) group at the [Technical University of Munich](https://www.tum.de).
 This open-source version is a modernized and cleaned up version of our internal code and will contain most of its functionality, modulo some parts which we unfortunately cannot share (yet).
 
-**Releases:**
+**Releases:** ([changelog](CHANGELOG.md))
 
+- v0.6: major feature release, e.g. seamless GPU-computing, Python bindings (February 2, 2021)
 - v0.5: the "projector" release (September 18, 2019)
 - v0.4: first public release (July 19, 2019)
