@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ProximityOperator.h"
 
 namespace elsa
