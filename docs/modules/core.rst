@@ -74,3 +74,9 @@ Expression
 .. mdinclude:: expression_templates.md
 
 .. doxygenclass:: elsa::Expression
+
+
+Utilities
+----------
+.. doxygenclass:: elsa::Badge
+

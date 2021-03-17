@@ -8,6 +8,7 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 set(MODULE_HEADERS
         elsaDefines.h
         Cloneable.h
+        Utilities/Badge.hpp
         Descriptors/DataDescriptor.h
         Descriptors/DescriptorUtils.h
         Descriptors/VolumeDescriptor.h
@@ -80,9 +81,11 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME}
         $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
         $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/Descriptors>
         $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/Handlers>
+        $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/Utilities>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Descriptors>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Handlers>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Utilities>
         )
 
 

@@ -3,6 +3,7 @@
 #include "elsaDefines.h"
 #include "DataHandler.h"
 #include "Quickvec.h"
+#include "Badge.hpp"
 
 #include <Eigen/Core>
 
@@ -54,6 +55,30 @@ namespace elsa
         friend DataContainer<data_t>;
 
     public:
+        /**
+         * @brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
+         * DataHandlerGPU. Only accessible by DataHandlerGPU
+         *
+         * @param[in] badge Badge that it can only be called
+         * @param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
+         * @param[in] data pointer to start of segment
+         * @param[in] n number of elements in block
+         */
+        DataHandlerMapGPU(Badge<DataHandlerGPU<data_t>> badge, DataHandlerGPU<data_t>* dataOwner,
+                          data_t* data, index_t n);
+
+        /**
+         * @brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
+         * DataHandlerGPU. Only accessible by DataHandlerMapGPU.
+         *
+         * @param[in] badge Badge that it can only be called
+         * @param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
+         * @param[in] data pointer to start of segment
+         * @param[in] n number of elements in block
+         */
+        DataHandlerMapGPU(Badge<DataHandlerMapGPU<data_t>> badge, DataHandlerGPU<data_t>* dataOwner,
+                          data_t* data, index_t n);
+
         /// copy constructor
         DataHandlerMapGPU(const DataHandlerMapGPU<data_t>& other);
 
@@ -166,12 +191,13 @@ namespace elsa
 
     private:
         /**
-         * \brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
-         * DataHandlerGPU
+         * @brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
+         * DataHandlerGPU. Private implementation, called by multiple different callers
+         * which are granted access via a `Badge`
          *
-         * \param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
-         * \param[in] data pointer to start of segment
-         * \param[in] n number of elements in block
+         * @param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
+         * @param[in] data pointer to start of segment
+         * @param[in] n number of elements in block
          */
         DataHandlerMapGPU(DataHandlerGPU<data_t>* dataOwner, data_t* data, index_t n);
     };

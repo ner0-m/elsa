@@ -269,8 +269,9 @@ namespace elsa
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
             throw std::invalid_argument("DataHandler: requested block out of bounds");
 
-        return std::unique_ptr<DataHandlerMapGPU<data_t>>{
-            new DataHandlerMapGPU{this, _data->_data.get() + startIndex, numberOfElements}};
+        return std::make_unique<DataHandlerMapGPU<data_t>>(Badge<DataHandlerGPU<data_t>>{}, this,
+                                                           _data->_data.get() + startIndex,
+                                                           numberOfElements);
     }
 
     template <typename data_t>
@@ -284,8 +285,9 @@ namespace elsa
         // Eigen objects
         auto mutableThis = const_cast<DataHandlerGPU<data_t>*>(this);
         auto mutableData = const_cast<data_t*>(_data->_data.get() + startIndex);
-        return std::unique_ptr<const DataHandlerMapGPU<data_t>>{
-            new DataHandlerMapGPU{mutableThis, mutableData, numberOfElements}};
+
+        return std::make_unique<DataHandlerMapGPU<data_t>>(
+            Badge<DataHandlerGPU<data_t>>{}, mutableThis, mutableData, numberOfElements);
     }
 
     template <typename data_t>

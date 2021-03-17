@@ -1,8 +1,25 @@
 #include "DataHandlerMapGPU.h"
 #include "DataHandlerGPU.h"
+#include "Badge.hpp"
 
 namespace elsa
 {
+    template <typename data_t>
+    DataHandlerMapGPU<data_t>::DataHandlerMapGPU(
+        [[maybe_unused]] Badge<DataHandlerGPU<data_t>> badge, DataHandlerGPU<data_t>* dataOwner,
+        data_t* data, index_t n)
+        : DataHandlerMapGPU<data_t>(dataOwner, data, n)
+    {
+    }
+
+    template <typename data_t>
+    DataHandlerMapGPU<data_t>::DataHandlerMapGPU(
+        [[maybe_unused]] Badge<DataHandlerMapGPU<data_t>> badge, DataHandlerGPU<data_t>* dataOwner,
+        data_t* data, index_t n)
+        : DataHandlerMapGPU<data_t>(dataOwner, data, n)
+    {
+    }
+
     template <typename data_t>
     DataHandlerMapGPU<data_t>::DataHandlerMapGPU(DataHandlerGPU<data_t>* dataOwner, data_t* data,
                                                  index_t n)
@@ -265,8 +282,9 @@ namespace elsa
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
             throw std::invalid_argument("DataHandler: requested block out of bounds");
 
-        return std::unique_ptr<DataHandlerMapGPU<data_t>>(
-            new DataHandlerMapGPU{_dataOwner, _map._data.get() + startIndex, numberOfElements});
+        return std::make_unique<DataHandlerMapGPU<data_t>>(
+            Badge<DataHandlerMapGPU<data_t>>{}, _dataOwner, _map._data.get() + startIndex,
+            numberOfElements);
     }
 
     template <typename data_t>
@@ -279,8 +297,8 @@ namespace elsa
         // using a const_cast here is fine as long as the DataHandlers never expose the internal
         // Eigen objects
         auto mutableData = const_cast<data_t*>(_map._data.get() + startIndex);
-        return std::unique_ptr<const DataHandlerMapGPU<data_t>>(
-            new DataHandlerMapGPU{_dataOwner, mutableData, numberOfElements});
+        return std::make_unique<DataHandlerMapGPU<data_t>>(
+            Badge<DataHandlerMapGPU<data_t>>{}, _dataOwner, mutableData, numberOfElements);
     }
 
     template <typename data_t>
