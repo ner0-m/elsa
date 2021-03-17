@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Residual.h"
+#include <optional>
 
 namespace elsa
 {
@@ -90,17 +91,11 @@ namespace elsa
         LinearOperator<data_t> getJacobianImpl(const DataContainer<data_t>& x) override;
 
     private:
-        /// flag if operator A is present
-        bool _hasOperator;
-
-        /// flag if data vector b is present
-        bool _hasDataVector;
-
-        /// the operator A
+        /// the operator A, nullptr implies no operator present
         std::unique_ptr<LinearOperator<data_t>> _operator{};
 
-        /// the data vector b
-        std::unique_ptr<const DataContainer<data_t>> _dataVector{};
+        /// optional  data vector b
+        std::optional<const DataContainer<data_t>> _dataVector{};
     };
 
 } // namespace elsa

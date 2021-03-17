@@ -7,25 +7,19 @@ namespace elsa
 {
     template <typename data_t>
     LinearResidual<data_t>::LinearResidual(const DataDescriptor& descriptor)
-        : Residual<data_t>(descriptor, descriptor), _hasOperator{false}, _hasDataVector{false}
+        : Residual<data_t>(descriptor, descriptor)
     {
     }
 
     template <typename data_t>
     LinearResidual<data_t>::LinearResidual(const DataContainer<data_t>& b)
-        : Residual<data_t>(b.getDataDescriptor(), b.getDataDescriptor()),
-          _hasOperator{false},
-          _hasDataVector{true},
-          _dataVector{std::make_unique<DataContainer<data_t>>(b)}
+        : Residual<data_t>(b.getDataDescriptor(), b.getDataDescriptor()), _dataVector{b}
     {
     }
 
     template <typename data_t>
     LinearResidual<data_t>::LinearResidual(const LinearOperator<data_t>& A)
-        : Residual<data_t>(A.getDomainDescriptor(), A.getRangeDescriptor()),
-          _hasOperator{true},
-          _hasDataVector{false},
-          _operator{A.clone()}
+        : Residual<data_t>(A.getDomainDescriptor(), A.getRangeDescriptor()), _operator{A.clone()}
     {
     }
 
@@ -33,10 +27,8 @@ namespace elsa
     LinearResidual<data_t>::LinearResidual(const LinearOperator<data_t>& A,
                                            const DataContainer<data_t>& b)
         : Residual<data_t>(A.getDomainDescriptor(), A.getRangeDescriptor()),
-          _hasOperator{true},
-          _hasDataVector{true},
           _operator{A.clone()},
-          _dataVector{std::make_unique<DataContainer<data_t>>(b)}
+          _dataVector{b}
     {
         if (A.getRangeDescriptor().getNumberOfCoefficients() != b.getSize())
             throw std::invalid_argument("LinearResidual: A and b do not match");
@@ -45,13 +37,13 @@ namespace elsa
     template <typename data_t>
     bool LinearResidual<data_t>::hasOperator() const
     {
-        return _hasOperator;
+        return static_cast<bool>(_operator);
     }
 
     template <typename data_t>
     bool LinearResidual<data_t>::hasDataVector() const
     {
-        return _hasDataVector;
+        return _dataVector.has_value();
     }
 
     template <typename data_t>
@@ -75,13 +67,13 @@ namespace elsa
     template <typename data_t>
     LinearResidual<data_t>* LinearResidual<data_t>::cloneImpl() const
     {
-        if (_hasOperator && _hasDataVector)
+        if (hasOperator() && hasDataVector())
             return new LinearResidual<data_t>(getOperator(), getDataVector());
 
-        if (_hasOperator)
+        if (hasOperator())
             return new LinearResidual<data_t>(getOperator());
 
-        if (_hasDataVector)
+        if (hasDataVector())
             return new LinearResidual<data_t>(getDataVector());
 
         return new LinearResidual<data_t>(this->getDomainDescriptor());
@@ -97,8 +89,8 @@ namespace elsa
         if (!otherLinearResidual)
             return false;
 
-        if (_hasOperator != otherLinearResidual->_hasOperator
-            || _hasDataVector != otherLinearResidual->_hasDataVector)
+        if (hasOperator() != otherLinearResidual->hasOperator()
+            || hasDataVector() != otherLinearResidual->hasDataVector())
             return false;
 
         if ((_operator && !otherLinearResidual->_operator)
@@ -122,12 +114,12 @@ namespace elsa
     void LinearResidual<data_t>::evaluateImpl(const DataContainer<data_t>& x,
                                               DataContainer<data_t>& result)
     {
-        if (_hasOperator)
+        if (hasOperator())
             _operator->apply(x, result);
         else
             result = x;
 
-        if (_hasDataVector)
+        if (hasDataVector())
             result -= *_dataVector;
     }
 
@@ -135,7 +127,7 @@ namespace elsa
     LinearOperator<data_t>
         LinearResidual<data_t>::getJacobianImpl([[maybe_unused]] const DataContainer<data_t>& x)
     {
-        if (_hasOperator)
+        if (hasOperator())
             return leaf(*_operator);
         else
             return leaf(Identity<data_t>(this->getRangeDescriptor()));
