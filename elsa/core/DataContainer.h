@@ -220,6 +220,9 @@ namespace elsa
         /// return the squared l2 norm of this signal (dot product with itself)
         GetFloatingPointType_t<data_t> squaredL2Norm() const;
 
+        /// return the l2 norm of this signal (square root of dot product with itself)
+        GetFloatingPointType_t<data_t> l2Norm() const;
+
         /// return the l1 norm of this signal (sum of absolute values)
         GetFloatingPointType_t<data_t> l1Norm() const;
 

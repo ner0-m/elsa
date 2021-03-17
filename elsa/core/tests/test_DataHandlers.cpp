@@ -464,6 +464,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
                 REQUIRE(dh.l1Norm() == Approx(randVec.array().abs().sum()));
                 REQUIRE(dh.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
                 REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()));
+                REQUIRE(dh.l2Norm() == Approx(randVec.norm()));
 
                 auto randVec2 = generateRandomMatrix<data_t>(size);
                 TestType dh2(randVec2);

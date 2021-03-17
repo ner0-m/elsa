@@ -683,6 +683,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataHa
                     dh.lInfNorm(), randVec.middleRows(size / 3, size).array().abs().maxCoeff()));
                 REQUIRE(checkSameNumbers(dh.squaredL2Norm(),
                                          randVec.middleRows(size / 3, size).squaredNorm()));
+                REQUIRE(checkSameNumbers(dh.l2Norm(), randVec.middleRows(size / 3, size).norm()));
 
                 auto randVec2 = generateRandomMatrix<data_t>(size);
                 TestType realDh2(randVec2);

@@ -81,6 +81,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    GetFloatingPointType_t<data_t> DataHandlerMapCPU<data_t>::l2Norm() const
+    {
+        return _map.norm();
+    }
+
+    template <typename data_t>
     GetFloatingPointType_t<data_t> DataHandlerMapCPU<data_t>::l1Norm() const
     {
         return _map.array().abs().sum();
