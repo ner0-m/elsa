@@ -9,6 +9,7 @@ set(MODULE_HEADERS
         Residual.h
         LinearResidual.h
         Functional.h
+        L0PseudoNorm.h
         L1Norm.h
         L2NormPow2.h
         WeightedL2NormPow2.h
@@ -17,13 +18,15 @@ set(MODULE_HEADERS
         PseudoHuber.h
         Quadric.h
         EmissionLogLikelihood.h
-        TransmissionLogLikelihood.h)
+        TransmissionLogLikelihood.h
+        Constraint.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         Residual.cpp
         LinearResidual.cpp
         Functional.cpp
+        L0PseudoNorm.cpp
         L1Norm.cpp
         L2NormPow2.cpp
         WeightedL2NormPow2.cpp
@@ -32,7 +35,8 @@ set(MODULE_SOURCES
         PseudoHuber.cpp
         Quadric.cpp
         EmissionLogLikelihood.cpp
-        TransmissionLogLikelihood.cpp)
+        TransmissionLogLikelihood.cpp
+        Constraint.cpp)
 
 
 # build the module library

@@ -38,3 +38,8 @@ Optimized Gradient Method
 ===============
 
 .. doxygenclass:: elsa::OGM
+
+ADMM
+=====
+
+.. doxygenclass:: elsa::ADMM

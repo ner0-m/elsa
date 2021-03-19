@@ -14,6 +14,7 @@
 #include "Residual.h"
 #include "LinearResidual.h"
 #include "Huber.h"
+#include "L0PseudoNorm.h"
 #include "L1Norm.h"
 #include "L2NormPow2.h"
 #include "WeightedL2NormPow2.h"
@@ -76,3 +77,4 @@
 #include "FISTA.h"
 #include "FGM.h"
 #include "OGM.h"
+#include "ADMM.h"

@@ -144,6 +144,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    index_t DataContainer<data_t>::l0PseudoNorm() const
+    {
+        return _dataHandler->l0PseudoNorm();
+    }
+
+    template <typename data_t>
     GetFloatingPointType_t<data_t> DataContainer<data_t>::l1Norm() const
     {
         return _dataHandler->l1Norm();

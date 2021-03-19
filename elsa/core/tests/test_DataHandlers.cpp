@@ -461,6 +461,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
             THEN("the reductions work as expected")
             {
                 REQUIRE(checkSameNumbers(dh.sum(), randVec.sum()));
+                REQUIRE(dh.l0PseudoNorm()
+                        == (randVec.array().cwiseAbs()
+                            >= std::numeric_limits<GetFloatingPointType_t<data_t>>::epsilon())
+                               .count());
                 REQUIRE(dh.l1Norm() == Approx(randVec.array().abs().sum()));
                 REQUIRE(dh.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
                 REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()));

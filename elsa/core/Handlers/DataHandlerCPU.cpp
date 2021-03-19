@@ -85,6 +85,13 @@ namespace elsa
     }
 
     template <typename data_t>
+    index_t DataHandlerCPU<data_t>::l0PseudoNorm() const
+    {
+        using FloatType = GetFloatingPointType_t<data_t>;
+        return (_data->array().cwiseAbs() >= std::numeric_limits<FloatType>::epsilon()).count();
+    }
+
+    template <typename data_t>
     GetFloatingPointType_t<data_t> DataHandlerCPU<data_t>::l1Norm() const
     {
         return _data->array().abs().sum();

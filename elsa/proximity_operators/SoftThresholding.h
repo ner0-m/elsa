@@ -9,8 +9,8 @@ namespace elsa
      *
      * \tparam data_t data type for the values of the operator, defaulting to real_t
      *
-     * This class represents the soft thresholding operator, expressed by its apply method
-     * through the function i.e. \f$ prox(v) = sign(v)·(|v| - t)_+. \f$
+     * This class represents the soft thresholding operator, expressed by its apply method through
+     * the function i.e. \f$ prox(v) = sign(v)·(|v| - t)_+. \f$
      *
      * References:
      * http://sfb649.wiwi.hu-berlin.de/fedc_homepage/xplore/tutorials/xlghtmlnode93.html
@@ -33,7 +33,7 @@ namespace elsa
         /**
          * \brief apply the proximity operator of the l1 norm to an element in the operator's domain
          *
-         * \param[in] x input DataContainer
+         * \param[in] v input DataContainer
          * \param[in] t input Threshold
          * \param[out] prox output DataContainer
          */

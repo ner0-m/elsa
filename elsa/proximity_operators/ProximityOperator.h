@@ -15,10 +15,13 @@ namespace elsa
      *
      * This class represents a proximity operator prox, expressed through its apply methods,
      * which implement the proximity operator of f with penalty r i.e.
-     * \f$ prox_{f,r}(v) = argmin_x(f(x) + (r/2)·(\| Ax - b \|^2_2)). \f$
+     * \f$ prox_{f,\rho}(v) = argmin_x(f(x) + (\rho/2)·\| x - v \|^2_2). \f$
      *
      * Concrete implementations of proximity operators will derive from this class and override the
      * applyImpl method.
+     *
+     * References:
+     * https://stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf
      */
     template <typename data_t = real_t>
     class ProximityOperator : public Cloneable<ProximityOperator<data_t>>

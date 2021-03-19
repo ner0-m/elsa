@@ -88,6 +88,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    index_t DataHandlerMapGPU<data_t>::l0PseudoNorm() const
+    {
+        return _map.l0PseudoNorm();
+    }
+
+    template <typename data_t>
     GetFloatingPointType_t<data_t> DataHandlerMapGPU<data_t>::l1Norm() const
     {
         return _map.l1Norm();

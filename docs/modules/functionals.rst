@@ -25,6 +25,11 @@ Huber
 
 .. doxygenclass:: elsa::Huber
 
+L0PseudoNorm
+======
+
+.. doxygenclass:: elsa::L0PseudoNorm
+
 L1Norm
 ======
 

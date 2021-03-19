@@ -111,6 +111,9 @@ namespace elsa
         /// return the l2 norm of the data vector (square root of the dot product with itself)
         GetFloatingPointType_t<data_t> l2Norm() const override;
 
+        /// return the l0 pseudo-norm of the data vector (number of non-zero values)
+        index_t l0PseudoNorm() const override;
+
         /// return the l1 norm of the data vector (sum of absolute values)
         GetFloatingPointType_t<data_t> l1Norm() const override;
 

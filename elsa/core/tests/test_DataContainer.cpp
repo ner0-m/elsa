@@ -227,6 +227,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataCo
             THEN("the reductions work as expected")
             {
                 REQUIRE(checkSameNumbers(dc.sum(), randVec.sum()));
+                REQUIRE(dc.l0PseudoNorm()
+                        == (randVec.array().cwiseAbs()
+                            >= std::numeric_limits<GetFloatingPointType_t<data_t>>::epsilon())
+                               .count());
                 REQUIRE(checkSameNumbers(dc.l1Norm(), randVec.array().abs().sum()));
                 REQUIRE(checkSameNumbers(dc.lInfNorm(), randVec.array().abs().maxCoeff()));
                 REQUIRE(checkSameNumbers(dc.squaredL2Norm(), randVec.squaredNorm()));

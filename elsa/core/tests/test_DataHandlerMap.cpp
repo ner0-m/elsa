@@ -677,6 +677,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataHa
             THEN("the reductions work as expected")
             {
                 REQUIRE(checkSameNumbers(dh.sum(), randVec.middleRows(size / 3, size).sum()));
+                REQUIRE(dh.l0PseudoNorm()
+                        == (randVec.middleRows(size / 3, size).array().cwiseAbs()
+                            >= std::numeric_limits<GetFloatingPointType_t<data_t>>::epsilon())
+                               .count());
                 REQUIRE(checkSameNumbers(dh.l1Norm(),
                                          randVec.middleRows(size / 3, size).array().abs().sum()));
                 REQUIRE(checkSameNumbers(

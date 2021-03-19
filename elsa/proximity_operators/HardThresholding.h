@@ -5,12 +5,12 @@
 namespace elsa
 {
     /**
-     * \brief Class representing the proximity operator of the l1 norm
+     * \brief Class representing the proximity operator of the l0 pseudo-norm
      *
      * \tparam data_t data type for the values of the operator, defaulting to real_t
      *
-     * This class represents the soft thresholding operator, expressed by its apply method
-     * through the function i.e. \f$ prox(v) = v·1_{\{|v| > t\}}. \f$
+     * This class represents the hard thresholding operator, expressed by its apply method through
+     * the function i.e. \f$ prox(v) = v·1_{\{|v| > t\}}. \f$
      *
      * References:
      * http://sfb649.wiwi.hu-berlin.de/fedc_homepage/xplore/tutorials/xlghtmlnode93.html
@@ -31,9 +31,10 @@ namespace elsa
 
     protected:
         /**
-         * \brief apply the proximity operator of the l0 norm to an element in the operator's domain
+         * \brief apply the proximity operator of the l0 pseudo-norm to an element in the operator's
+         * domain
          *
-         * \param[in] x input DataContainer
+         * \param[in] v input DataContainer
          * \param[in] t input Threshold
          * \param[out] prox output DataContainer
          */
