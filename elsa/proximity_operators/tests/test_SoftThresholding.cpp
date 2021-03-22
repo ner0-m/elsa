@@ -1,3 +1,11 @@
+/**
+ * @file test_SoftThresholding.cpp
+ *
+ * @brief Tests for the SoftThresholding class
+ *
+ * @author Andi Braimllari
+ */
+
 #include "SoftThresholding.h"
 #include "VolumeDescriptor.h"
 

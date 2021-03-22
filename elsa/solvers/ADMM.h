@@ -12,22 +12,24 @@
 namespace elsa
 {
     /**
-     * \brief Class representing an Alternating Direction Method of Multipliers solver
+     * @brief Class representing an Alternating Direction Method of Multipliers solver
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
-     * \tparam XSolver Solver type handling the x update
-     * \tparam ZSolver ProximityOperator type handling the z update
+     * @author Andi Braimllari - initial code
+     *
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam XSolver Solver type handling the x update
+     * @tparam ZSolver ProximityOperator type handling the z update
      *
      * ADMM solves minimization splitting problems of the form
-     * \f$ x \mapsto f(x) + g(z) \f$ such that \f$ Ax + Bz = c\f$.
+     * @f$ x \mapsto f(x) + g(z) @f$ such that @f$ Ax + Bz = c @f$.
      * Commonly regularized optimization problems can be rewritten in such a form by using variable
      * splitting.
      *
      * ADMM can be expressed in the following scaled form
      *
-     *  - \f$ x_{k+1} = argmin_x(f(x) + (\rho/2) ·\| Ax + Bz_{k} - c + u_{k}\|^2_2) \f$
-     *  - \f$ z_{k+1} = argmin_z(g(z) + (\rho/2) ·\| Ax_{k+1} + Bz - c + u_{k}\|^2_2) \f$
-     *  - \f$ u_{k+1} = u_{k} + Ax_{k+1} + Bz_{k+1} - c\f$
+     *  - @f$ x_{k+1} = argmin_{x}(f(x) + (\rho/2) ·\| Ax + Bz_{k} - c + u_{k}\|^2_2) @f$
+     *  - @f$ z_{k+1} = argmin_{z}(g(z) + (\rho/2) ·\| Ax_{k+1} + Bz - c + u_{k}\|^2_2) @f$
+     *  - @f$ u_{k+1} = u_{k} + Ax_{k+1} + Bz_{k+1} - c @f$
      *
      * References:
      * https://stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf
@@ -40,20 +42,20 @@ namespace elsa
         ADMM(const SplittingProblem<data_t>& splittingProblem) : Solver<data_t>(splittingProblem)
         {
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
-                          "XSolver must extend Solver");
+                          "ADMM: XSolver must extend Solver");
 
             static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ZSolver must extend ProximityOperator");
+                          "ADMM: ZSolver must extend ProximityOperator");
         }
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations)
             : Solver<data_t>(splittingProblem), _defaultXSolverIterations{defaultXSolverIterations}
         {
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
-                          "XSolver must extend Solver");
+                          "ADMM: XSolver must extend Solver");
 
             static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ZSolver must extend ProximityOperator");
+                          "ADMM: ZSolver must extend ProximityOperator");
         }
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations,
@@ -64,12 +66,13 @@ namespace elsa
               _epsilonRel{epsilonRel}
         {
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
-                          "XSolver must extend Solver");
+                          "ADMM: XSolver must extend Solver");
 
             static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ZSolver must extend ProximityOperator");
+                          "ADMM: ZSolver must extend ProximityOperator");
         }
 
+        /// default destructor
         ~ADMM() override = default;
 
         auto solveImpl(index_t iterations) -> DataContainer<data_t>& override
@@ -86,7 +89,7 @@ namespace elsa
 
             if (!dynamic_cast<const L2NormPow2<data_t>*>(&dataTerm)) {
                 throw std::invalid_argument(
-                    "ADMM::solve: supported data term only of type L2NormPow2");
+                    "ADMM::solveImpl: supported data term only of type L2NormPow2");
             }
 
             const auto& dataTermResidual =
@@ -94,7 +97,7 @@ namespace elsa
 
             if (g.size() != 1) {
                 throw std::invalid_argument(
-                    "ADMM::solve: supported number of regularization terms is 1");
+                    "ADMM::solveImpl: supported number of regularization terms is 1");
             }
 
             data_t regWeight = g[0].getWeight();
@@ -102,7 +105,7 @@ namespace elsa
 
             if (!dynamic_cast<L0PseudoNorm<data_t>*>(&regularizationTerm)
                 && !dynamic_cast<L1Norm<data_t>*>(&regularizationTerm)) {
-                throw std::invalid_argument("ADMM::solve: supported regularization terms are "
+                throw std::invalid_argument("ADMM::solveImpl: supported regularization terms are "
                                             "of type L0PseudoNorm or L1Norm");
             }
 
@@ -179,6 +182,7 @@ namespace elsa
                     return getCurrentSolution();
                 }
 
+                /// varying penalty parameter
                 if (std::abs(_tauIncr - static_cast<data_t>(1.0))
                         > std::numeric_limits<data_t>::epsilon()
                     || std::abs(_tauDecr - static_cast<data_t>(1.0))
@@ -220,10 +224,10 @@ namespace elsa
         /// the default number of iterations for the XSolver
         index_t _defaultXSolverIterations{5};
 
-        /// \f$ \rho \f$ from the problem definition
+        /// @f$ \rho @f$ from the problem definition
         data_t _rho{1};
 
-        /// variables for varying penalty parameter \f$ \rho \f$
+        /// variables for varying penalty parameter @f$ \rho @f$
         data_t _mu{10};
         data_t _tauIncr{2};
         data_t _tauDecr{2};

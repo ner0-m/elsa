@@ -1,3 +1,11 @@
+/**
+ * @file test_L0PseudoNorm.cpp
+ *
+ * @brief Tests for the L0PseudoNorm class
+ *
+ * @author Andi Braimllari
+ */
+
 #include "L0PseudoNorm.h"
 #include "LinearResidual.h"
 #include "Identity.h"

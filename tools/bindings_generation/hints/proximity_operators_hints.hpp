@@ -8,7 +8,7 @@ namespace elsa
 {
     namespace py = pybind11;
 #ifndef ELSA_BINDINGS_IN_SINGLE_MODULE
-    class ProximityOperatorsHints : ModuleHints // TODO GENERATE ME AUTOMATICALLY
+    class ProximityOperatorsHints : ModuleHints
     {
 
         struct LoggerProximityOperators : Logger {

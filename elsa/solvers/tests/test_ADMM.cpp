@@ -1,3 +1,11 @@
+/**
+ * @file test_ADMM.cpp
+ *
+ * @brief Tests for the ADMM class
+ *
+ * @author Andi Braimllari
+ */
+
 #include "ADMM.h"
 #include "CG.h"
 #include "SoftThresholding.h"

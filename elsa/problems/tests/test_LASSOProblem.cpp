@@ -1,3 +1,11 @@
+/**
+ * @file test_LASSOProblem.cpp
+ *
+ * @brief Tests for the LASSOProblem class
+ *
+ * @author Andi Braimllari
+ */
+
 #include "L2NormPow2.h"
 #include "LASSOProblem.h"
 #include "VolumeDescriptor.h"

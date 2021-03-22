@@ -1,3 +1,11 @@
+/**
+ * @file test_FISTA.cpp
+ *
+ * @brief Tests for the FISTA class
+ *
+ * @author Andi Braimllari
+ */
+
 #include "FISTA.h"
 #include "Identity.h"
 #include "Logger.h"

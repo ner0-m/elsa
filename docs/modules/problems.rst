@@ -33,3 +33,8 @@ LASSOProblem
 ============
 
 .. doxygenclass:: elsa::LASSOProblem
+
+SplittingProblem
+============
+
+.. doxygenclass:: elsa::SplittingProblem

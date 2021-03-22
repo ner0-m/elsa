@@ -9,13 +9,15 @@
 namespace elsa
 {
     /**
-     * \brief Base class representing a proximity operator prox.
+     * @brief Base class representing a proximity operator prox.
      *
-     * \tparam data_t data type for the values of the operator, defaulting to real_t
+     * @author Andi Braimllari - initial code
+     *
+     * @tparam data_t data type for the values of the operator, defaulting to real_t
      *
      * This class represents a proximity operator prox, expressed through its apply methods,
      * which implement the proximity operator of f with penalty r i.e.
-     * \f$ prox_{f,\rho}(v) = argmin_x(f(x) + (\rho/2)·\| x - v \|^2_2). \f$
+     * @f$ prox_{f,\rho}(v) = argmin_{x}(f(x) + (\rho/2)·\| x - v \|^2_2). @f$
      *
      * Concrete implementations of proximity operators will derive from this class and override the
      * applyImpl method.
@@ -31,10 +33,10 @@ namespace elsa
         ProximityOperator() = delete;
 
         /**
-         * \brief Override to construct an actual proximity operator for one of the derived classes
+         * @brief Override to construct an actual proximity operator for one of the derived classes
          * from the given DataDescriptor descriptor
          *
-         * \param[in] descriptor DataDescriptor describing the operator values
+         * @param[in] descriptor DataDescriptor describing the operator values
          */
         ProximityOperator(const DataDescriptor& descriptor);
 
@@ -51,12 +53,12 @@ namespace elsa
         auto getRangeDescriptor() const -> const DataDescriptor&;
 
         /**
-         * \brief apply the proximity operator to an element in the operator's domain
+         * @brief apply the proximity operator to an element in the operator's domain
          *
-         * \param[in] v input DataContainer
-         * \param[in] t input Threshold
+         * @param[in] v input DataContainer
+         * @param[in] t input Threshold
          *
-         * \returns prox DataContainer containing the application of the proximity operator to
+         * @returns prox DataContainer containing the application of the proximity operator to
          * data v, i.e. in the range of the operator
          *
          * Please note: this method uses apply(v, t, prox(v)) to perform the actual operation.
@@ -65,11 +67,11 @@ namespace elsa
             -> DataContainer<data_t>;
 
         /**
-         * \brief apply the proximity operator to an element in the operator's domain
+         * @brief apply the proximity operator to an element in the operator's domain
          *
-         * \param[in] v input DataContainer
-         * \param[in] t input Threshold
-         * \param[out] prox output DataContainer
+         * @param[in] v input DataContainer
+         * @param[in] t input Threshold
+         * @param[out] prox output DataContainer
          *
          * Please note: this method calls the method applyImpl that has to be overridden in derived
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual

@@ -1,3 +1,11 @@
+/**
+ * @file test_Constraint.cpp
+ *
+ * @brief Tests for the Constraint class
+ *
+ * @author Andi Braimllari
+ */
+
 #include "Constraint.h"
 #include "Identity.h"
 #include "Scaling.h"

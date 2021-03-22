@@ -5,13 +5,15 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a constraint associated to an optimization problem.
+     * @brief Class representing a constraint associated to an optimization problem.
      *
-     * \tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * @author Andi Braimllari - initial code
+     *
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
      * real_t
      *
      * Constraint is expressed in the form
-     *  - \f$ Ax + Bz = c\f$.
+     *  - @f$ Ax + Bz = c @f$.
      *
      * All three components must be present during construction. One can interchangeably utilize a
      * LinearResidual if either of the LinearOperators A or B is the zero matrix.
@@ -21,12 +23,12 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the constraint, accepting the two LinearOperators and
+         * @brief Constructor for the constraint, accepting the two LinearOperators and
          * DataContainer
          *
-         * \param[in] A LinearOperator
-         * \param[in] B LinearOperator
-         * \param[in] c DataContainer
+         * @param[in] A LinearOperator
+         * @param[in] B LinearOperator
+         * @param[in] c DataContainer
          */
         Constraint(const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
                    const DataContainer<data_t>& c);
@@ -54,13 +56,13 @@ namespace elsa
         auto isEqual(const Constraint<data_t>& other) const -> bool override;
 
     private:
-        /// \f$ A \f$ from the problem definition
+        /// @f$ A @f$ from the problem definition
         std::unique_ptr<LinearOperator<data_t>> _A;
 
-        /// \f$ B \f$ from the problem definition
+        /// @f$ B @f$ from the problem definition
         std::unique_ptr<LinearOperator<data_t>> _B;
 
-        /// \f$ c \f$ from the problem definition
+        /// @f$ c @f$ from the problem definition
         DataContainer<data_t> _c;
     };
 } // namespace elsa

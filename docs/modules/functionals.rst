@@ -25,6 +25,11 @@ Huber
 
 .. doxygenclass:: elsa::Huber
 
+Constraint
+======
+
+.. doxygenclass:: elsa::Constraint
+
 L0PseudoNorm
 ======
 

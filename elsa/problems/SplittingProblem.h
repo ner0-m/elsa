@@ -9,15 +9,17 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a splitting problem
+     * @brief Class representing a splitting problem
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @author Andi Braimllari - initial code
+     *
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a splitting problem i.e.
      *
-     *  - minimize \f$ f(x) + g(z) \f$ subject to \f$ Ax + Bz = c\f$.
+     *  - minimize @f$ f(x) + g(z) @f$ subject to @f$ Ax + Bz = c @f$.
      *
-     * in which \f$ A \f$ and \f$ B \f$ are linear operators, \f$ c \f$ is a data vector.
+     * in which @f$ A @f$ and @f$ B @f$ are linear operators, @f$ c @f$ is a data vector.
      *
      * References:
      * https://stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf
@@ -26,10 +28,26 @@ namespace elsa
     class SplittingProblem : public Problem<data_t>
     {
     public:
+        /**
+         * @brief Constructor for SplittingProblem, accepting a functional, regularization terms and
+         * a constraint
+         *
+         * @param[in] f the functional from the problem statement
+         * @param[in] g the regularization terms from the problem statement
+         * @param[in] constraint the constraint from the problem statement
+         */
         SplittingProblem(const Functional<data_t>& f,
                          const std::vector<RegularizationTerm<data_t>>& g,
                          const Constraint<data_t>& constraint);
 
+        /**
+         * @brief Constructor for SplittingProblem, accepting a functional, a regularization term
+         * and a constraint
+         *
+         * @param[in] f the functional from the problem statement
+         * @param[in] g the regularization term from the problem statement
+         * @param[in] constraint the constraint from the problem statement
+         */
         SplittingProblem(const Functional<data_t>& f, const RegularizationTerm<data_t>& g,
                          const Constraint<data_t>& constraint);
 

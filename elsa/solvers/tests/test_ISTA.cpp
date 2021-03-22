@@ -1,3 +1,11 @@
+/**
+ * @file test_ISTA.cpp
+ *
+ * @brief Tests for the ISTA class
+ *
+ * @author Andi Braimllari
+ */
+
 #include "ISTA.h"
 #include "Identity.h"
 #include "Logger.h"

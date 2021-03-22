@@ -1,3 +1,11 @@
+/**
+ * @file test_HardThresholding.cpp
+ *
+ * @brief Tests for the HardThresholding class
+ *
+ * @author Andi Braimllari
+ */
+
 #include "HardThresholding.h"
 #include "VolumeDescriptor.h"
 

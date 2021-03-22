@@ -5,13 +5,15 @@
 namespace elsa
 {
     /**
-     * \brief Class representing the l0 pseudo-norm functional.
+     * @brief Class representing the l0 pseudo-norm functional.
      *
-     * \tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * @author Andi Braimllari - initial code
+     *
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
      * real_t
      *
-     * The l0 pseudo-norm functional evaluates to \f$ \sum_{i=1}^n 1_{x_{i} \neq 0} \f$ for \f$
-     * x=(x_i)_{i=1}^n \f$. Please note that it is not differentiable, hence getGradient and
+     * The l0 pseudo-norm functional evaluates to @f$ \sum_{i=1}^n 1_{x_{i} \neq 0} @f$ for @f$
+     * x=(x_i)_{i=1}^n @f$. Please note that it is not differentiable, hence getGradient and
      * getHessian will throw exceptions.
      *
      * References:
@@ -23,18 +25,18 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the l0 pseudo-norm functional, mapping domain vector to a scalar
+         * @brief Constructor for the l0 pseudo-norm functional, mapping domain vector to a scalar
          * (without a residual)
          *
-         * \param[in] domainDescriptor describing the domain of the functional
+         * @param[in] domainDescriptor describing the domain of the functional
          */
         explicit L0PseudoNorm(const DataDescriptor& domainDescriptor);
 
         /**
-         * \brief Constructor for the l0 psuedo-norm functional, using a residual as input to map to
+         * @brief Constructor for the l0 psuedo-norm functional, using a residual as input to map to
          * a scalar
          *
-         * \param[in] residual to be used when evaluating the functional (or its derivatives)
+         * @param[in] residual to be used when evaluating the functional (or its derivatives)
          */
         explicit L0PseudoNorm(const Residual<data_t>& residual);
 
