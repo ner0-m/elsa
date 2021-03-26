@@ -8,10 +8,16 @@ endmacro()
 
 # macro for the unit tests
 macro(ELSA_TEST NAME)
+    # Parse arguments
+    set(options )
+    set(oneValueArgs )
+    set(multiValueArgs DEPENDENCIES)
+    cmake_parse_arguments(MYTEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
     # create the test executable
     add_executable(test_${NAME} EXCLUDE_FROM_ALL test_${NAME}.cpp test_main.cpp)
-    # add catch and the corresponding elsa library
-    target_link_libraries(test_${NAME} PRIVATE Catch2::Catch2 ${ELSA_MODULE_TARGET_NAME} elsa::test_routines)
+    # add catch and the corresponding elsa library plus optional dependencies
+    target_link_libraries(test_${NAME} PRIVATE Catch2::Catch2 ${ELSA_MODULE_TARGET_NAME} elsa::test_routines ${MYTEST_DEPENDENCIES})
     # enable C++17
     target_compile_features(test_${NAME} PUBLIC cxx_std_17)
     # include helpers
@@ -32,7 +38,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
     find_package(PythonLibs)
     if(PYTHONLIBS_FOUND AND (TARGET pybind11_generator))
         set(ELSA_PYTHON_BINDINGS_PATH "${CMAKE_BINARY_DIR}/pyelsa" CACHE INTERNAL "Output directory for pybind11 modules")
-        
+
         # remove __init__.py and logger.py files if present
         file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py)
         file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/logger.py)
@@ -67,17 +73,17 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
 
             add_custom_target(test_pyelsa DEPENDS pyelsa)
 
-            add_custom_command(TARGET test_pyelsa 
+            add_custom_command(TARGET test_pyelsa
                 PRE_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/tools/bindings_generation/tests/test_pyelsa.py
                     ${PROJECT_BINARY_DIR}/pyelsa/tests
                 DEPENDS ${PROJECT_SOURCE_DIR}/tools/bindings_generation/tests/test_pyelsa.py)
 
             add_dependencies(tests test_pyelsa)
-            
+
             add_test(NAME test_pyelsa
                 COMMAND ${PYTHON_EXECUTABLE} -m unittest pyelsa/tests/test_pyelsa.py
-                WORKING_DIRECTORY ${PROJECT_BINARY_DIR})            
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
         endif()
     else()
         message(STATUS "Couldn't find Python.h. Python bindings will not be generated.")
@@ -94,7 +100,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             # ensures the same compilation flags are passed to clang when compiling the file
             # as a component of elsa and when parsing it for bindings generation
             set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-            
+
             set(HINTS_FILE ${HINTS_PATH})
 
             get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
@@ -133,7 +139,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                     )
                 endif()
             endif()
-            
+
             add_custom_command(OUTPUT ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
                 COMMAND pybind11_generator
                     ${ARGN}
@@ -158,7 +164,7 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                 COMMENT "Generating bindings code for ${TARGET_NAME}"
                 VERBATIM)
-            
+
             if (NOT ELSA_BINDINGS_IN_SINGLE_MODULE)
                 pybind11_add_module(${PY_TARGET_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME})
                 set_target_properties(${PY_TARGET_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ELSA_PYTHON_BINDINGS_PATH})
@@ -205,7 +211,7 @@ if(ELSA_BUILD_PYTHON_BINDINGS AND PYTHONLIBS_FOUND AND (TARGET pybind11_generato
             file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\tadd_definitions_${PYMODULE}(m);\n")
         endforeach()
         file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "}\n")
-        
+
         file(WRITE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "from .pyelsa import *")
     else()
         # when split in multiple modules provide a top level Logger interface
@@ -229,7 +235,7 @@ if(ELSA_BUILD_PYTHON_BINDINGS AND PYTHONLIBS_FOUND AND (TARGET pybind11_generato
             file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\t\tlogger_${PYMODULE}.enableFileLogging(filename)\n")
         endforeach()
         file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\n")
-        
+
         # define flush function
         file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\tdef flush():\n")
         foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
