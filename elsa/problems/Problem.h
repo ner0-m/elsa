@@ -106,8 +106,8 @@ namespace elsa
          *
          * \returns the value of the problem evaluated at the current estimated solution
          *
-         * Please note: this method calls the method _evaluate that has to be overridden in derived
-         * classes.
+         * Please note: this method calls the method evaluateImpl that has to be overridden in
+         * derived classes.
          */
         data_t evaluate();
 
@@ -127,7 +127,7 @@ namespace elsa
          * \param[out] result output DataContainer containing the gradient (in the domain of the
          * problem)
          *
-         * Please note: this method calls the method _getGradient that has to be overridden in
+         * Please note: this method calls the method getGradientImpl that has to be overridden in
          * derived classes.
          */
         void getGradient(DataContainer<data_t>& result);
@@ -137,7 +137,7 @@ namespace elsa
          *
          * \returns a LinearOperator (the Hessian)
          *
-         * Please note: this method calls the method _getHessian that has to be overridden in
+         * Please note: this method calls the method getHessianImpl that has to be overridden in
          * derived classes.
          */
         LinearOperator<data_t> getHessian() const;

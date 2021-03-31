@@ -59,8 +59,9 @@ namespace elsa
          *
          * \returns result the scalar of the functional evaluated at x
          *
-         * Please note: after evaluating the residual at x, this method calls the method _evaluate
-         * that has to be overridden in derived classes to compute the functional's value.
+         * Please note: after evaluating the residual at x, this method calls the method
+         * evaluateImpl that has to be overridden in derived classes to compute the functional's
+         * value.
          */
         data_t evaluate(const DataContainer<data_t>& x);
 
@@ -83,7 +84,7 @@ namespace elsa
          * \param[out] result output DataContainer (in the domain of the functional)
          *
          * Please note: after evaluating the residual at x, this methods calls the method
-         * _getGradientInPlace that has to be overridden in derived classes to compute the
+         * getGradientInPlaceImpl that has to be overridden in derived classes to compute the
          * functional's gradient, and after that the chain rule for the residual is applied (if
          * necessary).
          */
@@ -99,9 +100,9 @@ namespace elsa
          * Note: some derived classes might decide to use only the diagonal of the Hessian as a fast
          * approximation!
          *
-         * Please note: after evaluating the residual at x, this method calls the method _getHessian
-         * that has to be overridden in derived classes to compute the functional's Hessian, and
-         * after that the chain rule for the residual is applied (if necessary).
+         * Please note: after evaluating the residual at x, this method calls the method
+         * getHessianImpl that has to be overridden in derived classes to compute the functional's
+         * Hessian, and after that the chain rule for the residual is applied (if necessary).
          */
         LinearOperator<data_t> getHessian(const DataContainer<data_t>& x);
 
@@ -116,7 +117,7 @@ namespace elsa
         bool isEqual(const Functional<data_t>& other) const override;
 
         /**
-         * \brief the _evaluate method that has to be overridden in derived classes
+         * \brief the evaluateImpl method that has to be overridden in derived classes
          *
          * \param[in] Rx the residual evaluated at x
          *
@@ -128,7 +129,7 @@ namespace elsa
         virtual data_t evaluateImpl(const DataContainer<data_t>& Rx) = 0;
 
         /**
-         * \brief the _getGradientInPlace method that has to be overridden in derived classes
+         * \brief the getGradientInPlaceImpl method that has to be overridden in derived classes
          *
          * \param[in,out] Rx the residual evaluated at x (in), and the gradient of the functional
          * (out)
@@ -140,7 +141,7 @@ namespace elsa
         virtual void getGradientInPlaceImpl(DataContainer<data_t>& Rx) = 0;
 
         /**
-         * \brief the _getHessian method that has to be overridden in derived classes
+         * \brief the getHessianImpl method that has to be overridden in derived classes
          *
          * \param[in] Rx the residual evaluated at x
          *

@@ -60,7 +60,7 @@ namespace elsa
          * \param[in] x input DataContainer (in the domain of the residual)
          * \param[out] result output DataContainer (in the range of the residual)
          *
-         * Please note: this method calls the method _evaluate that has to be overridden in
+         * Please note: this method calls the method evaluateImpl that has to be overridden in
          * derived classes. (Why is this method here not virtual itself? Because you cannot
          * have a non-virtual function overloading a virtual one [evaluate with one vs. two args].)
          */
@@ -74,7 +74,7 @@ namespace elsa
          *
          * \returns a LinearOperator (the Jacobian)
          *
-         * Please note: this method calls the method _getJacobian that has to be overridden in
+         * Please note: this method calls the method getJacobianImpl that has to be overridden in
          * derived classes. (This is not strictly necessary, it's just for consistency with
          * evaluate.)
          */

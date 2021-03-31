@@ -45,7 +45,7 @@ namespace elsa
          *
          * \returns a reference to the current solution (after solving)
          *
-         * Please note: this method calls _solve, which has to be overridden in derived classes.
+         * Please note: this method calls solveImpl, which has to be overridden in derived classes.
          */
         DataContainer<data_t>& solve(index_t iterations = 0);
 

@@ -43,7 +43,7 @@ namespace elsa
                 return evaluateImpl(x);
         }
 
-        // in all other cases: evaluate the residual first, then call our virtual _evaluate
+        // in all other cases: evaluate the residual first, then call our virtual evaluateImpl
         return evaluateImpl(_residual->evaluate(x));
     }
 
@@ -121,5 +121,4 @@ namespace elsa
     template class Functional<double>;
     template class Functional<std::complex<float>>;
     template class Functional<std::complex<double>>;
-
 } // namespace elsa
