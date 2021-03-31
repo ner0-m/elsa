@@ -25,7 +25,7 @@ namespace elsa
          * \param[in] problem the problem that is supposed to be solved
          * \param[in] stepSize the fixed step size to be used while solving
          */
-        GradientDescent(const Problem<data_t>& problem, real_t stepSize);
+        GradientDescent(const Problem<data_t>& problem, data_t stepSize);
 
         /**
          * \brief Constructor for gradient descent, accepting a problem. The step size will be
@@ -45,7 +45,7 @@ namespace elsa
 
     private:
         /// the step size
-        real_t _stepSize;
+        data_t _stepSize;
 
         /// the default number of iterations
         const index_t _defaultIterations{100};
