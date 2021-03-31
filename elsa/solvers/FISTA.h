@@ -13,7 +13,7 @@ namespace elsa
      * This class represents a FISTA solver i.e.
      *
      *  - @f$ x_{k} = shrinkageOperator(y_k - \mu * A^T (Ay_k - b)) @f$
-     *  - @f$ t_{k+1} = @frac{1 + \sqrt{1 + 4 * t_{k}^2}}{2} @f$
+     *  - @f$ t_{k+1} = \frac{1 + \sqrt{1 + 4 * t_{k}^2}}{2} @f$
      *  - @f$ y_{k+1} = x_{k} + (\frac{t_{k} - 1}{t_{k+1}}) * (x_{k} - x_{k - 1}) @f$
      *
      * in which shrinkageOperator is the SoftThresholding operator defined as @f$
