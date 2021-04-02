@@ -2,6 +2,8 @@
 
 #include "DetectorDescriptor.h"
 
+#include "spdlog/fmt/fmt.h"
+
 namespace elsa
 {
     /**
@@ -50,3 +52,16 @@ namespace elsa
         bool isEqual(const DataDescriptor& other) const override;
     };
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::PlanarDetectorDescriptor& desc);
+
+template <>
+struct fmt::formatter<elsa::PlanarDetectorDescriptor> : fmt::formatter<std::string> {
+    auto format(const elsa::PlanarDetectorDescriptor& dd, fmt::format_context& ctx)
+        -> decltype(ctx.out())
+    {
+        std::ostringstream os;
+        os << dd;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

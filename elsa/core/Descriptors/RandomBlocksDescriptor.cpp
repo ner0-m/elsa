@@ -2,6 +2,8 @@
 #include "VolumeDescriptor.h"
 #include "Error.h"
 
+#include "spdlog/fmt/ostr.h"
+
 namespace elsa
 {
     RandomBlocksDescriptor::RandomBlocksDescriptor(
@@ -93,3 +95,8 @@ namespace elsa
     }
 
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::RandomBlocksDescriptor& desc)
+{
+    return os << "{ RandomBlockDescriptor { " << desc.getNumberOfBlocks() << " blocks }}";
+}

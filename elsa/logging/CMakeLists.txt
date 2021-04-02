@@ -4,7 +4,7 @@ set(MODULE_HEADERS Logger.h LogGuard.h Timer.h)
 # list all the code files of the module
 set(MODULE_SOURCES Logger.cpp LogGuard.cpp Timer.cpp)
 
-list(APPEND MODULE_PUBLIC_DEPS "spdlog::spdlog_header_only")
+list(APPEND MODULE_PUBLIC_DEPS "spdlog::spdlog")
 list(APPEND MODULE_PRIVATE_DEPS)
 
 ADD_ELSA_MODULE(

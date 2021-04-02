@@ -13,6 +13,7 @@
 #include "IdenticalBlocksDescriptor.h"
 #include "testHelpers.h"
 #include "VolumeDescriptor.h"
+#include "Logger.h"
 
 #include <type_traits>
 
@@ -81,6 +82,11 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
             THEN("it has a data vector of correct size")
             {
                 REQUIRE_EQ(dc.getSize(), desc.getNumberOfCoefficients());
+            }
+
+            THEN("Printing compiles")
+            {
+                infoln("Printing DataContainer without checking formatting: {}", dc);
             }
         }
 

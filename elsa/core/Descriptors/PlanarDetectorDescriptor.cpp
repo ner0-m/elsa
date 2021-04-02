@@ -1,5 +1,6 @@
 #include "PlanarDetectorDescriptor.h"
-#include <iostream>
+
+#include "spdlog/fmt/ostr.h"
 
 namespace elsa
 {
@@ -83,3 +84,9 @@ namespace elsa
                                             getSpacingPerDimension(), _geometry);
     }
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::PlanarDetectorDescriptor& desc)
+{
+    return os << "PlanarDetectorDescriptor { " << desc.getNumberOfCoefficientsPerDimension()
+              << " }";
+}

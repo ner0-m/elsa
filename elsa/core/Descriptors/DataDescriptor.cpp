@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "Error.h"
+#include "spdlog/fmt/ostr.h"
 
 namespace elsa
 {
@@ -114,3 +115,8 @@ namespace elsa
     }
 
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::DataDescriptor& desc)
+{
+    return os << "{ DataDescriptor " << desc.getNumberOfCoefficientsPerDimension() << " }";
+}

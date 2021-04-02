@@ -3,6 +3,8 @@
 #include "BlockDescriptor.h"
 #include "VolumeDescriptor.h"
 
+#include "spdlog/fmt/fmt.h"
+
 namespace elsa
 {
     /**
@@ -67,3 +69,16 @@ namespace elsa
         VolumeDescriptor initBase(index_t numberOfBlocks, const DataDescriptor& dataDescriptor);
     };
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::IdenticalBlocksDescriptor& desc);
+
+template <>
+struct fmt::formatter<elsa::IdenticalBlocksDescriptor> : fmt::formatter<std::string> {
+    auto format(const elsa::IdenticalBlocksDescriptor& dd, fmt::format_context& ctx)
+        -> decltype(ctx.out())
+    {
+        std::ostringstream os;
+        os << dd;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

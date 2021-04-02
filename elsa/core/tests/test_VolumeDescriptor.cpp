@@ -14,6 +14,7 @@
 #include "VolumeDescriptor.h"
 #include "PartitionDescriptor.h"
 #include "DescriptorUtils.h"
+#include "Logger.h"
 #include <stdexcept>
 
 using namespace elsa;
@@ -707,6 +708,17 @@ TEST_CASE("VolumeDescriptor: Finding the best common descriptor")
             REQUIRE_THROWS_AS(bestCommon(dd, dd2), InvalidArgumentError);
         }
     }
+}
+
+TEST_CASE("VolumeDescriptor: Printing VolumeDescriptor")
+{
+    // FIXME: Actually test the formatting, this only tests compilation
+    IndexVector_t sizeVector(2);
+    sizeVector << 43, 112;
+
+    const VolumeDescriptor desc(sizeVector);
+
+    infoln("Printing without testing: {}", desc);
 }
 
 TEST_SUITE_END();

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "DataDescriptor.h"
+ 
+#include "spdlog/fmt/fmt.h"
 
 namespace elsa
 {
@@ -83,3 +85,15 @@ namespace elsa
     };
 
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::VolumeDescriptor& desc);
+ 
+template <>
+struct fmt::formatter<elsa::VolumeDescriptor> : fmt::formatter<std::string> {
+    auto format(const elsa::VolumeDescriptor& dd, fmt::format_context& ctx) -> decltype(ctx.out())
+    {
+        std::ostringstream os;
+        os << dd;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

@@ -3,6 +3,8 @@
 #include "BlockDescriptor.h"
 #include "VolumeDescriptor.h"
 
+#include "spdlog/fmt/fmt.h"
+
 namespace elsa
 {
     /**
@@ -93,3 +95,16 @@ namespace elsa
             generateDescriptorOfPartition(index_t numberOfSlices) const;
     };
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::PartitionDescriptor& desc);
+
+template <>
+struct fmt::formatter<elsa::PartitionDescriptor> : fmt::formatter<std::string> {
+    auto format(const elsa::PartitionDescriptor& dd, fmt::format_context& ctx)
+        -> decltype(ctx.out())
+    {
+        std::ostringstream os;
+        os << dd;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

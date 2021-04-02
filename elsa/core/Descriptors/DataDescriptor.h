@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include "spdlog/fmt/fmt.h"
+
 namespace elsa
 {
 
@@ -121,3 +123,15 @@ namespace elsa
     };
 
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::DataDescriptor& desc);
+
+template <>
+struct fmt::formatter<elsa::DataDescriptor> : fmt::formatter<std::string> {
+    auto format(const elsa::DataDescriptor& dd, fmt::format_context& ctx) -> decltype(ctx.out())
+    {
+        std::ostringstream os;
+        os << dd;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

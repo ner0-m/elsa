@@ -17,6 +17,8 @@
 #include <memory>
 #include <type_traits>
 
+#include "spdlog/fmt/ostr.h"
+
 namespace elsa
 {
 
@@ -619,5 +621,17 @@ namespace elsa
         return Expression{log, operand};
 #endif
     }
-
 } // namespace elsa
+
+template <typename data_t>
+std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<data_t>& dc);
+
+template <typename data_t>
+struct fmt::formatter<elsa::DataContainer<data_t>> : fmt::formatter<std::string> {
+    auto format(const elsa::DataContainer<data_t>& dc, fmt::format_context& ctx)
+    {
+        std::ostringstream os;
+        os << dc;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

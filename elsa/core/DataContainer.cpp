@@ -6,6 +6,8 @@
 
 #include <utility>
 
+#include "spdlog/fmt/ostr.h"
+
 namespace elsa
 {
 
@@ -512,3 +514,33 @@ namespace elsa
     template class DataContainer<index_t>;
 
 } // namespace elsa
+
+template <>
+std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<float>& dc)
+{
+    return os << "{ DataContainer<float> " << dc.getDataDescriptor() << "}";
+}
+
+template <>
+std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<double>& dc)
+{
+    return os << "{ DataContainer<double> " << dc.getDataDescriptor() << "}";
+}
+
+template <>
+std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<elsa::index_t>& dc)
+{
+    return os << "{ DataContainer<index_t> " << dc.getDataDescriptor() << "}";
+}
+
+template <>
+std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<std::complex<float>>& dc)
+{
+    return os << "{ DataContainer<cmpl<float>> " << dc.getDataDescriptor() << "}";
+}
+
+template <>
+std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<std::complex<double>>& dc)
+{
+    return os << "{ DataContainer<cmpl<double>> " << dc.getDataDescriptor() << "}";
+}

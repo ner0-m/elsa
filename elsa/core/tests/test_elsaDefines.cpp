@@ -9,6 +9,8 @@
 #include "doctest/doctest.h"
 #include <iostream>
 #include "elsaDefines.h"
+#include "Logger.h"
+#include <Eigen/Core>
 
 using namespace elsa;
 using namespace doctest;
@@ -50,5 +52,15 @@ TEST_CASE("elsaDefines: Printing default handler type")
     REQUIRE(defaultHandlerType == DataHandlerType::CPU);
 #endif
 }
+
+TEST_CASE("elsaDefines: Printing Eigen Matrix")
+{
+    // FIXME: Actually test the formatting, this only tests compilation
+    Eigen::Matrix<real_t, Eigen::Dynamic, 1> vec(3);
+    vec << 1, 2, 4.5;
+
+    infoln("Printing without testing: {}", vec);
+}
+
 
 TEST_SUITE_END();

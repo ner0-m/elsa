@@ -9,6 +9,7 @@
 #include "doctest/doctest.h"
 #include "PartitionDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "Logger.h"
 #include <stdexcept>
 
 using namespace elsa;
@@ -389,6 +390,20 @@ TEST_CASE("PartitionDescriptor: Testing clone()")
             }
         }
     }
+}
+
+TEST_CASE("PartitionDescriptor: Printing PartitionDescriptor")
+{
+    // FIXME: Actually test the formatting, this only tests compilation
+    IndexVector_t sizeVector(2);
+    sizeVector << 43, 112;
+
+    VolumeDescriptor dd(sizeVector);
+    index_t blocks = 77;
+
+    PartitionDescriptor desc(dd, blocks);
+
+    infoln("Printing without testing: {}", desc);
 }
 
 TEST_SUITE_END();

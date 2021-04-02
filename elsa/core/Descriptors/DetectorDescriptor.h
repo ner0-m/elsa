@@ -7,6 +7,8 @@
 #include <optional>
 #include "Eigen/Geometry"
 
+#include "spdlog/fmt/fmt.h"
+
 namespace elsa
 {
     /**
@@ -85,3 +87,15 @@ namespace elsa
         std::vector<Geometry> _geometry;
     };
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::DetectorDescriptor& desc);
+
+template <>
+struct fmt::formatter<elsa::DetectorDescriptor> : fmt::formatter<std::string> {
+    auto format(const elsa::DetectorDescriptor& dd, fmt::format_context& ctx) -> decltype(ctx.out())
+    {
+        std::ostringstream os;
+        os << dd;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

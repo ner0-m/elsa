@@ -4,6 +4,8 @@
 #include "Cloneable.h"
 #include "DataDescriptor.h"
 
+#include "spdlog/fmt/fmt.h"
+
 namespace elsa
 {
 
@@ -44,3 +46,15 @@ namespace elsa
         BlockDescriptor(const DataDescriptor& base) : DataDescriptor{base} {}
     };
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::BlockDescriptor& desc);
+
+template <>
+struct fmt::formatter<elsa::BlockDescriptor> : fmt::formatter<std::string> {
+    auto format(const elsa::BlockDescriptor& dd, fmt::format_context& ctx) -> decltype(ctx.out())
+    {
+        std::ostringstream os;
+        os << dd;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

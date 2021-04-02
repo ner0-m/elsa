@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <type_traits>
 
+#include "spdlog/fmt/ostr.h"
+
 namespace elsa
 {
     PartitionDescriptor::PartitionDescriptor(const DataDescriptor& dataDescriptor,
@@ -132,3 +134,9 @@ namespace elsa
         return std::make_unique<VolumeDescriptor>(coeffsPerDim, getSpacingPerDimension());
     }
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::PartitionDescriptor& desc)
+{
+    return os << "{ PartitionDescriptor { " << desc.getNumberOfBlocks() << " blocks"
+              << " }}";
+}

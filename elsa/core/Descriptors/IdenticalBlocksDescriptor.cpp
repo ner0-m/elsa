@@ -2,6 +2,8 @@
 #include "VolumeDescriptor.h"
 #include "Error.h"
 
+#include "spdlog/fmt/ostr.h"
+
 namespace elsa
 {
     IdenticalBlocksDescriptor::IdenticalBlocksDescriptor(index_t numberOfBlocks,
@@ -68,3 +70,9 @@ namespace elsa
         return VolumeDescriptor(numberOfCoeffs, spacingOfCoeffs);
     }
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::IdenticalBlocksDescriptor& desc)
+{
+    return os << "{ IdenticalBlockDescriptor { " << desc.getNumberOfBlocks() << " blocks of size "
+              << desc.getNumberOfCoefficientsPerDimension() << " }}";
+}

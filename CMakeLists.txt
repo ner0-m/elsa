@@ -93,6 +93,7 @@ if(ELSA_MASTER_PROJECT)
         VERSION 1.8.5
         OPTIONS "SPDLOG_INSTALL ON"
     )
+    set_target_properties(spdlog PROPERTIES POSITION_INDEPENDENT_CODE ON) 
 
     # setup Dnnl library
     find_package(Dnnl)

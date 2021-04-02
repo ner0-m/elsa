@@ -10,6 +10,7 @@
 
 #include "PlanarDetectorDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "Logger.h" 
 
 using namespace elsa;
 using namespace elsa::geometry;
@@ -248,6 +249,27 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 3D PlanarDetectorDescriptor")
             }
         }
     }
+}
+
+TEST_CASE("PlanarDetectorDescriptor: Printing PlanarDetectorDescriptor")
+{
+    // FIXME: Actually test the formatting, this only tests compilation
+    IndexVector_t volSize(3);
+    volSize << 5, 5, 5;
+
+    IndexVector_t sinoSize(3);
+    sinoSize << 5, 5, 1;
+
+    const real_t s2c = 10;
+    const real_t c2d = 4;
+
+    const Geometry g(SourceToCenterOfRotation{s2c}, CenterOfRotationToDetector{c2d},
+                     VolumeData3D{Size3D{volSize}}, SinogramData3D{Size3D{sinoSize}},
+                     RotationAngles3D{Gamma{0}});
+
+    PlanarDetectorDescriptor desc(sinoSize, {g});
+
+    infoln("Printing without testing: {}", desc);
 }
 
 TEST_SUITE_END();

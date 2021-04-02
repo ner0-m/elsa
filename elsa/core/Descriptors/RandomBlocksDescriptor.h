@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include "spdlog/fmt/fmt.h"
+
 namespace elsa
 {
     /**
@@ -78,3 +80,16 @@ namespace elsa
             determineSize(const std::vector<std::unique_ptr<DataDescriptor>>& blockDescriptors);
     };
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::RandomBlocksDescriptor& desc);
+
+template <>
+struct fmt::formatter<elsa::RandomBlocksDescriptor> : fmt::formatter<std::string> {
+    auto format(const elsa::RandomBlocksDescriptor& dd, fmt::format_context& ctx)
+        -> decltype(ctx.out())
+    {
+        std::ostringstream os;
+        os << dd;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

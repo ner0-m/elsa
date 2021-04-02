@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "spdlog/fmt/ostr.h"
+
 namespace elsa
 {
     VolumeDescriptor::VolumeDescriptor(IndexVector_t numberOfCoefficientsPerDimension)
@@ -40,3 +42,8 @@ namespace elsa
     }
 
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::VolumeDescriptor& desc)
+{
+    return os << "{ VolumeDescriptor " << desc.getNumberOfCoefficientsPerDimension() << " }";
+}

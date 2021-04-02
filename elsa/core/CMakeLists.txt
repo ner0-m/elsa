@@ -53,7 +53,7 @@ if(${ELSA_BUILD_WITH_QUICKVEC})
     set(MODULE_SOURCES ${MODULE_SOURCES} Handlers/DataHandlerGPU.cpp Handlers/DataHandlerMapGPU.cpp)
 endif()
 
-list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen")
+list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 # use OpenMP is available

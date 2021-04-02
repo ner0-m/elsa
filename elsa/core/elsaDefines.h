@@ -5,6 +5,8 @@
 #include <Eigen/Core>
 #include <type_traits>
 
+#include "spdlog/fmt/ostr.h"
+
 namespace elsa
 {
     using real_t = float;                   ///< global type for real numbers
@@ -83,3 +85,20 @@ namespace elsa
     constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, std::complex<float>>::value
                                || std::is_same<RemoveCvRef_t<T>, std::complex<double>>::value;
 } // namespace elsa
+
+template <typename data_t>
+std::ostream& operator<<(std::ostream& os, const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& vec)
+{
+    const Eigen::IOFormat fmt(4, 0, ", ", "", "[", "]");
+    return os << vec.transpose().format(fmt);
+}
+
+template <typename data_t>
+struct fmt::formatter<Eigen::Matrix<data_t, Eigen::Dynamic, 1>> : fmt::formatter<std::string> {
+    auto format(const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& v, fmt::format_context& ctx)
+    {
+        std::ostringstream os;
+        os << v;
+        return formatter<std::string>::format(os.str(), ctx);
+    }
+};

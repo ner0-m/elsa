@@ -11,6 +11,7 @@
 #include "doctest/doctest.h"
 
 #include "IdenticalBlocksDescriptor.h"
+#include "Logger.h"
 
 using namespace elsa;
 using namespace doctest;
@@ -313,4 +314,16 @@ TEST_CASE("IdenticalBlocksDescriptor: Testing cloning")
     }
 }
 
+TEST_CASE("IdenticalBlocksDescriptor: Testing Printing")
+{
+    // FIXME: Actually test the output of the logging! This is only testing compilation
+    IndexVector_t sizeVector(3);
+    sizeVector << 47, 11, 53;
+    const VolumeDescriptor dd(sizeVector);
+    const index_t blocks = 13;
+
+    IdenticalBlocksDescriptor bd(blocks, dd);
+
+    infoln("Printing without testing: {}", bd);
+}
 TEST_SUITE_END();

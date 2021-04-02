@@ -1,6 +1,8 @@
 #include "DetectorDescriptor.h"
 #include <iostream>
 
+#include "spdlog/fmt/ostr.h"
+
 namespace elsa
 {
     DetectorDescriptor::DetectorDescriptor(const IndexVector_t& numOfCoeffsPerDim,
@@ -85,3 +87,8 @@ namespace elsa
                           std::cbegin(otherBlock->_geometry));
     }
 } // namespace elsa
+
+std::ostream& operator<<(std::ostream& os, const elsa::DetectorDescriptor& desc)
+{
+    return os << "{ DetectorDescriptor " << desc.getNumberOfCoefficientsPerDimension() << " }";
+}

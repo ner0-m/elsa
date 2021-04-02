@@ -6,6 +6,7 @@
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/dist_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace elsa
 {
@@ -72,4 +73,52 @@ namespace elsa
         /// friend the LogGuard class to enable access to private methods
         friend class LogGuard;
     };
+
+    namespace detail
+    {
+        template <typename FormatString, typename... Args>
+        void logln(spdlog::level::level_enum lvl, FormatString msg, Args&&... args)
+        {
+            spdlog::set_pattern("[%^%=7l%$] %v");
+            spdlog::log(spdlog::source_loc{}, lvl, msg, std::forward<Args>(args)...);
+        }
+
+        template <typename FormatString, typename... Args>
+        void logln(spdlog::source_loc loc, spdlog::level::level_enum lvl, const FormatString& msg,
+                   Args&&... args)
+        {
+            spdlog::set_pattern("[%^%=7l%$] [%!@%s:%#] %v");
+            spdlog::log(loc, lvl, msg, std::forward<Args>(args)...);
+        }
+    } // namespace detail
+
+    template <typename FormatString, typename... Args>
+    void infoln(const FormatString& msg, Args&&... args)
+    {
+        ::elsa::detail::logln(spdlog::level::level_enum::info, msg, std::forward<Args>(args)...);
+    }
+
+    template <typename FormatString, typename... Args>
+    void warnln(const FormatString& msg, Args&&... args)
+    {
+        ::elsa::detail::logln(spdlog::level::level_enum::warn, msg, std::forward<Args>(args)...);
+    }
+
+    template <typename FormatString, typename... Args>
+    void dbgln(const FormatString& msg, Args&&... args)
+    {
+        ::elsa::detail::logln(spdlog::level::level_enum::debug, msg, std::forward<Args>(args)...);
+    }
+
+#define INFOLN(...)                                                                \
+    ::elsa::detail::logln(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, \
+                          spdlog::level::level_enum::info, __VA_ARGS__)
+
+#define WARNLN(...)                                                                \
+    ::elsa::detail::logln(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, \
+                          spdlog::level::level_enum::warn, __VA_ARGS__)
+
+#define DBGLN(...)                                                                 \
+    ::elsa::detail::logln(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, \
+                          spdlog::level::level_enum::debug, __VA_ARGS__)
 } // namespace elsa
