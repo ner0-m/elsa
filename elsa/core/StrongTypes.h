@@ -137,7 +137,10 @@ namespace elsa
                 }
 
                 /// Access operator
-                constexpr Type operator[](index_t i) const { return _angles[i]; }
+                constexpr Type operator[](index_t i) const
+                {
+                    return _angles[static_cast<size_t>(i)];
+                }
 
                 /// get function (non-const reference) to enable structured bindings
                 template <size_t I>

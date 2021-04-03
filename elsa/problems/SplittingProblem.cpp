@@ -37,7 +37,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void SplittingProblem<data_t>::getGradientImpl(DataContainer<data_t>& result)
+    void SplittingProblem<data_t>::getGradientImpl(DataContainer<data_t>&)
     {
         throw std::runtime_error(
             "SplittingProblem::getGradientImpl: currently unsupported operation");
@@ -51,7 +51,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    auto SplittingProblem<data_t>::getLipschitzConstantImpl(index_t nIterations) const -> data_t
+    auto SplittingProblem<data_t>::getLipschitzConstantImpl(index_t) const -> data_t
     {
         throw std::runtime_error(
             "SplittingProblem::getLipschitzConstantImpl: currently unsupported operation");

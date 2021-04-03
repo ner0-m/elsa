@@ -41,12 +41,9 @@ SCENARIO("Testing compile-time predicates")
 
 SCENARIO("Printing default handler type")
 {
-    switch (defaultHandlerType) {
-        case DataHandlerType::CPU:
-            std::cout << "CPU" << std::endl;
-            break;
-        case DataHandlerType::GPU:
-            std::cout << "GPU" << std::endl;
-            break;
-    }
+#ifdef ELSA_CUDA_VECTOR
+    REQUIRE(defaultHandlerType == DataHandlerType::GPU);
+#else
+    REQUIRE(defaultHandlerType == DataHandlerType::CPU);
+#endif
 }

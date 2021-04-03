@@ -54,7 +54,7 @@ namespace elsa
         // Create vector and reserve the necessary size, minor optimization such that no new
         // allocations are necessary in the loop
         std::vector<Geometry> geometryList;
-        geometryList.reserve(numberOfPoses);
+        geometryList.reserve(static_cast<std::size_t>(numberOfPoses));
 
         const real_t angleIncrement =
             static_cast<real_t>(arcDegrees) / (static_cast<real_t>(numberOfPoses) - 1.0f);

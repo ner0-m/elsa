@@ -36,7 +36,7 @@ SCENARIO("Testing 2d AABB")
                 REQUIRE(aabb._max(0) == (real_t) x);
                 REQUIRE(aabb._max(1) == (real_t) y);
 
-                REQUIRE(aabb._voxelCoordToIndexVector(0) == 1.0);
+                REQUIRE(aabb._voxelCoordToIndexVector(0) == 1);
                 REQUIRE(aabb._voxelCoordToIndexVector(1) == y);
             }
         }
@@ -56,7 +56,7 @@ SCENARIO("Testing 2d AABB")
                 REQUIRE(aabbcopy._max(0) == (real_t) x);
                 REQUIRE(aabbcopy._max(1) == (real_t) y);
 
-                REQUIRE(aabbcopy._voxelCoordToIndexVector(0) == 1.0);
+                REQUIRE(aabbcopy._voxelCoordToIndexVector(0) == 1);
                 REQUIRE(aabbcopy._voxelCoordToIndexVector(1) == y);
             }
         }
@@ -91,7 +91,7 @@ SCENARIO("Testing 3D aabb")
                 REQUIRE(aabb._max(1) == (real_t) y);
                 REQUIRE(aabb._max(2) == (real_t) z);
 
-                REQUIRE(aabb._voxelCoordToIndexVector(0) == 1.0);
+                REQUIRE(aabb._voxelCoordToIndexVector(0) == 1);
                 REQUIRE(aabb._voxelCoordToIndexVector(1) == y);
                 REQUIRE(aabb._voxelCoordToIndexVector(2) == (z * z));
             }

@@ -54,14 +54,20 @@ namespace elsa
         return computeRayFromDetectorCoord(detectorCoord, poseIndex);
     }
 
-    index_t DetectorDescriptor::getNumberOfGeometryPoses() const { return _geometry.size(); }
+    index_t DetectorDescriptor::getNumberOfGeometryPoses() const
+    {
+        return static_cast<index_t>(_geometry.size());
+    }
 
     std::optional<Geometry> DetectorDescriptor::getGeometryAt(const index_t index) const
     {
-        if (_geometry.size() <= std::make_unsigned_t<std::size_t>(index))
+        // Cast to size_t to silence warnings
+        auto i = std::make_unsigned_t<std::size_t>(index);
+
+        if (_geometry.size() <= i)
             return {};
 
-        return _geometry[index];
+        return _geometry[i];
     }
 
     bool DetectorDescriptor::isEqual(const DataDescriptor& other) const

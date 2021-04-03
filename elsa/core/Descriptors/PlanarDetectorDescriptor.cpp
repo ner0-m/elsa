@@ -61,7 +61,7 @@ namespace elsa
                                                               const index_t poseIndex) const
     {
         auto dim = getNumberOfDimensions();
-        auto geometry = _geometry[(poseIndex)];
+        auto geometry = _geometry[static_cast<std::size_t>(poseIndex)];
 
         auto projMatrix = geometry.getProjectionMatrix();
 

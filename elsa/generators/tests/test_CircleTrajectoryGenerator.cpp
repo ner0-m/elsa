@@ -52,7 +52,7 @@ SCENARIO("Create a Circular Trajectory")
 
                 real_t angle = static_cast<real_t>(1.0) * static_cast<real_t>(halfCircular)
                                / real_t(numberOfAngles - 1);
-                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
+                for (index_t i = 0; i < numberOfAngles; ++i) {
                     real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
                     Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
                                      CenterOfRotationToDetector{centerToDetector},
@@ -95,7 +95,7 @@ SCENARIO("Create a Circular Trajectory")
 
                 real_t angle = static_cast<real_t>(1.0) * static_cast<real_t>(halfCircular)
                                / static_cast<real_t>(numberOfAngles - 1);
-                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
+                for (index_t i = 0; i < numberOfAngles; ++i) {
                     real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
 
                     Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
@@ -148,7 +148,7 @@ SCENARIO("Create a Circular Trajectory")
 
                 real_t angleInc = 1.0f * static_cast<real_t>(halfCircular)
                                   / static_cast<real_t>(numberOfAngles - 1);
-                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
+                for (index_t i = 0; i < numberOfAngles; ++i) {
                     real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
 
                     Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
@@ -193,7 +193,7 @@ SCENARIO("Create a Circular Trajectory")
 
                 real_t angleInc = 1.0f * static_cast<real_t>(halfCircular)
                                   / static_cast<real_t>(numberOfAngles - 1);
-                for (std::size_t i = 0; i < static_cast<std::size_t>(numberOfAngles); ++i) {
+                for (index_t i = 0; i < numberOfAngles; ++i) {
                     real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;
 
                     Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
