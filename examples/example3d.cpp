@@ -44,7 +44,7 @@ void example3d()
     CG solver(problem);
 
     index_t noIterations{20};
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of gradient descent",
+    Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
                               noIterations);
     auto reconstruction = solver.solve(noIterations);
 

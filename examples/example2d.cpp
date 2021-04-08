@@ -44,7 +44,7 @@ void example2d()
     CG cgSolver(wlsProblem);
 
     index_t noIterations{20};
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of gradient descent",
+    Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
                               noIterations);
     auto cgReconstruction = cgSolver.solve(noIterations);
 
