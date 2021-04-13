@@ -14,6 +14,11 @@ MHD
 ==========
 
 .. doxygenclass:: elsa::MHD
+ 
+PGM
+==========
+
+.. doxygenclass:: elsa::PGM
 
 IO Utilities
 ============
