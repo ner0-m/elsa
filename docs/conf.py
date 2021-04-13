@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'elsa'
-copyright = '2019, Tobias Lasser'
+copyright = '2021, Tobias Lasser'
 author = 'Tobias Lasser'
 
 

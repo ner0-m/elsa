@@ -7,6 +7,12 @@
    self
 
 .. toctree::
+   :caption: Guides
+   :maxdepth: 2
+
+   guides/quickstart-cxx.md
+
+.. toctree::
    :caption: Modules
    :maxdepth: 2
 

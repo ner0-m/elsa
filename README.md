@@ -1,7 +1,7 @@
 elsa - an elegant framework for tomographic reconstruction
 ==========================================================
 
-**elsa** is a modern, flexible C++ library intended for use in tomographic reconstruction. 
+**elsa** is a modern, flexible C++ library intended for use in tomographic reconstruction.
 Using concepts such as data containers, operators, and functionals, inverse problems can be modelled and then solved.
 **elsa** supports any imaging modality in general, but currently only implements forward models for X-ray Computed Tomography.
 Seamless GPU computing based on CUDA is supported, along with Python bindings for ease of use.
@@ -14,8 +14,8 @@ Continuous Integration status (master)
 Documentation
 -------------
 
-The current documentation is available [here](https://ciip.in.tum.de/elsadocs/).
-
+Have a look at the [quickstart guide](https://ciip.in.tum.de/elsadocs/guides/quickstart-cxx.html),
+or check out the current documentation [here](https://ciip.in.tum.de/elsadocs/).
 
 Requirements
 ------------
@@ -62,7 +62,7 @@ As elsa depends on Eigen3 (version 3.3.9 or newer) and spdlog (version 1.7 or ne
 
 Contributing
 ------------
-To get involved, please see our [contributing page](CONTRIBUTING.md).
+To get involved, please see our [contributing page](https://gitlab.lrz.de/IP/elsa/-/blob/master/CONTRIBUTING.md).
 
 Contributors
 ------------
@@ -80,6 +80,7 @@ The **contributors** to elsa are:
 - Jonas Jelten
 - Andi Braimllari
 - Michael Loipfuehrer
+
 
 History
 -------
