@@ -5,6 +5,7 @@
 #include "Descriptors/RandomBlocksDescriptor.h"
 #include "LinearOperator.h"
 #include "DescriptorUtils.h"
+#include "Error.h"
 #include "Geometry.h"
 
 #include <pybind11/pybind11.h>
@@ -35,7 +36,7 @@ namespace elsa
                 if constexpr (N > 1) {
                     return invokeBestCommonVariadic<T, N - 1>::exec(args);
                 } else {
-                    throw(std::logic_error("Unsupported number of variadic arguments"));
+                    throw LogicError("Unsupported number of variadic arguments");
                 }
             };
         };

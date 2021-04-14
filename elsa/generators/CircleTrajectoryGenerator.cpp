@@ -18,7 +18,7 @@ namespace elsa
         const auto dim = volumeDescriptor.getNumberOfDimensions();
 
         if (dim < 2 || dim > 3)
-            throw std::invalid_argument("CircleTrajectoryGenerator: can only handle 2d/3d");
+            throw InvalidArgumentError("CircleTrajectoryGenerator: can only handle 2d/3d");
 
         Logger::get("CircleTrajectoryGenerator")
             ->info("creating {}D trajectory with {} poses in an {} degree arc", dim, numberOfPoses,

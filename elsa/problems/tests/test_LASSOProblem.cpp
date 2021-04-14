@@ -6,6 +6,7 @@
  * @author Andi Braimllari
  */
 
+#include "Error.h"
 #include "L2NormPow2.h"
 #include "LASSOProblem.h"
 #include "VolumeDescriptor.h"
@@ -46,7 +47,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing LASSOProblem", "", float, double)
             THEN("an invalid_argument exception is thrown")
             {
                 REQUIRE_THROWS_AS(LASSOProblem<TestType>(wlsProblem, invalidRegTerm),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -59,7 +60,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing LASSOProblem", "", float, double)
             THEN("an invalid_argument exception is thrown")
             {
                 REQUIRE_THROWS_AS(LASSOProblem<TestType>(wlsProblem, invalidRegTerm),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 

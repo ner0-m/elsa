@@ -48,7 +48,7 @@ namespace elsa
                 return 8;
 
             default:
-                throw std::invalid_argument("DataUtils::getSizeOfDataType: unknown data type");
+                throw InvalidArgumentError("DataUtils::getSizeOfDataType: unknown data type");
         }
     }
 
@@ -59,7 +59,7 @@ namespace elsa
         std::stringstream convert(str);
         convert >> value;
         if (convert.fail())
-            throw std::runtime_error("DataUtils::parse: failed to interpret string");
+            throw Error("DataUtils::parse: failed to interpret string");
         return value;
     }
 
@@ -73,7 +73,7 @@ namespace elsa
         while (!convert.eof()) {
             convert >> value;
             if (convert.fail())
-                throw std::runtime_error("DataUtils::parseVector: failed to interpret string");
+                throw Error("DataUtils::parseVector: failed to interpret string");
             dataVector.push_back(value);
         }
 
@@ -89,12 +89,12 @@ namespace elsa
         // allocate temporary storage
         auto ptr = std::make_unique<raw_data_t[]>(sizeInElements);
         if (!ptr)
-            throw std::runtime_error("DataUtils::parseRawData: failed allocating memory");
+            throw Error("DataUtils::parseRawData: failed allocating memory");
 
         // parse data into the storage
         file.read(reinterpret_cast<char*>(ptr.get()), sizeInBytes);
         if (file.gcount() != sizeInBytes)
-            throw std::runtime_error("DataUtils::parseRawData: failed to read sufficient data");
+            throw Error("DataUtils::parseRawData: failed to read sufficient data");
 
         // perform a component-wise copy to the data container
         for (std::size_t i = 0; i < sizeInElements; ++i)

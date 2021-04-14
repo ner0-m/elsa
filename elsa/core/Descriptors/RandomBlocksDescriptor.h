@@ -30,7 +30,7 @@ namespace elsa
          *
          * \param[in] blockDescriptors the list of descriptors of each block
          *
-         * \throw std::invalid_argument if the list is empty
+         * \throw InvalidArgumentError if the list is empty
          */
         RandomBlocksDescriptor(
             const std::vector<std::unique_ptr<DataDescriptor>>& blockDescriptors);
@@ -40,7 +40,7 @@ namespace elsa
          *
          * \param[in] blockDescriptors the list of descriptors of each block
          *
-         * \throw std::invalid_argument if the list is empty
+         * \throw InvalidArgumentError if the list is empty
          */
         RandomBlocksDescriptor(std::vector<std::unique_ptr<DataDescriptor>>&& blockDescriptors);
 

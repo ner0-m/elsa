@@ -1,7 +1,8 @@
 #include "DataDescriptor.h"
 
-#include <stdexcept>
 #include <algorithm>
+
+#include "Error.h"
 
 namespace elsa
 {
@@ -13,7 +14,7 @@ namespace elsa
     {
         // sanity checks
         if ((numberOfCoefficientsPerDimension.array() <= 0).any())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "DataDescriptor: non-positive number of coefficients not allowed");
 
         // set the origin at center
@@ -36,13 +37,13 @@ namespace elsa
     {
         // sanity checks
         if ((numberOfCoefficientsPerDimension.array() <= 0).any())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "DataDescriptor: non-positive number of coefficients not allowed");
         if (numberOfCoefficientsPerDimension.size() != spacingPerDimension.size())
-            throw std::invalid_argument("DataDescriptor: mismatch between "
-                                        "numberOfCoefficientsPerDimension and spacingPerDimension");
+            throw InvalidArgumentError("DataDescriptor: mismatch between "
+                                       "numberOfCoefficientsPerDimension and spacingPerDimension");
         if ((spacingPerDimension.array() < 0).any())
-            throw std::invalid_argument("DataDescriptor: non-positive spacing not allowed");
+            throw InvalidArgumentError("DataDescriptor: non-positive spacing not allowed");
 
         // set the origin at center
         _locationOfOrigin = static_cast<real_t>(0.5)
@@ -77,7 +78,7 @@ namespace elsa
     {
         // sanity check
         if (coordinate.size() != _productOfCoefficientsPerDimension.size())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "DataDescriptor: mismatch of coordinate and descriptor size");
 
         return _productOfCoefficientsPerDimension.cwiseProduct(coordinate).sum();
@@ -87,7 +88,7 @@ namespace elsa
     {
         // sanity check
         if (index < 0 || index >= getNumberOfCoefficients())
-            throw std::invalid_argument("DataDescriptor: invalid index");
+            throw InvalidArgumentError("DataDescriptor: invalid index");
 
         IndexVector_t coordinate(_numberOfDimensions);
 

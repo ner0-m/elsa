@@ -43,7 +43,7 @@ namespace elsa
                            dynamic_cast<DataHandlerMapGPU<data_t>*>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else {
-                throw std::logic_error("Unknown handler type");
+                throw InternalError("Unknown handler type");
             }
 #endif
         } else {
@@ -53,7 +53,7 @@ namespace elsa
                            dynamic_cast<DataHandlerMapCPU<data_t>*>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else {
-                throw std::logic_error("Unknown handler type");
+                throw InternalError("Unknown handler type");
             }
         }
     }
@@ -133,7 +133,7 @@ namespace elsa
                 if (auto info = getMetaInfoFromExpressions(args...); info.has_value()) {
                     return *info;
                 } else {
-                    throw std::logic_error("No meta info available, cannot create expression");
+                    throw LogicError("No meta info available, cannot create expression");
                 }
             }
         }

@@ -7,6 +7,7 @@
  */
 
 #include <catch2/catch.hpp>
+#include "Error.h"
 #include "PGMHandler.h"
 
 #include "VolumeDescriptor.h"
@@ -75,9 +76,9 @@ SCENARIO("Write PGM file")
         IndexVector_t numCoeff1d{{10}};
         VolumeDescriptor dd1d(numCoeff1d);
         DataContainer dc1d(dd1d);
-        THEN("A exception is raised")
+        THEN("An exception is raised")
         {
-            REQUIRE_THROWS_AS(PGM::write(dc1d, "test.pgm"), std::invalid_argument);
+            REQUIRE_THROWS_AS(PGM::write(dc1d, "test.pgm"), InvalidArgumentError);
         }
     }
 
@@ -86,9 +87,9 @@ SCENARIO("Write PGM file")
         IndexVector_t numCoeff3d{{10, 8, 17}};
         VolumeDescriptor dd(numCoeff3d);
         DataContainer dc(dd);
-        THEN("A exception is raised")
+        THEN("An exception is raised")
         {
-            REQUIRE_THROWS_AS(PGM::write(dc, "test.pgm"), std::invalid_argument);
+            REQUIRE_THROWS_AS(PGM::write(dc, "test.pgm"), InvalidArgumentError);
         }
     }
 }

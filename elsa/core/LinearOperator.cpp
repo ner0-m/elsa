@@ -92,7 +92,7 @@ namespace elsa
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != x.getSize()
                     || _lhs->getDomainDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "LinearOperator::apply: incorrect input/output sizes for adjoint leaf");
 
                 _lhs->applyAdjoint(x, Ax);
@@ -101,7 +101,7 @@ namespace elsa
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_lhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
                     || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "LinearOperator::apply: incorrect input/output sizes for leaf");
 
                 _lhs->apply(x, Ax);
@@ -116,7 +116,7 @@ namespace elsa
                     || _rhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize()
                     || _lhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
                     || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "LinearOperator::apply: incorrect input/output sizes for add leaf");
 
                 _rhs->apply(x, Ax);
@@ -128,7 +128,7 @@ namespace elsa
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_rhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
                     || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "LinearOperator::apply: incorrect input/output sizes for mult leaf");
 
                 DataContainer<data_t> temp(_rhs->getRangeDescriptor(), x.getDataHandlerType());
@@ -138,7 +138,7 @@ namespace elsa
             }
         }
 
-        throw std::logic_error("LinearOperator: apply called on ill-formed object");
+        throw LogicError("LinearOperator: apply called on ill-formed object");
     }
 
     template <typename data_t>
@@ -165,8 +165,8 @@ namespace elsa
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_lhs->getDomainDescriptor().getNumberOfCoefficients() != y.getSize()
                     || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                    throw std::invalid_argument("LinearOperator::applyAdjoint: incorrect "
-                                                "input/output sizes for adjoint leaf");
+                    throw InvalidArgumentError("LinearOperator::applyAdjoint: incorrect "
+                                               "input/output sizes for adjoint leaf");
 
                 _lhs->apply(y, Aty);
                 return;
@@ -174,7 +174,7 @@ namespace elsa
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
                     || _lhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "LinearOperator::applyAdjoint: incorrect input/output sizes for leaf");
 
                 _lhs->applyAdjoint(y, Aty);
@@ -189,7 +189,7 @@ namespace elsa
                     || _rhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize()
                     || _lhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
                     || _lhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "LinearOperator::applyAdjoint: incorrect input/output sizes for add leaf");
 
                 _rhs->applyAdjoint(y, Aty);
@@ -201,7 +201,7 @@ namespace elsa
                 // sanity check the arguments for the intended evaluation tree leaf operation
                 if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
                     || _rhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "LinearOperator::applyAdjoint: incorrect input/output sizes for mult leaf");
 
                 DataContainer<data_t> temp(_lhs->getDomainDescriptor(), y.getDataHandlerType());
@@ -211,7 +211,7 @@ namespace elsa
             }
         }
 
-        throw std::logic_error("LinearOperator: applyAdjoint called on ill-formed object");
+        throw LogicError("LinearOperator: applyAdjoint called on ill-formed object");
     }
 
     template <typename data_t>
@@ -284,12 +284,12 @@ namespace elsa
                 // for multiplication, domain of _lhs should match range of _rhs
                 if (_lhs->getDomainDescriptor().getNumberOfCoefficients()
                     != _rhs->getRangeDescriptor().getNumberOfCoefficients())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "LinearOperator: composite mult domain/range mismatch");
                 break;
 
             default:
-                throw std::logic_error("LinearOperator: unknown composition mode");
+                throw LogicError("LinearOperator: unknown composition mode");
         }
     }
 

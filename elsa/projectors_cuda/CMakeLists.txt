@@ -4,7 +4,7 @@ check_language(CUDA)
 
 if (CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
-    message(STATUS "CUDA support enabled")
+    message(STATUS "enabling CUDA projectors...")
 
     # build the kernels first
     add_subdirectory(projector_kernels)
@@ -66,5 +66,5 @@ if (CMAKE_CUDA_COMPILER)
     # install the module
     InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
 else()
-    message(STATUS "CUDA compiler NOT found! CUDA support disabled")
+    message(STATUS "CUDA compiler NOT found! CUDA projector support disabled")
 endif()

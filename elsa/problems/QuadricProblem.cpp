@@ -65,8 +65,8 @@ namespace elsa
             const auto regTermResidualPtr =
                 dynamic_cast<const LinearResidual<data_t>*>(&regFuncPtr->getResidual());
             if (!regTermResidualPtr)
-                throw std::logic_error("QuadricProblem: cannot convert a non-linear regularization "
-                                       "term to quadric form");
+                throw LogicError("QuadricProblem: cannot convert a non-linear regularization "
+                                 "term to quadric form");
 
             if (regTermResidualPtr->hasOperator()) {
                 const auto& regTermOp = regTermResidualPtr->getOperator();
@@ -93,8 +93,8 @@ namespace elsa
             const auto regTermResidualPtr =
                 dynamic_cast<const LinearResidual<data_t>*>(&regFuncPtr->getResidual());
             if (!regTermResidualPtr)
-                throw std::logic_error("QuadricProblem: cannot convert a non-linear regularization "
-                                       "term to quadric form");
+                throw LogicError("QuadricProblem: cannot convert a non-linear regularization "
+                                 "term to quadric form");
 
             const auto& W = regFuncPtr->getWeightingOperator();
             std::unique_ptr<Scaling<data_t>> lambdaWPtr;
@@ -148,8 +148,8 @@ namespace elsa
                 }
             }
         } else {
-            throw std::invalid_argument("QuadricProblem: regularization terms should be of type "
-                                        "(Weighted)L2NormPow2 or Quadric");
+            throw InvalidArgumentError("QuadricProblem: regularization terms should be of type "
+                                       "(Weighted)L2NormPow2 or Quadric");
         }
     }
 
@@ -184,7 +184,7 @@ namespace elsa
                 const auto residualPtr =
                     dynamic_cast<const LinearResidual<data_t>*>(&trueFunctionalPtr->getResidual());
                 if (!residualPtr)
-                    throw std::logic_error(
+                    throw LogicError(
                         "QuadricProblem: cannot convert a non-linear term to quadric form");
 
                 if (residualPtr->hasOperator()) {
@@ -209,7 +209,7 @@ namespace elsa
                 const auto residualPtr =
                     dynamic_cast<const LinearResidual<data_t>*>(&trueFunctionalPtr->getResidual());
                 if (!residualPtr)
-                    throw std::logic_error(
+                    throw LogicError(
                         "QuadricProblem: cannot convert a non-linear term to quadric form");
 
                 const auto& W = trueFunctionalPtr->getWeightingOperator();
@@ -231,8 +231,8 @@ namespace elsa
                     }
                 }
             } else {
-                throw std::logic_error("QuadricProblem: can only convert functionals of type "
-                                       "(Weighted)L2NormPow2 to Quadric");
+                throw LogicError("QuadricProblem: can only convert functionals of type "
+                                 "(Weighted)L2NormPow2 to Quadric");
             }
 
             if (problem.getRegularizationTerms().empty()) {

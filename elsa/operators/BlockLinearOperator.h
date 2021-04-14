@@ -46,7 +46,7 @@ namespace elsa
          * \param[in] ops the list of operators
          * \param[in] blockType the fashion in which the operators are to be stacked
          *
-         * \throw std::invalid_argument if ops is empty
+         * \throw InvalidArgumentError if ops is empty
          *
          * The domain and range descriptors of the BlockLinearOperator are generated automatically
          * based on the descriptors of the operators in the list. For the block descriptor, a
@@ -65,7 +65,7 @@ namespace elsa
          * \param[in] ops the list of operators
          * \param[in] blockType the fashion in which the operators are to be stacked
          *
-         * \throw std::invalid_argument if the passed in descriptors are not suitable for the
+         * \throw InvalidArgumentError if the passed in descriptors are not suitable for the
          * BlockLinearOperator
          */
         BlockLinearOperator(const DataDescriptor& domainDescriptor,

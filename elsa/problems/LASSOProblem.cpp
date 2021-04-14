@@ -1,4 +1,5 @@
 #include "LASSOProblem.h"
+#include "Error.h"
 #include "Identity.h"
 
 namespace elsa
@@ -12,11 +13,11 @@ namespace elsa
           _wlsProblem{wlsProblem}
     {
         if (regTerm.getWeight() < 0) {
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "LASSOProblem: regularization term must have a non-negative weight");
         }
         if (!dynamic_cast<const L1Norm<data_t>*>(&regTerm.getFunctional())) {
-            throw std::invalid_argument("LASSOProblem: regularization term must be type L1Norm");
+            throw InvalidArgumentError("LASSOProblem: regularization term must be type L1Norm");
         }
     }
 
@@ -75,8 +76,7 @@ namespace elsa
         const auto& regTerms = problem.getRegularizationTerms();
 
         if (regTerms.size() != 1) {
-            throw std::invalid_argument(
-                "LASSOProblem: exactly one regularization term is required");
+            throw InvalidArgumentError("LASSOProblem: exactly one regularization term is required");
         }
 
         return regTerms[0];

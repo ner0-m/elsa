@@ -37,7 +37,7 @@ namespace elsa
          * \param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
          * per dimension, (dimension is set implicitly from the size of the vector)
          *
-         * \throw std::invalid_argument if any number of coefficients is non-positive
+         * \throw InvalidArgumentError if any number of coefficients is non-positive
          */
         explicit DataDescriptor(IndexVector_t numberOfCoefficientsPerDimension);
 
@@ -48,7 +48,7 @@ namespace elsa
          * per dimension, (dimension is set implicitly from the size of the vector)
          * \param[in] spacingPerDimension vector containing the spacing per dimension
          *
-         * \throw std::invalid_argument if any number of coefficients is non-positive,
+         * \throw InvalidArgumentError if any number of coefficients is non-positive,
          *        or sizes of numberOfCoefficientsPerDimension and spacingPerDimension do not match
          */
         explicit DataDescriptor(IndexVector_t numberOfCoefficientsPerDimension,

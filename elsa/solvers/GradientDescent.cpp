@@ -11,7 +11,7 @@ namespace elsa
     {
         // sanity check
         if (_stepSize <= 0)
-            throw std::invalid_argument("GradientDescent: step size has to be positive");
+            throw InvalidArgumentError("GradientDescent: step size has to be positive");
     }
 
     template <typename data_t>

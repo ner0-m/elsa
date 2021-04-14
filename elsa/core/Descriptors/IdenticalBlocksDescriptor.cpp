@@ -1,5 +1,6 @@
 #include "IdenticalBlocksDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "Error.h"
 
 namespace elsa
 {
@@ -17,7 +18,7 @@ namespace elsa
     const DataDescriptor& IdenticalBlocksDescriptor::getDescriptorOfBlock(index_t i) const
     {
         if (i < 0 || i >= _numberOfBlocks)
-            throw std::invalid_argument("BlockDescriptor: index i is out of bounds");
+            throw InvalidArgumentError("BlockDescriptor: index i is out of bounds");
 
         return *_blockDescriptor;
     }
@@ -25,7 +26,7 @@ namespace elsa
     index_t IdenticalBlocksDescriptor::getOffsetOfBlock(index_t i) const
     {
         if (i < 0 || i >= _numberOfBlocks)
-            throw std::invalid_argument("BlockDescriptor: index i is out of bounds");
+            throw InvalidArgumentError("BlockDescriptor: index i is out of bounds");
 
         return i * _blockDescriptor->getNumberOfCoefficients();
     }
@@ -53,7 +54,7 @@ namespace elsa
                                                          const DataDescriptor& dataDescriptor)
     {
         if (numberOfBlocks < 1)
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "IdenticalBlockDescriptor: number of blocks has to be positive");
 
         auto numberOfCoeffs = dataDescriptor.getNumberOfCoefficientsPerDimension();

@@ -21,6 +21,7 @@ set(MODULE_HEADERS
         Descriptors/RandomBlocksDescriptor.h
         DataContainer.h
         DataContainerIterator.h
+        Error.h
         Handlers/DataHandler.h
         Handlers/DataHandlerCPU.h
         Handlers/DataHandlerMapCPU.h
@@ -41,6 +42,7 @@ set(MODULE_SOURCES
         Descriptors/DetectorDescriptor.cpp
         Descriptors/PartitionDescriptor.cpp
         DataContainer.cpp
+        Error.cpp
         Handlers/DataHandlerCPU.cpp
         Handlers/DataHandlerMapCPU.cpp
         LinearOperator.cpp
@@ -64,6 +66,8 @@ add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC Eigen3::Eigen)
+
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE ${CMAKE_DL_LIBS})
 
 # use OpenMP is available
 find_package(OpenMP)

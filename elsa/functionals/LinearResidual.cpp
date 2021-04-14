@@ -31,7 +31,7 @@ namespace elsa
           _dataVector{b}
     {
         if (A.getRangeDescriptor().getNumberOfCoefficients() != b.getSize())
-            throw std::invalid_argument("LinearResidual: A and b do not match");
+            throw InvalidArgumentError("LinearResidual: A and b do not match");
     }
 
     template <typename data_t>
@@ -50,7 +50,7 @@ namespace elsa
     const LinearOperator<data_t>& LinearResidual<data_t>::getOperator() const
     {
         if (!_operator)
-            throw std::runtime_error("LinearResidual::getOperator: operator not present");
+            throw Error("LinearResidual::getOperator: operator not present");
 
         return *_operator;
     }
@@ -59,7 +59,7 @@ namespace elsa
     const DataContainer<data_t>& LinearResidual<data_t>::getDataVector() const
     {
         if (!_dataVector)
-            throw std::runtime_error("LinearResidual::getDataVector: data vector not present");
+            throw Error("LinearResidual::getDataVector: data vector not present");
 
         return *_dataVector;
     }

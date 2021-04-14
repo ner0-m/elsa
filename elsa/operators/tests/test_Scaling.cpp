@@ -37,7 +37,7 @@ SCENARIO("Constructing a Scaling operator")
             {
                 REQUIRE(scalingOp.isIsotropic());
                 REQUIRE(scalingOp.getScaleFactor() == scaleFactor);
-                REQUIRE_THROWS_AS(scalingOp.getScaleFactors(), std::logic_error);
+                REQUIRE_THROWS_AS(scalingOp.getScaleFactors(), LogicError);
             }
         }
 
@@ -57,7 +57,7 @@ SCENARIO("Constructing a Scaling operator")
             {
                 REQUIRE(!scalingOp.isIsotropic());
                 REQUIRE(scalingOp.getScaleFactors() == dc);
-                REQUIRE_THROWS_AS(scalingOp.getScaleFactor(), std::logic_error);
+                REQUIRE_THROWS_AS(scalingOp.getScaleFactor(), LogicError);
             }
         }
 

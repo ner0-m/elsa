@@ -34,7 +34,7 @@ namespace elsa
     data_t Functional<data_t>::evaluate(const DataContainer<data_t>& x)
     {
         if (x.getSize() != getDomainDescriptor().getNumberOfCoefficients())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "Functional::evaluate: argument size does not match functional");
 
         // optimize for trivial LinearResiduals (no extra copy for residual result needed then)
@@ -61,7 +61,7 @@ namespace elsa
     {
         if (x.getSize() != getDomainDescriptor().getNumberOfCoefficients()
             || result.getSize() != _residual->getDomainDescriptor().getNumberOfCoefficients())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "Functional::getGradient: argument sizes do not match functional");
 
         // optimize for trivial or simple LinearResiduals

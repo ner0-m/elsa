@@ -30,7 +30,7 @@ namespace elsa
          *  times
          * along a new dimension
          *
-         *  \throw std::invalid_argument if numberOfBlocks is non-positive
+         *  \throw InvalidArgumentError if numberOfBlocks is non-positive
          */
         IdenticalBlocksDescriptor(index_t numberOfBlocks, const DataDescriptor& dataDescriptor);
 

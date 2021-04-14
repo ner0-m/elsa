@@ -101,7 +101,7 @@ SCENARIO("testing the DataUtils")
 
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataUtils::parse<index_t>(testStringGarbage), std::runtime_error);
+                REQUIRE_THROWS_AS(DataUtils::parse<index_t>(testStringGarbage), Error);
             }
         }
     }
@@ -135,8 +135,7 @@ SCENARIO("testing the DataUtils")
 
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataUtils::parseVector<index_t>(testStringGarbage),
-                                  std::runtime_error);
+                REQUIRE_THROWS_AS(DataUtils::parseVector<index_t>(testStringGarbage), Error);
             }
         }
     }

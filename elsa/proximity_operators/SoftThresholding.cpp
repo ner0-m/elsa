@@ -1,4 +1,5 @@
 #include "SoftThresholding.h"
+#include "Error.h"
 
 namespace elsa
 {
@@ -14,7 +15,7 @@ namespace elsa
                                              DataContainer<data_t>& prox) const
     {
         if (v.getSize() != prox.getSize()) {
-            throw std::logic_error("SoftThresholding: sizes of v and prox must match");
+            throw LogicError("SoftThresholding: sizes of v and prox must match");
         }
 
         auto vIter = v.begin();

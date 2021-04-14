@@ -15,16 +15,16 @@ namespace elsa
     {
         auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
         if (dim != static_cast<std::size_t>(_rangeDescriptor->getNumberOfDimensions())) {
-            throw std::logic_error(
+            throw LogicError(
                 std::string("SiddonsMethodCUDA: domain and range dimension need to match"));
         }
 
         if (dim != 2 && dim != 3) {
-            throw std::logic_error("SiddonsMethodCUDA: only supporting 2d/3d operations");
+            throw LogicError("SiddonsMethodCUDA: only supporting 2d/3d operations");
         }
 
         if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
-            throw std::logic_error("SiddonsMethodCUDA: geometry list was empty");
+            throw LogicError("SiddonsMethodCUDA: geometry list was empty");
         }
 
         const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
@@ -51,7 +51,7 @@ namespace elsa
             auto geometry = _detectorDescriptor.getGeometryAt(i);
 
             if (!geometry)
-                throw std::logic_error("JosephsMethodCUDA: Access not existing geometry pose");
+                throw LogicError("JosephsMethodCUDA: Access not existing geometry pose");
 
             RealMatrix_t P = geometry->getInverseProjectionMatrix().block(0, 0, dim, dim);
             int8_t* slice = projPtr + i * projPitch * dim;
@@ -60,7 +60,7 @@ namespace elsa
             if (cudaMemcpy2DAsync(slice, projPitch, P.data(), dim * sizeof(real_t),
                                   dim * sizeof(real_t), dim, cudaMemcpyHostToDevice)
                 != cudaSuccess)
-                throw std::logic_error(
+                throw LogicError(
                     "SiddonsMethodCUDA: Could not transfer inverse projection matrices to GPU.");
 
             int8_t* rayPtr = rayBasePtr + i * rayPitch;
@@ -70,7 +70,7 @@ namespace elsa
             // transfer ray origin
             if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyHostToDevice)
                 != cudaSuccess)
-                throw std::logic_error("SiddonsMethodCUDA: Could not transfer ray origins to GPU.");
+                throw LogicError("SiddonsMethodCUDA: Could not transfer ray origins to GPU.");
         }
     }
 
@@ -152,8 +152,8 @@ namespace elsa
             if (adjoint) {
                 copy3DDataContainerGPU<cudaMemcpyHostToDevice>(sinoPtr, dsinoPtr, sinoExt);
                 if (cudaMemset3DAsync(dvolumePtr, 0, volExt) != cudaSuccess)
-                    throw std::logic_error("SiddonsMethodCUDA::traverseVolume: Could not "
-                                           "zero-initialize volume on GPU.");
+                    throw LogicError("SiddonsMethodCUDA::traverseVolume: Could not "
+                                     "zero-initialize volume on GPU.");
             } else {
                 copy3DDataContainerGPU<cudaMemcpyHostToDevice>(volumePtr, dvolumePtr, volExt);
             }
@@ -206,21 +206,21 @@ namespace elsa
                         dsinoPtr.ptr, dsinoPtr.pitch, sinoPtr, rangeDimsui[0] * sizeof(data_t),
                         rangeDimsui[0] * sizeof(data_t), rangeDimsui[1], cudaMemcpyHostToDevice)
                     != cudaSuccess)
-                    throw std::logic_error(
+                    throw LogicError(
                         "SiddonsMethodCUDA::traverseVolume: Couldn't transfer sinogram to GPU.");
 
                 if (cudaMemset2DAsync(dvolumePtr.ptr, dvolumePtr.pitch, 0,
                                       domainDimsui[0] * sizeof(data_t), domainDimsui[1])
                     != cudaSuccess)
-                    throw std::logic_error("SiddonsMethodCUDA::traverseVolume: Could not "
-                                           "zero-initialize volume on GPU.");
+                    throw LogicError("SiddonsMethodCUDA::traverseVolume: Could not "
+                                     "zero-initialize volume on GPU.");
             } else {
                 if (cudaMemcpy2DAsync(dvolumePtr.ptr, dvolumePtr.pitch, volumePtr,
                                       domainDimsui[0] * sizeof(data_t),
                                       domainDimsui[0] * sizeof(data_t), domainDimsui[1],
                                       cudaMemcpyHostToDevice)
                     != cudaSuccess)
-                    throw std::logic_error(
+                    throw LogicError(
                         "SiddonsMethodCUDA::traverseVolume: Couldn't transfer volume to GPU.");
             }
 
@@ -250,14 +250,14 @@ namespace elsa
                                  dvolumePtr.pitch, domainDimsui[0] * sizeof(data_t),
                                  domainDimsui[1], cudaMemcpyDeviceToHost)
                     != cudaSuccess)
-                    throw std::logic_error(
+                    throw LogicError(
                         "SiddonsMethodCUDA::traverseVolume: Couldn't retrieve results from GPU.");
             } else {
                 if (cudaMemcpy2D(sinoPtr, rangeDimsui[0] * sizeof(data_t), dsinoPtr.ptr,
                                  dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t), rangeDimsui[1],
                                  cudaMemcpyDeviceToHost)
                     != cudaSuccess)
-                    throw std::logic_error(
+                    throw LogicError(
                         "SiddonsMethodCUDA::traverseVolume: Couldn't retrieve results from GPU");
             }
         }
@@ -296,15 +296,15 @@ namespace elsa
             cpyParams.srcPtr = gpuData;
             cpyParams.dstPtr = tmp;
         } else {
-            throw std::logic_error("Can only copy data between device and host");
+            throw LogicError("Can only copy data between device and host");
         }
 
         if (async) {
             if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
-                throw std::logic_error("Failed copying data between device and host");
+                throw LogicError("Failed copying data between device and host");
         } else {
             if (cudaMemcpy3D(&cpyParams) != cudaSuccess)
-                throw std::logic_error("Failed copying data between device and host");
+                throw LogicError("Failed copying data between device and host");
         }
     }
 

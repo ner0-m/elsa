@@ -1,6 +1,43 @@
-.idea
-.vscode
+# cmake-generated
 cmake-build-*
 cmake-build-debug
 cmake-build-release
 build/
+bin/
+/compile_commands.json
+
+# git
+*.orig
+
+# clion
+.idea
+
+# vscode
+.vscode/*
+*.code-workspace
+
+# vim
+[._]*.s[a-v][a-z]
+!*.svg  # comment out if you don't need vector files
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+[._]*.un~
+
+# emacs
+*~
+\#*\#
+.\#*
+.dir-locals.el
+
+# clangd
+.cache
+
+# misc
+.ignore
+todo.org
+todo

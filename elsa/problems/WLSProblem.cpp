@@ -59,14 +59,14 @@ namespace elsa
 
         if (!dynamic_cast<const WeightedL2NormPow2<data_t>*>(&dataTerm)
             && !dynamic_cast<const L2NormPow2<data_t>*>(&dataTerm))
-            throw std::logic_error("WLSProblem: conversion failed - data term is not "
-                                   "of type (Weighted)L2NormPow2");
+            throw LogicError("WLSProblem: conversion failed - data term is not "
+                             "of type (Weighted)L2NormPow2");
 
         const auto dataTermResidual =
             dynamic_cast<const LinearResidual<data_t>*>(&dataTerm.getResidual());
 
         if (!dataTermResidual)
-            throw std::logic_error("WLSProblem: conversion failed - data term is non-linear");
+            throw LogicError("WLSProblem: conversion failed - data term is non-linear");
 
         // data term is of convertible type
 
@@ -80,14 +80,14 @@ namespace elsa
         for (const auto& regTerm : regTerms) {
             if (!dynamic_cast<const WeightedL2NormPow2<data_t>*>(&regTerm.getFunctional())
                 && !dynamic_cast<const L2NormPow2<data_t>*>(&regTerm.getFunctional()))
-                throw std::logic_error("WLSProblem: conversion failed - regularization term is not "
-                                       "of type (Weighted)L2NormPow2");
+                throw LogicError("WLSProblem: conversion failed - regularization term is not "
+                                 "of type (Weighted)L2NormPow2");
 
             const auto regTermResidual =
                 dynamic_cast<const LinearResidual<data_t>*>(&regTerm.getFunctional().getResidual());
 
             if (!regTermResidual)
-                throw std::logic_error(
+                throw LogicError(
                     "WLSProblem: conversion failed - regularization term is non-linear");
 
             rangeDescList.push_back(regTermResidual->getRangeDescriptor().clone());
@@ -110,8 +110,8 @@ namespace elsa
 
                 if constexpr (std::is_floating_point_v<data_t>) {
                     if (fac < 0) {
-                        throw std::logic_error("WLSProblem: conversion failed - negative weighting "
-                                               "factor in WeightedL2NormPow2 term");
+                        throw LogicError("WLSProblem: conversion failed - negative weighting "
+                                         "factor in WeightedL2NormPow2 term");
                     }
                 }
 
@@ -122,9 +122,8 @@ namespace elsa
                 if constexpr (std::is_floating_point_v<data_t>) {
                     for (const auto& w : fac) {
                         if (w < 0) {
-                            throw std::logic_error(
-                                "WLSProblem: conversion failed - negative weighting "
-                                "factor in WeightedL2NormPow2 term");
+                            throw LogicError("WLSProblem: conversion failed - negative weighting "
+                                             "factor in WeightedL2NormPow2 term");
                         }
                     }
                 }
@@ -171,9 +170,8 @@ namespace elsa
 
                     if constexpr (std::is_floating_point_v<data_t>) {
                         if (lambda * fac < 0) {
-                            throw std::logic_error(
-                                "WLSProblem: conversion failed - negative weighting "
-                                "factor in WeightedL2NormPow2 term");
+                            throw LogicError("WLSProblem: conversion failed - negative weighting "
+                                             "factor in WeightedL2NormPow2 term");
                         }
                     }
 
@@ -184,7 +182,7 @@ namespace elsa
                     if constexpr (std::is_floating_point_v<data_t>) {
                         for (const auto& w : fac) {
                             if (lambda * w < 0) {
-                                throw std::logic_error(
+                                throw LogicError(
                                     "WLSProblem: conversion failed - negative weighting "
                                     "factor in WeightedL2NormPow2 term");
                             }
@@ -207,7 +205,7 @@ namespace elsa
             } else {
                 if constexpr (std::is_floating_point_v<data_t>) {
                     if (lambda < 0) {
-                        throw std::logic_error(
+                        throw LogicError(
                             "WLSProblem: conversion failed - negative regularization term weight");
                     }
                 }

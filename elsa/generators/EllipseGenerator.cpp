@@ -13,7 +13,7 @@ namespace elsa
     {
         // sanity check
         if (dc.getDataDescriptor().getNumberOfDimensions() != 2)
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EllipseGenerator::drawFilledEllipse2d: can only work on 2d DataContainers");
 
         // don't draw anything if size is 0
@@ -54,7 +54,7 @@ namespace elsa
     {
         // sanity check
         if (dc.getDataDescriptor().getNumberOfDimensions() != 3)
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EllipseGenerator::drawFilledEllipsoid3d: can only work on 3d DataContainers");
 
         // enables small optimizations
@@ -235,12 +235,12 @@ namespace elsa
             // bounds check coord just to be sure (we're not performance critical here anyway)
             if (coord[0] < 0
                 || coord[0] >= dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0])
-                throw std::invalid_argument("EllipseGenerator::drawShearedLinePairs2d: drawing "
-                                            "coordinate (x) out of bounds");
+                throw InvalidArgumentError("EllipseGenerator::drawShearedLinePairs2d: drawing "
+                                           "coordinate (x) out of bounds");
             if (coord[1] < 0
                 || coord[1] >= dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1])
-                throw std::invalid_argument("EllipseGenerator::drawShearedLinePairs2d: drawing "
-                                            "coordinate (y) out of bounds");
+                throw InvalidArgumentError("EllipseGenerator::drawShearedLinePairs2d: drawing "
+                                           "coordinate (y) out of bounds");
 
             dc(coord) += amplitude;
 
@@ -252,8 +252,8 @@ namespace elsa
 
                 if (coord[1] < 0
                     || coord[1] >= dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1])
-                    throw std::invalid_argument("EllipseGenerator::drawShearedLinePairs2d: drawing "
-                                                "coordinate (y) out of bounds");
+                    throw InvalidArgumentError("EllipseGenerator::drawShearedLinePairs2d: drawing "
+                                               "coordinate (y) out of bounds");
 
                 dc(coord) += amplitude;
             }

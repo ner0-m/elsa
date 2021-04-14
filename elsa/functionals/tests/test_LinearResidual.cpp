@@ -64,8 +64,8 @@ SCENARIO("Trivial LinearResidual")
                 REQUIRE(linRes.hasOperator() == false);
                 REQUIRE(linRes.hasDataVector() == false);
 
-                REQUIRE_THROWS_AS(linRes.getOperator(), std::runtime_error);
-                REQUIRE_THROWS_AS(linRes.getDataVector(), std::runtime_error);
+                REQUIRE_THROWS_AS(linRes.getOperator(), Error);
+                REQUIRE_THROWS_AS(linRes.getDataVector(), Error);
             }
 
             THEN("a clone behaves as expected")
@@ -114,7 +114,7 @@ SCENARIO("LinearResidual with just a data vector")
                 REQUIRE(linRes.hasDataVector() == true);
 
                 REQUIRE(linRes.getDataVector() == dc);
-                REQUIRE_THROWS_AS(linRes.getOperator(), std::runtime_error);
+                REQUIRE_THROWS_AS(linRes.getOperator(), Error);
             }
 
             THEN("a clone behaves as expected")
@@ -165,7 +165,7 @@ SCENARIO("LinearResidual with just an operator")
                 REQUIRE(linRes.hasDataVector() == false);
 
                 REQUIRE(linRes.getOperator() == mockOp);
-                REQUIRE_THROWS_AS(linRes.getDataVector(), std::runtime_error);
+                REQUIRE_THROWS_AS(linRes.getDataVector(), Error);
             }
 
             THEN("a clone behaves as expected")

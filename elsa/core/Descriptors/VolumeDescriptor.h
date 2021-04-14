@@ -32,7 +32,7 @@ namespace elsa
          * \param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
          * per dimension, (dimension is set implicitly from the size of the vector)
          *
-         * \throw std::invalid_argument if any number of coefficients is non-positive
+         * \throw InvalidArgumentError if any number of coefficients is non-positive
          */
         explicit VolumeDescriptor(IndexVector_t numberOfCoefficientsPerDimension);
 
@@ -43,7 +43,7 @@ namespace elsa
          * \param[in] numberOfCoefficientsPerDimension initializer list containing the number of
          * coefficients per dimension (dimension is set implicitly from the size of the list)
          *
-         * \throw std::invalid_argument if any number of coefficients is non-positive
+         * \throw InvalidArgumentError if any number of coefficients is non-positive
          */
         explicit VolumeDescriptor(std::initializer_list<index_t> numberOfCoefficientsPerDimension);
 
@@ -54,7 +54,7 @@ namespace elsa
          * per dimension, (dimension is set implicitly from the size of the vector)
          * \param[in] spacingPerDimension vector containing the spacing per dimension
          *
-         * \throw std::invalid_argument if any number of coefficients or spacing is non-positive,
+         * \throw InvalidArgumentError if any number of coefficients or spacing is non-positive,
          *        or sizes of numberOfCoefficientsPerDimension and spacingPerDimension do not match
          */
         explicit VolumeDescriptor(IndexVector_t numberOfCoefficientsPerDimension,
@@ -68,7 +68,7 @@ namespace elsa
          * coefficients per dimension (dimension is set implicitly from the size of the list)
          * \param[in] spacingPerDimension initializer list containing the spacing per dimension
          *
-         * \throw std::invalid_argument if any number of coefficients or spacing is non-positive,
+         * \throw InvalidArgumentError if any number of coefficients or spacing is non-positive,
          *        or sizes of numberOfCoefficientsPerDimension and spacingPerDimension do not match
          */
         explicit VolumeDescriptor(std::initializer_list<index_t> numberOfCoefficientsPerDimension,

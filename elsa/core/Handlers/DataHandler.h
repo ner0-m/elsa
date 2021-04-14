@@ -2,6 +2,7 @@
 
 #include "elsaDefines.h"
 #include "Cloneable.h"
+#include "Error.h"
 #include "ExpressionPredicates.h"
 
 #ifdef ELSA_CUDA_VECTOR
@@ -105,7 +106,7 @@ namespace elsa
         DataHandler<data_t>& operator=(const DataHandler<data_t>& other)
         {
             if (other.getSize() != getSize())
-                throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+                throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
             assign(other);
             return *this;
@@ -115,7 +116,7 @@ namespace elsa
         DataHandler<data_t>& operator=(DataHandler<data_t>&& other)
         {
             if (other.getSize() != getSize())
-                throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+                throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
             assign(std::move(other));
             return *this;

@@ -2,6 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
+#include "Error.h"
 
 #include <utility>
 #include <cassert>
@@ -313,7 +314,7 @@ namespace elsa
                 StaticVectorTemplate(Vector vec) : _vec(vec)
                 {
                     if (_vec.size() != Size)
-                        throw std::invalid_argument(
+                        throw InvalidArgumentError(
                             "StaticVectorTemplate::Given argument vector is of the wrong size");
                 }
 
@@ -517,7 +518,7 @@ namespace elsa
                 {
                     if (_spacing.size() != Size || _locationOfOrigin.size() != Size
                         || _spacing.size() != _locationOfOrigin.size())
-                        throw std::invalid_argument(
+                        throw InvalidArgumentError(
                             "Spacing and Origin must have the same dimension");
                 }
 
@@ -527,7 +528,7 @@ namespace elsa
                 {
                     if (_spacing.size() != Size || _locationOfOrigin.size() != Size
                         || _spacing.size() != _locationOfOrigin.size())
-                        throw std::invalid_argument(
+                        throw InvalidArgumentError(
                             "Spacing and Origin must have the same dimension");
                 }
 
@@ -537,7 +538,7 @@ namespace elsa
                 {
                     if (_spacing.size() != Size || _locationOfOrigin.size() != Size
                         || _spacing.size() != _locationOfOrigin.size())
-                        throw std::invalid_argument(
+                        throw InvalidArgumentError(
                             "Spacing and Origin must have the same dimension");
                 }
 
@@ -643,7 +644,7 @@ namespace elsa
             explicit Threshold(data_t threshold) : _threshold(threshold)
             {
                 if (threshold <= 0) {
-                    throw std::invalid_argument("threshold must be strictly greater than 0");
+                    throw InvalidArgumentError("threshold must be strictly greater than 0");
                 }
             }
 

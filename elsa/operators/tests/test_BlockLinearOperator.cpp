@@ -35,16 +35,16 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(ops, BlockType::COL),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
 
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(ops, BlockType::ROW),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
 
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(dd, bd, ops, BlockType::ROW),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
 
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(bd, dd, ops, BlockType::COL),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
     }
@@ -114,20 +114,20 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
                 // wrong number of coefficients
                 REQUIRE_THROWS_AS(
                     BlockLinearOperator<TestType>(blocksOfIncorrectSize, dd, ops, BlockType::COL),
-                    std::invalid_argument);
+                    InvalidArgumentError);
                 REQUIRE_THROWS_AS(
                     BlockLinearOperator<TestType>(dd, blocksOfIncorrectSize, ops, BlockType::ROW),
-                    std::invalid_argument);
+                    InvalidArgumentError);
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(bd, bdBase, ops, BlockType::COL),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(bdBase, bd, ops, BlockType::ROW),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
 
                 // descriptor not of block type
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(dd, bdBase, ops, BlockType::ROW),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(bdBase, dd, ops, BlockType::COL),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
     }
@@ -205,20 +205,20 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
                 // wrong number of coefficients
                 REQUIRE_THROWS_AS(
                     BlockLinearOperator<TestType>(blocksOfIncorrectSize, dd, ops, BlockType::COL),
-                    std::invalid_argument);
+                    InvalidArgumentError);
                 REQUIRE_THROWS_AS(
                     BlockLinearOperator<TestType>(dd, blocksOfIncorrectSize, ops, BlockType::ROW),
-                    std::invalid_argument);
+                    InvalidArgumentError);
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(bd, bdBase, ops, BlockType::COL),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(bdBase, bd, ops, BlockType::ROW),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
 
                 // descriptor not of block type
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(dd, bdBase, ops, BlockType::ROW),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(bdBase, dd, ops, BlockType::COL),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
     }
@@ -236,9 +236,9 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(ops, BlockType::COL),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(BlockLinearOperator<TestType>(ops, BlockType::ROW),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
     }

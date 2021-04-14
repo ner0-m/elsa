@@ -16,7 +16,7 @@ namespace elsa
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != r.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EmissionLogLikelihood: descriptor and y/r not matching in size.");
     }
 
@@ -27,7 +27,7 @@ namespace elsa
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EmissionLogLikelihood: descriptor and y not matching in size.");
     }
 
@@ -42,7 +42,7 @@ namespace elsa
         // sanity check
         if (residual.getRangeDescriptor() != y.getDataDescriptor()
             || residual.getRangeDescriptor() != r.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EmissionLogLikelihood: residual and y/r not matching in size.");
     }
 
@@ -53,7 +53,7 @@ namespace elsa
     {
         // sanity check
         if (residual.getRangeDescriptor() != y.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EmissionLogLikelihood: residual and y not matching in size.");
     }
 

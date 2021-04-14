@@ -30,7 +30,7 @@ namespace elsa
     data_t Scaling<data_t>::getScaleFactor() const
     {
         if (!_isIsotropic)
-            throw std::logic_error("Scaling: scaling is not isotropic");
+            throw LogicError("Scaling: scaling is not isotropic");
 
         return _scaleFactor;
     }
@@ -39,7 +39,7 @@ namespace elsa
     const DataContainer<data_t>& Scaling<data_t>::getScaleFactors() const
     {
         if (_isIsotropic)
-            throw std::logic_error("Scaling: scaling is isotropic");
+            throw LogicError("Scaling: scaling is isotropic");
 
         return *_scaleFactors;
     }

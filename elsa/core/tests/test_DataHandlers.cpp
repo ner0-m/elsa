@@ -487,7 +487,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
                 auto randVec2 = generateRandomMatrix<data_t>(wrongSize);
                 TestType dh2(randVec2);
 
-                REQUIRE_THROWS_AS(dh.dot(dh2), std::invalid_argument);
+                REQUIRE_THROWS_AS(dh.dot(dh2), InvalidArgumentError);
             }
         }
     }

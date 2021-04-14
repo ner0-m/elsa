@@ -6,6 +6,7 @@
  * @author Andi Braimllari
  */
 
+#include "Error.h"
 #include "ISTA.h"
 #include "Identity.h"
 #include "Logger.h"
@@ -84,7 +85,7 @@ SCENARIO("Solving various problems with ISTA")
 
             THEN("an exception is thrown as no regularization term is provided")
             {
-                REQUIRE_THROWS_AS(ISTA(wlsProb), std::logic_error);
+                REQUIRE_THROWS_AS(ISTA(wlsProb), InvalidArgumentError);
             }
         }
 
@@ -97,7 +98,7 @@ SCENARIO("Solving various problems with ISTA")
             THEN("the vector b is initialized with zeroes and the operator A becomes an "
                  "identity operator but an exception is thrown due to missing regularization term")
             {
-                REQUIRE_THROWS_AS(ISTA(quadricProbWithoutAb), std::logic_error);
+                REQUIRE_THROWS_AS(ISTA(quadricProbWithoutAb), InvalidArgumentError);
             }
         }
     }

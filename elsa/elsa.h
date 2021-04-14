@@ -4,6 +4,7 @@
 #include "elsaDefines.h"
 #include "DataContainer.h"
 #include "DataDescriptor.h"
+#include "Error.h"
 #include "LinearOperator.h"
 #include "IdenticalBlocksDescriptor.h"
 #include "PartitionDescriptor.h"

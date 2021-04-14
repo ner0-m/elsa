@@ -2,8 +2,8 @@
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
+#include "Error.h"
 
-#include <stdexcept>
 #include <utility>
 
 namespace elsa
@@ -27,7 +27,7 @@ namespace elsa
           _dataHandlerType{handlerType}
     {
         if (_dataHandler->getSize() != data.size())
-            throw std::invalid_argument("DataContainer: initialization vector has invalid size");
+            throw InvalidArgumentError("DataContainer: initialization vector has invalid size");
 
         for (index_t i = 0; i < _dataHandler->getSize(); ++i)
             (*_dataHandler)[i] = data[i];
@@ -247,7 +247,7 @@ namespace elsa
                 return std::make_unique<DataHandlerGPU<data_t>>(std::forward<Args>(args)...);
 #endif
             default:
-                throw std::invalid_argument("DataContainer: unknown handler type");
+                throw InvalidArgumentError("DataContainer: unknown handler type");
         }
     }
 
@@ -284,10 +284,10 @@ namespace elsa
     {
         const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
         if (!blockDesc)
-            throw std::logic_error("DataContainer: cannot get block from not-blocked container");
+            throw LogicError("DataContainer: cannot get block from not-blocked container");
 
         if (i >= blockDesc->getNumberOfBlocks() || i < 0)
-            throw std::invalid_argument("DataContainer: block index out of bounds");
+            throw InvalidArgumentError("DataContainer: block index out of bounds");
 
         index_t startIndex = blockDesc->getOffsetOfBlock(i);
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
@@ -307,10 +307,10 @@ namespace elsa
     {
         const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
         if (!blockDesc)
-            throw std::logic_error("DataContainer: cannot get block from not-blocked container");
+            throw LogicError("DataContainer: cannot get block from not-blocked container");
 
         if (i >= blockDesc->getNumberOfBlocks() || i < 0)
-            throw std::invalid_argument("DataContainer: block index out of bounds");
+            throw InvalidArgumentError("DataContainer: block index out of bounds");
 
         index_t startIndex = blockDesc->getOffsetOfBlock(i);
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
@@ -331,7 +331,7 @@ namespace elsa
     DataContainer<data_t> DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor)
     {
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
-            throw std::invalid_argument("DataContainer: view must have same size as container");
+            throw InvalidArgumentError("DataContainer: view must have same size as container");
 
         DataHandlerType newHandlerType = (_dataHandlerType == DataHandlerType::CPU
                                           || _dataHandlerType == DataHandlerType::MAP_CPU)
@@ -347,7 +347,7 @@ namespace elsa
         DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor) const
     {
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
-            throw std::invalid_argument("DataContainer: view must have same size as container");
+            throw InvalidArgumentError("DataContainer: view must have same size as container");
 
         DataHandlerType newHandlerType = (_dataHandlerType == DataHandlerType::CPU
                                           || _dataHandlerType == DataHandlerType::MAP_CPU)
@@ -443,7 +443,7 @@ namespace elsa
     {
         if (_dataHandlerType == DataHandlerType::CPU
             || _dataHandlerType == DataHandlerType::MAP_CPU) {
-            throw std::logic_error(
+            throw LogicError(
                 "DataContainer: cannot load data to CPU with already CPU based container");
         }
 
@@ -461,7 +461,7 @@ namespace elsa
     {
         if (_dataHandlerType == DataHandlerType::GPU
             || _dataHandlerType == DataHandlerType::MAP_GPU) {
-            throw std::logic_error(
+            throw LogicError(
                 "DataContainer: cannot load data to GPU with already GPU based container");
         }
 

@@ -79,7 +79,7 @@ namespace elsa
     data_t DataHandlerMapGPU<data_t>::dot(const DataHandler<data_t>& v) const
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandlerMapGPU: dot product argument has wrong size");
+            throw InvalidArgumentError("DataHandlerMapGPU: dot product argument has wrong size");
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
@@ -132,7 +132,7 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: addition argument has wrong size");
+            throw InvalidArgumentError("DataHandler: addition argument has wrong size");
 
         _dataOwner->detach();
 
@@ -153,7 +153,7 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator-=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: subtraction argument has wrong size");
+            throw InvalidArgumentError("DataHandler: subtraction argument has wrong size");
 
         _dataOwner->detach();
 
@@ -174,7 +174,7 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator*=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: multiplication argument has wrong size");
+            throw InvalidArgumentError("DataHandler: multiplication argument has wrong size");
 
         _dataOwner->detach();
 
@@ -195,7 +195,7 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator/=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: division argument has wrong size");
+            throw InvalidArgumentError("DataHandler: division argument has wrong size");
 
         _dataOwner->detach();
 
@@ -217,7 +217,7 @@ namespace elsa
         DataHandlerMapGPU<data_t>::operator=(const DataHandlerMapGPU<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+            throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
         if (getSize() == _dataOwner->getSize() && v.getSize() == v._dataOwner->getSize()) {
             _dataOwner->attach(v._dataOwner->_data);
@@ -280,7 +280,7 @@ namespace elsa
         DataHandlerMapGPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements)
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
-            throw std::invalid_argument("DataHandler: requested block out of bounds");
+            throw InvalidArgumentError("DataHandler: requested block out of bounds");
 
         return std::make_unique<DataHandlerMapGPU<data_t>>(
             Badge<DataHandlerMapGPU<data_t>>{}, _dataOwner, _map._data.get() + startIndex,
@@ -292,7 +292,7 @@ namespace elsa
         DataHandlerMapGPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
-            throw std::invalid_argument("DataHandler: requested block out of bounds");
+            throw InvalidArgumentError("DataHandler: requested block out of bounds");
 
         // using a const_cast here is fine as long as the DataHandlers never expose the internal
         // Eigen objects

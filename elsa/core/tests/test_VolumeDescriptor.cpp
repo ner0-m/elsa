@@ -10,6 +10,7 @@
  */
 
 #include <catch2/catch.hpp>
+#include "Error.h"
 #include "VolumeDescriptor.h"
 #include "PartitionDescriptor.h"
 #include "DescriptorUtils.h"
@@ -60,8 +61,8 @@ SCENARIO("Constructing VolumeDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({-10}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({-10}), InvalidArgumentError);
             }
         }
 
@@ -71,8 +72,8 @@ SCENARIO("Constructing VolumeDescriptors")
             {
                 // Try all possible combinations of constructors with initializer list
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff, validSpacing),
-                                  std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({-10}, {2.5}), std::invalid_argument);
+                                  InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({-10}, {2.5}), InvalidArgumentError);
             }
         }
 
@@ -111,9 +112,9 @@ SCENARIO("Constructing VolumeDescriptors")
             {
                 // Try all possible combinations of constructors
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
-                                  std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {3.5, 1.5}), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {-3.5}), std::invalid_argument);
+                                  InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {3.5, 1.5}), InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {-3.5}), InvalidArgumentError);
             }
         }
     }
@@ -157,9 +158,9 @@ SCENARIO("Constructing VolumeDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1, 18}), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1, 18}), InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}), InvalidArgumentError);
             }
         }
 
@@ -171,9 +172,9 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff2, validSpacing),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
 
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}, {1.5, 2.5}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}, {1.5, 2.5}), InvalidArgumentError);
             }
         }
 
@@ -211,10 +212,10 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
-                                  std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {-1.5, 2.0}), std::invalid_argument);
+                                  InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {-1.5, 2.0}), InvalidArgumentError);
                 REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {1.5, 2.0, 3.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
     }
@@ -257,8 +258,8 @@ SCENARIO("Constructing VolumeDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, -1}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, -1}), InvalidArgumentError);
             }
         }
 
@@ -267,11 +268,11 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff, validSpacing),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, -1}, {1.5, 2.5, 4.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {1.5, 2.5, 4.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -308,11 +309,10 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
-                                  std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, 25}, {1.5, 2.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, 25}, {1.5, 2.5}), InvalidArgumentError);
                 REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, 25}, {1.5, 2.5, -4.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
     }
@@ -407,7 +407,7 @@ SCENARIO("Coordinates and indices")
                 REQUIRE(dd.getIndexFromCoordinate(coordinate1) == 0);
                 REQUIRE(dd.getIndexFromCoordinate(coordinate2) == numCoeffs(0) - 1);
                 REQUIRE_THROWS_AS(dd.getIndexFromCoordinate(coordinateInvalid),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -423,8 +423,8 @@ SCENARIO("Coordinates and indices")
                 REQUIRE(dd.getCoordinateFromIndex(index1) == IndexVector_t::Constant(1, 0));
                 REQUIRE(dd.getCoordinateFromIndex(index2)
                         == IndexVector_t::Constant(1, numCoeffs(0) - 1));
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), std::invalid_argument);
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), std::invalid_argument);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), InvalidArgumentError);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), InvalidArgumentError);
             }
         }
     }
@@ -454,7 +454,7 @@ SCENARIO("Coordinates and indices")
                 REQUIRE(dd.getIndexFromCoordinate(coordinate3)
                         == numCoeffs(0) - 1 + numCoeffs(0) * (numCoeffs(1) - 1));
                 REQUIRE_THROWS_AS(dd.getIndexFromCoordinate(coordinateInvalid),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -480,8 +480,8 @@ SCENARIO("Coordinates and indices")
                 coordinate3 << numCoeffs(0) - 3, numCoeffs(1) - 1;
                 REQUIRE(dd.getCoordinateFromIndex(index3) == coordinate3);
 
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), std::invalid_argument);
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), std::invalid_argument);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), InvalidArgumentError);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), InvalidArgumentError);
             }
         }
     }
@@ -515,7 +515,7 @@ SCENARIO("Coordinates and indices")
                         == numCoeffs(0) - 4 + numCoeffs(0) * (numCoeffs(1) - 2)
                                + numCoeffs(0) * numCoeffs(1) * (numCoeffs(2) - 1));
                 REQUIRE_THROWS_AS(dd.getIndexFromCoordinate(coordinateInvalid),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -547,8 +547,8 @@ SCENARIO("Coordinates and indices")
                 coordinate4 << numCoeffs(0) - 5, numCoeffs(1) - 7, numCoeffs(2) - 3;
                 REQUIRE(dd.getCoordinateFromIndex(index4) == coordinate4);
 
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), std::invalid_argument);
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), std::invalid_argument);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), InvalidArgumentError);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), InvalidArgumentError);
             }
         }
     }
@@ -564,7 +564,7 @@ SCENARIO("Finding the best common descriptor")
         THEN("trying to determine the best common descriptor throws an error")
         {
             REQUIRE_THROWS_AS(bestCommon(std::vector<const DataDescriptor*>{}),
-                              std::invalid_argument);
+                              InvalidArgumentError);
         }
     }
 
@@ -704,8 +704,8 @@ SCENARIO("Finding the best common descriptor")
 
         THEN("trying to determine the best common descriptor throws an error")
         {
-            REQUIRE_THROWS_AS(bestCommon(dd2, dd), std::invalid_argument);
-            REQUIRE_THROWS_AS(bestCommon(dd, dd2), std::invalid_argument);
+            REQUIRE_THROWS_AS(bestCommon(dd2, dd), InvalidArgumentError);
+            REQUIRE_THROWS_AS(bestCommon(dd, dd2), InvalidArgumentError);
         }
     }
 }

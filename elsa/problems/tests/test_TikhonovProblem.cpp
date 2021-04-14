@@ -50,7 +50,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with one regularization te
             {
                 REQUIRE_THROWS_AS(
                     TikhonovProblem<TestType>(wls, std::vector<RegularizationTerm<TestType>>{}),
-                    std::invalid_argument);
+                    InvalidArgumentError);
             }
         }
 
@@ -61,7 +61,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with one regularization te
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(TikhonovProblem<TestType>(wls, invalidRegTerm),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -191,9 +191,9 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with several regularizatio
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(TikhonovProblem<TestType>(wls, invalidVecReg1),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(TikhonovProblem<TestType>(wls, invalidVecReg2),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 

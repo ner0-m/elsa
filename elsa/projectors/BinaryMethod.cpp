@@ -18,13 +18,13 @@ namespace elsa
         // sanity checks
         auto dim = _domainDescriptor->getNumberOfDimensions();
         if (dim < 2 || dim > 3)
-            throw std::invalid_argument("BinaryMethod: only supporting 2d/3d operations");
+            throw InvalidArgumentError("BinaryMethod: only supporting 2d/3d operations");
 
         if (dim != _rangeDescriptor->getNumberOfDimensions())
-            throw std::invalid_argument("BinaryMethod: domain and range dimension need to match");
+            throw InvalidArgumentError("BinaryMethod: domain and range dimension need to match");
 
         if (_detectorDescriptor.getNumberOfGeometryPoses() == 0)
-            throw std::invalid_argument("BinaryMethod: rangeDescriptor without any geometry");
+            throw InvalidArgumentError("BinaryMethod: rangeDescriptor without any geometry");
     }
 
     template <typename data_t>

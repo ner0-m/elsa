@@ -22,7 +22,7 @@ namespace elsa
                 != _problem->getCurrentSolution().getSize()
             || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
                    != _problem->getCurrentSolution().getSize()) {
-            throw std::invalid_argument("CG: incorrect size of preconditioner");
+            throw InvalidArgumentError("CG: incorrect size of preconditioner");
         }
     }
 

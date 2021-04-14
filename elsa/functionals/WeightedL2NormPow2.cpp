@@ -21,7 +21,7 @@ namespace elsa
         // sanity check
         if (residual.getRangeDescriptor().getNumberOfCoefficients()
             != weightingOp.getDomainDescriptor().getNumberOfCoefficients())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "WeightedL2NormPow2: sizes of residual and weighting operator do not match");
     }
 

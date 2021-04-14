@@ -12,7 +12,7 @@ namespace elsa
     {
         // make sure that at least one regularization term exists
         if (regTerms.empty()) {
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "TikhonovProblem: at least one regularization term has to be supplied");
         }
 
@@ -21,11 +21,11 @@ namespace elsa
             const auto& func = regTerm.getFunctional();
             if (!dynamic_cast<const L2NormPow2<data_t>*>(&func)
                 && !dynamic_cast<const WeightedL2NormPow2<data_t>*>(&func)) {
-                throw std::invalid_argument("TikhonovProblem: all regularization terms should be "
-                                            "of type L2NormPow2 or WeightedL2NormPow2");
+                throw InvalidArgumentError("TikhonovProblem: all regularization terms should be "
+                                           "of type L2NormPow2 or WeightedL2NormPow2");
             }
             if (!dynamic_cast<const LinearResidual<data_t>*>(&func.getResidual())) {
-                throw std::invalid_argument(
+                throw InvalidArgumentError(
                     "TikhonovProblem: all regularization terms should be linear");
             }
         }

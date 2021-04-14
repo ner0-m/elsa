@@ -17,15 +17,15 @@ namespace elsa
     {
         auto dim = _domainDescriptor->getNumberOfDimensions();
         if (dim != _rangeDescriptor->getNumberOfDimensions()) {
-            throw std::logic_error("SiddonsMethod: domain and range dimension need to match");
+            throw LogicError("SiddonsMethod: domain and range dimension need to match");
         }
 
         if (dim != 2 && dim != 3) {
-            throw std::logic_error("SiddonsMethod: only supporting 2d/3d operations");
+            throw LogicError("SiddonsMethod: only supporting 2d/3d operations");
         }
 
         if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
-            throw std::logic_error("SiddonsMethod: geometry list was empty");
+            throw LogicError("SiddonsMethod: geometry list was empty");
         }
     }
 

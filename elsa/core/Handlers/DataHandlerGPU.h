@@ -75,7 +75,7 @@ namespace elsa
          * \param[in] initialize - set to false if you do not need initialization with zeros
          * (default: true)
          *
-         * \throw std::invalid_argument if the size is non-positive
+         * \throw InvalidArgumentError if the size is non-positive
          */
         explicit DataHandlerGPU(index_t size);
 

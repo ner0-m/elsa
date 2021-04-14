@@ -76,7 +76,7 @@ namespace elsa
          *
          * \param[in] size of the vector
          *
-         * \throw std::invalid_argument if the size is non-positive
+         * \throw InvalidArgumentError if the size is non-positive
          */
         explicit DataHandlerCPU(index_t size);
 

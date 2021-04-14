@@ -12,7 +12,7 @@ namespace elsa
     {
         // sanity check delta
         if (delta <= static_cast<real_t>(0.0))
-            throw std::invalid_argument("PseudoHuber: delta has to be positive.");
+            throw InvalidArgumentError("PseudoHuber: delta has to be positive.");
     }
 
     template <typename data_t>
@@ -21,7 +21,7 @@ namespace elsa
     {
         // sanity check delta
         if (delta <= static_cast<real_t>(0.0))
-            throw std::invalid_argument("PseudoHuber: delta has to be positive.");
+            throw InvalidArgumentError("PseudoHuber: delta has to be positive.");
     }
 
     template <typename data_t>

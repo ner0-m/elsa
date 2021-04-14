@@ -6,6 +6,7 @@
  * @author Andi Braimllari
  */
 
+#include "Error.h"
 #include "SoftThresholding.h"
 #include "VolumeDescriptor.h"
 
@@ -133,8 +134,9 @@ SCENARIO("Using SoftThresholding")
                 data << 0, 0, 0, 0, 0, 0, 0, 0;
                 DataContainer<real_t> dC(volDescr, data);
 
+                // actually the geometry::Threshold throws this
                 REQUIRE_THROWS_AS(sThrOp.apply(dC, geometry::Threshold<real_t>{0}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
 
             THEN("SoftThresholding operator throws exception for t < 0")
@@ -143,8 +145,9 @@ SCENARIO("Using SoftThresholding")
                 data << 0, 0, 0, 0, 0, 0, 0, 0;
                 DataContainer<real_t> dataCont(volDescr, data);
 
+                // actually the geometry::Threshold throws this
                 REQUIRE_THROWS_AS(sThrOp.apply(dataCont, geometry::Threshold<real_t>{-1}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
 
             THEN("SoftThresholding operator throws exception for differently sized v and prox")
@@ -160,8 +163,8 @@ SCENARIO("Using SoftThresholding")
                 data1 << 0, 0, 0, 0, 0, 0, 0, 0, 0;
                 DataContainer<real_t> dC1(volDescr1, data1);
 
-                REQUIRE_THROWS_AS(sThrOp.apply(dC, geometry::Threshold<real_t>{-1}, dC1),
-                                  std::logic_error);
+                REQUIRE_THROWS_AS(sThrOp.apply(dC, geometry::Threshold<real_t>{1}, dC1),
+                                  LogicError);
             }
         }
     }

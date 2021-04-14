@@ -12,7 +12,7 @@ namespace elsa
      *
      * \return std::unique_ptr<DataDescriptor> the best common descriptor
      *
-     * \throw std::invalid_argument if the vector is empty or the descriptors in the vector
+     * \throw InvalidArgumentError if the vector is empty or the descriptors in the vector
      * don't all have the same size
      *
      * If all descriptors are equal, a clone of the first descriptor in the list is returned.

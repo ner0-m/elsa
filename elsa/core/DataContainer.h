@@ -6,6 +6,7 @@
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "DataContainerIterator.h"
+#include "Error.h"
 #include "Expression.h"
 
 #ifdef ELSA_CUDA_VECTOR
@@ -129,7 +130,7 @@ namespace elsa
                 handler->accessData().eval(source.template eval<true>());
 #endif
             } else {
-                throw std::logic_error("Unknown handler type");
+                throw LogicError("Unknown handler type");
             }
 
             return *this;
@@ -213,7 +214,7 @@ namespace elsa
                 return temp.sum();
 #endif
             } else {
-                throw std::logic_error("Unknown handler type");
+                throw LogicError("Unknown handler type");
             }
         }
 

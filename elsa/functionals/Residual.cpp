@@ -36,7 +36,7 @@ namespace elsa
     {
         if (x.getSize() != getDomainDescriptor().getNumberOfCoefficients()
             || result.getSize() != getRangeDescriptor().getNumberOfCoefficients())
-            throw std::invalid_argument("Residual::evaluate: argument sizes do not match residual");
+            throw InvalidArgumentError("Residual::evaluate: argument sizes do not match residual");
 
         evaluateImpl(x, result);
     }

@@ -54,8 +54,8 @@ SCENARIO("Testing the l1 norm functional")
                 DataContainer dc(dd, dataVec);
 
                 REQUIRE(func.evaluate(dc) == 14);
-                REQUIRE_THROWS_AS(func.getGradient(dc), std::logic_error);
-                REQUIRE_THROWS_AS(func.getHessian(dc), std::logic_error);
+                REQUIRE_THROWS_AS(func.getGradient(dc), LogicError);
+                REQUIRE_THROWS_AS(func.getHessian(dc), LogicError);
             }
         }
     }
@@ -103,8 +103,8 @@ SCENARIO("Testing the l1 norm functional")
                 DataContainer x(dd, dataVec);
 
                 REQUIRE(func.evaluate(x) == Approx((dataVec - randomData).lpNorm<1>()));
-                REQUIRE_THROWS_AS(func.getGradient(x), std::logic_error);
-                REQUIRE_THROWS_AS(func.getHessian(x), std::logic_error);
+                REQUIRE_THROWS_AS(func.getGradient(x), LogicError);
+                REQUIRE_THROWS_AS(func.getHessian(x), LogicError);
             }
         }
     }

@@ -1,5 +1,7 @@
 #include "HardThresholding.h"
 
+#include "Error.h"
+
 namespace elsa
 {
     template <typename data_t>
@@ -14,7 +16,7 @@ namespace elsa
                                              DataContainer<data_t>& prox) const
     {
         if (v.getSize() != prox.getSize()) {
-            throw std::logic_error("HardThresholding: sizes of v and prox must match");
+            throw LogicError("HardThresholding: sizes of v and prox must match");
         }
 
         auto vIter = v.begin();

@@ -30,24 +30,24 @@ namespace elsa
             auto trueDomainDesc = dynamic_cast<const BlockDescriptor*>(&domainDescriptor);
 
             if (trueDomainDesc == nullptr)
-                throw std::invalid_argument(
+                throw InvalidArgumentError(
                     "BlockLinearOperator: domain descriptor is not a BlockDescriptor");
 
             if (trueDomainDesc->getNumberOfBlocks() != static_cast<index_t>(ops.size()))
-                throw std::invalid_argument("BlockLinearOperator: domain descriptor number of "
-                                            "blocks does not match operator list size");
+                throw InvalidArgumentError("BlockLinearOperator: domain descriptor number of "
+                                           "blocks does not match operator list size");
 
             for (index_t i = 0; i < static_cast<index_t>(ops.size()); i++) {
                 const auto& op = ops[static_cast<std::size_t>(i)];
                 if (op->getRangeDescriptor().getNumberOfCoefficients()
                     != _rangeDescriptor->getNumberOfCoefficients())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "BlockLinearOperator: the range descriptor of a COL BlockLinearOperator "
                         "must have the same size as the range of every operator in the list");
 
                 if (op->getDomainDescriptor().getNumberOfCoefficients()
                     != trueDomainDesc->getDescriptorOfBlock(i).getNumberOfCoefficients())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "BlockLinearOperator: block of incorrect size in domain descriptor");
             }
         }
@@ -56,24 +56,24 @@ namespace elsa
             auto trueRangeDesc = dynamic_cast<const BlockDescriptor*>(&rangeDescriptor);
 
             if (trueRangeDesc == nullptr)
-                throw std::invalid_argument(
+                throw InvalidArgumentError(
                     "BlockLinearOperator: range descriptor is not a BlockDescriptor");
 
             if (trueRangeDesc->getNumberOfBlocks() != static_cast<index_t>(ops.size()))
-                throw std::invalid_argument("BlockLinearOperator: range descriptor number of "
-                                            "blocks does not match operator list size");
+                throw InvalidArgumentError("BlockLinearOperator: range descriptor number of "
+                                           "blocks does not match operator list size");
 
             for (index_t i = 0; i < static_cast<index_t>(ops.size()); i++) {
                 const auto& op = ops[static_cast<std::size_t>(i)];
                 if (op->getDomainDescriptor().getNumberOfCoefficients()
                     != _domainDescriptor->getNumberOfCoefficients())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "BlockLinearOperator: the domain descriptor of a ROW BlockLinearOperator "
                         "must have the same size as the domain of every operator in the list");
 
                 if (op->getRangeDescriptor().getNumberOfCoefficients()
                     != trueRangeDesc->getDescriptorOfBlock(i).getNumberOfCoefficients())
-                    throw std::invalid_argument(
+                    throw InvalidArgumentError(
                         "BlockLinearOperator: block of incorrect size in range descriptor");
             }
         }
@@ -211,7 +211,7 @@ namespace elsa
                 return bestBlockDescriptor(vec);
 
             default:
-                throw std::invalid_argument("BlockLinearOpearator: unsupported block type");
+                throw InvalidArgumentError("BlockLinearOpearator: unsupported block type");
         }
     }
 
@@ -232,7 +232,7 @@ namespace elsa
                 return bestCommon(vec);
 
             default:
-                throw std::invalid_argument("BlockLinearOpearator: unsupported block type");
+                throw InvalidArgumentError("BlockLinearOpearator: unsupported block type");
         }
     }
 
@@ -242,7 +242,7 @@ namespace elsa
     {
         auto numBlocks = descList.size();
         if (numBlocks == 0)
-            throw std::invalid_argument("BlockLinearOperator: operator list cannot be empty");
+            throw InvalidArgumentError("BlockLinearOperator: operator list cannot be empty");
 
         const auto& firstDesc = *descList[0];
         auto numDims = firstDesc.getNumberOfDimensions();

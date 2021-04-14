@@ -75,7 +75,7 @@ namespace elsa
                 applyHelper(x, Ax, DiffType::CENTRAL);
                 break;
             default:
-                throw std::logic_error("FiniteDifferences::apply: invalid DiffType");
+                throw LogicError("FiniteDifferences::apply: invalid DiffType");
         }
     }
 
@@ -98,7 +98,7 @@ namespace elsa
                 applyAdjointHelper(y, Aty, DiffType::CENTRAL);
                 break;
             default:
-                throw std::logic_error("FiniteDifferences::applyAdjoint: invalid DiffType");
+                throw LogicError("FiniteDifferences::applyAdjoint: invalid DiffType");
         }
     }
 

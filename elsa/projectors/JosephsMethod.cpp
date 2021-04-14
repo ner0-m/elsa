@@ -1,8 +1,8 @@
 #include "JosephsMethod.h"
 #include "Timer.h"
 #include "TraverseAABBJosephsMethod.h"
+#include "Error.h"
 
-#include <stdexcept>
 #include <type_traits>
 
 namespace elsa
@@ -19,15 +19,15 @@ namespace elsa
     {
         auto dim = _domainDescriptor->getNumberOfDimensions();
         if (dim != 2 && dim != 3) {
-            throw std::invalid_argument("JosephsMethod:only supporting 2d/3d operations");
+            throw InvalidArgumentError("JosephsMethod:only supporting 2d/3d operations");
         }
 
         if (dim != _rangeDescriptor->getNumberOfDimensions()) {
-            throw std::invalid_argument("JosephsMethod: domain and range dimension need to match");
+            throw InvalidArgumentError("JosephsMethod: domain and range dimension need to match");
         }
 
         if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
-            throw std::invalid_argument("JosephsMethod: geometry list was empty");
+            throw InvalidArgumentError("JosephsMethod: geometry list was empty");
         }
     }
 

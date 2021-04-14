@@ -90,6 +90,7 @@ if(ELSA_MASTER_PROJECT)
 
     # Adding quickvec
     if(ELSA_CUDA_VECTOR)
+        message(STATUS "CUDA support requested...")
         include(CheckLanguage)
         check_language(CUDA)
 
@@ -109,13 +110,10 @@ if(ELSA_MASTER_PROJECT)
                 set(ELSA_BUILD_WITH_QUICKVEC TRUE)
                 add_definitions(-DELSA_CUDA_VECTOR)
             else()
-                message(STATUS "CUDA compiler not found or not compiling with clang!")
-                message(STATUS "Compiling without a DataHandlerGPU")
-                message(STATUS "The default container type will be CPU")
-
-                set(ELSA_BUILD_WITH_QUICKVEC FALSE)
-                set(ELSA_CUDA_VECTOR OFF)
+                message(FATAL_ERROR "CUDA_VECTOR library quickvec could not be added.")
             endif()
+        else()
+            message(FATAL_ERROR "CUDA_VECTOR language support not found")
         endif()
     endif()
 

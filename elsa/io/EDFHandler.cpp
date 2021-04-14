@@ -14,7 +14,7 @@ namespace elsa
         // open the file
         std::ifstream file(filename, std::ios::binary);
         if (!file.good())
-            throw std::runtime_error("EDF::read: cannot read from '" + filename + "'");
+            throw Error("EDF::read: cannot read from '" + filename + "'");
 
         // get the meta data from the header
         auto properties = readHeader(file);
@@ -30,7 +30,7 @@ namespace elsa
         else if (dataType == DataUtils::DataType::FLOAT64)
             DataUtils::parseRawData<double, data_t>(file, dataContainer);
         else
-            throw std::runtime_error("EDF::read: invalid/unsupported data type");
+            throw Error("EDF::read: invalid/unsupported data type");
 
         return dataContainer;
     }
@@ -43,7 +43,7 @@ namespace elsa
         // open the file
         std::ofstream file(filename, std::ios::binary);
         if (!file.good())
-            throw std::runtime_error("EDF::write: cannot write to '" + filename + "'");
+            throw Error("EDF::write: cannot write to '" + filename + "'");
 
         // output the header
         writeHeader(file, data);
@@ -60,7 +60,7 @@ namespace elsa
 
         // read a single character and make sure that a header is opened
         if (file.eof() || file.get() != '{')
-            throw std::invalid_argument("EDF::readHeader: no header opening marker");
+            throw InvalidArgumentError("EDF::readHeader: no header opening marker");
 
         // read header data
         while (!file.eof()) {
@@ -98,7 +98,7 @@ namespace elsa
             // split the assignment
             auto delim = assignment.find('=');
             if (delim == std::string::npos)
-                throw std::invalid_argument("failed reading name/value delimiter");
+                throw InvalidArgumentError("failed reading name/value delimiter");
 
             std::string name = assignment.substr(0, delim);
             StringUtils::trim(name);
@@ -137,7 +137,7 @@ namespace elsa
         }
         const auto nDims = static_cast<index_t>(dim.size());
         if (nDims == 0u)
-            throw std::runtime_error("EDF::parseHeader: dimension information not found");
+            throw Error("EDF::parseHeader: dimension information not found");
 
         // parse the (non-standard) spacing tag
         std::vector<real_t> spacing;
@@ -152,7 +152,7 @@ namespace elsa
             StringUtils::toLower(byteorderValue);
 
             if (byteorderValue != "lowbytefirst")
-                throw std::runtime_error("EDF::parseHeader: unsupported byte order value");
+                throw Error("EDF::parseHeader: unsupported byte order value");
         }
 
         // check for the 'element type' value
@@ -176,13 +176,13 @@ namespace elsa
             else if (datatypeValue == "double" || datatypeValue == "doublevalue")
                 dataType = DataUtils::DataType::FLOAT64;
             else
-                throw std::runtime_error("EDF::parseHeader: invalid/unsupported data type");
+                throw Error("EDF::parseHeader: invalid/unsupported data type");
         } else
-            throw std::runtime_error("EDF::parseHeader: data type not found");
+            throw Error("EDF::parseHeader: data type not found");
 
         auto compressionIt = properties.find("compression");
         if (compressionIt != properties.end())
-            throw std::runtime_error("EDF::parseHeader: compression not supported");
+            throw Error("EDF::parseHeader: compression not supported");
 
         index_t size = 0;
         auto sizeIt = properties.find("size");
@@ -191,20 +191,20 @@ namespace elsa
 
         auto imageIt = properties.find("image");
         if (imageIt != properties.end() && DataUtils::parse<index_t>(imageIt->second) != 1)
-            throw std::runtime_error("EDF::parseHeader: image not set to 1");
+            throw Error("EDF::parseHeader: image not set to 1");
 
         // convert size
         IndexVector_t dimSizeVec(nDims);
         for (index_t i = 0; i < nDims; ++i)
             dimSizeVec[i] = dim[static_cast<std::size_t>(i)];
         if (dimSizeVec.prod() * DataUtils::getSizeOfDataType(dataType) != size)
-            throw std::runtime_error("EDF::parseHeader: size inconsistency");
+            throw Error("EDF::parseHeader: size inconsistency");
 
         // convert spacing
         RealVector_t dimSpacingVec(RealVector_t::Ones(nDims));
         if (!spacing.empty()) {
             if (nDims != static_cast<index_t>(spacing.size()))
-                throw std::runtime_error("EDF::parseHeader: spacing inconsistency");
+                throw Error("EDF::parseHeader: spacing inconsistency");
             for (index_t i = 0; i < nDims; ++i)
                 dimSpacingVec[i] = spacing[static_cast<std::size_t>(i)];
         }
@@ -257,7 +257,7 @@ namespace elsa
     template <typename data_t>
     std::string EDF::getDataTypeName([[maybe_unused]] const DataContainer<data_t>& data)
     {
-        throw std::invalid_argument("EDF::getDataTypeName: invalid/unsupported data type");
+        throw InvalidArgumentError("EDF::getDataTypeName: invalid/unsupported data type");
     }
 
     template <>

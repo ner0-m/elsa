@@ -28,7 +28,7 @@ namespace elsa
          * \param[in] dataDescriptor the descriptor to be partitioned
          * \param[in] numberOfBlocks the number of blocks
          *
-         * \throw std::invalid_argument if numberOfBlocks is less than 2 or greater than the number
+         * \throw InvalidArgumentError if numberOfBlocks is less than 2 or greater than the number
          * of coefficients in the last dimension
          *
          * If the given descriptor has a size of \f$ N \f$ in its last dimension, when dividing it
@@ -48,7 +48,7 @@ namespace elsa
          * \param[in] dataDescriptor the descriptor to be partitioned
          * \param[in] slicesInBlock the number of slices in each block
          *
-         * \throw std::invalid_argument if slicesInBlock does not specify a valid partition scheme
+         * \throw InvalidArgumentError if slicesInBlock does not specify a valid partition scheme
          * for the given descriptor
          *
          * Note: if the passed in DataDescriptor is a block descriptor, the block information

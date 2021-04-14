@@ -68,8 +68,8 @@ SCENARIO("Constructing a LinearOperator")
             THEN("the apply* operations throw")
             {
                 DataContainer dc(ddDomain);
-                REQUIRE_THROWS_AS(linOp.apply(dc), std::logic_error);
-                REQUIRE_THROWS_AS(linOp.applyAdjoint(dc), std::logic_error);
+                REQUIRE_THROWS_AS(linOp.apply(dc), LogicError);
+                REQUIRE_THROWS_AS(linOp.applyAdjoint(dc), LogicError);
             }
 
             THEN("copies are good")
@@ -153,8 +153,8 @@ SCENARIO("Leaf LinearOperator")
 
             THEN("the apply operations care for appropriately sized containers")
             {
-                REQUIRE_THROWS_AS(leafOp.apply(dcRange), std::invalid_argument);
-                REQUIRE_THROWS_AS(leafOp.applyAdjoint(dcDomain), std::invalid_argument);
+                REQUIRE_THROWS_AS(leafOp.apply(dcRange), InvalidArgumentError);
+                REQUIRE_THROWS_AS(leafOp.applyAdjoint(dcDomain), InvalidArgumentError);
             }
         }
 
@@ -213,8 +213,8 @@ SCENARIO("Leaf LinearOperator")
 
             THEN("the apply operations care for appropriately sized containers")
             {
-                REQUIRE_THROWS_AS(adjointOp.apply(dcDomain), std::invalid_argument);
-                REQUIRE_THROWS_AS(adjointOp.applyAdjoint(dcRange), std::invalid_argument);
+                REQUIRE_THROWS_AS(adjointOp.apply(dcDomain), InvalidArgumentError);
+                REQUIRE_THROWS_AS(adjointOp.applyAdjoint(dcRange), InvalidArgumentError);
             }
         }
 
@@ -278,8 +278,8 @@ SCENARIO("Composite LinearOperator")
 
             THEN("the apply operations care for appropriately sized containers")
             {
-                REQUIRE_THROWS_AS(addOp.apply(dcRange), std::invalid_argument);
-                REQUIRE_THROWS_AS(addOp.applyAdjoint(dcDomain), std::invalid_argument);
+                REQUIRE_THROWS_AS(addOp.apply(dcRange), InvalidArgumentError);
+                REQUIRE_THROWS_AS(addOp.applyAdjoint(dcDomain), InvalidArgumentError);
             }
         }
 
@@ -343,8 +343,8 @@ SCENARIO("Composite LinearOperator")
 
             THEN("the apply operations care for appropriately sized containers")
             {
-                REQUIRE_THROWS_AS(multOp.apply(dcRange), std::invalid_argument);
-                REQUIRE_THROWS_AS(multOp.applyAdjoint(dcDomain), std::invalid_argument);
+                REQUIRE_THROWS_AS(multOp.apply(dcRange), InvalidArgumentError);
+                REQUIRE_THROWS_AS(multOp.applyAdjoint(dcDomain), InvalidArgumentError);
             }
         }
 
@@ -409,8 +409,8 @@ SCENARIO("Composite LinearOperator")
 
             THEN("the apply operations expect appropriately sized containers")
             {
-                REQUIRE_THROWS_AS(compositeOp.apply(dcFinalRange), std::invalid_argument);
-                REQUIRE_THROWS_AS(compositeOp.applyAdjoint(dcDomain), std::invalid_argument);
+                REQUIRE_THROWS_AS(compositeOp.apply(dcFinalRange), InvalidArgumentError);
+                REQUIRE_THROWS_AS(compositeOp.applyAdjoint(dcDomain), InvalidArgumentError);
             }
         }
 

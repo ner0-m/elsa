@@ -60,7 +60,7 @@ namespace elsa
     data_t DataHandlerCPU<data_t>::dot(const DataHandler<data_t>& v) const
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandlerCPU: dot product argument has wrong size");
+            throw InvalidArgumentError("DataHandlerCPU: dot product argument has wrong size");
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
         if (auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v)) {
@@ -113,7 +113,7 @@ namespace elsa
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: addition argument has wrong size");
+            throw InvalidArgumentError("DataHandler: addition argument has wrong size");
 
         detach();
 
@@ -133,7 +133,7 @@ namespace elsa
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator-=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: subtraction argument has wrong size");
+            throw InvalidArgumentError("DataHandler: subtraction argument has wrong size");
 
         detach();
 
@@ -153,7 +153,7 @@ namespace elsa
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator*=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: multiplication argument has wrong size");
+            throw InvalidArgumentError("DataHandler: multiplication argument has wrong size");
 
         detach();
 
@@ -173,7 +173,7 @@ namespace elsa
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator/=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: division argument has wrong size");
+            throw InvalidArgumentError("DataHandler: division argument has wrong size");
 
         detach();
 
@@ -193,7 +193,7 @@ namespace elsa
     DataHandlerCPU<data_t>& DataHandlerCPU<data_t>::operator=(const DataHandlerCPU<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+            throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
         attach(v._data);
         return *this;
@@ -203,7 +203,7 @@ namespace elsa
     DataHandlerCPU<data_t>& DataHandlerCPU<data_t>::operator=(DataHandlerCPU<data_t>&& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+            throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
         attach(std::move(v._data));
 
@@ -262,7 +262,7 @@ namespace elsa
                                                                           index_t numberOfElements)
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
-            throw std::invalid_argument("DataHandler: requested block out of bounds");
+            throw InvalidArgumentError("DataHandler: requested block out of bounds");
 
         return std::unique_ptr<DataHandlerMapCPU<data_t>>{
             new DataHandlerMapCPU{this, _data->data() + startIndex, numberOfElements}};
@@ -273,7 +273,7 @@ namespace elsa
         DataHandlerCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
-            throw std::invalid_argument("DataHandler: requested block out of bounds");
+            throw InvalidArgumentError("DataHandler: requested block out of bounds");
 
         // using a const_cast here is fine as long as the DataHandlers never expose the internal
         // Eigen objects

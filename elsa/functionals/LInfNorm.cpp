@@ -24,14 +24,14 @@ namespace elsa
     template <typename data_t>
     void LInfNorm<data_t>::getGradientInPlaceImpl([[maybe_unused]] DataContainer<data_t>& Rx)
     {
-        throw std::logic_error("LInfNorm: not differentiable, so no gradient! (busted!)");
+        throw LogicError("LInfNorm: not differentiable, so no gradient! (busted!)");
     }
 
     template <typename data_t>
     LinearOperator<data_t>
         LInfNorm<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
     {
-        throw std::logic_error("LInfNorm: not differentiable, so no Hessian! (busted!)");
+        throw LogicError("LInfNorm: not differentiable, so no Hessian! (busted!)");
     }
 
     template <typename data_t>
