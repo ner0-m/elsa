@@ -43,3 +43,8 @@ Alternating Direction Method of Multipliers
 =====
 
 .. doxygenclass:: elsa::ADMM
+
+SQS Ordered Subsets
+===============
+
+.. doxygenclass:: elsa::SQS

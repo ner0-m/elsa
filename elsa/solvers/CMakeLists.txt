@@ -13,7 +13,8 @@ set(MODULE_HEADERS
         FISTA.h
         FGM.h
         OGM.h
-        ADMM.h)
+        ADMM.h
+        SQS.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -23,7 +24,8 @@ set(MODULE_SOURCES
         ISTA.cpp
         FISTA.cpp
         FGM.cpp
-        OGM.cpp)
+        OGM.cpp
+        SQS.cpp)
 
 
 # build the module library

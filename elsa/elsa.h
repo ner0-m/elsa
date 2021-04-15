@@ -57,6 +57,7 @@
 #include "WLSProblem.h"
 #include "TikhonovProblem.h"
 #include "LASSOProblem.h"
+#include "WLSSubsetProblem.h"
 
 // Projector headers
 #include "Geometry.h"
@@ -79,3 +80,4 @@
 #include "FGM.h"
 #include "OGM.h"
 #include "ADMM.h"
+#include "SQS.h"

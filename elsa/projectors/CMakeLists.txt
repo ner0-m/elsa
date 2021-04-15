@@ -12,7 +12,8 @@ set(MODULE_HEADERS
         TraverseAABBJosephsMethod.h
         BinaryMethod.h
         SiddonsMethod.h
-        JosephsMethod.h)
+        JosephsMethod.h
+        SubsetSampler.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -22,7 +23,8 @@ set(MODULE_SOURCES
         TraverseAABBJosephsMethod.cpp
         BinaryMethod.cpp
         SiddonsMethod.cpp
-        JosephsMethod.cpp)
+        JosephsMethod.cpp
+        SubsetSampler.cpp)
 
 
 # build the module library

@@ -14,7 +14,9 @@ set(MODULE_HEADERS
         TikhonovProblem.h
         QuadricProblem.h
         LASSOProblem.h
-        SplittingProblem.h)
+        SplittingProblem.h
+        SubsetProblem.h
+        WLSSubsetProblem.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -24,7 +26,9 @@ set(MODULE_SOURCES
         TikhonovProblem.cpp
         QuadricProblem.cpp
         LASSOProblem.cpp
-        SplittingProblem.cpp)
+        SplittingProblem.cpp
+        SubsetProblem.cpp
+        WLSSubsetProblem.cpp)
 
 
 # build the module library

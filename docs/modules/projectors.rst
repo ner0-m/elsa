@@ -47,3 +47,8 @@ TraverseAABBJosephsMethod
 -------------------------
 
 .. doxygenclass:: elsa::TraverseAABBJosephsMethod
+
+SubsetSampler
+-------------------------
+
+.. doxygenclass:: elsa::SubsetSampler
