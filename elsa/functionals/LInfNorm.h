@@ -5,13 +5,13 @@
 namespace elsa
 {
     /**
-     * \brief Class representing the maximum norm functional (l infinity).
+     * @brief Class representing the maximum norm functional (l infinity).
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - modernization
      *
-     * \tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
      * real_t
      *
      * The linf / max norm functional evaluates to \f$ \max_{i=1,\ldots,n} |x_i| \f$ for \f$
@@ -23,18 +23,18 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the linf norm functional, mapping domain vector to scalar (without
+         * @brief Constructor for the linf norm functional, mapping domain vector to scalar (without
          * a residual)
          *
-         * \param[in] domainDescriptor describing the domain of the functional
+         * @param[in] domainDescriptor describing the domain of the functional
          */
         explicit LInfNorm(const DataDescriptor& domainDescriptor);
 
         /**
-         * \brief Constructor for the linf norm functional, using a residual as input to map to a
+         * @brief Constructor for the linf norm functional, using a residual as input to map to a
          * scalar
          *
-         * \param[in] residual to be used when evaluating the functional (or its derivative)
+         * @param[in] residual to be used when evaluating the functional (or its derivative)
          */
         explicit LInfNorm(const Residual<data_t>& residual);
 

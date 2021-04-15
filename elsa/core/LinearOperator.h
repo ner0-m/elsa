@@ -11,14 +11,14 @@ namespace elsa
 {
 
     /**
-     * \brief Base class representing a linear operator A. Also implements operator expression
+     * @brief Base class representing a linear operator A. Also implements operator expression
      * functionality.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - composite rewrite
-     * \author Tobias Lasser - rewrite, modularization, modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - composite rewrite
+     * @author Tobias Lasser - rewrite, modularization, modernization
      *
-     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * This class represents a linear operator A, expressed through its apply/applyAdjoint methods,
      * which implement Ax and A^ty for DataContainers x,y of appropriate sizes. Concrete
@@ -39,10 +39,10 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the linear operator A, mapping from domain to range
+         * @brief Constructor for the linear operator A, mapping from domain to range
          *
-         * \param[in] domainDescriptor DataDescriptor describing the domain of the operator
-         * \param[in] rangeDescriptor DataDescriptor describing the range of the operator
+         * @param[in] domainDescriptor DataDescriptor describing the domain of the operator
+         * @param[in] rangeDescriptor DataDescriptor describing the range of the operator
          */
         LinearOperator(const DataDescriptor& domainDescriptor,
                        const DataDescriptor& rangeDescriptor);
@@ -62,11 +62,11 @@ namespace elsa
         const DataDescriptor& getRangeDescriptor() const;
 
         /**
-         * \brief apply the operator A to an element in the operator's domain
+         * @brief apply the operator A to an element in the operator's domain
          *
-         * \param[in] x input DataContainer (in the domain of the operator)
+         * @param[in] x input DataContainer (in the domain of the operator)
          *
-         * \returns Ax DataContainer containing the application of operator A to data x,
+         * @returns Ax DataContainer containing the application of operator A to data x,
          * i.e. in the range of the operator
          *
          * Please note: this method uses apply(x, Ax) to perform the actual operation.
@@ -74,10 +74,10 @@ namespace elsa
         DataContainer<data_t> apply(const DataContainer<data_t>& x) const;
 
         /**
-         * \brief apply the operator A to an element in the operator's domain
+         * @brief apply the operator A to an element in the operator's domain
          *
-         * \param[in] x input DataContainer (in the domain of the operator)
-         * \param[out] Ax output DataContainer (in the range of the operator)
+         * @param[in] x input DataContainer (in the domain of the operator)
+         * @param[out] Ax output DataContainer (in the range of the operator)
          *
          * Please note: this method calls the method applyImpl that has to be overridden in derived
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
@@ -86,11 +86,11 @@ namespace elsa
         void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
 
         /**
-         * \brief apply the adjoint of operator A to an element of the operator's range
+         * @brief apply the adjoint of operator A to an element of the operator's range
          *
-         * \param[in] y input DataContainer (in the range of the operator)
+         * @param[in] y input DataContainer (in the range of the operator)
          *
-         * \returns A^ty DataContainer containing the application of A^t to data y,
+         * @returns A^ty DataContainer containing the application of A^t to data y,
          * i.e. in the domain of the operator
          *
          * Please note: this method uses applyAdjoint(y, Aty) to perform the actual operation.
@@ -98,10 +98,10 @@ namespace elsa
         DataContainer<data_t> applyAdjoint(const DataContainer<data_t>& y) const;
 
         /**
-         * \brief apply the adjoint of operator A to an element of the operator's range
+         * @brief apply the adjoint of operator A to an element of the operator's range
          *
-         * \param[in] y input DataContainer (in the range of the operator)
-         * \param[out] Aty output DataContainer (in the domain of the operator)
+         * @param[in] y input DataContainer (in the range of the operator)
+         * @param[out] Aty output DataContainer (in the domain of the operator)
          *
          * Please note: this method calls the method applyAdjointImpl that has to be overridden in
          * derived classes. (Why is this method not virtual itself? Because you cannot have a

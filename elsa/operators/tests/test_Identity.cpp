@@ -1,9 +1,9 @@
 /**
- * \file test_Identity.cpp
+ * @file test_Identity.cpp
  *
- * \brief Tests for Identity class
+ * @brief Tests for Identity class
  *
- * \author Tobias Lasser - main code
+ * @author Tobias Lasser - main code
  */
 
 #include <catch2/catch.hpp>

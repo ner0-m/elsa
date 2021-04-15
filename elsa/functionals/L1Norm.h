@@ -5,13 +5,13 @@
 namespace elsa
 {
     /**
-     * \brief Class representing the l1 norm functional.
+     * @brief Class representing the l1 norm functional.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - modernization
      *
-     * \tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
      * real_t
      *
      * The l1 norm functional evaluates to \f$ \sum_{i=1}^n |x_i| \f$ for \f$ x=(x_i)_{i=1}^n \f$.
@@ -23,18 +23,18 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the l1 norm functional, mapping domain vector to a scalar (without
+         * @brief Constructor for the l1 norm functional, mapping domain vector to a scalar (without
          * a residual)
          *
-         * \param[in] domainDescriptor describing the domain of the functional
+         * @param[in] domainDescriptor describing the domain of the functional
          */
         explicit L1Norm(const DataDescriptor& domainDescriptor);
 
         /**
-         * \brief Constructor for the l1 norm functional, using a residual as input to map to a
+         * @brief Constructor for the l1 norm functional, using a residual as input to map to a
          * scalar
          *
-         * \param[in] residual to be used when evaluating the functional (or its derivatives)
+         * @param[in] residual to be used when evaluating the functional (or its derivatives)
          */
         explicit L1Norm(const Residual<data_t>& residual);
 

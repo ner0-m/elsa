@@ -12,11 +12,11 @@
 namespace elsa
 {
     /**
-     * \brief class to read and write EDF files.
+     * @brief class to read and write EDF files.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - modernization
      *
      * Class to handle reading EDF files into DataContainers and writing of DataContainers to EDF
      * files.

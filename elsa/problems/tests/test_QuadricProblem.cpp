@@ -1,9 +1,9 @@
 /**
- * \file test_QuadricProblem.cpp
+ * @file test_QuadricProblem.cpp
  *
- * \brief Tests for the QuqricProblem class
+ * @brief Tests for the QuqricProblem class
  *
- * \author Nikola Dinev
+ * @author Nikola Dinev
  */
 #include <catch2/catch.hpp>
 #include "QuadricProblem.h"

@@ -1,11 +1,11 @@
 /**
- * \file test_LInfNorm.cpp
+ * @file test_LInfNorm.cpp
  *
- * \brief Tests for the LInfNorm class
+ * @brief Tests for the LInfNorm class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite
- * \author Tobias Lasser - modernization
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - modernization
  */
 
 #include <catch2/catch.hpp>

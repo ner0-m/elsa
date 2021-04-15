@@ -7,11 +7,11 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a generic Problem that can be split into ordered subsets.
+     * @brief Class representing a generic Problem that can be split into ordered subsets.
      *
-     * \author Michael Loipführer - initial code
+     * @author Michael Loipführer - initial code
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a problem that can be split into smaller, ordered subsets for use in
      * ordered subset solvers like SQS.
@@ -21,10 +21,10 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for a subset problem
+         * @brief Constructor for a subset problem
          *
-         * \param[in] fullProblem the generic problem
-         * \param[in] subsetProblems the problem instances corresponding to each ordered subset
+         * @param[in] fullProblem the generic problem
+         * @param[in] subsetProblems the problem instances corresponding to each ordered subset
          *
          * NOTE: we also need to store the full problem as otherwise we would not be able to
          * easily compute the hessian of the problem.
@@ -36,29 +36,29 @@ namespace elsa
         ~SubsetProblem() override = default;
 
         /**
-         * \brief return the gradient of the problem at the current estimated solution for the given
+         * @brief return the gradient of the problem at the current estimated solution for the given
          * subset
          *
-         * \param[in] subset is index of the subset the gradient is evaluated for
+         * @param[in] subset is index of the subset the gradient is evaluated for
          *
-         * \returns DataContainer (in the domain of the problem) containing the result of the
+         * @returns DataContainer (in the domain of the problem) containing the result of the
          * gradient at the current solution for the given subset
          *
          */
         DataContainer<data_t> getSubsetGradient(index_t subset);
 
         /**
-         * \brief compute the gradient of the problem at the current estimated solution
+         * @brief compute the gradient of the problem at the current estimated solution
          *
-         * \param[in] subset is index of the subset the gradient is evaluated for
-         * \param[out] result output DataContainer containing the gradient (in the domain of the
+         * @param[in] subset is index of the subset the gradient is evaluated for
+         * @param[out] result output DataContainer containing the gradient (in the domain of the
          * problem) evaluated for the given subset
          *
          */
         void getSubsetGradient(DataContainer<data_t>& result, index_t subset);
 
         /**
-         * \brief return the number of ordered subsets this problem is divided into
+         * @brief return the number of ordered subsets this problem is divided into
          */
         index_t getNumberOfSubsets() const;
 

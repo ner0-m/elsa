@@ -1,9 +1,9 @@
 /**
- * \file test_CG.cpp
+ * @file test_CG.cpp
  *
- * \brief Tests for the CG class
+ * @brief Tests for the CG class
  *
- * \author Nikola Dinev
+ * @author Nikola Dinev
  */
 #include <catch2/catch.hpp>
 

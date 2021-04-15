@@ -1,11 +1,11 @@
 /**
- * \file test_TraverseAABB.cpp
+ * @file test_TraverseAABB.cpp
  *
- * \brief Test for TraverseAABB class
+ * @brief Test for TraverseAABB class
  *
- * \author David Frank - initial code
- * \author Maximilian Hornung - modularization, fixes
- * \author Tobias Lasser - minor fixes
+ * @author David Frank - initial code
+ * @author Maximilian Hornung - modularization, fixes
+ * @author Tobias Lasser - minor fixes
  */
 
 #include <catch2/catch.hpp>

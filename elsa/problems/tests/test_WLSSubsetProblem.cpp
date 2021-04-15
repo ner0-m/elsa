@@ -1,9 +1,9 @@
 /**
- * \file test_WLSSubsetProblem.cpp
+ * @file test_WLSSubsetProblem.cpp
  *
- * \brief Tests for the WLSSubsetProblem class
+ * @brief Tests for the WLSSubsetProblem class
  *
- * \author Michael Loipführer - initial code
+ * @author Michael Loipführer - initial code
  */
 
 #include <catch2/catch.hpp>

@@ -1,11 +1,11 @@
 /**
- * \file test_Huber.cpp
+ * @file test_Huber.cpp
  *
- * \brief Tests for the Huber class
+ * @brief Tests for the Huber class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite
- * \author Tobias Lasser - modernization
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - modernization
  */
 
 #include <catch2/catch.hpp>

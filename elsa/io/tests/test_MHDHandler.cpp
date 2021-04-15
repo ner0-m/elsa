@@ -1,9 +1,9 @@
 /**
- * \file test_MHDHandler.cpp
+ * @file test_MHDHandler.cpp
  *
- * \brief Tests for the MHDHandler class
+ * @brief Tests for the MHDHandler class
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
 #include <catch2/catch.hpp>

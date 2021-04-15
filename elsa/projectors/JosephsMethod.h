@@ -14,13 +14,13 @@
 namespace elsa
 {
     /**
-     * \brief Operator representing the discretized X-ray transform in 2d/3d using Joseph's method.
+     * @brief Operator representing the discretized X-ray transform in 2d/3d using Joseph's method.
      *
-     * \author Christoph Hahn - initial implementation
-     * \author Maximilian Hornung - modularization
-     * \author Nikola Dinev - fixes
+     * @author Christoph Hahn - initial implementation
+     * @author Maximilian Hornung - modularization
+     * @author Nikola Dinev - fixes
      *
-     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * The volume is traversed along the rays as specified by the Geometry. For interior voxels
      * the sampling point is located in the middle of the two planes orthogonal to the main
@@ -46,11 +46,11 @@ namespace elsa
         enum class Interpolation { NN, LINEAR };
 
         /**
-         * \brief Constructor for Joseph's traversal method.
+         * @brief Constructor for Joseph's traversal method.
          *
-         * \param[in] domainDescriptor describing the domain of the operator (the volume)
-         * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
-         * \param[in] interpolation enum specifying the interpolation mode
+         * @param[in] domainDescriptor describing the domain of the operator (the volume)
+         * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         * @param[in] interpolation enum specifying the interpolation mode
          *
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
@@ -101,20 +101,20 @@ namespace elsa
         using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
 
         /**
-         * \brief  Linear interpolation, works in any dimension
+         * @brief  Linear interpolation, works in any dimension
          *
-         * \tparam adjoint true for backward projection, false for forward
+         * @tparam adjoint true for backward projection, false for forward
          *
-         * \param[in] vector the input DataContainer
-         * \param[out] result DataContainer for results
-         * \param[in] fractionals the fractional numbers used in the interpolation
-         * \param[in] domainDim number of dimensions
-         * \param[in] currentVoxel coordinates of voxel for interpolation
-         * \param[in] intersection weighting for the interpolated values depending on the incidence
+         * @param[in] vector the input DataContainer
+         * @param[out] result DataContainer for results
+         * @param[in] fractionals the fractional numbers used in the interpolation
+         * @param[in] domainDim number of dimensions
+         * @param[in] currentVoxel coordinates of voxel for interpolation
+         * @param[in] intersection weighting for the interpolated values depending on the incidence
          * angle
-         * \param[in] from index of the current vector position
-         * \param[in] to index of the current result position
-         * \param[in] mainDirection specifies the main direction of the ray
+         * @param[in] from index of the current vector position
+         * @param[in] to index of the current result position
+         * @param[in] mainDirection specifies the main direction of the ray
          */
         template <bool adjoint>
         void linear(const DataContainer<data_t>& vector, DataContainer<data_t>& result,

@@ -25,8 +25,8 @@ variables:
 
 # Caches should only be used for caching
 # between pipelines not jobs, artifacts should be prefered for that
-# We store the CPM cache, for a given branch. 
-# TODO dfrank: Is it possible to cache it project wide? 
+# We store the CPM cache, for a given branch.
+# TODO dfrank: Is it possible to cache it project wide?
 cache:
   key: "$CI_COMMIT_REF_SLUG"
   paths:
@@ -150,6 +150,17 @@ clang-tidy:
     - elsa
     - clang
 
+comment-formating:
+  <<: *run_always
+  stage: static-test
+  image: $CLANG_FORMAT_IMAGE
+  script:
+    ./tools/ci_scripts/check-comment-style.sh
+  allow_failure: true
+  tags:
+    - linux
+    - elsa
+    - clang
 
 ### compile jobs ###
 

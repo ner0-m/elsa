@@ -1,9 +1,9 @@
 /**
- * \file test_Logger.cpp
+ * @file test_Logger.cpp
  *
- * \brief Tests for the Logger class
+ * @brief Tests for the Logger class
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
 #include <catch2/catch.hpp>

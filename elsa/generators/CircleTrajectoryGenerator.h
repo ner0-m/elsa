@@ -10,27 +10,27 @@
 namespace elsa
 {
     /**
-     * \brief Generator for traditional circular trajectories as used in X-ray Computed Tomography
+     * @brief Generator for traditional circular trajectories as used in X-ray Computed Tomography
      * (for 2d/3d).
      *
-     * \author Maximilan Hornung - initial code
-     * \author Tobias Lasser - modernization, fixes
+     * @author Maximilan Hornung - initial code
+     * @author Tobias Lasser - modernization, fixes
      */
     class CircleTrajectoryGenerator
     {
     public:
         /**
-         * \brief Generate a list of geometries corresponding to a circular trajectory around a
+         * @brief Generate a list of geometries corresponding to a circular trajectory around a
          * volume.
          *
-         * \param numberOfPoses the number of (equally spaced) acquisition poses to be generated
-         * \param volumeDescriptor the volume around which the trajectory should go
-         * \param arcDegrees the size of the arc of the circle covered by the trajectory (in
-         * degrees, 360 for full circle) \param sourceToCenter the distance of the X-ray source to
-         * the center of the volume \param centerToDetector the distance of the center of the volume
+         * @param numberOfPoses the number of (equally spaced) acquisition poses to be generated
+         * @param volumeDescriptor the volume around which the trajectory should go
+         * @param arcDegrees the size of the arc of the circle covered by the trajectory (in
+         * degrees, 360 for full circle) @param sourceToCenter the distance of the X-ray source to
+         * the center of the volume @param centerToDetector the distance of the center of the volume
          * to the X-ray detector
          *
-         * \returns a pair containing the list of geometries with a circular trajectory, and the
+         * @returns a pair containing the list of geometries with a circular trajectory, and the
          * sinogram data descriptor
          *
          * Please note: the first pose will be at 0 degrees, the last pose will be at arcDegrees

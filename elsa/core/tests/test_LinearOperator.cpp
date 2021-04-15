@@ -1,11 +1,11 @@
 /**
- * \file test_LinearOperator.cpp
+ * @file test_LinearOperator.cpp
  *
- * \brief Tests for LinearOperator class
+ * @brief Tests for LinearOperator class
  *
- * \author Tobias Lasser - main code
- * \author David Frank - composite tests
- * \author Nikola Dinev - fixes
+ * @author Tobias Lasser - main code
+ * @author David Frank - composite tests
+ * @author Nikola Dinev - fixes
  */
 
 #include <catch2/catch.hpp>

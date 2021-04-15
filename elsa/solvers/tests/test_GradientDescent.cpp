@@ -1,9 +1,9 @@
 /**
- * \file test_GradientDescent.cpp
+ * @file test_GradientDescent.cpp
  *
- * \brief Tests for the GradientDescent class
+ * @brief Tests for the GradientDescent class
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
 #include <catch2/catch.hpp>

@@ -21,15 +21,15 @@ namespace elsa
 {
 
     /**
-     * \brief class representing and storing a linearized n-dimensional signal
+     * @brief class representing and storing a linearized n-dimensional signal
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Tobias Lasser - rewrite, modularization, modernization
-     * \author David Frank - added DataHandler concept, iterators
-     * \author Nikola Dinev - add block support
-     * \author Jens Petit - expression templates
+     * @author Matthias Wieczorek - initial code
+     * @author Tobias Lasser - rewrite, modularization, modernization
+     * @author David Frank - added DataHandler concept, iterators
+     * @author Nikola Dinev - add block support
+     * @author Jens Petit - expression templates
      *
-     * \tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
+     * @tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
      *
      * This class provides a container for a signal that is stored in memory. This signal can
      * be n-dimensional, and will be stored in memory in a linearized fashion. The information
@@ -43,36 +43,36 @@ namespace elsa
         DataContainer() = delete;
 
         /**
-         * \brief Constructor for empty DataContainer, no initialisation is performed
+         * @brief Constructor for empty DataContainer, no initialisation is performed
          *
-         * \param[in] dataDescriptor containing the associated metadata
-         * \param[in] handlerType the data handler (default: CPU)
+         * @param[in] dataDescriptor containing the associated metadata
+         * @param[in] handlerType the data handler (default: CPU)
          */
         explicit DataContainer(const DataDescriptor& dataDescriptor,
                                DataHandlerType handlerType = defaultHandlerType);
 
         /**
-         * \brief Constructor for DataContainer, initializing it with a DataVector
+         * @brief Constructor for DataContainer, initializing it with a DataVector
          *
-         * \param[in] dataDescriptor containing the associated metadata
-         * \param[in] data vector containing the initialization data
-         * \param[in] handlerType the data handler (default: CPU)
+         * @param[in] dataDescriptor containing the associated metadata
+         * @param[in] data vector containing the initialization data
+         * @param[in] handlerType the data handler (default: CPU)
          */
         DataContainer(const DataDescriptor& dataDescriptor,
                       const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
                       DataHandlerType handlerType = defaultHandlerType);
 
         /**
-         * \brief Copy constructor for DataContainer
+         * @brief Copy constructor for DataContainer
          *
-         * \param[in] other DataContainer to copy
+         * @param[in] other DataContainer to copy
          */
         DataContainer(const DataContainer<data_t>& other);
 
         /**
-         * \brief copy assignment for DataContainer
+         * @brief copy assignment for DataContainer
          *
-         * \param[in] other DataContainer to copy
+         * @param[in] other DataContainer to copy
          *
          * Note that a copy assignment with a DataContainer on a different device (CPU vs GPU) will
          * result in an "infectious" copy which means that afterwards the current container will use
@@ -81,9 +81,9 @@ namespace elsa
         DataContainer<data_t>& operator=(const DataContainer<data_t>& other);
 
         /**
-         * \brief Move constructor for DataContainer
+         * @brief Move constructor for DataContainer
          *
-         * \param[in] other DataContainer to move from
+         * @param[in] other DataContainer to move from
          *
          * The moved-from objects remains in a valid state. However, as preconditions are not
          * fulfilled for any member functions, the object should not be used. After move- or copy-
@@ -92,9 +92,9 @@ namespace elsa
         DataContainer(DataContainer<data_t>&& other) noexcept;
 
         /**
-         * \brief Move assignment for DataContainer
+         * @brief Move assignment for DataContainer
          *
-         * \param[in] other DataContainer to move from
+         * @param[in] other DataContainer to move from
          *
          * The moved-from objects remains in a valid state. However, as preconditions are not
          * fulfilled for any member functions, the object should not be used. After move- or copy-
@@ -107,9 +107,9 @@ namespace elsa
         DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
 
         /**
-         * \brief Expression evaluation assignment for DataContainer
+         * @brief Expression evaluation assignment for DataContainer
          *
-         * \param[in] source expression to evaluate
+         * @param[in] source expression to evaluate
          *
          * This evaluates an expression template term into the underlying data member of
          * the DataHandler in use.
@@ -137,9 +137,9 @@ namespace elsa
         }
 
         /**
-         * \brief Expression constructor
+         * @brief Expression constructor
          *
-         * \param[in] source expression to evaluate
+         * @param[in] source expression to evaluate
          *
          * It creates a new DataContainer out of an expression. For this the meta information which
          * is saved in the expression is used.
@@ -387,9 +387,9 @@ namespace elsa
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
         /**
-         * \brief Factory function which returns GPU based DataContainers
+         * @brief Factory function which returns GPU based DataContainers
          *
-         * \return the GPU based DataContainer
+         * @return the GPU based DataContainer
          *
          * Note that if this function is called on a container which is already GPU based, it will
          * throw an exception.
@@ -397,9 +397,9 @@ namespace elsa
         DataContainer loadToGPU();
 
         /**
-         * \brief Factory function which returns CPU based DataContainers
+         * @brief Factory function which returns CPU based DataContainers
          *
-         * \return the CPU based DataContainer
+         * @return the CPU based DataContainer
          *
          * Note that if this function is called on a container which is already CPU based, it will
          * throw an exception.
@@ -428,12 +428,12 @@ namespace elsa
                                DataHandlerType dataType = defaultHandlerType);
 
         /**
-         * \brief Helper function to indicate if a regular assignment or a clone should be performed
+         * @brief Helper function to indicate if a regular assignment or a clone should be performed
          *
-         * \param[in] handlerType the member variable of the other container in
+         * @param[in] handlerType the member variable of the other container in
          * copy-/move-assignment
          *
-         * \return true if a regular assignment of the pointed to DataHandlers should be done
+         * @return true if a regular assignment of the pointed to DataHandlers should be done
          *
          * An assignment operation with a DataContainer which does not use the same device (CPU /
          * GPU) has to be handled differently. This helper function indicates if a regular

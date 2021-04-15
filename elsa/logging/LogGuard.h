@@ -7,11 +7,11 @@
 namespace elsa
 {
     /**
-     * \brief simple log guard class, logs a message each on creation and destruction.
+     * @brief simple log guard class, logs a message each on creation and destruction.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - minor modifications
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - minor modifications
      *
      * This class serves as a guard for logging, simple instantiation will log a starting message,
      * while going out of scope logs an ending message.

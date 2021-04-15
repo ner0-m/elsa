@@ -1,9 +1,9 @@
 /**
- * \file test_StrongTypes.cpp
+ * @file test_StrongTypes.cpp
  *
- * \brief Test for Strong type classes
+ * @brief Test for Strong type classes
  *
- * \author David Frank - initial code
+ * @author David Frank - initial code
  */
 
 #include <catch2/catch.hpp>

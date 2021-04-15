@@ -1,9 +1,9 @@
 /**
- * \file test_LogGuard.cpp
+ * @file test_LogGuard.cpp
  *
- * \brief Tests for LogGuard class
+ * @brief Tests for LogGuard class
  *
- * \author Maximilian Hornung
+ * @author Maximilian Hornung
  */
 
 #include <catch2/catch.hpp>

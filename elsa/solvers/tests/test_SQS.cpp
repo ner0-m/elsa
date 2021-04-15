@@ -1,9 +1,9 @@
 /**
- * \file test_SQS.cpp
+ * @file test_SQS.cpp
  *
- * \brief Tests for the SQS class
+ * @brief Tests for the SQS class
  *
- * \author Michael Loipführer - initial code
+ * @author Michael Loipführer - initial code
  */
 
 #include <catch2/catch.hpp>

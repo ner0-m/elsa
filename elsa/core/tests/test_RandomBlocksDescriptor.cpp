@@ -1,9 +1,9 @@
 /**
- * \file test_RandomBlocksDescriptor.cpp
+ * @file test_RandomBlocksDescriptor.cpp
  *
- * \brief Tests for RandomBlocksDescriptor class
+ * @brief Tests for RandomBlocksDescriptor class
  *
- * \author Nikola Dinev
+ * @author Nikola Dinev
  */
 
 #include <catch2/catch.hpp>

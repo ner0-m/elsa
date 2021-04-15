@@ -1,9 +1,9 @@
 /**
- * \file test_elsaDefines.cpp
+ * @file test_elsaDefines.cpp
  *
- * \brief Tests for common elsa defines
+ * @brief Tests for common elsa defines
  *
- * \author David Frank - initial version
+ * @author David Frank - initial version
  */
 
 #include <catch2/catch.hpp>

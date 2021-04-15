@@ -1,9 +1,9 @@
 /**
- * \file test_EllipseGenerator.cpp
+ * @file test_EllipseGenerator.cpp
  *
- * \brief Tests for the EllipseGenerator class
+ * @brief Tests for the EllipseGenerator class
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
 #include <catch2/catch.hpp>

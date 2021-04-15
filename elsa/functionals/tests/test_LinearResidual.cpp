@@ -1,10 +1,10 @@
 /**
- * \file test_LinearResidual.cpp
+ * @file test_LinearResidual.cpp
  *
- * \brief Tests for LinearResidual class
+ * @brief Tests for LinearResidual class
  *
- * \author Matthias Wieczorek - main code
- * \author Tobias Lasser - rewrite
+ * @author Matthias Wieczorek - main code
+ * @author Tobias Lasser - rewrite
  */
 
 #include <catch2/catch.hpp>

@@ -14,15 +14,15 @@
 namespace elsa
 {
     /**
-     * \brief Epsilon value for our test suit
+     * @brief Epsilon value for our test suit
      */
     static constexpr elsa::real_t epsilon = static_cast<elsa::real_t>(0.0001);
 
     /**
-     * \brief comparing two number types for approximate equality for complex and regular number
+     * @brief comparing two number types for approximate equality for complex and regular number
      *
-     * \tparam T - arithmetic data type
-     * \return true if same number
+     * @tparam T - arithmetic data type
+     * @return true if same number
      *
      * Use example in test case: REQUIRE(checkSameNumbers(a, b));
      * The CHECK(...) assertion in the function ensures that the values are reported when the test
@@ -44,12 +44,12 @@ namespace elsa
     }
 
     /**
-     * \brief Generates a random Eigen matrix for different data_t types with integer values limited
+     * @brief Generates a random Eigen matrix for different data_t types with integer values limited
      * to a certain range
      *
-     * \param[in] size the number of elements in the vector like matrix
+     * @param[in] size the number of elements in the vector like matrix
      *
-     * \tparam data_t the numerical type to use
+     * @tparam data_t the numerical type to use
      *
      * The integer range is chosen to be small, to allow multiplication with the values without
      * running into overflow issues.
@@ -89,14 +89,14 @@ namespace elsa
     }
 
     /**
-     * \brief generate a random eigen vector and a DataContainer with the same data. Specifically
+     * @brief generate a random eigen vector and a DataContainer with the same data. Specifically
      * take index_t into consideration and scale the random eigen vector, to not generate overflows
      *
-     * \tparam data_t Value type of DataContainers
-     * \param desc First DataContainer
-     * \param handlerType Second DataContainer
+     * @tparam data_t Value type of DataContainers
+     * @param desc First DataContainer
+     * @param handlerType Second DataContainer
      *
-     * \return a pair of a DataContainer and eigen vector, of same size and the same values
+     * @return a pair of a DataContainer and eigen vector, of same size and the same values
      */
     template <typename data_t>
     std::tuple<DataContainer<data_t>, Eigen::Matrix<data_t, Eigen::Dynamic, 1>>
@@ -111,7 +111,7 @@ namespace elsa
         return {dc, randVec};
     }
     /**
-     * \brief Compares two DataContainers using their norm. Computes \f$ \sqrt{\| x - y \|_{2}^2}
+     * @brief Compares two DataContainers using their norm. Computes \f$ \sqrt{\| x - y \|_{2}^2}
      * \f$ and compares it to \f$ prec * \sqrt{min(\| x \|_{2}^2, \| y \|_{2}^2)} \f$. If the first
      * is smaller or equal to the second, we can assume the vectors are approximate equal
      *
@@ -126,24 +126,24 @@ namespace elsa
                   real_t prec = Eigen::NumTraits<real_t>::dummy_precision());
 
     /**
-     * \brief Wrapper to remove const, volatile and reference of a type
+     * @brief Wrapper to remove const, volatile and reference of a type
      */
     template <typename T>
     using UnqualifiedType_t =
         typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
     /**
-     * \brief Helper to give types a name, this is used to print information during testing
+     * @brief Helper to give types a name, this is used to print information during testing
      *
-     * \tparam T type that should be given a name
-     * \tparam Dummy dummy, to be used to enable or disable specific specializations
+     * @tparam T type that should be given a name
+     * @tparam Dummy dummy, to be used to enable or disable specific specializations
      */
     template <typename T, typename Dummy = void>
     struct TypeName;
 
     /**
-     * \brief specialization to specify a name for index_t
-     * \tparam T [const] [volatile] index_t[&] should be accepted
+     * @brief specialization to specify a name for index_t
+     * @tparam T [const] [volatile] index_t[&] should be accepted
      */
     template <typename T>
     struct TypeName<T, std::enable_if_t<std::is_same_v<index_t, UnqualifiedType_t<T>>>> {
@@ -151,8 +151,8 @@ namespace elsa
     };
 
     /**
-     * \brief specialization to specify a name for float
-     * \tparam T [const] [volatile] float[&] should be accepted
+     * @brief specialization to specify a name for float
+     * @tparam T [const] [volatile] float[&] should be accepted
      */
     template <typename T>
     struct TypeName<T, std::enable_if_t<std::is_same_v<float, UnqualifiedType_t<T>>>> {
@@ -160,8 +160,8 @@ namespace elsa
     };
 
     /**
-     * \brief specialization to specify a name for double
-     * \tparam T [const] [volatile] double[&] should be accepted
+     * @brief specialization to specify a name for double
+     * @tparam T [const] [volatile] double[&] should be accepted
      */
     template <typename T>
     struct TypeName<T, std::enable_if_t<std::is_same_v<double, UnqualifiedType_t<T>>>> {
@@ -169,8 +169,8 @@ namespace elsa
     };
 
     /**
-     * \brief specialization to specify a name for complex<float>
-     * \tparam T [const] [volatile] complex<float>[&] should be accepted
+     * @brief specialization to specify a name for complex<float>
+     * @tparam T [const] [volatile] complex<float>[&] should be accepted
      */
     template <typename T>
     struct TypeName<T,
@@ -179,8 +179,8 @@ namespace elsa
     };
 
     /**
-     * \brief specialization to specify a name for complex<double>
-     * \tparam T [const] [volatile] complex<double>[&] should be accepted
+     * @brief specialization to specify a name for complex<double>
+     * @tparam T [const] [volatile] complex<double>[&] should be accepted
      */
     template <typename T>
     struct TypeName<T,
@@ -189,8 +189,8 @@ namespace elsa
     };
 
     /**
-     * \brief Quick access to TypeName<UnqualifiedType>::name
-     * \tparam T a type
+     * @brief Quick access to TypeName<UnqualifiedType>::name
+     * @tparam T a type
      */
     template <typename T>
     static constexpr auto TypeName_v = TypeName<UnqualifiedType_t<T>>::name;

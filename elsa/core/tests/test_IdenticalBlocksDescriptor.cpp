@@ -1,11 +1,11 @@
 /**
- * \file test_IdenticalBlocksDescriptor.cpp
+ * @file test_IdenticalBlocksDescriptor.cpp
  *
- * \brief Tests for IdenticalBlocksDescriptor class
+ * @brief Tests for IdenticalBlocksDescriptor class
  *
- * \author David Frank - initial version
- * \author Nikola Dinev - various enhancements
- * \author Tobias Lasser - rewrite and added code coverage
+ * @author David Frank - initial version
+ * @author Nikola Dinev - various enhancements
+ * @author Tobias Lasser - rewrite and added code coverage
  */
 
 #include <catch2/catch.hpp>

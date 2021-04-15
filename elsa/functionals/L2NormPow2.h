@@ -5,13 +5,13 @@
 namespace elsa
 {
     /**
-     * \brief Class representing the l2 norm functional (squared).
+     * @brief Class representing the l2 norm functional (squared).
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - modernization
      *
-     * \tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
      * real_t
      *
      * The l2 norm (squared) functional evaluates to \f$ 0.5 * \sum_{i=1}^n x_i^2 \f$ for \f$
@@ -22,18 +22,18 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the l2 norm (squared) functional, mapping domain vector to a
+         * @brief Constructor for the l2 norm (squared) functional, mapping domain vector to a
          * scalar (without a residual)
          *
-         * \param[in] domainDescriptor describing the domain of the functional
+         * @param[in] domainDescriptor describing the domain of the functional
          */
         explicit L2NormPow2(const DataDescriptor& domainDescriptor);
 
         /**
-         * \brief Constructor for the l2 norm (squared) functional, using a residual as input to map
+         * @brief Constructor for the l2 norm (squared) functional, using a residual as input to map
          * to a scalar
          *
-         * \param[in] residual to be used when evaluating the functional (or its derivatives)
+         * @param[in] residual to be used when evaluating the functional (or its derivatives)
          */
         explicit L2NormPow2(const Residual<data_t>& residual);
 

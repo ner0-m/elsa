@@ -1,12 +1,12 @@
 /**
- * \file test_Quadric.cpp
+ * @file test_Quadric.cpp
  *
- * \brief Tests for the Quadric class
+ * @brief Tests for the Quadric class
  *
- * \author Matthias Wieczorek - initial code
- * \author Maximilian Hornung - modularization
- * \author David Frank - rewrite
- * \author Tobias Lasser - modernization
+ * @author Matthias Wieczorek - initial code
+ * @author Maximilian Hornung - modularization
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - modernization
  */
 
 #include <catch2/catch.hpp>

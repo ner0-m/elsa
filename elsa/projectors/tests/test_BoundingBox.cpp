@@ -1,9 +1,9 @@
 /**
- * \file test_BoundingBox.cpp
+ * @file test_BoundingBox.cpp
  *
- * \brief Test for BoundingBox struct
+ * @brief Test for BoundingBox struct
  *
- * \author David Frank - initial code
+ * @author David Frank - initial code
  */
 
 #include <catch2/catch.hpp>

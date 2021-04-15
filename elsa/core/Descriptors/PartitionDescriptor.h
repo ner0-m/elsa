@@ -6,10 +6,10 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a descriptor obtained after the partition of a normal data
+     * @brief Class representing a descriptor obtained after the partition of a normal data
      * descriptor into blocks.
      *
-     * \author Nikola Dinev
+     * @author Nikola Dinev
      *
      * A single block of the PartitionDescriptor represents a linear segment containing one or more
      * slices of the original descriptor, taken along its last dimension. This also means that the
@@ -22,13 +22,13 @@ namespace elsa
     {
     public:
         /**
-         * \brief Construct a PartitionDescriptor by partitioning a given descriptor into blocks of
+         * @brief Construct a PartitionDescriptor by partitioning a given descriptor into blocks of
          * fairly equal sizes
          *
-         * \param[in] dataDescriptor the descriptor to be partitioned
-         * \param[in] numberOfBlocks the number of blocks
+         * @param[in] dataDescriptor the descriptor to be partitioned
+         * @param[in] numberOfBlocks the number of blocks
          *
-         * \throw InvalidArgumentError if numberOfBlocks is less than 2 or greater than the number
+         * @throw InvalidArgumentError if numberOfBlocks is less than 2 or greater than the number
          * of coefficients in the last dimension
          *
          * If the given descriptor has a size of \f$ N \f$ in its last dimension, when dividing it
@@ -42,13 +42,13 @@ namespace elsa
         PartitionDescriptor(const DataDescriptor& dataDescriptor, index_t numberOfBlocks);
 
         /**
-         * \brief Construct a PartitionDescriptor by specifying the number of slices contained in
+         * @brief Construct a PartitionDescriptor by specifying the number of slices contained in
          * each block
          *
-         * \param[in] dataDescriptor the descriptor to be partitioned
-         * \param[in] slicesInBlock the number of slices in each block
+         * @param[in] dataDescriptor the descriptor to be partitioned
+         * @param[in] slicesInBlock the number of slices in each block
          *
-         * \throw InvalidArgumentError if slicesInBlock does not specify a valid partition scheme
+         * @throw InvalidArgumentError if slicesInBlock does not specify a valid partition scheme
          * for the given descriptor
          *
          * Note: if the passed in DataDescriptor is a block descriptor, the block information

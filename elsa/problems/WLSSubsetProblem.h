@@ -8,11 +8,11 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a WSL Problem that can be split into subsets.
+     * @brief Class representing a WSL Problem that can be split into subsets.
      *
-     * \author Michael Loipführer - initial code
+     * @author Michael Loipführer - initial code
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a WSL problem that can be split into smaller, ordered subsets for use
      * in ordered subset solvers like SQS.
@@ -22,12 +22,12 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for a subset problem
+         * @brief Constructor for a subset problem
          *
-         * \param[in] A the full system matrix of the whole WSL problem
-         * \param[in] b data vector
-         * \param[in] subsetAs the system matrices corresponding to each subset
-         * \param[in] subsetBs a data vector with a Block Descriptor containing the data vector vor
+         * @param[in] A the full system matrix of the whole WSL problem
+         * @param[in] b data vector
+         * @param[in] subsetAs the system matrices corresponding to each subset
+         * @param[in] subsetBs a data vector with a Block Descriptor containing the data vector vor
          * each subset
          */
         WLSSubsetProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,

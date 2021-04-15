@@ -10,12 +10,12 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a subset sampling method.
+     * @brief Class representing a subset sampling method.
      *
-     * \author Michael Loipführer - initial code
+     * @author Michael Loipführer - initial code
      *
-     * \tparam detectorDescriptor_t
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam detectorDescriptor_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      *
      */
@@ -24,12 +24,12 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for SubsetSampler
+         * @brief Constructor for SubsetSampler
          *
-         * \param[in] volumeDescriptor of the problem
-         * \param[in] detectorDescriptor describes the geometry and trajectory of the measurements
-         * \param[in] sinogram is the actual measurement data
-         * \param[in] nSubsets is number of subsets that should be generated
+         * @param[in] volumeDescriptor of the problem
+         * @param[in] detectorDescriptor describes the geometry and trajectory of the measurements
+         * @param[in] sinogram is the actual measurement data
+         * @param[in] nSubsets is number of subsets that should be generated
          */
         SubsetSampler(const VolumeDescriptor& volumeDescriptor,
                       const detectorDescriptor_t& detectorDescriptor,
@@ -39,12 +39,12 @@ namespace elsa
         ~SubsetSampler() = default;
 
         /**
-         * \brief return the full sinogram
+         * @brief return the full sinogram
          */
         DataContainer<data_t> getData();
 
         /**
-         * \brief return the full projector
+         * @brief return the full projector
          */
         template <typename projector_t>
         std::unique_ptr<LinearOperator<data_t>> getProjector()
@@ -53,7 +53,7 @@ namespace elsa
         }
 
         /**
-         * \brief return a list of projectors that correspond to each subset
+         * @brief return a list of projectors that correspond to each subset
          */
         template <typename projector_t>
         std::vector<std::unique_ptr<LinearOperator<data_t>>> getSubsetProjectors()

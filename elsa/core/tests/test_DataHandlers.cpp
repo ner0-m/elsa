@@ -1,11 +1,11 @@
 /**
- * \file test_DataHandlers.cpp
+ * @file test_DataHandlers.cpp
  *
- * \brief Common tests for DataHandlers class
+ * @brief Common tests for DataHandlers class
  *
- * \author David Frank - initial code
- * \author Tobias Lasser - rewrite and code coverage
- * \author Jens Petit - refactoring to general DataHandler test
+ * @author David Frank - initial code
+ * @author Tobias Lasser - rewrite and code coverage
+ * @author Jens Petit - refactoring to general DataHandler test
  */
 
 #include <catch2/catch.hpp>

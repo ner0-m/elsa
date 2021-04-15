@@ -63,7 +63,7 @@ namespace elsa
          * @param[in] angles (gamma -> around y''-axis, beta -> around z' axis, alpha -> around y
          * axis) in radians
          * @param[in] offset offset of the principal point
-         * param[in] centerOfRotOffset offset of the center of rotation
+         * @param[in] centerOfRotOffset offset of the center of rotation
          *
          * Alpha, beta, gamma are Euler rotation angles using the YZY convention. They are specified
          * in radians. In standard circular trajectory CT settings, we would have alpha = beta = 0,

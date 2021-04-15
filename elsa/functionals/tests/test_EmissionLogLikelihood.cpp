@@ -1,11 +1,11 @@
 /**
- * \file test_EmissionLogLikelihood.cpp
+ * @file test_EmissionLogLikelihood.cpp
  *
- * \brief Tests for the EmissionLogLikelihood class
+ * @brief Tests for the EmissionLogLikelihood class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite
- * \author Tobias Lasser - rewrite
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - rewrite
  */
 
 #include <catch2/catch.hpp>

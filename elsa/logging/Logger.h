@@ -10,10 +10,10 @@
 namespace elsa
 {
     /**
-     * \brief Logging class for elsa purposes (wrapper around spdlog).
+     * @brief Logging class for elsa purposes (wrapper around spdlog).
      *
-     * \author Maximilian Hornung - initial version
-     * \author Tobias Lasser - rewrite
+     * @author Maximilian Hornung - initial version
+     * @author Tobias Lasser - rewrite
      *
      * This class provides logging for the elsa library. It is a thin wrapper around the spdlog
      * third party library, using the single-threaded versions of the sinks.

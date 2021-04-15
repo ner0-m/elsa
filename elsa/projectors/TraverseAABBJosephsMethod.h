@@ -10,7 +10,7 @@
 namespace elsa
 {
     /**
-     *  \brief Special traversal wrapper for Joseph's method.
+     *  @brief Special traversal wrapper for Joseph's method.
      */
     class TraverseAABBJosephsMethod
     {
@@ -19,7 +19,7 @@ namespace elsa
         using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
 
         /**
-         * \brief Possible stages of the traversal
+         * @brief Possible stages of the traversal
          *
          * FIRST: currently handling the first sampling
          * INTERIOR: currently handling an interior point
@@ -33,39 +33,39 @@ namespace elsa
 
     public:
         /**
-         * \brief Constructor for traversal, accepting bounding box and ray
+         * @brief Constructor for traversal, accepting bounding box and ray
          *
-         * \param[in] aabb axis-aligned boundary box describing the volume
-         * \param[in] r the ray to be traversed
+         * @param[in] aabb axis-aligned boundary box describing the volume
+         * @param[in] r the ray to be traversed
          */
         explicit TraverseAABBJosephsMethod(const BoundingBox& aabb, const Ray& r);
 
         /**
-         * \brief Update the traverser status by taking the next traversal step
+         * @brief Update the traverser status by taking the next traversal step
          */
         void updateTraverse();
 
         /**
-         * \brief Return whether the traversal is still in the bounding box
+         * @brief Return whether the traversal is still in the bounding box
          *
-         * \returns true if still in bounding box, false otherwise
+         * @returns true if still in bounding box, false otherwise
          */
         bool isInBoundingBox() const;
 
         /**
-         * \brief Returns the fractional part of the current position wrt. the center of the
+         * @brief Returns the fractional part of the current position wrt. the center of the
          * pixel/voxel
          *
          * For example: if the current position is (15.4, 21.7, 23.0), then the current voxel is
          * (15,21,23) and the fractional parts are (15.4, 21.7, 23.0) - (15.5, 21.5, 23.5) = (-0.1,
          * 0.2, -0.5)
          *
-         * \return RealVector_t fractionals
+         * @return RealVector_t fractionals
          */
         const RealVector_t& getFractionals() const;
 
         /**
-         * \brief Get direction to be ignored during interpolation
+         * @brief Get direction to be ignored during interpolation
          *
          * The sampling points are chosen so that one of the directions can be ignored during
          * interpolation, effectively reducing the number of operations needed for the calculation
@@ -73,21 +73,21 @@ namespace elsa
          * always the main direction. For the entry and exit points it's the entry resp. exit
          * direction.
          *
-         * \return int index of the direction to be ignored
+         * @return int index of the direction to be ignored
          */
         int getIgnoreDirection() const;
 
         /**
-         * \brief Get the intersection length for the current step
+         * @brief Get the intersection length for the current step
          *
-         * \return real_t intersection length
+         * @return real_t intersection length
          */
         real_t getIntersectionLength() const;
 
         /**
-         * \brief Get the coordinates of the voxel which contains the current sampling point
+         * @brief Get the coordinates of the voxel which contains the current sampling point
          *
-         * \return IndexVector_t coordinates of the voxel which contains the current sampling point
+         * @return IndexVector_t coordinates of the voxel which contains the current sampling point
          */
         IndexVector_t getCurrentVoxel() const;
 

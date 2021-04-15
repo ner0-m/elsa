@@ -20,14 +20,14 @@ namespace elsa
     long useCount(const DataHandlerGPU<data_t>&);
 
     /**
-     * \brief Class representing and owning a vector stored in CPU main memory (using
+     * @brief Class representing and owning a vector stored in CPU main memory (using
      * Eigen::Matrix).
      *
-     * \tparam data_t - data type that is stored, defaulting to real_t.
+     * @tparam data_t - data type that is stored, defaulting to real_t.
      *
-     * \author David Frank - main code
-     * \author Tobias Lasser - modularization and modernization
-     * \author Nikola Dinev - integration of map and copy-on-write concepts
+     * @author David Frank - main code
+     * @author Tobias Lasser - modularization and modernization
+     * @author Nikola Dinev - integration of map and copy-on-write concepts
      *
      * The class implements copy-on-write. Therefore any non-const functions should call the
      * detach() function first to trigger the copy-on-write mechanism.
@@ -69,27 +69,27 @@ namespace elsa
         ~DataHandlerGPU() override;
 
         /**
-         * \brief Constructor initializing an appropriately sized vector with zeros
+         * @brief Constructor initializing an appropriately sized vector with zeros
          *
-         * \param[in] size of the vector
-         * \param[in] initialize - set to false if you do not need initialization with zeros
+         * @param[in] size of the vector
+         * @param[in] initialize - set to false if you do not need initialization with zeros
          * (default: true)
          *
-         * \throw InvalidArgumentError if the size is non-positive
+         * @throw InvalidArgumentError if the size is non-positive
          */
         explicit DataHandlerGPU(index_t size);
 
         /**
-         * \brief Constructor initializing a data vector with a given vector
+         * @brief Constructor initializing a data vector with a given vector
          *
-         * \param[in] vector that is used for initializing the data
+         * @param[in] vector that is used for initializing the data
          */
         explicit DataHandlerGPU(DataVector_t const& vector);
 
         /**
-         * \brief Constructor initializing a data vector with a given vector
+         * @brief Constructor initializing a data vector with a given vector
          *
-         * \param[in] vector that is used for initializing the data
+         * @param[in] vector that is used for initializing the data
          */
         explicit DataHandlerGPU(quickvec::Vector<data_t> const& vector);
         /// copy constructor

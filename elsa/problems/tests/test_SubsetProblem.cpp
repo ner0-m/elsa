@@ -1,9 +1,9 @@
 /**
- * \file test_SubsetProblem.cpp
+ * @file test_SubsetProblem.cpp
  *
- * \brief Tests for the SubsetProblem class
+ * @brief Tests for the SubsetProblem class
  *
- * \author Michael Loipführer - initial code
+ * @author Michael Loipführer - initial code
  */
 
 #include <catch2/catch.hpp>

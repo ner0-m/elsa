@@ -1,11 +1,11 @@
 /**
- * \file test_Intersection.cpp
+ * @file test_Intersection.cpp
  *
- * \brief Test for Intersection class
+ * @brief Test for Intersection class
  *
- * \author David Frank - initial code
- * \author Maximilian Hornung - modularization
- * \author Tobias Lasser - consistency changes
+ * @author David Frank - initial code
+ * @author Maximilian Hornung - modularization
+ * @author Tobias Lasser - consistency changes
  */
 
 #include <catch2/catch.hpp>

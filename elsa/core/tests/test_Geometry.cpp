@@ -1,9 +1,9 @@
 /**
- * \file test_Geometry.cpp
+ * @file test_Geometry.cpp
  *
- * \brief Test for Geometry class
+ * @brief Test for Geometry class
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
 #include <catch2/catch.hpp>

@@ -7,13 +7,13 @@
 namespace elsa
 {
     /**
-     * \brief Operator to compute finite differences.
+     * @brief Operator to compute finite differences.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - rewrite and performance optimization
-     * \author Tobias Lasser - modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - rewrite and performance optimization
+     * @author Tobias Lasser - modernization
      *
-     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * This class represents a linear operator D that computes finite differences,
      * using the central, forward, or backward differences.
@@ -26,10 +26,10 @@ namespace elsa
         enum class DiffType { FORWARD, BACKWARD, CENTRAL };
 
         /**
-         * \brief Constructor for FiniteDifferences over all dimensions.
+         * @brief Constructor for FiniteDifferences over all dimensions.
          *
-         * \param[in] domainDescriptor Descriptor for domain
-         * \param[in] type denoting the type of finite differences
+         * @param[in] domainDescriptor Descriptor for domain
+         * @param[in] type denoting the type of finite differences
          *
          * This implementation uses zero padding such that it's equal to the
          * following matrix formulation (in 1D)
@@ -43,11 +43,11 @@ namespace elsa
                                    DiffType type = DiffType::FORWARD);
 
         /**
-         * \brief Constructor for FiniteDifferences over selected dimensions.
+         * @brief Constructor for FiniteDifferences over selected dimensions.
          *
-         * \param[in] domainDescriptor Descriptor for domain
-         * \param[in] activeDims Boolean vector defining which dimensions are active or not
-         * \param[in] type denoting the type of finite differences
+         * @param[in] domainDescriptor Descriptor for domain
+         * @param[in] activeDims Boolean vector defining which dimensions are active or not
+         * @param[in] type denoting the type of finite differences
          *
          * This implementation uses zero padding such that it's equal to the
          * following matrix formulation (in 1D)

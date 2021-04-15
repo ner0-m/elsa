@@ -8,11 +8,11 @@
 namespace elsa
 {
     /**
-     * \brief Timer class to provide easy logging of timing.
+     * @brief Timer class to provide easy logging of timing.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - minor changes
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - minor changes
      *
      * This class provides logging of timing using the guard pattern. It stores the current  time
      * upon creation, and outputs a log message with time elapsed on destruction.

@@ -1,9 +1,9 @@
 /**
- * \file test_EDFHandler.cpp
+ * @file test_EDFHandler.cpp
  *
- * \brief Tests for the EDFHandler class
+ * @brief Tests for the EDFHandler class
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
 #include <catch2/catch.hpp>

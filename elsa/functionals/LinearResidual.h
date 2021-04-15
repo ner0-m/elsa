@@ -6,12 +6,12 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a linear residual, i.e. Ax - b with operator A and vectors x, b.
+     * @brief Class representing a linear residual, i.e. Ax - b with operator A and vectors x, b.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Tobias Lasser - modularization, modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Tobias Lasser - modularization, modernization
      *
-     * \tparam data_t data type for the domain and range of the operator, default to real_t
+     * @tparam data_t data type for the domain and range of the operator, default to real_t
      *
      * A linear residual is a vector-valued mapping \f$ \mathbb{R}^n\to\mathbb{R}^m \f$, namely
      * \f$ x \mapsto  Ax - b \f$, where A is a LinearOperator, b a constant data vector
@@ -23,30 +23,30 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for a trivial residual \f$ x \mapsto x \f$
+         * @brief Constructor for a trivial residual \f$ x \mapsto x \f$
          *
-         * \param[in] descriptor describing the domain = range of the residual
+         * @param[in] descriptor describing the domain = range of the residual
          */
         explicit LinearResidual(const DataDescriptor& descriptor);
 
         /**
-         * \brief Constructor for a simple residual \f$ x \mapsto x - b \f$
+         * @brief Constructor for a simple residual \f$ x \mapsto x - b \f$
          *
-         * \param[in] b a vector (DataContainer) that will be subtracted from x
+         * @param[in] b a vector (DataContainer) that will be subtracted from x
          */
         explicit LinearResidual(const DataContainer<data_t>& b);
 
-        /** \brief Constructor for a residual \f$ x \mapsto Ax \f$
+        /** @brief Constructor for a residual \f$ x \mapsto Ax \f$
          *
-         * \param[in] A a LinearOperator
+         * @param[in] A a LinearOperator
          */
         explicit LinearResidual(const LinearOperator<data_t>& A);
 
         /**
-         * \brief Constructor for a residual \f$ x \mapsto Ax - b \f$
+         * @brief Constructor for a residual \f$ x \mapsto Ax - b \f$
          *
-         * \param[in] A a LinearOperator
-         * \param[in] b a vector (DataContainer)
+         * @param[in] A a LinearOperator
+         * @param[in] b a vector (DataContainer)
          */
         LinearResidual(const LinearOperator<data_t>& A, const DataContainer<data_t>& b);
 
@@ -79,11 +79,11 @@ namespace elsa
         void evaluateImpl(const DataContainer<data_t>& x, DataContainer<data_t>& result) override;
 
         /**
-         * \brief return the Jacobian (first derivative) of the linear residual at x.
+         * @brief return the Jacobian (first derivative) of the linear residual at x.
          *
-         * \param x input DataContainer (in the domain of the residual)
+         * @param x input DataContainer (in the domain of the residual)
          *
-         * \returns  a LinearOperator (the Jacobian)
+         * @returns  a LinearOperator (the Jacobian)
          *
          * If A is set, then the Jacobian is A and this returns a copy of A.
          * If A is not set, then an Identity operator is returned.

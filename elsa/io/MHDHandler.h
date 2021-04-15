@@ -13,12 +13,12 @@
 namespace elsa
 {
     /**
-     * \brief class to read and write MHD files. MHD files are compatible with ITK/VTK based
+     * @brief class to read and write MHD files. MHD files are compatible with ITK/VTK based
      * applications.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - modernization
      *
      * Class to handle reading MHD files into DataContainers and writing of DataContainers to MHD
      * files.

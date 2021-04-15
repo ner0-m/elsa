@@ -9,12 +9,12 @@
 namespace elsa
 {
     /**
-     * \brief Class implementing a voxel traversal of a volume (AABB) along a ray.
+     * @brief Class implementing a voxel traversal of a volume (AABB) along a ray.
      *
-     * \author Tobias Lasser - initial code
-     * \author David Frank - major rewrite
-     * \author Maximilian Hornung - modularization
-     * \author Nikola Dinev - fixes
+     * @author Tobias Lasser - initial code
+     * @author David Frank - major rewrite
+     * @author Maximilian Hornung - modularization
+     * @author Nikola Dinev - fixes
      *
      * This traversal always proceeds along "long" voxel edges, it will never "jump diagonally".
      * The method is based on J. Amantides, A. Woo: A Fast Voxel Traversal Algorithm for Ray
@@ -28,37 +28,37 @@ namespace elsa
 
     public:
         /**
-         * \brief Constructor for traversal, accepting bounding box and ray
+         * @brief Constructor for traversal, accepting bounding box and ray
          *
-         * \param[in] aabb axis-aligned boundary box describing the volume
-         * \param[in] r the ray to be traversed
+         * @param[in] aabb axis-aligned boundary box describing the volume
+         * @param[in] r the ray to be traversed
          */
         TraverseAABB(const BoundingBox& aabb, const Ray& r);
 
         /**
-         * \brief Update the traverser status by taking the next traversal step
+         * @brief Update the traverser status by taking the next traversal step
          */
         void updateTraverse();
 
         /**
-         * \brief Update the traverser status by taking the next traversal step, return the distance
+         * @brief Update the traverser status by taking the next traversal step, return the distance
          * of step
          *
-         * \returns the distance of the step taken
+         * @returns the distance of the step taken
          */
         real_t updateTraverseAndGetDistance();
 
         /**
-         * \brief Return whether the traversal is still in the bounding box
+         * @brief Return whether the traversal is still in the bounding box
          *
-         * \returns true if still in bounding box, false otherwise
+         * @returns true if still in bounding box, false otherwise
          */
         bool isInBoundingBox() const;
 
         /**
-         * \brief Return the current voxel in the bounding box
+         * @brief Return the current voxel in the bounding box
          *
-         * \returns coordinate vector
+         * @returns coordinate vector
          */
         IndexVector_t getCurrentVoxel() const;
 

@@ -1,11 +1,11 @@
 /**
- * \file test_DataContainer.cpp
+ * @file test_DataContainer.cpp
  *
- * \brief Tests for DataContainer class
+ * @brief Tests for DataContainer class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite to use Catch and BDD
- * \author Tobias Lasser - rewrite and added code coverage
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite to use Catch and BDD
+ * @author Tobias Lasser - rewrite and added code coverage
  */
 
 #include <catch2/catch.hpp>

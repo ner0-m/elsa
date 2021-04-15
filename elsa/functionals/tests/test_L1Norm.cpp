@@ -1,11 +1,11 @@
 /**
- * \file test_L1Norm.cpp
+ * @file test_L1Norm.cpp
  *
- * \brief Tests for the L1Norm class
+ * @brief Tests for the L1Norm class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite
- * \author Tobias Lasser - modernization
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - modernization
  */
 
 #include <catch2/catch.hpp>

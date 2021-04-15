@@ -8,13 +8,13 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a block operator matrix
+     * @brief Class representing a block operator matrix
      *
-     * \author Matthias Wieczorek - initial code
-     * \author David Frank - rewrite
-     * \author Nikola Dinev - automatic descriptor generation, rewrite
+     * @author Matthias Wieczorek - initial code
+     * @author David Frank - rewrite
+     * @author Nikola Dinev - automatic descriptor generation, rewrite
      *
-     * \tparam data_t  data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t  data type for the domain and range of the operator, defaulting to real_t
      *
      * A block linear operator represents a block operator matrix \f$ B \f$ consisting of multiple
      * matrices \f$ A_i, i=1,\ldots,n \f$ stacked:
@@ -41,12 +41,12 @@ namespace elsa
         using OperatorList = typename std::vector<std::unique_ptr<LinearOperator<data_t>>>;
 
         /**
-         * \brief Construct a BlockLinearOperator of the given BlockType from the list of operators
+         * @brief Construct a BlockLinearOperator of the given BlockType from the list of operators
          *
-         * \param[in] ops the list of operators
-         * \param[in] blockType the fashion in which the operators are to be stacked
+         * @param[in] ops the list of operators
+         * @param[in] blockType the fashion in which the operators are to be stacked
          *
-         * \throw InvalidArgumentError if ops is empty
+         * @throw InvalidArgumentError if ops is empty
          *
          * The domain and range descriptors of the BlockLinearOperator are generated automatically
          * based on the descriptors of the operators in the list. For the block descriptor, a
@@ -57,15 +57,15 @@ namespace elsa
         BlockLinearOperator(const OperatorList& ops, BlockType blockType);
 
         /**
-         * \brief Construct a BlockLinearOperator of the given BlockType from the list of operators,
+         * @brief Construct a BlockLinearOperator of the given BlockType from the list of operators,
          * and additionally manually set the domain and range descriptors of the operator
          *
-         * \param[in] domainDescriptor descriptor of the domain of the operator
-         * \param[in] rangeDescriptor descriptor of the range of the operator
-         * \param[in] ops the list of operators
-         * \param[in] blockType the fashion in which the operators are to be stacked
+         * @param[in] domainDescriptor descriptor of the domain of the operator
+         * @param[in] rangeDescriptor descriptor of the range of the operator
+         * @param[in] ops the list of operators
+         * @param[in] blockType the fashion in which the operators are to be stacked
          *
-         * \throw InvalidArgumentError if the passed in descriptors are not suitable for the
+         * @throw InvalidArgumentError if the passed in descriptors are not suitable for the
          * BlockLinearOperator
          */
         BlockLinearOperator(const DataDescriptor& domainDescriptor,

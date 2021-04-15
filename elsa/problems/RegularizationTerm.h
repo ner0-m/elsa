@@ -7,12 +7,12 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a regularization term (a scalar parameter and a functional).
+     * @brief Class representing a regularization term (a scalar parameter and a functional).
      *
-     * \author Maximilian Hornung - initial code
-     * \author Tobias Lasser - modernization
+     * @author Maximilian Hornung - initial code
+     * @author Tobias Lasser - modernization
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a regularization term, consisting of a regularization parameter (a
      * scalar) and a term (represented as a Functional). It is just a light-weight wrapper with no
@@ -23,10 +23,10 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the regularization term, accepting a weight and a functional.
+         * @brief Constructor for the regularization term, accepting a weight and a functional.
          *
-         * \param weight the regularization parameter
-         * \param functional the actual term
+         * @param weight the regularization parameter
+         * @param functional the actual term
          */
         RegularizationTerm(data_t weight, const Functional<data_t>& functional);
 

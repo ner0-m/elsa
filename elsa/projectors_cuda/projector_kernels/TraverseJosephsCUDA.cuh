@@ -1,10 +1,10 @@
 /**
- * \file TraverseJosephsCUDA.cuh
+ * @file TraverseJosephsCUDA.cuh
  *
- * \brief Provides interface definitions for the Joseph's CUDA projector. Allows for separable
+ * @brief Provides interface definitions for the Joseph's CUDA projector. Allows for separable
  * compilation of device and host code.
  *
- * \author Nikola Dinev (nikola.dinev@tum.de)
+ * @author Nikola Dinev (nikola.dinev@tum.de)
  */
 #pragma once
 
@@ -38,24 +38,24 @@ namespace elsa
         };
 
         /**
-         * \brief Forward projection using Josephs's method
+         * @brief Forward projection using Josephs's method
          *
-         * \param[in] sinogramDims specifies the dimensions of the sinogram
-         * \param[in] threads specifies the number of threads for each block
-         * \param[in] volume handle to the texture object containing the volume data
-         * \param[out] sinogram pointer to output
-         * \param[in] sinogramPitch pitch (padded width in bytes) of sinogram
-         * \param[in] rayOrigins pointer to ray origins
-         * \param[in] originPitch pitch of ray origins
-         * \param[in] projInv pointer to inverse of projection matrices (stored column-wise)
-         * \param[in] projPitch pitch of inverse of projection matrices
-         * \param[in] boundingBox specifies the size of the volume
+         * @param[in] sinogramDims specifies the dimensions of the sinogram
+         * @param[in] threads specifies the number of threads for each block
+         * @param[in] volume handle to the texture object containing the volume data
+         * @param[out] sinogram pointer to output
+         * @param[in] sinogramPitch pitch (padded width in bytes) of sinogram
+         * @param[in] rayOrigins pointer to ray origins
+         * @param[in] originPitch pitch of ray origins
+         * @param[in] projInv pointer to inverse of projection matrices (stored column-wise)
+         * @param[in] projPitch pitch of inverse of projection matrices
+         * @param[in] boundingBox specifies the size of the volume
          *
          * sinogramDims should be given as (numAngles, detectorSizeY (1 for 2D), detectorSizeX).
          *
          * threads should ideally be a multiple of the warp size (32 for all current GPUs).
          *
-         * \warning Interpolation mode for texture should be set to cudaFilterModePoint when working
+         * @warning Interpolation mode for texture should be set to cudaFilterModePoint when working
          * with doubles.
          */
         static void traverseForward(dim3 sinogramDims, int threads, cudaTextureObject_t volume,
@@ -65,19 +65,19 @@ namespace elsa
                                     const BoundingBox& boundingBox);
 
         /**
-         * \brief Backward projection using Josephs's method
+         * @brief Backward projection using Josephs's method
          *
-         * \param[in] sinogramDims specifies the dimensions of the sinogram
-         * \param[in] threads specifies the number of threads for each block
-         * \param[out] volume pointer to output
-         * \param[in] volumePitch pitch (padded width in bytes) of volume
-         * \param[in] sinogram pointer to sinogram data
-         * \param[in] sinogramPitch pitch of sinogram
-         * \param[in] rayOrigins pointer to ray origins
-         * \param[in] originPitch pitch of ray origins
-         * \param[in] projInv pointer to inverse of projection matrices
-         * \param[in] projPitch pitch of inverse of projection matrices
-         * \param[in] boundingBox specifies the size of the volume
+         * @param[in] sinogramDims specifies the dimensions of the sinogram
+         * @param[in] threads specifies the number of threads for each block
+         * @param[out] volume pointer to output
+         * @param[in] volumePitch pitch (padded width in bytes) of volume
+         * @param[in] sinogram pointer to sinogram data
+         * @param[in] sinogramPitch pitch of sinogram
+         * @param[in] rayOrigins pointer to ray origins
+         * @param[in] originPitch pitch of ray origins
+         * @param[in] projInv pointer to inverse of projection matrices
+         * @param[in] projPitch pitch of inverse of projection matrices
+         * @param[in] boundingBox specifies the size of the volume
          *
          * sinogramDims should be given as (numAngles, detectorSizeY (1 for 2D), detectorSizeX).
          *
@@ -93,24 +93,24 @@ namespace elsa
                                     uint32_t projPitch, const BoundingBox& boundingBox);
 
         /**
-         * \brief Approximation of backward projection for Josephs's method
+         * @brief Approximation of backward projection for Josephs's method
          *
-         * \param[in] volumeDims specifies the dimensions of the volume
-         * \param[in] threads specifies the number of threads for each block
-         * \param[out] volume pointer to output
-         * \param[in] volumePitch pitch (padded width in bytes) of volume
-         * \param[in] sinogram handle to the texture object containing the volume data
-         * \param[in] rayOrigins pointer to ray origins
-         * \param[in] originPitch pitch of ray origins
-         * \param[in] proj pointer to projection matrices
-         * \param[in] projPitch pitch of projection matrices
-         * \param[in] numAngles number of acquisition angles
+         * @param[in] volumeDims specifies the dimensions of the volume
+         * @param[in] threads specifies the number of threads for each block
+         * @param[out] volume pointer to output
+         * @param[in] volumePitch pitch (padded width in bytes) of volume
+         * @param[in] sinogram handle to the texture object containing the volume data
+         * @param[in] rayOrigins pointer to ray origins
+         * @param[in] originPitch pitch of ray origins
+         * @param[in] proj pointer to projection matrices
+         * @param[in] projPitch pitch of projection matrices
+         * @param[in] numAngles number of acquisition angles
          *
          * volumeDims should be given as (volSizeZ (1 for 2D), volSizeY, volSizeX).
          *
          * threads should ideally be a multiple of the warp size (32 for all current GPUs).
          *
-         * \warning Interpolation mode for texture should be set to cudaFilterModePoint when working
+         * @warning Interpolation mode for texture should be set to cudaFilterModePoint when working
          * with doubles.
          */
         static void traverseAdjointFast(dim3 volumeDims, int threads, int8_t* __restrict__ volume,

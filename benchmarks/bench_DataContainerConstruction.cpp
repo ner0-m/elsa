@@ -1,9 +1,9 @@
 /**
- * \file test_BenchmarkDataContainerConstruction.cpp
+ * @file test_BenchmarkDataContainerConstruction.cpp
  *
- * \brief Benchmarks for constructing an empty DataContainer
+ * @brief Benchmarks for constructing an empty DataContainer
  *
- * \author Jens Petit
+ * @author Jens Petit
  */
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING

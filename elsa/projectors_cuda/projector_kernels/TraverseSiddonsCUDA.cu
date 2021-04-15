@@ -20,7 +20,7 @@ struct EasyAccessSharedArray {
     }
 };
 /**
- * \brief General square matrix-vector multiplication
+ * @brief General square matrix-vector multiplication
  *
  * important: always use byte pointers for multidimensional arrays
  */

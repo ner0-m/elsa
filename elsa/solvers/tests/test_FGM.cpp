@@ -1,9 +1,9 @@
 /**
- * \file test_FGM.cpp
+ * @file test_FGM.cpp
  *
- * \brief Tests for the Fast Gradient Method class
+ * @brief Tests for the Fast Gradient Method class
  *
- * \author Michael Loipführer - initial code
+ * @author Michael Loipführer - initial code
  */
 
 #include <catch2/catch.hpp>

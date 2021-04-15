@@ -1,10 +1,10 @@
 /**
- * \file test_Problem.cpp
+ * @file test_Problem.cpp
  *
- * \brief Tests for the Problem class
+ * @brief Tests for the Problem class
  *
- * \author David Frank - initial code
- * \author Tobias Lasser - rewrite
+ * @author David Frank - initial code
+ * @author Tobias Lasser - rewrite
  */
 
 #include <catch2/catch.hpp>

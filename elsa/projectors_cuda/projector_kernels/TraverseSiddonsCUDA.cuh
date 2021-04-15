@@ -1,10 +1,10 @@
 /**
- * \file TraverseSiddonsCUDA.cuh
+ * @file TraverseSiddonsCUDA.cuh
  *
- * \brief Provides interface definitions for the Siddon's CUDA projector. Allows for separable
+ * @brief Provides interface definitions for the Siddon's CUDA projector. Allows for separable
  * compilation of device and host code.
  *
- * \author Nikola Dinev (nikola.dinev@tum.de)
+ * @author Nikola Dinev (nikola.dinev@tum.de)
  */
 #pragma once
 
@@ -39,19 +39,19 @@ namespace elsa
         };
 
         /**
-         * \brief Forward projection using Siddon's method
+         * @brief Forward projection using Siddon's method
          *
-         * \param[in] sinogramDims specifies the dimensions of the sinogram
-         * \param[in] threads specifies the number of threads for each block
-         * \param[in] volume pointer to volume data
-         * \param[in] volumePitch pitch (padded width in bytes) of volume
-         * \param[out] sinogram pointer to output
-         * \param[in] sinogramPitch pitch of sinogram
-         * \param[in] rayOrigins pointer to ray origins
-         * \param[in] originPitch pitch of ray origins
-         * \param[in] projInv pointer to inverse of projection matrices
-         * \param[in] projPitch pitch of inverse of projection matrices
-         * \param[in] boundingBox specifies the size of the volume
+         * @param[in] sinogramDims specifies the dimensions of the sinogram
+         * @param[in] threads specifies the number of threads for each block
+         * @param[in] volume pointer to volume data
+         * @param[in] volumePitch pitch (padded width in bytes) of volume
+         * @param[out] sinogram pointer to output
+         * @param[in] sinogramPitch pitch of sinogram
+         * @param[in] rayOrigins pointer to ray origins
+         * @param[in] originPitch pitch of ray origins
+         * @param[in] projInv pointer to inverse of projection matrices
+         * @param[in] projPitch pitch of inverse of projection matrices
+         * @param[in] boundingBox specifies the size of the volume
          *
          * sinogramDims should be given as (numAngles, detectorSizeY (1 for 2D), detectorSizeX).
          *
@@ -64,19 +64,19 @@ namespace elsa
                                     uint32_t projPitch, const BoundingBox& boundingBox);
 
         /**
-         * \brief Backward projection using Siddon's method
+         * @brief Backward projection using Siddon's method
          *
-         * \param[in] sinogramDims specifies the dimensions of the sinogram
-         * \param[in] threads specifies the number of threads for each block
-         * \param[out] volume pointer to output
-         * \param[in] volumePitch pitch (padded width in bytes) of volume
-         * \param[in] sinogram pointer to sinogram data
-         * \param[in] sinogramPitch pitch of sinogram
-         * \param[in] rayOrigins pointer to ray origins
-         * \param[in] originPitch pitch of ray origins
-         * \param[in] projInv pointer to inverse of projection matrices
-         * \param[in] projPitch pitch of inverse of projection matrices
-         * \param[in] boundingBox specifies the size of the volume
+         * @param[in] sinogramDims specifies the dimensions of the sinogram
+         * @param[in] threads specifies the number of threads for each block
+         * @param[out] volume pointer to output
+         * @param[in] volumePitch pitch (padded width in bytes) of volume
+         * @param[in] sinogram pointer to sinogram data
+         * @param[in] sinogramPitch pitch of sinogram
+         * @param[in] rayOrigins pointer to ray origins
+         * @param[in] originPitch pitch of ray origins
+         * @param[in] projInv pointer to inverse of projection matrices
+         * @param[in] projPitch pitch of inverse of projection matrices
+         * @param[in] boundingBox specifies the size of the volume
          *
          * sinogramDims should be given as (numAngles, detectorSizeY (1 for 2D), detectorSizeX).
          *

@@ -14,12 +14,12 @@
 namespace elsa
 {
     /**
-     * \brief GPU-operator representing the discretized X-ray transform in 2d/3d using Siddon's
+     * @brief GPU-operator representing the discretized X-ray transform in 2d/3d using Siddon's
      * method.
      *
-     * \author Nikola Dinev
+     * @author Nikola Dinev
      *
-     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * The volume is traversed along the rays as specified by the Geometry. Each ray is traversed in
      * a continguous fashion (i.e. along long voxel borders, not diagonally) and each traversed
@@ -40,11 +40,11 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for Siddon's method traversal.
+         * @brief Constructor for Siddon's method traversal.
          *
-         * \param[in] domainDescriptor describing the domain of the operator (the volume)
-         * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
-         * \param[in] geometryList vector containing the geometries for the acquisition poses
+         * @param[in] domainDescriptor describing the domain of the operator (the volume)
+         * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         * @param[in] geometryList vector containing the geometries for the acquisition poses
          *
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
@@ -97,14 +97,14 @@ namespace elsa
         void traverseVolume(void* volumePtr, void* sinoPtr) const;
 
         /**
-         * \brief Copies contents of a 3D data container between GPU and host memory
+         * @brief Copies contents of a 3D data container between GPU and host memory
          *
-         * \tparam direction specifies the direction of the copy operation
-         * \tparam async whether the copy should be performed asynchronously wrt. the host
+         * @tparam direction specifies the direction of the copy operation
+         * @tparam async whether the copy should be performed asynchronously wrt. the host
          *
-         * \param hostData pointer to host data
-         * \param gpuData pointer to gpu data
-         * \param[in] extent specifies the amount of data to be copied
+         * @param hostData pointer to host data
+         * @param gpuData pointer to gpu data
+         * @param[in] extent specifies the amount of data to be copied
          *
          * Note that hostData is expected to be a pointer to a linear memory region with no padding
          * between dimensions - e.g. the data in DataContainer is stored as a vector with no extra

@@ -1,12 +1,12 @@
 /**
- * \file test_VolumeDescriptor.cpp
+ * @file test_VolumeDescriptor.cpp
  *
- * \brief Tests for VolumeDescriptor class
+ * @brief Tests for VolumeDescriptor class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite to use Catch and BDD
- * \author Tobias Lasser - rewrite and added code coverage
- * \author Nikola Dinev - tests for automatic descriptor generation
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite to use Catch and BDD
+ * @author Tobias Lasser - rewrite and added code coverage
+ * @author Nikola Dinev - tests for automatic descriptor generation
  */
 
 #include <catch2/catch.hpp>

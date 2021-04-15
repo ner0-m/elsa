@@ -1,9 +1,9 @@
 /**
- * \file test_SubsetSampler.cpp
+ * @file test_SubsetSampler.cpp
  *
- * \brief Tests for the SubsetSampler class
+ * @brief Tests for the SubsetSampler class
  *
- * \author Michael Loipführer - initial code
+ * @author Michael Loipführer - initial code
  */
 #include <catch2/catch.hpp>
 

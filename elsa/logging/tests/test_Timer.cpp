@@ -1,9 +1,9 @@
 /**
- * \file test_Timer.cpp
+ * @file test_Timer.cpp
  *
- * \brief Tests for Timer class
+ * @brief Tests for Timer class
  *
- * \author Maximilian Hornung
+ * @author Maximilian Hornung
  */
 
 #include <catch2/catch.hpp>

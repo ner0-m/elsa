@@ -5,11 +5,11 @@
 namespace elsa
 {
     /**
-     * \brief Class representing an SQS Solver.
+     * @brief Class representing an SQS Solver.
      *
-     * \author Michael Loipführer - initial code
+     * @author Michael Loipführer - initial code
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class implements an SQS solver with multiple options for momentum acceleration and
      * ordered subsets.
@@ -25,12 +25,12 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for SQS, accepting an optimization problem and, optionally, a value
+         * @brief Constructor for SQS, accepting an optimization problem and, optionally, a value
          * for epsilon. If the problem passed to the constructor is a SubsetProblem SQS will operate
          * in ordered subset mode.
          *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] epsilon affects the stopping condition
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] epsilon affects the stopping condition
          */
         SQS(const Problem<data_t>& problem, bool momentumAcceleration = true,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
@@ -61,13 +61,13 @@ namespace elsa
         using Solver<data_t>::_problem;
 
         /**
-         * \brief Solve the optimization problem, i.e. apply iterations number of iterations of
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * gradient descent
          *
-         * \param[in] iterations number of iterations to execute (the default 0 value executes
+         * @param[in] iterations number of iterations to execute (the default 0 value executes
          * _defaultIterations of iterations)
          *
-         * \returns a reference to the current solution
+         * @returns a reference to the current solution
          */
         DataContainer<data_t>& solveImpl(index_t iterations) override;
 

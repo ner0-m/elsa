@@ -1,11 +1,11 @@
 /**
- * \file test_Scaling.cpp
+ * @file test_Scaling.cpp
  *
- * \brief Tests for Scaling operator class
+ * @brief Tests for Scaling operator class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite
- * \author Tobias Lasser - minor extensions
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - minor extensions
  */
 
 #include <catch2/catch.hpp>

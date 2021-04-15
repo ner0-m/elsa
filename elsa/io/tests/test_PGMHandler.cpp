@@ -1,9 +1,9 @@
 /**
- * \file test_PGMHandler.cpp
+ * @file test_PGMHandler.cpp
  *
- * \brief Tests for the PGMHandler class
+ * @brief Tests for the PGMHandler class
  *
- * \author David Frank - initial code
+ * @author David Frank - initial code
  */
 
 #include <catch2/catch.hpp>

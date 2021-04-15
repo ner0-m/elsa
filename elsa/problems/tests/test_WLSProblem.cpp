@@ -1,13 +1,13 @@
 /**
- * \file test_WLSProblem.cpp
+ * @file test_WLSProblem.cpp
  *
- * \brief Tests for the WLSProblem class
+ * @brief Tests for the WLSProblem class
  *
- * \author Matthias Wieczorek - initial code
- * \author Maximilian Hornung - modularization
- * \author David Frank - rewrite
- * \author Tobias Lasser - rewrite, modernization
- * \author Nikola Dinev - added tests for conversion constructor
+ * @author Matthias Wieczorek - initial code
+ * @author Maximilian Hornung - modularization
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - rewrite, modernization
+ * @author Nikola Dinev - added tests for conversion constructor
  */
 
 #include <catch2/catch.hpp>

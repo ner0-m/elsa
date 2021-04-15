@@ -1,9 +1,9 @@
 /**
- * \file test_TikhonovProblem.cpp
+ * @file test_TikhonovProblem.cpp
  *
- * \brief Tests for the TikhonovProblem<TestType> class
+ * @brief Tests for the TikhonovProblem<TestType> class
  *
- * \author Nikola Dinev
+ * @author Nikola Dinev
  */
 
 #include <catch2/catch.hpp>

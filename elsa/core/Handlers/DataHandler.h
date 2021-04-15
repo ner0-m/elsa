@@ -15,12 +15,12 @@ namespace elsa
 {
 
     /**
-     * \brief Base class encapsulating data handling. The data is stored transparently, for example
+     * @brief Base class encapsulating data handling. The data is stored transparently, for example
      * on CPU or GPU.
      *
-     * \author David Frank - initial code
-     * \author Tobias Lasser - modularization, modernization
-     * \author Nikola Dinev - add block support
+     * @author David Frank - initial code
+     * @author Tobias Lasser - modularization, modernization
+     * @author Nikola Dinev - add block support
      *
      * This abstract base class serves as an interface for data handlers, which encapsulate the
      * actual data being stored e.g. in main memory of the CPU or in various memory types of GPUs.

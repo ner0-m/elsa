@@ -68,12 +68,12 @@ namespace elsa
     };
 
     /**
-     * \brief Temporary expression type which enables lazy-evaluation of expression
+     * @brief Temporary expression type which enables lazy-evaluation of expression
      *
-     * \author Jens Petit
+     * @author Jens Petit
      *
-     * \tparam Callable - the operation to be performed
-     * \tparam Operands - the objects on which the operation is performed
+     * @tparam Callable - the operation to be performed
+     * @tparam Operands - the objects on which the operation is performed
      *
      */
     template <typename Callable, typename... Operands>

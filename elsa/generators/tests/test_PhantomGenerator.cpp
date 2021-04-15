@@ -1,9 +1,9 @@
 /**
- * \file test_PhantomGenerator.cpp
+ * @file test_PhantomGenerator.cpp
  *
- * \brief Tests for the PhantomGenerator class
+ * @brief Tests for the PhantomGenerator class
  *
- * \author Tobias Lasser - nothing to see here...
+ * @author Tobias Lasser - nothing to see here...
  */
 
 #include <catch2/catch.hpp>

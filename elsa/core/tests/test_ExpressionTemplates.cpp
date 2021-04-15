@@ -1,9 +1,9 @@
 /**
- * \file test_ExpressionTemplates.cpp
+ * @file test_ExpressionTemplates.cpp
  *
- * \brief Tests for Expression Templates
+ * @brief Tests for Expression Templates
  *
- * \author Jens Petit
+ * @author Jens Petit
  */
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING

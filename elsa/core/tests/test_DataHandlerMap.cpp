@@ -1,11 +1,11 @@
 /**
- * \file test_DataHandlerMap.cpp
+ * @file test_DataHandlerMap.cpp
  *
- * \brief Tests for DataHandlerMaps - DataHandlerMapCPU and DataHandlerMapGPU
+ * @brief Tests for DataHandlerMaps - DataHandlerMapCPU and DataHandlerMapGPU
  *
- * \author David Frank - initial code
- * \author Tobias Lasser - rewrite and code coverage
- * \author Jens Petit - refactoring into TEMPLATE_PRODUCT_TEST_CASE
+ * @author David Frank - initial code
+ * @author Tobias Lasser - rewrite and code coverage
+ * @author Jens Petit - refactoring into TEMPLATE_PRODUCT_TEST_CASE
  */
 
 #include <catch2/catch.hpp>

@@ -9,12 +9,12 @@
 namespace elsa
 {
     /**
-     * \brief Abstract base class representing a residual, i.e. a vector-valued mapping.
+     * @brief Abstract base class representing a residual, i.e. a vector-valued mapping.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Tobias Lasser - modularization, streamlining
+     * @author Matthias Wieczorek - initial code
+     * @author Tobias Lasser - modularization, streamlining
      *
-     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * A residual is a vector-valued mapping representing an error (or mismatch). For real numbers
      * this corresponds to \f$ \mathbb{R}^n\to\mathbb{R}^m \f$ (e.g. \f$ x \mapsto Ax-b \f$ for
@@ -26,10 +26,10 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the residual, mapping from domain to range
+         * @brief Constructor for the residual, mapping from domain to range
          *
-         * \param[in] domainDescriptor describing the domain of the residual
-         * \param[in] rangeDescriptor describing the range of the residual
+         * @param[in] domainDescriptor describing the domain of the residual
+         * @param[in] rangeDescriptor describing the range of the residual
          */
         Residual(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor);
 
@@ -43,11 +43,11 @@ namespace elsa
         const DataDescriptor& getRangeDescriptor() const;
 
         /**
-         * \brief evaluate the residual at x and return the result
+         * @brief evaluate the residual at x and return the result
          *
-         * \param[in] x input DataContainer (in the domain of the residual)
+         * @param[in] x input DataContainer (in the domain of the residual)
          *
-         * \returns result DataContainer (in the range of the residual) containing the result of
+         * @returns result DataContainer (in the range of the residual) containing the result of
          * the evaluation of the residual at x
          *
          * Please note: this method uses evaluate(x, result) to perform the actual operation.
@@ -55,10 +55,10 @@ namespace elsa
         DataContainer<data_t> evaluate(const DataContainer<data_t>& x);
 
         /**
-         * \brief evaluate the residual at x and store in result
+         * @brief evaluate the residual at x and store in result
          *
-         * \param[in] x input DataContainer (in the domain of the residual)
-         * \param[out] result output DataContainer (in the range of the residual)
+         * @param[in] x input DataContainer (in the domain of the residual)
+         * @param[out] result output DataContainer (in the range of the residual)
          *
          * Please note: this method calls the method evaluateImpl that has to be overridden in
          * derived classes. (Why is this method here not virtual itself? Because you cannot
@@ -67,12 +67,12 @@ namespace elsa
         void evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result);
 
         /**
-         * \brief return the Jacobian (first derivative) of the residual at x.
+         * @brief return the Jacobian (first derivative) of the residual at x.
          *
-         * \param[in] x input DataContainer (in the domain of the residual) at which the
+         * @param[in] x input DataContainer (in the domain of the residual) at which the
          * Jacobian of the residual will be evaluated
          *
-         * \returns a LinearOperator (the Jacobian)
+         * @returns a LinearOperator (the Jacobian)
          *
          * Please note: this method calls the method getJacobianImpl that has to be overridden in
          * derived classes. (This is not strictly necessary, it's just for consistency with

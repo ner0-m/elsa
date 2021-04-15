@@ -5,13 +5,13 @@
 namespace elsa
 {
     /**
-     * \brief Operator representing a scaling operation.
+     * @brief Operator representing a scaling operation.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - minor fixes
-     * \author Tobias Lasser - modularization, rewrite
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - minor fixes
+     * @author Tobias Lasser - modularization, rewrite
      *
-     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * This class represents a linear operator A that scales the input, either by a scalar
      * or by a diagonal scaling matrix.
@@ -21,18 +21,18 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for a scalar, isotropic scaling operator.
+         * @brief Constructor for a scalar, isotropic scaling operator.
          *
-         * \param[in] descriptor DataDescriptor describing the domain and the range of the operator
-         * \param[in] scaleFactor the scalar factor to scale with
+         * @param[in] descriptor DataDescriptor describing the domain and the range of the operator
+         * @param[in] scaleFactor the scalar factor to scale with
          */
         Scaling(const DataDescriptor& descriptor, data_t scaleFactor);
 
         /**
-         * \brief Constructor for a diagonal, anisotropic scaling operator.
+         * @brief Constructor for a diagonal, anisotropic scaling operator.
          *
-         * \param[in] descriptor DataDescriptor describing the domain and the range of the operator
-         * \param[in] scaleFactors a DataContainer containing the scaling factor to be put on the
+         * @param[in] descriptor DataDescriptor describing the domain and the range of the operator
+         * @param[in] scaleFactors a DataContainer containing the scaling factor to be put on the
          * diagonal
          */
         Scaling(const DataDescriptor& descriptor, const DataContainer<data_t>& scaleFactors);

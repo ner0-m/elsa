@@ -1,11 +1,11 @@
 /**
- * \file test_TransmissionLogLikelihood.cpp
+ * @file test_TransmissionLogLikelihood.cpp
  *
- * \brief Tests for the TransmissionLogLikelihood class
+ * @brief Tests for the TransmissionLogLikelihood class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite
- * \author Tobias Lasser - rewrite
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - rewrite
  */
 
 #include <catch2/catch.hpp>

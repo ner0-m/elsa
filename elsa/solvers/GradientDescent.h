@@ -5,11 +5,11 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a simple gradient descent solver with a fixed, given step size.
+     * @brief Class representing a simple gradient descent solver with a fixed, given step size.
      *
-     * \author Tobias Lasser - initial code
+     * @author Tobias Lasser - initial code
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class implements a simple gradient descent iterative solver with a fixed, given step
      * size. No particular stopping rule is currently implemented (only a fixed number of
@@ -20,20 +20,20 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for gradient descent, accepting a problem and a fixed step size
+         * @brief Constructor for gradient descent, accepting a problem and a fixed step size
          *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] stepSize the fixed step size to be used while solving
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] stepSize the fixed step size to be used while solving
          */
         GradientDescent(const Problem<data_t>& problem, data_t stepSize);
 
         /**
-         * \brief Constructor for gradient descent, accepting a problem. The step size will be
+         * @brief Constructor for gradient descent, accepting a problem. The step size will be
          * computed as \f$ 1 \over L \f$ with \f$ L \f$ being the Lipschitz constant of the
          * function.
          *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] stepSize the fixed step size to be used while solving
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] stepSize the fixed step size to be used while solving
          */
         GradientDescent(const Problem<data_t>& problem);
 
@@ -57,13 +57,13 @@ namespace elsa
         using Solver<data_t>::_problem;
 
         /**
-         * \brief Solve the optimization problem, i.e. apply iterations number of iterations of
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * gradient descent
          *
-         * \param[in] iterations number of iterations to execute (the default 0 value executes
+         * @param[in] iterations number of iterations to execute (the default 0 value executes
          * _defaultIterations of iterations)
          *
-         * \returns a reference to the current solution
+         * @returns a reference to the current solution
          */
         DataContainer<data_t>& solveImpl(index_t iterations) override;
 

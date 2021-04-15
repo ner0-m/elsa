@@ -1,11 +1,11 @@
 /**
- * \file test_BinaryMethod.cpp
+ * @file test_BinaryMethod.cpp
  *
- * \brief Test for BinaryMethod class
+ * @brief Test for BinaryMethod class
  *
- * \author David Frank - initial code
- * \author Nikola Dinev - rewrite and major extensions
- * \author Tobias Lasser - minor fixes
+ * @author David Frank - initial code
+ * @author Nikola Dinev - rewrite and major extensions
+ * @author Tobias Lasser - minor fixes
  */
 
 #include <catch2/catch.hpp>

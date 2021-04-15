@@ -5,11 +5,11 @@
 namespace elsa
 {
     /**
-     * \brief Class representing the Optimized Gradient Method.
+     * @brief Class representing the Optimized Gradient Method.
      *
-     * \author Michael Loipführer - initial code
+     * @author Michael Loipführer - initial code
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class implements the Optimized Gradient Method as introduced by Kim and Fessler in 2016.
      * OGM is a first order method to efficiently optimize convex functions with
@@ -27,11 +27,11 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for OGM, accepting an optimization problem and, optionally, a value
+         * @brief Constructor for OGM, accepting an optimization problem and, optionally, a value
          * for epsilon
          *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] epsilon affects the stopping condition
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] epsilon affects the stopping condition
          */
         OGM(const Problem<data_t>& problem,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
@@ -56,13 +56,13 @@ namespace elsa
         using Solver<data_t>::_problem;
 
         /**
-         * \brief Solve the optimization problem, i.e. apply iterations number of iterations of
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * gradient descent
          *
-         * \param[in] iterations number of iterations to execute (the default 0 value executes
+         * @param[in] iterations number of iterations to execute (the default 0 value executes
          * _defaultIterations of iterations)
          *
-         * \returns a reference to the current solution
+         * @returns a reference to the current solution
          */
         DataContainer<data_t>& solveImpl(index_t iterations) override;
 

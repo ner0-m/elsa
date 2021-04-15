@@ -1,9 +1,9 @@
 /**
- * \file test_PartitionDescriptor.cpp
+ * @file test_PartitionDescriptor.cpp
  *
- * \brief Tests for PartitionDescriptor class
+ * @brief Tests for PartitionDescriptor class
  *
- * \author Nikola Dinev
+ * @author Nikola Dinev
  */
 
 #include <catch2/catch.hpp>

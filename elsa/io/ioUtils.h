@@ -10,10 +10,10 @@
 namespace elsa
 {
     /**
-     * \brief class providing string handling utility functions.
+     * @brief class providing string handling utility functions.
      *
-     * \author Maximilian Hornung - initial code
-     * \author Tobias Lasser - rewrite
+     * @author Maximilian Hornung - initial code
+     * @author Tobias Lasser - rewrite
      */
     struct StringUtils {
     public:
@@ -28,11 +28,11 @@ namespace elsa
     };
 
     /**
-     * \brief class providing utility functions for reading/writing data
+     * @brief class providing utility functions for reading/writing data
      *
-     * \author Matthias Wieczorek - first version of code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - rewrite
+     * @author Matthias Wieczorek - first version of code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - rewrite
      */
     struct DataUtils {
     public:
@@ -62,10 +62,10 @@ namespace elsa
     };
 
     /**
-     * \brief class providing utility functions for the filesystem
+     * @brief class providing utility functions for the filesystem
      *
-     * \author Maximilian Hornung - initial code
-     * \author Tobias Lasser - rewrite
+     * @author Maximilian Hornung - initial code
+     * @author Tobias Lasser - rewrite
      */
     struct FileSystemUtils {
     public:

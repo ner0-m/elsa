@@ -1,11 +1,11 @@
 /**
- * \file test_L2NormPow2.cpp
+ * @file test_L2NormPow2.cpp
  *
- * \brief Tests for the L2NormPow2 class
+ * @brief Tests for the L2NormPow2 class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite
- * \author Tobias Lasser - modernization
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - modernization
  */
 
 #include <catch2/catch.hpp>

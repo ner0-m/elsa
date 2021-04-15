@@ -1,9 +1,9 @@
 /**
- * \file test_ioUtils.cpp
+ * @file test_ioUtils.cpp
  *
- * \brief Tests for the ioUtils
+ * @brief Tests for the ioUtils
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
 #include <catch2/catch.hpp>

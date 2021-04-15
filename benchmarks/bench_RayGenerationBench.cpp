@@ -1,9 +1,9 @@
 /**
- * \file test_RayGenerationBench.cpp
+ * @file test_RayGenerationBench.cpp
  *
- * \brief Benchmarks for ray generation
+ * @brief Benchmarks for ray generation
  *
- * \author David Frank
+ * @author David Frank
  */
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING

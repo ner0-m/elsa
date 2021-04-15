@@ -1,11 +1,11 @@
 /**
- * \file test_CircleTrajectoryGenerator.cpp
+ * @file test_CircleTrajectoryGenerator.cpp
  *
- * \brief Test for CircleTrajectoryGenerator class
+ * @brief Test for CircleTrajectoryGenerator class
  *
- * \author David Frank - initial code
- * \author Nikola Dinev - fixes
- * \author Tobias Lasser - modernization, fixes
+ * @author David Frank - initial code
+ * @author Nikola Dinev - fixes
+ * @author Tobias Lasser - modernization, fixes
  */
 
 #include <catch2/catch.hpp>

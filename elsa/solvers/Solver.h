@@ -7,13 +7,13 @@
 namespace elsa
 {
     /**
-     * \brief Base class representing a solver for an optimization problem.
+     * @brief Base class representing a solver for an optimization problem.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - rewrite, modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - rewrite, modernization
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents abstract (typically iterative) solvers acting on optimization problems.
      */
@@ -22,9 +22,9 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the solver, accepting an optimization problem
+         * @brief Constructor for the solver, accepting an optimization problem
          *
-         * \param[in] problem the problem that is supposed to be solved
+         * @param[in] problem the problem that is supposed to be solved
          */
         explicit Solver(const Problem<data_t>& problem);
 
@@ -38,12 +38,12 @@ namespace elsa
         DataContainer<data_t>& getCurrentSolution();
 
         /**
-         * \brief Solve the optimization problem (most likely iteratively)
+         * @brief Solve the optimization problem (most likely iteratively)
          *
-         * \param[in] iterations number of iterations to execute (optional argument, the default 0
+         * @param[in] iterations number of iterations to execute (optional argument, the default 0
          * value lets the solve choose how many iterations to execute)
          *
-         * \returns a reference to the current solution (after solving)
+         * @returns a reference to the current solution (after solving)
          *
          * Please note: this method calls solveImpl, which has to be overridden in derived classes.
          */

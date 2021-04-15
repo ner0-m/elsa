@@ -16,14 +16,14 @@ namespace elsa
     class DataHandlerGPU;
 
     /**
-     * \brief Class referencing a vector stored in GPU main memory, or a part thereof
+     * @brief Class referencing a vector stored in GPU main memory, or a part thereof
      *
-     * \tparam data_t data type of vector
+     * @tparam data_t data type of vector
      *
-     * \author David Frank - main code
-     * \author Tobias Lasser - modularization, fixes
-     * \author Nikola Dinev - integration with the copy-on-write mechanism
-     * \author Jens Petit - adaption of CPU version for GPU
+     * @author David Frank - main code
+     * @author Tobias Lasser - modularization, fixes
+     * @author Nikola Dinev - integration with the copy-on-write mechanism
+     * @author Jens Petit - adaption of CPU version for GPU
      *
      * This class does not own or manage its own memory. It is bound to a DataHandlerGPU (the data
      * owner) at its creation, and serves as a reference to a sequential block of memory owned by

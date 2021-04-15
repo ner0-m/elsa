@@ -1,10 +1,10 @@
 /**
- * \file test_FiniteDifferences.cpp
+ * @file test_FiniteDifferences.cpp
  *
- * \brief Tests for FiniteDifferences class
+ * @brief Tests for FiniteDifferences class
  *
- * \author Matthias Wieczorek - main code
- * \author Tobias Lasser - rewrite
+ * @author Matthias Wieczorek - main code
+ * @author Tobias Lasser - rewrite
  */
 
 #include <catch2/catch.hpp>
