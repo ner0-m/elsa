@@ -23,7 +23,8 @@ set(MODULE_SOURCES
         ISTA.cpp
         FISTA.cpp
         FGM.cpp
-        OGM.cpp)
+        OGM.cpp
+        SIRT.cpp)
 
 
 # build the module library
