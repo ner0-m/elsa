@@ -48,4 +48,4 @@ namespace elsa
         auto isEqual(const Solver<data_t>& other) const -> bool override;
     };
 
-}
+} // namespace elsa
