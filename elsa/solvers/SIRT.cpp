@@ -12,7 +12,7 @@ namespace elsa
     {
     }
     template <typename data_t>
-    DataContainer<data_t>& SIRT<data_t>::solveImpl(index_t iterations)
+    auto SIRT<data_t>::solveImpl(index_t iterations) -> DataContainer<data_t>&
     {
         if (iterations == 0)
             iterations = _defaultIterations;

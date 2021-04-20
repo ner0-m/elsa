@@ -43,13 +43,14 @@ void example2d()
     // solve the reconstruction problem
     CG cgSolver(wlsProblem);
 
-    index_t noIterations{20};
+    index_t noIterations{50};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
                               noIterations);
     auto cgReconstruction = cgSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(cgReconstruction, "2dreconstruction_cg.edf");
+    MHD::write(cgReconstruction, "2dreconstruction_cg.mhd",
+               "2d.raw"); // mhd -> paraview, edf for python
 
     L1Norm regFunc(projector.getDomainDescriptor());
     RegularizationTerm regTerm(0.5f, regFunc);
@@ -63,7 +64,7 @@ void example2d()
     auto istaReconstruction = istaSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(istaReconstruction, "2dreconstruction_ista.edf");
+    MHD::write(istaReconstruction, "2dreconstruction_ista.mhd", "2dreconstruction_ista.raw");
 
     // solve the reconstruction problem with FISTA
     FISTA fistaSolver(lassoProb);
@@ -72,7 +73,7 @@ void example2d()
     auto fistaReconstruction = fistaSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(fistaReconstruction, "2dreconstruction_fista.edf");
+    MHD::write(fistaReconstruction, "2dreconstruction_fista.mhd", "2dreconstruction_fista.raw");
 }
 
 int main()
