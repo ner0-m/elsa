@@ -13,7 +13,8 @@ set(MODULE_HEADERS
         FISTA.h
         FGM.h
         OGM.h
-        ADMM.h)
+        ADMM.h
+        SIRT.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
