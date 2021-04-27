@@ -36,6 +36,17 @@ namespace elsa
         OGM(const Problem<data_t>& problem,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
+        /**
+         * @brief Constructor for OGM, accepting an optimization problem the inverse of a
+         * preconditioner and, optionally, a value for epsilon
+         *
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] preconditionerInverse the inverse of the preconditioner
+         * @param[in] epsilon affects the stopping condition
+         */
+        OGM(const Problem<data_t>& problem, const LinearOperator<data_t>& preconditionerInverse,
+            data_t epsilon = std::numeric_limits<data_t>::epsilon());
+
         /// make copy constructor deletion explicit
         OGM(const OGM<data_t>&) = delete;
 
@@ -48,6 +59,9 @@ namespace elsa
 
         /// variable affecting the stopping condition
         data_t _epsilon;
+
+        /// the inverse of the preconditioner (if supplied)
+        std::unique_ptr<LinearOperator<data_t>> _preconditionerInverse{};
 
         /// lift the base class method getCurrentSolution
         using Solver<data_t>::getCurrentSolution;

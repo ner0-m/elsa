@@ -1,4 +1,3 @@
-#include <iostream>
 #include "OGM.h"
 #include "Logger.h"
 
@@ -8,6 +7,22 @@ namespace elsa
     OGM<data_t>::OGM(const Problem<data_t>& problem, data_t epsilon)
         : Solver<data_t>(problem), _epsilon{epsilon}
     {
+    }
+
+    template <typename data_t>
+    OGM<data_t>::OGM(const Problem<data_t>& problem,
+                     const LinearOperator<data_t>& preconditionerInverse, data_t epsilon)
+        : Solver<data_t>(problem),
+          _epsilon{epsilon},
+          _preconditionerInverse{preconditionerInverse.clone()}
+    {
+        // check that preconditioner is compatible with problem
+        if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
+                != _problem->getCurrentSolution().getSize()
+            || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
+                   != _problem->getCurrentSolution().getSize()) {
+            throw InvalidArgumentError("OGM: incorrect size of preconditioner");
+        }
     }
 
     template <typename data_t>
@@ -24,11 +39,17 @@ namespace elsa
         auto deltaZero = _problem->getGradient().squaredL2Norm();
         Logger::get("OGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
 
+        // log history legend
+        Logger::get("OGM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}", "iteration",
+                                 "thetaRatio0", "thetaRatio1", "y", "gradient");
+
         for (index_t i = 0; i < iterations; ++i) {
-            Logger::get("OGM")->info("iteration {} of {}", i + 1, iterations);
             auto& x = getCurrentSolution();
 
             auto gradient = _problem->getGradient();
+
+            if (_preconditionerInverse)
+                gradient = _preconditionerInverse->apply(gradient);
 
             DataContainer<data_t> y = x - gradient / lipschitz;
             data_t theta;
@@ -43,10 +64,15 @@ namespace elsa
                                      + static_cast<data_t>(4.0) * prevTheta * prevTheta))
                         / static_cast<data_t>(2.0);
             }
+
+            Logger::get("OGM")->info(" {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", i,
+                                     (prevTheta - 1) / theta, prevTheta / theta, y.squaredL2Norm(),
+                                     gradient.squaredL2Norm());
+
             // x_{i+1} = y_{i+1} + \frac{\theta_i-1}{\theta_{i+1}}(y_{i+1} - y_i) +
             // \frac{\theta_i}{\theta_{i+1}}/(y_{i+1} - x_i)
-            x = y + (prevTheta - static_cast<data_t>(1.0)) / theta * (y - prevY)
-                - prevTheta / theta * gradient / lipschitz;
+            x = y + ((prevTheta - static_cast<data_t>(1.0)) / theta) * (y - prevY)
+                - (prevTheta / theta) * (gradient / lipschitz);
             prevTheta = theta;
             prevY = y;
 
@@ -66,6 +92,9 @@ namespace elsa
     template <typename data_t>
     OGM<data_t>* OGM<data_t>::cloneImpl() const
     {
+        if (_preconditionerInverse)
+            return new OGM(*_problem, *_preconditionerInverse, _epsilon);
+
         return new OGM(*_problem, _epsilon);
     }
 
@@ -81,6 +110,14 @@ namespace elsa
 
         if (_epsilon != otherOGM->_epsilon)
             return false;
+
+        if ((_preconditionerInverse && !otherOGM->_preconditionerInverse)
+            || (!_preconditionerInverse && otherOGM->_preconditionerInverse))
+            return false;
+
+        if (_preconditionerInverse && otherOGM->_preconditionerInverse)
+            if (*_preconditionerInverse != *otherOGM->_preconditionerInverse)
+                return false;
 
         return true;
     }

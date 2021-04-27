@@ -14,7 +14,8 @@ set(MODULE_HEADERS
         LASSOProblem.h
         SplittingProblem.h
         SubsetProblem.h
-        WLSSubsetProblem.h)
+        WLSSubsetProblem.h
+        JacobiPreconditioner.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -26,7 +27,8 @@ set(MODULE_SOURCES
         LASSOProblem.cpp
         SplittingProblem.cpp
         SubsetProblem.cpp
-        WLSSubsetProblem.cpp)
+        WLSSubsetProblem.cpp
+        JacobiPreconditioner.cpp)
 
 
 # build the module library

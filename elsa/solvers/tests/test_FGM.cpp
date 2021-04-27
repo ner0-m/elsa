@@ -11,15 +11,13 @@
 #include <iostream>
 #include "FGM.h"
 #include "WLSProblem.h"
-#include "Problem.h"
 #include "Identity.h"
-#include "LinearResidual.h"
-#include "L2NormPow2.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "SiddonsMethod.h"
 #include "CircleTrajectoryGenerator.h"
 #include "PhantomGenerator.h"
+#include "JacobiPreconditioner.h"
 #include "testHelpers.h"
 
 using namespace elsa;
@@ -46,15 +44,19 @@ TEST_CASE_TEMPLATE("FGM: Solving a simple linear problem", TestType, FGM<float>,
     {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd{numCoeff};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer dcB(dd, bVec);
+        DataContainer<data_t> dcB{dd, bVec};
 
-        Identity<data_t> idOp(dd);
+        bVec.setRandom();
+        bVec = bVec.cwiseAbs();
+        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
-        WLSProblem prob(idOp, dcB);
+        // using WLS problem here for ease of use
+        WLSProblem prob{scalingOp, dcB};
+
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
         WHEN("setting up a FGM solver")
@@ -65,21 +67,44 @@ TEST_CASE_TEMPLATE("FGM: Solving a simple linear problem", TestType, FGM<float>,
             {
                 auto fgmClone = solver.clone();
 
-                REQUIRE(fgmClone.get() != &solver);
-                REQUIRE(*fgmClone == solver);
+                REQUIRE_NE(fgmClone.get(), &solver);
+                REQUIRE_EQ(*fgmClone, solver);
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(dd.getNumberOfCoefficients());
+                    auto solution = solver.solve(1000);
 
-                    DataContainer<data_t> resultsDifference = solution - dcB;
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
-                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(),
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
                                           epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
-                    REQUIRE(checkApproxEq(solution.squaredL2Norm(), dcB.squaredL2Norm(), 0.1f));
+                }
+            }
+        }
+
+        WHEN("setting up a preconditioned FGM solver")
+        {
+            auto preconditionerInverse = JacobiPreconditioner<data_t>(scalingOp, true);
+            TestType solver{prob, preconditionerInverse, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto fgmClone = solver.clone();
+
+                REQUIRE_NE(fgmClone.get(), &solver);
+                REQUIRE_EQ(*fgmClone, solver);
+
+                AND_THEN("it works as expected")
+                {
+                    // with a good preconditioner we should need fewer iterations than without
+                    auto solution = solver.solve(1000);
+
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+
+                    // should have converged for the given number of iterations
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                          epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
                 }
             }
         }
@@ -105,16 +130,17 @@ TEST_CASE_TEMPLATE("FGM: Solving a Tikhonov problem", TestType, FGM<float>, FGM<
         bVec.setRandom();
         DataContainer dcB(dd, bVec);
 
-        Identity<data_t> idOp(dd);
-        LinearResidual<data_t> linRes(idOp, dcB);
-        L2NormPow2<data_t> func(linRes);
-
         // the regularization term
-        L2NormPow2<data_t> regFunc(dd);
-        auto lambda = static_cast<data_t>(0.1f);
-        RegularizationTerm<data_t> regTerm(lambda, regFunc);
 
-        Problem prob(func, regTerm);
+        bVec.setRandom();
+        bVec = bVec.cwiseProduct(bVec);
+        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
+
+        auto lambda = static_cast<data_t>(0.1);
+        Scaling<data_t> lambdaOp{dd, lambda};
+
+        // using WLS problem here for ease of use
+        WLSProblem<data_t> prob{scalingOp + lambdaOp, dcB};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -126,17 +152,44 @@ TEST_CASE_TEMPLATE("FGM: Solving a Tikhonov problem", TestType, FGM<float>, FGM<
             {
                 auto fgmClone = solver.clone();
 
-                REQUIRE(fgmClone.get() != &solver);
-                REQUIRE(*fgmClone == solver);
+                REQUIRE_NE(fgmClone.get(), &solver);
+                REQUIRE_EQ(*fgmClone, solver);
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = fgmClone->solve(10);
+                    auto solution = solver.solve(dd.getNumberOfCoefficients());
 
-                    DataContainer<data_t> resultsDifference = solution - dcB;
+                    DataContainer<data_t> resultsDifference =
+                        (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85));
+                }
+            }
+        }
+
+        WHEN("setting up a preconditioned FGM solver")
+        {
+            auto preconditionerInverse = JacobiPreconditioner<data_t>(scalingOp + lambdaOp, true);
+            TestType solver{prob, preconditionerInverse, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto fgmClone = solver.clone();
+
+                REQUIRE_NE(fgmClone.get(), &solver);
+                REQUIRE_EQ(*fgmClone, solver);
+
+                AND_THEN("it works as expected")
+                {
+                    // a perfect preconditioner should allow for convergence in a single step
+                    auto solution = solver.solve(dd.getNumberOfCoefficients());
+
+                    DataContainer<data_t> resultsDifference =
+                        (scalingOp + lambdaOp).apply(solution) - dcB;
+
+                    // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85));
                 }
             }
@@ -194,7 +247,6 @@ TEST_CASE("FGM: Solving a simple phantom reconstruction")
                     // does not converge to the optimal solution because of the regularization term
                     REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(),
                                           epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
-                    REQUIRE(checkApproxEq(reconstruction.squaredL2Norm(), phantom.squaredL2Norm()));
                 }
             }
         }

@@ -9,15 +9,13 @@
 #include "doctest/doctest.h"
 
 #include <iostream>
+#include "JacobiPreconditioner.h"
 #include "SQS.h"
 #include "WLSProblem.h"
 #include "WLSSubsetProblem.h"
 #include "SubsetSampler.h"
 #include "PlanarDetectorDescriptor.h"
-#include "Problem.h"
 #include "Identity.h"
-#include "LinearResidual.h"
-#include "L2NormPow2.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "CircleTrajectoryGenerator.h"
@@ -48,15 +46,19 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
     {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd{numCoeff};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer dcB(dd, bVec);
+        DataContainer<data_t> dcB{dd, bVec};
 
-        Identity<data_t> idOp(dd);
+        bVec.setRandom();
+        bVec = bVec.cwiseAbs();
+        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
-        WLSProblem prob(idOp, dcB);
+        // using WLS problem here for ease of use
+        WLSProblem prob{scalingOp, dcB};
+
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
         WHEN("setting up a SQS solver")
@@ -67,17 +69,42 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
             {
                 auto sqsClone = solver.clone();
 
-                REQUIRE(sqsClone.get() != &solver);
-                REQUIRE(*sqsClone == solver);
+                REQUIRE_NE(sqsClone.get(), &solver);
+                REQUIRE_EQ(*sqsClone, solver);
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(dd.getNumberOfCoefficients());
+                    auto solution = solver.solve(1000);
 
-                    DataContainer<data_t> resultsDifference = solution - dcB;
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                }
+            }
+        }
+
+        WHEN("setting up a preconditioned SQS solver")
+        {
+            auto preconditioner = JacobiPreconditioner<data_t>(scalingOp, false);
+            TestType solver{prob, preconditioner, true, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto sqsClone = solver.clone();
+
+                REQUIRE_NE(sqsClone.get(), &solver);
+                REQUIRE_EQ(*sqsClone, solver);
+
+                AND_THEN("it works as expected")
+                {
+                    // with a good preconditioner we should need fewer iterations than without
+                    auto solution = solver.solve(500);
+
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+
+                    // should have converged for the given number of iterations
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
                 }
             }
         }
@@ -103,16 +130,15 @@ TEST_CASE_TEMPLATE("SQS: Solving a Tikhonov problem", TestType, SQS<float>, SQS<
         bVec.setRandom();
         DataContainer dcB(dd, bVec);
 
-        Identity<data_t> idOp(dd);
-        LinearResidual<data_t> linRes(idOp, dcB);
-        L2NormPow2<data_t> func(linRes);
+        bVec.setRandom();
+        bVec = bVec.cwiseProduct(bVec);
+        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
-        // the regularization term
-        L2NormPow2<data_t> regFunc(dd);
-        auto lambda = static_cast<data_t>(0.1f);
-        RegularizationTerm<data_t> regTerm(lambda, regFunc);
+        auto lambda = static_cast<data_t>(0.1);
+        Scaling<data_t> lambdaOp{dd, lambda};
 
-        Problem prob(func, regTerm);
+        // using WLS problem here for ease of use
+        WLSProblem<data_t> prob{scalingOp + lambdaOp, dcB};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -124,17 +150,44 @@ TEST_CASE_TEMPLATE("SQS: Solving a Tikhonov problem", TestType, SQS<float>, SQS<
             {
                 auto sqsClone = solver.clone();
 
-                REQUIRE(sqsClone.get() != &solver);
-                REQUIRE(*sqsClone == solver);
+                REQUIRE_NE(sqsClone.get(), &solver);
+                REQUIRE_EQ(*sqsClone, solver);
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(20);
+                    auto solution = solver.solve(dd.getNumberOfCoefficients());
 
-                    DataContainer<data_t> resultsDifference = solution - dcB;
+                    DataContainer<data_t> resultsDifference =
+                        (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85f));
+                }
+            }
+        }
+
+        WHEN("setting up a preconditioned SQS solver")
+        {
+            auto preconditioner = JacobiPreconditioner<data_t>(scalingOp + lambdaOp, false);
+            TestType solver{prob, preconditioner, true, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto sqsClone = solver.clone();
+
+                REQUIRE_NE(sqsClone.get(), &solver);
+                REQUIRE_EQ(*sqsClone, solver);
+
+                AND_THEN("it works as expected")
+                {
+                    // a perfect preconditioner should allow for convergence in a single step
+                    auto solution = solver.solve(dd.getNumberOfCoefficients());
+
+                    DataContainer<data_t> resultsDifference =
+                        (scalingOp + lambdaOp).apply(solution) - dcB;
+
+                    // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85f));
                 }
             }
@@ -152,7 +205,6 @@ TEST_CASE("SQS: Solving a simple phantom reconstruction")
 
     GIVEN("a Phantom reconstruction problem")
     {
-
         IndexVector_t size(2);
         size << 16, 16; // TODO: determine optimal phantom size for efficient testing
         auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
@@ -179,8 +231,8 @@ TEST_CASE("SQS: Solving a simple phantom reconstruction")
             {
                 auto sqsClone = solver.clone();
 
-                REQUIRE(sqsClone.get() != &solver);
-                REQUIRE(*sqsClone == solver);
+                REQUIRE_NE(sqsClone.get(), &solver);
+                REQUIRE_EQ(*sqsClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -190,7 +242,7 @@ TEST_CASE("SQS: Solving a simple phantom reconstruction")
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0.034f));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.034f));
                 }
             }
         }
@@ -241,8 +293,8 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
             {
                 auto sqsClone = solver.clone();
 
-                REQUIRE(sqsClone.get() != &solver);
-                REQUIRE(*sqsClone == solver);
+                REQUIRE_NE(sqsClone.get(), &solver);
+                REQUIRE_EQ(*sqsClone, solver);
 
                 AND_THEN("it works as expected")
                 {

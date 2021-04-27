@@ -1,5 +1,4 @@
 #include <Identity.h>
-#include <iostream>
 #include <Scaling.h>
 #include "SQS.h"
 #include "Logger.h"
@@ -17,6 +16,31 @@ namespace elsa
             _subsetMode = true;
         } else {
             Logger::get("SQS")->info("SQS did not receive a SubsetProblem, running in normal mode");
+        }
+    }
+
+    template <typename data_t>
+    SQS<data_t>::SQS(const Problem<data_t>& problem, const LinearOperator<data_t>& preconditioner,
+                     bool momentumAcceleration, data_t epsilon)
+        : Solver<data_t>(problem),
+          _epsilon{epsilon},
+          _preconditioner{preconditioner.clone()},
+          _momentumAcceleration{momentumAcceleration}
+    {
+        if (dynamic_cast<const SubsetProblem<data_t>*>(&problem)) {
+            Logger::get("SQS")->info(
+                "SQS did received a SubsetProblem, running in ordered subset mode");
+            _subsetMode = true;
+        } else {
+            Logger::get("SQS")->info("SQS did not receive a SubsetProblem, running in normal mode");
+        }
+
+        // check that preconditioner is compatible with problem
+        if (_preconditioner->getDomainDescriptor().getNumberOfCoefficients()
+                != _problem->getCurrentSolution().getSize()
+            || _preconditioner->getRangeDescriptor().getNumberOfCoefficients()
+                   != _problem->getCurrentSolution().getSize()) {
+            throw InvalidArgumentError("SQS: incorrect size of preconditioner");
         }
     }
 
@@ -54,14 +78,15 @@ namespace elsa
             Logger::get("SQS")->info("iteration {} of {}", i + 1, iterations);
 
             for (index_t m = 0; m < nSubsets; m++) {
-                index_t k = i * nSubsets + m;
-
                 if (_subsetMode) {
                     gradient =
                         static_cast<SubsetProblem<data_t>*>(_problem.get())->getSubsetGradient(m);
                 } else {
                     gradient = _problem->getGradient();
                 }
+
+                if (_preconditioner)
+                    gradient = _preconditioner->apply(gradient);
 
                 // TODO: element wise relu
                 if (_momentumAcceleration) {
@@ -110,6 +135,9 @@ namespace elsa
     template <typename data_t>
     SQS<data_t>* SQS<data_t>::cloneImpl() const
     {
+        if (_preconditioner)
+            return new SQS(*_problem, *_preconditioner, _momentumAcceleration, _epsilon);
+
         return new SQS(*_problem, _momentumAcceleration, _epsilon);
     }
 
@@ -125,6 +153,14 @@ namespace elsa
 
         if (_epsilon != otherSQS->_epsilon)
             return false;
+
+        if ((_preconditioner && !otherSQS->_preconditioner)
+            || (!_preconditioner && otherSQS->_preconditioner))
+            return false;
+
+        if (_preconditioner && otherSQS->_preconditioner)
+            if (*_preconditioner != *otherSQS->_preconditioner)
+                return false;
 
         return true;
     }

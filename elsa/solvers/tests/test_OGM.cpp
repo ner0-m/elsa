@@ -46,33 +46,67 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
     {
         IndexVector_t numCoeff(2);
         numCoeff << 13, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd{numCoeff};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer dcB(dd, bVec);
+        DataContainer<data_t> dcB{dd, bVec};
 
-        Identity<data_t> idOp(dd);
+        bVec.setRandom();
+        bVec = bVec.cwiseAbs();
+        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
+        Identity<data_t> idOp{dd};
 
-        WLSProblem prob(idOp, dcB);
+        // using WLS problem here for ease of use
+        WLSProblem prob{scalingOp, dcB};
+        //        WLSProblem prob{idOp, dcB};
+
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
-        WHEN("setting up a FGM solver")
+        WHEN("setting up an OGM solver")
         {
             TestType solver{prob, epsilon};
 
             THEN("the clone works correctly")
             {
-                auto fgmClone = solver.clone();
+                auto ogmClone = solver.clone();
 
-                REQUIRE(fgmClone.get() != &solver);
-                REQUIRE(*fgmClone == solver);
+                REQUIRE(ogmClone.get() != &solver);
+                REQUIRE(*ogmClone == solver);
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(dd.getNumberOfCoefficients());
+                    auto solution = solver.solve(1000);
 
-                    DataContainer<data_t> resultsDifference = solution - dcB;
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+                    //                    DataContainer<data_t> resultsDifference = solution - dcB;
+
+                    // should have converged for the given number of iterations
+                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
+                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                }
+            }
+        }
+
+        WHEN("setting up a preconditioned OGM solver")
+        {
+            bVec = 1 / bVec.array();
+            TestType solver{prob, Scaling<data_t>{dd, DataContainer<data_t>{dd, bVec}}, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto ogmClone = solver.clone();
+
+                REQUIRE(ogmClone.get() != &solver);
+                REQUIRE(*ogmClone == solver);
+
+                AND_THEN("it works as expected")
+                {
+                    // with a good preconditioner we should need fewer iterations than without
+                    auto solution = solver.solve(500);
+
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+                    //                    DataContainer<data_t> resultsDifference = solution - dcB;
 
                     // should have converged for the given number of iterations
                     // REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(0.01)
@@ -104,39 +138,66 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
         bVec.setRandom();
         DataContainer dcB(dd, bVec);
 
-        Identity<data_t> idOp(dd);
-        LinearResidual<data_t> linRes(idOp, dcB);
-        L2NormPow2<data_t> func(linRes);
+        bVec.setRandom();
+        bVec = bVec.cwiseProduct(bVec);
+        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
-        // the regularization term
-        L2NormPow2<data_t> regFunc(dd);
-        auto lambda = static_cast<data_t>(0.1f);
-        RegularizationTerm<data_t> regTerm(lambda, regFunc);
+        auto lambda = static_cast<data_t>(0.1);
+        Scaling<data_t> lambdaOp{dd, lambda};
 
-        Problem prob(func, regTerm);
+        // using WLS problem here for ease of use
+        WLSProblem<data_t> prob{scalingOp + lambdaOp, dcB};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
-        WHEN("setting up a FGM solver")
+        WHEN("setting up an OGM solver")
         {
             TestType solver{prob, epsilon};
 
             THEN("the clone works correctly")
             {
-                auto fgmClone = solver.clone();
+                auto ogmClone = solver.clone();
 
-                REQUIRE(fgmClone.get() != &solver);
-                REQUIRE(*fgmClone == solver);
+                REQUIRE(ogmClone.get() != &solver);
+                REQUIRE(*ogmClone == solver);
 
                 AND_THEN("it works as expected")
                 {
                     auto solution = solver.solve(dd.getNumberOfCoefficients());
 
-                    DataContainer<data_t> resultsDifference = solution - dcB;
+                    DataContainer<data_t> resultsDifference =
+                        (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.929));
+                }
+            }
+        }
+
+        WHEN("setting up a preconditioned OGM solver")
+        {
+            bVec = 1 / (bVec.array() + lambda);
+            TestType solver{prob, Scaling<data_t>{dd, DataContainer<data_t>{dd, bVec}}, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto ogmClone = solver.clone();
+
+                REQUIRE(ogmClone.get() != &solver);
+                REQUIRE(*ogmClone == solver);
+
+                AND_THEN("it works as expected")
+                {
+                    // a perfect preconditioner should allow for convergence in a single step
+                    auto solution = solver.solve(dd.getNumberOfCoefficients());
+
+                    DataContainer<data_t> resultsDifference =
+                        (scalingOp + lambdaOp).apply(solution) - dcB;
+
+                    // should have converged for the given number of iterations
+                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(0.00001)
+                            <= epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
         }

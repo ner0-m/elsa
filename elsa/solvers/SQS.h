@@ -30,9 +30,24 @@ namespace elsa
          * in ordered subset mode.
          *
          * @param[in] problem the problem that is supposed to be solved
+         * @param[in] momentumAcceleration whether or not to enable momentum acceleration
          * @param[in] epsilon affects the stopping condition
          */
         SQS(const Problem<data_t>& problem, bool momentumAcceleration = true,
+            data_t epsilon = std::numeric_limits<data_t>::epsilon());
+
+        /**
+         * @brief Constructor for SQS, accepting an optimization problem, the inverse of the
+         * preconditioner and, optionally, a value for epsilon. If the problem passed to the
+         * constructor is a SubsetProblem SQS will operate in ordered subset mode.
+         *
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] preconditioner a preconditioner for the problem at hand
+         * @param[in] momentumAcceleration whether or not to enable momentum acceleration
+         * @param[in] epsilon affects the stopping condition
+         */
+        SQS(const Problem<data_t>& problem, const LinearOperator<data_t>& preconditioner,
+            bool momentumAcceleration = true,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
@@ -47,6 +62,9 @@ namespace elsa
 
         /// variable affecting the stopping condition
         data_t _epsilon;
+
+        /// the preconditioner (if supplied)
+        std::unique_ptr<LinearOperator<data_t>> _preconditioner{};
 
         /// whether to enable momentum acceleration
         bool _momentumAcceleration;
