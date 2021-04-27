@@ -7,6 +7,7 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 # list all the headers of the module
 set(MODULE_HEADERS
         elsaDefines.h
+        Backtrace.h
         Cloneable.h
         Utilities/Badge.hpp
         Utilities/Statistics.hpp
@@ -33,6 +34,7 @@ set(MODULE_HEADERS
 
 # list all the code files of the module
 set(MODULE_SOURCES
+        Backtrace.cpp
         Descriptors/DataDescriptor.cpp
         Descriptors/VolumeDescriptor.cpp
         Descriptors/PlanarDetectorDescriptor.cpp
