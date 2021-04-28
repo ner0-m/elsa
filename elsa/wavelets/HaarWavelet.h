@@ -1,13 +1,12 @@
 #pragma once
 
 #include "Wavelet.h"
-#include "elsaDefines.h"
-//#include "Cloneable.h"
 
+// TODO dead class?
 namespace elsa
 {
     template <typename data_t = real_t>
-    class HaarWavelet: public Wavelet<data_t>
+    class HaarWavelet : public Wavelet<data_t>
     {
     public:
         int waveletFunction(real_t t)

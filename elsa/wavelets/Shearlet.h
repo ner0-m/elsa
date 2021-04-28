@@ -1,10 +1,8 @@
 #pragma once
 
-#include "elsaDefines.h"
-#include "DataContainer.h"
 #include "Curvelet.h"
-//#include "Cloneable.h"
 
+// TODO dead class?
 namespace elsa
 {
     // TODO does inheritance make sense here? decide towards the end of the implementation?
@@ -21,9 +19,6 @@ namespace elsa
         // wavefront to image
         // SH^-1: R ^ J x n x n -> R ^ n^2
         DataContainer<data_t> inverseTransform(DataContainer<data_t> wavefront); // wavefront?
-
-        // TODO how to represent the two matrices S (shearing matrix) and A (parabolic scaling
-        //  matrix)? No LinearOperator offers selectively setting each matrix value?
 
         // NN: R ^ J x n x n -> R ^ J x n x n
     };

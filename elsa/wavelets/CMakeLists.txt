@@ -6,22 +6,26 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 # list all the headers of the module
 set(MODULE_HEADERS
         Wavelet.h
+        MeyerWavelet.h
         HaarWavelet.h
         Curvelet.h
         Shearlet.h
-        DiscreteShearlet.h
-        ConeAdaptedDiscreteShearlet.h
-        BootstrappingShearletAndDLModel.h)
+        DiscreteShearletTransform.h
+        ConeAdaptedDiscreteShearletTransform.h
+        BootstrappingShearletAndDLModel.h
+        SHADMM.h
+        BumpFunction.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         Wavelet.cpp
+        MeyerWavelet.cpp
         HaarWavelet.cpp
         Curvelet.cpp
         Shearlet.cpp
-        DiscreteShearlet.cpp
-        ConeAdaptedDiscreteShearlet.cpp
-        BootstrappingShearletAndDLModel.cpp)
+        DiscreteShearletTransform.cpp
+        ConeAdaptedDiscreteShearletTransform.cpp
+        BumpFunction.cpp)
 
 # build the module library
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})

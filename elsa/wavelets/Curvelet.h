@@ -1,9 +1,8 @@
 #pragma once
 
-#include "elsaDefines.h"
-//#include "Wavelet.h"
-//#include "Cloneable.h"
+#include "Wavelet.h"
 
+// TODO dead class?
 namespace elsa
 {
     // TODO does inheritance make sense here? decide towards the end of the implementation?

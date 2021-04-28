@@ -3,4 +3,5 @@ include(CTest)
 include(Catch)
 
 # the actual tests
-ELSA_TEST(ConeAdaptedDiscreteShearlet)
+ELSA_TEST(DiscreteShearletTransform)
+ELSA_TEST(ConeAdaptedDiscreteShearletTransform)

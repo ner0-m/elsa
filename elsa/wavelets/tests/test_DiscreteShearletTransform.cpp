@@ -1,18 +1,18 @@
 /**
- * @file test_ConeAdaptedDiscreteShearlet.cpp
+ * @file test_DiscreteShearletTransform.cpp
  *
- * @brief Tests for the ConeAdaptedDiscreteShearlet class
+ * @brief Tests for the DiscreteShearletTransform class
  *
  * @author Andi Braimllari
  */
 
-#include "ConeAdaptedDiscreteShearlet.h"
+#include "DiscreteShearletTransform.h"
 
 #include <catch2/catch.hpp>
 
 using namespace elsa;
 
-SCENARIO("Listing what to test in shearlets")
+SCENARIO("Listing what to test in DiscreteShearletTransform")
 {
     GIVEN("nothing")
     {
