@@ -1,0 +1,98 @@
+cmake_minimum_required(VERSION 3.10)
+
+include(ComputeCapabilityCUDA)
+
+# make sure host compiler used by NVCC is the one used for the rest of the project
+set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
+
+set(CUDA_ARCH_TYPES "Auto" CACHE STRING "Space-separated list of target GPU architectures. Defaults to Auto. If Auto attempts to detect and target all installed GPUS.")
+
+if ("${CUDA_ARCH_TYPES}" STREQUAL "Auto")
+  CUDA_DETECT_INSTALLED_GPUS(TARGET_GPUS)
+else()
+  set(TARGET_GPUS ${CUDA_ARCH_TYPES})
+endif()
+
+# fmad can reduce accuracy, but only gives a negligible boost to speed
+# use expt-relaxed-constexpr flag to suppress warnings caused by including the Eigen header
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --fmad=false --expt-relaxed-constexpr")
+
+# set target GPU architectures
+foreach(TARGET_GPU ${TARGET_GPUS})
+  string(REPLACE "." "" TARGET_GPU ${TARGET_GPU})
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code arch=compute_${TARGET_GPU},code=[sm_${TARGET_GPU},compute_${TARGET_GPU}]")
+endforeach()
+
+if (ELSA_BUILD_WITH_MORE_WARNINGS)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wreorder -Xptxas=-warn-spills,-warn-lmem-usage")
+endif()
+
+# set the name of the module
+set(ELSA_MODULE_NAME ml_cudnn_backend)
+set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
+set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
+
+set(ELSA_ML_INCLUDE_PATH)
+# list all the headers of the module
+set(MODULE_HEADERS
+    CudnnActivation.h
+    CudnnLayer.h
+    CudnnDense.h
+    CudnnTrainable.h
+    CudnnMemory.h
+    CudnnContext.h
+    CudnnSoftmax.h
+    CudnnReshape.h
+    CudnnNoop.h
+    CudnnMerging.h
+    CudnnOptimizer.h
+    CudnnPooling.h
+    CudnnConvolution.h
+)
+
+# list all the code files of the module
+set(MODULE_SOURCES
+    CudnnMemory.cu
+    CudnnActivation.cu
+    CudnnContext.cu
+    CudnnTrainable.cpp
+    CudnnDense.cu
+    CudnnSoftmax.cpp
+    CudnnReshape.cpp
+    CudnnNoop.cpp
+    CudnnMerging.cu
+    CudnnOptimizer.cu
+    CudnnPooling.cu
+    CudnnConvolution.cu
+    ../../Initializer.cpp
+    ../../Optimizer.cpp
+)
+
+# build the module library
+add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
+add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
+
+#CUDA doesn't support C++17, require C++14
+set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES CUDA_STANDARD 14 POSITION_INDEPENDENT_CODE ON)
+
+# CUDA doesn't support linking against a library built under the C++17 standard,
+# we only need the elsa.h header -> manually specify include directories
+target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC 
+        $<TARGET_PROPERTY:elsa_core,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:elsa_logging,INTERFACE_INCLUDE_DIRECTORIES>
+        $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/../.."
+)
+
+# Include Cudnn headers as system headers to avoid warnings
+target_include_directories(${ELSA_MODULE_TARGET_NAME} SYSTEM PUBLIC $<BUILD_INTERFACE:${Cudnn_INCLUDE_DIR}>
+                           $<BUILD_INTERFACE:${Cublas_INCLUDE_DIRS}> $<BUILD_INTERFACE:${Npp_INCLUDE_DIRS}>)
+
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC ${Cuda_LIB} ${Cudnn_LIB} ${Cublas_LIB} ${Nppc_LIB} ${Nppig_LIB})
+
+# register the module
+registerComponent(${ELSA_MODULE_NAME})
+
+# install the kernels as a module
+InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})

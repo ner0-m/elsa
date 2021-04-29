@@ -31,6 +31,9 @@ option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when buildin
 
 option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
 
+option(ELSA_BUILD_ML_DNNL "Try to build the elsa_ml module with Intel(R) Dnnl backend" ON)
+option(ELSA_BUILD_ML_CUDNN "Try to build the elsa_ml module with Nvidia(R) Cudnn backend" ON)
+
 set(ELSA_SANITIZER
         "" CACHE STRING
         "Compile with a sanitizer. Options are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak, 'Address;Undefined'"
@@ -87,6 +90,13 @@ if(ELSA_MASTER_PROJECT)
 
     # setup Dnnl library
     find_package(Dnnl)
+
+    # setup Cudnn library
+    if(ELSA_BUILD_ML_CUDNN)
+      find_package(Cudnn)
+      find_package(Cublas)
+      find_package(Npp)
+    endif(ELSA_BUILD_ML_CUDNN)
 
     # Adding quickvec
     if(ELSA_CUDA_VECTOR)

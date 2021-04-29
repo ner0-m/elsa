@@ -4,14 +4,13 @@ elsa io
 
 .. contents:: Table of Contents
 
-
 EDF
-==========
+===
 
 .. doxygenclass:: elsa::EDF
 
 MHD
-==========
+===
 
 .. doxygenclass:: elsa::MHD
  

@@ -13,6 +13,16 @@ target_link_libraries(example2d_admm elsa::all)
 target_compile_features(example2d_admm PUBLIC cxx_std_17)
 add_dependencies(build-examples example2d_admm)
 
+# add_executable(exampleMl exampleMl.cpp)
+# target_link_libraries(exampleMl elsa::all)
+# target_compile_features(exampleMl PUBLIC cxx_std_17)
+# add_dependencies(build-examples exampleMl)
+
+# add_executable(example_MNIST example_MNIST.cpp)
+# target_link_libraries(example_MNIST elsa::all)
+# target_compile_features(example_MNIST PUBLIC cxx_std_17)
+# add_dependencies(build-examples example_MNIST)
+
 if(ELSA_BUILD_CUDA_PROJECTORS)
     include(CheckLanguage)
     check_language(CUDA)

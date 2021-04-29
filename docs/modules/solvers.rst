@@ -30,12 +30,12 @@ Fast Iterative Shrinkage-Thresholding Algorithm
 .. doxygenclass:: elsa::FISTA
 
 Nesterov's Fast Gradient Method
-===============
+===============================
 
 .. doxygenclass:: elsa::FGM
 
 Optimized Gradient Method
-===============
+=========================
 
 .. doxygenclass:: elsa::OGM
 
