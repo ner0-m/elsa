@@ -21,4 +21,5 @@
    modules/projectors_cuda
    modules/proximity_operators
    modules/generators
+   modules/ml/ml
 
