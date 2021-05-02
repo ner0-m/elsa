@@ -3,5 +3,5 @@ include(CTest)
 include(Catch)
 
 # the actual tests
-ELSA_TEST(MeyerWavelet)
-ELSA_TEST(HaarWavelet)
+ELSA_TEST(DiscreteShearletTransform)
+ELSA_TEST(ConeAdaptedDiscreteShearletTransform)

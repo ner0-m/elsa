@@ -19,7 +19,9 @@ set(MODULE_HEADERS
         Quadric.h
         EmissionLogLikelihood.h
         TransmissionLogLikelihood.h
-        Constraint.h)
+        Constraint.h
+        WeightedL1Norm.h
+        BumpFunction.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -36,7 +38,9 @@ set(MODULE_SOURCES
         Quadric.cpp
         EmissionLogLikelihood.cpp
         TransmissionLogLikelihood.cpp
-        Constraint.cpp)
+        Constraint.cpp
+        WeightedL1Norm.cpp
+        BumpFunction.cpp)
 
 
 # build the module library

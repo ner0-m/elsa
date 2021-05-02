@@ -568,6 +568,19 @@ namespace elsa
         }
     }
 
+    /// Element-wise absolute value operation
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto abs(Operand const& operand)
+    {
+        auto abs = [](auto const& operand) { return (operand.array().cwiseAbs()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR // TODO if this will be accepted, make the respective changes in quickvec
+        auto absGPU = [](auto const& operand, bool /**/) { return quickvec::abs(operand); };
+        return Expression{Callables{abs, absGPU}, operand};
+#else
+        return Expression{abs, operand};
+#endif
+    }
+
     /// Element-wise square operation
     template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
     auto square(Operand const& operand)

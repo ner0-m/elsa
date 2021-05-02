@@ -6,7 +6,7 @@ namespace elsa
     ConeAdaptedDiscreteShearletTransform<data_t>::ConeAdaptedDiscreteShearletTransform(
         std::vector<int> mPrime, int j, int k, std::vector<int> m, int jTilde, int kTilde,
         std::vector<int> mTilde)
-        : DiscreteShearletTransform<data_t>(, , )
+        : DiscreteShearletTransform<data_t>(0, 0, 0)
     {
     }
 
@@ -14,8 +14,8 @@ namespace elsa
     void ConeAdaptedDiscreteShearletTransform<data_t>::applyImpl(const DataContainer<data_t>& f,
                                                                  DataContainer<data_t>& SHf) const
     {
-        // what exactly is R (Radon transform) and eta (measurement noise)?
-        // also, f = an n x n image vectorized? f in R^n^2?
+        // what exactly is R (Radon transform) and y (measurement noise)?
+        // also, f = an n x n image vectorized? f ∈ R^n^2?
 
         // TODO are the images only grayscale or rgb or accept any number of channels?
 

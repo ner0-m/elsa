@@ -1,25 +1,29 @@
 # set the name of the module
-set(ELSA_MODULE_NAME wavelets)
-set(ELSA_MODULE_TARGET_NAME elsa_wavelets)
+set(ELSA_MODULE_NAME shearlets)
+set(ELSA_MODULE_TARGET_NAME elsa_shearlets)
 set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 
 # list all the headers of the module
 set(MODULE_HEADERS
-        Wavelet.h
-        MeyerWavelet.h
-        HaarWavelet.h)
+        Curvelet.h
+        Shearlet.h
+        DiscreteShearletTransform.h
+        ConeAdaptedDiscreteShearletTransform.h
+        BootstrappingSDLX.h
+        SHADMM.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
-        Wavelet.cpp
-        MeyerWavelet.cpp
-        HaarWavelet.cpp)
+        Curvelet.cpp
+        Shearlet.cpp
+        DiscreteShearletTransform.cpp
+        ConeAdaptedDiscreteShearletTransform.cpp)
 
 # build the module library
 add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
 add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_proximity_operators elsa_problems elsa_solvers)
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging elsa_proximity_operators elsa_problems elsa_solvers elsa_wavelets)
 
 # use OpenMP is available
 find_package(OpenMP)

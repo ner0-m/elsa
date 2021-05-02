@@ -2,7 +2,7 @@
 
 #include "Curvelet.h"
 
-// TODO dead class?
+// TODO dead class? currently keeping only if inheritance requires it in the future
 namespace elsa
 {
     // TODO does inheritance make sense here? decide towards the end of the implementation?

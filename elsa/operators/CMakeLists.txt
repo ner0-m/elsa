@@ -9,14 +9,20 @@ set(MODULE_HEADERS
         Identity.h
         Scaling.h
         FiniteDifferences.h
-        BlockLinearOperator.h)
+        BlockLinearOperator.h
+        ProjectionOperator.h
+        ParabolicScalingOperator.h
+        ShearingOperator.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         Identity.cpp
         Scaling.cpp
         FiniteDifferences.cpp
-        BlockLinearOperator.cpp)
+        BlockLinearOperator.cpp
+        ProjectionOperator.cpp
+        ParabolicScalingOperator.cpp
+        ShearingOperator.cpp)
 
 
 # build the module library

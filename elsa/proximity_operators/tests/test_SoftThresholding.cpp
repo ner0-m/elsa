@@ -169,3 +169,35 @@ SCENARIO("Using SoftThresholding")
         }
     }
 }
+
+SCENARIO("Using SoftThresholding with a vector of Thresholds")
+{
+    GIVEN("a DataDescriptor")
+    {
+        IndexVector_t numCoeff(1);
+        numCoeff << 4;
+        VolumeDescriptor volDescr(numCoeff);
+
+        WHEN("Using SoftThresholding operator")
+        {
+            SoftThresholding<real_t> sThrOp(volDescr);
+
+            THEN("SoftThresholding operator throws exception for differently sized v and prox")
+            {
+                RealVector_t data(volDescr.getNumberOfCoefficients());
+                data << -1, 5, 7, -9;
+                DataContainer<real_t> dataCont(volDescr, data);
+
+                std::vector<geometry::Threshold<real_t>> thresholds = {
+                    geometry::Threshold<real_t>{2}, geometry::Threshold<real_t>{3},
+                    geometry::Threshold<real_t>{1}, geometry::Threshold<real_t>{34}};
+
+                RealVector_t expectedRes(sThrOp.getRangeDescriptor().getNumberOfCoefficients());
+                expectedRes << 0, 2, 6, 0;
+                DataContainer<real_t> dCRes(sThrOp.getRangeDescriptor(), expectedRes);
+
+                REQUIRE(isApprox(dCRes, sThrOp.apply(dataCont, thresholds)));
+            }
+        }
+    }
+}

@@ -23,3 +23,18 @@ BlockLinearOperator
 ===================
 
 .. doxygenclass:: elsa::BlockLinearOperator
+
+ProjectionOperator
+===================
+
+.. doxygenclass:: elsa::ProjectionOperator
+
+ShearingOperator
+===================
+
+.. doxygenclass:: elsa::ShearingOperator
+
+ParabolicScalingOperator
+===================
+
+.. doxygenclass:: elsa::ParabolicScalingOperator

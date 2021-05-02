@@ -26,8 +26,8 @@ namespace elsa
          */
         // TODO what are the shearlet system inputs? infer here max of these values and span those
         //  index spaces (use different inputs here)
-        // scale index j, the orientation index k, and the position index m.
-        DiscreteShearletTransform(int j, int k, std::vector<int> m);
+        DiscreteShearletTransform(index_t width, index_t height, index_t scales);
+        // consider scale index j, the orientation index k, and the position index m.
 
         /// default destructor
         ~DiscreteShearletTransform() override = default;
@@ -53,6 +53,9 @@ namespace elsa
 
     private:
         // TODO add here variables that define the shearlet system
+        index_t _width;
+        index_t _height;
+        index_t _numberOfScales;
 
         // scale index j, the orientation index k, and the position index m.
         /// shearlet generating function

@@ -3,7 +3,7 @@
 #include "DataContainer.h"
 #include "Cloneable.h"
 
-// TODO dead class?
+// TODO dead class? currently keeping only if inheritance requires it in the future
 namespace elsa
 {
     // TODO does it make sense for Wavelet to be superclass of Curvelet? and the latter of Shearlet?

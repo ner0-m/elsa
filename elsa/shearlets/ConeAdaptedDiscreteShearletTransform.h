@@ -2,6 +2,7 @@
 
 #include "DiscreteShearletTransform.h"
 
+// TODO development here will continue after DiscreteShearletTransform starts making sense
 namespace elsa
 {
     /**

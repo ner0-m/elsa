@@ -1,16 +1,28 @@
+#include <VolumeDescriptor.h>
 #include "DiscreteShearletTransform.h"
 
 namespace elsa
 {
     // TODO the inputs here should be enough to define the entire system
     template <typename data_t>
-    DiscreteShearletTransform<data_t>::DiscreteShearletTransform(int j, int k, std::vector<int> m)
-        : LinearOperator<data_t>(, , )
+    DiscreteShearletTransform<data_t>::DiscreteShearletTransform(index_t width, index_t height,
+                                                                 index_t numberOfScales)
+        // dummy values for the LinearOperator constructor
+        : LinearOperator<data_t>(VolumeDescriptor{{1, 1}}, VolumeDescriptor{{1, 1}}),
+          _width{width},
+          _height{height},
+          _numberOfScales{numberOfScales}
     {
-        if (m.size() != 2) {
-            throw InvalidArgumentError(
-                "DiscreteShearletTransform: the position index m is two-dimensional");
-        }
+        // sanity check the parameters here
+        //        if (scales something) {
+        //            throw InvalidArgumentError(
+        //                "DiscreteShearletTransform: the allowed number of scales is ... ");
+        //        }
+
+        // TODO generate here the system?
+        //  this goes against the docs in LinearOperator: "Hence any pre-computations/caching should
+        //  only be done in a lazy manner (e.g. during the first call of apply), and not in the
+        //  constructor."
     }
 
     template <typename data_t>
