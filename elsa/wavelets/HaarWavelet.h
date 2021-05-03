@@ -2,7 +2,7 @@
 
 #include "Wavelet.h"
 
-// TODO dead class?
+// TODO might be used as a generating function in shearlet systems
 namespace elsa
 {
     template <typename data_t = real_t>

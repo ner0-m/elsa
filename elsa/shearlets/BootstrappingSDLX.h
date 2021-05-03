@@ -60,6 +60,11 @@ namespace elsa
             // Compile the model
             model.compile(ml::SparseCategoricalCrossentropy(), &opt);
             model.fit(inputs, labels, /* epochs */ 10);
+
+            /// details about modified U-Net below
+            /// MU: R ^ J x n x n -> R ^ J x n x n
+            /// fully convolutional neural network
+
             // TODO consider adding TDB, TD, TU for a modification of U-Net
         }
 

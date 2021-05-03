@@ -5,8 +5,6 @@ set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
 
 # list all the headers of the module
 set(MODULE_HEADERS
-        Curvelet.h
-        Shearlet.h
         DiscreteShearletTransform.h
         ConeAdaptedDiscreteShearletTransform.h
         BootstrappingSDLX.h
@@ -14,8 +12,6 @@ set(MODULE_HEADERS
 
 # list all the code files of the module
 set(MODULE_SOURCES
-        Curvelet.cpp
-        Shearlet.cpp
         DiscreteShearletTransform.cpp
         ConeAdaptedDiscreteShearletTransform.cpp)
 

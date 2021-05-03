@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LinearOperator.h"
+#include "VolumeDescriptor.h"
 
 namespace elsa
 {

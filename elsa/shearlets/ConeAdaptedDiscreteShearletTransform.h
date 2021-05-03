@@ -65,7 +65,5 @@ namespace elsa
         DataContainer<data_t> psiTilde(int jTilde, int kTilde, std::vector<int> mTilde);
 
         // Scone = {(a,s,t): a ∈ (0,1], |s| ≤ 1+a^1/2, t ∈ R^2}.
-
-        // NN: R ^ J x n x n -> R ^ J x n x n
     };
 } // namespace elsa
