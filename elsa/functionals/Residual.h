@@ -52,7 +52,7 @@ namespace elsa
          *
          * Please note: this method uses evaluate(x, result) to perform the actual operation.
          */
-        DataContainer<data_t> evaluate(const DataContainer<data_t>& x);
+        DataContainer<data_t> evaluate(const DataContainer<data_t>& x) const;
 
         /**
          * @brief evaluate the residual at x and store in result
@@ -64,7 +64,7 @@ namespace elsa
          * derived classes. (Why is this method here not virtual itself? Because you cannot
          * have a non-virtual function overloading a virtual one [evaluate with one vs. two args].)
          */
-        void evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result);
+        void evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result) const;
 
         /**
          * @brief return the Jacobian (first derivative) of the residual at x.
@@ -92,7 +92,7 @@ namespace elsa
 
         /// the evaluate method that has to be overridden in derived classes
         virtual void evaluateImpl(const DataContainer<data_t>& x,
-                                  DataContainer<data_t>& result) = 0;
+                                  DataContainer<data_t>& result) const = 0;
 
         /// the getJacobian method that has to be overriden in derived classes
         virtual LinearOperator<data_t> getJacobianImpl(const DataContainer<data_t>& x) = 0;

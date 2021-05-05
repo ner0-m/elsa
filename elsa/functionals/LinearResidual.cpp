@@ -112,7 +112,7 @@ namespace elsa
 
     template <typename data_t>
     void LinearResidual<data_t>::evaluateImpl(const DataContainer<data_t>& x,
-                                              DataContainer<data_t>& result)
+                                              DataContainer<data_t>& result) const
     {
         if (hasOperator())
             _operator->apply(x, result);

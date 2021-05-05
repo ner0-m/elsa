@@ -76,7 +76,8 @@ namespace elsa
         bool isEqual(const Residual<data_t>& other) const override;
 
         /// the evaluate method, evaluating the residual at x and placing the value in result
-        void evaluateImpl(const DataContainer<data_t>& x, DataContainer<data_t>& result) override;
+        void evaluateImpl(const DataContainer<data_t>& x,
+                          DataContainer<data_t>& result) const override;
 
         /**
          * @brief return the Jacobian (first derivative) of the linear residual at x.

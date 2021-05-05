@@ -24,7 +24,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> Residual<data_t>::evaluate(const DataContainer<data_t>& x)
+    DataContainer<data_t> Residual<data_t>::evaluate(const DataContainer<data_t>& x) const
     {
         DataContainer<data_t> result(*_rangeDescriptor, x.getDataHandlerType());
         evaluate(x, result);
@@ -32,7 +32,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Residual<data_t>::evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result)
+    void Residual<data_t>::evaluate(const DataContainer<data_t>& x,
+                                    DataContainer<data_t>& result) const
     {
         if (x.getSize() != getDomainDescriptor().getNumberOfCoefficients()
             || result.getSize() != getRangeDescriptor().getNumberOfCoefficients())
