@@ -14,7 +14,8 @@ set(MODULE_HEADERS
         FGM.h
         OGM.h
         ADMM.h
-        SIRT.h)
+        SIRT.h
+        Landweber.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -25,7 +26,8 @@ set(MODULE_SOURCES
         FISTA.cpp
         FGM.cpp
         OGM.cpp
-        SIRT.cpp)
+        SIRT.cpp
+        Landweber.cpp)
 
 
 # build the module library

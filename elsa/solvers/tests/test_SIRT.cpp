@@ -44,10 +44,10 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", SIRT<float>,
 
             THEN("the clone works correctly")
             {
-                auto gdClone = solver.clone();
+                auto sirtClone = solver.clone();
 
-                REQUIRE(gdClone.get() != &solver);
-                REQUIRE(*gdClone == solver);
+                REQUIRE(sirtClone.get() != &solver);
+                REQUIRE(*sirtClone == solver);
 
                 AND_THEN("it works as expected")
                 {

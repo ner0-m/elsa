@@ -79,3 +79,4 @@
 #include "OGM.h"
 #include "ADMM.h"
 #include "SIRT.h"
+#include "Landweber.h"
