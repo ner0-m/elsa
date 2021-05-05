@@ -6,8 +6,12 @@ namespace elsa
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
                              const std::vector<RegularizationTerm<data_t>>& regTerms,
-                             const DataContainer<data_t>& x0)
-        : _dataTerm{dataTerm.clone()}, _regTerms{regTerms}, _currentSolution{x0}
+                             const DataContainer<data_t>& x0,
+                             const std::optional<data_t> lipschitzConstant)
+        : _dataTerm{dataTerm.clone()},
+          _regTerms{regTerms},
+          _currentSolution{x0},
+          _lipschitzConstant{lipschitzConstant}
     {
         // sanity checks
         if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
@@ -24,10 +28,12 @@ namespace elsa
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
-                             const std::vector<RegularizationTerm<data_t>>& regTerms)
+                             const std::vector<RegularizationTerm<data_t>>& regTerms,
+                             const std::optional<data_t> lipschitzConstant)
         : _dataTerm{dataTerm.clone()},
           _regTerms{regTerms},
-          _currentSolution{dataTerm.getDomainDescriptor()}
+          _currentSolution{dataTerm.getDomainDescriptor()},
+          _lipschitzConstant{lipschitzConstant}
     {
         // sanity check
         for (auto& regTerm : _regTerms) {
@@ -43,8 +49,12 @@ namespace elsa
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
                              const RegularizationTerm<data_t>& regTerm,
-                             const DataContainer<data_t>& x0)
-        : _dataTerm{dataTerm.clone()}, _regTerms{regTerm}, _currentSolution{x0}
+                             const DataContainer<data_t>& x0,
+                             const std::optional<data_t> lipschitzConstant)
+        : _dataTerm{dataTerm.clone()},
+          _regTerms{regTerm},
+          _currentSolution{x0},
+          _lipschitzConstant{lipschitzConstant}
     {
         // sanity checks
         if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
@@ -59,10 +69,12 @@ namespace elsa
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
-                             const RegularizationTerm<data_t>& regTerm)
+                             const RegularizationTerm<data_t>& regTerm,
+                             const std::optional<data_t> lipschitzConstant)
         : _dataTerm{dataTerm.clone()},
           _regTerms{regTerm},
-          _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType}
+          _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType},
+          _lipschitzConstant{lipschitzConstant}
     {
         // sanity check
         if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
@@ -74,8 +86,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    Problem<data_t>::Problem(const Functional<data_t>& dataTerm, const DataContainer<data_t>& x0)
-        : _dataTerm{dataTerm.clone()}, _currentSolution{x0}
+    Problem<data_t>::Problem(const Functional<data_t>& dataTerm, const DataContainer<data_t>& x0,
+                             const std::optional<data_t> lipschitzConstant)
+        : _dataTerm{dataTerm.clone()}, _currentSolution{x0}, _lipschitzConstant{lipschitzConstant}
     {
         // sanity check
         if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
@@ -84,9 +97,11 @@ namespace elsa
     }
 
     template <typename data_t>
-    Problem<data_t>::Problem(const Functional<data_t>& dataTerm)
+    Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
+                             const std::optional<data_t> lipschitzConstant)
         : _dataTerm{dataTerm.clone()},
-          _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType}
+          _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType},
+          _lipschitzConstant{lipschitzConstant}
     {
         _currentSolution = 0;
     }
@@ -96,7 +111,8 @@ namespace elsa
         : Cloneable<Problem<data_t>>(),
           _dataTerm{problem._dataTerm->clone()},
           _regTerms{problem._regTerms},
-          _currentSolution{problem._currentSolution}
+          _currentSolution{problem._currentSolution},
+          _lipschitzConstant{problem._lipschitzConstant}
     {
     }
 
@@ -160,6 +176,9 @@ namespace elsa
     template <typename data_t>
     data_t Problem<data_t>::getLipschitzConstantImpl(index_t nIterations) const
     {
+        if (_lipschitzConstant.has_value()) {
+            return _lipschitzConstant.value();
+        }
         // compute the Lipschitz Constant as the largest eigenvalue of the Hessian
         const auto hessian = getHessian();
         Eigen::Matrix<data_t, Eigen::Dynamic, 1> bVec(

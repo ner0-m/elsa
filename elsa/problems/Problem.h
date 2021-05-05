@@ -35,10 +35,13 @@ namespace elsa
          * @param[in] dataTerm functional expressing the data term
          * @param[in] regTerms vector of RegularizationTerms (weight and functional)
          * @param[in] x0 initial value for the current estimated solution
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
         Problem(const Functional<data_t>& dataTerm,
                 const std::vector<RegularizationTerm<data_t>>& regTerms,
-                const DataContainer<data_t>& x0);
+                const DataContainer<data_t>& x0, std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for optimization problem, accepting a data and multiple regularization
@@ -46,9 +49,13 @@ namespace elsa
          *
          * @param[in] dataTerm functional expressing the data term
          * @param[in] regTerms vector of RegularizationTerms (weight and functional)
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
         Problem(const Functional<data_t>& dataTerm,
-                const std::vector<RegularizationTerm<data_t>>& regTerms);
+                const std::vector<RegularizationTerm<data_t>>& regTerms,
+                std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for optimization problem, accepting a data and one regularization
@@ -57,9 +64,12 @@ namespace elsa
          * @param[in] dataTerm functional expressing the data term
          * @param[in] regTerm RegularizationTerm (weight and functional)
          * @param[in] x0 initial value for the current estimated solution
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
         Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm,
-                const DataContainer<data_t>& x0);
+                const DataContainer<data_t>& x0, std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for optimization problem, accepting a data and one regularization
@@ -67,8 +77,12 @@ namespace elsa
          *
          * @param[in] dataTerm functional expressing the data term
          * @param[in] regTerm RegularizationTerm (weight and functional)
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
-        Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm);
+        Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm,
+                std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for optimization problem, accepting a data term and an initial guess
@@ -76,15 +90,23 @@ namespace elsa
          *
          * @param[in] dataTerm functional expressing the data term
          * @param[in] x0 initial value for the current estimated solution
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
-        Problem(const Functional<data_t>& dataTerm, const DataContainer<data_t>& x0);
+        Problem(const Functional<data_t>& dataTerm, const DataContainer<data_t>& x0,
+                std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for optimization problem, accepting a data term.
          *
          * @param[in] dataTerm functional expressing the data term
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
-        explicit Problem(const Functional<data_t>& dataTerm);
+        explicit Problem(const Functional<data_t>& dataTerm,
+                         std::optional<data_t> lipschitzConstant = {});
 
         /// default destructor
         ~Problem() override = default;
@@ -143,7 +165,8 @@ namespace elsa
         LinearOperator<data_t> getHessian() const;
 
         /**
-         * @brief return the Lipschitz Constant of the problem at the current estimated solution
+         * @brief return the Lipschitz Constant of the problem at the current estimated solution. If
+         * an explicit lipschitz constant has been passed to the problem it will be returned here.
          *
          * @param[in] nIterations number of iterations to compute the lipschitz constant using
          * power iteration.
@@ -166,6 +189,9 @@ namespace elsa
 
         /// the current estimated solution
         DataContainer<data_t> _currentSolution;
+
+        /// the known lipschitz constant for a problem, if not given will be computed on demand
+        std::optional<data_t> _lipschitzConstant = {};
 
         /// protected copy constructor, simplifies cloning (of the subclasses primarily)
         Problem(const Problem<data_t>& problem);

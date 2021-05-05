@@ -31,9 +31,13 @@ namespace elsa
          * @param[in] A linear operator
          * @param[in] b data vector
          * @param[in] x0 initial value for the current estimated solution
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
         WLSProblem(const Scaling<data_t>& W, const LinearOperator<data_t>& A,
-                   const DataContainer<data_t>& b, const DataContainer<data_t>& x0);
+                   const DataContainer<data_t>& b, const DataContainer<data_t>& x0,
+                   std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for the wls problem, accepting W, A, and b
@@ -41,9 +45,12 @@ namespace elsa
          * @param[in] W scaling operator for weighting
          * @param[in] A linear operator
          * @param[in] b data vector
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
         WLSProblem(const Scaling<data_t>& W, const LinearOperator<data_t>& A,
-                   const DataContainer<data_t>& b);
+                   const DataContainer<data_t>& b, std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for the (w)ls problem, accepting A, b, and an initial guess x0 (no
@@ -52,17 +59,24 @@ namespace elsa
          * @param[in] A linear operator
          * @param[in] b data vector
          * @param[in] x0 initial value for the current estimated solution
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
         WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-                   const DataContainer<data_t>& x0);
+                   const DataContainer<data_t>& x0, std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for the (w)ls problem, accepting A and b (no weights)
          *
          * @param[in] A linear operator
          * @param[in] b data vector
+         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
+         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
+         * cases where the numerical approximation is not accurate and the constant is known.
          */
-        WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b);
+        WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
+                   std::optional<data_t> lipschitzConstant = {});
 
         /**
          * @brief Constructor for converting a general optimization problem to a WLS problem

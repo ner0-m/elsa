@@ -45,11 +45,8 @@ namespace elsa
 
             auto gradient = _problem->getGradient();
 
-            Logger::get("FGM")->warn("gradient l2 norm: {}", gradient.squaredL2Norm());
             if (_preconditionerInverse)
                 gradient = _preconditionerInverse->apply(gradient);
-            Logger::get("FGM")->warn("preconditioned gradient l2 norm: {}",
-                                     gradient.squaredL2Norm());
 
             DataContainer<data_t> y = x - gradient / lipschitz;
             const auto theta = (static_cast<data_t>(1.0)

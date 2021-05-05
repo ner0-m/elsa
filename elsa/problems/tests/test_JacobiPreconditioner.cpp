@@ -36,7 +36,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing JacobiPreconditioner", "", JacobiPrecondit
 
         WHEN("setting up a Jacobi Preconditioner")
         {
-            TestType preconditioner(scalingOp);
+            TestType preconditioner{scalingOp, false};
 
             THEN("the clone works correctly")
             {
@@ -44,6 +44,19 @@ TEMPLATE_TEST_CASE("Scenario: Testing JacobiPreconditioner", "", JacobiPrecondit
 
                 REQUIRE(preconditionerClone.get() != &preconditioner);
                 REQUIRE(*preconditionerClone == preconditioner);
+            }
+
+            THEN("the preconditioner actually represents the diagonal of the operator")
+            {
+
+                DataContainer<data_t> e(scalingOp.getDomainDescriptor());
+                e = 0;
+                DataContainer<data_t> diag(scalingOp.getDomainDescriptor());
+                for (index_t i = 0; i < e.getSize(); i++) {
+                    e[i] = 1;
+                    REQUIRE(preconditioner.apply(e) == scalingOp.apply(e));
+                    e[i] = 0;
+                }
             }
         }
     }

@@ -35,7 +35,10 @@ namespace elsa
         auto x0 = DataContainer<data_t>(getCurrentSolution());
         auto& prevY = x0;
 
-        auto lipschitz = _problem->getLipschitzConstant();
+        // OGM is very picky when it comes to the accuracy of the used lipschitz constant therefore
+        // we use 20 power iterations instead of 5 here to be more precise.
+        // In some cases OGM might still not converge then an even more precise constant is needed
+        auto lipschitz = _problem->getLipschitzConstant(20);
         auto deltaZero = _problem->getGradient().squaredL2Norm();
         Logger::get("OGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
 

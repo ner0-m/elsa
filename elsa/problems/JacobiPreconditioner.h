@@ -49,11 +49,14 @@ namespace elsa
 
     private:
         /// the actual inverse diagonal representing a Jacobi Preconditioner for the given problem
-        std::unique_ptr<Scaling<data_t>> _inverseDiagonal;
+        Scaling<data_t> _inverseDiagonal;
 
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;
         using LinearOperator<data_t>::_rangeDescriptor;
+
+        /// utility to get the diagonal of a linear operator
+        static DataContainer<data_t> diagonalFromOperator(const LinearOperator<data_t>& op);
     };
 
 } // namespace elsa

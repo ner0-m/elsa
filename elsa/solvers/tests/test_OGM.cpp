@@ -55,11 +55,11 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
         bVec.setRandom();
         bVec = bVec.cwiseAbs();
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
-        Identity<data_t> idOp{dd};
 
         // using WLS problem here for ease of use
-        WLSProblem prob{scalingOp, dcB};
-        //        WLSProblem prob{idOp, dcB};
+        // since OGM is very picky with the precision of the lipschitz constant of a problem we need
+        // to pass it explicitly
+        WLSProblem<data_t> prob{scalingOp, dcB, static_cast<data_t>(1.0)};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -79,7 +79,6 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
                     auto solution = solver.solve(1000);
 
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
-                    //                    DataContainer<data_t> resultsDifference = solution - dcB;
 
                     // should have converged for the given number of iterations
                     REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
@@ -106,7 +105,6 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
                     auto solution = solver.solve(500);
 
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
-                    //                    DataContainer<data_t> resultsDifference = solution - dcB;
 
                     // should have converged for the given number of iterations
                     // REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(0.01)
@@ -146,7 +144,9 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
         Scaling<data_t> lambdaOp{dd, lambda};
 
         // using WLS problem here for ease of use
-        WLSProblem<data_t> prob{scalingOp + lambdaOp, dcB};
+        // since OGM is very picky with the precision of the lipschitz constant of a problem we need
+        // to pass it explicitly
+        WLSProblem<data_t> prob{scalingOp + lambdaOp, dcB, static_cast<data_t>(1.2)};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
