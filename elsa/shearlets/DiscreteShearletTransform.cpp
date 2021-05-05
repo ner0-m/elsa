@@ -8,7 +8,8 @@ namespace elsa
     DiscreteShearletTransform<data_t>::DiscreteShearletTransform(index_t width, index_t height,
                                                                  index_t numberOfScales)
         // dummy values for the LinearOperator constructor
-        : LinearOperator<data_t>(VolumeDescriptor{{1, 1}}, VolumeDescriptor{{1, 1}}),
+        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
+                                 VolumeDescriptor{{width, height}}),
           _width{width},
           _height{height},
           _numberOfScales{numberOfScales}
@@ -37,9 +38,17 @@ namespace elsa
         //  n^2 vectorized
 
         // TODO current plan:
-        //  fft on the image
-        //  fftshift on the frequency domain components (what's the current shape up until here)
+        //  fft on the image (FFT: nxn -> nxn ?)
+        //  fftshift on the frequency domain components  (FFT_SHIFT: nxn -> nxn ?)
         //  apply the shearlet generator/scaling functions
+
+        // FourierTransform<data_t> ft(VolumeDescriptor{{_width, _height}});
+        // DataContainer<data_t> F = ft.fft2D(f); // if we're applying FFT 2D, make f to be nxn
+        // F = ft.fftShift2D(F);
+        // DataContainer<data_t> SHF = _SH.apply(F); // ?
+        // SHF = _SH.ifftShift2D(F); // ?
+        // DataContainer<data_t> SHf = _SH.ifft2D(SHF); // ?
+        // return SHf; // (either as n^2xJ or nxnxJ)
 
         // TODO should image de-vectorization be done here or afterwards? SHf is output as an n^2xJ
         //  or nxnxJ de-vectorized

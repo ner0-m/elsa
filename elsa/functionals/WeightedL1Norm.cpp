@@ -7,7 +7,13 @@ namespace elsa
     WeightedL1Norm<data_t>::WeightedL1Norm(const DataContainer<data_t>& weightingOp)
         : Functional<data_t>(weightingOp.getDataDescriptor()), _weightingOp{weightingOp}
     {
-        // TODO afaik all weights should be >=0, add sanity check if so
+        // sanity check
+        for (data_t weight : weightingOp) {
+            if (weight < 0) {
+                throw InvalidArgumentError(
+                    "WeightedL1Norm: all weights in the w vector should be >= 0");
+            }
+        }
     }
 
     template <typename data_t>
@@ -20,7 +26,13 @@ namespace elsa
             != weightingOp.getDataDescriptor().getNumberOfCoefficients())
             throw InvalidArgumentError(
                 "WeightedL1Norm: sizes of residual and weighting operator do not match");
-        // TODO afaik all weights should be >=0, add sanity check if so
+        // sanity check
+        for (data_t weight : weightingOp) {
+            if (weight < 0) {
+                throw InvalidArgumentError(
+                    "WeightedL1Norm: all weights in the w vector should be >= 0");
+            }
+        }
     }
 
     template <typename data_t>
@@ -77,6 +89,6 @@ namespace elsa
     // explicit template instantiation
     template class WeightedL1Norm<float>;
     template class WeightedL1Norm<double>;
-    template class WeightedL1Norm<std::complex<float>>;
-    template class WeightedL1Norm<std::complex<double>>;
+    //    template class WeightedL1Norm<std::complex<float>>;
+    //    template class WeightedL1Norm<std::complex<double>>;
 } // namespace elsa

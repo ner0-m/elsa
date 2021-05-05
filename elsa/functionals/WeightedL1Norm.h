@@ -12,8 +12,8 @@ namespace elsa
      *
      * @tparam data_t data type for the domain of the functional, defaulting to real_t
      *
-     * The weighted l1 norm functional evaluates to \f$ \| x \|_{w,1} = \sum_{i=1}^n w_{i} * |x_{i}|
-     * \f$
+     * The weighted l1 norm functional evaluates to @f$ \| x \|_{w,1} = \sum_{i=1}^n w_{i} * |x_{i}|
+     * @f$ where @f$ w_{i} >= 0 @f$.
      */
     template <typename data_t = real_t>
     class WeightedL1Norm : public Functional<data_t>
@@ -24,7 +24,7 @@ namespace elsa
          * @brief Constructor for the weighted l1 norm, mapping domain vector to a scalar
          * (without a residual)
          *
-         * @param[in] weightingOp scaling vector used for weights
+         * @param[in] weightingOp vector used for weights
          */
         explicit WeightedL1Norm(const DataContainer<data_t>& weightingOp);
 

@@ -1,36 +1,80 @@
 #include "ShearingOperator.h"
+#include "VolumeDescriptor.h"
 #include "Timer.h"
 
 namespace elsa
 {
     template <typename data_t>
-    ShearingOperator<data_t>::ShearingOperator(const DataDescriptor& descriptor)
-        : LinearOperator<data_t>(descriptor, descriptor)
+    ShearingOperator<data_t>::ShearingOperator(const DataDescriptor& rangeDescriptor,
+                                               real_t shearingParameter)
+        : LinearOperator<data_t>(
+            VolumeDescriptor{rangeDescriptor.getNumberOfCoefficientsPerDimension()[0],
+                             rangeDescriptor.getNumberOfCoefficientsPerDimension()[0]},
+            rangeDescriptor),
+          _shearingParameter{shearingParameter}
     {
+        if (rangeDescriptor.getNumberOfCoefficientsPerDimension()[0]
+            != _shearingOperatorDimensions) {
+            throw LogicError("ShearingOperator: the number of rows of the vector x should be 2");
+        }
     }
 
     template <typename data_t>
     void ShearingOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                             DataContainer<data_t>& Px) const
+                                             DataContainer<data_t>& Ssx) const
     {
-        // TODO add logic
         Timer timeguard("ShearingOperator", "apply");
-        Px = x;
+
+        index_t numberOfRows = x.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0];
+        index_t numberOfColumns = x.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1];
+
+        if (numberOfRows != _shearingOperatorDimensions) {
+            throw LogicError("ShearingOperator: the number of rows of the vector x should be 2");
+        }
+
+        if (Ssx.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0]
+                != _shearingOperatorDimensions
+            || Ssx.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1]
+                   != numberOfColumns) {
+            throw LogicError("ShearingOperator: the number of rows of the vector x should be 2");
+        }
+
+        for (index_t j = 0; j < numberOfColumns; j++) {
+            Ssx[j] = x[j] + _shearingParameter * x[j + numberOfColumns];
+            Ssx[j + numberOfColumns] = x[j + numberOfColumns];
+        }
     }
 
     template <typename data_t>
     void ShearingOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                    DataContainer<data_t>& Pty) const
+                                                    DataContainer<data_t>& Ssty) const
     {
-        // TODO add logic
         Timer timeguard("ShearingOperator", "applyAdjoint");
-        Pty = y;
+
+        index_t numberOfRows = y.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0];
+        index_t numberOfColumns = y.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1];
+
+        if (numberOfRows != _shearingOperatorDimensions) {
+            throw LogicError("ShearingOperator: the number of rows of the vector y should be 2");
+        }
+
+        if (Ssty.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0]
+                != _shearingOperatorDimensions
+            || Ssty.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1]
+                   != numberOfColumns) {
+            throw LogicError("ShearingOperator: the number of rows of the vector y should be 2");
+        }
+
+        for (index_t j = 0; j < numberOfColumns; j++) {
+            Ssty[j] = y[j];
+            Ssty[j + numberOfColumns] = _shearingParameter * y[j] + y[j + numberOfColumns];
+        }
     }
 
     template <typename data_t>
     ShearingOperator<data_t>* ShearingOperator<data_t>::cloneImpl() const
     {
-        return new ShearingOperator(this->getDomainDescriptor());
+        return new ShearingOperator(this->getRangeDescriptor(), _shearingParameter);
     }
 
     template <typename data_t>
@@ -39,14 +83,14 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherProjector = dynamic_cast<const ShearingOperator*>(&other);
-        return static_cast<bool>(otherProjector);
+        auto otherShearingOp = dynamic_cast<const ShearingOperator*>(&other);
+        return static_cast<bool>(otherShearingOp);
     }
 
     // ------------------------------------------
     // explicit template instantiation
     template class ShearingOperator<float>;
-    template class ShearingOperator<std::complex<float>>;
+    //    template class ShearingOperator<std::complex<float>>;
     template class ShearingOperator<double>;
-    template class ShearingOperator<std::complex<double>>;
+    //    template class ShearingOperator<std::complex<double>>;
 } // namespace elsa

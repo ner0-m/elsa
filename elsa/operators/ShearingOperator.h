@@ -11,13 +11,20 @@ namespace elsa
      *
      * @author Andi Braimllari - initial code
      *
-     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t//TODO
      *
-     * This class represents a WHAT that is HOW.
+     * This class represents a 2x2 shearing operation @f$ S_{s} @f$.@f$ S_{s} @f$ is the symmetric
+     * matrix defined as:
      *
-     * S_{s} is e.g. the matrix:
-     * (1      s)
-     * (0      1)
+     * (1  s)
+     * (0  1)
+     *
+     * where the shearing parameter s ∈ R.
+     *
+     * Its inverse matrix @f$ S_{s}^{-1} @f$ is defined as:
+     *
+     * (1 -s)
+     * (0  1)
      *
      * References:
      * https://www.math.uh.edu/~dlabate/SHBookIntro.pdf
@@ -29,9 +36,9 @@ namespace elsa
         /**
          * @brief Constructor for the shearing operator, specifying the domain (= range).
          *
-         * @param[in] descriptor DataDescriptor describing the domain and range of the operator
+         * @param[in] shearingParameter the parameter to shear by
          */
-        explicit ShearingOperator(const DataDescriptor& descriptor);
+        explicit ShearingOperator(const DataDescriptor& rangeDescriptor, real_t shearingParameter);
 
         /// default destructor
         ~ShearingOperator() override = default;
@@ -49,7 +56,7 @@ namespace elsa
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ssx) const override;
 
         /**
-         * @brief apply the adjoint of the shearing operator A to y, i.e. S_{s}^ty = y
+         * @brief apply the adjoint of the shearing operator S_{s} to y, i.e. S_{s}^ty
          *
          * @param[in] y input DataContainer (in the range of the operator)
          * @param[out] S_{s}ty output DataContainer (in the domain of the operator)
@@ -62,5 +69,9 @@ namespace elsa
 
         /// implement the polymorphic comparison operation
         bool isEqual(const LinearOperator<data_t>& other) const override;
+
+    private:
+        real_t _shearingParameter;
+        index_t _shearingOperatorDimensions{2};
     };
 } // namespace elsa

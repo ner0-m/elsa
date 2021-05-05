@@ -26,8 +26,8 @@ namespace elsa
             WLSProblem<real_t> wlsProb(R, y);
             WeightedL1Norm<real_t> wl1Norm(eta.getDataDescriptor()); // or maybe some another DD
             RegularizationTerm<real_t> regTerm(1 / 2, wl1Norm);      // regTerm(lambda, l1Norm)
-            LinearOperator A(, ); // AT = (ρ_1 SH^T, ρ_2 I_n2 ) ∈ R^n^2×(J+1)n^2
-            LinearOperator B(, ); // B = diag(−ρ_1 1_Jn^2 , −ρ_2 1_n2)
+            LinearOperator A(, ); // AT = (ρ_1 SH^T, ρ_2 I_n2 ) ∈ R ^ n^2 × (J+1)n^2
+            LinearOperator B(, ); // B = diag(−ρ_1 1_Jn^2 , −ρ_2 1_n2) ∈ R ^ (J+1)n2 × (J+1)n^2
             DataContainer<real_t> zeroes(A.domainDescriptor);
             zeroes = 0;
             Constraint<real_t> constraint(A, B, zeroes);
@@ -62,10 +62,12 @@ namespace elsa
             model.fit(inputs, labels, /* epochs */ 10);
 
             /// details about modified U-Net below
-            /// MU: R ^ J x n x n -> R ^ J x n x n
+            /// NN: R ^ J x n x n -> R ^ J x n x n
             /// fully convolutional neural network
 
             // TODO consider adding TDB, TD, TU for a modification of U-Net
+
+            // additional model to try given sufficient time: TransUNet
         }
 
         void trainDLModel()
