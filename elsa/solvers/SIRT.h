@@ -39,13 +39,13 @@ namespace elsa
          *
          * \returns a reference to the current solution
          */
-        auto solveImpl(index_t iterations) -> DataContainer<data_t>& override;
+        DataContainer<data_t>& solveImpl(index_t iterations) override;
 
         /// implement the polymorphic clone operation
-        auto cloneImpl() const -> SIRT<data_t>* override;
+        SIRT<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
-        auto isEqual(const Solver<data_t>& other) const -> bool override;
+        bool isEqual(const Solver<data_t>& other) const override;
     };
 
 } // namespace elsa

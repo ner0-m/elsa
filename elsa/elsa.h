@@ -78,3 +78,4 @@
 #include "FGM.h"
 #include "OGM.h"
 #include "ADMM.h"
+#include "SIRT.h"

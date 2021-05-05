@@ -12,7 +12,7 @@ namespace elsa
     {
     }
     template <typename data_t>
-    auto SIRT<data_t>::solveImpl(index_t iterations) -> DataContainer<data_t>&
+    DataContainer<data_t>& SIRT<data_t>::solveImpl(index_t iterations)
     {
         if (iterations == 0)
             iterations = _defaultIterations;
@@ -39,14 +39,15 @@ namespace elsa
 
         return getCurrentSolution();
     }
+
     template <typename data_t>
-    auto SIRT<data_t>::cloneImpl() const -> SIRT<data_t>*
+    SIRT<data_t>* SIRT<data_t>::cloneImpl() const
     {
-        return new SIRT(*_problem);
+        return new SIRT<data_t>(*(dynamic_cast<WLSProblem<data_t>*>(_problem.get())));
     }
 
     template <typename data_t>
-    auto SIRT<data_t>::isEqual(const Solver<data_t>& other) const -> bool
+    bool SIRT<data_t>::isEqual(const Solver<data_t>& other) const
     {
         if (!Solver<data_t>::isEqual(other))
             return false;
@@ -54,4 +55,9 @@ namespace elsa
         auto otherSIRT = dynamic_cast<const SIRT*>(&other);
         return otherSIRT;
     }
+
+    // ------------------------------------------
+    // explicit template instantiation
+    template class SIRT<float>;
+    template class SIRT<double>;
 } // namespace elsa
