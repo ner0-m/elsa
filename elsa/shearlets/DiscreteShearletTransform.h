@@ -69,8 +69,10 @@ namespace elsa
         /// shearlet scaling function
         DataContainer<data_t> phi(int j, int k, std::vector<int> m);
 
-        // TODO how to represent the two matrices S (shearing matrix) and A (parabolic scaling
-        //  matrix)? No LinearOperator offers selectively setting each matrix value?
+        // TODO how to represent the two matrices S shearing matrix and A parabolic scaling matrix?
+        //  No LinearOperator offers selectively setting each matrix value?
+        //  Created ShearingOperator for the first one, Scaling covers the parabolic scaling
+        //  operator and its inverse
 
         // NN: R ^ J x n x n -> R ^ J x n x n
     };

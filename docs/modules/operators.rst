@@ -33,8 +33,3 @@ ShearingOperator
 ===================
 
 .. doxygenclass:: elsa::ShearingOperator
-
-ParabolicScalingOperator
-===================
-
-.. doxygenclass:: elsa::ParabolicScalingOperator

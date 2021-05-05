@@ -11,7 +11,6 @@ set(MODULE_HEADERS
         FiniteDifferences.h
         BlockLinearOperator.h
         ProjectionOperator.h
-        ParabolicScalingOperator.h
         ShearingOperator.h)
 
 # list all the code files of the module
@@ -21,7 +20,6 @@ set(MODULE_SOURCES
         FiniteDifferences.cpp
         BlockLinearOperator.cpp
         ProjectionOperator.cpp
-        ParabolicScalingOperator.cpp
         ShearingOperator.cpp)
 
 
