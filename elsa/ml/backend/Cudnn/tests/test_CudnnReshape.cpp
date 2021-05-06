@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "testHelpers.h"
 #include "VolumeDescriptor.h"
@@ -9,8 +9,14 @@
 using namespace elsa;
 using namespace elsa::ml;
 using namespace elsa::ml::detail;
+using namespace doctest;
 
-TEST_CASE("CudnnFlatten", "[ml][cudnn]")
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_SUITE_BEGIN("ml-cudnn");
+
+TEST_CASE("CudnnFlatten")
 {
     IndexVector_t inputDimensions{{11, 22, 33, 44}};
     VolumeDescriptor inputDescriptor(inputDimensions);
@@ -30,7 +36,7 @@ TEST_CASE("CudnnFlatten", "[ml][cudnn]")
     REQUIRE(isApprox(input, output));
 }
 
-TEST_CASE("CudnnUpsample", "[ml][cudnn]")
+TEST_CASE("CudnnUpsample")
 {
     const int H = 3;
     const int W = 3;
@@ -120,3 +126,5 @@ TEST_CASE("CudnnUpsample", "[ml][cudnn]")
         REQUIRE(ingrad[i] == Approx(data[i]));
     }
 }
+
+TEST_SUITE_END();

@@ -6,6 +6,8 @@
  * @author Andi Braimllari
  */
 
+#include "doctest/doctest.h"
+
 #include "ADMM.h"
 #include "CG.h"
 #include "SoftThresholding.h"
@@ -14,15 +16,16 @@
 #include "FISTA.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
-
-#include <catch2/catch.hpp>
 #include <testHelpers.h>
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Solving problems with ADMM")
+TEST_SUITE_BEGIN("solvers");
+
+TEST_CASE("ADMM: Solving problems")
 {
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("some problems and a constraint")
     {
@@ -76,3 +79,5 @@ SCENARIO("Solving problems with ADMM")
         }
     }
 }
+
+TEST_SUITE_END();

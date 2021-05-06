@@ -4,11 +4,11 @@
  * @brief Tests for DataContainer class
  *
  * @author Matthias Wieczorek - initial code
- * @author David Frank - rewrite to use Catch and BDD
+ * @author David Frank - rewrite to use doctest and BDD
  * @author Tobias Lasser - rewrite and added code coverage
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "DataContainer.h"
 #include "IdenticalBlocksDescriptor.h"
 #include "testHelpers.h"
@@ -17,7 +17,7 @@
 #include <type_traits>
 
 using namespace elsa;
-using namespace Catch::literals; // to enable 0.0_a approximate floats
+using namespace doctest;
 
 // Provides object to be used with TEMPLATE_PRODUCT_TEST_CASE, necessary because enum cannot be
 // passed directly
@@ -35,14 +35,32 @@ struct TestHelperCPU {
     using data_t = T;
 };
 
+using CPUTypeTuple =
+    std::tuple<TestHelperCPU<float>, TestHelperCPU<double>, TestHelperCPU<std::complex<float>>,
+               TestHelperCPU<std::complex<double>>, TestHelperCPU<index_t>>;
+
+TYPE_TO_STRING(TestHelperCPU<float>);
+TYPE_TO_STRING(TestHelperCPU<double>);
+TYPE_TO_STRING(TestHelperCPU<index_t>);
+TYPE_TO_STRING(TestHelperCPU<std::complex<float>>);
+TYPE_TO_STRING(TestHelperCPU<std::complex<double>>);
+
 #ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "",
-                           (TestHelperCPU, TestHelperGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHelperCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
+using GPUTypeTuple =
+    std::tuple<TestHelperGPU<float>, TestHelperGPU<double>, TestHelperGPU<std::complex<float>>,
+               TestHelperGPU<std::complex<double>>, TestHelperGPU<index_t>>;
+
+TYPE_TO_STRING(TestHelperGPU<float>);
+TYPE_TO_STRING(TestHelperGPU<double>);
+TYPE_TO_STRING(TestHelperGPU<index_t>);
+TYPE_TO_STRING(TestHelperGPU<std::complex<float>>);
+TYPE_TO_STRING(TestHelperGPU<std::complex<double>>);
 #endif
+
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
+                          datacontainer_construction)
 {
     using data_t = typename TestType::data_t;
 
@@ -58,11 +76,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
         {
             DataContainer<data_t> dc(desc, TestType::handler_t);
 
-            THEN("it has the correct DataDescriptor") { REQUIRE(dc.getDataDescriptor() == desc); }
+            THEN("it has the correct DataDescriptor") { REQUIRE_EQ(dc.getDataDescriptor(), desc); }
 
             THEN("it has a data vector of correct size")
             {
-                REQUIRE(dc.getSize() == desc.getNumberOfCoefficients());
+                REQUIRE_EQ(dc.getSize(), desc.getNumberOfCoefficients());
             }
         }
 
@@ -72,14 +90,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
 
             DataContainer<data_t> dc(desc, data, TestType::handler_t);
 
-            THEN("it has the correct DataDescriptor") { REQUIRE(dc.getDataDescriptor() == desc); }
+            THEN("it has the correct DataDescriptor") { REQUIRE_EQ(dc.getDataDescriptor(), desc); }
 
             THEN("it has correctly initialized data")
             {
-                REQUIRE(dc.getSize() == desc.getNumberOfCoefficients());
+                REQUIRE_EQ(dc.getSize(), desc.getNumberOfCoefficients());
 
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == data[i]);
+                    REQUIRE_UNARY(checkApproxEq(dc[i], data[i]));
             }
         }
     }
@@ -102,10 +120,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
 
             THEN("it copied correctly")
             {
-                REQUIRE(dc.getDataDescriptor() == otherDc.getDataDescriptor());
-                REQUIRE(&dc.getDataDescriptor() != &otherDc.getDataDescriptor());
+                REQUIRE_EQ(dc.getDataDescriptor(), otherDc.getDataDescriptor());
+                REQUIRE_NE(&dc.getDataDescriptor(), &otherDc.getDataDescriptor());
 
-                REQUIRE(dc == otherDc);
+                REQUIRE_EQ(dc, otherDc);
             }
         }
 
@@ -116,10 +134,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
 
             THEN("it copied correctly")
             {
-                REQUIRE(dc.getDataDescriptor() == otherDc.getDataDescriptor());
-                REQUIRE(&dc.getDataDescriptor() != &otherDc.getDataDescriptor());
+                REQUIRE_EQ(dc.getDataDescriptor(), otherDc.getDataDescriptor());
+                REQUIRE_NE(&dc.getDataDescriptor(), &otherDc.getDataDescriptor());
 
-                REQUIRE(dc == otherDc);
+                REQUIRE_EQ(dc, otherDc);
             }
         }
 
@@ -131,9 +149,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
 
             THEN("it moved correctly")
             {
-                REQUIRE(dc.getDataDescriptor() == oldOtherDc.getDataDescriptor());
+                REQUIRE_EQ(dc.getDataDescriptor(), oldOtherDc.getDataDescriptor());
 
-                REQUIRE(dc == oldOtherDc);
+                REQUIRE_EQ(dc, oldOtherDc);
             }
 
             THEN("the moved from object is still valid (but empty)") { otherDc = dc; }
@@ -148,9 +166,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
 
             THEN("it moved correctly")
             {
-                REQUIRE(dc.getDataDescriptor() == oldOtherDc.getDataDescriptor());
+                REQUIRE_EQ(dc.getDataDescriptor(), oldOtherDc.getDataDescriptor());
 
-                REQUIRE(dc == oldOtherDc);
+                REQUIRE_EQ(dc, oldOtherDc);
             }
 
             THEN("the moved from object is still valid (but empty)") { otherDc = dc; }
@@ -158,14 +176,45 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataContainers", "", (TestHel
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Element-wise access of DataContainers", "",
-                           (TestHelperCPU, TestHelperGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Element-wise access of DataContainers", "", (TestHelperCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing the reduction operations", TestType,
+                          datacontainer_reduction)
+{
+    using data_t = typename TestType::data_t;
+
+    INFO("Testing type: " << TypeName_v<const data_t>);
+
+    GIVEN("a DataContainer")
+    {
+        IndexVector_t numCoeff(3);
+        numCoeff << 11, 73, 45;
+        VolumeDescriptor desc(numCoeff);
+
+        WHEN("putting in some random data")
+        {
+            auto [dc, randVec] = generateRandomContainer<data_t>(desc, TestType::handler_t);
+
+            THEN("the reductions work a expected")
+            {
+                REQUIRE_UNARY(checkApproxEq(dc.sum(), randVec.sum()));
+                REQUIRE_UNARY(checkApproxEq(
+                    dc.l0PseudoNorm(),
+                    (randVec.array().cwiseAbs()
+                     >= std::numeric_limits<GetFloatingPointType_t<data_t>>::epsilon())
+                        .count()));
+                REQUIRE_UNARY(checkApproxEq(dc.l1Norm(), randVec.array().abs().sum()));
+                REQUIRE_UNARY(checkApproxEq(dc.lInfNorm(), randVec.array().abs().maxCoeff()));
+                REQUIRE_UNARY(checkApproxEq(dc.squaredL2Norm(), randVec.squaredNorm()));
+
+                auto [dc2, randVec2] = generateRandomContainer<data_t>(desc, TestType::handler_t);
+
+                REQUIRE_UNARY(checkApproxEq(dc.dot(dc2), randVec.dot(randVec2)));
+            }
+        }
+    }
+}
+
+TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType,
+                          datacontainer_elemwise)
 {
     using data_t = typename TestType::data_t;
 
@@ -186,76 +235,31 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Element-wise access of DataContainers", ""
 
             THEN("it works as expected when using indices/coordinates")
             {
-                dc[index] = data_t(2.2f);
-                REQUIRE(dc[index] == data_t(2.2f));
-                REQUIRE(dc(coord) == data_t(2.2f));
-                REQUIRE(dc(17, 4) == data_t(2.2f));
+                // For integral typeps don't have a floating point value
+                if constexpr (std::is_integral_v<data_t>) {
+                    dc[index] = data_t(2);
+                    REQUIRE_UNARY(checkApproxEq(dc[index], 2));
+                    REQUIRE_UNARY(checkApproxEq(dc(coord), 2));
+                    REQUIRE_UNARY(checkApproxEq(dc(17, 4), 2));
 
-                dc(coord) = data_t(3.3f);
-                REQUIRE(dc[index] == data_t(3.3f));
-                REQUIRE(dc(coord) == data_t(3.3f));
-                REQUIRE(dc(17, 4) == data_t(3.3f));
+                    dc(coord) = data_t(3);
+                    REQUIRE_UNARY(checkApproxEq(dc[index], 3));
+                    REQUIRE_UNARY(checkApproxEq(dc(coord), 3));
+                    REQUIRE_UNARY(checkApproxEq(dc(17, 4), 3));
+                } else {
+                    dc[index] = data_t(2.2f);
+                    REQUIRE_UNARY(checkApproxEq(dc[index], 2.2f));
+                    REQUIRE_UNARY(checkApproxEq(dc(coord), 2.2f));
+                    REQUIRE_UNARY(checkApproxEq(dc(17, 4), 2.2f));
+
+                    dc(coord) = data_t(3.3f);
+                    REQUIRE_UNARY(checkApproxEq(dc[index], 3.3f));
+                    REQUIRE_UNARY(checkApproxEq(dc(coord), 3.3f));
+                    REQUIRE_UNARY(checkApproxEq(dc(17, 4), 3.3f));
+                }
             }
         }
     }
-}
-
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataContainer", "",
-                           (TestHelperCPU, TestHelperGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataContainer", "",
-                           (TestHelperCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
-{
-    using data_t = typename TestType::data_t;
-
-    INFO("Testing type: " << TypeName_v<const data_t>);
-
-    GIVEN("a DataContainer")
-    {
-        IndexVector_t numCoeff(3);
-        numCoeff << 11, 73, 45;
-        VolumeDescriptor desc(numCoeff);
-
-        WHEN("putting in some random data")
-        {
-            auto [dc, randVec] = generateRandomContainer<data_t>(desc, TestType::handler_t);
-
-            THEN("the reductions work as expected")
-            {
-                REQUIRE(checkSameNumbers(dc.sum(), randVec.sum()));
-                REQUIRE(dc.l0PseudoNorm()
-                        == (randVec.array().cwiseAbs()
-                            >= std::numeric_limits<GetFloatingPointType_t<data_t>>::epsilon())
-                               .count());
-                REQUIRE(checkSameNumbers(dc.l1Norm(), randVec.array().abs().sum()));
-                REQUIRE(checkSameNumbers(dc.lInfNorm(), randVec.array().abs().maxCoeff()));
-                REQUIRE(checkSameNumbers(dc.squaredL2Norm(), randVec.squaredNorm()));
-
-                auto [dc2, randVec2] = generateRandomContainer<data_t>(desc, TestType::handler_t);
-
-                REQUIRE(checkSameNumbers(dc.dot(dc2), randVec.dot(randVec2)));
-            }
-        }
-    }
-}
-
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataContainer", "",
-                           (TestHelperCPU, TestHelperGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataContainer", "",
-                           (TestHelperCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
-{
-    using data_t = typename TestType::data_t;
-
-    INFO("Testing type: " << TypeName_v<const data_t>);
 
     GIVEN("a DataContainer")
     {
@@ -271,22 +275,22 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
             {
                 DataContainer dcSquare = square(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(checkSameNumbers(dcSquare[i], randVec.array().square()[i]));
+                    REQUIRE_UNARY(checkApproxEq(dcSquare[i], randVec.array().square()[i]));
                 DataContainer dcSqrt = sqrt(dcSquare);
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(checkSameNumbers(dcSqrt[i], randVec.array().square().sqrt()[i]));
+                    REQUIRE_UNARY(checkApproxEq(dcSqrt[i], randVec.array().square().sqrt()[i]));
 
                 // do exponent check only for floating point types as for integer will likely lead
                 // to overflow due to random init over full value range
                 if constexpr (!std::is_integral_v<data_t>) {
                     DataContainer dcExp = exp(dc);
                     for (index_t i = 0; i < dc.getSize(); ++i)
-                        REQUIRE(checkSameNumbers(dcExp[i], randVec.array().exp()[i]));
+                        REQUIRE_UNARY(checkApproxEq(dcExp[i], randVec.array().exp()[i]));
                 }
 
                 DataContainer dcLog = log(dcSquare);
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(checkSameNumbers(dcLog[i], randVec.array().square().log()[i]));
+                    REQUIRE_UNARY(checkApproxEq(dcLog[i], randVec.array().square().log()[i]));
             }
 
             auto scalar = static_cast<data_t>(923.41f);
@@ -295,35 +299,35 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
             {
                 dc += scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == randVec(i) + scalar);
+                    REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) + scalar));
             }
 
             THEN("the binary in-place subtraction of a scalar work as expected")
             {
                 dc -= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == randVec(i) - scalar);
+                    REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) - scalar));
             }
 
             THEN("the binary in-place multiplication with a scalar work as expected")
             {
                 dc *= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == randVec(i) * scalar);
+                    REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) * scalar));
             }
 
             THEN("the binary in-place division by a scalar work as expected")
             {
                 dc /= scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(checkSameNumbers(dc[i], randVec(i) / scalar));
+                    REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) / scalar));
             }
 
             THEN("the element-wise assignment of a scalar works as expected")
             {
                 dc = scalar;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == scalar);
+                    REQUIRE_UNARY(checkApproxEq(dc[i], scalar));
             }
         }
 
@@ -336,21 +340,21 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
             {
                 dc += dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == randVec(i) + randVec2(i));
+                    REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) + randVec2(i)));
             }
 
             THEN("the element-wise in-place subtraction works as expected")
             {
                 dc -= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(dc[i] == randVec(i) - randVec2(i));
+                    REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) - randVec2(i)));
             }
 
             THEN("the element-wise in-place multiplication works as expected")
             {
                 dc *= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
-                    REQUIRE(checkSameNumbers(dc[i], randVec(i) * randVec2(i)));
+                    REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) * randVec2(i)));
             }
 
             THEN("the element-wise in-place division works as expected")
@@ -358,22 +362,15 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
                 dc /= dc2;
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     if (dc2[i] != data_t(0))
-                        REQUIRE(checkSameNumbers(dc[i], randVec(i) / randVec2(i)));
+                        REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) / randVec2(i)));
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE(
-    "Scenario: Testing the arithmetic operations with DataContainer arguments", "",
-    (TestHelperCPU, TestHelperGPU),
-    (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE(
-    "Scenario: Testing the arithmetic operations with DataContainer arguments", "", (TestHelperCPU),
-    (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE(
+    "DataContainer: Testing the arithmetic operations with DataContainers arguments", TestType,
+    datacontainer_arithmetic)
 {
     using data_t = typename TestType::data_t;
 
@@ -392,20 +389,20 @@ TEMPLATE_PRODUCT_TEST_CASE(
         {
             DataContainer resultPlus = dc + dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultPlus[i] == dc[i] + dc2[i]);
+                REQUIRE_UNARY(checkApproxEq(resultPlus[i], dc[i] + dc2[i]));
 
             DataContainer resultMinus = dc - dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMinus[i] == dc[i] - dc2[i]);
+                REQUIRE_UNARY(checkApproxEq(resultMinus[i], dc[i] - dc2[i]));
 
             DataContainer resultMult = dc * dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(checkSameNumbers(resultMult[i], dc[i] * dc2[i]));
+                REQUIRE_UNARY(checkApproxEq(resultMult[i], dc[i] * dc2[i]));
 
             DataContainer resultDiv = dc / dc2;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 if (dc2[i] != data_t(0))
-                    REQUIRE(checkSameNumbers(resultDiv[i], dc[i] / dc2[i]));
+                    REQUIRE_UNARY(checkApproxEq(resultDiv[i], dc[i] / dc2[i]));
         }
 
         THEN("the operations with a scalar work as expected")
@@ -414,49 +411,42 @@ TEMPLATE_PRODUCT_TEST_CASE(
 
             DataContainer resultScalarPlus = scalar + dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarPlus[i] == scalar + dc[i]);
+                REQUIRE_UNARY(checkApproxEq(resultScalarPlus[i], scalar + dc[i]));
 
             DataContainer resultPlusScalar = dc + scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultPlusScalar[i] == dc[i] + scalar);
+                REQUIRE_UNARY(checkApproxEq(resultPlusScalar[i], dc[i] + scalar));
 
             DataContainer resultScalarMinus = scalar - dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarMinus[i] == scalar - dc[i]);
+                REQUIRE_UNARY(checkApproxEq(resultScalarMinus[i], scalar - dc[i]));
 
             DataContainer resultMinusScalar = dc - scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMinusScalar[i] == dc[i] - scalar);
+                REQUIRE_UNARY(checkApproxEq(resultMinusScalar[i], dc[i] - scalar));
 
             DataContainer resultScalarMult = scalar * dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultScalarMult[i] == scalar * dc[i]);
+                REQUIRE_UNARY(checkApproxEq(resultScalarMult[i], scalar * dc[i]));
 
             DataContainer resultMultScalar = dc * scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(resultMultScalar[i] == dc[i] * scalar);
+                REQUIRE_UNARY(checkApproxEq(resultMultScalar[i], dc[i] * scalar));
 
             DataContainer resultScalarDiv = scalar / dc;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 if (dc[i] != data_t(0))
-                    REQUIRE(checkSameNumbers(resultScalarDiv[i], scalar / dc[i]));
+                    REQUIRE_UNARY(checkApproxEq(resultScalarDiv[i], scalar / dc[i]));
 
             DataContainer resultDivScalar = dc / scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
-                REQUIRE(checkSameNumbers(resultDivScalar[i], dc[i] / scalar));
+                REQUIRE_UNARY(checkApproxEq(resultDivScalar[i], dc[i] / scalar));
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataContainer", "",
-                           (TestHelperCPU, TestHelperGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataContainer", "",
-                           (TestHelperCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing creation of Maps through DataContainer", TestType,
+                          datacontainer_maps)
 {
     using data_t = typename TestType::data_t;
 
@@ -490,11 +480,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
 
             THEN("view has the correct descriptor and data")
             {
-                REQUIRE(linearDesc == linearDc.getDataDescriptor());
-                REQUIRE(&linearDc[0] == &dc[0]);
+                REQUIRE_EQ(linearDesc, linearDc.getDataDescriptor());
+                REQUIRE_EQ(&linearDc[0], &dc[0]);
 
-                REQUIRE(linearDesc == linearConstDc.getDataDescriptor());
-                REQUIRE(&linearConstDc[0] == &constDc[0]);
+                REQUIRE_EQ(linearDesc, linearConstDc.getDataDescriptor());
+                REQUIRE_EQ(&linearConstDc[0], &constDc[0]);
 
                 AND_THEN("view is not a shallow copy")
                 {
@@ -502,12 +492,12 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
                     const auto constDcCopy = constDc;
 
                     linearDc[0] = 1;
-                    REQUIRE(&linearDc[0] == &dc[0]);
-                    REQUIRE(&linearDc[0] != &dcCopy[0]);
+                    REQUIRE_EQ(&linearDc[0], &dc[0]);
+                    REQUIRE_NE(&linearDc[0], &dcCopy[0]);
 
                     linearConstDc[0] = 1;
-                    REQUIRE(&linearConstDc[0] == &constDc[0]);
-                    REQUIRE(&linearConstDc[0] != &constDcCopy[0]);
+                    REQUIRE_EQ(&linearConstDc[0], &constDc[0]);
+                    REQUIRE_NE(&linearConstDc[0], &constDcCopy[0]);
                 }
             }
         }
@@ -532,11 +522,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
                     auto dcBlock = dc.getBlock(i);
                     const auto constDcBlock = constDc.getBlock(i);
 
-                    REQUIRE(dcBlock.getDataDescriptor() == blockDesc.getDescriptorOfBlock(i));
-                    REQUIRE(&dcBlock[0] == &dc[0] + blockDesc.getOffsetOfBlock(i));
+                    REQUIRE_EQ(dcBlock.getDataDescriptor(), blockDesc.getDescriptorOfBlock(i));
+                    REQUIRE_EQ(&dcBlock[0], &dc[0] + blockDesc.getOffsetOfBlock(i));
 
-                    REQUIRE(constDcBlock.getDataDescriptor() == blockDesc.getDescriptorOfBlock(i));
-                    REQUIRE(&constDcBlock[0] == &constDc[0] + blockDesc.getOffsetOfBlock(i));
+                    REQUIRE_EQ(constDcBlock.getDataDescriptor(), blockDesc.getDescriptorOfBlock(i));
+                    REQUIRE_EQ(&constDcBlock[0], &constDc[0] + blockDesc.getOffsetOfBlock(i));
                 }
             }
         }
@@ -551,11 +541,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
 
             THEN("view has the correct descriptor and data")
             {
-                REQUIRE(linearDesc == linearDc.getDataDescriptor());
-                REQUIRE(&linearDc[0] == &dc[0]);
+                REQUIRE_EQ(linearDesc, linearDc.getDataDescriptor());
+                REQUIRE_EQ(&linearDc[0], &dc[0]);
 
-                REQUIRE(linearDesc == linearConstDc.getDataDescriptor());
-                REQUIRE(&linearConstDc[0] == &constDc[0]);
+                REQUIRE_EQ(linearDesc, linearConstDc.getDataDescriptor());
+                REQUIRE_EQ(&linearConstDc[0], &constDc[0]);
 
                 AND_THEN("view is not a shallow copy")
                 {
@@ -563,12 +553,12 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
                     const auto constDcCopy = constDc;
 
                     linearDc[0] = 1;
-                    REQUIRE(&linearDc[0] == &dc[0]);
-                    REQUIRE(&linearDc[0] != &dcCopy[0]);
+                    REQUIRE_EQ(&linearDc[0], &dc[0]);
+                    REQUIRE_NE(&linearDc[0], &dcCopy[0]);
 
                     linearConstDc[0] = 1;
-                    REQUIRE(&linearConstDc[0] == &constDc[0]);
-                    REQUIRE(&linearConstDc[0] != &constDcCopy[0]);
+                    REQUIRE_EQ(&linearConstDc[0], &constDc[0]);
+                    REQUIRE_NE(&linearConstDc[0], &constDcCopy[0]);
                 }
             }
         }
@@ -576,8 +566,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing creation of Maps through DataConta
 }
 
 #ifdef ELSA_CUDA_VECTOR
-TEMPLATE_TEST_CASE("Scenario: Testing loading data to GPU and vice versa.", "", float, double,
-                   std::complex<float>, std::complex<double>, index_t)
+TEST_CASE_TEMPLATE("DataContainer: Testing load data to GPU and vice versa", TestType, float,
+                   double, std::complex<float>, std::complex<double>, index_t)
 {
     GIVEN("A CPU DataContainer with random data")
     {
@@ -609,12 +599,12 @@ TEMPLATE_TEST_CASE("Scenario: Testing loading data to GPU and vice versa.", "", 
         {
             DataContainer dcGPU2 = dcCPU.loadToGPU();
 
-            REQUIRE(dcGPU2.getDataHandlerType() == DataHandlerType::GPU);
+            REQUIRE_EQ(dcGPU2.getDataHandlerType(), DataHandlerType::GPU);
 
             THEN("all elements have to be the same")
             {
                 for (index_t i = 0; i < dcCPU.getSize(); ++i) {
-                    REQUIRE(dcGPU2[i] == dcGPU[i]);
+                    REQUIRE_UNARY(checkApproxEq(dcGPU2[i], dcGPU[i]));
                 }
             }
         }
@@ -623,12 +613,12 @@ TEMPLATE_TEST_CASE("Scenario: Testing loading data to GPU and vice versa.", "", 
         {
             DataContainer dcCPU2 = dcGPU.loadToCPU();
 
-            REQUIRE(dcCPU2.getDataHandlerType() == DataHandlerType::CPU);
+            REQUIRE_EQ(dcCPU2.getDataHandlerType(), DataHandlerType::CPU);
 
             THEN("all elements have to be the same")
             {
                 for (index_t i = 0; i < dcCPU.getSize(); ++i) {
-                    REQUIRE(dcCPU2[i] == dcGPU[i]);
+                    REQUIRE_UNARY(checkApproxEq(dcCPU2[i], dcGPU[i]));
                 }
             }
         }
@@ -639,10 +629,18 @@ TEMPLATE_TEST_CASE("Scenario: Testing loading data to GPU and vice versa.", "", 
 
             THEN("it should be a GPU container")
             {
-                REQUIRE(dcCPU.getDataHandlerType() == DataHandlerType::GPU);
+                REQUIRE_EQ(dcCPU.getDataHandlerType(), DataHandlerType::GPU);
             }
 
-            AND_THEN("they should be equal") { REQUIRE(dcCPU == dcGPU); }
+            AND_THEN("they should be equal")
+            {
+                REQUIRE_EQ(dcCPU, dcGPU);
+                REQUIRE_EQ(dcCPU.getSize(), dcGPU.getSize());
+
+                for (index_t i = 0; i < dcCPU.getSize(); ++i) {
+                    REQUIRE_UNARY(checkApproxEq(dcCPU[i], dcGPU[i]));
+                }
+            }
         }
 
         WHEN("copy-assigning a CPU to a GPU container")
@@ -651,10 +649,18 @@ TEMPLATE_TEST_CASE("Scenario: Testing loading data to GPU and vice versa.", "", 
 
             THEN("it should be a GPU container")
             {
-                REQUIRE(dcGPU.getDataHandlerType() == DataHandlerType::CPU);
+                REQUIRE_EQ(dcGPU.getDataHandlerType(), DataHandlerType::CPU);
             }
 
-            AND_THEN("they should be equal") { REQUIRE(dcCPU == dcGPU); }
+            AND_THEN("they should be equal")
+            {
+                REQUIRE_EQ(dcCPU, dcGPU);
+                REQUIRE_EQ(dcCPU.getSize(), dcGPU.getSize());
+
+                for (index_t i = 0; i < dcCPU.getSize(); ++i) {
+                    REQUIRE_UNARY(checkApproxEq(dcCPU[i], dcGPU[i]));
+                }
+            }
         }
     }
 }
@@ -684,18 +690,18 @@ SCENARIO("Testing iterators for DataContainer")
         {
             int i = 0;
             for (auto v = dc1.cbegin(); v != dc1.cend(); v++) {
-                REQUIRE(*v == randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(*v, randVec1[i++]));
             }
-            REQUIRE(i == size);
+            REQUIRE_EQ(i, size);
         }
 
         THEN("We can iterate backward")
         {
             int i = size;
             for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
-                REQUIRE(*v == randVec1[--i]);
+                REQUIRE_UNARY(checkApproxEq(*v, randVec1[--i]));
             }
-            REQUIRE(i == 0);
+            REQUIRE_EQ(i, 0);
         }
 
         THEN("We can iterate and mutate")
@@ -703,21 +709,21 @@ SCENARIO("Testing iterators for DataContainer")
             int i = 0;
             for (auto& v : dc1) {
                 v = v * 2;
-                REQUIRE(v == 2 * randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(v, 2 * randVec1[i++]));
             }
-            REQUIRE(i == size);
+            REQUIRE_EQ(i, size);
 
             i = 0;
             for (auto v : dc1) {
-                REQUIRE(v == 2 * randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(v, 2 * randVec1[i++]));
             }
-            REQUIRE(i == size);
+            REQUIRE_EQ(i, size);
         }
 
         THEN("We can use STL algorithms")
         {
-            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
-            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
+            REQUIRE_EQ(*std::min_element(dc1.cbegin(), dc1.cend()), randVec1.minCoeff());
+            REQUIRE_EQ(*std::max_element(dc1.cbegin(), dc1.cend()), randVec1.maxCoeff());
         }
     }
     GIVEN("A 2D container")
@@ -739,18 +745,18 @@ SCENARIO("Testing iterators for DataContainer")
         {
             int i = 0;
             for (auto v : dc1) {
-                REQUIRE(v == randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(v, randVec1[i++]));
             }
-            REQUIRE(i == size * size);
+            REQUIRE_EQ(i, size * size);
         }
 
         THEN("We can iterate backward")
         {
             int i = size * size;
             for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
-                REQUIRE(*v == randVec1[--i]);
+                REQUIRE_UNARY(checkApproxEq(*v, randVec1[--i]));
             }
-            REQUIRE(i == 0);
+            REQUIRE_EQ(i, 0);
         }
 
         THEN("We can iterate and mutate")
@@ -758,21 +764,21 @@ SCENARIO("Testing iterators for DataContainer")
             int i = 0;
             for (auto& v : dc1) {
                 v = v * 2;
-                REQUIRE(v == 2 * randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(v, 2 * randVec1[i++]));
             }
-            REQUIRE(i == size * size);
+            REQUIRE_EQ(i, size * size);
 
             i = 0;
             for (auto v : dc1) {
-                REQUIRE(v == 2 * randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(v, 2 * randVec1[i++]));
             }
-            REQUIRE(i == size * size);
+            REQUIRE_EQ(i, size * size);
         }
 
         THEN("We can use STL algorithms")
         {
-            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
-            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
+            REQUIRE_EQ(*std::min_element(dc1.cbegin(), dc1.cend()), randVec1.minCoeff());
+            REQUIRE_EQ(*std::max_element(dc1.cbegin(), dc1.cend()), randVec1.maxCoeff());
         }
     }
     GIVEN("A 3D container")
@@ -794,18 +800,18 @@ SCENARIO("Testing iterators for DataContainer")
         {
             int i = 0;
             for (auto v : dc1) {
-                REQUIRE(v == randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(v, randVec1[i++]));
             }
-            REQUIRE(i == size * size * size);
+            REQUIRE_EQ(i, size * size * size);
         }
 
         THEN("We can iterate backward")
         {
             int i = size * size * size;
             for (auto v = dc1.crbegin(); v != dc1.crend(); v++) {
-                REQUIRE(*v == randVec1[--i]);
+                REQUIRE_UNARY(checkApproxEq(*v, randVec1[--i]));
             }
-            REQUIRE(i == 0);
+            REQUIRE_EQ(i, 0);
         }
 
         THEN("We can iterate and mutate")
@@ -813,21 +819,39 @@ SCENARIO("Testing iterators for DataContainer")
             int i = 0;
             for (auto& v : dc1) {
                 v = v * 2;
-                REQUIRE(v == 2 * randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(v, 2 * randVec1[i++]));
             }
-            REQUIRE(i == size * size * size);
+            REQUIRE_EQ(i, size * size * size);
 
             i = 0;
             for (auto v : dc1) {
-                REQUIRE(v == 2 * randVec1[i++]);
+                REQUIRE_UNARY(checkApproxEq(v, 2 * randVec1[i++]));
             }
-            REQUIRE(i == size * size * size);
+            REQUIRE_EQ(i, size * size * size);
         }
 
         THEN("We can use STL algorithms")
         {
-            REQUIRE(*std::min_element(dc1.cbegin(), dc1.cend()) == randVec1.minCoeff());
-            REQUIRE(*std::max_element(dc1.cbegin(), dc1.cend()) == randVec1.maxCoeff());
+            REQUIRE_EQ(*std::min_element(dc1.cbegin(), dc1.cend()), randVec1.minCoeff());
+            REQUIRE_EQ(*std::max_element(dc1.cbegin(), dc1.cend()), randVec1.maxCoeff());
         }
     }
 }
+
+// "instantiate" the test templates for CPU types
+TEST_CASE_TEMPLATE_APPLY(datacontainer_construction, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datacontainer_reduction, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datacontainer_elemwise, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datacontainer_arithmetic, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datacontainer_maps, CPUTypeTuple);
+
+#ifdef ELSA_CUDA_VECTOR
+// "instantiate" the test templates for GPU types
+TEST_CASE_TEMPLATE_APPLY(datacontainer_construction, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datacontainer_reduction, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datacontainer_elemwise, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datacontainer_arithmetic, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datacontainer_maps, GPUTypeTuple);
+#endif
+
+TEST_SUITE_END();

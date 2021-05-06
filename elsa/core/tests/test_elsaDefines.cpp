@@ -6,29 +6,32 @@
  * @author David Frank - initial version
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <iostream>
 #include "elsaDefines.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing PI")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE("elsaDefines: Testing PI")
 {
 
-    THEN("Pi for real_t and pi_t are equal") { REQUIRE(pi<real_t> == pi_t); }
+    THEN("Pi for real_t and pi_t are equal") { REQUIRE_EQ(pi<real_t>, pi_t); }
 
     THEN("pi_t is somewhat close to a representation for pi")
     {
-        REQUIRE(pi_t == Approx(3.14159265358979323846).epsilon(1e-5));
+        REQUIRE_EQ(pi_t, Approx(3.14159265358979323846).epsilon(1e-5));
     }
 
     THEN("Pi for double is close to given value for pi")
     {
-        REQUIRE(pi<double> == 3.14159265358979323846);
+        REQUIRE_EQ(pi<double>, 3.14159265358979323846);
     }
 }
 
-SCENARIO("Testing compile-time predicates")
+TEST_CASE("elsaDefines: Testing compile-time predicates")
 {
     static_assert(std::is_same_v<float, GetFloatingPointType_t<std::complex<float>>>);
     static_assert(std::is_same_v<double, GetFloatingPointType_t<std::complex<double>>>);
@@ -36,10 +39,10 @@ SCENARIO("Testing compile-time predicates")
     static_assert(std::is_same_v<float, GetFloatingPointType_t<float>>);
     static_assert(!std::is_same_v<float, GetFloatingPointType_t<double>>);
 
-    REQUIRE(true);
+    REQUIRE_UNARY(true);
 }
 
-SCENARIO("Printing default handler type")
+TEST_CASE("elsaDefines: Printing default handler type")
 {
 #ifdef ELSA_CUDA_VECTOR
     REQUIRE(defaultHandlerType == DataHandlerType::GPU);
@@ -47,3 +50,5 @@ SCENARIO("Printing default handler type")
     REQUIRE(defaultHandlerType == DataHandlerType::CPU);
 #endif
 }
+
+TEST_SUITE_END();

@@ -23,11 +23,11 @@ namespace elsa::ml
 {
     /// A ml model that can be used for training and inference.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
-    /// \tparam data_t The type of all coefficients used in the model. This
+    /// @tparam data_t The type of all coefficients used in the model. This
     /// parameter is optional and defaults to real_t.
-    /// \tparam Backend The MlBackend that will be used for inference and
+    /// @tparam Backend The MlBackend that will be used for inference and
     /// training. This parameter is optional and defaults to MlBackend::Auto.
     template <typename data_t = real_t, MlBackend Backend = MlBackend::Auto>
     class Model
@@ -37,17 +37,17 @@ namespace elsa::ml
         Model() = default;
 
         /// Construct a model by specifying a set of in- and outputs.
-        /// \param inputs a list if input layers
-        /// \param outputs a list of layers that serve as this model's outputs
-        /// \param name a name for this model
+        /// @param inputs a list if input layers
+        /// @param outputs a list of layers that serve as this model's outputs
+        /// @param name a name for this model
         Model(std::initializer_list<Input<data_t>*> inputs,
               std::initializer_list<Layer<data_t>*> outputs, const std::string& name = "model");
 
         /// Construct a model by specifying a single input and a single output
         ///
-        /// \param input an input layer
-        /// \param output a layer that serves as this model's output
-        /// \param name a name for this model
+        /// @param input an input layer
+        /// @param output a layer that serves as this model's output
+        /// @param name a name for this model
         Model(Input<data_t>* input, Layer<data_t>* output, const std::string& name = "model");
 
         /// Compile the model by specifying a loss function and an optimizer.
@@ -86,11 +86,11 @@ namespace elsa::ml
 
         /// Train the model by providing inputs x and labels y.
         ///
-        /// \param x model input
-        /// \param y labels
-        /// \param epochs training epochs
+        /// @param x model input
+        /// @param y labels
+        /// @param epochs training epochs
         ///
-        /// \returns a Model::History object
+        /// @returns a Model::History object
         History fit(const std::vector<DataContainer<data_t>>& x,
                     const std::vector<DataContainer<data_t>>& y, index_t epochs);
 

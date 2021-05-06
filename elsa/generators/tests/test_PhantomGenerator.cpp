@@ -6,10 +6,12 @@
  * @author Tobias Lasser - nothing to see here...
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "PhantomGenerator.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
 RealVector_t get2dModifiedSheppLogan45x45();
 

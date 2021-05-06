@@ -1,12 +1,18 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <random>
 
 #include "VolumeDescriptor.h"
 #include "CudnnMemory.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEST_CASE("CudnnMemory", "[ml][cudnn]")
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_SUITE_BEGIN("ml-cudnn");
+
+TEST_CASE("CudnnMemory")
 {
     IndexVector_t dims{{1, 3, 4}};
     VolumeDescriptor desc(dims);
@@ -49,3 +55,5 @@ TEST_CASE("CudnnMemory", "[ml][cudnn]")
         }
     }
 }
+
+TEST_SUITE_END();

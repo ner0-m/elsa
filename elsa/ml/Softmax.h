@@ -9,7 +9,7 @@ namespace elsa::ml
 {
     /// A Softmax layer.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     template <typename data_t = real_t>
     class Softmax : public Layer<data_t>
     {

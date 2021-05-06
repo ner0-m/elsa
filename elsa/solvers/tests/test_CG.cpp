@@ -5,7 +5,8 @@
  *
  * @author Nikola Dinev
  */
-#include <catch2/catch.hpp>
+
+#include "doctest/doctest.h"
 
 #include "CG.h"
 #include "Scaling.h"
@@ -14,17 +15,21 @@
 #include "SiddonsMethod.h"
 #include "CircleTrajectoryGenerator.h"
 #include "PhantomGenerator.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
+
+TEST_SUITE_BEGIN("solvers");
 
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, CG<double>)
+TEST_CASE_TEMPLATE("CG: Solving a simple linear problem", TestType, CG<float>, CG<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a linear problem")
     {
@@ -88,19 +93,21 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(Approx((resultsDifference).squaredL2Norm()).margin(0.00001)
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    // REQUIRE(Approx((resultsDifference).squaredL2Norm()).margin(0.00001)
+                    //         <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE(checkApproxEq((resultsDifference).squaredL2Norm(),
+                                          epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<double>)
+TEST_CASE_TEMPLATE("CG: Solving a Tikhonov problem", TestType, CG<float>, CG<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a Tikhonov problem")
     {
@@ -177,10 +184,10 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
     }
 }
 
-TEST_CASE("Scenario: Solving a simple phantom reconstruction", "")
+TEST_CASE("CG: Solving a simple phantom reconstruction")
 {
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::INFO);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a Phantom reconstruction problem")
     {
@@ -222,10 +229,14 @@ TEST_CASE("Scenario: Solving a simple phantom reconstruction", "")
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
-                            <= epsilon * epsilon * phantom.squaredL2Norm());
+                    // REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
+                    //         <= epsilon * epsilon * phantom.squaredL2Norm());
+                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                          epsilon * epsilon * phantom.squaredL2Norm()));
                 }
             }
         }
     }
 }
+
+TEST_SUITE_END();

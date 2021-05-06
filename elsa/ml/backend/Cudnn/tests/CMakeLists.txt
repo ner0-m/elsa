@@ -1,12 +1,19 @@
-cmake_minimum_required(VERSION 3.10)
-
-# enable ctest and Catch test discovery
+# enable ctest and doctest test discovery
 include(CTest)
-include(Catch)
+include(doctest)
+ 
+add_custom_target(run-tests-ml_cudnn
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS build-tests-ml_cudnn
+    USES_TERMINAL
+    COMMENT "Build and run the tests from module 'ml_cudnn_backend'.")
 
-ELSA_TEST(CudnnActivation)
-ELSA_TEST(CudnnMemory)
-ELSA_TEST(CudnnMerging)
-ELSA_TEST(CudnnNoop)
-ELSA_TEST(CudnnDeconvolution)
-ELSA_TEST(CudnnReshape)
+add_custom_target(build-tests-ml_cudnn) 
+
+ELSA_DOCTEST(CudnnActivation)
+ELSA_DOCTEST(CudnnMemory)
+ELSA_DOCTEST(CudnnMerging)
+ELSA_DOCTEST(CudnnNoop)
+ELSA_DOCTEST(CudnnDeconvolution)
+ELSA_DOCTEST(CudnnReshape)

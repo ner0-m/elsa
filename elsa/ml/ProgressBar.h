@@ -23,10 +23,10 @@
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /**
- * \file progressbar.hpp
- * \brief Implements a progessbar
- * \author Prakhar Srivastav <prakhar@prakhar.me>
- * \author David Tellenbach <david.tellenbach@in.tum.de>
+ * @file progressbar.hpp
+ * @brief Implements a progessbar
+ * @author Prakhar Srivastav <prakhar@prakhar.me>
+ * @author David Tellenbach <david.tellenbach@in.tum.de>
  */
 #pragma once
 
@@ -42,7 +42,7 @@ namespace elsa::ml
         /**
          * \ingroup Internal
          * \class ProgressBar
-         * \brief A progress bar
+         * @brief A progress bar
          *
          * Usage example:
          *
@@ -68,14 +68,14 @@ namespace elsa::ml
         {
         public:
             /**
-             * \brief Constructor
-             * \param total The total number of ticks in the progress bar
-             * \param width The width of the progress bar in chars
-             * \param complete The char that will be displayed to indicate already
+             * @brief Constructor
+             * @param total The total number of ticks in the progress bar
+             * @param width The width of the progress bar in chars
+             * @param complete The char that will be displayed to indicate already
              * completed parts of the progress bar. This is optional and defaults to '='
-             * \param incomplete The char that will be displayed to indicate yet
+             * @param incomplete The char that will be displayed to indicate yet
              * uncompleted parts of the progress bar. This is optional and defaults to ' '
-             * \param head The char that will be displayed the head of the progress bar.
+             * @param head The char that will be displayed the head of the progress bar.
              * This is optional and defaults to '>'
              */
             ProgressBar(uint32_t total, uint32_t width, char complete = '=', char incomplete = ' ',
@@ -89,15 +89,15 @@ namespace elsa::ml
             }
 
             /**
-             * \brief Increment the progress bar
-             * \return The value of \p ticks after incrementing it
+             * @brief Increment the progress bar
+             * @return The value of \p ticks after incrementing it
              */
             uint32_t operator++() { return ++ticks; }
 
             /**
-             * \brief Display the progress bar
-             * \param preMessage A message to display right before the progressbar
-             * \param postMessage A message to display right after the progressbar
+             * @brief Display the progress bar
+             * @param preMessage A message to display right before the progressbar
+             * @param postMessage A message to display right after the progressbar
              */
             void display(const std::string& preMessage = std::string(""),
                          const std::string& postMessage = std::string("")) const
@@ -127,9 +127,9 @@ namespace elsa::ml
             }
 
             /**
-             * \brief Indicate that the progressbar has finished
-             * \param preMessage A message to display right before the progressbar
-             * \param postMessage A message to display right after the progressbar
+             * @brief Indicate that the progressbar has finished
+             * @param preMessage A message to display right before the progressbar
+             * @param postMessage A message to display right after the progressbar
              */
             void done(const std::string& preMessage = std::string(""),
                       const std::string& postMessage = std::string(""))

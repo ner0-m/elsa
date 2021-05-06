@@ -6,13 +6,16 @@
  * @author Tobias Lasser - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "MHDHandler.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Reading and write data with MHDHandler")
+TEST_SUITE_BEGIN("io");
+
+TEST_CASE("MHDHandler: Reading and writing data")
 {
     GIVEN("a DataContainer")
     {
@@ -39,3 +42,5 @@ SCENARIO("Reading and write data with MHDHandler")
         }
     }
 }
+
+TEST_SUITE_END();

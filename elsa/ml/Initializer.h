@@ -30,10 +30,10 @@ namespace elsa
 
                 /// Initialize a chunk of raw memory with samples for a given
                 /// distribution.
-                /// \param data Pointer to memory to be initialized
-                /// \param size Size of the memory block to be initialized
-                /// \param initializer Specifies how the memory block will be initialized
-                /// \param fanInOut Tuple containing the fan-in and fan-out of a layer.
+                /// @param data Pointer to memory to be initialized
+                /// @param size Size of the memory block to be initialized
+                /// @param initializer Specifies how the memory block will be initialized
+                /// @param fanInOut Tuple containing the fan-in and fan-out of a layer.
                 /// This information is used for some initialization types.
                 static void initialize(
                     data_t* data, index_t size, Initializer initializer,
@@ -41,9 +41,9 @@ namespace elsa
 
                 /// Initialize a chunk of raw memory with samples for a given
                 /// distribution.
-                /// \param data Pointer to memory to be initialized
-                /// \param size Size of the memory block to be initialized
-                /// \param initializer Specifies how the memory block will be initialized
+                /// @param data Pointer to memory to be initialized
+                /// @param size Size of the memory block to be initialized
+                /// @param initializer Specifies how the memory block will be initialized
                 static void initialize(data_t* data, index_t size, Initializer initializer);
 
             private:

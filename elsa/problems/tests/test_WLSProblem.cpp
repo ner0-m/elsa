@@ -10,7 +10,8 @@
  * @author Nikola Dinev - added tests for conversion constructor
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
+
 #include "WLSProblem.h"
 #include "Identity.h"
 #include "Scaling.h"
@@ -21,10 +22,14 @@
 #include "BlockLinearOperator.h"
 #include "RandomBlocksDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
 {
     GIVEN("the operator and data")
     {
@@ -371,9 +376,10 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
         for (std::size_t i = 0; i < descriptions.size(); i++) {
             for (std::size_t j = 0; j < descriptions.size(); j++) {
-                WHEN(std::string("The data term ") + descriptions[i] + ". The regularization term "
-                     + descriptions[j])
+                WHEN("Trying different settings")
                 {
+                    INFO("The data term ", descriptions[i]);
+                    INFO("The regularization term ", descriptions[j]);
                     Eigen::Matrix<TestType, Eigen::Dynamic, 1> xVec =
                         Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343);
                     DataContainer<TestType> x{desc, xVec};
@@ -387,8 +393,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
 
                         auto gradDiff = prob.getGradient();
                         gradDiff -= converted.getGradient();
-                        REQUIRE(gradDiff.squaredL2Norm()
-                                == Approx(0).margin(std::numeric_limits<TestType>::epsilon()));
+                        REQUIRE_UNARY(checkApproxEq(gradDiff.squaredL2Norm(), 0));
                     }
                 }
             }
@@ -434,3 +439,5 @@ TEMPLATE_TEST_CASE("Scenario: Testing WLSProblem", "", float, double)
         }
     }
 }
+
+TEST_SUITE_END();

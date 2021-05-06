@@ -6,10 +6,11 @@
  * @author David Frank - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "BoundingBox.h"
 
 using namespace elsa;
+using namespace doctest;
 
 SCENARIO("Testing 2d AABB")
 {

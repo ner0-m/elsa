@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <random>
 
 #include "VolumeDescriptor.h"
@@ -8,8 +8,14 @@
 
 using namespace elsa;
 using namespace elsa::ml::detail;
+using namespace doctest;
 
-TEST_CASE("CudnnNoop", "[ml][cudnn]")
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_SUITE_BEGIN("ml-cudnn");
+
+TEST_CASE("CudnnNoop")
 {
     index_t N = 11;
     index_t C = 22;
@@ -48,3 +54,5 @@ TEST_CASE("CudnnNoop", "[ml][cudnn]")
     for (int i = 0; i < output.getSize(); ++i)
         REQUIRE(inGrad[i] == input[i]);
 }
+
+TEST_SUITE_END();

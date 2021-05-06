@@ -8,12 +8,10 @@
  * @author Jens Petit - refactoring to general DataHandler test
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "testHelpers.h"
-
-#include <iostream>
 
 #ifdef ELSA_CUDA_VECTOR
 #include "DataHandlerGPU.h"
@@ -35,15 +33,33 @@ long elsa::useCount(const DataHandlerGPU<data_t>& dh)
 #endif
 
 using namespace elsa;
+using namespace doctest;
+
+using CPUTypeTuple =
+    std::tuple<DataHandlerCPU<float>, DataHandlerCPU<double>, DataHandlerCPU<std::complex<float>>,
+               DataHandlerCPU<std::complex<double>>, DataHandlerCPU<index_t>>;
+
+TYPE_TO_STRING(DataHandlerCPU<float>);
+TYPE_TO_STRING(DataHandlerCPU<double>);
+TYPE_TO_STRING(DataHandlerCPU<index_t>);
+TYPE_TO_STRING(DataHandlerCPU<std::complex<float>>);
+TYPE_TO_STRING(DataHandlerCPU<std::complex<double>>);
 
 #ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
+using GPUTypeTuple =
+    std::tuple<DataHandlerGPU<float>, DataHandlerGPU<double>, DataHandlerGPU<std::complex<float>>,
+               DataHandlerGPU<std::complex<double>>, DataHandlerGPU<index_t>>;
+
+TYPE_TO_STRING(DataHandlerGPU<float>);
+TYPE_TO_STRING(DataHandlerGPU<double>);
+TYPE_TO_STRING(DataHandlerGPU<index_t>);
+TYPE_TO_STRING(DataHandlerGPU<std::complex<float>>);
+TYPE_TO_STRING(DataHandlerGPU<std::complex<double>>);
 #endif
+
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Testing Construction", TestType, datahandler_construction)
 {
     using data_t = typename TestType::value_type;
 
@@ -55,7 +71,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
         {
             const TestType dh{size};
 
-            THEN("it has the correct size") { REQUIRE(size == dh.getSize()); }
+            THEN("it has the correct size") { REQUIRE_EQ(size, dh.getSize()); }
         }
 
         WHEN("constructing with a given vector")
@@ -64,7 +80,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
             const TestType dh{randVec};
 
             for (index_t i = 0; i < size; ++i)
-                REQUIRE(dh[i] == randVec(i));
+                REQUIRE_UNARY(checkApproxEq(dh[i], randVec(i)));
         }
 
         WHEN("copy constructing")
@@ -77,16 +93,16 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
 
             THEN("a shallow copy is created")
             {
-                REQUIRE(dh2 == dh);
-                REQUIRE(useCount(dh) == 2);
+                REQUIRE_EQ(dh2, dh);
+                REQUIRE_EQ(useCount(dh), 2);
 
                 const auto dh2View = dh2.getBlock(0, size);
                 AND_THEN("associated maps are not transferred")
                 {
                     dh2[0] = data_t(1);
-                    REQUIRE(dh2[0] == data_t(1));
-                    REQUIRE((*dhView)[0] == randVec[0]);
-                    REQUIRE((*dh2View)[0] == data_t(1));
+                    REQUIRE_UNARY(checkApproxEq(dh2[0], 1));
+                    REQUIRE_UNARY(checkApproxEq((*dhView)[0], randVec[0]));
+                    REQUIRE_UNARY(checkApproxEq((*dh2View)[0], 1));
                 }
             }
         }
@@ -102,23 +118,15 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandler", "", (DataHandle
 
             THEN("data and associated maps are moved to the new handler")
             {
-                REQUIRE(useCount(dh2) == 1);
-                REQUIRE(dh2 == testDh);
-                REQUIRE(&(*dhView)[0] == &dh2[0]);
+                REQUIRE_EQ(useCount(dh2), 1);
+                REQUIRE_EQ(dh2, testDh);
+                REQUIRE_EQ(&(*dhView)[0], &dh2[0]);
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler", "",
-                           (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Testing equality operator", TestType, datahandler_equality)
 {
     using data_t = typename TestType::value_type;
 
@@ -133,8 +141,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler",
             const TestType dh2{size + 1};
             THEN("the result is false")
             {
-                REQUIRE_FALSE(dh == dh2);
-                REQUIRE_FALSE(dh == *dh2.getBlock(0, size + 1));
+                REQUIRE_NE(dh, dh2);
+                REQUIRE_NE(dh, *dh2.getBlock(0, size + 1));
             }
         }
 
@@ -143,8 +151,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler",
             const auto dh2 = dh;
             THEN("the result is true")
             {
-                REQUIRE(dh == dh2);
-                REQUIRE(dh == *dh.getBlock(0, size));
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(dh, *dh.getBlock(0, size));
             }
         }
 
@@ -153,8 +161,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler",
             const TestType dh2{randVec};
             THEN("the result is true")
             {
-                REQUIRE(dh == dh2);
-                REQUIRE(dh == *dh2.getBlock(0, size));
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(dh, *dh2.getBlock(0, size));
             }
         }
 
@@ -164,21 +172,15 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandler",
             const TestType dh2{randVec};
             THEN("the result is false")
             {
-                REQUIRE_FALSE(dh == dh2);
-                REQUIRE_FALSE(dh == *dh2.getBlock(0, size));
+                REQUIRE_NE(dh, dh2);
+                REQUIRE_NE(dh, *dh2.getBlock(0, size));
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Assigning to DataHandlerCPU", TestType,
+                          datahandler_assigncpu)
 {
     using data_t = typename TestType::value_type;
 
@@ -204,9 +206,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
             dh = dh2;
             THEN("a shallow copy is performed and associated Maps are updated")
             {
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == dh2);
-                REQUIRE(*dhMap == *dh2Map);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(*dhMap, *dh2Map);
             }
         }
 
@@ -226,12 +228,12 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
             dh = std::move(dh2);
             THEN("data is moved, associated maps are merged")
             {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(dh == testDh);
-                REQUIRE(&(*dhMap)[0] == &dh[size / 2]);
-                REQUIRE(dhMap->getSize() == size / 3);
-                REQUIRE(&(*dh2View)[0] == &dh[0]);
-                REQUIRE(dh2View->getSize() == size);
+                REQUIRE_EQ(useCount(dh), 1);
+                REQUIRE_EQ(dh, testDh);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[size / 2]);
+                REQUIRE_EQ(dhMap->getSize(), size / 3);
+                REQUIRE_EQ(&(*dh2View)[0], &dh[0]);
+                REQUIRE_EQ(dh2View->getSize(), size);
             }
         }
 
@@ -253,13 +255,13 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
             *dhPtr = *dh2Ptr;
             THEN("a shallow copy is performed and associated Maps are updated")
             {
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == *dh2Ptr);
-                REQUIRE(*dhMap == *dh2Map);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, *dh2Ptr);
+                REQUIRE_EQ(*dhMap, *dh2Map);
                 dh[0] = 1;
-                REQUIRE(&dh[0] != &(*dh2Ptr)[0]);
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[size / 2]);
+                REQUIRE_NE(&dh[0], &(*dh2Ptr)[0]);
+                REQUIRE_EQ(*dhMap, *dh2Map);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[size / 2]);
             }
         }
 
@@ -281,11 +283,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
             *dhPtr = *dh2Map;
             THEN("a deep copy is performed")
             {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
-                REQUIRE(dh == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[size / 2]);
-                REQUIRE(dhMap->getSize() == size / 3);
+                REQUIRE_EQ(useCount(dh), 1);
+                REQUIRE_EQ(useCount(dhCopy), 1);
+                REQUIRE_EQ(dh, *dh2Map);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[size / 2]);
+                REQUIRE_EQ(dhMap->getSize(), size / 3);
             }
         }
 
@@ -309,13 +311,13 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
             *dhPtr = *dh2View;
             THEN("a shallow copy is performed and associated maps are updated")
             {
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == *dh2View);
-                REQUIRE(*dhMap == *dh2Map);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, *dh2View);
+                REQUIRE_EQ(*dhMap, *dh2Map);
                 dh[0] = 1;
-                REQUIRE(&dh[0] != &(*dh2View)[0]);
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[size / 2]);
+                REQUIRE_NE(&dh[0], &(*dh2View)[0]);
+                REQUIRE_EQ(*dhMap, *dh2Map);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[size / 2]);
             }
         }
 
@@ -339,12 +341,12 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
             *dhPtr = std::move(*dh2Ptr);
             THEN("data is moved and associated Maps are updated")
             {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(dh == testDh);
-                REQUIRE(&(*dhMap)[0] == &dh[size / 2]);
-                REQUIRE(dhMap->getSize() == size / 3);
-                REQUIRE(&(*dh2View)[0] == &dh[0]);
-                REQUIRE(dh2View->getSize() == size);
+                REQUIRE_EQ(useCount(dh), 1);
+                REQUIRE_EQ(dh, testDh);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[size / 2]);
+                REQUIRE_EQ(dhMap->getSize(), size / 3);
+                REQUIRE_EQ(&(*dh2View)[0], &dh[0]);
+                REQUIRE_EQ(dh2View->getSize(), size);
             }
         }
 
@@ -365,11 +367,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
             *dhPtr = std::move(*dh2Map);
             THEN("a deep copy is performed")
             {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
-                REQUIRE(dh == *dh2.getBlock(0, size));
-                REQUIRE(&(*dhMap)[0] == &dh[size / 2]);
-                REQUIRE(dhMap->getSize() == size / 3);
+                REQUIRE_EQ(useCount(dh), 1);
+                REQUIRE_EQ(useCount(dhCopy), 1);
+                REQUIRE_EQ(dh, *dh2.getBlock(0, size));
+                REQUIRE_EQ(&(*dhMap)[0], &dh[size / 2]);
+                REQUIRE_EQ(dhMap->getSize(), size / 3);
             }
         }
 
@@ -392,23 +394,23 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerCPU", "", (DataHan
             *dhPtr = std::move(*dh2View);
             THEN("a shallow copy is performed and associated maps are updated")
             {
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == *dh2View);
-                REQUIRE(*dhMap == *dh2Map);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, *dh2View);
+                REQUIRE_EQ(*dhMap, *dh2Map);
                 dh[0] = 1;
-                REQUIRE(&dh[0] != &dh2[0]);
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[size / 2]);
+                REQUIRE_NE(&dh[0], &dh2[0]);
+                REQUIRE_EQ(*dhMap, *dh2Map);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[size / 2]);
             }
         }
     }
 }
 
 #ifdef ELSA_CUDA_VECTOR
-TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>,
+TEST_CASE_TEMPLATE("DataHandlers: Testing clone()", TestType, DataHandlerCPU<float>,
                    DataHandlerGPU<float>)
 #else
-TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>)
+TEST_CASE_TEMPLATE("DataHandlers: Testing clone()", TestType, DataHandlerCPU<float>)
 #endif
 {
     GIVEN("some DataHandler")
@@ -423,29 +425,22 @@ TEMPLATE_TEST_CASE("Scenario: Cloning DataHandler", "", DataHandlerCPU<float>)
 
             THEN("a shallow copy is produced")
             {
-                REQUIRE(dhClone.get() != &dh);
+                REQUIRE_NE(dhClone.get(), &dh);
 
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(*dhClone == dh);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(*dhClone, dh);
 
-                REQUIRE(dhClone->getSize() == dh.getSize());
+                REQUIRE_EQ(dhClone->getSize(), dh.getSize());
 
                 dh[0] = 2.f;
-                REQUIRE(dh != *dhClone);
+                REQUIRE_NE(dh, *dhClone);
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHandler", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHandler", "",
-                           (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Testing the reduction operations", TestType,
+                          datahandler_reduction)
 {
     using data_t = typename TestType::value_type;
 
@@ -460,24 +455,23 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
 
             THEN("the reductions work as expected")
             {
-                REQUIRE(checkSameNumbers(dh.sum(), randVec.sum()));
-                REQUIRE(dh.l0PseudoNorm()
-                        == (randVec.array().cwiseAbs()
-                            >= std::numeric_limits<GetFloatingPointType_t<data_t>>::epsilon())
-                               .count());
-                REQUIRE(dh.l1Norm() == Approx(randVec.array().abs().sum()));
-                REQUIRE(dh.lInfNorm() == Approx(randVec.array().abs().maxCoeff()));
-                REQUIRE(dh.squaredL2Norm() == Approx(randVec.squaredNorm()));
-                REQUIRE(dh.l2Norm() == Approx(randVec.norm()));
+                auto eps = std::numeric_limits<GetFloatingPointType_t<data_t>>::epsilon();
+                REQUIRE_UNARY(checkApproxEq(dh.sum(), randVec.sum()));
+                REQUIRE_UNARY(
+                    checkApproxEq(dh.l0PseudoNorm(), (randVec.array().cwiseAbs() >= eps).count()));
+                REQUIRE_UNARY(checkApproxEq(dh.l1Norm(), randVec.array().abs().sum()));
+                REQUIRE_UNARY(checkApproxEq(dh.lInfNorm(), randVec.array().abs().maxCoeff()));
+                REQUIRE_UNARY(checkApproxEq(dh.squaredL2Norm(), randVec.squaredNorm()));
+                REQUIRE_UNARY(checkApproxEq(dh.l2Norm(), randVec.norm()));
 
                 auto randVec2 = generateRandomMatrix<data_t>(size);
                 TestType dh2(randVec2);
 
-                REQUIRE(checkSameNumbers(dh.dot(dh2), randVec.dot(randVec2)));
+                REQUIRE_UNARY(checkApproxEq(dh.dot(dh2), randVec.dot(randVec2)));
 
                 auto dhMap = dh2.getBlock(0, dh2.getSize());
 
-                REQUIRE(checkSameNumbers(dh.dot(*dhMap), randVec.dot(randVec2)));
+                REQUIRE_UNARY(checkApproxEq(dh.dot(*dhMap), randVec.dot(randVec2)));
             }
 
             THEN("the dot product expects correctly sized arguments")
@@ -493,15 +487,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operatios of DataHan
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataHandler", "",
-                           (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Testing the element-wise operations", TestType,
+                          datahandler_elementwise)
 {
     using data_t = typename TestType::value_type;
 
@@ -531,46 +518,46 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
                 dh += dh2;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] + dh2[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] + dh2[i]));
 
                 dh = oldDh;
                 dh += *dhMap;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] + dh2[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] + dh2[i]));
 
                 dh = oldDh;
                 dh -= dh2;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] - dh2[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] - dh2[i]));
 
                 dh = oldDh;
                 dh -= *dhMap;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] - dh2[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] - dh2[i]));
 
                 dh = oldDh;
                 dh *= dh2;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] * dh2[i]));
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] * dh2[i]));
 
                 dh = oldDh;
                 dh *= *dhMap;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] * dh2[i]));
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] * dh2[i]));
 
                 dh = oldDh;
                 dh /= dh2;
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
                         // due to floating point arithmetic less precision
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
+                        REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] / dh2[i]));
 
                 dh = oldDh;
                 dh /= *dhMap;
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
                         // due to floating point arithmetic less precision
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
+                        REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] / dh2[i]));
             }
 
             THEN("the element-wise binary scalar operations work as expected")
@@ -580,22 +567,22 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
                 dh += scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] + scalar);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] + scalar));
 
                 dh = oldDh;
                 dh -= scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] - scalar);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] - scalar));
 
                 dh = oldDh;
                 dh *= scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] * scalar);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] * scalar));
 
                 dh = oldDh;
                 dh /= scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] / scalar));
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] / scalar));
             }
 
             THEN("the element-wise assignment of a scalar works as expected")
@@ -604,20 +591,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
                 dh = scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == scalar);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], scalar));
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandler", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandler", "", (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Testing referencing blocks", TestType,
+                          datahandler_blockreferencing)
 {
     using data_t = typename TestType::value_type;
 
@@ -636,10 +617,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandler", "", (D
 
             THEN("returned data handler references the correct elements")
             {
-                REQUIRE(dhBlock->getSize() == size / 2);
+                REQUIRE_EQ(dhBlock->getSize(), size / 2);
 
                 for (index_t i = 0; i < size / 2; i++)
-                    REQUIRE(&(*dhBlock)[i] == &dh[i + size / 3]);
+                    REQUIRE_UNARY(checkApproxEq(&(*dhBlock)[i], &dh[i + size / 3]));
             }
         }
 
@@ -650,20 +631,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandler", "", (D
             THEN("the referenced volume and the actual volume are equal")
             {
 
-                REQUIRE(dh == *dhBlock);
+                REQUIRE_EQ(dh, *dhBlock);
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "", (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Testing the copy-on-write mechanism", TestType,
+                          datahandler_copyonwrite)
 {
     using data_t = typename TestType::value_type;
 
@@ -680,73 +655,73 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "", 
 
             THEN("the data is the same")
             {
-                REQUIRE(dh == dh2);
-                REQUIRE(useCount(dh) == 2);
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(useCount(dh), 2);
             }
         }
 
         WHEN("non-const manipulating a copy constructed shallow copy")
         {
             TestType dh2 = dh;
-            REQUIRE(useCount(dh) == 2);
-            REQUIRE(useCount(dh2) == 2);
+            REQUIRE_EQ(useCount(dh), 2);
+            REQUIRE_EQ(useCount(dh2), 2);
 
             THEN("copy-on-write is invoked")
             {
                 dh2 += 2;
-                REQUIRE(dh2 != dh);
-                REQUIRE(useCount(dh2) == 1);
-                REQUIRE(useCount(dh) == 1);
+                REQUIRE_NE(dh2, dh);
+                REQUIRE_EQ(useCount(dh2), 1);
+                REQUIRE_EQ(useCount(dh), 1);
             }
 
             THEN("copy-on-write is invoked")
             {
                 dh2 += dh;
-                REQUIRE(dh2 != dh);
-                REQUIRE(useCount(dh2) == 1);
-                REQUIRE(useCount(dh) == 1);
+                REQUIRE_NE(dh2, dh);
+                REQUIRE_EQ(useCount(dh2), 1);
+                REQUIRE_EQ(useCount(dh), 1);
             }
 
             THEN("copy-on-write is invoked")
             {
                 dh2 -= 2;
-                REQUIRE(dh2 != dh);
+                REQUIRE_NE(dh2, dh);
             }
 
             THEN("copy-on-write is invoked")
             {
                 dh2 -= dh;
-                REQUIRE(dh2 != dh);
+                REQUIRE_NE(dh2, dh);
             }
 
             THEN("copy-on-write is invoked")
             {
                 dh2 /= 2;
-                REQUIRE(dh2 != dh);
+                REQUIRE_NE(dh2, dh);
             }
 
             THEN("copy-on-write is invoked")
             {
                 dh2 /= dh;
-                REQUIRE(dh2 != dh);
+                REQUIRE_NE(dh2, dh);
             }
 
             THEN("copy-on-write is invoked")
             {
                 dh2 *= 2;
-                REQUIRE(dh2 != dh);
+                REQUIRE_NE(dh2, dh);
             }
 
             THEN("copy-on-write is invoked")
             {
                 dh2 *= dh;
-                REQUIRE(dh2 != dh);
+                REQUIRE_NE(dh2, dh);
             }
 
             THEN("copy-on-write is invoked")
             {
                 dh[0] += 2;
-                REQUIRE(dh2 != dh);
+                REQUIRE_NE(dh2, dh);
             }
         }
 
@@ -756,7 +731,29 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the copy-on-write mechanism", "", 
                 dh[i] += 2;
             }
 
-            THEN("copy-on-write should not be invoked") { REQUIRE(useCount(dh) == 1); }
+            THEN("copy-on-write should not be invoked") { REQUIRE_EQ(useCount(dh), 1); }
         }
     }
 }
+
+// "instantiate" the test templates for cpu types
+TEST_CASE_TEMPLATE_APPLY(datahandler_construction, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_equality, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_assigncpu, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_reduction, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_elementwise, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_blockreferencing, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_copyonwrite, CPUTypeTuple);
+
+#ifdef ELSA_CUDA_VECTOR
+// "instantiate" the test templates for GPU types
+TEST_CASE_TEMPLATE_APPLY(datahandler_construction, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_equality, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_assigncpu, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_reduction, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_elementwise, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_blockreferencing, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandler_copyonwrite, CPUTypeTuple);
+#endif
+
+TEST_SUITE_END();

@@ -47,9 +47,9 @@ namespace elsa::ml
 
             /// Get this layer's input-descriptor at a given index.
             ///
-            /// \param index the index of the input-descriptor in this layer's
+            /// @param index the index of the input-descriptor in this layer's
             /// list of input-descriptors
-            /// \return this layer's output-descriptor at a given index
+            /// @return this layer's output-descriptor at a given index
             VolumeDescriptor getInputDescriptor(index_t index = 0) const
             {
                 validateVectorIndex(_inputDescriptor, index);
@@ -66,10 +66,10 @@ namespace elsa::ml
 
             /// Set this layer's input at a given index.
             ///
-            /// \param input DataContainer containing the input data
-            /// \param index Index of the input to set in the list of layer
+            /// @param input DataContainer containing the input data
+            /// @param index Index of the input to set in the list of layer
             /// inputs.
-            /// \warning This performs a copy from the DataContainer to Dnnl memory
+            /// @warning This performs a copy from the DataContainer to Dnnl memory
             /// and is therefore potentially expensive.
             void setInput(const DataContainer<data_t>& input, index_t index = 0);
 
@@ -81,8 +81,8 @@ namespace elsa::ml
 
             /// Set this layer's output-gradient at a given index.
             ///
-            /// \param gradient DataContainer containing the gradient data.
-            /// \param index Index of the gradient to set in the list of layer
+            /// @param gradient DataContainer containing the gradient data.
+            /// @param index Index of the gradient to set in the list of layer
             /// gradients.
             void setOutputGradient(const DataContainer<data_t>& gradient, index_t index = 0);
 
@@ -101,7 +101,7 @@ namespace elsa::ml
             /// to match this memory-format, regardless of the memory-format
             /// that is used internally.
             ///
-            /// \warning This function performs a copy and is therefore potentially
+            /// @warning This function performs a copy and is therefore potentially
             /// expensive. It should not be used internally to connect network
             /// layers.
             DataContainer<data_t> getOutput() const;
@@ -121,7 +121,7 @@ namespace elsa::ml
             /// Get this layer's input gradient memory
             std::shared_ptr<dnnl::memory> getInputGradientMemory(index_t index = 0);
 
-            /// \returns the number of inputs of this layer
+            /// @returns the number of inputs of this layer
             index_t getNumberOfInputs() const
             {
                 return static_cast<index_t>(_inputDescriptor.size());
@@ -133,13 +133,13 @@ namespace elsa::ml
                 _outputGradient = std::vector<DnnlMemory>(!num ? 1 : num, _outputGradient[0]);
             }
 
-            /// \returns the number of output-gradients of this layer
+            /// @returns the number of output-gradients of this layer
             index_t getNumberOfOutputGradients() const { return _outputGradient.size(); }
 
             /// Compile this layer, i.e., construct all necessary layer logic based on arguments
             /// defined beforehand.
             ///
-            /// \param propagation The kind of propagation this layer should be compiled for
+            /// @param propagation The kind of propagation this layer should be compiled for
             void compile(PropagationKind propagation = PropagationKind::Forward);
 
             /// Return a pointer to this layer's execution engine.
@@ -151,10 +151,10 @@ namespace elsa::ml
             /// Initialize all parameters of this layer
             virtual void initialize() {}
 
-            /// \returns true if this layer is trainable, false otherwise
+            /// @returns true if this layer is trainable, false otherwise
             virtual bool isTrainable() const;
 
-            /// \returns true if this layer can merge multiple inputs together,
+            /// @returns true if this layer can merge multiple inputs together,
             /// false otherwise
             virtual bool canMerge() const;
 
@@ -274,13 +274,13 @@ namespace elsa::ml
             /// \note This performs a copy and is therefore potentially expensive.
             static void readFromDnnlMemory(DataContainer<data_t>& data, const dnnl::memory& memory);
 
-            /// \returns true if this layer needs to synchronize its Dnnl
+            /// @returns true if this layer needs to synchronize its Dnnl
             /// execution-stream during a forward-pass, false otherwise.
             ///
             /// This is particularly true for any merging layer.
             virtual bool needsForwardSynchronisation() const { return false; }
 
-            /// \returns true if this layer needs to synchronize its Dnnl
+            /// @returns true if this layer needs to synchronize its Dnnl
             /// execution-stream during a backward-pass, false otherwise.
             ///
             /// This is particularly true for all layers with multiple outputs.
@@ -322,14 +322,14 @@ namespace elsa::ml
             ///  h: Height (spatial dimension)
             ///  w: Width (spatial dimension)
             ///
-            /// \param desc DataDescriptor to choose a format type tag.
-            /// \param isInput True if the DataDescriptor descripes an input,
+            /// @param desc DataDescriptor to choose a format type tag.
+            /// @param isInput True if the DataDescriptor descripes an input,
             ///                false if it describes weights.
-            /// \return Dnnl memory format tag corresponding to the above table.
+            /// @return Dnnl memory format tag corresponding to the above table.
             static dnnl::memory::format_tag
                 dataDescriptorToDnnlMemoryFormatTag(const VolumeDescriptor& desc, bool isInput);
 
-            /// \returns a string representation of a Dnnl memory format-tag
+            /// @returns a string representation of a Dnnl memory format-tag
             static std::string dnnlMemoryFormatTagToString(dnnl::memory::format_tag tag);
 
             /// This layer's forward propagation stream

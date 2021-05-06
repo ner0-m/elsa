@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.10)
-
 # set the name of the module
 set(ELSA_MODULE_NAME ml_dnnl_backend)
 set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})

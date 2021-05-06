@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.9)
-
 # set the name of the module
 set(ELSA_MODULE_NAME logging)
 set(ELSA_MODULE_TARGET_NAME elsa_logging)

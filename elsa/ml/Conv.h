@@ -29,16 +29,16 @@ namespace elsa::ml
 
     protected:
         /// Construct a ConvBase instance by definining
-        /// \param layerType the type of the conv layer
-        /// \param activation the activation of the conv layer
-        /// \param useBias true of the layer uses a bias, false otherwise
-        /// \param kernelInitializer the initializer used to initialize all
+        /// @param layerType the type of the conv layer
+        /// @param activation the activation of the conv layer
+        /// @param useBias true of the layer uses a bias, false otherwise
+        /// @param kernelInitializer the initializer used to initialize all
         ///                          kernels of the conv layer
-        /// \param biasInitializer the initializer use to initialize the bias
+        /// @param biasInitializer the initializer use to initialize the bias
         ///                        term. This has no effect if useBias is set to
         ///                        false
-        /// \param name the name of this layer
-        /// \param requiredNumberOfDimensions the number of dimensions any input
+        /// @param name the name of this layer
+        /// @param requiredNumberOfDimensions the number of dimensions any input
         ///                                   to the layer must have
         ConvBase(LayerType layerType, index_t numberOfFilters,
                  const VolumeDescriptor& filterDescriptor, Activation activation, index_t strides,
@@ -59,7 +59,7 @@ namespace elsa::ml
     public:
         void computeOutputDescriptor() override;
 
-        /// \return an IndexVector_t with the padding along each dimension
+        /// @return an IndexVector_t with the padding along each dimension
         IndexVector_t getPaddingSizes() const;
 
     protected:
@@ -73,7 +73,7 @@ namespace elsa::ml
 
     /// 1D convolution layer (e.g. temporal convolution).
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// This layer creates a convolution kernel that is convolved with the layer input over a single
     /// spatial (or temporal) dimension.  If ``useBias`` is ``true``,
@@ -82,23 +82,23 @@ namespace elsa::ml
     struct Conv1D : public Conv<data_t> {
         /// Construct a Conv1D layer
         ///
-        /// \param numberOfFilters The number of filters for the convolution
-        /// \param filterDescriptor A VolumeDescriptor describing the shape of
+        /// @param numberOfFilters The number of filters for the convolution
+        /// @param filterDescriptor A VolumeDescriptor describing the shape of
         /// all filters.
-        /// \param activation The activation function finally applied to the
+        /// @param activation The activation function finally applied to the
         /// outputs.
-        /// \param strides The strides for the convolution. This parameter is
+        /// @param strides The strides for the convolution. This parameter is
         /// optional and defaults to 1.
-        /// \param padding The input padding that is applied before the convolution.
+        /// @param padding The input padding that is applied before the convolution.
         /// This parameter is optional and defaults to Padding::Valid.
-        /// \param useBias True if the layer uses a bias vector, false otherwise.
+        /// @param useBias True if the layer uses a bias vector, false otherwise.
         /// This parameter is optional and defaults to ``true``.
-        /// \param kernelInitializer The initializer used for all convolutional
+        /// @param kernelInitializer The initializer used for all convolutional
         /// filters. This parameter is optional and defaults to Initializer::GlorotUniform.
-        /// \param biasInitializer The initializer used to initialize the bias vector.
+        /// @param biasInitializer The initializer used to initialize the bias vector.
         /// If ``useBias`` is ``false`` this has no effect. This parameter is optional
         /// and defaults to Initializer::Zeros.
-        /// \param name The name of this layer.
+        /// @param name The name of this layer.
         Conv1D(index_t numberOfFilters, const VolumeDescriptor& filterDescriptor,
                Activation activation, index_t strides = 1, Padding padding = Padding::Valid,
                bool useBias = true, Initializer kernelInitializer = Initializer::GlorotUniform,
@@ -112,7 +112,7 @@ namespace elsa::ml
 
     /// 2D convolution layer (e.g. spatial convolution over images).
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// This layer implements a spatial convolution layer with a given number of filters that is
     /// convolved over the spatial dimensions of an image. If ``useBias`` is ``true``, a bias vector
@@ -122,23 +122,23 @@ namespace elsa::ml
 
         /// Construct a Conv2D layer
         ///
-        /// \param numberOfFilters The number of filters for the convolution
-        /// \param filterDescriptor A VolumeDescriptor describing the shape of
+        /// @param numberOfFilters The number of filters for the convolution
+        /// @param filterDescriptor A VolumeDescriptor describing the shape of
         /// all filters.
-        /// \param activation The activation function finally applied to the
+        /// @param activation The activation function finally applied to the
         /// outputs.
-        /// \param strides The strides for the convolution. This parameter is
+        /// @param strides The strides for the convolution. This parameter is
         /// optional and defaults to 1.
-        /// \param padding The input padding that is applied before the convolution.
+        /// @param padding The input padding that is applied before the convolution.
         /// This parameter is optional and defaults to Padding::Valid.
-        /// \param useBias True if the layer uses a bias vector, false otherwise.
+        /// @param useBias True if the layer uses a bias vector, false otherwise.
         /// This parameter is optional and defaults to ``true``.
-        /// \param kernelInitializer The initializer used for all convolutional
+        /// @param kernelInitializer The initializer used for all convolutional
         /// filters. This parameter is optional and defaults to Initializer::GlorotUniform.
-        /// \param biasInitializer The initializer used to initialize the bias vector.
+        /// @param biasInitializer The initializer used to initialize the bias vector.
         /// If ``useBias`` is ``false`` this has no effect. This parameter is optional
         /// and defaults to Initializer::Zeros.
-        /// \param name The name of this layer.
+        /// @param name The name of this layer.
         Conv2D(index_t numberOfFilters, const VolumeDescriptor& filterDescriptor,
                Activation activation, index_t strides = 1, Padding padding = Padding::Valid,
                bool useBias = true, Initializer kernelInitializer = Initializer::GlorotUniform,
@@ -146,22 +146,22 @@ namespace elsa::ml
 
         /// Construct a Conv2D layer
         ///
-        /// \param numberOfFilters The number of filters for the convolution
-        /// \param filterSize The size of all filters as an ``std::array``, e.g. ``{w, h, c}``.
-        /// \param activation The activation function finally applied to the outputs.
-        /// \param strides The strides for the convolution. This parameter is optional and defaults
-        /// to 1. \param padding The input padding that is applied before the convolution. This
+        /// @param numberOfFilters The number of filters for the convolution
+        /// @param filterSize The size of all filters as an ``std::array``, e.g. ``{w, h, c}``.
+        /// @param activation The activation function finally applied to the outputs.
+        /// @param strides The strides for the convolution. This parameter is optional and defaults
+        /// to 1. @param padding The input padding that is applied before the convolution. This
         /// parameter is optional and defaults to Padding::Valid.
-        /// \param useBias True if the layer
+        /// @param useBias True if the layer
         /// uses a bias vector, false otherwise. This parameter is optional and defaults to
         /// ``true``.
-        /// \param kernelInitializer The initializer used for all convolutional filters.
+        /// @param kernelInitializer The initializer used for all convolutional filters.
         /// This parameter is optional and defaults to Initializer::GlorotUniform.
-        /// \param biasInitializer The initializer used to initialize the bias vector. If
+        /// @param biasInitializer The initializer used to initialize the bias vector. If
         /// ``useBias`` is
         /// ``false`` this has no effect. This parameter is optional and defaults to
         /// Initializer::Zeros.
-        /// \param name The name of this layer.
+        /// @param name The name of this layer.
         Conv2D(index_t numberOfFilters, const std::array<index_t, 3>& filterSize,
                Activation activation, index_t strides = 1, Padding padding = Padding::Valid,
                bool useBias = true, Initializer kernelInitializer = Initializer::GlorotUniform,
@@ -170,7 +170,7 @@ namespace elsa::ml
 
     /// 3D convolution layer (e.g. spatial convolution over volumes).
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// This layer implements a spatial convolution layer with a given number of filters that is
     /// convolved over the spatial dimensions of a volume. If ``useBias`` is ``true``, a bias vector
@@ -179,23 +179,23 @@ namespace elsa::ml
     struct Conv3D : public Conv<data_t> {
         /// Construct a Conv3D layer
         ///
-        /// \param numberOfFilters The number of filters for the convolution
-        /// \param filterDescriptor A VolumeDescriptor describing the shape of
+        /// @param numberOfFilters The number of filters for the convolution
+        /// @param filterDescriptor A VolumeDescriptor describing the shape of
         /// all filters.
-        /// \param activation The activation function finally applied to the
+        /// @param activation The activation function finally applied to the
         /// outputs.
-        /// \param strides The strides for the convolution. This parameter is
+        /// @param strides The strides for the convolution. This parameter is
         /// optional and defaults to 1.
-        /// \param padding The input padding that is applied before the convolution.
+        /// @param padding The input padding that is applied before the convolution.
         /// This parameter is optional and defaults to Padding::Valid.
-        /// \param useBias True if the layer uses a bias vector, false otherwise.
+        /// @param useBias True if the layer uses a bias vector, false otherwise.
         /// This parameter is optional and defaults to ``true``.
-        /// \param kernelInitializer The initializer used for all convolutional
+        /// @param kernelInitializer The initializer used for all convolutional
         /// filters. This parameter is optional and defaults to Initializer::GlorotUniform.
-        /// \param biasInitializer The initializer used to initialize the bias vector.
+        /// @param biasInitializer The initializer used to initialize the bias vector.
         /// If ``useBias`` is ``false`` this has no effect. This parameter is optional
         /// and defaults to Initializer::Zeros.
-        /// \param name The name of this layer.
+        /// @param name The name of this layer.
         Conv3D(index_t numberOfFilters, const VolumeDescriptor& filterDescriptor,
                Activation activation, index_t strides = 1, Padding padding = Padding::Valid,
                bool useBias = true, Initializer kernelInitializer = Initializer::GlorotUniform,
@@ -228,7 +228,7 @@ namespace elsa::ml
 
     /// Transposed convolution layer (sometimes called Deconvolution).
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// The need for transposed convolutions generally arises from the desire to use a
     /// transformation going in the opposite direction of a normal convolution, i.e., from something
@@ -238,23 +238,23 @@ namespace elsa::ml
     struct Conv2DTranspose : public ConvTranspose<data_t> {
         /// Construct a Conv2DTranspose layer
         ///
-        /// \param numberOfFilters The number of filters for the convolution
-        /// \param filterDescriptor A VolumeDescriptor describing the shape of
+        /// @param numberOfFilters The number of filters for the convolution
+        /// @param filterDescriptor A VolumeDescriptor describing the shape of
         /// all filters.
-        /// \param activation The activation function finally applied to the
+        /// @param activation The activation function finally applied to the
         /// outputs.
-        /// \param strides The strides for the convolution. This parameter is
+        /// @param strides The strides for the convolution. This parameter is
         /// optional and defaults to 1.
-        /// \param padding The input padding that is applied before the convolution.
+        /// @param padding The input padding that is applied before the convolution.
         /// This parameter is optional and defaults to Padding::Valid.
-        /// \param useBias True if the layer uses a bias vector, false otherwise.
+        /// @param useBias True if the layer uses a bias vector, false otherwise.
         /// This parameter is optional and defaults to ``true``.
-        /// \param kernelInitializer The initializer used for all convolutional
+        /// @param kernelInitializer The initializer used for all convolutional
         /// filters. This parameter is optional and defaults to Initializer::GlorotUniform.
-        /// \param biasInitializer The initializer used to initialize the bias vector.
+        /// @param biasInitializer The initializer used to initialize the bias vector.
         /// If ``useBias`` is ``false`` this has no effect. This parameter is optional
         /// and defaults to Initializer::Zeros.
-        /// \param name The name of this layer.
+        /// @param name The name of this layer.
         Conv2DTranspose(index_t numberOfFilters, const VolumeDescriptor& filterDescriptor,
                         Activation activation, index_t strides = 1,
                         Padding padding = Padding::Valid, bool useBias = true,

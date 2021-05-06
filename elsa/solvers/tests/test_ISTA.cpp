@@ -6,6 +6,8 @@
  * @author Andi Braimllari
  */
 
+#include "doctest/doctest.h"
+
 #include "Error.h"
 #include "ISTA.h"
 #include "Identity.h"
@@ -13,14 +15,15 @@
 #include "VolumeDescriptor.h"
 #include "QuadricProblem.h"
 
-#include <catch2/catch.hpp>
-
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Solving a LASSOProblem with ISTA")
+TEST_SUITE_BEGIN("solvers");
+
+TEST_CASE("ISTA: Solving a LASSOProblem")
 {
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a LASSOProblem")
     {
@@ -62,10 +65,10 @@ SCENARIO("Solving a LASSOProblem with ISTA")
     }
 }
 
-SCENARIO("Solving various problems with ISTA")
+TEST_CASE("ISTA: Solving various problems")
 {
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a DataContainer")
     {
@@ -85,7 +88,7 @@ SCENARIO("Solving various problems with ISTA")
 
             THEN("an exception is thrown as no regularization term is provided")
             {
-                REQUIRE_THROWS_AS(ISTA(wlsProb), InvalidArgumentError);
+                REQUIRE_THROWS_AS(ISTA{wlsProb}, InvalidArgumentError);
             }
         }
 
@@ -98,8 +101,10 @@ SCENARIO("Solving various problems with ISTA")
             THEN("the vector b is initialized with zeroes and the operator A becomes an "
                  "identity operator but an exception is thrown due to missing regularization term")
             {
-                REQUIRE_THROWS_AS(ISTA(quadricProbWithoutAb), InvalidArgumentError);
+                REQUIRE_THROWS_AS(ISTA{quadricProbWithoutAb}, InvalidArgumentError);
             }
         }
     }
 }
+
+TEST_SUITE_END();

@@ -1,10 +1,17 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "Graph.h"
+#include <numeric>
 
 using namespace elsa;
+using namespace doctest;
 
-TEST_CASE("Graph", "[ml]")
+TEST_SUITE_BEGIN("ml");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE("Graph")
 {
     SECTION("Graph of int")
     {
@@ -151,3 +158,4 @@ TEST_CASE("Graph", "[ml]")
         REQUIRE(sum == std::accumulate(v.begin(), v.end(), 0));
     }
 }
+TEST_SUITE_END();

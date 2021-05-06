@@ -1,12 +1,12 @@
 /**
- * \file test_common.cpp
+ * @file test_common.cpp
  *
- * \brief Tests for common ml functionality
+ * @brief Tests for common ml functionality
  *
- * \author David Tellenbach
+ * @author David Tellenbach
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <random>
 
 #include "DataContainer.h"
@@ -14,6 +14,12 @@
 
 using namespace elsa;
 using namespace elsa::ml::detail;
+using namespace doctest;
+
+TEST_SUITE_BEGIN("ml-dnnl");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
 
 template <typename F, typename data_t>
 static void testActivation(F func, data_t alpha, data_t beta, const DataContainer<data_t>& input,
@@ -101,7 +107,7 @@ void testActivationLayer(Func f, FuncDer f_der)
     }
 }
 
-TEST_CASE("DnnlRelu", "[ml][dnnl]")
+TEST_CASE("DnnlRelu")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha,
                 [[maybe_unused]] float beta) {
@@ -121,7 +127,7 @@ TEST_CASE("DnnlRelu", "[ml][dnnl]")
     testActivationLayer<DnnlRelu<float>>(f, f_der);
 }
 
-TEST_CASE("DnnlAbs", "[ml][dnnl]")
+TEST_CASE("DnnlAbs")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha,
                 [[maybe_unused]] float beta) { return std::abs(coeff); };
@@ -138,7 +144,7 @@ TEST_CASE("DnnlAbs", "[ml][dnnl]")
     testActivationLayer<DnnlAbs<float>>(f, f_der);
 }
 
-TEST_CASE("DnnlElu", "[ml][dnnl]")
+TEST_CASE("DnnlElu")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha,
                 [[maybe_unused]] float beta) {
@@ -158,7 +164,7 @@ TEST_CASE("DnnlElu", "[ml][dnnl]")
     testActivationLayer<DnnlElu<float>>(f, f_der);
 }
 
-TEST_CASE("DnnlLinear", "[ml][dnnl]")
+TEST_CASE("DnnlLinear")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha,
                 [[maybe_unused]] float beta) { return alpha * coeff + beta; };
@@ -168,7 +174,7 @@ TEST_CASE("DnnlLinear", "[ml][dnnl]")
     testActivationLayer<DnnlLinear<float>>(f, f_der);
 }
 
-TEST_CASE("DnnlTanh", "[ml][dnnl]")
+TEST_CASE("DnnlTanh")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha,
                 [[maybe_unused]] float beta) { return std::tanh(coeff); };
@@ -180,7 +186,7 @@ TEST_CASE("DnnlTanh", "[ml][dnnl]")
     testActivationLayer<DnnlTanh<float>>(f, f_der);
 }
 
-TEST_CASE("DnnlLogistic", "[ml][dnnl]")
+TEST_CASE("DnnlLogistic")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha,
                 [[maybe_unused]] float beta) { return 1.f / (1.f + std::exp(-1.f * coeff)); };
@@ -192,7 +198,7 @@ TEST_CASE("DnnlLogistic", "[ml][dnnl]")
     testActivationLayer<DnnlLogistic<float>>(f, f_der);
 }
 
-TEST_CASE("DnnlExp", "[ml][dnnl]")
+TEST_CASE("DnnlExp")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha,
                 [[maybe_unused]] float beta) { return std::exp(coeff); };
@@ -202,7 +208,7 @@ TEST_CASE("DnnlExp", "[ml][dnnl]")
     testActivationLayer<DnnlExp<float>>(f, f_der);
 }
 
-TEST_CASE("DnnlSoftRelu", "[ml][dnnl]")
+TEST_CASE("DnnlSoftRelu")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha,
                 [[maybe_unused]] float beta) { return std::log(1 + std::exp(coeff)); };
@@ -211,3 +217,4 @@ TEST_CASE("DnnlSoftRelu", "[ml][dnnl]")
                     [[maybe_unused]] float beta) { return 1.f / (1.f + std::exp(-1.f * coeff)); };
     testActivationLayer<DnnlSoftRelu<float>>(f, f_der);
 }
+TEST_SUITE_END();

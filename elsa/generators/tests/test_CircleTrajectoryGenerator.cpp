@@ -8,13 +8,15 @@
  * @author Tobias Lasser - modernization, fixes
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "CircleTrajectoryGenerator.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
 SCENARIO("Create a Circular Trajectory")
 {
@@ -63,14 +65,16 @@ SCENARIO("Create a Circular Trajectory")
                     auto geom = sdesc->getGeometryAt(i);
                     CHECK(geom);
 
-                    REQUIRE((tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm()
-                            == Approx(0));
-                    REQUIRE((tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm()
-                            == Approx(0).margin(0.0000001));
-                    REQUIRE(
+                    const auto centerNorm =
+                        (tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm();
+                    const auto projMatNorm =
+                        (tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm();
+                    const auto invProjMatNorm =
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
-                            .norm()
-                        == Approx(0).margin(0.0000001));
+                            .norm();
+                    REQUIRE(checkApproxEq(centerNorm, 0));
+                    REQUIRE(checkApproxEq(projMatNorm, 0, 0.0000001));
+                    REQUIRE(checkApproxEq(invProjMatNorm, 0, 0.0000001));
                 }
             }
         }
@@ -107,14 +111,16 @@ SCENARIO("Create a Circular Trajectory")
                     auto geom = sdesc->getGeometryAt(i);
                     CHECK(geom);
 
-                    REQUIRE((tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm()
-                            == Approx(0));
-                    REQUIRE((tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm()
-                            == Approx(0).margin(0.0000001));
-                    REQUIRE(
+                    const auto centerNorm =
+                        (tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm();
+                    const auto projMatNorm =
+                        (tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm();
+                    const auto invProjMatNorm =
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
-                            .norm()
-                        == Approx(0).margin(0.0000001));
+                            .norm();
+                    REQUIRE(checkApproxEq(centerNorm, 0));
+                    REQUIRE(checkApproxEq(projMatNorm, 0, 0.0000001));
+                    REQUIRE(checkApproxEq(invProjMatNorm, 0, 0.0000001));
                 }
             }
         }
@@ -161,14 +167,16 @@ SCENARIO("Create a Circular Trajectory")
                     auto geom = sdesc->getGeometryAt(i);
                     CHECK(geom);
 
-                    REQUIRE((tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm()
-                            == Approx(0));
-                    REQUIRE((tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm()
-                            == Approx(0).margin(0.0000001));
-                    REQUIRE(
+                    const auto centerNorm =
+                        (tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm();
+                    const auto projMatNorm =
+                        (tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm();
+                    const auto invProjMatNorm =
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
-                            .norm()
-                        == Approx(0).margin(0.0000001));
+                            .norm();
+                    REQUIRE(checkApproxEq(centerNorm, 0));
+                    REQUIRE(checkApproxEq(projMatNorm, 0, 0.0000001));
+                    REQUIRE(checkApproxEq(invProjMatNorm, 0, 0.0000001));
                 }
             }
         }
@@ -206,14 +214,16 @@ SCENARIO("Create a Circular Trajectory")
                     auto geom = sdesc->getGeometryAt(i);
                     CHECK(geom);
 
-                    REQUIRE((tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm()
-                            == Approx(0));
-                    REQUIRE((tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm()
-                            == Approx(0).margin(0.0000001));
-                    REQUIRE(
+                    const auto centerNorm =
+                        (tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm();
+                    const auto projMatNorm =
+                        (tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm();
+                    const auto invProjMatNorm =
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
-                            .norm()
-                        == Approx(0).margin(0.0000001));
+                            .norm();
+                    REQUIRE(checkApproxEq(centerNorm, 0));
+                    REQUIRE(checkApproxEq(projMatNorm, 0, 0.0000001));
+                    REQUIRE(checkApproxEq(invProjMatNorm, 0, 0.0000001));
                 }
             }
         }

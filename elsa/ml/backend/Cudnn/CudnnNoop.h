@@ -12,7 +12,7 @@ namespace elsa
         {
             /// A noop layer, i.e., a layer that does just nothing
             ///
-            /// \author David Tellenbach
+            /// @author David Tellenbach
             ///
             /// This layer just forwards its input unchanged to its output and
             /// its output-gradient unchanged to its input-gradient.

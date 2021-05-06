@@ -1,19 +1,25 @@
 /**
- * \file test_common.cpp
+ * @file test_common.cpp
  *
- * \brief Tests for common ml functionality
+ * @brief Tests for common ml functionality
  *
- * \author David Tellenbach
+ * @author David Tellenbach
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "DataContainer.h"
 #include "VolumeDescriptor.h"
 #include "Common.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEST_CASE("Common", "[ml]")
+TEST_SUITE_BEGIN("ml");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE("Common")
 {
     SECTION("LayerType")
     {
@@ -49,3 +55,4 @@ TEST_CASE("Common", "[ml]")
         REQUIRE(ml::detail::getEnumMemberAsString(ml::Initializer::HeUniform) == "HeUniform");
     }
 }
+TEST_SUITE_END();

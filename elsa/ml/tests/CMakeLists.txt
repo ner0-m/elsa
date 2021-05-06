@@ -1,15 +1,22 @@
-cmake_minimum_required(VERSION 3.9)
-
-# enable ctest and Catch test discovery
+# enable ctest and doctest test discovery
 include(CTest)
-include(Catch)
+include(doctest)
+ 
+add_custom_target(run-tests-ml
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS build-tests-ml
+    USES_TERMINAL
+    COMMENT "Build and run the tests from module 'ml'.")
+
+add_custom_target(build-tests-ml) 
 
 # the actual tests
-ELSA_TEST(Common)
-ELSA_TEST(Graph)
-ELSA_TEST(CoreLayers)
-ELSA_TEST(ConvLayers)
-ELSA_TEST(Loss)
-ELSA_TEST(Utils)
-ELSA_TEST(Reshape)
-ELSA_TEST(Initializer)
+ELSA_DOCTEST(Common)
+ELSA_DOCTEST(Graph)
+ELSA_DOCTEST(CoreLayers)
+ELSA_DOCTEST(ConvLayers)
+ELSA_DOCTEST(Loss)
+ELSA_DOCTEST(Utils)
+ELSA_DOCTEST(Reshape)
+ELSA_DOCTEST(Initializer)

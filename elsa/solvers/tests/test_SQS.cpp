@@ -6,7 +6,8 @@
  * @author Michael Loipführer - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
+
 #include <iostream>
 #include "SQS.h"
 #include "WLSProblem.h"
@@ -22,17 +23,26 @@
 #include "CircleTrajectoryGenerator.h"
 #include "SiddonsMethod.h"
 #include "PhantomGenerator.h"
+#include "testHelpers.h"
 
 using namespace elsa;
 
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", SQS<float>, SQS<double>)
+TEST_SUITE_BEGIN("solvers");
+
+TYPE_TO_STRING(SQS<float>);
+TYPE_TO_STRING(SQS<double>);
+
+TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>, SQS<double>)
 {
+    // Set seed for Eigen Matrices!
+    srand((unsigned int) 666);
+
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a linear problem")
     {
@@ -67,19 +77,21 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", SQS<float>, 
                     DataContainer<data_t> resultsDifference = solution - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
                 }
             }
         }
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", SQS<float>, SQS<double>)
+TEST_CASE_TEMPLATE("SQS: Solving a Tikhonov problem", TestType, SQS<float>, SQS<double>)
 {
+    // Set seed for Eigen Matrices!
+    srand((unsigned int) 666);
+
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a Tikhonov problem")
     {
@@ -117,24 +129,26 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", SQS<float>, SQS<d
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(dd.getNumberOfCoefficients());
+                    auto solution = solver.solve(20);
 
                     DataContainer<data_t> resultsDifference = solution - dcB;
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85f));
                 }
             }
         }
     }
 }
 
-TEST_CASE("Scenario: Solving a simple phantom reconstruction", "")
+TEST_CASE("SQS: Solving a simple phantom reconstruction")
 {
+    // Set seed for Eigen Matrices!
+    srand((unsigned int) 666);
+
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::INFO);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a Phantom reconstruction problem")
     {
@@ -176,18 +190,20 @@ TEST_CASE("Scenario: Solving a simple phantom reconstruction", "")
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
-                            <= epsilon * epsilon * phantom.squaredL2Norm());
+                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0.034f));
                 }
             }
         }
     }
 }
 
-TEST_CASE("Scenario: Solving a simple phantom problem using ordered subsets", "")
+TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
 {
+    // Set seed for Eigen Matrices!
+    srand((unsigned int) 666);
+
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::INFO);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a Phantom reconstruction problem")
     {
@@ -236,10 +252,11 @@ TEST_CASE("Scenario: Solving a simple phantom problem using ordered subsets", ""
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
-                            <= epsilon * epsilon * phantom.squaredL2Norm());
+                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
                 }
             }
         }
     }
 }
+
+TEST_SUITE_END();

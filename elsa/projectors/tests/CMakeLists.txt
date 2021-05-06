@@ -1,13 +1,22 @@
-# enable ctest and Catch test discovery
+# enable ctest and doctest test discovery
 include(CTest)
-include(Catch)
+include(doctest)
 
+
+add_custom_target(run-tests-projectors
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS build-tests-projectors
+    USES_TERMINAL
+    COMMENT "Build and run the tests from module 'projectors'.")
+
+add_custom_target(build-tests-projectors) 
 
 # the actual tests
-ELSA_TEST(BoundingBox)
-ELSA_TEST(Intersection)
-ELSA_TEST(TraverseAABB)
-ELSA_TEST(BinaryMethod)
-ELSA_TEST(SiddonsMethod)
-ELSA_TEST(JosephsMethod)
-ELSA_TEST(SubsetSampler DEPENDENCIES elsa_generators)
+ELSA_DOCTEST(BoundingBox)
+ELSA_DOCTEST(Intersection)
+ELSA_DOCTEST(TraverseAABB)
+ELSA_DOCTEST(BinaryMethod)
+ELSA_DOCTEST(SiddonsMethod)
+ELSA_DOCTEST(JosephsMethod)
+ELSA_DOCTEST(SubsetSampler DEPENDENCIES elsa_generators)

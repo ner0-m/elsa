@@ -15,14 +15,14 @@ namespace elsa::ml
     public:
         /// Construct an Activation layer
         ///
-        /// \param activation
-        /// \param name
+        /// @param activation
+        /// @param name
         explicit ActivationBase(Activation activation, const std::string& name = "");
 
         /// default constructor
         ActivationBase() = default;
 
-        /// \returns the activation
+        /// @returns the activation
         Activation getActivation() const;
 
     private:
@@ -30,9 +30,9 @@ namespace elsa::ml
     };
 
     /**
-     * \brief Sigmoid activation function, \f$ \text{sigmoid}(x) = 1 / (1 + \exp(-x)) \f$.
+     * @brief Sigmoid activation function, \f$ \text{sigmoid}(x) = 1 / (1 + \exp(-x)) \f$.
      *
-     * \author David Tellenbach
+     * @author David Tellenbach
      */
     template <typename data_t = real_t>
     struct Sigmoid : ActivationBase<data_t> {
@@ -40,9 +40,9 @@ namespace elsa::ml
     };
 
     /**
-     * \brief Applies the rectified linear unit activation function.
+     * @brief Applies the rectified linear unit activation function.
      *
-     * \author David Tellenbach
+     * @author David Tellenbach
      *
      * With default values, this returns the standard ReLU activation \f$ \max(x, 0) \f$,
      * the element-wise maximum of 0 and the input tensor.
@@ -52,25 +52,25 @@ namespace elsa::ml
         explicit Relu(const std::string& name = "");
     };
 
-    /// \brief Hyperbolic tangent activation function.
+    /// @brief Hyperbolic tangent activation function.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     template <typename data_t = real_t>
     struct Tanh : ActivationBase<data_t> {
         explicit Tanh(const std::string& name = "");
     };
 
-    /// \brief Clipped Relu activation function.
+    /// @brief Clipped Relu activation function.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     template <typename data_t = real_t>
     struct ClippedRelu : ActivationBase<data_t> {
         explicit ClippedRelu(const std::string& name = "");
     };
 
-    /// \brief Exponential Linear Unit.
+    /// @brief Exponential Linear Unit.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// ELUs have negative values which pushes the mean of the activations
     /// closer to zero. Mean activations that are closer to zero enable faster
@@ -83,9 +83,9 @@ namespace elsa::ml
         explicit Elu(const std::string& name = "");
     };
 
-    /// \brief Identity activation
+    /// @brief Identity activation
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// This is not a real activation function and just leaves the input
     /// unchanged.

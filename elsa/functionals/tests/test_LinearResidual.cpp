@@ -7,12 +7,15 @@
  * @author Tobias Lasser - rewrite
  */
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
+
+#include "testHelpers.h"
 #include "LinearResidual.h"
 #include "Identity.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
 // mock operator, which outputs 1 for apply and 3 for applyAdjoint
 template <typename data_t = real_t>
@@ -44,7 +47,13 @@ protected:
     }
 };
 
-SCENARIO("Trivial LinearResidual")
+TYPE_TO_STRING(std::complex<float>);
+TYPE_TO_STRING(std::complex<double>);
+
+TEST_SUITE_BEGIN("functionals");
+
+TEST_CASE_TEMPLATE("LinearResidual: Testing trivial linear residual", TestType, float, double,
+                   std::complex<float>, std::complex<double>)
 {
     GIVEN("a descriptor")
     {
@@ -54,15 +63,15 @@ SCENARIO("Trivial LinearResidual")
 
         WHEN("instantiating")
         {
-            LinearResidual linRes(dd);
+            LinearResidual<TestType> linRes(dd);
 
             THEN("the residual is as expected")
             {
-                REQUIRE(linRes.getDomainDescriptor() == dd);
-                REQUIRE(linRes.getRangeDescriptor() == dd);
+                REQUIRE_EQ(linRes.getDomainDescriptor(), dd);
+                REQUIRE_EQ(linRes.getRangeDescriptor(), dd);
 
-                REQUIRE(linRes.hasOperator() == false);
-                REQUIRE(linRes.hasDataVector() == false);
+                REQUIRE_UNARY_FALSE(linRes.hasOperator());
+                REQUIRE_UNARY_FALSE(linRes.hasDataVector());
 
                 REQUIRE_THROWS_AS(linRes.getOperator(), Error);
                 REQUIRE_THROWS_AS(linRes.getDataVector(), Error);
@@ -72,48 +81,51 @@ SCENARIO("Trivial LinearResidual")
             {
                 auto linResClone = linRes.clone();
 
-                REQUIRE(linResClone.get() != &linRes);
-                REQUIRE(*linResClone == linRes);
+                REQUIRE_NE(linResClone.get(), &linRes);
+                REQUIRE_EQ(*linResClone, linRes);
             }
 
             THEN("the Jacobian and evaluate work as expected")
             {
-                Identity idOp(dd);
-                DataContainer dcX(dd);
+                Identity<TestType> idOp(dd);
+                DataContainer<TestType> dcX(dd);
                 dcX = 1;
 
-                REQUIRE(linRes.getJacobian(dcX) == leaf(idOp));
-                REQUIRE(linRes.evaluate(dcX) == dcX);
+                REQUIRE_EQ(linRes.getJacobian(dcX), leaf(idOp));
+                REQUIRE_UNARY(isApprox(linRes.evaluate(dcX), dcX));
             }
         }
     }
 }
 
-SCENARIO("LinearResidual with just a data vector")
+TEST_CASE_TEMPLATE("LinearResidual: Testing with just an data vector", TestType, float, double,
+                   std::complex<float>, std::complex<double>)
 {
+    using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
+
     GIVEN("a descriptor and data")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 18, 36;
         VolumeDescriptor dd(numCoeff);
 
-        RealVector_t randomData(dd.getNumberOfCoefficients());
+        Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
-        DataContainer dc(dd, randomData);
+        DataContainer<TestType> dc(dd, randomData);
 
         WHEN("instantiating")
         {
-            LinearResidual linRes(dc);
+            LinearResidual<TestType> linRes(dc);
 
             THEN("the residual is as expected")
             {
-                REQUIRE(linRes.getDomainDescriptor() == dd);
-                REQUIRE(linRes.getRangeDescriptor() == dd);
+                REQUIRE_EQ(linRes.getDomainDescriptor(), dd);
+                REQUIRE_EQ(linRes.getRangeDescriptor(), dd);
 
-                REQUIRE(linRes.hasOperator() == false);
-                REQUIRE(linRes.hasDataVector() == true);
+                REQUIRE_UNARY_FALSE(linRes.hasOperator());
+                REQUIRE_UNARY(linRes.hasDataVector());
 
-                REQUIRE(linRes.getDataVector() == dc);
+                REQUIRE_UNARY(isApprox(linRes.getDataVector(), dc));
                 REQUIRE_THROWS_AS(linRes.getOperator(), Error);
             }
 
@@ -121,24 +133,27 @@ SCENARIO("LinearResidual with just a data vector")
             {
                 auto linResClone = linRes.clone();
 
-                REQUIRE(linResClone.get() != &linRes);
-                REQUIRE(*linResClone == linRes);
+                REQUIRE_NE(linResClone.get(), &linRes);
+                REQUIRE_EQ(*linResClone, linRes);
             }
 
             THEN("the Jacobian and evaluate work as expected")
             {
-                Identity idOp(dd);
-                DataContainer dcX(dd);
+                Identity<TestType> idOp(dd);
+                DataContainer<TestType> dcX(dd);
                 dcX = 1;
 
-                REQUIRE(linRes.getJacobian(dcX) == leaf(idOp));
-                REQUIRE(linRes.evaluate(dcX) == dcX - dc);
+                REQUIRE_EQ(linRes.getJacobian(dcX), leaf(idOp));
+
+                DataContainer<TestType> tmp = dcX - dc;
+                REQUIRE_UNARY(isApprox(linRes.evaluate(dcX), tmp));
             }
         }
     }
 }
 
-SCENARIO("LinearResidual with just an operator")
+TEST_CASE_TEMPLATE("LinearResidual: Testing with just an operator", TestType, float, double,
+                   std::complex<float>, std::complex<double>)
 {
     GIVEN("descriptors and an operator")
     {
@@ -150,21 +165,21 @@ SCENARIO("LinearResidual with just an operator")
         numCoeff2 << 18, 36;
         VolumeDescriptor ddRange(numCoeff2);
 
-        MockOperator mockOp(ddDomain, ddRange);
+        MockOperator<TestType> mockOp(ddDomain, ddRange);
 
         WHEN("instantiating")
         {
-            LinearResidual linRes(mockOp);
+            LinearResidual<TestType> linRes(mockOp);
 
             THEN("the residual is as expected")
             {
-                REQUIRE(linRes.getDomainDescriptor() == ddDomain);
-                REQUIRE(linRes.getRangeDescriptor() == ddRange);
+                REQUIRE_EQ(linRes.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(linRes.getRangeDescriptor(), ddRange);
 
-                REQUIRE(linRes.hasOperator() == true);
-                REQUIRE(linRes.hasDataVector() == false);
+                REQUIRE_UNARY(linRes.hasOperator());
+                REQUIRE_UNARY_FALSE(linRes.hasDataVector());
 
-                REQUIRE(linRes.getOperator() == mockOp);
+                REQUIRE_EQ(linRes.getOperator(), mockOp);
                 REQUIRE_THROWS_AS(linRes.getDataVector(), Error);
             }
 
@@ -172,24 +187,27 @@ SCENARIO("LinearResidual with just an operator")
             {
                 auto linResClone = linRes.clone();
 
-                REQUIRE(linResClone.get() != &linRes);
-                REQUIRE(*linResClone == linRes);
+                REQUIRE_NE(linResClone.get(), &linRes);
+                REQUIRE_EQ(*linResClone, linRes);
             }
 
             THEN("the Jacobian and evaluate work as expected")
             {
-                DataContainer dcX(ddDomain);
+                DataContainer<TestType> dcX(ddDomain);
                 dcX = 1;
 
-                REQUIRE(linRes.getJacobian(dcX) == leaf(mockOp));
-                REQUIRE(linRes.evaluate(dcX) == mockOp.apply(dcX));
+                REQUIRE_EQ(linRes.getJacobian(dcX), leaf(mockOp));
+                REQUIRE_UNARY(isApprox(linRes.evaluate(dcX), mockOp.apply(dcX)));
             }
         }
     }
 }
 
-SCENARIO("LinearResidual with operator and data")
+TEST_CASE_TEMPLATE("LinearResidual: Testing with operator and data", TestType, float, double,
+                   std::complex<float>, std::complex<double>)
 {
+    using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
+
     GIVEN("an operator and data")
     {
         IndexVector_t numCoeff(3);
@@ -199,44 +217,48 @@ SCENARIO("LinearResidual with operator and data")
         numCoeff2 << 18, 36;
         VolumeDescriptor ddRange(numCoeff2);
 
-        MockOperator mockOp(ddDomain, ddRange);
+        MockOperator<TestType> mockOp(ddDomain, ddRange);
 
-        RealVector_t randomData(ddRange.getNumberOfCoefficients());
+        Vector randomData(ddRange.getNumberOfCoefficients());
         randomData.setRandom();
-        DataContainer dc(ddRange, randomData);
+        DataContainer<TestType> dc(ddRange, randomData);
 
         WHEN("instantiating")
         {
-            LinearResidual linRes(mockOp, dc);
+            LinearResidual<TestType> linRes(mockOp, dc);
 
             THEN("the residual is as expected")
             {
-                REQUIRE(linRes.getDomainDescriptor() == ddDomain);
-                REQUIRE(linRes.getRangeDescriptor() == ddRange);
+                REQUIRE_EQ(linRes.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(linRes.getRangeDescriptor(), ddRange);
 
-                REQUIRE(linRes.hasOperator() == true);
-                REQUIRE(linRes.hasDataVector() == true);
+                REQUIRE_UNARY(linRes.hasOperator());
+                REQUIRE_UNARY(linRes.hasDataVector());
 
-                REQUIRE(linRes.getOperator() == mockOp);
-                REQUIRE(linRes.getDataVector() == dc);
+                REQUIRE_EQ(linRes.getOperator(), mockOp);
+                REQUIRE_UNARY(isApprox(linRes.getDataVector(), dc));
             }
 
             THEN("a clone behaves as expected")
             {
                 auto linResClone = linRes.clone();
 
-                REQUIRE(linResClone.get() != &linRes);
-                REQUIRE(*linResClone == linRes);
+                REQUIRE_NE(linResClone.get(), &linRes);
+                REQUIRE_EQ(*linResClone, linRes);
             }
 
             THEN("the Jacobian and evaluate work as expected")
             {
-                DataContainer dcX(ddDomain);
+                DataContainer<TestType> dcX(ddDomain);
                 dcX = 1;
 
-                REQUIRE(linRes.getJacobian(dcX) == leaf(mockOp));
-                REQUIRE(linRes.evaluate(dcX) == mockOp.apply(dcX) - dc);
+                REQUIRE_EQ(linRes.getJacobian(dcX), leaf(mockOp));
+
+                DataContainer<TestType> tmp = mockOp.apply(dcX) - dc;
+                REQUIRE_UNARY(isApprox(linRes.evaluate(dcX), tmp));
             }
         }
     }
 }
+
+TEST_SUITE_END();

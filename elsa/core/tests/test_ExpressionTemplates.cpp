@@ -8,8 +8,7 @@
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 
-#include <catch2/catch.hpp>
-#include <iostream>
+#include "doctest/doctest.h"
 #include "DataContainer.h"
 #include "IdenticalBlocksDescriptor.h"
 #include <typeinfo>
@@ -19,6 +18,7 @@
 #include <cxxabi.h>
 
 using namespace elsa;
+using namespace doctest;
 static const index_t dimension = 16;
 
 // helper to print out the type
@@ -41,7 +41,9 @@ std::string type_name()
     return r;
 }
 
-TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE_TEMPLATE("Expression templates", TestType, float, double)
 {
     GIVEN("Three random data containers")
     {
@@ -136,7 +138,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
             THEN("the results have to be correct")
             {
                 for (index_t i = 0; i < result.getSize(); ++i) {
-                    REQUIRE(Approx(result[i]) == dc1[i] + dc1[i] * std::sqrt(dc2[i]));
+                    REQUIRE_EQ(Approx(result[i]), dc1[i] + dc1[i] * std::sqrt(dc2[i]));
                 }
             }
         }
@@ -148,7 +150,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
             THEN("the results have to be correct")
             {
                 for (index_t i = 0; i < result.getSize(); ++i) {
-                    REQUIRE(Approx(result[i]).epsilon(0.001) == dc3[i] / dc1[i] * dc2[i] - dc3[i]);
+                    REQUIRE_EQ(Approx(result[i]).epsilon(0.001), dc3[i] / dc1[i] * dc2[i] - dc3[i]);
                 }
             }
         }
@@ -160,7 +162,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
                 DataContainer dc1Before = dc1;
                 dc1 += dc3 * 2 / dc2;
                 for (index_t i = 0; i < dc1.getSize(); ++i) {
-                    REQUIRE(Approx(dc1[i]).epsilon(0.001) == dc1Before[i] + (dc3[i] * 2 / dc2[i]));
+                    REQUIRE_EQ(Approx(dc1[i]).epsilon(0.001), dc1Before[i] + (dc3[i] * 2 / dc2[i]));
                 }
             }
 
@@ -169,7 +171,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
                 DataContainer dc1Before = dc1;
                 dc1 *= dc3 * 2 / dc2;
                 for (index_t i = 0; i < dc1.getSize(); ++i) {
-                    REQUIRE(Approx(dc1[i]).epsilon(0.001) == dc1Before[i] * (dc3[i] * 2 / dc2[i]));
+                    REQUIRE_EQ(Approx(dc1[i]).epsilon(0.001), dc1Before[i] * (dc3[i] * 2 / dc2[i]));
                 }
             }
 
@@ -178,7 +180,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
                 DataContainer dc1Before = dc1;
                 dc1 /= dc3 * 2 / dc2;
                 for (index_t i = 0; i < dc1.getSize(); ++i) {
-                    REQUIRE(Approx(dc1[i]).epsilon(0.001) == dc1Before[i] / (dc3[i] * 2 / dc2[i]));
+                    REQUIRE_EQ(Approx(dc1[i]).epsilon(0.001), dc1Before[i] / (dc3[i] * 2 / dc2[i]));
                 }
             }
 
@@ -187,7 +189,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
                 DataContainer dc1Before = dc1;
                 dc1 -= dc3 * 2 / dc2;
                 for (index_t i = 0; i < dc1.getSize(); ++i) {
-                    REQUIRE(Approx(dc1[i]).epsilon(0.001) == dc1Before[i] - (dc3[i] * 2 / dc2[i]));
+                    REQUIRE_EQ(Approx(dc1[i]).epsilon(0.001), dc1Before[i] - (dc3[i] * 2 / dc2[i]));
                 }
             }
         }
@@ -216,7 +218,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
             {
                 DataContainer result = TestType(1.8) * dc + dc;
                 for (index_t i = 0; i < dc.getSize(); i++) {
-                    REQUIRE(Approx(result[i]) == TestType(1.8) * dc[i] + dc[i]);
+                    REQUIRE_EQ(Approx(result[i]), TestType(1.8) * dc[i] + dc[i]);
                 }
             }
         }
@@ -232,9 +234,9 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
                 DataContainer result =
                     TestType(1.8) * dcBlock + dcBlock2 / dcBlock - square(dcBlock3);
                 for (index_t i = 0; i < result.getSize(); i++) {
-                    REQUIRE(Approx(result[i])
-                            == TestType(1.8) * dcBlock[i] + dcBlock2[i] / dcBlock[i]
-                                   - dcBlock3[i] * dcBlock3[i]);
+                    REQUIRE_EQ(Approx(result[i]), TestType(1.8) * dcBlock[i]
+                                                      + dcBlock2[i] / dcBlock[i]
+                                                      - dcBlock3[i] * dcBlock3[i]);
                 }
             }
         }
@@ -248,8 +250,8 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
                 DataContainer result =
                     TestType(1.8) * dcBlock + dcBlock / dcBlock - square(dcBlock);
                 for (index_t i = 0; i < result.getSize(); i++) {
-                    REQUIRE(Approx(result[i])
-                            == TestType(1.8) * dc[i] + dc[i] / dc[i] - dc[i] * dc[i]);
+                    REQUIRE_EQ(Approx(result[i]),
+                               TestType(1.8) * dc[i] + dc[i] / dc[i] - dc[i] * dc[i]);
                 }
             }
         }
@@ -281,9 +283,9 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
             THEN("the calculations are correct")
             {
                 for (index_t i = 0; i < result.getSize(); i++) {
-                    REQUIRE(Approx(result[i])
-                            == TestType(1.8) * linearDc[i] + linearDc[i] / linearDc[i]
-                                   - linearDc[i] * linearDc[i]);
+                    REQUIRE_EQ(Approx(result[i]), TestType(1.8) * linearDc[i]
+                                                      + linearDc[i] / linearDc[i]
+                                                      - linearDc[i] * linearDc[i]);
                 }
             }
         }
@@ -295,7 +297,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates", "", float, double)
 }
 
 #ifdef ELSA_CUDA_VECTOR
-TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
+TEST_CASE_TEMPLATE("Expression templates: Testing on GPU", TestType, float, double)
 {
     GIVEN("Three random data containers")
     {
@@ -393,7 +395,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
             THEN("the results have to be correct")
             {
                 for (index_t i = 0; i < result.getSize(); ++i) {
-                    REQUIRE(Approx(result[i]) == dc1[i] + dc1[i] * std::sqrt(dc2[i]));
+                    REQUIRE_EQ(Approx(result[i]), dc1[i] + dc1[i] * std::sqrt(dc2[i]));
                 }
             }
         }
@@ -405,7 +407,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
             THEN("the results have to be correct")
             {
                 for (index_t i = 0; i < result.getSize(); ++i) {
-                    REQUIRE(Approx(result[i]).epsilon(0.001) == dc3[i] / dc1[i] * dc2[i] - dc3[i]);
+                    REQUIRE_EQ(Approx(result[i]).epsilon(0.001), dc3[i] / dc1[i] * dc2[i] - dc3[i]);
                 }
             }
         }
@@ -417,7 +419,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
                 DataContainer dc1Before = dc1;
                 dc1 += dc3 * 2 / dc2;
                 for (index_t i = 0; i < dc1.getSize(); ++i) {
-                    REQUIRE(Approx(dc1[i]).epsilon(0.001) == dc1Before[i] + (dc3[i] * 2 / dc2[i]));
+                    REQUIRE_EQ(Approx(dc1[i]).epsilon(0.001), dc1Before[i] + (dc3[i] * 2 / dc2[i]));
                 }
             }
 
@@ -426,7 +428,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
                 DataContainer dc1Before = dc1;
                 dc1 *= dc3 * 2 / dc2;
                 for (index_t i = 0; i < dc1.getSize(); ++i) {
-                    REQUIRE(Approx(dc1[i]).epsilon(0.001) == dc1Before[i] * (dc3[i] * 2 / dc2[i]));
+                    REQUIRE_EQ(Approx(dc1[i]).epsilon(0.001), dc1Before[i] * (dc3[i] * 2 / dc2[i]));
                 }
             }
 
@@ -435,7 +437,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
                 DataContainer dc1Before = dc1;
                 dc1 /= dc3 * 2 / dc2;
                 for (index_t i = 0; i < dc1.getSize(); ++i) {
-                    REQUIRE(Approx(dc1[i]).epsilon(0.001) == dc1Before[i] / (dc3[i] * 2 / dc2[i]));
+                    REQUIRE_EQ(Approx(dc1[i]).epsilon(0.001), dc1Before[i] / (dc3[i] * 2 / dc2[i]));
                 }
             }
 
@@ -444,7 +446,7 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
                 DataContainer dc1Before = dc1;
                 dc1 -= dc3 * 2 / dc2;
                 for (index_t i = 0; i < dc1.getSize(); ++i) {
-                    REQUIRE(Approx(dc1[i]).epsilon(0.001) == dc1Before[i] - (dc3[i] * 2 / dc2[i]));
+                    REQUIRE_EQ(Approx(dc1[i]).epsilon(0.001), dc1Before[i] - (dc3[i] * 2 / dc2[i]));
                 }
             }
         }
@@ -453,3 +455,5 @@ TEMPLATE_TEST_CASE("Scenario: Expression templates on GPU", "", float, double)
     cudaDeviceReset();
 }
 #endif
+
+TEST_SUITE_END();

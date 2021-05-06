@@ -6,11 +6,13 @@
  * @author Tobias Lasser - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "EllipseGenerator.h"
 #include "VolumeDescriptor.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
 static constexpr auto pi_d = pi<real_t>;
 

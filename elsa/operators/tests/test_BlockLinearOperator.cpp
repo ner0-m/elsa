@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "IdenticalBlocksDescriptor.h"
 #include "PartitionDescriptor.h"
@@ -9,8 +9,11 @@
 #include "Scaling.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE_TEMPLATE("BlockLinearOperator: Testing construction", TestType, float, double)
 {
     using BlockType = typename BlockLinearOperator<TestType>::BlockType;
     using OperatoList = std::vector<std::unique_ptr<LinearOperator<TestType>>>;
@@ -280,7 +283,7 @@ TEMPLATE_TEST_CASE("Constructing a BlockLinearOperator ", "", float, double)
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator apply", "", float, double)
+TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double)
 {
     using BlockType = typename BlockLinearOperator<TestType>::BlockType;
     index_t rows = 4, cols = 8, numBlks = 3;
@@ -386,7 +389,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator apply", "", float, double)
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator applyAdjoint", "", float, double)
+TEST_CASE_TEMPLATE("BlockLinearOperator: applyAdjoint", TestType, float, double)
 {
     using BlockType = typename BlockLinearOperator<TestType>::BlockType;
     index_t rows = 4, cols = 8, numBlks = 3;
@@ -478,7 +481,7 @@ TEMPLATE_TEST_CASE("Scenario: BlockLinearOperator applyAdjoint", "", float, doub
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Cloning BlockLinearOperator", "", float, double)
+TEST_CASE_TEMPLATE("BlockLinearOperator: Testing cloning", TestType, float, double)
 {
     using BlockType = typename BlockLinearOperator<TestType>::BlockType;
     index_t rows = 4, cols = 8;
@@ -543,7 +546,7 @@ TEMPLATE_TEST_CASE("Scenario: Cloning BlockLinearOperator", "", float, double)
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Comparing BlockLinearOperators", "", float, double)
+TEST_CASE_TEMPLATE("BlockLinearOperator: Testing comparison", TestType, float, double)
 {
     using BlockType = typename BlockLinearOperator<TestType>::BlockType;
     index_t rows = 4, cols = 8;
@@ -603,3 +606,4 @@ TEMPLATE_TEST_CASE("Scenario: Comparing BlockLinearOperators", "", float, double
         }
     }
 }
+TEST_SUITE_END();

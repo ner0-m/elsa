@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <random>
 
 #include "VolumeDescriptor.h"
@@ -9,8 +9,14 @@
 using namespace elsa;
 using namespace elsa::ml;
 using namespace elsa::ml::detail;
+using namespace doctest;
 
-TEST_CASE("CudnnDeconvolution", "[ml][cudnn]")
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_SUITE_BEGIN("ml-cudnn");
+
+TEST_CASE("CudnnDeconvolution")
 {
     SECTION("Test 1")
     {
@@ -58,3 +64,5 @@ TEST_CASE("CudnnDeconvolution", "[ml][cudnn]")
             std::cout << inGrad[i] << "\n";
     }
 }
+
+TEST_SUITE_END();

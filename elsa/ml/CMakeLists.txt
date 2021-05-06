@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.10)
-
 # Set the name of the module
 set(ELSA_MODULE_NAME ml)
 set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
@@ -33,7 +31,11 @@ if(Cudnn_FOUND AND Cublas_FOUND AND ELSA_BUILD_ML_CUDNN)
     set(ELSA_ML_CUDNN_BACKEND_DIR ${ELSA_BACKEND_DIR}/Cudnn)
     add_subdirectory(${ELSA_ML_CUDNN_BACKEND_DIR})
   endif(CMAKE_CUDA_COMPILER)
-endif(Cudnn_FOUND AND Cublas_FOUND AND ELSA_BUILD_ML_CUDNN)
+elseif(Cudnn_FOUND AND ELSA_BUILD_ML_CUDNN)
+    message(STATUS "Cudnn backend deactivated, cuDNN not found")
+elseif(Cublas_FOUND AND ELSA_BUILD_ML_CUDNN) 
+    message(STATUS "Cudnn backend deactivated, cublas not found")
+endif()
 
 # list all the headers of the module
 set(MODULE_HEADERS
@@ -131,11 +133,17 @@ set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT
 if(ELSA_TESTING)
     add_subdirectory(tests)
 
+    # set the module name correctly here! 
+    set(_module_name ${ELSA_MODULE_TARGET_NAME}) 
+    set(ELSA_MODULE_TARGET_NAME elsa_ml_cudnn_backend) 
     # We add Cudnn backend tests here because we want to be able to use C++17
     # in the tests
     if(ELSA_HAS_CUDNN_BACKEND)
       add_subdirectory(${ELSA_ML_CUDNN_BACKEND_DIR}/tests)
     endif(ELSA_HAS_CUDNN_BACKEND)
+     
+    # and now set it back 
+    set(ELSA_MODULE_TARGET_NAME ${_module_name}) 
 endif(ELSA_TESTING)
 
 if (ELSA_BUILD_WITH_QUICKVEC)

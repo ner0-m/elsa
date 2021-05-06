@@ -6,7 +6,7 @@
  * @author David Frank - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Error.h"
 #include "PGMHandler.h"
 
@@ -16,6 +16,7 @@
 #include <string_view>
 
 using namespace elsa;
+using namespace doctest;
 
 inline bool file_exists(std::string name)
 {
@@ -23,7 +24,9 @@ inline bool file_exists(std::string name)
     return f.good();
 }
 
-SCENARIO("Write PGM file")
+TEST_SUITE_BEGIN("io");
+
+TEST_CASE("PGMHandler: Write PGM file")
 {
     GIVEN("A 2D DataContainer")
     {
@@ -93,3 +96,5 @@ SCENARIO("Write PGM file")
         }
     }
 }
+
+TEST_SUITE_END();

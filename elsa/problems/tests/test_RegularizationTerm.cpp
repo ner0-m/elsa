@@ -1,13 +1,13 @@
-/**
- *
- */
+#include "doctest/doctest.h"
 
-#include <catch2/catch.hpp>
 #include "RegularizationTerm.h"
 #include "L2NormPow2.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
+
+TEST_SUITE_BEGIN("problems");
 
 SCENARIO("Testing RegularizationTerm")
 {
@@ -102,3 +102,5 @@ SCENARIO("Testing RegularizationTerm")
         }
     }
 }
+
+TEST_SUITE_END();

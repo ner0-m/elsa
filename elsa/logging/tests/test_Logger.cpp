@@ -6,15 +6,18 @@
  * @author Tobias Lasser - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Logger.h"
 #include <sstream>
 
 using namespace elsa;
+using namespace doctest;
 
 using namespace std::string_literals;
 
-SCENARIO("Using Loggers")
+TEST_SUITE_BEGIN("logging");
+
+TEST_CASE("Logger: Use test")
 {
     GIVEN("a logger")
     {
@@ -168,3 +171,5 @@ SCENARIO("Using Loggers")
         REQUIRE(resultString == (msg + '\n'));
     }
 }
+
+TEST_SUITE_END();

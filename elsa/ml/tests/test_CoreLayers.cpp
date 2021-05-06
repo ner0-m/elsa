@@ -1,10 +1,16 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Input.h"
 #include "Dense.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("CoreLayers", "[ml]", float)
+TEST_SUITE_BEGIN("ml");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE_TEMPLATE("CoreLayers", TestType, float)
 {
     SECTION("Input")
     {
@@ -61,3 +67,4 @@ TEMPLATE_TEST_CASE("CoreLayers", "[ml]", float)
         REQUIRE_THROWS_AS(d.setInputDescriptor(invalidDesc), std::invalid_argument);
     }
 }
+TEST_SUITE_END();

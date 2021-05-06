@@ -166,13 +166,13 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
     enable_testing()
 
     CPMAddPackage(
-         NAME Catch2
-         GITHUB_REPOSITORY catchorg/Catch2
-         VERSION 2.10.1 # <-- Current, update to: 2.13.1
+         NAME doctest
+         GITHUB_REPOSITORY onqtam/doctest
+         GIT_TAG 2.4.4
     )
-
+ 
     # add the CMake modules for automatic test discovery
-    set(CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/contrib" ${CMAKE_MODULE_PATH})
+    set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
 
     if(ELSA_TESTING)
         message(STATUS "elsa testing is enabled")
@@ -185,6 +185,9 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             USES_TERMINAL
             COMMENT "Build and run all the tests.")
+
+        # Target to only build all tests
+        add_custom_target(build-tests)
 
         if(ELSA_COVERAGE)
             message(STATUS "elsa test coverage is enabled")

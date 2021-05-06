@@ -9,16 +9,28 @@
  * @author Tobias Lasser - modernization
  */
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
+
+#include "testHelpers.h"
 #include "Quadric.h"
 #include "Identity.h"
 #include "Scaling.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing the Quadric functional")
+TYPE_TO_STRING(std::complex<float>);
+TYPE_TO_STRING(std::complex<double>);
+
+TEST_SUITE_BEGIN("functionals");
+
+// SCENARIO("Testing the Quadric<TestType>functional")
+TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
+                   std::complex<float>, std::complex<double>)
 {
+    using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
+
     GIVEN("no operator and no data")
     {
         IndexVector_t numCoeff(3);
@@ -27,40 +39,40 @@ SCENARIO("Testing the Quadric functional")
 
         WHEN("instantiating")
         {
-            Quadric func(dd);
+            Quadric<TestType> func(dd);
 
             THEN("the functional is as expected")
             {
-                REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
-                REQUIRE(linRes);
-                REQUIRE(linRes->hasDataVector() == false);
-                REQUIRE(linRes->hasOperator() == false);
+                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                REQUIRE_UNARY(linRes);
+                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
+                REQUIRE_UNARY_FALSE(linRes->hasOperator());
 
                 const auto& gradExpr = func.getGradientExpression();
-                REQUIRE(gradExpr.hasDataVector() == false);
-                REQUIRE(gradExpr.hasOperator() == false);
+                REQUIRE_UNARY_FALSE(gradExpr.hasDataVector());
+                REQUIRE_UNARY_FALSE(gradExpr.hasOperator());
             }
 
             THEN("a clone behaves as expected")
             {
                 auto qClone = func.clone();
 
-                REQUIRE(qClone.get() != &func);
-                REQUIRE(*qClone == func);
+                REQUIRE_NE(qClone.get(), &func);
+                REQUIRE_EQ(*qClone, func);
             }
 
             THEN("the evaluate, gradient and Hessian work as expected")
             {
-                RealVector_t dataVec(dd.getNumberOfCoefficients());
+                Vector dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
-                DataContainer x(dd, dataVec);
+                DataContainer<TestType> x(dd, dataVec);
 
-                real_t trueValue = static_cast<real_t>(0.5) * x.squaredL2Norm();
-                REQUIRE(func.evaluate(x) == Approx(trueValue));
-                REQUIRE(func.getGradient(x) == x);
-                REQUIRE(func.getHessian(x) == leaf(Identity(dd)));
+                TestType trueValue = static_cast<TestType>(0.5) * x.squaredL2Norm();
+                REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
+                REQUIRE_UNARY(isApprox(func.getGradient(x), x));
+                REQUIRE_EQ(func.getHessian(x), leaf(Identity<TestType>(dd)));
             }
         }
     }
@@ -71,45 +83,45 @@ SCENARIO("Testing the Quadric functional")
         numCoeff << 13, 11, 7;
         VolumeDescriptor dd(numCoeff);
 
-        Scaling scalingOp(dd, static_cast<real_t>(3.0));
+        Scaling scalingOp(dd, static_cast<TestType>(3.0));
 
         WHEN("instantiating")
         {
-            Quadric func(scalingOp);
+            Quadric<TestType> func(scalingOp);
 
             THEN("the functional is as expected")
             {
-                REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
-                REQUIRE(linRes);
-                REQUIRE(linRes->hasDataVector() == false);
-                REQUIRE(linRes->hasOperator() == false);
+                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                REQUIRE_UNARY(linRes);
+                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
+                REQUIRE_UNARY_FALSE(linRes->hasOperator());
 
                 const auto& gradExpr = func.getGradientExpression();
-                REQUIRE(gradExpr.hasDataVector() == false);
-                REQUIRE(gradExpr.getOperator() == scalingOp);
+                REQUIRE_UNARY_FALSE(gradExpr.hasDataVector());
+                REQUIRE_EQ(gradExpr.getOperator(), scalingOp);
             }
 
             THEN("a clone behaves as expected")
             {
                 auto qClone = func.clone();
 
-                REQUIRE(qClone.get() != &func);
-                REQUIRE(*qClone == func);
+                REQUIRE_NE(qClone.get(), &func);
+                REQUIRE_EQ(*qClone, func);
             }
 
             THEN("the evaluate, gradient and Hessian work as expected")
             {
-                RealVector_t dataVec(dd.getNumberOfCoefficients());
+                Vector dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
-                DataContainer x(dd, dataVec);
+                DataContainer<TestType> x(dd, dataVec);
 
-                real_t trueValue =
-                    static_cast<real_t>(0.5) * scalingOp.getScaleFactor() * x.squaredL2Norm();
-                REQUIRE(func.evaluate(x) == Approx(trueValue));
-                REQUIRE(func.getGradient(x) == scalingOp.getScaleFactor() * x);
-                REQUIRE(func.getHessian(x) == leaf(scalingOp));
+                TestType trueValue =
+                    static_cast<TestType>(0.5) * scalingOp.getScaleFactor() * x.squaredL2Norm();
+                REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
+                REQUIRE_EQ(func.getGradient(x), scalingOp.getScaleFactor() * x);
+                REQUIRE_EQ(func.getHessian(x), leaf(scalingOp));
             }
         }
     }
@@ -120,46 +132,46 @@ SCENARIO("Testing the Quadric functional")
         numCoeff << 13, 11, 7;
         VolumeDescriptor dd(numCoeff);
 
-        RealVector_t randomData(dd.getNumberOfCoefficients());
+        Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
-        DataContainer dc(dd, randomData);
+        DataContainer<TestType> dc(dd, randomData);
 
         WHEN("instantiating")
         {
-            Quadric func(dc);
+            Quadric<TestType> func(dc);
 
             THEN("the functional is as expected")
             {
-                REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
-                REQUIRE(linRes);
-                REQUIRE(linRes->hasDataVector() == false);
-                REQUIRE(linRes->hasOperator() == false);
+                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                REQUIRE_UNARY(linRes);
+                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
+                REQUIRE_UNARY_FALSE(linRes->hasOperator());
 
                 const auto& gradExpr = func.getGradientExpression();
-                REQUIRE(gradExpr.getDataVector() == dc);
-                REQUIRE(gradExpr.hasOperator() == false);
+                REQUIRE_EQ(gradExpr.getDataVector(), dc);
+                REQUIRE_UNARY_FALSE(gradExpr.hasOperator());
             }
 
             THEN("a clone behaves as expected")
             {
                 auto qClone = func.clone();
 
-                REQUIRE(qClone.get() != &func);
-                REQUIRE(*qClone == func);
+                REQUIRE_NE(qClone.get(), &func);
+                REQUIRE_EQ(*qClone, func);
             }
 
             THEN("the evaluate, gradient and Hessian work as expected")
             {
-                RealVector_t dataVec(dd.getNumberOfCoefficients());
+                Vector dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
-                DataContainer x(dd, dataVec);
+                DataContainer<TestType> x(dd, dataVec);
 
-                real_t trueValue = static_cast<real_t>(0.5) * x.squaredL2Norm() - x.dot(dc);
-                REQUIRE(func.evaluate(x) == Approx(trueValue));
-                REQUIRE(func.getGradient(x) == x - dc);
-                REQUIRE(func.getHessian(x) == leaf(Identity<real_t>(dd)));
+                TestType trueValue = static_cast<TestType>(0.5) * x.squaredL2Norm() - x.dot(dc);
+                REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
+                REQUIRE_EQ(func.getGradient(x), x - dc);
+                REQUIRE_EQ(func.getHessian(x), leaf(Identity<TestType>(dd)));
             }
         }
     }
@@ -170,50 +182,52 @@ SCENARIO("Testing the Quadric functional")
         numCoeff << 13, 11, 7;
         VolumeDescriptor dd(numCoeff);
 
-        Identity idOp(dd);
+        Identity<TestType> idOp(dd);
 
-        RealVector_t randomData(dd.getNumberOfCoefficients());
+        Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
-        DataContainer dc(dd, randomData);
+        DataContainer<TestType> dc(dd, randomData);
 
         WHEN("instantiating")
         {
-            Quadric func(idOp, dc);
+            Quadric<TestType> func(idOp, dc);
 
             THEN("the functional is as expected")
             {
-                REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
-                REQUIRE(linRes);
-                REQUIRE(linRes->hasDataVector() == false);
-                REQUIRE(linRes->hasOperator() == false);
+                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                REQUIRE_UNARY(linRes);
+                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
+                REQUIRE_UNARY_FALSE(linRes->hasOperator());
 
                 const auto& gradExpr = func.getGradientExpression();
-                REQUIRE(gradExpr.getDataVector() == dc);
-                REQUIRE(gradExpr.getOperator() == idOp);
+                REQUIRE(isApprox(gradExpr.getDataVector(), dc));
+                REQUIRE_EQ(gradExpr.getOperator(), idOp);
             }
 
             THEN("a clone behaves as expected")
             {
                 auto qClone = func.clone();
 
-                REQUIRE(qClone.get() != &func);
-                REQUIRE(*qClone == func);
+                REQUIRE_NE(qClone.get(), &func);
+                REQUIRE_EQ(*qClone, func);
             }
 
             THEN("the evaluate, gradient and Hessian work as expected")
             {
-                RealVector_t dataVec(dd.getNumberOfCoefficients());
+                Vector dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
-                DataContainer x(dd, dataVec);
+                DataContainer<TestType> x(dd, dataVec);
 
-                real_t trueValue = static_cast<real_t>(0.5) * x.dot(x) - x.dot(dc);
-                REQUIRE(func.evaluate(x) == Approx(trueValue));
-                DataContainer grad(dd, (dataVec - randomData).eval());
-                REQUIRE(func.getGradient(x) == grad);
-                REQUIRE(func.getHessian(x) == leaf(idOp));
+                TestType trueValue = static_cast<TestType>(0.5) * x.dot(x) - x.dot(dc);
+                REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
+                DataContainer<TestType> grad(dd, (dataVec - randomData).eval());
+                REQUIRE_EQ(func.getGradient(x), grad);
+                REQUIRE_EQ(func.getHessian(x), leaf(idOp));
             }
         }
     }
 }
+
+TEST_SUITE_END();

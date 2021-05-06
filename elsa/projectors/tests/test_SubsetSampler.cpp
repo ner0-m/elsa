@@ -5,7 +5,7 @@
  *
  * @author Michael Loipführer - initial code
  */
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "SubsetSampler.h"
 #include "Logger.h"
@@ -17,6 +17,7 @@
 #include "JosephsMethod.h"
 
 using namespace elsa;
+using namespace doctest;
 
 SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor")
 {

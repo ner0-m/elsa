@@ -1,10 +1,16 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Input.h"
 #include "Conv.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("ConvShapes", "[ml]", float)
+TEST_SUITE_BEGIN("ml");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE_TEMPLATE("ConvShapes", TestType, float)
 {
     SECTION("Conv1D")
     {
@@ -46,3 +52,4 @@ TEMPLATE_TEST_CASE("ConvShapes", "[ml]", float)
         REQUIRE(layer.getOutputDescriptor().getNumberOfCoefficientsPerDimension() == outDims);
     }
 }
+TEST_SUITE_END();

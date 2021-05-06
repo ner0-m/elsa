@@ -6,17 +6,24 @@
  * @author Andi Braimllari
  */
 
+#include <doctest/doctest.h>
+
+#include "testHelpers.h"
 #include "Constraint.h"
 #include "Identity.h"
 #include "Scaling.h"
 #include "VolumeDescriptor.h"
 
-#include <catch2/catch.hpp>
-
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("Scenario: Testing Constraint", "", float, std::complex<float>, double,
-                   std::complex<double>)
+TYPE_TO_STRING(std::complex<float>);
+TYPE_TO_STRING(std::complex<double>);
+
+TEST_SUITE_BEGIN("functionals");
+
+TEST_CASE_TEMPLATE("Constraint: Testing construction and clone", TestType, float,
+                   std::complex<float>, double, std::complex<double>)
 {
     GIVEN("an Identity, a Scaling operator and a DataContainer")
     {
@@ -35,18 +42,20 @@ TEMPLATE_TEST_CASE("Scenario: Testing Constraint", "", float, std::complex<float
 
             THEN("the Constraint is as expected")
             {
-                REQUIRE(constraint.getOperatorA() == A);
-                REQUIRE(constraint.getOperatorB() == B);
-                REQUIRE(constraint.getDataVectorC() == c);
+                REQUIRE_EQ(constraint.getOperatorA(), A);
+                REQUIRE_EQ(constraint.getOperatorB(), B);
+                REQUIRE_UNARY(isApprox(constraint.getDataVectorC(), c));
             }
 
             THEN("a clone behaves as expected")
             {
                 auto constraintClone = constraint.clone();
 
-                REQUIRE(constraintClone.get() != &constraint);
-                REQUIRE(*constraintClone == constraint);
+                REQUIRE_NE(constraintClone.get(), &constraint);
+                REQUIRE_EQ(*constraintClone, constraint);
             }
         }
     }
 }
+
+TEST_SUITE_END();

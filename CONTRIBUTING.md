@@ -52,11 +52,19 @@ Set it in your e.g. `.bashrc`.
 You can run the elsa unit tests by running `ctest` in the build folder. To specify which tests run,
 filter with `ctest -R regular_expression`.
 
-We use a testing style described as [Behaviour-Driven
-Development](https://github.com/catchorg/Catch2/blob/master/docs/tutorial.md#bdd-style) (BDD). Please
-follow this style when adding new tests.
-
+We use a testing style similar described in [Behaviour-Driven
+Development](https://github.com/onqtam/doctest/blob/master/doc/markdown/testcases.md#bdd-style-test-cases) (BDD). Please
+follow this style when adding new tests. However, isntead of using `SCENARIO` use `TEST_CASE` with the name of the
+class under test at the beginning of the test name. Also be sure to add the tests to the test suite associated
+to the module of the test.
+ 
+We're currently relying on [doctest](https://github.com/onqtam/doctest/) as our testing framework, when 
+using assertion macros, please try to use the 
+[binary and unary asserts](https://github.com/onqtam/doctest/blob/master/doc/markdown/assertions.md#binary-and-unary-asserts)
+as much as possible. 
+ 
 ## Benchmarking
+ 
 You can use the catch testing framework to do [benchmarking
 ](https://github.com/catchorg/Catch2/blob/master/docs/benchmarks.md). If so, add your benchmarking
 case following this template

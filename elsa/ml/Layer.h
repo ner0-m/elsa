@@ -16,7 +16,7 @@ namespace elsa::ml
 {
     /// Base class for all layers in a network
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     template <typename data_t = real_t>
     class Layer
     {
@@ -26,12 +26,12 @@ namespace elsa::ml
         /**
          *  Construct a layer
          *
-         * \param layerType the type of the layer
-         * \param requiredNumberOfDimensions the required number of
+         * @param layerType the type of the layer
+         * @param requiredNumberOfDimensions the required number of
          *            dimensions any input to this layer has. This can be set
          *            to Layer::AnyNumberOfInputDimensions to indicate that the
          *            number of input dimensions is not restricted.
-         *  \param allowedNumberOfInputs the allowed number of inputs to
+         *  @param allowedNumberOfInputs the allowed number of inputs to
          *             this layer. This can be set to Layer::AnyNumberOfInputs
          *             to indicate that the layer accepts an arbitrary number of
          *             inputs.
@@ -55,25 +55,25 @@ namespace elsa::ml
         /// Destructor
         virtual ~Layer() = default;
 
-        /// \returns this layer's layer-type
+        /// @returns this layer's layer-type
         LayerType getLayerType() const;
 
-        /// \returns this layer's name
+        /// @returns this layer's name
         std::string getName() const;
 
         /// set the layer's input descriptor at a given index
         void setInputDescriptor(const VolumeDescriptor&);
 
-        /// \returns this layer's input descriptor at a given index
+        /// @returns this layer's input descriptor at a given index
         VolumeDescriptor getInputDescriptor(index_t index = 0) const;
 
-        /// \returns the number of inputs of this layer
+        /// @returns the number of inputs of this layer
         index_t getNumberOfInputs() const;
 
-        /// \returns the layer's output descriptor
+        /// @returns the layer's output descriptor
         VolumeDescriptor getOutputDescriptor() const;
 
-        /// \returns the layer's unique global index
+        /// @returns the layer's unique global index
         index_t getGlobalIndex() const;
 
         /// Set this layer's input.
@@ -85,13 +85,13 @@ namespace elsa::ml
         /// Compute this layer's output descriptor.
         virtual void computeOutputDescriptor();
 
-        /// \returns true of a layer is trainable and false otherwise
+        /// @returns true of a layer is trainable and false otherwise
         bool isTrainable() const;
 
-        /// \returns true of a layer can merge multiple inputs and false otherwise
+        /// @returns true of a layer can merge multiple inputs and false otherwise
         virtual bool canMerge() const;
 
-        /// \returns the number of trainable parameters
+        /// @returns the number of trainable parameters
         index_t getNumberOfTrainableParameters() const;
 
         template <typename T>

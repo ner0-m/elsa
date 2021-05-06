@@ -21,7 +21,7 @@ namespace elsa::ml
          * This layer is used as a base class for all Dnnl layer's with trainable
          * parameters, such as convolutional or dense layers.
          *
-         * \tparam data_t Type of all coefficiens used in the layer
+         * @tparam data_t Type of all coefficiens used in the layer
          */
         template <typename data_t>
         class DnnlTrainableLayer : public DnnlLayer<data_t>

@@ -8,12 +8,13 @@
  * @author Tobias Lasser - minor fixes
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "TraverseAABB.h"
 #include "Intersection.h"
 
 using namespace elsa;
+using namespace doctest;
 
 using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
 

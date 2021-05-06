@@ -9,9 +9,9 @@
 
 namespace elsa::ml
 {
-    /// \brief Just your regular densely-connected NN layer.
+    /// @brief Just your regular densely-connected NN layer.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// Dense implements the operation:
     ///   \f$ \text{output} = \text{activation}(\text{input} \cdot \text{kernel} + \text{bias}) \f$
@@ -20,22 +20,22 @@ namespace elsa::ml
     /// and bias is a bias vector created by the layer (only applicable if
     /// ``use_bias`` is ``true``).
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     template <typename data_t = real_t>
     class Dense : public Trainable<data_t>
     {
     public:
         /// Construct a Dense layer
         ///
-        /// \param units The number of units (neurons) of the layer. This is
+        /// @param units The number of units (neurons) of the layer. This is
         /// also the dimensionality of the output space.
-        /// \param activation Activation function to use.
-        /// \param useBias Whether the layer uses a bias vector.
-        /// \param kernelInitializer Initializer for the kernel weights matrix.
+        /// @param activation Activation function to use.
+        /// @param useBias Whether the layer uses a bias vector.
+        /// @param kernelInitializer Initializer for the kernel weights matrix.
         /// This parameter is optional and defaults to Initializer::GlorotNormal.
-        /// \param biasInitializer Initializer for the bias vector. This
+        /// @param biasInitializer Initializer for the bias vector. This
         /// parameter is optional and defaults to Initializer::Zeros.
-        /// \param name
+        /// @param name
         Dense(index_t units, Activation activation, bool useBias = true,
               Initializer kernelInitializer = Initializer::GlorotNormal,
               Initializer biasInitializer = Initializer::Zeros, const std::string& name = "");
@@ -43,7 +43,7 @@ namespace elsa::ml
         /// Default constructor
         Dense() = default;
 
-        /// \returns the the number of units (also called neurons) of this layer.
+        /// @returns the the number of units (also called neurons) of this layer.
         index_t getNumberOfUnits() const;
 
         /// \copydoc Trainable::computeOutputDescriptor

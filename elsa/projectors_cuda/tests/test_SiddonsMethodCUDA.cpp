@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "SiddonsMethodCUDA.h"
 #include "SiddonsMethod.h"
@@ -13,6 +13,10 @@
 
 using namespace elsa;
 using namespace elsa::geometry;
+using namespace doctest;
+
+// TODO(dfrank): remove this and replace with checkApproxEq
+using doctest::Approx;
 
 /*
  * this function declaration can be used in conjunction with decltype to deduce the
@@ -23,8 +27,9 @@ using namespace elsa::geometry;
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", SiddonsMethodCUDA<float>,
-                   SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
+TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
+                   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
+                   SiddonsMethod<double>)
 {
     // Turn logger of
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -79,8 +84,9 @@ TEMPLATE_TEST_CASE("Scenario: Calls to functions of super class", "", SiddonsMet
     }
 }
 
-TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMethodCUDA<float>,
-                   SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
+                   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
+                   SiddonsMethod<double>)
 {
     // Turn logger of
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -286,31 +292,33 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
         const std::array<real_t, numCases> angles = {0., 90., 180., 270.};
 
         // clang-format off
-        backProjections[0] << 0, 0, 1, 0, 0, 
-                              0, 0, 1, 0, 0, 
-                              0, 0, 1, 0, 0, 
-                              0, 0, 1, 0, 0, 
+        backProjections[0] << 0, 0, 1, 0, 0,
+                              0, 0, 1, 0, 0,
+                              0, 0, 1, 0, 0,
+                              0, 0, 1, 0, 0,
                               0, 0, 1, 0, 0;
-         
-        backProjections[1] << 0, 0, 0, 0, 0, 
-                              0, 0, 0, 0, 0, 
-                              1, 1, 1, 1, 1, 
-                              0, 0, 0, 0, 0, 
+
+        backProjections[1] << 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0,
+                              1, 1, 1, 1, 1,
+                              0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0;
-        // clang-format on 
-         
+        // clang-format on
+
         for (index_t i = 0; i < numCases; i++) {
-            WHEN("An axis-aligned ray with an angle of " + std::to_string(angles[i])
-                 + " radians passes through the center of a pixel")
+            WHEN("An axis-aligned ray with a fixed angle passes through the center of a pixel")
             {
+                INFO("An axis-aligned ray with an angle of ", angles[i],
+                     " radians passes through the center of a pixel");
+
                 geom.emplace_back(stc, ctr, Degree{angles[i]}, std::move(volData),
                                   std::move(sinoData));
-                 
+
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer<data_t> sino(sinoDescriptor);
-                 
+
                 TestType op(volumeDescriptor, sinoDescriptor);
-                 
+
                 THEN("The result of projecting through a pixel is exactly the pixel value")
                 {
                     for (index_t j = 0; j < volSize; j++) {
@@ -328,26 +336,24 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                              "value")
                     {
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, backProjections[i %
-                                         2])));
+                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,
+                                                                       backProjections[i % 2])));
                     }
                 }
             }
         }
-         
-         
+
         WHEN("A y-axis-aligned ray runs along the left voxel boundary")
         {
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
                               std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{-0.5, 0});
-             
+
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer<data_t> sino(sinoDescriptor);
-             
+
             TestType op(volumeDescriptor, sinoDescriptor);
-             
+
             THEN("The result of projecting through a pixel is the value of the pixel with the "
                  "higher index")
             {
@@ -363,8 +369,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                 {
                     sino[0] = 1;
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                    backProjections[0])));
+                    REQUIRE(isApprox(volume,
+                                     DataContainer<data_t>(volumeDescriptor, backProjections[0])));
                 }
             }
         }
@@ -376,10 +382,10 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
                               std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                               RotationOffset2D{volSize * 0.5, 0});
-             
+
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer<data_t> sino(sinoDescriptor);
-             
+
             TestType op(volumeDescriptor, sinoDescriptor);
 
             THEN("The result of projecting is zero")
@@ -399,13 +405,12 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                 }
             }
         }
-         
-         
+
         // clang-format off
         backProjections[0] << 1, 0, 0, 0, 0,
-                              1, 0, 0, 0, 0, 
-                              1, 0, 0, 0, 0, 
-                              1, 0, 0, 0, 0, 
+                              1, 0, 0, 0, 0,
+                              1, 0, 0, 0, 0,
+                              1, 0, 0, 0, 0,
                               1, 0, 0, 0, 0;
         // clang-format on
 
@@ -524,9 +529,9 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                         Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
 
                         // clang-format off
-                        expected <<              0,              0, 2 - 2 / sqrt3d, 4 / sqrt3d - 2, 
-                                                 0,              0,     2 / sqrt3d,              0, 
-                                                 0,     2 / sqrt3d,              0,              0, 
+                        expected <<              0,              0, 2 - 2 / sqrt3d, 4 / sqrt3d - 2,
+                                                 0,              0,     2 / sqrt3d,              0,
+                                                 0,     2 / sqrt3d,              0,              0,
                                     4 / sqrt3d - 2, 2 - 2 / sqrt3d,              0,              0;
                         // clang-format on
 
@@ -578,9 +583,9 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                         Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
 
                         // clang-format off
-                        expected << 0, 0,              0,              0, 
-                                    0, 0,              0, 4 - 2 * sqrt3d, 
-                                    0, 0,              0,     2 / sqrt3d, 
+                        expected << 0, 0,              0,              0,
+                                    0, 0,              0, 4 - 2 * sqrt3d,
+                                    0, 0,              0,     2 / sqrt3d,
                                     0, 0, 2 - 2 / sqrt3d, 4 / sqrt3d - 2;
                         // clang-format on
 
@@ -632,8 +637,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
 
                         // clang-format off
                         expected << 4 / sqrt3d - 2, 2 - 2 / sqrt3d, 0, 0,
-                                        2 / sqrt3d,              0, 0, 0, 
-                                    4 - 2 * sqrt3d,              0, 0, 0, 
+                                        2 / sqrt3d,              0, 0, 0,
+                                    4 - 2 * sqrt3d,              0, 0, 0,
                                                  0,              0, 0, 0;
                         // clang-format on
 
@@ -675,9 +680,9 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
 
                         Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
                         // clang-format off
-                        expected << 1 / sqrt3d, 0, 0, 0, 
-                                             0, 0, 0, 0, 
-                                             0, 0, 0, 0, 
+                        expected << 1 / sqrt3d, 0, 0, 0,
+                                             0, 0, 0, 0,
+                                             0, 0, 0, 0,
                                              0, 0, 0, 0;
                         // clang-format on
 
@@ -745,8 +750,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
 
                         // clang-format off
                         expected << 4 / sqrt3d - 2,          0,          0,              0,
-                                    2 - 2 / sqrt3d, 2 / sqrt3d,          0,              0, 
-                                                 0,          0, 2 / sqrt3d, 2 - 2 / sqrt3d, 
+                                    2 - 2 / sqrt3d, 2 / sqrt3d,          0,              0,
+                                                 0,          0, 2 / sqrt3d, 2 - 2 / sqrt3d,
                                                  0,          0,          0, 4 / sqrt3d - 2;
                         // clang-format on
 
@@ -797,9 +802,9 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
                         Eigen::Matrix<data_t, Eigen::Dynamic, 1> expected(volSize * volSize);
 
                         // clang-format off
-                        expected <<              0,              0,              0, 0, 
-                                                 0,              0,              0, 0, 
-                                    2 - 2 / sqrt3d,              0,              0, 0, 
+                        expected <<              0,              0,              0, 0,
+                                                 0,              0,              0, 0,
+                                    2 - 2 / sqrt3d,              0,              0, 0,
                                     4 / sqrt3d - 2,     2 / sqrt3d, 4 - 2 * sqrt3d, 0;
                         // clang-format on
 
@@ -910,8 +915,9 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a single ray", "", SiddonsMe
     }
 }
 
-TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a multiple rays", "", SiddonsMethodCUDA<float>,
-                   SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a multiple rays", TestType,
+                   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
+                   SiddonsMethod<double>)
 {
     // Turn logger of
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -983,7 +989,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a multiple rays", "", Siddon
                     cmp <<  0,  0, 10,  0,  0,
                             0,  0, 10,  0,  0,
                            10, 10, 20, 10, 10,
-                            0,  0, 10,  0,  0, 
+                            0,  0, 10,  0,  0,
                             0,  0, 10,  0,  0;
                     // clang-format on
 
@@ -995,8 +1001,9 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 2D setup with a multiple rays", "", Siddon
     }
 }
 
-TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMethodCUDA<float>,
-                   SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
+                   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
+                   SiddonsMethod<double>)
 {
     // Turn logger of
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -1089,7 +1096,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
             backProj[0] << 0, 0, 0, 0, 1, 0, 0, 0, 0,
                            0, 0, 0, 0, 1, 0, 0, 0, 0,
                            0, 0, 0, 0, 1, 0, 0, 0, 0;
-             
+
             backProj[1] << 0, 0, 0, 0, 0, 0, 0, 0, 0,
                            0, 0, 0, 1, 1, 1, 0, 0, 0,
                            0, 0, 0, 0, 0, 0, 0, 0, 0;
@@ -1100,8 +1107,10 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
             // clang-format on
 
             for (index_t i = 0; i < numCases; i++) {
-                WHEN("A " + al[i] + "-axis-aligned ray passes through the center of a pixel")
+                WHEN("An axis-aligned ray passes through the center of a pixel")
                 {
+                    INFO("A ", al[i], "-axis-aligned ray passes through the center of a pixel");
+
                     geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                                       RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
 
@@ -1176,8 +1185,10 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
             al[5] = "top right edge";
 
             for (index_t i = 0; i < numCases / 2; i++) {
-                WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume")
+                WHEN("A z-axis-aligned ray runs along the corners and edges of the volume")
                 {
+                    INFO("A z-axis-aligned ray runs along the ", al[i], " of the volume");
+
                     // x-ray source must be very far from the volume center to make testing of the
                     // op backprojection simpler
                     geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr,
@@ -1225,8 +1236,9 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
             }
 
             for (index_t i = numCases / 2; i < numCases; i++) {
-                WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume")
+                WHEN("A z-axis-aligned ray runs along the corners and edges of the volume")
                 {
+                    INFO("A z-axis-aligned ray runs along the ", al[i], " of the volume");
                     // x-ray source must be very far from the volume center to make testing of the
                     // op backprojection simpler
                     geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr,
@@ -1289,7 +1301,7 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
                     volume(1, 1, 2) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).margin(1e-5));
+                    REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1302,8 +1314,8 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
 
                         sino[0] = 1;
                         // clang-format off
-                        backProj << 0, 0, 0, 0, 1 - 1 / sqrt3d, sqrt3d - 1, 0, 0, 0, 
-                                    0, 0, 0, 0, 2 / sqrt3d, 0, 0, 0, 0, 
+                        backProj << 0, 0, 0, 0, 1 - 1 / sqrt3d, sqrt3d - 1, 0, 0, 0,
+                                    0, 0, 0, 0, 2 / sqrt3d, 0, 0, 0, 0,
                                     0, 0, 0, sqrt3d - 1, 1 - 1 / sqrt3d, 0, 0, 0, 0;
                         // clang-format on
 
@@ -1498,9 +1510,10 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
             StrArray ali = {"z", "z", "z", "x", "x", "x", "y", "y", "y"};
 
             for (index_t i = 0; i < numCases; i++) {
-                WHEN("Tracing along a " + ali[i] + "-axis-aligned ray with negative " + neg[i]
-                     + "-coodinate of origin")
+                WHEN("Tracing along a fixed axis-aligned ray with negative coordinate of origin")
                 {
+                    INFO("Tracing along a ", ali[i], "-axis-aligned ray with negative ", neg[i],
+                         "-coodinate of origin");
                     geom.emplace_back(
                         stc, ctr, std::move(volData), std::move(sinoData),
                         RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}, Alpha{alpha[i]}},
@@ -1533,8 +1546,9 @@ TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a single ray", "", SiddonsMe
     }
 }
 
-TEMPLATE_TEST_CASE("SiddonsMethodCUDA 3D setup with a multiple rays", "", SiddonsMethodCUDA<float>,
-                   SiddonsMethodCUDA<double>, SiddonsMethod<float>, SiddonsMethod<double>)
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a multiple rays", TestType,
+                   SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
+                   SiddonsMethod<double>)
 {
     // Turn logger of
     Logger::setLevel(Logger::LogLevel::OFF);

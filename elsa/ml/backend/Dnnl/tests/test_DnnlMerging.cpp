@@ -1,12 +1,12 @@
 /**
- * \file test_common.cpp
+ * @file test_common.cpp
  *
- * \brief Tests for common ml functionality
+ * @brief Tests for common ml functionality
  *
- * \author David Tellenbach
+ * @author David Tellenbach
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <iostream>
 
 #include "DataContainer.h"
@@ -16,8 +16,14 @@
 using namespace elsa;
 using namespace elsa::ml;
 using namespace elsa::ml::detail;
+using namespace doctest;
 
-TEST_CASE("DnnlSum", "[ml][dnnl]")
+TEST_SUITE_BEGIN("ml-dnnl");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE("DnnlSum")
 {
     index_t N = 11;
     index_t C = 22;
@@ -113,3 +119,4 @@ TEST_CASE("DnnlSum", "[ml][dnnl]")
         }
     }
 }
+TEST_SUITE_END();

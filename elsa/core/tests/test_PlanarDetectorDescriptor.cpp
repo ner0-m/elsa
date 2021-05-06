@@ -6,19 +6,20 @@
  * @author David Frank - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "PlanarDetectorDescriptor.h"
 #include "VolumeDescriptor.h"
 
-#include <iostream>
-
 using namespace elsa;
 using namespace elsa::geometry;
+using namespace doctest;
 
 using Ray = DetectorDescriptor::Ray;
 
-SCENARIO("Testing 2D PlanarDetectorDescriptor")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
 {
     GIVEN("Given a 5x5 Volume and a single 5 wide detector pose")
     {
@@ -41,9 +42,9 @@ SCENARIO("Testing 2D PlanarDetectorDescriptor")
         {
             auto geom = desc.getGeometryAt(0);
 
-            CHECK(desc.getNumberOfGeometryPoses() == 1);
+            CHECK_EQ(desc.getNumberOfGeometryPoses(), 1);
 
-            THEN("Geometry is equal") { CHECK((geom) == g); }
+            THEN("Geometry is equal") { CHECK_EQ((geom), g); }
         }
 
         WHEN("Generating rays for detecor pixels 0, 2 and 4")
@@ -61,14 +62,14 @@ SCENARIO("Testing 2D PlanarDetectorDescriptor")
 
                 // Check that ray origin is camera center
                 auto c = g.getCameraCenter();
-                CHECK((ro - c).sum() == Approx(0));
+                CHECK_EQ((ro - c).sum(), Approx(0));
 
                 // compute intersection manually
                 real_t t = Approx(rd[0]) == 0 ? (s2c + c2d) : ((pixel[0] - ro[0]) / rd[0]);
 
                 auto detCoordY = ro[1] + t * rd[1];
 
-                CHECK(detCoordY == Approx(ddVol.getLocationOfOrigin()[1] + c2d));
+                CHECK_EQ(detCoordY, Approx(ddVol.getLocationOfOrigin()[1] + c2d));
             }
         }
         WHEN("Computing detector coord from ray")
@@ -82,7 +83,7 @@ SCENARIO("Testing 2D PlanarDetectorDescriptor")
                 rd.normalize();
 
                 auto detCoord = desc.computeDetectorCoordFromRay(Ray(ro, rd), 0);
-                CHECK(detCoord[0] == Approx(0.5).margin(0.05));
+                CHECK_EQ(detCoord[0], Approx(0.5).epsilon(0.05));
             }
             THEN("The detector coord is correct asd")
             {
@@ -90,7 +91,7 @@ SCENARIO("Testing 2D PlanarDetectorDescriptor")
                 rd.normalize();
 
                 auto detCoord = desc.computeDetectorCoordFromRay(Ray(ro, rd), 0);
-                CHECK(detCoord[0] == Approx(2.5));
+                CHECK_EQ(detCoord[0], Approx(2.5));
             }
 
             THEN("The detector coord is correct asd")
@@ -99,7 +100,7 @@ SCENARIO("Testing 2D PlanarDetectorDescriptor")
                 rd.normalize();
 
                 auto detCoord = desc.computeDetectorCoordFromRay(Ray(ro, rd), 0);
-                CHECK(detCoord[0] == Approx(4.5).margin(0.05));
+                CHECK_EQ(detCoord[0], Approx(4.5).epsilon(0.05));
             }
         }
 
@@ -130,12 +131,12 @@ SCENARIO("Testing 2D PlanarDetectorDescriptor")
             {
                 auto geom = desc.getGeometryAt(0);
 
-                CHECK(desc.getNumberOfGeometryPoses() == 4);
+                CHECK_EQ(desc.getNumberOfGeometryPoses(), 4);
 
-                THEN("Geometry is equal") { CHECK((desc.getGeometryAt(0)) == g1); }
-                THEN("Geometry is equal") { CHECK((desc.getGeometryAt(1)) == g2); }
-                THEN("Geometry is equal") { CHECK((desc.getGeometryAt(2)) == g3); }
-                THEN("Geometry is equal") { CHECK((desc.getGeometryAt(3)) == g4); }
+                THEN("Geometry is equal") { CHECK_EQ((desc.getGeometryAt(0)), g1); }
+                THEN("Geometry is equal") { CHECK_EQ((desc.getGeometryAt(1)), g2); }
+                THEN("Geometry is equal") { CHECK_EQ((desc.getGeometryAt(2)), g3); }
+                THEN("Geometry is equal") { CHECK_EQ((desc.getGeometryAt(3)), g4); }
             }
 
             WHEN("Check for multiple poses, that all the overloads compute the same rays")
@@ -163,22 +164,23 @@ SCENARIO("Testing 2D PlanarDetectorDescriptor")
                         auto ro3 = ray3.origin();
                         auto rd3 = ray3.direction();
 
-                        CHECK(ro1 == ro2);
-                        CHECK(ro1 == ro3);
+                        CHECK_EQ(ro1, ro2);
+                        CHECK_EQ(ro1, ro3);
 
-                        CHECK(rd1 == rd2);
-                        CHECK(rd1 == rd3);
+                        CHECK_EQ(rd1, rd2);
+                        CHECK_EQ(rd1, rd3);
 
                         // Shouldn't be necessary, but whatever
-                        CHECK(ro2 == ro3);
-                        CHECK(rd2 == rd3);
+                        CHECK_EQ(ro2, ro3);
+                        CHECK_EQ(rd2, rd3);
                     }
                 }
             }
         }
     }
 }
-SCENARIO("Testing 3D PlanarDetectorDescriptor")
+
+TEST_CASE("PlanarDetectorDescriptor: Testing 3D PlanarDetectorDescriptor")
 {
     GIVEN("Given a 5x5x5 Volume and a single 5x5 wide detector pose")
     {
@@ -202,9 +204,9 @@ SCENARIO("Testing 3D PlanarDetectorDescriptor")
         {
             auto geom = desc.getGeometryAt(0);
 
-            CHECK(desc.getNumberOfGeometryPoses() == 1);
+            CHECK_EQ(desc.getNumberOfGeometryPoses(), 1);
 
-            THEN("Geometry is equal") { CHECK((geom) == g); }
+            THEN("Geometry is equal") { CHECK_EQ((geom), g); }
         }
 
         WHEN("Generating rays for detecor pixels 0, 2 and 4 for each dim")
@@ -224,7 +226,7 @@ SCENARIO("Testing 3D PlanarDetectorDescriptor")
 
                     // Check that ray origin is camera center
                     auto c = g.getCameraCenter();
-                    CHECK((ro - c).sum() == Approx(0));
+                    CHECK_EQ((ro - c).sum(), Approx(0));
 
                     auto o = ddVol.getLocationOfOrigin();
                     RealVector_t detCoordWorld(3);
@@ -239,11 +241,13 @@ SCENARIO("Testing 3D PlanarDetectorDescriptor")
                     else if (std::abs(rd[2]) > 0)
                         factor = (rotD[2] - ro[2] / rd[2]);
 
-                    CHECK((ro[0] + factor * rd[0]) == Approx(rotD[0]));
-                    CHECK((ro[1] + factor * rd[1]) == Approx(rotD[1]));
-                    CHECK((ro[2] + factor * rd[2]) == Approx(rotD[2]));
+                    CHECK_EQ((ro[0] + factor * rd[0]), Approx(rotD[0]));
+                    CHECK_EQ((ro[1] + factor * rd[1]), Approx(rotD[1]));
+                    CHECK_EQ((ro[2] + factor * rd[2]), Approx(rotD[2]));
                 }
             }
         }
     }
 }
+
+TEST_SUITE_END();

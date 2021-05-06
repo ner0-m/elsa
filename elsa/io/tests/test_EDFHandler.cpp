@@ -6,13 +6,16 @@
  * @author Tobias Lasser - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "EDFHandler.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Reading and write data with EDFHandler")
+TEST_SUITE_BEGIN("io");
+
+TEST_CASE("EDFHandler: Reading and writing data")
 {
     GIVEN("a DataContainer")
     {
@@ -38,3 +41,5 @@ SCENARIO("Reading and write data with EDFHandler")
         }
     }
 }
+
+TEST_SUITE_END();

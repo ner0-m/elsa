@@ -6,13 +6,16 @@
  * @author Tobias Lasser - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "ioUtils.h"
 #include "elsaDefines.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("testing the StringUtils")
+TEST_SUITE_BEGIN("io");
+
+TEST_CASE("ioUtils: testing the StringUtils")
 {
     GIVEN("a string with whitespace at beginning/end")
     {
@@ -58,7 +61,7 @@ SCENARIO("testing the StringUtils")
     }
 }
 
-SCENARIO("testing the DataUtils")
+TEST_CASE("ioUtils: testing the DataUtils")
 {
     GIVEN("a data type")
     {
@@ -140,3 +143,5 @@ SCENARIO("testing the DataUtils")
         }
     }
 }
+
+TEST_SUITE_END();

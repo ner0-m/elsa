@@ -1,11 +1,17 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "DataContainer.h"
 #include "VolumeDescriptor.h"
 #include "Loss.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("BinaryCrossentropy", "[ml]", float)
+TEST_SUITE_BEGIN("ml");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE_TEMPLATE("BinaryCrossentropy", TestType, float)
 {
     IndexVector_t dims{{2, 4}};
     VolumeDescriptor dd(dims);
@@ -54,7 +60,7 @@ TEMPLATE_TEST_CASE("BinaryCrossentropy", "[ml]", float)
     }
 }
 
-TEMPLATE_TEST_CASE("CategoricalCrossentropy", "[ml]", float)
+TEST_CASE_TEMPLATE("CategoricalCrossentropy", TestType, float)
 {
     IndexVector_t dims{{3, 4}};
     VolumeDescriptor dd(dims);
@@ -124,7 +130,7 @@ TEMPLATE_TEST_CASE("CategoricalCrossentropy", "[ml]", float)
     }
 }
 
-TEMPLATE_TEST_CASE("SparseCategoricalCrossentropy", "[ml]", float)
+TEST_CASE_TEMPLATE("SparseCategoricalCrossentropy", TestType, float)
 {
     IndexVector_t predictionDims{{3, 4}};
     VolumeDescriptor predictionDesc(predictionDims);
@@ -176,7 +182,7 @@ TEMPLATE_TEST_CASE("SparseCategoricalCrossentropy", "[ml]", float)
     }
 }
 
-TEMPLATE_TEST_CASE("MeanSquaredError", "[ml]", float)
+TEST_CASE_TEMPLATE("MeanSquaredError", TestType, float)
 {
     IndexVector_t dims{{3, 2}};
     VolumeDescriptor dd(dims);
@@ -221,3 +227,4 @@ TEMPLATE_TEST_CASE("MeanSquaredError", "[ml]", float)
             REQUIRE(derivative[i] == Approx(refDerivative[i]));
     }
 }
+TEST_SUITE_END();

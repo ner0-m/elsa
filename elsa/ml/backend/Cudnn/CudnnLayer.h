@@ -53,7 +53,7 @@ namespace elsa
 
             /// Base class for all Cudnn layers
             ///
-            /// \author David Tellenbach
+            /// @author David Tellenbach
             template <typename data_t>
             class CudnnLayer
             {
@@ -70,7 +70,7 @@ namespace elsa
                 /// Set this layer's input at a given index
                 void setInput(const DataContainer<data_t>& input, index_t index = 0);
 
-                /// \returns a DataContainer with this layers output.
+                /// @returns a DataContainer with this layers output.
                 DataContainer<data_t> getOutput();
 
                 /// Set this layer's input memory at a given index
@@ -100,37 +100,37 @@ namespace elsa
                     return outputGradient_.front().deviceMemory;
                 }
 
-                /// \returns this layer's input-gradient at a given index
+                /// @returns this layer's input-gradient at a given index
                 DataContainer<data_t> getInputGradient(index_t index = 0);
 
-                /// \returns the number of inputs of this layer
+                /// @returns the number of inputs of this layer
                 index_t getNumberOfInputs() const;
 
                 std::shared_ptr<DeviceMemory<data_t>> getOutputMemory();
 
                 std::shared_ptr<DeviceMemory<data_t>> getOutputMemory() const;
 
-                /// \returns this layer's input-descriptor at a given index
+                /// @returns this layer's input-descriptor at a given index
                 VolumeDescriptor getInputDescriptor(index_t index = 0) const;
 
-                /// \returns this layer's output-descriptor
+                /// @returns this layer's output-descriptor
                 VolumeDescriptor getOutputDescriptor() const;
 
-                /// \returns true if this layer has trainable parameters, false otherwise
+                /// @returns true if this layer has trainable parameters, false otherwise
                 virtual bool isTrainable() const;
 
-                /// \returns true if this layer can merge multiple inputs, false otherwise.
+                /// @returns true if this layer can merge multiple inputs, false otherwise.
                 virtual bool canMerge() const;
 
-                /// \returns true if this layer needs to block the execution of subsequent layers
+                /// @returns true if this layer needs to block the execution of subsequent layers
                 /// during backward propagation, false otherwise
                 virtual bool needsForwardSynchronisation() const;
 
-                /// \returns true if this layer needs to block the execution of previous layers
+                /// @returns true if this layer needs to block the execution of previous layers
                 /// during backward propagation, false otherwise.
                 virtual bool needsBackwardSynchronisation() const;
 
-                /// \returns this layer's name
+                /// @returns this layer's name
                 std::string getName() const;
 
                 /// Set the number of output-gradients of this layer.
@@ -149,7 +149,7 @@ namespace elsa
                 /// output-gradient of this layer by the sum of all output-gradients
                 void handleMultipleOutputGradients();
 
-                /// \returns the batch-size used in this layer
+                /// @returns the batch-size used in this layer
                 index_t getBatchSize() const;
 
             protected:

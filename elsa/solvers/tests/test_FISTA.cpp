@@ -6,6 +6,8 @@
  * @author Andi Braimllari
  */
 
+#include "doctest/doctest.h"
+
 #include "Error.h"
 #include "FISTA.h"
 #include "Identity.h"
@@ -13,14 +15,15 @@
 #include "VolumeDescriptor.h"
 #include "QuadricProblem.h"
 
-#include <catch2/catch.hpp>
-
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Solving a LASSOProblem with FISTA")
+TEST_SUITE_BEGIN("solvers");
+
+TEST_CASE("FISTA: Solving a LASSOProblem")
 {
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a LASSOProblem")
     {
@@ -62,10 +65,10 @@ SCENARIO("Solving a LASSOProblem with FISTA")
     }
 }
 
-SCENARIO("Solving various problems with FISTA")
+TEST_CASE("FISTA: Solving various problems")
 {
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a DataContainer")
     {
@@ -85,7 +88,7 @@ SCENARIO("Solving various problems with FISTA")
 
             THEN("an exception is thrown as no regularization term is provided")
             {
-                REQUIRE_THROWS_AS(FISTA(wlsProb), InvalidArgumentError);
+                REQUIRE_THROWS_AS(FISTA{wlsProb}, InvalidArgumentError);
             }
         }
 
@@ -98,8 +101,10 @@ SCENARIO("Solving various problems with FISTA")
             THEN("the vector b is initialized with zeroes and the operator A becomes an "
                  "identity operator but an exception is thrown due to missing regularization term")
             {
-                REQUIRE_THROWS_AS(FISTA(quadricProbWithoutAb), InvalidArgumentError);
+                REQUIRE_THROWS_AS(FISTA{quadricProbWithoutAb}, InvalidArgumentError);
             }
         }
     }
 }
+
+TEST_SUITE_END();

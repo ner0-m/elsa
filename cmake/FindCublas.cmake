@@ -29,6 +29,7 @@ set(CUBLAS_PATHS
   /usr
   /usr/local
   /usr/local/cuda
+  /opt/cuda
 )
 
 # Finds the include directories

@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.10)
-
 include(ComputeCapabilityCUDA)
 
 # make sure host compiler used by NVCC is the one used for the rest of the project

@@ -11,7 +11,7 @@ namespace elsa::ml
 {
     /// Common ml utilities
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     struct Utils {
         /// Utilities to plot a model
         struct Plotting {
@@ -26,12 +26,12 @@ namespace elsa::ml
 
             /// Convert a model to Graphviz' DOT format.
             ///
-            /// \param model The model to plot
-            /// \param filename The filename of the DOT file. This parameter is
+            /// @param model The model to plot
+            /// @param filename The filename of the DOT file. This parameter is
             /// optional and defaults to "model.png"
-            /// \param rankDir The direction of the plotted DOT graph. This
+            /// @param rankDir The direction of the plotted DOT graph. This
             /// parameter is optional and defaults to RankDir::TD.
-            /// \param dpi The dots-per-inch encoded in the DOT file.
+            /// @param dpi The dots-per-inch encoded in the DOT file.
             template <typename T>
             static void modelToDot([[maybe_unused]] const T& model,
                                    const std::string& filename = "model.png",

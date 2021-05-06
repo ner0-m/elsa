@@ -8,16 +8,27 @@
  * @author Tobias Lasser - modernization
  */
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
+
+#include "testHelpers.h"
 #include "L1Norm.h"
 #include "LinearResidual.h"
 #include "Identity.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing the l1 norm functional")
+TYPE_TO_STRING(std::complex<float>);
+TYPE_TO_STRING(std::complex<double>);
+
+TEST_SUITE_BEGIN("functionals");
+
+TEST_CASE_TEMPLATE("L1Norm: Testing without residual", TestType, float, double, std::complex<float>,
+                   std::complex<double>)
 {
+    using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
+
     GIVEN("just data (no residual)")
     {
         IndexVector_t numCoeff(1);
@@ -26,39 +37,45 @@ SCENARIO("Testing the l1 norm functional")
 
         WHEN("instantiating")
         {
-            L1Norm func(dd);
+            L1Norm<TestType> func(dd);
 
             THEN("the functional is as expected")
             {
-                REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
                 auto& residual = func.getResidual();
-                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&residual);
-                REQUIRE(linRes);
-                REQUIRE(linRes->hasDataVector() == false);
-                REQUIRE(linRes->hasOperator() == false);
+                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&residual);
+                REQUIRE_UNARY(linRes);
+                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
+                REQUIRE_UNARY_FALSE(linRes->hasOperator());
             }
 
             THEN("a clone behaves as expected")
             {
                 auto l1Clone = func.clone();
 
-                REQUIRE(l1Clone.get() != &func);
-                REQUIRE(*l1Clone == func);
+                REQUIRE_NE(l1Clone.get(), &func);
+                REQUIRE_EQ(*l1Clone, func);
             }
 
             THEN("the evaluate, gradient and Hessian work as expected")
             {
-                RealVector_t dataVec(dd.getNumberOfCoefficients());
+                Vector dataVec(dd.getNumberOfCoefficients());
                 dataVec << -9, -4, 0, 1;
-                DataContainer dc(dd, dataVec);
+                DataContainer<TestType> dc(dd, dataVec);
 
-                REQUIRE(func.evaluate(dc) == 14);
+                REQUIRE(checkApproxEq(func.evaluate(dc), 14));
                 REQUIRE_THROWS_AS(func.getGradient(dc), LogicError);
                 REQUIRE_THROWS_AS(func.getHessian(dc), LogicError);
             }
         }
     }
+}
+
+TEST_CASE_TEMPLATE("L1Norm: Testing with residual", TestType, float, double, std::complex<float>,
+                   std::complex<double>)
+{
+    using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
 
     GIVEN("a residual with data")
     {
@@ -66,46 +83,49 @@ SCENARIO("Testing the l1 norm functional")
         numCoeff << 4;
         VolumeDescriptor dd(numCoeff);
 
-        RealVector_t randomData(dd.getNumberOfCoefficients());
+        Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
-        DataContainer dc(dd, randomData);
+        DataContainer<TestType> dc(dd, randomData);
 
-        Identity idOp(dd);
+        Identity<TestType> idOp(dd);
 
-        LinearResidual linRes(idOp, dc);
+        LinearResidual<TestType> linRes(idOp, dc);
 
         WHEN("instantiating")
         {
-            L1Norm func(linRes);
+            L1Norm<TestType> func(linRes);
 
             THEN("the functional is as expected")
             {
-                REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
                 auto& residual = func.getResidual();
-                auto* lRes = dynamic_cast<const LinearResidual<real_t>*>(&residual);
-                REQUIRE(lRes);
-                REQUIRE(*lRes == linRes);
+                auto* lRes = dynamic_cast<const LinearResidual<TestType>*>(&residual);
+                REQUIRE_UNARY(lRes);
+                REQUIRE_EQ(*lRes, linRes);
             }
 
             THEN("a clone behaves as expected")
             {
                 auto l1Clone = func.clone();
 
-                REQUIRE(l1Clone.get() != &func);
-                REQUIRE(*l1Clone == func);
+                REQUIRE_NE(l1Clone.get(), &func);
+                REQUIRE_EQ(*l1Clone, func);
             }
 
             THEN("the evaluate, gradient and Hessian work as expected")
             {
-                RealVector_t dataVec(dd.getNumberOfCoefficients());
+                Vector dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
-                DataContainer x(dd, dataVec);
+                DataContainer<TestType> x(dd, dataVec);
 
-                REQUIRE(func.evaluate(x) == Approx((dataVec - randomData).lpNorm<1>()));
+                REQUIRE_UNARY(
+                    checkApproxEq(func.evaluate(x), (dataVec - randomData).template lpNorm<1>()));
                 REQUIRE_THROWS_AS(func.getGradient(x), LogicError);
                 REQUIRE_THROWS_AS(func.getHessian(x), LogicError);
             }
         }
     }
 }
+
+TEST_SUITE_END();

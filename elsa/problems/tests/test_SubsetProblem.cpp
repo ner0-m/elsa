@@ -6,12 +6,16 @@
  * @author Michael Loipführer - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
+
 #include "Logger.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("Scenario: Testing SubsetProblem", "", float, double)
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE_TEMPLATE("Scenario: Testing SubsetProblem", data_t, float, double)
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);
@@ -25,3 +29,5 @@ TEMPLATE_TEST_CASE("Scenario: Testing SubsetProblem", "", float, double)
         // SubsetSampler would work but require a whole bunch of other components.
     }
 }
+
+TEST_SUITE_END();

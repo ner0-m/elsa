@@ -6,17 +6,20 @@
  * @author Andi Braimllari
  */
 
+#include "doctest/doctest.h"
+
 #include "Error.h"
 #include "L2NormPow2.h"
 #include "LASSOProblem.h"
 #include "VolumeDescriptor.h"
 #include "Identity.h"
 
-#include <catch2/catch.hpp>
-
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("Scenario: Testing LASSOProblem", "", float, double)
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE_TEMPLATE("Scenario: Testing LASSOProblem", TestType, float, double)
 {
     GIVEN("some data term and a regularization term")
     {
@@ -132,3 +135,5 @@ TEMPLATE_TEST_CASE("Scenario: Testing LASSOProblem", "", float, double)
         }
     }
 }
+
+TEST_SUITE_END();

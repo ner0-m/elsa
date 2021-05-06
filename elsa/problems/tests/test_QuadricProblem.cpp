@@ -5,7 +5,9 @@
  *
  * @author Nikola Dinev
  */
-#include <catch2/catch.hpp>
+
+#include "doctest/doctest.h"
+
 #include "QuadricProblem.h"
 #include "Identity.h"
 #include "Scaling.h"
@@ -14,15 +16,19 @@
 #include "Huber.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
+#include "testHelpers.h"
 
 #include <array>
 
 using namespace elsa;
+using namespace doctest;
 
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>,
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<float>,
                    QuadricProblem<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
@@ -247,7 +253,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                 auto gradient = prob.getGradient();
                 DataContainer gradientDirect = scaleFactor * (scaleFactor * x0) - scaleFactor * dc;
                 for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE(gradient[i] == Approx(gradientDirect[i]).margin(0.00001));
+                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 REQUIRE(hessian == leaf(adjoint(scalingOp) * scalingOp));
@@ -378,11 +384,11 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
 
         for (std::size_t i = 0; i < dataTerms.size(); i++) {
             for (std::size_t j = 0; j < regFunc.size(); j++) {
-                WHEN(std::string(
-                         "Calling the conversion constructor on an OptimizationProblem with only "
-                         "quadric terms. The data term ")
-                     + descriptions[i] + ". The regularization term " + descriptions[j])
+                WHEN("Calling the conversion constructor with an OptimizationProblem with only "
+                     "quadric terms")
                 {
+                    INFO("The data term: ", descriptions[i]);
+                    INFO("The regularization term: ", descriptions[j]);
 
                     RegularizationTerm reg{static_cast<data_t>(0.25), *regFunc[j]};
                     Problem prob{*dataTerms[i], reg, x0};
@@ -397,8 +403,7 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
 
                         DataContainer<data_t> gradDiff =
                             prob.getGradient() - converted.getGradient();
-                        REQUIRE(gradDiff.squaredL2Norm()
-                                == Approx(0).margin(std::numeric_limits<data_t>::epsilon()));
+                        REQUIRE_UNARY(checkApproxEq(gradDiff.squaredL2Norm(), 0));
 
                         REQUIRE(prob.getHessian().apply(x0) == converted.getHessian().apply(x0));
                     }
@@ -432,8 +437,9 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                 + (std::string(res.hasOperator() ? " with an operator" : " with no operator")
                    + ", ")
                 + (res.hasDataVector() ? "a data vector" : "no data vector");
-            WHEN("converting a " + desc + ", and no x0 to a quadric problem")
+            WHEN("Converting a quadric problem with no x0")
             {
+                INFO("Converting a ", desc, "and no x0 to a quadric problem");
                 // use OptimizationProblem istead of WLSProblem as it allows for more general
                 // formulations
                 Problem<data_t> initialProb{*dataTerm};
@@ -481,8 +487,9 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                 }
             }
 
-            WHEN("converting a " + desc + ", and x0 to a quadric problem")
+            WHEN("Converting a quadric problem with x0")
             {
+                INFO("Converting a ", desc, "and x0 to a quadric problem");
                 randomData.setRandom();
                 DataContainer<data_t> x0{dd, randomData};
 
@@ -599,9 +606,11 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                        + ", ")
                     + (res.hasDataVector() ? "a data vector" : "no data vector");
 
-                WHEN("converting a Tikhonov problem with a " + desc
-                     + ", and no x0 to a quadric problem")
+                WHEN("Converting a Tikhonov problem with no x0 to a quadric problem")
                 {
+
+                    INFO("Converting a Tikhonov problem with a ", desc,
+                         "and no x0 to a quadric problem");
 
                     // conversion of data terms already tested, fix to 0.5*||Ax-b||^2 for tikhonov
                     // problem tests
@@ -681,15 +690,16 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
                         }
                     }
                 }
-
-                WHEN("converting a Tikhonov problem with a " + desc
-                     + ", and x0 to a quadric problem")
+                WHEN("Converting a Tikhonov problem with x0 to a quadric problem")
                 {
+                    INFO("Converting a Tikhonov problem with a ", desc,
+                         "and x0 to a quadric problem");
+
                     randomData.setRandom();
                     DataContainer<data_t> x0{dd, randomData};
 
-                    // conversion of data terms already tested, fix to 0.5*||Ax-b||^2 for tikhonov
-                    // problem tests
+                    // conversion of data terms already tested, fix to 0.5*||Ax-b||^2 for
+                    // tikhonov problem tests
                     auto dataScaleFactor = static_cast<data_t>(5.0);
                     Scaling<data_t> dataScalingOp{dd, dataScaleFactor};
 
@@ -773,3 +783,5 @@ TEMPLATE_TEST_CASE("Scenario: Testing QuadricProblem", "", QuadricProblem<float>
         }
     }
 }
+
+TEST_SUITE_END();

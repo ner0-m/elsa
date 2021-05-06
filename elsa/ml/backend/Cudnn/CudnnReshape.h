@@ -15,7 +15,7 @@ namespace elsa
         {
             /// A layer that reshapes its input without changing the underlying data.
             ///
-            /// \author David Tellenbach
+            /// @author David Tellenbach
             template <typename data_t>
             class CudnnReshape : public CudnnLayer<data_t>
             {
@@ -48,7 +48,7 @@ namespace elsa
 
             /// A layer that flattens its input.
             ///
-            /// \author David Tellenbach
+            /// @author David Tellenbach
             template <typename data_t>
             struct CudnnFlatten : public CudnnReshape<data_t> {
                 CudnnFlatten(const VolumeDescriptor& inputDescriptor);
@@ -56,7 +56,7 @@ namespace elsa
 
             /// A layer upsamples a given image.
             ///
-            /// \author David Tellenbach
+            /// @author David Tellenbach
             template <typename data_t>
             class CudnnUpsampling : public CudnnLayer<data_t>
             {

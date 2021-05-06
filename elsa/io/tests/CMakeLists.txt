@@ -1,11 +1,20 @@
-cmake_minimum_required(VERSION 3.9)
-
-# enable ctest and Catch test discovery
+# enable ctest and doctest test discovery
 include(CTest)
-include(Catch)
+include(doctest)
+
+# Add target to build tests for module
+add_custom_target(build-tests-io)
+add_custom_target(
+    run-tests-io
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS build-tests-io
+    USES_TERMINAL
+    COMMENT "Build and run the tests from module 'io'."
+)
 
 # the actual tests
-ELSA_TEST(ioUtils)
-ELSA_TEST(EDFHandler)
-ELSA_TEST(MHDHandler)
-ELSA_TEST(PGMHandler)
+elsa_doctest(ioUtils)
+elsa_doctest(EDFHandler)
+elsa_doctest(MHDHandler)
+elsa_doctest(PGMHandler)

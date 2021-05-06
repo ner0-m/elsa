@@ -8,11 +8,12 @@
  * @author Nikola Dinev - fixes
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "LinearOperator.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
 // mock operator, which outputs 1 for apply and 2 for applyAdjoint
 template <typename data_t = real_t>
@@ -44,7 +45,9 @@ protected:
     }
 };
 
-SCENARIO("Constructing a LinearOperator")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE("LinearOperator: Testing construction")
 {
     GIVEN("DataDescriptors")
     {
@@ -61,8 +64,8 @@ SCENARIO("Constructing a LinearOperator")
 
             THEN("the DataDescriptors are as expected")
             {
-                REQUIRE(linOp.getDomainDescriptor() == ddDomain);
-                REQUIRE(linOp.getRangeDescriptor() == ddRange);
+                REQUIRE_EQ(linOp.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(linOp.getRangeDescriptor(), ddRange);
             }
 
             THEN("the apply* operations throw")
@@ -75,13 +78,13 @@ SCENARIO("Constructing a LinearOperator")
             THEN("copies are good")
             {
                 auto newOp = linOp;
-                REQUIRE(newOp == linOp);
+                REQUIRE_EQ(newOp, linOp);
             }
         }
     }
 }
 
-SCENARIO("Cloning LinearOperators")
+TEST_CASE("LinearOperator: Testing clone()")
 {
     GIVEN("a LinearOperator")
     {
@@ -99,20 +102,20 @@ SCENARIO("Cloning LinearOperators")
 
             THEN("everything matches")
             {
-                REQUIRE(linOpClone.get() != &linOp);
-                REQUIRE(*linOpClone == linOp);
+                REQUIRE_NE(linOpClone.get(), &linOp);
+                REQUIRE_EQ(*linOpClone, linOp);
             }
 
             THEN("copies are also identical")
             {
                 auto newOp = *linOpClone;
-                REQUIRE(newOp == linOp);
+                REQUIRE_EQ(newOp, linOp);
             }
         }
     }
 }
 
-SCENARIO("Leaf LinearOperator")
+TEST_CASE("LinearOperator: Testing a leaf LinearOperator")
 {
     GIVEN("a non-adjoint leaf linear operator")
     {
@@ -130,8 +133,8 @@ SCENARIO("Leaf LinearOperator")
         {
             THEN("the descriptors are set correctly")
             {
-                REQUIRE(leafOp.getDomainDescriptor() == ddDomain);
-                REQUIRE(leafOp.getRangeDescriptor() == ddRange);
+                REQUIRE_EQ(leafOp.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(leafOp.getRangeDescriptor(), ddRange);
             }
         }
 
@@ -144,11 +147,11 @@ SCENARIO("Leaf LinearOperator")
             {
                 auto resultApply = leafOp.apply(dcDomain);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApply[i] == 1);
+                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(1));
 
                 auto resultApplyAdjoint = leafOp.applyAdjoint(dcRange);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE(resultApplyAdjoint[i] == 3);
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(3));
             }
 
             THEN("the apply operations care for appropriately sized containers")
@@ -165,11 +168,11 @@ SCENARIO("Leaf LinearOperator")
 
             THEN("it should be identical")
             {
-                REQUIRE(newOp == leafOp);
-                REQUIRE(assignedOp == leaf(newOp));
+                REQUIRE_EQ(newOp, leafOp);
+                REQUIRE_EQ(assignedOp, leaf(newOp));
 
                 assignedOp = newOp;
-                REQUIRE(assignedOp == newOp);
+                REQUIRE_EQ(assignedOp, newOp);
             }
         }
     }
@@ -190,8 +193,8 @@ SCENARIO("Leaf LinearOperator")
         {
             THEN("the descriptors are set correctly")
             {
-                REQUIRE(adjointOp.getDomainDescriptor() == ddRange);
-                REQUIRE(adjointOp.getRangeDescriptor() == ddDomain);
+                REQUIRE_EQ(adjointOp.getDomainDescriptor(), ddRange);
+                REQUIRE_EQ(adjointOp.getRangeDescriptor(), ddDomain);
             }
         }
 
@@ -204,11 +207,11 @@ SCENARIO("Leaf LinearOperator")
             {
                 auto resultApply = adjointOp.apply(dcRange);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApply[i] == 3);
+                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(3));
 
                 auto resultApplyAdjoint = adjointOp.applyAdjoint(dcDomain);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE(resultApplyAdjoint[i] == 1);
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(1));
             }
 
             THEN("the apply operations care for appropriately sized containers")
@@ -225,17 +228,17 @@ SCENARIO("Leaf LinearOperator")
 
             THEN("it should be identical")
             {
-                REQUIRE(newOp == adjointOp);
-                REQUIRE(assignedOp == adjoint(newOp));
+                REQUIRE_EQ(newOp, adjointOp);
+                REQUIRE_EQ(assignedOp, adjoint(newOp));
 
                 assignedOp = newOp;
-                REQUIRE(assignedOp == newOp);
+                REQUIRE_EQ(assignedOp, newOp);
             }
         }
     }
 }
 
-SCENARIO("Composite LinearOperator")
+TEST_CASE("LinearOperator: Testing composite LinearOperator")
 {
     GIVEN("an additive composite linear operator")
     {
@@ -255,8 +258,8 @@ SCENARIO("Composite LinearOperator")
         {
             THEN("the descriptors are set correctly")
             {
-                REQUIRE(addOp.getDomainDescriptor() == ddDomain);
-                REQUIRE(addOp.getRangeDescriptor() == ddRange);
+                REQUIRE_EQ(addOp.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(addOp.getRangeDescriptor(), ddRange);
             }
         }
 
@@ -269,11 +272,11 @@ SCENARIO("Composite LinearOperator")
             {
                 auto resultApply = addOp.apply(dcDomain);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApply[i] == 2);
+                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(2));
 
                 auto resultApplyAdjoint = addOp.applyAdjoint(dcRange);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE(resultApplyAdjoint[i] == 6);
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(6));
             }
 
             THEN("the apply operations care for appropriately sized containers")
@@ -290,11 +293,11 @@ SCENARIO("Composite LinearOperator")
 
             THEN("it should be identical")
             {
-                REQUIRE(newOp == addOp);
-                REQUIRE(assignedOp == adjoint(newOp));
+                REQUIRE_EQ(newOp, addOp);
+                REQUIRE_EQ(assignedOp, adjoint(newOp));
 
                 assignedOp = newOp;
-                REQUIRE(assignedOp == newOp);
+                REQUIRE_EQ(assignedOp, newOp);
             }
         }
     }
@@ -320,8 +323,8 @@ SCENARIO("Composite LinearOperator")
         {
             THEN("the descriptors are set correctly")
             {
-                REQUIRE(multOp.getDomainDescriptor() == ddDomain);
-                REQUIRE(multOp.getRangeDescriptor() == ddRange);
+                REQUIRE_EQ(multOp.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(multOp.getRangeDescriptor(), ddRange);
             }
         }
 
@@ -334,11 +337,11 @@ SCENARIO("Composite LinearOperator")
             {
                 auto resultApply = multOp.apply(dcDomain);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApply[i] == 1);
+                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(1));
 
                 auto resultApplyAdjoint = multOp.applyAdjoint(dcRange);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE(resultApplyAdjoint[i] == 3);
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(3));
             }
 
             THEN("the apply operations care for appropriately sized containers")
@@ -355,11 +358,11 @@ SCENARIO("Composite LinearOperator")
 
             THEN("it should be identical")
             {
-                REQUIRE(newOp == multOp);
-                REQUIRE(assignedOp == adjoint(newOp));
+                REQUIRE_EQ(newOp, multOp);
+                REQUIRE_EQ(assignedOp, adjoint(newOp));
 
                 assignedOp = newOp;
-                REQUIRE(assignedOp == newOp);
+                REQUIRE_EQ(assignedOp, newOp);
             }
         }
     }
@@ -386,8 +389,8 @@ SCENARIO("Composite LinearOperator")
         {
             THEN("the descriptors are set correctly")
             {
-                REQUIRE(compositeOp.getDomainDescriptor() == ddDomain);
-                REQUIRE(compositeOp.getRangeDescriptor() == ddFinalRange);
+                REQUIRE_EQ(compositeOp.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(compositeOp.getRangeDescriptor(), ddFinalRange);
             }
         }
 
@@ -400,11 +403,11 @@ SCENARIO("Composite LinearOperator")
             {
                 auto resultApply = compositeOp.apply(dcDomain);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApply[i] == 4);
+                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(4));
 
                 auto resultApplyAdjoint = compositeOp.applyAdjoint(dcFinalRange);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE(resultApplyAdjoint[i] == 3);
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(3));
             }
 
             THEN("the apply operations expect appropriately sized containers")
@@ -421,12 +424,14 @@ SCENARIO("Composite LinearOperator")
 
             THEN("it should be identical")
             {
-                REQUIRE(newOp == compositeOp);
-                REQUIRE(assignedOp == adjoint(newOp));
+                REQUIRE_EQ(newOp, compositeOp);
+                REQUIRE_EQ(assignedOp, adjoint(newOp));
 
                 assignedOp = newOp;
-                REQUIRE(assignedOp == newOp);
+                REQUIRE_EQ(assignedOp, newOp);
             }
         }
     }
 }
+
+TEST_SUITE_END();

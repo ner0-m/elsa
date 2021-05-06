@@ -61,13 +61,13 @@ namespace elsa
         public:
             /// Construct an SGD optimizer
             ///
-            /// \param learningRate The learning-rate. This parameter is
+            /// @param learningRate The learning-rate. This parameter is
             /// optional and defaults to 0.01.
-            /// \param momentum hyperparameter >= 0 that accelerates gradient
+            /// @param momentum hyperparameter >= 0 that accelerates gradient
             /// descent in the relevant direction and dampens oscillations. This
             /// parameter is optional and defaults to 0, i.e., vanilla gradient
             /// descent.
-            /// \param nesterov Whether to apply Nesterov momentum. This
+            /// @param nesterov Whether to apply Nesterov momentum. This
             /// parameter is optional an defaults to false.
             SGD(data_t learningRate = data_t(0.01), data_t momentum = data_t(0.0),
                 bool nesterov = false);
@@ -105,13 +105,13 @@ namespace elsa
         public:
             /// Construct an Adam optimizer.
             ///
-            /// \param learningRate The learning-rate. This parameter is
+            /// @param learningRate The learning-rate. This parameter is
             /// optional and defaults to 0.001.
-            /// \param beta1 The exponential decay rate for the 1st moment
+            /// @param beta1 The exponential decay rate for the 1st moment
             /// estimates. This parameter is optional and defaults to 0.9.
-            /// \param beta2 The exponential decay rate for the 2nd moment
+            /// @param beta2 The exponential decay rate for the 2nd moment
             /// estimates. This parameter is optional and defaults to 0.999.
-            /// \param epsilon A small constant for numerical stability. This
+            /// @param epsilon A small constant for numerical stability. This
             /// epsilon is "epsilon hat" in the Kingma and Ba paper (in the
             /// formula just before Section 2.1), not the epsilon in Algorithm 1
             /// of the paper. This parameter is optional and defaults to 1e-7.

@@ -1,10 +1,16 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Input.h"
 #include "Reshape.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEST_CASE("Reshape", "[ml]")
+TEST_SUITE_BEGIN("ml");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE("Reshape")
 {
     IndexVector_t inputDims{{3, 4, 5, 2}};
     VolumeDescriptor inputDesc(inputDims);
@@ -21,7 +27,7 @@ TEST_CASE("Reshape", "[ml]")
     REQUIRE(layer.getOutputDescriptor() == targetShape);
 }
 
-TEST_CASE("Flatten", "[ml]")
+TEST_CASE("Flatten")
 {
     IndexVector_t inputDims{{3, 4, 5, 2}};
 
@@ -47,3 +53,4 @@ TEST_CASE("Flatten", "[ml]")
     VolumeDescriptor requiredOutDesc(requiredOutDims);
     REQUIRE(layer.getOutputDescriptor() == requiredOutDesc);
 }
+TEST_SUITE_END();

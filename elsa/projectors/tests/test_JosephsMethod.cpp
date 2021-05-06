@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "JosephsMethod.h"
 #include "Geometry.h"
@@ -9,6 +9,10 @@
 
 using namespace elsa;
 using namespace elsa::geometry;
+using namespace doctest;
+
+// TODO(dfrank): remove this and replace with checkApproxEq
+using doctest::Approx;
 
 SCENARIO("Testing BinaryVoxelTraversal with only one ray")
 {
@@ -305,7 +309,7 @@ SCENARIO("Calls to functions of super class")
                 opClone->applyAdjoint(sino, volumeClone);
 
                 DataContainer resultsDifference = volume - volumeClone;
-                REQUIRE(resultsDifference.squaredL2Norm() == Approx(0.0).margin(1e-5));
+                REQUIRE(resultsDifference.squaredL2Norm() == Approx(0.0).epsilon(1e-5));
             }
         }
     }
@@ -599,9 +603,10 @@ SCENARIO("Rays not intersecting the bounding box are present")
         std::string ali[numCases] = {"z", "z", "z", "x", "x", "x", "y", "y", "y"};
 
         for (int i = 0; i < numCases; i++) {
-            WHEN("Tracing along a " + ali[i] + "-axis-aligned ray with negative " + neg[i]
-                 + "-coodinate of origin")
+            WHEN("Tracing along an axis-aligned ray with negative direction in one direction")
             {
+                INFO("Tracing along a ", ali[i], "-axis-aligned ray with negative ",
+                     neg[i] + "-coodinate of origin");
                 geom.emplace_back(stc, ctr, VolumeData3D{Size3D{volumeDims}},
                                   SinogramData3D{Size3D{sinoDims}},
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}, Alpha{alpha[i]}},
@@ -668,9 +673,11 @@ SCENARIO("Axis-aligned rays are present")
         backProj[0] << 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0;
 
         for (index_t i = 0; i < numCases; i++) {
-            WHEN("An axis-aligned ray with an angle of " + std::to_string(angles[i])
-                 + " radians passes through the center of a pixel")
+            WHEN("An axis-aligned ray with fixed angles pass through the center of a pixel")
             {
+                INFO("An axis-aligned ray with an angle of ", angles[i],
+                     " radians passes through the center of a pixel");
+
                 geom.emplace_back(stc, ctr, Radian{angles[i]}, std::move(volData),
                                   std::move(sinoData));
 
@@ -712,9 +719,12 @@ SCENARIO("Axis-aligned rays are present")
             0, 0, 0, 0, 0, 0, 0, 0, 0;
 
         for (index_t i = 0; i < numCases; i++) {
-            WHEN("An axis-aligned ray with an angle of " + std::to_string(angles[i])
-                 + " radians does not pass through the center of a pixel")
+            WHEN("An axis-aligned ray with fixed angle, which does not pass through the center of "
+                 "a pixel")
             {
+                INFO("An axis-aligned ray with an angle of ", angles[i],
+                     " radians does not pass through the center of a pixel");
+
                 geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{angles[i]},
                                   std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
                                   RotationOffset2D{-offsetx[i], -offsety[i]});
@@ -863,8 +873,10 @@ SCENARIO("Axis-aligned rays are present")
             0, 0, 0, 0, 1, 0, 0, 0, 0;
 
         for (index_t i = 0; i < numCases; i++) {
-            WHEN("A " + al[i] + "-axis-aligned ray passes through the center of a pixel")
+            WHEN("An axis-aligned ray passes through the center of a pixel")
             {
+                INFO("A ", al[i], "-axis-aligned ray passes through the center of a pixel");
+
                 geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
 
@@ -922,8 +934,10 @@ SCENARIO("Axis-aligned rays are present")
             0, 0, 0, 0.25, 0.75, 0, 0, 0, 0;
 
         for (index_t i = 0; i < numCases; i++) {
-            WHEN("A " + al[i] + "-axis-aligned ray does not pass through the center of a voxel")
+            WHEN("An axis-aligned ray does not pass through the center of a voxel")
             {
+                INFO("A ", al[i], "-axis-aligned ray does not pass through the center of a voxel");
+
                 geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, std::move(volData),
                                   std::move(sinoData),
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}},
@@ -1021,8 +1035,9 @@ SCENARIO("Axis-aligned rays are present")
             1, 0, 0, 0, 0, 0, 0, 0, 0;
 
         for (index_t i = 0; i < numCases; i++) {
-            WHEN("A z-axis-aligned ray runs along the " + al[i] + " of the volume")
+            WHEN("A z-axis-aligned ray runs along the a corner of the volume")
             {
+                INFO("A z-axis-aligned ray runs along the ", al[i], " of the volume");
                 // x-ray source must be very far from the volume center to make testing of the fast
                 // backprojection simpler
                 geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, std::move(volData),
@@ -1637,7 +1652,7 @@ SCENARIO("Projection under an angle")
                 volume(1, 1, 2) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino[0] == Approx(0).margin(1e-5));
+                REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1684,7 +1699,7 @@ SCENARIO("Projection under an angle")
                 volume(1, 1, 2) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino[0] == Approx(0).margin(1e-5));
+                REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1734,7 +1749,7 @@ SCENARIO("Projection under an angle")
                 volume(0, 1, 2) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino[0] == Approx(0).margin(1e-5));
+                REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
 
                 AND_THEN("The correct weighting is applied")
                 {
@@ -1781,7 +1796,7 @@ SCENARIO("Projection under an angle")
                 volume(0, 1, 0) = 0;
 
                 op.apply(volume, sino);
-                REQUIRE(sino[0] == Approx(0).margin(1e-5));
+                REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
 
                 AND_THEN("The correct weighting is applied")
                 {

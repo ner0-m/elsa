@@ -18,10 +18,10 @@ namespace elsa::ml
     {
         /// A node in a graph.
         ///
-        /// \author David Tellenbach
+        /// @author David Tellenbach
         ///
-        /// \tparam T type of the data this node holds
-        /// \tparam UseRawPtr If this parameter is set to `true` data is stored
+        /// @tparam T type of the data this node holds
+        /// @tparam UseRawPtr If this parameter is set to `true` data is stored
         /// as a raw pointer, i.e., `T*`. If this parameter is set to `false`
         /// data is stored as `std::shared_ptr<T>`.
         template <typename T, bool UseRawPtr = true>
@@ -55,10 +55,10 @@ namespace elsa::ml
 
         /// An edge between nodes of the graph
         ///
-        /// \author David Tellenbach
+        /// @author David Tellenbach
         ///
-        /// \tparam T type of the data this node holds
-        /// \tparam UseRawPtr If this parameter is set to `true` data is stored
+        /// @tparam T type of the data this node holds
+        /// @tparam UseRawPtr If this parameter is set to `true` data is stored
         /// as a raw pointer, i.e., `T*`. If this parameter is set to `false`
         /// data is stored as `std::shared_ptr<T>`.
         template <typename T, bool UseRawPtr = true>
@@ -94,10 +94,10 @@ namespace elsa::ml
         /// A graph that can be altered and traversed in an efficient and
         /// structured manner.
         ///
-        /// \author David Tellenbach
+        /// @author David Tellenbach
         ///
-        /// \tparam T type of the data this node holds
-        /// \tparam UseRawPtr If this parameter is set to `true` data is stored
+        /// @tparam T type of the data this node holds
+        /// @tparam UseRawPtr If this parameter is set to `true` data is stored
         /// as a raw pointer, i.e., `T*`. If this parameter is set to `false`
         /// data is stored as `std::shared_ptr<T>`.
         template <typename T, bool UseRawPtr = true>
@@ -149,13 +149,13 @@ namespace elsa::ml
                 edges_.emplace_back(EdgeType(&nodes_.at(begin), &nodes_.at(end)));
             }
 
-            /// \returns a reference to a vector of edges
+            /// @returns a reference to a vector of edges
             inline std::vector<EdgeType>& getEdges() { return edges_; }
 
-            /// \returns a constant reference to a vector of edges
+            /// @returns a constant reference to a vector of edges
             inline const std::vector<EdgeType>& getEdges() const { return edges_; }
 
-            /// \returns a vector containing all edges beginning at a given
+            /// @returns a vector containing all edges beginning at a given
             /// index
             inline std::vector<EdgeType> getOutgoingEdges(index_t begin) const
             {
@@ -167,7 +167,7 @@ namespace elsa::ml
                 return ret;
             }
 
-            /// \returns a vector containing all edges ending at a given index
+            /// @returns a vector containing all edges ending at a given index
             inline std::vector<EdgeType> getIncomingEdges(index_t end) const
             {
                 std::vector<EdgeType> ret;
@@ -180,9 +180,9 @@ namespace elsa::ml
 
             /// Insert a new node after a node with a given index.
             ///
-            /// \param index Index of the node after that the insertion
+            /// @param index Index of the node after that the insertion
             /// should be done
-            /// \param newIndex Index of the to be inserted node
+            /// @param newIndex Index of the to be inserted node
             void insertNodeAfter(index_t index, index_t newIndex)
             {
                 for (auto& e : getOutgoingEdges(index))
@@ -191,10 +191,10 @@ namespace elsa::ml
                 addEdge(index, newIndex);
             }
 
-            /// \returns a reference to a map of indices and nodes
+            /// @returns a reference to a map of indices and nodes
             inline std::map<index_t, NodeType>& getNodes() { return nodes_; }
 
-            /// \returns a constant reference to a map of indices and nodes
+            /// @returns a constant reference to a map of indices and nodes
             inline const std::map<index_t, NodeType>& getNodes() const { return nodes_; }
 
             /// delete all nodes and edges of the graph
@@ -252,10 +252,10 @@ namespace elsa::ml
             /// Visit all nodes of the graph. The visitors have access the node
             /// indices
             ///
-            /// \param root Index of the node that serves as starting point
+            /// @param root Index of the node that serves as starting point
             /// of the traversal.
             ///
-            /// \param visitor A function-like object (function, overloaded
+            /// @param visitor A function-like object (function, overloaded
             /// call operator, lambda) with the signature
             ///   `void(T* data, index_t index)`.
             /// The visitor will be applied to every node in a breadth-first
@@ -321,11 +321,11 @@ namespace elsa::ml
 
             /// Print a representation of the graph in the Dot language.
             ///
-            /// \param filename the name of the file that is written to
-            /// \param nodePrinter a function (or lambda) that defines how
+            /// @param filename the name of the file that is written to
+            /// @param nodePrinter a function (or lambda) that defines how
             ///                        to print the data of a single node
-            /// \param dpi Dots-per-inch definition for the Dot representation
-            /// \param rankDir RankDir::TD if the graph should be drawn top-down,
+            /// @param dpi Dots-per-inch definition for the Dot representation
+            /// @param rankDir RankDir::TD if the graph should be drawn top-down,
             ///                    rankdDir::LR if it should be drawn left-right
             template <typename NodePrinter>
             void toDot(const std::string& filename, NodePrinter nodePrinter, index_t dpi = 90,

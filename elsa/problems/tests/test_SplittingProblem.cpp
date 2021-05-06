@@ -6,17 +6,20 @@
  * @author Andi Braimllari
  */
 
+#include "doctest/doctest.h"
+
 #include "SplittingProblem.h"
 #include "L1Norm.h"
 #include "VolumeDescriptor.h"
 #include "Identity.h"
 
-#include <catch2/catch.hpp>
-
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("Scenario: Testing SplittingProblem", "", float, std::complex<float>, double,
-                   std::complex<double>)
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE_TEMPLATE("Scenario: Testing SplittingProblem", TestType, float, std::complex<float>,
+                   double, std::complex<double>)
 {
     GIVEN("some data terms, a regularization term and a constraint")
     {
@@ -73,3 +76,5 @@ TEMPLATE_TEST_CASE("Scenario: Testing SplittingProblem", "", float, std::complex
         }
     }
 }
+
+TEST_SUITE_END();

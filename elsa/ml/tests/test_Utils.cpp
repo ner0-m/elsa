@@ -1,12 +1,12 @@
 /**
- * \file test_common.cpp
+ * @file test_common.cpp
  *
- * \brief Tests for common ml functionality
+ * @brief Tests for common ml functionality
  *
- * \author David Tellenbach
+ * @author David Tellenbach
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "elsaDefines.h"
 #include "DataContainer.h"
@@ -14,8 +14,14 @@
 #include "Utils.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEST_CASE("Encoding", "[ml]")
+TEST_SUITE_BEGIN("ml");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE("Encoding")
 {
     SECTION("Encode one-hot")
     {
@@ -61,3 +67,4 @@ TEST_CASE("Encoding", "[ml]")
         REQUIRE(fromOneHot[3] == Approx(1.f));
     }
 }
+TEST_SUITE_END();

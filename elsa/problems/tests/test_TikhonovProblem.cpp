@@ -6,7 +6,8 @@
  * @author Nikola Dinev
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
+
 #include "Problem.h"
 #include "Identity.h"
 #include "Scaling.h"
@@ -15,11 +16,15 @@
 #include "L1Norm.h"
 #include "TikhonovProblem.h"
 #include "VolumeDescriptor.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
-TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with one regularization term", "", float,
-                   double)
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE_TEMPLATE("Scenario: Testing TikhonovProblem with one regularization term", TestType,
+                   float, double)
 {
     GIVEN("some data term and some regularization term")
     {
@@ -151,8 +156,8 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with one regularization te
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with several regularization terms", "", float,
-                   double)
+TEST_CASE_TEMPLATE("Scenario: Testing TikhonovProblem with several regularization terms", TestType,
+                   float, double)
 {
     GIVEN("some data term and several regularization terms")
     {
@@ -266,14 +271,14 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with several regularizatio
                 DataContainer gradientDirect =
                     dcScaling * (dcScaling * dcX0 - dcData) + weight1 * dcX0 + weight2 * dcX0;
                 for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE(gradient[i] == Approx(gradientDirect[i]).margin(0.00001));
+                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE(result[i]
-                            == Approx(scaling[i] * scaling[i] * dataVec[i] + weight1 * dataVec[i]
-                                      + weight2 * dataVec[i]));
+                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
+                                                               + weight1 * dataVec[i]
+                                                               + weight2 * dataVec[i]));
             }
 
             THEN("the TikhonovProblem is different from a Problem with the same terms")
@@ -285,3 +290,5 @@ TEMPLATE_TEST_CASE("Scenario: Testing TikhonovProblem with several regularizatio
         }
     }
 }
+
+TEST_SUITE_END();

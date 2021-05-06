@@ -7,7 +7,8 @@
  * @author Tobias Lasser - rewrite
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
+
 #include <iostream>
 #include <Logger.h>
 #include "Problem.h"
@@ -16,10 +17,14 @@
 #include "LinearResidual.h"
 #include "L2NormPow2.h"
 #include "VolumeDescriptor.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing Problem without regularization")
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE("Testing Problem without regularization")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);
@@ -68,7 +73,7 @@ SCENARIO("Testing Problem without regularization")
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE(result[i] == Approx(scaling[i] * scaling[i] * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f).margin(0.05));
+                REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0f));
             }
         }
 
@@ -108,7 +113,7 @@ SCENARIO("Testing Problem without regularization")
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE(result[i] == Approx(scaling[i] * scaling[i] * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f).margin(0.05));
+                REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0f));
             }
         }
     }
@@ -170,7 +175,8 @@ SCENARIO("Testing Problem with one regularization term")
                     REQUIRE(result[i]
                             == Approx(scaling[i] * scaling[i] * dataVec[i] + weight * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f + weight).margin(0.05));
+                // REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f + weight).margin(0.05));
+                REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0 + weight));
             }
         }
 
@@ -211,7 +217,8 @@ SCENARIO("Testing Problem with one regularization term")
                     REQUIRE(result[i]
                             == Approx(scaling[i] * scaling[i] * dataVec[i] + weight * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f + weight).margin(0.05));
+                // REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f + weight).margin(0.05));
+                REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0 + weight));
             }
         }
     }
@@ -279,8 +286,10 @@ SCENARIO("Testing Problem with several regularization terms")
                             == Approx(scaling[i] * scaling[i] * dataVec[i] + weight1 * dataVec[i]
                                       + weight2 * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100)
-                        == Approx(1.0f + weight1 + weight2).margin(0.05));
+                // REQUIRE(prob.getLipschitzConstant(100)
+                //         == Approx(1.0f + weight1 + weight2).margin(0.05));
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.getLipschitzConstant(100), 1.0 + weight1 + weight2));
             }
         }
 
@@ -315,18 +324,22 @@ SCENARIO("Testing Problem with several regularization terms")
                 DataContainer gradientDirect =
                     dcScaling * (dcScaling * dcX0 - dcData) + weight1 * dcX0 + weight2 * dcX0;
                 for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE(gradient[i] == Approx(gradientDirect[i]).margin(0.00001));
+                    REQUIRE(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE(result[i]
-                            == Approx(scaling[i] * scaling[i] * dataVec[i] + weight1 * dataVec[i]
-                                      + weight2 * dataVec[i]));
+                    REQUIRE(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
+                                                         + weight1 * dataVec[i]
+                                                         + weight2 * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100)
-                        == Approx(1.0f + weight1 + weight2).margin(0.05));
+                // REQUIRE(prob.getLipschitzConstant(100)
+                //         == Approx(1.0f + weight1 + weight2).margin(0.05));
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.getLipschitzConstant(100), 1.0 + weight1 + weight2));
             }
         }
     }
 }
+
+TEST_SUITE_END();

@@ -8,13 +8,16 @@
  * @author Tobias Lasser - rewrite and added code coverage
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "IdenticalBlocksDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Constructing IdenticalBlocksDescriptors")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE("IdenticalBlocksDescriptor: Construction")
 {
     GIVEN("a 1D descriptor")
     {
@@ -30,27 +33,27 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
 
             THEN("there are 5 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i) == dd);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i), dd);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new IdenticalBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 2);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 2);
 
                 IndexVector_t correctSize(2);
                 correctSize << dd.getNumberOfCoefficients(), blocks;
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
                 RealVector_t correctSpacing(2);
                 correctSpacing(0) = dd.getSpacingPerDimension()(0);
                 correctSpacing(1) = 1.0;
-                REQUIRE(bd.getSpacingPerDimension() == correctSpacing);
+                REQUIRE_EQ(bd.getSpacingPerDimension(), correctSpacing);
             }
 
             THEN("the new IdenticalBlocksDescriptor does index calculations correctly")
@@ -59,14 +62,14 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                 coordinate << dd.getNumberOfCoefficients() - 1, blocks - 1;
                 index_t index = coordinate(0) + coordinate(1) * dd.getNumberOfCoefficients();
 
-                REQUIRE(bd.getIndexFromCoordinate(coordinate) == index);
-                REQUIRE(bd.getCoordinateFromIndex(index) == coordinate);
+                REQUIRE_EQ(bd.getIndexFromCoordinate(coordinate), index);
+                REQUIRE_EQ(bd.getCoordinateFromIndex(index), coordinate);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == i * dd.getNumberOfCoefficients());
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), i * dd.getNumberOfCoefficients());
 
                 REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
             }
@@ -77,8 +80,8 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                 IndexVector_t monoCoeffs(2);
                 monoCoeffs << size, blocks;
                 VolumeDescriptor mono(monoCoeffs);
-                REQUIRE(mono != bd);
-                REQUIRE(bd != mono);
+                REQUIRE_NE(mono, bd);
+                REQUIRE_NE(bd, mono);
             }
         }
     }
@@ -96,28 +99,28 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
 
             THEN("there are 10 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i) == dd);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i), dd);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new IdenticalBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 3);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 3);
 
                 IndexVector_t correctSize(3);
                 correctSize << sizeVector(0), sizeVector(1), blocks;
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
                 RealVector_t correctSpacing(3);
                 correctSpacing(0) = dd.getSpacingPerDimension()(0);
                 correctSpacing(1) = dd.getSpacingPerDimension()(1);
                 correctSpacing(2) = 1.0;
-                REQUIRE(bd.getSpacingPerDimension() == correctSpacing);
+                REQUIRE_EQ(bd.getSpacingPerDimension(), correctSpacing);
             }
 
             THEN("the new IdenticalBlocksDescriptor does index calculations correctly")
@@ -127,14 +130,14 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                 index_t index = coordinate(0) + coordinate(1) * sizeVector(0)
                                 + coordinate(2) * sizeVector(0) * sizeVector(1);
 
-                REQUIRE(bd.getIndexFromCoordinate(coordinate) == index);
-                REQUIRE(bd.getCoordinateFromIndex(index) == coordinate);
+                REQUIRE_EQ(bd.getIndexFromCoordinate(coordinate), index);
+                REQUIRE_EQ(bd.getCoordinateFromIndex(index), coordinate);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == i * dd.getNumberOfCoefficients());
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), i * dd.getNumberOfCoefficients());
 
                 REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
             }
@@ -145,8 +148,8 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                 IndexVector_t monoCoeffs(3);
                 monoCoeffs << sizeVector, blocks;
                 VolumeDescriptor mono(monoCoeffs);
-                REQUIRE(mono != bd);
-                REQUIRE(bd != mono);
+                REQUIRE_NE(mono, bd);
+                REQUIRE_NE(bd, mono);
             }
 
             THEN("the block descriptor is different from an IdenticalBlocksDescriptor with the "
@@ -156,8 +159,8 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                 VolumeDescriptor dd2(coeffsBlock.head(coeffsBlock.size() - 1));
                 IdenticalBlocksDescriptor dd3(coeffsBlock[coeffsBlock.size() - 1], dd2);
                 IdenticalBlocksDescriptor bd2(blocks, dd3);
-                REQUIRE(bd2 != bd);
-                REQUIRE(bd != bd2);
+                REQUIRE_NE(bd2, bd);
+                REQUIRE_NE(bd, bd2);
             }
         }
     }
@@ -175,28 +178,28 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
 
             THEN("there are 25 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i) == dd);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i), dd);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new IdenticalBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 4);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 4);
 
                 IndexVector_t correctSize(4);
                 correctSize << sizeVector(0), sizeVector(1), sizeVector(2), blocks;
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
                 RealVector_t correctSpacing(4);
                 for (index_t i = 0; i < 3; ++i)
                     correctSpacing(i) = dd.getSpacingPerDimension()(i);
                 correctSpacing(3) = 1.0;
-                REQUIRE(bd.getSpacingPerDimension() == correctSpacing);
+                REQUIRE_EQ(bd.getSpacingPerDimension(), correctSpacing);
             }
 
             THEN("the new IdenticalBlocksDescriptor does index calculations correctly")
@@ -208,14 +211,14 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                                 + coordinate(2) * sizeVector(0) * sizeVector(1)
                                 + coordinate(3) * sizeVector(0) * sizeVector(1) * sizeVector(2);
 
-                REQUIRE(bd.getIndexFromCoordinate(coordinate) == index);
-                REQUIRE(bd.getCoordinateFromIndex(index) == coordinate);
+                REQUIRE_EQ(bd.getIndexFromCoordinate(coordinate), index);
+                REQUIRE_EQ(bd.getCoordinateFromIndex(index), coordinate);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == i * dd.getNumberOfCoefficients());
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), i * dd.getNumberOfCoefficients());
 
                 REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
             }
@@ -226,8 +229,8 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                 IndexVector_t monoCoeffs(4);
                 monoCoeffs << sizeVector, blocks;
                 VolumeDescriptor mono(monoCoeffs);
-                REQUIRE(mono != bd);
-                REQUIRE(bd != mono);
+                REQUIRE_NE(mono, bd);
+                REQUIRE_NE(bd, mono);
             }
 
             THEN("the block descriptor is different from an IdenticalBlocksDescriptor with the "
@@ -237,14 +240,14 @@ SCENARIO("Constructing IdenticalBlocksDescriptors")
                 VolumeDescriptor dd2(coeffsBlock.head(coeffsBlock.size() - 1));
                 IdenticalBlocksDescriptor dd3(coeffsBlock[coeffsBlock.size() - 1], dd2);
                 IdenticalBlocksDescriptor bd2(blocks, dd3);
-                REQUIRE(bd2 != bd);
-                REQUIRE(bd != bd2);
+                REQUIRE_NE(bd2, bd);
+                REQUIRE_NE(bd, bd2);
             }
         }
     }
 }
 
-SCENARIO("Cloning IdenticalBlocksDescriptors")
+TEST_CASE("IdenticalBlocksDescriptor: Testing cloning")
 {
     GIVEN("a 1D IdenticalBlocksDescriptor")
     {
@@ -260,9 +263,9 @@ SCENARIO("Cloning IdenticalBlocksDescriptors")
 
             THEN("it's a real clone")
             {
-                REQUIRE(bdClone.get() != &bd);
-                REQUIRE(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
-                REQUIRE(*bdClone == bd);
+                REQUIRE_NE(bdClone.get(), &bd);
+                REQUIRE_UNARY(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_EQ(*bdClone, bd);
             }
         }
     }
@@ -281,9 +284,9 @@ SCENARIO("Cloning IdenticalBlocksDescriptors")
 
             THEN("it's a real clone")
             {
-                REQUIRE(bdClone.get() != &bd);
-                REQUIRE(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
-                REQUIRE(*bdClone == bd);
+                REQUIRE_NE(bdClone.get(), &bd);
+                REQUIRE_UNARY(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_EQ(*bdClone, bd);
             }
         }
     }
@@ -302,10 +305,12 @@ SCENARIO("Cloning IdenticalBlocksDescriptors")
 
             THEN("it's a real clone")
             {
-                REQUIRE(bdClone.get() != &bd);
-                REQUIRE(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
-                REQUIRE(*bdClone == bd);
+                REQUIRE_NE(bdClone.get(), &bd);
+                REQUIRE_UNARY(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_EQ(*bdClone, bd);
             }
         }
     }
 }
+
+TEST_SUITE_END();

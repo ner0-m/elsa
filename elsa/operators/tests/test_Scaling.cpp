@@ -8,13 +8,16 @@
  * @author Tobias Lasser - minor extensions
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Scaling.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Constructing a Scaling operator")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE_TEMPLATE("Scaling: Testing construction", data_t, float, double)
 {
     GIVEN("a descriptor")
     {
@@ -25,7 +28,7 @@ SCENARIO("Constructing a Scaling operator")
         WHEN("instantiating an isotropic scaling operator")
         {
             real_t scaleFactor = 3.5f;
-            Scaling scalingOp(dd, scaleFactor);
+            Scaling<data_t> scalingOp(dd, scaleFactor);
 
             THEN("the descriptors are as expected")
             {
@@ -43,9 +46,9 @@ SCENARIO("Constructing a Scaling operator")
 
         WHEN("instantiating an anisotropic scaling operator")
         {
-            DataContainer dc(dd);
+            DataContainer<data_t> dc(dd);
             dc = 3.5f;
-            Scaling scalingOp(dd, dc);
+            Scaling<data_t> scalingOp(dd, dc);
 
             THEN("the descriptors  are as expected")
             {
@@ -63,7 +66,7 @@ SCENARIO("Constructing a Scaling operator")
 
         WHEN("cloning a scaling operator")
         {
-            Scaling scalingOp(dd, 3.5f);
+            Scaling<data_t> scalingOp(dd, 3.5f);
             auto scalingOpClone = scalingOp.clone();
 
             THEN("everything matches")
@@ -75,21 +78,21 @@ SCENARIO("Constructing a Scaling operator")
     }
 }
 
-SCENARIO("Using a Scaling operator")
+TEST_CASE_TEMPLATE("Scaling: Testing apply to data", data_t, float, double)
 {
     GIVEN("some data")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 34, 13;
         VolumeDescriptor dd(numCoeff);
-        DataContainer input(dd);
-        real_t inputScalar{2.5f};
+        DataContainer<data_t> input(dd);
+        data_t inputScalar{2.5};
         input = inputScalar;
 
         WHEN("applying isotropic scaling")
         {
             real_t scaleFactor{3.7f};
-            Scaling scalingOp(dd, scaleFactor);
+            Scaling<data_t> scalingOp(dd, scaleFactor);
 
             THEN("apply and applyAdjoint yield the correct results")
             {
@@ -105,11 +108,11 @@ SCENARIO("Using a Scaling operator")
 
         WHEN("applying anisotropic scaling")
         {
-            RealVector_t randomData(dd.getNumberOfCoefficients());
+            Vector_t<data_t> randomData(dd.getNumberOfCoefficients());
             randomData.setRandom();
-            DataContainer scaleFactors(dd, randomData);
+            DataContainer<data_t> scaleFactors(dd, randomData);
 
-            Scaling scalingOp(dd, scaleFactors);
+            Scaling<data_t> scalingOp(dd, scaleFactors);
 
             THEN("apply and applyAdjoint yield the correct results")
             {
@@ -124,3 +127,4 @@ SCENARIO("Using a Scaling operator")
         }
     }
 }
+TEST_SUITE_END();

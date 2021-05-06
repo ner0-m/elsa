@@ -6,12 +6,15 @@
  * @author David Frank - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "StrongTypes.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing RotationAngles")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE("StrongTypes: Testing RotationAngles")
 {
 
     using namespace geometry;
@@ -21,7 +24,7 @@ SCENARIO("Testing RotationAngles")
     {
         RotationAngles<1> angle{Degree{90}};
 
-        THEN("The value and size are correct") { CHECK(angle[0] == Radian{pi_t / 2}); }
+        THEN("The value and size are correct") { CHECK_EQ(angle[0], Radian{pi_t / 2}); }
     }
 
     GIVEN("A 2D RotationAngles")
@@ -30,8 +33,8 @@ SCENARIO("Testing RotationAngles")
 
         THEN("The value and size are correct")
         {
-            CHECK(angle[0] == Radian{pi_t / 2});
-            CHECK(angle[1] == Radian{pi_t / 4});
+            CHECK_EQ(angle[0], Radian{pi_t / 2});
+            CHECK_EQ(angle[1], Radian{pi_t / 4});
         }
     }
 
@@ -41,9 +44,9 @@ SCENARIO("Testing RotationAngles")
 
         THEN("The value and size are correct")
         {
-            CHECK(angle[0] == Radian{pi_t / 2});
-            CHECK(angle[1] == Radian{pi_t / 4});
-            CHECK(angle[2] == Radian{pi_t});
+            CHECK_EQ(angle[0], Radian{pi_t / 2});
+            CHECK_EQ(angle[1], Radian{pi_t / 4});
+            CHECK_EQ(angle[2], Radian{pi_t});
         }
     }
 
@@ -55,22 +58,22 @@ SCENARIO("Testing RotationAngles")
         {
             auto [g, b, a] = angle;
 
-            CHECK(angle[0] == Radian{pi_t / 2});
-            CHECK(angle.gamma() == Radian{pi_t / 2});
-            CHECK(g == Radian{pi_t / 2});
+            CHECK_EQ(angle[0], Radian{pi_t / 2});
+            CHECK_EQ(angle.gamma(), Radian{pi_t / 2});
+            CHECK_EQ(g, Radian{pi_t / 2});
 
-            CHECK(angle[1] == Radian{pi_t / 4});
-            CHECK(angle.beta() == Radian{pi_t / 4});
-            CHECK(b == Radian{pi_t / 4});
+            CHECK_EQ(angle[1], Radian{pi_t / 4});
+            CHECK_EQ(angle.beta(), Radian{pi_t / 4});
+            CHECK_EQ(b, Radian{pi_t / 4});
 
-            CHECK(angle[2] == Radian{pi_t});
-            CHECK(angle.alpha() == Radian{pi_t});
-            CHECK(a == Radian{pi_t});
+            CHECK_EQ(angle[2], Radian{pi_t});
+            CHECK_EQ(angle.alpha(), Radian{pi_t});
+            CHECK_EQ(a, Radian{pi_t});
         }
     }
 }
 
-SCENARIO("Testing StaticRealVector")
+TEST_CASE("StrongTypes: Testing StaticRealVector")
 {
     using namespace geometry;
     using namespace geometry::detail;
@@ -82,7 +85,7 @@ SCENARIO("Testing StaticRealVector")
         THEN("The Eigen Vector is of size 0")
         {
             auto eigenVec = vec.get();
-            REQUIRE(eigenVec.size() == 0);
+            REQUIRE_EQ(eigenVec.size(), 0);
         }
     }
 
@@ -93,9 +96,9 @@ SCENARIO("Testing StaticRealVector")
         THEN("The value and size are correct")
         {
             auto eigenVec = vec.get();
-            CHECK(eigenVec.size() == 1);
+            CHECK_EQ(eigenVec.size(), 1);
 
-            CHECK(vec[0] == Approx(1));
+            CHECK_EQ(vec[0], Approx(1));
         }
     }
 
@@ -106,10 +109,10 @@ SCENARIO("Testing StaticRealVector")
         THEN("The value and size are correct")
         {
             auto eigenVec = vec.get();
-            CHECK(eigenVec.size() == 2);
+            CHECK_EQ(eigenVec.size(), 2);
 
-            CHECK(vec[0] == Approx(1));
-            CHECK(vec[1] == Approx(2));
+            CHECK_EQ(vec[0], Approx(1));
+            CHECK_EQ(vec[1], Approx(2));
         }
     }
 
@@ -120,11 +123,11 @@ SCENARIO("Testing StaticRealVector")
         THEN("The value and size are correct")
         {
             auto eigenVec = vec.get();
-            CHECK(eigenVec.size() == 3);
+            CHECK_EQ(eigenVec.size(), 3);
 
-            CHECK(vec[0] == Approx(1));
-            CHECK(vec[1] == Approx(2));
-            CHECK(vec[2] == Approx(3));
+            CHECK_EQ(vec[0], Approx(1));
+            CHECK_EQ(vec[1], Approx(2));
+            CHECK_EQ(vec[2], Approx(3));
         }
     }
 
@@ -135,17 +138,17 @@ SCENARIO("Testing StaticRealVector")
         THEN("The value and size are correct")
         {
             auto eigenVec = vec.get();
-            CHECK(eigenVec.size() == 4);
+            CHECK_EQ(eigenVec.size(), 4);
 
-            CHECK(vec[0] == Approx(1));
-            CHECK(vec[1] == Approx(2));
-            CHECK(vec[2] == Approx(3));
-            CHECK(vec[3] == Approx(6));
+            CHECK_EQ(vec[0], Approx(1));
+            CHECK_EQ(vec[1], Approx(2));
+            CHECK_EQ(vec[2], Approx(3));
+            CHECK_EQ(vec[3], Approx(6));
         }
     }
 }
 
-SCENARIO("Testing GeometryData")
+TEST_CASE("StrongTypes: Testing GeometryData")
 {
     using namespace geometry;
     using namespace geometry::detail;
@@ -156,8 +159,8 @@ SCENARIO("Testing GeometryData")
 
         THEN("The Eigen Vector is of size 0")
         {
-            CHECK(data.getSpacing().size() == 0);
-            CHECK(data.getLocationOfOrigin().size() == 0);
+            CHECK_EQ(data.getSpacing().size(), 0);
+            CHECK_EQ(data.getLocationOfOrigin().size(), 0);
         }
     }
 
@@ -165,17 +168,13 @@ SCENARIO("Testing GeometryData")
     {
         GeometryData data{Spacing1D{1}, OriginShift1D{0}};
 
-        // static_assert(2 == std::tuple_size<decltype(data)>::value);
-
         THEN("Spacing and Origin is of correct size and correct values")
         {
-            // auto [spacing, origin] = data;
+            CHECK_EQ(data.getSpacing().size(), 1);
+            CHECK_EQ(data.getSpacing()[0], Approx(1));
 
-            CHECK(data.getSpacing().size() == 1);
-            CHECK(data.getSpacing()[0] == Approx(1));
-
-            CHECK(data.getLocationOfOrigin().size() == 1);
-            CHECK(data.getLocationOfOrigin()[0] == Approx(0));
+            CHECK_EQ(data.getLocationOfOrigin().size(), 1);
+            CHECK_EQ(data.getLocationOfOrigin()[0], Approx(0));
         }
 
         THEN("We can construct it from coefficients")
@@ -184,11 +183,11 @@ SCENARIO("Testing GeometryData")
 
             GeometryData<1> data2{Size1D{coeffs}};
 
-            CHECK(data2.getSpacing().size() == 1);
-            CHECK(data2.getSpacing()[0] == Approx(1));
+            CHECK_EQ(data2.getSpacing().size(), 1);
+            CHECK_EQ(data2.getSpacing()[0], Approx(1));
 
-            CHECK(data2.getLocationOfOrigin().size() == 1);
-            CHECK(data2.getLocationOfOrigin()[0] == Approx(2.5));
+            CHECK_EQ(data2.getLocationOfOrigin().size(), 1);
+            CHECK_EQ(data2.getLocationOfOrigin()[0], Approx(2.5));
         }
     }
 
@@ -198,13 +197,13 @@ SCENARIO("Testing GeometryData")
 
         THEN("Spacing and Origin is of correct size and correct values")
         {
-            CHECK(data.getSpacing().size() == 2);
-            CHECK(data.getSpacing()[0] == Approx(1));
-            CHECK(data.getSpacing()[1] == Approx(0.5));
+            CHECK_EQ(data.getSpacing().size(), 2);
+            CHECK_EQ(data.getSpacing()[0], Approx(1));
+            CHECK_EQ(data.getSpacing()[1], Approx(0.5));
 
-            CHECK(data.getLocationOfOrigin().size() == 2);
-            CHECK(data.getLocationOfOrigin()[0] == Approx(0));
-            CHECK(data.getLocationOfOrigin()[1] == Approx(0.2));
+            CHECK_EQ(data.getLocationOfOrigin().size(), 2);
+            CHECK_EQ(data.getLocationOfOrigin()[0], Approx(0));
+            CHECK_EQ(data.getLocationOfOrigin()[1], Approx(0.2));
         }
 
         THEN("We can construct it from coefficients")
@@ -213,18 +212,18 @@ SCENARIO("Testing GeometryData")
 
             GeometryData<2> data2{Size2D{coeffs}, Spacing2D{2, 2}};
 
-            CHECK(data2.getSpacing().size() == 2);
-            CHECK(data2.getSpacing()[0] == Approx(2));
-            CHECK(data2.getSpacing()[1] == Approx(2));
+            CHECK_EQ(data2.getSpacing().size(), 2);
+            CHECK_EQ(data2.getSpacing()[0], Approx(2));
+            CHECK_EQ(data2.getSpacing()[1], Approx(2));
 
-            CHECK(data2.getLocationOfOrigin().size() == 2);
-            CHECK(data2.getLocationOfOrigin()[0] == Approx(5));
-            CHECK(data2.getLocationOfOrigin()[1] == Approx(5));
+            CHECK_EQ(data2.getLocationOfOrigin().size(), 2);
+            CHECK_EQ(data2.getLocationOfOrigin()[0], Approx(5));
+            CHECK_EQ(data2.getLocationOfOrigin()[1], Approx(5));
         }
     }
 }
 
-SCENARIO("Testing VolumeData")
+TEST_CASE("StrongTypes: Testing VolumeData")
 {
     using namespace geometry;
 
@@ -237,13 +236,13 @@ SCENARIO("Testing VolumeData")
         {
             VolumeData2D volData{Size2D{size}};
 
-            CHECK(volData.getSpacing().size() == 2);
-            CHECK(volData.getSpacing()[0] == Approx(1));
-            CHECK(volData.getSpacing()[1] == Approx(1));
+            CHECK_EQ(volData.getSpacing().size(), 2);
+            CHECK_EQ(volData.getSpacing()[0], Approx(1));
+            CHECK_EQ(volData.getSpacing()[1], Approx(1));
 
-            CHECK(volData.getLocationOfOrigin().size() == 2);
-            CHECK(volData.getLocationOfOrigin()[0] == Approx(5));
-            CHECK(volData.getLocationOfOrigin()[1] == Approx(5));
+            CHECK_EQ(volData.getLocationOfOrigin().size(), 2);
+            CHECK_EQ(volData.getLocationOfOrigin()[0], Approx(5));
+            CHECK_EQ(volData.getLocationOfOrigin()[1], Approx(5));
         }
     }
 
@@ -259,25 +258,25 @@ SCENARIO("Testing VolumeData")
         {
             VolumeData2D volData{Size2D{size}, Spacing2D{spacing}};
 
-            CHECK(volData.getSpacing().size() == 2);
-            CHECK(volData.getSpacing()[0] == Approx(0.5));
-            CHECK(volData.getSpacing()[1] == Approx(2));
+            CHECK_EQ(volData.getSpacing().size(), 2);
+            CHECK_EQ(volData.getSpacing()[0], Approx(0.5));
+            CHECK_EQ(volData.getSpacing()[1], Approx(2));
 
-            CHECK(volData.getLocationOfOrigin().size() == 2);
-            CHECK(volData.getLocationOfOrigin()[0] == Approx(2.5));
-            CHECK(volData.getLocationOfOrigin()[1] == Approx(10));
+            CHECK_EQ(volData.getLocationOfOrigin().size(), 2);
+            CHECK_EQ(volData.getLocationOfOrigin()[0], Approx(2.5));
+            CHECK_EQ(volData.getLocationOfOrigin()[1], Approx(10));
         }
         THEN("Structured bindings produce correct results")
         {
             auto [sp, o] = VolumeData2D{Size2D{size}, Spacing2D{spacing}};
 
-            CHECK(sp.size() == 2);
-            CHECK(sp[0] == Approx(0.5));
-            CHECK(sp[1] == Approx(2));
+            CHECK_EQ(sp.size(), 2);
+            CHECK_EQ(sp[0], Approx(0.5));
+            CHECK_EQ(sp[1], Approx(2));
 
-            CHECK(o.size() == 2);
-            CHECK(o[0] == Approx(2.5));
-            CHECK(o[1] == Approx(10));
+            CHECK_EQ(o.size(), 2);
+            CHECK_EQ(o[0], Approx(2.5));
+            CHECK_EQ(o[1], Approx(10));
         }
     }
 
@@ -290,15 +289,15 @@ SCENARIO("Testing VolumeData")
         {
             VolumeData3D volData{Size3D{size}};
 
-            CHECK(volData.getSpacing().size() == 3);
-            CHECK(volData.getSpacing()[0] == Approx(1));
-            CHECK(volData.getSpacing()[1] == Approx(1));
-            CHECK(volData.getSpacing()[2] == Approx(1));
+            CHECK_EQ(volData.getSpacing().size(), 3);
+            CHECK_EQ(volData.getSpacing()[0], Approx(1));
+            CHECK_EQ(volData.getSpacing()[1], Approx(1));
+            CHECK_EQ(volData.getSpacing()[2], Approx(1));
 
-            CHECK(volData.getLocationOfOrigin().size() == 3);
-            CHECK(volData.getLocationOfOrigin()[0] == Approx(5));
-            CHECK(volData.getLocationOfOrigin()[1] == Approx(5));
-            CHECK(volData.getLocationOfOrigin()[2] == Approx(5));
+            CHECK_EQ(volData.getLocationOfOrigin().size(), 3);
+            CHECK_EQ(volData.getLocationOfOrigin()[0], Approx(5));
+            CHECK_EQ(volData.getLocationOfOrigin()[1], Approx(5));
+            CHECK_EQ(volData.getLocationOfOrigin()[2], Approx(5));
         }
     }
 
@@ -314,20 +313,20 @@ SCENARIO("Testing VolumeData")
         {
             VolumeData3D volData{Size3D{size}, Spacing3D{spacing}};
 
-            CHECK(volData.getSpacing().size() == 3);
-            CHECK(volData.getSpacing()[0] == Approx(0.5));
-            CHECK(volData.getSpacing()[1] == Approx(2));
-            CHECK(volData.getSpacing()[2] == Approx(1));
+            CHECK_EQ(volData.getSpacing().size(), 3);
+            CHECK_EQ(volData.getSpacing()[0], Approx(0.5));
+            CHECK_EQ(volData.getSpacing()[1], Approx(2));
+            CHECK_EQ(volData.getSpacing()[2], Approx(1));
 
-            CHECK(volData.getLocationOfOrigin().size() == 3);
-            CHECK(volData.getLocationOfOrigin()[0] == Approx(2.5));
-            CHECK(volData.getLocationOfOrigin()[1] == Approx(10));
-            CHECK(volData.getLocationOfOrigin()[2] == Approx(5));
+            CHECK_EQ(volData.getLocationOfOrigin().size(), 3);
+            CHECK_EQ(volData.getLocationOfOrigin()[0], Approx(2.5));
+            CHECK_EQ(volData.getLocationOfOrigin()[1], Approx(10));
+            CHECK_EQ(volData.getLocationOfOrigin()[2], Approx(5));
         }
     }
 }
 
-SCENARIO("Testing SinogramData")
+TEST_CASE("StrongTypes: Testing SinogramData")
 {
     using namespace geometry;
 
@@ -340,13 +339,13 @@ SCENARIO("Testing SinogramData")
         {
             SinogramData2D volData{Size2D{size}};
 
-            CHECK(volData.getSpacing().size() == 2);
-            CHECK(volData.getSpacing()[0] == Approx(1));
-            CHECK(volData.getSpacing()[1] == Approx(1));
+            CHECK_EQ(volData.getSpacing().size(), 2);
+            CHECK_EQ(volData.getSpacing()[0], Approx(1));
+            CHECK_EQ(volData.getSpacing()[1], Approx(1));
 
-            CHECK(volData.getLocationOfOrigin().size() == 2);
-            CHECK(volData.getLocationOfOrigin()[0] == Approx(5));
-            CHECK(volData.getLocationOfOrigin()[1] == Approx(5));
+            CHECK_EQ(volData.getLocationOfOrigin().size(), 2);
+            CHECK_EQ(volData.getLocationOfOrigin()[0], Approx(5));
+            CHECK_EQ(volData.getLocationOfOrigin()[1], Approx(5));
         }
     }
 
@@ -362,13 +361,13 @@ SCENARIO("Testing SinogramData")
         {
             SinogramData2D sinoData{Size2D{size}, Spacing2D{spacing}};
 
-            CHECK(sinoData.getSpacing().size() == 2);
-            CHECK(sinoData.getSpacing()[0] == Approx(0.5));
-            CHECK(sinoData.getSpacing()[1] == Approx(2));
+            CHECK_EQ(sinoData.getSpacing().size(), 2);
+            CHECK_EQ(sinoData.getSpacing()[0], Approx(0.5));
+            CHECK_EQ(sinoData.getSpacing()[1], Approx(2));
 
-            CHECK(sinoData.getLocationOfOrigin().size() == 2);
-            CHECK(sinoData.getLocationOfOrigin()[0] == Approx(2.5));
-            CHECK(sinoData.getLocationOfOrigin()[1] == Approx(10));
+            CHECK_EQ(sinoData.getLocationOfOrigin().size(), 2);
+            CHECK_EQ(sinoData.getLocationOfOrigin()[0], Approx(2.5));
+            CHECK_EQ(sinoData.getLocationOfOrigin()[1], Approx(10));
 
             CHECK_THROWS(SinogramData2D{Size2D{size}, Spacing2D{RealVector_t(3)}});
         }
@@ -386,13 +385,13 @@ SCENARIO("Testing SinogramData")
         {
             auto [s, o] = SinogramData2D{Spacing2D{spacing}, OriginShift2D{shift}};
 
-            CHECK(s.size() == 2);
-            CHECK(s[0] == Approx(1));
-            CHECK(s[1] == Approx(1));
+            CHECK_EQ(s.size(), 2);
+            CHECK_EQ(s[0], Approx(1));
+            CHECK_EQ(s[1], Approx(1));
 
-            CHECK(o.size() == 2);
-            CHECK(o[0] == Approx(1));
-            CHECK(o[1] == Approx(1));
+            CHECK_EQ(o.size(), 2);
+            CHECK_EQ(o[0], Approx(1));
+            CHECK_EQ(o[1], Approx(1));
 
             // Test that exceptions are thrown
             CHECK_THROWS(SinogramData2D{Spacing2D{spacing}, RealVector_t(3)});
@@ -410,15 +409,15 @@ SCENARIO("Testing SinogramData")
         {
             SinogramData3D sinoData{Size3D{size}};
 
-            CHECK(sinoData.getSpacing().size() == 3);
-            CHECK(sinoData.getSpacing()[0] == Approx(1));
-            CHECK(sinoData.getSpacing()[1] == Approx(1));
-            CHECK(sinoData.getSpacing()[2] == Approx(1));
+            CHECK_EQ(sinoData.getSpacing().size(), 3);
+            CHECK_EQ(sinoData.getSpacing()[0], Approx(1));
+            CHECK_EQ(sinoData.getSpacing()[1], Approx(1));
+            CHECK_EQ(sinoData.getSpacing()[2], Approx(1));
 
-            CHECK(sinoData.getLocationOfOrigin().size() == 3);
-            CHECK(sinoData.getLocationOfOrigin()[0] == Approx(5));
-            CHECK(sinoData.getLocationOfOrigin()[1] == Approx(5));
-            CHECK(sinoData.getLocationOfOrigin()[2] == Approx(5));
+            CHECK_EQ(sinoData.getLocationOfOrigin().size(), 3);
+            CHECK_EQ(sinoData.getLocationOfOrigin()[0], Approx(5));
+            CHECK_EQ(sinoData.getLocationOfOrigin()[1], Approx(5));
+            CHECK_EQ(sinoData.getLocationOfOrigin()[2], Approx(5));
         }
     }
 
@@ -434,15 +433,15 @@ SCENARIO("Testing SinogramData")
         {
             auto [s, o] = SinogramData3D{Size3D{size}, Spacing3D{spacing}};
 
-            CHECK(s.size() == 3);
-            CHECK(s[0] == Approx(0.5));
-            CHECK(s[1] == Approx(2));
-            CHECK(s[2] == Approx(1));
+            CHECK_EQ(s.size(), 3);
+            CHECK_EQ(s[0], Approx(0.5));
+            CHECK_EQ(s[1], Approx(2));
+            CHECK_EQ(s[2], Approx(1));
 
-            CHECK(o.size() == 3);
-            CHECK(o[0] == Approx(2.5));
-            CHECK(o[1] == Approx(10));
-            CHECK(o[2] == Approx(5));
+            CHECK_EQ(o.size(), 3);
+            CHECK_EQ(o[0], Approx(2.5));
+            CHECK_EQ(o[1], Approx(10));
+            CHECK_EQ(o[2], Approx(5));
         }
     }
 
@@ -458,15 +457,15 @@ SCENARIO("Testing SinogramData")
         {
             SinogramData3D volData{Spacing3D{spacing}, OriginShift3D{shift}};
 
-            CHECK(volData.getSpacing().size() == 3);
-            CHECK(volData.getSpacing()[0] == Approx(1));
-            CHECK(volData.getSpacing()[1] == Approx(1));
-            CHECK(volData.getSpacing()[2] == Approx(1));
+            CHECK_EQ(volData.getSpacing().size(), 3);
+            CHECK_EQ(volData.getSpacing()[0], Approx(1));
+            CHECK_EQ(volData.getSpacing()[1], Approx(1));
+            CHECK_EQ(volData.getSpacing()[2], Approx(1));
 
-            CHECK(volData.getLocationOfOrigin().size() == 3);
-            CHECK(volData.getLocationOfOrigin()[0] == Approx(1));
-            CHECK(volData.getLocationOfOrigin()[1] == Approx(1));
-            CHECK(volData.getLocationOfOrigin()[2] == Approx(1));
+            CHECK_EQ(volData.getLocationOfOrigin().size(), 3);
+            CHECK_EQ(volData.getLocationOfOrigin()[0], Approx(1));
+            CHECK_EQ(volData.getLocationOfOrigin()[1], Approx(1));
+            CHECK_EQ(volData.getLocationOfOrigin()[2], Approx(1));
 
             // Test that exceptions are thrown
             CHECK_THROWS(SinogramData3D{Spacing3D{spacing}, RealVector_t(2)});
@@ -476,7 +475,7 @@ SCENARIO("Testing SinogramData")
     }
 }
 
-SCENARIO("Testing Threshold")
+TEST_CASE("StrongTypes: Testing Threshold")
 {
     using namespace geometry;
 
@@ -492,12 +491,12 @@ SCENARIO("Testing Threshold")
             Threshold<real_t> tHalf{half};
             Threshold<real_t> tNine{nine};
 
-            CHECK(tOne == one);
-            CHECK((nine - tOne) > tOne);
-            CHECK(nine >= tHalf);
-            CHECK(tNine != half);
-            CHECK(tHalf < (one + tNine));
-            CHECK((tHalf + half) <= (one + tNine));
+            CHECK_EQ(tOne, one);
+            CHECK_GT((nine - tOne), tOne);
+            CHECK_GE(nine, tHalf);
+            CHECK_NE(tNine, half);
+            CHECK_LT(tHalf, (one + tNine));
+            CHECK_LE((tHalf + half), (one + tNine));
         }
     }
 
@@ -513,3 +512,5 @@ SCENARIO("Testing Threshold")
         }
     }
 }
+
+TEST_SUITE_END();

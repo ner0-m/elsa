@@ -21,12 +21,12 @@ namespace elsa::ml
 
             /// Construct a Dnnl Convolutional layer
             ///
-            /// \param inputDescriptor Descriptor for the layer's input
-            /// \param outputDescriptor Descriptor for the layer's output
-            /// \param weightsDescriptor Descriptor for the layer's weights
-            /// \param strides Vector containing strides to perform a convolution operation with
-            /// \param paddingLow Vector containing the input padding for lower spatial dimensions
-            /// \param paddingHigh Vector containing the input padding for higher spatial dimensions
+            /// @param inputDescriptor Descriptor for the layer's input
+            /// @param outputDescriptor Descriptor for the layer's output
+            /// @param weightsDescriptor Descriptor for the layer's weights
+            /// @param strides Vector containing strides to perform a convolution operation with
+            /// @param paddingLow Vector containing the input padding for lower spatial dimensions
+            /// @param paddingHigh Vector containing the input padding for higher spatial dimensions
             DnnlConvolution(const VolumeDescriptor& inputDescriptor,
                             const VolumeDescriptor& outputDescriptor,
                             const VolumeDescriptor& weightsDescriptor, const IndexVector_t& strides,

@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <type_traits>
 #include <random>
 #include <iostream>
@@ -10,8 +10,14 @@
 using namespace elsa;
 using namespace elsa::ml;
 using namespace elsa::ml::detail;
+using namespace doctest;
 
-TEST_CASE("DnnlPoooling", "[ml][dnnl]")
+TEST_SUITE_BEGIN("ml-dnnl");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE("DnnlPoooling")
 {
     // Example from http://cs231n.github.io/convolutional-networks/
 
@@ -81,3 +87,4 @@ TEST_CASE("DnnlPoooling", "[ml][dnnl]")
         REQUIRE(inputGradient[i] == requiredGradientInput[i]);
     }
 }
+TEST_SUITE_END();

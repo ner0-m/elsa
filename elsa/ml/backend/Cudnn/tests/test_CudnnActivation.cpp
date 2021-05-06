@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <random>
 
 #include "VolumeDescriptor.h"
@@ -8,6 +8,12 @@
 
 using namespace elsa;
 using namespace elsa::ml::detail;
+using namespace doctest;
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_SUITE_BEGIN("ml-cudnn");
 
 template <typename F, typename data_t>
 static void testActivation(F func, data_t alpha, const DataContainer<data_t>& input,
@@ -85,7 +91,7 @@ void testActivationLayer(Func f, FuncDer f_der)
     }
 }
 
-TEST_CASE("CudnnRelu", "[ml][cudnn]")
+TEST_CASE("CudnnRelu")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha) {
         if (coeff <= 0)
@@ -103,7 +109,7 @@ TEST_CASE("CudnnRelu", "[ml][cudnn]")
     testActivationLayer<CudnnRelu<float>>(f, f_der);
 }
 
-TEST_CASE("CudnnElu", "[ml][cudnn]")
+TEST_CASE("CudnnElu")
 {
     auto f = []([[maybe_unused]] const auto& coeff, [[maybe_unused]] float alpha) {
         if (coeff <= 0)
@@ -120,3 +126,5 @@ TEST_CASE("CudnnElu", "[ml][cudnn]")
     };
     testActivationLayer<CudnnElu<float>>(f, f_der);
 }
+
+TEST_SUITE_END();

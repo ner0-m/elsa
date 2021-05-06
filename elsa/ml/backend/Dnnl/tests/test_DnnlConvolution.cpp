@@ -1,12 +1,12 @@
 /**
- * \file test_DnnlConvolution.cpp
+ * @file test_DnnlConvolution.cpp
  *
- * \brief Tests for DnnlConvolution
+ * @brief Tests for DnnlConvolution
  *
- * \author David Tellenbach
+ * @author David Tellenbach
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <iostream>
 
 #include "DataContainer.h"
@@ -16,8 +16,14 @@
 using namespace elsa;
 using namespace elsa::ml;
 using namespace elsa::ml::detail;
+using namespace doctest;
 
-TEST_CASE("DnnlConvolution", "[ml][dnnl]")
+TEST_SUITE_BEGIN("ml-dnnl");
+
+// TODO(dfrank): remove and replace with proper doctest usage of test cases
+#define SECTION(name) DOCTEST_SUBCASE(name)
+
+TEST_CASE("DnnlConvolution")
 {
     // Example taken from http://cs231n.github.io/convolutional-networks/
     SECTION("Test 1")
@@ -105,3 +111,4 @@ TEST_CASE("DnnlConvolution", "[ml][dnnl]")
         DnnlConvolution<real_t> conv(nchw_inputDesc, )
     }
 }
+TEST_SUITE_END();

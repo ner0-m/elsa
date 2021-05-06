@@ -10,12 +10,15 @@
 #include "HardThresholding.h"
 #include "VolumeDescriptor.h"
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include <testHelpers.h>
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Constructing HardThresholding")
+TEST_SUITE_BEGIN("proximity_operators");
+
+TEST_CASE_TEMPLATE("HardThresholding: Testing construction", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
@@ -25,7 +28,7 @@ SCENARIO("Constructing HardThresholding")
 
         WHEN("instantiating a HardThresholding operator")
         {
-            HardThresholding<real_t> hThrOp(volDescr);
+            HardThresholding<data_t> hThrOp(volDescr);
 
             THEN("the DataDescriptors are equal")
             {
@@ -35,7 +38,7 @@ SCENARIO("Constructing HardThresholding")
 
         WHEN("cloning a HardThresholding operator")
         {
-            HardThresholding<real_t> hThrOp(volDescr);
+            HardThresholding<data_t> hThrOp(volDescr);
             auto hThrOpClone = hThrOp.clone();
 
             THEN("cloned HardThresholding operator equals original HardThresholding operator")
@@ -47,7 +50,7 @@ SCENARIO("Constructing HardThresholding")
     }
 }
 
-SCENARIO("Using HardThresholding in 1D")
+TEST_CASE_TEMPLATE("HardThresholding: Testing in 1D", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
@@ -57,25 +60,25 @@ SCENARIO("Using HardThresholding in 1D")
 
         WHEN("Using HardThresholding operator in 1D")
         {
-            HardThresholding<real_t> hThrOp(volDescr);
+            HardThresholding<data_t> hThrOp(volDescr);
 
             THEN("Values under threshold=4 are 0 and values above remain the same")
             {
-                RealVector_t data(volDescr.getNumberOfCoefficients());
+                Vector_t<data_t> data(volDescr.getNumberOfCoefficients());
                 data << -2, 3, 4, -7, 7, 8, 8, 3;
-                DataContainer<real_t> dC(volDescr, data);
+                DataContainer<data_t> dC(volDescr, data);
 
-                RealVector_t expectedRes(hThrOp.getRangeDescriptor().getNumberOfCoefficients());
+                Vector_t<data_t> expectedRes(hThrOp.getRangeDescriptor().getNumberOfCoefficients());
                 expectedRes << 0, 0, 0, -7, 7, 8, 8, 0;
-                DataContainer<real_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
+                DataContainer<data_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, hThrOp.apply(dC, geometry::Threshold<real_t>{4})));
+                REQUIRE(isApprox(dCRes, hThrOp.apply(dC, geometry::Threshold<data_t>{4})));
             }
         }
     }
 }
 
-SCENARIO("Using HardThresholding in 3D")
+TEST_CASE_TEMPLATE("HardThresholding: Testing in 3D", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
@@ -85,25 +88,25 @@ SCENARIO("Using HardThresholding in 3D")
 
         WHEN("Using HardThresholding operator in 3D")
         {
-            HardThresholding<real_t> hThrOp(volumeDescriptor);
+            HardThresholding<data_t> hThrOp(volumeDescriptor);
 
             THEN("Values under threshold=5 are 0 and values above remain the same")
             {
-                RealVector_t data(volumeDescriptor.getNumberOfCoefficients());
+                Vector_t<data_t> data(volumeDescriptor.getNumberOfCoefficients());
                 data << 2, 1, 6, 6, 1, 4, 2, -9, 7, 7, 7, 3, 1, 2, 8, 9, -4, 5;
-                DataContainer<real_t> dC(volumeDescriptor, data);
+                DataContainer<data_t> dC(volumeDescriptor, data);
 
-                RealVector_t expectedRes(hThrOp.getRangeDescriptor().getNumberOfCoefficients());
+                Vector_t<data_t> expectedRes(hThrOp.getRangeDescriptor().getNumberOfCoefficients());
                 expectedRes << 0, 0, 6, 6, 0, 0, 0, -9, 7, 7, 7, 0, 0, 0, 8, 9, 0, 0;
-                DataContainer<real_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
+                DataContainer<data_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, hThrOp.apply(dC, geometry::Threshold<real_t>{5})));
+                REQUIRE(isApprox(dCRes, hThrOp.apply(dC, geometry::Threshold<data_t>{5})));
             }
         }
     }
 }
 
-SCENARIO("Using HardThresholding")
+TEST_CASE_TEMPLATE("HardThresholding: Testing general behaviour", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
@@ -113,60 +116,62 @@ SCENARIO("Using HardThresholding")
 
         WHEN("Using HardThresholding operator")
         {
-            HardThresholding<real_t> hThrOp(volDescr);
+            HardThresholding<data_t> hThrOp(volDescr);
 
             THEN("The zero vector is returned when the zero vector is given")
             {
-                RealVector_t data(volDescr.getNumberOfCoefficients());
+                Vector_t<data_t> data(volDescr.getNumberOfCoefficients());
                 data << 0, 0, 0, 0, 0, 0, 0, 0;
-                DataContainer<real_t> dataContainer(volDescr, data);
+                DataContainer<data_t> dataContainer(volDescr, data);
 
-                RealVector_t expectedRes(hThrOp.getRangeDescriptor().getNumberOfCoefficients());
+                Vector_t<data_t> expectedRes(hThrOp.getRangeDescriptor().getNumberOfCoefficients());
                 expectedRes << 0, 0, 0, 0, 0, 0, 0, 0;
-                DataContainer<real_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
+                DataContainer<data_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
 
                 REQUIRE(
-                    isApprox(dCRes, hThrOp.apply(dataContainer, geometry::Threshold<real_t>{4})));
+                    isApprox(dCRes, hThrOp.apply(dataContainer, geometry::Threshold<data_t>{4})));
             }
 
             THEN("HardThresholding operator throws exception for t = 0")
             {
-                RealVector_t data(volDescr.getNumberOfCoefficients());
+                Vector_t<data_t> data(volDescr.getNumberOfCoefficients());
                 data << 0, 0, 0, 0, 0, 0, 0, 0;
-                DataContainer<real_t> dC(volDescr, data);
+                DataContainer<data_t> dC(volDescr, data);
 
                 // actually the geometry::Threshold throws this
-                REQUIRE_THROWS_AS(hThrOp.apply(dC, geometry::Threshold<real_t>{0}),
+                REQUIRE_THROWS_AS(hThrOp.apply(dC, geometry::Threshold<data_t>{0}),
                                   InvalidArgumentError);
             }
 
             THEN("HardThresholding operator throws exception for t < 0")
             {
-                RealVector_t data(volDescr.getNumberOfCoefficients());
+                Vector_t<data_t> data(volDescr.getNumberOfCoefficients());
                 data << 0, 0, 0, 0, 0, 0, 0, 0;
-                DataContainer<real_t> dC(volDescr, data);
+                DataContainer<data_t> dC(volDescr, data);
 
                 // actually the geometry::Threshold throws this
-                REQUIRE_THROWS_AS(hThrOp.apply(dC, geometry::Threshold<real_t>{-1}),
+                REQUIRE_THROWS_AS(hThrOp.apply(dC, geometry::Threshold<data_t>{-1}),
                                   InvalidArgumentError);
             }
 
             THEN("HardThresholding operator throws exception for differently sized v and prox")
             {
-                RealVector_t data(volDescr.getNumberOfCoefficients());
+                Vector_t<data_t> data(volDescr.getNumberOfCoefficients());
                 data << 0, 0, 0, 0, 0, 0, 0, 0;
-                DataContainer<real_t> dC(volDescr, data);
+                DataContainer<data_t> dC(volDescr, data);
 
                 IndexVector_t numCoeff1(1);
                 numCoeff1 << 9;
                 VolumeDescriptor volDescr1(numCoeff1);
-                RealVector_t data1(volDescr1.getNumberOfCoefficients());
+                Vector_t<data_t> data1(volDescr1.getNumberOfCoefficients());
                 data1 << 0, 0, 0, 0, 0, 0, 0, 0, 0;
-                DataContainer<real_t> dC1(volDescr1, data1);
+                DataContainer<data_t> dC1(volDescr1, data1);
 
-                REQUIRE_THROWS_AS(hThrOp.apply(dC, geometry::Threshold<real_t>{1}, dC1),
+                REQUIRE_THROWS_AS(hThrOp.apply(dC, geometry::Threshold<data_t>{1}, dC1),
                                   LogicError);
             }
         }
     }
 }
+
+TEST_SUITE_END();

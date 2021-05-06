@@ -23,7 +23,7 @@ namespace elsa::ml
 
     /// Base class for all loss functions
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     template <typename data_t = real_t>
     class Loss
     {
@@ -34,17 +34,17 @@ namespace elsa::ml
         /// virtual destructor
         virtual ~Loss() = default;
 
-        /// \returns the loss between predictions x and labels y
+        /// @returns the loss between predictions x and labels y
         data_t getLoss(const DataContainer<data_t>& x, const DataContainer<data_t>& y) const;
 
-        /// \returns the loss between predictions x and labels y
+        /// @returns the loss between predictions x and labels y
         data_t operator()(const DataContainer<data_t>& x, const DataContainer<data_t>& y);
 
-        /// \returns the loss-gradient between predictions x and labels y
+        /// @returns the loss-gradient between predictions x and labels y
         DataContainer<data_t> getLossGradient(const DataContainer<data_t>& x,
                                               const DataContainer<data_t>& y) const;
 
-        /// \return the name of this loss function
+        /// @return the name of this loss function
         std::string getName() const;
 
     protected:
@@ -62,10 +62,10 @@ namespace elsa::ml
         std::string name_;
     };
 
-    /// \brief Computes the cross-entropy loss between true labels and predicted
+    /// @brief Computes the cross-entropy loss between true labels and predicted
     /// labels.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// Use this cross-entropy loss when there are only two label classes
     /// (assumed to be 0 and 1). For each example, there should be a single
@@ -86,9 +86,9 @@ namespace elsa::ml
                                                       const DataContainer<data_t>&);
     };
 
-    /// \brief Computes the crossentropy loss between the labels and predictions.
+    /// @brief Computes the crossentropy loss between the labels and predictions.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// Use this crossentropy loss function when there are two or more label
     /// classes. We expect labels to be provided in a one-hot representation.
@@ -112,9 +112,9 @@ namespace elsa::ml
                                                       const DataContainer<data_t>& y);
     };
 
-    /// \brief Computes the crossentropy loss between the labels and predictions.
+    /// @brief Computes the crossentropy loss between the labels and predictions.
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// Use this crossentropy loss function when there are two or more label
     /// classes. If you want to provide labels using one-hot representation,
@@ -139,9 +139,9 @@ namespace elsa::ml
                                                       const DataContainer<data_t>& y);
     };
 
-    /// \brief Computes the mean squared error between labels y and predictions x:
+    /// @brief Computes the mean squared error between labels y and predictions x:
     ///
-    /// \author David Tellenbach
+    /// @author David Tellenbach
     ///
     /// \f[ \text{loss} = (y - x)^2 \f]
     template <typename data_t = real_t>
