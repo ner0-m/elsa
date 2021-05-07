@@ -86,12 +86,7 @@ if(ELSA_MASTER_PROJECT)
     endif()
 
     # setup spdlog Library
-    CPMAddPackage(
-        NAME Spdlog
-        GITHUB_REPOSITORY gabime/spdlog
-        VERSION 1.7.0 # 1.7.0 Fallback if it dosen't work
-        OPTIONS "SPDLOG_INSTALL ON"
-    )
+    CPMAddPackage("gh:gabime/spdlog@1.7.0") 
 
     # setup Dnnl library
     find_package(Dnnl)
@@ -133,11 +128,7 @@ if(ELSA_MASTER_PROJECT)
     endif()
 
     if (${ELSA_BUILD_PYTHON_BINDINGS})
-        CPMAddPackage(
-            NAME pybind11
-            GITHUB_REPOSITORY pybind/pybind11
-            VERSION 2.6.0
-        )
+        CPMAddPackage("gh:pybind/pybind11@2.6.0") 
     endif()
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
@@ -170,11 +161,7 @@ endif(NOT ELSA_MASTER_PROJECT)
 if(ELSA_TESTING OR ELSA_BENCHMARKS)
     enable_testing()
 
-    CPMAddPackage(
-         NAME doctest
-         GITHUB_REPOSITORY onqtam/doctest
-         GIT_TAG 2.4.4
-    )
+    CPMAddPackage("gh:onqtam/doctest#2.4.4") 
  
     # add the CMake modules for automatic test discovery
     set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
