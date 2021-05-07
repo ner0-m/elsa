@@ -1,3 +1,6 @@
+# Create binaries for benchmarks in bin/benchmarks
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/benchmarks) 
+ 
 # add Catch2 only here to still use it in benchmarks 
 CPMAddPackage(
      NAME Catch2

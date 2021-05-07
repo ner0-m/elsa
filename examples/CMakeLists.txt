@@ -1,3 +1,6 @@
+# Create binaries for examples in bin/examples 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples) 
+ 
 # define a target for all examples
 add_custom_target(build-examples)
 

@@ -5,6 +5,7 @@ cmake-build-release
 build/
 bin/
 /compile_commands.json
+_build/ 
 
 # git
 *.orig

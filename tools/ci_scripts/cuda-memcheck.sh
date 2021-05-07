@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILES="build/elsa/core/tests/test_ExpressionTemplates"
+FILES="build/bin/tests/elsa_core/test_ExpressionTemplates"
 
 if type cuda-memcheck &> /dev/null; then
     echo "cuda-memcheck available in version:"

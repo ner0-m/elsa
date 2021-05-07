@@ -24,6 +24,8 @@ macro(ELSA_DOCTEST NAME)
     target_include_directories(test_${NAME} PRIVATE ${CMAKE_SOURCE_DIR}/elsa/test_routines/)
     # Improve compile times for tests
     target_compile_definitions(test_${NAME} PRIVATE DOCTEST_CONFIG_SUPER_FAST_ASSERTS)
+    # Set output directory to bin/tests/<module>
+    set_target_properties(test_${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}") 
 
     # Add test to global dependency
     add_dependencies(tests test_${NAME})

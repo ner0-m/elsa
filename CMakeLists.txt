@@ -59,6 +59,11 @@ include(CPM)
 # export compile_commands.json for language servers such as ccls
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# By default set all output to lib or bin directories
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) 
+
 # ------------ dependencies ------------
 # ------------
 
@@ -196,8 +201,7 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             APPEND_COVERAGE_COMPILER_FLAGS()
             set(COVERAGE_LCOV_EXCLUDES
                 '${CPM_SOURCE_CACHE}/*'
-                '${PROJECT_BINARY_DIR}/_deps/'
-                '${PROJECT_SOURCE_DIR}/thirdparty/*'
+                '${PROJECT_BINARY_DIR}/_deps/*'
                 '/usr/*')
             SETUP_TARGET_FOR_COVERAGE_LCOV(NAME test_coverage EXECUTABLE ctest)
 
