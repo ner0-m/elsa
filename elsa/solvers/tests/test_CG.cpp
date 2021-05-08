@@ -57,8 +57,8 @@ TEST_CASE_TEMPLATE("CG: Solving a simple linear problem", TestType, CG<float>, C
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -67,8 +67,8 @@ TEST_CASE_TEMPLATE("CG: Solving a simple linear problem", TestType, CG<float>, C
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE((resultsDifference).squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE((resultsDifference).squaredL2Norm(),
+                               epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
         }
@@ -82,8 +82,8 @@ TEST_CASE_TEMPLATE("CG: Solving a simple linear problem", TestType, CG<float>, C
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -93,10 +93,8 @@ TEST_CASE_TEMPLATE("CG: Solving a simple linear problem", TestType, CG<float>, C
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    // REQUIRE(Approx((resultsDifference).squaredL2Norm()).margin(0.00001)
-                    //         <= epsilon * epsilon * dcB.squaredL2Norm());
-                    REQUIRE(checkApproxEq((resultsDifference).squaredL2Norm(),
-                                          epsilon * epsilon * dcB.squaredL2Norm()));
+                    REQUIRE_UNARY(checkApproxEq((resultsDifference).squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -138,8 +136,8 @@ TEST_CASE_TEMPLATE("CG: Solving a Tikhonov problem", TestType, CG<float>, CG<dou
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -149,8 +147,8 @@ TEST_CASE_TEMPLATE("CG: Solving a Tikhonov problem", TestType, CG<float>, CG<dou
                         (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE(resultsDifference.squaredL2Norm(),
+                               epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
         }
@@ -164,8 +162,8 @@ TEST_CASE_TEMPLATE("CG: Solving a Tikhonov problem", TestType, CG<float>, CG<dou
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -176,8 +174,8 @@ TEST_CASE_TEMPLATE("CG: Solving a Tikhonov problem", TestType, CG<float>, CG<dou
                         (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE(resultsDifference.squaredL2Norm(),
+                               epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
         }
@@ -218,8 +216,8 @@ TEST_CASE("CG: Solving a simple phantom reconstruction")
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -229,10 +227,8 @@ TEST_CASE("CG: Solving a simple phantom reconstruction")
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    // REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
-                    //         <= epsilon * epsilon * phantom.squaredL2Norm());
-                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                          epsilon * epsilon * phantom.squaredL2Norm()));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * phantom.squaredL2Norm()));
                 }
             }
         }

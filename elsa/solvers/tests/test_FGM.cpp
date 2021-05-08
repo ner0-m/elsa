@@ -78,7 +78,7 @@ TEST_CASE_TEMPLATE("FGM: Solving a simple linear problem", TestType, FGM<float>,
 
                     // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                          epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
+                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.5f));
                 }
             }
         }
@@ -104,7 +104,7 @@ TEST_CASE_TEMPLATE("FGM: Solving a simple linear problem", TestType, FGM<float>,
 
                     // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                          epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
+                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
                 }
             }
         }
@@ -164,7 +164,8 @@ TEST_CASE_TEMPLATE("FGM: Solving a Tikhonov problem", TestType, FGM<float>, FGM<
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
                 }
             }
         }
@@ -190,7 +191,8 @@ TEST_CASE_TEMPLATE("FGM: Solving a Tikhonov problem", TestType, FGM<float>, FGM<
                         (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
                 }
             }
         }
@@ -234,8 +236,8 @@ TEST_CASE("FGM: Solving a simple phantom reconstruction")
             {
                 auto fgmClone = solver.clone();
 
-                REQUIRE(fgmClone.get() != &solver);
-                REQUIRE(*fgmClone == solver);
+                REQUIRE_NE(fgmClone.get(), &solver);
+                REQUIRE_EQ(*fgmClone, solver);
 
                 AND_THEN("it works as expected")
                 {

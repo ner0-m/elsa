@@ -63,8 +63,8 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", TestType,
             {
                 auto gdClone = solver.clone();
 
-                REQUIRE(gdClone.get() != &solver);
-                REQUIRE(*gdClone == solver);
+                REQUIRE_NE(gdClone.get(), &solver);
+                REQUIRE_EQ(*gdClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -73,8 +73,8 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", TestType,
                     DataContainer<data_t> resultsDifference = solution - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE(resultsDifference.squaredL2Norm(),
+                               epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
         }
@@ -87,8 +87,8 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", TestType,
             {
                 auto gdClone = solver.clone();
 
-                REQUIRE(gdClone.get() != &solver);
-                REQUIRE(*gdClone == solver);
+                REQUIRE_NE(gdClone.get(), &solver);
+                REQUIRE_EQ(*gdClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -97,8 +97,8 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", TestType,
                     DataContainer<data_t> resultsDifference = solution - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                          epsilon * epsilon * dcB.squaredL2Norm()));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -143,8 +143,8 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a Tikhonov problem", TestType, Grad
             {
                 auto gdClone = solver.clone();
 
-                REQUIRE(gdClone.get() != &solver);
-                REQUIRE(*gdClone == solver);
+                REQUIRE_NE(gdClone.get(), &solver);
+                REQUIRE_EQ(*gdClone, solver);
             }
             THEN("it works as expected")
             {
@@ -155,7 +155,7 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a Tikhonov problem", TestType, Grad
                 // should have converged for the given number of iterations
                 // does not converge to the optimal solution because of the regularization term
                 // Therefore, just check to fixed value
-                REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85));
+                REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85));
             }
         }
     }

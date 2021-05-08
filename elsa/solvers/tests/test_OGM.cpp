@@ -71,8 +71,8 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
             {
                 auto ogmClone = solver.clone();
 
-                REQUIRE(ogmClone.get() != &solver);
-                REQUIRE(*ogmClone == solver);
+                REQUIRE_NE(ogmClone.get(), &solver);
+                REQUIRE_EQ(*ogmClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -81,8 +81,8 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(1)
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.5f));
                 }
             }
         }
@@ -96,8 +96,8 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
             {
                 auto ogmClone = solver.clone();
 
-                REQUIRE(ogmClone.get() != &solver);
-                REQUIRE(*ogmClone == solver);
+                REQUIRE_NE(ogmClone.get(), &solver);
+                REQUIRE_EQ(*ogmClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -107,10 +107,8 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    // REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(0.01)
-                    //         <= epsilon * epsilon * dcB.squaredL2Norm());
-                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                          epsilon * epsilon * dcB.squaredL2Norm()));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -158,8 +156,8 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
             {
                 auto ogmClone = solver.clone();
 
-                REQUIRE(ogmClone.get() != &solver);
-                REQUIRE(*ogmClone == solver);
+                REQUIRE_NE(ogmClone.get(), &solver);
+                REQUIRE_EQ(*ogmClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -170,7 +168,8 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.929));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -184,8 +183,8 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
             {
                 auto ogmClone = solver.clone();
 
-                REQUIRE(ogmClone.get() != &solver);
-                REQUIRE(*ogmClone == solver);
+                REQUIRE_NE(ogmClone.get(), &solver);
+                REQUIRE_EQ(*ogmClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -196,8 +195,8 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
                         (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(Approx(resultsDifference.squaredL2Norm()).margin(0.00001)
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -240,8 +239,8 @@ TEST_CASE("OGM: Solving a simple phantom reconstruction")
             {
                 auto ogmClone = solver.clone();
 
-                REQUIRE(ogmClone.get() != &solver);
-                REQUIRE(*ogmClone == solver);
+                REQUIRE_NE(ogmClone.get(), &solver);
+                REQUIRE_EQ(*ogmClone, solver);
 
                 AND_THEN("it works as expected")
                 {

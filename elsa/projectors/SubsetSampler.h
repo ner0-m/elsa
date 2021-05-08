@@ -2,6 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DetectorDescriptor.h"
+#include "PlanarDetectorDescriptor.h"
 #include "VolumeDescriptor.h"
 #include "DataContainer.h"
 #include "SiddonsMethod.h"

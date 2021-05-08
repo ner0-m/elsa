@@ -1,6 +1,5 @@
 #include "SubsetSampler.h"
 #include "PartitionDescriptor.h"
-#include "PlanarDetectorDescriptor.h"
 #include "SiddonsMethod.h"
 #include "JosephsMethod.h"
 

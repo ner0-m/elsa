@@ -79,7 +79,8 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -104,7 +105,8 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -162,7 +164,8 @@ TEST_CASE_TEMPLATE("SQS: Solving a Tikhonov problem", TestType, SQS<float>, SQS<
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85f));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -188,7 +191,8 @@ TEST_CASE_TEMPLATE("SQS: Solving a Tikhonov problem", TestType, SQS<float>, SQS<
                         (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85f));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
@@ -303,8 +307,7 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
                     DataContainer resultsDifference = reconstruction - phantom;
 
                     // should have converged for the given number of iterations
-                    // does not converge to the optimal solution because of the regularization term
-                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
                 }
             }
         }
