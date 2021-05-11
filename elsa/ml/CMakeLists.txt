@@ -1,8 +1,3 @@
-# Set the name of the module
-set(ELSA_MODULE_NAME ml)
-set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
-set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
-
 # Path to ml backend implementations
 set(ELSA_BACKEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/backend")
 
@@ -10,30 +5,29 @@ set(ELSA_BACKEND_DIR "${CMAKE_CURRENT_SOURCE_DIR}/backend")
 
 # Dnnl backend
 if(Dnnl_FOUND AND ELSA_BUILD_ML_DNNL)
-  message(STATUS "Dnnl backend for ml module is available")
-  set(ELSA_HAS_DNNL_BACKEND 1)
-  # Define ELSA_HAS_DNNL_BACKEND 
-  add_definitions(-DELSA_HAS_DNNL_BACKEND=1)
-  set(ELSA_ML_DNNL_BACKEND_DIR ${ELSA_BACKEND_DIR}/Dnnl)
-  add_subdirectory(${ELSA_ML_DNNL_BACKEND_DIR})
-endif(Dnnl_FOUND AND ELSA_BUILD_ML_DNNL)
+    message(STATUS "Dnnl backend for ml module is available")
+
+    set(ELSA_HAS_DNNL_BACKEND 1)
+    set(ELSA_ML_DNNL_BACKEND_DIR ${ELSA_BACKEND_DIR}/Dnnl)
+    add_subdirectory(${ELSA_ML_DNNL_BACKEND_DIR})
+endif()
 
 # Cudnn backend
 if(Cudnn_FOUND AND Cublas_FOUND AND ELSA_BUILD_ML_CUDNN)
-  include(CheckLanguage)
-  check_language(CUDA)
-  if (CMAKE_CUDA_COMPILER)
-    enable_language(CUDA)
-    message(STATUS "Cudnn backend for ml module is available")
-    set(ELSA_HAS_CUDNN_BACKEND 1)
-    # Define ELSA_HAS_CUDNN_BACKEND 
-    add_definitions(-DELSA_HAS_CUDNN_BACKEND=1)
-    set(ELSA_ML_CUDNN_BACKEND_DIR ${ELSA_BACKEND_DIR}/Cudnn)
-    add_subdirectory(${ELSA_ML_CUDNN_BACKEND_DIR})
-  endif(CMAKE_CUDA_COMPILER)
+    include(CheckLanguage)
+    check_language(CUDA)
+    if(CMAKE_CUDA_COMPILER)
+        message(STATUS "Cudnn backend for ml module is available")
+
+        enable_language(CUDA)
+
+        set(ELSA_HAS_CUDNN_BACKEND 1)
+        set(ELSA_ML_CUDNN_BACKEND_DIR ${ELSA_BACKEND_DIR}/Cudnn)
+        add_subdirectory(${ELSA_ML_CUDNN_BACKEND_DIR})
+    endif()
 elseif(Cudnn_FOUND AND ELSA_BUILD_ML_CUDNN)
     message(STATUS "Cudnn backend deactivated, cuDNN not found")
-elseif(Cublas_FOUND AND ELSA_BUILD_ML_CUDNN) 
+elseif(Cublas_FOUND AND ELSA_BUILD_ML_CUDNN)
     message(STATUS "Cudnn backend deactivated, cublas not found")
 endif()
 
@@ -84,74 +78,52 @@ set(MODULE_SOURCES
     State.cpp
 )
 
-# build the module library
-add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
-add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
+list(APPEND MODULE_PRIVATE_DEPS)
 
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging)
-
-# Link Dnnl if wanted and available
-if (ELSA_HAS_DNNL_BACKEND)
-  target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC ${Dnnl_LIB})
-  # Include Dnnl library header as system to avoid warnings
-  target_include_directories(${ELSA_MODULE_TARGET_NAME} SYSTEM PUBLIC $<BUILD_INTERFACE:${Dnnl_INCLUDE_DIR}>)
-  target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ELSA_DNNL_BACKEND_DIR}>)
-endif (ELSA_HAS_DNNL_BACKEND)
-
-
-# use OpenMP is available
+# Add OpenMP to the private dependency list
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
+    list(APPEND MODULE_PRIVATE_DEPS OpenMP::OpenMP_CXX)
 endif()
 
-target_include_directories(${ELSA_MODULE_TARGET_NAME}
-        PUBLIC
-        $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        $<BUILD_INTERFACE:${ELSA_ML_DNNL_BACKEND_DIR}>
+# Add Dnnl backend to the list of public dependencies
+if(ELSA_HAS_DNNL_BACKEND)
+    list(APPEND MODULE_PUBLIC_DEPS elsa_ml_dnnl_backend)
+endif()
+
+# Add Cudnn backend to the list of public dependencies
+if(ELSA_HAS_CUDNN_BACKEND)
+    list(APPEND MODULE_PUBLIC_DEPS elsa_ml_cudnn_backend)
+endif()
+
+AddElsaModule(
+    ml "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
+    PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 
-# Link Dnnl backend
+# Link Dnnl if wanted and available
 if(ELSA_HAS_DNNL_BACKEND)
-  target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ELSA_ML_DNNL_BACKEND_DIR}>)
-  target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_ml_dnnl_backend)
-endif(ELSA_HAS_DNNL_BACKEND)
+    # Include Dnnl library header as system to avoid warnings
+    target_include_directories(${ELSA_MODULE_TARGET_NAME} SYSTEM PUBLIC $<BUILD_INTERFACE:${Dnnl_INCLUDE_DIR}>)
+    target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ELSA_ML_DNNL_BACKEND_DIR}>)
+    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_HAS_DNNL_BACKEND=1)
+endif()
 
 # Link Cudnn backend
 if(ELSA_HAS_CUDNN_BACKEND)
-  target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_ml_cudnn_backend)
-  target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ELSA_ML_CUDNN_BACKEND_DIR}>)
-endif(ELSA_HAS_CUDNN_BACKEND)
+    target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ELSA_ML_DNNL_BACKEND_DIR}>)
+    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_HAS_CUDNN_BACKEND=1)
+endif()
 
-# require C++17
-target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
-# set -fPIC
-set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# We add Cudnn backend tests here because we want to be able to use C++17 in the tests
+if(ELSA_TESTING AND ELSA_HAS_CUDNN_BACKEND)
+    # set the module name correctly here!
+    set(_module_name ${ELSA_MODULE_TARGET_NAME})
+    set(ELSA_MODULE_TARGET_NAME elsa_ml_cudnn_backend)
 
-# build the tests (if enabled)
-if(ELSA_TESTING)
-    add_subdirectory(tests)
+    add_subdirectory(${ELSA_ML_CUDNN_BACKEND_DIR}/tests)
 
-    # set the module name correctly here! 
-    set(_module_name ${ELSA_MODULE_TARGET_NAME}) 
-    set(ELSA_MODULE_TARGET_NAME elsa_ml_cudnn_backend) 
-    # We add Cudnn backend tests here because we want to be able to use C++17
-    # in the tests
-    if(ELSA_HAS_CUDNN_BACKEND)
-      add_subdirectory(${ELSA_ML_CUDNN_BACKEND_DIR}/tests)
-    endif(ELSA_HAS_CUDNN_BACKEND)
-     
-    # and now set it back 
-    set(ELSA_MODULE_TARGET_NAME ${_module_name}) 
-endif(ELSA_TESTING)
-
-if (ELSA_BUILD_WITH_QUICKVEC)
-  add_definitions(-DELSA_CUDA_VECTOR)
-endif(ELSA_BUILD_WITH_QUICKVEC)
-
-# register the module
-registerComponent(${ELSA_MODULE_NAME})
-
-# install the module
-InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+    # and now set it back
+    set(ELSA_MODULE_TARGET_NAME ${_module_name})
+endif()

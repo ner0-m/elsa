@@ -14,6 +14,6 @@ add_custom_target(
 )
 
 # the actual tests
-elsa_doctest(Logger)
-elsa_doctest(LogGuard)
-elsa_doctest(Timer)
+ELSA_DOCTEST(Logger)
+ELSA_DOCTEST(LogGuard)
+ELSA_DOCTEST(Timer)

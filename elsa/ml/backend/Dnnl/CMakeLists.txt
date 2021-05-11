@@ -1,8 +1,3 @@
-# set the name of the module
-set(ELSA_MODULE_NAME ml_dnnl_backend)
-set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
-set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
-
 # list all the headers of the module
 set(MODULE_HEADERS
     DnnlActivationLayer.h
@@ -34,34 +29,19 @@ set(MODULE_SOURCES
     DnnlOptimizer.cpp
 )
 
-# build the module library
-add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
-add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging ${Dnnl_LIB})
+list(APPEND MODULE_PRIVATE_DEPS)
 
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging ${Dnnl_LIB})
+AddElsaModule(
+    ml_dnnl_backend "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
+    PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
+)
 
-target_include_directories(${ELSA_MODULE_TARGET_NAME}
-                           PUBLIC
-                           $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
-                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-                           "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/../.."
+target_include_directories(
+    ${ELSA_MODULE_TARGET_NAME}
+    PUBLIC $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+           "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/../.."
 )
 
 # Include Dnnl headers as system headers to avoid warnings
 target_include_directories(${ELSA_MODULE_TARGET_NAME} SYSTEM PUBLIC $<BUILD_INTERFACE:${Dnnl_INCLUDE_DIR}>)
-
-# require C++17
-target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
-# set -fPIC
-set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-# build the tests (if enabled)
-if(ELSA_TESTING)
-    add_subdirectory(tests)
-endif(ELSA_TESTING)
-
-# register the module
-registerComponent(${ELSA_MODULE_NAME})
-
-# install the module
-InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})

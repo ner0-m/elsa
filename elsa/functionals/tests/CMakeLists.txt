@@ -2,12 +2,14 @@
 include(CTest)
 include(doctest)
 
-add_custom_target(run-tests-functionals
+add_custom_target(
+    run-tests-functionals
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS build-tests-functionals
     USES_TERMINAL
-    COMMENT "Build and run the tests from module 'functionals'.")
+    COMMENT "Build and run the tests from module 'functionals'."
+)
 
 add_custom_target(build-tests-functionals)
 

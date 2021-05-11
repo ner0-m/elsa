@@ -14,7 +14,7 @@ add_custom_target(
 )
 
 # the actual tests
-elsa_doctest(ioUtils)
-elsa_doctest(EDFHandler)
-elsa_doctest(MHDHandler)
-elsa_doctest(PGMHandler)
+ELSA_DOCTEST(ioUtils)
+ELSA_DOCTEST(EDFHandler)
+ELSA_DOCTEST(MHDHandler)
+ELSA_DOCTEST(PGMHandler)

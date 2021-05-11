@@ -4,219 +4,154 @@ macro(registerComponent name)
     set(ELSA_REGISTERED_TARGETS "${ELSA_REGISTERED_TARGETS};elsa_${name}" PARENT_SCOPE)
 endmacro()
 
+# Add warnings to a module
+function(add_warnings module)
+    if(NOT (module MATCHES "projector_kernels"))
+        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+            target_compile_options(elsa_${module} PUBLIC -Wall -Wextra -Wconversion -pedantic -Wfatal-errors)
+        endif()
+        if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+            target_compile_options(elsa_${module} PUBLIC /W3 /WX)
+        endif()
+    endif()
+endfunction()
+
+# Simple macro to add a module
+macro(AddElsaModule ELSA_MODULE_NAME MODULE_HEADERS MODULE_SOURCES)
+    # Parse arguments
+    set(options INSTALL_DIR NO_TESTS)
+    set(oneValueArgs)
+    set(multiValueArgs PUBLIC_DEPS PRIVATE_DEPS)
+    cmake_parse_arguments(ADD_MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    # Make name persistent after macro
+    set(ELSA_MODULE_NAME ${ELSA_MODULE_NAME})
+
+    # set the name of the module
+    set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
+    set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
+
+    # build the module library
+    add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
+    add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
+
+    # Add public dependencies
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC "${ADD_MODULE_PUBLIC_DEPS}")
+    # Add private dependencies
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE "${ADD_MODULE_PRIVATE_DPES}")
+    # require C++17
+    target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
+    # set -fPIC
+    set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    target_include_directories(
+        ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
+                                          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    )
+
+    if(${ELSA_MASTER_PROJECT} AND ${ELSA_BUILD_WITH_MORE_WARNINGS})
+        add_warnings(${ELSA_MODULE_NAME})
+    endif()
+
+    # build the tests (if enabled)
+    if(ELSA_TESTING AND NOT ADD_MODULE_NO_TESTS)
+        add_subdirectory(tests)
+    endif()
+
+    # register the module
+    registerComponent(${ELSA_MODULE_NAME})
+
+    # install the module
+    if(${ADD_MODULE_INSTALL_DIR})
+        InstallElsaModuleDir(
+            ${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/"
+        )
+    else()
+        InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+    endif()
+endmacro()
+
 # macro for the unit tests
 macro(ELSA_DOCTEST NAME)
     # Parse arguments
     set(options)
     set(oneValueArgs)
-    set(multiValueArgs DEPENDENCIES)
-    cmake_parse_arguments(MYTEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    set(multiValueArgs PUBLIC_DEPENDENCIES PRIVATE_DEPENDENCIES)
+    cmake_parse_arguments(ELSA_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+    # set the name for the test once
+    set(_testname test_${NAME})
     # create the test executable
-    add_executable(test_${NAME} EXCLUDE_FROM_ALL test_${NAME}.cpp test_docmain.cpp)
+    add_executable(${_testname} EXCLUDE_FROM_ALL ${_testname}.cpp test_docmain.cpp)
     # add catch and the corresponding elsa library
     target_link_libraries(
-        test_${NAME} PRIVATE doctest::doctest ${ELSA_MODULE_TARGET_NAME} elsa::test_routines ${MYTEST_DEPENDENCIES}
+        ${_testname} PRIVATE doctest::doctest ${ELSA_MODULE_TARGET_NAME} elsa::test_routines
+                             ${ELSA_TEST_PUBLIC_DEPENDENCIES}
     )
     # enable C++17
-    target_compile_features(test_${NAME} PUBLIC cxx_std_17)
+    target_compile_features(${_testname} PUBLIC cxx_std_17)
     # include helpers
-    target_include_directories(test_${NAME} PRIVATE ${CMAKE_SOURCE_DIR}/elsa/test_routines/)
+    target_include_directories(${_testname} PRIVATE ${CMAKE_SOURCE_DIR}/elsa/test_routines/)
     # Improve compile times for tests
-    target_compile_definitions(test_${NAME} PRIVATE DOCTEST_CONFIG_SUPER_FAST_ASSERTS)
+    target_compile_definitions(${_testname} PRIVATE DOCTEST_CONFIG_SUPER_FAST_ASSERTS)
     # Set output directory to bin/tests/<module>
-    set_target_properties(test_${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}") 
+    set_target_properties(
+        ${_testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}"
+    )
 
     # Add test to global dependency
-    add_dependencies(tests test_${NAME})
-    add_dependencies(build-tests test_${NAME})
+    add_dependencies(tests ${_testname})
+    add_dependencies(build-tests ${_testname})
 
     # if we use JUnit reporter handle arguments
     if(${ELSA_CREATE_JUNIT_REPORTS})
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/test_reports)
-        set(ELSA_JUNIT_OUTPUT_DIR "${PROJECT_BINARY_DIR}/test_reports/test_${NAME}.xml")
+        set(ELSA_JUNIT_OUTPUT_DIR "${PROJECT_BINARY_DIR}/test_reports/${_testname}.xml")
     endif(${ELSA_CREATE_JUNIT_REPORTS})
 
     # let doctest discover the test and add the JUNIT arguments
-    doctest_discover_tests(test_${NAME} JUNIT_OUTPUT_DIR "${ELSA_JUNIT_OUTPUT_DIR}")
+    doctest_discover_tests(${_testname} JUNIT_OUTPUT_DIR "${ELSA_JUNIT_OUTPUT_DIR}")
 
     # Add test to the corresponding fine grained dependency
     if(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_core")
-        add_dependencies(build-tests-core test_${NAME})
+        add_dependencies(build-tests-core ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_functionals")
-        add_dependencies(build-tests-functionals test_${NAME})
+        add_dependencies(build-tests-functionals ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_logging")
-        add_dependencies(build-tests-logging test_${NAME})
+        add_dependencies(build-tests-logging ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_io")
-        add_dependencies(build-tests-io test_${NAME})
+        add_dependencies(build-tests-io ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_operators")
-        add_dependencies(build-tests-operators test_${NAME})
+        add_dependencies(build-tests-operators ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_problems")
-        add_dependencies(build-tests-problems test_${NAME})
+        add_dependencies(build-tests-problems ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_proximity_operators")
-        add_dependencies(build-tests-proximity_operators test_${NAME})
+        add_dependencies(build-tests-proximity_operators ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_solvers")
-        add_dependencies(build-tests-solvers test_${NAME})
+        add_dependencies(build-tests-solvers ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_generators")
-        add_dependencies(build-tests-generators test_${NAME})
+        add_dependencies(build-tests-generators ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_projectors")
-        add_dependencies(build-tests-projectors test_${NAME})
+        add_dependencies(build-tests-projectors ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_projectors_cuda")
-        add_dependencies(build-tests-projectors_cuda test_${NAME})
+        add_dependencies(build-tests-projectors_cuda ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_ml")
-        add_dependencies(build-tests-ml test_${NAME})
+        add_dependencies(build-tests-ml ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_ml_dnnl_backend")
-        add_dependencies(build-tests-ml_dnnl test_${NAME})
+        add_dependencies(build-tests-ml_dnnl ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_ml_cudnn_backend")
-        add_dependencies(build-tests-ml_cudnn test_${NAME})
+        add_dependencies(build-tests-ml_cudnn ${_testname})
     else()
-        message(WARNING "No test build target for module \"${ELSA_MODULE_TARGET_NAME}\" when adding test \"test_${NAME}\"")
+        message(
+            WARNING "No test build target for module \"${ELSA_MODULE_TARGET_NAME}\" when adding test \"${_testname}\""
+        )
     endif()
 endmacro()
 
+include(PythonBindings)
+
 if(ELSA_BUILD_PYTHON_BINDINGS)
-    find_package(PythonLibs)
-    if(PYTHONLIBS_FOUND AND (TARGET pybind11_generator))
-        set(ELSA_PYTHON_BINDINGS_PATH "${CMAKE_BINARY_DIR}/pyelsa" CACHE INTERNAL
-                                                                         "Output directory for pybind11 modules"
-        )
-
-        # remove __init__.py and logger.py files if present
-        file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py)
-        file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/logger.py)
-
-        if(CMAKE_CXX_FLAGS)
-            string(REPLACE " " ";" CXX_FLAGS_LIST ${CMAKE_CXX_FLAGS})
-        endif()
-
-        # always combine bindings in a single module if using libc++
-        foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST)
-            if(${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                set(ELSA_BINDINGS_IN_SINGLE_MODULE ON CACHE BOOL "Bindings compiled in single module as libc++ is used"
-                                                            FORCE
-                )
-            endif()
-        endforeach()
-
-        if(ELSA_BINDINGS_IN_SINGLE_MODULE)
-            # bind_elsa.cpp combines all bindings definitions into a single PYBIND11_MODULE
-            file(WRITE ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "#include <pybind11/pybind11.h>\n\n")
-
-            pybind11_add_module(pyelsa ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp)
-            set_target_properties(pyelsa PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ELSA_PYTHON_BINDINGS_PATH})
-            target_include_directories(pyelsa PUBLIC ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints)
-            target_compile_definitions(pyelsa PRIVATE ELSA_BINDINGS_IN_SINGLE_MODULE)
-            target_link_libraries(pyelsa PUBLIC elsa::all)
-            target_compile_features(pyelsa PUBLIC cxx_std_17)
-        else()
-            add_custom_target(pyelsa)
-        endif()
-
-        if(ELSA_TESTING)
-            file(COPY ${PROJECT_SOURCE_DIR}/tools/bindings_generation/tests DESTINATION ${PROJECT_BINARY_DIR}/pyelsa)
-
-            add_custom_target(test_pyelsa DEPENDS pyelsa)
-
-            add_custom_command(
-                TARGET test_pyelsa
-                PRE_BUILD
-                COMMAND
-                    ${CMAKE_COMMAND} -E copy_if_different
-                    ${PROJECT_SOURCE_DIR}/tools/bindings_generation/tests/test_pyelsa.py
-                    ${PROJECT_BINARY_DIR}/pyelsa/tests DEPENDS
-                    ${PROJECT_SOURCE_DIR}/tools/bindings_generation/tests/test_pyelsa.py
-            )
-
-            add_dependencies(tests test_pyelsa)
-
-            add_test(NAME test_pyelsa COMMAND ${PYTHON_EXECUTABLE} -m unittest pyelsa/tests/test_pyelsa.py
-                     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-            )
-        endif()
-    else()
-        message(STATUS "Couldn't find Python.h. Python bindings will not be generated.")
-    endif()
-
-    # macro for generation of the corresponding python module for the elsa target TARGET_NAME as a pre-build step the
-    # code for the python bindings will be generated and stored in the directory ELSA_PYTHON_BINDINGS_PATH under the
-    # name BINDINGS_CODE_FILENAME the sources containing the public interface of TARGET_NAME should be specified as
-    # additional arguments you can omit a source file from the list to prevent the generation of bindings for that file
-    macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
-        if((TARGET pyelsa) AND (TARGET pybind11_generator))
-            set(HINTS_FILE ${HINTS_PATH})
-
-            # when compiling with libc++ as the STL, the path to the STL headers must be specified
-            set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX "")
-            get_target_property(TARGET_COMPILE_OPTIONS ${TARGET_NAME} COMPILE_OPTIONS)
-            if(CMAKE_CXX_FLAGS)
-                string(REPLACE " " ";" CXX_FLAGS_LIST ${CMAKE_CXX_FLAGS})
-            endif()
-
-            # search through the global and target specific compile options for the "-stdlib=libc++" flag
-            foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST TARGET_COMPILE_OPTIONS)
-                if(${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                    set(ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX --extra-arg=-isystem --extra-arg=${LIBCXX_INCLUDE_DIR})
-                    break()
-                endif()
-            endforeach(COMPILE_OPTION)
-
-            if(ELSA_BINDINGS_IN_SINGLE_MODULE)
-                set(SINGLE_MODULE_FLAGS --extra-arg=-DELSA_BINDINGS_IN_SINGLE_MODULE --no-module)
-            endif()
-
-            set(PY_TARGET_NAME "py${TARGET_NAME}")
-
-            if(ELSA_CUDA_VECTOR)
-                if(NOT ${HINTS_PATH} STREQUAL "")
-                    get_filename_component(HINTS_NAME ${HINTS_PATH} NAME)
-                    get_filename_component(HINTS_CU_NAME ${HINTS_PATH} NAME_WE)
-                    set(HINTS_CU_NAME "${HINTS_CU_NAME}.cu")
-                    set(HINTS_FILE "${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_CU_NAME}")
-
-                    add_custom_command(
-                        OUTPUT ${HINTS_FILE} COMMAND ${CMAKE_COMMAND} -E copy ${HINTS_PATH} ${HINTS_FILE}
-                        DEPENDS ${HINTS_PATH}
-                    )
-                endif()
-            endif()
-
-            add_custom_command(
-                OUTPUT ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
-                COMMAND
-                    pybind11_generator ${ARGN} ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX} --extra-arg=-isystem
-                    --extra-arg=${CLANG_RESOURCE_DIR}/include --extra-arg=-std=c++17 --extra-arg=-w
-                    --extra-arg=--cuda-host-only -p=${CMAKE_BINARY_DIR} --hints=${HINTS_FILE}
-                    -o=${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME} --pyname=${PY_TARGET_NAME}
-                    ${SINGLE_MODULE_FLAGS}
-                DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_FILE}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-                COMMENT "Generating bindings code for ${TARGET_NAME}"
-                VERBATIM
-            )
-
-            if(NOT ELSA_BINDINGS_IN_SINGLE_MODULE)
-                pybind11_add_module(${PY_TARGET_NAME} ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME})
-                set_target_properties(
-                    ${PY_TARGET_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${ELSA_PYTHON_BINDINGS_PATH}
-                )
-                target_include_directories(
-                    ${PY_TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints
-                )
-                target_link_libraries(${PY_TARGET_NAME} PUBLIC ${TARGET_NAME})
-                target_compile_features(${PY_TARGET_NAME} PUBLIC cxx_std_17)
-                add_dependencies(pyelsa ${PY_TARGET_NAME})
-
-                file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "from .${PY_TARGET_NAME} import *\n")
-            else()
-                add_custom_target(${PY_TARGET_NAME} DEPENDS ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME})
-                add_dependencies(pyelsa ${PY_TARGET_NAME})
-
-                file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "#include \"${BINDINGS_CODE_FILENAME}\"\n")
-            endif()
-
-            set(ELSA_PYTHON_MODULES "${ELSA_PYTHON_MODULES};${PY_TARGET_NAME}" PARENT_SCOPE)
-        endif()
-    endmacro()
+    SetupPythonBindings()
 endif()
 
 # add the elsa modules
@@ -237,48 +172,8 @@ add_subdirectory(generators)
 add_subdirectory(test_routines)
 add_subdirectory(test_allmodules)
 
-if(ELSA_BUILD_PYTHON_BINDINGS AND PYTHONLIBS_FOUND AND (TARGET pybind11_generator))
-    if(ELSA_BINDINGS_IN_SINGLE_MODULE)
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\nPYBIND11_MODULE(pyelsa, m)\n{\n")
-        list(REMOVE_ITEM ELSA_PYTHON_MODULES "")
-        foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
-            file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "\tadd_definitions_${PYMODULE}(m);\n")
-        endforeach()
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/bind_elsa.cpp "}\n")
-
-        file(WRITE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "from .pyelsa import *")
-    else()
-        # when split in multiple modules provide a top level Logger interface
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "from . import *\n\n")
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "class Logger(object):\n")
-
-        # remove the empty item and core module from the list (core doesn't use logging)
-        list(REMOVE_ITEM ELSA_PYTHON_MODULES "")
-        list(FILTER ELSA_PYTHON_MODULES EXCLUDE REGEX ".*core.*")
-
-        # define setLevel function
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\tdef setLevel(level: LogLevel):\n")
-        foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
-            file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\t\tlogger_${PYMODULE}.setLevel(level)\n")
-        endforeach()
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\n")
-
-        # define enableFileLogging function
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\tdef enableFileLogging(filename: str):\n")
-        foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
-            file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\t\tlogger_${PYMODULE}.enableFileLogging(filename)\n")
-        endforeach()
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\n")
-
-        # define flush function
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\tdef flush():\n")
-        foreach(PYMODULE IN LISTS ELSA_PYTHON_MODULES)
-            file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/logger.py "\t\tlogger_${PYMODULE}.flush()\n")
-        endforeach()
-
-        # add Logger to __init__.py file
-        file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "\nfrom .logger import Logger\n")
-    endif()
+if(ELSA_BUILD_PYTHON_BINDINGS)
+    AddLoggerToBindings()
 endif()
 
 # library to build and add all registered components of the library
@@ -292,23 +187,8 @@ target_include_directories(
 )
 
 # register the all "module"
-registercomponent(all)
+registerComponent(all)
 
 # install the all module and the elsa.h file
-installelsamodule(all elsa_all elsa_allTargets)
+InstallElsaModule(all elsa_all elsa_allTargets)
 install(FILES elsa.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/elsa/)
-
-# if stand-alone and option set, turn on all warnings for all components
-if(${ELSA_MASTER_PROJECT} AND ${ELSA_BUILD_WITH_MORE_WARNINGS})
-    list(REMOVE_ITEM ELSA_REGISTERED_COMPONENTS "")
-    foreach(_component ${ELSA_REGISTERED_COMPONENTS})
-        if(NOT (_component MATCHES "projector_kernels"))
-            if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-                target_compile_options(elsa_${_component} PUBLIC -Wall -Wextra -Wconversion -pedantic -Wfatal-errors)
-            endif()
-            if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-                target_compile_options(elsa_${_component} PUBLIC /W3 /WX)
-            endif()
-        endif()
-    endforeach(_component ELSA_REGISTERED_COMPONENTS)
-endif()

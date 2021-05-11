@@ -13,7 +13,7 @@ add_custom_target(
 )
 
 # the actual tests
-elsa_doctest(Identity)
-elsa_doctest(Scaling)
-elsa_doctest(FiniteDifferences)
-elsa_doctest(BlockLinearOperator)
+ELSA_DOCTEST(Identity)
+ELSA_DOCTEST(Scaling)
+ELSA_DOCTEST(FiniteDifferences)
+ELSA_DOCTEST(BlockLinearOperator)

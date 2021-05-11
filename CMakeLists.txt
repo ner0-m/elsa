@@ -62,7 +62,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # By default set all output to lib or bin directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # ------------ dependencies ------------
 # ------------
@@ -175,7 +175,7 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
          GITHUB_REPOSITORY onqtam/doctest
          GIT_TAG 2.4.4
     )
- 
+
     # add the CMake modules for automatic test discovery
     set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
 
