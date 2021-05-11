@@ -279,18 +279,52 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
 
         auto sinogram = projector.apply(phantom);
 
-        index_t nSubsets{4};
-        SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
-            static_cast<const VolumeDescriptor&>(volumeDescriptor),
-            static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), sinogram, nSubsets);
-
-        WLSSubsetProblem<real_t> problem(
-            *subsetSampler.getProjector<SiddonsMethod<real_t>>(), subsetSampler.getData(),
-            subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
         real_t epsilon = std::numeric_limits<real_t>::epsilon();
 
-        WHEN("setting up a SQS solver")
+        WHEN("setting up a SQS solver with ROUND_ROBIN subsampling")
         {
+            index_t nSubsets{4};
+            SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
+                static_cast<const VolumeDescriptor&>(volumeDescriptor),
+                static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
+
+            WLSSubsetProblem<real_t> problem(
+                *subsetSampler.getProjector<SiddonsMethod<real_t>>(),
+                subsetSampler.getPartitionedData(sinogram),
+                subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
+            SQS solver{problem, true, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto sqsClone = solver.clone();
+
+                REQUIRE(sqsClone.get() != &solver);
+                REQUIRE(*sqsClone == solver);
+
+                AND_THEN("it works as expected")
+                {
+                    auto reconstruction = solver.solve(40);
+
+                    DataContainer resultsDifference = reconstruction - phantom;
+
+                    // should have converged for the given number of iterations
+                    // does not converge to the optimal solution because of the regularization term
+                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                }
+            }
+        }
+        WHEN("setting up a SQS solver with EQUI_ROTATION subsampling")
+        {
+            index_t nSubsets{4};
+            SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
+                static_cast<const VolumeDescriptor&>(volumeDescriptor),
+                static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets,
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::SamplingStrategy::EQUI_ROTATION);
+
+            WLSSubsetProblem<real_t> problem(
+                *subsetSampler.getProjector<SiddonsMethod<real_t>>(),
+                subsetSampler.getPartitionedData(sinogram),
+                subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
             SQS solver{problem, true, epsilon};
 
             THEN("the clone works correctly")

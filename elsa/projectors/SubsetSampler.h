@@ -24,6 +24,12 @@ namespace elsa
     class SubsetSampler : public Cloneable<SubsetSampler<detectorDescriptor_t, data_t>>
     {
     public:
+        /// enum to differentiate between different subset sampling strategies
+        enum class SamplingStrategy {
+            ROUND_ROBIN,   /// (default) divides data points into subsets via simple round-robin
+            EQUI_ROTATION, /// equally spaces the data points based on their rotation
+        };
+
         /**
          * @brief Constructor for SubsetSampler
          *
@@ -31,18 +37,22 @@ namespace elsa
          * @param[in] detectorDescriptor describes the geometry and trajectory of the measurements
          * @param[in] sinogram is the actual measurement data
          * @param[in] nSubsets is number of subsets that should be generated
+         * @param[in] samplingStrategy the strategy with which to sample the subsets
          */
         SubsetSampler(const VolumeDescriptor& volumeDescriptor,
-                      const detectorDescriptor_t& detectorDescriptor,
-                      const DataContainer<data_t>& sinogram, index_t nSubsets);
+                      const detectorDescriptor_t& detectorDescriptor, index_t nSubsets,
+                      SamplingStrategy samplingStrategy = SamplingStrategy::ROUND_ROBIN);
 
         /// default destructor
         ~SubsetSampler() = default;
 
         /**
-         * @brief return the full sinogram
+         * @brief return a new data descriptor with a BlockDescriptor containing the reordered
+         * sinogram data in each block corresponding to a subset
+         *
+         * @param[in] sinogram the original sinogram
          */
-        DataContainer<data_t> getData();
+        DataContainer<data_t> getPartitionedData(const DataContainer<data_t>& sinogram);
 
         /**
          * @brief return the full projector
@@ -80,8 +90,8 @@ namespace elsa
         SubsetSampler<detectorDescriptor_t, data_t>* cloneImpl() const override;
 
     private:
-        /// measurement data split into subsets using a RandomBlockDescriptor
-        std::unique_ptr<DataContainer<data_t>> _data;
+        /// mapping of data point indices to respective subsets
+        std::vector<std::vector<index_t>> _indexMapping;
 
         /// volume descriptor of the problem
         VolumeDescriptor _volumeDescriptor;
