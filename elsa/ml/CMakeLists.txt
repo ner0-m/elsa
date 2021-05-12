@@ -78,7 +78,9 @@ set(MODULE_SOURCES
     State.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
+# elsa modules ml depends on  
+list(APPEND ELSA_MODULE_DEPS elsa_core elsa_logging)
+list(APPEND MODULE_PUBLIC_DEPS )
 list(APPEND MODULE_PRIVATE_DEPS)
 
 # Add OpenMP to the private dependency list
@@ -89,13 +91,15 @@ endif()
 
 # Add Dnnl backend to the list of public dependencies
 if(ELSA_HAS_DNNL_BACKEND)
-    list(APPEND MODULE_PUBLIC_DEPS elsa_ml_dnnl_backend)
+    list(APPEND ELSA_MODULE_DEPS elsa_ml_dnnl_backend)
 endif()
 
 # Add Cudnn backend to the list of public dependencies
 if(ELSA_HAS_CUDNN_BACKEND)
-    list(APPEND MODULE_PUBLIC_DEPS elsa_ml_cudnn_backend)
+    list(APPEND ELSA_MODULE_DEPS elsa_ml_cudnn_backend)
 endif()
+
+list(APPEND MODULE_PUBLIC_DEPS ${ELSA_MODULE_DEPS})
 
 AddElsaModule(
     ml "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
@@ -127,3 +131,5 @@ if(ELSA_TESTING AND ELSA_HAS_CUDNN_BACKEND)
     # and now set it back
     set(ELSA_MODULE_TARGET_NAME ${_module_name})
 endif()
+
+WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES ${ELSA_MODULE_DEPS})

@@ -61,3 +61,5 @@ registerComponent(${ELSA_MODULE_NAME})
 
 # install the kernels as a module
 InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+ 
+WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES)

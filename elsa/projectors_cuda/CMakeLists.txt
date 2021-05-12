@@ -48,3 +48,5 @@ if(CMAKE_CUDA_COMPILER)
 else()
     message(STATUS "CUDA compiler NOT found! CUDA projector support disabled")
 endif()
+ 
+WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors elsa_projector_kernels)

@@ -45,3 +45,5 @@ target_include_directories(
 
 # Include Dnnl headers as system headers to avoid warnings
 target_include_directories(${ELSA_MODULE_TARGET_NAME} SYSTEM PUBLIC $<BUILD_INTERFACE:${Dnnl_INCLUDE_DIR}>)
+ 
+WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)

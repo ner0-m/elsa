@@ -1,5 +1,33 @@
 # install an elsa module
 
+function(WriteModuleConfig ELSA_MODULE_NAME)
+    if(ELSA_INSTALL)
+        # Parse arguments
+        set(options)
+        set(oneValueArgs)
+        set(multiValueArgs DEPENDENCIES)
+        cmake_parse_arguments(INSTALL_MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+         
+        # set up the target/library for make install
+        include(GNUInstallDirs)
+        include(CMakePackageConfigHelpers)
+
+        # This uses INSTALL_MODULE_DEPEDENCIES! to replace in the .in file
+        configure_package_config_file(
+            ${PROJECT_SOURCE_DIR}/cmake/elsaComponentConfig.cmake.in
+            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsa_${ELSA_MODULE_NAME}Config.cmake
+            INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
+        )
+
+        # install the config files
+        install(
+                FILES
+                ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsa_${ELSA_MODULE_NAME}Config.cmake
+                DESTINATION ${INSTALL_CONFIG_DIR}
+        )
+    endif() 
+endfunction()
+
 function(InstallElsaModule ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_EXPORT_TARGET)
     if(ELSA_INSTALL)
         # This is required so that the exported target has the name core and not elsa_core

@@ -104,3 +104,5 @@ target_include_directories(
     PUBLIC $<BUILD_INTERFACE:${Cudnn_INCLUDE_DIR}> $<BUILD_INTERFACE:${Cublas_INCLUDE_DIRS}>
            $<BUILD_INTERFACE:${Npp_INCLUDE_DIRS}>
 )
+ 
+WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES )

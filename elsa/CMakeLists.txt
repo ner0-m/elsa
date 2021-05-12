@@ -185,6 +185,8 @@ target_link_libraries(elsa_all INTERFACE ${ELSA_REGISTERED_TARGETS})
 target_include_directories(
     elsa_all INTERFACE $<INSTALL_INTERFACE:include/elsa/> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
+ 
+WriteModuleConfig(all DEPENDENCIES ${ELSA_REGISTERED_TARGETS})
 
 # register the all "module"
 registerComponent(all)

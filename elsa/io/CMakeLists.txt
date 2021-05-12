@@ -21,3 +21,5 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
         ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
     )
 endif()
+ 
+WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)

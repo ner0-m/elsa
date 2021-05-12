@@ -19,3 +19,5 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
         CircleTrajectoryGenerator.h
     )
 endif()
+ 
+WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)
