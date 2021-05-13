@@ -139,6 +139,7 @@ cache:
   script: &installjob_script_clang
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
+    - git checkout add-cpm # TODO Remove before merging 
     - mkdir -p build/ && cd build/
     - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
@@ -147,12 +148,14 @@ cache:
   script: &installjob_script
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
+    - git checkout add-cpm # TODO Remove before merging 
     - mkdir -p build/ && cd build/
     - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa"
     - ninja
 
 .installjob_anchors: &install_job
-  <<: *run_on_merge_requests
+  # <<: *run_on_merge_requests
+  <<: *run_always # TODO: Change back to on MR
   cache: &install_cache
     key: "$CI_COMMIT_REF_SLUG"
     paths:
@@ -392,6 +395,7 @@ install-gpu-only:
   script:
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
+    - git checkout add-cpm  # TODO: remove me before merging
     - mkdir -p build/ && cd build/
     - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -Dquickvec_DIR="$CI_PROJECT_DIR/install-elsa/lib/cmake/Quickvec" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
     - ninja
