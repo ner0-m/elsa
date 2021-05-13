@@ -20,12 +20,12 @@ GradientDescent
 .. doxygenclass:: elsa::GradientDescent
 
 Iterative Shrinkage-Thresholding Algorithm
-====
+==========================================
 
 .. doxygenclass:: elsa::ISTA
 
 Fast Iterative Shrinkage-Thresholding Algorithm
-=====
+===============================================
 
 .. doxygenclass:: elsa::FISTA
 
@@ -40,7 +40,7 @@ Optimized Gradient Method
 .. doxygenclass:: elsa::OGM
 
 Alternating Direction Method of Multipliers
-=====
+===========================================
 
 .. doxygenclass:: elsa::ADMM
 

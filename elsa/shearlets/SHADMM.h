@@ -5,7 +5,8 @@
 #include "SplittingProblem.h"
 #include "DiscreteShearletTransform.h"
 #include "BlockLinearOperator.h"
-#include "L1Norm.h"
+#include "WeightedL1Norm.h"
+#include "Indicator.h.h"
 #include "L2NormPow2.h"
 #include "LinearResidual.h"
 #include "Logger.h"
@@ -70,35 +71,43 @@ namespace elsa
             const auto& dataTermResidual =
                 dynamic_cast<const LinearResidual<data_t>&>(f.getResidual());
 
-            if (g.size() != 1) { // TODO now we have two here?
+            /// now we have two here? the WL1Norm and Indicator, they don't seem to be used
+            if (g.size() != 2) {
                 throw std::invalid_argument(
-                    "SHADMM::solveImpl: supported number of regularization terms is 1");
+                    "SHADMM::solveImpl: supported number of regularization terms is 2");
+            }
+
+            if (g[0].getWeight() != g[1].getWeight()) {
+                throw std::invalid_argument(
+                    "SHADMM::solveImpl: regularization weights should match");
             }
 
             data_t regWeight = g[0].getWeight();
-            Functional<data_t>& regularizationTerm = g[0].getFunctional();
 
-            if (!dynamic_cast<L0PseudoNorm<data_t>*>(&regularizationTerm)
-                && !dynamic_cast<L1Norm<data_t>*>(&regularizationTerm)) {
+            if (!dynamic_cast<WeightedL1Norm<data_t>*>(&g[0].getFunctional())
+                && !dynamic_cast<Indicator<data_t>*>(&g[1].getFunctional())) {
                 throw std::invalid_argument("SHADMM::solveImpl: supported regularization terms are "
-                                            "of type L0PseudoNorm or L1Norm");
+                                            "of type WeightedL1Norm and Indicator, respectively");
             }
 
             const auto& constraint = splittingProblem->getConstraint();
-            // TODO should come as  // AT = (ρ1 SH^T, ρ2 I_n2 ) ∈ R^n^2×(J+1)n^2
+            /// should come as // AT = (ρ_1*SH^T, ρ_2*I_n2 ) ∈ R ^ n^2 × (J+1)n^2
             const auto& A = constraint.getOperatorA();
-            // TODO should come as // B = diag(−ρ_1 1_Jn^2 , −ρ_2 1_n2)
+            /// should come as // B = diag(−ρ_1*1_Jn^2 , −ρ_2*1_n2) ∈ R ^ (J+1)n2 × (J+1)n^2
             const auto& B = constraint.getOperatorB();
-            // TODO should come as the zero vector
+            /// should come as the zero vector
             const auto& c = constraint.getDataVectorC();
 
-            // TODO f is the same as the x in the regular ADMM
+            /// f ∈ R ^ n^2, f is the same as x in the regular ADMM
             DataContainer<data_t> f(A.getRangeDescriptor());
-            f = 0; // TODO set me to R_φTy
+            /// set me to R_φTy, try 0 start as well
+            f = 0; // dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
 
+            /// this means z ∈ R ^ (J+1)n^2
             DataContainer<data_t> z(B.getRangeDescriptor());
             z = 0;
 
+            /// this means u ∈ R ^ (J+1)n^2
             DataContainer<data_t> u(c.getDataDescriptor());
             u = 0;
 
@@ -122,10 +131,7 @@ namespace elsa
                 // TODO VERY SHADMM specific code
                 // TODO add vector of thresholds to SoftThresholding? use ProjectionOperator?
 
-                /// notes regarding dimensions
                 /// first Jn^2 for P1, last n^2 for P2
-                /// this means f ∈ R ^ n^2 ?
-                /// this means z and u ∈ R ^ (J+1) x n^2
                 // TODO should f be called x in the merged ADMM? probably yes
 
                 SoftThresholding<data_t> shrink(B.getRangeDescriptor()); // Jn^2

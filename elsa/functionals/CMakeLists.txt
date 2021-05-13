@@ -21,7 +21,8 @@ set(MODULE_HEADERS
         TransmissionLogLikelihood.h
         Constraint.h
         WeightedL1Norm.h
-        BumpFunction.h)
+        BumpFunction.h
+        Indicator.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -40,7 +41,8 @@ set(MODULE_SOURCES
         TransmissionLogLikelihood.cpp
         Constraint.cpp
         WeightedL1Norm.cpp
-        BumpFunction.cpp)
+        BumpFunction.cpp
+        Indicator.cpp)
 
 
 # build the module library
