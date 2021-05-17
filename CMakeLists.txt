@@ -149,7 +149,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
-# include the InstallElsaModule function
+# include the install_elsa_module function
 include(InstallElsaModule)
 
 # ------------ Setup Tools -----------
@@ -198,12 +198,12 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             message(STATUS "elsa test coverage is enabled")
 
             include(CodeCoverage)
-            APPEND_COVERAGE_COMPILER_FLAGS()
+            append_coverage_compiler_flags()
             set(COVERAGE_LCOV_EXCLUDES
                 '${CPM_SOURCE_CACHE}/*'
                 '${PROJECT_BINARY_DIR}/_deps/*'
                 '/usr/*')
-            SETUP_TARGET_FOR_COVERAGE_LCOV(NAME test_coverage EXECUTABLE ctest)
+            setup_target_for_coverage_lcov(NAME test_coverage EXECUTABLE ctest)
 
         else(ELSA_COVERAGE)
             message(STATUS "elsa test coverage is disabled")

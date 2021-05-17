@@ -13,7 +13,7 @@
 #
 
 # set the CLANG_VERSION variables from the output emitted by clang --version
-function(SET_CLANG_VERSION CLANG_EXECUTABLE)
+function(_set_clang_version CLANG_EXECUTABLE)
   execute_process(
     COMMAND ${CLANG_EXECUTABLE} --version
     OUTPUT_VARIABLE CLANG_OUT
@@ -33,7 +33,7 @@ function(SET_CLANG_VERSION CLANG_EXECUTABLE)
 endfunction()
 
 # finds the most recent version of an LLVM executable installed on the system
-function(FIND_MOST_RECENT_LLVM_EXECUTABLE EXECUTABLE_NAME)
+function(_find_most_recent_llvm_executable EXECUTABLE_NAME)
   # capitalize and convert dashes to underscored for variable name
   string(TOUPPER ${EXECUTABLE_NAME} VARNAME)
   string(REPLACE "-" "_" VARNAME ${VARNAME})
@@ -54,17 +54,17 @@ if(CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
   set(CLANG ${CMAKE_CXX_COMPILER} CACHE INTERNAL "Path to clang executable")
 else()
-  FIND_MOST_RECENT_LLVM_EXECUTABLE(clang)
+  _find_most_recent_llvm_executable(clang)
 endif()
 
 if (CLANG)
   # determine clang version
-  SET_CLANG_VERSION(${CLANG})
+  _set_clang_version(${CLANG})
 
   # if the version used is too low, look for the most recent version installed on the system instead
   if(CLANG_VERSION VERSION_LESS "8")
-    FIND_MOST_RECENT_LLVM_EXECUTABLE(clang)
-    SET_CLANG_VERSION(${CLANG})
+    _find_most_recent_llvm_executable(clang)
+    _set_clang_version(${CLANG})
   endif()
 
   execute_process(
@@ -82,7 +82,7 @@ if (CLANG)
             llvm-config-${CLANG_VERSION_MAJOR}
             llvm-config)
   else()
-    FIND_MOST_RECENT_LLVM_EXECUTABLE(llvm-config)
+    _find_most_recent_llvm_executable(llvm-config)
   endif()
 
   # determine where libcxx is installed by parsing the output of the clang compilation stage
@@ -120,7 +120,7 @@ if (CLANG)
     endif()
   endforeach()
 else()
-  FIND_MOST_RECENT_LLVM_EXECUTABLE(llvm-config)
+  _find_most_recent_llvm_executable(llvm-config)
 endif()
 
 

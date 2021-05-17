@@ -67,7 +67,7 @@ if(${ELSA_BUILD_WITH_QUICKVEC})
     list(APPEND MODULE_PUBLIC_DEPS "Quickvec::quickvec")
 endif()
 
-AddElsaModule(
+ADD_ELSA_MODULE(
     core "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
@@ -111,10 +111,10 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
     list(FILTER BINDINGS_SOURCES EXCLUDE REGEX Geometry.cpp)
     list(FILTER BINDINGS_SOURCES EXCLUDE REGEX StrongTypes.cpp)
 
-    generate_bindings(
+    GENERATE_BINDINGS(
         ${ELSA_MODULE_TARGET_NAME} bind_${ELSA_MODULE_NAME}.cpp
         ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
     )
 endif()
  
-WriteModuleConfig(${ELSA_MODULE_NAME})
+write_module_config(${ELSA_MODULE_NAME})

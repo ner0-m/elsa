@@ -50,12 +50,12 @@
 #      include(CodeCoverage)
 #
 # 3. Append necessary compiler flags:
-#      APPEND_COVERAGE_COMPILER_FLAGS()
+#      append_coverage_compiler_flags()
 #
 # 3.a (OPTIONAL) Set appropriate optimization flags, e.g. -O0, -O1 or -Og
 #
 # 4. If you need to exclude additional directories from the report, specify them
-#    using the COVERAGE_LCOV_EXCLUDES variable before calling SETUP_TARGET_FOR_COVERAGE_LCOV.
+#    using the COVERAGE_LCOV_EXCLUDES variable before calling setup_target_for_coverage_lcov.
 #    Example:
 #      set(COVERAGE_LCOV_EXCLUDES 'dir1/*' 'dir2/*')
 #
@@ -128,12 +128,12 @@ endif()
 # NOTE! The executable should always have a ZERO as exit code otherwise
 # the coverage generation will not complete.
 #
-# SETUP_TARGET_FOR_COVERAGE_LCOV(
+# setup_target_for_coverage_lcov(
 #     NAME testrunner_coverage                    # New target name
 #     EXECUTABLE testrunner -j ${PROCESSOR_COUNT} # Executable in PROJECT_BINARY_DIR
 #     DEPENDENCIES testrunner                     # Dependencies to build first
 # )
-function(SETUP_TARGET_FOR_COVERAGE_LCOV)
+function(setup_target_for_coverage_lcov)
 
     set(options NONE)
     set(oneValueArgs NAME)
@@ -184,11 +184,11 @@ function(SETUP_TARGET_FOR_COVERAGE_LCOV)
         COMMENT "Open ./${Coverage_NAME}/index.html in your browser to view the coverage report."
     )
 
-endfunction() # SETUP_TARGET_FOR_COVERAGE_LCOV
+endfunction() # setup_target_for_coverage_lcov
 
 
-function(APPEND_COVERAGE_COMPILER_FLAGS)
+function(append_coverage_compiler_flags)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COVERAGE_COMPILER_FLAGS}" PARENT_SCOPE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COVERAGE_COMPILER_FLAGS}" PARENT_SCOPE)
     message(STATUS "Appending code coverage compiler flags: ${COVERAGE_COMPILER_FLAGS}")
-endfunction() # APPEND_COVERAGE_COMPILER_FLAGS
+endfunction() # append_coverage_compiler_flags

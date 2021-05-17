@@ -1,5 +1,5 @@
 # setup macro for component registration, so you can use find_package(elsa COMPONENT name) also sets all target names
-macro(registerComponent name)
+macro(REGISTER_MODULE name)
     set(ELSA_REGISTERED_COMPONENTS "${ELSA_REGISTERED_COMPONENTS};${name}" PARENT_SCOPE)
     set(ELSA_REGISTERED_TARGETS "${ELSA_REGISTERED_TARGETS};elsa_${name}" PARENT_SCOPE)
 endmacro()
@@ -17,7 +17,7 @@ function(add_warnings module)
 endfunction()
 
 # Simple macro to add a module
-macro(AddElsaModule ELSA_MODULE_NAME MODULE_HEADERS MODULE_SOURCES)
+macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     # Parse arguments
     set(options INSTALL_DIR NO_TESTS)
     set(oneValueArgs)
@@ -25,14 +25,14 @@ macro(AddElsaModule ELSA_MODULE_NAME MODULE_HEADERS MODULE_SOURCES)
     cmake_parse_arguments(ADD_MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     # Make name persistent after macro
-    set(ELSA_MODULE_NAME ${ELSA_MODULE_NAME})
+    set(ELSA_MODULE_NAME ${elsa_module_name})
 
     # set the name of the module
-    set(ELSA_MODULE_TARGET_NAME elsa_${ELSA_MODULE_NAME})
-    set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
+    set(ELSA_MODULE_TARGET_NAME elsa_${elsa_module_name})
+    set(ELSA_MODULE_EXPORT_TARGET elsa_${elsa_module_name}Targets)
 
     # build the module library
-    add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
+    add_library(${ELSA_MODULE_TARGET_NAME} ${module_headers} ${module_sources})
     add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
     # Add public dependencies
@@ -45,12 +45,12 @@ macro(AddElsaModule ELSA_MODULE_NAME MODULE_HEADERS MODULE_SOURCES)
     set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     target_include_directories(
-        ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
+        ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${elsa_module_name}>
                                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     )
 
     if(${ELSA_MASTER_PROJECT} AND ${ELSA_BUILD_WITH_MORE_WARNINGS})
-        add_warnings(${ELSA_MODULE_NAME})
+        add_warnings(${elsa_module_name})
     endif()
 
     # build the tests (if enabled)
@@ -59,20 +59,20 @@ macro(AddElsaModule ELSA_MODULE_NAME MODULE_HEADERS MODULE_SOURCES)
     endif()
 
     # register the module
-    registerComponent(${ELSA_MODULE_NAME})
+    REGISTER_MODULE(${elsa_module_name})
 
     # install the module
     if(${ADD_MODULE_INSTALL_DIR})
-        InstallElsaModuleDir(
-            ${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/"
+        install_elsa_module_dir(
+            ${elsa_module_name} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/"
         )
     else()
-        InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+        install_elsa_module(${elsa_module_name} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
     endif()
 endmacro()
 
 # macro for the unit tests
-macro(ELSA_DOCTEST NAME)
+macro(ELSA_DOCTEST name)
     # Parse arguments
     set(options)
     set(oneValueArgs)
@@ -80,7 +80,7 @@ macro(ELSA_DOCTEST NAME)
     cmake_parse_arguments(ELSA_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     # set the name for the test once
-    set(_testname test_${NAME})
+    set(_testname test_${name})
     # create the test executable
     add_executable(${_testname} EXCLUDE_FROM_ALL ${_testname}.cpp test_docmain.cpp)
     # add catch and the corresponding elsa library
@@ -186,11 +186,11 @@ target_include_directories(
     elsa_all INTERFACE $<INSTALL_INTERFACE:include/elsa/> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
  
-WriteModuleConfig(all DEPENDENCIES ${ELSA_REGISTERED_TARGETS})
+write_module_config(all DEPENDENCIES ${ELSA_REGISTERED_TARGETS})
 
 # register the all "module"
-registerComponent(all)
+REGISTER_MODULE(all)
 
 # install the all module and the elsa.h file
-InstallElsaModule(all elsa_all elsa_allTargets)
+install_elsa_module(all elsa_all elsa_allTargets)
 install(FILES elsa.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/elsa/)

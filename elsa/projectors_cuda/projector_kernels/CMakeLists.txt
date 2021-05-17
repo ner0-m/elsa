@@ -6,7 +6,7 @@ set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
 set(CUDA_ARCH_TYPES "Auto" CACHE STRING "Space-separated list of target GPU architectures. Defaults to Auto. If Auto attempts to detect and target all installed GPUS.")
 
 if ("${CUDA_ARCH_TYPES}" STREQUAL "Auto")
-  CUDA_DETECT_INSTALLED_GPUS(TARGET_GPUS)
+  cuda_detect_installed_gpus(TARGET_GPUS)
 else()
   set(TARGET_GPUS ${CUDA_ARCH_TYPES})
 endif()
@@ -57,9 +57,9 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC cudart)
 
 # register the module
-registerComponent(${ELSA_MODULE_NAME})
+REGISTER_MODULE(${ELSA_MODULE_NAME})
 
 # install the kernels as a module
-InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+install_elsa_module(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
  
-WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES)

@@ -79,7 +79,7 @@ list(
 )
 list(APPEND MODULE_PRIVATE_DEPS)
 
-AddElsaModule(
+ADD_ELSA_MODULE(
     ml_cudnn_backend "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR NO_TESTS PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
@@ -105,4 +105,4 @@ target_include_directories(
            $<BUILD_INTERFACE:${Npp_INCLUDE_DIRS}>
 )
  
-WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES )
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES )

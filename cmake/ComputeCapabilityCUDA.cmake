@@ -9,9 +9,9 @@ cmake_minimum_required(VERSION 3.10)
 #
 # A function for automatic detection of GPUs installed  (if autodetection is enabled)
 # Usage:
-#   CUDA_DETECT_INSTALLED_GPUS(OUT_VARIABLE)
+#   cuda_detect_installed_gpus(OUT_VARIABLE)
 #
-function(CUDA_DETECT_INSTALLED_GPUS OUT_VARIABLE)
+function(cuda_detect_installed_gpus OUT_VARIABLE)
   set(file "${PROJECT_BINARY_DIR}/detect_cuda_compute_capabilities.cu")
 
   file(WRITE ${file} ""

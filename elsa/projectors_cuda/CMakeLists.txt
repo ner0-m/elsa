@@ -29,7 +29,7 @@ if(CMAKE_CUDA_COMPILER)
     )
     list(APPEND MODULE_PRIVATE_DEPS)
 
-    AddElsaModule(
+    ADD_ELSA_MODULE(
         projectors_cuda "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
         PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
     )
@@ -40,7 +40,7 @@ if(CMAKE_CUDA_COMPILER)
     target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)
 
     if(ELSA_BUILD_PYTHON_BINDINGS)
-        generate_bindings(
+        GENERATE_BINDINGS(
             ${ELSA_MODULE_TARGET_NAME} bind_${ELSA_MODULE_NAME}.cpp
             ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${MODULE_SOURCES}
         )
@@ -49,4 +49,4 @@ else()
     message(STATUS "CUDA compiler NOT found! CUDA projector support disabled")
 endif()
  
-WriteModuleConfig(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors elsa_projector_kernels)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors elsa_projector_kernels)

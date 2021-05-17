@@ -1,6 +1,4 @@
-# install an elsa module
-
-function(WriteModuleConfig ELSA_MODULE_NAME)
+function(write_module_config module_name)
     if(ELSA_INSTALL)
         # Parse arguments
         set(options)
@@ -15,20 +13,21 @@ function(WriteModuleConfig ELSA_MODULE_NAME)
         # This uses INSTALL_MODULE_DEPEDENCIES! to replace in the .in file
         configure_package_config_file(
             ${PROJECT_SOURCE_DIR}/cmake/elsaComponentConfig.cmake.in
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsa_${ELSA_MODULE_NAME}Config.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsa_${module_name}Config.cmake
             INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
         )
 
         # install the config files
         install(
                 FILES
-                ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsa_${ELSA_MODULE_NAME}Config.cmake
+                ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsa_${module_name}Config.cmake
                 DESTINATION ${INSTALL_CONFIG_DIR}
         )
     endif() 
 endfunction()
 
-function(InstallElsaModule ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_EXPORT_TARGET)
+# install an elsa module
+function(install_elsa_module ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_EXPORT_TARGET)
     if(ELSA_INSTALL)
         # This is required so that the exported target has the name core and not elsa_core
         set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES EXPORT_NAME ${ELSA_MODULE_NAME})
@@ -60,7 +59,7 @@ endfunction()
 # by installing all the files given in "MODULE_DIRECTORY" to installprefix/elsa/module_name
 # 
 # This method preserves all the hierarchical structures of the directory (sub folders are preserved)
-function(InstallElsaModuleDir ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_EXPORT_TARGET MODULE_DIRECTORY)
+function(install_elsa_module_dir ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_EXPORT_TARGET MODULE_DIRECTORY)
     if(ELSA_INSTALL)
         # This is required so that the exported target has the name core and not elsa_core
         set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES EXPORT_NAME ${ELSA_MODULE_NAME})

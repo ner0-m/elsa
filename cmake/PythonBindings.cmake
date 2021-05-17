@@ -2,7 +2,6 @@ find_package(PythonLibs)
 
 # macro for generation of the corresponding python module for the elsa target TARGET_NAME as a pre-build step the
 # code for the python bindings will be generated and stored in the directory ELSA_PYTHON_BINDINGS_PATH under the
-# name BINDINGS_CODE_FILENAME the sources containing the public interface of TARGET_NAME should be specified as
 # additional arguments you can omit a source file from the list to prevent the generation of bindings for that file
 macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
     if((TARGET pyelsa) AND (TARGET pybind11_generator))
