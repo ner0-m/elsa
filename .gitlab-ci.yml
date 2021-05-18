@@ -76,21 +76,21 @@ cache:
       - build/**/tests/test_*tests-*.cmake
       - build/Testing
 
-      # Add elsa install to artifact 
+      # Add elsa install to artifact
       - install-elsa/include/elsa/**/*.h
       - install-elsa/include/elsa/**/*.hpp
       - install-elsa/include/elsa/**/*.cuh
       - install-elsa/lib/cmake/elsa/**/*.cmake
       - install-elsa/lib/libelsa*.a
-      # Add quickvec install to artifact 
+      # Add quickvec install to artifact
       - install-elsa/include/Quickvec/**/*.h
       - install-elsa/include/Quickvec/**/*.hpp
       - install-elsa/lib/cmake/Quickvec/*.cmake
       - install-elsa/lib/libquickvec.a
-      # Add doctest install to artifact 
+      # Add doctest install to artifact
       - install-elsa/include/doctest/**/*.h
       - install-elsa/lib/cmake/doctest/**/*.cmake
-      # Add spdlog install to artifact 
+      # Add spdlog install to artifact
       - install-elsa/include/spdlog/**/*.h
       - install-elsa/lib/cmake/spdlog/**/*.cmake
       - install-elsa/lib/libspdlog.a
@@ -193,6 +193,28 @@ comment-formating:
     - elsa
     - clang
 
+.cmake-format:
+  <<: *run_always
+  stage: static-test
+  image: $CLANG_FORMAT_IMAGE
+  script:
+    ./tools/ci_scripts/cmake-format-test.sh
+  tags:
+    - linux
+    - elsa
+    - clang
+
+cmake-lint:
+  <<: *run_always
+  stage: static-test
+  image: $CLANG_FORMAT_IMAGE
+  script:
+    ./tools/ci_scripts/cmake-lint-test.sh
+  tags:
+    - linux
+    - elsa
+    - clang
+
 ### compile jobs ###
 
 build-ubuntu:
@@ -248,10 +270,10 @@ build-gpu-only:
     - cd build
     - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CUDA_VECTOR=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
-    - ninja build-tests 
+    - ninja build-tests
     - ninja build-benchmarks
     - ninja build-examples
-    - ninja install 
+    - ninja install
   tags:
     - linux
     - elsa

@@ -92,6 +92,16 @@ currently use version 10.0.0, different versions might produce errors.
 We use `clang-tidy` with the enabled checks specified in [the configuration file](.clang-tidy). Note
 that currently all `readability-*` checks have to pass, otherwise the CI will fail. We encourage
 developers to check their code with `clang-tidy` and remove all warnings if applicable.
+ 
+#### CMake 
+
+We use [cmakelang](https://cmake-format.readthedocs.io/en/latest/index.html) to enforce
+certain style guide and reduce the changes of error in our CMake code, please check the guide to install it.
+
+Currently, only the `cmake-lint` is used, but sooner rather than later, we'll also start
+using `cmake-format` of the same package.
+
+Please check the link above on how to install the package.
 
 ## Code Coverage
 We use `lcov` with `gcov` for test coverage information. If you want to run this locally you have to
