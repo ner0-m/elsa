@@ -39,6 +39,7 @@ set(ELSA_SANITIZER
         "Compile with a sanitizer. Options are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak, 'Address;Undefined'"
         )
 
+set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures") 
 
 # ------------ general setup -----------
 # ------------
