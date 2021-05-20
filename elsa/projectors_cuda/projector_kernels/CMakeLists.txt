@@ -10,7 +10,7 @@ set_cuda_arch_type(${ELSA_CUDA_ARCH_TYPE})
 # use expt-relaxed-constexpr flag to suppress warnings caused by including the Eigen header
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --fmad=false --expt-relaxed-constexpr")
 
-if (ELSA_BUILD_WITH_MORE_WARNINGS)
+if(ELSA_MASTER_PROJECT)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wreorder -Xptxas=-warn-spills,-warn-lmem-usage")
 endif()
 

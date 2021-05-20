@@ -1,20 +1,10 @@
+include(CompilerWarnings) 
+ 
 # setup macro for component registration, so you can use find_package(elsa COMPONENT name) also sets all target names
 macro(REGISTER_MODULE name)
     set(ELSA_REGISTERED_COMPONENTS "${ELSA_REGISTERED_COMPONENTS};${name}" PARENT_SCOPE)
     set(ELSA_REGISTERED_TARGETS "${ELSA_REGISTERED_TARGETS};elsa_${name}" PARENT_SCOPE)
 endmacro()
-
-# Add warnings to a module
-function(add_warnings module)
-    if(NOT (module MATCHES "projector_kernels"))
-        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-            target_compile_options(elsa_${module} PUBLIC -Wall -Wextra -Wconversion -pedantic -Wfatal-errors)
-        endif()
-        if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-            target_compile_options(elsa_${module} PUBLIC /W3 /WX)
-        endif()
-    endif()
-endfunction()
 
 # Simple macro to add a module
 macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
@@ -43,14 +33,14 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
     # set -fPIC
     set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
+    
     target_include_directories(
         ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${elsa_module_name}>
                                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     )
 
-    if(${ELSA_MASTER_PROJECT} AND ${ELSA_BUILD_WITH_MORE_WARNINGS})
-        add_warnings(${elsa_module_name})
+    if(ELSA_MASTER_PROJECT)
+        set_target_warnings(${ELSA_MODULE_TARGET_NAME} LEVEL ${ELSA_WARNINGS_LEVEL}) 
     endif()
 
     # build the tests (if enabled)

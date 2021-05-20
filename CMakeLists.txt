@@ -27,13 +27,13 @@ option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
 option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (requires libclang-dev)" ON)
 option(ELSA_BINDINGS_IN_SINGLE_MODULE "Combine the bindings for all elsa modules in a single python module" OFF)
-option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when building (-Wall -Wextra)" ON)
 
 option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
 
 option(ELSA_BUILD_ML_DNNL "Try to build the elsa_ml module with Intel(R) Dnnl backend" ON)
 option(ELSA_BUILD_ML_CUDNN "Try to build the elsa_ml module with Nvidia(R) Cudnn backend" ON)
 
+set(ELSA_WARNING_LEVEL "base" CACHE STRING "Warning level with which elsa is build. Options are: base, all")
 set(ELSA_SANITIZER
         "" CACHE STRING
         "Compile with a sanitizer. Options are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak, 'Address;Undefined'"
