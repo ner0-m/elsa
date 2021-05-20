@@ -28,6 +28,17 @@ namespace elsa
          */
         // TODO what are the shearlet system inputs? infer here max of these values and span those
         //  index spaces (use different inputs here)
+        DiscreteShearletTransform(index_t width, index_t height);
+        // consider scale index j, the orientation index k, and the position index m.
+
+        /**
+         * @brief Constructor for a (regular) discrete shearlet transform.
+         *
+         * @param[in] descriptor DataDescriptor describing the domain and the range of the operator
+         * @param[in] scaleFactor the scalar factor to scale with
+         */
+        // TODO what are the shearlet system inputs? infer here max of these values and span those
+        //  index spaces (use different inputs here)
         DiscreteShearletTransform(index_t width, index_t height, index_t scales);
         // consider scale index j, the orientation index k, and the position index m.
 

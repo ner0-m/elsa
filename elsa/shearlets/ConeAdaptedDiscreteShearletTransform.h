@@ -2,7 +2,7 @@
 
 #include "DiscreteShearletTransform.h"
 
-// TODO development here will continue after DiscreteShearletTransform starts making sense
+// TODO extend from DiscreteShearletTransform?, do we gain anything from it? probably not
 namespace elsa
 {
     /**
@@ -14,10 +14,10 @@ namespace elsa
      *
      * References:
      * https://www.math.uh.edu/~dlabate/SHBookIntro.pdf
+     * https://www.math.uh.edu/~dlabate/Athens.pdf
      */
     template <typename data_t = real_t>
-    class ConeAdaptedDiscreteShearletTransform
-        : public DiscreteShearletTransform<data_t> // or : public LinearOperator<data_t>?
+    class ConeAdaptedDiscreteShearletTransform : public LinearOperator<data_t>
     {
     public:
         /**
@@ -28,10 +28,7 @@ namespace elsa
          */
         // TODO what are the shearlet system inputs? infer here max of these values and span those
         //  index spaces (use different inputs here)
-        // scale index j, the orientation index k, and the position index m.
-        ConeAdaptedDiscreteShearletTransform(std::vector<int> mPrime, int j, int k,
-                                             std::vector<int> m, int jTilde, int kTilde,
-                                             std::vector<int> mTilde);
+        ConeAdaptedDiscreteShearletTransform(index_t width, index_t height);
 
         /// default destructor
         ~ConeAdaptedDiscreteShearletTransform() override = default;
@@ -56,14 +53,71 @@ namespace elsa
         bool isEqual(const LinearOperator<data_t>& other) const override;
 
     private:
-        // 3 functions of cone-adapted wavelets
+        DataContainer<data_t> v(data_t x) const
+        {
+            if (x < 0) {
+                return 0;
+            } else if (0 <= x <= 1) {
+                return 35 * std::pow(x, 4) - 84 * std::pow(x, 5) + 70 * std::pow(x, 6)
+                       - 20 * std::pow(x, 7);
+            } else {
+                return 1;
+            }
+        }
 
-        DataContainer<data_t> phi(std::vector<int> mPrime); // m should have size 2
+        // TODO pi<real_t>, reconsider
+        DataContainer<data_t> b(data_t w) const
+        {
+            if (1 <= std::abs(w) <= 2) {
+                return std::sin(pi_t / 2 * v(std::abs(w) - 1));
+            } else if (2 < std::abs(w) <= 4) {
+                return std::cos(pi_t / 2 * v(1 / 2 * std::abs(w) - 1));
+            } else {
+                return 0;
+            }
+        }
 
-        DataContainer<data_t> psi(int j, int k, std::vector<int> m);
+        DataContainer<data_t> phi(data_t w) const
+        {
+            if (std::abs(w) <= 1 / 2) {
+                return 1;
+            } else if (1 / 2 < std::abs(w) < 1) {
+                return std::cos(pi_t / 2 * v(2 * std::abs(w) - 1));
+            } else {
+                return 0;
+            }
+        }
 
-        DataContainer<data_t> psiTilde(int jTilde, int kTilde, std::vector<int> mTilde);
+        DataContainer<data_t> phiHat(data_t w1, data_t w2) const
+        {
+            if (std::abs(w2) <= std::abs(w1)) {
+                return phi(w1);
+            } else {
+                return phi(w2);
+            }
+        }
 
-        // Scone = {(a,s,t): a ∈ (0,1], |s| ≤ 1+a^1/2, t ∈ R^2}.
+        DataContainer<data_t> psiHat1(data_t w) const
+        {
+            return std::sqrt(std::pow(b(2 * w), 2) + std::pow(b(w), 2));
+        }
+
+        DataContainer<data_t> psiHat2(data_t w) const
+        {
+            if (w <= 0) {
+                return std::sqrt(v(1 + w));
+            } else {
+                return std::sqrt(v(1 - w));
+            }
+        }
+
+        DataContainer<data_t> psiHat(data_t w1, data_t w2) const
+        {
+            if (w1 == 0) {
+                return 0;
+            } else {
+                return psiHat1(w1) * psiHat2(w2 / w1);
+            }
+        }
     };
 } // namespace elsa

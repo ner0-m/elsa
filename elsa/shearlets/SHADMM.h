@@ -82,7 +82,7 @@ namespace elsa
                     "SHADMM::solveImpl: regularization weights should match");
             }
 
-            data_t regWeight = g[0].getWeight();
+            DataContainer<data_t> w = g[0].getWeight();
 
             if (!dynamic_cast<WeightedL1Norm<data_t>*>(&g[0].getFunctional())
                 && !dynamic_cast<Indicator<data_t>*>(&g[1].getFunctional())) {
@@ -114,9 +114,10 @@ namespace elsa
             Logger::get("SHADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
                                         "iteration", "fL2NormSq", "zL2NormSq", "uL2NormSq",
                                         "rkL2Norm", "skL2Norm");
-
             for (index_t iter = 0; iter < iterations; ++iter) {
-                LinearResidual<data_t> fLinearResidual(A, c - B.apply(z) - u);
+                // TODO how is z updated? how is it tied to the projections? can you determine z by
+                //  its projections?
+                LinearResidual<data_t> fLinearResidual(A, c - B.apply(z) - u); // c is 0 in SHADMM
                 RegularizationTerm fRegTerm(_rho / 2, L2NormPow2<data_t>(fLinearResidual));
                 Problem<data_t> fUpdateProblem(dataTerm, fRegTerm, f);
 
@@ -140,15 +141,16 @@ namespace elsa
 
                 // here w is pulled from the WeightedL1Norm
                 P1z = shrink.apply(SH.apply(f) + P1u, _rho0 * w / _rho1);
-                P2z = max(f + P2u, 0); // similar to ReLU, implement this? is this present already?
-                // z is concatenating P1z and P2z?
-                z = concatenate(P1z, P2z); // ?
+                // TODO element-wise max?
+                P2z = max(f + P2u, 0); // 0 is the zero vector, is this is this present already?
+                // z is concatenating P1z and P2z? probably not, what is it then?
+                // z = concatenate(P1z, P2z); // ?
                 // consider using BlockLinearOperator for the final ADMM
 
                 P1u = P1u + SH.apply(f) - P1z;
                 P2u = P2u + f - P2z;
-                // u is concatenating P1u and P2u?
-                u = concatenate(P1u, P2u); // ?
+                // u is concatenating P1u and P2u? probably not, what is it then?
+                // u = concatenate(P1u, P2u); // ?
                 // consider using BlockLinearOperator for the final ADMM
 
                 // TODO VERY SHADMM specific code

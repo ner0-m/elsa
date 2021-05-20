@@ -30,6 +30,33 @@ namespace elsa
         /// _SH shape is J x n^2 x n^2
     }
 
+    /// note that we are only dealing with square nxn images (for now at least)
+    // TODO the inputs here should be enough to define the entire system
+    template <typename data_t>
+    DiscreteShearletTransform<data_t>::DiscreteShearletTransform(index_t width, index_t height)
+        // dummy values for the LinearOperator constructor
+        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
+                                 VolumeDescriptor{{width, height}}),
+          _width{width},
+          _height{height},
+          _numberOfScales{4} // TODO calculate here, 4 is a dummy value
+    {
+        // sanity check the parameters here
+        //        if (scales something) {
+        //            throw InvalidArgumentError(
+        //                "DiscreteShearletTransform: the allowed number of scales is ... ");
+        //        }
+
+        // TODO generate here the system?
+        //  this goes against the docs in LinearOperator: "Hence any pre-computations/caching should
+        //  only be done in a lazy manner (e.g. during the first call of apply), and not in the
+        //  constructor."
+
+        /// DataContainer<data_t> _SH; //declare in the header file?
+        /// _SH = // fancy magic goes here
+        /// _SH shape is J x n^2 x n^2
+    }
+
     template <typename data_t>
     void DiscreteShearletTransform<data_t>::applyImpl(const DataContainer<data_t>& f,
                                                       DataContainer<data_t>& SHf) const
