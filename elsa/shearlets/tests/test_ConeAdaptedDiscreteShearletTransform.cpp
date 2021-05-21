@@ -10,9 +10,9 @@
 
 //#include <catch2/catch.hpp>
 //
-//using namespace elsa;
+// using namespace elsa;
 //
-//SCENARIO("Listing what to test in ConeAdaptedDiscreteShearletTransform")
+// SCENARIO("Listing what to test in ConeAdaptedDiscreteShearletTransform")
 //{
 //    GIVEN("nothing")
 //    {
