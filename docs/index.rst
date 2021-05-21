@@ -22,6 +22,7 @@
    modules/operators
    modules/functionals
    modules/problems
+   modules/shearlets
    modules/solvers
    modules/projectors
    modules/projectors_cuda

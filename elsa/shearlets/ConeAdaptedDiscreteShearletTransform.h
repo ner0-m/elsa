@@ -53,7 +53,7 @@ namespace elsa
         bool isEqual(const LinearOperator<data_t>& other) const override;
 
     private:
-        DataContainer<data_t> v(data_t x) const
+        real_t v(data_t x) const
         {
             if (x < 0) {
                 return 0;
@@ -66,7 +66,7 @@ namespace elsa
         }
 
         // TODO pi<real_t>, reconsider
-        DataContainer<data_t> b(data_t w) const
+        real_t b(data_t w) const
         {
             if (1 <= std::abs(w) <= 2) {
                 return std::sin(pi_t / 2 * v(std::abs(w) - 1));
@@ -77,7 +77,7 @@ namespace elsa
             }
         }
 
-        DataContainer<data_t> phi(data_t w) const
+        real_t phi(data_t w) const
         {
             if (std::abs(w) <= 1 / 2) {
                 return 1;
@@ -88,7 +88,7 @@ namespace elsa
             }
         }
 
-        DataContainer<data_t> phiHat(data_t w1, data_t w2) const
+        real_t phiHat(data_t w1, data_t w2) const
         {
             if (std::abs(w2) <= std::abs(w1)) {
                 return phi(w1);
@@ -97,12 +97,12 @@ namespace elsa
             }
         }
 
-        DataContainer<data_t> psiHat1(data_t w) const
+        real_t psiHat1(data_t w) const
         {
             return std::sqrt(std::pow(b(2 * w), 2) + std::pow(b(w), 2));
         }
 
-        DataContainer<data_t> psiHat2(data_t w) const
+        real_t psiHat2(data_t w) const
         {
             if (w <= 0) {
                 return std::sqrt(v(1 + w));
@@ -111,7 +111,7 @@ namespace elsa
             }
         }
 
-        DataContainer<data_t> psiHat(data_t w1, data_t w2) const
+        real_t psiHat(data_t w1, data_t w2) const
         {
             if (w1 == 0) {
                 return 0;
