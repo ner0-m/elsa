@@ -20,7 +20,8 @@ namespace elsa
         }
 
         void runHybrid(LinearOperator<real_t> R, DataContainer<real_t> y,
-                       ConeAdaptedDiscreteShearletTransform<real_t> shearletTransform)
+                       ConeAdaptedDiscreteShearletTransform<real_t> shearletTransform,
+                       DataContainer<real_t> weights)
         {
             // TODO what exactly is R (radon operator) and y (measurement noise) here
 
@@ -28,8 +29,7 @@ namespace elsa
             ///  here ADMM can be used (what else can be used here?)
             /// building now the splitting problem of the above
             WLSProblem<real_t> wlsProb(R, y);
-            // TODO how do I write, ||P1z||_{1,w}?
-            WeightedL1Norm<real_t> wl1Norm(eta.getDataDescriptor()); // or maybe some another DD
+            WeightedL1Norm<real_t> wl1Norm(LinearResidual<real_t>{shearletTransform}, weights);
             RegularizationTerm<real_t> wl1RegTerm(1 / 2, wl1Norm);
             // indicator if P2z is >=0, P2z ∈ R ^ n^2
             Indicator<real_t> indicator(R.getRangeDescriptor());
