@@ -3,25 +3,18 @@
 
 namespace elsa
 {
-    // TODO calculate eta here, 61 is a dummy value
     template <typename data_t>
     ConeAdaptedDiscreteShearletTransform<data_t>::ConeAdaptedDiscreteShearletTransform(
         index_t width, index_t height)
-        : LinearOperator<data_t>(
-            VolumeDescriptor{{width, height}},
-            VolumeDescriptor{
-                {static_cast<index_t>(std::pow(2, (static_cast<index_t>(std::floor(
-                                                       1 / 2 * std::log2(std::max(width, height))))
-                                                   + 2))
-                                      - 3),
-                 width, height}})
+        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
+                                 VolumeDescriptor{{eta(width, height), width, height}})
     {
-        // TODO currently only solving for square images with odd sizes?
-        if (width != height || width % 2 == 0 || height % 2 == 0) {
+        // TODO currently only solving for images with odd sizes?
+        if (width % 2 == 0 || height % 2 == 0) {
             throw InvalidArgumentError("ConeAdaptedDiscreteShearletTransform: currently only "
-                                       "supporting square images with odd sizes");
+                                       "supporting images with odd sizes");
         }
-        // TODO precompute the spectra here?
+        // NB spectra is precomputed in applyImpl/applyAdjointImpl in the first call
     }
 
     template <typename data_t>
@@ -34,17 +27,18 @@ namespace elsa
         //
         //        // TODO SHf shape here should be zeros([eta, width, height], dtype=complex)
         //
-        //        // TODO is data_t a good choice here? what about index_t? what about
-        //        std::complex<real_t>
+        //        // TODO is data_t a good choice here? what about index_t?
+        //        //  what about std::complex<real_t>
         //
         //        auto jZero = static_cast<index_t>(std::floor(1 / 2 * std::log2(std::max(width,
-        //        height)))); auto eta = static_cast<index_t>(std::pow(2, (jZero + 2)) - 3);
+        //        height)))); auto eta = static_cast<index_t>(std::pow(2, (jZero + 2)) - 3); //
+        //        eta(,)
         //
         //        DataContainer<std::complex<real_t>> fftImg = fft.fft2(f);
         //
         //        index_t i = 0;
         //
-        //        // TODO do DataContainers support negative indexing?
+        //        // TODO if precomputedSpectra, skip computing it, else compute and store it
         //
         //        for (index_t j = 0; j < jZero; j++) {
         //            for (auto k = static_cast<index_t>(std::pow(-2, j));
@@ -137,6 +131,8 @@ namespace elsa
         //
         //        // NB sampling from is [-255, 255] x [-255, 255]
         //
+        //        // TODO if precomputedSpectra, skip computing it, else compute and store it
+        //
         //        index_t i = 0;
         //        // [0, ..., j0 - 1]
         //        for (index_t j = 0; j < jZero; j++) {
@@ -211,7 +207,8 @@ namespace elsa
         //        // TODO this is the reconstruction, is it?
         //        f = fft.ifft2(fHat);
         //        printf("Finished inverse shearlet transform in"); // SH^T == SH^-1?
-        //        return fHat;
+        //
+        //        //        return fHat; meaning SHty = fHat;
     }
 
     template <typename data_t>

@@ -119,5 +119,14 @@ namespace elsa
                 return psiHat1(w1) * psiHat2(w2 / w1);
             }
         }
+
+        index_t eta(index_t width, index_t height)
+        {
+            return static_cast<index_t>(
+                std::pow(
+                    2, (static_cast<index_t>(std::floor(1 / 2 * std::log2(std::max(width, height))))
+                        + 2))
+                - 3);
+        }
     };
 } // namespace elsa
