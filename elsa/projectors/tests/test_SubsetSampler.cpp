@@ -20,6 +20,95 @@
 using namespace elsa;
 using namespace doctest;
 
+SCENARIO("Testing the standalone subset sampling strategies")
+{
+    Logger::setLevel(Logger::LogLevel::WARN);
+
+    GIVEN("A circular trajectory with 32 angles")
+    {
+        IndexVector_t size(2);
+        size << 128, 128;
+        VolumeDescriptor volumeDescriptor{size};
+        index_t numAngles{32}, arc{360};
+        auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
+            numAngles, volumeDescriptor, arc, static_cast<real_t>(size(0)) * 100.0f,
+            static_cast<real_t>(size(0)));
+
+        WHEN("performing round robin sampling into 4 subsets")
+        {
+            const auto nSubsets = 4;
+            const std::vector<std::vector<index_t>> mapping =
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::sampleRoundRobin(
+                    static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
+            THEN("The mapping is correct with every subset having 8 elements")
+            {
+                for (std::size_t i = 0; i < static_cast<std::size_t>(nSubsets); ++i) {
+                    REQUIRE_EQ(mapping[i].size(), 8);
+                    for (std::size_t j = 0; j < mapping[i].size(); j++) {
+                        REQUIRE_EQ(mapping[i][j], j * nSubsets + i);
+                    }
+                }
+            }
+        }
+        WHEN("performing equi rotation sampling into 4 subsets")
+        {
+            const auto nSubsets = 4;
+            const std::vector<std::vector<index_t>> mapping =
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::sampleEquiRotation(
+                    static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
+            THEN("The mapping is correct with every subset having 8 elements")
+            {
+                REQUIRE_EQ(mapping[0], std::vector<index_t>{0, 3, 7, 11, 15, 19, 23, 27});
+                REQUIRE_EQ(mapping[1], std::vector<index_t>{31, 4, 8, 12, 16, 20, 24, 28});
+                REQUIRE_EQ(mapping[2], std::vector<index_t>{1, 5, 9, 13, 17, 21, 25, 29});
+                REQUIRE_EQ(mapping[3], std::vector<index_t>{2, 6, 10, 14, 18, 22, 26, 30});
+            }
+        }
+    }
+
+    GIVEN("A spherical trajectory with 32 angles and 4 circles")
+    {
+        IndexVector_t size(3);
+        size << 128, 128, 128;
+        VolumeDescriptor volumeDescriptor{size};
+        index_t numPoses{32}, numCircles{4};
+        auto sinoDescriptor = SphereTrajectoryGenerator::createTrajectory(
+            numPoses, volumeDescriptor, numCircles,
+            geometry::SourceToCenterOfRotation(static_cast<real_t>(size(0)) * 100.0f),
+            geometry::CenterOfRotationToDetector(static_cast<real_t>(size(0))));
+
+        WHEN("performing round robin sampling into 4 subsets")
+        {
+            const auto nSubsets = 4;
+            const auto mapping = SubsetSampler<PlanarDetectorDescriptor, real_t>::sampleRoundRobin(
+                static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
+            THEN("The mapping is correct with every subset having 8 elements")
+            {
+                for (std::size_t i = 0; i < static_cast<std::size_t>(nSubsets); ++i) {
+                    REQUIRE_EQ(mapping[i].size(), 8);
+                    for (std::size_t j = 0; j < mapping[i].size(); j++) {
+                        REQUIRE_EQ(mapping[i][j], j * nSubsets + i);
+                    }
+                }
+            }
+        }
+        WHEN("performing equi rotation sampling into 4 subsets")
+        {
+            const auto nSubsets = 4;
+            const auto mapping =
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::sampleEquiRotation(
+                    static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
+            THEN("The mapping is correct with every subset having 8 elements")
+            {
+                REQUIRE_EQ(mapping[0], std::vector<index_t>{0, 22, 1, 24, 26, 2, 29, 11});
+                REQUIRE_EQ(mapping[1], std::vector<index_t>{4, 13, 7, 23, 27, 9, 30, 10});
+                REQUIRE_EQ(mapping[2], std::vector<index_t>{12, 5, 15, 14, 17, 18, 31, 3});
+                REQUIRE_EQ(mapping[3], std::vector<index_t>{21, 6, 25, 16, 8, 28, 20, 19});
+            }
+        }
+    }
+}
+
 SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and circular trajectory")
 {
     Logger::setLevel(Logger::LogLevel::WARN);
@@ -31,7 +120,7 @@ SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and circular traje
 
     index_t numAngles{180}, arc{360};
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-        numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100,
+        numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
         static_cast<real_t>(size(0)));
 
     SiddonsMethod projector(static_cast<const VolumeDescriptor&>(volumeDescriptor),
@@ -137,8 +226,9 @@ SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and spherical traj
 
     index_t numPoses{180}, numCircles{5};
     auto sinoDescriptor = SphereTrajectoryGenerator::createTrajectory(
-        numPoses, phantom.getDataDescriptor(), numCircles, static_cast<real_t>(size(0)) * 100,
-        static_cast<real_t>(size(0)));
+        numPoses, phantom.getDataDescriptor(), numCircles,
+        geometry::SourceToCenterOfRotation(static_cast<real_t>(size(0)) * 100.0f),
+        geometry::CenterOfRotationToDetector(static_cast<real_t>(size(0))));
 
     SiddonsMethod projector(static_cast<const VolumeDescriptor&>(volumeDescriptor),
                             *sinoDescriptor);

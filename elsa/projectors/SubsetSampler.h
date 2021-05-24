@@ -18,7 +18,6 @@ namespace elsa
      * @tparam detectorDescriptor_t
      * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
-     *
      */
     template <typename detectorDescriptor_t, typename data_t = real_t>
     class SubsetSampler : public Cloneable<SubsetSampler<detectorDescriptor_t, data_t>>
@@ -78,6 +77,24 @@ namespace elsa
 
             return projectors;
         }
+
+        /**
+         * @brief Helper method implementing round robin sampling
+         *
+         * @return mapping of data indices to subsets
+         */
+        static std::vector<std::vector<index_t>>
+            sampleRoundRobin(const detectorDescriptor_t& detectorDescriptor, index_t nSubsets);
+
+        /**
+         * @brief Helper method implementing rotational distance based sampling. Iteratively loop
+         * through all data points and assign the closest on based on the angle of rotation to the
+         * next subset.
+         *
+         * @return mapping of data indices to subsets
+         */
+        static std::vector<std::vector<index_t>>
+            sampleEquiRotation(const detectorDescriptor_t& detectorDescriptor, index_t nSubsets);
 
     protected:
         /// default copy constructor for cloning

@@ -41,7 +41,8 @@ namespace elsa
          */
         static std::unique_ptr<DetectorDescriptor>
             createTrajectory(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
-                             index_t numberOfCircles, real_t sourceToCenter,
-                             real_t centerToDetector);
+                             index_t numberOfCircles,
+                             geometry::SourceToCenterOfRotation sourceToCenter,
+                             geometry::CenterOfRotationToDetector centerToDetector);
     };
 } // namespace elsa

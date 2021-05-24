@@ -217,7 +217,7 @@ TEST_CASE("FGM: Solving a simple phantom reconstruction")
 
         index_t numAngles{90}, arc{360};
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0) * 100),
+            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
 
         SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),

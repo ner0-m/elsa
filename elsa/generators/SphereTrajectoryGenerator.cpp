@@ -6,7 +6,8 @@ namespace elsa
 {
     std::unique_ptr<DetectorDescriptor> SphereTrajectoryGenerator::createTrajectory(
         index_t numberOfPoses, const DataDescriptor& volumeDescriptor, index_t numberOfCircles,
-        real_t sourceToCenter, real_t centerToDetector)
+        geometry::SourceToCenterOfRotation sourceToCenter,
+        geometry::CenterOfRotationToDetector centerToDetector)
     {
         // pull in geometry namespace, to reduce cluttering
         using namespace geometry;
@@ -83,8 +84,7 @@ namespace elsa
                 auto gamma = M_PI * 2.0 * static_cast<double>(poseIndex)
                              / static_cast<double>(posesInCircle);
 
-                geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
-                                          CenterOfRotationToDetector{centerToDetector},
+                geometryList.emplace_back(sourceToCenter, centerToDetector,
                                           VolumeData3D{volumeDescriptor.getSpacingPerDimension(),
                                                        volumeDescriptor.getLocationOfOrigin()},
                                           SinogramData3D{Size3D{coeffs}, Spacing3D{spacing}},

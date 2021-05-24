@@ -220,7 +220,7 @@ TEST_CASE("OGM: Solving a simple phantom reconstruction")
 
         index_t numAngles{90}, arc{360};
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0) * 100),
+            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
 
         SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
@@ -250,7 +250,7 @@ TEST_CASE("OGM: Solving a simple phantom reconstruction")
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.131));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.131f));
                 }
             }
         }

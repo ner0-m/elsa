@@ -35,8 +35,8 @@ SCENARIO("Create a Spherical Trajectory")
         WHEN("We create a spherical trajectory with 3 circular trajectories and 256 poses for this "
              "scenario")
         {
-            auto diffCenterSource = static_cast<real_t>(s * 100);
-            auto diffCenterDetector = static_cast<real_t>(s);
+            geometry::SourceToCenterOfRotation diffCenterSource(s * 100);
+            geometry::CenterOfRotationToDetector diffCenterDetector(s);
 
             auto sdesc = SphereTrajectoryGenerator::createTrajectory(
                 numberOfPoses, desc, 5, diffCenterSource, diffCenterDetector);
