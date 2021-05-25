@@ -16,6 +16,12 @@ target_link_libraries(example2d_admm elsa::all)
 target_compile_features(example2d_admm PUBLIC cxx_std_17)
 add_dependencies(build-examples example2d_admm)
 
+# build the mnist learning example program
+add_executable(mnist_learning_example mnist_learning_example.cpp)
+target_link_libraries(mnist_learning_example elsa::all)
+target_compile_features(mnist_learning_example PUBLIC cxx_std_17)
+add_dependencies(build-examples mnist_learning_example)
+
 # add_executable(exampleMl exampleMl.cpp)
 # target_link_libraries(exampleMl elsa::all)
 # target_compile_features(exampleMl PUBLIC cxx_std_17)
