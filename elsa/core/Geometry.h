@@ -109,6 +109,9 @@ namespace elsa
                  real_t centerOfRotationOffsetY = static_cast<real_t>(0.0),
                  real_t centerOfRotationOffsetZ = static_cast<real_t>(0.0));
 
+        Geometry(geometry::VolumeData3D&& volData, geometry::SinogramData3D&& sinoData,
+                 const RealMatrix_t& R, const RealMatrix_t& t, const RealMatrix_t& K);
+
         /**
          * @brief Return the projection matrix
          *

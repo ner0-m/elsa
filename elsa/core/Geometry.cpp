@@ -147,6 +147,24 @@ namespace elsa
         buildMatrices();
     }
 
+    Geometry::Geometry(geometry::VolumeData3D&& volData, geometry::SinogramData3D&& sinoData,
+                       const RealMatrix_t& R, const RealMatrix_t& t, const RealMatrix_t& K)
+        : _objectDimension{3},
+          _P{RealMatrix_t::Identity(3, 3 + 1)},
+          _Pinv{RealMatrix_t::Identity(3 + 1, 3)},
+          _K{RealMatrix_t::Identity(3, 3)},
+          _R{RealMatrix_t::Identity(3, 3)},
+          _t{RealVector_t::Zero(3)},
+          _S{RealMatrix_t::Identity(3 + 1, 3 + 1)},
+          _C{RealVector_t::Zero(3)}
+    {
+        _R = R;
+        _t = t;
+        _K = K;
+
+        buildMatrices();
+    }
+
     const RealMatrix_t& Geometry::getProjectionMatrix() const { return _P; }
 
     const RealMatrix_t& Geometry::getInverseProjectionMatrix() const { return _Pinv; }
