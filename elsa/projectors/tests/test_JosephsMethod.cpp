@@ -828,6 +828,61 @@ SCENARIO("Axis-aligned rays are present")
         }
     }
 
+    GIVEN("A non-quadratic 2D volume")
+    {
+        IndexVector_t volumeDims(2), sinoDims(2);
+        volumeDims << 5, 2;
+        const index_t detectorSize = 1;
+        const index_t numImgs = 1;
+        sinoDims << detectorSize, numImgs;
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        DataContainer volume(volumeDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * 5};
+        auto ctr = CenterOfRotationToDetector{5};
+        auto volData = VolumeData2D{Size2D{volumeDims}};
+        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+
+        std::vector<Geometry> geom;
+
+        WHEN("An axis-aligned ray enters (and leaves) through the shorter volume dimension")
+        {
+            geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
+                              PrincipalPointOffset{0},
+                              RotationOffset2D{static_cast<real_t>(1.6), 0});
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor);
+
+            THEN("The results of forward projecting are correct")
+            {
+                volume = 0;
+                volume(4, 0) = 1;
+                volume(4, 1) = 1;
+
+                op.apply(volume, sino);
+                REQUIRE(sino[0] == Approx(1.2));
+
+                AND_THEN("The backprojection yields the correct result")
+                {
+                    sino[0] = 1;
+
+                    volume = 0;
+                    DataContainer bpExpected = volume;
+                    bpExpected(4, 0) = static_cast<real_t>(0.6);
+                    bpExpected(4, 1) = static_cast<real_t>(0.6);
+                    bpExpected(3, 0) = static_cast<real_t>(0.4);
+                    bpExpected(3, 1) = static_cast<real_t>(0.4);
+
+                    op.applyAdjoint(sino, volume);
+                    REQUIRE(isApprox(volume, bpExpected));
+                }
+            }
+        }
+    }
+
     GIVEN("A 3D setting with a single ray")
     {
         IndexVector_t volumeDims(3), sinoDims(3);
@@ -1156,6 +1211,61 @@ SCENARIO("Axis-aligned rays are present")
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, cmp)));
+                }
+            }
+        }
+    }
+
+    GIVEN("A non-cubic 3D volume")
+    {
+        IndexVector_t volumeDims(3), sinoDims(3);
+        volumeDims << 5, 1, 2;
+        const index_t detectorSize = 1;
+        const index_t numImgs = 1;
+        sinoDims << detectorSize, detectorSize, numImgs;
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        DataContainer volume(volumeDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * 5};
+        auto ctr = CenterOfRotationToDetector{5};
+        auto volData = VolumeData3D{Size3D{volumeDims}};
+        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+
+        std::vector<Geometry> geom;
+
+        WHEN("An axis-aligned ray enters (and leaves) through the shorter volume dimension")
+        {
+            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                              RotationAngles3D{Gamma{0}}, PrincipalPointOffset2D{0, 0},
+                              RotationOffset3D{static_cast<real_t>(1.6), 0, 0});
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor);
+
+            THEN("The results of forward projecting are correct")
+            {
+                volume = 0;
+                volume(4, 0, 0) = 1;
+                volume(4, 0, 1) = 1;
+
+                op.apply(volume, sino);
+                REQUIRE(sino[0] == Approx(1.2));
+
+                AND_THEN("The backprojection yields the correct result")
+                {
+                    sino[0] = 1;
+
+                    volume = 0;
+                    DataContainer bpExpected = volume;
+                    bpExpected(4, 0, 0) = static_cast<real_t>(0.6);
+                    bpExpected(4, 0, 1) = static_cast<real_t>(0.6);
+                    bpExpected(3, 0, 0) = static_cast<real_t>(0.4);
+                    bpExpected(3, 0, 1) = static_cast<real_t>(0.4);
+
+                    op.applyAdjoint(sino, volume);
+                    REQUIRE(isApprox(volume, bpExpected));
                 }
             }
         }
@@ -1610,6 +1720,56 @@ SCENARIO("Projection under an angle")
         }
     }
 
+    GIVEN("A non-quadratic 2D volume")
+    {
+        IndexVector_t volumeDims(2), sinoDims(2);
+        volumeDims << 4, 1;
+        const index_t detectorSize = 1;
+        const index_t numImgs = 1;
+        sinoDims << detectorSize, numImgs;
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        DataContainer volume(volumeDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * 5};
+        auto ctr = CenterOfRotationToDetector{5};
+        auto volData = VolumeData2D{Size2D{volumeDims}};
+        auto sinoData = SinogramData2D{Size2D{sinoDims}};
+
+        std::vector<Geometry> geom;
+
+        WHEN("An axis-aligned ray enters (and leaves) through the shorter volume dimension")
+        {
+            geom.emplace_back(stc, ctr, Radian{pi_t / 6}, std::move(volData), std::move(sinoData));
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor);
+
+            THEN("The results of forward projecting are correct")
+            {
+                volume = 0;
+                volume(1, 0) = 1;
+
+                op.apply(volume, sino);
+                REQUIRE(sino[0] == Approx(std::sqrt(static_cast<real_t>(1) / 3)));
+
+                AND_THEN("The backprojection yields the correct result")
+                {
+                    sino[0] = 1;
+
+                    volume = 0;
+                    DataContainer bpExpected = volume;
+                    bpExpected(1, 0) = std::sqrt(static_cast<real_t>(1) / 3);
+                    bpExpected(2, 0) = std::sqrt(static_cast<real_t>(1) / 3);
+
+                    op.applyAdjoint(sino, volume);
+                    REQUIRE(isApprox(volume, bpExpected));
+                }
+            }
+        }
+    }
+
     GIVEN("A 3D setting with a single ray")
     {
         IndexVector_t volumeDims(3), sinoDims(3);
@@ -1814,6 +1974,57 @@ SCENARIO("Projection under an angle")
 
                     op.applyAdjoint(sino, volume);
                     REQUIRE(isApprox(volume, DataContainer(volumeDescriptor, backProj), epsilon));
+                }
+            }
+        }
+    }
+
+    GIVEN("A non-cubic 3D volume")
+    {
+        IndexVector_t volumeDims(3), sinoDims(3);
+        volumeDims << 4, 1, 1;
+        const index_t detectorSize = 1;
+        const index_t numImgs = 1;
+        sinoDims << detectorSize, detectorSize, numImgs;
+        VolumeDescriptor volumeDescriptor(volumeDims);
+        DataContainer volume(volumeDescriptor);
+
+        auto stc = SourceToCenterOfRotation{20 * 5};
+        auto ctr = CenterOfRotationToDetector{5};
+        auto volData = VolumeData3D{Size3D{volumeDims}};
+        auto sinoData = SinogramData3D{Size3D{sinoDims}};
+
+        std::vector<Geometry> geom;
+
+        WHEN("An axis-aligned ray enters (and leaves) through the shorter volume dimension")
+        {
+            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                              RotationAngles3D{Gamma{pi_t / 6}});
+
+            PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
+            DataContainer sino(sinoDescriptor);
+
+            JosephsMethod op(volumeDescriptor, sinoDescriptor);
+
+            THEN("The results of forward projecting are correct")
+            {
+                volume = 0;
+                volume(1, 0, 0) = 1;
+
+                op.apply(volume, sino);
+                REQUIRE(sino[0] == Approx(std::sqrt(static_cast<real_t>(1) / 3)));
+
+                AND_THEN("The backprojection yields the correct result")
+                {
+                    sino[0] = 1;
+
+                    volume = 0;
+                    DataContainer bpExpected = volume;
+                    bpExpected(1, 0, 0) = std::sqrt(static_cast<real_t>(1) / 3);
+                    bpExpected(2, 0, 0) = std::sqrt(static_cast<real_t>(1) / 3);
+
+                    op.applyAdjoint(sino, volume);
+                    REQUIRE(isApprox(volume, bpExpected, epsilon));
                 }
             }
         }

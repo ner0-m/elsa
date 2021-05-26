@@ -19,7 +19,9 @@ namespace elsa
         selectClosestVoxel(_entryPoint);
 
         // exit direction stored in _exitDirection
-        (_exitPoint - (_aabb._max - _aabb._min) / 2).cwiseAbs().maxCoeff(&_exitDirection);
+        (_exitPoint - (_exitPoint.array().floor() + static_cast<real_t>(0.5)).matrix())
+            .cwiseAbs()
+            .maxCoeff(&_exitDirection);
 
         moveToFirstSamplingPoint(r.direction(), intersectionLength);
 
@@ -53,9 +55,9 @@ namespace elsa
         }
         switch (_stage) {
             case FIRST:
+                _nextStep.cwiseAbs().maxCoeff(&_ignoreDirection);
                 if (_isInAABB) {
                     // now ignore main direction
-                    _nextStep.cwiseAbs().maxCoeff(&_ignoreDirection);
                     _nextStep /= std::abs(_nextStep(_ignoreDirection));
                     _fractionals(_ignoreDirection) = 0;
                     _intersectionLength = _nextStep.norm();
@@ -106,13 +108,6 @@ namespace elsa
         // determine main direction
         rd.cwiseAbs().maxCoeff(&_ignoreDirection);
 
-        // find distance to next plane orthogonal to main direction
-        auto nextBoundary = static_cast<int>(_currentPos(_ignoreDirection));
-        if (_stepDirection(_ignoreDirection) > 0)
-            nextBoundary += 1;
-        real_t distToBoundary = (static_cast<real_t>(nextBoundary) - _entryPoint[_ignoreDirection])
-                                / rd[_ignoreDirection];
-
         // intialize _nextStep as the step for interior pixels
         _nextStep(_ignoreDirection) = _stepDirection(_ignoreDirection);
         for (int i = 0; i < _aabb._dim; ++i) {
@@ -122,20 +117,32 @@ namespace elsa
             }
         }
 
-        // determine entry direction (the entry coordinate furthest from the center of the volume)
-        (_entryPoint - (_aabb._max - _aabb._min) / 2).cwiseAbs().maxCoeff(&_ignoreDirection);
-
         RealVector_t currentPosition = _entryPoint;
         // move to first sampling point
-        if (intersectionLength < distToBoundary) {
+        if (std::abs(_entryPoint[_ignoreDirection] - _exitPoint[_ignoreDirection])
+            <= static_cast<real_t>(1.)) {
             _stage = LAST;
             // use midpoint of intersection as the interpolation value
             currentPosition += rd * intersectionLength / 2;
             _intersectionLength = intersectionLength;
         } else {
+            // find distance to next plane orthogonal to main direction
+            real_t nextBoundary = std::trunc(_currentPos(_ignoreDirection));
+            if (_stepDirection(_ignoreDirection) > 0)
+                nextBoundary += static_cast<real_t>(1.);
+
+            real_t distToBoundary =
+                (nextBoundary - _entryPoint[_ignoreDirection]) / rd[_ignoreDirection];
+
             currentPosition += rd * distToBoundary / 2;
             _nextStep = _nextStep / 2 + _nextStep * (distToBoundary / (2 * _nextStep.norm()));
             _intersectionLength = distToBoundary;
+
+            // determine entry direction (the entry coordinate furthest from the center of the
+            // volume)
+            (_entryPoint - (_entryPoint.array().floor() + static_cast<real_t>(0.5)).matrix())
+                .cwiseAbs()
+                .maxCoeff(&_ignoreDirection);
         }
         selectClosestVoxel(currentPosition);
 
