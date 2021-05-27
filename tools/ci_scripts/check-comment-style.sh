@@ -33,6 +33,7 @@ if [[ $(printf "%s" "$grepoutput" | wc -l) -gt 0 ]]; then
     echo "$grepoutput"
     echo ""
     echo "Please check the above, if there are any doxygen tags you can replace"
+    exit 1 
 else
     echo -e "\e[32mEverything is perfect!\e[0m"
 fi
