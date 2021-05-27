@@ -426,7 +426,7 @@ asan-ubsan:
   script:
     - mkdir -p build
     - cd build
-    - cmake -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
+    - CXX=gcc-10 cmake -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
     - ninja tests
   tags:
     - linux
