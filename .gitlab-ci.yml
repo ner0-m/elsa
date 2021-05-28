@@ -18,6 +18,7 @@ variables:
   CUDA_IMAGE: "elsa/cuda:10.2"
   UBUNTU_IMAGE: "elsa/ubuntu:20.04"
   GPU_ONLY_IMAGE: "elsa/cuda-clang:10.0"
+  SANITIZER_IMAGE: "elsa/gcc:10"
   COVERAGE_IMAGE: "elsa/coverage:10.2"
 
 ### Cache setup ###
@@ -414,7 +415,7 @@ cuda-memcheck:
 asan-ubsan:
   <<: *run_on_merge_requests
   stage: sanitizer
-  image: $CUDA_IMAGE
+  image: $SANITIZER_IMAGE
   dependencies: []
   script:
     - mkdir -p build
