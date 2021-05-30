@@ -1,18 +1,18 @@
 # Find Nvidia's Cudnn library
 #
 # The following variables are set if Cudnn is found.
-#   Cudnn_FOUND        - True
-#   Cudnn_INCLUDE_DIR  - The path to cudnn.h
-#   Cudnn_LIBRARY      - The path to the cudnn library
+# 
+#   * Cudnn_FOUND        - True
+#   * Cudnn_INCLUDE_DIR  - The path to cudnn.h
+#   * Cudnn_LIBRARY      - The path to the cudnn library
 #
 # This module reads hints about search locations from the following environment
 # variables:
 #
-# Cudnn_ROOT Cudnn_ROOT_DIR
-#
-# as well as in the following subdirectories
-#
-# include thirdparty ThirdParty external
+# * Cudnn_ROOT 
+# * Cudnn_ROOT 
+# * CUDA_ROOT
+# * CUDA_TOOLKIT_ROOT_DIR
 #
 # If
 #   Cudnn_INCLUDE_DIR
@@ -22,30 +22,34 @@
 
 include(FindPackageHandleStandardArgs)
 
+set(CUDNN_HINTS
+  ${CUDA_ROOT}
+  $ENV{Cudnn_ROOT}
+  $ENV{Cudnn_ROOT_DIR}
+  $ENV{CUDA_ROOT}
+  $ENV{CUDA_TOOLKIT_ROOT_DIR}
+)
+set(CUDNN_PATHS
+  /usr
+  /usr/local
+  /usr/local/cuda
+  /opt/cuda
+)
+
 macro(_cudnn_find_lib)
   find_library(Cudnn_LIB cudnn
-               HINTS ENV
-                     Cudnn_ROOT
-                     ENV
-                     Cudnn_ROOT_DIR
-                     include
-                     thirdparty
-                     ThirdParty
-                     external
+               HINTS ${CUDNN_HINTS}
+               PATH_SUFFIXES include inc include/x86_64 include/x64
+               PATHS ${CUDNN_PATHS}
                DOC "Cudnn library files")
 endmacro(_cudnn_find_lib)
 
 macro(_cudnn_find_include)
   find_path(Cudnn_INCLUDE_DIR
             NAMES cudnn.h
-            HINTS ENV
-                  Cudnn_ROOT
-                  ENV
-                  Cudnn_ROOT_DIR
-                  include
-                  thirdparty
-                  ThirdParty
-                  external
+            HINTS ${CUDNN_HINTS}
+            PATH_SUFFIXES include inc include/x86_64 include/x64
+            PATHS ${CUDNN_PATHS}
             DOC "Cudnn header files")
 endmacro(_cudnn_find_include)
 
