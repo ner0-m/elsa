@@ -51,6 +51,18 @@ You can build and run the elsa unit tests by running (in the build folder):
 make tests
 ```
 
+We also provide a `CMakePresets.json` to support [CMake's presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html).
+You can use them the following way from the root of the repository:
+
+```
+cmake --preset=<name>
+```
+
+A couple of useful presets provided here are: `default-gcc`, `default-clang`, `default-clang-libcxx` and
+`default-coverage`. For more configurations such as configurations with sanitizers check
+the `CMakePresets.json` file. The preset names are rather long, that way it's
+easy to overwrite them with shorter names in your personal `CMakeUserPresets.json`.
+
 Building against the elsa library
 ---------------------------------
 

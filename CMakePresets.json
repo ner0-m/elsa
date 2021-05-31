@@ -1,0 +1,157 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 16,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "hidden-clang",
+      "hidden": true,
+      "displayName": "Base preset for clang builds",
+      "description": "Inherit from this to build using clang",
+      "environment": {
+        "CXX": "clang++",
+        "CC": "clang"
+      }
+    },
+    {
+      "name": "hidden-clang-libcxx",
+      "hidden": true,
+      "inherits": "hidden-clang",
+      "displayName": "Base preset for clang and libc++ builds",
+      "description": "Inherit from this to build using clang and libc++",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+        "CMAKE_EXE_LINKER_FLAGS": "-lc++abi"
+      }
+    },
+    {
+      "name": "default-gcc",
+      "displayName": "Default gcc Config",
+      "description": "Default gcc build using Ninja generator",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/gcc",
+      "cacheVariables": {
+        "ELSA_BUILD_CUDA_PROJECTORS": "OFF",
+        "ELSA_BUILD_PYTHON_BINDINGS": "OFF",
+        "ELSA_CUDA_VECTOR": "OFF",
+        "ELSA_WARNING_LEVEL": "base"
+      }
+    },
+    {
+      "name": "default-clang",
+      "displayName": "Default clang Config",
+      "description": "Default clang build using Ninja generator",
+      "inherits": "hidden-clang",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/clang",
+      "cacheVariables": {
+        "ELSA_BUILD_CUDA_PROJECTORS": "OFF",
+        "ELSA_BUILD_PYTHON_BINDINGS": "OFF",
+        "ELSA_CUDA_VECTOR": "OFF",
+        "ELSA_WARNING_LEVEL": "base"
+      }
+    },
+    {
+      "name": "default-clang-libcxx",
+      "displayName": "Default clang + libc++ Config",
+      "description": "Default clang build using libc++",
+      "inherits": ["default-clang", "hidden-clang-libcxx"]
+    },
+
+
+    {
+      "name": "ci-base",
+      "displayName": "Hidden base config for CI",
+      "description": "Common configuration for all CI jobs",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "ELSA_BENCHMAKRS": "ON",
+        "ELSA_CREATE_JUNIT_REPORTS": "ON",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install-elsa"
+      }
+    },
+    {
+      "name": "ci-gcc",
+      "displayName": "CI Config for GCC builds",
+      "description": "Config using GCC (used for CI)",
+      "inherits": "ci-base"
+    },
+    {
+      "name": "ci-clang",
+      "displayName": "CI Config for clang and libc++ builds",
+      "description": "Config using clang and libc++ (used for CI)",
+      "inherits": ["ci-base", "hidden-clang-libcxx"]
+    },
+    {
+      "name": "ci-gpu-only",
+      "inherits": "ci-clang",
+      "displayName": "CI Config for GPU builds",
+      "description": "Config to build with clang and quickvec",
+      "cacheVariables": {
+        "ELSA_CUDA_VECTOR": "ON"
+      }
+    },
+    {
+      "name": "base-asan-ubsan",
+      "hidden": true,
+      "displayName": "Config to add ASAN and UBSAN",
+      "description": "Config to build with Address and Undefined behaviour sanitizer",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "ELSA_BUILD_CUDA_PROJECTORS": "OFF",
+        "ELSA_BUILD_PYTHON_BINDINGS": "OFF",
+        "ELSA_SANITIZER": "Address;Undefined"
+      }
+    },
+    {
+      "name": "asan-ubsan-gcc-debug",
+      "displayName": "Config to add ASAN and UBSAN using GCC in Debug mode",
+      "description": "Config to build with Address and Undefined behaviour sanitizer using GCC in Debug mode",
+      "inherits": "base-asan-ubsan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "asan-ubsan-gcc-release",
+      "displayName": "Config to add ASAN and UBSAN using GCC in Release mode",
+      "description": "Config to build with Address and Undefined behaviour sanitizer using GCC in Release mode",
+      "inherits": "base-asan-ubsan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "asan-ubsan-clang-release",
+      "displayName": "Config to add ASAN and UBSAN using clang in Debug mode",
+      "description": "Config to build with Address and Undefined behaviour sanitizer using clang in Debug mode",
+      "inherits": ["base-asan-ubsan", "hidden-clang"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+     
+    {
+      "name": "default-coverage",
+      "displayName": "Config for code coverage",
+      "description": "Config to gather code coverage information",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ELSA_COVERAGE": "ON",
+        "ELSA_BUILD_PYTHON_BINDINGS": "OFF"
+      },
+      "environment": {
+        "CXX": "g++",
+        "CC": "gcc"
+      }
+    }
+  ]
+}
