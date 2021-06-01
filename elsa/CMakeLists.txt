@@ -53,6 +53,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     REGISTER_MODULE(${elsa_module_name})
 
     # install the module
+    # if INSTALL_DIR arg is set, recurse the whole directory
     if(${ADD_MODULE_INSTALL_DIR})
         install_elsa_module_dir(
             ${elsa_module_name} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/"

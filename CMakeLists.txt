@@ -288,4 +288,4 @@ add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P "${PROJECT_SOURCE_DIR}/cmake/Uninstall.cmake"
     COMMENT "Uninstalling elsa (Removing all installed files)"
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt"
-    )
+)

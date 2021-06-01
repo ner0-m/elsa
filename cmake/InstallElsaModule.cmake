@@ -57,7 +57,7 @@ endfunction()
 # Install a module using a directory
 # Install the target "ELSA_MODULE_TARGET_NAME" with the exported name "ELSA_MODULE_EXPORT_TARGET"
 # by installing all the files given in "MODULE_DIRECTORY" to installprefix/elsa/module_name
-# 
+#
 # This method preserves all the hierarchical structures of the directory (sub folders are preserved)
 function(install_elsa_module_dir ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODULE_EXPORT_TARGET MODULE_DIRECTORY)
     if(ELSA_INSTALL)
@@ -74,9 +74,9 @@ function(install_elsa_module_dir ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_M
                 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         )
         # install the header files
-	install(DIRECTORY ${MODULE_DIRECTORY}
+        install(DIRECTORY ${MODULE_DIRECTORY}
                 DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/elsa/${ELSA_MODULE_NAME}
-		FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.cuh"
+                FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.cuh"
         )
         # create the config file for the module
         install(EXPORT ${ELSA_MODULE_EXPORT_TARGET}
