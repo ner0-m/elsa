@@ -15,7 +15,7 @@ Documentation
 -------------
 
 Have a look at the [quickstart guide](https://ciip.in.tum.de/elsadocs/guides/quickstart-cxx.html), an [Alternating
-Direction Method of Multipliers solver guide](), or check out the current
+Direction Method of Multipliers solver guide](https://ciip.in.tum.de/elsadocs/guides/admm-cxx.html), or check out the current
 documentation [here](https://ciip.in.tum.de/elsadocs/).
 
 Requirements
