@@ -11,6 +11,7 @@
    :maxdepth: 2
 
    guides/quickstart-cxx.md
+   guides/admm-cxx.md
 
 .. toctree::
    :caption: Modules
