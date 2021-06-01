@@ -1,29 +1,29 @@
 function(write_module_config module_name)
+    # Parse arguments
+    set(options)
+    set(oneValueArgs)
+    set(multiValueArgs DEPENDENCIES)
+    cmake_parse_arguments(INSTALL_MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    # set up the target/library for make install
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+
+    # This uses INSTALL_MODULE_DEPEDENCIES! to replace in the .in file
+    # the component config then uses each for find_dependency
+    configure_package_config_file(
+        ${PROJECT_SOURCE_DIR}/cmake/elsaComponentConfig.cmake.in
+        ${CMAKE_BINARY_DIR}/elsa/elsa_${module_name}Config.cmake
+        INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
+    )
+
     if(ELSA_INSTALL)
-        # Parse arguments
-        set(options)
-        set(oneValueArgs)
-        set(multiValueArgs DEPENDENCIES)
-        cmake_parse_arguments(INSTALL_MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-         
-        # set up the target/library for make install
-        include(GNUInstallDirs)
-        include(CMakePackageConfigHelpers)
-
-        # This uses INSTALL_MODULE_DEPEDENCIES! to replace in the .in file
-        configure_package_config_file(
-            ${PROJECT_SOURCE_DIR}/cmake/elsaComponentConfig.cmake.in
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsa_${module_name}Config.cmake
-            INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
-        )
-
         # install the config files
         install(
-                FILES
-                ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsa_${module_name}Config.cmake
-                DESTINATION ${INSTALL_CONFIG_DIR}
+            FILES ${CMAKE_BINARY_DIR}/elsa/elsa_${module_name}Config.cmake
+            DESTINATION ${INSTALL_CONFIG_DIR}
         )
-    endif() 
+    endif()
 endfunction()
 
 # install an elsa module
@@ -47,11 +47,20 @@ function(install_elsa_module ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_MODUL
         )
         # create the config file for the module
         install(EXPORT ${ELSA_MODULE_EXPORT_TARGET}
-                FILE ${ELSA_MODULE_EXPORT_TARGET}.cmake
+                FILE "${ELSA_MODULE_EXPORT_TARGET}.cmake"
                 NAMESPACE elsa::
-                DESTINATION ${INSTALL_CONFIG_DIR}
+                DESTINATION "${INSTALL_CONFIG_DIR}"
         )
     endif(ELSA_INSTALL)
+
+    # this file won't be installed,
+    # it's just for linking to the elsa module in its in-repo build tree!
+    # FILE has to have the same structure as the install(EXPORT DESTINATION)
+    export(
+        EXPORT "${ELSA_MODULE_EXPORT_TARGET}"
+        FILE "${CMAKE_BINARY_DIR}/elsa/${ELSA_MODULE_EXPORT_TARGET}.cmake"
+        NAMESPACE elsa::
+    )
 endfunction()
 
 # Install a module using a directory
@@ -85,4 +94,13 @@ function(install_elsa_module_dir ELSA_MODULE_NAME ELSA_MODULE_TARGET_NAME ELSA_M
                 DESTINATION ${INSTALL_CONFIG_DIR}
         )
     endif(ELSA_INSTALL)
+
+    # same as for install_elsa_module: generate a in-buildtree cmake targets file
+    # that is not installed later.
+    export(
+        EXPORT "${ELSA_MODULE_EXPORT_TARGET}"
+        FILE "${CMAKE_BINARY_DIR}/elsa/${ELSA_MODULE_EXPORT_TARGET}.cmake"
+        NAMESPACE elsa::
+    )
+
 endfunction()
