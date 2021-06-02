@@ -17,10 +17,10 @@ std::vector<DataContainer<real_t>> loadData(const std::string& fileName,
         printf("opened %s\n", fileName.c_str());
     }
     std::getline(myfile, line);
-    int count = 0;
+    //    int count = 0;
     while (!myfile.eof()) {
-        if (count == 10)
-            break;
+        //        if (count == 10)
+        //            break;
         DataContainer<real_t> vectorizedImage(VolumeDescriptor{28 * 28});
         int pixelDensity = 0;
         int pixelIndex = 0;
@@ -49,7 +49,7 @@ std::vector<DataContainer<real_t>> loadData(const std::string& fileName,
         //            batchedImages.push_back(vectorizedImage);
         //        }
         std::getline(myfile, line);
-        count++;
+        //        count++;
     }
     //    for (real_t pix : trainingImages[60000 - 1]) {
     //        printf("%f, ", pix);
@@ -76,17 +76,17 @@ std::vector<DataContainer<real_t>> loadLabels(const std::string& fileName,
         printf("opened %s\n", fileName.c_str());
     }
     std::getline(myfile, line);
-    int count = 0;
+    //    int count = 0;
     while (!myfile.eof()) {
-        if (count == 10)
-            break;
+        //        if (count == 10)
+        //            break;
         char c = line[0];
         DataContainer<real_t> imageLabel(VolumeDescriptor{1});
         imageLabel = static_cast<real_t>((int) c - '0');
         //        printf("%f\n", imageLabel[0]);
         trainingLabels.push_back(imageLabel);
         std::getline(myfile, line);
-        count++;
+        //        count++;
     }
     //    printf("label: %f and label: %f and label: %f and label: %f and label: %f and label:
     //    %f\n",
@@ -127,11 +127,11 @@ void mnist_example()
     //    auto model = ml::Model<real_t, elsa::ml::MlBackend::Cudnn>(&input, &softmax);
 
     auto model = ml::Sequential<real_t, elsa::ml::MlBackend::Cudnn>(
-        ml::Input(VolumeDescriptor{28 * 28}, 1), ml::Dense(128, ml::Activation::Relu),
-        ml::Dense(10, ml::Activation::Relu), ml::Softmax());
+        ml::Input(VolumeDescriptor{28 * 28}, 1), ml::Dense(28 * 28, ml::Activation::Relu),
+        ml::Dense(128, ml::Activation::Relu), ml::Dense(10, ml::Activation::Relu), ml::Softmax());
 
     // Define an Adam optimizer
-    auto opt = ml::SGD(0.0004f);
+    auto opt = ml::Adam(0.00004f);
 
     // Compile the model
     model.compile(ml::SparseCategoricalCrossentropy(), &opt);
@@ -147,8 +147,11 @@ void mnist_example()
     printf("after training the model\n");
 
     DataContainer<real_t> pred = model.predict(loadData("mnist_train.csv")[0]);
-    printf("The net predicted: %f and the ground truth is: %f\n", pred[0],
-           loadLabels("mnist_train.csv")[0][0]);
+    printf("The net predicted: ");
+    for (real_t v : pred) {
+        printf("%f, ", v);
+    }
+    printf("\n And the ground truth is: %f\n", loadLabels("mnist_train.csv")[0][0]);
 }
 //(60000, 1, 784)
 //(12000, 5, 784)
