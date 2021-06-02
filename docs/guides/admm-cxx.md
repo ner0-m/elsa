@@ -1,4 +1,4 @@
-Solving a problem with `ADMM`
+Solving a problem with ADMM
 -----------------------------
 We will briefly explain the `ADMM` component and go through an example. Note that the current capabilities of this class
 are limited, more features are coming soon.
@@ -94,7 +94,7 @@ This generates the following sinogram,
 
 `ADMM` requires a `SplittingProblem` to solve. As mentioned above, we will utilize a `LASSOProblem` object to construct
 that, which requires setting up the [weighted least squares](https://en.wikipedia.org/wiki/Weighted_least_squares)
-problem and the [L1 regularizer](https://en.wikipedia.org/wiki/Regularization_(mathematics)). We do that as in the
+problem and the [L1 regularizer](https://en.wikipedia.org/wiki/Regularization_\(mathematics\)). We do that as in the
 following,
 
 ```c++
@@ -168,7 +168,7 @@ which displays the following image
 
 ![Difference image between the phantom and the ADMM reconstruction](./images/2ddifference_image.png)
 
-## References
+### References
 
 [1] Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers, 2011 S. Boyd,
 N. Parikh1], E. Chu, B. Peleato and J. Eckstein DOI: 10.1561/2200000016
