@@ -1,6 +1,11 @@
 #pragma once
 
-namespace elsa
+#include <string>
+
+#include "Common.h"
+#include "Layer.h"
+
+namespace elsa::ml
 {
     /**
      * @brief Class representing the PhantomNet model
@@ -69,6 +74,97 @@ namespace elsa
         /// default destructor
         ~PhantomNet() = default;
 
+        // TODO considering having these 3 layers in the ml package alongside other Layers e.g.
+        //  Softmax, UpSampling and such, but given that these 3 are not quite conventional,
+        //  following this approach, that package would be "polluted", even more so with more
+        //  incoming models
+
+        /**
+         * @brief Class representing the Trimmed-DenseBlock layer in the PhantomNet model
+         *
+         * @author Andi Braimllari - initial code
+         *
+         * @tparam data_t The type of all coefficients used in this model. This parameter is
+         * optional and defaults to real_t.
+         *
+         * References:
+         * https://arxiv.org/pdf/1811.04602.pdf
+         */
+        template <typename data_t = real_t>
+        // TODO or should it inherit from Trainable, or even ConvBase(have a look at Dense as well)
+        //  probably just Trainable
+        class TrimmedDenseBlock : public Layer<data_t>
+        {
+        public:
+            /// Construct a Softmax layer.
+            explicit Softmax(index_t axis = -1, const std::string& name = "");
+
+            /// Get the Softmax axis.
+            index_t getAxis() const;
+
+            /// \copydoc Layer::computeOutputDescriptor
+            void computeOutputDescriptor() override;
+
+        private:
+            index_t axis_;
+        };
+
+        /**
+         * @brief Class representing the TransitionDown layer in the PhantomNet model
+         *
+         * @author Andi Braimllari - initial code
+         *
+         * @tparam data_t The type of all coefficients used in this model. This parameter is
+         * optional and defaults to real_t.
+         *
+         * References:
+         * https://arxiv.org/pdf/1811.04602.pdf
+         */
+        template <typename data_t = real_t>
+        class TransitionDown : public Layer<data_t>
+        {
+        public:
+            /// Construct a Softmax layer.
+            explicit Softmax(index_t axis = -1, const std::string& name = "");
+
+            /// Get the Softmax axis.
+            index_t getAxis() const;
+
+            /// \copydoc Layer::computeOutputDescriptor
+            void computeOutputDescriptor() override;
+
+        private:
+            index_t axis_;
+        };
+
+        /**
+         * @brief Class representing the TransitionUp layer in the PhantomNet model
+         *
+         * @author Andi Braimllari - initial code
+         *
+         * @tparam data_t The type of all coefficients used in this model. This parameter is
+         * optional and defaults to real_t.
+         *
+         * References:
+         * https://arxiv.org/pdf/1811.04602.pdf
+         */
+        template <typename data_t = real_t>
+        class TransitionUp : public Layer<data_t>
+        {
+        public:
+            /// Construct a Softmax layer.
+            explicit Softmax(index_t axis = -1, const std::string& name = "");
+
+            /// Get the Softmax axis.
+            index_t getAxis() const;
+
+            /// \copydoc Layer::computeOutputDescriptor
+            void computeOutputDescriptor() override;
+
+        private:
+            index_t axis_;
+        };
+
     private:
         template <typename T, typename... Ts>
         void addLayerHelper(T&& first, Ts&&... rest)
@@ -82,4 +178,4 @@ namespace elsa
 
         std::vector<Layer<data_t>*> layers_;
     };
-} // namespace elsa
+} // namespace elsa::ml
