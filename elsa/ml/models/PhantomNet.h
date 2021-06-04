@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-
+#include "Model.h"
 #include "Common.h"
 #include "Layer.h"
 
@@ -26,12 +25,6 @@ namespace elsa::ml
         // TODO check all these
     public:
         PhantomNet() = default;
-
-        ~PhantomNet()
-        {
-            for (auto& layer : layers_)
-                delete layer;
-        }
 
         template <typename FirstLayerType, typename... LayerTypes>
         PhantomNet(FirstLayerType&& input, LayerTypes&&... layers)
@@ -69,37 +62,38 @@ namespace elsa::ml
         // TODO what about these two?
 
         /// make copy constructor deletion explicit
-        PhantomNet(const Constraint<data_t>&) = delete;
+        PhantomNet(const PhantomNet<data_t>&) = delete;
 
         /// default destructor
-        ~PhantomNet() = default;
+        //        ~PhantomNet() = default;
+        ~PhantomNet()
+        {
+            for (auto& layer : layers_)
+                delete layer;
+        }
 
-        // TODO considering having these 3 layers in the ml package alongside other Layers e.g.
+        // TODO considered having these 3 layers in the ml package alongside other Layers e.g.
         //  Softmax, UpSampling and such, but given that these 3 are not quite conventional,
-        //  following this approach, that package would be "polluted", even more so with more
-        //  incoming models
+        //  following this approach, that package would be overpopulated with layers that would
+        //  essentially be used once, even more so with more incoming models
 
         /**
          * @brief Class representing the Trimmed-DenseBlock layer in the PhantomNet model
          *
          * @author Andi Braimllari - initial code
          *
-         * @tparam data_t The type of all coefficients used in this model. This parameter is
-         * optional and defaults to real_t.
-         *
          * References:
          * https://arxiv.org/pdf/1811.04602.pdf
          */
-        template <typename data_t = real_t>
         // TODO or should it inherit from Trainable, or even ConvBase(have a look at Dense as well)
         //  probably just Trainable
         class TrimmedDenseBlock : public Layer<data_t>
         {
         public:
-            /// Construct a Softmax layer.
-            explicit Softmax(index_t axis = -1, const std::string& name = "");
+            /// Construct a TrimmedDenseBlock layer.
+            explicit TrimmedDenseBlock(index_t axis = -1, const std::string& name = "");
 
-            /// Get the Softmax axis.
+            /// Get the TrimmedDenseBlock axis.
             index_t getAxis() const;
 
             /// \copydoc Layer::computeOutputDescriptor
@@ -114,20 +108,16 @@ namespace elsa::ml
          *
          * @author Andi Braimllari - initial code
          *
-         * @tparam data_t The type of all coefficients used in this model. This parameter is
-         * optional and defaults to real_t.
-         *
          * References:
          * https://arxiv.org/pdf/1811.04602.pdf
          */
-        template <typename data_t = real_t>
         class TransitionDown : public Layer<data_t>
         {
         public:
-            /// Construct a Softmax layer.
-            explicit Softmax(index_t axis = -1, const std::string& name = "");
+            /// Construct a TransitionDown layer.
+            explicit TransitionDown(index_t axis = -1, const std::string& name = "");
 
-            /// Get the Softmax axis.
+            /// Get the TransitionDown axis.
             index_t getAxis() const;
 
             /// \copydoc Layer::computeOutputDescriptor
@@ -142,20 +132,16 @@ namespace elsa::ml
          *
          * @author Andi Braimllari - initial code
          *
-         * @tparam data_t The type of all coefficients used in this model. This parameter is
-         * optional and defaults to real_t.
-         *
          * References:
          * https://arxiv.org/pdf/1811.04602.pdf
          */
-        template <typename data_t = real_t>
         class TransitionUp : public Layer<data_t>
         {
         public:
-            /// Construct a Softmax layer.
-            explicit Softmax(index_t axis = -1, const std::string& name = "");
+            /// Construct a TransitionUp layer.
+            explicit TransitionUp(index_t axis = -1, const std::string& name = "");
 
-            /// Get the Softmax axis.
+            /// Get the TransitionUp axis.
             index_t getAxis() const;
 
             /// \copydoc Layer::computeOutputDescriptor
