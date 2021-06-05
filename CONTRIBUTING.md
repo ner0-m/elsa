@@ -124,3 +124,17 @@ with `pre-commit install` such that they are run before each commit.
 
 None of the commit hooks will change anything in your commit, they mearly check and error if
 something is wrong.
+
+## Building the Documentation
+The [elsa documentation](https://ciip.in.tum.de/elsadocs/) is automatically built and deployed through the CI for each commit to master.
+To build it locally the following packages are required: `sphinx doxygen` which should be available in
+most major linux distributions or via pip. Additionally, the following sphinx extensions need to be installed via pip:
+`sphinx-rtd-theme m2r2 breathe`.
+Then simply build the documentation using ninja
+```
+mkdir -p build
+cd build
+cmake .. -GNinja
+ninja docs
+```
+The docs should then be available at `build/docs/sphinx`.

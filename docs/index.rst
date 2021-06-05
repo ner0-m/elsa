@@ -12,6 +12,7 @@
 
    guides/quickstart-cxx.md
    guides/admm-cxx.md
+   guides/python_bindings.md
 
 .. toctree::
    :caption: Modules
@@ -23,7 +24,7 @@
    modules/operators
    modules/functionals
    modules/problems
-   modules/solvers
+   modules/solvers/solvers
    modules/projectors
    modules/projectors_cuda
    modules/proximity_operators

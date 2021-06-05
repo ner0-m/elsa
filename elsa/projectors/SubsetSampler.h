@@ -34,7 +34,6 @@ namespace elsa
          *
          * @param[in] volumeDescriptor of the problem
          * @param[in] detectorDescriptor describes the geometry and trajectory of the measurements
-         * @param[in] sinogram is the actual measurement data
          * @param[in] nSubsets is number of subsets that should be generated
          * @param[in] samplingStrategy the strategy with which to sample the subsets
          */
@@ -54,7 +53,9 @@ namespace elsa
         DataContainer<data_t> getPartitionedData(const DataContainer<data_t>& sinogram);
 
         /**
-         * @brief return the full projector
+         * @brief return
+         *
+         * @tparam projector_t the type of projector to instantiate
          */
         template <typename Projector_t>
         std::unique_ptr<LinearOperator<data_t>> getProjector()
@@ -64,6 +65,8 @@ namespace elsa
 
         /**
          * @brief return a list of projectors that correspond to each subset
+         *
+         * @tparam projector_t the type of projector to instantiate
          */
         template <typename Projector_t>
         std::vector<std::unique_ptr<LinearOperator<data_t>>> getSubsetProjectors()

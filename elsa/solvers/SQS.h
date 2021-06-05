@@ -33,7 +33,7 @@ namespace elsa
          * in ordered subset mode.
          *
          * @param[in] problem the problem that is supposed to be solved
-         * @param[in] momentumAcceleration whether or not to enable momentum acceleration
+         * @param[in] momentumAcceleration whether to enable Nesterov's momentum acceleration
          * @param[in] epsilon affects the stopping condition
          */
         SQS(const Problem<data_t>& problem, bool momentumAcceleration = true,

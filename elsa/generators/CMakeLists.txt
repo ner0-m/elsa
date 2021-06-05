@@ -27,6 +27,7 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
                 ${ELSA_MODULE_TARGET_NAME} bind_${ELSA_MODULE_NAME}.cpp
                 ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${MODULE_SOURCES}
                 CircleTrajectoryGenerator.h
+                SphereTrajectoryGenerator.h
         )
 endif()
 

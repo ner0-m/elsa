@@ -36,7 +36,6 @@ namespace elsa
          * function.
          *
          * @param[in] problem the problem that is supposed to be solved
-         * @param[in] stepSize the fixed step size to be used while solving
          */
         GradientDescent(const Problem<data_t>& problem);
 

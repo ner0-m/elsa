@@ -1,6 +1,8 @@
-************
-elsa solvers
-************
+.. _elsa-solvers-api:
+
+***********
+elsa solvers API
+***********
 
 .. contents:: Table of Contents
 
