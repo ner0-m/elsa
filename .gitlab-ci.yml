@@ -22,9 +22,11 @@ variables:
 
 ### Cache setup ###
 
-# Caches should only be used for caching
-# between pipelines not jobs, artifacts should be prefered for that
+# Caches should only be used for caching between pipelines not jobs
+# By default, have a unique and separate cache for each branch and job in the CI, otherwhise it can happen that 
+# different build configurations are spilled into different jobs and sporadic build failure occures.
 cache:
+  key: "$CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME" 
   paths:
     - build/_deps/*
 
@@ -153,15 +155,6 @@ cache:
 
 .installjob_anchors: &install_job
   <<: *run_on_merge_requests
-  cache: &install_cache
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - $CPM_SOURCE_CACHE/eigen3/*
-      - $CPM_SOURCE_CACHE/spdlog/*
-      - $CPM_SOURCE_CACHE/doctest/*
-      - $CPM_SOURCE_CACHE/pybind11/*
-      - $CPM_SOURCE_CACHE/quickvec/*
-      # - /tmp/elsa_testing/*
 
 ### static test ###
 
@@ -449,11 +442,6 @@ test-coverage:
     - CXX=g++ cmake .. -GNinja -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
     - ninja tests
     - ninja test_coverage
-  cache:
-    key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
-    paths:
-      - $CPM_SOURCE_CACHE
-      - build/
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
     paths:
