@@ -3,7 +3,7 @@ Solving a problem with ADMM
 We will briefly explain the `ADMM` component and go through an example. 
 Note that the current capabilities of this class are limited, more features are coming soon (tm).
 
-### `ADMM` in elsa
+### ADMM in elsa
 
 Alternating Direction Method of Multipliers is an algorithm which provides the grounds for solving a certain class of
 problems. 
@@ -57,7 +57,7 @@ value of `lambda` to 1/2.
 It is evident that the result of `ADMM` depends on both of these. More information on this, is
 provided by Wieczorek *et al.* [2].
 
-### Solving a toy inverse problem using ADMM
+### Solving a toy inverse problem
 
 We start by generating a modified 2D Shepp-Logan phantom by calling
 
@@ -101,7 +101,7 @@ This generates the following sinogram,
 `ADMM` requires a `SplittingProblem` to solve. 
 As mentioned above, we will utilize a `LASSOProblem` object to construct
 that, which requires setting up the [weighted least squares](https://en.wikipedia.org/wiki/Weighted_least_squares)
-problem and the [L1 regularizer](https://en.wikipedia.org/wiki/Regularization_\(mathematics\)). 
+problem and the [L1 regularizer](https://en.wikipedia.org/wiki/Regularization_(mathematics)). 
 We do that as follows,
 
 ```c++
