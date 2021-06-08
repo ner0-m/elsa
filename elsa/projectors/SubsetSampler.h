@@ -15,12 +15,12 @@ namespace elsa
      *
      * @author Michael Loipführer - initial code
      *
-     * @tparam detectorDescriptor_t
+     * @tparam DetectorDescriptor_t
      * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      */
-    template <typename detectorDescriptor_t, typename data_t = real_t>
-    class SubsetSampler : public Cloneable<SubsetSampler<detectorDescriptor_t, data_t>>
+    template <typename DetectorDescriptor_t, typename data_t = real_t>
+    class SubsetSampler : public Cloneable<SubsetSampler<DetectorDescriptor_t, data_t>>
     {
     public:
         /// enum to differentiate between different subset sampling strategies
@@ -39,14 +39,14 @@ namespace elsa
          * @param[in] samplingStrategy the strategy with which to sample the subsets
          */
         SubsetSampler(const VolumeDescriptor& volumeDescriptor,
-                      const detectorDescriptor_t& detectorDescriptor, index_t nSubsets,
+                      const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets,
                       SamplingStrategy samplingStrategy = SamplingStrategy::ROUND_ROBIN);
 
         /// default destructor
         ~SubsetSampler() = default;
 
         /**
-         * @brief return a new data descriptor with a BlockDescriptor containing the reordered
+         * @brief return a new DataContainer with a BlockDescriptor containing the reordered
          * sinogram data in each block corresponding to a subset
          *
          * @param[in] sinogram the original sinogram
@@ -56,23 +56,23 @@ namespace elsa
         /**
          * @brief return the full projector
          */
-        template <typename projector_t>
+        template <typename Projector_t>
         std::unique_ptr<LinearOperator<data_t>> getProjector()
         {
-            return std::make_unique<projector_t>(_volumeDescriptor, _fullDetectorDescriptor);
+            return std::make_unique<Projector_t>(_volumeDescriptor, _fullDetectorDescriptor);
         }
 
         /**
          * @brief return a list of projectors that correspond to each subset
          */
-        template <typename projector_t>
+        template <typename Projector_t>
         std::vector<std::unique_ptr<LinearOperator<data_t>>> getSubsetProjectors()
         {
             std::vector<std::unique_ptr<LinearOperator<data_t>>> projectors;
 
             for (const auto& detectorDescriptor : _detectorDescriptors) {
                 projectors.emplace_back(
-                    std::make_unique<projector_t>(_volumeDescriptor, detectorDescriptor));
+                    std::make_unique<Projector_t>(_volumeDescriptor, detectorDescriptor));
             }
 
             return projectors;
@@ -84,7 +84,7 @@ namespace elsa
          * @return mapping of data indices to subsets
          */
         static std::vector<std::vector<index_t>>
-            sampleRoundRobin(const detectorDescriptor_t& detectorDescriptor, index_t nSubsets);
+            sampleRoundRobin(const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets);
 
         /**
          * @brief Helper method implementing rotational distance based sampling. Iteratively loop
@@ -94,17 +94,17 @@ namespace elsa
          * @return mapping of data indices to subsets
          */
         static std::vector<std::vector<index_t>>
-            sampleEquiRotation(const detectorDescriptor_t& detectorDescriptor, index_t nSubsets);
+            sampleEquiRotation(const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets);
 
     protected:
         /// default copy constructor for cloning
-        SubsetSampler<detectorDescriptor_t, data_t>(
-            const SubsetSampler<detectorDescriptor_t, data_t>& other);
+        SubsetSampler<DetectorDescriptor_t, data_t>(
+            const SubsetSampler<DetectorDescriptor_t, data_t>& other);
         /// implement the polymorphic comparison operation
-        bool isEqual(const SubsetSampler<detectorDescriptor_t, data_t>& other) const override;
+        bool isEqual(const SubsetSampler<DetectorDescriptor_t, data_t>& other) const override;
 
         /// implement the polymorphic clone operation
-        SubsetSampler<detectorDescriptor_t, data_t>* cloneImpl() const override;
+        SubsetSampler<DetectorDescriptor_t, data_t>* cloneImpl() const override;
 
     private:
         /// mapping of data point indices to respective subsets
@@ -114,10 +114,10 @@ namespace elsa
         VolumeDescriptor _volumeDescriptor;
 
         /// the full detector descriptor of the problem
-        detectorDescriptor_t _fullDetectorDescriptor;
+        DetectorDescriptor_t _fullDetectorDescriptor;
 
         /// list of detector descriptors corresponding to each block
-        std::vector<detectorDescriptor_t> _detectorDescriptors;
+        std::vector<DetectorDescriptor_t> _detectorDescriptors;
 
         /// number of subsets
         index_t _nSubsets;

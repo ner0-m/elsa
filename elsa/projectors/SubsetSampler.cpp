@@ -5,9 +5,9 @@
 
 namespace elsa
 {
-    template <typename detectorDescriptor_t, typename data_t>
-    SubsetSampler<detectorDescriptor_t, data_t>::SubsetSampler(
-        const VolumeDescriptor& volumeDescriptor, const detectorDescriptor_t& detectorDescriptor,
+    template <typename DetectorDescriptor_t, typename data_t>
+    SubsetSampler<DetectorDescriptor_t, data_t>::SubsetSampler(
+        const VolumeDescriptor& volumeDescriptor, const DetectorDescriptor_t& detectorDescriptor,
         index_t nSubsets, SamplingStrategy samplingStrategy)
         : _indexMapping(static_cast<std::size_t>(nSubsets)),
           _volumeDescriptor(volumeDescriptor),
@@ -41,13 +41,13 @@ namespace elsa
                 detectorDescriptor.getNumberOfCoefficientsPerDimension();
             numOfCoeffsPerDim[numOfCoeffsPerDim.size() - 1] = static_cast<index_t>(indices.size());
 
-            _detectorDescriptors.emplace_back(detectorDescriptor_t(numOfCoeffsPerDim, geometry));
+            _detectorDescriptors.emplace_back(DetectorDescriptor_t(numOfCoeffsPerDim, geometry));
         }
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    std::vector<std::vector<index_t>> SubsetSampler<detectorDescriptor_t, data_t>::sampleRoundRobin(
-        const detectorDescriptor_t& detectorDescriptor, index_t nSubsets)
+    template <typename DetectorDescriptor_t, typename data_t>
+    std::vector<std::vector<index_t>> SubsetSampler<DetectorDescriptor_t, data_t>::sampleRoundRobin(
+        const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets)
     {
         std::vector<std::vector<index_t>> subsetIndices(static_cast<std::size_t>(nSubsets));
 
@@ -64,10 +64,10 @@ namespace elsa
         return subsetIndices;
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
+    template <typename DetectorDescriptor_t, typename data_t>
     std::vector<std::vector<index_t>>
-        SubsetSampler<detectorDescriptor_t, data_t>::sampleEquiRotation(
-            const detectorDescriptor_t& detectorDescriptor, index_t nSubsets)
+        SubsetSampler<DetectorDescriptor_t, data_t>::sampleEquiRotation(
+            const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets)
     {
         std::vector<std::vector<index_t>> subsetIndices(static_cast<std::size_t>(nSubsets));
 
@@ -117,9 +117,9 @@ namespace elsa
         return subsetIndices;
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    SubsetSampler<detectorDescriptor_t, data_t>::SubsetSampler(
-        const SubsetSampler<detectorDescriptor_t, data_t>& other)
+    template <typename DetectorDescriptor_t, typename data_t>
+    SubsetSampler<DetectorDescriptor_t, data_t>::SubsetSampler(
+        const SubsetSampler<DetectorDescriptor_t, data_t>& other)
         : _indexMapping{other._indexMapping},
           _volumeDescriptor(other._volumeDescriptor),
           _fullDetectorDescriptor(other._fullDetectorDescriptor),
@@ -130,8 +130,8 @@ namespace elsa
         }
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    DataContainer<data_t> SubsetSampler<detectorDescriptor_t, data_t>::getPartitionedData(
+    template <typename DetectorDescriptor_t, typename data_t>
+    DataContainer<data_t> SubsetSampler<DetectorDescriptor_t, data_t>::getPartitionedData(
         const DataContainer<data_t>& sinogram)
     {
         // save the number of entries per subset
@@ -163,16 +163,16 @@ namespace elsa
         return partitionedData;
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    SubsetSampler<detectorDescriptor_t, data_t>*
-        SubsetSampler<detectorDescriptor_t, data_t>::cloneImpl() const
+    template <typename DetectorDescriptor_t, typename data_t>
+    SubsetSampler<DetectorDescriptor_t, data_t>*
+        SubsetSampler<DetectorDescriptor_t, data_t>::cloneImpl() const
     {
-        return new SubsetSampler<detectorDescriptor_t, data_t>(*this);
+        return new SubsetSampler<DetectorDescriptor_t, data_t>(*this);
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    bool SubsetSampler<detectorDescriptor_t, data_t>::isEqual(
-        const SubsetSampler<detectorDescriptor_t, data_t>& other) const
+    template <typename DetectorDescriptor_t, typename data_t>
+    bool SubsetSampler<DetectorDescriptor_t, data_t>::isEqual(
+        const SubsetSampler<DetectorDescriptor_t, data_t>& other) const
     {
         if (typeid(*this) != typeid(other))
             return false;
