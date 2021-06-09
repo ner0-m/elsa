@@ -6,6 +6,8 @@
  * @author Michael Loipführer - initial code
  */
 #include <SphereTrajectoryGenerator.h>
+#include <numeric>
+#include <iostream>
 #include "doctest/doctest.h"
 
 #include "SubsetSampler.h"
@@ -33,13 +35,17 @@ SCENARIO("Testing the standalone subset sampling strategies")
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
             numAngles, volumeDescriptor, arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
+        const auto numCoeffsPerDim = sinoDescriptor->getNumberOfCoefficientsPerDimension();
+        const index_t nDimensions = sinoDescriptor->getNumberOfDimensions();
+        const auto numElements = numCoeffsPerDim[nDimensions - 1];
 
         WHEN("performing round robin sampling into 4 subsets")
         {
             const auto nSubsets = 4;
+            std::vector<index_t> indices(static_cast<std::size_t>(numElements));
+            std::iota(indices.begin(), indices.end(), 0);
             const std::vector<std::vector<index_t>> mapping =
-                SubsetSampler<PlanarDetectorDescriptor, real_t>::sampleRoundRobin(
-                    static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::splitRoundRobin(indices, nSubsets);
             THEN("The mapping is correct with every subset having 8 elements")
             {
                 for (std::size_t i = 0; i < static_cast<std::size_t>(nSubsets); ++i) {
@@ -50,18 +56,40 @@ SCENARIO("Testing the standalone subset sampling strategies")
                 }
             }
         }
+        WHEN("performing round robin sampling into 5 subsets")
+        {
+            const auto nSubsets = 5;
+            std::vector<index_t> indices(static_cast<std::size_t>(numElements));
+            std::iota(indices.begin(), indices.end(), 0);
+            const auto mapping =
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::splitRoundRobin(indices, nSubsets);
+            THEN("The mapping is correct with every subset having 6 elements apart from the first "
+                 "two")
+            {
+                for (std::size_t i = 0; i < static_cast<std::size_t>(nSubsets); ++i) {
+                    if (i <= 1) {
+                        REQUIRE_EQ(mapping[i].size(), 7);
+                    } else {
+                        REQUIRE_EQ(mapping[i].size(), 6);
+                    }
+                    for (std::size_t j = 0; j < mapping[i].size(); j++) {
+                        REQUIRE_EQ(mapping[i][j], j * nSubsets + i);
+                    }
+                }
+            }
+        }
         WHEN("performing equi rotation sampling into 4 subsets")
         {
             const auto nSubsets = 4;
             const std::vector<std::vector<index_t>> mapping =
-                SubsetSampler<PlanarDetectorDescriptor, real_t>::sampleEquiRotation(
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::splitRotationalClustering(
                     static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
             THEN("The mapping is correct with every subset having 8 elements")
             {
-                REQUIRE_EQ(mapping[0], std::vector<index_t>{0, 3, 7, 11, 15, 19, 23, 27});
-                REQUIRE_EQ(mapping[1], std::vector<index_t>{31, 4, 8, 12, 16, 20, 24, 28});
-                REQUIRE_EQ(mapping[2], std::vector<index_t>{1, 5, 9, 13, 17, 21, 25, 29});
-                REQUIRE_EQ(mapping[3], std::vector<index_t>{2, 6, 10, 14, 18, 22, 26, 30});
+                REQUIRE_EQ(mapping[0], std::vector<index_t>{16, 28, 24, 20, 0, 12, 3, 7});
+                REQUIRE_EQ(mapping[1], std::vector<index_t>{31, 27, 23, 19, 15, 11, 4, 8});
+                REQUIRE_EQ(mapping[2], std::vector<index_t>{30, 26, 22, 18, 14, 1, 5, 9});
+                REQUIRE_EQ(mapping[3], std::vector<index_t>{29, 25, 21, 17, 13, 2, 6, 10});
             }
         }
     }
@@ -76,12 +104,17 @@ SCENARIO("Testing the standalone subset sampling strategies")
             numPoses, volumeDescriptor, numCircles,
             geometry::SourceToCenterOfRotation(static_cast<real_t>(size(0)) * 100.0f),
             geometry::CenterOfRotationToDetector(static_cast<real_t>(size(0))));
+        const auto numCoeffsPerDim = sinoDescriptor->getNumberOfCoefficientsPerDimension();
+        const index_t nDimensions = sinoDescriptor->getNumberOfDimensions();
+        const auto numElements = numCoeffsPerDim[nDimensions - 1];
 
         WHEN("performing round robin sampling into 4 subsets")
         {
             const auto nSubsets = 4;
-            const auto mapping = SubsetSampler<PlanarDetectorDescriptor, real_t>::sampleRoundRobin(
-                static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
+            std::vector<index_t> indices(static_cast<std::size_t>(numElements));
+            std::iota(indices.begin(), indices.end(), 0);
+            const auto mapping =
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::splitRoundRobin(indices, nSubsets);
             THEN("The mapping is correct with every subset having 8 elements")
             {
                 for (std::size_t i = 0; i < static_cast<std::size_t>(nSubsets); ++i) {
@@ -92,18 +125,40 @@ SCENARIO("Testing the standalone subset sampling strategies")
                 }
             }
         }
+        WHEN("performing round robin sampling into 5 subsets")
+        {
+            const auto nSubsets = 5;
+            std::vector<index_t> indices(static_cast<std::size_t>(numElements));
+            std::iota(indices.begin(), indices.end(), 0);
+            const auto mapping =
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::splitRoundRobin(indices, nSubsets);
+            THEN("The mapping is correct with every subset having 6 elements apart from the first "
+                 "two")
+            {
+                for (std::size_t i = 0; i < static_cast<std::size_t>(nSubsets); ++i) {
+                    if (i <= 1) {
+                        REQUIRE_EQ(mapping[i].size(), 7);
+                    } else {
+                        REQUIRE_EQ(mapping[i].size(), 6);
+                    }
+                    for (std::size_t j = 0; j < mapping[i].size(); j++) {
+                        REQUIRE_EQ(mapping[i][j], j * nSubsets + i);
+                    }
+                }
+            }
+        }
         WHEN("performing equi rotation sampling into 4 subsets")
         {
             const auto nSubsets = 4;
             const auto mapping =
-                SubsetSampler<PlanarDetectorDescriptor, real_t>::sampleEquiRotation(
+                SubsetSampler<PlanarDetectorDescriptor, real_t>::splitRotationalClustering(
                     static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
             THEN("The mapping is correct with every subset having 8 elements")
             {
-                REQUIRE_EQ(mapping[0], std::vector<index_t>{0, 22, 1, 24, 26, 2, 29, 11});
-                REQUIRE_EQ(mapping[1], std::vector<index_t>{4, 13, 7, 23, 27, 9, 30, 10});
-                REQUIRE_EQ(mapping[2], std::vector<index_t>{12, 5, 15, 14, 17, 18, 31, 3});
-                REQUIRE_EQ(mapping[3], std::vector<index_t>{21, 6, 25, 16, 8, 28, 20, 19});
+                REQUIRE_EQ(mapping[0], std::vector<index_t>{0, 12, 1, 22, 30, 18, 25, 26});
+                REQUIRE_EQ(mapping[1], std::vector<index_t>{4, 13, 21, 31, 23, 15, 28, 27});
+                REQUIRE_EQ(mapping[2], std::vector<index_t>{5, 20, 10, 14, 24, 7, 17, 8});
+                REQUIRE_EQ(mapping[3], std::vector<index_t>{11, 3, 6, 19, 29, 9, 16, 2});
             }
         }
     }
@@ -172,13 +227,14 @@ SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and circular traje
                            nSubsets);
             }
         }
-        WHEN("Setting up a subset sampler with 4 subsets and EQUI_ROTATION sampling")
+        WHEN("Setting up a subset sampler with 4 subsets and ROTATIONAL_CLUSTERING sampling")
         {
             index_t nSubsets{4};
             SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
                 static_cast<const VolumeDescriptor&>(volumeDescriptor),
                 static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets,
-                SubsetSampler<PlanarDetectorDescriptor, real_t>::SamplingStrategy::EQUI_ROTATION);
+                SubsetSampler<PlanarDetectorDescriptor,
+                              real_t>::SamplingStrategy::ROTATIONAL_CLUSTERING);
             THEN("the clone works as expected")
             {
 
@@ -279,13 +335,14 @@ SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and spherical traj
                            nSubsets);
             }
         }
-        WHEN("Setting up a subset sampler with 4 subsets and EQUI_ROTATION sampling")
+        WHEN("Setting up a subset sampler with 4 subsets and ROTATIONAL_CLUSTERING sampling")
         {
             index_t nSubsets{4};
             SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
                 static_cast<const VolumeDescriptor&>(volumeDescriptor),
                 static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets,
-                SubsetSampler<PlanarDetectorDescriptor, real_t>::SamplingStrategy::EQUI_ROTATION);
+                SubsetSampler<PlanarDetectorDescriptor,
+                              real_t>::SamplingStrategy::ROTATIONAL_CLUSTERING);
             THEN("the clone works as expected")
             {
 

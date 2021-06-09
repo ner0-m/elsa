@@ -41,10 +41,16 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
         WHEN("Retreiving the single geometry pose")
         {
             auto geom = desc.getGeometryAt(0);
+            auto geomList = desc.getGeometry();
 
             CHECK_EQ(desc.getNumberOfGeometryPoses(), 1);
+            CHECK_EQ(geomList.size(), 1);
 
-            THEN("Geometry is equal") { CHECK_EQ((geom), g); }
+            THEN("Geometry is equal")
+            {
+                CHECK_EQ((geom), g);
+                CHECK_EQ(geomList[0], g);
+            }
         }
 
         WHEN("Generating rays for detecor pixels 0, 2 and 4")
@@ -127,16 +133,34 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
 
             PlanarDetectorDescriptor desc(sinoSize, {g1, g2, g3, g4});
 
-            WHEN("Retreiving the single geometry pose")
+            WHEN("Retreiving geometry poses")
             {
                 auto geom = desc.getGeometryAt(0);
+                auto geomList = desc.getGeometry();
 
                 CHECK_EQ(desc.getNumberOfGeometryPoses(), 4);
+                CHECK_EQ(geomList.size(), 4);
 
-                THEN("Geometry is equal") { CHECK_EQ((desc.getGeometryAt(0)), g1); }
-                THEN("Geometry is equal") { CHECK_EQ((desc.getGeometryAt(1)), g2); }
-                THEN("Geometry is equal") { CHECK_EQ((desc.getGeometryAt(2)), g3); }
-                THEN("Geometry is equal") { CHECK_EQ((desc.getGeometryAt(3)), g4); }
+                THEN("Geometry is equal")
+                {
+                    CHECK_EQ((desc.getGeometryAt(0)), g1);
+                    CHECK_EQ(geomList[0], g1);
+                }
+                THEN("Geometry is equal")
+                {
+                    CHECK_EQ((desc.getGeometryAt(1)), g2);
+                    CHECK_EQ(geomList[1], g2);
+                }
+                THEN("Geometry is equal")
+                {
+                    CHECK_EQ((desc.getGeometryAt(2)), g3);
+                    CHECK_EQ(geomList[2], g3);
+                }
+                THEN("Geometry is equal")
+                {
+                    CHECK_EQ((desc.getGeometryAt(3)), g4);
+                    CHECK_EQ(geomList[3], g4);
+                }
             }
 
             WHEN("Check for multiple poses, that all the overloads compute the same rays")
@@ -203,10 +227,16 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 3D PlanarDetectorDescriptor")
         WHEN("Retreiving the single geometry pose")
         {
             auto geom = desc.getGeometryAt(0);
+            auto geomList = desc.getGeometry();
 
             CHECK_EQ(desc.getNumberOfGeometryPoses(), 1);
+            CHECK_EQ(geomList.size(), 1);
 
-            THEN("Geometry is equal") { CHECK_EQ((geom), g); }
+            THEN("Geometry is equal")
+            {
+                CHECK_EQ((geom), g);
+                CHECK_EQ(geomList[0], g);
+            }
         }
 
         WHEN("Generating rays for detecor pixels 0, 2 and 4 for each dim")

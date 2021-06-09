@@ -313,13 +313,14 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
                 }
             }
         }
-        WHEN("setting up a SQS solver with EQUI_ROTATION subsampling")
+        WHEN("setting up a SQS solver with ROTATIONAL_CLUSTERING subsampling")
         {
             index_t nSubsets{4};
             SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
                 static_cast<const VolumeDescriptor&>(volumeDescriptor),
                 static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets,
-                SubsetSampler<PlanarDetectorDescriptor, real_t>::SamplingStrategy::EQUI_ROTATION);
+                SubsetSampler<PlanarDetectorDescriptor,
+                              real_t>::SamplingStrategy::ROTATIONAL_CLUSTERING);
 
             WLSSubsetProblem<real_t> problem(
                 *subsetSampler.getProjector<SiddonsMethod<real_t>>(),

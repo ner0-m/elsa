@@ -25,8 +25,8 @@ namespace elsa
     public:
         /// enum to differentiate between different subset sampling strategies
         enum class SamplingStrategy {
-            ROUND_ROBIN,   /// (default) divides data points into subsets via simple round-robin
-            EQUI_ROTATION, /// equally spaces the data points based on their rotation
+            ROUND_ROBIN, /// (default) divides data points into subsets via simple round-robin
+            ROTATIONAL_CLUSTERING, /// equally spaces the data points based on their rotation
         };
 
         /**
@@ -79,12 +79,12 @@ namespace elsa
         }
 
         /**
-         * @brief Helper method implementing round robin sampling
+         * @brief Helper method implementing a general round robin splitting of a list of indices.
          *
          * @return mapping of data indices to subsets
          */
         static std::vector<std::vector<index_t>>
-            sampleRoundRobin(const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets);
+            splitRoundRobin(const std::vector<index_t>& indices, index_t nSubsets);
 
         /**
          * @brief Helper method implementing rotational distance based sampling. Iteratively loop
@@ -94,7 +94,8 @@ namespace elsa
          * @return mapping of data indices to subsets
          */
         static std::vector<std::vector<index_t>>
-            sampleEquiRotation(const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets);
+            splitRotationalClustering(const DetectorDescriptor_t& detectorDescriptor,
+                                      index_t nSubsets);
 
     protected:
         /// default copy constructor for cloning

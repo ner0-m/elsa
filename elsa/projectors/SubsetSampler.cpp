@@ -1,4 +1,5 @@
 #include <set>
+#include <numeric>
 #include "SubsetSampler.h"
 #include "PartitionDescriptor.h"
 #include "SiddonsMethod.h"
@@ -20,18 +21,23 @@ namespace elsa
 
         // the mapping of data indices to subsets
 
+        const auto numCoeffsPerDim = detectorDescriptor.getNumberOfCoefficientsPerDimension();
+        const index_t nDimensions = detectorDescriptor.getNumberOfDimensions();
+        const auto numElements = numCoeffsPerDim[nDimensions - 1];
         if (samplingStrategy == SamplingStrategy::ROUND_ROBIN) {
-            _indexMapping = sampleRoundRobin(detectorDescriptor, _nSubsets);
-        } else if (samplingStrategy == SamplingStrategy::EQUI_ROTATION) {
-            _indexMapping = sampleEquiRotation(detectorDescriptor, _nSubsets);
+            std::vector<index_t> indices(static_cast<std::size_t>(numElements));
+            std::iota(indices.begin(), indices.end(), 0);
+            _indexMapping = splitRoundRobin(indices, _nSubsets);
+        } else if (samplingStrategy == SamplingStrategy::ROTATIONAL_CLUSTERING) {
+            _indexMapping = splitRotationalClustering(detectorDescriptor, _nSubsets);
         } else {
             throw std::invalid_argument("SubsetSampler: unsupported sampling strategy");
         }
 
         // create the detector descriptors that correspond to each subset
-        for (const auto& indices : _indexMapping) {
+        for (const auto& blockIndices : _indexMapping) {
             std::vector<Geometry> geometry;
-            for (auto index : indices) {
+            for (auto index : blockIndices) {
                 auto geo = detectorDescriptor.getGeometryAt(index);
                 if (geo.has_value()) {
                     geometry.emplace_back(*geo);
@@ -39,26 +45,23 @@ namespace elsa
             }
             IndexVector_t numOfCoeffsPerDim =
                 detectorDescriptor.getNumberOfCoefficientsPerDimension();
-            numOfCoeffsPerDim[numOfCoeffsPerDim.size() - 1] = static_cast<index_t>(indices.size());
+            numOfCoeffsPerDim[numOfCoeffsPerDim.size() - 1] =
+                static_cast<index_t>(blockIndices.size());
 
             _detectorDescriptors.emplace_back(DetectorDescriptor_t(numOfCoeffsPerDim, geometry));
         }
     }
 
     template <typename DetectorDescriptor_t, typename data_t>
-    std::vector<std::vector<index_t>> SubsetSampler<DetectorDescriptor_t, data_t>::sampleRoundRobin(
-        const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets)
+    std::vector<std::vector<index_t>> SubsetSampler<DetectorDescriptor_t, data_t>::splitRoundRobin(
+        const std::vector<index_t>& indices, index_t nSubsets)
     {
         std::vector<std::vector<index_t>> subsetIndices(static_cast<std::size_t>(nSubsets));
 
-        const auto numCoeffsPerDim = detectorDescriptor.getNumberOfCoefficientsPerDimension();
-        const index_t nDimensions = detectorDescriptor.getNumberOfDimensions();
-        const auto numElements = numCoeffsPerDim[nDimensions - 1];
-
         // determine the mapping of indices to subsets
-        for (index_t i = 0; i < numElements; ++i) {
-            const auto subset = i % nSubsets;
-            subsetIndices[static_cast<std::size_t>(subset)].template emplace_back(i);
+        for (std::size_t i = 0; i < indices.size(); ++i) {
+            const auto subset = i % static_cast<std::size_t>(nSubsets);
+            subsetIndices[subset].template emplace_back(indices[i]);
         }
 
         return subsetIndices;
@@ -66,20 +69,9 @@ namespace elsa
 
     template <typename DetectorDescriptor_t, typename data_t>
     std::vector<std::vector<index_t>>
-        SubsetSampler<DetectorDescriptor_t, data_t>::sampleEquiRotation(
+        SubsetSampler<DetectorDescriptor_t, data_t>::splitRotationalClustering(
             const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets)
     {
-        std::vector<std::vector<index_t>> subsetIndices(static_cast<std::size_t>(nSubsets));
-
-        const auto numCoeffsPerDim = detectorDescriptor.getNumberOfCoefficientsPerDimension();
-        const index_t nDimensions = detectorDescriptor.getNumberOfDimensions();
-
-        subsetIndices[0].template emplace_back(0);
-        std::size_t currentSubset = 1;
-        Geometry currGeometry = detectorDescriptor.getGeometryAt(0).value();
-        auto nElements = static_cast<index_t>(numCoeffsPerDim[nDimensions - 1]);
-        std::set<index_t> taken = {0};
-
         // angle between two rotation matrices used as a distance measure
         auto dist = [](auto& g1, auto& g2) {
             return std::acos(
@@ -87,34 +79,21 @@ namespace elsa
                 / 2.0);
         };
 
-        // loop to find the closest (rotationally) point to the current one, putting it in the next
-        // subset until all points are distributed
-        while (taken.size() < static_cast<std::size_t>(nElements)) {
-            index_t closest = -1;
-            double minAngle = std::numeric_limits<double>::max();
-            for (index_t i = 0; i < nElements; ++i) {
-                if (taken.find(i) == taken.end()) {
-                    const Geometry geo = detectorDescriptor.getGeometryAt(i).value();
-                    auto angle = dist(currGeometry, geo);
-                    if (angle < minAngle) {
-                        closest = i;
-                        minAngle = angle;
-                    }
-                }
-            }
+        const auto numCoeffsPerDim = detectorDescriptor.getNumberOfCoefficientsPerDimension();
+        const index_t nDimensions = detectorDescriptor.getNumberOfDimensions();
+        const auto numElements = numCoeffsPerDim[nDimensions - 1];
+        std::vector<index_t> indices(static_cast<std::size_t>(numElements));
+        std::iota(indices.begin(), indices.end(), 0);
+        const auto geometry = detectorDescriptor.getGeometry();
 
-            if (closest < 0) {
-                throw std::runtime_error(
-                    "SubsetSampler: Error finding smallest rotational difference");
-            }
+        const auto first = geometry.front();
+        std::sort(std::begin(indices), std::end(indices),
+                  [dist, first, &geometry](auto lhs, auto rhs) {
+                      return dist(first, geometry[static_cast<std::size_t>(lhs)])
+                             < dist(first, geometry[static_cast<std::size_t>(rhs)]);
+                  });
 
-            currGeometry = detectorDescriptor.getGeometryAt(closest).value();
-            taken.emplace(closest);
-            subsetIndices[currentSubset].template emplace_back(closest);
-            currentSubset = (currentSubset + 1) % static_cast<std::size_t>(nSubsets);
-        }
-
-        return subsetIndices;
+        return splitRoundRobin(indices, nSubsets);
     }
 
     template <typename DetectorDescriptor_t, typename data_t>
