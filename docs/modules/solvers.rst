@@ -48,3 +48,8 @@ SQS Ordered Subsets
 ===============
 
 .. doxygenclass:: elsa::SQS
+
+Orthogonal Matching Pursuit
+===============
+
+.. doxygenclass:: elsa::OMP
