@@ -83,9 +83,9 @@ cache:
       - install-elsa/lib/cmake/elsa/**/*.cmake
       - install-elsa/lib/libelsa*.a
       # Add quickvec install to artifact
-      - install-elsa/include/Quickvec/**/*.h
-      - install-elsa/include/Quickvec/**/*.hpp
-      - install-elsa/lib/cmake/Quickvec/*.cmake
+      - install-elsa/include/quickvec/**/*.h
+      - install-elsa/include/quickvec/**/*.hpp
+      - install-elsa/lib/cmake/quickvec/*.cmake
       - install-elsa/lib/libquickvec.a
       # Add doctest install to artifact
       - install-elsa/include/doctest/**/*.h
@@ -409,7 +409,7 @@ install-gpu-only:
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
     - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -Dquickvec_DIR="$CI_PROJECT_DIR/install-elsa/lib/cmake/Quickvec" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
+    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -Dquickvec_DIR="$CI_PROJECT_DIR/install-elsa/lib/cmake/quickvec" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
     - ninja
   tags:
     - linux
