@@ -115,3 +115,12 @@ make test_coverage
 ```
 and then the results should be available at `build/test_coverage/index.html`. You can compare your
 local results to [the latest master coverage results](https://ciip.in.tum.de/elsacoverage/).
+
+## pre-commit
+
+There is also a basic `.pre-commit-config.yaml` file to install pre-commit hooks using 
+[pre-commit](https://pre-commit.com/). You are highly encouraged to install the pre-commits
+with `pre-commit install` such that they are run before each commit.
+
+None of the commit hooks will change anything in your commit, they mearly check and error if
+something is wrong.
