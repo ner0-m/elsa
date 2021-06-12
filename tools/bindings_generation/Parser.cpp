@@ -403,7 +403,9 @@ public:
                         if (defaultArg && !defaultArg->isInstantiationDependent()
                             && !defaultArg->isValueDependent() && !defaultArg->isTypeDependent()
                             && defaultArg->EvaluateAsRValue(result, *context)
-                            && !result.hasSideEffects() && !result.Val.isStruct()) {
+                            && !result.hasSideEffects()
+                            && (result.Val.isInt() || result.Val.isFloat()
+                                || result.Val.isComplexInt() || result.Val.isComplexFloat())) {
 
                             f.params.back().defaultValue =
                                 result.Val.getAsString(*context, param->getType());
