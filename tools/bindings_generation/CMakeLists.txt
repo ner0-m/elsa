@@ -20,10 +20,10 @@ else()
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
         # try to match the stdlib llvm was compiled with
         # if info unavailable, assume it was libstdc++ for Clang and libc++ for AppleClang
-        # TODO: generates a dev-warning on initial configuration, but alternative is deprecated
-        file(GET_RUNTIME_DEPENDENCIES 
-            RESOLVED_DEPENDENCIES_VAR LLVM_DEPS
-            EXECUTABLES ${LLVM_CONFIG})
+        # TODO: get_prerequisites is deprecated, GET_RUNTIME_DEPS throws dev-warning and fails linting
+        include(GetPrerequisites)
+        get_prerequisites(${LLVM_CONFIG} LLVM_DEPS 0 0 "" "")
+        # file(GET_RUNTIME_DEPENDENCIES  RESOLVED_DEPENDENCIES_VAR LLVM_DEPS EXECUTABLES ${LLVM_CONFIG})
         foreach(LLVM_DEP IN LISTS LLVM_DEPS)
             if (${LLVM_DEP} MATCHES "/libstdc[+][+][.]")
                 set(LLVM_CXX_STDLIB_DEP stdc++)

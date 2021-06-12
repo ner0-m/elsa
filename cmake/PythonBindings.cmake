@@ -92,13 +92,29 @@ function(SetupPythonBindings)
         endif()
 
         # always combine bindings in a single module if using libc++
-        foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST)
-            if(${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                set(ELSA_BINDINGS_IN_SINGLE_MODULE ON CACHE BOOL "Bindings compiled in single module as libc++ is used"
-                                                            FORCE
-                )
-            endif()
+        set (USES_LIBCXX "FALSE")
+        if (CMAKE_CXX_COMPILER_ID MATCHES "Apple[Cc]lang")
+            set (USES_LIBCXX "TRUE")
+            foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST)
+                if(${COMPILE_OPTION} MATCHES "-stdlib=libstdc\\+\\+")
+                    set(USES_LIBCXX "FALSE")
+                    break()
+                endif()
+            endforeach()
+        elseif(CMAKE_CXX_COMPILER_ID MATCHES "^[Cc]lang")
+            foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST)
+                if(${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+")
+                    set(USES_LIBCXX "TRUE")
+                    break()
+                endif()
         endforeach()
+        endif()
+
+        if (USES_LIBCXX)
+            set(ELSA_BINDINGS_IN_SINGLE_MODULE ON CACHE BOOL "Bindings compiled in single module as libc++ is used"
+                                                        FORCE
+            )
+        endif()
 
         if(ELSA_BINDINGS_IN_SINGLE_MODULE)
             # bind_elsa.cpp combines all bindings definitions into a single PYBIND11_MODULE
