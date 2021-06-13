@@ -169,13 +169,14 @@ if(ELSA_MASTER_PROJECT)
         message(STATUS "CUDA support requested...")
         include(CheckLanguage)
         check_language(CUDA)
+        find_package(CUDA 11.0 REQUIRED)
 
         if(CMAKE_CUDA_COMPILER)
             enable_language(CUDA)
             CPMAddPackage(
                 NAME Quickvec
                 GIT_REPOSITORY https://gitlab.lrz.de/IP/quickvec.git
-                GIT_TAG 960ac64 # current commit on master 
+                GIT_TAG cuda_11
             )
 
             if(Quickvec_ADDED)
@@ -187,6 +188,12 @@ if(ELSA_MASTER_PROJECT)
                 add_definitions(-DELSA_CUDA_VECTOR)
             else()
                 message(FATAL_ERROR "CUDA_VECTOR library quickvec could not be added.")
+                message(STATUS "CUDA compiler not found!")
+                message(STATUS "Compiling without a DataHandlerGPU")
+                message(STATUS "The default container type will be CPU")
+
+                set(ELSA_BUILD_WITH_QUICKVEC FALSE)
+                set(ELSA_CUDA_VECTOR OFF)
             endif()
         else()
             message(FATAL_ERROR "CUDA_VECTOR language support not found")

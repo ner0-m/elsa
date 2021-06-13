@@ -11,19 +11,20 @@ namespace elsa
 {
     template <typename data_t>
     DataHandlerGPU<data_t>::DataHandlerGPU(index_t size)
-        : _data(std::make_shared<quickvec::Vector<data_t>>(size))
+        : _data(std::make_shared<quickvec::Vector<GetQuickvecType_t<data_t>>>(size))
     {
     }
 
     template <typename data_t>
     DataHandlerGPU<data_t>::DataHandlerGPU(DataVector_t const& vector)
-        : _data(std::make_shared<quickvec::Vector<data_t>>(vector))
+        : _data(std::make_shared<quickvec::Vector<GetQuickvecType_t<data_t>>>(vector))
     {
     }
 
     template <typename data_t>
-    DataHandlerGPU<data_t>::DataHandlerGPU(quickvec::Vector<data_t> const& vector)
-        : _data(std::make_shared<quickvec::Vector<data_t>>(vector.clone()))
+    DataHandlerGPU<data_t>::DataHandlerGPU(
+        quickvec::Vector<GetQuickvecType_t<data_t>> const& vector)
+        : _data(std::make_shared<quickvec::Vector<GetQuickvecType_t<data_t>>>(vector.clone()))
     {
     }
 
@@ -58,13 +59,13 @@ namespace elsa
     data_t& DataHandlerGPU<data_t>::operator[](index_t index)
     {
         detach();
-        return (*_data)[static_cast<size_t>(index)];
+        return static_cast<data_t>((*_data)[static_cast<size_t>(index)]);
     }
 
     template <typename data_t>
     const data_t& DataHandlerGPU<data_t>::operator[](index_t index) const
     {
-        return (*_data)[static_cast<size_t>(index)];
+        return static_cast<data_t>((*_data)[static_cast<size_t>(index)]);
     }
 
     template <typename data_t>
@@ -86,7 +87,7 @@ namespace elsa
     template <typename data_t>
     GetFloatingPointType_t<data_t> DataHandlerGPU<data_t>::squaredL2Norm() const
     {
-        return _data->squaredL2Norm();
+        return _data->squaredl2Norm();
     }
 
     template <typename data_t>
@@ -413,13 +414,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    quickvec::Vector<data_t> DataHandlerGPU<data_t>::accessData() const
+    quickvec::Vector<GetQuickvecType_t<data_t>> DataHandlerGPU<data_t>::accessData() const
     {
         return *_data;
     }
 
     template <typename data_t>
-    quickvec::Vector<data_t> DataHandlerGPU<data_t>::accessData()
+    quickvec::Vector<GetQuickvecType_t<data_t>> DataHandlerGPU<data_t>::accessData()
     {
         detach();
         return *_data;
@@ -435,11 +436,12 @@ namespace elsa
                 data_t* oldData = _data->_data.get();
 
                 // create deep copy of vector
-                _data = std::make_shared<quickvec::Vector<data_t>>(_data->clone());
+                _data =
+                    std::make_shared<quickvec::Vector<GetQuickvecType_t<data_t>>>(_data->clone());
 
                 // modify all associated maps
                 for (auto map : _associatedMaps)
-                    new (&map->_map) quickvec::Vector<data_t>(
+                    new (&map->_map) quickvec::Vector<GetQuickvecType_t<data_t>>(
                         _data->_data.get() + (map->_map._data.get() - oldData),
                         static_cast<size_t>(map->getSize()));
             }
@@ -452,7 +454,7 @@ namespace elsa
     {
         if (_data.use_count() != 1) {
             // allocate new vector
-            auto newData = std::make_shared<quickvec::Vector<data_t>>(getSize());
+            auto newData = std::make_shared<quickvec::Vector<GetQuickvecType_t<data_t>>>(getSize());
 
             // copy elements before start of block
             for (index_t i = 0; i < startIndex; ++i) {
@@ -468,7 +470,7 @@ namespace elsa
 
             // modify all associated maps
             for (auto map : _associatedMaps)
-                new (&map->_map) quickvec::Vector<data_t>(
+                new (&map->_map) quickvec::Vector<GetQuickvecType_t<data_t>>(
                     newData->_data.get() + (map->_map._data.get() - _data->_data.get()),
                     static_cast<size_t>(map->getSize()));
 
@@ -477,7 +479,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DataHandlerGPU<data_t>::attach(const std::shared_ptr<quickvec::Vector<data_t>>& data)
+    void DataHandlerGPU<data_t>::attach(
+        const std::shared_ptr<quickvec::Vector<GetQuickvecType_t<data_t>>>& data)
     {
         data_t* oldData = _data->_data.get();
 
@@ -486,13 +489,14 @@ namespace elsa
 
         // modify all associated maps
         for (auto& map : _associatedMaps)
-            new (&map->_map)
-                quickvec::Vector<data_t>(_data->_data.get() + (map->_map._data.get() - oldData),
-                                         static_cast<size_t>(map->getSize()));
+            new (&map->_map) quickvec::Vector<GetQuickvecType_t<data_t>>(
+                _data->_data.get() + (map->_map._data.get() - oldData),
+                static_cast<size_t>(map->getSize()));
     }
 
     template <typename data_t>
-    void DataHandlerGPU<data_t>::attach(std::shared_ptr<quickvec::Vector<data_t>>&& data)
+    void DataHandlerGPU<data_t>::attach(
+        std::shared_ptr<quickvec::Vector<GetQuickvecType_t<data_t>>>&& data)
     {
         data_t* oldData = _data->_data.get();
 
@@ -501,9 +505,9 @@ namespace elsa
 
         // modify all associated maps
         for (auto& map : _associatedMaps)
-            new (&map->_map)
-                quickvec::Vector<data_t>(_data->_data.get() + (map->_map._data.get() - oldData),
-                                         static_cast<size_t>(map->getSize()));
+            new (&map->_map) quickvec::Vector<GetQuickvecType_t<data_t>>(
+                _data->_data.get() + (map->_map._data.get() - oldData),
+                static_cast<size_t>(map->getSize()));
     }
 
     // ------------------------------------------

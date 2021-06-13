@@ -2,7 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DataHandler.h"
-#include "Quickvec.h"
+#include "Quickvec.cuh"
 #include "Badge.hpp"
 
 #include <Eigen/Core>
@@ -177,7 +177,7 @@ namespace elsa
 
     protected:
         /// vector mapping of the data
-        quickvec::Vector<data_t> _map;
+        quickvec::Vector<GetQuickvecType_t<data_t>> _map;
 
         /// pointer to the data-owning handler
         DataHandlerGPU<data_t>* _dataOwner;
@@ -196,10 +196,10 @@ namespace elsa
         void assign(DataHandler<data_t>&& other) override;
 
         /// return non-const version of the data
-        quickvec::Vector<data_t> accessData();
+        quickvec::Vector<GetQuickvecType_t<data_t>> accessData();
 
         /// return const version of the data
-        quickvec::Vector<data_t> accessData() const;
+        quickvec::Vector<GetQuickvecType_t<data_t>> accessData() const;
 
     private:
         /**

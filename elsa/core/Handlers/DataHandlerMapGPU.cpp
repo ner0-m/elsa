@@ -397,14 +397,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    quickvec::Vector<data_t> DataHandlerMapGPU<data_t>::accessData()
+    quickvec::Vector<GetQuickvecType_t<data_t>> DataHandlerMapGPU<data_t>::accessData()
     {
         _dataOwner->detach();
         return _map;
     }
 
     template <typename data_t>
-    quickvec::Vector<data_t> DataHandlerMapGPU<data_t>::accessData() const
+    quickvec::Vector<GetQuickvecType_t<data_t>> DataHandlerMapGPU<data_t>::accessData() const
     {
         return _map;
     }

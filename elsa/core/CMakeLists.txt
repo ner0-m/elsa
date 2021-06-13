@@ -52,7 +52,6 @@ set(MODULE_SOURCES
 
 if(${ELSA_BUILD_WITH_QUICKVEC})
     set(MODULE_HEADERS ${MODULE_HEADERS} Handlers/DataHandlerGPU.h Handlers/DataHandlerMapGPU.h)
-
     set(MODULE_SOURCES ${MODULE_SOURCES} Handlers/DataHandlerGPU.cpp Handlers/DataHandlerMapGPU.cpp)
 endif()
 
@@ -96,6 +95,16 @@ ADD_ELSA_MODULE(
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 
+# link Quickvec for DataHandlerGPU
+# Also add the necessary compile definition for quickvec
+if(${ELSA_BUILD_WITH_QUICKVEC})
+    set_source_files_properties(Handlers/DataHandlerGPU.h Handlers/DataHandlerMapGPU.h Handlers/DataHandlerMapGPU.cpp Handlers/DataHandlerGPU.cpp Handlers/DataHandlerCPU.h Handlers/DataHandlerCPU.cpp Handlers/DataHandlerMapCPU.h Handlers/DataHandlerMapCPU.cpp PROPERTIES LANGUAGE CUDA)
+    set_source_files_properties(Expression.h Handlers/DataHandler.h DataContainer.cpp DataContainer.h LinearOperator.cpp PROPERTIES LANGUAGE CUDA)
+    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC "Quickvec::quickvec")
+    target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cuda_std_17)
+endif()
+
 # CMAKE_DL_LIBS is a weird name, so I can't figure out now, how to pass it via argument, so add it later...
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE ${CMAKE_DL_LIBS})
 
@@ -109,11 +118,6 @@ target_include_directories(
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Handlers>
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Utilities>
 )
-
-# Also add the necessary compile definition for quickvec
-if(${ELSA_BUILD_WITH_QUICKVEC})
-    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
-endif()
 
 if(WITH_FFTW AND FFTW3_FOUND)
     target_compile_definitions("${ELSA_MODULE_TARGET_NAME}" PRIVATE WITH_FFTW)
@@ -145,5 +149,5 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
         ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
     )
 endif()
- 
+
 write_module_config(${ELSA_MODULE_NAME})
