@@ -2,7 +2,7 @@
 #
 # Defines the variables:
 #
-#  LLVM_FOUND - LLVM was found of the system
+#  LLVM_FOUND - LLVM was found on the system
 #  LLVM_VERSION - LLVM version
 #  LLVM_CXXFLAGS - C++ compiler flags for files that include LLVM headers
 #  LLVM_INCLUDE_DIR - Directory containing LLVM headers
@@ -47,52 +47,15 @@ function(_find_most_recent_llvm_executable EXECUTABLE_NAME)
   )
 endfunction()
 
-
-# if we are using Clang as the compiler, select the version used instead of the most recent one
-if(CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
-  set(CLANG ${CMAKE_C_COMPILER} CACHE INTERNAL "Path to clang executable")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
-  set(CLANG ${CMAKE_CXX_COMPILER} CACHE INTERNAL "Path to clang executable")
-else()
-  _find_most_recent_llvm_executable(clang)
-endif()
-
-if (CLANG)
-  # determine clang version
-  _set_clang_version(${CLANG})
-
-  # if the version used is too low, look for the most recent version installed on the system instead
-  if(CLANG_VERSION VERSION_LESS "8")
-    _find_most_recent_llvm_executable(clang)
-    _set_clang_version(${CLANG})
-  endif()
-
-  execute_process(
-    COMMAND ${CLANG} -print-resource-dir
-    OUTPUT_VARIABLE CLANG_RESOURCE_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  set(CLANG_RESOURCE_DIR ${CLANG_RESOURCE_DIR} CACHE INTERNAL "path to Clang resource directory")
-
-  if (DEFINED CLANG_VERSION)
-    # use the corresponding version of LLVM
-    find_program(LLVM_CONFIG 
-      NAMES llvm-config-${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}
-            llvm-config-${CLANG_VERSION_MAJOR}${CLANG_VERSION_MINOR}${CLANG_VERSION_PATCH}
-            llvm-config-${CLANG_VERSION_MAJOR}
-            llvm-config)
-  else()
-    _find_most_recent_llvm_executable(llvm-config)
-  endif()
-
-  # determine where libcxx is installed by parsing the output of the clang compilation stage
+# determine where libcxx is installed by parsing the output of the clang compilation stage
+function(_determine_path_to_libcxx CLANG_EXECUTABLE)
   set (NOOP_CPP ${CMAKE_BINARY_DIR}/noop.cpp)
   if (NOT EXISTS ${NOOP_CPP})
     file(WRITE ${NOOP_CPP} "int main() {}")
   endif()
   
   execute_process(
-    COMMAND ${CLANG} -v -c -stdlib=libc++ ${NOOP_CPP} 
+    COMMAND ${CLANG_EXECUTABLE} -v -c -stdlib=libc++ ${NOOP_CPP} 
     ERROR_VARIABLE CLANG_OUT
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     ERROR_STRIP_TRAILING_WHITESPACE)
@@ -119,17 +82,80 @@ if (CLANG)
       set(REACHED_INCLUDE_PATH TRUE)
     endif()
   endforeach()
-else()
-  _find_most_recent_llvm_executable(llvm-config)
+endfunction()
+
+if(NOT LLVM_CONFIG)
+  # llvm-config not manually set and we are using Clang as the compiler, 
+  # select the same llvm version as clang, instead of the most recent one
+  if(CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
+    set(CLANG ${CMAKE_C_COMPILER} CACHE INTERNAL "Path to clang executable")
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
+    set(CLANG ${CMAKE_CXX_COMPILER} CACHE INTERNAL "Path to clang executable")
+  endif()
+  
+  if (CLANG)
+    # determine clang version
+    _set_clang_version(${CLANG})
+
+    if (CLANG VERSION_GREATER_EQUAL "8")
+      find_program(LLVM_CONFIG 
+          NAMES llvm-config-${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}
+                llvm-config-${CLANG_VERSION_MAJOR}${CLANG_VERSION_MINOR}${CLANG_VERSION_PATCH}
+                llvm-config-${CLANG_VERSION_MAJOR}
+                llvm-config)
+    endif()
+
+    _determine_path_to_libcxx(${CLANG})
+  endif()
 endif()
 
+# if LLVM_CONFIG not set manually and couldn't be deduced, look for most recent one
+if (NOT LLVM_CONFIG)
+  _find_most_recent_llvm_executable(llvm-config)
+endif()
 
 if (LLVM_CONFIG)
   execute_process(
     COMMAND ${LLVM_CONFIG} --version
     OUTPUT_VARIABLE LLVM_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  
+
+  # try to find the same version clang as llvm-config
+  if (NOT CLANG OR (NOT CLANG_VERSION VERSION_EQUAL LLVM_VERSION))
+    string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" REGEX_MATCH ${LLVM_VERSION})
+    set(LLVM_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(LLVM_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(LLVM_VERSION_PATCH ${CMAKE_MATCH_3})
+
+    find_program(CLANG 
+      NAMES clang-${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}
+            clang-${LLVM_VERSION_MAJOR}${LLVM_VERSION_MINOR}${LLVM_VERSION_PATCH}
+            clang-${LLVM_VERSION_MAJOR}
+            clang)
+    
+    if(CLANG)
+      _set_clang_version(${CLANG})
+    endif()
+  endif()
+
+  if (CLANG_VERSION VERSION_EQUAL LLVM_VERSION)
+    # if we have found matching version of llvm and clang,
+    # use clang to determine the clang resource dir
+    execute_process(
+      COMMAND ${CLANG} -print-resource-dir
+      OUTPUT_VARIABLE CLANG_RESOURCE_DIR
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(CLANG_RESOURCE_DIR ${CLANG_RESOURCE_DIR} CACHE INTERNAL "path to Clang resource directory")
+  else()
+    # if the versions are not matching, we have to use the default location
+    get_filename_component(LLVM_CONFIG_DIR ${LLVM_CONFIG} DIRECTORY)
+    set(CLANG_RESOURCE_DIR "${LLVM_CONFIG_DIR}/../lib/clang/${LLVM_VERSION}" 
+        CACHE INTERNAL "path to Clang resource directory")
+    # issue a warning since this doesn't always work (see #78)
+    message(WARNING "CLANG_RESOURCE_DIR set to default: ${CLANG_RESOURCE_DIR}, you may have to set it manually")
+  endif()
+
   execute_process(
     COMMAND ${LLVM_CONFIG} --cxxflags
     OUTPUT_VARIABLE LLVM_CXXFLAGS
