@@ -72,12 +72,6 @@ namespace elsa
         SubsetSampler<DetectorDescriptor_t, data_t>::splitRotationalClustering(
             const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets)
     {
-        // angle between two rotation matrices used as a distance measure
-        auto dist = [](auto& g1, auto& g2) {
-            return std::acos(
-                ((g1.getRotationMatrix() * g2.getRotationMatrix().transpose()).trace() - 1.0)
-                / 2.0);
-        };
 
         const auto numCoeffsPerDim = detectorDescriptor.getNumberOfCoefficientsPerDimension();
         const index_t nDimensions = detectorDescriptor.getNumberOfDimensions();
@@ -85,6 +79,18 @@ namespace elsa
         std::vector<index_t> indices(static_cast<std::size_t>(numElements));
         std::iota(indices.begin(), indices.end(), 0);
         const auto geometry = detectorDescriptor.getGeometry();
+
+        // angle between two rotation matrices used as a distance measure
+        auto dist = [nDimensions](auto& g1, auto& g2) {
+            const auto& r1 = g1.getRotationMatrix();
+            const auto& r2 = g2.getRotationMatrix();
+            auto product = r1 * r2.transpose();
+            if (nDimensions == 2) { // the 2D case
+                return static_cast<double>(std::atan2(product(1, 0), product(0, 0)));
+            } else { // the 3D case
+                return std::acos((product.trace() - 1.0) / 2.0);
+            }
+        };
 
         const auto first = geometry.front();
         std::sort(std::begin(indices), std::end(indices),

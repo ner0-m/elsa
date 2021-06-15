@@ -7,7 +7,6 @@
  */
 #include <SphereTrajectoryGenerator.h>
 #include <numeric>
-#include <iostream>
 #include "doctest/doctest.h"
 
 #include "SubsetSampler.h"
@@ -86,10 +85,10 @@ SCENARIO("Testing the standalone subset sampling strategies")
                     static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
             THEN("The mapping is correct with every subset having 8 elements")
             {
-                REQUIRE_EQ(mapping[0], std::vector<index_t>{16, 28, 24, 20, 0, 12, 3, 7});
-                REQUIRE_EQ(mapping[1], std::vector<index_t>{31, 27, 23, 19, 15, 11, 4, 8});
-                REQUIRE_EQ(mapping[2], std::vector<index_t>{30, 26, 22, 18, 14, 1, 5, 9});
-                REQUIRE_EQ(mapping[3], std::vector<index_t>{29, 25, 21, 17, 13, 2, 6, 10});
+                REQUIRE_EQ(mapping[0], std::vector<index_t>{15, 11, 7, 3, 0, 27, 23, 19});
+                REQUIRE_EQ(mapping[1], std::vector<index_t>{14, 10, 6, 2, 30, 26, 22, 18});
+                REQUIRE_EQ(mapping[2], std::vector<index_t>{13, 9, 5, 1, 29, 25, 21, 17});
+                REQUIRE_EQ(mapping[3], std::vector<index_t>{12, 8, 4, 31, 28, 24, 20, 16});
             }
         }
     }
