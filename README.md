@@ -14,9 +14,10 @@ Continuous Integration status (master)
 Documentation
 -------------
 
-Have a look at the [quickstart guide](https://ciip.in.tum.de/elsadocs/guides/quickstart-cxx.html), an [Alternating
-Direction Method of Multipliers solver guide](https://ciip.in.tum.de/elsadocs/guides/admm-cxx.html), or check out the current
-documentation [here](https://ciip.in.tum.de/elsadocs/).
+The current documentation of the master branch is available [here](https://ciip.in.tum.de/elsadocs/).
+There is also
+*  a [quickstart guide](https://ciip.in.tum.de/elsadocs/guides/quickstart-cxx.html)
+*  a [tutorial on the Alternating Direction Method of Multipliers solver](https://ciip.in.tum.de/elsadocs/guides/admm-cxx.html)
 
 Requirements
 ------------
@@ -93,6 +94,7 @@ The **contributors** to elsa are:
 - Jonas Jelten
 - Andi Braimllari
 - Michael Loipfuehrer
+- Jonas Buerger
 
 
 History
@@ -106,3 +108,26 @@ This open-source version is a modernized and cleaned up version of our internal 
 - v0.6: major feature release, e.g. seamless GPU-computing, Python bindings (February 2, 2021)
 - v0.5: the "projector" release (September 18, 2019)
 - v0.4: first public release (July 19, 2019)
+
+Citation
+--------
+
+If you are using elsa in your work, we would like to ask you to cite us:
+
+```txt
+@inproceedings{LasserElsa2019,
+author = {Tobias Lasser and Maximilian Hornung and David Frank},
+title = {{elsa - an elegant framework for tomographic reconstruction}},
+volume = {11072},
+booktitle = {15th International Meeting on Fully Three-Dimensional Image Reconstruction in Radiology and Nuclear Medicine},
+editor = {Samuel Matej and Scott D. Metzler},
+organization = {International Society for Optics and Photonics},
+publisher = {SPIE},
+pages = {570 -- 573},
+keywords = {tomography, tomographic reconstruction, inverse problems, software framework, C++, Python},
+year = {2019},
+doi = {10.1117/12.2534833},
+URL = {https://doi.org/10.1117/12.2534833}
+}
+```
+
