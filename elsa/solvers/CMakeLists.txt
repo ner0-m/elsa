@@ -9,7 +9,8 @@ set(MODULE_HEADERS
     OGM.h
     ADMM.h
     SQS.h
-        OrthogonalMatchingPursuit.h
+    OrthogonalMatchingPursuit.h
+    KSVD.h
 )
 
 # list all the code files of the module
@@ -22,7 +23,8 @@ set(MODULE_SOURCES
     FGM.cpp
     OGM.cpp
     SQS.cpp
-        OrthogonalMatchingPursuit.cpp
+    OrthogonalMatchingPursuit.cpp
+    KSVD.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximity_operators)
