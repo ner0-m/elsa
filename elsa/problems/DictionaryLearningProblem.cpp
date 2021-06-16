@@ -43,24 +43,15 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> DictionaryLearningProblem<data_t>::getRestrictedError(index_t atom)
+    DataContainer<data_t>
+        DictionaryLearningProblem<data_t>::getRestrictedError(IndexVector_t affectedSignals,
+                                                              index_t atom)
     {
-        IndexVector_t affectedSignals(0);
-
-        index_t i = 0;
-        for (auto representation : _representations) {
-            if (representation[atom] != 0) {
-                affectedSignals.conservativeResize(affectedSignals.size() + 1);
-                affectedSignals[affectedSignals.size() - 1] = i;
-            }
-            ++i;
-        }
-
         IdenticalBlocksDescriptor errorDescriptor(affectedSignals.size(),
                                                   _signals.getBlock(0).getDataDescriptor());
         DataContainer<data_t> modifiedError(errorDescriptor);
 
-        i = 0;
+        index_t i = 0;
         for (index_t idx : affectedSignals) {
             modifiedError[i] =
                 _residual[idx] + _dictionary.getAtom(atom) * _representations.getBlock(idx)[atom];
@@ -74,7 +65,7 @@ namespace elsa
     void DictionaryLearningProblem<data_t>::updateError()
     {
         index_t nSignals = _signals.getDataDescriptor().getNumberOfBlocks();
-        for (index_t i; i < nSignals; ++i) {
+        for (index_t i = 0; i < nSignals; ++i) {
             _residual.getBlock(i) =
                 _signals.getBlock(i) - _dictionary.apply(_representations.getBlock(i));
         }

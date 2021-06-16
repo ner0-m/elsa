@@ -52,7 +52,7 @@ namespace elsa
 
         DataContainer<data_t> getGlobalError();
 
-        DataContainer<data_t> getRestrictedError(index_t atom);
+        DataContainer<data_t> getRestrictedError(IndexVector_t affectedSignals, index_t atom);
 
         void updateError();
 
