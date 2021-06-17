@@ -1,4 +1,5 @@
 #include "SubsetProblem.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -31,32 +32,30 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> SubsetProblem<data_t>::getSubsetGradient(index_t subset)
     {
-        if (subset < 0 || static_cast<std::size_t>(subset) >= _subsetProblems.size()) {
+        if (subset < 0 || asUnsigned(subset) >= _subsetProblems.size()) {
             throw std::invalid_argument(
                 "SubsetProblem: subset index out of bounds for number of subsets");
         }
 
-        _subsetProblems[static_cast<std::size_t>(subset)]->getCurrentSolution() =
-            this->getCurrentSolution();
-        return _subsetProblems[static_cast<std::size_t>(subset)]->getGradient();
+        _subsetProblems[asUnsigned(subset)]->getCurrentSolution() = this->getCurrentSolution();
+        return _subsetProblems[asUnsigned(subset)]->getGradient();
     }
 
     template <typename data_t>
     void SubsetProblem<data_t>::getSubsetGradient(DataContainer<data_t>& result, index_t subset)
     {
-        if (subset < 0 || static_cast<std::size_t>(subset) >= _subsetProblems.size()) {
+        if (subset < 0 || asUnsigned(subset) >= _subsetProblems.size()) {
             throw std::invalid_argument(
                 "SubsetProblem: subset index out of bounds for number of subsets");
         }
-        _subsetProblems[static_cast<std::size_t>(subset)]->getCurrentSolution() =
-            this->getCurrentSolution();
-        _subsetProblems[static_cast<std::size_t>(subset)]->getGradient(result);
+        _subsetProblems[asUnsigned(subset)]->getCurrentSolution() = this->getCurrentSolution();
+        _subsetProblems[asUnsigned(subset)]->getGradient(result);
     }
 
     template <typename data_t>
     index_t SubsetProblem<data_t>::getNumberOfSubsets() const
     {
-        return static_cast<index_t>(_subsetProblems.size());
+        return asSigned(_subsetProblems.size());
     }
 
     template <typename data_t>
