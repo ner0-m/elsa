@@ -14,7 +14,11 @@
 namespace elsa
 {
     /// Stats for a single iteration of a run
+    template <typename data_t = real_t>
     struct Stats {
+        /// Typedef to make generic programming easier
+        using Scalar = data_t;
+
         /// Store time as floating point representation that we can easily print in decimal notation
         using fsec = std::chrono::duration<real_t>;
 
@@ -22,10 +26,10 @@ namespace elsa
         fsec::rep _time;
 
         /// Absolute error
-        real_t _absError;
+        data_t _absError;
 
         /// Relative error
-        real_t _relError;
+        data_t _relError;
     };
 
     /**
@@ -34,15 +38,16 @@ namespace elsa
      * @param stats vector of `Stats` storing samples for each iteration of the benchmark
      * @return mean and standard deviation of each of the quantities stored in `Stats`
      */
-    auto evaluateStats(const std::vector<Stats>& stats)
+    template <typename data_t = real_t>
+    auto evaluateStats(const std::vector<Stats<data_t>>& stats)
     {
-        std::vector<Stats::fsec::rep> time;
+        std::vector<typename Stats<data_t>::fsec::rep> time;
         time.reserve(stats.size());
 
-        std::vector<real_t> absError;
+        std::vector<typename Stats<data_t>::Scalar> absError;
         absError.reserve(stats.size());
 
-        std::vector<real_t> relError;
+        std::vector<typename Stats<data_t>::Scalar> relError;
         relError.reserve(stats.size());
 
         for (const auto& s : stats) {
@@ -157,7 +162,7 @@ namespace elsa
             Logging::logHeader();
 
             // Some statistics we want to save
-            std::vector<Stats> stats(benchIters);
+            std::vector<Stats<data_t>> stats(benchIters);
 
             // Setup a phantom, default a Modified Shepp Logan
             auto phantom = phantomSetup(dim, size);
@@ -222,8 +227,9 @@ namespace elsa
                 auto [lower, upper] = confidenceInterval95(benchIters, timeMean, timeStddev);
 
                 // Log a laps
-                Logging::logLaps(dim, size, benchIters, opName, solName, noIters, timeMean,
-                                 timeStddev, lower, upper, absErrMean, relErrMean);
+                Logging::template logLaps<data_t>(dim, size, benchIters, opName, solName, noIters,
+                                                  timeMean, timeStddev, lower, upper, absErrMean,
+                                                  relErrMean);
             }
         }
     } // namespace detail

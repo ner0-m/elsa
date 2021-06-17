@@ -14,4 +14,7 @@ int main()
     benchDriver<CG, SiddonsMethod>(2, 64, 5);
     benchDriver<ADMM, CG, SoftThresholding, SiddonsMethod>(2, 32, 5);
     benchDriver<ISTA, SiddonsMethod>(2, 32, 5);
+
+    // Explicitly test for double
+    benchDriver<CG, SiddonsMethod, double>(2, 64, 5);
 }
