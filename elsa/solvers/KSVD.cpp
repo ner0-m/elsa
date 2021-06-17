@@ -6,9 +6,7 @@ namespace elsa
     KSVD<data_t>::KSVD(/*const*/ DictionaryLearningProblem<data_t>& problem, data_t epsilon)
         : /*Solver<data_t>(problem),*/ _problem{problem},
           _epsilon{epsilon},
-          _nSamples{getNumberOfSamples(problem.getSignals())},
-          _firstLeftSingular(VolumeDescriptor({problem.getCurrentDictionary().getNumberOfAtoms()})),
-          _firstRightSingular(VolumeDescriptor{1})
+          _nSamples{getNumberOfSamples(problem.getSignals())}
     {
     }
 
@@ -18,6 +16,18 @@ namespace elsa
         const auto& signalsDescriptor =
             dynamic_cast<const IdenticalBlocksDescriptor&>(signals.getDataDescriptor());
         return signalsDescriptor.getNumberOfBlocks();
+    }
+
+    template <typename data_t>
+    DataContainer<data_t>& KSVD<data_t>::solve(index_t iterations)
+    {
+        return solveImpl(iterations);
+    }
+
+    template <typename data_t>
+    Dictionary<data_t>& KSVD<data_t>::getLearnedDictionary()
+    {
+        return _problem.getCurrentDictionary();
     }
 
     template <typename data_t>
@@ -40,9 +50,10 @@ namespace elsa
             for (index_t k = 0; k < dict.getNumberOfAtoms(); ++k) {
                 auto affectedSignals = getAffectedSignals(representations, k);
                 auto modifiedError = _problem.getRestrictedError(affectedSignals, k);
-                calculateSVD(modifiedError);
-                dict.updateAtom(k, _firstLeftSingular);
-                updateRepresentations(representations, affectedSignals, k);
+                auto svd = calculateSVD(modifiedError);
+                dict.updateAtom(k, getNextAtom(svd));
+                updateRepresentations(representations, getNextRepresentation(svd), affectedSignals,
+                                      k);
                 _problem.updateError();
                 if (_problem.getGlobalError().l2Norm() < _epsilon)
                     break;
@@ -69,7 +80,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void KSVD<data_t>::calculateSVD(DataContainer<data_t> error)
+    auto KSVD<data_t>::calculateSVD(DataContainer<data_t> error)
     {
         const auto& errorDescriptor =
             dynamic_cast<const IdenticalBlocksDescriptor&>(error.getDataDescriptor());
@@ -83,20 +94,32 @@ namespace elsa
             }
         }
 
-        Eigen::JacobiSVD svd(errorMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
-        _firstLeftSingular =
-            DataContainer<data_t>(VolumeDescriptor({nCoeffs}), svd.matrixU().col(0));
-        _firstSingularValue = svd.singularValues()[0];
-        _firstRightSingular =
-            DataContainer<data_t>(VolumeDescriptor({nBlocks}), svd.matrixV().col(0));
+        return errorMatrix.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> KSVD<data_t>::getNextAtom(
+        Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd)
+    {
+        auto firstLeft = svd.matrixU().col(0);
+        DataContainer<data_t> firstLeftSingular(VolumeDescriptor({firstLeft.rows()}), firstLeft);
+        return firstLeftSingular;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> KSVD<data_t>::getNextRepresentation(
+        Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd)
+    {
+        auto firstRight = svd.matrixV().col(0);
+        DataContainer<data_t> firstRightSingular(VolumeDescriptor({firstRight.rows()}), firstRight);
+        return firstRightSingular * svd.singularValues()[0];
     }
 
     template <typename data_t>
     void KSVD<data_t>::updateRepresentations(DataContainer<data_t>& representations,
+                                             DataContainer<data_t> nextRepresentation,
                                              IndexVector_t affectedSignals, index_t atom)
     {
-        DataContainer<data_t> nextRepresentation = _firstSingularValue * _firstRightSingular;
-
         index_t i = 0;
         for (auto idx : affectedSignals) {
             representations.getBlock(idx)[atom] = nextRepresentation[i];
