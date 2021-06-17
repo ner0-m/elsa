@@ -70,4 +70,10 @@ namespace elsa
                 _signals.getBlock(i) - _dictionary.apply(_representations.getBlock(i));
         }
     }
+
+    // ------------------------------------------
+    // explicit template instantiation
+    template class DictionaryLearningProblem<float>;
+    template class DictionaryLearningProblem<double>;
+
 } // namespace elsa
