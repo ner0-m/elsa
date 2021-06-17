@@ -1,5 +1,5 @@
 #include "DetectorDescriptor.h"
-#include <iostream>
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -62,7 +62,7 @@ namespace elsa
     std::optional<Geometry> DetectorDescriptor::getGeometryAt(const index_t index) const
     {
         // Cast to size_t to silence warnings
-        auto i = std::make_unsigned_t<std::size_t>(index);
+        auto i = asUnsigned(index);
 
         if (_geometry.size() <= i)
             return {};
