@@ -44,6 +44,9 @@ namespace elsa
         /// default destructor
         //~DictionaryLearningProblem() override = default;
 
+        static const IdenticalBlocksDescriptor&
+            getIdenticalBlocksDescriptor(const DataContainer<data_t>& data);
+
         Dictionary<data_t>& getCurrentDictionary();
 
         DataContainer<data_t>& getCurrentRepresentations();

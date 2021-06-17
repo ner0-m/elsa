@@ -5,17 +5,29 @@ namespace elsa
     template <typename data_t>
     DictionaryLearningProblem<data_t>::DictionaryLearningProblem(
         const DataContainer<data_t>& signals, const index_t nAtoms)
-        : _dictionary(signals.getBlock(0), nAtoms),
+        : _dictionary(getIdenticalBlocksDescriptor(signals).getDescriptorOfBlock(0), nAtoms),
           _signals(signals),
-          _residual(signals.getDataDescriptor())
+          _residual(signals.getDataDescriptor()),
+          _representations(
+              IdenticalBlocksDescriptor(getIdenticalBlocksDescriptor(signals).getNumberOfBlocks(),
+                                        VolumeDescriptor({nAtoms})))
     {
-        VolumeDescriptor representationDescriptor({nAtoms});
-        const auto& signalsDescriptor =
-            dynamic_cast<const IdenticalBlocksDescriptor&>(_signals.getDataDescriptor());
-        IdenticalBlocksDescriptor representationsDescriptor(signalsDescriptor.getNumberOfBlocks(),
-                                                            representationDescriptor);
-        _representations = DataContainer(representationsDescriptor);
         updateError();
+    }
+
+    template <typename data_t>
+    const IdenticalBlocksDescriptor&
+        DictionaryLearningProblem<data_t>::getIdenticalBlocksDescriptor(
+            const DataContainer<data_t>& data)
+    {
+        try {
+            const auto& identBlocksDesc =
+                dynamic_cast<const IdenticalBlocksDescriptor&>(data.getDataDescriptor());
+            return identBlocksDesc;
+        } catch (std::bad_cast e) {
+            throw InvalidArgumentError("DictionaryLearningProblem: cannot initialize from signals "
+                                       "without IdenticalBlocksDescriptor");
+        }
     }
 
     template <typename data_t>
@@ -53,8 +65,9 @@ namespace elsa
 
         index_t i = 0;
         for (index_t idx : affectedSignals) {
-            modifiedError[i] =
-                _residual[idx] + _dictionary.getAtom(atom) * _representations.getBlock(idx)[atom];
+            modifiedError.getBlock(i) =
+                _residual.getBlock(idx)
+                + _dictionary.getAtom(atom) * _representations.getBlock(idx)[atom];
             ++i;
         }
 
@@ -64,7 +77,7 @@ namespace elsa
     template <typename data_t>
     void DictionaryLearningProblem<data_t>::updateError()
     {
-        index_t nSignals = _signals.getDataDescriptor().getNumberOfBlocks();
+        index_t nSignals = getIdenticalBlocksDescriptor(_signals).getNumberOfBlocks();
         for (index_t i = 0; i < nSignals; ++i) {
             _residual.getBlock(i) =
                 _signals.getBlock(i) - _dictionary.apply(_representations.getBlock(i));
