@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Solver.h"
+//#include "Solver.h"
 #include "RepresentationProblem.h"
 #include "DictionaryLearningProblem.h"
 #include "OMP.h"
@@ -38,6 +38,11 @@ namespace elsa
         /// default destructor
         //~KSVD() override = default;
 
+        // public entry point, will be inherited from Solver
+        DataContainer<data_t>& solve(index_t iterations);
+
+        Dictionary<data_t>& getLearnedDictionary();
+
     private:
         /// variable affecting the stopping condition
         data_t _epsilon;
@@ -46,10 +51,6 @@ namespace elsa
 
         /// lift the base class variable _problem
         DictionaryLearningProblem<data_t>& _problem;
-
-        DataContainer<data_t> _firstLeftSingular;
-        DataContainer<data_t> _firstRightSingular;
-        data_t _firstSingularValue;
 
         /**
          * @brief Solve the representation problem, i.e. apply iterations number of iterations of
@@ -65,9 +66,16 @@ namespace elsa
         IndexVector_t getAffectedSignals(const DataContainer<data_t>& representations,
                                          index_t atom);
 
-        void calculateSVD(DataContainer<data_t> data);
+        auto calculateSVD(DataContainer<data_t> data);
+
+        DataContainer<data_t> getNextAtom(
+            Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd);
+
+        DataContainer<data_t> getNextRepresentation(
+            Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd);
 
         void updateRepresentations(DataContainer<data_t>& representations,
+                                   DataContainer<data_t> nextRepresentation,
                                    IndexVector_t affectedSignals, index_t atom);
 
         static index_t getNumberOfSamples(const DataContainer<data_t>& signals);
