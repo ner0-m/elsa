@@ -9,6 +9,8 @@
 #include "doctest/doctest.h"
 #include "PartitionDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
+
 #include <stdexcept>
 
 using namespace elsa;
@@ -342,7 +344,7 @@ TEST_CASE("PartitionDescriptor: Testing clone()")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<PartitionDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<PartitionDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }
@@ -363,7 +365,7 @@ TEST_CASE("PartitionDescriptor: Testing clone()")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<PartitionDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<PartitionDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }
@@ -384,7 +386,7 @@ TEST_CASE("PartitionDescriptor: Testing clone()")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<PartitionDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<PartitionDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }

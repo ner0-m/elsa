@@ -36,10 +36,11 @@ namespace elsa
 
         data_t lambda = _problem->getRegularizationTerms()[0].getWeight();
 
-        auto linResid =
-            dynamic_cast<const LinearResidual<data_t>*>(&(_problem->getDataTerm()).getResidual());
-        const LinearOperator<data_t>& A = linResid->getOperator();
-        const DataContainer<data_t>& b = linResid->getDataVector();
+        // Safe as long as only LinearResidual exits
+        const auto& linResid =
+            downcast<LinearResidual<data_t>>((_problem->getDataTerm()).getResidual());
+        const LinearOperator<data_t>& A = linResid.getOperator();
+        const DataContainer<data_t>& b = linResid.getDataVector();
 
         DataContainer<data_t>& x = getCurrentSolution();
         DataContainer<data_t> xPrev = getCurrentSolution();
@@ -89,7 +90,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherFISTA = dynamic_cast<const FISTA*>(&other);
+        auto otherFISTA = downcast_safe<FISTA>(&other);
         if (!otherFISTA)
             return false;
 

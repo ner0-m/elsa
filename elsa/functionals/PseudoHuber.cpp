@@ -1,5 +1,6 @@
 #include "PseudoHuber.h"
 #include "Scaling.h"
+#include "TypeCasts.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -77,7 +78,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherPHuber = dynamic_cast<const PseudoHuber*>(&other);
+        auto otherPHuber = downcast_safe<PseudoHuber>(&other);
         if (!otherPHuber)
             return false;
 

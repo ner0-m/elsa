@@ -18,6 +18,7 @@
 #include "CircleTrajectoryGenerator.h"
 #include "PhantomGenerator.h"
 #include "JacobiPreconditioner.h"
+#include "TypeCasts.hpp"
 #include "testHelpers.h"
 
 using namespace elsa;
@@ -220,8 +221,7 @@ TEST_CASE("FGM: Solving a simple phantom reconstruction")
             numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
 
-        SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                *sinoDescriptor);
+        SiddonsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
         auto sinogram = projector.apply(phantom);
 

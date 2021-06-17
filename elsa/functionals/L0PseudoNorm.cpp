@@ -1,4 +1,5 @@
 #include "L0PseudoNorm.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -45,8 +46,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherL0PseudoNorm = dynamic_cast<const L0PseudoNorm*>(&other);
-        return static_cast<bool>(otherL0PseudoNorm);
+        return is<L0PseudoNorm>(other);
     }
 
     // ------------------------------------------

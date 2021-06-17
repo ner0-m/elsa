@@ -74,23 +74,21 @@ int main()
 
         // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns
         // a VolumeDescriptor
+        auto& volDescriptor = downcast<VolumeDescriptor>(volumeDescriptor);
 
         // setup and run test for fast Joseph's
         Logger::get("Setup")->info("Fast unmatched Joseph's:\n");
-        auto josephsFast = JosephsMethodCUDA(
-            dynamic_cast<const VolumeDescriptor&>(volumeDescriptor), *sinoDescriptor);
+        auto josephsFast = JosephsMethodCUDA(volDescriptor, *sinoDescriptor);
         testExecutionSpeed(josephsFast, phantom, numIters);
 
         // setup and run test for slow Joseph's
         Logger::get("Setup")->info("Slow matched Joseph's:\n");
-        auto josephsSlow = JosephsMethodCUDA(
-            dynamic_cast<const VolumeDescriptor&>(volumeDescriptor), *sinoDescriptor, false);
+        auto josephsSlow = JosephsMethodCUDA(volDescriptor, *sinoDescriptor, false);
         testExecutionSpeed(josephsSlow, phantom, numIters);
 
         // setup and run test for Siddon's
         Logger::get("Setup")->info("Siddon's:\n");
-        auto siddons = SiddonsMethodCUDA(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                         *sinoDescriptor);
+        auto siddons = SiddonsMethodCUDA(volDescriptor, *sinoDescriptor);
         testExecutionSpeed(siddons, phantom, numIters);
     }
 }

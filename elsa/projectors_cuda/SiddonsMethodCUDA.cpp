@@ -1,6 +1,7 @@
 #include "SiddonsMethodCUDA.h"
 #include "LogGuard.h"
 #include "Timer.h"
+#include "TypeCasts.hpp"
 
 #include "Logger.h"
 namespace elsa
@@ -114,7 +115,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherSM = dynamic_cast<const SiddonsMethodCUDA*>(&other);
+        auto otherSM = downcast_safe<SiddonsMethodCUDA>(&other);
         if (!otherSM)
             return false;
 

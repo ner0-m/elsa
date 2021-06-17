@@ -2,6 +2,7 @@
 #include "Timer.h"
 #include "TraverseAABBJosephsMethod.h"
 #include "Error.h"
+#include "TypeCasts.hpp"
 
 #include <type_traits>
 
@@ -59,7 +60,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherJM = dynamic_cast<const JosephsMethod*>(&other);
+        auto otherJM = downcast_safe<JosephsMethod>(&other);
         if (!otherJM)
             return false;
 

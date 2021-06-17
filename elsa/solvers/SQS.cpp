@@ -3,6 +3,7 @@
 #include "SQS.h"
 #include "Logger.h"
 #include "SubsetProblem.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -10,7 +11,7 @@ namespace elsa
     SQS<data_t>::SQS(const Problem<data_t>& problem, bool momentumAcceleration, data_t epsilon)
         : Solver<data_t>(problem), _epsilon{epsilon}, _momentumAcceleration{momentumAcceleration}
     {
-        if (dynamic_cast<const SubsetProblem<data_t>*>(&problem)) {
+        if (is<SubsetProblem<data_t>>(problem)) {
             Logger::get("SQS")->info(
                 "SQS did received a SubsetProblem, running in ordered subset mode");
             _subsetMode = true;
@@ -27,7 +28,7 @@ namespace elsa
           _preconditioner{preconditioner.clone()},
           _momentumAcceleration{momentumAcceleration}
     {
-        if (dynamic_cast<const SubsetProblem<data_t>*>(&problem)) {
+        if (is<SubsetProblem<data_t>>(problem)) {
             Logger::get("SQS")->info(
                 "SQS did received a SubsetProblem, running in ordered subset mode");
             _subsetMode = true;
@@ -147,7 +148,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherSQS = dynamic_cast<const SQS*>(&other);
+        auto otherSQS = downcast_safe<SQS>(&other);
         if (!otherSQS)
             return false;
 

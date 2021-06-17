@@ -1,4 +1,5 @@
 #include "OMP.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -11,7 +12,8 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& OMP<data_t>::solveImpl(index_t iterations)
     {
-        const auto& reprProblem = dynamic_cast<RepresentationProblem<data_t>&>(*_problem);
+        // Safe, as it's the only possible input
+        const auto& reprProblem = downcast<RepresentationProblem<data_t>>(*_problem);
 
         const auto& dict = reprProblem.getDictionary();
         const auto& residual = _problem->getDataTerm().getResidual();
@@ -70,8 +72,7 @@ namespace elsa
     template <typename data_t>
     OMP<data_t>* OMP<data_t>::cloneImpl() const
     {
-        const auto& reprProblem = dynamic_cast<RepresentationProblem<data_t>&>(*_problem);
-        return new OMP(reprProblem, _epsilon);
+        return new OMP(downcast<RepresentationProblem<data_t>>(*_problem), _epsilon);
     }
 
     template <typename data_t>
@@ -80,7 +81,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherOMP = dynamic_cast<const OMP*>(&other);
+        auto otherOMP = downcast_safe<OMP>(&other);
         if (!otherOMP)
             return false;
 

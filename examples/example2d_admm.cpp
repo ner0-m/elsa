@@ -28,8 +28,7 @@ void example2d_admm()
 
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
     // VolumeDescriptor
-    SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                            *sinoDescriptor);
+    SiddonsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);

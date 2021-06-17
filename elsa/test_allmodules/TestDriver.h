@@ -4,6 +4,7 @@
 #include "SetupHelpers.h"
 #include "NoiseGenerators.h"
 #include "LoggingHelpers.h"
+#include "TypeCasts.hpp"
 
 #include <thread>
 #include <chrono>
@@ -172,8 +173,7 @@ namespace elsa
             // Add noise, default NoNoiseGenerator
             phantom = noiseGen(phantom);
 
-            const auto& volDesc =
-                dynamic_cast<const VolumeDescriptor&>(phantom.getDataDescriptor());
+            const auto& volDesc = downcast<VolumeDescriptor>(phantom.getDataDescriptor());
             const IndexVector_t coeffs = volDesc.getNumberOfCoefficientsPerDimension();
 
             // setup trajectory

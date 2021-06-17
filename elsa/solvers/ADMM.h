@@ -80,20 +80,20 @@ namespace elsa
             if (iterations == 0)
                 iterations = _defaultIterations;
 
-            auto* splittingProblem = dynamic_cast<SplittingProblem<data_t>*>(_problem.get());
+            auto& splittingProblem = downcast<SplittingProblem<data_t>>(*_problem);
 
-            const auto& f = splittingProblem->getF();
-            const auto& g = splittingProblem->getG();
+            const auto& f = splittingProblem.getF();
+            const auto& g = splittingProblem.getG();
 
             const auto& dataTerm = f;
 
-            if (!dynamic_cast<const L2NormPow2<data_t>*>(&dataTerm)) {
+            if (!is<L2NormPow2<data_t>>(dataTerm)) {
                 throw std::invalid_argument(
                     "ADMM::solveImpl: supported data term only of type L2NormPow2");
             }
 
-            const auto& dataTermResidual =
-                dynamic_cast<const LinearResidual<data_t>&>(f.getResidual());
+            // Safe as long as only LinearResidual exits
+            const auto& dataTermResidual = downcast<LinearResidual<data_t>>(f.getResidual());
 
             if (g.size() != 1) {
                 throw std::invalid_argument(
@@ -103,13 +103,13 @@ namespace elsa
             data_t regWeight = g[0].getWeight();
             Functional<data_t>& regularizationTerm = g[0].getFunctional();
 
-            if (!dynamic_cast<L0PseudoNorm<data_t>*>(&regularizationTerm)
-                && !dynamic_cast<L1Norm<data_t>*>(&regularizationTerm)) {
+            if (!is<L0PseudoNorm<data_t>>(regularizationTerm)
+                && !is<L1Norm<data_t>>(regularizationTerm)) {
                 throw std::invalid_argument("ADMM::solveImpl: supported regularization terms are "
                                             "of type L0PseudoNorm or L1Norm");
             }
 
-            const auto& constraint = splittingProblem->getConstraint();
+            const auto& constraint = splittingProblem.getConstraint();
             const auto& A = constraint.getOperatorA();
             const auto& B = constraint.getOperatorB();
             const auto& c = constraint.getDataVectorC();
@@ -210,8 +210,7 @@ namespace elsa
         /// implement the polymorphic clone operation
         auto cloneImpl() const -> ADMM<XSolver, ZSolver>* override
         {
-            return new ADMM<XSolver, ZSolver>(
-                *dynamic_cast<SplittingProblem<data_t>*>(_problem.get()));
+            return new ADMM<XSolver, ZSolver>(downcast<SplittingProblem<data_t>>(*_problem));
         }
 
     private:

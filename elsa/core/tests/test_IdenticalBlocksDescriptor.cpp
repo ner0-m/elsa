@@ -11,6 +11,7 @@
 #include "doctest/doctest.h"
 
 #include "IdenticalBlocksDescriptor.h"
+#include "TypeCasts.hpp"
 
 using namespace elsa;
 using namespace doctest;
@@ -264,7 +265,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Testing cloning")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<IdenticalBlocksDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }
@@ -285,7 +286,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Testing cloning")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<IdenticalBlocksDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }
@@ -306,7 +307,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Testing cloning")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<IdenticalBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<IdenticalBlocksDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }

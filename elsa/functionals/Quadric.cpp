@@ -1,5 +1,6 @@
 #include "Quadric.h"
 #include "Identity.h"
+#include "TypeCasts.hpp"
 
 #include <stdexcept>
 
@@ -90,7 +91,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherQuadric = dynamic_cast<const Quadric*>(&other);
+        auto otherQuadric = downcast_safe<Quadric>(&other);
         if (!otherQuadric)
             return false;
 

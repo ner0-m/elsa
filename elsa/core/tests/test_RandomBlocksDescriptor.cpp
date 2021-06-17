@@ -9,6 +9,8 @@
 #include "doctest/doctest.h"
 #include "RandomBlocksDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
+
 #include <stdexcept>
 
 using namespace elsa;
@@ -432,7 +434,7 @@ TEST_CASE("RandomBlocksDescriptor: Testing clone()")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<RandomBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<RandomBlocksDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }
@@ -463,7 +465,7 @@ TEST_CASE("RandomBlocksDescriptor: Testing clone()")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<RandomBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<RandomBlocksDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }
@@ -498,7 +500,7 @@ TEST_CASE("RandomBlocksDescriptor: Testing clone()")
             THEN("it's a real clone")
             {
                 REQUIRE_NE(bdClone.get(), &bd);
-                REQUIRE_UNARY(dynamic_cast<RandomBlocksDescriptor*>(bdClone.get()));
+                REQUIRE_UNARY(is<RandomBlocksDescriptor>(bdClone.get()));
                 REQUIRE_EQ(*bdClone, bd);
             }
         }

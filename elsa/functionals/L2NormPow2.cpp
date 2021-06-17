@@ -2,6 +2,7 @@
 
 #include "LinearOperator.h"
 #include "Identity.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -46,8 +47,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherL2NormPow2 = dynamic_cast<const L2NormPow2*>(&other);
-        return static_cast<bool>(otherL2NormPow2);
+        return is<L2NormPow2<data_t>>(other);
     }
 
     // ------------------------------------------

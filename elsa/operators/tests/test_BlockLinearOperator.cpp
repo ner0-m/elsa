@@ -7,6 +7,7 @@
 #include "VolumeDescriptor.h"
 #include "Identity.h"
 #include "Scaling.h"
+#include "TypeCasts.hpp"
 
 using namespace elsa;
 using namespace doctest;
@@ -509,7 +510,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing cloning", TestType, float, doub
             THEN("it's a real clone")
             {
                 REQUIRE(bloClone.get() != &blockOp);
-                REQUIRE(dynamic_cast<BlockLinearOperator<TestType>*>(bloClone.get()));
+                REQUIRE(is<BlockLinearOperator<TestType>>(bloClone.get()));
                 REQUIRE(blockOp == *bloClone);
             }
         }
@@ -539,7 +540,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing cloning", TestType, float, doub
             THEN("it's a real clone")
             {
                 REQUIRE(bloClone.get() != &blockOp);
-                REQUIRE(dynamic_cast<BlockLinearOperator<TestType>*>(bloClone.get()));
+                REQUIRE(is<BlockLinearOperator<TestType>>(bloClone.get()));
                 REQUIRE(blockOp == *bloClone);
             }
         }

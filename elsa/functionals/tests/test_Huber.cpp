@@ -14,6 +14,7 @@
 #include "LinearResidual.h"
 #include "Identity.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
 #include "testHelpers.h"
 
 using namespace elsa;
@@ -44,7 +45,7 @@ TEST_CASE_TEMPLATE("Huber: Testing without residual only data", TestType, float,
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
                 REQUIRE_UNARY(linRes);
                 REQUIRE_UNARY_FALSE(linRes->hasDataVector());
                 REQUIRE_UNARY_FALSE(linRes->hasOperator());
@@ -135,7 +136,7 @@ TEST_CASE_TEMPLATE("Huber<TestType>: Testing with residual", TestType, float, do
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* lRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                auto* lRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
                 REQUIRE_UNARY(lRes);
                 REQUIRE_EQ(*lRes, linRes);
             }

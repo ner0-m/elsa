@@ -8,6 +8,7 @@
 #include "DataContainerIterator.h"
 #include "Error.h"
 #include "Expression.h"
+#include "TypeCasts.hpp"
 
 #ifdef ELSA_CUDA_VECTOR
 #include "DataHandlerGPU.h"
@@ -117,16 +118,16 @@ namespace elsa
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
         DataContainer<data_t>& operator=(Source const& source)
         {
-            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(_dataHandler.get())) {
+            if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(_dataHandler.get())) {
                 handler->accessData() = source.template eval<false>();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapCPU<data_t>*>(_dataHandler.get())) {
+                           downcast_safe<DataHandlerMapCPU<data_t>>(_dataHandler.get())) {
                 handler->accessData() = source.template eval<false>();
 #ifdef ELSA_CUDA_VECTOR
-            } else if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(_dataHandler.get())) {
+            } else if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(_dataHandler.get())) {
                 handler->accessData().eval(source.template eval<true>());
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapGPU<data_t>*>(_dataHandler.get())) {
+                           downcast_safe<DataHandlerMapGPU<data_t>>(_dataHandler.get())) {
                 handler->accessData().eval(source.template eval<true>());
 #endif
             } else {
@@ -199,17 +200,17 @@ namespace elsa
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
         data_t dot(const Source& source) const
         {
-            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(_dataHandler.get())) {
+            if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(_dataHandler.get())) {
                 return (*this * source).template eval<false>().sum();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapCPU<data_t>*>(_dataHandler.get())) {
+                           downcast_safe<DataHandlerMapCPU<data_t>>(_dataHandler.get())) {
                 return (*this * source).template eval<false>().sum();
 #ifdef ELSA_CUDA_VECTOR
-            } else if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(_dataHandler.get())) {
+            } else if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(_dataHandler.get())) {
                 DataContainer temp = (*this * source);
                 return temp.sum();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapGPU<data_t>*>(_dataHandler.get())) {
+                           downcast_safe<DataHandlerMapGPU<data_t>>(_dataHandler.get())) {
                 DataContainer temp = (*this * source);
                 return temp.sum();
 #endif

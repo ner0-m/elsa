@@ -1,6 +1,7 @@
 #include "JosephsMethodCUDA.h"
 #include "LogGuard.h"
 #include "Timer.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -118,7 +119,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherJM = dynamic_cast<const JosephsMethodCUDA*>(&other);
+        auto otherJM = downcast_safe<JosephsMethodCUDA>(&other);
         if (!otherJM)
             return false;
 

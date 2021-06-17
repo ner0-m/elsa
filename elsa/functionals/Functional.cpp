@@ -1,5 +1,6 @@
 #include "Functional.h"
 #include "LinearResidual.h"
+#include "TypeCasts.hpp"
 
 #include <stdexcept>
 
@@ -38,7 +39,7 @@ namespace elsa
                 "Functional::evaluate: argument size does not match functional");
 
         // optimize for trivial LinearResiduals (no extra copy for residual result needed then)
-        if (auto* linearResidual = dynamic_cast<LinearResidual<data_t>*>(_residual.get())) {
+        if (auto* linearResidual = downcast_safe<LinearResidual<data_t>>(_residual.get())) {
             if (!linearResidual->hasOperator() && !linearResidual->hasDataVector())
                 return evaluateImpl(x);
         }
@@ -65,7 +66,7 @@ namespace elsa
                 "Functional::getGradient: argument sizes do not match functional");
 
         // optimize for trivial or simple LinearResiduals
-        if (auto* linearResidual = dynamic_cast<LinearResidual<data_t>*>(_residual.get())) {
+        if (auto* linearResidual = downcast_safe<LinearResidual<data_t>>(_residual.get())) {
             // if trivial, no extra copy for residual result needed (and no chain rule)
             if (!linearResidual->hasOperator() && !linearResidual->hasDataVector()) {
                 result = x;
@@ -92,7 +93,7 @@ namespace elsa
     LinearOperator<data_t> Functional<data_t>::getHessian(const DataContainer<data_t>& x)
     {
         // optimize for trivial and simple LinearResiduals
-        if (auto* linearResidual = dynamic_cast<LinearResidual<data_t>*>(_residual.get())) {
+        if (auto* linearResidual = downcast_safe<LinearResidual<data_t>>(_residual.get())) {
             // if trivial, no extra copy for residual result needed (and no chain rule)
             if (!linearResidual->hasOperator() && !linearResidual->hasDataVector())
                 return getHessianImpl(x);

@@ -1,5 +1,6 @@
 #include "FGM.h"
 #include "Logger.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -85,7 +86,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherFGM = dynamic_cast<const FGM*>(&other);
+        auto otherFGM = downcast_safe<FGM>(&other);
         if (!otherFGM)
             return false;
 

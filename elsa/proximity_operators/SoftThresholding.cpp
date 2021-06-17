@@ -1,5 +1,6 @@
 #include "SoftThresholding.h"
 #include "Error.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -45,7 +46,7 @@ namespace elsa
             return false;
         }
 
-        auto otherDerived = dynamic_cast<const SoftThresholding<data_t>*>(&other);
+        auto otherDerived = downcast_safe<SoftThresholding<data_t>>(&other);
 
         return static_cast<bool>(otherDerived);
     }

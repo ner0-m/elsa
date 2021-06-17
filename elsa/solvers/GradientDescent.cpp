@@ -1,7 +1,6 @@
 #include "GradientDescent.h"
 #include "Logger.h"
-
-#include <stdexcept>
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -52,7 +51,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherGD = dynamic_cast<const GradientDescent*>(&other);
+        auto otherGD = downcast_safe<GradientDescent<data_t>>(&other);
         if (!otherGD)
             return false;
 

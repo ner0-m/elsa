@@ -2,6 +2,7 @@
 #include "PartitionDescriptor.h"
 #include "RandomBlocksDescriptor.h"
 #include "DescriptorUtils.h"
+#include "TypeCasts.hpp"
 
 #include <algorithm>
 
@@ -27,7 +28,7 @@ namespace elsa
           _blockType{blockType}
     {
         if (_blockType == COL) {
-            auto trueDomainDesc = dynamic_cast<const BlockDescriptor*>(&domainDescriptor);
+            const auto* trueDomainDesc = downcast_safe<BlockDescriptor>(&domainDescriptor);
 
             if (trueDomainDesc == nullptr)
                 throw InvalidArgumentError(
@@ -53,7 +54,7 @@ namespace elsa
         }
 
         if (_blockType == ROW) {
-            auto trueRangeDesc = dynamic_cast<const BlockDescriptor*>(&rangeDescriptor);
+            const auto* trueRangeDesc = downcast_safe<BlockDescriptor>(&rangeDescriptor);
 
             if (trueRangeDesc == nullptr)
                 throw InvalidArgumentError(

@@ -429,7 +429,7 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
 
         for (const auto& dataTerm : dataTerms) {
             const auto& res = static_cast<const LinearResidual<data_t>&>(dataTerm->getResidual());
-            const auto isWeighted = dynamic_cast<const WeightedL2NormPow2<data_t>*>(dataTerm.get());
+            const auto isWeighted = is<WeightedL2NormPow2<data_t>>(dataTerm.get());
             std::string probType = isWeighted ? "wls problem" : "ls problem";
 
             std::string desc =
@@ -595,8 +595,7 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
             for (const auto& regTerm : dataTerms) {
                 const auto& res =
                     static_cast<const LinearResidual<data_t>&>(regTerm->getResidual());
-                const auto isWeighted =
-                    dynamic_cast<const WeightedL2NormPow2<data_t>*>(regTerm.get());
+                const auto isWeighted = is<WeightedL2NormPow2<data_t>>(regTerm.get());
                 std::string regType =
                     isWeighted ? "weighted l2-norm regularizer" : "l2-norm regularizer";
 

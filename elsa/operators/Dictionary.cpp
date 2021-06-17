@@ -1,4 +1,5 @@
 #include "Dictionary.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -37,10 +38,8 @@ namespace elsa
         Dictionary<data_t>::getIdenticalBlocksDescriptor(const DataContainer<data_t>& data)
     {
         try {
-            const auto& identBlocksDesc =
-                dynamic_cast<const IdenticalBlocksDescriptor&>(data.getDataDescriptor());
-            return identBlocksDesc;
-        } catch (std::bad_cast e) {
+            return downcast_safe<IdenticalBlocksDescriptor>(data.getDataDescriptor());
+        } catch (BadCastError e) {
             throw InvalidArgumentError(
                 "Dictionary: cannot initialize from data without IdenticalBlocksDescriptor");
         }
@@ -167,7 +166,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherDictionary = dynamic_cast<const Dictionary*>(&other);
+        auto otherDictionary = downcast_safe<Dictionary>(&other);
         if (!otherDictionary)
             return false;
 

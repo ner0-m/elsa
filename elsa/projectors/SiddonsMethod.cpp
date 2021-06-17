@@ -1,6 +1,7 @@
 #include "SiddonsMethod.h"
 #include "Timer.h"
 #include "TraverseAABB.h"
+#include "TypeCasts.hpp"
 
 #include <stdexcept>
 #include <type_traits>
@@ -57,7 +58,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherSM = dynamic_cast<const SiddonsMethod*>(&other);
+        auto otherSM = downcast_safe<SiddonsMethod>(&other);
         if (!otherSM)
             return false;
 
