@@ -13,7 +13,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    static index_t getNumberOfSamples(const DataContainer<data_t>& signals)
+    index_t KSVD<data_t>::getNumberOfSamples(const DataContainer<data_t>& signals)
     {
         const auto& signalsDescriptor =
             dynamic_cast<const IdenticalBlocksDescriptor&>(signals.getDataDescriptor());

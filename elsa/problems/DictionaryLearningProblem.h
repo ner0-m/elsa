@@ -44,9 +44,6 @@ namespace elsa
         /// default destructor
         //~DictionaryLearningProblem() override = default;
 
-        static const IdenticalBlocksDescriptor&
-            getIdenticalBlocksDescriptor(const DataContainer<data_t>& data);
-
         Dictionary<data_t>& getCurrentDictionary();
 
         DataContainer<data_t>& getCurrentRepresentations();
@@ -73,5 +70,8 @@ namespace elsa
         DataContainer<data_t> _representations;
         const DataContainer<data_t> _signals;
         DataContainer<data_t> _residual;
+
+        static const IdenticalBlocksDescriptor&
+            getIdenticalBlocksDescriptor(const DataContainer<data_t>& data);
     };
 } // namespace elsa
