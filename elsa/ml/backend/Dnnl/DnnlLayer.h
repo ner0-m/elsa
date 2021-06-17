@@ -12,6 +12,7 @@
 #include "DataDescriptor.h"
 #include "VolumeDescriptor.h"
 #include "Logger.h"
+#include "TypeCasts.hpp"
 
 #include "dnnl.hpp"
 
@@ -227,7 +228,7 @@ namespace elsa::ml
             inline static void validateVectorIndex([[maybe_unused]] const std::vector<T>& vec,
                                                    [[maybe_unused]] index_t index)
             {
-                assert(asIndex(index) >= 0 && asIndex(index) < vec.size()
+                assert(asUnsigned(index) >= 0 && asUnsigned(index) < vec.size()
                        && "Vector index is out of bounds");
             }
 

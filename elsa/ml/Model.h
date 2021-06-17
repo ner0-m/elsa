@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "elsaDefines.h"
+#include "TypeCasts.hpp"
 #include "Common.h"
 #include "BackendAdaptor.h"
 #include "State.h"
@@ -151,7 +152,7 @@ namespace elsa::ml
                        << edge.end()->getData()->getName() << "\n";
                 }
             }
-            if (asIndex(count) != graph.getNodes().size()) {
+            if (asUnsigned(count) != graph.getNodes().size()) {
                 os << "____________________________________________________________________________"
                       "____\n";
             }

@@ -1,4 +1,5 @@
 #include "Loss.h"
+#include "TypeCasts.hpp"
 
 namespace elsa::ml
 {
@@ -93,14 +94,14 @@ namespace elsa::ml
         // Get blocked descriptor where each block represents a single batch
         auto batchDesc = getBlockedBatchDescriptor(x.getDataDescriptor());
 
-        std::vector<data_t> batchLoss(asIndex(batchDesc.getNumberOfBlocks()), data_t(0));
+        std::vector<data_t> batchLoss(asUnsigned(batchDesc.getNumberOfBlocks()), data_t(0));
 
         // Calulate binary-crossentropy for each batch
         for (index_t b = 0; b < batchDesc.getNumberOfBlocks(); ++b) {
 #ifndef ELSA_CUDA_VECTOR
             auto x_expr = (data_t(1) * x.viewAs(batchDesc).getBlock(b)).eval().array();
             auto y_expr = (data_t(1) * y.viewAs(batchDesc).getBlock(b)).eval().array();
-            batchLoss[asIndex(b)] =
+            batchLoss[asUnsigned(b)] =
                 (y_expr * x_expr.max(std::numeric_limits<data_t>::epsilon()).log()
                  + (1 - y_expr) * (1 - x_expr).max(std::numeric_limits<data_t>::epsilon()).log())
                     .mean();
@@ -114,7 +115,7 @@ namespace elsa::ml
                 x2_expr[i] = std::max(x2_expr[i], std::numeric_limits<data_t>::epsilon());
             }
             DataContainer<data_t> l = y_expr * log(x_expr) + (1 - y_expr) * log(x2_expr);
-            batchLoss[asIndex(b)] = l.sum() / x_expr.getSize();
+            batchLoss[asUnsigned(b)] = l.sum() / x_expr.getSize();
 #endif
         }
 
@@ -168,7 +169,7 @@ namespace elsa::ml
         auto batchDesc = getBlockedBatchDescriptor(x.getDataDescriptor());
 
         // Calculate loss for each batch
-        std::vector<data_t> batchLoss(asIndex(batchDesc.getNumberOfBlocks()), data_t(0));
+        std::vector<data_t> batchLoss(asUnsigned(batchDesc.getNumberOfBlocks()), data_t(0));
         for (int b = 0; b < batchDesc.getNumberOfBlocks(); ++b) {
 #ifndef ELSA_CUDA_VECTOR
             auto x_expr = (data_t(1) * x.viewAs(batchDesc).getBlock(b))
@@ -176,14 +177,14 @@ namespace elsa::ml
                               .array()
                               .max(std::numeric_limits<data_t>::epsilon());
             auto y_expr = (data_t(1) * y.viewAs(batchDesc).getBlock(b)).eval();
-            batchLoss[asIndex(b)] = y_expr.dot(x_expr.log().matrix());
+            batchLoss[asUnsigned(b)] = y_expr.dot(x_expr.log().matrix());
 #else
             DataContainer<data_t> x_expr = x.viewAs(batchDesc).getBlock(b);
             for (index_t i = 0; i < x_expr.getSize(); ++i) {
                 x_expr[i] = std::max(x_expr[i], std::numeric_limits<data_t>::epsilon());
             }
             DataContainer<data_t> y_expr = y.viewAs(batchDesc).getBlock(b);
-            batchLoss[asIndex(b)] = y_expr.dot(log(x_expr));
+            batchLoss[asUnsigned(b)] = y_expr.dot(log(x_expr));
 #endif
         }
         data_t loss = reduceLoss(reduction, batchLoss);
@@ -277,17 +278,17 @@ namespace elsa::ml
         auto batchDesc = getBlockedBatchDescriptor(x.getDataDescriptor());
 
         // Calculate loss for each batch
-        std::vector<data_t> batchLoss(asIndex(batchDesc.getNumberOfBlocks()), data_t(0));
+        std::vector<data_t> batchLoss(asUnsigned(batchDesc.getNumberOfBlocks()), data_t(0));
         for (index_t b = 0; b < batchDesc.getNumberOfBlocks(); ++b) {
 #ifndef ELSA_CUDA_VECTOR
             auto x_expr = (data_t(1) * x.viewAs(batchDesc).getBlock(b)).eval().array();
             auto y_expr = (data_t(1) * y.viewAs(batchDesc).getBlock(b)).eval().array();
-            batchLoss[asIndex(b)] = ((y_expr - x_expr) * (y_expr - x_expr)).mean();
+            batchLoss[asUnsigned(b)] = ((y_expr - x_expr) * (y_expr - x_expr)).mean();
 #else
             DataContainer<data_t> x_expr = x.viewAs(batchDesc).getBlock(b);
             DataContainer<data_t> y_expr = y.viewAs(batchDesc).getBlock(b);
             DataContainer<data_t> l = ((y_expr - x_expr) * (y_expr - x_expr));
-            batchLoss[asIndex(b)] = l.sum() / x_expr.getSize();
+            batchLoss[asUnsigned(b)] = l.sum() / x_expr.getSize();
 #endif
         }
         data_t loss = reduceLoss(reduction, batchLoss);

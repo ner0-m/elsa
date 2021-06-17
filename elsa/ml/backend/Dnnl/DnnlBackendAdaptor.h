@@ -7,6 +7,7 @@
 #include <string>
 
 #include "elsaDefines.h"
+#include "TypeCasts.hpp"
 #include "Common.h"
 #include "State.h"
 #include "Layer.h"
@@ -381,7 +382,7 @@ namespace elsa::ml
 
                         inputGradientMemory.clear();
                         inputGradientCounter = 0;
-                        for (std::size_t i = 0; i < asIndex(node->getNumberOfInputs()); ++i) {
+                        for (std::size_t i = 0; i < asUnsigned(node->getNumberOfInputs()); ++i) {
                             inputGradientMemory.push_back(node->getInputGradientMemory(i));
                         }
                     },
@@ -420,8 +421,8 @@ namespace elsa::ml
                     // visitor for the current node in the traversal
                     [&executionStream, &forwardPropagationList](auto node, index_t s) {
                         node->forwardPropagate(executionStream);
-                        assert(forwardPropagationList[asIndex(s)] == false);
-                        forwardPropagationList[asIndex(s)] = true;
+                        assert(forwardPropagationList[asUnsigned(s)] == false);
+                        forwardPropagationList[asUnsigned(s)] = true;
                     },
                     // visitor for the current and the next node in the traversal
                     []([[maybe_unused]] auto node, [[maybe_unused]] index_t s,
@@ -431,14 +432,14 @@ namespace elsa::ml
                     [&backendGraph, &forwardPropagationList]([[maybe_unused]] auto node,
                                                              index_t s) {
                         for (const auto& inEdge : backendGraph.getIncomingEdges(s)) {
-                            if (!forwardPropagationList[asIndex(inEdge.begin()->getIndex())])
+                            if (!forwardPropagationList[asUnsigned(inEdge.begin()->getIndex())])
                                 return true;
                         }
                         return false;
                     });
 
                 forwardPropagationList =
-                    std::vector<bool>(asIndex(backendGraph.getNumberOfNodes()), false);
+                    std::vector<bool>(asUnsigned(backendGraph.getNumberOfNodes()), false);
 
                 index_t outputIdx = *std::begin(model->backendOutputs_);
                 auto outputLayer = getCheckedLayerPtr(backendGraph.getNodes().at(outputIdx));
@@ -476,7 +477,7 @@ namespace elsa::ml
                     for (std::size_t idx = 0; idx < x.size(); ++idx) {
                         // Set this model's input as the input of the model's
                         // input layer.
-                        inputLayer->setInput(x[asIndex(idx)]);
+                        inputLayer->setInput(x[asUnsigned(idx)]);
 
                         // Keep track of all nodes we already handled
                         std::vector<bool> nodeList(backendGraph.getNumberOfNodes(), false);
@@ -487,8 +488,8 @@ namespace elsa::ml
                             // visitor for the current node in the traversal
                             [&executionStream, &nodeList](auto node, index_t s) {
                                 node->forwardPropagate(executionStream);
-                                assert(nodeList[asIndex(s)] == false);
-                                nodeList[asIndex(s)] = true;
+                                assert(nodeList[asUnsigned(s)] == false);
+                                nodeList[asUnsigned(s)] = true;
                             },
                             // visitor for the current and the next node in the traversal
                             []([[maybe_unused]] auto node, [[maybe_unused]] index_t s,
@@ -497,7 +498,7 @@ namespace elsa::ml
                             // predecessors of the current node
                             [&backendGraph, &nodeList]([[maybe_unused]] auto node, index_t s) {
                                 for (const auto& inEdge : backendGraph.getIncomingEdges(s)) {
-                                    if (!nodeList[asIndex(inEdge.begin()->getIndex())])
+                                    if (!nodeList[asUnsigned(inEdge.begin()->getIndex())])
                                         return true;
                                 }
                                 return false;
@@ -510,7 +511,7 @@ namespace elsa::ml
                         // Get accuracy
                         auto label = Utils::Encoding::fromOneHot(output, 10);
                         for (int i = 0; i < model->batchSize_; ++i) {
-                            if (label[i] == y[asIndex(idx)][i]) {
+                            if (label[i] == y[asUnsigned(idx)][i]) {
                                 correct += 1;
                             }
                         }
@@ -519,7 +520,7 @@ namespace elsa::ml
                                          / static_cast<double>(((idx + 1) * model->batchSize_)));
 
                         // Loss calculation
-                        trainingHistory.loss.push_back(lossFunc(output, y[asIndex(idx)]));
+                        trainingHistory.loss.push_back(lossFunc(output, y[asUnsigned(idx)]));
                         epochLoss += trainingHistory.loss.back();
 
                         ++progBar;
@@ -532,7 +533,7 @@ namespace elsa::ml
                                 + " - Accuracy: " + std::to_string(epochAccuracy));
 
                         outputLayer->setOutputGradient(
-                            lossFunc.getLossGradient(output, y[asIndex(idx)]));
+                            lossFunc.getLossGradient(output, y[asUnsigned(idx)]));
 
                         // Backward-propagate all nodes, starting at the output
                         // until we reach the input.
@@ -542,8 +543,8 @@ namespace elsa::ml
                             // Visitor for the current node in the traversal.
                             [&executionStream, &nodeList](auto node, index_t s) {
                                 node->backwardPropagate(executionStream);
-                                assert(nodeList[asIndex(s)] == false);
-                                nodeList[asIndex(s)] = true;
+                                assert(nodeList[asUnsigned(s)] == false);
+                                nodeList[asUnsigned(s)] = true;
                             },
                             // Visitor for the current and the next node in the
                             // traversal.
@@ -551,7 +552,7 @@ namespace elsa::ml
                                [[maybe_unused]] auto nextNode, [[maybe_unused]] index_t nextS) {},
                             [&backendGraph, &nodeList]([[maybe_unused]] auto node, index_t s) {
                                 for (const auto& outEdge : backendGraph.getOutgoingEdges(s)) {
-                                    if (!nodeList[asIndex(outEdge.end()->getIndex())])
+                                    if (!nodeList[asUnsigned(outEdge.end()->getIndex())])
                                         return true;
                                 }
                                 return false;

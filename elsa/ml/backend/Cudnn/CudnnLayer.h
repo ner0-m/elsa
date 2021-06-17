@@ -6,6 +6,7 @@
 
 // #include "Common.h"
 #include "elsaDefines.h"
+#include "TypeCasts.hpp"
 #include "DataDescriptor.h"
 #include "VolumeDescriptor.h"
 #include "CudnnContext.h"
@@ -399,7 +400,7 @@ namespace elsa
             void CudnnLayer<data_t>::validateVectorIndex([[maybe_unused]] const std::vector<T>& vec,
                                                          [[maybe_unused]] index_t index)
             {
-                assert(index >= 0 && asIndex(index) < vec.size()
+                assert(index >= 0 && asUnsigned(index) < vec.size()
                        && "Vector index is out of bounds");
             }
 

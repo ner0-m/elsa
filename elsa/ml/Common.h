@@ -3,17 +3,12 @@
 #include <string>
 
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
     namespace ml
     {
-        template <typename T>
-        auto asIndex(const T& v)
-        {
-            return std::make_unsigned_t<T>(v);
-        }
-
         /// Initializer that can be used to initialize trainable parameters in a network layer
         enum class Initializer {
             /**

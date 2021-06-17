@@ -1,4 +1,5 @@
 #include "DnnlMerging.h"
+#include "TypeCasts.hpp"
 
 namespace elsa::ml
 {
@@ -128,20 +129,20 @@ namespace elsa::ml
                 _outputDescriptor->getNumberOfCoefficients());
 
             for (int i = 0; i < _inputGradient.size(); ++i) {
-                BaseType::validateDnnlMemory(_inputGradient[asIndex(i)].effectiveMemory);
+                BaseType::validateDnnlMemory(_inputGradient[asUnsigned(i)].effectiveMemory);
                 BaseType::validateDnnlMemory(_outputGradient.front().effectiveMemory);
-                BaseType::validateDnnlMemory(_input[asIndex(i)].effectiveMemory);
+                BaseType::validateDnnlMemory(_input[asUnsigned(i)].effectiveMemory);
 
                 // Get input-gradient memory
                 Eigen::Map<Eigen::ArrayX<data_t>> inputGrad(
                     static_cast<data_t*>(
-                        _inputGradient[asIndex(i)].effectiveMemory->get_data_handle()),
-                    _inputDescriptor[asIndex(i)]->getNumberOfCoefficients());
+                        _inputGradient[asUnsigned(i)].effectiveMemory->get_data_handle()),
+                    _inputDescriptor[asUnsigned(i)]->getNumberOfCoefficients());
 
                 // Get input memory
                 Eigen::Map<Eigen::ArrayX<data_t>> input(
-                    static_cast<data_t*>(_input[asIndex(i)].effectiveMemory->get_data_handle()),
-                    _inputDescriptor[asIndex(i)]->getNumberOfCoefficients());
+                    static_cast<data_t*>(_input[asUnsigned(i)].effectiveMemory->get_data_handle()),
+                    _inputDescriptor[asUnsigned(i)]->getNumberOfCoefficients());
 
                 // Compute input-gradient
                 inputGrad = outputGrad * input;

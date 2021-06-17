@@ -2,6 +2,7 @@
 
 #include "Common.h"
 #include "DataContainer.h"
+#include "TypeCasts.hpp"
 
 namespace elsa::ml
 {
@@ -58,7 +59,7 @@ namespace elsa::ml
         {
             IndexVector_t dims(desc.getNumberOfDimensions() + 1);
             dims.head(desc.getNumberOfDimensions()) = desc.getNumberOfCoefficientsPerDimension();
-            dims.tail(1)[asIndex(0)] = batchSize;
+            dims.tail(1)[asUnsigned(0)] = batchSize;
             return VolumeDescriptor(dims);
         }
 

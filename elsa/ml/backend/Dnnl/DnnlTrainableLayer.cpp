@@ -1,4 +1,5 @@
 #include "DnnlTrainableLayer.h"
+#include "TypeCasts.hpp"
 
 namespace elsa::ml
 {
@@ -10,7 +11,7 @@ namespace elsa::ml
                                                        const VolumeDescriptor& weightsDescriptor,
                                                        Initializer initializer)
             : DnnlLayer<data_t>(inputDescriptor, outputDescriptor, "DnnlTrainableLayer"),
-              _weightsGradientAcc(asIndex(weightsDescriptor.getNumberOfCoefficients())),
+              _weightsGradientAcc(asUnsigned(weightsDescriptor.getNumberOfCoefficients())),
               _weightsDescriptor(weightsDescriptor.clone()),
               _initializer(initializer)
         {

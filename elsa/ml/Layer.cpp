@@ -1,5 +1,6 @@
 #include <sstream>
 #include <algorithm>
+#include "TypeCasts.hpp"
 
 #include "Layer.h"
 
@@ -106,11 +107,11 @@ namespace elsa::ml
         if (inputDescriptors_.size() <= static_cast<std::size_t>(index))
             throw std::logic_error("No input descriptor at given index");
 
-        if (!inputDescriptors_[asIndex(index)])
+        if (!inputDescriptors_[asUnsigned(index)])
             throw std::logic_error("Input descriptor not set");
 
         return *detail::dynamic_unique_ptr_cast<VolumeDescriptor>(
-            inputDescriptors_[asIndex(index)]->clone());
+            inputDescriptors_[asUnsigned(index)]->clone());
     }
 
     template <typename data_t>

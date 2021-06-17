@@ -1,6 +1,7 @@
 #include "Model.h"
 
 #include <deque>
+#include "TypeCasts.hpp"
 
 namespace elsa::ml
 {
@@ -44,7 +45,7 @@ namespace elsa::ml
 
         // We maintain a list of nodes we've already visited and a call-queue to
         // ensure the correct order of traversal.
-        std::vector<bool> visited(asIndex(graph.getNumberOfNodes()));
+        std::vector<bool> visited(asUnsigned(graph.getNumberOfNodes()));
         // Note that this queue is in fact a deque, so we can push and pop from
         // both, the front and back.
         std::deque<index_t> queue;
@@ -98,7 +99,7 @@ namespace elsa::ml
                         // all of its inputs
                         nodes.at(s).getData()->computeOutputDescriptor();
 
-                        visited[asIndex(s)] = true;
+                        visited[asUnsigned(s)] = true;
                     } else {
                         // We end up here if we have a merging layer but haven't
                         // collected all of its inputs yet. In this case we
