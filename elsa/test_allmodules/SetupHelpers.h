@@ -150,7 +150,7 @@ namespace elsa
 
                 // Create L1 regularization term
                 L1Norm regFunc(op.getDomainDescriptor());
-                RegularizationTerm regTerm(0.5f, regFunc);
+                RegularizationTerm regTerm(data_t{0.5}, regFunc);
 
                 // Create LASSOProblem
                 LASSOProblem lassoProb(problem, regTerm);
