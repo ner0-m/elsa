@@ -147,4 +147,13 @@ namespace elsa
         InvalidArgumentError(const std::string& msg);
     };
 
+    /**
+     * Could not cast to the given type
+     */
+    class BadCastError : public Error
+    {
+    public:
+        BadCastError(const std::string& msg);
+    };
+
 } // namespace elsa

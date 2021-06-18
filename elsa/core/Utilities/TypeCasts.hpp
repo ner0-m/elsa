@@ -6,16 +6,23 @@
 #include <memory>
 
 #include "elsaDefines.h"
+#include "Error.h"
 
 namespace elsa
 {
+    namespace detail
+    {
+        /// Type of CopyConst_t is 'const Dst' if Src is 'const Type', else it's 'Dst'
+        template <typename Src, typename Dst>
+        using CopyConst_t =
+            typename std::conditional_t<std::is_const_v<Src>, std::add_const_t<Dst>, Dst>;
+    } // namespace detail
+
     /// Check if a type can be dynamically casted to another
     template <typename Derived, typename Base>
     bool is(Base& input)
     {
-        using OutputType =
-            std::conditional_t<std::is_const_v<Base>, std::add_const_t<Derived>, Derived>;
-        return dynamic_cast<OutputType*>(&input);
+        return dynamic_cast<detail::CopyConst_t<Base, Derived>*>(&input);
     }
 
     /// Overload to check for pointer types directly
@@ -36,47 +43,43 @@ namespace elsa
 
     /// Downcast pointer, assumes that type is known (i.e. checked by is(...))
     template <typename Derived, typename Base>
-    auto downcast(Base* input)
-        -> std::conditional_t<std::is_const_v<Base>, std::add_const_t<Derived>, Derived>*
+    auto downcast(Base* input) -> detail::CopyConst_t<Base, Derived>*
     {
         static_assert(std::is_base_of_v<Base, Derived>, "To downcast, types needs to be derived");
-        using ReturnType =
-            std::conditional_t<std::is_const_v<Base>, std::add_const_t<Derived>, Derived>;
 
         assert(!input || is<Derived>(*input));
 
-        return static_cast<ReturnType*>(input);
+        return static_cast<detail::CopyConst_t<Base, Derived>*>(input);
     }
 
     /// Downcast reference, assumes that type is known (i.e. checked by is(...))
     template <typename Derived, typename Base>
-    auto downcast(Base& input)
-        -> std::conditional_t<std::is_const_v<Base>, std::add_const_t<Derived>, Derived>&
+    auto downcast(Base& input) -> detail::CopyConst_t<Base, Derived>&
     {
         static_assert(std::is_base_of_v<Base, Derived>, "To downcast, types needs to be derived");
-        using ReturnType =
-            std::conditional_t<std::is_const_v<Base>, std::add_const_t<Derived>, Derived>;
 
         assert(is<Derived>(input));
 
-        return static_cast<ReturnType&>(input);
+        return static_cast<detail::CopyConst_t<Base, Derived>&>(input);
     }
 
     /// Downcast reference, assumes that type is known (i.e. checked by is(...))
-    template <typename Derived, typename Base, typename Deleter>
-    std::unique_ptr<Derived, Deleter> downcast(std::unique_ptr<Base, Deleter>&& input)
+    /// Note: This version only works with the default deleter, if you need a fancy deleter,
+    /// this function might need's some overloading and SFINAE to get it working
+    template <typename Derived, typename Base>
+    std::unique_ptr<Derived> downcast(std::unique_ptr<Base>&& input)
     {
         static_assert(std::is_base_of_v<Base, Derived>, "To downcast, types needs to be derived");
 
         assert(is<Derived>(input));
 
         auto d = static_cast<Derived*>(input.release());
-        return std::unique_ptr<Derived, Deleter>(d, std::move(input.get_deleter()));
+        return std::unique_ptr<Derived>(d);
     }
 
     /// Try to downcast pointer to Base to Derived, return a nullptr if it fails
     template <typename Derived, typename Base>
-    Derived* downcast_safe(Base* input)
+    auto downcast_safe(Base* input) -> detail::CopyConst_t<Base, Derived>*
     {
         static_assert(std::is_base_of_v<Base, Derived>, "To downcast, types needs to be derived");
 
@@ -90,27 +93,33 @@ namespace elsa
     /// Try to downcast reference to Base to Derived, Will throw std::bad_cast if it can't
     /// dynamically cast to Derived
     template <typename Derived, typename Base>
-    Derived& downcast_safe(Base& input)
+    auto downcast_safe(Base& input) -> detail::CopyConst_t<Base, Derived>&
     {
         static_assert(std::is_base_of_v<Base, Derived>, "To downcast, types needs to be derived");
 
-        return dynamic_cast<Derived&>(input);
+        if (is<Derived>(input)) {
+            return downcast<Derived>(input);
+        }
+
+        throw BadCastError("Could not cast given reference to wanted type");
     }
 
     /// Try to downcast a unique_ptr to Base to Derived, return a nullptr if it fails
-    /// Note that if the downcast can't be performed the callees unique_ptr is not touched
+    /// Note: that if the downcast can't be performed the callees unique_ptr is not touched
     /// But once the cast is done, the callees unique_ptr is not safe to use anymore
-    template <typename Derived, typename Base, typename Deleter>
-    std::unique_ptr<Derived, Deleter> downcast_safe(std::unique_ptr<Base, Deleter>&& input)
+    /// Also This version only works with the default deleter, if you need a fancy deleter,
+    /// this function might need's some overloading and SFINAE to get it working
+    template <typename Derived, typename Base>
+    std::unique_ptr<Derived> downcast_safe(std::unique_ptr<Base>&& input)
     {
         static_assert(std::is_base_of_v<Base, Derived>, "To downcast, types needs to be derived");
 
         if (Derived* result = downcast_safe<Derived>(input.get())) {
             input.release();
-            return std::unique_ptr<Derived, Deleter>(result, std::move(input.get_deleter()));
+            return std::unique_ptr<Derived>(result);
         }
 
-        return std::unique_ptr<Derived, Deleter>(nullptr, input.get_deleter());
+        return std::unique_ptr<Derived>(nullptr);
     }
 
     namespace detail

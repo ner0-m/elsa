@@ -141,4 +141,6 @@ namespace elsa
 
     InvalidArgumentError::InvalidArgumentError(const std::string& msg) : Error{msg} {}
 
+    BadCastError::BadCastError(const std::string& msg) : Error{msg} {}
+
 } // namespace elsa
