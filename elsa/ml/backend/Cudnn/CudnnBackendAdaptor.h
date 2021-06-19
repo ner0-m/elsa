@@ -77,8 +77,8 @@ namespace elsa::ml
 
                         // Get the corresponding node in the front-end graph as
                         // a trainable layer
-                        auto trainableLayer = dynamic_cast<Trainable<data_t>*>(
-                            State<data_t>::getGraph().getData(nodeIdx));
+                        auto trainableLayer =
+                            downcast<Trainable<data_t>>(State<data_t>::getGraph().getData(nodeIdx));
                         Activation activation = trainableLayer->getActivation();
 
                         // Insert a new node that will hold our activation layer
@@ -162,7 +162,7 @@ namespace elsa::ml
                     case LayerType::Sigmoid:
                     case LayerType::Tanh:
                     case LayerType::Elu: {
-                        auto downcastedLayer = dynamic_cast<const ActivationBase<data_t>*>(node);
+                        auto downcastedLayer = downcast<ActivationBase<data_t>>(node);
                         cudnn_impl::addActivationNode<data_t>(nodeIdx,
                                                               downcastedLayer->getActivation(),
                                                               inputDescriptorWithBatchSize, graph);
@@ -170,7 +170,7 @@ namespace elsa::ml
                     }
                     case LayerType::Dense: {
                         // Downcast to the polymorphic layer type
-                        auto downcastedLayer = dynamic_cast<const Dense<data_t>*>(node);
+                        auto downcastedLayer = downcast<Dense<data_t>>(node);
 
                         assert(node->getInputDescriptor().getNumberOfDimensions() == 1
                                && "Dense layer requires 1D input");
@@ -212,7 +212,7 @@ namespace elsa::ml
                     case LayerType::Conv2D:
                     case LayerType::Conv3D: {
                         // Downcast to the polymorphic layer type
-                        auto downcastedLayer = dynamic_cast<const Conv<data_t>*>(node);
+                        auto downcastedLayer = downcast<Conv<data_t>>(node);
 
                         // Build weights descriptor
                         VolumeDescriptor filterDescriptor =
@@ -252,7 +252,7 @@ namespace elsa::ml
                     case LayerType::MaxPooling1D:
                     case LayerType::MaxPooling2D: {
                         // Downcast to the polymorphic layer type
-                        auto downcastedLayer = dynamic_cast<const Pooling<data_t>*>(node);
+                        auto downcastedLayer = downcast_safe<Pooling<data_t>>(node);
 
                         IndexVector_t poolingWindow = downcastedLayer->getPoolSize();
                         IndexVector_t strides(poolingWindow.size());
@@ -270,7 +270,7 @@ namespace elsa::ml
                         break;
                     }
                     case LayerType::UpSampling2D: {
-                        auto downcastedLayer = dynamic_cast<const UpSampling2D<data_t>*>(node);
+                        auto downcastedLayer = downcast_safe<UpSampling2D<data_t>>(node);
                         graph->setData(nodeIdx, std::make_shared<CudnnUpsampling<data_t>>(
                                                     /* input-descriptor */
                                                     inputDescriptorWithBatchSize,

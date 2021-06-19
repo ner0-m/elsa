@@ -54,8 +54,7 @@ namespace elsa::ml
             VolumeDescriptor getInputDescriptor(index_t index = 0) const
             {
                 validateVectorIndex(_inputDescriptor, index);
-                return *dynamic_unique_ptr_cast<VolumeDescriptor>(
-                    _inputDescriptor[asUnsigned(index)]->clone());
+                return downcast_safe<VolumeDescriptor>(*_inputDescriptor[asUnsigned(index)]);
             }
 
             /// Get this layer's output-descriptor
@@ -63,7 +62,7 @@ namespace elsa::ml
             {
                 assert(_outputDescriptor != nullptr
                        && "Cannot get output-descriptor since it is null");
-                return *dynamic_unique_ptr_cast<VolumeDescriptor>(_outputDescriptor->clone());
+                return downcast_safe<VolumeDescriptor>(*_outputDescriptor);
             }
 
             /// Set this layer's input at a given index.

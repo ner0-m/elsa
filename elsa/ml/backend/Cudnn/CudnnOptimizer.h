@@ -84,14 +84,14 @@ namespace elsa
                 {
                     switch (opt->getOptimizerType()) {
                         case OptimizerType::Adam: {
-                            auto downcastedOpt = dynamic_cast<Adam<data_t>*>(opt);
+                            auto downcastedOpt = downcast<Adam<data_t>>(opt);
                             return std::make_shared<OptimizerAdamImpl<data_t, MlBackend::Cudnn>>(
                                 size, context, downcastedOpt->getLearningRate(),
                                 downcastedOpt->getBeta1(), downcastedOpt->getBeta2(),
                                 downcastedOpt->getEpsilon());
                         }
                         case OptimizerType::SGD: {
-                            auto downcastedOpt = dynamic_cast<SGD<data_t>*>(opt);
+                            auto downcastedOpt = downcast<SGD<data_t>>(opt);
                             return std::make_shared<OptimizerSGDImpl<data_t, MlBackend::Cudnn>>(
                                 size, context, downcastedOpt->getLearningRate(),
                                 downcastedOpt->getMomentum(), downcastedOpt->useNesterov());

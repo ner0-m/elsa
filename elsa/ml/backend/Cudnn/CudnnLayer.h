@@ -337,13 +337,13 @@ namespace elsa
             VolumeDescriptor CudnnLayer<data_t>::getInputDescriptor(index_t index) const
             {
                 validateVectorIndex(inputDescriptor_, index);
-                return *dynamic_unique_ptr_cast<VolumeDescriptor>(inputDescriptor_[index]->clone());
+                return *downcast_safe<VolumeDescriptor>(*inputDescriptor_[index]);
             }
 
             template <typename data_t>
             VolumeDescriptor CudnnLayer<data_t>::getOutputDescriptor() const
             {
-                return *dynamic_unique_ptr_cast<VolumeDescriptor>(outputDescriptor_->clone());
+                return *downcast_safe<VolumeDescriptor>(*outputDescriptor_);
             }
 
             template <typename data_t>
