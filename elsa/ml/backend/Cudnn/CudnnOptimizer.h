@@ -19,7 +19,8 @@ namespace elsa
                                  data_t learningRate = data_t(0.01), data_t momentum = data_t(0.0),
                                  bool nesterov = false);
 
-                void updateParameter(const data_t* gradient, int batchSize, data_t* param) override;
+                void updateParameter(const data_t* gradient, index_t batchSize,
+                                     data_t* param) override;
 
             private:
                 /// \copydoc OptimizerImplBase::learningRate_

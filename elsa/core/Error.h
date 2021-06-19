@@ -11,7 +11,7 @@ namespace elsa
 
     // fwd-decls for Backtrace.h
     struct backtrace_symbol;
-    struct Backtrace;
+    class Backtrace;
 
     /**
      * Base exception for every error that occurs in elsa.

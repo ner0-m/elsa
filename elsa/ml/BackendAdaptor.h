@@ -97,7 +97,7 @@ namespace elsa::ml
             for (auto&& node : backendGraph->getNodes()) {
                 auto layer = getCheckedLayerPtr(node.second);
                 layer->setNumberOfOutputGradients(
-                    backendGraph->getOutgoingEdges(node.first).size());
+                    asSigned(backendGraph->getOutgoingEdges(node.first).size()));
             }
         }
     } // namespace detail

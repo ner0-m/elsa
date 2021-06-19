@@ -25,7 +25,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void RepresentationProblem<data_t>::getGradientImpl(DataContainer<data_t>& result)
+    void RepresentationProblem<data_t>::getGradientImpl(DataContainer<data_t>&)
     {
         throw LogicError(
             "RepresentationProblem::getGradient: Objective function is not differentiable");

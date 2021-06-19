@@ -383,7 +383,8 @@ namespace elsa::ml
                         inputGradientMemory.clear();
                         inputGradientCounter = 0;
                         for (std::size_t i = 0; i < asUnsigned(node->getNumberOfInputs()); ++i) {
-                            inputGradientMemory.push_back(node->getInputGradientMemory(i));
+                            inputGradientMemory.push_back(
+                                node->getInputGradientMemory(asSigned(i)));
                         }
                     },
                     // visitor for the current and the next node in the traversal
@@ -393,7 +394,7 @@ namespace elsa::ml
                         assert(inputGradientMemory[inputGradientCounter] != nullptr
                                && "Input-gradient memory is null during backward graph-traversal");
                         prevNode->setNextOutputGradientMemory(
-                            inputGradientMemory[inputGradientCounter]);
+                            inputGradientMemory[asUnsigned(inputGradientCounter)]);
                         ++inputGradientCounter;
                     },
                     []([[maybe_unused]] auto node) { return false; });
@@ -413,7 +414,8 @@ namespace elsa::ml
                 inputLayer->setInput(x);
 
                 // Keep track of all node we already handled
-                std::vector<bool> forwardPropagationList(backendGraph.getNumberOfNodes(), false);
+                std::vector<bool> forwardPropagationList(
+                    asUnsigned(backendGraph.getNumberOfNodes()), false);
 
                 backendGraph.visitWithIndex(
                     // Start node for traversal
@@ -480,7 +482,8 @@ namespace elsa::ml
                         inputLayer->setInput(x[asUnsigned(idx)]);
 
                         // Keep track of all nodes we already handled
-                        std::vector<bool> nodeList(backendGraph.getNumberOfNodes(), false);
+                        std::vector<bool> nodeList(asUnsigned(backendGraph.getNumberOfNodes()),
+                                                   false);
 
                         backendGraph.visitWithIndex(
                             // Start node for traversal
@@ -504,7 +507,8 @@ namespace elsa::ml
                                 return false;
                             });
 
-                        nodeList = std::vector<bool>(backendGraph.getNumberOfNodes(), false);
+                        nodeList =
+                            std::vector<bool>(asUnsigned(backendGraph.getNumberOfNodes()), false);
 
                         auto output = outputLayer->getOutput();
 
@@ -516,8 +520,9 @@ namespace elsa::ml
                             }
                         }
 
-                        epochAccuracy = (static_cast<double>(correct)
-                                         / static_cast<double>(((idx + 1) * model->batchSize_)));
+                        epochAccuracy =
+                            (static_cast<double>(correct)
+                             / static_cast<double>(((idx + 1) * asUnsigned(model->batchSize_))));
 
                         // Loss calculation
                         trainingHistory.loss.push_back(lossFunc(output, y[asUnsigned(idx)]));

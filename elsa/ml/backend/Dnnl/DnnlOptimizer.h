@@ -21,7 +21,8 @@ namespace elsa
                                   data_t beta1 = data_t(0.9), data_t beta2 = data_t(0.999),
                                   data_t epsilon = data_t(1e-7));
 
-                void updateParameter(const data_t* gradient, int batchSize, data_t* param) override;
+                void updateParameter(const data_t* gradient, index_t batchSize,
+                                     data_t* param) override;
 
             private:
                 /// \copydoc OptimizerImplBase::learningRate_
