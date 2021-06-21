@@ -203,10 +203,10 @@ namespace elsa
             return getCurrentSolution();
         }
 
-    protected:
         /// lift the base class method getCurrentSolution
         using Solver<data_t>::getCurrentSolution;
 
+    protected:
         /// implement the polymorphic clone operation
         auto cloneImpl() const -> ADMM<XSolver, ZSolver>* override
         {

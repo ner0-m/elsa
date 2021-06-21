@@ -43,15 +43,15 @@ namespace elsa
         /// default destructor
         ~GradientDescent() override = default;
 
+        /// lift the base class method getCurrentSolution
+        using Solver<data_t>::getCurrentSolution;
+
     private:
         /// the step size
         data_t _stepSize;
 
         /// the default number of iterations
         const index_t _defaultIterations{100};
-
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
 
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;

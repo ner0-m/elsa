@@ -69,10 +69,10 @@ namespace elsa
         /// default destructor
         ~FISTA() override = default;
 
-    protected:
         /// lift the base class method getCurrentSolution
         using Solver<data_t>::getCurrentSolution;
 
+    protected:
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;
 

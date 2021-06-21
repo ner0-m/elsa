@@ -53,6 +53,9 @@ namespace elsa
         /// default destructor
         ~OGM() override = default;
 
+        /// lift the base class method getCurrentSolution
+        using Solver<data_t>::getCurrentSolution;
+
     private:
         /// the default number of iterations
         const index_t _defaultIterations{100};
@@ -62,9 +65,6 @@ namespace elsa
 
         /// the inverse of the preconditioner (if supplied)
         std::unique_ptr<LinearOperator<data_t>> _preconditionerInverse{};
-
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
 
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;

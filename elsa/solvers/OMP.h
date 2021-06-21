@@ -44,12 +44,12 @@ namespace elsa
         /// default destructor
         ~OMP() override = default;
 
+        /// lift the base class method getCurrentSolution
+        using Solver<data_t>::getCurrentSolution;
+
     private:
         /// variable affecting the stopping condition
         data_t _epsilon;
-
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
 
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;

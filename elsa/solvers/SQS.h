@@ -56,6 +56,9 @@ namespace elsa
         /// default destructor
         ~SQS() override = default;
 
+        /// lift the base class method getCurrentSolution
+        using Solver<data_t>::getCurrentSolution;
+
     private:
         /// the default number of iterations
         const index_t _defaultIterations{100};
@@ -71,9 +74,6 @@ namespace elsa
 
         /// whether to operate in subset based mode
         bool _subsetMode{false};
-
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
 
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;
