@@ -16,19 +16,25 @@ namespace elsa
         if (!file.good())
             throw Error("EDF::read: cannot read from '" + filename + "'");
 
+        return EDF::read<data_t>(file);
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> EDF::read(std::istream& input)
+    {
         // get the meta data from the header
-        auto properties = readHeader(file);
+        auto properties = readHeader(input);
         auto [descriptor, dataType] = parseHeader(properties);
 
         // read in the data
         DataContainer<data_t> dataContainer(*descriptor);
 
         if (dataType == DataUtils::DataType::UINT16)
-            DataUtils::parseRawData<uint16_t, data_t>(file, dataContainer);
+            DataUtils::parseRawData<uint16_t, data_t>(input, dataContainer);
         else if (dataType == DataUtils::DataType::FLOAT32)
-            DataUtils::parseRawData<float, data_t>(file, dataContainer);
+            DataUtils::parseRawData<float, data_t>(input, dataContainer);
         else if (dataType == DataUtils::DataType::FLOAT64)
-            DataUtils::parseRawData<double, data_t>(file, dataContainer);
+            DataUtils::parseRawData<double, data_t>(input, dataContainer);
         else
             throw Error("EDF::read: invalid/unsupported data type");
 
@@ -45,16 +51,22 @@ namespace elsa
         if (!file.good())
             throw Error("EDF::write: cannot write to '" + filename + "'");
 
+        EDF::write<data_t>(data, file);
+    }
+
+    template <typename data_t>
+    void EDF::write(const DataContainer<data_t>& data, std::ostream& output)
+    {
         // output the header
-        writeHeader(file, data);
+        writeHeader(output, data);
 
         // output the raw data
         // TODO: this would be more efficient if we had a data pointer...
         for (index_t i = 0; i < data.getSize(); ++i)
-            file.write(reinterpret_cast<const char*>(&data[i]), sizeof(data_t));
+            output.write(reinterpret_cast<const char*>(&data[i]), sizeof(data_t));
     }
 
-    std::map<std::string, std::string> EDF::readHeader(std::ifstream& file)
+    std::map<std::string, std::string> EDF::readHeader(std::istream& file)
     {
         std::map<std::string, std::string> properties;
 
@@ -214,7 +226,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void EDF::writeHeader(std::ofstream& file, const DataContainer<data_t>& data)
+    void EDF::writeHeader(std::ostream& file, const DataContainer<data_t>& data)
     {
         // open the header
         file << "{\n";
@@ -296,12 +308,21 @@ namespace elsa
     template DataContainer<float> EDF::read(std::string);
     template DataContainer<double> EDF::read(std::string);
     template DataContainer<index_t> EDF::read(std::string);
+
+    template DataContainer<float> EDF::read(std::istream&);
+    template DataContainer<double> EDF::read(std::istream&);
+    template DataContainer<index_t> EDF::read(std::istream&);
+
     template void EDF::write(const DataContainer<float>&, std::string);
     template void EDF::write(const DataContainer<double>&, std::string);
     template void EDF::write(const DataContainer<index_t>&, std::string);
 
-    template void EDF::writeHeader(std::ofstream&, const DataContainer<float>&);
-    template void EDF::writeHeader(std::ofstream&, const DataContainer<double>&);
-    template void EDF::writeHeader(std::ofstream&, const DataContainer<index_t>&);
+    template void EDF::write(const DataContainer<float>&, std::ostream&);
+    template void EDF::write(const DataContainer<double>&, std::ostream&);
+    template void EDF::write(const DataContainer<index_t>&, std::ostream&);
+
+    template void EDF::writeHeader(std::ostream&, const DataContainer<float>&);
+    template void EDF::writeHeader(std::ostream&, const DataContainer<double>&);
+    template void EDF::writeHeader(std::ostream&, const DataContainer<index_t>&);
 
 } // namespace elsa

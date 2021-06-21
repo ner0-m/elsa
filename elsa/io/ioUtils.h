@@ -58,7 +58,7 @@ namespace elsa
 
         /// read in raw data (of type raw_data_t) into a data container (of type data_t)
         template <typename raw_data_t, typename data_t>
-        static void parseRawData(std::ifstream& file, DataContainer<data_t>& data);
+        static void parseRawData(std::istream& file, DataContainer<data_t>& data);
     };
 
     /**
