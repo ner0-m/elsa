@@ -269,7 +269,7 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
         auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
-        index_t numAngles{90}, arc{360};
+        index_t numAngles{20}, arc{180};
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
             numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
@@ -303,13 +303,14 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
 
                 AND_THEN("it works as expected")
                 {
-                    auto reconstruction = solver.solve(40);
+                    auto reconstruction = solver.solve(10);
 
                     DataContainer resultsDifference = reconstruction - phantom;
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
                 }
             }
         }
@@ -337,12 +338,13 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
 
                 AND_THEN("it works as expected")
                 {
-                    auto reconstruction = solver.solve(40);
+                    auto reconstruction = solver.solve(10);
 
                     DataContainer resultsDifference = reconstruction - phantom;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
                 }
             }
         }

@@ -21,7 +21,7 @@
 using namespace elsa;
 using namespace doctest;
 
-SCENARIO("Testing the standalone subset sampling strategies")
+TEST_CASE("SubsetSampler: Testing subset sampling strategies")
 {
     Logger::setLevel(Logger::LogLevel::WARN);
 
@@ -163,16 +163,17 @@ SCENARIO("Testing the standalone subset sampling strategies")
     }
 }
 
-SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and circular trajectory")
+TEST_CASE(
+    "SubsetSampler: 2D Integration test with PlanarDetectorDescriptor and circular trajectory")
 {
     Logger::setLevel(Logger::LogLevel::WARN);
 
     IndexVector_t size(2);
-    size << 128, 128;
+    size << 16, 16;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
-    index_t numAngles{180}, arc{360};
+    index_t numAngles{20}, arc{360};
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
         static_cast<real_t>(size(0)));
@@ -186,7 +187,6 @@ SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and circular traje
 
     GIVEN("A small phantom problem")
     {
-
         WHEN("Setting up a subset sampler with 4 subsets")
         {
             index_t nSubsets{4};
@@ -270,16 +270,17 @@ SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and circular traje
     }
 }
 
-SCENARIO("Testing SubsetSampler with PlanarDetectorDescriptor and spherical trajectory")
+TEST_CASE(
+    "SubsetSampler: 3D Integration test with PlanarDetectorDescriptor and spherical trajectory")
 {
     Logger::setLevel(Logger::LogLevel::WARN);
 
     IndexVector_t size(3);
-    size << 32, 32, 32;
+    size << 8, 8, 8;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
-    index_t numPoses{180}, numCircles{5};
+    index_t numPoses{16}, numCircles{5};
     auto sinoDescriptor = SphereTrajectoryGenerator::createTrajectory(
         numPoses, phantom.getDataDescriptor(), numCircles,
         geometry::SourceToCenterOfRotation(static_cast<real_t>(size(0)) * 100.0f),
