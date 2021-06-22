@@ -21,7 +21,7 @@ TEST_SUITE_BEGIN("solvers");
 TEST_CASE("KSVD: Solving a DictionaryLearningProblem")
 {
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::OFF);
+    // Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a random signal")
     {
@@ -32,8 +32,6 @@ TEST_CASE("KSVD: Solving a DictionaryLearningProblem")
         RealVector_t signalVec(dd.getNumberOfCoefficients());
         signalVec.setRandom();
         DataContainer signals(signalsDescriptor, signalVec);
-
-        DictionaryLearningProblem dictProb(signals, nAtoms);
 
         WHEN("setting up a DictionaryLearningProblem from it")
         {
