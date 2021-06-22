@@ -59,6 +59,9 @@ namespace elsa
         DictionaryLearningProblem<data_t>::getRestrictedError(IndexVector_t affectedSignals,
                                                               index_t atom)
     {
+        if (affectedSignals.size() < 1)
+            throw InvalidArgumentError(
+                "DictionaryLearningProblem::getRestrictedError: affectedSignals must not be empty");
         IdenticalBlocksDescriptor errorDescriptor(affectedSignals.size(),
                                                   _signals.getBlock(0).getDataDescriptor());
         DataContainer<data_t> modifiedError(errorDescriptor);

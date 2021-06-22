@@ -1,4 +1,5 @@
 #include "KSVD.h"
+#include "Error.h"
 
 namespace elsa
 {
@@ -39,9 +40,10 @@ namespace elsa
 
         index_t i = 0;
         while (i < iterations && _problem.getGlobalError().l2Norm() >= _epsilon) {
+            Logger::get("KSVD")->info("Current error: {}", _problem.getGlobalError().l2Norm());
             // first find a sparse representation
             for (index_t j = 0; j < _nSamples; ++j) {
-                RepresentationProblem reprProblem(dict, signals.getBlock(i));
+                RepresentationProblem reprProblem(dict, signals.getBlock(j));
                 OMP omp(reprProblem);
                 representations.getBlock(j) = omp.solve(3); // sparsity level needs to be set here
             }
@@ -49,6 +51,8 @@ namespace elsa
             // then optimize atom by atom
             for (index_t k = 0; k < dict.getNumberOfAtoms(); ++k) {
                 auto affectedSignals = getAffectedSignals(representations, k);
+                if (affectedSignals.size() == 0)
+                    break;
                 auto modifiedError = _problem.getRestrictedError(affectedSignals, k);
                 auto svd = calculateSVD(modifiedError);
                 dict.updateAtom(k, getNextAtom(svd));
