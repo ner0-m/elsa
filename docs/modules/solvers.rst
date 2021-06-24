@@ -52,4 +52,4 @@ SQS Ordered Subsets
 Orthogonal Matching Pursuit
 ===============
 
-.. doxygenclass:: elsa::OMP
+.. doxygenclass:: elsa::OrthogonalMatchingPursuit

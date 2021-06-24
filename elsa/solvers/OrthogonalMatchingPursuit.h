@@ -25,24 +25,24 @@ namespace elsa
      *
      */
     template <typename data_t = real_t>
-    class OMP : public Solver<data_t>
+    class OrthogonalMatchingPursuit : public Solver<data_t>
     {
     public:
         /**
-         * @brief Constructor for OMP, accepting a dictionary representation problem and,
-         * optionally, a value for epsilon
+         * @brief Constructor for OrthogonalMatchingPursuit, accepting a dictionary representation
+         * problem and, optionally, a value for epsilon
          *
          * @param[in] problem the representation problem that is supposed to be solved
          * @param[in] epsilon affects the stopping condition
          */
-        OMP(const RepresentationProblem<data_t>& problem,
-            data_t epsilon = std::numeric_limits<data_t>::epsilon());
+        OrthogonalMatchingPursuit(const RepresentationProblem<data_t>& problem,
+                                  data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
-        OMP(const OMP<data_t>&) = delete;
+        OrthogonalMatchingPursuit(const OrthogonalMatchingPursuit<data_t>&) = delete;
 
         /// default destructor
-        ~OMP() override = default;
+        ~OrthogonalMatchingPursuit() override = default;
 
         /// lift the base class method getCurrentSolution
         using Solver<data_t>::getCurrentSolution;
@@ -62,15 +62,15 @@ namespace elsa
          * @brief Solve the representation problem, i.e. apply iterations number of iterations of
          * matching pursuit
          *
-         * @param[in] iterations number of iterations to execute. As OMP is a greedy algorithm, this
-         * corresponds to the desired sparsity level
+         * @param[in] iterations number of iterations to execute. As OrthogonalMatchingPursuit is a
+         * greedy algorithm, this corresponds to the desired sparsity level
          *
          * @returns a reference to the current solution
          */
         DataContainer<data_t>& solveImpl(index_t iterations) override;
 
         /// implement the polymorphic clone operation
-        OMP<data_t>* cloneImpl() const override;
+        OrthogonalMatchingPursuit<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Solver<data_t>& other) const override;

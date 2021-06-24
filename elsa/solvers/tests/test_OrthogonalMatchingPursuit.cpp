@@ -1,7 +1,7 @@
 /**
- * @file test_OMP.cpp
+ * @file test_OrthogonalMatchingPursuit.cpp
  *
- * @brief Tests for the OMP class
+ * @brief Tests for the OrthogonalMatchingPursuit class
  *
  * @author Jonas Buerger
  */
@@ -10,7 +10,7 @@
 
 #include <limits>
 #include "Error.h"
-#include "OMP.h"
+#include "OrthogonalMatchingPursuit.h"
 #include "Dictionary.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
@@ -22,7 +22,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("solvers");
 
-TEST_CASE("OMP: Solving a RepresentationProblem")
+TEST_CASE("OrthogonalMatchingPursuit: Solving a RepresentationProblem")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -45,11 +45,12 @@ TEST_CASE("OMP: Solving a RepresentationProblem")
 
         RepresentationProblem reprProb(dictOp, dcSignal);
 
-        WHEN("setting up a OMP solver")
+        WHEN("setting up a OrthogonalMatchingPursuit solver")
         {
-            OMP solver(reprProb, std::numeric_limits<real_t>::epsilon());
+            OrthogonalMatchingPursuit solver(reprProb, std::numeric_limits<real_t>::epsilon());
 
-            THEN("cloned OMP solver equals original OMP solver")
+            THEN("cloned OrthogonalMatchingPursuit solver equals original "
+                 "OrthogonalMatchingPursuit solver")
             {
                 auto ompClone = solver.clone();
 

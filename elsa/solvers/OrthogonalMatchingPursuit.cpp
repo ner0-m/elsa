@@ -1,16 +1,17 @@
-#include "OMP.h"
+#include "OrthogonalMatchingPursuit.h"
 #include "TypeCasts.hpp"
 
 namespace elsa
 {
     template <typename data_t>
-    OMP<data_t>::OMP(const RepresentationProblem<data_t>& problem, data_t epsilon)
+    OrthogonalMatchingPursuit<data_t>::OrthogonalMatchingPursuit(
+        const RepresentationProblem<data_t>& problem, data_t epsilon)
         : Solver<data_t>(problem), _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
-    DataContainer<data_t>& OMP<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t>& OrthogonalMatchingPursuit<data_t>::solveImpl(index_t iterations)
     {
         // Safe, as it's the only possible input
         const auto& reprProblem = downcast<RepresentationProblem<data_t>>(*_problem);
@@ -50,8 +51,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    index_t OMP<data_t>::mostCorrelatedAtom(const Dictionary<data_t>& dict,
-                                            const DataContainer<data_t>& evaluatedResidual)
+    index_t OrthogonalMatchingPursuit<data_t>::mostCorrelatedAtom(
+        const Dictionary<data_t>& dict, const DataContainer<data_t>& evaluatedResidual)
     {
         // for this to work atom has to be L2-normalized
         data_t maxCorrelation = 0;
@@ -70,18 +71,19 @@ namespace elsa
     }
 
     template <typename data_t>
-    OMP<data_t>* OMP<data_t>::cloneImpl() const
+    OrthogonalMatchingPursuit<data_t>* OrthogonalMatchingPursuit<data_t>::cloneImpl() const
     {
-        return new OMP(downcast<RepresentationProblem<data_t>>(*_problem), _epsilon);
+        return new OrthogonalMatchingPursuit(downcast<RepresentationProblem<data_t>>(*_problem),
+                                             _epsilon);
     }
 
     template <typename data_t>
-    bool OMP<data_t>::isEqual(const Solver<data_t>& other) const
+    bool OrthogonalMatchingPursuit<data_t>::isEqual(const Solver<data_t>& other) const
     {
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherOMP = downcast_safe<OMP>(&other);
+        auto otherOMP = downcast_safe<OrthogonalMatchingPursuit>(&other);
         if (!otherOMP)
             return false;
 
@@ -93,7 +95,7 @@ namespace elsa
 
     // ------------------------------------------
     // explicit template instantiation
-    template class OMP<float>;
-    template class OMP<double>;
+    template class OrthogonalMatchingPursuit<float>;
+    template class OrthogonalMatchingPursuit<double>;
 
 } // namespace elsa
