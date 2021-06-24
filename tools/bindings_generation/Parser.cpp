@@ -393,11 +393,9 @@ public:
                     f.numDefaultArgs++;
 
                     if (f.posFirstNonBindableDefaultArg == method->getNumParams()) {
-                        auto defaultArg = param->getDefaultArg();
-
-                        // uninstantiated default args must be retrieved using a different method
-                        if (!defaultArg)
-                            defaultArg = param->getUninstantiatedDefaultArg();
+                        auto defaultArg = param->hasUninstantiatedDefaultArg()
+                                              ? param->getUninstantiatedDefaultArg()
+                                              : param->getDefaultArg();
 
                         Expr::EvalResult result;
                         if (defaultArg && !defaultArg->isInstantiationDependent()
