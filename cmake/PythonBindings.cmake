@@ -45,6 +45,7 @@ macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
                 pybind11_generator ${ARGN} ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX} --extra-arg=-isystem
                 --extra-arg=${CLANG_RESOURCE_DIR}/include --extra-arg=-std=c++17 --extra-arg=-w
                 --extra-arg=--cuda-host-only -p=${CMAKE_BINARY_DIR} --hints=${HINTS_FILE}
+                --extra-arg=-DEIGEN_DONT_PARALLELIZE
                 -o=${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME} --pyname=${PY_TARGET_NAME}
                 ${SINGLE_MODULE_FLAGS}
             DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_FILE}
