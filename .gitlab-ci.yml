@@ -10,16 +10,17 @@ stages:
 ### variables ###
 
 variables:
-  CLANG_FORMAT_IMAGE: "elsa/clang-format:10"
-  CLANG_TIDY_IMAGE: "elsa/clang-tidy:8"
-  GCC_IMAGE: "elsa/gcc-pybinds:10"
-  CLANG9_IMAGE: "elsa/clang-pybinds:9"
-  CLANG10_IMAGE: "elsa/clang-pybinds:10"
-  CUDA_IMAGE: "elsa/cuda:10.2"
-  UBUNTU_IMAGE: "elsa/ubuntu:20.04"
-  GPU_ONLY_IMAGE: "elsa/cuda-clang:10.0"
-  SANITIZER_IMAGE: "elsa/gcc:10"
-  COVERAGE_IMAGE: "elsa/coverage:10.2"
+  DOCKER_REGISTRY_URL: "docker.ciip.in.tum.de:5000" 
+  CLANG_FORMAT_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-format:10"
+  CLANG_TIDY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-tidy:8"
+  GCC_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc-pybinds:10"
+  CLANG9_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:9"
+  CLANG10_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:10"
+  CUDA_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda:10.2"
+  UBUNTU_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/ubuntu:20.04"
+  GPU_ONLY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda-clang:10.0"
+  SANITIZER_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc:10"
+  COVERAGE_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/coverage:10.2"
 
 ### Cache setup ###
 
