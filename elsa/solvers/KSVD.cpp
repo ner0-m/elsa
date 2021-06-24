@@ -42,7 +42,7 @@ namespace elsa
             // first find a sparse representation
             for (index_t j = 0; j < _nSamples; ++j) {
                 RepresentationProblem reprProblem(dict, signals.getBlock(j));
-                OMP omp(reprProblem);
+                OrthogonalMatchingPursuit omp(reprProblem);
                 representations.getBlock(j) = omp.solve(3); // sparsity level needs to be set here
             }
             _problem.updateError();

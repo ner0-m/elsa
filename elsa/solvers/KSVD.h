@@ -3,7 +3,7 @@
 //#include "Solver.h"
 #include "RepresentationProblem.h"
 #include "DictionaryLearningProblem.h"
-#include "OMP.h"
+#include "OrthogonalMatchingPursuit.h"
 
 #include <Eigen/SVD>
 
