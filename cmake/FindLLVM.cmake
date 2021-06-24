@@ -7,7 +7,8 @@
 #  LLVM_CXXFLAGS - C++ compiler flags for files that include LLVM headers
 #  LLVM_INCLUDE_DIR - Directory containing LLVM headers
 #  LLVM_LIB_DIR - Directory containing LLVM libraries
-#  LLVM_SHARED_MODE - How the provided components can be collectively linked
+#  LLVM_CXX_STDLIB_DEP - the c++ stdlib which LLVM depends on
+#  IS_LLVM_STATICALLY_LINKED - are LLVM (or its components) statically linked into libTooling
 #  CLANG_RESOURCE_DIR - Clang resource directory pathname (this is also an INTERNAL CACHE variable)
 #  LIBCXX_INCLUDE_DIR - path to the libc++ headers (this is also an INTERNAL CACHE variable)
 #
@@ -174,24 +175,42 @@ if (LLVM_CONFIG)
     OUTPUT_VARIABLE LLVM_LIB_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  execute_process(
-    COMMAND ${LLVM_CONFIG} --shared-mode
-    OUTPUT_VARIABLE LLVM_SHARED_MODE
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-
   find_library(LLVM_LIBRARY NAMES LLVM PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
 
   include(FindPackageHandleStandardArgs)
-
+  set(IS_LLVM_STATICALLY_LINKED "YES")
   if(NOT LLVM_VERSION VERSION_LESS "9.0")
     find_library(CLANG_CPP_LIBRARY NAMES clang-cpp PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
+    if (CLANG_CPP_LIBRARY)
+      # TODO: get_prerequisites is deprecated, GET_RUNTIME_DEPS throws dev-warning and fails linting
+      include(GetPrerequisites)
+      get_prerequisites(${CLANG_CPP_LIBRARY} LLVM_DEPS 0 0 "" "")
+      # file(GET_RUNTIME_DEPENDENCIES  RESOLVED_DEPENDENCIES_VAR LLVM_DEPS EXECUTABLES ${LLVM_CONFIG})
+      foreach(LLVM_DEP IN LISTS LLVM_DEPS)
+        if (${LLVM_DEP} MATCHES "/libstdc[+][+][.]")
+          set(LLVM_CXX_STDLIB_DEP stdc++)
+        elseif(${LLVM_DEP} MATCHES "/libc[+][+][.]")
+          set(LLVM_CXX_STDLIB_DEP c++)
+        elseif(${LLVM_DEP} MATCHES "/libLLVM(-[0-9]+)?[.]")
+          set(IS_LLVM_STATICALLY_LINKED "NO")
+        endif()
+      endforeach()
+    endif()
+
+    # only require libLLVM if it is not statically linked into clang-cpp
+    if (IS_LLVM_STATICALLY_LINKED)
+      set(LLVM_LIB_VAR "")
+    else()
+      set(LLVM_LIB_VAR "LLVM_LIBRARY")
+    endif()
     find_package_handle_standard_args(LLVM VERSION_VAR LLVM_VERSION
                                         REQUIRED_VARS LLVM_LIB_DIR
                                                       LLVM_INCLUDE_DIR
-                                                      LLVM_LIBRARY
+                                                      ${LLVM_LIB_VAR}
                                                       CLANG_CPP_LIBRARY
                                                       CLANG_RESOURCE_DIR)
   else()
+    # for LLVM versions older than 9 we expect all components to be static libaries
     find_library(CLANG_AST_LIBRARY NAMES clangAST PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
     find_library(CLANG_BASIC_LIBRARY NAMES clangBasic PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)
     find_library(CLANG_FRONTEND_LIBRARY NAMES clangFrontend PATHS ${LLVM_LIB_DIR} NO_DEFAULT_PATH)

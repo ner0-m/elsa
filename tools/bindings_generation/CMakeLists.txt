@@ -20,20 +20,6 @@ else()
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
         # try to match the stdlib llvm was compiled with
         # if info unavailable, assume it was libstdc++ for Clang and libc++ for AppleClang
-        # TODO: get_prerequisites is deprecated, GET_RUNTIME_DEPS throws dev-warning and fails linting
-        include(GetPrerequisites)
-        get_prerequisites(${LLVM_CONFIG} LLVM_DEPS 0 0 "" "")
-        # file(GET_RUNTIME_DEPENDENCIES  RESOLVED_DEPENDENCIES_VAR LLVM_DEPS EXECUTABLES ${LLVM_CONFIG})
-        foreach(LLVM_DEP IN LISTS LLVM_DEPS)
-            if (${LLVM_DEP} MATCHES "/libstdc[+][+][.]")
-                set(LLVM_CXX_STDLIB_DEP stdc++)
-                break()
-            elseif(${LLVM_DEP} MATCHES "/libc[+][+][.]")
-                set(LLVM_CXX_STDLIB_DEP c++)
-                break()
-            endif()
-        endforeach()
-                
         if (LLVM_CXX_STDLIB_DEP)
             target_compile_options(pybind11_generator PUBLIC -stdlib=lib${LLVM_CXX_STDLIB_DEP})
             target_link_options(pybind11_generator PUBLIC -stdlib=lib${LLVM_CXX_STDLIB_DEP}
@@ -60,12 +46,11 @@ else()
     endif()
     
     if (NOT LLVM_VERSION VERSION_LESS 9)
-        if (LLVM_SHARED_MODE STREQUAL "shared")
-                target_link_libraries(pybind11_generator PUBLIC ${LLVM_LIBRARY} ${CLANG_CPP_LIBRARY})
-        elseif (LLVM_SHARED_MODE STREQUAL "static")
-                # all of the necessary LLVM components should already be statically linked in clang-cpp
-                # when LLVM_SHARED_MODE is static
-                target_link_libraries(pybind11_generator PUBLIC ${CLANG_CPP_LIBRARY})
+        if (IS_LLVM_STATICALLY_LINKED)
+            # all of the necessary LLVM components should already be statically linked in clang-cpp
+            target_link_libraries(pybind11_generator PUBLIC ${CLANG_CPP_LIBRARY})    
+        else()
+            target_link_libraries(pybind11_generator PUBLIC ${LLVM_LIBRARY} ${CLANG_CPP_LIBRARY})
         endif()
     else()
         target_link_libraries(pybind11_generator PRIVATE 
