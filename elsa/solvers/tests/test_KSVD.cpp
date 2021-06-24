@@ -27,7 +27,7 @@ TEST_CASE("KSVD: Solving a DictionaryLearningProblem")
     {
         VolumeDescriptor dd({5});
         IdenticalBlocksDescriptor signalsDescriptor(1, dd);
-        const index_t nAtoms = 15;
+        const index_t nAtoms = 10;
 
         RealVector_t signalVec(dd.getNumberOfCoefficients());
         signalVec.setRandom();
@@ -40,7 +40,7 @@ TEST_CASE("KSVD: Solving a DictionaryLearningProblem")
 
             THEN("a suitable dictionary and representation are found")
             {
-                auto solution = solver.solve(20);
+                auto solution = solver.solve(5);
                 auto& learnedDict = solver.getLearnedDictionary();
 
                 REQUIRE_UNARY(
