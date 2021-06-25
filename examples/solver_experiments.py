@@ -1,12 +1,12 @@
+import argparse
 from dataclasses import dataclass, field
-from typing import List
+from pathlib import Path
+from typing import List, Optional
 
-import time
-
+import matplotlib
 import numpy as np
-import matplotlib.pyplot as plt
-
 import pyelsa as elsa
+import time
 
 
 class IndexTracker:
@@ -51,9 +51,9 @@ def mse(optimized: np.ndarray, original: np.ndarray) -> float:
     return np.sum(diff) / size
 
 
-def instantiate_solvers(solvers: List[SolverTest], do_3d=False):
+def instantiate_solvers(solvers: List[SolverTest], problem_size: int, do_3d=False):
     # generate the phantom
-    size = np.array([128, 128]) if not do_3d else np.array([32, 32, 32])
+    size = np.array([problem_size, problem_size]) if not do_3d else np.array([problem_size, problem_size, problem_size])
     phantom = elsa.PhantomGenerator.createModifiedSheppLogan(size)
     volume_descriptor = phantom.getDataDescriptor()
 
@@ -69,8 +69,7 @@ def instantiate_solvers(solvers: List[SolverTest], do_3d=False):
         # generate circular trajectory
         arc = 360
         sino_descriptor = elsa.CircleTrajectoryGenerator.createTrajectory(
-            num_poses, phantom.getDataDescriptor(), arc, elsa.SourceToCenterOfRotation(size[0] * 100),
-            elsa.CenterOfRotationToDetector(size[0]))
+            num_poses, phantom.getDataDescriptor(), arc, size[0] * 100, size[0])
 
     # setup operator for 2d X-ray transform
     projector = elsa.SiddonsMethod(volume_descriptor, sino_descriptor)
@@ -107,8 +106,9 @@ def instantiate_solvers(solvers: List[SolverTest], do_3d=False):
     return instantiated_solvers, phantom
 
 
-def compare_solvers(solvers: List[SolverTest], do_3d=False, max_iterations=50, save_as=None, show_plot=True):
-    instantiated_solvers, phantom = instantiate_solvers(solvers, do_3d)
+def compare_solvers(solvers: List[SolverTest], show_plot: bool, max_iterations: int, problem_size: int, save_as=None,
+                    do_3d=False, ):
+    instantiated_solvers, phantom = instantiate_solvers(solvers, problem_size=problem_size, do_3d=do_3d)
 
     # solve the reconstruction problem
     distances = [[] for _ in solvers]
@@ -124,6 +124,7 @@ def compare_solvers(solvers: List[SolverTest], do_3d=False, max_iterations=50, s
 
     print(f'Done with optimizing starting to plot now')
 
+    import matplotlib.pyplot as plt  # local imports so that we can switch to headless mode before importing
     fig, ax = plt.subplots()
     ax.set_xlabel('number of iterations')
     ax.set_ylabel('MSE')
@@ -139,8 +140,9 @@ def compare_solvers(solvers: List[SolverTest], do_3d=False, max_iterations=50, s
         plt.show()
 
 
-def time_solvers(solvers: List[SolverTest], do_3d=False, max_iterations=50, save_as=None, show_plot=True):
-    instantiated_solvers, phantom = instantiate_solvers(solvers, do_3d)
+def time_solvers(solvers: List[SolverTest], max_iterations: int, problem_size: int, show_plot: bool, do_3d=False,
+                 save_as=None):
+    instantiated_solvers, phantom = instantiate_solvers(solvers, do_3d=do_3d, problem_size=problem_size)
 
     # solve the reconstruction problem
     distances = [[] for _ in solvers]
@@ -160,6 +162,7 @@ def time_solvers(solvers: List[SolverTest], do_3d=False, max_iterations=50, save
 
     print(f'Done with optimizing starting to plot now')
 
+    import matplotlib.pyplot as plt  # local imports so that we can switch to headless mode before importing
     fig, ax = plt.subplots()
     ax.set_xlabel('execution time [s]')
     ax.set_ylabel('MSE')
@@ -175,20 +178,7 @@ def time_solvers(solvers: List[SolverTest], do_3d=False, max_iterations=50, save
         plt.show()
 
 
-def compare_sqs():
-    solvers = [
-        SolverTest(elsa.SQS, 'SQS with 3 subsets', uses_subsets=True, n_subsets=3),
-        SolverTest(elsa.SQS, 'SQS with 5 subsets', uses_subsets=True, n_subsets=5),
-        SolverTest(elsa.SQS, 'SQS with 7 subsets', uses_subsets=True, n_subsets=7),
-        SolverTest(elsa.SQS, 'SQS with 8 subsets', uses_subsets=True, n_subsets=8),
-        SolverTest(elsa.CG, 'CG')
-    ]
-
-    compare_solvers(solvers, do_3d=True, max_iterations=10)
-    time_solvers(solvers, do_3d=True, max_iterations=10)
-
-
-def compare_sqs_strategies():
+def compare_sqs_strategies(max_iterations: int, show_plots: bool, problem_size: int, plots_dir: Optional[Path] = None):
     solvers = [
         SolverTest(elsa.SQS, 'SQS with 3 subsets, round_robin', uses_subsets=True, n_subsets=3),
         SolverTest(elsa.SQS, 'SQS with 5 subsets, round_robin', uses_subsets=True, n_subsets=5),
@@ -199,13 +189,16 @@ def compare_sqs_strategies():
                    sampling_strategy='ROTATIONAL_CLUSTERING'),
         SolverTest(elsa.SQS, 'SQS with 7 subsets, rotational clustering', uses_subsets=True, n_subsets=7,
                    sampling_strategy='ROTATIONAL_CLUSTERING'),
+        SolverTest(elsa.CG, 'CG')
     ]
 
-    compare_solvers(solvers, do_3d=True, max_iterations=10)
-    time_solvers(solvers, do_3d=True, max_iterations=10)
+    compare_solvers(solvers, do_3d=True, max_iterations=max_iterations, show_plot=show_plots, problem_size=problem_size,
+                    save_as=plots_dir / 'sqs_comparison_convergence.png' if plots_dir else None)
+    time_solvers(solvers, do_3d=True, max_iterations=max_iterations, show_plot=show_plots, problem_size=problem_size,
+                 save_as=plots_dir / 'sqs_comparison_time.png' if plots_dir else None)
 
 
-def main():
+def evaluate_solvers(max_iterations: int, show_plots: bool, problem_size: int, plots_dir: Optional[Path] = None):
     solvers = [
         SolverTest(elsa.GradientDescent, 'Gradient Descent'),  # with 1 / lipschitz as step size
         SolverTest(elsa.ISTA, 'ISTA', needs_lasso=True),
@@ -217,11 +210,38 @@ def main():
         SolverTest(elsa.CG, 'CG')
     ]
 
-    compare_solvers(solvers, max_iterations=50)
-    time_solvers(solvers, max_iterations=50)
+    compare_solvers(solvers, max_iterations=max_iterations, show_plot=show_plots, problem_size=problem_size,
+                    save_as=plots_dir / 'solvers_comparison_convergence.png' if plots_dir else None)
+    time_solvers(solvers, max_iterations=max_iterations, show_plot=show_plots, problem_size=problem_size,
+                 save_as=plots_dir / 'solvers_comparison_time.png' if plots_dir else None)
+
+
+def dir_path(path) -> Path:
+    if Path(path).is_dir():
+        return Path(path)
+    raise argparse.ArgumentTypeError(f'directory {path} is not a valid path')
+
+
+def create_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--headless', action='store_true', help='Run matplotlib in headless mode')
+    parser.add_argument('--max-iterations', type=int, default=50,
+                        help='Maximum number of iterations for solver experiments')
+    parser.add_argument('--plots-dir', type=dir_path, required=False, help='Directory to store the plots in')
+    parser.add_argument('--problem-size', type=int, default=128, help='Size of the problems to test')
+
+    return parser
+
+
+def main(max_iterations: int, headless_mode: bool, plots_dir: Optional[Path], problem_size: int):
+    if headless_mode:
+        matplotlib.use('Agg')
+    compare_sqs_strategies(max_iterations=max_iterations, show_plots=not headless_mode, plots_dir=plots_dir,
+                           problem_size=problem_size)
+    evaluate_solvers(max_iterations=max_iterations, show_plots=not headless_mode, plots_dir=plots_dir,
+                     problem_size=problem_size)
 
 
 if __name__ == '__main__':
-    # compare_sqs()
-    compare_sqs_strategies()
-    # main()
+    args = create_parser().parse_args()
+    main(args.max_iterations, args.headless, args.plots_dir, args.problem_size)

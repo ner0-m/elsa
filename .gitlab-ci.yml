@@ -229,7 +229,8 @@ build-ubuntu:
 build-gcc:
   <<: *build_job_artifact
   image: $GCC_IMAGE
-  script: *buildjob_normal
+  script:
+  - *buildjob_normal
   tags:
     - linux
     - elsa
@@ -238,7 +239,10 @@ build-gcc:
 build-clang9:
   <<: *build_job_artifact
   image: $CLANG9_IMAGE
-  script: *buildjob_clang
+  script:
+  - *buildjob_clang
+  - pip3 install matplotlib
+  - PYTHONPATH="$PYTHONPATH:$(pwd)" python3 ../examples/solver_experiments.py --headless --max-iterations 1 --problem-size 16
   tags:
     - linux
     - elsa
@@ -247,7 +251,10 @@ build-clang9:
 build-clang10:
   <<: *build_job_artifact
   image: $CLANG10_IMAGE
-  script: *buildjob_clang
+  script:
+  - *buildjob_clang
+  - pip3 install matplotlib
+  - PYTHONPATH="$PYTHONPATH:$(pwd)" python3 ../examples/solver_experiments.py --headless --max-iterations 1 --problem-size 16
   tags:
     - linux
     - elsa
