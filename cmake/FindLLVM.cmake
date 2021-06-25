@@ -141,8 +141,9 @@ if (LLVM_CONFIG)
             clang-${LLVM_VERSION_MAJOR}
             clang)
     
-    if(CLANG)
+    if (CLANG)
       _set_clang_version(${CLANG})
+      _determine_path_to_libcxx(${CLANG})
     endif()
   endif()
 
