@@ -11,27 +11,28 @@
 #include "RepresentationProblem.h"
 #include "VolumeDescriptor.h"
 #include "Dictionary.h"
+#include "testHelpers.h"
 
 using namespace elsa;
 using namespace doctest;
 
 TEST_SUITE_BEGIN("problems");
 
-TEST_CASE_TEMPLATE("Scenario: Testing RepresentationProblem", TestType, float, double)
+TEST_CASE_TEMPLATE("RepresentationProblem: Setup with a dictionary and a signal vector", data_t,
+                   float, double)
 {
     GIVEN("some dictionary operator and a signal vector")
     {
         const index_t nAtoms = 10;
         VolumeDescriptor signalDescriptor({5});
 
-        Dictionary<TestType> dictOp(signalDescriptor, nAtoms);
+        Dictionary<data_t> dictOp(signalDescriptor, nAtoms);
 
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> signalVec(
-            signalDescriptor.getNumberOfCoefficients());
+        Vector_t<data_t> signalVec(signalDescriptor.getNumberOfCoefficients());
         signalVec.setRandom();
-        DataContainer<TestType> dcSignal(signalDescriptor, signalVec);
+        DataContainer<data_t> dcSignal(signalDescriptor, signalVec);
 
-        RepresentationProblem<TestType> reprProblem(dictOp, dcSignal);
+        RepresentationProblem<data_t> reprProblem(dictOp, dcSignal);
 
         WHEN("cloning a RepresentationProblem")
         {
@@ -46,19 +47,19 @@ TEST_CASE_TEMPLATE("Scenario: Testing RepresentationProblem", TestType, float, d
         WHEN("evaluating the problem for a random representation")
         {
             VolumeDescriptor reprDescriptor({nAtoms});
-            Eigen::Matrix<TestType, Eigen::Dynamic, 1> reprVec(
-                reprDescriptor.getNumberOfCoefficients());
+            Vector_t<data_t> reprVec(reprDescriptor.getNumberOfCoefficients());
             reprVec.setRandom();
-            DataContainer<TestType> dcRepresentation(reprDescriptor, reprVec);
+            DataContainer<data_t> dcRepresentation(reprDescriptor, reprVec);
 
             reprProblem.getCurrentSolution() = dcRepresentation;
             auto evaluation = reprProblem.evaluate();
 
             THEN("the evaluation is as expected")
             {
-                DataContainer<TestType> residual = (dcSignal - dictOp.apply(dcRepresentation));
-                auto expected = 0.5 * residual.squaredL2Norm();
-                REQUIRE_EQ(evaluation, Approx(expected));
+                DataContainer<data_t> residual = (dcSignal - dictOp.apply(dcRepresentation));
+                data_t expected = as<data_t>(0.5) * residual.squaredL2Norm();
+
+                REQUIRE_UNARY(checkApproxEq(evaluation, expected));
             }
         }
 

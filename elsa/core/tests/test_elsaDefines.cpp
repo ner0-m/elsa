@@ -48,9 +48,9 @@ TEST_CASE("elsaDefines: Testing compile-time predicates")
 TEST_CASE("elsaDefines: Printing default handler type")
 {
 #ifdef ELSA_CUDA_VECTOR
-    REQUIRE(defaultHandlerType == DataHandlerType::GPU);
+    REQUIRE_EQ(defaultHandlerType, DataHandlerType::GPU);
 #else
-    REQUIRE(defaultHandlerType == DataHandlerType::CPU);
+    REQUIRE_EQ(defaultHandlerType, DataHandlerType::CPU);
 #endif
 }
 

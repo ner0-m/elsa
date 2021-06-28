@@ -26,7 +26,6 @@ TYPE_TO_STRING(std::complex<double>);
 
 TEST_SUITE_BEGIN("functionals");
 
-// SCENARIO("Testing the Quadric<TestType>functional")
 TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
                    std::complex<float>, std::complex<double>)
 {

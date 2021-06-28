@@ -155,7 +155,7 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a Tikhonov problem", TestType, Grad
                 // should have converged for the given number of iterations
                 // does not converge to the optimal solution because of the regularization term
                 // Therefore, just check to fixed value
-                REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85));
+                REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85f));
             }
         }
     }

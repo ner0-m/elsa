@@ -25,7 +25,6 @@ TYPE_TO_STRING(std::complex<double>);
 
 TEST_SUITE_BEGIN("functionals");
 
-// SCENARIO("Testing the l2 norm (squared) functional")
 TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, float, double,
                    std::complex<float>, std::complex<double>)
 {

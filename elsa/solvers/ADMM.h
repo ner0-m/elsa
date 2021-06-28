@@ -208,9 +208,10 @@ namespace elsa
 
     protected:
         /// implement the polymorphic clone operation
-        auto cloneImpl() const -> ADMM<XSolver, ZSolver>* override
+        auto cloneImpl() const -> ADMM<XSolver, ZSolver, data_t>* override
         {
-            return new ADMM<XSolver, ZSolver>(downcast<SplittingProblem<data_t>>(*_problem));
+            return new ADMM<XSolver, ZSolver, data_t>(
+                downcast<SplittingProblem<data_t>>(*_problem));
         }
 
     private:

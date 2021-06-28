@@ -29,7 +29,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("problems");
 
-TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
+TEST_CASE_TEMPLATE("WLSProblems: Testing with operator and data", TestType, float, double)
 {
     GIVEN("the operator and data")
     {
@@ -51,21 +51,23 @@ TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer<TestType> dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcZero);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
 
-                REQUIRE(prob.evaluate() == Approx(0.5 * bVec.squaredNorm()));
-                REQUIRE(prob.getGradient() == static_cast<TestType>(-1.0f) * dcB);
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.evaluate(), as<TestType>(0.5) * bVec.squaredNorm()));
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.getGradient(), static_cast<TestType>(-1.0f) * dcB));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian.apply(dcB) == dcB);
+                REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcB));
             }
         }
 
@@ -81,23 +83,28 @@ TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == dcX0);
 
-                REQUIRE(prob.evaluate() == Approx(0.5 * (x0Vec - bVec).squaredNorm()));
-                REQUIRE(prob.getGradient() == (dcX0 - dcB));
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcX0));
+
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
+                                            as<TestType>(0.5) * (x0Vec - bVec).squaredNorm()));
+                REQUIRE_UNARY(isApprox(prob.getGradient(), dcX0 - dcB));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian.apply(dcB) == dcB);
+                REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcB));
             }
         }
     }
+}
 
+TEST_CASE_TEMPLATE("WLSProblems: Testing with weights, operator and data", TestType, float, double)
+{
     GIVEN("weights, operator and data")
     {
         IndexVector_t numCoeff(3);
@@ -123,22 +130,24 @@ TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer<TestType> dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcZero);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
 
-                REQUIRE(prob.evaluate()
-                        == Approx(0.5 * bVec.dot((weightsVec.array() * bVec.array()).matrix())));
-                REQUIRE(prob.getGradient() == static_cast<TestType>(-1.0f) * dcWeights * dcB);
+                REQUIRE_UNARY(checkApproxEq(
+                    prob.evaluate(),
+                    as<TestType>(0.5) * bVec.dot((weightsVec.array() * bVec.array()).matrix())));
+                DataContainer<TestType> tmpDc = as<TestType>(-1) * dcWeights * dcB;
+                REQUIRE_UNARY(isApprox(prob.getGradient(), tmpDc));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian.apply(dcB) == dcWeights * dcB);
+                REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcWeights * dcB));
             }
         }
 
@@ -154,29 +163,32 @@ TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer<TestType> dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcX0);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcX0));
 
-                REQUIRE(
-                    prob.evaluate()
-                    == Approx(0.5
-                              * (x0Vec - bVec)
-                                    .dot((weightsVec.array() * (x0Vec - bVec).array()).matrix())));
-                REQUIRE(prob.getGradient() == dcWeights * (dcX0 - dcB));
+                REQUIRE_UNARY(checkApproxEq(
+                    prob.evaluate(),
+                    as<TestType>(0.5)
+                        * (x0Vec - bVec)
+                              .dot((weightsVec.array() * (x0Vec - bVec).array()).matrix())));
+                REQUIRE_UNARY(isApprox(prob.getGradient(), dcWeights * (dcX0 - dcB)));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian.apply(dcB) == dcWeights * dcB);
+                REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcWeights * dcB));
             }
         }
     }
+}
 
+TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestType, float, double)
+{
     GIVEN("an optimization problem with only a (w)ls data term")
     {
         VolumeDescriptor desc{IndexVector_t::Constant(1, 343)};
@@ -196,10 +208,10 @@ TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
 
             THEN("only the type of the problem changes")
             {
-                REQUIRE(lsProb.getDataTerm() == prob.getDataTerm());
-                REQUIRE(lsProb.getRegularizationTerms() == prob.getRegularizationTerms());
-                REQUIRE(wlsProb.getDataTerm() == weightedProb.getDataTerm());
-                REQUIRE(wlsProb.getRegularizationTerms() == weightedProb.getRegularizationTerms());
+                REQUIRE_EQ(lsProb.getDataTerm(), prob.getDataTerm());
+                REQUIRE_EQ(lsProb.getRegularizationTerms(), prob.getRegularizationTerms());
+                REQUIRE_EQ(wlsProb.getDataTerm(), weightedProb.getDataTerm());
+                REQUIRE_EQ(wlsProb.getRegularizationTerms(), weightedProb.getRegularizationTerms());
             }
         }
     }
@@ -257,10 +269,10 @@ TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
 
             THEN("only the type of the problem changes")
             {
-                REQUIRE(prob1.getDataTerm() == converted1.getDataTerm());
-                REQUIRE(prob1.getRegularizationTerms() == converted1.getRegularizationTerms());
-                REQUIRE(prob2.getDataTerm() == converted2.getDataTerm());
-                REQUIRE(prob2.getRegularizationTerms() == converted2.getRegularizationTerms());
+                REQUIRE_EQ(prob1.getDataTerm(), converted1.getDataTerm());
+                REQUIRE_EQ(prob1.getRegularizationTerms(), converted1.getRegularizationTerms());
+                REQUIRE_EQ(prob2.getDataTerm(), converted2.getDataTerm());
+                REQUIRE_EQ(prob2.getRegularizationTerms(), converted2.getRegularizationTerms());
             }
         }
 
@@ -389,7 +401,7 @@ TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
                          "for the initial problem")
                     {
                         WLSProblem<TestType> converted{prob};
-                        REQUIRE(prob.evaluate() == Approx(converted.evaluate()));
+                        REQUIRE_UNARY(checkApproxEq(prob.evaluate(), converted.evaluate()));
 
                         auto gradDiff = prob.getGradient();
                         gradDiff -= converted.getGradient();
@@ -434,8 +446,8 @@ TEST_CASE_TEMPLATE("WLSProblems: Tests", TestType, float, double)
             blockVec.getBlock(1) = 0;
 
             L2NormPow2<TestType> blockWls{LinearResidual<TestType>{blockOp, blockVec}};
-            REQUIRE(conv.getDataTerm() == blockWls);
-            REQUIRE(conv.getRegularizationTerms().empty());
+            REQUIRE_EQ(conv.getDataTerm(), blockWls);
+            REQUIRE_UNARY(conv.getRegularizationTerms().empty());
         }
     }
 }

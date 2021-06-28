@@ -18,7 +18,7 @@
 using namespace elsa;
 using namespace doctest;
 
-SCENARIO("Create a Circular Trajectory")
+TEST_CASE("CircleTrajectoryGenerator: Create a Circular Trajectory")
 {
     using namespace geometry;
 
@@ -44,7 +44,7 @@ SCENARIO("Create a Circular Trajectory")
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
             // Check that the detector size is correct
-            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
+            REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[0], expectedDetectorSize);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
                  "matrix")
@@ -72,9 +72,9 @@ SCENARIO("Create a Circular Trajectory")
                     const auto invProjMatNorm =
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
                             .norm();
-                    REQUIRE(checkApproxEq(centerNorm, 0));
-                    REQUIRE(checkApproxEq(projMatNorm, 0, 0.0000001));
-                    REQUIRE(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
+                    REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
+                    REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
                 }
             }
         }
@@ -89,7 +89,7 @@ SCENARIO("Create a Circular Trajectory")
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
             // Check that the detector size is correct
-            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
+            REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[0], expectedDetectorSize);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
                  "matrix")
@@ -118,9 +118,9 @@ SCENARIO("Create a Circular Trajectory")
                     const auto invProjMatNorm =
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
                             .norm();
-                    REQUIRE(checkApproxEq(centerNorm, 0));
-                    REQUIRE(checkApproxEq(projMatNorm, 0, 0.0000001));
-                    REQUIRE(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
+                    REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
+                    REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
                 }
             }
         }
@@ -143,8 +143,8 @@ SCENARIO("Create a Circular Trajectory")
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
             // Check that the detector size is correct
-            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
-            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[1] == expectedDetectorSize);
+            REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[0], expectedDetectorSize);
+            REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[1], expectedDetectorSize);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
                  "matrix")
@@ -190,8 +190,8 @@ SCENARIO("Create a Circular Trajectory")
                 numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
 
             // Check that the detector size is correct
-            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
-            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[1] == expectedDetectorSize);
+            REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[0], expectedDetectorSize);
+            REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[1], expectedDetectorSize);
 
             THEN("Every geomList in our list has the same camera center and the same projection "
                  "matrix")
@@ -221,9 +221,9 @@ SCENARIO("Create a Circular Trajectory")
                     const auto invProjMatNorm =
                         (tmpGeom.getInverseProjectionMatrix() - geom->getInverseProjectionMatrix())
                             .norm();
-                    REQUIRE(checkApproxEq(centerNorm, 0));
-                    REQUIRE(checkApproxEq(projMatNorm, 0, 0.0000001));
-                    REQUIRE(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
+                    REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
+                    REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
                 }
             }
         }

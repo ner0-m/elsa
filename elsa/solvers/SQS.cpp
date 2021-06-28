@@ -63,7 +63,7 @@ namespace elsa
 
         data_t prevT = 1;
         data_t t = 1;
-        data_t nextT;
+        data_t nextT = 0;
         auto& z = getCurrentSolution();
         DataContainer<data_t> x = DataContainer<data_t>(getCurrentSolution());
         DataContainer<data_t> prevX = x;
@@ -91,9 +91,8 @@ namespace elsa
 
                 // TODO: element wise relu
                 if (_momentumAcceleration) {
-                    nextT = static_cast<data_t>(1)
-                            + std::sqrt(static_cast<data_t>(1) + static_cast<data_t>(4) * t * t)
-                                  / static_cast<data_t>(2);
+                    nextT = as<data_t>(1)
+                            + std::sqrt(as<data_t>(1) + as<data_t>(4) * t * t) / as<data_t>(2);
 
                     x = z - nSubsets * diag.apply(gradient);
                     z = x + prevT / nextT * (x - prevX);

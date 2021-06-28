@@ -11,6 +11,7 @@
 #include "doctest/doctest.h"
 #include "Scaling.h"
 #include "VolumeDescriptor.h"
+#include "testHelpers.h"
 
 using namespace elsa;
 using namespace doctest;
@@ -32,14 +33,14 @@ TEST_CASE_TEMPLATE("Scaling: Testing construction", data_t, float, double)
 
             THEN("the descriptors are as expected")
             {
-                REQUIRE(scalingOp.getDomainDescriptor() == dd);
-                REQUIRE(scalingOp.getRangeDescriptor() == dd);
+                REQUIRE_EQ(scalingOp.getDomainDescriptor(), dd);
+                REQUIRE_EQ(scalingOp.getRangeDescriptor(), dd);
             }
 
             THEN("the scaling is isotropic and correct")
             {
-                REQUIRE(scalingOp.isIsotropic());
-                REQUIRE(scalingOp.getScaleFactor() == scaleFactor);
+                REQUIRE_UNARY(scalingOp.isIsotropic());
+                REQUIRE_EQ(scalingOp.getScaleFactor(), scaleFactor);
                 REQUIRE_THROWS_AS(scalingOp.getScaleFactors(), LogicError);
             }
         }
@@ -52,14 +53,14 @@ TEST_CASE_TEMPLATE("Scaling: Testing construction", data_t, float, double)
 
             THEN("the descriptors  are as expected")
             {
-                REQUIRE(scalingOp.getDomainDescriptor() == dd);
-                REQUIRE(scalingOp.getRangeDescriptor() == dd);
+                REQUIRE_EQ(scalingOp.getDomainDescriptor(), dd);
+                REQUIRE_EQ(scalingOp.getRangeDescriptor(), dd);
             }
 
             THEN("the scaling is anisotropic")
             {
-                REQUIRE(!scalingOp.isIsotropic());
-                REQUIRE(scalingOp.getScaleFactors() == dc);
+                REQUIRE_UNARY_FALSE(scalingOp.isIsotropic());
+                REQUIRE_EQ(scalingOp.getScaleFactors(), dc);
                 REQUIRE_THROWS_AS(scalingOp.getScaleFactor(), LogicError);
             }
         }
@@ -71,8 +72,8 @@ TEST_CASE_TEMPLATE("Scaling: Testing construction", data_t, float, double)
 
             THEN("everything matches")
             {
-                REQUIRE(scalingOpClone.get() != &scalingOp);
-                REQUIRE(*scalingOpClone == scalingOp);
+                REQUIRE_NE(scalingOpClone.get(), &scalingOp);
+                REQUIRE_EQ(*scalingOpClone, scalingOp);
             }
         }
     }
@@ -98,11 +99,11 @@ TEST_CASE_TEMPLATE("Scaling: Testing apply to data", data_t, float, double)
             {
                 auto resultApply = scalingOp.apply(input);
                 for (index_t i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApply[i] == Approx(inputScalar * scaleFactor));
+                    REQUIRE_UNARY(checkApproxEq(resultApply[i], inputScalar * scaleFactor));
 
                 auto resultApplyAdjoint = scalingOp.applyAdjoint(input);
                 for (index_t i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApplyAdjoint[i] == Approx(inputScalar * scaleFactor));
+                    REQUIRE_UNARY(checkApproxEq(resultApplyAdjoint[i], inputScalar * scaleFactor));
             }
         }
 
@@ -118,11 +119,12 @@ TEST_CASE_TEMPLATE("Scaling: Testing apply to data", data_t, float, double)
             {
                 auto resultApply = scalingOp.apply(input);
                 for (index_t i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApply[i] == Approx(inputScalar * scaleFactors[i]));
+                    REQUIRE_UNARY(checkApproxEq(resultApply[i], inputScalar * scaleFactors[i]));
 
                 auto resultApplyAdjoint = scalingOp.applyAdjoint(input);
                 for (index_t i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE(resultApplyAdjoint[i] == Approx(inputScalar * scaleFactors[i]));
+                    REQUIRE_UNARY(
+                        checkApproxEq(resultApplyAdjoint[i], inputScalar * scaleFactors[i]));
             }
         }
     }

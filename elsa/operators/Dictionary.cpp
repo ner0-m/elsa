@@ -39,7 +39,7 @@ namespace elsa
     {
         try {
             return downcast_safe<IdenticalBlocksDescriptor>(data.getDataDescriptor());
-        } catch (BadCastError e) {
+        } catch (const BadCastError&) {
             throw InvalidArgumentError(
                 "Dictionary: cannot initialize from data without IdenticalBlocksDescriptor");
         }
@@ -50,8 +50,7 @@ namespace elsa
         Dictionary<data_t>::generateInitialData(const DataDescriptor& signalDescriptor,
                                                 index_t nAtoms)
     {
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randomData(
-            signalDescriptor.getNumberOfCoefficients() * nAtoms);
+        Vector_t<data_t> randomData(signalDescriptor.getNumberOfCoefficients() * nAtoms);
         randomData.setRandom();
         IdenticalBlocksDescriptor desc(nAtoms, signalDescriptor);
         DataContainer<data_t> initData{desc, randomData};
@@ -111,7 +110,7 @@ namespace elsa
             ++j;
         }
 
-        return std::move(supportDict);
+        return supportDict;
     }
 
     template <typename data_t>

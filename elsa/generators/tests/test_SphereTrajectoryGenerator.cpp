@@ -16,7 +16,7 @@
 using namespace elsa;
 using namespace doctest;
 
-SCENARIO("Create a Spherical Trajectory")
+TEST_CASE("SphereTrajectoryGenerator: Create a Spherical Trajectory")
 {
     using namespace geometry;
 
@@ -24,6 +24,24 @@ SCENARIO("Create a Spherical Trajectory")
 
     // Detector size is the volume size scalled by the square root of 2
     const auto expectedDetectorSize = static_cast<index_t>(s * std::sqrt(2));
+
+    GIVEN("A 2D descriptor and 256 poses")
+    {
+        index_t numberOfPoses = 256;
+        IndexVector_t volSize(2);
+        volSize << s, s;
+        VolumeDescriptor desc{volSize};
+
+        WHEN("Trying to create a 2D spherical trajectory")
+        {
+            geometry::SourceToCenterOfRotation diffCenterSource(s * 100);
+            geometry::CenterOfRotationToDetector diffCenterDetector(s);
+
+            REQUIRE_THROWS_AS(SphereTrajectoryGenerator::createTrajectory(
+                                  numberOfPoses, desc, 5, diffCenterSource, diffCenterDetector),
+                              InvalidArgumentError);
+        }
+    }
 
     GIVEN("A 3D descriptor and 256 poses")
     {
@@ -42,8 +60,8 @@ SCENARIO("Create a Spherical Trajectory")
                 numberOfPoses, desc, 5, diffCenterSource, diffCenterDetector);
 
             // Check that the detector size is correct
-            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[0] == expectedDetectorSize);
-            REQUIRE(sdesc->getNumberOfCoefficientsPerDimension()[1] == expectedDetectorSize);
+            REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[0], expectedDetectorSize);
+            REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[1], expectedDetectorSize);
         }
     }
 }

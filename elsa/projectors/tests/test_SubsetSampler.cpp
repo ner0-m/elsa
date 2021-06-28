@@ -28,7 +28,7 @@ TEST_CASE("SubsetSampler: Testing subset sampling strategies")
     GIVEN("A circular trajectory with 32 angles")
     {
         IndexVector_t size(2);
-        size << 128, 128;
+        size << 32, 32;
         VolumeDescriptor volumeDescriptor{size};
         index_t numAngles{32}, arc{360};
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
@@ -96,7 +96,7 @@ TEST_CASE("SubsetSampler: Testing subset sampling strategies")
     GIVEN("A spherical trajectory with 32 angles and 4 circles")
     {
         IndexVector_t size(3);
-        size << 128, 128, 128;
+        size << 32, 32, 32;
         VolumeDescriptor volumeDescriptor{size};
         index_t numPoses{32}, numCircles{4};
         auto sinoDescriptor = SphereTrajectoryGenerator::createTrajectory(
@@ -327,7 +327,7 @@ TEST_CASE(
                     const auto coeffsPerDimension =
                         subset.getDataDescriptor().getNumberOfCoefficientsPerDimension();
 
-                    REQUIRE(coeffsPerDimension[0] == coeffsPerDimSinogram[0]);
+                    REQUIRE_EQ(coeffsPerDimension[0], coeffsPerDimSinogram[0]);
                 }
 
                 subsetSampler.getProjector<SiddonsMethod<real_t>>();

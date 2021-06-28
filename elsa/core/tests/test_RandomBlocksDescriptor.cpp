@@ -414,14 +414,12 @@ TEST_CASE("RandomBlocksDescriptor: Testing clone()")
         index_t blocks = 21;
         std::vector<std::unique_ptr<DataDescriptor>> descriptors(0);
 
-        index_t size = 0;
         IndexVector_t offsets(blocks);
         offsets[0] = 0;
         for (index_t i = 0; i < blocks; i++) {
             index_t n = 1 + std::rand() % 100;
             descriptors.emplace_back(
                 std::make_unique<VolumeDescriptor>(IndexVector_t::Constant(1, n)));
-            size += n;
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + n;
         }
@@ -445,14 +443,12 @@ TEST_CASE("RandomBlocksDescriptor: Testing clone()")
         index_t blocks = 77;
         std::vector<std::unique_ptr<DataDescriptor>> descriptors(0);
 
-        index_t size = 0;
         IndexVector_t offsets(blocks);
         offsets[0] = 0;
         for (index_t i = 0; i < blocks; i++) {
             IndexVector_t coeffs(2);
             coeffs << 1 + std::rand() % 100, 1 + std::rand() % 100;
             descriptors.emplace_back(std::make_unique<VolumeDescriptor>(coeffs));
-            size += coeffs.prod();
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + coeffs.prod();
         }
@@ -476,7 +472,6 @@ TEST_CASE("RandomBlocksDescriptor: Testing clone()")
         index_t blocks = 13;
         std::vector<std::unique_ptr<DataDescriptor>> descriptors(0);
 
-        index_t size = 0;
         IndexVector_t offsets(blocks);
         offsets[0] = 0;
         for (index_t i = 0; i < blocks; i++) {
@@ -486,7 +481,6 @@ TEST_CASE("RandomBlocksDescriptor: Testing clone()")
                 coeffs[j] = 1 + std::abs(coeffs[j]) % 100;
 
             descriptors.emplace_back(std::make_unique<VolumeDescriptor>(coeffs));
-            size += coeffs.prod();
 
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + coeffs.prod();

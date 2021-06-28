@@ -33,14 +33,15 @@ namespace elsa
 
         // allocate device memory and copy ray origins and the inverse of projection matrices to
         // device
-        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, numGeometry);
+        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, asUnsigned(numGeometry));
 
-        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t), numGeometry)
+        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t),
+                            asUnsigned(numGeometry))
             != cudaSuccess)
             throw std::bad_alloc();
 
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = numGeometry;
+        _rayOrigins.ysize = asUnsigned(numGeometry);
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();
@@ -52,7 +53,7 @@ namespace elsa
         auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
         auto rayPitch = _rayOrigins.pitch;
 
-        for (index_t i = 0; i < numGeometry; i++) {
+        for (unsigned i = 0; i < numGeometry; i++) {
             auto geometry = _detectorDescriptor.getGeometryAt(i);
 
             if (!geometry)
@@ -406,7 +407,7 @@ namespace elsa
             throw std::bad_alloc();
 
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = _detectorDescriptor.getNumberOfGeometryPoses();
+        _rayOrigins.ysize = asUnsigned(_detectorDescriptor.getNumberOfGeometryPoses());
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();

@@ -32,7 +32,7 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing construction", data_t, float, doub
 
             THEN("the DataDescriptors are equal")
             {
-                REQUIRE(hThrOp.getRangeDescriptor() == volDescr);
+                REQUIRE_EQ(hThrOp.getRangeDescriptor(), volDescr);
             }
         }
 
@@ -43,8 +43,8 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing construction", data_t, float, doub
 
             THEN("cloned HardThresholding operator equals original HardThresholding operator")
             {
-                REQUIRE(hThrOpClone.get() != &hThrOp);
-                REQUIRE(*hThrOpClone == hThrOp);
+                REQUIRE_NE(hThrOpClone.get(), &hThrOp);
+                REQUIRE_EQ(*hThrOpClone, hThrOp);
             }
         }
     }
@@ -72,7 +72,7 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing in 1D", data_t, float, double)
                 expectedRes << 0, 0, 0, -7, 7, 8, 8, 0;
                 DataContainer<data_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, hThrOp.apply(dC, geometry::Threshold<data_t>{4})));
+                REQUIRE_UNARY(isApprox(dCRes, hThrOp.apply(dC, geometry::Threshold<data_t>{4})));
             }
         }
     }
@@ -100,7 +100,7 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing in 3D", data_t, float, double)
                 expectedRes << 0, 0, 6, 6, 0, 0, 0, -9, 7, 7, 7, 0, 0, 0, 8, 9, 0, 0;
                 DataContainer<data_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, hThrOp.apply(dC, geometry::Threshold<data_t>{5})));
+                REQUIRE_UNARY(isApprox(dCRes, hThrOp.apply(dC, geometry::Threshold<data_t>{5})));
             }
         }
     }
@@ -128,7 +128,7 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing general behaviour", data_t, float,
                 expectedRes << 0, 0, 0, 0, 0, 0, 0, 0;
                 DataContainer<data_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(
+                REQUIRE_UNARY(
                     isApprox(dCRes, hThrOp.apply(dataContainer, geometry::Threshold<data_t>{4})));
             }
 
