@@ -19,6 +19,9 @@ namespace elsa
     class GradientDescent : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for gradient descent, accepting a problem and a fixed step size
          *

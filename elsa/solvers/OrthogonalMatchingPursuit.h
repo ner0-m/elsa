@@ -28,6 +28,9 @@ namespace elsa
     class OrthogonalMatchingPursuit : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for OrthogonalMatchingPursuit, accepting a dictionary representation
          * problem and, optionally, a value for epsilon

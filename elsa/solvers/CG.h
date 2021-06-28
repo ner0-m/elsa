@@ -32,6 +32,9 @@ namespace elsa
     class CG : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for CG, accepting an optimization problem and, optionally, a value for
          * epsilon

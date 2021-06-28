@@ -32,6 +32,9 @@ namespace elsa
     class ISTA : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for ISTA, accepting a problem, a fixed step size and optionally, a
          * value for epsilon

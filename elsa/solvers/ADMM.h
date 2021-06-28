@@ -39,6 +39,9 @@ namespace elsa
     class ADMM : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         ADMM(const SplittingProblem<data_t>& splittingProblem) : Solver<data_t>(splittingProblem)
         {
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,

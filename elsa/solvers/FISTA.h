@@ -33,6 +33,9 @@ namespace elsa
     class FISTA : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for FISTA, accepting a problem, a fixed step size and optionally, a
          * value for epsilon

@@ -24,6 +24,9 @@ namespace elsa
     class FGM : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for FGM, accepting an optimization problem and, optionally, a value
          * for epsilon

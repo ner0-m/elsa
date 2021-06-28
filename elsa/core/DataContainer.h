@@ -40,6 +40,9 @@ namespace elsa
     class DataContainer
     {
     public:
+        /// Scalar alias
+        using Scalar = data_t;
+
         /// delete default constructor (without metadata there can be no valid container)
         DataContainer() = delete;
 

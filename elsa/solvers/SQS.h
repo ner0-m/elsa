@@ -24,6 +24,9 @@ namespace elsa
     class SQS : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for SQS, accepting an optimization problem and, optionally, a value
          * for epsilon. If the problem passed to the constructor is a SubsetProblem SQS will operate
