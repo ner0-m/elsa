@@ -48,6 +48,42 @@ TEST_CASE("KSVD: Solving a DictionaryLearningProblem")
             }
         }
     }
+
+    GIVEN("Multiple random signals")
+    {
+        VolumeDescriptor dd({5});
+        const index_t nAtoms = 10;
+
+        RealVector_t signalVec1(dd.getNumberOfCoefficients());
+        RealVector_t signalVec2(dd.getNumberOfCoefficients());
+        RealVector_t signalVec3(dd.getNumberOfCoefficients());
+        signalVec1.setRandom();
+        signalVec2.setRandom();
+        signalVec3.setRandom();
+
+        IdenticalBlocksDescriptor signalsDescriptor(3, dd);
+        DataContainer signals(signalsDescriptor);
+        signals.getBlock(0) = DataContainer(dd, signalVec1);
+        signals.getBlock(1) = DataContainer(dd, signalVec2);
+        signals.getBlock(2) = DataContainer(dd, signalVec3);
+
+        WHEN("setting up a DictionaryLearningProblem from them")
+        {
+            DictionaryLearningProblem dictProb(signals, nAtoms);
+            KSVD solver(dictProb);
+
+            THEN("a suitable dictionary and representation are found")
+            {
+                auto solution = solver.solve(10);
+                auto& learnedDict = solver.getLearnedDictionary();
+
+                for (index_t i = 0; i < 3; ++i) {
+                    REQUIRE_UNARY(
+                        isApprox(signals.getBlock(i), learnedDict.apply(solution.getBlock(i))));
+                }
+            }
+        }
+    }
 }
 
 TEST_SUITE_END();
