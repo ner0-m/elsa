@@ -11,8 +11,9 @@
    :maxdepth: 2
 
    guides/quickstart-cxx.md
-   guides/admm-cxx.md
    guides/python_bindings.md
+   modules/solvers/choosing_a_solver.rst
+   guides/admm-cxx.md
 
 .. toctree::
    :caption: Modules
