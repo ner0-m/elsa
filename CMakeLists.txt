@@ -41,6 +41,9 @@ set(ELSA_SANITIZER
 
 set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures") 
 
+option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
+option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
+
 # ------------ general setup -----------
 # ------------
 
@@ -65,34 +68,90 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# set where to install the exports/targets
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
+
+
 # ------------ dependencies ------------
 # ------------
 
 # only add the dependencies if elsa is stand-alone
 if(ELSA_MASTER_PROJECT)
-    # setup Eigen Library
-    CPMAddPackage(
-        NAME eigen3
-        GIT_REPOSITORY https://gitlab.com/libeigen/eigen
-        # Currently we're on a random master branch commit, until Eigen 3.4 will be released we kind of have to
-        # stick with it, see also https://gitlab.lrz.de/IP/elsa/-/issues/91 for a little discussion on it
-        GIT_TAG c1b0aea65
-        DOWNLOAD_ONLY YES  # Eigen's CMakelists are not intended for library use
-    )
+    if(SYSTEM_EIGEN)
+        message(STATUS "Using system-wide Eigen library...")
+        find_package(Eigen3 REQUIRED)
+    else()
+        # setup custom Eigen Library
+        # once there's a proper release,
+        # the system-eigen has to be a drop-in replacement for the git-version
+        CPMAddPackage(
+            NAME eigen3
+            GIT_REPOSITORY https://gitlab.com/libeigen/eigen
+            # Currently we're on a random master branch commit, until Eigen 3.4 will be released we kind of have to
+            # stick with it, see also https://gitlab.lrz.de/IP/elsa/-/issues/91 for a little discussion on it
+            GIT_TAG c1b0aea65
+            DOWNLOAD_ONLY YES  # Eigen's CMakelists are not intended for library use
+        )
 
-    # Add the Eigen library target to link against
-    if(eigen3_ADDED)
-        add_library(Eigen3::Eigen INTERFACE IMPORTED)
-        target_include_directories(Eigen3::Eigen INTERFACE ${eigen3_SOURCE_DIR})
+        # Add the Eigen library target to link against
+        if(eigen3_ADDED)
+            message(STATUS "Using bundled Eigen version in ${eigen3_SOURCE_DIR}")
+            # this target is set-up as a drop-in replacement
+            # for a system eigen package.
+            set(EIGEN_BUNDLED_INSTALLDIR "elsa/Eigen")
+            add_library(Eigen INTERFACE)
+            add_library(Eigen3::Eigen ALIAS Eigen)
+
+            target_include_directories(Eigen INTERFACE
+                $<BUILD_INTERFACE:${eigen3_SOURCE_DIR}>
+                $<INSTALL_INTERFACE:${EIGEN_BUNDLED_INSTALLDIR}>
+            )
+
+            # register eigen in the build tree
+            export(TARGETS Eigen FILE "${CMAKE_CURRENT_BINARY_DIR}/elsa/eigen3Targets.cmake")
+
+            # install custom elsa
+            if(ELSA_INSTALL)
+                install(TARGETS Eigen EXPORT eigenExport)
+                install(EXPORT eigenExport
+                    NAMESPACE Eigen3::
+                    FILE "eigen3Targets.cmake"
+                    DESTINATION ${INSTALL_CONFIG_DIR}
+                )
+
+                install(DIRECTORY "${eigen3_SOURCE_DIR}/Eigen/"
+                    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${EIGEN_BUNDLED_INSTALLDIR}"
+                )
+            endif()
+        endif()
     endif()
 
-    # setup spdlog Library
-    CPMAddPackage(
-        NAME spdlog
-        GITHUB_REPOSITORY gabime/spdlog
-        VERSION 1.9.0
-        OPTIONS "SPDLOG_INSTALL ON"
-    )
+    if(SYSTEM_SPDLOG)
+        message(STATUS "Using system-wide spdlog library...")
+        find_package(spdlog REQUIRED)
+    else()
+        # setup bundled spdlog
+        # this already reads spdlog's cmake definitions
+        CPMAddPackage(
+            NAME spdlog
+            GITHUB_REPOSITORY gabime/spdlog
+            VERSION 1.9.0
+            OPTIONS "SPDLOG_INSTALL ON"
+        )
+        message(STATUS "Using bundled spdlog version in ${spdlog_SOURCE_DIR}")
+        # because spdlog didn't do that on its own, we export the target.
+        # this is just for the in-buildtree linking, won't be installed.
+        # store in the bindir/elsa/ directory, which may be nested
+        # in other build directories somehow.
+        export(
+            TARGETS spdlog_header_only spdlog
+            FILE "${CMAKE_CURRENT_BINARY_DIR}/elsa/spdlogTargets.cmake"
+        )
+        # SPDLOG_INSTALL will manage install and includedir setup
+        # to $CMAKE_INSTALL_INCLUDEDIR/spdlog
+    endif()
 
     # setup Dnnl library
     find_package(Dnnl)
@@ -143,12 +202,6 @@ if(ELSA_MASTER_PROJECT)
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
 endif()
-
-
-# set where to install the exports/targets
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
 # include the install_elsa_module function
 include(InstallElsaModule)

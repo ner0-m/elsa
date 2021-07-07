@@ -74,8 +74,6 @@ Then you can configure elsa via the `find_package(elsa)` statement and link your
 Alternatively, you can link more specifically only against the required elsa modules, such as `target_link_libraries(myTarget elsa::core)`.
 In your source code, `#include "elsa.h"` to include all of elsa; alternatively, include only the header files you are actually using to minimize compilation times.
 
-As elsa depends on Eigen3 (version 3.3.9 or newer) and spdlog (version 1.7 or newer), you will need to have these packages installed on your system, and you have to point CMake to those installations.
-
 Contributing
 ------------
 To get involved, please see our [contributing page](https://gitlab.lrz.de/IP/elsa/-/blob/master/CONTRIBUTING.md).
