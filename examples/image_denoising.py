@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from datetime import datetime
+import os
 import sys
 sys.path.append("/home/buerger/Documents/master_thesis/elsa/build")
 
@@ -31,30 +33,42 @@ def im2patches(image, blocksize, stride):
 
 def patches2im(patches, imageshape, blocksize, stride):
     image = np.zeros(imageshape)
-    last_patch_x = math.floor((imageshape[0] - blocksize) / stride)
-    last_patch_y = math.floor((imageshape[1] - blocksize) / stride)
+    last_patch_x = math.floor(imageshape[0] - blocksize)
+    last_patch_y = math.floor(imageshape[1] - blocksize)
 
     x = 0
     y = 0
-    patchnr = 0
     for i in range(patches.shape[0]):
         patch = patches[i,:].reshape(blocksize, blocksize, order='F')
-        try:
-            image[x:x+blocksize, y:y+blocksize] += patch
-            #print(f"Writing patch {patchnr} to block {x},{y} - {x+blocksize},{y+blocksize}")
-        except:
-            print(x,y)
-            sys.exit(1)
+        image[x:x+blocksize, y:y+blocksize] += patch
+
         if(y < last_patch_y):
-            y += 1
+            y += stride
         else:
             y = 0
-            x += 1
-        patchnr +=1
+            x += stride
 
-    image /= blocksize*blocksize
+    image /= (blocksize*blocksize/stride)
 
     return image
+
+def plot_and_save(original, noisy, reconstruction):
+    filename = "imagedenoising"
+    if not os.path.exists(filename):
+        os.makedirs(filename)
+    timestamp = datetime.now().strftime("%y%m%d_%H%M")
+    filename += "/" + timestamp + ".png"
+
+    plt.subplot(131)
+    plt.imshow(raccoon, cmap='gray')
+    plt.subplot(132)
+    plt.imshow(noisy_raccoon, cmap='gray')
+    plt.subplot(133)
+    plt.imshow(reconstructed_raccoon, cmap='gray')
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.show()
+
+#############MAIN######################
 
 raccoon = scipy.misc.face(gray=True)
 raccoon = raccoon / 255.0 #scale between 0 and 1
@@ -65,43 +79,22 @@ raccoon /= 4.0
 noise = np.random.normal(0,0.1,raccoon.shape)
 noisy_raccoon = raccoon + noise 
 
-patched_raccoon = patches2im(im2patches(raccoon, 10, 1), raccoon.shape, 10, 1)
+patched_raccoon = im2patches(noisy_raccoon, 12, 4)
+n_patches = patched_raccoon.shape[0]
+patchlength = patched_raccoon.shape[1]
+patch_descriptor = elsa.pyelsa_core.VolumeDescriptor([patchlength])
+raccoon_descriptor = elsa.pyelsa_core.IdenticalBlocksDescriptor(n_patches, patch_descriptor)
+raccoon_dc = elsa.pyelsa_core.DataContainer(raccoon_descriptor, patched_raccoon.flatten())
 
-plt.subplot(131)
-plt.imshow(raccoon, cmap='gray')
-plt.subplot(132)
-plt.imshow(noisy_raccoon, cmap='gray')
-plt.subplot(133)
-plt.imshow(patched_raccoon, cmap='gray')
-plt.show()
+problem = elsa.pyelsa_problems.DictionaryLearningProblem(raccoon_dc, 128)
+solver = elsa.pyelsa_solvers.KSVD(problem, 16)
+representations = solver.solve(50)
+dictionary = solver.getLearnedDictionary()
 
-def old_stuff():
-    size = np.array([128, 128])
-    phantom = elsa.PhantomGenerator.createModifiedSheppLogan(size)
-    volume_descriptor = phantom.getDataDescriptor()
-    
-    # generate circular trajectory
-    num_angles = 180
-    arc = 360
+reconstructed_raccoon_patches = np.zeros(patched_raccoon.shape)
+for i in range(n_patches):
+    reconstructed_raccoon_patches[i] = np.array(dictionary.apply(representations.getBlock(i)))
 
-    sino_descriptor = elsa.CircleTrajectoryGenerator.createTrajectory(
-        num_angles, phantom.getDataDescriptor(), arc, size[0] * 100, size[0])
-        
-    # setup operator for 2d X-ray transform
-    projector = elsa.SiddonsMethod(volume_descriptor, sino_descriptor)
+reconstructed_raccoon = patches2im(reconstructed_raccoon_patches, raccoon.shape, 12, 4)
 
-    # simulate the sinogram
-    sinogram = projector.apply(phantom)
-
-    # setup reconstruction problem
-    problem = elsa.WLSProblem(projector, sinogram)
-
-    # solve the problem
-    solver = elsa.CG(problem)
-    n_iterations = 20
-    reconstruction = solver.solve(n_iterations)
-
-    # plot the reconstruction
-    plt.imshow(np.array(reconstruction), '2D Reconstruction')
-    plt.show()
-
+plot_and_save(raccoon, noisy_raccoon, reconstructed_raccoon)
