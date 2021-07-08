@@ -12,6 +12,7 @@ namespace elsa
               IdenticalBlocksDescriptor(getIdenticalBlocksDescriptor(signals).getNumberOfBlocks(),
                                         VolumeDescriptor({nAtoms})))
     {
+        _representations = 1; // not the best initialization but OMP starts from scratch anyways
         updateError();
     }
 
