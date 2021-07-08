@@ -39,6 +39,11 @@ namespace elsa
         auto& representations = _problem.getCurrentRepresentations();
         auto signals = _problem.getSignals();
 
+        Logger::get("KSVD")->info("Started for {} iterations, with {} signals and {} atoms. "
+                                  "Stopping error: {}, initial error: {}",
+                                  iterations, _nSamples, dict.getNumberOfAtoms(), _epsilon,
+                                  _problem.getGlobalError().l2Norm());
+
         index_t i = 0;
         while (i < iterations && _problem.getGlobalError().l2Norm() >= _epsilon) {
             // first find a sparse representation
