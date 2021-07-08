@@ -36,7 +36,7 @@ TEST_CASE("KSVD: Solving a DictionaryLearningProblem")
         WHEN("setting up a DictionaryLearningProblem from it")
         {
             DictionaryLearningProblem dictProb(signals, nAtoms);
-            KSVD solver(dictProb);
+            KSVD solver(dictProb, 3);
 
             THEN("a suitable dictionary and representation are found")
             {
@@ -70,7 +70,7 @@ TEST_CASE("KSVD: Solving a DictionaryLearningProblem")
         WHEN("setting up a DictionaryLearningProblem from them")
         {
             DictionaryLearningProblem dictProb(signals, nAtoms);
-            KSVD solver(dictProb);
+            KSVD solver(dictProb, 3);
 
             THEN("a suitable dictionary and representation are found")
             {

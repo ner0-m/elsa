@@ -29,7 +29,7 @@ namespace elsa
          * @param[in] problem the representation problem that is supposed to be solved
          * @param[in] epsilon affects the stopping condition
          */
-        KSVD(/*const*/ DictionaryLearningProblem<data_t>& problem,
+        KSVD(/*const*/ DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,
              data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
@@ -48,6 +48,8 @@ namespace elsa
         data_t _epsilon;
 
         index_t _nSamples;
+
+        index_t _sparsityLevel;
 
         /// lift the base class variable _problem
         DictionaryLearningProblem<data_t>& _problem;
