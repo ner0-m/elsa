@@ -3,8 +3,10 @@
 namespace elsa
 {
     template <typename data_t>
-    KSVD<data_t>::KSVD(/*const*/ DictionaryLearningProblem<data_t>& problem, data_t epsilon)
+    KSVD<data_t>::KSVD(/*const*/ DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,
+                       data_t epsilon)
         : /*Solver<data_t>(problem),*/ _problem{problem},
+          _sparsityLevel{sparsityLevel},
           _epsilon{epsilon},
           _nSamples{getNumberOfSamples(problem.getSignals())}
     {
@@ -43,7 +45,7 @@ namespace elsa
             for (index_t j = 0; j < _nSamples; ++j) {
                 RepresentationProblem reprProblem(dict, signals.getBlock(j));
                 OrthogonalMatchingPursuit omp(reprProblem);
-                representations.getBlock(j) = omp.solve(3); // sparsity level needs to be set here
+                representations.getBlock(j) = omp.solve(_sparsityLevel);
             }
             _problem.updateError();
 
