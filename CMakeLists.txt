@@ -345,3 +345,18 @@ add_custom_target(uninstall
     COMMENT "Uninstalling elsa (Removing all installed files)"
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt"
 )
+
+
+# build information overview
+string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_TYPE_CXX_FLAGS)
+message("
+          project | ${PROJECT_NAME}
+         compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
+       build type | ${CMAKE_BUILD_TYPE}
+         cxxflags | ${CMAKE_CXX_FLAGS}
+ build type flags | ${${BUILD_TYPE_CXX_FLAGS}}
+        build dir | ${CMAKE_BINARY_DIR}
+   install prefix | ${CMAKE_INSTALL_PREFIX}
+")
+
+set_property(GLOBAL PROPERTY TARGET_MESSAGES OFF)
