@@ -572,6 +572,32 @@ namespace elsa
         }
     }
 
+    /// Element-wise absolute value operation
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto abs(Operand const& operand)
+    {
+        auto abs = [](auto const& operand) { return (operand.array().cwiseAbs()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR // TODO if this will be accepted, make the respective changes in quickvec
+        auto absGPU = [](auto const& operand, bool /**/) { return quickvec::abs(operand); };
+        return Expression{Callables{abs, absGPU}, operand};
+#else
+        return Expression{abs, operand};
+#endif
+    }
+
+//    /// Element-wise max operation
+//    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+//    auto max(Operand const& operand1, Operand const& operand2)
+//    {
+//        auto max = [](auto const& operand) { return (operand.array().cwiseAbs()).matrix(); };
+//#ifdef ELSA_CUDA_VECTOR // TODO if this will be accepted, make the respective changes in quickvec
+//        auto maxGPU = [](auto const& operand1, auto const& operand2, bool /**/) { return quickvec::max(operand1, operand2); };
+//        return Expression{Callables{max, maxGPU}, operand1, operand2};
+//#else
+//        return Expression{max, operand1, operand2};
+//#endif
+//    }
+
     /// Element-wise square operation
     template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
     auto square(Operand const& operand)

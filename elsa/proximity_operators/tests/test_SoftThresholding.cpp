@@ -176,4 +176,36 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing general behaviour", data_t, float,
     }
 }
 
+TEST_CASE_TEMPLATE("Using SoftThresholding with a vector of Thresholds", data_t, float, double)
+{
+    GIVEN("a DataDescriptor")
+    {
+        IndexVector_t numCoeff(1);
+        numCoeff << 4;
+        VolumeDescriptor volDescr(numCoeff);
+
+        WHEN("Using SoftThresholding operator")
+        {
+            SoftThresholding<data_t> sThrOp(volDescr);
+
+            THEN("SoftThresholding operator throws exception for differently sized v and prox")
+            {
+                Vector_t<data_t> data(volDescr.getNumberOfCoefficients());
+                data << -1, 5, 7, -9;
+                DataContainer<data_t> dataCont(volDescr, data);
+
+                std::vector<geometry::Threshold<data_t>> thresholds = {
+                    geometry::Threshold<data_t>{2}, geometry::Threshold<data_t>{3},
+                    geometry::Threshold<data_t>{1}, geometry::Threshold<data_t>{34}};
+
+                Vector_t<data_t> expectedRes(sThrOp.getRangeDescriptor().getNumberOfCoefficients());
+                expectedRes << 0, 2, 6, 0;
+                DataContainer<data_t> dCRes(sThrOp.getRangeDescriptor(), expectedRes);
+
+                REQUIRE(isApprox(dCRes, sThrOp.apply(dataCont, thresholds)));
+            }
+        }
+    }
+}
+
 TEST_SUITE_END();

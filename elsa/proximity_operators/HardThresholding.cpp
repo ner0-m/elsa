@@ -32,6 +32,33 @@ namespace elsa
     }
 
     template <typename data_t>
+    void HardThresholding<data_t>::applyImpl(const DataContainer<data_t>& v,
+                                             std::vector<geometry::Threshold<data_t>> thresholds,
+                                             DataContainer<data_t>& prox) const
+    {
+        if (v.getSize() != prox.getSize()) {
+            throw LogicError("HardThresholding: sizes of v and prox must match");
+        }
+
+        if (v.getSize() != thresholds.size()) {
+            throw LogicError("HardThresholding: sizes of v and thresholds must match");
+        }
+
+        auto vIter = v.begin();
+        auto thresholdsIter = thresholds.begin();
+        auto proxIter = prox.begin();
+
+        for (; vIter != v.end() && proxIter != prox.end() && thresholdsIter != thresholds.end();
+               vIter++, thresholdsIter++, proxIter++) {
+            if ((*vIter > *thresholdsIter) || (*vIter < -*thresholdsIter)) {
+                *proxIter = *vIter;
+            } else {
+                *proxIter = 0;
+            }
+        }
+    }
+
+    template <typename data_t>
     auto HardThresholding<data_t>::cloneImpl() const -> HardThresholding<data_t>*
     {
         return new HardThresholding<data_t>(this->getRangeDescriptor());

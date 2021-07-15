@@ -42,6 +42,17 @@ namespace elsa
         void applyImpl(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
                        DataContainer<data_t>& prox) const override;
 
+        /**
+         * @brief apply the proximity operator of the l1 norm to an element in the operator's domain
+         *
+         * @param[in] v input DataContainer
+         * @param[in] thresholds input vector<Threshold>
+         * @param[out] prox output DataContainer
+         */
+        void applyImpl(const DataContainer<data_t>& v,
+                       std::vector<geometry::Threshold<data_t>> thresholds,
+                       DataContainer<data_t>& prox) const override;
+
         /// implement the polymorphic clone operation
         auto cloneImpl() const -> SoftThresholding<data_t>* override;
 
