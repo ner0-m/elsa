@@ -5,39 +5,25 @@
 namespace elsa
 {
     /**
-     * @brief Class representing a sparse representation problem.
+     * @brief Class representing a dictionary learning problem.
      *
      * @author Jonas Buerger - initial code
      *
      * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
-     * This class represents a sparse representation problem, i.e.
-     * \f$ \min_x \|\| x \_\|_0 \f$, s.t. \f$ \| y - Dx \| < \epsilon \f$, where \f$ D \f$ is a
-     * dictionary operator, \f$ y \f$ is the signal that should be represented, \f$ x \f$ is the
-     * sparse representation vector and \f$ \epsilon \f$ is some error bound.
+     * TODO: add description
      */
     template <typename data_t = real_t>
     class DictionaryLearningProblem
     {
     public:
         /**
-         * @brief Constructor for the representation problem, accepting D, x, and an initial guess
-         * x0
+         * @brief Constructor for the dictionary learning problem, accepting signals and number of
+         * atoms
          *
-         * @param[in] D dictionary operator
-         * @param[in] y signal that should be sparsely represented
-         * @param[in] x0 initial value for the current estimated solution
-         */
-        /* we probably don't need a constructor with an initial guess, at least not for OMP...
-        RepresentationProblem(const Dictionary<data_t>& D, const DataContainer<data_t>& y,
-                              const DataContainer<data_t>& x0);
-        */
-
-        /**
-         * @brief Constructor for the representation problem, accepting D and y
-         *
-         * @param[in] D dictionary operator
-         * @param[in] y signal that should be sparsely represented
+         * @param[in] signals The signals for which a dictionary with sparse representations should
+         * be found
+         * @param[in] nAtoms The number of atoms the learned dictionary will have
          */
         DictionaryLearningProblem(const DataContainer<data_t>& signals, index_t nAtoms);
 
