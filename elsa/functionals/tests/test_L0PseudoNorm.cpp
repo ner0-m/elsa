@@ -13,6 +13,7 @@
 #include "LinearResidual.h"
 #include "Identity.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
 
 using namespace elsa;
 using namespace doctest;
@@ -38,7 +39,7 @@ TEST_CASE_TEMPLATE("L0PseudoNorm: Testing without residual", TestType, float, do
                 REQUIRE_EQ(l0PseudoNorm.getDomainDescriptor(), volDescr);
 
                 const auto& residual = l0PseudoNorm.getResidual();
-                const auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&residual);
+                const auto* linRes = downcast_safe<LinearResidual<TestType>>(&residual);
                 REQUIRE_UNARY(linRes);
                 REQUIRE_UNARY_FALSE(linRes->hasDataVector());
                 REQUIRE_UNARY_FALSE(linRes->hasOperator());
@@ -93,7 +94,7 @@ TEST_CASE_TEMPLATE("L0PseudoNorm: Testing with residual", TestType, float, doubl
                 REQUIRE_EQ(l0PseudoNorm.getDomainDescriptor(), volDescr);
 
                 const auto& residual = l0PseudoNorm.getResidual();
-                const auto* lRes = dynamic_cast<const LinearResidual<TestType>*>(&residual);
+                const auto* lRes = downcast_safe<LinearResidual<TestType>>(&residual);
                 REQUIRE_UNARY(lRes);
                 REQUIRE_EQ(*lRes, linRes);
             }

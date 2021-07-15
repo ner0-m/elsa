@@ -81,7 +81,7 @@ namespace elsa
     }
 
     template <typename raw_data_t, typename data_t>
-    void DataUtils::parseRawData(std::ifstream& file, DataContainer<data_t>& data)
+    void DataUtils::parseRawData(std::istream& file, DataContainer<data_t>& data)
     {
         auto sizeInElements = static_cast<std::size_t>(data.getSize());
         auto sizeInBytes = static_cast<index_t>(sizeInElements * sizeof(raw_data_t));
@@ -131,14 +131,14 @@ namespace elsa
     template std::vector<double> DataUtils::parseVector(const std::string&);
     template std::vector<index_t> DataUtils::parseVector(const std::string&);
 
-    template void DataUtils::parseRawData<uint16_t, float>(std::ifstream&, DataContainer<float>&);
-    template void DataUtils::parseRawData<float, float>(std::ifstream&, DataContainer<float>&);
-    template void DataUtils::parseRawData<double, float>(std::ifstream&, DataContainer<float>&);
-    template void DataUtils::parseRawData<uint16_t, double>(std::ifstream&, DataContainer<double>&);
-    template void DataUtils::parseRawData<float, double>(std::ifstream&, DataContainer<double>&);
-    template void DataUtils::parseRawData<double, double>(std::ifstream&, DataContainer<double>&);
-    template void DataUtils::parseRawData<uint16_t, index_t>(std::ifstream&,
+    template void DataUtils::parseRawData<uint16_t, float>(std::istream&, DataContainer<float>&);
+    template void DataUtils::parseRawData<float, float>(std::istream&, DataContainer<float>&);
+    template void DataUtils::parseRawData<double, float>(std::istream&, DataContainer<float>&);
+    template void DataUtils::parseRawData<uint16_t, double>(std::istream&, DataContainer<double>&);
+    template void DataUtils::parseRawData<float, double>(std::istream&, DataContainer<double>&);
+    template void DataUtils::parseRawData<double, double>(std::istream&, DataContainer<double>&);
+    template void DataUtils::parseRawData<uint16_t, index_t>(std::istream&,
                                                              DataContainer<index_t>&);
-    template void DataUtils::parseRawData<float, index_t>(std::ifstream&, DataContainer<index_t>&);
-    template void DataUtils::parseRawData<double, index_t>(std::ifstream&, DataContainer<index_t>&);
+    template void DataUtils::parseRawData<float, index_t>(std::istream&, DataContainer<index_t>&);
+    template void DataUtils::parseRawData<double, index_t>(std::istream&, DataContainer<index_t>&);
 } // namespace elsa

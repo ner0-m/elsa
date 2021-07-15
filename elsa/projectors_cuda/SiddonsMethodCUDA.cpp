@@ -1,6 +1,7 @@
 #include "SiddonsMethodCUDA.h"
 #include "LogGuard.h"
 #include "Timer.h"
+#include "TypeCasts.hpp"
 
 #include "Logger.h"
 namespace elsa
@@ -31,13 +32,14 @@ namespace elsa
 
         // allocate device memory and copy ray origins and the inverse of the significant part of
         // projection matrices to device
-        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, numGeometry);
+        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, asUnsigned(numGeometry));
 
-        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t), numGeometry)
+        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t),
+                            asUnsigned(numGeometry))
             != cudaSuccess)
             throw std::bad_alloc();
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = numGeometry;
+        _rayOrigins.ysize = asUnsigned(numGeometry);
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();
@@ -47,7 +49,7 @@ namespace elsa
         auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
         auto rayPitch = _rayOrigins.pitch;
 
-        for (index_t i = 0; i < numGeometry; i++) {
+        for (unsigned i = 0; i < numGeometry; i++) {
             auto geometry = _detectorDescriptor.getGeometryAt(i);
 
             if (!geometry)
@@ -58,7 +60,7 @@ namespace elsa
             // CUDA also uses a column-major representation, directly transfer matrix
             // transfer inverse of projection matrix
             if (cudaMemcpy2DAsync(slice, projPitch, P.data(), dim * sizeof(real_t),
-                                  dim * sizeof(real_t), dim, cudaMemcpyHostToDevice)
+                                  dim * sizeof(real_t), dim, cudaMemcpyDefault)
                 != cudaSuccess)
                 throw LogicError(
                     "SiddonsMethodCUDA: Could not transfer inverse projection matrices to GPU.");
@@ -68,7 +70,7 @@ namespace elsa
             RealVector_t ro =
                 -P * geometry->getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
             // transfer ray origin
-            if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyHostToDevice)
+            if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyDefault)
                 != cudaSuccess)
                 throw LogicError("SiddonsMethodCUDA: Could not transfer ray origins to GPU.");
         }
@@ -114,7 +116,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherSM = dynamic_cast<const SiddonsMethodCUDA*>(&other);
+        auto otherSM = downcast_safe<SiddonsMethodCUDA>(&other);
         if (!otherSM)
             return false;
 
@@ -150,12 +152,14 @@ namespace elsa
                 throw std::bad_alloc();
 
             if (adjoint) {
-                copy3DDataContainerGPU<cudaMemcpyHostToDevice>(sinoPtr, dsinoPtr, sinoExt);
+                copy3DDataContainerGPU<ContainerCpyKind::cpyContainerToRawGPU>(sinoPtr, dsinoPtr,
+                                                                               sinoExt);
                 if (cudaMemset3DAsync(dvolumePtr, 0, volExt) != cudaSuccess)
                     throw LogicError("SiddonsMethodCUDA::traverseVolume: Could not "
                                      "zero-initialize volume on GPU.");
             } else {
-                copy3DDataContainerGPU<cudaMemcpyHostToDevice>(volumePtr, dvolumePtr, volExt);
+                copy3DDataContainerGPU<ContainerCpyKind::cpyContainerToRawGPU>(volumePtr,
+                                                                               dvolumePtr, volExt);
             }
 
             dim3 sinogramDims(rangeDimsui[2], rangeDimsui[1], rangeDimsui[0]);
@@ -179,10 +183,11 @@ namespace elsa
 
             // retrieve results from GPU
             if (adjoint)
-                copy3DDataContainerGPU<cudaMemcpyDeviceToHost, false>(volumePtr, dvolumePtr,
-                                                                      volExt);
+                copy3DDataContainerGPU<ContainerCpyKind::cpyRawGPUToContainer, false>(
+                    volumePtr, dvolumePtr, volExt);
             else
-                copy3DDataContainerGPU<cudaMemcpyDeviceToHost, false>(sinoPtr, dsinoPtr, sinoExt);
+                copy3DDataContainerGPU<ContainerCpyKind::cpyRawGPUToContainer, false>(
+                    sinoPtr, dsinoPtr, sinoExt);
 
         } else {
             typename TraverseSiddonsCUDA<data_t, 2>::BoundingBox boundingBox;
@@ -204,7 +209,7 @@ namespace elsa
             if (adjoint) {
                 if (cudaMemcpy2DAsync(
                         dsinoPtr.ptr, dsinoPtr.pitch, sinoPtr, rangeDimsui[0] * sizeof(data_t),
-                        rangeDimsui[0] * sizeof(data_t), rangeDimsui[1], cudaMemcpyHostToDevice)
+                        rangeDimsui[0] * sizeof(data_t), rangeDimsui[1], cudaMemcpyDefault)
                     != cudaSuccess)
                     throw LogicError(
                         "SiddonsMethodCUDA::traverseVolume: Couldn't transfer sinogram to GPU.");
@@ -218,7 +223,7 @@ namespace elsa
                 if (cudaMemcpy2DAsync(dvolumePtr.ptr, dvolumePtr.pitch, volumePtr,
                                       domainDimsui[0] * sizeof(data_t),
                                       domainDimsui[0] * sizeof(data_t), domainDimsui[1],
-                                      cudaMemcpyHostToDevice)
+                                      cudaMemcpyDefault)
                     != cudaSuccess)
                     throw LogicError(
                         "SiddonsMethodCUDA::traverseVolume: Couldn't transfer volume to GPU.");
@@ -248,14 +253,14 @@ namespace elsa
             if (adjoint) {
                 if (cudaMemcpy2D(volumePtr, domainDimsui[0] * sizeof(data_t), dvolumePtr.ptr,
                                  dvolumePtr.pitch, domainDimsui[0] * sizeof(data_t),
-                                 domainDimsui[1], cudaMemcpyDeviceToHost)
+                                 domainDimsui[1], cudaMemcpyDefault)
                     != cudaSuccess)
                     throw LogicError(
                         "SiddonsMethodCUDA::traverseVolume: Couldn't retrieve results from GPU.");
             } else {
                 if (cudaMemcpy2D(sinoPtr, rangeDimsui[0] * sizeof(data_t), dsinoPtr.ptr,
                                  dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t), rangeDimsui[1],
-                                 cudaMemcpyDeviceToHost)
+                                 cudaMemcpyDefault)
                     != cudaSuccess)
                     throw LogicError(
                         "SiddonsMethodCUDA::traverseVolume: Couldn't retrieve results from GPU");
@@ -269,34 +274,24 @@ namespace elsa
     }
 
     template <typename data_t>
-    template <cudaMemcpyKind direction, bool async>
+    template <typename SiddonsMethodCUDA<data_t>::ContainerCpyKind direction, bool async>
     void SiddonsMethodCUDA<data_t>::copy3DDataContainerGPU(void* hostData,
                                                            const cudaPitchedPtr& gpuData,
                                                            const cudaExtent& extent) const
     {
         cudaMemcpy3DParms cpyParams = {};
         cpyParams.extent = extent;
-
-        cudaPointerAttributes ptrAttributes;
-        // if host data is a cuda pointer it must be managed unified memory -> internal copy
-        if (cudaPointerGetAttributes(&ptrAttributes, hostData) == cudaSuccess) {
-            Logger::get("SiddonsMethodCUDA")->debug("Use internal GPU copy");
-            cpyParams.kind = cudaMemcpyDeviceToDevice;
-        } else {
-            cpyParams.kind = direction;
-        }
+        cpyParams.kind = cudaMemcpyDefault;
 
         cudaPitchedPtr tmp =
             make_cudaPitchedPtr(hostData, extent.width, extent.width, extent.height);
 
-        if (direction == cudaMemcpyHostToDevice) {
+        if (direction == ContainerCpyKind::cpyContainerToRawGPU) {
             cpyParams.dstPtr = gpuData;
             cpyParams.srcPtr = tmp;
-        } else if (direction == cudaMemcpyDeviceToHost) {
+        } else if (direction == ContainerCpyKind::cpyRawGPUToContainer) {
             cpyParams.srcPtr = gpuData;
             cpyParams.dstPtr = tmp;
-        } else {
-            throw LogicError("Can only copy data between device and host");
         }
 
         if (async) {
@@ -304,7 +299,7 @@ namespace elsa
                 throw LogicError("Failed copying data between device and host");
         } else {
             if (cudaMemcpy3D(&cpyParams) != cudaSuccess)
-                throw LogicError("Failed copying data between device and host");
+                throw LogicError("Failed copying data between device acudaMemcpyKindnd host");
         }
     }
 

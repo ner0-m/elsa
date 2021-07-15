@@ -4,6 +4,7 @@
 #include "RandomBlocksDescriptor.h"
 #include "BlockLinearOperator.h"
 #include "Identity.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -63,13 +64,12 @@ namespace elsa
         const auto& dataTerm = problem.getDataTerm();
         const auto& regTerms = problem.getRegularizationTerms();
 
-        if (!dynamic_cast<const WeightedL2NormPow2<data_t>*>(&dataTerm)
-            && !dynamic_cast<const L2NormPow2<data_t>*>(&dataTerm))
+        if (!is<WeightedL2NormPow2<data_t>>(dataTerm) && !is<L2NormPow2<data_t>>(dataTerm))
             throw LogicError("WLSProblem: conversion failed - data term is not "
                              "of type (Weighted)L2NormPow2");
 
         const auto dataTermResidual =
-            dynamic_cast<const LinearResidual<data_t>*>(&dataTerm.getResidual());
+            downcast_safe<LinearResidual<data_t>>(&dataTerm.getResidual());
 
         if (!dataTermResidual)
             throw LogicError("WLSProblem: conversion failed - data term is non-linear");
@@ -84,13 +84,14 @@ namespace elsa
         std::vector<std::unique_ptr<DataDescriptor>> rangeDescList(0);
         rangeDescList.push_back(dataTermResidual->getRangeDescriptor().clone());
         for (const auto& regTerm : regTerms) {
-            if (!dynamic_cast<const WeightedL2NormPow2<data_t>*>(&regTerm.getFunctional())
-                && !dynamic_cast<const L2NormPow2<data_t>*>(&regTerm.getFunctional()))
+            if (!is<WeightedL2NormPow2<data_t>>(regTerm.getFunctional())
+                && !is<L2NormPow2<data_t>>(regTerm.getFunctional()))
                 throw LogicError("WLSProblem: conversion failed - regularization term is not "
                                  "of type (Weighted)L2NormPow2");
 
+            //
             const auto regTermResidual =
-                dynamic_cast<const LinearResidual<data_t>*>(&regTerm.getFunctional().getResidual());
+                downcast_safe<LinearResidual<data_t>>(&regTerm.getFunctional().getResidual());
 
             if (!regTermResidual)
                 throw LogicError(
@@ -106,8 +107,9 @@ namespace elsa
         std::vector<std::unique_ptr<LinearOperator<data_t>>> opList(0);
 
         // add block corresponding to data term
-        if (const auto trueFunc = dynamic_cast<const WeightedL2NormPow2<data_t>*>(&dataTerm)) {
-            const auto& scaling = trueFunc->getWeightingOperator();
+        if (is<WeightedL2NormPow2<data_t>>(dataTerm)) {
+            const auto& trueFunc = downcast<WeightedL2NormPow2<data_t>>(dataTerm);
+            const auto& scaling = trueFunc.getWeightingOperator();
             const auto& desc = scaling.getDomainDescriptor();
 
             std::unique_ptr<Scaling<data_t>> sqrtW{};
@@ -166,8 +168,9 @@ namespace elsa
             const auto& func = regTerm.getFunctional();
             const auto residual = static_cast<const LinearResidual<data_t>*>(&func.getResidual());
 
-            if (const auto trueFunc = dynamic_cast<const WeightedL2NormPow2<data_t>*>(&func)) {
-                const auto& scaling = trueFunc->getWeightingOperator();
+            if (is<WeightedL2NormPow2<data_t>>(func)) {
+                const auto& trueFunc = downcast<WeightedL2NormPow2<data_t>>(func);
+                const auto& scaling = trueFunc.getWeightingOperator();
                 const auto& desc = scaling.getDomainDescriptor();
 
                 std::unique_ptr<Scaling<data_t>> sqrtLambdaW{};

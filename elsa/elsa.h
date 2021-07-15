@@ -28,6 +28,7 @@
 // Generators headers
 #include "PhantomGenerator.h"
 #include "CircleTrajectoryGenerator.h"
+#include "SphereTrajectoryGenerator.h"
 
 // IO headers
 #include "EDFHandler.h"
@@ -57,6 +58,7 @@
 #include "WLSProblem.h"
 #include "TikhonovProblem.h"
 #include "LASSOProblem.h"
+#include "SubsetProblem.h"
 #include "WLSSubsetProblem.h"
 
 // Projector headers
@@ -64,6 +66,7 @@
 #include "BinaryMethod.h"
 #include "JosephsMethod.h"
 #include "SiddonsMethod.h"
+#include "SubsetSampler.h"
 
 // CUDA projectors
 #ifdef ELSA_CUDA_PROJECTORS

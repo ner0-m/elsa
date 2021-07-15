@@ -666,7 +666,7 @@ TEST_CASE_TEMPLATE("DataContainer: Testing load data to GPU and vice versa", Tes
 }
 #endif
 
-SCENARIO("Testing iterators for DataContainer")
+TEST_CASE("DataContainer: Testing iterators for DataContainer")
 {
     GIVEN("A 1D container")
     {

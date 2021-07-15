@@ -23,3 +23,8 @@ BlockLinearOperator
 ===================
 
 .. doxygenclass:: elsa::BlockLinearOperator
+
+Dictionary
+===================
+
+.. doxygenclass:: elsa::Dictionary

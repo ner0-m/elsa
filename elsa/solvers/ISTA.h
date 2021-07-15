@@ -32,6 +32,9 @@ namespace elsa
     class ISTA : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for ISTA, accepting a problem, a fixed step size and optionally, a
          * value for epsilon
@@ -68,10 +71,10 @@ namespace elsa
         /// default destructor
         ~ISTA() override = default;
 
-    protected:
         /// lift the base class method getCurrentSolution
         using Solver<data_t>::getCurrentSolution;
 
+    protected:
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;
 

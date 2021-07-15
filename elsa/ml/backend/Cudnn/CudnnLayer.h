@@ -6,6 +6,7 @@
 
 // #include "Common.h"
 #include "elsaDefines.h"
+#include "TypeCasts.hpp"
 #include "DataDescriptor.h"
 #include "VolumeDescriptor.h"
 #include "CudnnContext.h"
@@ -336,13 +337,13 @@ namespace elsa
             VolumeDescriptor CudnnLayer<data_t>::getInputDescriptor(index_t index) const
             {
                 validateVectorIndex(inputDescriptor_, index);
-                return *dynamic_unique_ptr_cast<VolumeDescriptor>(inputDescriptor_[index]->clone());
+                return *downcast_safe<VolumeDescriptor>(*inputDescriptor_[index]);
             }
 
             template <typename data_t>
             VolumeDescriptor CudnnLayer<data_t>::getOutputDescriptor() const
             {
-                return *dynamic_unique_ptr_cast<VolumeDescriptor>(outputDescriptor_->clone());
+                return *downcast_safe<VolumeDescriptor>(*outputDescriptor_);
             }
 
             template <typename data_t>
@@ -399,7 +400,7 @@ namespace elsa
             void CudnnLayer<data_t>::validateVectorIndex([[maybe_unused]] const std::vector<T>& vec,
                                                          [[maybe_unused]] index_t index)
             {
-                assert(index >= 0 && asIndex(index) < vec.size()
+                assert(index >= 0 && asUnsigned(index) < vec.size()
                        && "Vector index is out of bounds");
             }
 

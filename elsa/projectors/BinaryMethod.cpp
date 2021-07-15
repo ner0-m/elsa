@@ -1,6 +1,7 @@
 #include "BinaryMethod.h"
 #include "Timer.h"
 #include "TraverseAABB.h"
+#include "TypeCasts.hpp"
 
 #include <stdexcept>
 #include <type_traits>
@@ -55,7 +56,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherBM = dynamic_cast<const BinaryMethod*>(&other);
+        auto otherBM = downcast_safe<BinaryMethod>(&other);
         if (!otherBM)
             return false;
 

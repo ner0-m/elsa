@@ -19,7 +19,7 @@ void example2d_admm()
 
     // generate circular trajectory
     index_t numAngles{180}, arc{360};
-    real_t distance = static_cast<real_t>(size(0));
+    const auto distance = static_cast<real_t>(size(0));
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
@@ -28,8 +28,7 @@ void example2d_admm()
 
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
     // VolumeDescriptor
-    SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                            *sinoDescriptor);
+    SiddonsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);

@@ -11,6 +11,9 @@
    :maxdepth: 2
 
    guides/quickstart-cxx.md
+   guides/python_bindings.md
+   modules/solvers/choosing_a_solver.rst
+   guides/admm-cxx.md
 
 .. toctree::
    :caption: Modules
@@ -23,7 +26,7 @@
    modules/functionals
    modules/problems
    modules/shearlets
-   modules/solvers
+   modules/solvers/solvers
    modules/projectors
    modules/projectors_cuda
    modules/proximity_operators

@@ -12,6 +12,7 @@
 #include "DataDescriptor.h"
 #include "VolumeDescriptor.h"
 #include "Logger.h"
+#include "TypeCasts.hpp"
 
 #include "dnnl.hpp"
 
@@ -53,7 +54,7 @@ namespace elsa::ml
             VolumeDescriptor getInputDescriptor(index_t index = 0) const
             {
                 validateVectorIndex(_inputDescriptor, index);
-                return *dynamic_unique_ptr_cast<VolumeDescriptor>(_inputDescriptor[index]->clone());
+                return downcast_safe<VolumeDescriptor>(*_inputDescriptor[asUnsigned(index)]);
             }
 
             /// Get this layer's output-descriptor
@@ -61,7 +62,7 @@ namespace elsa::ml
             {
                 assert(_outputDescriptor != nullptr
                        && "Cannot get output-descriptor since it is null");
-                return *dynamic_unique_ptr_cast<VolumeDescriptor>(_outputDescriptor->clone());
+                return downcast_safe<VolumeDescriptor>(*_outputDescriptor);
             }
 
             /// Set this layer's input at a given index.
@@ -130,11 +131,12 @@ namespace elsa::ml
             /// Set the number of output-gradients of this layer
             void setNumberOfOutputGradients(index_t num)
             {
-                _outputGradient = std::vector<DnnlMemory>(!num ? 1 : num, _outputGradient[0]);
+                _outputGradient =
+                    std::vector<DnnlMemory>(num == 0 ? 1 : asUnsigned(num), _outputGradient[0]);
             }
 
             /// @returns the number of output-gradients of this layer
-            index_t getNumberOfOutputGradients() const { return _outputGradient.size(); }
+            index_t getNumberOfOutputGradients() const { return asSigned(_outputGradient.size()); }
 
             /// Compile this layer, i.e., construct all necessary layer logic based on arguments
             /// defined beforehand.
@@ -227,7 +229,7 @@ namespace elsa::ml
             inline static void validateVectorIndex([[maybe_unused]] const std::vector<T>& vec,
                                                    [[maybe_unused]] index_t index)
             {
-                assert(asIndex(index) >= 0 && asIndex(index) < vec.size()
+                assert(asUnsigned(index) >= 0 && asUnsigned(index) < vec.size()
                        && "Vector index is out of bounds");
             }
 
@@ -284,12 +286,7 @@ namespace elsa::ml
             /// execution-stream during a backward-pass, false otherwise.
             ///
             /// This is particularly true for all layers with multiple outputs.
-            virtual bool needsBackwardSynchronisation() const
-            {
-                if (_outputGradient.size() > 1)
-                    return true;
-                return false;
-            }
+            virtual bool needsBackwardSynchronisation() const { return _outputGradient.size() > 1; }
 
             std::string getName() const { return _name; }
 

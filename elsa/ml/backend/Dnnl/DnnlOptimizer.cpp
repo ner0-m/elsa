@@ -20,7 +20,7 @@ namespace elsa::ml
 
         template <typename data_t>
         void OptimizerAdamImpl<data_t, MlBackend::Dnnl>::updateParameter(
-            const data_t* gradient, [[maybe_unused]] int batchSize, data_t* param)
+            const data_t* gradient, [[maybe_unused]] index_t batchSize, data_t* param)
         {
             ++step_;
 

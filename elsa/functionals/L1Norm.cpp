@@ -1,4 +1,5 @@
 #include "L1Norm.h"
+#include "TypeCasts.hpp"
 
 #include <stdexcept>
 
@@ -46,8 +47,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherL1Norm = dynamic_cast<const L1Norm*>(&other);
-        return static_cast<bool>(otherL1Norm);
+        return is<L1Norm>(other);
     }
 
     // ------------------------------------------

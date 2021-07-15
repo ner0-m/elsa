@@ -1,5 +1,5 @@
 #include "Conv.h"
-#include <iostream>
+#include "TypeCasts.hpp"
 
 namespace elsa::ml
 {
@@ -30,12 +30,8 @@ namespace elsa::ml
         if (!filterDescriptor_)
             throw std::logic_error("Filter descriptor not set");
 
-        // Clone the input descriptor
-        std::unique_ptr<DataDescriptor> p = filterDescriptor_->clone();
-
         // Downcast to VolumeDescriptor
-        VolumeDescriptor* result = dynamic_cast<VolumeDescriptor*>(p.get());
-        return *result;
+        return downcast<VolumeDescriptor>(*filterDescriptor_);
     }
 
     template <typename data_t>
@@ -71,7 +67,7 @@ namespace elsa::ml
     IndexVector_t Conv<data_t>::getPaddingSizes() const
     {
         // We pad spatial dimensions only
-        IndexVector_t paddingSize(asIndex(this->convolutionDimensions_));
+        IndexVector_t paddingSize(asUnsigned(this->convolutionDimensions_));
 
         switch (this->getPadding()) {
             // Valid padding means no padding at all

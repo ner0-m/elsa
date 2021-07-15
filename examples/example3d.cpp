@@ -28,8 +28,7 @@ void example3d()
 
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
     // VolumeDescriptor
-    JosephsMethodCUDA projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                *sinoDescriptor);
+    JosephsMethodCUDA projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);

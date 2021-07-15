@@ -1,5 +1,6 @@
 #include "EmissionLogLikelihood.h"
 #include "Scaling.h"
+#include "TypeCasts.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -116,7 +117,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherELL = dynamic_cast<const EmissionLogLikelihood*>(&other);
+        auto otherELL = downcast_safe<EmissionLogLikelihood>(&other);
         if (!otherELL)
             return false;
 

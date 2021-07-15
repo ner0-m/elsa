@@ -27,18 +27,19 @@ option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
 option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (requires libclang-dev)" ON)
 option(ELSA_BINDINGS_IN_SINGLE_MODULE "Combine the bindings for all elsa modules in a single python module" OFF)
-option(ELSA_BUILD_WITH_MORE_WARNINGS "Enable all and extra warnings when building (-Wall -Wextra)" ON)
 
 option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
 
 option(ELSA_BUILD_ML_DNNL "Try to build the elsa_ml module with Intel(R) Dnnl backend" ON)
 option(ELSA_BUILD_ML_CUDNN "Try to build the elsa_ml module with Nvidia(R) Cudnn backend" ON)
 
+set(ELSA_WARNING_LEVEL "base" CACHE STRING "Warning level with which elsa is build. Options are: base, all")
 set(ELSA_SANITIZER
         "" CACHE STRING
         "Compile with a sanitizer. Options are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak, 'Address;Undefined'"
         )
 
+set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures") 
 
 # ------------ general setup -----------
 # ------------
@@ -87,7 +88,7 @@ if(ELSA_MASTER_PROJECT)
 
     # setup spdlog Library
     CPMAddPackage(
-        NAME Spdlog
+        NAME spdlog
         GITHUB_REPOSITORY gabime/spdlog
         VERSION 1.7.0 # 1.7.0 Fallback if it dosen't work
         OPTIONS "SPDLOG_INSTALL ON"
@@ -149,7 +150,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
-# include the InstallElsaModule function
+# include the install_elsa_module function
 include(InstallElsaModule)
 
 # ------------ Setup Tools -----------
@@ -198,12 +199,12 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             message(STATUS "elsa test coverage is enabled")
 
             include(CodeCoverage)
-            APPEND_COVERAGE_COMPILER_FLAGS()
+            append_coverage_compiler_flags()
             set(COVERAGE_LCOV_EXCLUDES
                 '${CPM_SOURCE_CACHE}/*'
                 '${PROJECT_BINARY_DIR}/_deps/*'
                 '/usr/*')
-            SETUP_TARGET_FOR_COVERAGE_LCOV(NAME test_coverage EXECUTABLE ctest)
+            setup_target_for_coverage_lcov(NAME test_coverage EXECUTABLE ctest)
 
         else(ELSA_COVERAGE)
             message(STATUS "elsa test coverage is disabled")
@@ -248,34 +249,37 @@ endif(ELSA_BENCHMARKS)
 # ------------ setup installation ------
 # ------------
 
-if(ELSA_INSTALL)
-    # set up the target/library for make install
-    include(GNUInstallDirs)
-    include(CMakePackageConfigHelpers)
+# set up the target/library for make install
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-    # setup the ElsaConfig*.cmake files
-    write_basic_package_version_file(
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfigVersion.cmake
-            VERSION ${PROJECT_VERSION}
-            COMPATIBILITY AnyNewerVersion
-    )
-    configure_package_config_file(
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/elsaConfig.cmake.in
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfig.cmake
-            INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
-    )
+# setup the ElsaConfig*.cmake files
+write_basic_package_version_file(
+    ${CMAKE_BINARY_DIR}/elsa/elsaConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/elsaConfig.cmake.in
+    ${CMAKE_BINARY_DIR}/elsa/elsaConfig.cmake
+    INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
+)
+
+if(ELSA_MASTER_PROJECT)
+    # this puts the local build tree into the user package repository, but not the installed version...
+    export(PACKAGE elsa)
+endif()
+
+if(ELSA_INSTALL)
+    message(STATUS "setting up elsa installation")
 
     # install the config files
     install(
-            FILES
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfig.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfigVersion.cmake
-            DESTINATION ${INSTALL_CONFIG_DIR}
+        FILES
+        ${CMAKE_BINARY_DIR}/elsa/elsaConfig.cmake
+        ${CMAKE_BINARY_DIR}/elsa/elsaConfigVersion.cmake
+        DESTINATION ${INSTALL_CONFIG_DIR}
     )
-
-    # this puts the local build tree into the user package repository, but not the installed version...
-    # ...but we rely on the paths in the installed version. sigh. commented out for now.
-    #export(PACKAGE elsa)
 endif(ELSA_INSTALL)
 
 
@@ -287,4 +291,4 @@ add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P "${PROJECT_SOURCE_DIR}/cmake/Uninstall.cmake"
     COMMENT "Uninstalling elsa (Removing all installed files)"
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt"
-    )
+)

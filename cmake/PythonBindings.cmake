@@ -2,7 +2,6 @@ find_package(PythonLibs)
 
 # macro for generation of the corresponding python module for the elsa target TARGET_NAME as a pre-build step the
 # code for the python bindings will be generated and stored in the directory ELSA_PYTHON_BINDINGS_PATH under the
-# name BINDINGS_CODE_FILENAME the sources containing the public interface of TARGET_NAME should be specified as
 # additional arguments you can omit a source file from the list to prevent the generation of bindings for that file
 macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
     if((TARGET pyelsa) AND (TARGET pybind11_generator))
@@ -46,6 +45,7 @@ macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
                 pybind11_generator ${ARGN} ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX} --extra-arg=-isystem
                 --extra-arg=${CLANG_RESOURCE_DIR}/include --extra-arg=-std=c++17 --extra-arg=-w
                 --extra-arg=--cuda-host-only -p=${CMAKE_BINARY_DIR} --hints=${HINTS_FILE}
+                --extra-arg=-DEIGEN_DONT_PARALLELIZE
                 -o=${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME} --pyname=${PY_TARGET_NAME}
                 ${SINGLE_MODULE_FLAGS}
             DEPENDS ${TARGET_NAME} pybind11_generator ${HINTS_FILE}
@@ -88,18 +88,28 @@ function(SetupPythonBindings)
         file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py)
         file(REMOVE ${ELSA_PYTHON_BINDINGS_PATH}/logger.py)
 
-        if(CMAKE_CXX_FLAGS)
-            string(REPLACE " " ";" CXX_FLAGS_LIST ${CMAKE_CXX_FLAGS})
+        # always combine bindings in a single module if using libc++
+        set(USES_LIBCXX "FALSE")
+        if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+            set(USES_LIBCXX "TRUE")
+            if (CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
+                if ("${CMAKE_CXX_FLAGS}" MATCHES "-stdlib=libstdc\\+\\+")
+                    set(USES_LIBCXX "FALSE")
+                endif()
+            endif()
+        else()
+            if(CMAKE_CXX_COMPILER_ID MATCHES "^[Cc]lang")
+                if ("${CMAKE_CXX_FLAGS}" MATCHES "-stdlib=libc\\+\\+")
+                    set(USES_LIBCXX "TRUE")
+                endif()
+            endif()
         endif()
 
-        # always combine bindings in a single module if using libc++
-        foreach(COMPILE_OPTION IN LISTS CXX_FLAGS_LIST)
-            if(${COMPILE_OPTION} MATCHES "-stdlib=libc\\+\\+.*")
-                set(ELSA_BINDINGS_IN_SINGLE_MODULE ON CACHE BOOL "Bindings compiled in single module as libc++ is used"
-                                                            FORCE
-                )
-            endif()
-        endforeach()
+        if (USES_LIBCXX)
+            set(ELSA_BINDINGS_IN_SINGLE_MODULE ON CACHE BOOL "Bindings compiled in single module as libc++ is used"
+                                                        FORCE
+            )
+        endif()
 
         if(ELSA_BINDINGS_IN_SINGLE_MODULE)
             # bind_elsa.cpp combines all bindings definitions into a single PYBIND11_MODULE

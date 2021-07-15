@@ -1,5 +1,6 @@
 #include "LinearResidual.h"
 #include "Identity.h"
+#include "TypeCasts.hpp"
 
 #include <stdexcept>
 
@@ -85,7 +86,7 @@ namespace elsa
         if (!Residual<data_t>::isEqual(other))
             return false;
 
-        auto otherLinearResidual = dynamic_cast<const LinearResidual*>(&other);
+        auto otherLinearResidual = downcast_safe<LinearResidual>(&other);
         if (!otherLinearResidual)
             return false;
 

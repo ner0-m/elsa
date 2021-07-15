@@ -19,6 +19,9 @@ namespace elsa
     class GradientDescent : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for gradient descent, accepting a problem and a fixed step size
          *
@@ -33,7 +36,6 @@ namespace elsa
          * function.
          *
          * @param[in] problem the problem that is supposed to be solved
-         * @param[in] stepSize the fixed step size to be used while solving
          */
         GradientDescent(const Problem<data_t>& problem);
 
@@ -43,15 +45,15 @@ namespace elsa
         /// default destructor
         ~GradientDescent() override = default;
 
+        /// lift the base class method getCurrentSolution
+        using Solver<data_t>::getCurrentSolution;
+
     private:
         /// the step size
         data_t _stepSize;
 
         /// the default number of iterations
         const index_t _defaultIterations{100};
-
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
 
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;

@@ -1,0 +1,13 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+set(_dependend_components @INSTALL_MODULE_DEPENDENCIES@)
+
+foreach(_comp ${_dependend_components}) 
+    message(STATUS "Loading: ${_comp}") 
+    find_dependency(${_comp} REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR})
+    if (${_comp}_FOUND)
+        include(${CMAKE_CURRENT_LIST_DIR}/${_comp}Targets.cmake)
+    endif(${_comp}_FOUND) 
+endforeach()

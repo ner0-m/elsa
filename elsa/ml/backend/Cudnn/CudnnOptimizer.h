@@ -19,7 +19,8 @@ namespace elsa
                                  data_t learningRate = data_t(0.01), data_t momentum = data_t(0.0),
                                  bool nesterov = false);
 
-                void updateParameter(const data_t* gradient, int batchSize, data_t* param) override;
+                void updateParameter(const data_t* gradient, index_t batchSize,
+                                     data_t* param) override;
 
             private:
                 /// \copydoc OptimizerImplBase::learningRate_
@@ -83,14 +84,14 @@ namespace elsa
                 {
                     switch (opt->getOptimizerType()) {
                         case OptimizerType::Adam: {
-                            auto downcastedOpt = dynamic_cast<Adam<data_t>*>(opt);
+                            auto downcastedOpt = downcast<Adam<data_t>>(opt);
                             return std::make_shared<OptimizerAdamImpl<data_t, MlBackend::Cudnn>>(
                                 size, context, downcastedOpt->getLearningRate(),
                                 downcastedOpt->getBeta1(), downcastedOpt->getBeta2(),
                                 downcastedOpt->getEpsilon());
                         }
                         case OptimizerType::SGD: {
-                            auto downcastedOpt = dynamic_cast<SGD<data_t>*>(opt);
+                            auto downcastedOpt = downcast<SGD<data_t>>(opt);
                             return std::make_shared<OptimizerSGDImpl<data_t, MlBackend::Cudnn>>(
                                 size, context, downcastedOpt->getLearningRate(),
                                 downcastedOpt->getMomentum(), downcastedOpt->useNesterov());

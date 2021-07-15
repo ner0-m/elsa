@@ -34,10 +34,10 @@ TEST_CASE("MHDHandler: Reading and writing data")
 
             THEN("the read in DataContainer contains the expected data")
             {
-                REQUIRE(dc.getSize() == dcRead.getSize());
-                REQUIRE(dc.getDataDescriptor() == dcRead.getDataDescriptor());
+                REQUIRE_EQ(dc.getSize(), dcRead.getSize());
+                REQUIRE_EQ(dc.getDataDescriptor(), dcRead.getDataDescriptor());
 
-                REQUIRE(dcRead == dc);
+                REQUIRE_EQ(dcRead, dc);
             }
         }
     }

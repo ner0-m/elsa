@@ -1,5 +1,6 @@
 #include "ISTA.h"
 #include "SoftThresholding.h"
+#include "TypeCasts.hpp"
 
 #include <Logger.h>
 
@@ -34,10 +35,11 @@ namespace elsa
 
         data_t lambda = _problem->getRegularizationTerms()[0].getWeight();
 
-        auto linResid =
-            dynamic_cast<const LinearResidual<data_t>*>(&(_problem->getDataTerm()).getResidual());
-        const LinearOperator<data_t>& A = linResid->getOperator();
-        const DataContainer<data_t>& b = linResid->getDataVector();
+        // Safe as long as only LinearResidual exits
+        const auto& linResid =
+            downcast<LinearResidual<data_t>>((_problem->getDataTerm()).getResidual());
+        const LinearOperator<data_t>& A = linResid.getOperator();
+        const DataContainer<data_t>& b = linResid.getDataVector();
 
         DataContainer<data_t>& x = getCurrentSolution();
         DataContainer<data_t> Atb = A.applyAdjoint(b);
@@ -75,7 +77,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherISTA = dynamic_cast<const ISTA*>(&other);
+        auto otherISTA = downcast_safe<ISTA>(&other);
         if (!otherISTA)
             return false;
 

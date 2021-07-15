@@ -24,13 +24,16 @@ namespace elsa
     class SQS : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
          * @brief Constructor for SQS, accepting an optimization problem and, optionally, a value
          * for epsilon. If the problem passed to the constructor is a SubsetProblem SQS will operate
          * in ordered subset mode.
          *
          * @param[in] problem the problem that is supposed to be solved
-         * @param[in] momentumAcceleration whether or not to enable momentum acceleration
+         * @param[in] momentumAcceleration whether to enable Nesterov's momentum acceleration
          * @param[in] epsilon affects the stopping condition
          */
         SQS(const Problem<data_t>& problem, bool momentumAcceleration = true,
@@ -56,6 +59,9 @@ namespace elsa
         /// default destructor
         ~SQS() override = default;
 
+        /// lift the base class method getCurrentSolution
+        using Solver<data_t>::getCurrentSolution;
+
     private:
         /// the default number of iterations
         const index_t _defaultIterations{100};
@@ -71,9 +77,6 @@ namespace elsa
 
         /// whether to operate in subset based mode
         bool _subsetMode{false};
-
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
 
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;

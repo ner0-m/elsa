@@ -190,13 +190,12 @@ namespace elsa
             template <typename data_t>
             void InitializerImpl<data_t>::ramlak(data_t* data, index_t size)
             {
-                const index_t hw = static_cast<data_t>(size - data_t(1)) / data_t(2);
+                const index_t hw = as<index_t>((as<data_t>(size) - 1) / 2);
 
                 for (index_t i = -hw; i <= hw; ++i) {
-                    if (i % 2)
-                        data[i + hw] = data_t(-1)
-                                       / (static_cast<data_t>(i) * static_cast<data_t>(i)
-                                          * pi<data_t> * pi<data_t>);
+                    if ((i % 2) != 0)
+                        data[i + hw] =
+                            data_t(-1) / (as<data_t>(i) * as<data_t>(i) * pi<data_t> * pi<data_t>);
                     else
                         data[i + hw] = data_t(0);
                 }

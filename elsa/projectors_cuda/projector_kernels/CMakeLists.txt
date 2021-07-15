@@ -3,25 +3,14 @@ include(ComputeCapabilityCUDA)
 # make sure host compiler used by NVCC is the one used for the rest of the project
 set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
 
-set(CUDA_ARCH_TYPES "Auto" CACHE STRING "Space-separated list of target GPU architectures. Defaults to Auto. If Auto attempts to detect and target all installed GPUS.")
-
-if ("${CUDA_ARCH_TYPES}" STREQUAL "Auto")
-  CUDA_DETECT_INSTALLED_GPUS(TARGET_GPUS)
-else()
-  set(TARGET_GPUS ${CUDA_ARCH_TYPES})
-endif()
+# Append compute capabilities to CMAKE_CUDA_ARCHITECTURE 
+set_cuda_arch_type(${ELSA_CUDA_ARCH_TYPE})
 
 # fmad can reduce accuracy, but only gives a negligible boost to speed
 # use expt-relaxed-constexpr flag to suppress warnings caused by including the Eigen header
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --fmad=false --expt-relaxed-constexpr")
 
-# set target GPU architectures
-foreach(TARGET_GPU ${TARGET_GPUS})
-  string(REPLACE "." "" TARGET_GPU ${TARGET_GPU})
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code arch=compute_${TARGET_GPU},code=[sm_${TARGET_GPU},compute_${TARGET_GPU}]")
-endforeach()
-
-if (ELSA_BUILD_WITH_MORE_WARNINGS)
+if(ELSA_MASTER_PROJECT)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wreorder -Xptxas=-warn-spills,-warn-lmem-usage")
 endif()
 
@@ -57,7 +46,9 @@ target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC cudart)
 
 # register the module
-registerComponent(${ELSA_MODULE_NAME})
+REGISTER_MODULE(${ELSA_MODULE_NAME})
 
 # install the kernels as a module
-InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+install_elsa_module(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+ 
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES)

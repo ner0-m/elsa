@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DetectorDescriptor.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {

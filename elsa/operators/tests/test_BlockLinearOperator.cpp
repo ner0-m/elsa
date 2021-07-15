@@ -7,6 +7,8 @@
 #include "VolumeDescriptor.h"
 #include "Identity.h"
 #include "Scaling.h"
+#include "TypeCasts.hpp"
+#include "testHelpers.h"
 
 using namespace elsa;
 using namespace doctest;
@@ -65,20 +67,20 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing construction", TestType, float,
 
             THEN("the BlockLinearOperator contains the correct operators")
             {
-                REQUIRE(blockOp1.numberOfOps() == 2);
-                REQUIRE(blockOp1.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp1.getIthOperator(1) == *iop1);
-                REQUIRE(blockOp2.numberOfOps() == 2);
-                REQUIRE(blockOp2.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp2.getIthOperator(1) == *iop1);
+                REQUIRE_EQ(blockOp1.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp1.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp1.getIthOperator(1), *iop1);
+                REQUIRE_EQ(blockOp2.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp2.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp2.getIthOperator(1), *iop1);
             }
 
             THEN("the automatically generated operator descriptors are correct")
             {
-                REQUIRE(blockOp1.getDomainDescriptor() == bd);
-                REQUIRE(blockOp1.getRangeDescriptor() == dd);
-                REQUIRE(blockOp2.getDomainDescriptor() == dd);
-                REQUIRE(blockOp2.getRangeDescriptor() == bd);
+                REQUIRE_EQ(blockOp1.getDomainDescriptor(), bd);
+                REQUIRE_EQ(blockOp1.getRangeDescriptor(), dd);
+                REQUIRE_EQ(blockOp2.getDomainDescriptor(), dd);
+                REQUIRE_EQ(blockOp2.getRangeDescriptor(), bd);
             }
         }
 
@@ -91,20 +93,20 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing construction", TestType, float,
 
             THEN("the BlockLinearOperator contains the correct operators")
             {
-                REQUIRE(blockOp1.numberOfOps() == 2);
-                REQUIRE(blockOp1.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp1.getIthOperator(1) == *iop1);
-                REQUIRE(blockOp2.numberOfOps() == 2);
-                REQUIRE(blockOp2.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp2.getIthOperator(1) == *iop1);
+                REQUIRE_EQ(blockOp1.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp1.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp1.getIthOperator(1), *iop1);
+                REQUIRE_EQ(blockOp2.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp2.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp2.getIthOperator(1), *iop1);
             }
 
             THEN("the automatically generated operator descriptors are correct")
             {
-                REQUIRE(blockOp1.getDomainDescriptor() == bd2);
-                REQUIRE(blockOp1.getRangeDescriptor() == ddLinearized);
-                REQUIRE(blockOp2.getDomainDescriptor() == ddLinearized);
-                REQUIRE(blockOp2.getRangeDescriptor() == bd2);
+                REQUIRE_EQ(blockOp1.getDomainDescriptor(), bd2);
+                REQUIRE_EQ(blockOp1.getRangeDescriptor(), ddLinearized);
+                REQUIRE_EQ(blockOp2.getDomainDescriptor(), ddLinearized);
+                REQUIRE_EQ(blockOp2.getRangeDescriptor(), bd2);
             }
         }
 
@@ -156,20 +158,20 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing construction", TestType, float,
 
             THEN("the BlockLinearOperator contains the correct operators")
             {
-                REQUIRE(blockOp1.numberOfOps() == 2);
-                REQUIRE(blockOp1.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp1.getIthOperator(1) == *iop2);
-                REQUIRE(blockOp2.numberOfOps() == 2);
-                REQUIRE(blockOp2.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp2.getIthOperator(1) == *iop2);
+                REQUIRE_EQ(blockOp1.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp1.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp1.getIthOperator(1), *iop2);
+                REQUIRE_EQ(blockOp2.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp2.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp2.getIthOperator(1), *iop2);
             }
 
             THEN("the automatically generated operator descriptors are correct")
             {
-                REQUIRE(blockOp1.getDomainDescriptor() == expectedBlocks);
-                REQUIRE(blockOp1.getRangeDescriptor() == ddLinearized);
-                REQUIRE(blockOp2.getDomainDescriptor() == ddLinearized);
-                REQUIRE(blockOp2.getRangeDescriptor() == expectedBlocks);
+                REQUIRE_EQ(blockOp1.getDomainDescriptor(), expectedBlocks);
+                REQUIRE_EQ(blockOp1.getRangeDescriptor(), ddLinearized);
+                REQUIRE_EQ(blockOp2.getDomainDescriptor(), ddLinearized);
+                REQUIRE_EQ(blockOp2.getRangeDescriptor(), expectedBlocks);
             }
         }
 
@@ -182,20 +184,20 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing construction", TestType, float,
 
             THEN("the BlockLinearOperator contains the correct operators")
             {
-                REQUIRE(blockOp1.numberOfOps() == 2);
-                REQUIRE(blockOp1.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp1.getIthOperator(1) == *iop2);
-                REQUIRE(blockOp2.numberOfOps() == 2);
-                REQUIRE(blockOp2.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp2.getIthOperator(1) == *iop2);
+                REQUIRE_EQ(blockOp1.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp1.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp1.getIthOperator(1), *iop2);
+                REQUIRE_EQ(blockOp2.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp2.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp2.getIthOperator(1), *iop2);
             }
 
             THEN("the automatically generated operator descriptors are correct")
             {
-                REQUIRE(blockOp1.getDomainDescriptor() == bd2);
-                REQUIRE(blockOp1.getRangeDescriptor() == dd);
-                REQUIRE(blockOp2.getDomainDescriptor() == dd);
-                REQUIRE(blockOp2.getRangeDescriptor() == bd2);
+                REQUIRE_EQ(blockOp1.getDomainDescriptor(), bd2);
+                REQUIRE_EQ(blockOp1.getRangeDescriptor(), dd);
+                REQUIRE_EQ(blockOp2.getDomainDescriptor(), dd);
+                REQUIRE_EQ(blockOp2.getRangeDescriptor(), bd2);
             }
         }
 
@@ -263,21 +265,21 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing construction", TestType, float,
 
             THEN("the BlockLinearOperator contains the correct operators")
             {
-                REQUIRE(blockOp1.numberOfOps() == 2);
-                REQUIRE(blockOp1.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp1.getIthOperator(1) == *iop2);
-                REQUIRE(blockOp2.numberOfOps() == 2);
-                REQUIRE(blockOp2.getIthOperator(0) == *iop1);
-                REQUIRE(blockOp2.getIthOperator(1) == *iop2);
+                REQUIRE_EQ(blockOp1.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp1.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp1.getIthOperator(1), *iop2);
+                REQUIRE_EQ(blockOp2.numberOfOps(), 2);
+                REQUIRE_EQ(blockOp2.getIthOperator(0), *iop1);
+                REQUIRE_EQ(blockOp2.getIthOperator(1), *iop2);
             }
 
             THEN("the automatically generated operator descriptors are correct and have a uniform "
                  "spacing of one")
             {
-                REQUIRE(blockOp1.getDomainDescriptor() == bd);
-                REQUIRE(blockOp1.getRangeDescriptor() == dd);
-                REQUIRE(blockOp2.getDomainDescriptor() == dd);
-                REQUIRE(blockOp2.getRangeDescriptor() == bd);
+                REQUIRE_EQ(blockOp1.getDomainDescriptor(), bd);
+                REQUIRE_EQ(blockOp1.getRangeDescriptor(), dd);
+                REQUIRE_EQ(blockOp2.getDomainDescriptor(), dd);
+                REQUIRE_EQ(blockOp2.getRangeDescriptor(), bd);
             }
         }
     }
@@ -322,17 +324,17 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
             THEN("the for the first block, x was multiplied by 2.")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE(range[i] == vec[i] * scale1);
+                    REQUIRE_UNARY(checkApproxEq(range[i], vec[i] * scale1));
             }
             THEN("the for the second block, x was multiplied by 3.")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE(range[i + rows * cols] == vec[i] * scale2);
+                    REQUIRE_UNARY(checkApproxEq(range[i + rows * cols], vec[i] * scale2));
             }
             THEN("the for the third block, x was multiplied by 4.")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE(range[i + rows * cols * 2] == vec[i] * scale3);
+                    REQUIRE_UNARY(checkApproxEq(range[i + rows * cols * 2], vec[i] * scale3));
             }
         }
     }
@@ -380,9 +382,8 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
             {
                 auto size = rows * cols;
                 for (int i = 0; i < size; i++) {
-                    REQUIRE(range[i]
-                            == vec[i] * scale1 + vec[i + size] * scale2
-                                   + vec[i + size * 2] * scale3);
+                    REQUIRE_UNARY(checkApproxEq(range[i], vec[i] * scale1 + vec[i + size] * scale2
+                                                              + vec[i + size * 2] * scale3));
                 }
             }
         }
@@ -430,7 +431,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: applyAdjoint", TestType, float, double)
                  "scaled with the corresponding factor")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE(result[i] == 35);
+                    REQUIRE_UNARY(checkApproxEq(result[i], 35));
             }
         }
     }
@@ -465,17 +466,17 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: applyAdjoint", TestType, float, double)
             THEN("the for the first block, x was multiplied by 2.")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE(result[i] == vec[i] * scale1);
+                    REQUIRE_EQ(result[i], vec[i] * scale1);
             }
             THEN("the for the second block, x was multiplied by 3.")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE(result[i + rows * cols] == vec[i] * scale2);
+                    REQUIRE_EQ(result[i + rows * cols], vec[i] * scale2);
             }
             THEN("the for the third block, x was multiplied by 4.")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE(result[i + rows * cols * 2] == vec[i] * scale3);
+                    REQUIRE_EQ(result[i + rows * cols * 2], vec[i] * scale3);
             }
         }
     }
@@ -508,9 +509,9 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing cloning", TestType, float, doub
 
             THEN("it's a real clone")
             {
-                REQUIRE(bloClone.get() != &blockOp);
-                REQUIRE(dynamic_cast<BlockLinearOperator<TestType>*>(bloClone.get()));
-                REQUIRE(blockOp == *bloClone);
+                REQUIRE_NE(bloClone.get(), &blockOp);
+                REQUIRE_UNARY(is<BlockLinearOperator<TestType>>(bloClone.get()));
+                REQUIRE_EQ(blockOp, *bloClone);
             }
         }
     }
@@ -538,9 +539,9 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing cloning", TestType, float, doub
 
             THEN("it's a real clone")
             {
-                REQUIRE(bloClone.get() != &blockOp);
-                REQUIRE(dynamic_cast<BlockLinearOperator<TestType>*>(bloClone.get()));
-                REQUIRE(blockOp == *bloClone);
+                REQUIRE_NE(bloClone.get(), &blockOp);
+                REQUIRE_UNARY(is<BlockLinearOperator<TestType>>(bloClone.get()));
+                REQUIRE_EQ(blockOp, *bloClone);
             }
         }
     }
@@ -573,8 +574,8 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing comparison", TestType, float, d
 
             THEN("they are not equal")
             {
-                REQUIRE(blockOp != blockOpLeaf);
-                REQUIRE(blockOpLeaf != blockOp);
+                REQUIRE_NE(blockOp, blockOpLeaf);
+                REQUIRE_NE(blockOpLeaf, blockOp);
             }
         }
 
@@ -585,8 +586,8 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing comparison", TestType, float, d
 
             THEN("they are not equal")
             {
-                REQUIRE(blockOp != blockOp2);
-                REQUIRE(blockOp2 != blockOp);
+                REQUIRE_NE(blockOp, blockOp2);
+                REQUIRE_NE(blockOp2, blockOp);
             }
         }
 
@@ -600,8 +601,8 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing comparison", TestType, float, d
 
             THEN("they are not equal")
             {
-                REQUIRE(blockOp != blockOp2);
-                REQUIRE(blockOp2 != blockOp);
+                REQUIRE_NE(blockOp, blockOp2);
+                REQUIRE_NE(blockOp2, blockOp);
             }
         }
     }

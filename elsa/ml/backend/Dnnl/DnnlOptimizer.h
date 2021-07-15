@@ -21,7 +21,8 @@ namespace elsa
                                   data_t beta1 = data_t(0.9), data_t beta2 = data_t(0.999),
                                   data_t epsilon = data_t(1e-7));
 
-                void updateParameter(const data_t* gradient, int batchSize, data_t* param) override;
+                void updateParameter(const data_t* gradient, index_t batchSize,
+                                     data_t* param) override;
 
             private:
                 /// \copydoc OptimizerImplBase::learningRate_
@@ -56,7 +57,7 @@ namespace elsa
                 {
                     switch (opt->getOptimizerType()) {
                         case OptimizerType::Adam: {
-                            auto downcastedOpt = dynamic_cast<Adam<data_t>*>(opt);
+                            auto downcastedOpt = downcast<Adam<data_t>>(opt);
                             return std::make_shared<OptimizerAdamImpl<data_t, MlBackend::Dnnl>>(
                                 size, downcastedOpt->getLearningRate(), downcastedOpt->getBeta1(),
                                 downcastedOpt->getBeta2(), downcastedOpt->getEpsilon());

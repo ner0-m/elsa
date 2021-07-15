@@ -11,7 +11,7 @@ namespace elsa
 
     // fwd-decls for Backtrace.h
     struct backtrace_symbol;
-    struct Backtrace;
+    class Backtrace;
 
     /**
      * Base exception for every error that occurs in elsa.
@@ -145,6 +145,15 @@ namespace elsa
     {
     public:
         InvalidArgumentError(const std::string& msg);
+    };
+
+    /**
+     * Could not cast to the given type
+     */
+    class BadCastError : public Error
+    {
+    public:
+        BadCastError(const std::string& msg);
     };
 
 } // namespace elsa

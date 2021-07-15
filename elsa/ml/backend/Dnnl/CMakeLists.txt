@@ -32,7 +32,7 @@ set(MODULE_SOURCES
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging ${Dnnl_LIB})
 list(APPEND MODULE_PRIVATE_DEPS)
 
-AddElsaModule(
+ADD_ELSA_MODULE(
     ml_dnnl_backend "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
@@ -45,3 +45,5 @@ target_include_directories(
 
 # Include Dnnl headers as system headers to avoid warnings
 target_include_directories(${ELSA_MODULE_TARGET_NAME} SYSTEM PUBLIC $<BUILD_INTERFACE:${Dnnl_INCLUDE_DIR}>)
+ 
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)

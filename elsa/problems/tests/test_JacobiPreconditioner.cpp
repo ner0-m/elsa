@@ -24,13 +24,11 @@ constexpr data_t return_data_t(const T<data_t>&);
 TYPE_TO_STRING(JacobiPreconditioner<float>);
 TYPE_TO_STRING(JacobiPreconditioner<double>);
 
-TEST_CASE_TEMPLATE("JacobiPreconditioner: Testing standard use cases", TestType,
-                   JacobiPreconditioner<float>, JacobiPreconditioner<double>)
+TEST_CASE_TEMPLATE("JacobiPreconditioner: Testing standard use cases", data_t, float, double)
 {
     // Set seed for Eigen Matrices!
     srand((unsigned int) 666);
 
-    using data_t = decltype(return_data_t(std::declval<TestType>()));
     // no log spamming in tests
     Logger::setLevel(Logger::LogLevel::OFF);
 
@@ -47,7 +45,7 @@ TEST_CASE_TEMPLATE("JacobiPreconditioner: Testing standard use cases", TestType,
 
         WHEN("setting up a Jacobi Preconditioner")
         {
-            TestType preconditioner{scalingOp, false};
+            JacobiPreconditioner<data_t> preconditioner{scalingOp, false};
 
             THEN("the clone works correctly")
             {

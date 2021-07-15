@@ -21,6 +21,9 @@ namespace elsa
     class Solver : public Cloneable<Solver<data_t>>
     {
     public:
+        /// Scalar alias
+        using Scalar = data_t;
+
         /**
          * @brief Constructor for the solver, accepting an optimization problem
          *

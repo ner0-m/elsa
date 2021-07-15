@@ -27,8 +27,11 @@ author = 'Tobias Lasser'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [ "breathe", "m2r2"]
+extensions = [ "breathe", "m2r2", "sphinxcontrib.katex", "sphinx.ext.autosectionlabel"]
 source_suffix = ['.rst', '.md']
+
+# Make sure the target is unique
+autosectionlabel_prefix_document = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -38,6 +41,8 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# -- Options for KaTex -------------------------------------------------------
+katex_inline = [r'$', r'$']
 
 # -- Options for HTML output -------------------------------------------------
 

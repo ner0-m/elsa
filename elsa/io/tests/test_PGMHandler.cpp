@@ -60,15 +60,15 @@ TEST_CASE("PGMHandler: Write PGM file")
             };
 
             // Check header
-            REQUIRE(nextToken(str, "\n") == "P2");
-            REQUIRE(nextToken(str, "\n") == "10 10");
-            REQUIRE(nextToken(str, "\n") == "255");
+            REQUIRE_EQ(nextToken(str, "\n"), "P2");
+            REQUIRE_EQ(nextToken(str, "\n"), "10 10");
+            REQUIRE_EQ(nextToken(str, "\n"), "255");
 
             // Now check the content
             int counter = 0;
             while (!str.empty()) {
                 auto val = static_cast<int>(static_cast<real_t>(counter) * scaleFactor);
-                REQUIRE(std::to_string(val) == nextToken(str, "\n"));
+                REQUIRE_EQ(std::to_string(val), nextToken(str, "\n"));
                 counter++;
             }
         }

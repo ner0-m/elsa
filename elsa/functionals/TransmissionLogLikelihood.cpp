@@ -1,6 +1,7 @@
 #include "TransmissionLogLikelihood.h"
 #include "Scaling.h"
 #include "Error.h"
+#include "TypeCasts.hpp"
 
 #include <cmath>
 
@@ -132,7 +133,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherTLL = dynamic_cast<const TransmissionLogLikelihood*>(&other);
+        auto otherTLL = downcast_safe<TransmissionLogLikelihood>(&other);
         if (!otherTLL)
             return false;
 

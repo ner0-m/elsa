@@ -3,6 +3,7 @@
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
 #include "Error.h"
+#include "TypeCasts.hpp"
 
 #include <utility>
 
@@ -282,7 +283,7 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i)
     {
-        const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
+        const auto blockDesc = downcast_safe<BlockDescriptor>(_dataDescriptor.get());
         if (!blockDesc)
             throw LogicError("DataContainer: cannot get block from not-blocked container");
 
@@ -305,7 +306,7 @@ namespace elsa
     template <typename data_t>
     const DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i) const
     {
-        const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
+        const auto blockDesc = downcast_safe<BlockDescriptor>(_dataDescriptor.get());
         if (!blockDesc)
             throw LogicError("DataContainer: cannot get block from not-blocked container");
 

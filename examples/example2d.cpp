@@ -19,7 +19,7 @@ void example2d()
 
     // generate circular trajectory
     index_t numAngles{180}, arc{360};
-    real_t distance = static_cast<real_t>(size(0));
+    const auto distance = static_cast<real_t>(size(0));
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 

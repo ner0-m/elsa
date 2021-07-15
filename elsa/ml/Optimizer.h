@@ -154,7 +154,7 @@ namespace elsa
 
                 virtual ~OptimizerImplBase() = default;
 
-                virtual void updateParameter(const data_t* gradient, int batchSize,
+                virtual void updateParameter(const data_t* gradient, index_t batchSize,
                                              data_t* param) = 0;
 
             protected:

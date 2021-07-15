@@ -110,6 +110,7 @@ namespace elsa
         /// convenience typedef for cuda array flags
         using cudaArrayFlags = unsigned int;
 
+        enum class ContainerCpyKind { cpyContainerToRawGPU, cpyRawGPUToContainer };
         /**
          * @brief Copies contents of a 3D data container between GPU and host memory
          *
@@ -127,7 +128,7 @@ namespace elsa
          * DataContainer x;
          * void* hostData = (void*)&x[0];
          */
-        template <cudaMemcpyKind direction, bool async = true>
+        template <ContainerCpyKind direction, bool async = true>
         void copy3DDataContainer(void* hostData, const cudaPitchedPtr& gpuData,
                                  const cudaExtent& extent) const;
 
