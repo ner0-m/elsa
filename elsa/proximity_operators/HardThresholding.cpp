@@ -49,7 +49,7 @@ namespace elsa
         auto proxIter = prox.begin();
 
         for (; vIter != v.end() && proxIter != prox.end() && thresholdsIter != thresholds.end();
-               vIter++, thresholdsIter++, proxIter++) {
+             vIter++, thresholdsIter++, proxIter++) {
             if ((*vIter > *thresholdsIter) || (*vIter < -*thresholdsIter)) {
                 *proxIter = *vIter;
             } else {
