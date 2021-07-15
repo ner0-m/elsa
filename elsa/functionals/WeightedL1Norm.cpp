@@ -57,7 +57,7 @@ namespace elsa
 
     template <typename data_t>
     LinearOperator<data_t>
-    WeightedL1Norm<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
+        WeightedL1Norm<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
     {
         // TODO
         throw LogicError("WeightedL1Norm: not differentiable, so no Hessian! (busted!)");
