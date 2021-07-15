@@ -23,10 +23,11 @@ namespace elsa
     {
     public:
         /**
-         * @brief Constructor for KSVD, accepting a dictionary representation problem and,
-         * optionally, a value for epsilon
+         * @brief Constructor for KSVD, accepting a dictionary representation problem, the desired
+         * sparsity level of the representations and, optionally, a value for epsilon
          *
          * @param[in] problem the representation problem that is supposed to be solved
+         * @param[in] sparsityLevel The number of non-zero entries in the representations
          * @param[in] epsilon affects the stopping condition
          */
         KSVD(/*const*/ DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,

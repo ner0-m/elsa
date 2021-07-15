@@ -3,7 +3,7 @@
 namespace elsa
 {
     template <typename data_t>
-    KSVD<data_t>::KSVD(/*const*/ DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,
+    KSVD<data_t>::KSVD(DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,
                        data_t epsilon)
         : /*Solver<data_t>(problem),*/ _problem{problem},
           _sparsityLevel{sparsityLevel},
