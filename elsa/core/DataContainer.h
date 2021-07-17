@@ -317,6 +317,19 @@ namespace elsa
         /// return a const view of this DataContainer with a different descriptor
         const DataContainer<data_t> viewAs(const DataDescriptor& dataDescriptor) const;
 
+        /// @brief Slice the container in the last dimension
+        ///
+        /// Access a portion of the container via a slice. The slicing always is in the last
+        /// dimension. So for a 3D volume, the slice would be an sliced in the z direction and would
+        /// be a part of the x-y plane.
+        ///
+        /// A slice is always the same dimension as the original DataContainer, but with a thickness
+        /// of 1 in the last dimension (i.e. the coefficient of the last dimension is 1)
+        const DataContainer<data_t> slice(index_t i) const;
+
+        /// @overload non-canst/read-write overload
+        DataContainer<data_t> slice(index_t i);
+
         /// iterator for DataContainer (random access and continuous)
         using iterator = DataContainerIterator<DataContainer<data_t>>;
 

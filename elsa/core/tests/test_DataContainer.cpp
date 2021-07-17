@@ -51,6 +51,9 @@ TYPE_TO_STRING(DataContainer<index_t>);
 TYPE_TO_STRING(DataContainer<std::complex<float>>);
 TYPE_TO_STRING(DataContainer<std::complex<double>>);
 
+TYPE_TO_STRING(std::complex<float>);
+TYPE_TO_STRING(std::complex<double>);
+
 #ifdef ELSA_CUDA_VECTOR
 using GPUTypeTuple =
     std::tuple<TestHelperGPU<float>, TestHelperGPU<double>, TestHelperGPU<std::complex<float>>,
@@ -970,6 +973,228 @@ TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, floa
         DataContainer dc2(desc2D);
 
         THEN("The concatenation throws") { REQUIRE_THROWS_AS(concatenate(dc1, dc2), LogicError); }
+    }
+}
+
+TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double,
+                   std::complex<float>, std::complex<double>)
+{
+    // Set seed for Eigen Matrices!
+    srand((unsigned int) 666);
+
+    GIVEN("A non 3D DataContainer")
+    {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff2D(2);
+        numCoeff2D << size, size;
+
+        const VolumeDescriptor desc(numCoeff2D);
+        const Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size);
+        const DataContainer<data_t> dc(desc, randVec);
+
+        THEN("Accessing an out of bounds slice throws")
+        {
+            REQUIRE_THROWS_AS(dc.slice(20), LogicError);
+        }
+
+        WHEN("Accessing all the slices")
+        {
+            for (int i = 0; i < size; ++i) {
+                auto slice = dc.slice(i);
+
+                THEN("The the slice is a 2D slice of \"thickness\" 1")
+                {
+                    REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 2);
+
+                    auto coeffs = slice.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+                    auto expectedCoeffs = IndexVector_t(2);
+                    expectedCoeffs << size, 1;
+                    REQUIRE_EQ(coeffs, expectedCoeffs);
+                }
+
+                THEN("All values are the same as of the original DataContainer")
+                {
+                    // Check that it's read correctly
+                    auto vecSlice = randVec.segment(i * size, size);
+                    for (int j = 0; j < size; ++j) {
+                        REQUIRE_UNARY(checkApproxEq(slice(j, 0), vecSlice[j]));
+                    }
+                }
+            }
+        }
+    }
+
+    GIVEN("A const 3D DataContainer")
+    {
+        constexpr index_t size = 20;
+
+        const VolumeDescriptor desc({size, size, size});
+        const Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size * size);
+        const DataContainer<data_t> dc(desc, randVec);
+
+        THEN("Accessing an out of bounds slice throws")
+        {
+            REQUIRE_THROWS_AS(dc.slice(20), LogicError);
+        }
+
+        WHEN("Accessing all the slices")
+        {
+            for (int i = 0; i < size; ++i) {
+                auto slice = dc.slice(i);
+
+                THEN("The the slice is a 3D slice of \"thickness\" 1")
+                {
+                    REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 3);
+
+                    auto coeffs = slice.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+                    auto expectedCoeffs = IndexVector_t(3);
+                    expectedCoeffs << size, size, 1;
+                    REQUIRE_EQ(coeffs, expectedCoeffs);
+                }
+
+                THEN("All values are the same as of the original DataContainer")
+                {
+                    // Check that it's read correctly
+                    auto vecSlice = randVec.segment(i * size * size, size * size);
+                    for (int j = 0; j < size; ++j) {
+                        for (int k = 0; k < size; ++k) {
+                            REQUIRE_UNARY(checkApproxEq(slice(k, j, 0), vecSlice[k + j * size]));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    GIVEN("A non-const 3D DataContainer")
+    {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(3);
+        numCoeff << size, size, size;
+
+        const VolumeDescriptor desc(numCoeff);
+        DataContainer<data_t> dc(desc);
+        dc = 0;
+
+        THEN("Accessing an out of bounds slice throws")
+        {
+            REQUIRE_THROWS_AS(dc.slice(20), LogicError);
+        }
+
+        WHEN("Setting the first slice to 1")
+        {
+            dc.slice(0) = 1;
+
+            THEN("Only the first slice is set to 1")
+            {
+                for (int j = 0; j < size; ++j) {
+                    for (int i = 0; i < size; ++i) {
+                        data_t val = dc(i, j, 0);
+                        INFO("Expected slice 0 to be ", data_t{1}, " but it's ", val, " (at (", i,
+                             ", ", j, ", 0))");
+                        REQUIRE_UNARY(checkApproxEq(val, 1));
+                    }
+                }
+            }
+
+            THEN("The other slices are still set to 0")
+            {
+                for (int k = 1; k < size; ++k) {
+                    for (int j = 0; j < size; ++j) {
+                        for (int i = 0; i < size; ++i) {
+                            data_t val = dc(i, j, k);
+                            INFO("Expected all slices but the first to be ", data_t{0},
+                                 " but it's ", val, " (at (", i, ", ", j, ", 0))");
+                            REQUIRE_UNARY(checkApproxEq(val, 0));
+                        }
+                    }
+                }
+            }
+        }
+
+        WHEN("Setting the fifth slice to some random data using a 3D DataContainer")
+        {
+            Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size * 1);
+            const DataContainer slice(VolumeDescriptor({size, size, 1}), randVec);
+
+            dc.slice(5) = slice;
+            THEN("The first 4 slices are still zero")
+            {
+                for (int k = 0; k < 5; ++k) {
+                    for (int j = 0; j < size; ++j) {
+                        for (int i = 0; i < size; ++i) {
+                            data_t val = dc(i, j, k);
+
+                            INFO("Expected all slices but the first to be ", data_t{0},
+                                 " but it's ", val, " (at (", i, ", ", j, ", 0))");
+                            REQUIRE_UNARY(checkApproxEq(val, 0));
+                        }
+                    }
+                }
+            }
+
+            THEN("The fifth slices set correctly")
+            {
+                for (int j = 0; j < size; ++j) {
+                    for (int i = 0; i < size; ++i) {
+                        data_t val = dc(i, j, 5);
+                        auto expected = randVec[i + j * size];
+                        INFO("Expected slice 0 to be ", expected, " but it's ", val, " (at (", i,
+                             ", ", j, ", 0))");
+                        REQUIRE_UNARY(checkApproxEq(val, expected));
+                    }
+                }
+            }
+
+            THEN("The last 14 slices are still zero")
+            {
+                // Check last slices
+                for (int k = 6; k < size; ++k) {
+                    for (int j = 0; j < size; ++j) {
+                        for (int i = 0; i < size; ++i) {
+                            data_t val = dc(i, j, k);
+
+                            INFO("Expected all slices but the first to be ", data_t{0},
+                                 " but it's ", val, " (at (", i, ", ", j, ", 0))");
+                            REQUIRE_UNARY(checkApproxEq(val, 0));
+                        }
+                    }
+                }
+            }
+        }
+
+        WHEN("Setting the first slice to some random data using a 2D DataContainer")
+        {
+            Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size);
+            const DataContainer slice(VolumeDescriptor({size, size}), randVec);
+
+            dc.slice(0) = slice;
+            THEN("The fifth slices set correctly")
+            {
+                for (int j = 0; j < size; ++j) {
+                    for (int i = 0; i < size; ++i) {
+                        data_t val = dc(i, j, 0);
+                        auto expected = randVec[i + j * size];
+                        INFO("Expected slice 0 to be ", expected, " but it's ", val, " (at (", i,
+                             ", ", j, ", 0))");
+                        REQUIRE_UNARY(checkApproxEq(val, expected));
+                    }
+                }
+            }
+            THEN("The other slices are still zero")
+            {
+                for (int k = 1; k < size; ++k) {
+                    for (int j = 0; j < size; ++j) {
+                        for (int i = 0; i < size; ++i) {
+                            data_t val = dc(i, j, k);
+                            INFO("Expected all slices but the first to be ", data_t{0},
+                                 " but it's ", val, " (at (", i, ", ", j, ", 0))");
+                            REQUIRE_UNARY(checkApproxEq(val, 0));
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
