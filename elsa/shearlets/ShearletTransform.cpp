@@ -7,12 +7,7 @@ namespace elsa
 {
     template <typename data_t>
     ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height)
-        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
-                                 VolumeDescriptor{{calculateL(width, height), width, height}}),
-          _width{width},
-          _height{height},
-          _jZero(calculatejZero(width, height)),
-          _L{calculateL(width, height)}
+        : ShearletTransform(width, height, calculatejZero(width, height))
     {
     }
 
@@ -25,6 +20,10 @@ namespace elsa
           _jZero{jZero},
           _L{calculateL(width, height)}
     {
+        if (width < 0 || height < 0) {
+            throw LogicError("ShearletTransform: negative width/height were provided");
+        }
+        // TODO check for jZero < 0? probably yes
     }
 
     // TODO remove me before final MR, implement in some other place
@@ -93,6 +92,15 @@ namespace elsa
         // SHty = getReals(np.sum(fft.ifft2(fft.fft2(y) * getSpectra()), axis = 0));
     }
 
+    // TODO consider simplifying the usage of floor/ceil
+    // TODO consider ordering spectra based on the frequency domain, might be essential when
+    //  training a DL model since it should learn these patterns based on a logical order
+    // TODO consider utilizing OpenMP
+    // TODO address casts
+    // TODO consider accommodating for different type of shearing and parabolic scaling functions
+    // TODO consider using [i]fftshift for even-sized signals
+    // TODO consider adding various generating functions, e.g. smooth shearlets
+    // TODO are we supporting real shearlets only? seems so
     template <typename data_t>
     void ShearletTransform<data_t>::computeSpectra() const
     {
