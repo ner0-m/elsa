@@ -14,4 +14,4 @@ add_custom_target(
 )
 
 # the actual tests
-ELSA_DOCTEST(ConeAdaptedDiscreteShearletTransform)
+ELSA_DOCTEST(ShearletTransform)

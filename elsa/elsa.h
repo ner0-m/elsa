@@ -75,7 +75,7 @@
 #endif
 
 // Shearlet headers
-#include "ConeAdaptedDiscreteShearletTransform.h"
+#include "ShearletTransform.h"
 
 // Solver headers
 #include "Solver.h"

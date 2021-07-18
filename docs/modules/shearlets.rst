@@ -4,7 +4,7 @@ elsa shearlets
 
 .. contents:: Table of Contents
 
-ConeAdaptedDiscreteShearletTransform
-====================================
+ShearletTransform
+=================
 
-.. doxygenclass:: elsa::ConeAdaptedDiscreteShearletTransform
+.. doxygenclass:: elsa::ShearletTransform

@@ -1,19 +1,30 @@
 # list all the headers of the module
 set(MODULE_HEADERS
-        ConeAdaptedDiscreteShearletTransform.h
+        ShearletTransform.h
         )
 
 # list all the code files of the module
 set(MODULE_SOURCES
-        ConeAdaptedDiscreteShearletTransform.cpp
+        ShearletTransform.cpp
         )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators elsa_functionals)
 list(APPEND MODULE_PRIVATE_DEPS)
 
-AddElsaModule(
+# use OpenMP is available
+find_package(OpenMP)
+if (OpenMP_CXX_FOUND)
+    list(APPEND MODULE_PRIVATE_DEPS OpenMP::OpenMP_CXX)
+endif ()
+
+ADD_ELSA_MODULE(
         shearlets "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
         PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
+)
+
+target_include_directories(
+        ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 if (ELSA_BUILD_PYTHON_BINDINGS)
@@ -22,3 +33,5 @@ if (ELSA_BUILD_PYTHON_BINDINGS)
             ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${MODULE_SOURCES}
     )
 endif ()
+
+write_module_config(${ELSA_MODULE_NAME} elsa_core elsa_logging)
