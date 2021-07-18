@@ -446,6 +446,11 @@ namespace elsa
         bool canAssign(DataHandlerType handlerType);
     };
 
+    /// Concatenate two DataContainers to one (requires copying of both)
+    template <typename data_t>
+    DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
+                                      const DataContainer<data_t>& dc2);
+
     /// User-defined template argument deduction guide for the expression based constructor
     template <typename Source>
     DataContainer(Source const& source) -> DataContainer<typename Source::data_t>;
