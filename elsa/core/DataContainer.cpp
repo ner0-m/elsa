@@ -2,6 +2,7 @@
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
+#include "RandomBlocksDescriptor.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
 
@@ -504,6 +505,30 @@ namespace elsa
         }
     }
 
+    template <typename data_t>
+    DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
+                                      const DataContainer<data_t>& dc2)
+    {
+        auto desc1 = dc1.getDataDescriptor().clone();
+        auto desc2 = dc2.getDataDescriptor().clone();
+
+        if (desc1->getNumberOfDimensions() != desc2->getNumberOfDimensions()) {
+            throw LogicError("Can't concatenate two DataContainers with different dimension");
+        }
+
+        std::vector<std::unique_ptr<DataDescriptor>> descriptors;
+        descriptors.reserve(2);
+        descriptors.push_back(std::move(desc1));
+        descriptors.push_back(std::move(desc2));
+
+        auto blockDesc = RandomBlocksDescriptor(descriptors);
+        auto concatenated = DataContainer<data_t>(blockDesc);
+
+        concatenated.getBlock(0) = dc1;
+        concatenated.getBlock(1) = dc2;
+        return concatenated;
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
@@ -511,5 +536,16 @@ namespace elsa
     template class DataContainer<double>;
     template class DataContainer<std::complex<double>>;
     template class DataContainer<index_t>;
+
+    template DataContainer<float> concatenate<float>(const DataContainer<float>&,
+                                                     const DataContainer<float>&);
+    template DataContainer<double> concatenate<double>(const DataContainer<double>&,
+                                                       const DataContainer<double>&);
+    template DataContainer<std::complex<float>>
+        concatenate<std::complex<float>>(const DataContainer<std::complex<float>>&,
+                                         const DataContainer<std::complex<float>>&);
+    template DataContainer<std::complex<double>>
+        concatenate<std::complex<double>>(const DataContainer<std::complex<double>>&,
+                                          const DataContainer<std::complex<double>>&);
 
 } // namespace elsa
