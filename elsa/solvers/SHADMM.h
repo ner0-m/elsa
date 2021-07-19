@@ -55,19 +55,41 @@ namespace elsa
         /// default destructor
         ~SHADMM() override = default;
 
-        DataContainer<data_t> maxWithZero(DataContainer<data_t> vector)
+        DataContainer<data_t> maxWithZero(DataContainer<data_t> dC)
         {
-            DataContainer<data_t> rez(vector.getDataDescriptor());
-
-            for (int i = 0; i < vector.getSize(); i++) {
-                if (vector[i] > 0) {
-                    rez[i] = vector[i];
+            DataContainer<data_t> resDC(dC.getDataDescriptor());
+            for (int i = 0; i < dC.getSize(); i++) {
+                if (dC[i] > 0) {
+                    resDC[i] = dC[i];
                 } else {
-                    rez[i] = 0;
+                    resDC[i] = 0;
                 }
             }
+            return resDC;
+        }
 
-            return rez;
+        DataContainer<data_t> getFirstNElements(index_t n, DataContainer<data_t> dc)
+        {
+            DataContainer<data_t> res(dc.getDataDescriptor());
+            for (index_t i = 0; i < dc.getSize(); i++) {
+                if (i >= n) {
+                    res[i] = 0;
+                }
+                res[i] = dc[i];
+            }
+            return res;
+        }
+
+        DataContainer<data_t> getLastNElements(index_t n, DataContainer<data_t> dc)
+        {
+            DataContainer<data_t> res(dc.getDataDescriptor());
+            for (index_t i = 0; i < dc.getSize(); i++) {
+                if (i >= n) {
+                    res[i] = dc[i];
+                }
+                res[i] = 0;
+            }
+            return res;
         }
 
         auto solveImpl(index_t iterations) -> DataContainer<data_t>& override
@@ -75,7 +97,8 @@ namespace elsa
             if (iterations == 0)
                 iterations = _defaultIterations;
 
-            auto* splittingProblem = dynamic_cast<SplittingProblem<data_t>*>(_problem.get());
+            SplittingProblem<> auto* splittingProblem =
+                downcast<SplittingProblem<data_t>>(*_problem);
 
             const auto& F = splittingProblem->getF();
             const auto& G = splittingProblem->getG();
@@ -111,44 +134,61 @@ namespace elsa
 
             const auto& constraint = splittingProblem->getConstraint();
             /// should come as // AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
-            const auto& A = constraint.getOperatorA();
+            const BlockLinearOperator<data_t>& A =
+                downcast<BlockLinearOperator<data_t>>(constraint.getOperatorA());
             /// should come as // B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-            const auto& B = constraint.getOperatorB();
+            const BlockLinearOperator<data_t>& B =
+                downcast<BlockLinearOperator<data_t>>(constraint.getOperatorB());
             /// should come as the zero vector
-            const auto& c = constraint.getDataVectorC();
+            const DataContainer<data_t>& c = constraint.getDataVectorC();
+
+            ShearletTransform<data_t> shearletTransform = A.getIthOperator(0);
+
+            if (shearletTransform.getWidth() != shearletTransform.getHeight()) {
+                throw std::invalid_argument(
+                    "SHADMM::solveImpl: currently only solving square-shaped signals");
+            }
+
+            index_t L = shearletTransform.getL();
+            index_t n = shearletTransform.getWidth();
+
+            VolumeDescriptor volDescrOfn2({n * n});
+            VolumeDescriptor volDescrOfLn2({L * n * n});
+            VolumeDescriptor volDescrOfLp1n2({(L + 1) * n * n});
 
             /// f ∈ R ^ n^2, f is the same as x in the regular ADMM
-            DataContainer<data_t> f(A.getRangeDescriptor());
+            DataContainer<data_t> f(volDescrOfn2);
             /// set me to R_φTy, try 0 start as well
             f = 0; // dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
 
             /// this means z ∈ R ^ (L+1)n^2
-            DataContainer<data_t> z(B.getRangeDescriptor());
+            DataContainer<data_t> z(volDescrOfLp1n2);
             z = 0;
 
             /// this means u ∈ R ^ (L+1)n^2
-            DataContainer<data_t> u(c.getDataDescriptor());
+            DataContainer<data_t> u(volDescrOfLp1n2);
             u = 0;
 
             /// this means P1u ∈ R ^ Ln^2
-            DataContainer<data_t> P1u(c.getDataDescriptor());
+            DataContainer<data_t> P1z(volDescrOfLn2);
+            P1z = 0;
+
+            /// this means P2u ∈ R ^ n^2
+            DataContainer<data_t> P2z(volDescrOfn2);
+            P2z = 0;
+
+            /// this means P1u ∈ R ^ Ln^2
+            DataContainer<data_t> P1u(volDescrOfLn2);
             P1u = 0;
 
             /// this means P2u ∈ R ^ n^2
-            DataContainer<data_t> P2u(c.getDataDescriptor());
+            DataContainer<data_t> P2u(volDescrOfn2);
             P2u = 0;
-
-            /// ShearletTransform<data_t> SH(...);
 
             Logger::get("SHADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
                                         "iteration", "fL2NormSq", "zL2NormSq", "uL2NormSq",
                                         "rkL2Norm", "skL2Norm");
             for (index_t iter = 0; iter < iterations; ++iter) {
-                // TODO how is z updated? how is it tied to the projections? can you determine z by
-                //  its projections?
-                printf("before\n");
-                printf("%f\n", B.apply(z).squaredL2Norm());
-                printf("after\n");
                 LinearResidual<data_t> fLinearResidual(A, c - B.apply(z) - u); // c is 0 in SHADMM
                 RegularizationTerm fRegTerm(_rho / 2, L2NormPow2<data_t>(fLinearResidual));
                 Problem<data_t> fUpdateProblem(dataTerm, fRegTerm, f);
@@ -161,45 +201,41 @@ namespace elsa
                 DataContainer<data_t> zPrev = z;
                 data_t Afnorm = f.l2Norm();
 
-                // TODO VERY SHADMM specific code
+                // ===== here starts very SHADMM specific code =====
                 // TODO add vector of thresholds to SoftThresholding? use ProjectionOperator?
 
                 /// first Ln^2 for P1, last n^2 for P2
                 // TODO should f be called x in the merged ADMM? probably yes
 
-                SoftThresholding<data_t> shrink(B.getRangeDescriptor()); // Ln^2
+                /// this means shrink ∈ R ^ Ln^2
+                SoftThresholding<data_t> shrink(volDescrOfLn2);
 
-                // here, w is pulled from the WeightedL1Norm
-
-                /// DataContainer<data_t> P1z =
-                /// shrink.apply(SH.apply(f.viewAs(VolumeDescriptor{{f.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0],
-                /// f.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1]}})) + P1u,
-                /// geometry::Threshold(_rho0 * w / _rho1));
-                DataContainer<data_t> P1z = shrink.apply(P1u, geometry::Threshold(_rho0 / _rho1));
+                // w is pulled from the WeightedL1Norm
+                P1z =
+                    shrink.apply(shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}})) + P1u,
+                                 geometry::Threshold(_rho0 * w / _rho1));
                 // TODO element-wise max?
-                DataContainer<data_t> P2z = maxWithZero(f + P2u);
-                // 0 is the zero vector, is this ReLU-like functionality present already?
-                // z is concatenating P1z and P2z? probably not, what is it then?
-                // z = concatenate(P1z, P2z); // ?
-                // consider using BlockLinearOperator for the final ADMM
+                P2z = maxWithZero(f + P2u); // TODO is this ReLU-like functionality present already?
+                // z is concatenating P1z and P2z? if not, what is it then?
+                // TODO consider using BlockLinearOperator for the final ADMM
 
                 /// P1u = P1u + SH.apply(f) - P1z; // not accounting for reshaping f
-                /// P1u = P1u +
-                /// f.viewAs(VolumeDescriptor{{f.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0],
-                /// f.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1]}})- P1z;
-                P1u = P1u - P1z;
+                P1u = P1u + shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}})) - P1z;
                 P2u = P2u + f - P2z;
-                // u is concatenating P1u and P2u? probably not, what is it then?
-                // u = concatenate(P1u, P2u); // ?
-                // consider using BlockLinearOperator for the final ADMM
+                // u is concatenating P1u and P2u? if not, what is it then?
+                // TODO consider using BlockLinearOperator for the final ADMM
 
-                // TODO VERY SHADMM specific code
+                u = concatenate(P1u, P2u);
+                z = concatenate(P1z, P2z);
+                // ===== here ends very SHADMM specific code =====
 
                 rk -= z;
                 DataContainer<data_t> sk = zPrev - z;
                 sk *= _rho;
 
-                u += A.apply(f) + B.apply(z) - c;
+                // TODO this might just work out of the box instead of the sliced parts as done
+                //  above
+                // u += A.apply(f) + B.apply(z) - c;
 
                 DataContainer<data_t> Atu = u;
                 Atu *= _rho;
