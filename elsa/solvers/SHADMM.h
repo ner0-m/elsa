@@ -97,8 +97,7 @@ namespace elsa
             if (iterations == 0)
                 iterations = _defaultIterations;
 
-            SplittingProblem<> auto* splittingProblem =
-                downcast<SplittingProblem<data_t>>(*_problem);
+            auto& splittingProblem = downcast<SplittingProblem<data_t>>(*_problem);
 
             const auto& F = splittingProblem->getF();
             const auto& G = splittingProblem->getG();
@@ -112,8 +111,9 @@ namespace elsa
 
             const auto& dataTermResidual = downcast<LinearResidual<data_t>>(F.getResidual());
 
-            /// now we have two here? the WL1Norm and Indicator, they don't seem to be used, would
-            /// be used if SoftThresholding accepted them in the constructor
+            /// TODO now we have two here? the WL1Norm and Indicator, they don't seem to be used (we
+            ///  currently only get the weight from WL1Norm), would be used if SoftThresholding
+            ///  accepted them in the constructor
             if (G.size() != 2) {
                 throw std::invalid_argument(
                     "SHADMM::solveImpl: supported number of regularization terms is 2");
@@ -124,13 +124,13 @@ namespace elsa
                     "SHADMM::solveImpl: regularization weights should match");
             }
 
-            /// auto w = static_cast<DataContainer<data_t>>(g[0].getWeight());
-
             if (!is<WeightedL1Norm<data_t>>(&G[0].getFunctional())
                 && !is<Indicator<data_t>>(&G[1].getFunctional())) {
                 throw std::invalid_argument("SHADMM::solveImpl: supported regularization terms are "
                                             "of type WeightedL1Norm and Indicator, respectively");
             }
+
+            auto w = static_cast<DataContainer<data_t>>(G[0].getWeight());
 
             const auto& constraint = splittingProblem->getConstraint();
             /// should come as // AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
