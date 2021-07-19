@@ -581,7 +581,7 @@ namespace elsa
     template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
     auto abs(Operand const& operand)
     {
-        auto abs = [](auto const& operand) { return (operand.array().cwiseAbs()).matrix(); };
+        auto abs = [](auto const& operand) { return (operand.array().abs()).matrix(); };
 #ifdef ELSA_CUDA_VECTOR // TODO if this will be accepted, make the respective changes in quickvec
         auto absGPU = [](auto const& operand, bool /**/) { return quickvec::abs(operand); };
         return Expression{Callables{abs, absGPU}, operand};

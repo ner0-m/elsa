@@ -13,12 +13,15 @@
 #include "testHelpers.h"
 #include "TypeCasts.hpp"
 
+#include <doctest/doctest.h>
+
 using namespace elsa;
 using namespace doctest;
 
 TEST_SUITE_BEGIN("functionals");
 
-TEST_CASE_TEMPLATE("Testing the weighted, squared l1 norm functional", TestType, float, double)
+TEST_CASE_TEMPLATE("WeightedL1Norm: Testing the weighted, l1 norm functional", TestType, float,
+                   double)
 {
     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
 
