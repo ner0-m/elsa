@@ -104,7 +104,9 @@ if(ELSA_MASTER_PROJECT)
             add_library(Eigen INTERFACE)
             add_library(Eigen3::Eigen ALIAS Eigen)
 
-            target_include_directories(Eigen INTERFACE
+            target_include_directories(Eigen
+                SYSTEM      # include with -isystem so many warnings are swallowed!
+                INTERFACE
                 $<BUILD_INTERFACE:${eigen3_SOURCE_DIR}>
                 $<INSTALL_INTERFACE:${EIGEN_BUNDLED_INSTALLDIR}>
             )
