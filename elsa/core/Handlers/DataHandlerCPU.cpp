@@ -1,6 +1,14 @@
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
+#include "Error.h"
 #include "TypeCasts.hpp"
+
+#include "DataDescriptor.h"
+
+#if WITH_FFTW
+#define EIGEN_FFTW_DEFAULT
+#endif
+#include <unsupported/Eigen/FFT>
 
 namespace elsa
 {
@@ -108,6 +116,62 @@ namespace elsa
     data_t DataHandlerCPU<data_t>::sum() const
     {
         return _data->sum();
+    }
+
+    template <typename data_t>
+    void DataHandlerCPU<data_t>::fft(const DataDescriptor& source_desc) const
+    {
+        if constexpr (isComplex<data_t>) {
+            asm("int $3");
+            const auto& src_shape = source_desc.getNumberOfCoefficientsPerDimension();
+            const auto& src_dims = source_desc.getNumberOfDimensions();
+
+            typename DataVector_t::Scalar *this_data = this->_data->data();
+
+            // TODO: fftw variants
+
+            // generalization of an 1D-FFT
+            // walk over each dimenson and 1d-fft one 'line' of data
+            for (index_t dim_idx = 0; dim_idx < src_dims; ++dim_idx) {
+                // jumps in the data for the current dimension's data
+                // dim_size[0] * dim_size[1] * ...
+                const index_t stride = src_shape.head(dim_idx).prod();
+
+                // number of coefficients for the current dimension
+                const index_t dim_size = src_shape(dim_idx);
+
+                // number of coefficients for the other dimensions
+                // this is the number of 1d-ffts we'll do
+                // e.g. [2, 3, 4], and dim_idx=2 -> src_shape.prod() == 24 / 4 = 6 == 2*3
+                const index_t other_dims_size = src_shape.prod() / dim_size;
+
+                // do all the 1d-ffts along the current dimensions axis
+                //#pragma omp parallel for
+                for (index_t i = 0; i < other_dims_size; ++i) {
+
+                    // this is one "ray" through the volume
+                    Eigen::Map<DataVector_t,
+                               Eigen::AlignmentType::Unaligned,
+                               Eigen::InnerStride<>>
+                            input_map(this_data + i,
+                                      dim_size,
+                                      Eigen::InnerStride<>(stride));
+
+                    Eigen::FFT<GetFloatingPointType_t<typename DataVector_t::Scalar>> fft_op;
+                    // in-place conversion, fwd(out, in);
+                    fft_op.fwd(input_map, input_map);
+                }
+            }
+        }
+        else {
+            throw Error{"fft with non-complex input container not supported"};
+        }
+    }
+
+    template <typename data_t>
+    void DataHandlerCPU<data_t>::ifft(const DataDescriptor& source_desc) const
+    {
+        throw Error{"ifft not yet implemented"};
     }
 
     template <typename data_t>

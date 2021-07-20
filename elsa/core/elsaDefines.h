@@ -82,4 +82,19 @@ namespace elsa
     template <typename T>
     constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, std::complex<float>>::value
                                || std::is_same<RemoveCvRef_t<T>, std::complex<double>>::value;
+
+    /**
+     * Helper function to be used as failure case with constexpr-ifs:
+     *
+     * if constexpr (bla) {
+     *     ...
+     * }
+     * else {
+     *     match_failure();
+     * }
+     */
+    template <bool nope = false>
+    void branch_match_failure() {
+        static_assert(nope, "no static branch match found");
+    }
 } // namespace elsa

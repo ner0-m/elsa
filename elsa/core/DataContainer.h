@@ -47,7 +47,8 @@ namespace elsa
         DataContainer() = delete;
 
         /**
-         * @brief Constructor for empty DataContainer, no initialisation is performed
+         * @brief Constructor for empty DataContainer, no initialisation is performed,
+         *        but the underlying space is allocated.
          *
          * @param[in] dataDescriptor containing the associated metadata
          * @param[in] handlerType the data handler (default: CPU)
@@ -239,6 +240,78 @@ namespace elsa
 
         /// return the sum of all elements of this signal
         data_t sum() const;
+
+        /// convert to the fourier transformed signal
+        void fft() const;
+
+        /// convert to the inverse fourier transformed signal
+        void ifft() const;
+
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>,
+                                  DataContainer<_data_t>>
+        asComplex() const
+        {
+            return *this;
+        }
+
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<not isComplex<_data_t>,
+                                  DataContainer<std::complex<_data_t>>>
+        asComplex() const
+        {
+            DataContainer<std::complex<data_t>> ret{
+                *this->_dataDescriptor,
+                this->_dataHandlerType,
+            };
+
+            // extend with complex zero value
+            for (index_t idx = 0; idx < this->getSize(); ++idx) {
+                ret[idx] = std::complex<data_t>{(*this)[idx], 0};
+            }
+
+            return ret;
+        }
+
+        template <bool get_real,
+                  typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>,
+                                  DataContainer<GetFloatingPointType<_data_t>>>
+        asComplexSplitup() const
+        {
+            using f_type = GetFloatingPointType<_data_t>;
+            DataContainer<f_type> ret{
+                *this->_dataDescriptor,
+                this->_dataHandlerType,
+            };
+
+            // drop one of real/imaginary parts
+            for (index_t idx = 0; idx < this->getSize(); ++idx) {
+                auto&& val = (*this)[idx];
+                if constexpr(get_real) {
+                    ret[idx] = val.real();
+                } else {
+                    ret[idx] = val.imag();
+                }
+            }
+
+            return ret;
+        }
+
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>,
+                                  DataContainer<GetFloatingPointType<_data_t>>>
+        asReal() const {
+            this->asComplexSplitup<true>();
+        }
+
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>,
+                                  DataContainer<GetFloatingPointType<_data_t>>>
+        asImaginary() const {
+            this->asComplexSplitup<false>();
+        }
+
 
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);

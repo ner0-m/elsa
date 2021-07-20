@@ -128,6 +128,12 @@ namespace elsa
         /// return the sum of all elements of the data vector
         data_t sum() const override;
 
+        /// create the fourier transformed of the data vector
+        void fft(const DataDescriptor& source_desc) const override;
+
+        /// create the inverse fourier transformed of the data vector
+        void ifft(const DataDescriptor& source_desc) const override;
+
         /// copy assign another DataHandlerGPU
         DataHandlerGPU<data_t>& operator=(const DataHandlerGPU<data_t>& v);
 

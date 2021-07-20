@@ -6,13 +6,15 @@
  * \author Jonas Jelten
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "FourierTransform.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
 
-SCENARIO("Constructing a FourierTransform operator")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE_TEMPLATE("FourierTransform: Testing construction", data_t, float, double)
 {
     GIVEN("a descriptor")
     {
@@ -45,25 +47,27 @@ SCENARIO("Constructing a FourierTransform operator")
     }
 }
 
-SCENARIO("Using FourierTransform")
+TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
 {
     GIVEN("some data")
     {
         IndexVector_t numCoeff(2);
-        numCoeff << 11, 13;
+        numCoeff << 2, 4;
         VolumeDescriptor dd(numCoeff);
-        DataContainer<complex_t> input(dd);
-        input = 3.3f;
+        using cdata_t = std::complex<data_t>;
 
-        FourierTransform fftOp(dd);
+        FourierTransform<std::complex<data_t>> fftOp{dd};
 
         WHEN("applying the fft")
         {
+            Vector_t<data_t>
+            DataContainer<std::complex<data_t>> input{dd};
+            input = 3.3f;
             auto output = fftOp.apply(input);
 
             THEN("the result is as expected")
             {
-                REQUIRE(output.getSize() == input.getSize());
+                REQUIRE(output2.getSize() == input.getSize());
                 //REQUIRE(input == output);
             }
         }
@@ -89,5 +93,9 @@ SCENARIO("Using FourierTransform")
                     REQUIRE(input == output);
             }
         }
+
+        // TODO ensure identity
+        // TODO ensure linearity
+        // TODO impulse function response
     }
 }

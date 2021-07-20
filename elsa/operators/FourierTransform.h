@@ -43,9 +43,9 @@ namespace elsa
         void applyImpl(const DataContainer<data_t> &x, DataContainer<data_t> &Ax) const override;
 
         /**
-         * \brief TODO ifft
-         * \param x inputData (XXX)
-         * \param Atx outputData (XXX)
+         * \brief perform the inverse fourier transformation
+         * \param x inputData (image matrix in frequency domain)
+         * \param Atx outputData (inversely fourier transformed image matrix)
          */
         void applyAdjointImpl(const DataContainer<data_t> &y, DataContainer<data_t> &Aty) const override;
 
@@ -54,18 +54,6 @@ namespace elsa
 
         /// implement the polymorphic comparison operation
         bool isEqual(const B &other) const override;
-
-        /// recursively called fft implementation
-        void fft(const fftvector_t &in,
-                 fftvector_t &out,
-                 index_t dims) const;
-
-        void fft1d(const fftvector_t &in,
-                   fftvector_t& out) const;
-
-        void ifft1d(const fftvector_t &in,
-                    fftvector_t& out) const;
-
     };
 
 } // namespace elsa
