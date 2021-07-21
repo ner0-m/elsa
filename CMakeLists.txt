@@ -90,7 +90,7 @@ if(ELSA_MASTER_PROJECT)
     CPMAddPackage(
         NAME spdlog
         GITHUB_REPOSITORY gabime/spdlog
-        VERSION 1.7.0 # 1.7.0 Fallback if it dosen't work
+        VERSION 1.9.0
         OPTIONS "SPDLOG_INSTALL ON"
     )
 
