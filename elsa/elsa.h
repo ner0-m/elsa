@@ -85,6 +85,7 @@
 #include "ADMM.h"
 #include "SQS.h"
 #include "SIRT.h"
+#include "Landweber.h"
 
 // Ml headers
 #include "Common.h"
