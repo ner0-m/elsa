@@ -1,29 +1,35 @@
 # list all the headers of the module
 set(MODULE_HEADERS
-    Solver.h
-    GradientDescent.h
-    CG.h
-    ISTA.h
-    FISTA.h
-    FGM.h
-    OGM.h
-    ADMM.h
-    SQS.h
+        Solver.h
+        GradientDescent.h
+        CG.h
+        ISTA.h
+        FISTA.h
+        FGM.h
+        OGM.h
+        ADMM.h
+        SQS.h
+        SIRT.h
+        Landweber.h
+        Cimmino.h
         OrthogonalMatchingPursuit.h
-)
+        )
 
 # list all the code files of the module
 set(MODULE_SOURCES
-    Solver.cpp
-    GradientDescent.cpp
-    CG.cpp
-    ISTA.cpp
-    FISTA.cpp
-    FGM.cpp
-    OGM.cpp
-    SQS.cpp
+        Solver.cpp
+        GradientDescent.cpp
+        CG.cpp
+        ISTA.cpp
+        FISTA.cpp
+        FGM.cpp
+        OGM.cpp
+        SQS.cpp
+        SIRT.cpp
+        Landweber.cpp
+        Cimmino.cpp
         OrthogonalMatchingPursuit.cpp
-)
+        )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximity_operators)
 list(APPEND MODULE_PRIVATE_DEPS)
