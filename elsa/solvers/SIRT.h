@@ -6,11 +6,11 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a general SIRT solver.
+     * @brief Class representing a general SIRT solver.
      *
-     * \author Maryna Shcherbak - initial code
+     * @author Maryna Shcherbak - initial code
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class implements a SIRT solver with the update expression \f$ x^{(k+1)} = x^k +
      * CA^T(b-Ax^k)) \f$. Here \f$ C \f$ is a diagonal matrix of inverse column sum of the system
@@ -24,8 +24,8 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for SIRT, accepting a problem.
-         * \param[in] problem the problem that is supposed to be solved
+         * @brief Constructor for SIRT, accepting a problem.
+         * @param[in] problem the problem that is supposed to be solved
          */
         SIRT(const WLSProblem<data_t>& problem);
 
@@ -45,13 +45,13 @@ namespace elsa
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;
         /**
-         * \brief Solve the optimization problem, i.e. apply iterations number of iterations of
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * SIRT
          *
-         * \param[in] iterations number of iterations to execute (the default 0 value executes
+         * @param[in] iterations number of iterations to execute (the default 0 value executes
          * _defaultIterations of iterations)
          *
-         * \returns a reference to the current solution
+         * @returns a reference to the current solution
          */
         DataContainer<data_t>& solveImpl(index_t iterations) override;
 

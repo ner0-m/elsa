@@ -1,9 +1,9 @@
 /**
- * \file test_Cimmino.cpp
+ * @file test_Cimmino.cpp
  *
- * \brief Tests for the Cimmino class
+ * @brief Tests for the Cimmino class
  *
- * \author Maryna Shcherbak - initial code
+ * @author Maryna Shcherbak - initial code
  */
 
 #include "doctest/doctest.h"

@@ -1,10 +1,10 @@
 
 /**
- * \file test_SIRT.cpp
+ * @file test_SIRT.cpp
  *
- * \brief Tests for the SIRT class
+ * @brief Tests for the SIRT class
  *
- * \author Maryna Shcherbak
+ * @author Maryna Shcherbak
  */
 
 #include "doctest/doctest.h"

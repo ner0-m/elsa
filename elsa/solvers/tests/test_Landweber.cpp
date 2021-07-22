@@ -1,9 +1,9 @@
 /**
- * \file test_Landweber.cpp
+ * @file test_Landweber.cpp
  *
- * \brief Tests for the Landweber class
+ * @brief Tests for the Landweber class
  *
- * \author Maryna Shcherbak - initial code
+ * @author Maryna Shcherbak - initial code
  */
 
 #include "doctest/doctest.h"
