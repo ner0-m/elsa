@@ -84,6 +84,7 @@
 #include "OGM.h"
 #include "ADMM.h"
 #include "SQS.h"
+#include "SIRT.h"
 
 // Ml headers
 #include "Common.h"
