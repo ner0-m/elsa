@@ -13,6 +13,7 @@ set(MODULE_HEADERS
         Landweber.h
         Cimmino.h
         OrthogonalMatchingPursuit.h
+        NLCG.h
         )
 
 # list all the code files of the module
@@ -29,6 +30,7 @@ set(MODULE_SOURCES
         Landweber.cpp
         Cimmino.cpp
         OrthogonalMatchingPursuit.cpp
+        NLCG.cpp
         )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximity_operators)

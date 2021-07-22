@@ -87,6 +87,7 @@
 #include "SIRT.h"
 #include "Landweber.h"
 #include "Cimmino.h"
+#include "NLCG.h"
 
 // Ml headers
 #include "Common.h"
