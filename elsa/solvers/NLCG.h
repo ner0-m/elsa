@@ -18,9 +18,9 @@ namespace elsa
     template <typename data_t = real_t>
     class NLCG : public Solver<data_t>
     {
-        enum Beta { FR, PR };
 
     public:
+        enum Beta { FR, PR };
         /**
          * @brief Constructor for NLCG, accepting a problem.
          * @param[in] problem the problem that is supposed to be solved
