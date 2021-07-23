@@ -14,6 +14,7 @@
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "QuadricProblem.h"
+#include "testHelpers.h"
 
 using namespace elsa;
 using namespace doctest;
@@ -52,14 +53,14 @@ TEST_CASE("ISTA: Solving a LASSOProblem")
             {
                 auto istaClone = solver.clone();
 
-                REQUIRE(istaClone.get() != &solver);
-                REQUIRE(*istaClone == solver);
+                REQUIRE_NE(istaClone.get(), &solver);
+                REQUIRE_EQ(*istaClone, solver);
             }
 
             THEN("the solution is correct")
             {
-                auto solution = solver.solve(1000);
-                REQUIRE(solution.squaredL2Norm() == Approx(bVec.squaredNorm()));
+                auto solution = solver.solve(100);
+                REQUIRE_UNARY(checkApproxEq(solution.squaredL2Norm(), bVec.squaredNorm()));
             }
         }
     }

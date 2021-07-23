@@ -28,10 +28,11 @@ namespace elsa
             Logger::setLevel(Logger::LogLevel::OFF);
         }
 
+        template <typename data_t = real_t>
         static void logLaps(int dim, int size, std::size_t benchIters, std::string_view opName,
-                            std::string_view solName, std::size_t noIters, real_t timeMean,
-                            real_t timeStddev, real_t timeLower, real_t timeUpper,
-                            real_t absErrMean, real_t relErrMean)
+                            std::string_view solName, int noIters, data_t timeMean,
+                            data_t timeStddev, data_t timeLower, data_t timeUpper,
+                            data_t absErrMean, data_t relErrMean)
         {
             // Log output of this iterations
             Logger::setLevel(Logger::LogLevel::INFO);

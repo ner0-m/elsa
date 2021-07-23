@@ -18,8 +18,8 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("problems");
 
-TEST_CASE_TEMPLATE("Scenario: Testing SplittingProblem", TestType, float, std::complex<float>,
-                   double, std::complex<double>)
+TEST_CASE_TEMPLATE("SplittingProblem: Simple Test", data_t, float, std::complex<float>, double,
+                   std::complex<double>)
 {
     GIVEN("some data terms, a regularization term and a constraint")
     {
@@ -27,38 +27,38 @@ TEST_CASE_TEMPLATE("Scenario: Testing SplittingProblem", TestType, float, std::c
         numCoeff << 91, 32;
         VolumeDescriptor dd(numCoeff);
 
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> scaling(dd.getNumberOfCoefficients());
+        Vector_t<data_t> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
-        DataContainer<TestType> dcScaling(dd, scaling);
-        Scaling<TestType> scaleOp(dd, dcScaling);
+        DataContainer<data_t> dcScaling(dd, scaling);
+        Scaling<data_t> scaleOp(dd, dcScaling);
 
-        Eigen::Matrix<TestType, Eigen::Dynamic, 1> dataVec(dd.getNumberOfCoefficients());
+        Vector_t<data_t> dataVec(dd.getNumberOfCoefficients());
         dataVec.setRandom();
-        DataContainer<TestType> dcData(dd, dataVec);
+        DataContainer<data_t> dcData(dd, dataVec);
 
-        WLSProblem<TestType> wlsProblem(scaleOp, dcData);
+        WLSProblem<data_t> wlsProblem(scaleOp, dcData);
 
-        Identity<TestType> A(dd);
-        Scaling<TestType> B(dd, -1);
-        DataContainer<TestType> c(dd);
+        Identity<data_t> A(dd);
+        Scaling<data_t> B(dd, -1);
+        DataContainer<data_t> c(dd);
         c = 0;
-        Constraint<TestType> constraint(A, B, c);
+        Constraint<data_t> constraint(A, B, c);
 
         WHEN("setting up a SplittingProblem")
         {
-            L1Norm<TestType> l1NormRegFunc(dd);
-            RegularizationTerm<TestType> l1NormRegTerm(1 / 2, l1NormRegFunc);
+            L1Norm<data_t> l1NormRegFunc(dd);
+            RegularizationTerm<data_t> l1NormRegTerm(1 / 2, l1NormRegFunc);
 
-            SplittingProblem<TestType> splittingProblem(wlsProblem.getDataTerm(), l1NormRegTerm,
-                                                        constraint);
+            SplittingProblem<data_t> splittingProblem(wlsProblem.getDataTerm(), l1NormRegTerm,
+                                                      constraint);
 
             THEN("cloned SplittingProblem equals original SplittingProblem")
             {
 
                 auto splittingProblemClone = splittingProblem.clone();
 
-                REQUIRE(splittingProblemClone.get() != &splittingProblem);
-                REQUIRE(*splittingProblemClone == splittingProblem);
+                REQUIRE_NE(splittingProblemClone.get(), &splittingProblem);
+                REQUIRE_EQ(*splittingProblemClone, splittingProblem);
             }
 
             THEN("evaluating SplittingProblem throws an exception as it is not yet supported")

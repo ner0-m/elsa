@@ -96,6 +96,7 @@ namespace elsa
         template <bool adjoint>
         void traverseVolume(void* volumePtr, void* sinoPtr) const;
 
+        enum class ContainerCpyKind { cpyContainerToRawGPU, cpyRawGPUToContainer };
         /**
          * @brief Copies contents of a 3D data container between GPU and host memory
          *
@@ -113,7 +114,7 @@ namespace elsa
          * DataContainer x;
          * void* hostData = (void*)&x[0];
          */
-        template <cudaMemcpyKind direction, bool async = true>
+        template <ContainerCpyKind direction, bool async = true>
         void copy3DDataContainerGPU(void* hostData, const cudaPitchedPtr& gpuData,
                                     const cudaExtent& extent) const;
 

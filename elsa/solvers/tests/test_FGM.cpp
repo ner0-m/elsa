@@ -18,6 +18,7 @@
 #include "CircleTrajectoryGenerator.h"
 #include "PhantomGenerator.h"
 #include "JacobiPreconditioner.h"
+#include "TypeCasts.hpp"
 #include "testHelpers.h"
 
 using namespace elsa;
@@ -215,20 +216,19 @@ TEST_CASE("FGM: Solving a simple phantom reconstruction")
         auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
-        index_t numAngles{90}, arc{360};
+        index_t numAngles{30}, arc{180};
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0) * 100),
+            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
 
-        SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                *sinoDescriptor);
+        SiddonsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
         auto sinogram = projector.apply(phantom);
 
         WLSProblem problem(projector, sinogram);
         real_t epsilon = std::numeric_limits<real_t>::epsilon();
 
-        WHEN("setting up a SQS solver")
+        WHEN("setting up a FGM solver")
         {
             FGM solver{problem, epsilon};
 
@@ -241,7 +241,7 @@ TEST_CASE("FGM: Solving a simple phantom reconstruction")
 
                 AND_THEN("it works as expected")
                 {
-                    auto reconstruction = solver.solve(20);
+                    auto reconstruction = solver.solve(15);
 
                     DataContainer resultsDifference = reconstruction - phantom;
 

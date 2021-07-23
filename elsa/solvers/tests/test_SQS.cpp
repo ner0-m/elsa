@@ -21,6 +21,7 @@
 #include "CircleTrajectoryGenerator.h"
 #include "SiddonsMethod.h"
 #include "PhantomGenerator.h"
+#include "TypeCasts.hpp"
 #include "testHelpers.h"
 
 using namespace elsa;
@@ -216,11 +217,10 @@ TEST_CASE("SQS: Solving a simple phantom reconstruction")
 
         index_t numAngles{90}, arc{360};
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0) * 100),
+            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
 
-        SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                *sinoDescriptor);
+        SiddonsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
         auto sinogram = projector.apply(phantom);
 
@@ -269,9 +269,9 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
         auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
-        index_t numAngles{90}, arc{360};
+        index_t numAngles{20}, arc{180};
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0) * 100),
+            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
 
         SiddonsMethod projector(static_cast<const VolumeDescriptor&>(volumeDescriptor),
@@ -279,18 +279,54 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
 
         auto sinogram = projector.apply(phantom);
 
-        index_t nSubsets{4};
-        SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
-            static_cast<const VolumeDescriptor&>(volumeDescriptor),
-            static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), sinogram, nSubsets);
-
-        WLSSubsetProblem<real_t> problem(
-            *subsetSampler.getProjector<SiddonsMethod<real_t>>(), subsetSampler.getData(),
-            subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
         real_t epsilon = std::numeric_limits<real_t>::epsilon();
 
-        WHEN("setting up a SQS solver")
+        WHEN("setting up a SQS solver with ROUND_ROBIN subsampling")
         {
+            index_t nSubsets{4};
+            SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
+                static_cast<const VolumeDescriptor&>(volumeDescriptor),
+                static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
+
+            WLSSubsetProblem<real_t> problem(
+                *subsetSampler.getProjector<SiddonsMethod<real_t>>(),
+                subsetSampler.getPartitionedData(sinogram),
+                subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
+            SQS solver{problem, true, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto sqsClone = solver.clone();
+
+                REQUIRE(sqsClone.get() != &solver);
+                REQUIRE(*sqsClone == solver);
+
+                AND_THEN("it works as expected")
+                {
+                    auto reconstruction = solver.solve(10);
+
+                    DataContainer resultsDifference = reconstruction - phantom;
+
+                    // should have converged for the given number of iterations
+                    // does not converge to the optimal solution because of the regularization term
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
+                }
+            }
+        }
+        WHEN("setting up a SQS solver with ROTATIONAL_CLUSTERING subsampling")
+        {
+            index_t nSubsets{4};
+            SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
+                static_cast<const VolumeDescriptor&>(volumeDescriptor),
+                static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets,
+                SubsetSampler<PlanarDetectorDescriptor,
+                              real_t>::SamplingStrategy::ROTATIONAL_CLUSTERING);
+
+            WLSSubsetProblem<real_t> problem(
+                *subsetSampler.getProjector<SiddonsMethod<real_t>>(),
+                subsetSampler.getPartitionedData(sinogram),
+                subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
             SQS solver{problem, true, epsilon};
 
             THEN("the clone works correctly")
@@ -302,12 +338,13 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
 
                 AND_THEN("it works as expected")
                 {
-                    auto reconstruction = solver.solve(40);
+                    auto reconstruction = solver.solve(10);
 
                     DataContainer resultsDifference = reconstruction - phantom;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
                 }
             }
         }

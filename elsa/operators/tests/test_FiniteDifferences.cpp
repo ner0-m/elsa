@@ -34,8 +34,8 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing construction", data_t, float, doub
 
             THEN("the descriptors are as expected")
             {
-                REQUIRE(fdOp.getDomainDescriptor() == dd);
-                REQUIRE(fdOp.getRangeDescriptor() == ddRange);
+                REQUIRE_EQ(fdOp.getDomainDescriptor(), dd);
+                REQUIRE_EQ(fdOp.getRangeDescriptor(), ddRange);
             }
         }
 
@@ -46,8 +46,8 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing construction", data_t, float, doub
 
             THEN("everything matches")
             {
-                REQUIRE(fdOpClone.get() != &fdOp);
-                REQUIRE(*fdOpClone == fdOp);
+                REQUIRE_NE(fdOpClone.get(), &fdOp);
+                REQUIRE_EQ(*fdOpClone, fdOp);
             }
         }
     }
@@ -75,7 +75,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 1D", data_t, float, double)
                 resApply << -27, -1, -3, 8, -7;
                 DataContainer<data_t> dcResApply(fdOp.getRangeDescriptor(), resApply);
 
-                REQUIRE(dcResApply == fdOp.apply(dc));
+                REQUIRE_EQ(dcResApply, fdOp.apply(dc));
 
                 Vector_t<data_t> resApplyAdjoint(
                     fdOp.getDomainDescriptor().getNumberOfCoefficients());
@@ -83,7 +83,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 1D", data_t, float, double)
                 DataContainer<data_t> dcResApplyAdjoint(fdOp.getDomainDescriptor(),
                                                         resApplyAdjoint);
 
-                REQUIRE(dcResApplyAdjoint == fdOp.applyAdjoint(dcResApply));
+                REQUIRE_EQ(dcResApplyAdjoint, fdOp.applyAdjoint(dcResApply));
             }
         }
 
@@ -97,7 +97,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 1D", data_t, float, double)
                 resApply << 30, -27, -1, -3, 8;
                 DataContainer<data_t> dcResApply(fdOp.getRangeDescriptor(), resApply);
 
-                REQUIRE(dcResApply == fdOp.apply(dc));
+                REQUIRE_EQ(dcResApply, fdOp.apply(dc));
 
                 Vector_t<data_t> resApplyAdjoint(
                     fdOp.getDomainDescriptor().getNumberOfCoefficients());
@@ -105,7 +105,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 1D", data_t, float, double)
                 DataContainer<data_t> dcResApplyAdjoint(fdOp.getDomainDescriptor(),
                                                         resApplyAdjoint);
 
-                REQUIRE(dcResApplyAdjoint == fdOp.applyAdjoint(dcResApply));
+                REQUIRE_EQ(dcResApplyAdjoint, fdOp.applyAdjoint(dcResApply));
             }
         }
 
@@ -119,7 +119,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 1D", data_t, float, double)
                 resApply << 1.5, -14.0, -2.0, 2.5, 0.5;
                 DataContainer<data_t> dcResApply(fdOp.getRangeDescriptor(), resApply);
 
-                REQUIRE(dcResApply == fdOp.apply(dc));
+                REQUIRE_EQ(dcResApply, fdOp.apply(dc));
 
                 Vector_t<data_t> resApplyAdjoint(
                     fdOp.getDomainDescriptor().getNumberOfCoefficients());
@@ -127,7 +127,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 1D", data_t, float, double)
                 DataContainer<data_t> dcResApplyAdjoint(fdOp.getDomainDescriptor(),
                                                         resApplyAdjoint);
 
-                REQUIRE(dcResApplyAdjoint == fdOp.applyAdjoint(dcResApply));
+                REQUIRE_EQ(dcResApplyAdjoint, fdOp.applyAdjoint(dcResApply));
             }
         }
     }
@@ -155,7 +155,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 2D", data_t, float, double)
                     1, -1, -1, 1, 10, -2, 6, -14, -13, -8, -12, -1;
                 DataContainer<data_t> dcRes(fdOp.getRangeDescriptor(), res);
 
-                REQUIRE(dcRes == fdOp.apply(dc));
+                REQUIRE_EQ(dcRes, fdOp.apply(dc));
             }
         }
 
@@ -170,7 +170,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 2D", data_t, float, double)
                     6, -2, 10, 1, -1, -1, 1, 10, -2, 6, -14;
                 DataContainer<data_t> dcRes(fdOp.getRangeDescriptor(), res);
 
-                REQUIRE(dcRes == fdOp.apply(dc));
+                REQUIRE_EQ(dcRes, fdOp.apply(dc));
             }
         }
 
@@ -188,7 +188,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 2D", data_t, float, double)
                     -3.0, -7.5;
                 DataContainer<data_t> dcRes(fdOp.getRangeDescriptor(), res);
 
-                REQUIRE(dcRes == fdOp.apply(dc));
+                REQUIRE_EQ(dcRes, fdOp.apply(dc));
             }
         }
     }
@@ -221,13 +221,13 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 2D with not all dimensions acti
                 res1 << -11, 4, -5, -4, 9, -4, 7, -14, 7, -4, 9, -15, -5, 4, -11, -1;
                 DataContainer<data_t> dcRes1(fdOp1.getRangeDescriptor(), res1);
 
-                REQUIRE(dcRes1 == fdOp1.apply(dc));
+                REQUIRE_EQ(dcRes1, fdOp1.apply(dc));
 
                 Vector_t<data_t> res2(fdOp2.getRangeDescriptor().getNumberOfCoefficients());
                 res2 << -14, 6, -2, 10, 1, -1, -1, 1, 10, -2, 6, -14, -13, -8, -12, -1;
                 DataContainer<data_t> dcRes2(fdOp2.getRangeDescriptor(), res2);
 
-                REQUIRE(dcRes2 == fdOp2.apply(dc));
+                REQUIRE_EQ(dcRes2, fdOp2.apply(dc));
             }
         }
 
@@ -248,13 +248,13 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 2D with not all dimensions acti
                 res1 << 16, -11, 4, -5, 2, 9, -4, 7, 3, 7, -4, 9, 13, -5, 4, -11;
                 DataContainer<data_t> dcRes1(fdOp1.getRangeDescriptor(), res1);
 
-                REQUIRE(dcRes1 == fdOp1.apply(dc));
+                REQUIRE_EQ(dcRes1, fdOp1.apply(dc));
 
                 Vector_t<data_t> res2(fdOp2.getRangeDescriptor().getNumberOfCoefficients());
                 res2 << 16, 5, 9, 4, -14, 6, -2, 10, 1, -1, -1, 1, 10, -2, 6, -14;
                 DataContainer<data_t> dcRes2(fdOp2.getRangeDescriptor(), res2);
 
-                REQUIRE(dcRes2 == fdOp2.apply(dc));
+                REQUIRE_EQ(dcRes2, fdOp2.apply(dc));
             }
         }
 
@@ -276,14 +276,14 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 2D with not all dimensions acti
                     -3.5, -6.0;
                 DataContainer<data_t> dcRes1(fdOp1.getRangeDescriptor(), res1);
 
-                REQUIRE(dcRes1 == fdOp1.apply(dc));
+                REQUIRE_EQ(dcRes1, fdOp1.apply(dc));
 
                 Vector_t<data_t> res2(fdOp2.getRangeDescriptor().getNumberOfCoefficients());
                 res2 << 1.0, 5.5, 3.5, 7.0, -6.5, 2.5, -1.5, 5.5, 5.5, -1.5, 2.5, -6.5, -1.5, -5.0,
                     -3.0, -7.5;
                 DataContainer<data_t> dcRes2(fdOp2.getRangeDescriptor(), res2);
 
-                REQUIRE(dcRes2 == fdOp2.apply(dc));
+                REQUIRE_EQ(dcRes2, fdOp2.apply(dc));
             }
         }
     }

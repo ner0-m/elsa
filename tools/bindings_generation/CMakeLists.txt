@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 find_package(LLVM)
 
@@ -12,19 +12,45 @@ else()
     target_compile_features(pybind11_generator PUBLIC cxx_std_17)
     target_include_directories(pybind11_generator PUBLIC ${LLVM_INCLUDE_DIR})
 
-    # linking fails if the generator is built using libc++ 
-    # force use of libstdc++ instead when compiling with clang
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(pybind11_generator PUBLIC -stdlib=libstdc++)
-        target_link_options(pybind11_generator PUBLIC -stdlib=libstdc++ -lstdc++)
+    # compiler specific options
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
+            target_link_libraries(pybind11_generator PUBLIC stdc++fs)
+        endif()
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
+        # try to match the stdlib llvm was compiled with
+        # if info unavailable, assume it was libstdc++ for Clang and libc++ for AppleClang
+        if (LLVM_CXX_STDLIB_DEP)
+            target_compile_options(pybind11_generator PUBLIC -stdlib=lib${LLVM_CXX_STDLIB_DEP})
+            target_link_options(pybind11_generator PUBLIC -stdlib=lib${LLVM_CXX_STDLIB_DEP}
+                                -l${LLVM_CXX_STDLIB_DEP})
+
+            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+                target_link_libraries(pybind11_generator PUBLIC ${LLVM_CXX_STDLIB_DEP}fs)
+            endif()
+        elseif(CMAKE_CXX_COMPILER_ID MATCHES "^[Cc]lang")
+            target_compile_options(pybind11_generator PUBLIC -stdlib=libstdc++)
+            target_link_options(pybind11_generator PUBLIC -stdlib=libstdc++ -lstdc++)
+
+            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+                target_link_libraries(pybind11_generator PUBLIC stdc++fs)
+            endif()
+        elseif(CMAKE_CXX_COMPILER_ID MATCHES "Apple[Cc]lang")
+            target_compile_options(pybind11_generator PUBLIC -stdlib=libc++)
+            target_link_options(pybind11_generator PUBLIC -stdlib=libc++ -lc++)
+
+            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+                target_link_libraries(pybind11_generator PUBLIC c++fs)
+            endif()
+        endif()
     endif()
+    
     if (NOT LLVM_VERSION VERSION_LESS 9)
-        if (LLVM_SHARED_MODE STREQUAL "shared")
-                target_link_libraries(pybind11_generator PUBLIC ${LLVM_LIBRARY} ${CLANG_CPP_LIBRARY} stdc++fs)
-        elseif (LLVM_SHARED_MODE STREQUAL "static")
-                # all of the necessary LLVM components should already be statically linked in clang-cpp
-                # when LLVM_SHARED_MODE is static
-                target_link_libraries(pybind11_generator PUBLIC ${CLANG_CPP_LIBRARY} stdc++fs)
+        if (IS_LLVM_STATICALLY_LINKED)
+            # all of the necessary LLVM components should already be statically linked in clang-cpp
+            target_link_libraries(pybind11_generator PUBLIC ${CLANG_CPP_LIBRARY})    
+        else()
+            target_link_libraries(pybind11_generator PUBLIC ${LLVM_LIBRARY} ${CLANG_CPP_LIBRARY})
         endif()
     else()
         target_link_libraries(pybind11_generator PRIVATE 
@@ -39,8 +65,7 @@ else()
                                 ${CLANG_AST_LIBRARY}
                                 ${CLANG_LEX_LIBRARY}
                                 ${CLANG_BASIC_LIBRARY}
-                                ${LLVM_LIBRARY}
-                                stdc++fs)
+                                ${LLVM_LIBRARY})
     endif()
 
     add_subdirectory(hints)

@@ -14,7 +14,8 @@ namespace elsa
         typename Clock::time_point stop = Clock::now();
         auto timeElapsed =
             std::to_string(std::chrono::duration_cast<Duration>(stop - _start).count());
-        Logger::get("Timing")->info("Execution of {}: {} took {} ms", _name, _message, timeElapsed);
+        Logger::get("Timing")->debug("Execution of {}: {} took {} ms", _name, _message,
+                                     timeElapsed);
     }
 
     // ------------------------------------------

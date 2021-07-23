@@ -61,7 +61,7 @@ namespace elsa
             }
             template <typename data_t>
             void OptimizerSGDImpl<data_t, MlBackend::Cudnn>::updateParameter(const data_t* gradient,
-                                                                             int batchSize,
+                                                                             index_t batchSize,
                                                                              data_t* param)
             {
                 if (momentum_ == 0) {

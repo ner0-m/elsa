@@ -11,6 +11,7 @@
 
 #include "elsaDefines.h"
 #include "Common.h"
+#include "TypeCasts.hpp"
 
 namespace elsa::ml
 {
@@ -362,7 +363,7 @@ namespace elsa::ml
 
                 // We maintain a list of nodes we've already visited and a call-queue to
                 // ensure the correct order of traversal.
-                std::vector<bool> visited(asIndex(getNumberOfNodes()));
+                std::vector<bool> visited(asUnsigned(getNumberOfNodes()));
                 // Note that this queue is in fact a deque, so we can push and pop from
                 // both, the front and back.
                 std::deque<index_t> queue;
@@ -389,7 +390,7 @@ namespace elsa::ml
                             } else {
                                 visitor(nodes_.at(s).getData());
                             }
-                            visited[asIndex(s)] = true;
+                            visited[asUnsigned(s)] = true;
                         } else {
                             queue.push_front(s);
                             continue;

@@ -16,7 +16,7 @@ using namespace doctest;
 
 static constexpr auto pi_d = pi<real_t>;
 
-SCENARIO("Drawing a rotated filled ellipse in 2d")
+TEST_CASE("EllipseGenerator: Drawing a rotated filled ellipse in 2d")
 {
     GIVEN("a volume and example ellipse parameters")
     {
@@ -68,16 +68,15 @@ SCENARIO("Drawing a rotated filled ellipse in 2d")
                             }
                         }
                     }
-                    REQUIRE(
-                        (static_cast<real_t>(wrongPixelCounter) / static_cast<real_t>(sizes.prod()))
-                        < 0.11); // 11% isn't great... :(
+                    REQUIRE_LT((as<real_t>(wrongPixelCounter) / as<real_t>(sizes.prod())),
+                               Approx(0.11)); // 11% isn't great... :(
                 }
             }
         }
     }
 }
 
-SCENARIO("Drawing a rotated filled ellipsoid in 3d")
+TEST_CASE("EllipseGenerator: Drawing a rotated filled ellipsoid in 3d")
 {
     GIVEN("a volume and example ellipsoid parameters")
     {

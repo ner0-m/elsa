@@ -1,6 +1,8 @@
-************
-elsa solvers
-************
+.. _elsa-solvers-api:
+
+***********
+elsa solvers API
+***********
 
 .. contents:: Table of Contents
 
@@ -48,3 +50,8 @@ SQS Ordered Subsets
 ===============
 
 .. doxygenclass:: elsa::SQS
+
+Orthogonal Matching Pursuit
+===============
+
+.. doxygenclass:: elsa::OrthogonalMatchingPursuit

@@ -1,5 +1,6 @@
 #include "Scaling.h"
 #include "Timer.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -82,7 +83,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherScaling = dynamic_cast<const Scaling*>(&other);
+        auto otherScaling = downcast_safe<Scaling>(&other);
         if (!otherScaling)
             return false;
 

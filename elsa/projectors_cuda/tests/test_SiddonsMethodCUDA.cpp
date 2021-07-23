@@ -27,7 +27,7 @@ using doctest::Approx;
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA: Calls to functions of super class", TestType,
                    SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
                    SiddonsMethod<double>)
 {
@@ -38,9 +38,9 @@ TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
     GIVEN("A projector")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
-        const index_t volSize = 50;
-        const index_t detectorSize = 50;
-        const index_t numImgs = 50;
+        const index_t volSize = 10;
+        const index_t detectorSize = 10;
+        const index_t numImgs = 10;
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
@@ -52,7 +52,7 @@ TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
 
         std::vector<Geometry> geom;
         for (index_t i = 0; i < numImgs; i++) {
-            real_t angle = static_cast<real_t>(i) * 2 * pi_t / 50;
+            real_t angle = static_cast<real_t>(i) * 2 * pi_t / 10;
             geom.emplace_back(stc, ctr, Radian{angle}, VolumeData2D{Size2D{volumeDims}},
                               SinogramData2D{Size2D{sinoDims}});
         }
@@ -74,17 +74,17 @@ TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
             {
                 op.apply(volume, sino);
                 opClone->apply(volume, sinoClone);
-                REQUIRE(isApprox<data_t>(sino, sinoClone, epsilon));
+                REQUIRE_UNARY(isApprox<data_t>(sino, sinoClone, epsilon));
 
                 op.applyAdjoint(sino, volume);
                 opClone->applyAdjoint(sino, volumeClone);
-                REQUIRE(isApprox<data_t>(volume, volumeClone, epsilon));
+                REQUIRE_UNARY(isApprox<data_t>(volume, volumeClone, epsilon));
             }
         }
     }
 }
 
-TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA: 2D setup with a single ray", TestType,
                    SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
                    SiddonsMethod<double>)
 {
@@ -139,7 +139,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero, epsilon));
+                    REQUIRE_UNARY(isApprox(sino, zero, epsilon));
                 }
             }
 
@@ -154,7 +154,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.applyAdjoint(sino, volume);
                     DataContainer<data_t> zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(volume, zero, epsilon));
+                    REQUIRE_UNARY(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -177,7 +177,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     zero = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isApprox(sino, zero));
 
                     AND_THEN("Result of backprojection is zero")
                     {
@@ -185,7 +185,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         zero = 0;
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isApprox(volume, zero));
                     }
                 }
             }
@@ -207,7 +207,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     zero = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isApprox(sino, zero));
 
                     AND_THEN("Result of backprojection is zero")
                     {
@@ -215,7 +215,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         zero = 0;
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isApprox(volume, zero));
                     }
                 }
             }
@@ -237,7 +237,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     zero = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isApprox(sino, zero));
 
                     AND_THEN("Result of backprojection is zero")
                     {
@@ -245,7 +245,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         zero = 0;
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isApprox(volume, zero));
                     }
                 }
             }
@@ -268,7 +268,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
 
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isApprox(sino, zero));
 
                     AND_THEN("Result of backprojection is zero")
                     {
@@ -277,7 +277,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         DataContainer<data_t> zero(volumeDescriptor);
                         zero = 0;
 
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isApprox(volume, zero));
                     }
                 }
             }
@@ -308,10 +308,10 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
         for (index_t i = 0; i < numCases; i++) {
             WHEN("An axis-aligned ray with a fixed angle passes through the center of a pixel")
             {
-                INFO("An axis-aligned ray with an angle of ", angles[i],
+                INFO("An axis-aligned ray with an angle of ", angles[asUnsigned(i)],
                      " radians passes through the center of a pixel");
 
-                geom.emplace_back(stc, ctr, Degree{angles[i]}, std::move(volData),
+                geom.emplace_back(stc, ctr, Degree{angles[asUnsigned(i)]}, std::move(volData),
                                   std::move(sinoData));
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -329,15 +329,16 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                             volume(j, volSize / 2) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == 1);
+                        REQUIRE_EQ(sino[0], Approx(1));
                     }
 
                     AND_THEN("The backprojection sets the values of all hit pixels to the detector "
                              "value")
                     {
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i % 2])));
+                        REQUIRE_UNARY(
+                            isApprox(volume, DataContainer<data_t>(volumeDescriptor,
+                                                                   backProjections[i % 2])));
                     }
                 }
             }
@@ -362,15 +363,15 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     volume(volSize / 2, j) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(1.0));
+                    REQUIRE_EQ(sino[0], Approx(1.0));
                 }
 
                 AND_THEN("The backprojection yields the exact adjoint")
                 {
                     sino[0] = 1;
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume,
-                                     DataContainer<data_t>(volumeDescriptor, backProjections[0])));
+                    REQUIRE_UNARY(isApprox(
+                        volume, DataContainer<data_t>(volumeDescriptor, backProjections[0])));
                 }
             }
         }
@@ -392,7 +393,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
             {
                 volume = 0;
                 op.apply(volume, sino);
-                REQUIRE(sino[0] == 0.0);
+                REQUIRE_EQ(sino[0], Approx(0));
 
                 AND_THEN("The result of backprojection is also zero")
                 {
@@ -401,7 +402,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.applyAdjoint(sino, volume);
                     DataContainer<data_t> zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(volume, zero));
+                    REQUIRE_UNARY(isApprox(volume, zero));
                 }
             }
         }
@@ -432,15 +433,15 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     volume(0, j) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == 1);
+                    REQUIRE_EQ(sino[0], Approx(1));
                 }
 
                 AND_THEN("The backprojection yields the exact adjoint")
                 {
                     sino[0] = 1;
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume,
-                                     DataContainer<data_t>(volumeDescriptor, backProjections[0])));
+                    REQUIRE_UNARY(isApprox(
+                        volume, DataContainer<data_t>(volumeDescriptor, backProjections[0])));
                 }
             }
         }
@@ -504,7 +505,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     zero = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
+                    REQUIRE_EQ(zero[0], Approx(0).epsilon(epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -513,7 +514,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         volume(2, 1) = 3;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(2 * sqrt3d + 2));
+                        REQUIRE_EQ(sino[0], Approx(2 * sqrt3d + 2));
 
                         // on the other side of the center
                         volume = 0;
@@ -522,7 +523,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         volume(0, 3) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(2 * sqrt3d + 2));
+                        REQUIRE_EQ(sino[0], Approx(2 * sqrt3d + 2));
 
                         sino[0] = 1;
 
@@ -536,8 +537,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, expected), epsilon));
                     }
                 }
             }
@@ -566,7 +567,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero, epsilon));
+                    REQUIRE_UNARY(isApprox(sino, zero, epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -576,7 +577,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         volume(2, 3) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(14 - 4 * sqrt3d));
+                        REQUIRE_EQ(sino[0], Approx(14 - 4 * sqrt3d));
 
                         sino[0] = 1;
 
@@ -590,8 +591,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, expected), epsilon));
                     }
                 }
             }
@@ -619,7 +620,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero, epsilon));
+                    REQUIRE_UNARY(isApprox(sino, zero, epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -629,7 +630,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         volume(0, 2) = 4;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(14 - 4 * sqrt3d));
+                        REQUIRE_EQ(sino[0], Approx(14 - 4 * sqrt3d));
 
                         sino[0] = 1;
 
@@ -643,8 +644,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, expected), epsilon));
                     }
                 }
             }
@@ -667,14 +668,14 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero, epsilon));
+                    REQUIRE_UNARY(isApprox(sino, zero, epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
                         volume(0, 0) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(1 / sqrt3d));
+                        REQUIRE_EQ(sino[0], Approx(1 / sqrt3d));
 
                         sino[0] = 1;
 
@@ -687,8 +688,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, expected), epsilon));
                     }
                 }
             }
@@ -724,7 +725,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
+                    REQUIRE_EQ(zero[0], Approx(0).epsilon(epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -733,7 +734,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         volume(1, 1) = 3;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(2 * sqrt3d + 2));
+                        REQUIRE_EQ(sino[0], Approx(2 * sqrt3d + 2));
 
                         // on the other side of the center
                         volume = 0;
@@ -742,7 +743,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         volume(3, 3) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(2 * sqrt3d + 2));
+                        REQUIRE_EQ(sino[0], Approx(2 * sqrt3d + 2));
 
                         sino[0] = 1;
 
@@ -756,8 +757,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, expected), epsilon));
                     }
                 }
             }
@@ -785,7 +786,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
+                    REQUIRE_EQ(zero[0], Approx(0).epsilon(epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -795,7 +796,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         volume(2, 3) = 4;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(14 - 4 * sqrt3d));
+                        REQUIRE_EQ(sino[0], Approx(14 - 4 * sqrt3d));
 
                         sino[0] = 1;
 
@@ -809,8 +810,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, expected), epsilon));
                     }
                 }
             }
@@ -839,7 +840,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
+                    REQUIRE_EQ(zero[0], Approx(0).epsilon(epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -849,7 +850,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         volume(3, 1) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(14 - 4 * sqrt3d));
+                        REQUIRE_EQ(sino[0], Approx(14 - 4 * sqrt3d));
 
                         sino[0] = 1;
 
@@ -861,8 +862,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, expected), epsilon));
                     }
                 }
             }
@@ -888,14 +889,14 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                     op.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(zero[0] == Approx(0).epsilon(epsilon));
+                    REQUIRE_EQ(zero[0], Approx(0).epsilon(epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
                         volume(3, 0) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(1 / sqrt3d).epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx(1 / sqrt3d).epsilon(0.005));
 
                         sino[0] = 1;
 
@@ -906,8 +907,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, expected),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, expected), epsilon));
                     }
                 }
             }
@@ -915,7 +916,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a single ray", TestType,
     }
 }
 
-TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a multiple rays", TestType,
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA: 2D setup with a multiple rays", TestType,
                    SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
                    SiddonsMethod<double>)
 {
@@ -979,7 +980,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a multiple rays", TestType,
 
                 op.apply(volume, sino);
                 for (index_t i = 0; i < numImgs; i++)
-                    REQUIRE(sino[i] == Approx(5.0));
+                    REQUIRE_EQ(sino[i], Approx(5.0));
 
                 AND_THEN("Backprojection yields the exact adjoint")
                 {
@@ -994,14 +995,14 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 2D setup with a multiple rays", TestType,
                     // clang-format on
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
+                    REQUIRE_UNARY(isApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
                 }
             }
         }
     }
 }
 
-TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA: 3D setup with a single ray", TestType,
                    SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
                    SiddonsMethod<double>)
 {
@@ -1058,7 +1059,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                     zero = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero, epsilon));
+                    REQUIRE_UNARY(isApprox(sino, zero, epsilon));
                 }
             }
 
@@ -1074,7 +1075,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                     zero = 0;
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, zero, epsilon));
+                    REQUIRE_UNARY(isApprox(volume, zero, epsilon));
                 }
             }
         }
@@ -1109,10 +1110,12 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
             for (index_t i = 0; i < numCases; i++) {
                 WHEN("An axis-aligned ray passes through the center of a pixel")
                 {
-                    INFO("A ", al[i], "-axis-aligned ray passes through the center of a pixel");
+                    INFO("A ", al[asUnsigned(i)],
+                         "-axis-aligned ray passes through the center of a pixel");
 
-                    geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
-                                      RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
+                    geom.emplace_back(
+                        stc, ctr, std::move(volData), std::move(sinoData),
+                        RotationAngles3D{Gamma{gamma[asUnsigned(i)]}, Beta{beta[asUnsigned(i)]}});
 
                     PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                     DataContainer<data_t> sino(sinoDescriptor);
@@ -1131,7 +1134,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                                 volume(volSize / 2, j, volSize / 2) = 1;
 
                             op.apply(volume, sino);
-                            REQUIRE(sino[0] == 1);
+                            REQUIRE_EQ(sino[0], Approx(1));
                         }
 
                         AND_THEN(
@@ -1139,7 +1142,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                             "value")
                         {
                             op.applyAdjoint(sino, volume);
-                            REQUIRE(isApprox(
+                            REQUIRE_UNARY(isApprox(
                                 volume, DataContainer<data_t>(volumeDescriptor, backProj[i / 2])));
                         }
                     }
@@ -1184,7 +1187,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
             al[4] = "top border";
             al[5] = "top right edge";
 
-            for (index_t i = 0; i < numCases / 2; i++) {
+            for (unsigned int i = 0; i < numCases / 2; i++) {
                 WHEN("A z-axis-aligned ray runs along the corners and edges of the volume")
                 {
                     INFO("A z-axis-aligned ray runs along the ", al[i], " of the volume");
@@ -1220,7 +1223,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                             }
 
                             op.apply(volume, sino);
-                            REQUIRE(sino[0] == 1);
+                            REQUIRE_EQ(sino[0], Approx(1));
                         }
 
                         AND_THEN("The backprojection yields the exact adjoints")
@@ -1228,14 +1231,14 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                             sino[0] = 1;
                             op.applyAdjoint(sino, volume);
 
-                            REQUIRE(isApprox(volume,
-                                             DataContainer<data_t>(volumeDescriptor, backProj[i])));
+                            REQUIRE_UNARY(isApprox(
+                                volume, DataContainer<data_t>(volumeDescriptor, backProj[i])));
                         }
                     }
                 }
             }
 
-            for (index_t i = numCases / 2; i < numCases; i++) {
+            for (unsigned i = numCases / 2; i < numCases; i++) {
                 WHEN("A z-axis-aligned ray runs along the corners and edges of the volume")
                 {
                     INFO("A z-axis-aligned ray runs along the ", al[i], " of the volume");
@@ -1256,7 +1259,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         volume = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == 0);
+                        REQUIRE_EQ(sino[0], Approx(0));
 
                         AND_THEN("The result of backprojection is also zero")
                         {
@@ -1265,7 +1268,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
 
                             DataContainer<data_t> zero(volumeDescriptor);
                             zero = 0;
-                            REQUIRE(volume == zero);
+                            REQUIRE_UNARY(isCwiseApprox(volume, zero));
                         }
                     }
                 }
@@ -1301,7 +1304,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                     volume(1, 1, 2) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
+                    REQUIRE_EQ(sino[0], Approx(0).epsilon(1e-5));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1310,7 +1313,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         volume(1, 1, 2) = 2;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(3 * sqrt3d - 1).epsilon(epsilon));
+                        REQUIRE_EQ(sino[0], Approx(3 * sqrt3d - 1).epsilon(epsilon));
 
                         sino[0] = 1;
                         // clang-format off
@@ -1320,8 +1323,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, backProj), epsilon));
                     }
                 }
             }
@@ -1348,7 +1351,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                     volume(1, 1, 2) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).epsilon(epsilon));
+                    REQUIRE_EQ(sino[0], Approx(0).epsilon(epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1357,7 +1360,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         volume(2, 1, 1) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(1 - 2 / sqrt3d + 3 * sqrt3d));
+                        REQUIRE_EQ(sino[0], Approx(1 - 2 / sqrt3d + 3 * sqrt3d));
 
                         sino[0] = 1;
 
@@ -1368,8 +1371,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, backProj), epsilon));
                     }
                 }
             }
@@ -1395,7 +1398,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                     volume(0, 1, 2) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).epsilon(epsilon));
+                    REQUIRE_EQ(sino[0], Approx(0).epsilon(epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1404,7 +1407,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         volume(0, 1, 1) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(3 * sqrt3d + 1 - 2 / sqrt3d).epsilon(epsilon));
+                        REQUIRE_EQ(sino[0], Approx(3 * sqrt3d + 1 - 2 / sqrt3d).epsilon(epsilon));
 
                         sino[0] = 1;
 
@@ -1415,8 +1418,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, backProj), epsilon));
                     }
                 }
             }
@@ -1439,14 +1442,14 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                     volume(0, 1, 0) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).epsilon(epsilon));
+                    REQUIRE_EQ(sino[0], Approx(0).epsilon(epsilon));
 
                     AND_THEN("The correct weighting is applied")
                     {
                         volume(0, 1, 0) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(sqrt3d - 1).epsilon(epsilon));
+                        REQUIRE_EQ(sino[0], Approx(sqrt3d - 1).epsilon(epsilon));
 
                         sino[0] = 1;
 
@@ -1457,8 +1460,8 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj),
-                                         epsilon));
+                        REQUIRE_UNARY(isApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, backProj), epsilon));
                     }
                 }
             }
@@ -1509,7 +1512,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
             StrArray neg = {"x", "y", "x and y", "y", "z", "y and z", "x", "z", "x and z"};
             StrArray ali = {"z", "z", "z", "x", "x", "x", "y", "y", "y"};
 
-            for (index_t i = 0; i < numCases; i++) {
+            for (unsigned i = 0; i < numCases; i++) {
                 WHEN("Tracing along a fixed axis-aligned ray with negative coordinate of origin")
                 {
                     INFO("Tracing along a ", ali[i], "-axis-aligned ray with negative ", neg[i],
@@ -1530,14 +1533,14 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
                         op.apply(volume, sino);
                         DataContainer<data_t> zero(sinoDescriptor);
                         zero = 0;
-                        REQUIRE(isApprox(sino, zero, epsilon));
+                        REQUIRE_UNARY(isApprox(sino, zero, epsilon));
 
                         AND_THEN("Result of backprojection is zero")
                         {
                             op.applyAdjoint(sino, volume);
                             DataContainer<data_t> zero(volumeDescriptor);
                             zero = 0;
-                            REQUIRE(isApprox(volume, zero, epsilon));
+                            REQUIRE_UNARY(isApprox(volume, zero, epsilon));
                         }
                     }
                 }
@@ -1546,7 +1549,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a single ray", TestType,
     }
 }
 
-TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a multiple rays", TestType,
+TEST_CASE_TEMPLATE("SiddonsMethodCUDA: 3D setup with a multiple rays", TestType,
                    SiddonsMethodCUDA<float>, SiddonsMethodCUDA<double>, SiddonsMethod<float>,
                    SiddonsMethod<double>)
 {
@@ -1610,7 +1613,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a multiple rays", TestType,
 
                 op.apply(volume, sino);
                 for (index_t i = 0; i < numImgs; i++)
-                    REQUIRE(sino[i] == Approx(3.0));
+                    REQUIRE_EQ(sino[i], Approx(3.0));
 
                 AND_THEN("Backprojection yields the exact adjoint")
                 {
@@ -1623,7 +1626,7 @@ TEST_CASE_TEMPLATE("SiddonsMethodCUDA 3D setup with a multiple rays", TestType,
                     // clang-format on
 
                     op.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
+                    REQUIRE_UNARY(isApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
                 }
             }
         }

@@ -1,4 +1,5 @@
 #include "DnnlMerging.h"
+#include "TypeCasts.hpp"
 
 namespace elsa::ml
 {
@@ -127,21 +128,20 @@ namespace elsa::ml
                 static_cast<data_t*>(_outputGradient.front().effectiveMemory->get_data_handle()),
                 _outputDescriptor->getNumberOfCoefficients());
 
-            for (int i = 0; i < _inputGradient.size(); ++i) {
-                BaseType::validateDnnlMemory(_inputGradient[asIndex(i)].effectiveMemory);
+            for (std::size_t i = 0; i < _inputGradient.size(); ++i) {
+                BaseType::validateDnnlMemory(_inputGradient[i].effectiveMemory);
                 BaseType::validateDnnlMemory(_outputGradient.front().effectiveMemory);
-                BaseType::validateDnnlMemory(_input[asIndex(i)].effectiveMemory);
+                BaseType::validateDnnlMemory(_input[i].effectiveMemory);
 
                 // Get input-gradient memory
                 Eigen::Map<Eigen::ArrayX<data_t>> inputGrad(
-                    static_cast<data_t*>(
-                        _inputGradient[asIndex(i)].effectiveMemory->get_data_handle()),
-                    _inputDescriptor[asIndex(i)]->getNumberOfCoefficients());
+                    static_cast<data_t*>(_inputGradient[i].effectiveMemory->get_data_handle()),
+                    _inputDescriptor[i]->getNumberOfCoefficients());
 
                 // Get input memory
                 Eigen::Map<Eigen::ArrayX<data_t>> input(
-                    static_cast<data_t*>(_input[asIndex(i)].effectiveMemory->get_data_handle()),
-                    _inputDescriptor[asIndex(i)]->getNumberOfCoefficients());
+                    static_cast<data_t*>(_input[i].effectiveMemory->get_data_handle()),
+                    _inputDescriptor[i]->getNumberOfCoefficients());
 
                 // Compute input-gradient
                 inputGrad = outputGrad * input;
@@ -176,7 +176,8 @@ namespace elsa::ml
             }
 
             // Create primitive-descriptor
-            _forwardPrimitiveDescriptor = dnnl::concat::primitive_desc(_axis, memDesc, *_engine);
+            _forwardPrimitiveDescriptor =
+                dnnl::concat::primitive_desc(as<int>(_axis), memDesc, *_engine);
 
             for (std::size_t i = 0; i < _input.size(); ++i) {
                 // Reoder input memory if necessary

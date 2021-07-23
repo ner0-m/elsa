@@ -1,4 +1,5 @@
 #include "OGM.h"
+#include "TypeCasts.hpp"
 #include "Logger.h"
 
 namespace elsa
@@ -107,7 +108,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherOGM = dynamic_cast<const OGM*>(&other);
+        auto otherOGM = downcast_safe<OGM>(&other);
         if (!otherOGM)
             return false;
 

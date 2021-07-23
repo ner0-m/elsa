@@ -3,10 +3,12 @@
 # This module currently doesn't support searching for a specific Dnnl version,
 # however it will not match Dnnl's predecessor mkl-dnn.
 #
-# The following variables are set if spdlog is found. Dnnl_FOUND        - True
-# when the spdlog include directory is found. Dnnl_INCLUDE_DIR  - The path to
-# where the spdlog include files are. Dnnl_LIBRARY      - The path to the Dnnl
-# library, i.e., libdnnl.dylib or something similar This module reads hints
+# The following variables are set if Dnnl is found.
+#   Dnnl_FOUND        - True when the Dnnl include directory is found.
+#   Dnnl_INCLUDE_DIR  - The path to where the Dnnl include files are.
+#   Dnnl_LIBRARY      - The path to the Dnnl library, i.e., libdnnl.dylib or something similar
+#
+# This module reads hints
 # about search locations from the following environment variables:
 #
 # Dnnl_ROOT Dnnl_ROOT_DIR

@@ -1,5 +1,6 @@
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -63,9 +64,9 @@ namespace elsa
             throw InvalidArgumentError("DataHandlerCPU: dot product argument has wrong size");
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             return _data->dot(*otherHandler->_data);
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU<data_t>>(&v)) {
             return _data->dot(otherHandler->_map);
         } else {
             return this->slowDotProduct(v);
@@ -118,9 +119,9 @@ namespace elsa
         detach();
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             *_data += *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU<data_t>>(&v)) {
             *_data += otherHandler->_map;
         } else {
             this->slowAddition(v);
@@ -138,9 +139,9 @@ namespace elsa
         detach();
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             *_data -= *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU<data_t>>(&v)) {
             *_data -= otherHandler->_map;
         } else {
             this->slowSubtraction(v);
@@ -158,9 +159,9 @@ namespace elsa
         detach();
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             _data->array() *= otherHandler->_data->array();
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU<data_t>>(&v)) {
             _data->array() *= otherHandler->_map.array();
         } else {
             this->slowMultiplication(v);
@@ -178,9 +179,9 @@ namespace elsa
         detach();
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             _data->array() /= otherHandler->_data->array();
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU<data_t>>(&v)) {
             _data->array() /= otherHandler->_map.array();
         } else {
             this->slowDivision(v);
@@ -292,7 +293,7 @@ namespace elsa
     template <typename data_t>
     bool DataHandlerCPU<data_t>::isEqual(const DataHandler<data_t>& other) const
     {
-        if (const auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&other)) {
+        if (const auto otherHandler = downcast_safe<DataHandlerMapCPU<data_t>>(&other)) {
 
             if (_data->size() != otherHandler->_map.size())
                 return false;
@@ -301,7 +302,7 @@ namespace elsa
                 return false;
 
             return true;
-        } else if (const auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&other)) {
+        } else if (const auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&other)) {
 
             if (_data->size() != otherHandler->_data->size())
                 return false;
@@ -318,14 +319,14 @@ namespace elsa
     void DataHandlerCPU<data_t>::assign(const DataHandler<data_t>& other)
     {
 
-        if (const auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&other)) {
+        if (const auto otherHandler = downcast_safe<DataHandlerMapCPU<data_t>>(&other)) {
             if (getSize() == otherHandler->_dataOwner->getSize()) {
                 attach(otherHandler->_dataOwner->_data);
             } else {
                 detachWithUninitializedBlock(0, getSize());
                 *_data = otherHandler->_map;
             }
-        } else if (const auto otherHandler = dynamic_cast<const DataHandlerCPU*>(&other)) {
+        } else if (const auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&other)) {
             attach(otherHandler->_data);
         } else
             this->slowAssign(other);
@@ -334,14 +335,14 @@ namespace elsa
     template <typename data_t>
     void DataHandlerCPU<data_t>::assign(DataHandler<data_t>&& other)
     {
-        if (const auto otherHandler = dynamic_cast<const DataHandlerMapCPU<data_t>*>(&other)) {
+        if (const auto otherHandler = downcast_safe<DataHandlerMapCPU<data_t>>(&other)) {
             if (getSize() == otherHandler->_dataOwner->getSize()) {
                 attach(otherHandler->_dataOwner->_data);
             } else {
                 detachWithUninitializedBlock(0, getSize());
                 *_data = otherHandler->_map;
             }
-        } else if (const auto otherHandler = dynamic_cast<DataHandlerCPU*>(&other)) {
+        } else if (const auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&other)) {
             attach(std::move(otherHandler->_data));
 
             for (auto& map : otherHandler->_associatedMaps)

@@ -1,6 +1,7 @@
 #include "DataHandlerMapGPU.h"
 #include "DataHandlerGPU.h"
 #include "Badge.hpp"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -83,9 +84,9 @@ namespace elsa
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             return _map.dot(*otherHandler->_data);
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             return _map.dot(otherHandler->_map);
         } else {
             return this->slowDotProduct(v);
@@ -138,9 +139,9 @@ namespace elsa
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             _map += *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             _map += otherHandler->_map;
         } else {
             this->slowAddition(v);
@@ -159,9 +160,9 @@ namespace elsa
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             _map -= *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             _map -= otherHandler->_map;
         } else {
             this->slowSubtraction(v);
@@ -180,9 +181,9 @@ namespace elsa
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             _map *= *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             _map *= otherHandler->_map;
         } else {
             this->slowMultiplication(v);
@@ -201,9 +202,9 @@ namespace elsa
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             _map /= *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             _map /= otherHandler->_map;
         } else {
             this->slowDivision(v);
@@ -314,7 +315,7 @@ namespace elsa
     template <typename data_t>
     bool DataHandlerMapGPU<data_t>::isEqual(const DataHandler<data_t>& other) const
     {
-        if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&other)) {
+        if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&other)) {
 
             if (_map.size() != otherHandler->_map.size())
                 return false;
@@ -324,7 +325,7 @@ namespace elsa
             }
 
             return true;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&other)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&other)) {
 
             if (_map.size() != otherHandler->_data->size())
                 return false;
@@ -342,7 +343,7 @@ namespace elsa
     void DataHandlerMapGPU<data_t>::assign(const DataHandler<data_t>& other)
     {
 
-        if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&other)) {
+        if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&other)) {
             if (getSize() == _dataOwner->getSize()
                 && otherHandler->getSize() == otherHandler->_dataOwner->getSize()) {
                 _dataOwner->attach(otherHandler->_dataOwner->_data);
@@ -351,7 +352,7 @@ namespace elsa
                     _map._data.get() - _dataOwner->_data->_data.get(), getSize());
                 _map = otherHandler->_map;
             }
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&other)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&other)) {
             if (getSize() == _dataOwner->getSize()) {
                 _dataOwner->attach(otherHandler->_data);
             } else {

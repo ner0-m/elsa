@@ -23,12 +23,12 @@ TEST_SUITE_BEGIN("ml-dnnl");
 // TODO(dfrank): remove and replace with proper doctest usage of test cases
 #define SECTION(name) DOCTEST_SUBCASE(name)
 
-TEST_CASE("DnnlSum")
+TEST_CASE("DnnlMerging: DnnlSum")
 {
     index_t N = 11;
-    index_t C = 22;
-    index_t H = 33;
-    index_t W = 44;
+    index_t C = 10;
+    index_t H = 9;
+    index_t W = 8;
 
     IndexVector_t dims{{W, H, C, N}};
     VolumeDescriptor desc(dims);

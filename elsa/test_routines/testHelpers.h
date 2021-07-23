@@ -225,6 +225,13 @@ namespace elsa
     [[nodiscard]] bool isApprox(const DataHandler<data_t>& x, const Vector_t<data_t>& y,
                                 real_t prec = Eigen::NumTraits<real_t>::dummy_precision());
 
+    template <typename data_t, typename Source, typename = std::enable_if_t<isExpression<Source>>>
+    [[nodiscard]] bool isApprox(const DataContainer<data_t>& x, const Source& y,
+                                real_t prec = Eigen::NumTraits<real_t>::dummy_precision())
+    {
+        return isApprox(x, DataContainer<data_t>{y}, prec);
+    }
+
     template <typename data_t>
     [[nodiscard]] bool isCwiseApprox(const DataContainer<data_t>& x,
                                      const DataContainer<data_t>& y);

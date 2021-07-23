@@ -1,61 +1,43 @@
+#include <set>
+#include <numeric>
 #include "SubsetSampler.h"
 #include "PartitionDescriptor.h"
 #include "SiddonsMethod.h"
-#include "JosephsMethod.h"
 
 namespace elsa
 {
-    template <typename detectorDescriptor_t, typename data_t>
-    SubsetSampler<detectorDescriptor_t, data_t>::SubsetSampler(
-        const VolumeDescriptor& volumeDescriptor, const detectorDescriptor_t& detectorDescriptor,
-        const DataContainer<data_t>& sinogram, index_t nSubsets)
-        : _volumeDescriptor(volumeDescriptor),
+    template <typename DetectorDescriptor_t, typename data_t>
+    SubsetSampler<DetectorDescriptor_t, data_t>::SubsetSampler(
+        const VolumeDescriptor& volumeDescriptor, const DetectorDescriptor_t& detectorDescriptor,
+        index_t nSubsets, SamplingStrategy samplingStrategy)
+        : _indexMapping(static_cast<std::size_t>(nSubsets)),
+          _volumeDescriptor(volumeDescriptor),
           _fullDetectorDescriptor(detectorDescriptor),
           _nSubsets{nSubsets}
     {
-
-        // the individual data descriptors for each block
-        std::vector<IndexVector_t> subsetIndices;
-
-        index_t nDimensions = sinogram.getDataDescriptor().getNumberOfDimensions();
-        // determine the mapping of indices to subsets
-        auto subsetSize = static_cast<index_t>(
-            sinogram.getDataDescriptor().getNumberOfCoefficientsPerDimension()[nDimensions - 1]
-            / _nSubsets);
-        for (index_t i = 0; i < _nSubsets - 1; i++) {
-            IndexVector_t indices(subsetSize);
-            for (index_t j = 0; j < subsetSize; j++) {
-                indices[j] = i + j * _nSubsets;
-            }
-            subsetIndices.emplace_back(indices);
-        }
-        index_t lastSubsetSize =
-            sinogram.getDataDescriptor().getNumberOfCoefficientsPerDimension()[nDimensions - 1]
-            - subsetSize * (_nSubsets - 1);
-        IndexVector_t lastSubsetIndices(lastSubsetSize);
-        for (index_t j = 0; j < subsetSize; j++) {
-            lastSubsetIndices[j] = _nSubsets - 1 + j * _nSubsets;
+        if (nSubsets <= 1) {
+            throw std::invalid_argument("SubsetSampler: nSubsets must be >= 2");
         }
 
-        // TODO: this is not quite right, better would be for the first subset to be larger
-        for (index_t j = subsetSize; j < lastSubsetSize; j++) {
-            lastSubsetIndices[j] =
-                sinogram.getDataDescriptor().getNumberOfCoefficientsPerDimension()[nDimensions - 1]
-                - (lastSubsetSize - j);
-        }
-        subsetIndices.emplace_back(lastSubsetIndices);
+        // the mapping of data indices to subsets
 
-        // save the number of entries per subset
-        IndexVector_t slicesInBlock(subsetIndices.size());
-        for (unsigned long i = 0; i < subsetIndices.size(); i++) {
-            slicesInBlock[static_cast<index_t>(i)] = subsetIndices[i].size();
+        const auto numCoeffsPerDim = detectorDescriptor.getNumberOfCoefficientsPerDimension();
+        const index_t nDimensions = detectorDescriptor.getNumberOfDimensions();
+        const auto numElements = numCoeffsPerDim[nDimensions - 1];
+        if (samplingStrategy == SamplingStrategy::ROUND_ROBIN) {
+            std::vector<index_t> indices(static_cast<std::size_t>(numElements));
+            std::iota(indices.begin(), indices.end(), 0);
+            _indexMapping = splitRoundRobin(indices, _nSubsets);
+        } else if (samplingStrategy == SamplingStrategy::ROTATIONAL_CLUSTERING) {
+            _indexMapping = splitRotationalClustering(detectorDescriptor, _nSubsets);
+        } else {
+            throw std::invalid_argument("SubsetSampler: unsupported sampling strategy");
         }
 
-        for (index_t i = 0; i < _nSubsets; i++) {
-            IndexVector_t indices = subsetIndices[static_cast<unsigned long>(
-                i)]; // the indices of the data rows belonging to this subset
+        // create the detector descriptors that correspond to each subset
+        for (const auto& blockIndices : _indexMapping) {
             std::vector<Geometry> geometry;
-            for (auto index : indices) {
+            for (auto index : blockIndices) {
                 auto geo = detectorDescriptor.getGeometryAt(index);
                 if (geo.has_value()) {
                     geometry.emplace_back(*geo);
@@ -63,70 +45,124 @@ namespace elsa
             }
             IndexVector_t numOfCoeffsPerDim =
                 detectorDescriptor.getNumberOfCoefficientsPerDimension();
-            numOfCoeffsPerDim[numOfCoeffsPerDim.size() - 1] = indices.size();
+            numOfCoeffsPerDim[numOfCoeffsPerDim.size() - 1] =
+                static_cast<index_t>(blockIndices.size());
 
-            // TODO: maybe move this logic to the detector descriptor class (but how?)
-
-            _detectorDescriptors.emplace_back(detectorDescriptor_t(numOfCoeffsPerDim, geometry));
-        }
-
-        PartitionDescriptor dataDescriptor(sinogram.getDataDescriptor(), slicesInBlock);
-        // TODO: make this initialization better to not initialize _data twice (if neccessary)
-        _data =
-            std::make_unique<DataContainer<data_t>>(dataDescriptor, sinogram.getDataHandlerType());
-
-        // resort the actual measurement data
-        IndexVector_t numOfCoeffsPerDim =
-            sinogram.getDataDescriptor().getNumberOfCoefficientsPerDimension();
-        index_t coeffsPerRow = numOfCoeffsPerDim.head(numOfCoeffsPerDim.size() - 1).prod();
-        for (index_t i = 0; i < _nSubsets; i++) {
-            // the indices of the data rows belonging to this subset
-            IndexVector_t indices = subsetIndices[static_cast<unsigned long>(i)];
-
-            auto block = (*_data).getBlock(i);
-
-            for (int j = 0; j < indices.size(); j++) {
-                for (int k = 0; k < coeffsPerRow; k++) {
-                    block[j * coeffsPerRow + k] = sinogram[indices[j] * coeffsPerRow + k];
-                }
-            }
+            _detectorDescriptors.emplace_back(DetectorDescriptor_t(numOfCoeffsPerDim, geometry));
         }
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    SubsetSampler<detectorDescriptor_t, data_t>::SubsetSampler(
-        const SubsetSampler<detectorDescriptor_t, data_t>& other)
-        : _volumeDescriptor(other._volumeDescriptor),
+    template <typename DetectorDescriptor_t, typename data_t>
+    std::vector<std::vector<index_t>> SubsetSampler<DetectorDescriptor_t, data_t>::splitRoundRobin(
+        const std::vector<index_t>& indices, index_t nSubsets)
+    {
+        std::vector<std::vector<index_t>> subsetIndices(static_cast<std::size_t>(nSubsets));
+
+        // determine the mapping of indices to subsets
+        for (std::size_t i = 0; i < indices.size(); ++i) {
+            const auto subset = i % static_cast<std::size_t>(nSubsets);
+            subsetIndices[subset].template emplace_back(indices[i]);
+        }
+
+        return subsetIndices;
+    }
+
+    template <typename DetectorDescriptor_t, typename data_t>
+    std::vector<std::vector<index_t>>
+        SubsetSampler<DetectorDescriptor_t, data_t>::splitRotationalClustering(
+            const DetectorDescriptor_t& detectorDescriptor, index_t nSubsets)
+    {
+
+        const auto numCoeffsPerDim = detectorDescriptor.getNumberOfCoefficientsPerDimension();
+        const index_t nDimensions = detectorDescriptor.getNumberOfDimensions();
+        const auto numElements = numCoeffsPerDim[nDimensions - 1];
+        std::vector<index_t> indices(static_cast<std::size_t>(numElements));
+        std::iota(indices.begin(), indices.end(), 0);
+        const auto geometry = detectorDescriptor.getGeometry();
+
+        // angle between two rotation matrices used as a distance measure
+        auto dist = [nDimensions](auto& g1, auto& g2) {
+            const auto& r1 = g1.getRotationMatrix();
+            const auto& r2 = g2.getRotationMatrix();
+            auto product = r1 * r2.transpose();
+            if (nDimensions == 2) { // the 2D case
+                return static_cast<double>(std::atan2(product(1, 0), product(0, 0)));
+            } else { // the 3D case
+                return std::acos((product.trace() - 1.0) / 2.0);
+            }
+        };
+
+        const auto first = geometry.front();
+        std::sort(std::begin(indices), std::end(indices),
+                  [dist, first, &geometry](auto lhs, auto rhs) {
+                      return dist(first, geometry[static_cast<std::size_t>(lhs)])
+                             < dist(first, geometry[static_cast<std::size_t>(rhs)]);
+                  });
+
+        return splitRoundRobin(indices, nSubsets);
+    }
+
+    template <typename DetectorDescriptor_t, typename data_t>
+    SubsetSampler<DetectorDescriptor_t, data_t>::SubsetSampler(
+        const SubsetSampler<DetectorDescriptor_t, data_t>& other)
+        : _indexMapping{other._indexMapping},
+          _volumeDescriptor(other._volumeDescriptor),
           _fullDetectorDescriptor(other._fullDetectorDescriptor),
           _nSubsets{other._nSubsets}
     {
-        _data = std::make_unique<DataContainer<data_t>>(*other._data);
         for (const auto& detectorDescriptor : other._detectorDescriptors) {
             _detectorDescriptors.emplace_back(detectorDescriptor);
         }
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    DataContainer<data_t> SubsetSampler<detectorDescriptor_t, data_t>::getData()
+    template <typename DetectorDescriptor_t, typename data_t>
+    DataContainer<data_t> SubsetSampler<DetectorDescriptor_t, data_t>::getPartitionedData(
+        const DataContainer<data_t>& sinogram)
     {
-        return (*_data);
+        // save the number of entries per subset
+        IndexVector_t slicesInBlock(_indexMapping.size());
+        for (unsigned long i = 0; i < _indexMapping.size(); i++) {
+            slicesInBlock[static_cast<index_t>(i)] = static_cast<index_t>(_indexMapping[i].size());
+        }
+        PartitionDescriptor dataDescriptor(sinogram.getDataDescriptor(), slicesInBlock);
+
+        const auto numCoeffsPerDim =
+            sinogram.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+        auto partitionedData = DataContainer<data_t>(dataDescriptor, sinogram.getDataHandlerType());
+
+        // resort the actual measurement partitionedData
+        index_t coeffsPerRow = numCoeffsPerDim.head(numCoeffsPerDim.size() - 1).prod();
+        for (index_t i = 0; i < _nSubsets; i++) {
+            // the indices of the partitionedData rows belonging to this subset
+            std::vector<index_t> indices = _indexMapping[static_cast<std::size_t>(i)];
+
+            auto block = partitionedData.getBlock(i);
+
+            for (std::size_t j = 0; j < indices.size(); j++) {
+                for (int k = 0; k < coeffsPerRow; k++) {
+                    block[static_cast<index_t>(j) * coeffsPerRow + k] =
+                        sinogram[indices[j] * coeffsPerRow + k];
+                }
+            }
+        }
+        return partitionedData;
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    SubsetSampler<detectorDescriptor_t, data_t>*
-        SubsetSampler<detectorDescriptor_t, data_t>::cloneImpl() const
+    template <typename DetectorDescriptor_t, typename data_t>
+    SubsetSampler<DetectorDescriptor_t, data_t>*
+        SubsetSampler<DetectorDescriptor_t, data_t>::cloneImpl() const
     {
-        return new SubsetSampler<detectorDescriptor_t, data_t>(*this);
+        return new SubsetSampler<DetectorDescriptor_t, data_t>(*this);
     }
 
-    template <typename detectorDescriptor_t, typename data_t>
-    bool SubsetSampler<detectorDescriptor_t, data_t>::isEqual(
-        const SubsetSampler<detectorDescriptor_t, data_t>& other) const
+    template <typename DetectorDescriptor_t, typename data_t>
+    bool SubsetSampler<DetectorDescriptor_t, data_t>::isEqual(
+        const SubsetSampler<DetectorDescriptor_t, data_t>& other) const
     {
         if (typeid(*this) != typeid(other))
             return false;
 
-        if (*_data != *(other._data))
+        if (_indexMapping != other._indexMapping)
             return false;
 
         if (_volumeDescriptor != other._volumeDescriptor)

@@ -19,12 +19,11 @@ namespace elsa
         // make sure that all regularization terms are linear and of type (Weighted)L2NormPow2
         for (const auto& regTerm : regTerms) {
             const auto& func = regTerm.getFunctional();
-            if (!dynamic_cast<const L2NormPow2<data_t>*>(&func)
-                && !dynamic_cast<const WeightedL2NormPow2<data_t>*>(&func)) {
+            if (!is<L2NormPow2<data_t>>(func) && !is<WeightedL2NormPow2<data_t>>(func)) {
                 throw InvalidArgumentError("TikhonovProblem: all regularization terms should be "
                                            "of type L2NormPow2 or WeightedL2NormPow2");
             }
-            if (!dynamic_cast<const LinearResidual<data_t>*>(&func.getResidual())) {
+            if (!is<LinearResidual<data_t>>(func.getResidual())) {
                 throw InvalidArgumentError(
                     "TikhonovProblem: all regularization terms should be linear");
             }

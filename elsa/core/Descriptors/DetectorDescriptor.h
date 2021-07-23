@@ -74,6 +74,9 @@ namespace elsa
         /// Get the number of poses used in the geometry
         index_t getNumberOfGeometryPoses() const;
 
+        /// Get the list of geometry poses
+        std::vector<Geometry> getGeometry() const;
+
         /// Get the i-th geometry in the trajectory.
         std::optional<Geometry> getGeometryAt(const index_t index) const;
 

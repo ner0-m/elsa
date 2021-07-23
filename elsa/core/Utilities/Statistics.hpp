@@ -46,7 +46,8 @@ namespace elsa
      * @param stddev standard deviation of samples
      * @return pair of lower and upper bound of 95% confidence interval
      */
-    constexpr auto confidenceInterval95(std::size_t n, real_t mean, real_t stddev)
+    template <typename data_t = real_t>
+    constexpr auto confidenceInterval95(std::size_t n, data_t mean, data_t stddev)
         -> std::pair<real_t, real_t>
     {
         // Do we run often enough to assume a large sample size?

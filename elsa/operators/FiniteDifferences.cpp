@@ -1,6 +1,7 @@
 #include "FiniteDifferences.h"
 #include "Timer.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -216,7 +217,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherFD = dynamic_cast<const FiniteDifferences*>(&other);
+        auto otherFD = downcast_safe<FiniteDifferences>(&other);
         if (!otherFD)
             return false;
 

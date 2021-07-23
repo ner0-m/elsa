@@ -1,4 +1,5 @@
 #include "DnnlLayer.h"
+#include "TypeCasts.hpp"
 #include <iostream>
 #include <sstream>
 
@@ -39,25 +40,25 @@ namespace elsa::ml
                 _inputDescriptor.push_back(inputDescriptor[i].clone());
 
                 // Get memory-format tag for input and input-gradient
-                _input[asIndex(i)].formatTag =
-                    dataDescriptorToDnnlMemoryFormatTag(inputDescriptor[asIndex(i)], true);
-                _inputGradient[asIndex(i)].formatTag = _input[asIndex(i)].formatTag;
+                _input[asUnsigned(i)].formatTag =
+                    dataDescriptorToDnnlMemoryFormatTag(inputDescriptor[asUnsigned(i)], true);
+                _inputGradient[asUnsigned(i)].formatTag = _input[asUnsigned(i)].formatTag;
 
-                assert(_input[asIndex(i)].formatTag != dnnl::memory::format_tag::undef
+                assert(_input[asUnsigned(i)].formatTag != dnnl::memory::format_tag::undef
                        && "Could not resolve Dnnl source memory format tag");
 
                 // Get input and input-gradient dimensions
                 for (const auto& dim :
-                     _inputDescriptor[asIndex(i)]->getNumberOfCoefficientsPerDimension()) {
-                    _input[asIndex(i)].dimensions.push_back(dim);
-                    _inputGradient[asIndex(i)].dimensions.push_back(dim);
+                     _inputDescriptor[asUnsigned(i)]->getNumberOfCoefficientsPerDimension()) {
+                    _input[asUnsigned(i)].dimensions.push_back(dim);
+                    _inputGradient[asUnsigned(i)].dimensions.push_back(dim);
                 }
 
                 // Get input and input-gradient Dnnl descriptors
-                _input[asIndex(i)].descriptor = dnnl::memory::desc(
-                    {_input[asIndex(i)].dimensions}, _typeTag, dnnl::memory::format_tag::any);
+                _input[asUnsigned(i)].descriptor = dnnl::memory::desc(
+                    {_input[asUnsigned(i)].dimensions}, _typeTag, dnnl::memory::format_tag::any);
 
-                _inputGradient[asIndex(i)].descriptor = _input[asIndex(i)].descriptor;
+                _inputGradient[asUnsigned(i)].descriptor = _input[asUnsigned(i)].descriptor;
             }
 
             // Set output memory descriptor
@@ -220,14 +221,15 @@ namespace elsa::ml
             validateVectorIndex(_input, index);
 
             // If no input has been set yet we allocate
-            if (!_input[index].describedMemory) {
-                _input[index].describedMemory = std::make_shared<dnnl::memory>(
-                    dnnl::memory::desc(
-                        {{_input[index].dimensions}, _typeTag, _input[index].formatTag}),
+            if (!_input[asUnsigned(index)].describedMemory) {
+                _input[asUnsigned(index)].describedMemory = std::make_shared<dnnl::memory>(
+                    dnnl::memory::desc({{_input[asUnsigned(index)].dimensions},
+                                        _typeTag,
+                                        _input[asUnsigned(index)].formatTag}),
                     *_engine);
             }
 
-            writeToDnnlMemory(input, *_input[index].describedMemory);
+            writeToDnnlMemory(input, *_input[asUnsigned(index)].describedMemory);
         }
 
         template <typename data_t>
@@ -239,8 +241,8 @@ namespace elsa::ml
             validateVectorIndex(_input, index);
 
             // Set input memory
-            _input[index].describedMemory = input;
-            validateDnnlMemory(_input[index].describedMemory);
+            _input[asUnsigned(index)].describedMemory = input;
+            validateDnnlMemory(_input[asUnsigned(index)].describedMemory);
         }
 
         template <typename data_t>
@@ -257,14 +259,14 @@ namespace elsa::ml
             // Check if index is valid
             validateVectorIndex(_outputGradient, index);
 
-            if (!_outputGradient[index].describedMemory) {
-                _outputGradient[index].describedMemory = std::make_shared<dnnl::memory>(
-                    dnnl::memory::desc({{_outputGradient[index].dimensions},
+            if (!_outputGradient[asUnsigned(index)].describedMemory) {
+                _outputGradient[asUnsigned(index)].describedMemory = std::make_shared<dnnl::memory>(
+                    dnnl::memory::desc({{_outputGradient[asUnsigned(index)].dimensions},
                                         _typeTag,
-                                        _outputGradient[index].formatTag}),
+                                        _outputGradient[asUnsigned(index)].formatTag}),
                     *_engine);
             }
-            writeToDnnlMemory(gradient, *_outputGradient[index].describedMemory);
+            writeToDnnlMemory(gradient, *_outputGradient[asUnsigned(index)].describedMemory);
         }
 
         template <typename data_t>
@@ -276,8 +278,8 @@ namespace elsa::ml
             validateVectorIndex(_outputGradient, index);
 
             // Set output-gradient memory
-            _outputGradient[index].describedMemory = outputGradient;
-            validateDnnlMemory(_outputGradient[index].describedMemory);
+            _outputGradient[asUnsigned(index)].describedMemory = outputGradient;
+            validateDnnlMemory(_outputGradient[asUnsigned(index)].describedMemory);
         }
 
         template <typename data_t>
@@ -412,27 +414,28 @@ namespace elsa::ml
         std::shared_ptr<dnnl::memory> DnnlLayer<data_t>::getInputGradientMemory(index_t index)
         {
             validateVectorIndex(_inputGradient, index);
-            validateDnnlMemory(_inputGradient[asIndex(index)].effectiveMemory);
-            return _inputGradient[asIndex(index)].effectiveMemory;
+            validateDnnlMemory(_inputGradient[asUnsigned(index)].effectiveMemory);
+            return _inputGradient[asUnsigned(index)].effectiveMemory;
         }
 
         template <typename data_t>
         DataContainer<data_t> DnnlLayer<data_t>::getInputGradient(index_t index) const
         {
-            validateVectorIndex(_inputGradient, index);
-            validateDnnlMemory(_inputGradient[index].effectiveMemory);
+            auto i = asUnsigned(index);
 
-            DataContainer<data_t> output(reverseDataDescriptor(*_inputDescriptor[index]));
+            validateVectorIndex(_inputGradient, index);
+            validateDnnlMemory(_inputGradient[i].effectiveMemory);
+
+            DataContainer<data_t> output(reverseDataDescriptor(*_inputDescriptor[i]));
 
             dnnl::memory outMem;
-            if (_inputGradient[index].effectiveMemory->get_desc()
-                != _inputGradient[index].descriptor) {
+            if (_inputGradient[i].effectiveMemory->get_desc() != _inputGradient[i].descriptor) {
                 outMem = dnnl::memory(
-                    {{_inputGradient[index].dimensions}, _typeTag, _inputGradient[index].formatTag},
+                    {{_inputGradient[i].dimensions}, _typeTag, _inputGradient[i].formatTag},
                     *_engine);
                 dnnl::stream execStream(*_engine);
-                dnnl::reorder(*_inputGradient[index].effectiveMemory, outMem)
-                    .execute(execStream, {{DNNL_ARG_FROM, *_inputGradient[index].effectiveMemory},
+                dnnl::reorder(*_inputGradient[i].effectiveMemory, outMem)
+                    .execute(execStream, {{DNNL_ARG_FROM, *_inputGradient[i].effectiveMemory},
                                           {DNNL_ARG_TO, outMem}});
                 execStream.wait();
             }
@@ -516,7 +519,7 @@ namespace elsa::ml
                     {{DNNL_ARG_DST, *_outputGradient.front().effectiveMemory}});
                 for (std::size_t i = 0; i < _outputGradient.size(); ++i) {
                     _backwardStream.arguments.back().insert(
-                        {DNNL_ARG_MULTIPLE_SRC + i, mem[asIndex(i)]});
+                        {DNNL_ARG_MULTIPLE_SRC + i, mem[asUnsigned(i)]});
                 }
             }
         }

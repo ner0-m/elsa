@@ -7,6 +7,7 @@
 #include <string>
 
 #include "elsaDefines.h"
+#include "TypeCasts.hpp"
 #include "Common.h"
 #include "State.h"
 #include "Layer.h"
@@ -94,14 +95,14 @@ namespace elsa::ml
                 case LayerType::Sigmoid:
                 case LayerType::Tanh:
                 case LayerType::Elu: {
-                    auto downcastedLayer = dynamic_cast<const ActivationBase<data_t>*>(node);
+                    auto downcastedLayer = downcast_safe<ActivationBase<data_t>>(node);
                     addActivationNode<data_t>(nodeIdx, downcastedLayer->getActivation(),
                                               inputDescriptorWithBatchSize, graph);
                     break;
                 }
                 case LayerType::Dense: {
                     // Downcast to the polymorphic layer type
-                    auto downcastedLayer = dynamic_cast<const Dense<data_t>*>(node);
+                    auto downcastedLayer = downcast_safe<Dense<data_t>>(node);
 
                     assert(node->getInputDescriptor().getNumberOfDimensions() == 1
                            && "Dense layer requires 1D input");
@@ -139,7 +140,7 @@ namespace elsa::ml
                 case LayerType::Conv2D:
                 case LayerType::Conv3D: {
                     // Downcast to the polymorphic layer type
-                    auto downcastedLayer = dynamic_cast<const Conv<data_t>*>(node);
+                    auto downcastedLayer = downcast_safe<Conv<data_t>>(node);
 
                     // Build weights descriptor
                     VolumeDescriptor filterDescriptor = reverseVolumeDescriptor(
@@ -176,7 +177,7 @@ namespace elsa::ml
                 case LayerType::MaxPooling1D:
                 case LayerType::MaxPooling2D: {
                     // Downcast to the polymorphic layer type
-                    auto downcastedLayer = dynamic_cast<const Pooling<data_t>*>(node);
+                    auto downcastedLayer = downcast_safe<Pooling<data_t>>(node);
 
                     IndexVector_t poolingWindow = downcastedLayer->getPoolSize();
                     IndexVector_t strides(poolingWindow.size());
@@ -233,8 +234,8 @@ namespace elsa::ml
 
                     // Get the corresponding node in the front-end graph as
                     // a trainable layer
-                    auto trainableLayer = dynamic_cast<Trainable<data_t>*>(
-                        State<data_t>::getGraph().getData(nodeIdx));
+                    auto trainableLayer =
+                        downcast<Trainable<data_t>>(State<data_t>::getGraph().getData(nodeIdx));
                     Activation activation = trainableLayer->getActivation();
 
                     // Insert a new node that will hold our activation layer
@@ -381,8 +382,9 @@ namespace elsa::ml
 
                         inputGradientMemory.clear();
                         inputGradientCounter = 0;
-                        for (std::size_t i = 0; i < asIndex(node->getNumberOfInputs()); ++i) {
-                            inputGradientMemory.push_back(node->getInputGradientMemory(i));
+                        for (std::size_t i = 0; i < asUnsigned(node->getNumberOfInputs()); ++i) {
+                            inputGradientMemory.push_back(
+                                node->getInputGradientMemory(asSigned(i)));
                         }
                     },
                     // visitor for the current and the next node in the traversal
@@ -392,7 +394,7 @@ namespace elsa::ml
                         assert(inputGradientMemory[inputGradientCounter] != nullptr
                                && "Input-gradient memory is null during backward graph-traversal");
                         prevNode->setNextOutputGradientMemory(
-                            inputGradientMemory[inputGradientCounter]);
+                            inputGradientMemory[asUnsigned(inputGradientCounter)]);
                         ++inputGradientCounter;
                     },
                     []([[maybe_unused]] auto node) { return false; });
@@ -412,7 +414,8 @@ namespace elsa::ml
                 inputLayer->setInput(x);
 
                 // Keep track of all node we already handled
-                std::vector<bool> forwardPropagationList(backendGraph.getNumberOfNodes(), false);
+                std::vector<bool> forwardPropagationList(
+                    asUnsigned(backendGraph.getNumberOfNodes()), false);
 
                 backendGraph.visitWithIndex(
                     // Start node for traversal
@@ -420,8 +423,8 @@ namespace elsa::ml
                     // visitor for the current node in the traversal
                     [&executionStream, &forwardPropagationList](auto node, index_t s) {
                         node->forwardPropagate(executionStream);
-                        assert(forwardPropagationList[asIndex(s)] == false);
-                        forwardPropagationList[asIndex(s)] = true;
+                        assert(forwardPropagationList[asUnsigned(s)] == false);
+                        forwardPropagationList[asUnsigned(s)] = true;
                     },
                     // visitor for the current and the next node in the traversal
                     []([[maybe_unused]] auto node, [[maybe_unused]] index_t s,
@@ -431,14 +434,14 @@ namespace elsa::ml
                     [&backendGraph, &forwardPropagationList]([[maybe_unused]] auto node,
                                                              index_t s) {
                         for (const auto& inEdge : backendGraph.getIncomingEdges(s)) {
-                            if (!forwardPropagationList[asIndex(inEdge.begin()->getIndex())])
+                            if (!forwardPropagationList[asUnsigned(inEdge.begin()->getIndex())])
                                 return true;
                         }
                         return false;
                     });
 
                 forwardPropagationList =
-                    std::vector<bool>(asIndex(backendGraph.getNumberOfNodes()), false);
+                    std::vector<bool>(asUnsigned(backendGraph.getNumberOfNodes()), false);
 
                 index_t outputIdx = *std::begin(model->backendOutputs_);
                 auto outputLayer = getCheckedLayerPtr(backendGraph.getNodes().at(outputIdx));
@@ -476,10 +479,11 @@ namespace elsa::ml
                     for (std::size_t idx = 0; idx < x.size(); ++idx) {
                         // Set this model's input as the input of the model's
                         // input layer.
-                        inputLayer->setInput(x[asIndex(idx)]);
+                        inputLayer->setInput(x[asUnsigned(idx)]);
 
                         // Keep track of all nodes we already handled
-                        std::vector<bool> nodeList(backendGraph.getNumberOfNodes(), false);
+                        std::vector<bool> nodeList(asUnsigned(backendGraph.getNumberOfNodes()),
+                                                   false);
 
                         backendGraph.visitWithIndex(
                             // Start node for traversal
@@ -487,8 +491,8 @@ namespace elsa::ml
                             // visitor for the current node in the traversal
                             [&executionStream, &nodeList](auto node, index_t s) {
                                 node->forwardPropagate(executionStream);
-                                assert(nodeList[asIndex(s)] == false);
-                                nodeList[asIndex(s)] = true;
+                                assert(nodeList[asUnsigned(s)] == false);
+                                nodeList[asUnsigned(s)] = true;
                             },
                             // visitor for the current and the next node in the traversal
                             []([[maybe_unused]] auto node, [[maybe_unused]] index_t s,
@@ -497,29 +501,31 @@ namespace elsa::ml
                             // predecessors of the current node
                             [&backendGraph, &nodeList]([[maybe_unused]] auto node, index_t s) {
                                 for (const auto& inEdge : backendGraph.getIncomingEdges(s)) {
-                                    if (!nodeList[asIndex(inEdge.begin()->getIndex())])
+                                    if (!nodeList[asUnsigned(inEdge.begin()->getIndex())])
                                         return true;
                                 }
                                 return false;
                             });
 
-                        nodeList = std::vector<bool>(backendGraph.getNumberOfNodes(), false);
+                        nodeList =
+                            std::vector<bool>(asUnsigned(backendGraph.getNumberOfNodes()), false);
 
                         auto output = outputLayer->getOutput();
 
                         // Get accuracy
                         auto label = Utils::Encoding::fromOneHot(output, 10);
                         for (int i = 0; i < model->batchSize_; ++i) {
-                            if (label[i] == y[asIndex(idx)][i]) {
+                            if (label[i] == y[asUnsigned(idx)][i]) {
                                 correct += 1;
                             }
                         }
 
-                        epochAccuracy = (static_cast<double>(correct)
-                                         / static_cast<double>(((idx + 1) * model->batchSize_)));
+                        epochAccuracy =
+                            (static_cast<double>(correct)
+                             / static_cast<double>(((idx + 1) * asUnsigned(model->batchSize_))));
 
                         // Loss calculation
-                        trainingHistory.loss.push_back(lossFunc(output, y[asIndex(idx)]));
+                        trainingHistory.loss.push_back(lossFunc(output, y[asUnsigned(idx)]));
                         epochLoss += trainingHistory.loss.back();
 
                         ++progBar;
@@ -532,7 +538,7 @@ namespace elsa::ml
                                 + " - Accuracy: " + std::to_string(epochAccuracy));
 
                         outputLayer->setOutputGradient(
-                            lossFunc.getLossGradient(output, y[asIndex(idx)]));
+                            lossFunc.getLossGradient(output, y[asUnsigned(idx)]));
 
                         // Backward-propagate all nodes, starting at the output
                         // until we reach the input.
@@ -542,8 +548,8 @@ namespace elsa::ml
                             // Visitor for the current node in the traversal.
                             [&executionStream, &nodeList](auto node, index_t s) {
                                 node->backwardPropagate(executionStream);
-                                assert(nodeList[asIndex(s)] == false);
-                                nodeList[asIndex(s)] = true;
+                                assert(nodeList[asUnsigned(s)] == false);
+                                nodeList[asUnsigned(s)] = true;
                             },
                             // Visitor for the current and the next node in the
                             // traversal.
@@ -551,7 +557,7 @@ namespace elsa::ml
                                [[maybe_unused]] auto nextNode, [[maybe_unused]] index_t nextS) {},
                             [&backendGraph, &nodeList]([[maybe_unused]] auto node, index_t s) {
                                 for (const auto& outEdge : backendGraph.getOutgoingEdges(s)) {
-                                    if (!nodeList[asIndex(outEdge.end()->getIndex())])
+                                    if (!nodeList[asUnsigned(outEdge.end()->getIndex())])
                                         return true;
                                 }
                                 return false;

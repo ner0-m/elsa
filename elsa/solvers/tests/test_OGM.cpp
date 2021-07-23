@@ -20,6 +20,7 @@
 #include "SiddonsMethod.h"
 #include "CircleTrajectoryGenerator.h"
 #include "PhantomGenerator.h"
+#include "TypeCasts.hpp"
 #include "testHelpers.h"
 
 using namespace elsa;
@@ -218,13 +219,12 @@ TEST_CASE("OGM: Solving a simple phantom reconstruction")
         auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
-        index_t numAngles{90}, arc{360};
+        index_t numAngles{20}, arc{360};
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0) * 100),
+            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
             static_cast<real_t>(size(0)));
 
-        SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                *sinoDescriptor);
+        SiddonsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
         auto sinogram = projector.apply(phantom);
 
@@ -244,13 +244,14 @@ TEST_CASE("OGM: Solving a simple phantom reconstruction")
 
                 AND_THEN("it works as expected")
                 {
-                    auto reconstruction = solver.solve(10);
+                    auto reconstruction = solver.solve(15);
 
                     DataContainer resultsDifference = reconstruction - phantom;
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.131));
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.15));
                 }
             }
         }

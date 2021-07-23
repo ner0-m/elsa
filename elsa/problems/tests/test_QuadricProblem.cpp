@@ -17,6 +17,7 @@
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "testHelpers.h"
+#include "TypeCasts.hpp"
 
 #include <array>
 
@@ -28,10 +29,10 @@ constexpr data_t return_data_t(const T<data_t>&);
 
 TEST_SUITE_BEGIN("problems");
 
-TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<float>,
-                   QuadricProblem<double>)
+TEST_CASE_TEMPLATE("QuadricProblem: Construction with a Quadric functional", TestType, float,
+                   double)
 {
-    using data_t = decltype(return_data_t(std::declval<TestType>()));
+    using data_t = TestType;
 
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);
@@ -53,27 +54,27 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
 
         WHEN("constructing a QuadricProblem without x0 from it")
         {
-            TestType prob{quad};
+            QuadricProblem<data_t> prob{quad};
 
             THEN("the clone works correctly")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer<data_t> dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcZero);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
 
-                REQUIRE(prob.evaluate() == 0);
-                REQUIRE(prob.getGradient() == static_cast<data_t>(-1.0) * dc);
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(), 0));
+                REQUIRE_UNARY(checkApproxEq(prob.getGradient(), as<data_t>(-1.0) * dc));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian == leaf(scalingOp));
+                REQUIRE_EQ(hessian, leaf(scalingOp));
             }
         }
 
@@ -83,34 +84,43 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
             x0Vec.setRandom();
             DataContainer<data_t> x0{dd, x0Vec};
 
-            TestType prob{quad, x0};
+            QuadricProblem<data_t> prob{quad, x0};
 
             THEN("the clone works correctly")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == x0);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), x0));
 
-                REQUIRE(prob.evaluate()
-                        == Approx(static_cast<data_t>(0.5 * scaleFactor) * x0.squaredL2Norm()
-                                  - x0.dot(dc)));
+                REQUIRE_UNARY(checkApproxEq(
+                    prob.evaluate(),
+                    static_cast<data_t>(0.5 * scaleFactor) * x0.squaredL2Norm() - x0.dot(dc)));
 
                 auto gradient = prob.getGradient();
                 DataContainer gradientDirect = scaleFactor * x0 - dc;
                 for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian == leaf(scalingOp));
+                REQUIRE_EQ(hessian, leaf(scalingOp));
             }
         }
     }
+}
+
+TEST_CASE_TEMPLATE("QuadricProblem: with a Quadric functional with spd operator", TestType, float,
+                   double)
+{
+    using data_t = TestType;
+
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::WARN);
 
     GIVEN("a spd operator")
     {
@@ -127,27 +137,27 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
 
         WHEN("constructing a QuadricProblem without x0 from it")
         {
-            TestType prob{scalingOp, dc, true};
+            QuadricProblem<data_t> prob{scalingOp, dc, true};
 
             THEN("the clone works correctly")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer<data_t> dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcZero);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
 
-                REQUIRE(prob.evaluate() == 0);
-                REQUIRE(prob.getGradient() == static_cast<data_t>(-1.0) * dc);
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(), 0));
+                REQUIRE_UNARY(isApprox(prob.getGradient(), static_cast<data_t>(-1.0) * dc));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian == leaf(scalingOp));
+                REQUIRE_EQ(hessian, leaf(scalingOp));
             }
         }
 
@@ -157,34 +167,43 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
             x0Vec.setRandom();
             DataContainer<data_t> x0{dd, x0Vec};
 
-            TestType prob{scalingOp, dc, x0, true};
+            QuadricProblem<data_t> prob{scalingOp, dc, x0, true};
 
             THEN("the clone works correctly")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == x0);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), x0));
 
-                REQUIRE(prob.evaluate()
-                        == Approx(static_cast<data_t>(0.5 * scaleFactor) * x0.squaredL2Norm()
-                                  - x0.dot(dc)));
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.evaluate(),
+                                  as<data_t>(0.5 * scaleFactor) * x0.squaredL2Norm() - x0.dot(dc)));
 
                 auto gradient = prob.getGradient();
                 DataContainer gradientDirect = scaleFactor * x0 - dc;
                 for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian == leaf(scalingOp));
+                REQUIRE_EQ(hessian, leaf(scalingOp));
             }
         }
     }
+}
+
+TEST_CASE_TEMPLATE("QuadricProblem: with a Quadric functional with non-spd operator", TestType,
+                   float, double)
+{
+    using data_t = TestType;
+
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::WARN);
 
     GIVEN("a non-spd operator")
     {
@@ -201,27 +220,27 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
 
         WHEN("Constructing a QuadricProblem without x0 from it")
         {
-            TestType prob{scalingOp, dc, false};
+            QuadricProblem<data_t> prob{scalingOp, dc, false};
 
             THEN("the clone works correctly")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer<data_t> dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcZero);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
 
-                REQUIRE(prob.evaluate() == 0);
-                REQUIRE(prob.getGradient() == static_cast<data_t>(-scaleFactor) * dc);
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(), 0));
+                REQUIRE_UNARY(isApprox(prob.getGradient(), as<data_t>(-scaleFactor) * dc));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian == leaf(adjoint(scalingOp) * scalingOp));
+                REQUIRE_EQ(hessian, leaf(adjoint(scalingOp) * scalingOp));
             }
         }
 
@@ -231,24 +250,24 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
             x0Vec.setRandom();
             DataContainer<data_t> x0{dd, x0Vec};
 
-            TestType prob{scalingOp, dc, x0, false};
+            QuadricProblem<data_t> prob{scalingOp, dc, x0, false};
 
             THEN("the clone works correctly")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == x0);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), x0));
 
-                REQUIRE(prob.evaluate()
-                        == Approx(static_cast<data_t>(0.5 * scaleFactor * scaleFactor)
-                                      * x0.squaredL2Norm()
-                                  - scaleFactor * x0.dot(dc)));
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.evaluate(),
+                                  as<data_t>(0.5 * scaleFactor * scaleFactor) * x0.squaredL2Norm()
+                                      - scaleFactor * x0.dot(dc)));
 
                 auto gradient = prob.getGradient();
                 DataContainer gradientDirect = scaleFactor * (scaleFactor * x0) - scaleFactor * dc;
@@ -256,10 +275,19 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
                     REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian == leaf(adjoint(scalingOp) * scalingOp));
+                REQUIRE_EQ(hessian, leaf(adjoint(scalingOp) * scalingOp));
             }
         }
     }
+}
+
+TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", TestType, float,
+                   double)
+{
+    using data_t = TestType;
+
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::WARN);
 
     GIVEN("an optimization problem")
     {
@@ -302,21 +330,21 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == x0);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), x0));
 
-                REQUIRE(prob.evaluate()
-                        == Approx(static_cast<data_t>(0.5 * weightFactor) * x0.squaredL2Norm()
-                                  - x0.dot(dc)));
-                REQUIRE(prob.getGradient() == (weightFactor * x0) - dc);
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
+                                            as<data_t>(0.5 * weightFactor) * x0.squaredL2Norm()
+                                                - x0.dot(dc)));
+                REQUIRE_UNARY(isApprox(prob.getGradient(), (weightFactor * x0) - dc));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian == leaf(weightingOp));
+                REQUIRE_EQ(hessian, leaf(weightingOp));
             }
         }
 
@@ -330,28 +358,28 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
             QuadricProblem<data_t> prob{initialProb};
             THEN("conversion yields the same result as cloning")
             {
-                REQUIRE(*initialProb.clone() == prob);
+                REQUIRE_EQ(*initialProb.clone(), prob);
             }
 
             THEN("the clone works correctly")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == x0);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), x0));
 
-                REQUIRE(prob.evaluate()
-                        == Approx(static_cast<data_t>(0.5 * weightFactor) * x0.squaredL2Norm()
-                                  - x0.dot(dc)));
-                REQUIRE(prob.getGradient() == (weightFactor * x0) - dc);
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
+                                            as<data_t>(0.5 * weightFactor) * x0.squaredL2Norm()
+                                                - x0.dot(dc)));
+                REQUIRE_UNARY(isApprox(prob.getGradient(), (weightFactor * x0) - dc));
 
                 auto hessian = prob.getHessian();
-                REQUIRE(hessian == leaf(weightingOp));
+                REQUIRE_EQ(hessian, leaf(weightingOp));
             }
         }
 
@@ -399,13 +427,14 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
                          "for the initial problem")
                     {
 
-                        REQUIRE(converted.evaluate() == Approx(prob.evaluate()));
+                        REQUIRE_UNARY(checkApproxEq(converted.evaluate(), prob.evaluate()));
 
                         DataContainer<data_t> gradDiff =
                             prob.getGradient() - converted.getGradient();
                         REQUIRE_UNARY(checkApproxEq(gradDiff.squaredL2Norm(), 0));
 
-                        REQUIRE(prob.getHessian().apply(x0) == converted.getHessian().apply(x0));
+                        REQUIRE_UNARY(isApprox(prob.getHessian().apply(x0),
+                                               converted.getHessian().apply(x0)));
                     }
                 }
             }
@@ -429,7 +458,7 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
 
         for (const auto& dataTerm : dataTerms) {
             const auto& res = static_cast<const LinearResidual<data_t>&>(dataTerm->getResidual());
-            const auto isWeighted = dynamic_cast<const WeightedL2NormPow2<data_t>*>(dataTerm.get());
+            const auto isWeighted = is<WeightedL2NormPow2<data_t>>(dataTerm.get());
             std::string probType = isWeighted ? "wls problem" : "ls problem";
 
             std::string desc =
@@ -444,22 +473,22 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
                 // formulations
                 Problem<data_t> initialProb{*dataTerm};
 
-                TestType prob{initialProb};
+                QuadricProblem<data_t> prob{initialProb};
 
                 THEN("the clone works correctly")
                 {
                     auto probClone = prob.clone();
 
-                    REQUIRE(probClone.get() != &prob);
-                    REQUIRE(*probClone == prob);
+                    REQUIRE_NE(probClone.get(), &prob);
+                    REQUIRE_EQ(*probClone, prob);
 
                     AND_THEN("the problem behaves as expected")
                     {
                         DataContainer<data_t> zero{dd};
                         zero = 0;
-                        REQUIRE(prob.getCurrentSolution() == zero);
+                        REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), zero));
 
-                        REQUIRE(prob.evaluate() == 0);
+                        REQUIRE_UNARY(checkApproxEq(prob.evaluate(), 0));
 
                         DataContainer<data_t> grad =
                             res.hasDataVector() ? static_cast<data_t>(-1.0) * dc : zero;
@@ -467,20 +496,20 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
                             grad *= scaleFactor;
                         if (res.hasDataVector() && isWeighted)
                             grad *= weightFactor;
-                        REQUIRE(prob.getGradient() == grad);
+                        REQUIRE_UNARY(isApprox(prob.getGradient(), grad));
 
                         if (isWeighted) {
                             if (res.hasOperator()) {
-                                REQUIRE(prob.getHessian()
-                                        == leaf(adjoint(scalingOp) * weightingOp * scalingOp));
+                                REQUIRE_EQ(prob.getHessian(),
+                                           leaf(adjoint(scalingOp) * weightingOp * scalingOp));
                             } else {
-                                REQUIRE(prob.getHessian() == leaf(weightingOp));
+                                REQUIRE_EQ(prob.getHessian(), leaf(weightingOp));
                             }
                         } else {
                             if (res.hasOperator()) {
-                                REQUIRE(prob.getHessian() == leaf(adjoint(scalingOp) * scalingOp));
+                                REQUIRE_EQ(prob.getHessian(), leaf(adjoint(scalingOp) * scalingOp));
                             } else {
-                                REQUIRE(prob.getHessian() == leaf(Identity<data_t>{dd}));
+                                REQUIRE_EQ(prob.getHessian(), leaf(Identity<data_t>{dd}));
                             }
                         }
                     }
@@ -497,95 +526,105 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
                 // formulations
                 Problem<data_t> initialProb{*dataTerm, x0};
 
-                TestType prob{initialProb};
+                QuadricProblem<data_t> prob{initialProb};
 
                 THEN("the clone works correctly")
                 {
                     auto probClone = prob.clone();
 
-                    REQUIRE(probClone.get() != &prob);
-                    REQUIRE(*probClone == prob);
+                    REQUIRE_NE(probClone.get(), &prob);
+                    REQUIRE_EQ(*probClone, prob);
 
                     AND_THEN("the problem behaves as expected")
                     {
-                        REQUIRE(prob.getCurrentSolution() == x0);
+                        REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), x0));
 
                         if (isWeighted) {
                             if (res.hasOperator()) {
                                 if (res.hasDataVector()) {
-                                    REQUIRE(prob.evaluate()
-                                            == Approx(0.5 * scaleFactor * scaleFactor * weightFactor
-                                                          * x0.squaredL2Norm()
-                                                      - scaleFactor * weightFactor * x0.dot(dc)));
+                                    REQUIRE_UNARY(
+                                        checkApproxEq(prob.evaluate(),
+                                                      (as<data_t>(0.5) * scaleFactor * scaleFactor
+                                                           * weightFactor * x0.squaredL2Norm()
+                                                       - scaleFactor * weightFactor * x0.dot(dc))));
                                     auto gradient = prob.getGradient();
                                     DataContainer gradientDirect =
                                         scaleFactor * (weightFactor * (scaleFactor * x0))
                                         - scaleFactor * (weightFactor * dc);
                                     for (index_t i = 0; i < gradient.getSize(); ++i)
-                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                                        REQUIRE_UNARY(
+                                            checkApproxEq(gradient[i], gradientDirect[i]));
                                 } else {
-                                    REQUIRE(prob.evaluate()
-                                            == Approx(0.5 * scaleFactor * scaleFactor * weightFactor
-                                                      * x0.squaredL2Norm()));
+                                    REQUIRE_UNARY(checkApproxEq(
+                                        prob.evaluate(), as<data_t>(0.5) * scaleFactor * scaleFactor
+                                                             * weightFactor * x0.squaredL2Norm()));
 
                                     auto gradient = prob.getGradient();
                                     DataContainer gradientDirect =
                                         scaleFactor * (weightFactor * (scaleFactor * x0));
                                     for (index_t i = 0; i < gradient.getSize(); ++i)
-                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                                        REQUIRE_UNARY(
+                                            checkApproxEq(gradient[i], gradientDirect[i]));
                                 }
-                                REQUIRE(prob.getHessian()
-                                        == leaf(adjoint(scalingOp) * weightingOp * scalingOp));
+                                REQUIRE_EQ(prob.getHessian(),
+                                           leaf(adjoint(scalingOp) * weightingOp * scalingOp));
                             } else {
                                 if (res.hasDataVector()) {
-                                    REQUIRE(prob.evaluate()
-                                            == Approx(0.5 * weightFactor * x0.squaredL2Norm()
-                                                      - weightFactor * x0.dot(dc)));
-                                    REQUIRE(prob.getGradient()
-                                            == weightFactor * x0 - weightFactor * dc);
+                                    REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
+                                                                as<data_t>(0.5) * weightFactor
+                                                                        * x0.squaredL2Norm()
+                                                                    - weightFactor * x0.dot(dc)));
+                                    REQUIRE_UNARY(checkApproxEq(
+                                        prob.getGradient(), weightFactor * x0 - weightFactor * dc));
                                 } else {
-                                    REQUIRE(prob.evaluate()
-                                            == Approx(0.5 * weightFactor * x0.squaredL2Norm()));
+                                    REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
+                                                                as<data_t>(0.5) * weightFactor
+                                                                    * x0.squaredL2Norm()));
 
                                     auto gradient = prob.getGradient();
                                     DataContainer gradientDirect = weightFactor * x0;
                                     for (index_t i = 0; i < gradient.getSize(); ++i)
-                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                                        REQUIRE_UNARY(
+                                            checkApproxEq(gradient[i], gradientDirect[i]));
                                 }
-                                REQUIRE(prob.getHessian() == leaf(weightingOp));
+                                REQUIRE_EQ(prob.getHessian(), leaf(weightingOp));
                             }
                         } else {
                             if (res.hasOperator()) {
                                 if (res.hasDataVector()) {
-                                    REQUIRE(prob.evaluate()
-                                            == Approx(0.5 * scaleFactor * scaleFactor
-                                                          * x0.squaredL2Norm()
-                                                      - scaleFactor * x0.dot(dc)));
+                                    REQUIRE_UNARY(checkApproxEq(
+                                        prob.evaluate(), as<data_t>(0.5) * scaleFactor * scaleFactor
+                                                                 * x0.squaredL2Norm()
+                                                             - scaleFactor * x0.dot(dc)));
                                     auto gradient = prob.getGradient();
                                     DataContainer gradientDirect =
                                         scaleFactor * (scaleFactor * x0) - scaleFactor * dc;
                                     for (index_t i = 0; i < gradient.getSize(); ++i)
-                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                                        REQUIRE_UNARY(
+                                            checkApproxEq(gradient[i], gradientDirect[i]));
                                 } else {
-                                    REQUIRE(prob.evaluate()
-                                            == Approx(0.5 * scaleFactor * scaleFactor
-                                                      * x0.squaredL2Norm()));
+                                    REQUIRE_UNARY(checkApproxEq(
+                                        prob.evaluate(), as<data_t>(0.5) * scaleFactor * scaleFactor
+                                                             * x0.squaredL2Norm()));
                                     auto gradient = prob.getGradient();
                                     DataContainer gradientDirect = scaleFactor * (scaleFactor * x0);
                                     for (index_t i = 0; i < gradient.getSize(); ++i)
-                                        REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                                        REQUIRE_UNARY(
+                                            checkApproxEq(gradient[i], gradientDirect[i]));
                                 }
-                                REQUIRE(prob.getHessian() == leaf(adjoint(scalingOp) * scalingOp));
+                                REQUIRE_EQ(prob.getHessian(), leaf(adjoint(scalingOp) * scalingOp));
                             } else {
                                 if (res.hasDataVector()) {
-                                    REQUIRE(prob.evaluate()
-                                            == Approx(0.5 * x0.squaredL2Norm() - x0.dot(dc)));
-                                    REQUIRE(prob.getGradient() == x0 - dc);
+                                    REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
+                                                                as<data_t>(0.5) * x0.squaredL2Norm()
+                                                                    - x0.dot(dc)));
+                                    REQUIRE_UNARY(isApprox(prob.getGradient(), x0 - dc));
                                 } else {
-                                    REQUIRE(prob.evaluate() == Approx(0.5 * x0.squaredL2Norm()));
-                                    REQUIRE(prob.getGradient() == x0);
+                                    REQUIRE_UNARY(checkApproxEq(
+                                        prob.evaluate(), as<data_t>(0.5) * x0.squaredL2Norm()));
+                                    REQUIRE_UNARY(isApprox(prob.getGradient(), x0));
                                 }
-                                REQUIRE(prob.getHessian() == leaf(Identity<data_t>{dd}));
+                                REQUIRE_EQ(prob.getHessian(), leaf(Identity<data_t>{dd}));
                             }
                         }
                     }
@@ -595,8 +634,7 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
             for (const auto& regTerm : dataTerms) {
                 const auto& res =
                     static_cast<const LinearResidual<data_t>&>(regTerm->getResidual());
-                const auto isWeighted =
-                    dynamic_cast<const WeightedL2NormPow2<data_t>*>(regTerm.get());
+                const auto isWeighted = is<WeightedL2NormPow2<data_t>>(regTerm.get());
                 std::string regType =
                     isWeighted ? "weighted l2-norm regularizer" : "l2-norm regularizer";
 
@@ -626,22 +664,22 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
 
                     Problem<data_t> initialProb{func, reg};
 
-                    TestType prob{initialProb};
+                    QuadricProblem<data_t> prob{initialProb};
 
                     THEN("the clone works correctly")
                     {
                         auto probClone = prob.clone();
 
-                        REQUIRE(probClone.get() != &prob);
-                        REQUIRE(*probClone == prob);
+                        REQUIRE_NE(probClone.get(), &prob);
+                        REQUIRE_EQ(*probClone, prob);
 
                         AND_THEN("the problem behaves as expected")
                         {
                             DataContainer<data_t> zero{dd};
                             zero = 0;
-                            REQUIRE(prob.getCurrentSolution() == zero);
+                            REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), zero));
 
-                            REQUIRE(prob.evaluate() == 0);
+                            REQUIRE_UNARY(checkApproxEq(prob.evaluate(), 0));
 
                             DataContainer<data_t> grad = -dataScaleFactor * dataB;
 
@@ -657,34 +695,34 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
                                     regGrad *= regWeight;
                                 }
 
-                                REQUIRE(prob.getGradient() == grad + regGrad);
+                                REQUIRE_UNARY(isApprox(prob.getGradient(), grad + regGrad));
                             } else {
-                                REQUIRE(prob.getGradient() == grad);
+                                REQUIRE_UNARY(isApprox(prob.getGradient(), grad));
                             }
 
                             if (isWeighted) {
                                 Scaling<data_t> lambdaW{dd, regWeight * weightFactor};
 
                                 if (res.hasOperator()) {
-                                    REQUIRE(prob.getHessian()
-                                            == leaf(adjoint(dataScalingOp) * dataScalingOp
+                                    REQUIRE_EQ(prob.getHessian(),
+                                               leaf(adjoint(dataScalingOp) * dataScalingOp
                                                     + adjoint(scalingOp) * lambdaW * scalingOp));
                                 } else {
-                                    REQUIRE(
-                                        prob.getHessian()
-                                        == leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaW));
+                                    REQUIRE_EQ(
+                                        prob.getHessian(),
+                                        leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaW));
                                 }
                             } else {
                                 Scaling<data_t> lambdaOp{dd, regWeight};
 
                                 if (res.hasOperator()) {
-                                    REQUIRE(prob.getHessian()
-                                            == leaf(adjoint(dataScalingOp) * dataScalingOp
+                                    REQUIRE_EQ(prob.getHessian(),
+                                               leaf(adjoint(dataScalingOp) * dataScalingOp
                                                     + lambdaOp * adjoint(scalingOp) * scalingOp));
                                 } else {
-                                    REQUIRE(
-                                        prob.getHessian()
-                                        == leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaOp));
+                                    REQUIRE_EQ(
+                                        prob.getHessian(),
+                                        leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaOp));
                                 }
                             }
                         }
@@ -712,18 +750,18 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
 
                     Problem<data_t> initialProb{func, reg, x0};
 
-                    TestType prob{initialProb};
+                    QuadricProblem<data_t> prob{initialProb};
 
                     THEN("the clone works correctly")
                     {
                         auto probClone = prob.clone();
 
-                        REQUIRE(probClone.get() != &prob);
-                        REQUIRE(*probClone == prob);
+                        REQUIRE_NE(probClone.get(), &prob);
+                        REQUIRE_EQ(*probClone, prob);
 
                         AND_THEN("the problem behaves as expected")
                         {
-                            REQUIRE(prob.getCurrentSolution() == x0);
+                            REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), x0));
 
                             DataContainer<data_t> Ax = dataScaleFactor * (dataScaleFactor * x0);
                             DataContainer<data_t> b = dataScaleFactor * dataB;
@@ -737,17 +775,17 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
                                     if (res.hasDataVector()) {
                                         b += scaleFactor * (regWeight * weightFactor * dc);
                                     }
-                                    REQUIRE(prob.getHessian()
-                                            == leaf(adjoint(dataScalingOp) * dataScalingOp
+                                    REQUIRE_EQ(prob.getHessian(),
+                                               leaf(adjoint(dataScalingOp) * dataScalingOp
                                                     + adjoint(scalingOp) * lambdaW * scalingOp));
                                 } else {
                                     Ax += weightFactor * regWeight * x0;
                                     if (res.hasDataVector()) {
                                         b += weightFactor * regWeight * dc;
                                     }
-                                    REQUIRE(
-                                        prob.getHessian()
-                                        == leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaW));
+                                    REQUIRE_EQ(
+                                        prob.getHessian(),
+                                        leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaW));
                                 }
                             } else {
                                 Scaling<data_t> lambdaOp{dd, regWeight};
@@ -757,25 +795,26 @@ TEST_CASE_TEMPLATE("Scenario: Testing QuadricProblem", TestType, QuadricProblem<
                                     if (res.hasDataVector()) {
                                         b += regWeight * (scaleFactor * dc);
                                     }
-                                    REQUIRE(prob.getHessian()
-                                            == leaf(adjoint(dataScalingOp) * dataScalingOp
+                                    REQUIRE_EQ(prob.getHessian(),
+                                               leaf(adjoint(dataScalingOp) * dataScalingOp
                                                     + lambdaOp * adjoint(scalingOp) * scalingOp));
                                 } else {
                                     Ax += regWeight * x0;
                                     if (res.hasDataVector()) {
                                         b += regWeight * dc;
                                     }
-                                    REQUIRE(
-                                        prob.getHessian()
-                                        == leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaOp));
+                                    REQUIRE_EQ(
+                                        prob.getHessian(),
+                                        leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaOp));
                                 }
                             }
-                            REQUIRE(prob.evaluate() == Approx(0.5 * x0.dot(Ax) - x0.dot(b)));
+                            REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
+                                                        as<data_t>(0.5) * x0.dot(Ax) - x0.dot(b)));
 
                             auto gradient = prob.getGradient();
                             DataContainer gradientDirect = Ax - b;
                             for (index_t i = 0; i < gradient.getSize(); ++i)
-                                REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                                REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
                         }
                     }
                 }

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "elsaDefines.h"
 #include <tuple>
 #include <variant>
 #include <optional>
+
+#include "elsaDefines.h"
+#include "TypeCasts.hpp"
 #include "DataDescriptor.h"
 #include "ExpressionPredicates.h"
 #include "DataHandlerCPU.h"
@@ -37,20 +39,20 @@ namespace elsa
 
         if constexpr (GPU) {
 #ifdef ELSA_CUDA_VECTOR
-            if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(operand._dataHandler.get())) {
+            if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapGPU<data_t>*>(operand._dataHandler.get())) {
+                           downcast_safe<DataHandlerMapGPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else {
                 throw InternalError("Unknown handler type");
             }
 #endif
         } else {
-            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(operand._dataHandler.get())) {
+            if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapCPU<data_t>*>(operand._dataHandler.get())) {
+                           downcast_safe<DataHandlerMapCPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else {
                 throw InternalError("Unknown handler type");

@@ -32,7 +32,7 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing construction", data_t, float, doub
 
             THEN("the DataDescriptors are equal")
             {
-                REQUIRE(sThrOp.getRangeDescriptor() == volDescr);
+                REQUIRE_EQ(sThrOp.getRangeDescriptor(), volDescr);
             }
         }
 
@@ -43,8 +43,8 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing construction", data_t, float, doub
 
             THEN("cloned SoftThresholding operator equals original SoftThresholding operator")
             {
-                REQUIRE(sThrOpClone.get() != &sThrOp);
-                REQUIRE(*sThrOpClone == sThrOp);
+                REQUIRE_NE(sThrOpClone.get(), &sThrOp);
+                REQUIRE_EQ(*sThrOpClone, sThrOp);
             }
         }
     }
@@ -72,7 +72,8 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing in 1D", data_t, float, double)
                 expectedRes << 0, 0, 0, -3, 3, 4, 4, 0;
                 DataContainer<data_t> dCRes(sThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, sThrOp.apply(dataCont, geometry::Threshold<data_t>{4})));
+                REQUIRE_UNARY(
+                    isApprox(dCRes, sThrOp.apply(dataCont, geometry::Threshold<data_t>{4})));
             }
         }
     }
@@ -100,7 +101,8 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing in 3D", data_t, float, double)
                 expectedRes << 0, 0, 1, 1, 0, 0, 0, -4, 2, 2, 2, 0, 0, 0, 3, 4, 0, 0;
                 DataContainer<data_t> dCRes(sThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, sThrOp.apply(dataCont, geometry::Threshold<data_t>{5})));
+                REQUIRE_UNARY(
+                    isApprox(dCRes, sThrOp.apply(dataCont, geometry::Threshold<data_t>{5})));
             }
         }
     }
@@ -128,7 +130,8 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing general behaviour", data_t, float,
                 expectedRes << 0, 0, 0, 0, 0, 0, 0, 0;
                 DataContainer<data_t> dCRes(sThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, sThrOp.apply(dataCont, geometry::Threshold<data_t>{4})));
+                REQUIRE_UNARY(
+                    isApprox(dCRes, sThrOp.apply(dataCont, geometry::Threshold<data_t>{4})));
             }
 
             THEN("SoftThresholding operator throws exception for t = 0")

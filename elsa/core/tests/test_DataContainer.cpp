@@ -45,6 +45,12 @@ TYPE_TO_STRING(TestHelperCPU<index_t>);
 TYPE_TO_STRING(TestHelperCPU<std::complex<float>>);
 TYPE_TO_STRING(TestHelperCPU<std::complex<double>>);
 
+TYPE_TO_STRING(DataContainer<float>);
+TYPE_TO_STRING(DataContainer<double>);
+TYPE_TO_STRING(DataContainer<index_t>);
+TYPE_TO_STRING(DataContainer<std::complex<float>>);
+TYPE_TO_STRING(DataContainer<std::complex<double>>);
+
 #ifdef ELSA_CUDA_VECTOR
 using GPUTypeTuple =
     std::tuple<TestHelperGPU<float>, TestHelperGPU<double>, TestHelperGPU<std::complex<float>>,
@@ -666,7 +672,7 @@ TEST_CASE_TEMPLATE("DataContainer: Testing load data to GPU and vice versa", Tes
 }
 #endif
 
-SCENARIO("Testing iterators for DataContainer")
+TEST_CASE("DataContainer: Testing iterators for DataContainer")
 {
     GIVEN("A 1D container")
     {
@@ -835,6 +841,131 @@ SCENARIO("Testing iterators for DataContainer")
             REQUIRE_EQ(*std::min_element(dc1.cbegin(), dc1.cend()), randVec1.minCoeff());
             REQUIRE_EQ(*std::max_element(dc1.cbegin(), dc1.cend()), randVec1.maxCoeff());
         }
+    }
+}
+
+TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, float, double,
+                   std::complex<float>, std::complex<double>)
+{
+    GIVEN("Two equally sized 1D data containers")
+    {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(1);
+        numCoeff << size;
+        VolumeDescriptor desc(numCoeff);
+
+        Vector_t<data_t> randVec1 = Vector_t<data_t>::Random(size);
+        Vector_t<data_t> randVec2 = Vector_t<data_t>::Random(size);
+
+        DataContainer dc1(desc, randVec1);
+        DataContainer dc2(desc, randVec2);
+
+        auto concated = concatenate(dc1, dc2);
+        THEN("The size of the concatenated DataContainer is twice the original one")
+        {
+            REQUIRE_EQ(concated.getSize(), 2 * size);
+        }
+
+        THEN("The values correspond to the original DataContainers")
+        {
+            for (int i = 0; i < size; ++i) {
+                INFO("Error at position: ", i);
+                REQUIRE_EQ(concated[i], randVec1[i]);
+            }
+
+            for (int i = 0; i < size; ++i) {
+                INFO("Error at position: ", i + size);
+                REQUIRE_EQ(concated[i + size], randVec2[i]);
+            }
+        }
+    }
+
+    GIVEN("Two differently sized 1D data containers")
+    {
+        IndexVector_t numCoeff(1);
+
+        constexpr index_t size1 = 20;
+        numCoeff[0] = size1;
+        VolumeDescriptor desc1(numCoeff);
+
+        constexpr index_t size2 = 10;
+        numCoeff[0] = size2;
+        VolumeDescriptor desc2(numCoeff);
+
+        Vector_t<data_t> randVec1 = Vector_t<data_t>::Random(size1);
+        Vector_t<data_t> randVec2 = Vector_t<data_t>::Random(size2);
+
+        DataContainer dc1(desc1, randVec1);
+        DataContainer dc2(desc2, randVec2);
+
+        auto concated = concatenate(dc1, dc2);
+
+        THEN("The size of the concatenated DataContainer is twice the original one")
+        {
+            REQUIRE_EQ(concated.getSize(), size1 + size2);
+        }
+
+        THEN("The values correspond to the original DataContainers")
+        {
+            for (int i = 0; i < size1; ++i) {
+                INFO("Error at position: ", i);
+                REQUIRE_EQ(concated[i], randVec1[i]);
+            }
+
+            for (int i = 0; i < size2; ++i) {
+                INFO("Error at position: ", i + size1);
+                REQUIRE_EQ(concated[i + size1], randVec2[i]);
+            }
+        }
+    }
+
+    GIVEN("Two equally sized 2D data containers")
+    {
+        constexpr index_t size = 20;
+        IndexVector_t numCoeff(2);
+        numCoeff << size, size;
+        VolumeDescriptor desc(numCoeff);
+
+        Vector_t<data_t> randVec1 = Vector_t<data_t>::Random(size * size);
+        Vector_t<data_t> randVec2 = Vector_t<data_t>::Random(size * size);
+
+        DataContainer dc1(desc, randVec1);
+        DataContainer dc2(desc, randVec2);
+
+        auto concated = concatenate(dc1, dc2);
+        THEN("The size of the concatenated DataContainer is twice the original one")
+        {
+            REQUIRE_EQ(concated.getSize(), 2 * (size * size));
+        }
+
+        THEN("The values correspond to the original DataContainers")
+        {
+            for (int i = 0; i < size * size; ++i) {
+                INFO("Error at position: ", i);
+                REQUIRE_EQ(concated[i], randVec1[i]);
+            }
+
+            for (int i = 0; i < size * size; ++i) {
+                INFO("Error at position: ", i + size);
+                REQUIRE_EQ(concated[i + size * size], randVec2[i]);
+            }
+        }
+    }
+
+    GIVEN("DataContainers of different dimension")
+    {
+        IndexVector_t numCoeff1D(1);
+        numCoeff1D << 20;
+        VolumeDescriptor desc1D(numCoeff1D);
+
+        IndexVector_t numCoeff2D(2);
+        numCoeff2D << 20, 20;
+        VolumeDescriptor desc2D(numCoeff2D);
+
+        DataContainer dc1(desc1D);
+        DataContainer dc2(desc2D);
+
+        THEN("The concatenation throws") { REQUIRE_THROWS_AS(concatenate(dc1, dc2), LogicError); }
     }
 }
 

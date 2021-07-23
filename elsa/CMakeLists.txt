@@ -31,8 +31,9 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE "${ADD_MODULE_PRIVATE_DPES}")
     # require C++17
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
-    # set -fPIC
-    set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    # set -fPIC and -fvisibility=hidden
+    set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON
+                                                                CXX_VISIBILITY_PRESET hidden)
     
     target_include_directories(
         ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${elsa_module_name}>
@@ -52,6 +53,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     REGISTER_MODULE(${elsa_module_name})
 
     # install the module
+    # if INSTALL_DIR arg is set, recurse the whole directory
     if(${ADD_MODULE_INSTALL_DIR})
         install_elsa_module_dir(
             ${elsa_module_name} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/"

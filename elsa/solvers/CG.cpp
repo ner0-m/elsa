@@ -1,5 +1,6 @@
 #include "CG.h"
 #include "Logger.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -131,7 +132,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherCG = dynamic_cast<const CG*>(&other);
+        auto otherCG = downcast_safe<CG>(&other);
         if (!otherCG)
             return false;
 

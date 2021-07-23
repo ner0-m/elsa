@@ -3,6 +3,7 @@
 #include "SQS.h"
 #include "Logger.h"
 #include "SubsetProblem.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -10,7 +11,7 @@ namespace elsa
     SQS<data_t>::SQS(const Problem<data_t>& problem, bool momentumAcceleration, data_t epsilon)
         : Solver<data_t>(problem), _epsilon{epsilon}, _momentumAcceleration{momentumAcceleration}
     {
-        if (dynamic_cast<const SubsetProblem<data_t>*>(&problem)) {
+        if (is<SubsetProblem<data_t>>(problem)) {
             Logger::get("SQS")->info(
                 "SQS did received a SubsetProblem, running in ordered subset mode");
             _subsetMode = true;
@@ -27,7 +28,7 @@ namespace elsa
           _preconditioner{preconditioner.clone()},
           _momentumAcceleration{momentumAcceleration}
     {
-        if (dynamic_cast<const SubsetProblem<data_t>*>(&problem)) {
+        if (is<SubsetProblem<data_t>>(problem)) {
             Logger::get("SQS")->info(
                 "SQS did received a SubsetProblem, running in ordered subset mode");
             _subsetMode = true;
@@ -62,7 +63,7 @@ namespace elsa
 
         data_t prevT = 1;
         data_t t = 1;
-        data_t nextT;
+        data_t nextT = 0;
         auto& z = getCurrentSolution();
         DataContainer<data_t> x = DataContainer<data_t>(getCurrentSolution());
         DataContainer<data_t> prevX = x;
@@ -90,9 +91,8 @@ namespace elsa
 
                 // TODO: element wise relu
                 if (_momentumAcceleration) {
-                    nextT = static_cast<data_t>(1)
-                            + std::sqrt(static_cast<data_t>(1) + static_cast<data_t>(4) * t * t)
-                                  / static_cast<data_t>(2);
+                    nextT = as<data_t>(1)
+                            + std::sqrt(as<data_t>(1) + as<data_t>(4) * t * t) / as<data_t>(2);
 
                     x = z - nSubsets * diag.apply(gradient);
                     z = x + prevT / nextT * (x - prevX);
@@ -147,7 +147,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherSQS = dynamic_cast<const SQS*>(&other);
+        auto otherSQS = downcast_safe<SQS>(&other);
         if (!otherSQS)
             return false;
 

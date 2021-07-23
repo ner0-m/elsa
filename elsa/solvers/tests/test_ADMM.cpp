@@ -23,7 +23,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("solvers");
 
-TEST_CASE("ADMM: Solving problems")
+TEST_CASE_TEMPLATE("ADMM: Solving problems", data_t, float, double)
 {
     Logger::setLevel(Logger::LogLevel::OFF);
 
@@ -33,48 +33,51 @@ TEST_CASE("ADMM: Solving problems")
         numCoeff << 21, 11;
         VolumeDescriptor volDescr(numCoeff);
 
-        Eigen::Matrix<real_t, Eigen::Dynamic, 1> bVec(volDescr.getNumberOfCoefficients());
+        Vector_t<data_t> bVec(volDescr.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer<real_t> dcB(volDescr, bVec);
+        DataContainer<data_t> dcB(volDescr, bVec);
 
-        Identity<real_t> idOp(volDescr);
-        Scaling<real_t> negativeIdOp(volDescr, -1);
-        DataContainer<real_t> dCC(volDescr);
+        Identity<data_t> idOp(volDescr);
+        Scaling<data_t> negativeIdOp(volDescr, -1);
+        DataContainer<data_t> dCC(volDescr);
         dCC = 0;
 
-        WLSProblem<real_t> wlsProb(idOp, dcB);
+        WLSProblem<data_t> wlsProb(idOp, dcB);
 
-        Constraint<real_t> constraint(idOp, negativeIdOp, dCC);
+        Constraint<data_t> constraint(idOp, negativeIdOp, dCC);
 
         WHEN("setting up ADMM and FISTA to solve a LASSOProblem")
         {
-            L1Norm<real_t> regFunc(volDescr);
-            RegularizationTerm<real_t> regTerm(0.000001f, regFunc);
+            L1Norm<data_t> regFunc(volDescr);
+            RegularizationTerm<data_t> regTerm(0.000001f, regFunc);
 
-            SplittingProblem<real_t> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
+            SplittingProblem<data_t> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, SoftThresholding> admm(splittingProblem);
+            ADMM<CG, SoftThresholding, data_t> admm(splittingProblem);
 
-            LASSOProblem<real_t> lassoProb(wlsProb, regTerm);
-            FISTA<real_t> fista(lassoProb);
+            LASSOProblem<data_t> lassoProb(wlsProb, regTerm);
+            FISTA<data_t> fista(lassoProb);
 
-            THEN("the solutions match") { REQUIRE(isApprox(admm.solve(200), fista.solve(200))); }
+            THEN("the solutions match")
+            {
+                REQUIRE_UNARY(isApprox(admm.solve(100), fista.solve(100)));
+            }
         }
 
         WHEN("setting up ADMM to solve a WLSProblem + L0PseudoNorm")
         {
-            L0PseudoNorm<real_t> regFunc(volDescr);
-            RegularizationTerm<real_t> regTerm(0.000001f, regFunc);
+            L0PseudoNorm<data_t> regFunc(volDescr);
+            RegularizationTerm<data_t> regTerm(0.000001f, regFunc);
 
-            SplittingProblem<real_t> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
+            SplittingProblem<data_t> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, HardThresholding> admm(splittingProblem);
+            ADMM<CG, HardThresholding, data_t> admm(splittingProblem);
 
             THEN("the solution doesn't throw, is not nan and is approximate to the b vector")
             {
-                REQUIRE_NOTHROW(admm.solve(200));
-                REQUIRE(!std::isnan(admm.solve(200).squaredL2Norm()));
-                REQUIRE(isApprox(admm.solve(200), dcB));
+                REQUIRE_NOTHROW(admm.solve(10));
+                REQUIRE_UNARY(!std::isnan(admm.solve(20).squaredL2Norm()));
+                REQUIRE_UNARY(isApprox(admm.solve(20), dcB));
             }
         }
     }

@@ -5,12 +5,12 @@ MAINTAINER David Frank <frankd@in.tum.de>
 LABEL Description="Image only containing clang-format" 
  
 ARG CLANG_FORMAT_VERSION=10 
-RUN apt update && apt upgrade -qqy && apt install git clang-format-${CLANG_FORMAT_VERSION} -qqy \
-  && rm -rf /var/lib/apt/lists/* 
+RUN apt update && apt upgrade -qqy && apt install git clang-format-${CLANG_FORMAT_VERSION} python3-pip -qqy \
+  && pip install cmakelang && rm -rf /var/lib/apt/lists/* 
  
 # Append llvm directory to path, that we can use clang-format instead of clang-format-<some-version> 
 ENV PATH="$PATH:/usr/lib/llvm-${CLANG_FORMAT_VERSION}/bin/"
-  
+
 # Add Test script 
 ADD tests/test_clang-format.sh /tmp/tests/test_clang-format.sh
  

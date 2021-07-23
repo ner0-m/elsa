@@ -15,7 +15,7 @@ using namespace doctest;
 
 RealVector_t get2dModifiedSheppLogan45x45();
 
-SCENARIO("Drawing a 2d Shepp-Logan phantom")
+TEST_CASE("PhantomGenerator: Drawing a 2d Shepp-Logan phantom")
 {
     GIVEN("a volume size")
     {
@@ -34,7 +34,7 @@ SCENARIO("Drawing a 2d Shepp-Logan phantom")
     }
 }
 
-SCENARIO("Drawing a 3d Shepp-Logan phantom")
+TEST_CASE("PhantomGenerator: Drawing a 3d Shepp-Logan phantom")
 {
     GIVEN("a volume size")
     {

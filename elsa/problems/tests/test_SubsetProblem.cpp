@@ -15,7 +15,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("problems");
 
-TEST_CASE_TEMPLATE("Scenario: Testing SubsetProblem", data_t, float, double)
+TEST_CASE_TEMPLATE("SubsetProblem: Empty test", data_t, float, double)
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);

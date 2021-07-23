@@ -10,6 +10,7 @@ set(MODULE_HEADERS
     SubsetProblem.h
     WLSSubsetProblem.h
     JacobiPreconditioner.h
+    RepresentationProblem.h
 )
 
 # list all the code files of the module
@@ -24,6 +25,7 @@ set(MODULE_SOURCES
     SubsetProblem.cpp
     WLSSubsetProblem.cpp
     JacobiPreconditioner.cpp
+    RepresentationProblem.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators elsa_functionals)

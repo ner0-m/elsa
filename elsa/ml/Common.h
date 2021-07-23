@@ -3,17 +3,12 @@
 #include <string>
 
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
     namespace ml
     {
-        template <typename T>
-        auto asIndex(const T& v)
-        {
-            return std::make_unsigned_t<T>(v);
-        }
-
         /// Initializer that can be used to initialize trainable parameters in a network layer
         enum class Initializer {
             /**
@@ -205,25 +200,6 @@ namespace elsa
             std::string getEnumMemberAsString(Initializer);
             std::string getEnumMemberAsString(MlBackend);
             std::string getEnumMemberAsString(PropagationKind);
-
-            template <typename Derived, typename Base, typename Del>
-            static std::unique_ptr<Derived, Del>
-                static_unique_ptr_cast(std::unique_ptr<Base, Del>&& p)
-            {
-                auto d = static_cast<Derived*>(p.release());
-                return std::unique_ptr<Derived, Del>(d, std::move(p.get_deleter()));
-            }
-
-            template <typename Derived, typename Base, typename Del>
-            static std::unique_ptr<Derived, Del>
-                dynamic_unique_ptr_cast(std::unique_ptr<Base, Del>&& p)
-            {
-                if (Derived* result = dynamic_cast<Derived*>(p.get())) {
-                    p.release();
-                    return std::unique_ptr<Derived, Del>(result, std::move(p.get_deleter()));
-                }
-                return std::unique_ptr<Derived, Del>(nullptr, p.get_deleter());
-            }
         } // namespace detail
     }     // namespace ml
 } // namespace elsa

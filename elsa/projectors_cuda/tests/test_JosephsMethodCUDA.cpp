@@ -25,7 +25,7 @@ using doctest::Approx;
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
+TEST_CASE_TEMPLATE("JosephsMethodCUDA: Calls to functions of super class", TestType,
                    JosephsMethodCUDA<float>, JosephsMethodCUDA<double>)
 {
     // Turn logger of
@@ -35,9 +35,9 @@ TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
     GIVEN("A projector")
     {
         IndexVector_t volumeDims(2), sinoDims(2);
-        const index_t volSize = 50;
-        const index_t detectorSize = 50;
-        const index_t numImgs = 50;
+        const index_t volSize = 10;
+        const index_t detectorSize = 10;
+        const index_t numImgs = 10;
         volumeDims << volSize, volSize;
         sinoDims << detectorSize, numImgs;
         VolumeDescriptor volumeDescriptor(volumeDims);
@@ -49,7 +49,7 @@ TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
 
         std::vector<Geometry> geom;
         for (index_t i = 0; i < numImgs; i++) {
-            real_t angle = static_cast<real_t>(i) * 2 * pi_t / 50;
+            real_t angle = static_cast<real_t>(i) * 2 * pi_t / 10;
             geom.emplace_back(stc, ctr, Radian{angle}, VolumeData2D{Size2D{volumeDims}},
                               SinogramData2D{Size2D{sinoDims}});
         }
@@ -75,24 +75,24 @@ TEST_CASE_TEMPLATE("Scenario: Calls to functions of super class", TestType,
             {
                 fast.apply(volume, sino);
                 fastClone->apply(volume, sinoClone);
-                REQUIRE(isApprox(sino, sinoClone));
+                REQUIRE_UNARY(isCwiseApprox(sino, sinoClone));
 
                 slowClone->apply(volume, sinoClone);
-                REQUIRE(isApprox(sino, sinoClone));
+                REQUIRE_UNARY(isCwiseApprox(sino, sinoClone));
 
                 fast.applyAdjoint(sino, volume);
                 fastClone->applyAdjoint(sino, volumeClone);
-                REQUIRE(isApprox(volume, volumeClone));
+                REQUIRE_UNARY(isCwiseApprox(volume, volumeClone));
 
                 slow.applyAdjoint(sino, volume);
                 slowClone->applyAdjoint(sino, volumeClone);
-                REQUIRE(isApprox(volume, volumeClone));
+                REQUIRE_UNARY(isCwiseApprox(volume, volumeClone));
             }
         }
     }
 }
 
-TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
+TEST_CASE_TEMPLATE("JosephsMethodCUDA: 2D setup with a single ray", TestType,
                    JosephsMethodCUDA<float>, JosephsMethodCUDA<double>)
 {
     // Turn logger of
@@ -147,11 +147,11 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     sino = 1;
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
                 }
             }
 
@@ -166,16 +166,16 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.applyAdjoint(sino, volume);
                     DataContainer<data_t> zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(volume, zero));
+                    REQUIRE_UNARY(isCwiseApprox(volume, zero));
 
                     volume = 1;
                     slow.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, zero));
+                    REQUIRE_UNARY(isCwiseApprox(volume, zero));
                 }
             }
         }
 
-        GIVEN("Scenario: Rays not intersecting the bounding box are present")
+        GIVEN("Rays not intersecting the bounding box are present")
         {
             WHEN("Tracing along a y-axis-aligned ray with a negative x-coordinate of origin")
             {
@@ -193,20 +193,20 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("Result of backprojection is zero")
                     {
                         fast.applyAdjoint(sino, volume);
                         DataContainer<data_t> zero(volumeDescriptor);
                         zero = 0;
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isCwiseApprox(volume, zero));
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isCwiseApprox(volume, zero));
                     }
                 }
             }
@@ -230,10 +230,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     zero = 0;
 
                     fast.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("Result of backprojection is zero")
                     {
@@ -241,10 +241,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         zero = 0;
 
                         fast.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isCwiseApprox(volume, zero));
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isCwiseApprox(volume, zero));
                     }
                 }
             }
@@ -267,10 +267,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     zero = 0;
 
                     fast.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("Result of backprojection is zero")
                     {
@@ -278,10 +278,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         zero = 0;
 
                         fast.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isCwiseApprox(volume, zero));
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isCwiseApprox(volume, zero));
                     }
                 }
             }
@@ -306,10 +306,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     zero = 0;
 
                     fast.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("Result of backprojection is zero")
                     {
@@ -317,10 +317,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         zero = 0;
 
                         fast.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isCwiseApprox(volume, zero));
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, zero));
+                        REQUIRE_UNARY(isCwiseApprox(volume, zero));
                     }
                 }
             }
@@ -376,16 +376,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                             //
                             //  => different requirements for floats and doubles, looser
                             // requirements for doubles
-                            if constexpr (std::is_same_v<data_t, float>)
-                                REQUIRE(sino[0] == 1);
-                            else
-                                REQUIRE(sino[0] == Approx(1.0));
+                            REQUIRE_EQ(sino[0], Approx(1.0));
 
                             slow.apply(volume, sino);
-                            if constexpr (std::is_same_v<data_t, float>)
-                                REQUIRE(sino[0] == 1);
-                            else
-                                REQUIRE(sino[0] == Approx(1.0));
+                            REQUIRE_EQ(sino[0], Approx(1.0));
                         }
 
                         AND_THEN(
@@ -393,14 +387,14 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                             "value")
                         {
                             fast.applyAdjoint(sino, volume);
-                            REQUIRE(
-                                isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i % 2])));
+                            REQUIRE_UNARY(isCwiseApprox(
+                                volume,
+                                DataContainer<data_t>(volumeDescriptor, backProjections[i % 2])));
 
                             slow.applyAdjoint(sino, volume);
-                            REQUIRE(
-                                isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i % 2])));
+                            REQUIRE_UNARY(isCwiseApprox(
+                                volume,
+                                DataContainer<data_t>(volumeDescriptor, backProjections[i % 2])));
                         }
                     }
                 }
@@ -449,10 +443,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                 volume(j, volSize / 2) = 1;
 
                             fast.apply(volume, sino);
-                            REQUIRE(sino[0] == Approx(0.75));
+                            REQUIRE_EQ(sino[0], Approx(0.75));
 
                             slow.apply(volume, sino);
-                            REQUIRE(sino[0] == Approx(0.75));
+                            REQUIRE_EQ(sino[0], Approx(0.75));
                         }
 
                         AND_THEN("The slow backprojection yields the exact adjoint, the fast "
@@ -461,9 +455,9 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         {
                             sino[0] = 1;
                             slow.applyAdjoint(sino, volume);
-                            REQUIRE(
-                                isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i % 2])));
+                            REQUIRE_UNARY(isCwiseApprox(
+                                volume,
+                                DataContainer<data_t>(volumeDescriptor, backProjections[i % 2])));
 
                             fast.applyAdjoint(sino, volume);
 
@@ -479,11 +473,11 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                             //  requirements
                             // for doubles
                             if constexpr (std::is_same_v<data_t, float>)
-                                REQUIRE(isApprox(volume,
-                                                 DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i % 2])));
+                                REQUIRE_UNARY(isCwiseApprox(
+                                    volume, DataContainer<data_t>(volumeDescriptor,
+                                                                  backProjections[i % 2])));
                             else
-                                REQUIRE(isApprox(
+                                REQUIRE_UNARY(isApprox(
                                     volume,
                                     DataContainer<data_t>(volumeDescriptor, backProjections[i % 2]),
                                     static_cast<real_t>(0.001)));
@@ -518,10 +512,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         volume(volSize - 1, j) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0] == 1);
+                        REQUIRE_EQ(sino[0], Approx(1));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0] == 1);
+                        REQUIRE_EQ(sino[0], Approx(1));
                     }
 
                     AND_THEN(
@@ -530,7 +524,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     {
                         sino[0] = 1;
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(
+                        REQUIRE_UNARY(isCwiseApprox(
                             volume, DataContainer<data_t>(volumeDescriptor, backProjections[0])));
 
                         fast.applyAdjoint(sino, volume);
@@ -544,14 +538,15 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         //  => different requirements for floats and doubles, looser requirements
                         // for doubles
                         if constexpr (std::is_same_v<data_t, float>)
-                            REQUIRE(isApprox(
+                            REQUIRE_UNARY(isCwiseApprox(
                                 volume, DataContainer<data_t>(volumeDescriptor,
                                                               (backProjections[0] / 2).eval())));
                         else
-                            REQUIRE(isApprox(volume,
-                                             DataContainer<data_t>(volumeDescriptor,
-                                                                   (backProjections[0] / 2).eval()),
-                                             static_cast<real_t>(0.001)));
+                            REQUIRE_UNARY(
+                                isApprox(volume,
+                                         DataContainer<data_t>(volumeDescriptor,
+                                                               (backProjections[0] / 2).eval()),
+                                         static_cast<real_t>(0.001)));
                     }
                 }
             }
@@ -584,10 +579,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         volume(0, j) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0] == 1);
+                        REQUIRE_EQ(sino[0], Approx(1));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0] == 1);
+                        REQUIRE_EQ(sino[0], Approx(1));
                     }
 
                     AND_THEN(
@@ -596,7 +591,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     {
                         sino[0] = 1;
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(
+                        REQUIRE_UNARY(isCwiseApprox(
                             volume, DataContainer<data_t>(volumeDescriptor, backProjections[0])));
 
                         fast.applyAdjoint(sino, volume);
@@ -611,14 +606,15 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                          * for doubles
                          */
                         if constexpr (std::is_same_v<data_t, float>)
-                            REQUIRE(isApprox(
+                            REQUIRE_UNARY(isCwiseApprox(
                                 volume, DataContainer<data_t>(volumeDescriptor,
                                                               (backProjections[0] / 2).eval())));
                         else
-                            REQUIRE(isApprox(volume,
-                                             DataContainer<data_t>(volumeDescriptor,
-                                                                   (backProjections[0] / 2).eval()),
-                                             static_cast<real_t>(0.001)));
+                            REQUIRE_UNARY(
+                                isApprox(volume,
+                                         DataContainer<data_t>(volumeDescriptor,
+                                                               (backProjections[0] / 2).eval()),
+                                         static_cast<real_t>(0.001)));
                     }
                 }
             }
@@ -689,10 +685,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -702,10 +698,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         volume(1, 3) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(2 * weight));
+                        REQUIRE_EQ(sino[0], Approx(2 * weight));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(2 * weight));
+                        REQUIRE_EQ(sino[0], Approx(2 * weight));
 
                         sino[0] = 1;
 
@@ -717,8 +713,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
 
                         slowExpected *= weight;
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, slowExpected)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, slowExpected)));
 
                         fast.applyAdjoint(sino, volume);
                         for (real_t i = 0.5; i < volSize; i += 1) {
@@ -731,10 +727,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                              - pi_t / 3);
                                 const real_t len = volSize * 21 * std::tan(angle);
                                 if (len < 1) {
-                                    REQUIRE(volume((index_t) i, (index_t) j)
-                                            == Approx(1 - len).epsilon(0.005));
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j),
+                                               Approx(1 - len).epsilon(0.005));
                                 } else {
-                                    REQUIRE(volume((index_t) i, (index_t) j) == 0);
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j), Approx(0));
                                 }
                             }
                         }
@@ -772,10 +768,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -784,16 +780,14 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         volume(2, 3) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0]
-                                == Approx((4 - 2 * sqrt3d) * (sqrt3d - 1)
-                                          + (2 / sqrt3d) * (3 - 8 * sqrt3d / 6))
-                                       .epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx((4 - 2 * sqrt3d) * (sqrt3d - 1)
+                                                   + (2 / sqrt3d) * (3 - 8 * sqrt3d / 6))
+                                                .epsilon(0.005));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0]
-                                == Approx((4 - 2 * sqrt3d) * (sqrt3d - 1)
-                                          + (2 / sqrt3d) * (3 - 8 * sqrt3d / 6))
-                                       .epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx((4 - 2 * sqrt3d) * (sqrt3d - 1)
+                                                   + (2 / sqrt3d) * (3 - 8 * sqrt3d / 6))
+                                                .epsilon(0.005));
 
                         sino[0] = 1;
 
@@ -806,8 +800,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                             (2 / sqrt3d) * (sqrt3d / 2 - halfd);
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, slowExpected)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, slowExpected)));
 
                         fast.applyAdjoint(sino, volume);
                         for (real_t i = 0.5; i < volSize; i += 1) {
@@ -817,10 +811,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                              - pi_t / 3);
                                 const real_t len = 84 * std::tan(angle);
                                 if (len < 1) {
-                                    REQUIRE(volume((index_t) i, (index_t) j)
-                                            == Approx(1 - len).epsilon(0.01));
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j),
+                                               Approx(1 - len).epsilon(0.01));
                                 } else {
-                                    REQUIRE(volume((index_t) i, (index_t) j) == 0);
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j), Approx(0));
                                 }
                             }
                         }
@@ -855,10 +849,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -866,16 +860,14 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         volume(0, 1) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0]
-                                == Approx((sqrt3d - 1) + (5.0 / 3.0 - 1 / sqrt3d)
-                                          + (4 - 2 * sqrt3d) * (2 - sqrt3d))
-                                       .epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx((sqrt3d - 1) + (5.0 / 3.0 - 1 / sqrt3d)
+                                                   + (4 - 2 * sqrt3d) * (2 - sqrt3d))
+                                                .epsilon(0.005));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0]
-                                == Approx((sqrt3d - 1) + (5.0 / 3.0 - 1 / sqrt3d)
-                                          + (4 - 2 * sqrt3d) * (2 - sqrt3d))
-                                       .epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx((sqrt3d - 1) + (5.0 / 3.0 - 1 / sqrt3d)
+                                                   + (4 - 2 * sqrt3d) * (2 - sqrt3d))
+                                                .epsilon(0.005));
 
                         sino[0] = 1;
 
@@ -886,8 +878,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                             0, 0, 0;
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, slowExpected)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, slowExpected)));
 
                         fast.applyAdjoint(sino, volume);
 
@@ -899,10 +891,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                 const real_t len = 84 * std::tan(angle);
 
                                 if (len < 1) {
-                                    REQUIRE(volume((index_t) i, (index_t) j)
-                                            == Approx(1 - len).epsilon(0.002));
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j),
+                                               Approx(1 - len).epsilon(0.002));
                                 } else {
-                                    REQUIRE(volume((index_t) i, (index_t) j) == 0);
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j), Approx(0));
                                 }
                             }
                         }
@@ -932,20 +924,20 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("The correct weighting is applied")
                     {
                         volume(0, 0) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(1 / sqrt3d).epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx(1 / sqrt3d).epsilon(0.005));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(1 / sqrt3d).epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx(1 / sqrt3d).epsilon(0.005));
 
                         sino[0] = 1;
 
@@ -953,8 +945,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         slowExpected << 1 / sqrt3d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, slowExpected)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, slowExpected)));
 
                         fast.applyAdjoint(sino, volume);
 
@@ -966,10 +958,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                 const real_t len = 84 * std::tan(angle);
 
                                 if (len < 1) {
-                                    REQUIRE(volume((index_t) i, (index_t) j)
-                                            == Approx(1 - len).epsilon(0.002));
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j),
+                                               Approx(1 - len).epsilon(0.002));
                                 } else {
-                                    REQUIRE(volume((index_t) i, (index_t) j) == 0);
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j), Approx(0));
                                 }
                             }
                         }
@@ -1014,10 +1006,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1027,10 +1019,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         volume(2, 1) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(2 * weight));
+                        REQUIRE_EQ(sino[0], Approx(2 * weight));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(2 * weight));
+                        REQUIRE_EQ(sino[0], Approx(2 * weight));
 
                         sino[0] = 1;
 
@@ -1043,8 +1035,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
 
                         slowExpected *= weight;
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, slowExpected)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, slowExpected)));
 
                         fast.applyAdjoint(sino, volume);
                         for (real_t i = 0.5; i < volSize; i += 1) {
@@ -1053,10 +1045,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                     std::atan((sqrt3r * 40 + 2 - i) / (42 - j)) - pi_t / 3);
                                 const real_t len = volSize * 21 * std::tan(angle);
                                 if (len < 1) {
-                                    REQUIRE(volume((index_t) i, (index_t) j)
-                                            == Approx(1 - len).epsilon(0.005));
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j),
+                                               Approx(1 - len).epsilon(0.005));
                                 } else {
-                                    REQUIRE(volume((index_t) i, (index_t) j) == 0);
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j), Approx(0));
                                 }
                             }
                         }
@@ -1090,10 +1082,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1102,10 +1094,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         volume(1, 3) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx((4 - 2 * sqrt3d) + (2 / sqrt3d)));
+                        REQUIRE_EQ(sino[0], Approx((4 - 2 * sqrt3d) + (2 / sqrt3d)));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx((4 - 2 * sqrt3d) + (2 / sqrt3d)));
+                        REQUIRE_EQ(sino[0], Approx((4 - 2 * sqrt3d) + (2 / sqrt3d)));
 
                         sino[0] = 1;
 
@@ -1120,8 +1112,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                             (4 - 2 * sqrt3d) * (sqrt3d - 1), 0;
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, slowExpected)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, slowExpected)));
 
                         fast.applyAdjoint(sino, volume);
                         for (real_t i = 0.5; i < volSize; i += 1) {
@@ -1131,10 +1123,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                              - pi_t / 3);
                                 const real_t len = volSize * 21 * std::tan(angle);
                                 if (len < 1) {
-                                    REQUIRE(volume((index_t) i, (index_t) j)
-                                            == Approx(1 - len).epsilon(0.01));
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j),
+                                               Approx(1 - len).epsilon(0.01));
                                 } else {
-                                    REQUIRE(volume((index_t) i, (index_t) j) == 0);
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j), Approx(0));
                                 }
                             }
                         }
@@ -1169,10 +1161,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1180,16 +1172,14 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         volume(3, 1) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0]
-                                == Approx((sqrt3d - 1) + (5.0 / 3.0 - 1 / sqrt3d)
-                                          + (4 - 2 * sqrt3d) * (2 - sqrt3d))
-                                       .epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx((sqrt3d - 1) + (5.0 / 3.0 - 1 / sqrt3d)
+                                                   + (4 - 2 * sqrt3d) * (2 - sqrt3d))
+                                                .epsilon(0.005));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0]
-                                == Approx((sqrt3d - 1) + (5.0 / 3.0 - 1 / sqrt3d)
-                                          + (4 - 2 * sqrt3d) * (2 - sqrt3d))
-                                       .epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx((sqrt3d - 1) + (5.0 / 3.0 - 1 / sqrt3d)
+                                                   + (4 - 2 * sqrt3d) * (2 - sqrt3d))
+                                                .epsilon(0.005));
 
                         sino[0] = 1;
 
@@ -1201,8 +1191,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                             0, 0;
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, slowExpected)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, slowExpected)));
 
                         fast.applyAdjoint(sino, volume);
 
@@ -1214,10 +1204,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                 const real_t len = 84 * std::tan(angle);
 
                                 if (len < 1) {
-                                    REQUIRE(volume((index_t) i, (index_t) j)
-                                            == Approx(1 - len).epsilon(0.002));
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j),
+                                               Approx(1 - len).epsilon(0.002));
                                 } else {
-                                    REQUIRE(volume((index_t) i, (index_t) j) == 0);
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j), Approx(0));
                                 }
                             }
                         }
@@ -1248,20 +1238,20 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     AND_THEN("The correct weighting is applied")
                     {
                         volume(3, 0) = 1;
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(1 / sqrt3d).epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx(1 / sqrt3d).epsilon(0.005));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(1 / sqrt3d).epsilon(0.005));
+                        REQUIRE_EQ(sino[0], Approx(1 / sqrt3d).epsilon(0.005));
 
                         sino[0] = 1;
 
@@ -1269,8 +1259,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                         slowExpected << 0, 0, 0, 1 / sqrt3d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume,
-                                         DataContainer<data_t>(volumeDescriptor, slowExpected)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, slowExpected)));
 
                         fast.applyAdjoint(sino, volume);
 
@@ -1282,10 +1272,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
                                 const real_t len = 84 * std::tan(angle);
 
                                 if (len < 1) {
-                                    REQUIRE(volume((index_t) i, (index_t) j)
-                                            == Approx(1 - len).epsilon(0.002));
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j),
+                                               Approx(1 - len).epsilon(0.002));
                                 } else {
-                                    REQUIRE(volume((index_t) i, (index_t) j) == 0);
+                                    REQUIRE_EQ(volume((index_t) i, (index_t) j), Approx(0));
                                 }
                             }
                         }
@@ -1296,7 +1286,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a single ray", TestType,
     }
 }
 
-TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a multiple rays", TestType,
+TEST_CASE_TEMPLATE("JosephsMethodCUDA: 2D setup with a multiple rays", TestType,
                    JosephsMethodCUDA<float>, JosephsMethodCUDA<double>)
 {
     // Turn logger of
@@ -1361,11 +1351,11 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a multiple rays", TestType,
 
                 slow.apply(volume, sino);
                 for (index_t i = 0; i < numImgs; i++)
-                    REQUIRE(sino[i] == Approx(5.0));
+                    REQUIRE_EQ(sino[i], Approx(5.0));
 
                 fast.apply(volume, sino);
                 for (index_t i = 0; i < numImgs; i++)
-                    REQUIRE(sino[i] == Approx(5.0));
+                    REQUIRE_EQ(sino[i], Approx(5.0));
 
                 AND_THEN("Both fast and slow backprojections yield the exact adjoint")
                 {
@@ -1375,16 +1365,18 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 2D setup with a multiple rays", TestType,
                         10, 0, 0;
 
                     slow.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
+                    REQUIRE_UNARY(
+                        isCwiseApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
 
                     fast.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
+                    REQUIRE_UNARY(
+                        isCwiseApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
                 }
             }
         }
     }
 }
-TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
+TEST_CASE_TEMPLATE("JosephsMethodCUDA: 3D setup with a single ray", TestType,
                    JosephsMethodCUDA<float>, JosephsMethodCUDA<double>)
 {
     // Turn logger of
@@ -1442,11 +1434,11 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                     fast.apply(volume, sino);
                     DataContainer<data_t> zero(sinoDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                     sino = 1;
                     slow.apply(volume, sino);
-                    REQUIRE(isApprox(sino, zero));
+                    REQUIRE_UNARY(isCwiseApprox(sino, zero));
                 }
             }
 
@@ -1461,11 +1453,11 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                     fast.applyAdjoint(sino, volume);
                     DataContainer<data_t> zero(volumeDescriptor);
                     zero = 0;
-                    REQUIRE(isApprox(volume, zero));
+                    REQUIRE_UNARY(isCwiseApprox(volume, zero));
 
                     volume = 1;
                     slow.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, zero));
+                    REQUIRE_UNARY(isCwiseApprox(volume, zero));
                 }
             }
         }
@@ -1528,28 +1520,24 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         // accuracy.
                         //  => different requirements for floats and doubles, looser requirements
                         // for doubles
-                        if constexpr (std::is_same_v<data_t, float>)
-                            REQUIRE(sino[0] == 1);
-                        else
-                            REQUIRE(sino[0] == Approx(1.0));
+                        REQUIRE_EQ(sino[0], Approx(1.0));
 
                         slow.apply(volume, sino);
-                        if constexpr (std::is_same_v<data_t, float>)
-                            REQUIRE(sino[0] == 1);
-                        else
-                            REQUIRE(sino[0] == Approx(1.0));
+                        REQUIRE_EQ(sino[0], Approx(1.0));
                     }
 
                     AND_THEN("The backprojection sets the values of all hit voxels to the detector "
                              "value")
                     {
                         fast.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i / 2])));
+                        REQUIRE_UNARY(
+                            isCwiseApprox(volume, DataContainer<data_t>(volumeDescriptor,
+                                                                        backProjections[i / 2])));
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i / 2])));
+                        REQUIRE_UNARY(
+                            isCwiseApprox(volume, DataContainer<data_t>(volumeDescriptor,
+                                                                        backProjections[i / 2])));
                     }
                 }
             }
@@ -1616,16 +1604,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         //  => different requirements for floats and doubles, looser requirements
                         // for doubles
 
-                        if constexpr (std::is_same_v<data_t, float>)
-                            REQUIRE(sino[0] == 0.75);
-                        else
-                            REQUIRE(sino[0] == Approx(0.75));
+                        REQUIRE_EQ(sino[0], Approx(0.75));
 
                         slow.apply(volume, sino);
-                        if constexpr (std::is_same_v<data_t, float>)
-                            REQUIRE(sino[0] == 0.75);
-                        else
-                            REQUIRE(sino[0] == Approx(0.75));
+                        REQUIRE_EQ(sino[0], Approx(0.75));
                     }
 
                     AND_THEN("The slow backprojection yields the exact adjoint, the fast "
@@ -1643,18 +1625,19 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         //  => different requirements for floats and doubles, looser requirements
                         // for doubles
                         if constexpr (std::is_same_v<data_t, float>)
-                            REQUIRE(
-                                isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i / 2])));
+                            REQUIRE_UNARY(isCwiseApprox(
+                                volume,
+                                DataContainer<data_t>(volumeDescriptor, backProjections[i / 2])));
                         else
-                            REQUIRE(isApprox(
+                            REQUIRE_UNARY(isApprox(
                                 volume,
                                 DataContainer<data_t>(volumeDescriptor, backProjections[i / 2]),
                                 static_cast<real_t>(0.005)));
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor,
-                                                                       backProjections[i / 2])));
+                        REQUIRE_UNARY(
+                            isCwiseApprox(volume, DataContainer<data_t>(volumeDescriptor,
+                                                                        backProjections[i / 2])));
                     }
                 }
             }
@@ -1753,10 +1736,10 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         }
 
                         fast.apply(volume, sino);
-                        REQUIRE(sino[0] == 1);
+                        REQUIRE_EQ(sino[0], Approx(1));
 
                         slow.apply(volume, sino);
-                        REQUIRE(sino[0] == 1);
+                        REQUIRE_EQ(sino[0], Approx(1));
                     }
 
                     AND_THEN("The slow backprojection yields the exact adjoint, the fast "
@@ -1775,19 +1758,20 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         //  => different requirements for floats and doubles, looser requirements
                         // for doubles
                         if constexpr (std::is_same_v<data_t, float>)
-                            REQUIRE(isApprox(volume,
-                                             DataContainer<data_t>(
-                                                 volumeDescriptor,
-                                                 (backProjections[i] / (i > 3 ? 4 : 2)).eval())));
+                            REQUIRE_UNARY(isCwiseApprox(
+                                volume, DataContainer<data_t>(
+                                            volumeDescriptor,
+                                            (backProjections[i] / (i > 3 ? 4 : 2)).eval())));
                         else
-                            REQUIRE(isApprox(volume,
-                                             DataContainer<data_t>(
-                                                 volumeDescriptor,
-                                                 (backProjections[i] / (i > 3 ? 4 : 2)).eval()),
-                                             static_cast<real_t>(0.005)));
+                            REQUIRE_UNARY(
+                                isApprox(volume,
+                                         DataContainer<data_t>(
+                                             volumeDescriptor,
+                                             (backProjections[i] / (i > 3 ? 4 : 2)).eval()),
+                                         static_cast<real_t>(0.005)));
 
                         slow.applyAdjoint(sino, volume);
-                        REQUIRE(isApprox(
+                        REQUIRE_UNARY(isCwiseApprox(
                             volume, DataContainer<data_t>(volumeDescriptor, backProjections[i])));
                     }
                 }
@@ -1824,7 +1808,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                     volume(1, 1, 2) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
+                    REQUIRE_EQ(sino[0], Approx(0).epsilon(1e-5));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1833,7 +1817,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         volume(1, 1, 2) = 2;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(6 / sqrt3d + 2.0 / 3).epsilon(0.001));
+                        REQUIRE_EQ(sino[0], Approx(6 / sqrt3d + 2.0 / 3).epsilon(0.001));
 
                         sino[0] = 1;
                         // clang-format off
@@ -1843,8 +1827,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(
-                            isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, backProj)));
                     }
                 }
             }
@@ -1870,7 +1854,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                     volume(1, 1, 2) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
+                    REQUIRE_EQ(sino[0], Approx(0).epsilon(1e-5));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1879,10 +1863,9 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         volume(2, 1, 1) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(
-                            sino[0]
-                            == Approx((sqrt3d + 1) * (1 - 1 / sqrt3d) + 3 - sqrt3d / 2 + 2 / sqrt3d)
-                                   .epsilon(0.001));
+                        REQUIRE_EQ(sino[0], Approx((sqrt3d + 1) * (1 - 1 / sqrt3d) + 3 - sqrt3d / 2
+                                                   + 2 / sqrt3d)
+                                                .epsilon(0.001));
 
                         sino[0] = 1;
                         // clang-format off
@@ -1892,8 +1875,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(
-                            isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, backProj)));
                     }
                 }
             }
@@ -1919,7 +1902,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                     volume(0, 1, 2) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
+                    REQUIRE_EQ(sino[0], Approx(0).epsilon(1e-5));
 
                     AND_THEN("The correct weighting is applied")
                     {
@@ -1928,10 +1911,9 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         volume(0, 1, 1) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(
-                            sino[0]
-                            == Approx((sqrt3d + 1) * (1 - 1 / sqrt3d) + 3 - sqrt3d / 2 + 2 / sqrt3d)
-                                   .epsilon(0.001));
+                        REQUIRE_EQ(sino[0], Approx((sqrt3d + 1) * (1 - 1 / sqrt3d) + 3 - sqrt3d / 2
+                                                   + 2 / sqrt3d)
+                                                .epsilon(0.001));
 
                         sino[0] = 1;
                         // clang-format off
@@ -1941,8 +1923,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         // clang-format on
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(
-                            isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
+                        REQUIRE_UNARY(isCwiseApprox(
+                            volume, DataContainer<data_t>(volumeDescriptor, backProj)));
                     }
                 }
             }
@@ -1965,14 +1947,14 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                     volume(0, 1, 0) = 0;
 
                     op.apply(volume, sino);
-                    REQUIRE(sino[0] == Approx(0).epsilon(1e-5));
+                    REQUIRE_EQ(sino[0], Approx(0).epsilon(1e-5));
 
                     AND_THEN("The correct weighting is applied")
                     {
                         volume(0, 1, 0) = 1;
 
                         op.apply(volume, sino);
-                        REQUIRE(sino[0] == Approx(sqrt3d - 1));
+                        REQUIRE_EQ(sino[0], Approx(sqrt3d - 1));
 
                         sino[0] = 1;
                         // clang-format off
@@ -1981,8 +1963,8 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         // clang-format off
 
                         op.applyAdjoint(sino, volume);
-                        REQUIRE(
-                            isApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
+                        REQUIRE_UNARY(
+                            isCwiseApprox(volume, DataContainer<data_t>(volumeDescriptor, backProj)));
                     }
                 }
             }
@@ -2056,20 +2038,20 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
                         fast.apply(volume, sino);
                         DataContainer<data_t> zero(sinoDescriptor);
                         zero = 0;
-                        REQUIRE(isApprox(sino, zero));
+                        REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                         slow.apply(volume, sino);
-                        REQUIRE(isApprox(sino, zero));
+                        REQUIRE_UNARY(isCwiseApprox(sino, zero));
 
                         AND_THEN("Result of backprojection is zero")
                         {
                             fast.applyAdjoint(sino, volume);
                             DataContainer<data_t> zero(volumeDescriptor);
                             zero = 0;
-                            REQUIRE(isApprox(volume, zero));
+                            REQUIRE_UNARY(isCwiseApprox(volume, zero));
 
                             slow.applyAdjoint(sino, volume);
-                            REQUIRE(isApprox(volume, zero));
+                            REQUIRE_UNARY(isCwiseApprox(volume, zero));
                         }
                     }
                 }
@@ -2077,7 +2059,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a single ray", TestType,
         }
     }
 }
-TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a multiple rays",TestType, JosephsMethodCUDA<float>,
+TEST_CASE_TEMPLATE("JosephsMethodCUDA: 3D setup with a multiple rays",TestType, JosephsMethodCUDA<float>,
                    JosephsMethodCUDA<double>)
 {
     // Turn logger of
@@ -2141,11 +2123,11 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a multiple rays",TestType, J
 
                 slow.apply(volume, sino);
                 for (index_t i = 0; i < numImgs; i++)
-                    REQUIRE(sino[i] == Approx(3.0));
+                    REQUIRE_EQ(sino[i], Approx(3.0));
 
                 fast.apply(volume, sino);
                 for (index_t i = 0; i < numImgs; i++)
-                    REQUIRE(sino[i] == Approx(3.0));
+                    REQUIRE_EQ(sino[i], Approx(3.0));
 
                 AND_THEN("Both fast and slow backprojections yield the exact adjoint")
                 {
@@ -2158,10 +2140,12 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA 3D setup with a multiple rays",TestType, J
                     // clang-format on
 
                     slow.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
+                    REQUIRE_UNARY(
+                        isCwiseApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
 
                     fast.applyAdjoint(sino, volume);
-                    REQUIRE(isApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
+                    REQUIRE_UNARY(
+                        isCwiseApprox(volume, DataContainer<data_t>(volumeDescriptor, cmp)));
                 }
             }
         }

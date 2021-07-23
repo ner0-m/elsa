@@ -1,6 +1,7 @@
 #include "LASSOProblem.h"
 #include "Error.h"
 #include "Identity.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -16,7 +17,7 @@ namespace elsa
             throw InvalidArgumentError(
                 "LASSOProblem: regularization term must have a non-negative weight");
         }
-        if (!dynamic_cast<const L1Norm<data_t>*>(&regTerm.getFunctional())) {
+        if (!is<L1Norm<data_t>>(regTerm.getFunctional())) {
             throw InvalidArgumentError("LASSOProblem: regularization term must be type L1Norm");
         }
     }
@@ -43,26 +44,26 @@ namespace elsa
     template <typename data_t>
     auto LASSOProblem<data_t>::wlsFromProblem(const Problem<data_t>& problem) -> WLSProblem<data_t>
     {
-        auto linResid =
-            dynamic_cast<const LinearResidual<data_t>*>(&(problem.getDataTerm()).getResidual());
+        // All residuals are LinearResidual, so it's safe
+        auto& linResid = downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual());
 
         std::unique_ptr<LinearOperator<data_t>> dataTermOp;
 
-        if (linResid->hasOperator()) {
-            dataTermOp = linResid->getOperator().clone();
+        if (linResid.hasOperator()) {
+            dataTermOp = linResid.getOperator().clone();
         } else {
-            dataTermOp = std::make_unique<Identity<data_t>>(linResid->getDomainDescriptor());
+            dataTermOp = std::make_unique<Identity<data_t>>(linResid.getDomainDescriptor());
         }
 
-        DataContainer<data_t> dataVec = [&] {
-            if (linResid->hasDataVector()) {
-                return DataContainer<data_t>(linResid->getDataVector());
+        const DataContainer<data_t> dataVec = [&] {
+            if (linResid.hasDataVector()) {
+                return DataContainer<data_t>(linResid.getDataVector());
             } else {
                 Eigen::Matrix<data_t, Eigen::Dynamic, 1> zeroes(
-                    linResid->getRangeDescriptor().getNumberOfCoefficients());
+                    linResid.getRangeDescriptor().getNumberOfCoefficients());
                 zeroes.setZero();
 
-                return DataContainer<data_t>(linResid->getRangeDescriptor(), zeroes);
+                return DataContainer<data_t>(linResid.getRangeDescriptor(), zeroes);
             }
         }();
 

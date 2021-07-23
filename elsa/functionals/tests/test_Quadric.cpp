@@ -16,6 +16,7 @@
 #include "Identity.h"
 #include "Scaling.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
 
 using namespace elsa;
 using namespace doctest;
@@ -25,7 +26,6 @@ TYPE_TO_STRING(std::complex<double>);
 
 TEST_SUITE_BEGIN("functionals");
 
-// SCENARIO("Testing the Quadric<TestType>functional")
 TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
                    std::complex<float>, std::complex<double>)
 {
@@ -45,7 +45,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
                 REQUIRE_UNARY(linRes);
                 REQUIRE_UNARY_FALSE(linRes->hasDataVector());
                 REQUIRE_UNARY_FALSE(linRes->hasOperator());
@@ -93,7 +93,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
                 REQUIRE_UNARY(linRes);
                 REQUIRE_UNARY_FALSE(linRes->hasDataVector());
                 REQUIRE_UNARY_FALSE(linRes->hasOperator());
@@ -144,7 +144,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
                 REQUIRE_UNARY(linRes);
                 REQUIRE_UNARY_FALSE(linRes->hasDataVector());
                 REQUIRE_UNARY_FALSE(linRes->hasOperator());
@@ -196,7 +196,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<TestType>*>(&func.getResidual());
+                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
                 REQUIRE_UNARY(linRes);
                 REQUIRE_UNARY_FALSE(linRes->hasDataVector());
                 REQUIRE_UNARY_FALSE(linRes->hasOperator());

@@ -88,9 +88,9 @@ if(ELSA_MASTER_PROJECT)
 
     # setup spdlog Library
     CPMAddPackage(
-        NAME Spdlog
+        NAME spdlog
         GITHUB_REPOSITORY gabime/spdlog
-        VERSION 1.7.0 # 1.7.0 Fallback if it dosen't work
+        VERSION 1.9.0
         OPTIONS "SPDLOG_INSTALL ON"
     )
 
@@ -249,34 +249,37 @@ endif(ELSA_BENCHMARKS)
 # ------------ setup installation ------
 # ------------
 
-if(ELSA_INSTALL)
-    # set up the target/library for make install
-    include(GNUInstallDirs)
-    include(CMakePackageConfigHelpers)
+# set up the target/library for make install
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-    # setup the ElsaConfig*.cmake files
-    write_basic_package_version_file(
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfigVersion.cmake
-            VERSION ${PROJECT_VERSION}
-            COMPATIBILITY AnyNewerVersion
-    )
-    configure_package_config_file(
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/elsaConfig.cmake.in
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfig.cmake
-            INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
-    )
+# setup the ElsaConfig*.cmake files
+write_basic_package_version_file(
+    ${CMAKE_BINARY_DIR}/elsa/elsaConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/elsaConfig.cmake.in
+    ${CMAKE_BINARY_DIR}/elsa/elsaConfig.cmake
+    INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
+)
+
+if(ELSA_MASTER_PROJECT)
+    # this puts the local build tree into the user package repository, but not the installed version...
+    export(PACKAGE elsa)
+endif()
+
+if(ELSA_INSTALL)
+    message(STATUS "setting up elsa installation")
 
     # install the config files
     install(
-            FILES
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfig.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/elsa/elsaConfigVersion.cmake
-            DESTINATION ${INSTALL_CONFIG_DIR}
+        FILES
+        ${CMAKE_BINARY_DIR}/elsa/elsaConfig.cmake
+        ${CMAKE_BINARY_DIR}/elsa/elsaConfigVersion.cmake
+        DESTINATION ${INSTALL_CONFIG_DIR}
     )
-
-    # this puts the local build tree into the user package repository, but not the installed version...
-    # ...but we rely on the paths in the installed version. sigh. commented out for now.
-    #export(PACKAGE elsa)
 endif(ELSA_INSTALL)
 
 
@@ -288,4 +291,4 @@ add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P "${PROJECT_SOURCE_DIR}/cmake/Uninstall.cmake"
     COMMENT "Uninstalling elsa (Removing all installed files)"
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt"
-    )
+)

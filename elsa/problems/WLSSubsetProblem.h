@@ -27,7 +27,6 @@ namespace elsa
          * @param[in] A the full system matrix of the whole WSL problem
          * @param[in] b data vector
          * @param[in] subsetAs the system matrices corresponding to each subset
-         * @param[in] subsetBs a data vector with a Block Descriptor containing the data vector vor
          * each subset
          */
         WLSSubsetProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
