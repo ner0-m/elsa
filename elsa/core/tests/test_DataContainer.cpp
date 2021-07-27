@@ -279,6 +279,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
 
             THEN("the element-wise unary operations work as expected")
             {
+                DataContainer dcAbs = cwiseAbs(dc);
+                for (index_t i = 0; i < dc.getSize(); ++i)
+                    REQUIRE_UNARY(checkApproxEq(dcAbs[i], randVec.array().abs()[i]));
+
                 DataContainer dcSquare = square(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(dcSquare[i], randVec.array().square()[i]));
