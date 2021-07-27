@@ -8,12 +8,17 @@ namespace elsa
     NLCG<data_t>::NLCG(const Problem<data_t>& problem, Beta beta)
         : Solver<data_t>(problem), _beta(beta)
     {
+        auto linResid =
+            dynamic_cast<const LinearResidual<data_t>*>(&(_problem->getDataTerm()).getResidual());
+
+        if (!linResid)
+            throw std::logic_error("NLCG: Can only handle residuals of type 'LinearResidual'");
     }
 
     template <typename data_t>
     NLCG<data_t>::NLCG(const Problem<data_t>& problem,
                        const LinearOperator<data_t>& preconditionerInverse)
-        : Solver<data_t>{QuadricProblem<data_t>{problem}},
+        : Solver<data_t>{problem}, // remove the cast -> just accept problem
           _preconditionerInverse{preconditionerInverse.clone()}
     {
         // check that preconditioner is compatible with problem
@@ -30,10 +35,12 @@ namespace elsa
         if (iterations == 0)
             iterations = _defaultIterations;
 
-        // get references to some variables in the Quadric
+        // get references to some variables
         auto& x = _problem->getCurrentSolution();
+        // not quadric -> dynamic cast to linear residual
+        // result von dataterm cast to linear residual -> as in SIRT
         const auto& gradientExpr =
-            static_cast<const Quadric<data_t>&>(_problem->getDataTerm()).getGradientExpression();
+            downcast<LinearResidual<data_t>>((_problem->getDataTerm()).getResidual());
         const LinearOperator<data_t>* A = nullptr;
         const DataContainer<data_t>* b = nullptr;
 
@@ -62,9 +69,9 @@ namespace elsa
         auto deltaZero = deltaNew;
         data_t alpha;
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
-
+        index_t k = 0;
         for (index_t i = 0; i < iterations && deltaNew > epsilon * epsilon * deltaZero; ++i) {
-            auto Ad = A ? A->apply(d) : d;
+            // auto Ad = A ? A->apply(d) : d;
             int j = 0;
             auto deltaD = d.squaredL2Norm();
 
@@ -98,8 +105,12 @@ namespace elsa
                 }*/
             const auto beta = deltaNew / deltaOld;
             d = r + beta * d;
-            if (r.dot(d) <= 0)
+            k++;
+
+            if (/*k==50 || */ r.dot(d) <= 0) {
                 d = r;
+                k = 0;
+            }
             /*           switch (_beta) {
                            case FR:
                                beta = deltaNew/deltaOld; //how to get transform?

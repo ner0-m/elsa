@@ -14,6 +14,8 @@
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "testHelpers.h"
+#include "TransmissionLogLikelihood.h"
+
 
 using namespace elsa;
 using namespace doctest;
@@ -31,6 +33,7 @@ TEST_CASE_TEMPLATE("Scenario: Solving a simple problem", TestType, NLCG<float>, 
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
+    using Vector = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
 
     GIVEN("a linear problem")
     {
@@ -38,16 +41,24 @@ TEST_CASE_TEMPLATE("Scenario: Solving a simple problem", TestType, NLCG<float>, 
         numCoeff << 13, 24;
         VolumeDescriptor dd{numCoeff};
 
-        Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
-        bVec.setRandom();
-        DataContainer<data_t> dcB{dd, bVec};
+        Vector y(dd.getNumberOfCoefficients());
+        y.setRandom();
+        DataContainer<data_t> dcY(dd, y);
 
+        Vector bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
         bVec = bVec.cwiseAbs();
-        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
+        DataContainer<data_t> dcB{dd, bVec};
 
-        QuadricProblem<data_t> prob{scalingOp, dcB, true};
+
+        //Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
+
+        TransmissionLogLikelihood func(dd, dcY, dcB);
+
+        Problem<data_t> prob{func, dcB, true};
+        //generisches Problem
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
+        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
         WHEN("setting up a NLCG solver")
         {
