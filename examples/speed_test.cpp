@@ -28,7 +28,7 @@ void testExecutionSpeed(LinearOperator<real_t>& projector, DataContainer<real_t>
 
     // log average execution time
     timer /= static_cast<float>(numIters);
-    Logger::get("Timing")->info("average apply time: {}\n", timer);
+    infoln("average apply time: {}\n", timer);
 
     timer = 0;
 
@@ -43,7 +43,7 @@ void testExecutionSpeed(LinearOperator<real_t>& projector, DataContainer<real_t>
 
     // log average execution time
     timer /= static_cast<float>(numIters);
-    Logger::get("Timing")->info("average apply adjoint time: {}\n", timer);
+    infoln("average apply adjoint time: {}\n", timer);
 }
 
 int main()
@@ -59,7 +59,7 @@ int main()
     int numIters = 3;
 
     for (int size : sizes) {
-        Logger::get("Setup")->info("Running test for a volume with {}^3 voxels\n", size);
+        infoln("Running test for a volume with {}^3 voxels\n", size);
 
         // create 3d phantom
         IndexVector_t volumeSize(3);
@@ -77,17 +77,17 @@ int main()
         auto& volDescriptor = downcast<VolumeDescriptor>(volumeDescriptor);
 
         // setup and run test for fast Joseph's
-        Logger::get("Setup")->info("Fast unmatched Joseph's:\n");
+        infoln("Fast unmatched Joseph's:\n");
         auto josephsFast = JosephsMethodCUDA(volDescriptor, *sinoDescriptor);
         testExecutionSpeed(josephsFast, phantom, numIters);
 
         // setup and run test for slow Joseph's
-        Logger::get("Setup")->info("Slow matched Joseph's:\n");
+        infoln("Slow matched Joseph's:\n");
         auto josephsSlow = JosephsMethodCUDA(volDescriptor, *sinoDescriptor, false);
         testExecutionSpeed(josephsSlow, phantom, numIters);
 
         // setup and run test for Siddon's
-        Logger::get("Setup")->info("Siddon's:\n");
+        infoln("Siddon's:\n");
         auto siddons = SiddonsMethodCUDA(volDescriptor, *sinoDescriptor);
         testExecutionSpeed(siddons, phantom, numIters);
     }

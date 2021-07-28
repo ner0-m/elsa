@@ -2,8 +2,6 @@
 
 #include "elsa.h"
 
-#include <iostream>
-
 using namespace elsa;
 
 void example2d_admm()
@@ -24,7 +22,7 @@ void example2d_admm()
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
     // setup operator for 2d X-ray transform
-    Logger::get("Info")->info("Simulating sinogram using Siddon's method");
+    infoln("Simulating sinogram using Siddon's method");
 
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
     // VolumeDescriptor
@@ -58,7 +56,7 @@ void example2d_admm()
 
     ADMM<CG, SoftThresholding> admm(splittingProblem);
 
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of ADMM", noIterations);
+    infoln("Solving reconstruction using {} iterations of ADMM", noIterations);
     auto admmReconstruction = admm.solve(noIterations);
 
     // write the reconstruction out

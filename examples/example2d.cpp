@@ -24,10 +24,10 @@ void example2d()
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
     // setup operator for 2d X-ray transform
-    Logger::get("Info")->info("Simulating sinogram using Siddon's method");
+    infoln("Simulating sinogram using Siddon's method");
 
-    // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
-    // VolumeDescriptor
+    // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns
+    // a VolumeDescriptor
     SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
                             *sinoDescriptor);
 
@@ -44,8 +44,7 @@ void example2d()
     CG cgSolver(wlsProblem);
 
     index_t noIterations{20};
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
-                              noIterations);
+    infoln("Solving reconstruction using {} iterations of conjugate gradient", noIterations);
     auto cgReconstruction = cgSolver.solve(noIterations);
 
     // write the reconstruction out
@@ -59,7 +58,7 @@ void example2d()
     // solve the reconstruction problem with ISTA
     ISTA istaSolver(lassoProb);
 
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of ISTA", noIterations);
+    infoln("Solving reconstruction using {} iterations of ISTA", noIterations);
     auto istaReconstruction = istaSolver.solve(noIterations);
 
     // write the reconstruction out
@@ -68,7 +67,7 @@ void example2d()
     // solve the reconstruction problem with FISTA
     FISTA fistaSolver(lassoProb);
 
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of FISTA", noIterations);
+    infoln("Solving reconstruction using {} iterations of FISTA", noIterations);
     auto fistaReconstruction = fistaSolver.solve(noIterations);
 
     // write the reconstruction out

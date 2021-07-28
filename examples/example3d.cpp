@@ -24,7 +24,7 @@ void example3d()
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
     // setup operator for 2d X-ray transform
-    Logger::get("Info")->info("Simulating sinogram using Siddon's method");
+    infoln("Simulating sinogram using Siddon's method");
 
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
     // VolumeDescriptor
@@ -43,8 +43,7 @@ void example3d()
     CG solver(problem);
 
     index_t noIterations{20};
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
-                              noIterations);
+    infoln("Solving reconstruction using {} iterations of conjugate gradient", noIterations);
     auto reconstruction = solver.solve(noIterations);
 
     // write the reconstruction out
