@@ -172,4 +172,16 @@ TEST_CASE("Logger: Use test")
     }
 }
 
+TEST_CASE("Logger: Using the utility logging functions")
+{
+    // This is more of a compilation test
+    infoln("This is an info");
+    warnln("This is an warning");
+    dbgln("This is an debug message");
+    dbgln("This is an debug message number {}", 2);
+
+    INFOLN("This is the {} macro", "info");
+    WARNLN("This is the {} macro", "warning");
+    DBGLN("This is the {} macro", "debug");
+}
 TEST_SUITE_END();
