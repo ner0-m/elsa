@@ -36,7 +36,7 @@ namespace elsa
     void JosephsMethod<data_t>::applyImpl(const DataContainer<data_t>& x,
                                           DataContainer<data_t>& Ax) const
     {
-        Timer<> timeguard("JosephsMethod", "apply");
+        Timer timeguard("JosephsMethod", "apply");
         traverseVolume<false>(x, Ax);
     }
 
@@ -44,7 +44,7 @@ namespace elsa
     void JosephsMethod<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
                                                  DataContainer<data_t>& Aty) const
     {
-        Timer<> timeguard("JosephsMethod", "applyAdjoint");
+        Timer timeguard("JosephsMethod", "applyAdjoint");
         traverseVolume<true>(y, Aty);
     }
 
