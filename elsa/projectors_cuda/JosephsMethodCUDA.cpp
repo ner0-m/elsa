@@ -134,7 +134,7 @@ namespace elsa
     void JosephsMethodCUDA<data_t>::applyImpl(const DataContainer<data_t>& x,
                                               DataContainer<data_t>& Ax) const
     {
-        Timer<> timeGuard("JosephsMethodCUDA", "apply");
+        Timer timeGuard("JosephsMethodCUDA", "apply");
 
         // transfer volume as texture
         auto [volumeTex, volume] = copyTextureToGPU(x);
@@ -218,7 +218,7 @@ namespace elsa
     void JosephsMethodCUDA<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
                                                      DataContainer<data_t>& Aty) const
     {
-        Timer<> timeguard("JosephsMethodCUDA", "applyAdjoint");
+        Timer timeguard("JosephsMethodCUDA", "applyAdjoint");
 
         // allocate memory for volume
         auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();

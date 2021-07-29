@@ -1,20 +1,30 @@
 @PACKAGE_INIT@
 
+message(STATUS "finding elsa dependencies...")
+
 include(CMakeFindDependencyMacro)
-find_dependency(Eigen3 3.3.7 REQUIRED)
 find_dependency(OpenMP QUIET)
+find_dependency(Threads REQUIRED)  # for spdlog
 
-# for spdlog_header_only
-find_dependency(Threads REQUIRED)
+# when we bundle/git-download these libs
+# we have to ensure that an elsa-downstream project uses the same version,
+# and the path to this is encoded in our target info files.
+set(BUNDLED_DEPS
+    spdlog
+    eigen3
+)
+foreach(DEP ${BUNDLED_DEPS})
+    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${DEP}Targets.cmake")
+        # use the bundled version
+        message(STATUS "using elsa-bundled version of dependency ${DEP}")
+        include("${CMAKE_CURRENT_LIST_DIR}/${DEP}Targets.cmake")
+    else()
+        # use the system version
+        message(STATUS "finding system-version of dependency ${DEP}...")
+        find_dependency(${DEP} REQUIRED)
+    endif()
+endforeach()
 
-if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/spdlogTargets.cmake")
-    # this is used for in-repo build linking with the `export()` command
-    include("${CMAKE_CURRENT_LIST_DIR}/spdlogTargets.cmake")
-else()
-    # this should not be needed, since the elsa:: targets provide
-    # these PUBLIC dependencies transitively
-    find_dependency(spdlog REQUIRED)
-endif()
 
 if(EXISTS "@CMAKE_CUDA_COMPILER@")
     enable_language(CUDA)
@@ -29,6 +39,7 @@ set(_supported_components @ELSA_REGISTERED_COMPONENTS@)
 
 if(NOT elsa_FIND_COMPONENTS)
     # no specific components requested, include all
+    message(STATUS "finding elsa_all module")
     find_dependency(elsa_all REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR})
     if (elsa_all_FOUND)
         include(${CMAKE_CURRENT_LIST_DIR}/elsa_allTargets.cmake)
@@ -36,6 +47,7 @@ if(NOT elsa_FIND_COMPONENTS)
     message(STATUS "elsa found, using all modules")
 else()
     # Include specific components
+    message(STATUS "finding requested elsa components")
     foreach(_comp ${elsa_FIND_COMPONENTS})
         message(STATUS "elsa loading ${_comp}")
         if(NOT _comp IN_LIST _supported_components)

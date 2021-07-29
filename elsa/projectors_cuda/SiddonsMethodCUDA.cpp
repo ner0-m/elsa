@@ -96,7 +96,7 @@ namespace elsa
     void SiddonsMethodCUDA<data_t>::applyImpl(const DataContainer<data_t>& x,
                                               DataContainer<data_t>& Ax) const
     {
-        Timer<> timeGuard("SiddonsMethodCUDA", "apply");
+        Timer timeGuard("SiddonsMethodCUDA", "apply");
 
         traverseVolume<false>((void*) &(x[0]), (void*) &(Ax[0]));
     }
@@ -105,7 +105,7 @@ namespace elsa
     void SiddonsMethodCUDA<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
                                                      DataContainer<data_t>& Aty) const
     {
-        Timer<> timeguard("SiddonsMethodCUDA", "applyAdjoint");
+        Timer timeguard("SiddonsMethodCUDA", "applyAdjoint");
 
         traverseVolume<true>((void*) &(Aty[0]), (void*) &(y[0]));
     }

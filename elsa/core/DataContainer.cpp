@@ -3,6 +3,7 @@
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
 #include "RandomBlocksDescriptor.h"
+#include "PartitionDescriptor.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
 
@@ -360,6 +361,40 @@ namespace elsa
         // constant container
         return DataContainer<data_t>{dataDescriptor, _dataHandler->getBlock(0, getSize()),
                                      newHandlerType};
+    }
+
+    template <typename data_t>
+    const DataContainer<data_t> DataContainer<data_t>::slice(index_t i) const
+    {
+        auto& desc = getDataDescriptor();
+        auto dim = desc.getNumberOfDimensions();
+        auto sizeOfLastDim = desc.getNumberOfCoefficientsPerDimension()[dim - 1];
+
+        if (i >= sizeOfLastDim) {
+            throw LogicError("Trying to access out of bound slice");
+        }
+
+        auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
+
+        // Now set the slice
+        return viewAs(sliceDesc).getBlock(i);
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DataContainer<data_t>::slice(index_t i)
+    {
+        auto& desc = getDataDescriptor();
+        auto dim = desc.getNumberOfDimensions();
+        auto sizeOfLastDim = desc.getNumberOfCoefficientsPerDimension()[dim - 1];
+
+        if (i >= sizeOfLastDim) {
+            throw LogicError("Trying to access out of bound slice");
+        }
+
+        auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
+
+        // Now set the slice
+        return viewAs(sliceDesc).getBlock(i);
     }
 
     template <typename data_t>

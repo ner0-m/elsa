@@ -61,7 +61,7 @@ namespace elsa
     void FiniteDifferences<data_t>::applyImpl(const DataContainer<data_t>& x,
                                               DataContainer<data_t>& Ax) const
     {
-        Timer<> timeguard("FiniteDifferences", "apply");
+        Timer timeguard("FiniteDifferences", "apply");
 
         Ax = 0;
 
@@ -84,7 +84,7 @@ namespace elsa
     void FiniteDifferences<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
                                                      DataContainer<data_t>& Aty) const
     {
-        Timer<> timeguard("FiniteDifferences", "applyAdjoint");
+        Timer timeguard("FiniteDifferences", "applyAdjoint");
 
         Aty = 0;
 
