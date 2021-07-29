@@ -590,6 +590,45 @@ namespace elsa
         }
     }
 
+    /// Element-wise maximum value operation between two operands
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto cwiseMax(LHS const& lhs, RHS const& rhs)
+    {
+        constexpr bool isLHSComplex = isComplex<GetOperandDataType_t<LHS>>;
+        constexpr bool isRHSComplex = isComplex<GetOperandDataType_t<RHS>>;
+
+#ifdef ELSA_CUDA_VECTOR
+        auto cwiseMaxGPU = [](auto const& lhs, auto const& rhs, bool) {
+            return quickvec::cwiseMax(lhs, rhs);
+        };
+#endif
+        auto cwiseMax = [] {
+            if constexpr (isLHSComplex && isRHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().abs().max(right.array().abs())).matrix();
+                };
+            } else if constexpr (isLHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().abs().max(right.array())).matrix();
+                };
+            } else if constexpr (isRHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().max(right.array().abs())).matrix();
+                };
+            } else {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().max(right.array())).matrix();
+                };
+            }
+        }();
+
+#ifdef ELSA_CUDA_VECTOR
+        return Expression{Callables{cwiseMax, cwiseMaxGPU}, lhs, rhs};
+#else
+        return Expression{cwiseMax, lhs, rhs};
+#endif
+    }
+
     /// Element-wise absolute value operation
     template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
     auto cwiseAbs(Operand const& operand)
@@ -654,5 +693,4 @@ namespace elsa
         return Expression{log, operand};
 #endif
     }
-
 } // namespace elsa

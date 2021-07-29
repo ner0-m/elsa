@@ -378,6 +378,59 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                         REQUIRE_UNARY(checkApproxEq(dc[i], randVec(i) / randVec2(i)));
             }
         }
+
+        WHEN("having two containers with real and complex data each")
+        {
+            auto [dcReals1, realsVec1] = generateRandomContainer<real_t>(desc, TestType::handler_t);
+            auto [dcComps1, compsVec1] =
+                generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
+
+            THEN("the element-wise maximum operation works as expected for two real DataContainers")
+            {
+                auto [dcReals2, realsVec2] =
+                    generateRandomContainer<real_t>(desc, TestType::handler_t);
+
+                DataContainer dcCWiseMax = cwiseMax(dcReals1, dcReals2);
+                for (index_t i = 0; i < dcCWiseMax.getSize(); ++i)
+                    REQUIRE_UNARY(
+                        checkApproxEq(dcCWiseMax[i], realsVec1.array().max(realsVec2.array())[i]));
+            }
+
+            THEN("the element-wise maximum operation works as expected for a real and a complex "
+                 "DataContainer")
+            {
+                auto [dcComps2, compsVec2] =
+                    generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
+
+                DataContainer dcCWiseMax = cwiseMax(dcReals1, dcComps2);
+                for (index_t i = 0; i < dcCWiseMax.getSize(); ++i)
+                    REQUIRE_UNARY(checkApproxEq(dcCWiseMax[i],
+                                                realsVec1.array().max(compsVec2.array().abs())[i]));
+            }
+
+            THEN("the element-wise maximum operation works as expected for a complex and a real "
+                 "DataContainer")
+            {
+                auto [dcComps2, compsVec2] =
+                    generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
+
+                DataContainer dcCWiseMax = cwiseMax(dcComps2, dcReals1);
+                for (index_t i = 0; i < dcCWiseMax.getSize(); ++i)
+                    REQUIRE_UNARY(checkApproxEq(dcCWiseMax[i],
+                                                compsVec2.array().abs().max(realsVec1.array())[i]));
+            }
+
+            THEN("the element-wise maximum operation works as expected for two DataContainers")
+            {
+                auto [dcComps2, compsVec2] =
+                    generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
+
+                DataContainer dcCWiseMax = cwiseMax(dcComps1, dcComps2);
+                for (index_t i = 0; i < dcCWiseMax.getSize(); ++i)
+                    REQUIRE_UNARY(checkApproxEq(
+                        dcCWiseMax[i], compsVec1.array().abs().max(compsVec2.array().abs())[i]));
+            }
+        }
     }
 }
 
