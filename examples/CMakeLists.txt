@@ -16,6 +16,12 @@ target_link_libraries(example2d_admm elsa::all)
 target_compile_features(example2d_admm PUBLIC cxx_std_17)
 add_dependencies(build-examples example2d_admm)
 
+# build the deep learning models example program
+add_executable(dl_models_example dl_models_example.cpp)
+target_link_libraries(dl_models_example elsa::all)
+target_compile_features(dl_models_example PUBLIC cxx_std_17)
+add_dependencies(build-examples dl_models_example)
+
 # add_executable(exampleMl exampleMl.cpp)
 # target_link_libraries(exampleMl elsa::all)
 # target_compile_features(exampleMl PUBLIC cxx_std_17)
