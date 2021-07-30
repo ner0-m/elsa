@@ -171,6 +171,18 @@ namespace elsa
     }
 
     template <typename data_t>
+    void DataContainer<data_t>::fft() const
+    {
+        this->_dataHandler->fft(*this->_dataDescriptor);
+    }
+
+    template <typename data_t>
+    void DataContainer<data_t>::ifft() const
+    {
+        this->_dataHandler->ifft(*this->_dataDescriptor);
+    }
+
+    template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(const DataContainer<data_t>& dc)
     {
         *_dataHandler += *dc._dataHandler;

@@ -16,6 +16,7 @@ namespace elsa
     // forward declaration for friend test function
     template <typename data_t = real_t>
     class DataHandlerCPU;
+
     // forward declaration, used for testing and defined in test file (declared as friend)
     template <typename data_t>
     long useCount(const DataHandlerCPU<data_t>& /*dh*/);
@@ -122,6 +123,12 @@ namespace elsa
 
         /// return the sum of all elements of the data vector
         data_t sum() const override;
+
+        /// create the fourier transformed of the data vector
+        void fft(const DataDescriptor& source_desc) const override;
+
+        /// create the inverse fourier transformed of the data vector
+        void ifft(const DataDescriptor& source_desc) const override;
 
         /// copy assign another DataHandlerCPU to this, other types handled in assign()
         DataHandlerCPU<data_t>& operator=(const DataHandlerCPU<data_t>& v);

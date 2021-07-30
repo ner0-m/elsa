@@ -99,6 +99,12 @@ namespace elsa
         /// return the sum of all elements of the data vector
         data_t sum() const override;
 
+        /// create the fourier transformed of the data vector
+        void fft(const DataDescriptor& source_desc) const override;
+
+        /// create the inverse fourier transformed of the data vector
+        void ifft(const DataDescriptor& source_desc) const override;
+
         /// compute in-place element-wise addition of another vector v
         DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) override;
 
