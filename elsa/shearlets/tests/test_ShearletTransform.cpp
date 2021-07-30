@@ -111,12 +111,9 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
             THEN("the spectra constitute a Parseval frame")
             {
                 DataContainer<TestType> spectra = shearletTransform.getSpectra();
-                index_t width = shearletTransform.getDomainDescriptor()
-                                    .getNumberOfCoefficientsPerDimension()[0];
-                index_t height = shearletTransform.getDomainDescriptor()
-                                     .getNumberOfCoefficientsPerDimension()[1];
-                index_t layers =
-                    shearletTransform.getRangeDescriptor().getNumberOfCoefficientsPerDimension()[0];
+                index_t width = shearletTransform.getWidth();
+                index_t height = shearletTransform.getHeight();
+                index_t layers = shearletTransform.getL();
 
                 DataContainer<TestType> frameCorrectness(VolumeDescriptor{{width, height}});
 
@@ -126,14 +123,14 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                         for (index_t i = 0; i < layers; i++) {
                             currFrameSum += spectra(w1, w2, i) * spectra(w1, w2, i);
                         }
-                        frameCorrectness(w1, w2) = currFrameSum - 1;
+                        frameCorrectness(w1, w2) = currFrameSum; // TODO why not -1 here?
                     }
                 }
 
                 DataContainer<TestType> zeroes(VolumeDescriptor{{width, height}});
                 zeroes = 0;
 
-                // REQUIRE_UNARY(isApprox(frameCorrectness, zeroes));
+                REQUIRE_UNARY(isApprox(frameCorrectness, zeroes));
 
                 // spectra here is of shape (L, W, H), square its elements and get the sum by the
                 // last axis and subtract 1, the output will be of shape (W, H), its elements

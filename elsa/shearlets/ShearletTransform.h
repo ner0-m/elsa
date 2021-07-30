@@ -66,6 +66,15 @@ namespace elsa
         /// return the spectra
         auto getSpectra() const -> DataContainer<data_t>;
 
+        /// return the width
+        auto getWidth() const -> index_t;
+
+        /// return the height
+        auto getHeight() const -> index_t;
+
+        /// return the oversampling factor
+        auto getL() const -> index_t;
+
     protected:
         void applyImpl(const DataContainer<data_t>& f, DataContainer<data_t>& SHf) const override;
 

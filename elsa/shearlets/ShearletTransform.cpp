@@ -123,7 +123,7 @@ namespace elsa
                     phiHat(w1 < 0 ? w1 + _width : w1, w2 < 0 ? w2 + _height : w2);
             }
         }
-        spectra.viewAs(sliceDesc).getBlock(i) = sectionZero;
+        spectra.slice(i) = sectionZero;
         i += 1;
 
         for (index_t j = 0; j < _jZero; j++) {
@@ -161,12 +161,12 @@ namespace elsa
                 // TODO AFAIK sectionh, sectionv, sectionhxv really should only have reals, double
                 //  check
                 if (std::abs(k) <= static_cast<index_t>(std::pow(2, j)) - 1) {
-                    spectra.viewAs(sliceDesc).getBlock(i) = sectionh;
+                    spectra.slice(i) = sectionh;
                     i += 1;
-                    spectra.viewAs(sliceDesc).getBlock(i) = sectionv;
+                    spectra.slice(i) = sectionv;
                     i += 1;
                 } else if (std::abs(k) == static_cast<index_t>(std::pow(2, j))) {
-                    spectra.viewAs(sliceDesc).getBlock(i) = sectionhxv;
+                    spectra.slice(i) = sectionhxv;
                     i += 1;
                 }
             }
@@ -301,6 +301,24 @@ namespace elsa
             return false;
 
         return true;
+    }
+
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getWidth() const -> index_t
+    {
+        return _width;
+    }
+
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getHeight() const -> index_t
+    {
+        return _height;
+    }
+
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getL() const -> index_t
+    {
+        return 0;
     }
 
     // ------------------------------------------
