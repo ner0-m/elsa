@@ -590,8 +590,8 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataHandlerCPU<float>;
-    template class DataHandlerCPU<std::complex<float>>;
+    template class DataHandlerCPU<complex<float>>;
     template class DataHandlerCPU<double>;
-    template class DataHandlerCPU<std::complex<double>>;
+    template class DataHandlerCPU<complex<double>>;
     template class DataHandlerCPU<index_t>;
 } // namespace elsa

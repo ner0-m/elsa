@@ -9,6 +9,11 @@ add_executable(example2d example2d.cpp)
 target_link_libraries(example2d elsa::all)
 target_compile_features(example2d PUBLIC cxx_std_17)
 add_dependencies(build-examples example2d)
+if(${ELSA_BUILD_WITH_QUICKVEC})
+    set_source_files_properties(example2d.cpp PROPERTIES LANGUAGE CUDA)
+    target_compile_definitions(example2d PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+    target_compile_features(example2d PUBLIC cuda_std_17)
+endif()
 
 # build the 2d limited angle trajectory example program
 add_executable(limited_angle_example2d limited_angle_example2d.cpp limited_angle_example2d.cpp)

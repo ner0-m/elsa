@@ -96,7 +96,7 @@ namespace elsa
     template <typename data_t>
     GetFloatingPointType_t<data_t> DataHandlerMapGPU<data_t>::squaredL2Norm() const
     {
-        return _map.squaredL2Norm();
+        return _map.squaredl2Norm();
     }
 
     template <typename data_t>
@@ -397,14 +397,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    quickvec::Vector<GetQuickvecType_t<data_t>> DataHandlerMapGPU<data_t>::accessData()
+    quickvec::Vector<data_t> DataHandlerMapGPU<data_t>::accessData()
     {
         _dataOwner->detach();
         return _map;
     }
 
     template <typename data_t>
-    quickvec::Vector<GetQuickvecType_t<data_t>> DataHandlerMapGPU<data_t>::accessData() const
+    quickvec::Vector<data_t> DataHandlerMapGPU<data_t>::accessData() const
     {
         return _map;
     }
@@ -412,9 +412,9 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataHandlerMapGPU<float>;
-    template class DataHandlerMapGPU<std::complex<float>>;
+    template class DataHandlerMapGPU<complex<float>>;
     template class DataHandlerMapGPU<double>;
-    template class DataHandlerMapGPU<std::complex<double>>;
+    template class DataHandlerMapGPU<complex<double>>;
     template class DataHandlerMapGPU<index_t>;
 
 } // namespace elsa

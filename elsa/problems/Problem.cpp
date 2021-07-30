@@ -161,7 +161,7 @@ namespace elsa
         DataContainer<data_t> dcB(hessian.getDomainDescriptor(), bVec);
         for (index_t i = 0; i < nIterations; i++) {
             dcB = hessian.apply(dcB);
-            dcB = dcB / std::sqrt(dcB.dot(dcB));
+            dcB = dcB / sqrt(dcB.dot(dcB));
         }
 
         return dcB.dot(hessian.apply(dcB)) / (dcB.dot(dcB));
@@ -234,8 +234,8 @@ namespace elsa
 
     template class Problem<double>;
 
-    template class Problem<std::complex<float>>;
+    template class Problem<complex<float>>;
 
-    template class Problem<std::complex<double>>;
+    template class Problem<complex<double>>;
 
 } // namespace elsa

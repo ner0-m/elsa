@@ -83,6 +83,6 @@ namespace elsa
 
     template class BlockLinearOperatorHints<float>;
     template class BlockLinearOperatorHints<double>;
-    template class BlockLinearOperatorHints<std::complex<float>>;
-    template class BlockLinearOperatorHints<std::complex<double>>;
+    template class BlockLinearOperatorHints<complex<float>>;
+    template class BlockLinearOperatorHints<complex<double>>;
 } // namespace elsa

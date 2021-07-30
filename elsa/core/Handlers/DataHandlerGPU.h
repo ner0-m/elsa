@@ -91,7 +91,7 @@ namespace elsa
          *
          * @param[in] vector that is used for initializing the data
          */
-        explicit DataHandlerGPU(quickvec::Vector<GetQuickvecType_t<data_t>> const& vector);
+        explicit DataHandlerGPU(quickvec::Vector<data_t> const& vector);
         /// copy constructor
         DataHandlerGPU(const DataHandlerGPU<data_t>& other);
 
@@ -187,7 +187,7 @@ namespace elsa
 
     protected:
         /// the vector storing the data
-        std::shared_ptr<quickvec::Vector<GetQuickvecType_t<data_t>>> _data;
+        std::shared_ptr<quickvec::Vector<data_t>> _data;
 
         /// list of DataHandlerMaps referring to blocks of this
         std::list<DataHandlerMapGPU<data_t>*> _associatedMaps;
@@ -205,10 +205,10 @@ namespace elsa
         void assign(DataHandler<data_t>&& other) override;
 
         /// return non-const version of data
-        quickvec::Vector<GetQuickvecType_t<data_t>> accessData();
+        quickvec::Vector<data_t> accessData();
 
         /// return const version of data
-        quickvec::Vector<GetQuickvecType_t<data_t>> accessData() const;
+        quickvec::Vector<data_t> accessData() const;
 
     private:
         /// creates the deep copy for the copy-on-write mechanism
@@ -219,9 +219,9 @@ namespace elsa
         void detachWithUninitializedBlock(index_t startIndex, index_t numberOfElements);
 
         /// change the vector being handled
-        void attach(const std::shared_ptr<quickvec::Vector<GetQuickvecType_t<data_t>>>& data);
+        void attach(const std::shared_ptr<quickvec::Vector<data_t>>& data);
 
         /// change the vector being handled (rvalue version)
-        void attach(std::shared_ptr<quickvec::Vector<GetQuickvecType_t<data_t>>>&& data);
+        void attach(std::shared_ptr<quickvec::Vector<data_t>>&& data);
     };
 } // namespace elsa

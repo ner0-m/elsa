@@ -1,5 +1,6 @@
 include(CompilerWarnings) 
- 
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+
 # setup macro for component registration, so you can use find_package(elsa COMPONENT name) also sets all target names
 macro(REGISTER_MODULE name)
     set(ELSA_REGISTERED_COMPONENTS "${ELSA_REGISTERED_COMPONENTS};${name}" PARENT_SCOPE)
@@ -90,7 +91,13 @@ macro(ELSA_DOCTEST name)
     set_target_properties(
         ${_testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}"
     )
-
+    
+    if(${ELSA_BUILD_WITH_QUICKVEC})
+        set_source_files_properties(${_testname}.cpp PROPERTIES LANGUAGE CUDA)
+        target_compile_definitions(${_testname} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+        target_link_libraries(${_testname} PUBLIC "Quickvec::quickvec")
+        target_compile_features(${_testname} PUBLIC cuda_std_17)
+    endif()
     # Add test to global dependency
     add_dependencies(tests ${_testname})
     add_dependencies(build-tests ${_testname})

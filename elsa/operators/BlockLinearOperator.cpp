@@ -294,6 +294,6 @@ namespace elsa
     // explicit template instantiation
     template class BlockLinearOperator<float>;
     template class BlockLinearOperator<double>;
-    template class BlockLinearOperator<std::complex<float>>;
-    template class BlockLinearOperator<std::complex<double>>;
+    template class BlockLinearOperator<complex<float>>;
+    template class BlockLinearOperator<complex<double>>;
 } // namespace elsa

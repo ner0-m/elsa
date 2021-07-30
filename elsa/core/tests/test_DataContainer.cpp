@@ -36,14 +36,14 @@ struct TestHelperCPU {
 };
 
 using CPUTypeTuple =
-    std::tuple<TestHelperCPU<float>, TestHelperCPU<double>, TestHelperCPU<std::complex<float>>,
-               TestHelperCPU<std::complex<double>>, TestHelperCPU<index_t>>;
+    std::tuple<TestHelperCPU<float>, TestHelperCPU<double>, TestHelperCPU<complex<float>>,
+               TestHelperCPU<complex<double>>, TestHelperCPU<index_t>>;
 
 TYPE_TO_STRING(TestHelperCPU<float>);
 TYPE_TO_STRING(TestHelperCPU<double>);
 TYPE_TO_STRING(TestHelperCPU<index_t>);
-TYPE_TO_STRING(TestHelperCPU<std::complex<float>>);
-TYPE_TO_STRING(TestHelperCPU<std::complex<double>>);
+TYPE_TO_STRING(TestHelperCPU<complex<float>>);
+TYPE_TO_STRING(TestHelperCPU<complex<double>>);
 
 TYPE_TO_STRING(DataContainer<float>);
 TYPE_TO_STRING(DataContainer<double>);
@@ -56,14 +56,14 @@ TYPE_TO_STRING(std::complex<double>);
 
 #ifdef ELSA_CUDA_VECTOR
 using GPUTypeTuple =
-    std::tuple<TestHelperGPU<float>, TestHelperGPU<double>, TestHelperGPU<std::complex<float>>,
-               TestHelperGPU<std::complex<double>>, TestHelperGPU<index_t>>;
+    std::tuple<TestHelperGPU<float>, TestHelperGPU<double>, TestHelperGPU<complex<float>>,
+               TestHelperGPU<complex<double>>, TestHelperGPU<index_t>>;
 
 TYPE_TO_STRING(TestHelperGPU<float>);
 TYPE_TO_STRING(TestHelperGPU<double>);
 TYPE_TO_STRING(TestHelperGPU<index_t>);
-TYPE_TO_STRING(TestHelperGPU<std::complex<float>>);
-TYPE_TO_STRING(TestHelperGPU<std::complex<double>>);
+TYPE_TO_STRING(TestHelperGPU<complex<float>>);
+TYPE_TO_STRING(TestHelperGPU<complex<double>>);
 #endif
 
 TEST_SUITE_BEGIN("core");
@@ -656,7 +656,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing creation of Maps through DataC
 
 #ifdef ELSA_CUDA_VECTOR
 TEST_CASE_TEMPLATE("DataContainer: Testing load data to GPU and vice versa", TestType, float,
-                   double, std::complex<float>, std::complex<double>, index_t)
+                   double, complex<float>, complex<double>, index_t)
 {
     GIVEN("A CPU DataContainer with random data")
     {

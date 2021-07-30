@@ -5,11 +5,17 @@
 #include <Eigen/Core>
 #include <type_traits>
 
+#ifdef ELSA_CUDA_VECTOR
+#include <thrust/complex.h>
+#endif
+
+#include "Complex.h"
+
 namespace elsa
 {
-    using real_t = float;                   ///< global type for real numbers
-    using complex_t = std::complex<real_t>; ///< global type for complex numbers
-    using index_t = std::ptrdiff_t;         ///< global type for indices
+    using real_t = float;              ///< global type for real numbers
+    using complex_t = complex<real_t>; ///< global type for complex numbers
+    using index_t = std::ptrdiff_t;    ///< global type for indices
 
     /// global type for vectors of real numbers
     using RealVector_t = Eigen::Matrix<real_t, Eigen::Dynamic, 1>;
@@ -62,7 +68,7 @@ namespace elsa
 
     /// partial specialization to derive correct floating point type
     template <typename T>
-    struct GetFloatingPointType<std::complex<T>> {
+    struct GetFloatingPointType<complex<T>> {
         using type = T;
     };
 
@@ -83,8 +89,8 @@ namespace elsa
 
     /// Predicate to check if of complex type
     template <typename T>
-    constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, std::complex<float>>::value
-                               || std::is_same<RemoveCvRef_t<T>, std::complex<double>>::value;
+    constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, complex<float>>::value
+                               || std::is_same<RemoveCvRef_t<T>, complex<double>>::value;
 } // namespace elsa
 
 /*

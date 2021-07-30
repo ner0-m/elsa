@@ -54,7 +54,7 @@ namespace elsa
     // explicit template instantiation
     template class LInfNorm<float>;
     template class LInfNorm<double>;
-    template class LInfNorm<std::complex<float>>;
-    template class LInfNorm<std::complex<double>>;
+    template class LInfNorm<complex<float>>;
+    template class LInfNorm<complex<double>>;
 
 } // namespace elsa

@@ -102,8 +102,8 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class Scaling<float>;
-    template class Scaling<std::complex<float>>;
+    template class Scaling<complex<float>>;
     template class Scaling<double>;
-    template class Scaling<std::complex<double>>;
+    template class Scaling<complex<double>>;
 
 } // namespace elsa

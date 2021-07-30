@@ -106,6 +106,15 @@ ADD_ELSA_MODULE(
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 
+# link Quickvec for DataHandlerGPU
+# Also add the necessary compile definition for quickvec
+if(${ELSA_BUILD_WITH_QUICKVEC})
+    set_source_files_properties(${MODULE_SOURCES} PROPERTIES LANGUAGE CUDA)
+    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC "Quickvec::quickvec")
+    target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cuda_std_17)
+endif()
+
 # Link Dnnl if wanted and available
 if(ELSA_HAS_DNNL_BACKEND)
     # Include Dnnl library header as system to avoid warnings

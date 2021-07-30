@@ -660,9 +660,9 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
-    template class DataContainer<std::complex<float>>;
+    template class DataContainer<complex<float>>;
     template class DataContainer<double>;
-    template class DataContainer<std::complex<double>>;
+    template class DataContainer<complex<double>>;
     template class DataContainer<index_t>;
 
     template DataContainer<float> concatenate<float>(const DataContainer<float>&,

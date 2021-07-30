@@ -21,3 +21,12 @@ set(HEADERS
 add_executable(integration-tests ${SOURCES})
 target_link_libraries(integration-tests elsa::all)
 target_compile_features(integration-tests PUBLIC cxx_std_17)
+
+# link Quickvec for DataHandlerGPU
+# Also add the necessary compile definition for quickvec
+if(${ELSA_BUILD_WITH_QUICKVEC})
+    set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CUDA)
+    target_compile_definitions(integration-tests PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+    # target_link_libraries(integration-tests PUBLIC "Quickvec::quickvec")
+    target_compile_features(integration-tests PUBLIC cuda_std_17)
+endif()

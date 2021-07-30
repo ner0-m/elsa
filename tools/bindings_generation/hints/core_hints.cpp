@@ -273,14 +273,14 @@ namespace elsa
     };
 
     template class DataContainerHints<float>;
-    template class DataContainerComplexHints<std::complex<float>>;
+    template class DataContainerComplexHints<complex<float>>;
     template class DataContainerHints<double>;
-    template class DataContainerComplexHints<std::complex<double>>;
+    template class DataContainerComplexHints<complex<double>>;
     template class DataContainerHints<index_t>;
     template class LinearOperatorHints<float>;
     template class LinearOperatorHints<double>;
-    template class LinearOperatorHints<std::complex<float>>;
-    template class LinearOperatorHints<std::complex<double>>;
+    template class LinearOperatorHints<complex<float>>;
+    template class LinearOperatorHints<complex<double>>;
     template class TransparentClassHints<geometry::Spacing2D>;
     template class TransparentClassHints<geometry::OriginShift2D>;
     template class TransparentClassHints<geometry::Coefficients<2>>;
