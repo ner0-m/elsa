@@ -13,7 +13,7 @@ namespace elsa
                                         VolumeDescriptor({nAtoms})))
     {
         _representations = 1; // not the best initialization but OMP starts from scratch anyways
-        updateError();
+        calculateError();
     }
 
     template <typename data_t>
@@ -32,13 +32,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    Dictionary<data_t>& DictionaryLearningProblem<data_t>::getCurrentDictionary()
+    const Dictionary<data_t>& DictionaryLearningProblem<data_t>::getDictionary()
     {
         return _dictionary;
     }
 
     template <typename data_t>
-    DataContainer<data_t>& DictionaryLearningProblem<data_t>::getCurrentRepresentations()
+    const DataContainer<data_t>& DictionaryLearningProblem<data_t>::getRepresentations()
     {
         return _representations;
     }
@@ -56,35 +56,86 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>
-        DictionaryLearningProblem<data_t>::getRestrictedError(IndexVector_t affectedSignals,
-                                                              index_t atom)
+    DataContainer<data_t> DictionaryLearningProblem<data_t>::getRestrictedError(index_t atom)
     {
-        if (affectedSignals.size() < 1)
-            throw InvalidArgumentError(
-                "DictionaryLearningProblem::getRestrictedError: affectedSignals must not be empty");
-        IdenticalBlocksDescriptor errorDescriptor(affectedSignals.size(),
+        findAffectedSignals(atom);
+        if (_currentAffectedSignals.size() < 1)
+            throw LogicError(
+                "DictionaryLearningProblem::getRestrictedError: atom doesn't affect any signals");
+        IdenticalBlocksDescriptor errorDescriptor(_currentAffectedSignals.size(),
                                                   _signals.getBlock(0).getDataDescriptor());
-        DataContainer<data_t> modifiedError(errorDescriptor);
+        _currentModifiedError = std::make_unique<DataContainer<data_t>>(errorDescriptor);
 
         index_t i = 0;
-        for (index_t idx : affectedSignals) {
-            modifiedError.getBlock(i) =
+        for (index_t idx : _currentAffectedSignals) {
+            _currentModifiedError->getBlock(i) =
                 _residual.getBlock(idx)
                 + _dictionary.getAtom(atom) * _representations.getBlock(idx)[atom];
             ++i;
         }
 
-        return modifiedError;
+        return *_currentModifiedError;
     }
 
     template <typename data_t>
-    void DictionaryLearningProblem<data_t>::updateError()
+    void DictionaryLearningProblem<data_t>::calculateError()
     {
         index_t nSignals = getIdenticalBlocksDescriptor(_signals).getNumberOfBlocks();
         for (index_t i = 0; i < nSignals; ++i) {
             _residual.getBlock(i) =
                 _signals.getBlock(i) - _dictionary.apply(_representations.getBlock(i));
+        }
+    }
+
+    template <typename data_t>
+    void DictionaryLearningProblem<data_t>::updateRepresentations(
+        const DataContainer<data_t>& representations)
+    {
+        if (_representations.getDataDescriptor() != representations.getDataDescriptor())
+            throw InvalidArgumentError("DictionaryLearningProblem::updateRepresentations: can't "
+                                       "update to representations with different descriptor");
+
+        _representations = representations;
+        calculateError();
+    }
+
+    template <typename data_t>
+    void DictionaryLearningProblem<data_t>::updateAtom(index_t atomIdx,
+                                                       const DataContainer<data_t>& atom,
+                                                       const DataContainer<data_t>& representation)
+    {
+        // we should add some sanity checks on atom and representation here
+
+        if (atomIdx != _currentAtomIdx) {
+            // should not happen as ideally we update the atom
+            // for which we previously calculated the error
+            findAffectedSignals(atomIdx);
+            // actually we should exclude this case cause it also messes with currentModifiedError
+        }
+        _dictionary.updateAtom(atomIdx, atom);
+
+        index_t i = 0;
+        for (auto idx : _currentAffectedSignals) {
+            _representations.getBlock(idx)[atomIdx] = representation[i];
+
+            // update relevant part of the error matrix
+            _residual.getBlock(idx) = _currentModifiedError->getBlock(i) - atom * representation[i];
+            ++i;
+        }
+    }
+
+    template <typename data_t>
+    void DictionaryLearningProblem<data_t>::findAffectedSignals(index_t atom)
+    {
+        _currentAffectedSignals = IndexVector_t(0);
+        _currentAtomIdx = atom;
+        index_t nSignals = getIdenticalBlocksDescriptor(_signals).getNumberOfBlocks();
+
+        for (index_t i = 0; i < nSignals; ++i) {
+            if (_representations.getBlock(i)[atom] != 0) {
+                _currentAffectedSignals.conservativeResize(_currentAffectedSignals.size() + 1);
+                _currentAffectedSignals[_currentAffectedSignals.size() - 1] = i;
+            }
         }
     }
 

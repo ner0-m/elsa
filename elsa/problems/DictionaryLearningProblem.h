@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Dictionary.h"
+#include <memory>
 
 namespace elsa
 {
@@ -27,29 +28,20 @@ namespace elsa
          */
         DictionaryLearningProblem(const DataContainer<data_t>& signals, index_t nAtoms);
 
-        /// default destructor
-        //~DictionaryLearningProblem() override = default;
+        const Dictionary<data_t>& getDictionary();
 
-        Dictionary<data_t>& getCurrentDictionary();
-
-        DataContainer<data_t>& getCurrentRepresentations();
+        const DataContainer<data_t>& getRepresentations();
 
         DataContainer<data_t> getSignals();
 
         DataContainer<data_t> getGlobalError();
 
-        DataContainer<data_t> getRestrictedError(IndexVector_t affectedSignals, index_t atom);
+        DataContainer<data_t> getRestrictedError(index_t atom);
 
-        void updateError();
+        void updateRepresentations(const DataContainer<data_t>& representations);
 
-        /*
-            protected:
-                /// implement the polymorphic clone operation
-                RepresentationProblem<data_t>* cloneImpl() const override;
-
-                /// override getGradient and throw exception if called
-                void getGradientImpl(DataContainer<data_t>& result) override;
-        */
+        void updateAtom(index_t atomIdx, const DataContainer<data_t>& atom,
+                        const DataContainer<data_t>& representation);
 
     private:
         Dictionary<data_t> _dictionary;
@@ -57,6 +49,12 @@ namespace elsa
         const DataContainer<data_t> _signals;
         DataContainer<data_t> _residual;
 
+        IndexVector_t _currentAffectedSignals;
+        index_t _currentAtomIdx;
+        std::unique_ptr<DataContainer<data_t>> _currentModifiedError;
+
+        void calculateError();
+        void findAffectedSignals(index_t atom);
         static const IdenticalBlocksDescriptor&
             getIdenticalBlocksDescriptor(const DataContainer<data_t>& data);
     };
