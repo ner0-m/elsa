@@ -40,9 +40,9 @@ namespace elsa
         //~KSVD() override = default;
 
         // public entry point, will be inherited from Solver
-        DataContainer<data_t>& solve(index_t iterations);
+        DataContainer<data_t> solve(index_t iterations);
 
-        Dictionary<data_t>& getLearnedDictionary();
+        const Dictionary<data_t>& getLearnedDictionary();
 
     private:
         /// variable affecting the stopping condition
@@ -64,7 +64,7 @@ namespace elsa
          *
          * @returns a reference to the current solution
          */
-        DataContainer<data_t>& solveImpl(index_t iterations);
+        DataContainer<data_t> solveImpl(index_t iterations);
 
         IndexVector_t getAffectedSignals(const DataContainer<data_t>& representations,
                                          index_t atom);

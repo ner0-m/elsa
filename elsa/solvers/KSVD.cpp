@@ -5,7 +5,7 @@ namespace elsa
     template <typename data_t>
     KSVD<data_t>::KSVD(DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,
                        data_t epsilon)
-        : /*Solver<data_t>(problem),*/ _problem{problem},
+        : _problem{problem},
           _sparsityLevel{sparsityLevel},
           _epsilon{epsilon},
           _nSamples{getNumberOfSamples(problem.getSignals())}
@@ -21,22 +21,22 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>& KSVD<data_t>::solve(index_t iterations)
+    DataContainer<data_t> KSVD<data_t>::solve(index_t iterations)
     {
         return solveImpl(iterations);
     }
 
     template <typename data_t>
-    Dictionary<data_t>& KSVD<data_t>::getLearnedDictionary()
+    const Dictionary<data_t>& KSVD<data_t>::getLearnedDictionary()
     {
-        return _problem.getCurrentDictionary();
+        return _problem.getDictionary();
     }
 
     template <typename data_t>
-    DataContainer<data_t>& KSVD<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> KSVD<data_t>::solveImpl(index_t iterations)
     {
-        auto& dict = _problem.getCurrentDictionary();
-        auto& representations = _problem.getCurrentRepresentations();
+        auto& dict = _problem.getDictionary();
+        auto& representations = _problem.getRepresentations();
         auto signals = _problem.getSignals();
 
         Logger::get("KSVD")->info("Started for {} iterations, with {} signals and {} atoms. "
@@ -46,27 +46,27 @@ namespace elsa
 
         index_t i = 0;
         while (i < iterations && _problem.getGlobalError().l2Norm() >= _epsilon) {
+            DataContainer<data_t> nextRepresentations(representations.getDataDescriptor());
             // first find a sparse representation
             for (index_t j = 0; j < _nSamples; ++j) {
                 RepresentationProblem reprProblem(dict, signals.getBlock(j));
                 OrthogonalMatchingPursuit omp(reprProblem);
-                representations.getBlock(j) = omp.solve(_sparsityLevel);
+                nextRepresentations.getBlock(j) = omp.solve(_sparsityLevel);
             }
-            _problem.updateError();
+            _problem.updateRepresentations(nextRepresentations);
 
             // then optimize atom by atom
             for (index_t k = 0; k < dict.getNumberOfAtoms(); ++k) {
-                auto affectedSignals = getAffectedSignals(representations, k);
-                if (affectedSignals.size() == 0)
+                try {
+                    auto modifiedError = _problem.getRestrictedError(k);
+                    auto svd = calculateSVD(modifiedError);
+                    _problem.updateAtom(k, getNextAtom(svd), getNextRepresentation(svd));
+                    if (_problem.getGlobalError().l2Norm() < _epsilon)
+                        break;
+                } catch (LogicError& e) {
+                    // nothing bad, this atom is not used
                     continue;
-                auto modifiedError = _problem.getRestrictedError(affectedSignals, k);
-                auto svd = calculateSVD(modifiedError);
-                dict.updateAtom(k, getNextAtom(svd));
-                updateRepresentations(representations, getNextRepresentation(svd), affectedSignals,
-                                      k);
-                _problem.updateError();
-                if (_problem.getGlobalError().l2Norm() < _epsilon)
-                    break;
+                }
             }
 
             Logger::get("KSVD")->info("Error after iteration {}: {}", i,
