@@ -318,7 +318,7 @@ namespace elsa
     template <typename data_t>
     auto ShearletTransform<data_t>::getL() const -> index_t
     {
-        return 0;
+        return _L;
     }
 
     // ------------------------------------------

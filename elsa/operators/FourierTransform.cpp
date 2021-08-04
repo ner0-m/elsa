@@ -16,7 +16,7 @@ namespace elsa {
                                              DataContainer<data_t>& Ax) const
     {
 
-        Timer<> timeguard("FourierTransform", "apply()");
+        Timer timeguard("FourierTransform", "apply()");
 
         auto x_values = x.getDataDescriptor().getNumberOfCoefficientsPerDimension();
         auto x_dims = x.getDataDescriptor().getNumberOfDimensions();
@@ -33,7 +33,7 @@ namespace elsa {
     void FourierTransform<data_t>::applyAdjointImpl(const DataContainer<data_t>& x,
                                                     DataContainer<data_t>& Atx) const
     {
-        Timer<> timeguard("FourierTransform", "applyAdjoint()");
+        Timer timeguard("FourierTransform", "applyAdjoint()");
 
         auto x_values = x.getDataDescriptor().getNumberOfCoefficientsPerDimension();
         auto x_dims = x.getDataDescriptor().getNumberOfDimensions();
