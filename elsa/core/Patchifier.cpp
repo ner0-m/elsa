@@ -45,6 +45,31 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t> Patchifier<data_t>::patches2im(const DataContainer<data_t>& patches)
+    {
+        DataContainer<data_t> image(_imageShape);
+
+        const auto& patchesDescriptor =
+            dynamic_cast<const IdenticalBlocksDescriptor&>(patches.getDataDescriptor());
+
+        for (index_t patchIdx = 0; patchesDescriptor.getNumberOfBlocks(); ++patchIdx) {
+            const auto& patch = patches.getBlock(patchIdx);
+            IndexVector_t startIdx = getImageIdx(patchIdx);
+            IndexVector_t endIdx = startIdx + IndexVector_t({_blockSize, _blockSize});
+
+            index_t k = 0;
+            for (index_t i = startIdx[0]; i < endIdx[0]; ++i) {
+                for (index_t j = startIdx[1]; j < endIdx[1]; ++j) {
+                    image(IndexVector_t({i, j})) = patch[k];
+                    ++k;
+                }
+            }
+        }
+
+        return image;
+    }
+
+    template <typename data_t>
     IndexVector_t Patchifier<data_t>::getImageIdx(index_t patchNr)
     {
         IndexVector_t idx(2);
