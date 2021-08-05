@@ -1,6 +1,7 @@
 #pragma once
 
 #include "elsaDefines.h"
+#include "DataContainer.h"
 
 #include <limits>
 
@@ -17,7 +18,7 @@ namespace elsa
      *
      */
     template <typename data_t = real_t>
-    class ImageDenoisingTask : public Cloneable<ImageDenoisingTask<data_t>>
+    class ImageDenoisingTask
     {
     public:
         /**
@@ -31,12 +32,6 @@ namespace elsa
 
         DataContainer<data_t> denoise();
 
-        /// implement the polymorphic clone operation
-        ImageDenoisingTask<data_t>* cloneImpl() const override;
-
-        /// implement the polymorphic comparison operation
-        bool isEqual(const ImageDenoisingTask<data_t>& other) const override;
-
     private:
         DataContainer<data_t> _image;
         index_t _blockSize;
@@ -44,8 +39,5 @@ namespace elsa
         index_t _sparsityLevel;
         index_t _nIterations;
         data_t _epsilon;
-
-        DataContainer<data_t> im2patches();
-        DataContainer<data_t> patches2im();
     };
 } // namespace elsa
