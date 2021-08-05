@@ -26,6 +26,7 @@ set(MODULE_HEADERS
     ExpressionPredicates.h
     Geometry.h
     StrongTypes.h
+    Patchifier.h
 )
 
 # list all the code files of the module
@@ -46,6 +47,7 @@ set(MODULE_SOURCES
     LinearOperator.cpp
     Geometry.cpp
     StrongTypes.cpp
+    Patchifier.cpp
 )
 
 if(${ELSA_BUILD_WITH_QUICKVEC})
