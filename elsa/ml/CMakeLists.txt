@@ -56,8 +56,7 @@ set(MODULE_HEADERS
         Graph.h
         BackendAdaptor.h
         CudnnDataContainerInterface.h
-        models/AutoEncoder.h
-        models/UNet.h)
+        models/AutoEncoder.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -76,8 +75,7 @@ set(MODULE_SOURCES
         Loss.cpp
         Model.cpp
         Model.cpp
-        State.cpp
-        )
+        State.cpp)
 
 # elsa modules ml depends on  
 list(APPEND ELSA_MODULE_DEPS elsa_core elsa_logging)

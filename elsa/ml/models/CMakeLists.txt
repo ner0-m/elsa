@@ -1,9 +1,6 @@
-# TODO write this CMakeLists file correctly if a green light is given
-
 # list all the headers of the module
 set(MODULE_HEADERS
-        AutoEncoder.h
-        UNet.h)
+        AutoEncoder.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES)
