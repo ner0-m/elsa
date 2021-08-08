@@ -1,6 +1,7 @@
 #include <BlockDescriptor.h>
 #include "NLCG.h"
 #include "Logger.h"
+#include "Huber.h"
 
 namespace elsa
 {
@@ -41,6 +42,11 @@ namespace elsa
         // result von dataterm cast to linear residual -> as in SIRT
         const auto& gradientExpr =
             downcast<LinearResidual<data_t>>((_problem->getDataTerm()).getResidual());
+
+        //  const auto& gradientExpr =
+        //      static_cast<const
+        //      Quadric<data_t>&>(_problem->getDataTerm()).getGradientExpression();
+
         const LinearOperator<data_t>* A = nullptr;
         const DataContainer<data_t>* b = nullptr;
 
@@ -54,83 +60,63 @@ namespace elsa
         auto r = _problem->getGradient();
         r *= static_cast<data_t>(-1.0);
         auto d = r;
-        /*auto d = _preconditionerInverse ? _preconditionerInverse->apply(r) : r;
 
-        // only allocate space for s if preconditioned
-        std::unique_ptr<DataContainer<data_t>> s{};
-        if (_preconditionerInverse) {
-            s = std::make_unique<DataContainer<data_t>>(
-                _preconditionerInverse->getRangeDescriptor());
-            _preconditionerInverse->apply(r, *s);
-            d = *s;
-        }*/
-
-        auto deltaNew = r.squaredL2Norm(); // squared l2
+        auto deltaNew = r.dot(d); // squared l2
         auto deltaZero = deltaNew;
         data_t alpha;
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
-        index_t k = 0;
-        for (index_t i = 0; i < iterations && deltaNew > epsilon * epsilon * deltaZero; ++i) {
-            // auto Ad = A ? A->apply(d) : d;
+        for (index_t i = 0; i < iterations; ++i) {
             int j = 0;
             auto deltaD = d.squaredL2Norm();
+            const auto rOld = r;
 
             do {
                 auto numerator = _problem->getGradient().dot(d);
                 numerator *= static_cast<data_t>(-1.0);
-
                 auto denominator = d.dot(_problem->getHessian().apply(d));
+
+                if (denominator == 0)
+                    throw std::logic_error("NLCG: Division by zero.");
                 alpha = numerator / denominator;
                 x += alpha * d;
                 j++;
-            } while (j < 1 && alpha * alpha * deltaD > epsilon * epsilon);
+            } while (j < 3 && alpha * alpha * deltaD > epsilon * epsilon);
 
             r = _problem->getGradient();
             r *= static_cast<data_t>(-1.0);
+
             const auto deltaOld = deltaNew;
             deltaNew = r.squaredL2Norm();
-            /*    if (deltaNew <= epsilon * epsilon * deltaZero) {
-                    // check that we are not stopping prematurely due to accumulated roundoff error
-                    r = _problem->getGradient();
-                    deltaNew = r.squaredL2Norm();
-                    if (deltaNew <= epsilon * epsilon * deltaZero) {
-                        Logger::get("CG")->info("SUCCESS: Reached convergence at {}/{} iteration",
-                                                i + 1, iterations);
-                        return x;
-                    } else {
-                        // we are very close to the desired solution, so do a hard reset
-                        r *= static_cast<data_t>(-1.0);
-                        d = 0;
-                    }
-                }*/
-            const auto beta = deltaNew / deltaOld;
-            d = r + beta * d;
-            k++;
 
-            if (/*k==50 || */ r.dot(d) <= 0) {
-                d = r;
-                k = 0;
+            if (deltaNew <= epsilon * epsilon * deltaZero) {
+                // check that we are not stopping prematurely due to accumulated roundoff error
+                r = _problem->getGradient();
+                deltaNew = r.squaredL2Norm();
+                if (deltaNew <= epsilon * epsilon * deltaZero) {
+                    Logger::get("NLCG")->info("SUCCESS: Reached convergence at {}/{} iteration",
+                                              i + 1, iterations);
+                    return x;
+                } else {
+                    // we are very close to the desired solution, so do a hard reset
+                    r *= static_cast<data_t>(-1.0);
+                    d = r;
+                }
             }
-            /*           switch (_beta) {
-                           case FR:
-                               beta = deltaNew/deltaOld; //how to get transform?
-                               break;
-                           case PR: {
-                               auto deltaMid = r.dot(rOld);
-                               //if preconditioner? recalculate?
-                               beta = (deltaNew - deltaMid) / (deltaOld);
-                           }
-                               break;
 
-                       }
-                       if(beta < 0)
-                           d = (_preconditionerInverse ? *s : r);
-                       else
-                           d = (_preconditionerInverse ? *s : r) + beta*d;
-                       if(beta < 0)
-                           d = r;
-                       else
-                           d = r + beta*d;*/
+            data_t beta;
+            switch (_beta) {
+                case FR:
+                    beta = deltaNew / deltaOld; // how to get transform?
+                    break;
+                case PR: {
+                    auto deltaMid = r.dot(rOld);
+                    beta = (deltaNew - deltaMid) / (deltaOld);
+                    if (beta < 0)
+                        beta = 0;
+                } break;
+            }
+
+            d = r + beta * d;
         }
 
         return getCurrentSolution();
