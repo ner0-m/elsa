@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Geometry.h"
-
 #include "DetectorDescriptor.h"
 
 #include <vector>
@@ -10,20 +9,21 @@
 namespace elsa
 {
     /**
-     * @brief Generator for traditional circular trajectories as used in X-ray Computed Tomography
-     * (for 2d/3d).
+     * @brief Generator for limited angle trajectories as used in X-ray Computed Tomography
+     * (for 2D/3D).
      *
-     * @author Maximilan Hornung - initial code
-     * @author Tobias Lasser - modernization, fixes
+     * @author Andi Braimllari - initial code
      */
-    class CircleTrajectoryGenerator
+    class LimitedAngleTrajectoryGenerator
     {
     public:
         /**
-         * @brief Generate a list of geometries corresponding to a circular trajectory around a
+         * @brief Generate a list of geometries corresponding to a limited angle trajectory around a
          * volume.
          *
          * @param numberOfPoses the number of (equally spaced) acquisition poses to be generated
+         * @param missingWedgeIndices the indices of the poses between which the missing wedge is
+         * located
          * @param volumeDescriptor the volume around which the trajectory should go
          * @param arcDegrees the size of the arc of the circle covered by the trajectory (in
          * degrees, 360 for full circle)
@@ -41,11 +41,11 @@ namespace elsa
          * Please note: the sinogram size/spacing will match the volume size/spacing.
          *
          * TODO: Make it possible to return either PlanarDetectorDescriptor, or
-         * CurvedDetectorDescriptor
+         *  CurvedDetectorDescriptor
          */
         static std::unique_ptr<DetectorDescriptor>
-            createTrajectory(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
-                             index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector);
+            createTrajectory(index_t numberOfPoses, IndexVector_t missingWedgeIndices,
+                             const DataDescriptor& volumeDescriptor, index_t arcDegrees,
+                             real_t sourceToCenter, real_t centerToDetector);
     };
-
 } // namespace elsa
