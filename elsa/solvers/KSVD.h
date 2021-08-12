@@ -30,30 +30,11 @@ namespace elsa
          * @param[in] sparsityLevel The number of non-zero entries in the representations
          * @param[in] epsilon affects the stopping condition
          */
-        KSVD(/*const*/ DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,
+        KSVD(DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,
              data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
         KSVD(const KSVD<data_t>&) = delete;
-
-        /// default destructor
-        //~KSVD() override = default;
-
-        // public entry point, will be inherited from Solver
-        DataContainer<data_t> solve(index_t iterations);
-
-        const Dictionary<data_t>& getLearnedDictionary();
-
-    private:
-        /// variable affecting the stopping condition
-        data_t _epsilon;
-
-        index_t _nSamples;
-
-        index_t _sparsityLevel;
-
-        /// lift the base class variable _problem
-        DictionaryLearningProblem<data_t>& _problem;
 
         /**
          * @brief Solve the representation problem, i.e. apply iterations number of iterations of
@@ -64,10 +45,22 @@ namespace elsa
          *
          * @returns a reference to the current solution
          */
-        DataContainer<data_t> solveImpl(index_t iterations);
+        DataContainer<data_t> solve(index_t iterations);
 
-        IndexVector_t getAffectedSignals(const DataContainer<data_t>& representations,
-                                         index_t atom);
+        const Dictionary<data_t>& getLearnedDictionary();
+
+    private:
+        /// variable affecting the stopping condition
+        data_t _epsilon;
+
+        /// number of samples
+        index_t _nSamples;
+
+        /// number of atoms used for each representation
+        index_t _sparsityLevel;
+
+        /// keep a reference to the DictionaryLearningProblem
+        DictionaryLearningProblem<data_t>& _problem;
 
         auto calculateSVD(DataContainer<data_t> data);
 
@@ -77,15 +70,6 @@ namespace elsa
         DataContainer<data_t> getNextRepresentation(
             Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd);
 
-        void updateRepresentations(DataContainer<data_t>& representations,
-                                   DataContainer<data_t> nextRepresentation,
-                                   IndexVector_t affectedSignals, index_t atom);
-
         static index_t getNumberOfSamples(const DataContainer<data_t>& signals);
-        /// implement the polymorphic clone operation
-        // OMP<data_t>* cloneImpl() const override;
-
-        /// implement the polymorphic comparison operation
-        // bool isEqual(const Solver<data_t>& other) const override;
     };
 } // namespace elsa

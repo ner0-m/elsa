@@ -21,19 +21,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> KSVD<data_t>::solve(index_t iterations)
-    {
-        return solveImpl(iterations);
-    }
-
-    template <typename data_t>
     const Dictionary<data_t>& KSVD<data_t>::getLearnedDictionary()
     {
         return _problem.getDictionary();
     }
 
     template <typename data_t>
-    DataContainer<data_t> KSVD<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> KSVD<data_t>::solve(index_t iterations)
     {
         auto& dict = _problem.getDictionary();
         auto& representations = _problem.getRepresentations();
@@ -77,21 +71,6 @@ namespace elsa
     }
 
     template <typename data_t>
-    IndexVector_t KSVD<data_t>::getAffectedSignals(const DataContainer<data_t>& representations,
-                                                   index_t atom)
-    {
-        IndexVector_t affectedSignals(0);
-
-        for (index_t i = 0; i < _nSamples; ++i) {
-            if (representations.getBlock(i)[atom] != 0) {
-                affectedSignals.conservativeResize(affectedSignals.size() + 1);
-                affectedSignals[affectedSignals.size() - 1] = i;
-            }
-        }
-        return affectedSignals;
-    }
-
-    template <typename data_t>
     auto KSVD<data_t>::calculateSVD(DataContainer<data_t> error)
     {
         const auto& errorDescriptor =
@@ -127,17 +106,6 @@ namespace elsa
         return firstRightSingular * svd.singularValues()[0];
     }
 
-    template <typename data_t>
-    void KSVD<data_t>::updateRepresentations(DataContainer<data_t>& representations,
-                                             DataContainer<data_t> nextRepresentation,
-                                             IndexVector_t affectedSignals, index_t atom)
-    {
-        index_t i = 0;
-        for (auto idx : affectedSignals) {
-            representations.getBlock(idx)[atom] = nextRepresentation[i];
-            ++i;
-        }
-    }
     // ------------------------------------------
     // explicit template instantiation
     template class KSVD<float>;
