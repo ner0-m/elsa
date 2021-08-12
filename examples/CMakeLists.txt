@@ -10,6 +10,12 @@ target_link_libraries(example2d elsa::all)
 target_compile_features(example2d PUBLIC cxx_std_17)
 add_dependencies(build-examples example2d)
 
+# build the temporary 2d limited angle example program
+add_executable(temp_example2d_lat temp_example2d_lat.cpp temp_example2d_lat.cpp)
+target_link_libraries(temp_example2d_lat elsa::all)
+target_compile_features(temp_example2d_lat PUBLIC cxx_std_17)
+add_dependencies(build-examples temp_example2d_lat)
+
 # build the 2d example admm program
 add_executable(example2d_admm example2d_admm.cpp)
 target_link_libraries(example2d_admm elsa::all)

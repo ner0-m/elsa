@@ -22,8 +22,7 @@ namespace elsa
          * volume.
          *
          * @param numberOfPoses the number of (equally spaced) acquisition poses to be generated
-         * @param missingWedgeIndices the indices of the poses between which the missing wedge is
-         * located
+         * @param missingWedgeAngles the angles between which the missing wedge is located
          * @param volumeDescriptor the volume around which the trajectory should go
          * @param arcDegrees the size of the arc of the circle covered by the trajectory (in
          * degrees, 360 for full circle)
@@ -44,7 +43,7 @@ namespace elsa
          *  CurvedDetectorDescriptor
          */
         static std::unique_ptr<DetectorDescriptor>
-            createTrajectory(index_t numberOfPoses, IndexVector_t missingWedgeIndices,
+            createTrajectory(index_t numberOfPoses, RealVector_t missingWedgeAngles,
                              const DataDescriptor& volumeDescriptor, index_t arcDegrees,
                              real_t sourceToCenter, real_t centerToDetector);
     };

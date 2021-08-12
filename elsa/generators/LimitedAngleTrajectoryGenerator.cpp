@@ -8,7 +8,7 @@
 namespace elsa
 {
     std::unique_ptr<DetectorDescriptor> LimitedAngleTrajectoryGenerator::createTrajectory(
-        index_t numberOfPoses, IndexVector_t missingWedgeIndices,
+        index_t numberOfPoses, RealVector_t missingWedgeAngles,
         const DataDescriptor& volumeDescriptor, index_t arcDegrees, real_t sourceToCenter,
         real_t centerToDetector)
     {
@@ -21,8 +21,8 @@ namespace elsa
             throw InvalidArgumentError("LimitedAngleTrajectoryGenerator: can only handle 2D");
         }
 
-        printf("the size of the missingWedgeIndices is %ld\n", missingWedgeIndices.size());
-        if (missingWedgeIndices.size() != 2) {
+        printf("the size of the missingWedgeIndices is %ld\n", missingWedgeAngles.size());
+        if (missingWedgeAngles.size() != 2) {
             throw InvalidArgumentError("LimitedAngleTrajectoryGenerator: provide only two indices "
                                        "for specifying the missing wedge");
         }
@@ -62,7 +62,10 @@ namespace elsa
             static_cast<real_t>(arcDegrees) / (static_cast<real_t>(numberOfPoses) - 1.0f);
         for (index_t i = 0; i < numberOfPoses; ++i) {
             const Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
-            if (i >= missingWedgeIndices[0] && i <= missingWedgeIndices[1]) {
+            if ((angle.to_degree() >= missingWedgeAngles[0]
+                 && angle.to_degree() <= missingWedgeAngles[1])
+                || (angle.to_degree() >= (missingWedgeAngles[0] + 180)
+                    && angle.to_degree() <= (missingWedgeAngles[1] + 180))) {
                 // express here the missing wedge
 
                 // TODO just add a continue; or a custom Geometry object (different arguments than
