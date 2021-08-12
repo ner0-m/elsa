@@ -106,22 +106,38 @@ namespace elsa
     {
         // we should add some sanity checks on atom and representation here
 
+        bool hasValidError = true;
         if (atomIdx != _currentAtomIdx) {
             // should not happen as ideally we update the atom
             // for which we previously calculated the error
-            findAffectedSignals(atomIdx);
-            // actually we should exclude this case cause it also messes with currentModifiedError
+            try {
+                getRestrictedError(atomIdx);
+                // no exception => previous atom affects signals, continue as usual
+            } catch (LogicError&) {
+                hasValidError = false;
+                // previous atom wasn't used, using usual update strategy with restricted error not
+                // possible => update to new atom and calculate global error
+            }
         }
         _dictionary.updateAtom(atomIdx, atom);
+
+        if (!hasValidError)
+            findAffectedSignals(atomIdx);
 
         index_t i = 0;
         for (auto idx : _currentAffectedSignals) {
             _representations.getBlock(idx)[atomIdx] = representation[i];
 
-            // update relevant part of the error matrix
-            _residual.getBlock(idx) = _currentModifiedError->getBlock(i) - atom * representation[i];
+            if (hasValidError) {
+                // update relevant part of the error matrix
+                _residual.getBlock(idx) =
+                    _currentModifiedError->getBlock(i) - atom * representation[i];
+            }
             ++i;
         }
+
+        if (!hasValidError)
+            calculateError();
     }
 
     template <typename data_t>
