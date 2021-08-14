@@ -64,5 +64,27 @@ TEST_CASE_TEMPLATE("Patchifier: Using the patchifier", data_t, float, double)
             THEN("the result equals the original image") { REQUIRE_EQ(img, dcImage); }
         }
     }
+
+    GIVEN("An image and a corresponding patchifier with stride 2")
+    {
+        // it is important that blocksize, stride and image size fit together, otherwise the pixels
+        // at the border will be truncated and the depatchified image doesnt match the original
+        VolumeDescriptor imageDescriptor({7, 5});
+        index_t blockSize = 3;
+        index_t stride = 2;
+        Patchifier<data_t> patchifier(imageDescriptor, blockSize, stride);
+
+        Vector_t<data_t> imageVec(imageDescriptor.getNumberOfCoefficients());
+        imageVec.setRandom();
+        DataContainer<data_t> dcImage(imageDescriptor, imageVec);
+
+        WHEN("turning the image into patches and the result back to an image")
+        {
+            auto patches = patchifier.im2patches(dcImage);
+            auto img = patchifier.patches2im(patches);
+
+            THEN("the result equals the original image") { REQUIRE_EQ(img, dcImage); }
+        }
+    }
 }
 TEST_SUITE_END();
