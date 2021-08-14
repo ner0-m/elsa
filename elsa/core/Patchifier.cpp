@@ -89,8 +89,8 @@ namespace elsa
     IndexVector_t Patchifier<data_t>::getImageIdx(index_t patchNr)
     {
         IndexVector_t idx(2);
-        idx[0] = patchNr % _nPatchesRow; // col
-        idx[1] = patchNr / _nPatchesRow; // row
+        idx[0] = _stride * (patchNr % _nPatchesRow); // col
+        idx[1] = _stride * (patchNr / _nPatchesRow); // row
         return idx;
     }
     // ------------------------------------------
