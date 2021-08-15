@@ -2,15 +2,17 @@
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "PlanarDetectorDescriptor.h"
+#include "StrongTypes.h"
 
 #include <stdexcept>
 
 namespace elsa
 {
     std::unique_ptr<DetectorDescriptor> LimitedAngleTrajectoryGenerator::createTrajectory(
-        index_t numberOfPoses, RealVector_t missingWedgeAngles,
+        index_t numberOfPoses,
+        std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,
         const DataDescriptor& volumeDescriptor, index_t arcDegrees, real_t sourceToCenter,
-        real_t centerToDetector)
+        real_t centerToDetector, bool mirrored)
     {
         // pull in geometry namespace, to reduce cluttering
         using namespace geometry;
@@ -19,12 +21,6 @@ namespace elsa
         const auto dim = volumeDescriptor.getNumberOfDimensions();
         if (dim != 2) {
             throw InvalidArgumentError("LimitedAngleTrajectoryGenerator: can only handle 2D");
-        }
-
-        printf("the size of the missingWedgeIndices is %ld\n", missingWedgeAngles.size());
-        if (missingWedgeAngles.size() != 2) {
-            throw InvalidArgumentError("LimitedAngleTrajectoryGenerator: provide only two indices "
-                                       "for specifying the missing wedge");
         }
 
         Logger::get("LimitedAngleTrajectoryGenerator")
@@ -58,19 +54,16 @@ namespace elsa
         std::vector<Geometry> geometryList;
         geometryList.reserve(static_cast<std::size_t>(numberOfPoses));
 
-        const real_t angleIncrement =
-            static_cast<real_t>(arcDegrees) / (static_cast<real_t>(numberOfPoses) - 1.0f);
-        for (index_t i = 0; i < numberOfPoses; ++i) {
-            const Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
-            if ((angle.to_degree() >= missingWedgeAngles[0]
-                 && angle.to_degree() <= missingWedgeAngles[1])
-                || (angle.to_degree() >= (missingWedgeAngles[0] + 180)
-                    && angle.to_degree() <= (missingWedgeAngles[1] + 180))) {
-                // express here the missing wedge
+        real_t wedgeArc = mirrored ? 2 * (missingWedgeAngles.second - missingWedgeAngles.first)
+                                   : missingWedgeAngles.second - missingWedgeAngles.first;
 
-                // TODO just add a continue; or a custom Geometry object (different arguments than
-                //  below) that represents this missing part?
-            } else {
+        const real_t angleIncrement = (static_cast<real_t>(arcDegrees) - wedgeArc)
+                                      / (static_cast<real_t>(numberOfPoses) - 1.0f);
+
+        for (index_t i = 0;; ++i) {
+            Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
+
+            if (notInMissingWedge(angle, missingWedgeAngles, mirrored)) {
                 // use emplace_back, then no copy is created
                 geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
                                           CenterOfRotationToDetector{centerToDetector},
@@ -79,8 +72,27 @@ namespace elsa
                                                        volumeDescriptor.getLocationOfOrigin()},
                                           SinogramData2D{Size2D{coeffs}, Spacing2D{spacing}});
             }
+
+            if (angle.to_degree() > static_cast<real_t>(arcDegrees)) {
+                break;
+            }
         }
 
         return std::make_unique<PlanarDetectorDescriptor>(coeffs, spacing, geometryList);
+    }
+
+    bool LimitedAngleTrajectoryGenerator::notInMissingWedge(
+        elsa::geometry::Radian angle,
+        std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles, bool mirrored)
+    {
+        if (!mirrored) {
+            return !(angle.to_degree() >= missingWedgeAngles.first
+                     && angle.to_degree() <= missingWedgeAngles.second);
+        } else {
+            return !((angle.to_degree() >= missingWedgeAngles.first
+                      && angle.to_degree() <= missingWedgeAngles.second)
+                     || (angle.to_degree() >= (missingWedgeAngles.first + 180)
+                         && angle.to_degree() <= (missingWedgeAngles.second + 180)));
+        }
     }
 } // namespace elsa

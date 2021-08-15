@@ -22,7 +22,7 @@ namespace elsa
          * volume.
          *
          * @param numberOfPoses the number of (equally spaced) acquisition poses to be generated
-         * @param missingWedgeAngles the angles between which the missing wedge is located
+         * @param missingWedgeAngles the two angles between which the missing wedge is located
          * @param volumeDescriptor the volume around which the trajectory should go
          * @param arcDegrees the size of the arc of the circle covered by the trajectory (in
          * degrees, 360 for full circle)
@@ -30,6 +30,8 @@ namespace elsa
          * the center of the volume
          * @param centerToDetector the distance of the center of the volume
          * to the X-ray detector
+         * @param mirrored flag indicating whether the missing wedge will be mirrored or not,
+         * defaults to true
          *
          * @returns a pair containing the list of geometries with a circular trajectory, and the
          * sinogram data descriptor
@@ -42,9 +44,15 @@ namespace elsa
          * TODO: Make it possible to return either PlanarDetectorDescriptor, or
          *  CurvedDetectorDescriptor
          */
-        static std::unique_ptr<DetectorDescriptor>
-            createTrajectory(index_t numberOfPoses, RealVector_t missingWedgeAngles,
-                             const DataDescriptor& volumeDescriptor, index_t arcDegrees,
-                             real_t sourceToCenter, real_t centerToDetector);
+        static std::unique_ptr<DetectorDescriptor> createTrajectory(
+            index_t numberOfPoses,
+            std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,
+            const DataDescriptor& volumeDescriptor, index_t arcDegrees, real_t sourceToCenter,
+            real_t centerToDetector, bool mirrored = true);
+
+        static bool notInMissingWedge(
+            elsa::geometry::Radian angle,
+            std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,
+            bool mirrored = true);
     };
 } // namespace elsa

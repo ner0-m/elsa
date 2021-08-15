@@ -78,14 +78,8 @@ namespace elsa
 
         // --> loop either over every voxel that should  updated or every detector
         // cell that should be calculated
+#pragma omp parallel for
         for (index_t rangeIndex = 0; rangeIndex < maxIterations; ++rangeIndex) {
-            // numAngles * 181 - 2 * (wedgeAngle2 - wedgeAngle1) * 181 = 50680
-            // 360 * 181 - 2 * (60 - 20) * 181 = 50680, for wedge between 20 and 60 degrees an error
-            // is thrown for 50680 and over
-            // TODO use this to avoid errors, obviously this entire issue should be tackled differently
-            // if (rangeIndex == 50680) {
-            //     break;
-            // }
             // --> get the current ray to the detector center
             const auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
 
@@ -104,6 +98,7 @@ namespace elsa
                 auto weight = traverse.updateTraverseAndGetDistance();
                 // --> update result depending on the operation performed
                 if constexpr (adjoint)
+#pragma omp atomic
                     result[dataIndexForCurrentVoxel] += vector[rangeIndex] * weight;
                 else
                     result[rangeIndex] += vector[dataIndexForCurrentVoxel] * weight;
