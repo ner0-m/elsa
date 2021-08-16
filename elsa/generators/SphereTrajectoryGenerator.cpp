@@ -39,13 +39,12 @@ namespace elsa
 
             const auto spacingPerDim = volumeDescriptor.getSpacingPerDimension();
 
-            if (dim == 2) {
-                coeffs << coeffsPerDimScaled[0], numberOfPoses;
-                spacing << spacingPerDim[0], 1;
-            } else {
-                coeffs << coeffsPerDimScaled[0], coeffsPerDimScaled[1], numberOfPoses;
-                spacing << spacingPerDim[0], spacingPerDim[1], 1;
-            }
+            coeffs.head(dim - 1) = coeffsPerDimScaled.head(dim - 1);
+            coeffs[dim - 1] = numberOfPoses; // TODO: with eigen 3.4: `coeffs(Eigen::last) = 1`
+
+            spacing.head(dim - 1) = spacingPerDim.head(dim - 1);
+            spacing[dim - 1] = 1; // TODO: same as coeffs
+
             // Return a pair, then split it using structured bindings
             return std::pair{coeffs, spacing};
         }();
