@@ -18,4 +18,20 @@ if [ "$?" != "0" ] ; then
     echo "Error clang tidy version mismatch, expected $1" 
     exit 1
 fi
+ 
+echo "==="
+echo "=== cmake-format ==="
+cmake-format --version
+if [ "$?" != "0" ] ; then
+    echo "Error cmake-format can't be executed" 
+    exit 1
+fi
+echo "==="
+
+echo "=== cmake-lint ==="
+cmake-lint --version
+if [ "$?" != "0" ] ; then
+    echo "Error cmake-lint can't be executed" 
+    exit 1
+fi
 echo "==="

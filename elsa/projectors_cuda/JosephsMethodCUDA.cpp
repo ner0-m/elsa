@@ -1,6 +1,7 @@
 #include "JosephsMethodCUDA.h"
 #include "LogGuard.h"
 #include "Timer.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -16,30 +17,31 @@ namespace elsa
     {
         auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
         if (dim != static_cast<std::size_t>(_rangeDescriptor->getNumberOfDimensions())) {
-            throw std::logic_error(
+            throw LogicError(
                 std::string("JosephsMethodCUDA: domain and range dimension need to match"));
         }
 
         if (dim != 2 && dim != 3) {
-            throw std::logic_error("JosephsMethodCUDA: only supporting 2d/3d operations");
+            throw LogicError("JosephsMethodCUDA: only supporting 2d/3d operations");
         }
 
         if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
-            throw std::logic_error("JosephsMethodCUDA: geometry list was empty");
+            throw LogicError("JosephsMethodCUDA: geometry list was empty");
         }
 
         const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
 
         // allocate device memory and copy ray origins and the inverse of projection matrices to
         // device
-        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, numGeometry);
+        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, asUnsigned(numGeometry));
 
-        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t), numGeometry)
+        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t),
+                            asUnsigned(numGeometry))
             != cudaSuccess)
             throw std::bad_alloc();
 
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = numGeometry;
+        _rayOrigins.ysize = asUnsigned(numGeometry);
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();
@@ -51,20 +53,20 @@ namespace elsa
         auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
         auto rayPitch = _rayOrigins.pitch;
 
-        for (index_t i = 0; i < numGeometry; i++) {
+        for (unsigned i = 0; i < numGeometry; i++) {
             auto geometry = _detectorDescriptor.getGeometryAt(i);
 
             if (!geometry)
-                throw std::logic_error("JosephsMethodCUDA: Access not existing geometry pose");
+                throw LogicError("JosephsMethodCUDA: Access not existing geometry pose");
 
             RealMatrix_t P = geometry->getInverseProjectionMatrix().block(0, 0, dim, dim);
             auto* slice = (int8_t*) _projInvMatrices.ptr + i * projPitch * dim;
 
             // transfer inverse of projection matrix
             if (cudaMemcpy2D(slice, projPitch, P.data(), dim * sizeof(real_t), dim * sizeof(real_t),
-                             dim, cudaMemcpyHostToDevice)
+                             dim, cudaMemcpyDefault)
                 != cudaSuccess)
-                throw std::logic_error(
+                throw LogicError(
                     "JosephsMethodCUDA: Could not transfer inverse projection matrices to GPU.");
 
             // transfer projection matrix if _fast flag is set
@@ -72,10 +74,10 @@ namespace elsa
                 P = geometry->getProjectionMatrix().block(0, 0, dim, dim);
                 slice = (int8_t*) _projMatrices.ptr + i * projPitch * dim;
                 if (cudaMemcpy2D(slice, projPitch, P.data(), dim * sizeof(real_t),
-                                 dim * sizeof(real_t), dim, cudaMemcpyHostToDevice)
+                                 dim * sizeof(real_t), dim, cudaMemcpyDefault)
                     != cudaSuccess)
-                    throw std::logic_error("JosephsMethodCUDA: Could not transfer "
-                                           "projection matrices to GPU.");
+                    throw LogicError("JosephsMethodCUDA: Could not transfer "
+                                     "projection matrices to GPU.");
             }
 
             int8_t* rayPtr = rayBasePtr + i * rayPitch;
@@ -84,9 +86,9 @@ namespace elsa
                 -geometry->getInverseProjectionMatrix().block(0, 0, dim, dim)
                 * geometry->getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
             // transfer ray origin
-            if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyHostToDevice)
+            if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyDefault)
                 != cudaSuccess)
-                throw std::logic_error("JosephsMethodCUDA: Could not transfer ray origins to GPU.");
+                throw LogicError("JosephsMethodCUDA: Could not transfer ray origins to GPU.");
         }
     }
 
@@ -118,7 +120,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherJM = dynamic_cast<const JosephsMethodCUDA*>(&other);
+        auto otherJM = downcast_safe<JosephsMethodCUDA>(&other);
         if (!otherJM)
             return false;
 
@@ -132,7 +134,7 @@ namespace elsa
     void JosephsMethodCUDA<data_t>::applyImpl(const DataContainer<data_t>& x,
                                               DataContainer<data_t>& Ax) const
     {
-        Timer<> timeGuard("JosephsMethodCUDA", "apply");
+        Timer timeGuard("JosephsMethodCUDA", "apply");
 
         // transfer volume as texture
         auto [volumeTex, volume] = copyTextureToGPU(x);
@@ -168,7 +170,8 @@ namespace elsa
             cudaDeviceSynchronize();
 
             // retrieve results from GPU
-            copy3DDataContainer<cudaMemcpyDeviceToHost, false>((void*) &Ax[0], dsinoPtr, sinoExt);
+            copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, false>((void*) &Ax[0],
+                                                                               dsinoPtr, sinoExt);
         } else {
             if (cudaMallocPitch(&dsinoPtr.ptr, &dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t),
                                 rangeDimsui[1])
@@ -193,10 +196,9 @@ namespace elsa
             // retrieve results from GPU
             if (cudaMemcpy2D((void*) &Ax[0], rangeDimsui[0] * sizeof(data_t), dsinoPtr.ptr,
                              dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t), rangeDimsui[1],
-                             cudaMemcpyDeviceToHost)
+                             cudaMemcpyDefault)
                 != cudaSuccess)
-                throw std::logic_error(
-                    "JosephsMethodCUDA::apply: Couldn't retrieve results from GPU");
+                throw LogicError("JosephsMethodCUDA::apply: Couldn't retrieve results from GPU");
         }
 
         if (cudaDestroyTextureObject(volumeTex) != cudaSuccess)
@@ -216,7 +218,7 @@ namespace elsa
     void JosephsMethodCUDA<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
                                                      DataContainer<data_t>& Aty) const
     {
-        Timer<> timeguard("JosephsMethodCUDA", "applyAdjoint");
+        Timer timeguard("JosephsMethodCUDA", "applyAdjoint");
 
         // allocate memory for volume
         auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
@@ -258,8 +260,8 @@ namespace elsa
                         ->error("Couldn't free GPU memory; This may cause problems later.");
             } else {
                 if (cudaMemset3DAsync(dvolumePtr, 0, volExt) != cudaSuccess)
-                    throw std::logic_error("JosephsMethodCUDA::applyAdjoint: Could not "
-                                           "zero-initialize volume on GPU.");
+                    throw LogicError("JosephsMethodCUDA::applyAdjoint: Could not "
+                                     "zero-initialize volume on GPU.");
 
                 cudaPitchedPtr dsinoPtr;
                 cudaExtent sinoExt = make_cudaExtent(rangeDimsui[0] * sizeof(data_t),
@@ -268,7 +270,8 @@ namespace elsa
                 if (cudaMalloc3D(&dsinoPtr, sinoExt) != cudaSuccess)
                     throw std::bad_alloc();
 
-                copy3DDataContainer<cudaMemcpyHostToDevice>((void*) &y[0], dsinoPtr, sinoExt);
+                copy3DDataContainer<ContainerCpyKind::cpyContainerToRawGPU>((void*) &y[0], dsinoPtr,
+                                                                            sinoExt);
 
                 // perform projection
 
@@ -296,7 +299,8 @@ namespace elsa
             }
 
             // retrieve results from GPU
-            copy3DDataContainer<cudaMemcpyDeviceToHost, false>((void*) &Aty[0], dvolumePtr, volExt);
+            copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, false>((void*) &Aty[0],
+                                                                               dvolumePtr, volExt);
         } else {
             if (cudaMallocPitch(&dvolumePtr.ptr, &dvolumePtr.pitch,
                                 domainDimsui[0] * sizeof(data_t), domainDimsui[1])
@@ -329,8 +333,8 @@ namespace elsa
                 if (cudaMemset2DAsync(dvolumePtr.ptr, dvolumePtr.pitch, 0,
                                       domainDimsui[0] * sizeof(data_t), domainDimsui[1])
                     != cudaSuccess)
-                    throw std::logic_error("JosephsMethodCUDA::applyAdjoint: Could not "
-                                           "zero-initialize volume on GPU.");
+                    throw LogicError("JosephsMethodCUDA::applyAdjoint: Could not "
+                                     "zero-initialize volume on GPU.");
 
                 cudaPitchedPtr dsinoPtr;
                 IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
@@ -342,9 +346,9 @@ namespace elsa
                 if (cudaMemcpy2DAsync(dsinoPtr.ptr, dsinoPtr.pitch, (void*) &y[0],
                                       rangeDimsui[0] * sizeof(data_t),
                                       rangeDimsui[0] * sizeof(data_t), rangeDimsui[1],
-                                      cudaMemcpyHostToDevice)
+                                      cudaMemcpyDefault)
                     != cudaSuccess)
-                    throw std::logic_error(
+                    throw LogicError(
                         "JosephsMethodCUDA::applyAdjoint: Couldn't transfer sinogram to GPU.");
 
                 IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
@@ -372,9 +376,9 @@ namespace elsa
             // retrieve results from GPU
             if (cudaMemcpy2D((void*) &Aty[0], domainDimsui[0] * sizeof(data_t), dvolumePtr.ptr,
                              dvolumePtr.pitch, sizeof(data_t) * domainDimsui[0], domainDimsui[1],
-                             cudaMemcpyDeviceToHost)
+                             cudaMemcpyDefault)
                 != cudaSuccess)
-                throw std::logic_error(
+                throw LogicError(
                     "JosephsMethodCUDA::applyAdjoint: Couldn't retrieve results from GPU");
         }
 
@@ -403,71 +407,60 @@ namespace elsa
             throw std::bad_alloc();
 
         _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = _detectorDescriptor.getNumberOfGeometryPoses();
+        _rayOrigins.ysize = asUnsigned(_detectorDescriptor.getNumberOfGeometryPoses());
 
         if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
             throw std::bad_alloc();
 
         if (cudaMemcpyAsync(_projInvMatrices.ptr, other._projInvMatrices.ptr,
-                            _projInvMatrices.pitch * dim * numAngles, cudaMemcpyDeviceToDevice)
+                            _projInvMatrices.pitch * dim * numAngles, cudaMemcpyDefault)
             != cudaSuccess)
-            throw std::logic_error(
+            throw LogicError(
                 "JosephsMethodCUDA: Could not transfer inverse projection matrices to GPU.");
 
         if (cudaMemcpyAsync(_rayOrigins.ptr, other._rayOrigins.ptr, _rayOrigins.pitch * numAngles,
-                            cudaMemcpyDeviceToDevice)
+                            cudaMemcpyDefault)
             != cudaSuccess)
-            throw std::logic_error("JosephsMethodCUDA: Could not transfer ray origins to GPU.");
+            throw LogicError("JosephsMethodCUDA: Could not transfer ray origins to GPU.");
 
         if (_fast) {
             if (cudaMalloc3D(&_projMatrices, extent) != cudaSuccess)
                 throw std::bad_alloc();
 
             if (cudaMemcpyAsync(_projMatrices.ptr, other._projMatrices.ptr,
-                                _projMatrices.pitch * dim * numAngles, cudaMemcpyDeviceToDevice)
+                                _projMatrices.pitch * dim * numAngles, cudaMemcpyDefault)
                 != cudaSuccess)
-                throw std::logic_error(
+                throw LogicError(
                     "JosephsMethodCUDA: Could not transfer projection matrices to GPU.");
         }
     }
 
     template <typename data_t>
-    template <cudaMemcpyKind direction, bool async>
+    template <typename JosephsMethodCUDA<data_t>::ContainerCpyKind direction, bool async>
     void JosephsMethodCUDA<data_t>::copy3DDataContainer(void* hostData,
                                                         const cudaPitchedPtr& gpuData,
                                                         const cudaExtent& extent) const
     {
         cudaMemcpy3DParms cpyParams = {};
         cpyParams.extent = extent;
-
-        cudaPointerAttributes ptrAttributes;
-        // if host data is a cuda pointer it must be managed unified memory -> internal copy
-        if (cudaPointerGetAttributes(&ptrAttributes, hostData) == cudaSuccess) {
-            Logger::get("JosephsMethodCUDA")->debug("Use internal GPU copy");
-            cpyParams.kind = cudaMemcpyDeviceToDevice;
-        } else {
-            cpyParams.kind = direction;
-        }
-
+        cpyParams.kind = cudaMemcpyDefault;
         cudaPitchedPtr tmp =
             make_cudaPitchedPtr(hostData, extent.width, extent.width, extent.height);
 
-        if (direction == cudaMemcpyHostToDevice) {
+        if (direction == ContainerCpyKind::cpyContainerToRawGPU) {
             cpyParams.dstPtr = gpuData;
             cpyParams.srcPtr = tmp;
-        } else if (direction == cudaMemcpyDeviceToHost) {
+        } else if (direction == ContainerCpyKind::cpyRawGPUToContainer) {
             cpyParams.srcPtr = gpuData;
             cpyParams.dstPtr = tmp;
-        } else {
-            throw std::logic_error("Can only copy data between device and host");
         }
 
         if (async) {
             if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
-                throw std::logic_error("Failed copying data between device and host");
+                throw LogicError("Failed copying data between device and host");
         } else {
             if (cudaMemcpy3D(&cpyParams) != cudaSuccess)
-                throw std::logic_error("Failed copying data between device and host");
+                throw LogicError("Failed copying data between device and host");
         }
     }
 
@@ -491,8 +484,8 @@ namespace elsa
         else if (sizeof(data_t) == 8)
             channelDesc = cudaCreateChannelDesc(32, 32, 0, 0, cudaChannelFormatKindSigned);
         else
-            throw std::invalid_argument("JosephsMethodCUDA::copyTextureToGPU: only supports "
-                                        "DataContainer<data_t> with data_t of length 4 or 8 bytes");
+            throw InvalidArgumentError("JosephsMethodCUDA::copyTextureToGPU: only supports "
+                                       "DataContainer<data_t> with data_t of length 4 or 8 bytes");
 
         if (hostData.getDataDescriptor().getNumberOfDimensions() == 3) {
             cudaExtent volumeExtent =
@@ -506,18 +499,10 @@ namespace elsa
             cpyParams.srcPtr.ysize = domainDimsui[1];
             cpyParams.dstArray = volume;
             cpyParams.extent = volumeExtent;
-
-            // if host data is a cuda pointer it must be managed unified memory -> internal copy
-            cudaPointerAttributes ptrAttributes;
-            if (cudaPointerGetAttributes(&ptrAttributes, (void*) &hostData[0]) == cudaSuccess) {
-                Logger::get("JosephsMethodCUDA")->debug("Internal GPU copy of texture");
-                cpyParams.kind = cudaMemcpyDeviceToDevice;
-            } else {
-                cpyParams.kind = cudaMemcpyHostToDevice;
-            }
+            cpyParams.kind = cudaMemcpyDefault;
 
             if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
-                throw std::logic_error(
+                throw LogicError(
                     "JosephsMethodCUDA::copyTextureToGPU: Could not transfer data to GPU.");
         } else {
             // CUDA has a very weird way of handling layered 1D arrays
@@ -537,10 +522,10 @@ namespace elsa
                     (void*) &hostData[0], domainDimsui[0] * sizeof(data_t), domainDimsui[0], 1);
                 cpyParams.dstArray = volume;
                 cpyParams.extent = volumeExtent;
-                cpyParams.kind = cudaMemcpyHostToDevice;
+                cpyParams.kind = cudaMemcpyDefault;
 
                 if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
-                    throw std::logic_error(
+                    throw LogicError(
                         "JosephsMethodCUDA::copyTextureToGPU: Could not transfer data to GPU.");
             } else {
                 if (cudaMallocArray(&volume, &channelDesc, domainDimsui[0], domainDimsui[1], flags)
@@ -549,9 +534,9 @@ namespace elsa
 
                 if (cudaMemcpy2DToArrayAsync(
                         volume, 0, 0, &hostData[0], domainDimsui[0] * sizeof(data_t),
-                        domainDimsui[0] * sizeof(data_t), domainDimsui[1], cudaMemcpyHostToDevice)
+                        domainDimsui[0] * sizeof(data_t), domainDimsui[1], cudaMemcpyDefault)
                     != cudaSuccess)
-                    throw std::logic_error(
+                    throw LogicError(
                         "JosephsMethodCUDA::copyTextureToGPU: Could not transfer data to GPU.");
             }
         }
@@ -571,7 +556,7 @@ namespace elsa
         texDesc.normalizedCoords = 0;
 
         if (cudaCreateTextureObject(&volumeTex, &resDesc, &texDesc, nullptr) != cudaSuccess)
-            throw std::logic_error("Couldn't create texture object");
+            throw LogicError("Couldn't create texture object");
 
         return std::pair<cudaTextureObject_t, cudaArray*>(volumeTex, volume);
     }

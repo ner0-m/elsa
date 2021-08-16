@@ -1,64 +1,28 @@
-# set the name of the module
-set(ELSA_MODULE_NAME operators)
-set(ELSA_MODULE_TARGET_NAME elsa_operators)
-set(ELSA_MODULE_EXPORT_TARGET elsa_${ELSA_MODULE_NAME}Targets)
-
-
 # list all the headers of the module
-set(MODULE_HEADERS
-        Identity.h
-        Scaling.h
-        FiniteDifferences.h
-        BlockLinearOperator.h)
+set(MODULE_HEADERS Identity.h Scaling.h FiniteDifferences.h BlockLinearOperator.h Dictionary.h)
 
 # list all the code files of the module
-set(MODULE_SOURCES
-        Identity.cpp
-        Scaling.cpp
-        FiniteDifferences.cpp
-        BlockLinearOperator.cpp)
+set(MODULE_SOURCES Identity.cpp Scaling.cpp FiniteDifferences.cpp BlockLinearOperator.cpp Dictionary.cpp)
 
-
-# build the module library
-add_library(${ELSA_MODULE_TARGET_NAME} ${MODULE_HEADERS} ${MODULE_SOURCES})
-add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
-
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC elsa_core elsa_logging)
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
+list(APPEND MODULE_PRIVATE_DEPS)
 
 # use OpenMP is available
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
+    list(APPEND MODULE_PRIVATE_DEPS OpenMP::OpenMP_CXX)
 endif()
 
+ADD_ELSA_MODULE(
+    operators "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
+    PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
+)
 
-target_include_directories(${ELSA_MODULE_TARGET_NAME}
-        PUBLIC
-        $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        )
-
-
-# require C++17
-target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
-# set -fPIC
-set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-
-# build the tests (if enabled)
-if(ELSA_TESTING)
-    add_subdirectory(tests)
-endif(ELSA_TESTING)
-
-if (ELSA_BUILD_PYTHON_BINDINGS)
-        GENERATE_BINDINGS(${ELSA_MODULE_TARGET_NAME}
-                bind_${ELSA_MODULE_NAME}.cpp
-                ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.hpp
-                ${MODULE_SOURCES})
+if(ELSA_BUILD_PYTHON_BINDINGS)
+    GENERATE_BINDINGS(
+        ${ELSA_MODULE_TARGET_NAME} bind_${ELSA_MODULE_NAME}.cpp
+        ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${MODULE_SOURCES}
+    )
 endif()
-
-# register the module
-registerComponent(${ELSA_MODULE_NAME})
-
-# install the module
-InstallElsaModule(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+ 
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)

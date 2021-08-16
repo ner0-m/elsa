@@ -6,17 +6,19 @@
 #include "ioUtils.h"
 
 #include <fstream>
+#include <istream>
 #include <map>
+#include <ostream>
 #include <string>
 
 namespace elsa
 {
     /**
-     * \brief class to read and write EDF files.
+     * @brief class to read and write EDF files.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - modernization
+     * @author Matthias Wieczorek - initial code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - modernization
      *
      * Class to handle reading EDF files into DataContainers and writing of DataContainers to EDF
      * files.
@@ -34,13 +36,21 @@ namespace elsa
         template <typename data_t = real_t>
         static DataContainer<data_t> read(std::string filename);
 
+        /// read from stream into a DataContainer
+        template <typename data_t = real_t>
+        static DataContainer<data_t> read(std::istream& input);
+
         /// write the DataContainer to the file named filename
         template <typename data_t = real_t>
         static void write(const DataContainer<data_t>& data, std::string filename);
 
+        /// write the DataContainer to the file named filename
+        template <typename data_t = real_t>
+        static void write(const DataContainer<data_t>& data, std::ostream& output);
+
     private:
         /// read the EDF header into a property map
-        static std::map<std::string, std::string> readHeader(std::ifstream& file);
+        static std::map<std::string, std::string> readHeader(std::istream& file);
 
         /// parse the EDF header property map into a DataDescriptor and DataType
         static std::pair<std::unique_ptr<DataDescriptor>, DataUtils::DataType>
@@ -48,7 +58,7 @@ namespace elsa
 
         /// write the EDF header to file
         template <typename data_t>
-        static void writeHeader(std::ofstream& file, const DataContainer<data_t>& data);
+        static void writeHeader(std::ostream& file, const DataContainer<data_t>& data);
 
         /// return the EDF string for data type of DataContainer
         template <typename data_t>

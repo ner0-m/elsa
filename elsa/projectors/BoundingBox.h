@@ -5,17 +5,17 @@
 namespace elsa
 {
     /**
-     * \brief Helper struct defining a 2d or 3d axis-aligned bounding box (or in short: AABB).
+     * @brief Helper struct defining a 2d or 3d axis-aligned bounding box (or in short: AABB).
      *
-     * \author David Frank - initial code
-     * \author Tobias Lasser - minor changes
+     * @author David Frank - initial code
+     * @author Tobias Lasser - minor changes
      */
     struct BoundingBox {
     public:
         /**
-         * \brief Construct AABB of particular size
+         * @brief Construct AABB of particular size
          *
-         * \param[in] volumeDimensions the number of coefficients per volume dimension
+         * @param[in] volumeDimensions the number of coefficients per volume dimension
          */
         BoundingBox(const IndexVector_t& volumeDimensions);
 

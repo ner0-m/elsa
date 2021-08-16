@@ -1,23 +1,34 @@
 /**
- * \file test_Huber.cpp
+ * @file test_Huber.cpp
  *
- * \brief Tests for the Huber class
+ * @brief Tests for the Huber class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite
- * \author Tobias Lasser - modernization
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite
+ * @author Tobias Lasser - modernization
  */
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
+
 #include "Huber.h"
 #include "LinearResidual.h"
 #include "Identity.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing the Huber norm functional")
+TYPE_TO_STRING(std::complex<float>);
+TYPE_TO_STRING(std::complex<double>);
+
+TEST_SUITE_BEGIN("functionals");
+
+TEST_CASE_TEMPLATE("Huber: Testing without residual only data", TestType, float, double)
 {
+    using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
+
     GIVEN("just data (no residual)")
     {
         IndexVector_t numCoeff(3);
@@ -28,64 +39,77 @@ SCENARIO("Testing the Huber norm functional")
 
         WHEN("instantiating")
         {
-            Huber func(dd, delta);
+            Huber<TestType> func(dd, delta);
 
             THEN("the functional is as expected")
             {
-                REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
-                REQUIRE(linRes);
-                REQUIRE(linRes->hasDataVector() == false);
-                REQUIRE(linRes->hasOperator() == false);
+                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
+                REQUIRE_UNARY(linRes);
+                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
+                REQUIRE_UNARY_FALSE(linRes->hasOperator());
             }
 
             THEN("a clone behaves as expected")
             {
                 auto huberClone = func.clone();
 
-                REQUIRE(huberClone.get() != &func);
-                REQUIRE(*huberClone == func);
+                REQUIRE_NE(huberClone.get(), &func);
+                REQUIRE_EQ(*huberClone, func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected")
-            {
-                RealVector_t dataVec(dd.getNumberOfCoefficients());
-                dataVec.setRandom();
-                // fix the first entries to be bigger/smaller than delta
-                dataVec[0] = delta + 1;
-                dataVec[1] = delta + 2;
-                dataVec[2] = delta + 3;
-                dataVec[3] = delta - 1;
-                dataVec[4] = delta - 2;
-                dataVec[5] = delta - 3;
-                DataContainer x(dd, dataVec);
+            Vector dataVec(dd.getNumberOfCoefficients());
+            dataVec.setRandom();
 
-                // compute the "true" values
-                real_t trueValue = 0;
-                RealVector_t trueGrad(dd.getNumberOfCoefficients());
-                for (index_t i = 0; i < dataVec.size(); ++i) {
-                    real_t value = dataVec[i];
-                    if (std::abs(value) <= delta) {
-                        trueValue += 0.5f * value * value;
-                        trueGrad[i] = value;
-                    } else {
-                        trueValue += delta * (std::abs(value) - 0.5f * delta);
-                        trueGrad[i] = (value > 0) ? delta : -delta;
-                    }
+            // fix the first entries to be bigger/smaller than delta
+            dataVec[0] = delta + 1;
+            dataVec[1] = delta + 2;
+            dataVec[2] = delta + 3;
+            dataVec[3] = delta - 1;
+            dataVec[4] = delta - 2;
+            dataVec[5] = delta - 3;
+
+            DataContainer<TestType> x(dd, dataVec);
+
+            // compute the "true" values
+            TestType trueValue = 0;
+            Vector trueGrad(dd.getNumberOfCoefficients());
+            for (index_t i = 0; i < dataVec.size(); ++i) {
+                TestType value = dataVec[i];
+                if (std::abs(value) <= delta) {
+                    trueValue += 0.5f * value * value;
+                    trueGrad[i] = value;
+                } else {
+                    trueValue += delta * (std::abs(value) - 0.5f * delta);
+                    trueGrad[i] = (value > 0) ? delta : -delta;
                 }
+            }
 
-                REQUIRE(func.evaluate(x) == Approx(trueValue));
-                DataContainer dcTrueGrad(dd, trueGrad);
-                REQUIRE(func.getGradient(x) == dcTrueGrad);
-
+            THEN("the evaluate works as expected")
+            {
+                REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
+            }
+            THEN("the gradient works as expected")
+            {
+                DataContainer<TestType> dcTrueGrad(dd, trueGrad);
+                REQUIRE_UNARY(checkApproxEq(func.getGradient(x), dcTrueGrad));
+            }
+            THEN("the Hessian works as expected")
+            {
                 auto hessian = func.getHessian(x);
                 auto hx = hessian.apply(x);
                 for (index_t i = 0; i < hx.getSize(); ++i)
-                    REQUIRE(hx[i] == ((std::abs(dataVec[i]) <= delta) ? x[i] : 0));
+                    REQUIRE_UNARY(
+                        checkApproxEq(hx[i], ((std::abs(dataVec[i]) <= delta) ? x[i] : 0)));
             }
         }
     }
+}
+
+TEST_CASE_TEMPLATE("Huber<TestType>: Testing with residual", TestType, float, double)
+{
+    using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
 
     GIVEN("a residual with data")
     {
@@ -94,60 +118,67 @@ SCENARIO("Testing the Huber norm functional")
         numCoeff << 47, 11;
         VolumeDescriptor dd(numCoeff);
 
-        RealVector_t randomData(dd.getNumberOfCoefficients());
+        Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
-        DataContainer b(dd, randomData);
+        DataContainer<TestType> b(dd, randomData);
 
-        Identity A(dd);
+        Identity<TestType> A(dd);
 
-        LinearResidual linRes(A, b);
+        LinearResidual<TestType> linRes(A, b);
 
         real_t delta = 20;
 
         WHEN("instantiating")
         {
-            Huber func(linRes, delta);
+            Huber<TestType> func(linRes, delta);
 
             THEN("the functional is as expected")
             {
-                REQUIRE(func.getDomainDescriptor() == dd);
+                REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* lRes = dynamic_cast<const LinearResidual<real_t>*>(&func.getResidual());
-                REQUIRE(lRes);
-                REQUIRE(*lRes == linRes);
+                auto* lRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
+                REQUIRE_UNARY(lRes);
+                REQUIRE_EQ(*lRes, linRes);
             }
 
             THEN("a clone behaves as expected")
             {
                 auto huberClone = func.clone();
 
-                REQUIRE(huberClone.get() != &func);
-                REQUIRE(*huberClone == func);
+                REQUIRE_NE(huberClone.get(), &func);
+                REQUIRE_EQ(*huberClone, func);
             }
 
-            THEN("the evaluate, gradient and Hessian work as expected")
-            {
-                RealVector_t dataVec(dd.getNumberOfCoefficients());
-                dataVec.setRandom();
-                DataContainer x(dd, dataVec);
+            Vector dataVec(dd.getNumberOfCoefficients());
+            dataVec.setRandom();
+            DataContainer<TestType> x(dd, dataVec);
 
-                // compute the "true" values
-                real_t trueValue = 0;
-                RealVector_t trueGrad(dd.getNumberOfCoefficients());
-                for (index_t i = 0; i < dataVec.size(); ++i) {
-                    real_t value = dataVec[i] - randomData[i];
-                    if (std::abs(value) <= delta) {
-                        trueValue += 0.5f * value * value;
-                        trueGrad[i] = value;
-                    } else {
-                        trueValue += delta * (std::abs(value) - 0.5f * delta);
-                        trueGrad[i] = (value > 0) ? delta : -delta;
-                    }
+            // compute the "true" values
+            TestType trueValue = 0;
+            Vector trueGrad(dd.getNumberOfCoefficients());
+            for (index_t i = 0; i < dataVec.size(); ++i) {
+                TestType value = dataVec[i] - randomData[i];
+                if (std::abs(value) <= delta) {
+                    trueValue += 0.5f * value * value;
+                    trueGrad[i] = value;
+                } else {
+                    trueValue += delta * (std::abs(value) - 0.5f * delta);
+                    trueGrad[i] = (value > 0) ? delta : -delta;
                 }
+            }
 
-                REQUIRE(func.evaluate(x) == Approx(trueValue));
-                DataContainer dcTrueGrad(dd, trueGrad);
-                REQUIRE(func.getGradient(x) == dcTrueGrad);
+            THEN("the evaluate works as expected")
+            {
+                REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
+            }
+
+            THEN("the gradient works as expected")
+            {
+                DataContainer<TestType> dcTrueGrad(dd, trueGrad);
+                REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
+            }
+            THEN("the Hessian works as expected")
+            {
 
                 auto hessian = func.getHessian(x);
                 auto hx = hessian.apply(x);
@@ -157,3 +188,5 @@ SCENARIO("Testing the Huber norm functional")
         }
     }
 }
+
+TEST_SUITE_END();

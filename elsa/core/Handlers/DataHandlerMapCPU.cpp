@@ -1,5 +1,6 @@
 #include "DataHandlerMapCPU.h"
 #include "DataHandlerCPU.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -62,12 +63,12 @@ namespace elsa
     data_t DataHandlerMapCPU<data_t>::dot(const DataHandler<data_t>& v) const
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandlerMapCPU: dot product argument has wrong size");
+            throw InvalidArgumentError("DataHandlerMapCPU: dot product argument has wrong size");
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             return _map.dot(*otherHandler->_data);
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU>(&v)) {
             return _map.dot(otherHandler->_map);
         } else {
             return this->slowDotProduct(v);
@@ -78,6 +79,19 @@ namespace elsa
     GetFloatingPointType_t<data_t> DataHandlerMapCPU<data_t>::squaredL2Norm() const
     {
         return _map.squaredNorm();
+    }
+
+    template <typename data_t>
+    GetFloatingPointType_t<data_t> DataHandlerMapCPU<data_t>::l2Norm() const
+    {
+        return _map.norm();
+    }
+
+    template <typename data_t>
+    index_t DataHandlerMapCPU<data_t>::l0PseudoNorm() const
+    {
+        using FloatType = GetFloatingPointType_t<data_t>;
+        return (_map.array().cwiseAbs() >= std::numeric_limits<FloatType>::epsilon()).count();
     }
 
     template <typename data_t>
@@ -102,14 +116,14 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: addition argument has wrong size");
+            throw InvalidArgumentError("DataHandler: addition argument has wrong size");
 
         _dataOwner->detach();
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             _map += *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU>(&v)) {
             _map += otherHandler->_map;
         } else {
             this->slowAddition(v);
@@ -122,14 +136,14 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::operator-=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: subtraction argument has wrong size");
+            throw InvalidArgumentError("DataHandler: subtraction argument has wrong size");
 
         _dataOwner->detach();
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             _map -= *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU>(&v)) {
             _map -= otherHandler->_map;
         } else {
             this->slowSubtraction(v);
@@ -142,14 +156,14 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::operator*=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: multiplication argument has wrong size");
+            throw InvalidArgumentError("DataHandler: multiplication argument has wrong size");
 
         _dataOwner->detach();
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             _map.array() *= otherHandler->_data->array();
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU>(&v)) {
             _map.array() *= otherHandler->_map.array();
         } else {
             this->slowMultiplication(v);
@@ -162,14 +176,14 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::operator/=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: division argument has wrong size");
+            throw InvalidArgumentError("DataHandler: division argument has wrong size");
 
         _dataOwner->detach();
 
         // use Eigen if the other handler is CPU or Map, otherwise use the slow fallback version
-        if (auto otherHandler = dynamic_cast<const DataHandlerCPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&v)) {
             _map.array() /= otherHandler->_data->array();
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapCPU>(&v)) {
             _map.array() /= otherHandler->_map.array();
         } else {
             this->slowDivision(v);
@@ -183,7 +197,7 @@ namespace elsa
         DataHandlerMapCPU<data_t>::operator=(const DataHandlerMapCPU<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+            throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
         if (getSize() == _dataOwner->getSize() && v.getSize() == v._dataOwner->getSize()) {
             _dataOwner->attach(v._dataOwner->_data);
@@ -246,7 +260,7 @@ namespace elsa
         DataHandlerMapCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements)
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
-            throw std::invalid_argument("DataHandler: requested block out of bounds");
+            throw InvalidArgumentError("DataHandler: requested block out of bounds");
 
         return std::unique_ptr<DataHandlerMapCPU<data_t>>(
             new DataHandlerMapCPU{_dataOwner, _map.data() + startIndex, numberOfElements});
@@ -257,7 +271,7 @@ namespace elsa
         DataHandlerMapCPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
-            throw std::invalid_argument("DataHandler: requested block out of bounds");
+            throw InvalidArgumentError("DataHandler: requested block out of bounds");
 
         // using a const_cast here is fine as long as the DataHandlers never expose the internal
         // Eigen objects
@@ -279,7 +293,7 @@ namespace elsa
     template <typename data_t>
     bool DataHandlerMapCPU<data_t>::isEqual(const DataHandler<data_t>& other) const
     {
-        if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU*>(&other)) {
+        if (auto otherHandler = downcast_safe<DataHandlerMapCPU>(&other)) {
 
             if (_map.size() != otherHandler->_map.size())
                 return false;
@@ -289,7 +303,7 @@ namespace elsa
             }
 
             return true;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerCPU<data_t>*>(&other)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&other)) {
 
             if (_map.size() != otherHandler->_data->size())
                 return false;
@@ -306,7 +320,7 @@ namespace elsa
     void DataHandlerMapCPU<data_t>::assign(const DataHandler<data_t>& other)
     {
 
-        if (auto otherHandler = dynamic_cast<const DataHandlerMapCPU*>(&other)) {
+        if (auto otherHandler = downcast_safe<DataHandlerMapCPU>(&other)) {
             if (getSize() == _dataOwner->getSize()
                 && otherHandler->getSize() == otherHandler->_dataOwner->getSize()) {
                 _dataOwner->attach(otherHandler->_dataOwner->_data);
@@ -315,7 +329,7 @@ namespace elsa
                                                          getSize());
                 _map = otherHandler->_map;
             }
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerCPU<data_t>*>(&other)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerCPU<data_t>>(&other)) {
             if (getSize() == _dataOwner->getSize()) {
                 _dataOwner->attach(otherHandler->_data);
             } else {

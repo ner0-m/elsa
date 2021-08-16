@@ -119,7 +119,7 @@ namespace elsa
     {
         // sanity check
         if (R.rows() != _objectDimension || R.cols() != _objectDimension)
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "Geometry: 3D geometry requested with non-3D rotation matrix");
 
         // setup scaling matrix _S

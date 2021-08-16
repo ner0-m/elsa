@@ -1,5 +1,6 @@
 #include "RandomBlocksDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "Error.h"
 
 namespace elsa
 {
@@ -40,7 +41,7 @@ namespace elsa
     const DataDescriptor& RandomBlocksDescriptor::getDescriptorOfBlock(index_t i) const
     {
         if (i < 0 || i >= _blockOffsets.size())
-            throw std::invalid_argument("BlockDescriptor: index i is out of bounds");
+            throw InvalidArgumentError("BlockDescriptor: index i is out of bounds");
 
         return *_blockDescriptors[static_cast<std::size_t>(i)];
     }
@@ -48,7 +49,7 @@ namespace elsa
     index_t RandomBlocksDescriptor::getOffsetOfBlock(index_t i) const
     {
         if (i < 0 || i >= _blockOffsets.size())
-            throw std::invalid_argument("BlockDescriptor: index i is out of bounds");
+            throw InvalidArgumentError("BlockDescriptor: index i is out of bounds");
 
         return _blockOffsets[i];
     }
@@ -80,7 +81,7 @@ namespace elsa
         const std::vector<std::unique_ptr<DataDescriptor>>& blockDescriptors)
     {
         if (blockDescriptors.empty())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "RandomBlockDescriptor: list of block descriptors cannot be empty");
 
         index_t size = 0;

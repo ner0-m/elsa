@@ -1,6 +1,5 @@
 #include "VolumeDescriptor.h"
 
-#include <stdexcept>
 #include <algorithm>
 
 namespace elsa

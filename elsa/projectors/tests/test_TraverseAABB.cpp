@@ -1,19 +1,20 @@
 /**
- * \file test_TraverseAABB.cpp
+ * @file test_TraverseAABB.cpp
  *
- * \brief Test for TraverseAABB class
+ * @brief Test for TraverseAABB class
  *
- * \author David Frank - initial code
- * \author Maximilian Hornung - modularization, fixes
- * \author Tobias Lasser - minor fixes
+ * @author David Frank - initial code
+ * @author Maximilian Hornung - modularization, fixes
+ * @author Tobias Lasser - minor fixes
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 
 #include "TraverseAABB.h"
 #include "Intersection.h"
 
 using namespace elsa;
+using namespace doctest;
 
 using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
 
@@ -37,7 +38,7 @@ bool intersect(const RealVector_t& voxel, const Ray& r)
     return Intersection::withRay(bb, r).operator bool();
 }
 
-SCENARIO("Construction of a 2D traversal object")
+TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
 {
     // setup
     size_t dim = 2;
@@ -66,11 +67,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -82,11 +83,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 1);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -98,11 +99,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 1);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -114,11 +115,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -130,11 +131,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -149,11 +150,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -165,11 +166,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
             }
         }
 
@@ -181,11 +182,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
             }
         }
 
@@ -197,11 +198,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -213,11 +214,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -232,11 +233,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -248,11 +249,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
             }
         }
 
@@ -264,11 +265,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
             }
         }
 
@@ -280,11 +281,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -296,11 +297,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -315,11 +316,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -331,11 +332,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 1);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -347,11 +348,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 1);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -363,11 +364,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -379,11 +380,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -397,11 +398,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -412,11 +413,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the top left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 2);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -428,7 +429,7 @@ SCENARIO("Construction of a 2D traversal object")
 
             TraverseAABB traverse(aabb, r);
 
-            THEN("the the aabb is not hit") { REQUIRE_FALSE(traverse.isInBoundingBox()); }
+            THEN("the the aabb is not hit") { REQUIRE_UNARY_FALSE(traverse.isInBoundingBox()); }
         }
 
         WHEN("A ray with origin = (3.5, 3.0) and direction (-1, 0) hits the top edge of aabb")
@@ -439,7 +440,7 @@ SCENARIO("Construction of a 2D traversal object")
 
             TraverseAABB traverse(aabb, r);
 
-            THEN("the the aabb is not hit") { REQUIRE_FALSE(traverse.isInBoundingBox()); }
+            THEN("the the aabb is not hit") { REQUIRE_UNARY_FALSE(traverse.isInBoundingBox()); }
         }
 
         WHEN("A ray with origin = (0.0, -0.5) and direction (0, 1) hits the bottom edge of aabb)")
@@ -449,11 +450,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
 
@@ -464,11 +465,11 @@ SCENARIO("Construction of a 2D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the top left pixel")
             {
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
             }
         }
 
@@ -480,7 +481,7 @@ SCENARIO("Construction of a 2D traversal object")
 
             TraverseAABB traverse(aabb, r);
 
-            THEN("the the aabb is not hit") { REQUIRE_FALSE(traverse.isInBoundingBox()); }
+            THEN("the the aabb is not hit") { REQUIRE_UNARY_FALSE(traverse.isInBoundingBox()); }
         }
 
         WHEN("A ray with origin = (3.0, 3.5) and direction (0, -1) hits the top edge of aabb)")
@@ -491,12 +492,12 @@ SCENARIO("Construction of a 2D traversal object")
 
             TraverseAABB traverse(aabb, r);
 
-            THEN("the the aabb is not hit") { REQUIRE_FALSE(traverse.isInBoundingBox()); }
+            THEN("the the aabb is not hit") { REQUIRE_UNARY_FALSE(traverse.isInBoundingBox()); }
         }
     }
 }
 
-SCENARIO("Construction of a 3D traversal object")
+TEST_CASE("TraverseAABB: Construction of a 3D traversal object")
 {
     // setup
     size_t dim = 3;
@@ -520,20 +521,20 @@ SCENARIO("Construction of a 3D traversal object")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The ray intersects the aabb at the voxel (0, 0, 0)")
             {
-                REQUIRE(traverse.isInBoundingBox());
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(2) == 0);
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(2), 0);
             }
         }
     }
 }
 
-SCENARIO("Traverse a minimal 3D volume of size 1x1x1")
+TEST_CASE("TraverseAABB: Traverse a minimal 3D volume of size 1x1x1")
 {
     // setup
     size_t dim = 3;
@@ -560,22 +561,22 @@ SCENARIO("Traverse a minimal 3D volume of size 1x1x1")
 
             Ray r(ro, rd);
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             traverse.updateTraverse();
 
             THEN("The algorithms left the volume and the voxel it left the box is (0, 1, 0)")
             {
-                REQUIRE_FALSE(traverse.isInBoundingBox());
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 1);
-                REQUIRE(traverse.getCurrentVoxel()(2) == 0);
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(2), 0);
             }
         }
     }
 }
 
-SCENARIO("Traverse a 2D volume and only check that the endpoint is correct")
+TEST_CASE("TraverseAABB: Traverse a 2D volume and only check that the endpoint is correct")
 {
     // setup
     size_t dim = 2;
@@ -600,22 +601,22 @@ SCENARIO("Traverse a 2D volume and only check that the endpoint is correct")
 
             Ray r(ro, rd);
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             while (traverse.isInBoundingBox())
                 traverse.updateTraverse();
 
             THEN("The endpoint should be (10,4)")
             {
-                REQUIRE_FALSE(traverse.isInBoundingBox());
-                REQUIRE(traverse.getCurrentVoxel()(0) == 10);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 4);
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 4);
             }
         }
     }
 }
 
-SCENARIO("Traverse a 3D Volume diagonally")
+TEST_CASE("TraverseAABB: Traverse a 3D Volume diagonally")
 {
     // TODO: run through all 4 diagonals
     // TODO: make a non cube volume and run through all 4 diagonals
@@ -642,29 +643,29 @@ SCENARIO("Traverse a 3D Volume diagonally")
             Ray r(ro, rd);
 
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("You entered at (0, 0, 0)")
             {
-                CHECK(traverse.getCurrentVoxel()(0) == 0);
-                CHECK(traverse.getCurrentVoxel()(1) == 0);
-                CHECK(traverse.getCurrentVoxel()(2) == 0);
+                CHECK_EQ(traverse.getCurrentVoxel()(0), 0);
+                CHECK_EQ(traverse.getCurrentVoxel()(1), 0);
+                CHECK_EQ(traverse.getCurrentVoxel()(2), 0);
             }
             while (traverse.isInBoundingBox())
                 traverse.updateTraverse();
 
             THEN("You leave the volume at (10, 9, 9)")
             {
-                REQUIRE_FALSE(traverse.isInBoundingBox());
-                REQUIRE(traverse.getCurrentVoxel()(0) == 10);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 9);
-                REQUIRE(traverse.getCurrentVoxel()(2) == 9);
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 9);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(2), 9);
             }
         }
     }
 }
 
-SCENARIO("Check that the first step into the 2D Volume is correct")
+TEST_CASE("TraverseAABB: Check that the first step into the 2D Volume is correct")
 {
     size_t dim = 2;
     index_t x = 5;
@@ -687,22 +688,22 @@ SCENARIO("Check that the first step into the 2D Volume is correct")
 
             Ray r(ro, rd);
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The traversal is initially at (0, 0)")
             {
                 auto voxel = traverse.getCurrentVoxel();
-                CHECK(voxel(0) == 0);
-                CHECK(voxel(1) == 0);
+                CHECK_EQ(voxel(0), 0);
+                CHECK_EQ(voxel(1), 0);
             }
 
             traverse.updateTraverse();
 
             THEN("The first step is in y direction")
             {
-                REQUIRE(traverse.isInBoundingBox());
-                REQUIRE(traverse.getCurrentVoxel()(0) == 0);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 1);
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
             }
         }
 
@@ -714,28 +715,28 @@ SCENARIO("Check that the first step into the 2D Volume is correct")
 
             Ray r(ro, rd);
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The traversal is initially at (0, 0)")
             {
                 auto voxel = traverse.getCurrentVoxel();
-                CHECK(voxel(0) == 0);
-                CHECK(voxel(1) == 0);
+                CHECK_EQ(voxel(0), 0);
+                CHECK_EQ(voxel(1), 0);
             }
 
             traverse.updateTraverse();
 
             THEN("The first step is in y direction")
             {
-                REQUIRE(traverse.isInBoundingBox());
-                REQUIRE(traverse.getCurrentVoxel()(0) == 1);
-                REQUIRE(traverse.getCurrentVoxel()(1) == 0);
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
             }
         }
     }
 }
 
-SCENARIO("Traverse_Volume_2D_EachPointIsTested")
+TEST_CASE("TraverseAABB: Traverse_Volume_2D_EachPointIsTested")
 {
     // setup
     size_t dim = 2;
@@ -753,21 +754,21 @@ SCENARIO("Traverse_Volume_2D_EachPointIsTested")
     Ray r(ro, rd);
 
     TraverseAABB traverse(aabb, r);
-    CHECK(traverse.isInBoundingBox());
+    CHECK_UNARY(traverse.isInBoundingBox());
 
     size_t iter = 0;
     while (traverse.isInBoundingBox()) {
         RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
         INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-        REQUIRE(intersect(voxel, r));
+        REQUIRE_UNARY(intersect(voxel, r));
         traverse.updateTraverse();
         iter++;
     }
 }
 
-SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersection for every voxel "
-         "along the way")
+TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray voxel intersection "
+          "for every voxel along the way")
 {
     // TODO make this a stronger test, for first some "easy" direction (parallel ones)
     // TODO Then make some harder ones
@@ -794,14 +795,14 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
             while (traverse.isInBoundingBox()) {
                 RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
                 INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-                REQUIRE(intersect(voxel, r));
+                REQUIRE_UNARY(intersect(voxel, r));
                 traverse.updateTraverse();
                 iter++;
             }
@@ -820,14 +821,14 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
             while (traverse.isInBoundingBox()) {
                 RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
                 INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-                REQUIRE(intersect(voxel, r));
+                REQUIRE_UNARY(intersect(voxel, r));
                 traverse.updateTraverse();
                 iter++;
             }
@@ -846,14 +847,14 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
             while (traverse.isInBoundingBox()) {
                 RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
                 INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-                REQUIRE(intersect(voxel, r));
+                REQUIRE_UNARY(intersect(voxel, r));
                 traverse.updateTraverse();
                 iter++;
             }
@@ -872,14 +873,14 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
             while (traverse.isInBoundingBox()) {
                 RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
                 INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-                REQUIRE(intersect(voxel, r));
+                REQUIRE_UNARY(intersect(voxel, r));
                 traverse.updateTraverse();
                 iter++;
             }
@@ -898,14 +899,14 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
             while (traverse.isInBoundingBox()) {
                 RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
                 INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-                REQUIRE(intersect(voxel, r));
+                REQUIRE_UNARY(intersect(voxel, r));
                 traverse.updateTraverse();
                 iter++;
             }
@@ -924,14 +925,14 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
             while (traverse.isInBoundingBox()) {
                 RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
                 INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-                REQUIRE(intersect(voxel, r));
+                REQUIRE_UNARY(intersect(voxel, r));
                 traverse.updateTraverse();
                 iter++;
             }
@@ -950,14 +951,14 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
             TraverseAABB traverse(aabb, r);
-            CHECK(traverse.isInBoundingBox());
+            CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
             while (traverse.isInBoundingBox()) {
                 RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
                 INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-                REQUIRE(intersect(voxel, r));
+                REQUIRE_UNARY(intersect(voxel, r));
                 traverse.updateTraverse();
                 iter++;
             }
@@ -986,7 +987,7 @@ SCENARIO("Traversal through 2D volume should be equal to a ray voxel intersectio
                 RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
                 INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
 
-                REQUIRE(intersect(voxel, r));
+                REQUIRE_UNARY(intersect(voxel, r));
                 traverse.updateTraverse();
                 iter++;
             }

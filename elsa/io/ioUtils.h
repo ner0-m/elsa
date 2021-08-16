@@ -10,10 +10,10 @@
 namespace elsa
 {
     /**
-     * \brief class providing string handling utility functions.
+     * @brief class providing string handling utility functions.
      *
-     * \author Maximilian Hornung - initial code
-     * \author Tobias Lasser - rewrite
+     * @author Maximilian Hornung - initial code
+     * @author Tobias Lasser - rewrite
      */
     struct StringUtils {
     public:
@@ -28,11 +28,11 @@ namespace elsa
     };
 
     /**
-     * \brief class providing utility functions for reading/writing data
+     * @brief class providing utility functions for reading/writing data
      *
-     * \author Matthias Wieczorek - first version of code
-     * \author Maximilian Hornung - modularization
-     * \author Tobias Lasser - rewrite
+     * @author Matthias Wieczorek - first version of code
+     * @author Maximilian Hornung - modularization
+     * @author Tobias Lasser - rewrite
      */
     struct DataUtils {
     public:
@@ -58,14 +58,14 @@ namespace elsa
 
         /// read in raw data (of type raw_data_t) into a data container (of type data_t)
         template <typename raw_data_t, typename data_t>
-        static void parseRawData(std::ifstream& file, DataContainer<data_t>& data);
+        static void parseRawData(std::istream& file, DataContainer<data_t>& data);
     };
 
     /**
-     * \brief class providing utility functions for the filesystem
+     * @brief class providing utility functions for the filesystem
      *
-     * \author Maximilian Hornung - initial code
-     * \author Tobias Lasser - rewrite
+     * @author Maximilian Hornung - initial code
+     * @author Tobias Lasser - rewrite
      */
     struct FileSystemUtils {
     public:

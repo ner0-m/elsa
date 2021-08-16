@@ -4,6 +4,8 @@
 #include <iostream>
 #include <exception>
 
+#include "Error.h"
+
 namespace elsa
 {
     template <typename data_t>
@@ -24,7 +26,7 @@ namespace elsa
         const auto dim = data.getDataDescriptor().getNumberOfDimensions();
 
         if (dim != 2) {
-            throw std::invalid_argument("PGM:: Can only handle 2D data");
+            throw InvalidArgumentError("PGM:: Can only handle 2D data");
         }
 
         const auto dims = data.getDataDescriptor().getNumberOfCoefficientsPerDimension();

@@ -1,18 +1,21 @@
 /**
- * \file test_MHDHandler.cpp
+ * @file test_MHDHandler.cpp
  *
- * \brief Tests for the MHDHandler class
+ * @brief Tests for the MHDHandler class
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "MHDHandler.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Reading and write data with MHDHandler")
+TEST_SUITE_BEGIN("io");
+
+TEST_CASE("MHDHandler: Reading and writing data")
 {
     GIVEN("a DataContainer")
     {
@@ -31,11 +34,13 @@ SCENARIO("Reading and write data with MHDHandler")
 
             THEN("the read in DataContainer contains the expected data")
             {
-                REQUIRE(dc.getSize() == dcRead.getSize());
-                REQUIRE(dc.getDataDescriptor() == dcRead.getDataDescriptor());
+                REQUIRE_EQ(dc.getSize(), dcRead.getSize());
+                REQUIRE_EQ(dc.getDataDescriptor(), dcRead.getDataDescriptor());
 
-                REQUIRE(dcRead == dc);
+                REQUIRE_EQ(dcRead, dc);
             }
         }
     }
 }
+
+TEST_SUITE_END();

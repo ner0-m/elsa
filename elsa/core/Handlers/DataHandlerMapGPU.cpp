@@ -1,8 +1,26 @@
 #include "DataHandlerMapGPU.h"
 #include "DataHandlerGPU.h"
+#include "Badge.hpp"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
+    template <typename data_t>
+    DataHandlerMapGPU<data_t>::DataHandlerMapGPU(
+        [[maybe_unused]] Badge<DataHandlerGPU<data_t>> badge, DataHandlerGPU<data_t>* dataOwner,
+        data_t* data, index_t n)
+        : DataHandlerMapGPU<data_t>(dataOwner, data, n)
+    {
+    }
+
+    template <typename data_t>
+    DataHandlerMapGPU<data_t>::DataHandlerMapGPU(
+        [[maybe_unused]] Badge<DataHandlerMapGPU<data_t>> badge, DataHandlerGPU<data_t>* dataOwner,
+        data_t* data, index_t n)
+        : DataHandlerMapGPU<data_t>(dataOwner, data, n)
+    {
+    }
+
     template <typename data_t>
     DataHandlerMapGPU<data_t>::DataHandlerMapGPU(DataHandlerGPU<data_t>* dataOwner, data_t* data,
                                                  index_t n)
@@ -62,13 +80,13 @@ namespace elsa
     data_t DataHandlerMapGPU<data_t>::dot(const DataHandler<data_t>& v) const
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandlerMapGPU: dot product argument has wrong size");
+            throw InvalidArgumentError("DataHandlerMapGPU: dot product argument has wrong size");
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             return _map.dot(*otherHandler->_data);
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             return _map.dot(otherHandler->_map);
         } else {
             return this->slowDotProduct(v);
@@ -79,6 +97,18 @@ namespace elsa
     GetFloatingPointType_t<data_t> DataHandlerMapGPU<data_t>::squaredL2Norm() const
     {
         return _map.squaredL2Norm();
+    }
+
+    template <typename data_t>
+    GetFloatingPointType_t<data_t> DataHandlerMapGPU<data_t>::l2Norm() const
+    {
+        return _map.l2Norm();
+    }
+
+    template <typename data_t>
+    index_t DataHandlerMapGPU<data_t>::l0PseudoNorm() const
+    {
+        return _map.l0PseudoNorm();
     }
 
     template <typename data_t>
@@ -103,15 +133,15 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: addition argument has wrong size");
+            throw InvalidArgumentError("DataHandler: addition argument has wrong size");
 
         _dataOwner->detach();
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             _map += *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             _map += otherHandler->_map;
         } else {
             this->slowAddition(v);
@@ -124,15 +154,15 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator-=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: subtraction argument has wrong size");
+            throw InvalidArgumentError("DataHandler: subtraction argument has wrong size");
 
         _dataOwner->detach();
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             _map -= *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             _map -= otherHandler->_map;
         } else {
             this->slowSubtraction(v);
@@ -145,15 +175,15 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator*=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: multiplication argument has wrong size");
+            throw InvalidArgumentError("DataHandler: multiplication argument has wrong size");
 
         _dataOwner->detach();
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             _map *= *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             _map *= otherHandler->_map;
         } else {
             this->slowMultiplication(v);
@@ -166,15 +196,15 @@ namespace elsa
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator/=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: division argument has wrong size");
+            throw InvalidArgumentError("DataHandler: division argument has wrong size");
 
         _dataOwner->detach();
 
         // use quickvec if the other handler is GPU or GPU map, otherwise use the slow fallback
         // version
-        if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&v)) {
+        if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&v)) {
             _map /= *otherHandler->_data;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&v)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&v)) {
             _map /= otherHandler->_map;
         } else {
             this->slowDivision(v);
@@ -188,7 +218,7 @@ namespace elsa
         DataHandlerMapGPU<data_t>::operator=(const DataHandlerMapGPU<data_t>& v)
     {
         if (v.getSize() != getSize())
-            throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+            throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
         if (getSize() == _dataOwner->getSize() && v.getSize() == v._dataOwner->getSize()) {
             _dataOwner->attach(v._dataOwner->_data);
@@ -251,10 +281,11 @@ namespace elsa
         DataHandlerMapGPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements)
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
-            throw std::invalid_argument("DataHandler: requested block out of bounds");
+            throw InvalidArgumentError("DataHandler: requested block out of bounds");
 
-        return std::unique_ptr<DataHandlerMapGPU<data_t>>(
-            new DataHandlerMapGPU{_dataOwner, _map._data.get() + startIndex, numberOfElements});
+        return std::make_unique<DataHandlerMapGPU<data_t>>(
+            Badge<DataHandlerMapGPU<data_t>>{}, _dataOwner, _map._data.get() + startIndex,
+            numberOfElements);
     }
 
     template <typename data_t>
@@ -262,13 +293,13 @@ namespace elsa
         DataHandlerMapGPU<data_t>::getBlock(index_t startIndex, index_t numberOfElements) const
     {
         if (startIndex >= getSize() || numberOfElements > getSize() - startIndex)
-            throw std::invalid_argument("DataHandler: requested block out of bounds");
+            throw InvalidArgumentError("DataHandler: requested block out of bounds");
 
         // using a const_cast here is fine as long as the DataHandlers never expose the internal
         // Eigen objects
         auto mutableData = const_cast<data_t*>(_map._data.get() + startIndex);
-        return std::unique_ptr<const DataHandlerMapGPU<data_t>>(
-            new DataHandlerMapGPU{_dataOwner, mutableData, numberOfElements});
+        return std::make_unique<DataHandlerMapGPU<data_t>>(
+            Badge<DataHandlerMapGPU<data_t>>{}, _dataOwner, mutableData, numberOfElements);
     }
 
     template <typename data_t>
@@ -284,7 +315,7 @@ namespace elsa
     template <typename data_t>
     bool DataHandlerMapGPU<data_t>::isEqual(const DataHandler<data_t>& other) const
     {
-        if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&other)) {
+        if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&other)) {
 
             if (_map.size() != otherHandler->_map.size())
                 return false;
@@ -294,7 +325,7 @@ namespace elsa
             }
 
             return true;
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&other)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&other)) {
 
             if (_map.size() != otherHandler->_data->size())
                 return false;
@@ -312,7 +343,7 @@ namespace elsa
     void DataHandlerMapGPU<data_t>::assign(const DataHandler<data_t>& other)
     {
 
-        if (auto otherHandler = dynamic_cast<const DataHandlerMapGPU*>(&other)) {
+        if (auto otherHandler = downcast_safe<DataHandlerMapGPU>(&other)) {
             if (getSize() == _dataOwner->getSize()
                 && otherHandler->getSize() == otherHandler->_dataOwner->getSize()) {
                 _dataOwner->attach(otherHandler->_dataOwner->_data);
@@ -321,7 +352,7 @@ namespace elsa
                     _map._data.get() - _dataOwner->_data->_data.get(), getSize());
                 _map = otherHandler->_map;
             }
-        } else if (auto otherHandler = dynamic_cast<const DataHandlerGPU<data_t>*>(&other)) {
+        } else if (auto otherHandler = downcast_safe<DataHandlerGPU<data_t>>(&other)) {
             if (getSize() == _dataOwner->getSize()) {
                 _dataOwner->attach(otherHandler->_data);
             } else {

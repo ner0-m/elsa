@@ -1,17 +1,19 @@
 /**
- * \file test_BoundingBox.cpp
+ * @file test_BoundingBox.cpp
  *
- * \brief Test for BoundingBox struct
+ * @brief Test for BoundingBox struct
  *
- * \author David Frank - initial code
+ * @author David Frank - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "BoundingBox.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing 2d AABB")
+TEST_CASE("BoundingBox: Testing 2D AABB")
 {
     GIVEN("An aabb of size 10x15")
     {
@@ -28,16 +30,16 @@ SCENARIO("Testing 2d AABB")
 
             THEN("The min is set to the origin (0, 0) and the max is (10, 15)")
             {
-                REQUIRE(aabb._dim == dim);
+                REQUIRE_EQ(aabb._dim, dim);
 
-                REQUIRE(aabb._min(0) == 0);
-                REQUIRE(aabb._min(1) == 0);
+                REQUIRE_UNARY(checkApproxEq(aabb._min(0), 0));
+                REQUIRE_UNARY(checkApproxEq(aabb._min(1), 0));
 
-                REQUIRE(aabb._max(0) == (real_t) x);
-                REQUIRE(aabb._max(1) == (real_t) y);
+                REQUIRE_UNARY(checkApproxEq(aabb._max(0), (real_t) x));
+                REQUIRE_UNARY(checkApproxEq(aabb._max(1), (real_t) y));
 
-                REQUIRE(aabb._voxelCoordToIndexVector(0) == 1.0);
-                REQUIRE(aabb._voxelCoordToIndexVector(1) == y);
+                REQUIRE_UNARY(checkApproxEq(aabb._voxelCoordToIndexVector(0), 1));
+                REQUIRE_UNARY(checkApproxEq(aabb._voxelCoordToIndexVector(1), y));
             }
         }
 
@@ -48,22 +50,22 @@ SCENARIO("Testing 2d AABB")
 
             THEN("A copy is created succesfully")
             {
-                REQUIRE(aabbcopy._dim == dim);
+                REQUIRE_EQ(aabbcopy._dim, dim);
 
-                REQUIRE(aabbcopy._min(0) == 0);
-                REQUIRE(aabbcopy._min(1) == 0);
+                REQUIRE_UNARY(checkApproxEq(aabbcopy._min(0), 0));
+                REQUIRE_UNARY(checkApproxEq(aabbcopy._min(1), 0));
 
-                REQUIRE(aabbcopy._max(0) == (real_t) x);
-                REQUIRE(aabbcopy._max(1) == (real_t) y);
+                REQUIRE_UNARY(checkApproxEq(aabbcopy._max(0), (real_t) x));
+                REQUIRE_UNARY(checkApproxEq(aabbcopy._max(1), (real_t) y));
 
-                REQUIRE(aabbcopy._voxelCoordToIndexVector(0) == 1.0);
-                REQUIRE(aabbcopy._voxelCoordToIndexVector(1) == y);
+                REQUIRE_EQ(aabbcopy._voxelCoordToIndexVector(0), 1);
+                REQUIRE_EQ(aabbcopy._voxelCoordToIndexVector(1), y);
             }
         }
     }
 }
 
-SCENARIO("Testing 3D aabb")
+TEST_CASE("BoundingBox: Testing 3D aabb")
 {
     GIVEN("An aabb of size 10x15x20 with uniform")
     {
@@ -81,19 +83,19 @@ SCENARIO("Testing 3D aabb")
 
             THEN("The min is set to the origin (0, 0, 0) and the max is (10, 15, 20)")
             {
-                REQUIRE(aabb._dim == dim);
+                REQUIRE_EQ(aabb._dim, dim);
 
-                REQUIRE(aabb._min(0) == 0);
-                REQUIRE(aabb._min(1) == 0);
-                REQUIRE(aabb._min(2) == 0);
+                REQUIRE_UNARY(checkApproxEq(aabb._min(0), 0));
+                REQUIRE_UNARY(checkApproxEq(aabb._min(1), 0));
+                REQUIRE_UNARY(checkApproxEq(aabb._min(2), 0));
 
-                REQUIRE(aabb._max(0) == (real_t) x);
-                REQUIRE(aabb._max(1) == (real_t) y);
-                REQUIRE(aabb._max(2) == (real_t) z);
+                REQUIRE_UNARY(checkApproxEq(aabb._max(0), (real_t) x));
+                REQUIRE_UNARY(checkApproxEq(aabb._max(1), (real_t) y));
+                REQUIRE_UNARY(checkApproxEq(aabb._max(2), (real_t) z));
 
-                REQUIRE(aabb._voxelCoordToIndexVector(0) == 1.0);
-                REQUIRE(aabb._voxelCoordToIndexVector(1) == y);
-                REQUIRE(aabb._voxelCoordToIndexVector(2) == (z * z));
+                REQUIRE_EQ(aabb._voxelCoordToIndexVector(0), 1);
+                REQUIRE_EQ(aabb._voxelCoordToIndexVector(1), y);
+                REQUIRE_EQ(aabb._voxelCoordToIndexVector(2), (z * z));
             }
         }
     }

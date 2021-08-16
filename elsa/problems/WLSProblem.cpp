@@ -4,36 +4,43 @@
 #include "RandomBlocksDescriptor.h"
 #include "BlockLinearOperator.h"
 #include "Identity.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
     template <typename data_t>
     WLSProblem<data_t>::WLSProblem(const Scaling<data_t>& W, const LinearOperator<data_t>& A,
-                                   const DataContainer<data_t>& b, const DataContainer<data_t>& x0)
-        : Problem<data_t>{WeightedL2NormPow2<data_t>{LinearResidual<data_t>{A, b}, W}, x0}
+                                   const DataContainer<data_t>& b, const DataContainer<data_t>& x0,
+                                   const std::optional<data_t> lipschitzConstant)
+        : Problem<data_t>{WeightedL2NormPow2<data_t>{LinearResidual<data_t>{A, b}, W}, x0,
+                          lipschitzConstant}
     {
         // sanity checks are done in the member constructors already
     }
 
     template <typename data_t>
     WLSProblem<data_t>::WLSProblem(const Scaling<data_t>& W, const LinearOperator<data_t>& A,
-                                   const DataContainer<data_t>& b)
-        : Problem<data_t>{WeightedL2NormPow2<data_t>{LinearResidual<data_t>{A, b}, W}}
+                                   const DataContainer<data_t>& b,
+                                   const std::optional<data_t> lipschitzConstant)
+        : Problem<data_t>{WeightedL2NormPow2<data_t>{LinearResidual<data_t>{A, b}, W},
+                          lipschitzConstant}
     {
         // sanity checks are done in the member constructors already
     }
 
     template <typename data_t>
     WLSProblem<data_t>::WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-                                   const DataContainer<data_t>& x0)
-        : Problem<data_t>{L2NormPow2<data_t>{LinearResidual<data_t>{A, b}}, x0}
+                                   const DataContainer<data_t>& x0,
+                                   const std::optional<data_t> lipschitzConstant)
+        : Problem<data_t>{L2NormPow2<data_t>{LinearResidual<data_t>{A, b}}, x0, lipschitzConstant}
     {
         // sanity checks are done in the member constructors already
     }
 
     template <typename data_t>
-    WLSProblem<data_t>::WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b)
-        : Problem<data_t>{L2NormPow2<data_t>{LinearResidual<data_t>{A, b}}}
+    WLSProblem<data_t>::WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
+                                   const std::optional<data_t> lipschitzConstant)
+        : Problem<data_t>{L2NormPow2<data_t>{LinearResidual<data_t>{A, b}}, lipschitzConstant}
     {
         // sanity checks are done in the member constructors already
     }
@@ -57,16 +64,15 @@ namespace elsa
         const auto& dataTerm = problem.getDataTerm();
         const auto& regTerms = problem.getRegularizationTerms();
 
-        if (!dynamic_cast<const WeightedL2NormPow2<data_t>*>(&dataTerm)
-            && !dynamic_cast<const L2NormPow2<data_t>*>(&dataTerm))
-            throw std::logic_error("WLSProblem: conversion failed - data term is not "
-                                   "of type (Weighted)L2NormPow2");
+        if (!is<WeightedL2NormPow2<data_t>>(dataTerm) && !is<L2NormPow2<data_t>>(dataTerm))
+            throw LogicError("WLSProblem: conversion failed - data term is not "
+                             "of type (Weighted)L2NormPow2");
 
         const auto dataTermResidual =
-            dynamic_cast<const LinearResidual<data_t>*>(&dataTerm.getResidual());
+            downcast_safe<LinearResidual<data_t>>(&dataTerm.getResidual());
 
         if (!dataTermResidual)
-            throw std::logic_error("WLSProblem: conversion failed - data term is non-linear");
+            throw LogicError("WLSProblem: conversion failed - data term is non-linear");
 
         // data term is of convertible type
 
@@ -78,16 +84,17 @@ namespace elsa
         std::vector<std::unique_ptr<DataDescriptor>> rangeDescList(0);
         rangeDescList.push_back(dataTermResidual->getRangeDescriptor().clone());
         for (const auto& regTerm : regTerms) {
-            if (!dynamic_cast<const WeightedL2NormPow2<data_t>*>(&regTerm.getFunctional())
-                && !dynamic_cast<const L2NormPow2<data_t>*>(&regTerm.getFunctional()))
-                throw std::logic_error("WLSProblem: conversion failed - regularization term is not "
-                                       "of type (Weighted)L2NormPow2");
+            if (!is<WeightedL2NormPow2<data_t>>(regTerm.getFunctional())
+                && !is<L2NormPow2<data_t>>(regTerm.getFunctional()))
+                throw LogicError("WLSProblem: conversion failed - regularization term is not "
+                                 "of type (Weighted)L2NormPow2");
 
+            //
             const auto regTermResidual =
-                dynamic_cast<const LinearResidual<data_t>*>(&regTerm.getFunctional().getResidual());
+                downcast_safe<LinearResidual<data_t>>(&regTerm.getFunctional().getResidual());
 
             if (!regTermResidual)
-                throw std::logic_error(
+                throw LogicError(
                     "WLSProblem: conversion failed - regularization term is non-linear");
 
             rangeDescList.push_back(regTermResidual->getRangeDescriptor().clone());
@@ -100,8 +107,9 @@ namespace elsa
         std::vector<std::unique_ptr<LinearOperator<data_t>>> opList(0);
 
         // add block corresponding to data term
-        if (const auto trueFunc = dynamic_cast<const WeightedL2NormPow2<data_t>*>(&dataTerm)) {
-            const auto& scaling = trueFunc->getWeightingOperator();
+        if (is<WeightedL2NormPow2<data_t>>(dataTerm)) {
+            const auto& trueFunc = downcast<WeightedL2NormPow2<data_t>>(dataTerm);
+            const auto& scaling = trueFunc.getWeightingOperator();
             const auto& desc = scaling.getDomainDescriptor();
 
             std::unique_ptr<Scaling<data_t>> sqrtW{};
@@ -110,8 +118,8 @@ namespace elsa
 
                 if constexpr (std::is_floating_point_v<data_t>) {
                     if (fac < 0) {
-                        throw std::logic_error("WLSProblem: conversion failed - negative weighting "
-                                               "factor in WeightedL2NormPow2 term");
+                        throw LogicError("WLSProblem: conversion failed - negative weighting "
+                                         "factor in WeightedL2NormPow2 term");
                     }
                 }
 
@@ -122,9 +130,8 @@ namespace elsa
                 if constexpr (std::is_floating_point_v<data_t>) {
                     for (const auto& w : fac) {
                         if (w < 0) {
-                            throw std::logic_error(
-                                "WLSProblem: conversion failed - negative weighting "
-                                "factor in WeightedL2NormPow2 term");
+                            throw LogicError("WLSProblem: conversion failed - negative weighting "
+                                             "factor in WeightedL2NormPow2 term");
                         }
                     }
                 }
@@ -161,8 +168,9 @@ namespace elsa
             const auto& func = regTerm.getFunctional();
             const auto residual = static_cast<const LinearResidual<data_t>*>(&func.getResidual());
 
-            if (const auto trueFunc = dynamic_cast<const WeightedL2NormPow2<data_t>*>(&func)) {
-                const auto& scaling = trueFunc->getWeightingOperator();
+            if (is<WeightedL2NormPow2<data_t>>(func)) {
+                const auto& trueFunc = downcast<WeightedL2NormPow2<data_t>>(func);
+                const auto& scaling = trueFunc.getWeightingOperator();
                 const auto& desc = scaling.getDomainDescriptor();
 
                 std::unique_ptr<Scaling<data_t>> sqrtLambdaW{};
@@ -171,9 +179,8 @@ namespace elsa
 
                     if constexpr (std::is_floating_point_v<data_t>) {
                         if (lambda * fac < 0) {
-                            throw std::logic_error(
-                                "WLSProblem: conversion failed - negative weighting "
-                                "factor in WeightedL2NormPow2 term");
+                            throw LogicError("WLSProblem: conversion failed - negative weighting "
+                                             "factor in WeightedL2NormPow2 term");
                         }
                     }
 
@@ -184,7 +191,7 @@ namespace elsa
                     if constexpr (std::is_floating_point_v<data_t>) {
                         for (const auto& w : fac) {
                             if (lambda * w < 0) {
-                                throw std::logic_error(
+                                throw LogicError(
                                     "WLSProblem: conversion failed - negative weighting "
                                     "factor in WeightedL2NormPow2 term");
                             }
@@ -207,7 +214,7 @@ namespace elsa
             } else {
                 if constexpr (std::is_floating_point_v<data_t>) {
                     if (lambda < 0) {
-                        throw std::logic_error(
+                        throw LogicError(
                             "WLSProblem: conversion failed - negative regularization term weight");
                     }
                 }

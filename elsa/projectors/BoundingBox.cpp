@@ -2,13 +2,15 @@
 
 #include <stdexcept>
 
+#include "Error.h"
+
 namespace elsa
 {
     BoundingBox::BoundingBox(const IndexVector_t& volumeDimensions) : _dim(volumeDimensions.size())
     {
         // sanity check
         if (volumeDimensions.size() < 2 || volumeDimensions.size() > 3)
-            throw std::invalid_argument("BoundingBox: can only deal with the 2d/3d cases");
+            throw InvalidArgumentError("BoundingBox: can only deal with the 2d/3d cases");
 
         _min.setZero();
         _max = volumeDimensions.template cast<real_t>();

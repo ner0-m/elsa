@@ -1,20 +1,28 @@
-cmake_minimum_required(VERSION 3.9)
-
-# enable ctest and Catch test discovery
+# enable ctest and doctest test discovery
 include(CTest)
-include(Catch)
+include(doctest)
 
-# the actual tests
-ELSA_TEST(elsaDefines)
-ELSA_TEST(VolumeDescriptor)
-ELSA_TEST(IdenticalBlocksDescriptor)
-ELSA_TEST(PartitionDescriptor)
-ELSA_TEST(RandomBlocksDescriptor)
-ELSA_TEST(DataContainer)
-ELSA_TEST(DataHandlers)
-ELSA_TEST(DataHandlerMap)
-ELSA_TEST(LinearOperator)
-ELSA_TEST(ExpressionTemplates)
-ELSA_TEST(Geometry)
-ELSA_TEST(StrongTypes)
-ELSA_TEST(PlanarDetectorDescriptor)
+add_custom_target(
+    run-tests-core
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS build-tests-core
+    USES_TERMINAL
+    COMMENT "Build and run the tests from module 'core'."
+)
+
+add_custom_target(build-tests-core)
+
+ELSA_DOCTEST(elsaDefines)
+ELSA_DOCTEST(VolumeDescriptor)
+ELSA_DOCTEST(PlanarDetectorDescriptor)
+ELSA_DOCTEST(IdenticalBlocksDescriptor)
+ELSA_DOCTEST(PartitionDescriptor)
+ELSA_DOCTEST(RandomBlocksDescriptor)
+ELSA_DOCTEST(LinearOperator)
+ELSA_DOCTEST(StrongTypes)
+ELSA_DOCTEST(Geometry)
+ELSA_DOCTEST(ExpressionTemplates)
+ELSA_DOCTEST(DataHandlers)
+ELSA_DOCTEST(DataHandlerMap)
+ELSA_DOCTEST(DataContainer)

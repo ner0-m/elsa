@@ -8,12 +8,12 @@ namespace elsa
 {
 
     /**
-     *  \brief Abstract class defining the interface of all block descriptors.
+     *  @brief Abstract class defining the interface of all block descriptors.
      *
-     *  \author Matthias Wieczorek - initial code
-     *  \author David Frank - rewrite
-     *  \author Tobias Lasser - rewrite, modularization, modernization
-     *  \author Nikola Dinev - rework into abstract class
+     *  @author Matthias Wieczorek - initial code
+     *  @author David Frank - rewrite
+     *  @author Tobias Lasser - rewrite, modularization, modernization
+     *  @author Nikola Dinev - rework into abstract class
      *
      * A block descriptor provides metadata about a signal that is stored in memory (typically a
      * DataContainer). This signal can be n-dimensional, and will be stored in memory in a

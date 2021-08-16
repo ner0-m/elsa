@@ -4,6 +4,7 @@
 #include "elsaDefines.h"
 #include "DataContainer.h"
 #include "DataDescriptor.h"
+#include "Error.h"
 #include "LinearOperator.h"
 #include "IdenticalBlocksDescriptor.h"
 #include "PartitionDescriptor.h"
@@ -14,6 +15,7 @@
 #include "Residual.h"
 #include "LinearResidual.h"
 #include "Huber.h"
+#include "L0PseudoNorm.h"
 #include "L1Norm.h"
 #include "L2NormPow2.h"
 #include "WeightedL2NormPow2.h"
@@ -26,6 +28,7 @@
 // Generators headers
 #include "PhantomGenerator.h"
 #include "CircleTrajectoryGenerator.h"
+#include "SphereTrajectoryGenerator.h"
 
 // IO headers
 #include "EDFHandler.h"
@@ -55,12 +58,15 @@
 #include "WLSProblem.h"
 #include "TikhonovProblem.h"
 #include "LASSOProblem.h"
+#include "SubsetProblem.h"
+#include "WLSSubsetProblem.h"
 
 // Projector headers
 #include "Geometry.h"
 #include "BinaryMethod.h"
 #include "JosephsMethod.h"
 #include "SiddonsMethod.h"
+#include "SubsetSampler.h"
 
 // CUDA projectors
 #ifdef ELSA_CUDA_PROJECTORS
@@ -76,3 +82,21 @@
 #include "FISTA.h"
 #include "FGM.h"
 #include "OGM.h"
+#include "ADMM.h"
+#include "SQS.h"
+
+// Ml headers
+#include "Common.h"
+#include "Conv.h"
+#include "Dense.h"
+#include "Input.h"
+#include "Layer.h"
+#include "Loss.h"
+#include "Merging.h"
+#include "Model.h"
+#include "Optimizer.h"
+#include "Pooling.h"
+#include "Reshape.h"
+#include "Softmax.h"
+#include "Utils.h"
+#include "Projector.h"

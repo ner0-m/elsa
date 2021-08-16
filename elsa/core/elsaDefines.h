@@ -23,6 +23,10 @@ namespace elsa
     /// global type for vectors of booleans
     using BooleanVector_t = Eigen::Matrix<bool, Eigen::Dynamic, 1>;
 
+    /// global type for vectors of data_t
+    template <typename data_t>
+    using Vector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
+
     /// global type for matrices of real numbers
     using RealMatrix_t = Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic>;
 

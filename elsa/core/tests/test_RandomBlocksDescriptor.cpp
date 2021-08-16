@@ -1,19 +1,24 @@
 /**
- * \file test_RandomBlocksDescriptor.cpp
+ * @file test_RandomBlocksDescriptor.cpp
  *
- * \brief Tests for RandomBlocksDescriptor class
+ * @brief Tests for RandomBlocksDescriptor class
  *
- * \author Nikola Dinev
+ * @author Nikola Dinev
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "RandomBlocksDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
+
 #include <stdexcept>
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Constructing RandomBlocksDescriptors")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE("RandomBlocksDescriptors: Testing constructions")
 {
     GIVEN("0 an empty descriptor list")
     {
@@ -45,31 +50,31 @@ SCENARIO("Constructing RandomBlocksDescriptors")
 
             THEN("there are 5 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i)
-                            == *descriptors[static_cast<std::size_t>(i)]);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i),
+                               *descriptors[static_cast<std::size_t>(i)]);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new RandomBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 1);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 1);
 
                 IndexVector_t correctSize = IndexVector_t::Constant(1, size);
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
-                REQUIRE(bd.getSpacingPerDimension().size() == 1);
-                REQUIRE(bd.getSpacingPerDimension()[0] == 1.0);
+                REQUIRE_EQ(bd.getSpacingPerDimension().size(), 1);
+                REQUIRE_EQ(bd.getSpacingPerDimension()[0], 1.0);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == offsets[i]);
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), offsets[i]);
 
                 REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
             }
@@ -79,8 +84,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
                 VolumeDescriptor dd(size);
-                REQUIRE(bd != dd);
-                REQUIRE(dd != bd);
+                REQUIRE_NE(bd, dd);
+                REQUIRE_NE(dd, bd);
             }
 
             THEN("the block descriptor is different from a RandomBlocksDescriptor with the same "
@@ -91,8 +96,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                 std::vector<std::unique_ptr<DataDescriptor>> vec;
                 vec.push_back(dd.clone());
                 RandomBlocksDescriptor bd2(vec);
-                REQUIRE(bd != bd2);
-                REQUIRE(bd2 != bd);
+                REQUIRE_NE(bd, bd2);
+                REQUIRE_NE(bd2, bd);
             }
         }
 
@@ -106,31 +111,31 @@ SCENARIO("Constructing RandomBlocksDescriptors")
 
             THEN("there are 5 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i)
-                            == *descriptors[static_cast<std::size_t>(i)]);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i),
+                               *descriptors[static_cast<std::size_t>(i)]);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new RandomBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 1);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 1);
 
                 IndexVector_t correctSize = IndexVector_t::Constant(1, size);
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
-                REQUIRE(bd.getSpacingPerDimension().size() == 1);
-                REQUIRE(bd.getSpacingPerDimension()[0] == 1.0);
+                REQUIRE_EQ(bd.getSpacingPerDimension().size(), 1);
+                REQUIRE_EQ(bd.getSpacingPerDimension()[0], 1.0);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == offsets[i]);
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), offsets[i]);
 
                 REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
             }
@@ -160,31 +165,31 @@ SCENARIO("Constructing RandomBlocksDescriptors")
 
             THEN("there are 10 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i)
-                            == *descriptors[static_cast<std::size_t>(i)]);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i),
+                               *descriptors[static_cast<std::size_t>(i)]);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new RandomBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 1);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 1);
 
                 IndexVector_t correctSize = IndexVector_t::Constant(1, size);
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
-                REQUIRE(bd.getSpacingPerDimension().size() == 1);
-                REQUIRE(bd.getSpacingPerDimension()[0] == 1.0);
+                REQUIRE_EQ(bd.getSpacingPerDimension().size(), 1);
+                REQUIRE_EQ(bd.getSpacingPerDimension()[0], 1.0);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == offsets[i]);
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), offsets[i]);
 
                 REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
             }
@@ -194,8 +199,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
                 VolumeDescriptor dd(size);
-                REQUIRE(bd != dd);
-                REQUIRE(dd != bd);
+                REQUIRE_NE(bd, dd);
+                REQUIRE_NE(dd, bd);
             }
 
             THEN("the block descriptor is different from a RandomBlocksDescriptor with the same "
@@ -206,8 +211,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                 std::vector<std::unique_ptr<DataDescriptor>> vec;
                 vec.push_back(dd.clone());
                 RandomBlocksDescriptor bd2(vec);
-                REQUIRE(bd != bd2);
-                REQUIRE(bd2 != bd);
+                REQUIRE_NE(bd, bd2);
+                REQUIRE_NE(bd2, bd);
             }
 
             THEN("the block descriptor is different from a RandomBlocksDescriptor with the same "
@@ -221,8 +226,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                 }
 
                 RandomBlocksDescriptor bd2(descriptors2);
-                REQUIRE(bd != bd2);
-                REQUIRE(bd2 != bd);
+                REQUIRE_NE(bd, bd2);
+                REQUIRE_NE(bd2, bd);
             }
         }
 
@@ -236,31 +241,31 @@ SCENARIO("Constructing RandomBlocksDescriptors")
 
             THEN("there are 10 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i)
-                            == *descriptors[static_cast<std::size_t>(i)]);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i),
+                               *descriptors[static_cast<std::size_t>(i)]);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new RandomBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 1);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 1);
 
                 IndexVector_t correctSize = IndexVector_t::Constant(1, size);
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
-                REQUIRE(bd.getSpacingPerDimension().size() == 1);
-                REQUIRE(bd.getSpacingPerDimension()[0] == 1.0);
+                REQUIRE_EQ(bd.getSpacingPerDimension().size(), 1);
+                REQUIRE_EQ(bd.getSpacingPerDimension()[0], 1.0);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == offsets[i]);
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), offsets[i]);
 
                 REQUIRE_THROWS(bd.getOffsetOfBlock(blocks));
             }
@@ -294,31 +299,31 @@ SCENARIO("Constructing RandomBlocksDescriptors")
 
             THEN("there are 10 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i)
-                            == *descriptors[static_cast<std::size_t>(i)]);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i),
+                               *descriptors[static_cast<std::size_t>(i)]);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new RandomBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 1);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 1);
 
                 IndexVector_t correctSize = IndexVector_t::Constant(1, size);
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
-                REQUIRE(bd.getSpacingPerDimension().size() == 1);
-                REQUIRE(bd.getSpacingPerDimension()[0] == 1.0);
+                REQUIRE_EQ(bd.getSpacingPerDimension().size(), 1);
+                REQUIRE_EQ(bd.getSpacingPerDimension()[0], 1.0);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == offsets[i]);
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), offsets[i]);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
@@ -328,8 +333,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
             {
                 IndexVector_t size = IndexVector_t::Constant(1, bd.getNumberOfCoefficients());
                 VolumeDescriptor dd(size);
-                REQUIRE(bd != dd);
-                REQUIRE(dd != bd);
+                REQUIRE_NE(bd, dd);
+                REQUIRE_NE(dd, bd);
             }
 
             THEN("the block descriptor is different from a RandomBlocksDescriptor with the same "
@@ -340,8 +345,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                 std::vector<std::unique_ptr<DataDescriptor>> vec;
                 vec.push_back(dd.clone());
                 RandomBlocksDescriptor bd2(vec);
-                REQUIRE(bd != bd2);
-                REQUIRE(bd2 != bd);
+                REQUIRE_NE(bd, bd2);
+                REQUIRE_NE(bd2, bd);
             }
 
             THEN("the block descriptor is different from a RandomBlocksDescriptor with the same "
@@ -355,8 +360,8 @@ SCENARIO("Constructing RandomBlocksDescriptors")
                 }
 
                 RandomBlocksDescriptor bd2(descriptors2);
-                REQUIRE(bd != bd2);
-                REQUIRE(bd2 != bd);
+                REQUIRE_NE(bd, bd2);
+                REQUIRE_NE(bd2, bd);
             }
         }
 
@@ -370,31 +375,31 @@ SCENARIO("Constructing RandomBlocksDescriptors")
 
             THEN("there are 10 blocks of the correct size")
             {
-                REQUIRE(bd.getNumberOfBlocks() == blocks);
+                REQUIRE_EQ(bd.getNumberOfBlocks(), blocks);
 
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getDescriptorOfBlock(i)
-                            == *descriptors[static_cast<std::size_t>(i)]);
+                    REQUIRE_EQ(bd.getDescriptorOfBlock(i),
+                               *descriptors[static_cast<std::size_t>(i)]);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
 
             THEN("the new RandomBlocksDescriptor has the correct sizes")
             {
-                REQUIRE(bd.getNumberOfDimensions() == 1);
+                REQUIRE_EQ(bd.getNumberOfDimensions(), 1);
 
                 IndexVector_t correctSize = IndexVector_t::Constant(1, size);
-                REQUIRE(bd.getNumberOfCoefficientsPerDimension() == correctSize);
-                REQUIRE(bd.getNumberOfCoefficients() == correctSize.prod());
+                REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
+                REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
-                REQUIRE(bd.getSpacingPerDimension().size() == 1);
-                REQUIRE(bd.getSpacingPerDimension()[0] == 1.0);
+                REQUIRE_EQ(bd.getSpacingPerDimension().size(), 1);
+                REQUIRE_EQ(bd.getSpacingPerDimension()[0], 1.0);
             }
 
             THEN("the block offsets are correct")
             {
                 for (index_t i = 0; i < blocks; ++i)
-                    REQUIRE(bd.getOffsetOfBlock(i) == offsets[i]);
+                    REQUIRE_EQ(bd.getOffsetOfBlock(i), offsets[i]);
 
                 REQUIRE_THROWS(bd.getDescriptorOfBlock(blocks));
             }
@@ -402,21 +407,19 @@ SCENARIO("Constructing RandomBlocksDescriptors")
     }
 }
 
-SCENARIO("Cloning RandomBlocksDescriptors")
+TEST_CASE("RandomBlocksDescriptor: Testing clone()")
 {
     GIVEN("a RandomBlocksDescriptor of 1D descriptors")
     {
         index_t blocks = 21;
         std::vector<std::unique_ptr<DataDescriptor>> descriptors(0);
 
-        index_t size = 0;
         IndexVector_t offsets(blocks);
         offsets[0] = 0;
         for (index_t i = 0; i < blocks; i++) {
             index_t n = 1 + std::rand() % 100;
             descriptors.emplace_back(
                 std::make_unique<VolumeDescriptor>(IndexVector_t::Constant(1, n)));
-            size += n;
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + n;
         }
@@ -428,9 +431,9 @@ SCENARIO("Cloning RandomBlocksDescriptors")
 
             THEN("it's a real clone")
             {
-                REQUIRE(bdClone.get() != &bd);
-                REQUIRE(dynamic_cast<RandomBlocksDescriptor*>(bdClone.get()));
-                REQUIRE(*bdClone == bd);
+                REQUIRE_NE(bdClone.get(), &bd);
+                REQUIRE_UNARY(is<RandomBlocksDescriptor>(bdClone.get()));
+                REQUIRE_EQ(*bdClone, bd);
             }
         }
     }
@@ -440,14 +443,12 @@ SCENARIO("Cloning RandomBlocksDescriptors")
         index_t blocks = 77;
         std::vector<std::unique_ptr<DataDescriptor>> descriptors(0);
 
-        index_t size = 0;
         IndexVector_t offsets(blocks);
         offsets[0] = 0;
         for (index_t i = 0; i < blocks; i++) {
             IndexVector_t coeffs(2);
             coeffs << 1 + std::rand() % 100, 1 + std::rand() % 100;
             descriptors.emplace_back(std::make_unique<VolumeDescriptor>(coeffs));
-            size += coeffs.prod();
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + coeffs.prod();
         }
@@ -459,9 +460,9 @@ SCENARIO("Cloning RandomBlocksDescriptors")
 
             THEN("it's a real clone")
             {
-                REQUIRE(bdClone.get() != &bd);
-                REQUIRE(dynamic_cast<RandomBlocksDescriptor*>(bdClone.get()));
-                REQUIRE(*bdClone == bd);
+                REQUIRE_NE(bdClone.get(), &bd);
+                REQUIRE_UNARY(is<RandomBlocksDescriptor>(bdClone.get()));
+                REQUIRE_EQ(*bdClone, bd);
             }
         }
     }
@@ -471,7 +472,6 @@ SCENARIO("Cloning RandomBlocksDescriptors")
         index_t blocks = 13;
         std::vector<std::unique_ptr<DataDescriptor>> descriptors(0);
 
-        index_t size = 0;
         IndexVector_t offsets(blocks);
         offsets[0] = 0;
         for (index_t i = 0; i < blocks; i++) {
@@ -481,7 +481,6 @@ SCENARIO("Cloning RandomBlocksDescriptors")
                 coeffs[j] = 1 + std::abs(coeffs[j]) % 100;
 
             descriptors.emplace_back(std::make_unique<VolumeDescriptor>(coeffs));
-            size += coeffs.prod();
 
             if (i != blocks - 1)
                 offsets[i + 1] = offsets[i] + coeffs.prod();
@@ -494,10 +493,12 @@ SCENARIO("Cloning RandomBlocksDescriptors")
 
             THEN("it's a real clone")
             {
-                REQUIRE(bdClone.get() != &bd);
-                REQUIRE(dynamic_cast<RandomBlocksDescriptor*>(bdClone.get()));
-                REQUIRE(*bdClone == bd);
+                REQUIRE_NE(bdClone.get(), &bd);
+                REQUIRE_UNARY(is<RandomBlocksDescriptor>(bdClone.get()));
+                REQUIRE_EQ(*bdClone, bd);
             }
         }
     }
 }
+
+TEST_SUITE_END();

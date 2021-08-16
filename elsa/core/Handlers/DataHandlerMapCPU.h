@@ -14,14 +14,14 @@ namespace elsa
     class DataHandlerCPU;
 
     /**
-     * \brief Class referencing a vector stored in CPU main memory, or a part thereof (using
+     * @brief Class referencing a vector stored in CPU main memory, or a part thereof (using
      * Eigen::Map)
      *
-     * \tparam data_t data type of vector
+     * @tparam data_t data type of vector
      *
-     * \author David Frank - main code
-     * \author Tobias Lasser - modularization, fixes
-     * \author Nikola Dinev - integration with the copy-on-write mechanism
+     * @author David Frank - main code
+     * @author Tobias Lasser - modularization, fixes
+     * @author Nikola Dinev - integration with the copy-on-write mechanism
      *
      * This class does not own or manage its own memory. It is bound to a DataHandlerCPU (the data
      * owner) at its creation, and serves as a reference to a sequential block of memory owned by
@@ -83,6 +83,12 @@ namespace elsa
 
         /// return the squared l2 norm of the data vector (dot product with itself)
         GetFloatingPointType_t<data_t> squaredL2Norm() const override;
+
+        /// return the l2 norm of the data vector (square root of the dot product with itself)
+        GetFloatingPointType_t<data_t> l2Norm() const override;
+
+        /// return the l0 pseudo-norm of the data vector (number of non-zero values)
+        index_t l0PseudoNorm() const override;
 
         /// return the l1 norm of the data vector (sum of absolute values)
         GetFloatingPointType_t<data_t> l1Norm() const override;
@@ -166,12 +172,12 @@ namespace elsa
 
     private:
         /**
-         * \brief Construct a DataHandlerMapCPU referencing a sequential block of data owned by
+         * @brief Construct a DataHandlerMapCPU referencing a sequential block of data owned by
          * DataHandlerCPU
          *
-         * \param[in] dataOwner pointer to the DataHandlerCPU owning the data vector
-         * \param[in] data pointer to start of segment
-         * \param[in] n number of elements in block
+         * @param[in] dataOwner pointer to the DataHandlerCPU owning the data vector
+         * @param[in] data pointer to start of segment
+         * @param[in] n number of elements in block
          */
         DataHandlerMapCPU(DataHandlerCPU<data_t>* dataOwner, data_t* data, index_t n);
     };

@@ -16,13 +16,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    auto ProximityOperator<data_t>::apply(const DataContainer<data_t>& x,
+    auto ProximityOperator<data_t>::apply(const DataContainer<data_t>& v,
                                           geometry::Threshold<data_t> t) const
         -> DataContainer<data_t>
     {
         Timer timeguard("ProximityOperator", "apply");
-        DataContainer<data_t> prox(*_rangeDescriptor, x.getDataHandlerType());
-        applyImpl(x, t, prox);
+        DataContainer<data_t> prox(*_rangeDescriptor, v.getDataHandlerType());
+        applyImpl(v, t, prox);
         return prox;
     }
 

@@ -1,18 +1,21 @@
 /**
- * \file test_Geometry.cpp
+ * @file test_Geometry.cpp
  *
- * \brief Test for Geometry class
+ * @brief Test for Geometry class
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Geometry.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing 2D geometries")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE("Geometry: Testing 2D geometries")
 {
     using namespace geometry;
     GIVEN("some 2D setup")
@@ -36,7 +39,7 @@ SCENARIO("Testing 2D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -47,22 +50,22 @@ SCENARIO("Testing 2D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0));
+                REQUIRE_EQ(result.sum(), Approx(0));
             }
 
             THEN("then the rotation matrix is correct")
             {
                 RealMatrix_t id(2, 2);
                 id.setIdentity();
-                REQUIRE((g.getRotationMatrix() - id).sum() == Approx(0));
+                REQUIRE_EQ((g.getRotationMatrix() - id).sum(), Approx(0));
             }
 
             THEN("the camera center is correct")
             {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
-                REQUIRE((c[0] - o[0]) == Approx(0));
-                REQUIRE((c[1] - o[1] + s2c) == Approx(0));
+                REQUIRE_EQ((c[0] - o[0]), Approx(0));
+                REQUIRE_EQ((c[1] - o[1] + s2c), Approx(0));
             }
         }
 
@@ -77,7 +80,7 @@ SCENARIO("Testing 2D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -88,22 +91,22 @@ SCENARIO("Testing 2D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0));
+                REQUIRE_EQ(result.sum(), Approx(0));
             }
 
             THEN("then the rotation matrix is correct")
             {
                 RealMatrix_t id(2, 2);
                 id.setIdentity();
-                REQUIRE((g.getRotationMatrix() - id).sum() == Approx(0));
+                REQUIRE_EQ((g.getRotationMatrix() - id).sum(), Approx(0));
             }
 
             THEN("the camera center is correct")
             {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
-                REQUIRE((c[0] - o[0]) == Approx(0));
-                REQUIRE((c[1] - o[1] + s2c) == Approx(0));
+                REQUIRE_EQ((c[0] - o[0]), Approx(0));
+                REQUIRE_EQ((c[1] - o[1] + s2c), Approx(0));
             }
         }
 
@@ -115,7 +118,7 @@ SCENARIO("Testing 2D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -126,14 +129,14 @@ SCENARIO("Testing 2D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0.0).margin(0.000001));
+                REQUIRE_EQ(result.sum(), Approx(0.0).epsilon(0.01));
             }
 
             THEN("then the rotation matrix is correct")
             {
                 RealMatrix_t rot(2, 2);
                 rot << 0, -1, 1, 0;
-                REQUIRE((g.getRotationMatrix() - rot).sum() == Approx(0).margin(0.0000001));
+                REQUIRE_EQ((g.getRotationMatrix() - rot).sum(), Approx(0).epsilon(0.01));
             }
 
             THEN("the camera center is correct")
@@ -141,8 +144,8 @@ SCENARIO("Testing 2D geometries")
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
 
-                REQUIRE((c[0] - o[0] + s2c) == Approx(0));
-                REQUIRE((c[1] - o[1]) == Approx(0).margin(0.000001));
+                REQUIRE_EQ((c[0] - o[0] + s2c), Approx(0));
+                REQUIRE_EQ((c[1] - o[1]), Approx(0).epsilon(0.01));
             }
         }
 
@@ -160,7 +163,7 @@ SCENARIO("Testing 2D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -171,14 +174,14 @@ SCENARIO("Testing 2D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0.0).margin(0.000001));
+                REQUIRE_EQ(result.sum(), Approx(0.0).epsilon(0.01));
             }
 
             THEN("then the rotation matrix is correct")
             {
                 RealMatrix_t rot(2, 2);
                 rot << std::cos(angle), -std::sin(angle), std::sin(angle), std::cos(angle);
-                REQUIRE((g.getRotationMatrix() - rot).sum() == Approx(0));
+                REQUIRE_EQ((g.getRotationMatrix() - rot).sum(), Approx(0));
             }
 
             THEN("the camera center is correct")
@@ -191,14 +194,14 @@ SCENARIO("Testing 2D geometries")
                 real_t newX = std::cos(angle) * oldX + std::sin(angle) * oldY + o[0] + cx;
                 real_t newY = -std::sin(angle) * oldX + std::cos(angle) * oldY + o[1] + cy;
 
-                REQUIRE((c[0] - newX) == Approx(0).margin(0.000001));
-                REQUIRE((c[1] - newY) == Approx(0).margin(0.000001));
+                REQUIRE_EQ((c[0] - newX), Approx(0).epsilon(0.01));
+                REQUIRE_EQ((c[1] - newY), Approx(0).epsilon(0.01));
             }
         }
     }
 }
 
-SCENARIO("Testing 3D geometries")
+TEST_CASE("Geometry: Testing 3D geometries")
 {
     using namespace geometry;
     GIVEN("some 3D setup")
@@ -223,7 +226,7 @@ SCENARIO("Testing 3D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -234,23 +237,23 @@ SCENARIO("Testing 3D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0));
+                REQUIRE_EQ(result.sum(), Approx(0));
             }
 
             THEN("then the rotation matrix is correct")
             {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
-                REQUIRE((g.getRotationMatrix() - id).sum() == Approx(0));
+                REQUIRE_EQ((g.getRotationMatrix() - id).sum(), Approx(0));
             }
 
             THEN("the camera center is correct")
             {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
-                REQUIRE((c[0] - o[0]) == Approx(0));
-                REQUIRE((c[1] - o[1]) == Approx(0));
-                REQUIRE((c[2] - o[2] + s2c) == Approx(0));
+                REQUIRE_EQ((c[0] - o[0]), Approx(0));
+                REQUIRE_EQ((c[1] - o[1]), Approx(0));
+                REQUIRE_EQ((c[2] - o[2] + s2c), Approx(0));
             }
         }
 
@@ -267,7 +270,7 @@ SCENARIO("Testing 3D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -278,23 +281,23 @@ SCENARIO("Testing 3D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0));
+                REQUIRE_EQ(result.sum(), Approx(0));
             }
 
             THEN("then the rotation matrix is correct")
             {
                 RealMatrix_t id(3, 3);
                 id.setIdentity();
-                REQUIRE((g.getRotationMatrix() - id).sum() == Approx(0));
+                REQUIRE_EQ((g.getRotationMatrix() - id).sum(), Approx(0));
             }
 
             THEN("the camera center is correct")
             {
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
-                REQUIRE((c[0] - o[0]) == Approx(0));
-                REQUIRE((c[1] - o[1]) == Approx(0));
-                REQUIRE((c[2] - o[2] + s2c) == Approx(0));
+                REQUIRE_EQ((c[0] - o[0]), Approx(0));
+                REQUIRE_EQ((c[1] - o[1]), Approx(0));
+                REQUIRE_EQ((c[2] - o[2] + s2c), Approx(0));
             }
         }
 
@@ -309,7 +312,7 @@ SCENARIO("Testing 3D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -320,7 +323,7 @@ SCENARIO("Testing 3D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0).margin(0.0000001));
+                REQUIRE_EQ(result.sum(), Approx(0).epsilon(0.01));
             }
 
             THEN("then the rotation matrix is correct")
@@ -328,7 +331,7 @@ SCENARIO("Testing 3D geometries")
                 RealMatrix_t rot(3, 3);
                 rot << std::cos(angle), 0, std::sin(angle), 0, 1, 0, -std::sin(angle), 0,
                     std::cos(angle);
-                REQUIRE((g.getRotationMatrix() - rot).sum() == Approx(0));
+                REQUIRE_EQ((g.getRotationMatrix() - rot).sum(), Approx(0));
             }
 
             THEN("the camera center is correct")
@@ -336,9 +339,9 @@ SCENARIO("Testing 3D geometries")
                 auto c = g.getCameraCenter();
                 auto o = ddVol.getLocationOfOrigin();
 
-                REQUIRE((c[0] - o[0] - s2c) == Approx(0));
-                REQUIRE((c[1] - o[1]) == Approx(0).margin(0.000001));
-                REQUIRE((c[2] - o[2]) == Approx(0).margin(0.000001));
+                REQUIRE_EQ((c[0] - o[0] - s2c), Approx(0));
+                REQUIRE_EQ((c[1] - o[1]), Approx(0).epsilon(0.01));
+                REQUIRE_EQ((c[2] - o[2]), Approx(0).epsilon(0.01));
             }
         }
 
@@ -357,7 +360,7 @@ SCENARIO("Testing 3D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -368,7 +371,7 @@ SCENARIO("Testing 3D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0).margin(0.00001));
+                REQUIRE_EQ(result.sum(), Approx(0).epsilon(0.01));
             }
 
             THEN("then the rotation matrix is correct")
@@ -379,7 +382,7 @@ SCENARIO("Testing 3D geometries")
                 RealMatrix_t rot2(3, 3);
                 rot2 << std::cos(angle2), -std::sin(angle2), 0, std::sin(angle2), std::cos(angle2),
                     0, 0, 0, 1;
-                REQUIRE((g.getRotationMatrix() - rot1 * rot2).sum() == Approx(0));
+                REQUIRE_EQ((g.getRotationMatrix() - rot1 * rot2).sum(), Approx(0));
             }
 
             THEN("the camera center is correct")
@@ -393,7 +396,7 @@ SCENARIO("Testing 3D geometries")
                 src[2] = -s2c;
                 RealVector_t rotSrc = g.getRotationMatrix().transpose() * src + o + offset;
 
-                REQUIRE((rotSrc - c).sum() == Approx(0).margin(0.000001));
+                REQUIRE_EQ((rotSrc - c).sum(), Approx(0).epsilon(0.01));
             }
         }
 
@@ -418,7 +421,7 @@ SCENARIO("Testing 3D geometries")
             THEN("a copy is the same")
             {
                 Geometry gCopy(g);
-                REQUIRE(gCopy == g);
+                REQUIRE_EQ(gCopy, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -429,12 +432,12 @@ SCENARIO("Testing 3D geometries")
                 auto P = g.getProjectionMatrix();
                 auto Pinv = g.getInverseProjectionMatrix();
                 RealMatrix_t result = (P * Pinv) - id;
-                REQUIRE(result.sum() == Approx(0).margin(0.00001));
+                REQUIRE_EQ(result.sum(), Approx(0).epsilon(0.01));
             }
 
             THEN("then the rotation matrix is correct")
             {
-                REQUIRE((g.getRotationMatrix() - R).sum() == Approx(0));
+                REQUIRE_EQ((g.getRotationMatrix() - R).sum(), Approx(0));
             }
 
             THEN("the camera center is correct")
@@ -448,8 +451,10 @@ SCENARIO("Testing 3D geometries")
                 src[2] = -s2c;
                 RealVector_t rotSrc = g.getRotationMatrix().transpose() * src + o;
 
-                REQUIRE((rotSrc - c).sum() == Approx(0).margin(0.00001));
+                REQUIRE_EQ((rotSrc - c).sum(), Approx(0).epsilon(0.01));
             }
         }
     }
 }
+
+TEST_SUITE_END();

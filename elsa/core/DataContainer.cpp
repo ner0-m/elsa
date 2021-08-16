@@ -2,8 +2,11 @@
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
+#include "RandomBlocksDescriptor.h"
+#include "PartitionDescriptor.h"
+#include "Error.h"
+#include "TypeCasts.hpp"
 
-#include <stdexcept>
 #include <utility>
 
 namespace elsa
@@ -27,7 +30,7 @@ namespace elsa
           _dataHandlerType{handlerType}
     {
         if (_dataHandler->getSize() != data.size())
-            throw std::invalid_argument("DataContainer: initialization vector has invalid size");
+            throw InvalidArgumentError("DataContainer: initialization vector has invalid size");
 
         for (index_t i = 0; i < _dataHandler->getSize(); ++i)
             (*_dataHandler)[i] = data[i];
@@ -138,6 +141,18 @@ namespace elsa
     }
 
     template <typename data_t>
+    GetFloatingPointType_t<data_t> DataContainer<data_t>::l2Norm() const
+    {
+        return _dataHandler->l2Norm();
+    }
+
+    template <typename data_t>
+    index_t DataContainer<data_t>::l0PseudoNorm() const
+    {
+        return _dataHandler->l0PseudoNorm();
+    }
+
+    template <typename data_t>
     GetFloatingPointType_t<data_t> DataContainer<data_t>::l1Norm() const
     {
         return _dataHandler->l1Norm();
@@ -235,7 +250,7 @@ namespace elsa
                 return std::make_unique<DataHandlerGPU<data_t>>(std::forward<Args>(args)...);
 #endif
             default:
-                throw std::invalid_argument("DataContainer: unknown handler type");
+                throw InvalidArgumentError("DataContainer: unknown handler type");
         }
     }
 
@@ -270,12 +285,12 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i)
     {
-        const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
+        const auto blockDesc = downcast_safe<BlockDescriptor>(_dataDescriptor.get());
         if (!blockDesc)
-            throw std::logic_error("DataContainer: cannot get block from not-blocked container");
+            throw LogicError("DataContainer: cannot get block from not-blocked container");
 
         if (i >= blockDesc->getNumberOfBlocks() || i < 0)
-            throw std::invalid_argument("DataContainer: block index out of bounds");
+            throw InvalidArgumentError("DataContainer: block index out of bounds");
 
         index_t startIndex = blockDesc->getOffsetOfBlock(i);
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
@@ -293,12 +308,12 @@ namespace elsa
     template <typename data_t>
     const DataContainer<data_t> DataContainer<data_t>::getBlock(index_t i) const
     {
-        const auto blockDesc = dynamic_cast<const BlockDescriptor*>(_dataDescriptor.get());
+        const auto blockDesc = downcast_safe<BlockDescriptor>(_dataDescriptor.get());
         if (!blockDesc)
-            throw std::logic_error("DataContainer: cannot get block from not-blocked container");
+            throw LogicError("DataContainer: cannot get block from not-blocked container");
 
         if (i >= blockDesc->getNumberOfBlocks() || i < 0)
-            throw std::invalid_argument("DataContainer: block index out of bounds");
+            throw InvalidArgumentError("DataContainer: block index out of bounds");
 
         index_t startIndex = blockDesc->getOffsetOfBlock(i);
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
@@ -319,7 +334,7 @@ namespace elsa
     DataContainer<data_t> DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor)
     {
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
-            throw std::invalid_argument("DataContainer: view must have same size as container");
+            throw InvalidArgumentError("DataContainer: view must have same size as container");
 
         DataHandlerType newHandlerType = (_dataHandlerType == DataHandlerType::CPU
                                           || _dataHandlerType == DataHandlerType::MAP_CPU)
@@ -335,7 +350,7 @@ namespace elsa
         DataContainer<data_t>::viewAs(const DataDescriptor& dataDescriptor) const
     {
         if (dataDescriptor.getNumberOfCoefficients() != getSize())
-            throw std::invalid_argument("DataContainer: view must have same size as container");
+            throw InvalidArgumentError("DataContainer: view must have same size as container");
 
         DataHandlerType newHandlerType = (_dataHandlerType == DataHandlerType::CPU
                                           || _dataHandlerType == DataHandlerType::MAP_CPU)
@@ -346,6 +361,40 @@ namespace elsa
         // constant container
         return DataContainer<data_t>{dataDescriptor, _dataHandler->getBlock(0, getSize()),
                                      newHandlerType};
+    }
+
+    template <typename data_t>
+    const DataContainer<data_t> DataContainer<data_t>::slice(index_t i) const
+    {
+        auto& desc = getDataDescriptor();
+        auto dim = desc.getNumberOfDimensions();
+        auto sizeOfLastDim = desc.getNumberOfCoefficientsPerDimension()[dim - 1];
+
+        if (i >= sizeOfLastDim) {
+            throw LogicError("Trying to access out of bound slice");
+        }
+
+        auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
+
+        // Now set the slice
+        return viewAs(sliceDesc).getBlock(i);
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DataContainer<data_t>::slice(index_t i)
+    {
+        auto& desc = getDataDescriptor();
+        auto dim = desc.getNumberOfDimensions();
+        auto sizeOfLastDim = desc.getNumberOfCoefficientsPerDimension()[dim - 1];
+
+        if (i >= sizeOfLastDim) {
+            throw LogicError("Trying to access out of bound slice");
+        }
+
+        auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
+
+        // Now set the slice
+        return viewAs(sliceDesc).getBlock(i);
     }
 
     template <typename data_t>
@@ -431,7 +480,7 @@ namespace elsa
     {
         if (_dataHandlerType == DataHandlerType::CPU
             || _dataHandlerType == DataHandlerType::MAP_CPU) {
-            throw std::logic_error(
+            throw LogicError(
                 "DataContainer: cannot load data to CPU with already CPU based container");
         }
 
@@ -449,7 +498,7 @@ namespace elsa
     {
         if (_dataHandlerType == DataHandlerType::GPU
             || _dataHandlerType == DataHandlerType::MAP_GPU) {
-            throw std::logic_error(
+            throw LogicError(
                 "DataContainer: cannot load data to GPU with already GPU based container");
         }
 
@@ -491,6 +540,30 @@ namespace elsa
         }
     }
 
+    template <typename data_t>
+    DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
+                                      const DataContainer<data_t>& dc2)
+    {
+        auto desc1 = dc1.getDataDescriptor().clone();
+        auto desc2 = dc2.getDataDescriptor().clone();
+
+        if (desc1->getNumberOfDimensions() != desc2->getNumberOfDimensions()) {
+            throw LogicError("Can't concatenate two DataContainers with different dimension");
+        }
+
+        std::vector<std::unique_ptr<DataDescriptor>> descriptors;
+        descriptors.reserve(2);
+        descriptors.push_back(std::move(desc1));
+        descriptors.push_back(std::move(desc2));
+
+        auto blockDesc = RandomBlocksDescriptor(descriptors);
+        auto concatenated = DataContainer<data_t>(blockDesc);
+
+        concatenated.getBlock(0) = dc1;
+        concatenated.getBlock(1) = dc2;
+        return concatenated;
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
@@ -498,5 +571,16 @@ namespace elsa
     template class DataContainer<double>;
     template class DataContainer<std::complex<double>>;
     template class DataContainer<index_t>;
+
+    template DataContainer<float> concatenate<float>(const DataContainer<float>&,
+                                                     const DataContainer<float>&);
+    template DataContainer<double> concatenate<double>(const DataContainer<double>&,
+                                                       const DataContainer<double>&);
+    template DataContainer<std::complex<float>>
+        concatenate<std::complex<float>>(const DataContainer<std::complex<float>>&,
+                                         const DataContainer<std::complex<float>>&);
+    template DataContainer<std::complex<double>>
+        concatenate<std::complex<double>>(const DataContainer<std::complex<double>>&,
+                                          const DataContainer<std::complex<double>>&);
 
 } // namespace elsa

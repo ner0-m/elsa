@@ -6,10 +6,10 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a series of identical descriptors concatenated along a new
+     * @brief Class representing a series of identical descriptors concatenated along a new
      * dimension (the last dimension of the full descriptor).
      *
-     * \author Nikola Dinev
+     * @author Nikola Dinev
      *
      * The blocks are, essentially, slices (though not necessarily two-dimensional) of the full
      * descriptor along its last dimension. The last dimension of the full descriptor serves solely
@@ -22,15 +22,15 @@ namespace elsa
     {
     public:
         /**
-         *  \brief Create a new descriptor, replicating the dataDescriptor numberOfBlocks times
+         *  @brief Create a new descriptor, replicating the dataDescriptor numberOfBlocks times
          * along a new dimension
          *
-         *  \param[in] numberOfBlocks is the desired number of blocks
-         *  \param[in] dataDescriptor is the descriptor that will be replicated numberOfBlocks
+         *  @param[in] numberOfBlocks is the desired number of blocks
+         *  @param[in] dataDescriptor is the descriptor that will be replicated numberOfBlocks
          *  times
          * along a new dimension
          *
-         *  \throw std::invalid_argument if numberOfBlocks is non-positive
+         *  @throw InvalidArgumentError if numberOfBlocks is non-positive
          */
         IdenticalBlocksDescriptor(index_t numberOfBlocks, const DataDescriptor& dataDescriptor);
 

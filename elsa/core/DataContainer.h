@@ -6,7 +6,9 @@
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "DataContainerIterator.h"
+#include "Error.h"
 #include "Expression.h"
+#include "TypeCasts.hpp"
 
 #ifdef ELSA_CUDA_VECTOR
 #include "DataHandlerGPU.h"
@@ -20,15 +22,15 @@ namespace elsa
 {
 
     /**
-     * \brief class representing and storing a linearized n-dimensional signal
+     * @brief class representing and storing a linearized n-dimensional signal
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Tobias Lasser - rewrite, modularization, modernization
-     * \author David Frank - added DataHandler concept, iterators
-     * \author Nikola Dinev - add block support
-     * \author Jens Petit - expression templates
+     * @author Matthias Wieczorek - initial code
+     * @author Tobias Lasser - rewrite, modularization, modernization
+     * @author David Frank - added DataHandler concept, iterators
+     * @author Nikola Dinev - add block support
+     * @author Jens Petit - expression templates
      *
-     * \tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
+     * @tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
      *
      * This class provides a container for a signal that is stored in memory. This signal can
      * be n-dimensional, and will be stored in memory in a linearized fashion. The information
@@ -38,40 +40,43 @@ namespace elsa
     class DataContainer
     {
     public:
+        /// Scalar alias
+        using Scalar = data_t;
+
         /// delete default constructor (without metadata there can be no valid container)
         DataContainer() = delete;
 
         /**
-         * \brief Constructor for empty DataContainer, no initialisation is performed
+         * @brief Constructor for empty DataContainer, no initialisation is performed
          *
-         * \param[in] dataDescriptor containing the associated metadata
-         * \param[in] handlerType the data handler (default: CPU)
+         * @param[in] dataDescriptor containing the associated metadata
+         * @param[in] handlerType the data handler (default: CPU)
          */
         explicit DataContainer(const DataDescriptor& dataDescriptor,
                                DataHandlerType handlerType = defaultHandlerType);
 
         /**
-         * \brief Constructor for DataContainer, initializing it with a DataVector
+         * @brief Constructor for DataContainer, initializing it with a DataVector
          *
-         * \param[in] dataDescriptor containing the associated metadata
-         * \param[in] data vector containing the initialization data
-         * \param[in] handlerType the data handler (default: CPU)
+         * @param[in] dataDescriptor containing the associated metadata
+         * @param[in] data vector containing the initialization data
+         * @param[in] handlerType the data handler (default: CPU)
          */
         DataContainer(const DataDescriptor& dataDescriptor,
                       const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
                       DataHandlerType handlerType = defaultHandlerType);
 
         /**
-         * \brief Copy constructor for DataContainer
+         * @brief Copy constructor for DataContainer
          *
-         * \param[in] other DataContainer to copy
+         * @param[in] other DataContainer to copy
          */
         DataContainer(const DataContainer<data_t>& other);
 
         /**
-         * \brief copy assignment for DataContainer
+         * @brief copy assignment for DataContainer
          *
-         * \param[in] other DataContainer to copy
+         * @param[in] other DataContainer to copy
          *
          * Note that a copy assignment with a DataContainer on a different device (CPU vs GPU) will
          * result in an "infectious" copy which means that afterwards the current container will use
@@ -80,9 +85,9 @@ namespace elsa
         DataContainer<data_t>& operator=(const DataContainer<data_t>& other);
 
         /**
-         * \brief Move constructor for DataContainer
+         * @brief Move constructor for DataContainer
          *
-         * \param[in] other DataContainer to move from
+         * @param[in] other DataContainer to move from
          *
          * The moved-from objects remains in a valid state. However, as preconditions are not
          * fulfilled for any member functions, the object should not be used. After move- or copy-
@@ -91,9 +96,9 @@ namespace elsa
         DataContainer(DataContainer<data_t>&& other) noexcept;
 
         /**
-         * \brief Move assignment for DataContainer
+         * @brief Move assignment for DataContainer
          *
-         * \param[in] other DataContainer to move from
+         * @param[in] other DataContainer to move from
          *
          * The moved-from objects remains in a valid state. However, as preconditions are not
          * fulfilled for any member functions, the object should not be used. After move- or copy-
@@ -106,9 +111,9 @@ namespace elsa
         DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
 
         /**
-         * \brief Expression evaluation assignment for DataContainer
+         * @brief Expression evaluation assignment for DataContainer
          *
-         * \param[in] source expression to evaluate
+         * @param[in] source expression to evaluate
          *
          * This evaluates an expression template term into the underlying data member of
          * the DataHandler in use.
@@ -116,29 +121,29 @@ namespace elsa
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
         DataContainer<data_t>& operator=(Source const& source)
         {
-            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(_dataHandler.get())) {
+            if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(_dataHandler.get())) {
                 handler->accessData() = source.template eval<false>();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapCPU<data_t>*>(_dataHandler.get())) {
+                           downcast_safe<DataHandlerMapCPU<data_t>>(_dataHandler.get())) {
                 handler->accessData() = source.template eval<false>();
 #ifdef ELSA_CUDA_VECTOR
-            } else if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(_dataHandler.get())) {
+            } else if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(_dataHandler.get())) {
                 handler->accessData().eval(source.template eval<true>());
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapGPU<data_t>*>(_dataHandler.get())) {
+                           downcast_safe<DataHandlerMapGPU<data_t>>(_dataHandler.get())) {
                 handler->accessData().eval(source.template eval<true>());
 #endif
             } else {
-                throw std::logic_error("Unknown handler type");
+                throw LogicError("Unknown handler type");
             }
 
             return *this;
         }
 
         /**
-         * \brief Expression constructor
+         * @brief Expression constructor
          *
-         * \param[in] source expression to evaluate
+         * @param[in] source expression to evaluate
          *
          * It creates a new DataContainer out of an expression. For this the meta information which
          * is saved in the expression is used.
@@ -198,27 +203,33 @@ namespace elsa
         template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
         data_t dot(const Source& source) const
         {
-            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(_dataHandler.get())) {
+            if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(_dataHandler.get())) {
                 return (*this * source).template eval<false>().sum();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapCPU<data_t>*>(_dataHandler.get())) {
+                           downcast_safe<DataHandlerMapCPU<data_t>>(_dataHandler.get())) {
                 return (*this * source).template eval<false>().sum();
 #ifdef ELSA_CUDA_VECTOR
-            } else if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(_dataHandler.get())) {
+            } else if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(_dataHandler.get())) {
                 DataContainer temp = (*this * source);
                 return temp.sum();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapGPU<data_t>*>(_dataHandler.get())) {
+                           downcast_safe<DataHandlerMapGPU<data_t>>(_dataHandler.get())) {
                 DataContainer temp = (*this * source);
                 return temp.sum();
 #endif
             } else {
-                throw std::logic_error("Unknown handler type");
+                throw LogicError("Unknown handler type");
             }
         }
 
         /// return the squared l2 norm of this signal (dot product with itself)
         GetFloatingPointType_t<data_t> squaredL2Norm() const;
+
+        /// return the l2 norm of this signal (square root of dot product with itself)
+        GetFloatingPointType_t<data_t> l2Norm() const;
+
+        /// return the l0 pseudo-norm of this signal (number of non-zero values)
+        index_t l0PseudoNorm() const;
 
         /// return the l1 norm of this signal (sum of absolute values)
         GetFloatingPointType_t<data_t> l1Norm() const;
@@ -306,6 +317,19 @@ namespace elsa
         /// return a const view of this DataContainer with a different descriptor
         const DataContainer<data_t> viewAs(const DataDescriptor& dataDescriptor) const;
 
+        /// @brief Slice the container in the last dimension
+        ///
+        /// Access a portion of the container via a slice. The slicing always is in the last
+        /// dimension. So for a 3D volume, the slice would be an sliced in the z direction and would
+        /// be a part of the x-y plane.
+        ///
+        /// A slice is always the same dimension as the original DataContainer, but with a thickness
+        /// of 1 in the last dimension (i.e. the coefficient of the last dimension is 1)
+        const DataContainer<data_t> slice(index_t i) const;
+
+        /// @overload non-canst/read-write overload
+        DataContainer<data_t> slice(index_t i);
+
         /// iterator for DataContainer (random access and continuous)
         using iterator = DataContainerIterator<DataContainer<data_t>>;
 
@@ -380,9 +404,9 @@ namespace elsa
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
         /**
-         * \brief Factory function which returns GPU based DataContainers
+         * @brief Factory function which returns GPU based DataContainers
          *
-         * \return the GPU based DataContainer
+         * @return the GPU based DataContainer
          *
          * Note that if this function is called on a container which is already GPU based, it will
          * throw an exception.
@@ -390,9 +414,9 @@ namespace elsa
         DataContainer loadToGPU();
 
         /**
-         * \brief Factory function which returns CPU based DataContainers
+         * @brief Factory function which returns CPU based DataContainers
          *
-         * \return the CPU based DataContainer
+         * @return the CPU based DataContainer
          *
          * Note that if this function is called on a container which is already CPU based, it will
          * throw an exception.
@@ -421,12 +445,12 @@ namespace elsa
                                DataHandlerType dataType = defaultHandlerType);
 
         /**
-         * \brief Helper function to indicate if a regular assignment or a clone should be performed
+         * @brief Helper function to indicate if a regular assignment or a clone should be performed
          *
-         * \param[in] handlerType the member variable of the other container in
+         * @param[in] handlerType the member variable of the other container in
          * copy-/move-assignment
          *
-         * \return true if a regular assignment of the pointed to DataHandlers should be done
+         * @return true if a regular assignment of the pointed to DataHandlers should be done
          *
          * An assignment operation with a DataContainer which does not use the same device (CPU /
          * GPU) has to be handled differently. This helper function indicates if a regular
@@ -434,6 +458,11 @@ namespace elsa
          */
         bool canAssign(DataHandlerType handlerType);
     };
+
+    /// Concatenate two DataContainers to one (requires copying of both)
+    template <typename data_t>
+    DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
+                                      const DataContainer<data_t>& dc2);
 
     /// User-defined template argument deduction guide for the expression based constructor
     template <typename Source>
@@ -561,6 +590,58 @@ namespace elsa
         }
     }
 
+    /// Element-wise maximum value operation between two operands
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto cwiseMax(LHS const& lhs, RHS const& rhs)
+    {
+        constexpr bool isLHSComplex = isComplex<GetOperandDataType_t<LHS>>;
+        constexpr bool isRHSComplex = isComplex<GetOperandDataType_t<RHS>>;
+
+#ifdef ELSA_CUDA_VECTOR
+        auto cwiseMaxGPU = [](auto const& lhs, auto const& rhs, bool) {
+            return quickvec::cwiseMax(lhs, rhs);
+        };
+#endif
+        auto cwiseMax = [] {
+            if constexpr (isLHSComplex && isRHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().abs().max(right.array().abs())).matrix();
+                };
+            } else if constexpr (isLHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().abs().max(right.array())).matrix();
+                };
+            } else if constexpr (isRHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().max(right.array().abs())).matrix();
+                };
+            } else {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().max(right.array())).matrix();
+                };
+            }
+        }();
+
+#ifdef ELSA_CUDA_VECTOR
+        return Expression{Callables{cwiseMax, cwiseMaxGPU}, lhs, rhs};
+#else
+        return Expression{cwiseMax, lhs, rhs};
+#endif
+    }
+
+    /// Element-wise absolute value operation
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto cwiseAbs(Operand const& operand)
+    {
+        auto abs = [](auto const& operand) { return (operand.array().abs()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto absGPU = [](auto const& operand, bool) { return quickvec::cwiseAbs(operand); };
+        return Expression{Callables{abs, absGPU}, operand};
+#else
+        return Expression{abs, operand};
+#endif
+    }
+
     /// Element-wise square operation
     template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
     auto square(Operand const& operand)
@@ -612,5 +693,4 @@ namespace elsa
         return Expression{log, operand};
 #endif
     }
-
 } // namespace elsa

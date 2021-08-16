@@ -1,18 +1,21 @@
 /**
- * \file test_Identity.cpp
+ * @file test_Identity.cpp
  *
- * \brief Tests for Identity class
+ * @brief Tests for Identity class
  *
- * \author Tobias Lasser - main code
+ * @author Tobias Lasser - main code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Identity.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Constructing an Identity operator")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE_TEMPLATE("Identity: Testing construction", data_t, float, double)
 {
     GIVEN("a descriptor")
     {
@@ -22,7 +25,7 @@ SCENARIO("Constructing an Identity operator")
 
         WHEN("instantiating an Identity operator")
         {
-            Identity idOp(dd);
+            Identity<data_t> idOp(dd);
 
             THEN("the DataDescriptors are as expected")
             {
@@ -33,7 +36,7 @@ SCENARIO("Constructing an Identity operator")
 
         WHEN("cloning an  Identity operator")
         {
-            Identity idOp(dd);
+            Identity<data_t> idOp(dd);
             auto idOpClone = idOp.clone();
 
             THEN("everything matches")
@@ -45,17 +48,18 @@ SCENARIO("Constructing an Identity operator")
     }
 }
 
-SCENARIO("Using Identity")
+TEST_CASE_TEMPLATE("Identity: Testing apply", data_t, float, double, std::complex<float>,
+                   std::complex<double>)
 {
     GIVEN("some data")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 11, 13;
         VolumeDescriptor dd(numCoeff);
-        DataContainer input(dd);
+        DataContainer<data_t> input(dd);
         input = 3.3f;
 
-        Identity idOp(dd);
+        Identity<data_t> idOp(dd);
 
         WHEN("applying the identity")
         {
@@ -80,3 +84,4 @@ SCENARIO("Using Identity")
         }
     }
 }
+TEST_SUITE_END();

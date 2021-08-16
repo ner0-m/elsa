@@ -7,6 +7,15 @@
    self
 
 .. toctree::
+   :caption: Guides
+   :maxdepth: 2
+
+   guides/quickstart-cxx.md
+   guides/python_bindings.md
+   modules/solvers/choosing_a_solver.rst
+   guides/admm-cxx.md
+
+.. toctree::
    :caption: Modules
    :maxdepth: 2
 
@@ -16,9 +25,10 @@
    modules/operators
    modules/functionals
    modules/problems
-   modules/solvers
+   modules/solvers/solvers
    modules/projectors
    modules/projectors_cuda
    modules/proximity_operators
    modules/generators
+   modules/ml/ml
 

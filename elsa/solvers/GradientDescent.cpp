@@ -1,17 +1,16 @@
 #include "GradientDescent.h"
 #include "Logger.h"
-
-#include <stdexcept>
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
     template <typename data_t>
-    GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem, real_t stepSize)
+    GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem, data_t stepSize)
         : Solver<data_t>(problem), _stepSize{stepSize}
     {
         // sanity check
         if (_stepSize <= 0)
-            throw std::invalid_argument("GradientDescent: step size has to be positive");
+            throw InvalidArgumentError("GradientDescent: step size has to be positive");
     }
 
     template <typename data_t>
@@ -19,7 +18,7 @@ namespace elsa
         : Solver<data_t>(problem)
     {
         this->_stepSize =
-            static_cast<real_t>(1.0) / static_cast<real_t>(problem.getLipschitzConstant());
+            static_cast<data_t>(1.0) / static_cast<data_t>(problem.getLipschitzConstant());
     }
 
     template <typename data_t>
@@ -52,7 +51,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherGD = dynamic_cast<const GradientDescent*>(&other);
+        auto otherGD = downcast_safe<GradientDescent<data_t>>(&other);
         if (!otherGD)
             return false;
 
@@ -65,7 +64,5 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class GradientDescent<float>;
-
     template class GradientDescent<double>;
-
 } // namespace elsa

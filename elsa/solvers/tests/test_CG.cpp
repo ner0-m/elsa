@@ -1,29 +1,36 @@
 /**
- * \file test_CG.cpp
+ * @file test_CG.cpp
  *
- * \brief Tests for the CG class
+ * @brief Tests for the CG class
  *
- * \author Nikola Dinev
+ * @author Nikola Dinev
  */
-#include <catch2/catch.hpp>
+
+#include "doctest/doctest.h"
 
 #include "CG.h"
-#include "Identity.h"
 #include "Scaling.h"
 #include "Logger.h"
-#include "L2NormPow2.h"
 #include "VolumeDescriptor.h"
+#include "JosephsMethod.h"
+#include "CircleTrajectoryGenerator.h"
+#include "PhantomGenerator.h"
+#include "TypeCasts.hpp"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
+
+TEST_SUITE_BEGIN("solvers");
 
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, CG<double>)
+TEST_CASE_TEMPLATE("CG: Solving a simple linear problem", TestType, CG<float>, CG<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a linear problem")
     {
@@ -51,8 +58,8 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -61,8 +68,8 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE((resultsDifference).squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE((resultsDifference).squaredL2Norm(),
+                               epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
         }
@@ -76,8 +83,8 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -87,19 +94,19 @@ TEMPLATE_TEST_CASE("Scenario: Solving a simple linear problem", "", CG<float>, C
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(Approx((resultsDifference).squaredL2Norm()).margin(0.00001)
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_UNARY(checkApproxEq((resultsDifference).squaredL2Norm(),
+                                                epsilon * epsilon * dcB.squaredL2Norm()));
                 }
             }
         }
     }
 }
 
-TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<double>)
+TEST_CASE_TEMPLATE("CG: Solving a Tikhonov problem", TestType, CG<float>, CG<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::WARN);
+    Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a Tikhonov problem")
     {
@@ -130,8 +137,8 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -141,8 +148,8 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
                         (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE(resultsDifference.squaredL2Norm(),
+                               epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
         }
@@ -156,8 +163,8 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
             {
                 auto cgClone = solver.clone();
 
-                REQUIRE(cgClone.get() != &solver);
-                REQUIRE(*cgClone == solver);
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -168,10 +175,64 @@ TEMPLATE_TEST_CASE("Scenario: Solving a Tikhonov problem", "", CG<float>, CG<dou
                         (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE(resultsDifference.squaredL2Norm()
-                            <= epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE(resultsDifference.squaredL2Norm(),
+                               epsilon * epsilon * dcB.squaredL2Norm());
                 }
             }
         }
     }
 }
+
+TEST_CASE("CG: Solving a simple phantom reconstruction")
+{
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::OFF);
+
+    GIVEN("a Phantom reconstruction problem")
+    {
+
+        IndexVector_t size(2);
+        size << 16, 16; // TODO: determine optimal phantom size for efficient testing
+        auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+        auto& volumeDescriptor = phantom.getDataDescriptor();
+
+        index_t numAngles{30}, arc{180};
+        auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
+            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
+            static_cast<real_t>(size(0)));
+
+        JosephsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
+
+        auto sinogram = projector.apply(phantom);
+
+        WLSProblem problem(projector, sinogram);
+        real_t epsilon = std::numeric_limits<real_t>::epsilon();
+
+        WHEN("setting up a CG solver")
+        {
+            CG solver{problem, epsilon};
+
+            THEN("the clone works correctly")
+            {
+                auto cgClone = solver.clone();
+
+                REQUIRE_NE(cgClone.get(), &solver);
+                REQUIRE_EQ(*cgClone, solver);
+
+                AND_THEN("it works as expected")
+                {
+                    auto reconstruction = solver.solve(10);
+
+                    DataContainer resultsDifference = reconstruction - phantom;
+
+                    // should have converged for the given number of iterations
+                    // does not converge to the optimal solution because of the regularization term
+                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
+                }
+            }
+        }
+    }
+}
+
+TEST_SUITE_END();

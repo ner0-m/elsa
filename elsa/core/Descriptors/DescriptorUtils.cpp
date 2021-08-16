@@ -1,13 +1,14 @@
 #include "DescriptorUtils.h"
 #include "DataDescriptor.h"
 #include "VolumeDescriptor.h"
+#include "Error.h"
 
 namespace elsa
 {
     std::unique_ptr<DataDescriptor> bestCommon(const std::vector<const DataDescriptor*>& descList)
     {
         if (descList.empty())
-            throw std::invalid_argument("DataDescriptor::bestCommon: descriptor list empty");
+            throw InvalidArgumentError("DataDescriptor::bestCommon: descriptor list empty");
 
         const auto& firstDesc = *descList[0];
         auto coeffs = firstDesc.getNumberOfCoefficientsPerDimension();
@@ -44,8 +45,7 @@ namespace elsa
             });
 
         if (!allSameSize)
-            throw std::invalid_argument(
-                "DataDescriptor::bestCommon: descriptor sizes do not match");
+            throw InvalidArgumentError("DataDescriptor::bestCommon: descriptor sizes do not match");
 
         return std::make_unique<VolumeDescriptor>(IndexVector_t::Constant(1, size));
     }

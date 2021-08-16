@@ -1,5 +1,5 @@
 #include "DetectorDescriptor.h"
-#include <iostream>
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -54,14 +54,22 @@ namespace elsa
         return computeRayFromDetectorCoord(detectorCoord, poseIndex);
     }
 
-    index_t DetectorDescriptor::getNumberOfGeometryPoses() const { return _geometry.size(); }
+    std::vector<Geometry> DetectorDescriptor::getGeometry() const { return _geometry; }
+
+    index_t DetectorDescriptor::getNumberOfGeometryPoses() const
+    {
+        return static_cast<index_t>(_geometry.size());
+    }
 
     std::optional<Geometry> DetectorDescriptor::getGeometryAt(const index_t index) const
     {
-        if (_geometry.size() <= std::make_unsigned_t<std::size_t>(index))
+        // Cast to size_t to silence warnings
+        auto i = asUnsigned(index);
+
+        if (_geometry.size() <= i)
             return {};
 
-        return _geometry[index];
+        return _geometry[i];
     }
 
     bool DetectorDescriptor::isEqual(const DataDescriptor& other) const

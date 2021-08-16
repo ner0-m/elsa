@@ -1,5 +1,6 @@
 #include "CG.h"
 #include "Logger.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -22,7 +23,7 @@ namespace elsa
                 != _problem->getCurrentSolution().getSize()
             || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
                    != _problem->getCurrentSolution().getSize()) {
-            throw std::invalid_argument("CG: incorrect size of preconditioner");
+            throw InvalidArgumentError("CG: incorrect size of preconditioner");
         }
     }
 
@@ -131,7 +132,7 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherCG = dynamic_cast<const CG*>(&other);
+        auto otherCG = downcast_safe<CG>(&other);
         if (!otherCG)
             return false;
 

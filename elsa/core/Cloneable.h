@@ -5,10 +5,10 @@
 namespace elsa
 {
     /**
-     * \brief Class implementing polymorphic clones with smart pointers and CRTP, as well as
+     * @brief Class implementing polymorphic clones with smart pointers and CRTP, as well as
      * comparison operators.
      *
-     * \author Tobias Lasser
+     * @author Tobias Lasser
      *
      * This class provides a clone method using CRTP to support covariance with smart pointers.
      * For details see

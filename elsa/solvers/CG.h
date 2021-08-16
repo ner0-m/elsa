@@ -7,11 +7,11 @@
 namespace elsa
 {
     /**
-     * \brief Class implementing the conjugate gradient method
+     * @brief Class implementing the conjugate gradient method
      *
-     * \author Matthias Wieczorek - initial code
-     * \author David Frank - modularization and modernization
-     * \author Nikola Dinev - rewrite, various enhancements
+     * @author Matthias Wieczorek - initial code
+     * @author David Frank - modularization and modernization
+     * @author Nikola Dinev - rewrite, various enhancements
      *
      * CG is an iterative method for minimizing quadric functionals \f$ \frac{1}{2} x^tAx - x^tb \f$
      * with a symmetric positive-definite operator \f$ A \f$. Some common optimization problems,
@@ -32,12 +32,15 @@ namespace elsa
     class CG : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
-         * \brief Constructor for CG, accepting an optimization problem and, optionally, a value for
+         * @brief Constructor for CG, accepting an optimization problem and, optionally, a value for
          * epsilon
          *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] epsilon affects the stopping condition
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] epsilon affects the stopping condition
          *
          * If the problem is not a QuadricProblem, a conversion will be attempted. Throws if
          * conversion fails. See QuadricProblem for details on problems that are convertible to
@@ -47,12 +50,12 @@ namespace elsa
                     data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /**
-         * \brief Constructor for preconditioned CG, accepting an optimization problem, the inverse
+         * @brief Constructor for preconditioned CG, accepting an optimization problem, the inverse
          * of the preconditioner, and, optionally, a value for epsilon
          *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] preconditionerInverse the inverse of the preconditioner
-         * \param[in] epsilon affects the stopping condition
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] preconditionerInverse the inverse of the preconditioner
+         * @param[in] epsilon affects the stopping condition
          *
          * If the problem is not a QuadricProblem, a conversion will be attempted. Throws if
          * conversion fails. See QuadricProblem for details on problems that are convertible to
@@ -67,6 +70,9 @@ namespace elsa
         /// default destructor
         ~CG() override = default;
 
+        /// lift the base class method getCurrentSolution
+        using Solver<data_t>::getCurrentSolution;
+
     private:
         /// the default number of iterations
         const index_t _defaultIterations{100};
@@ -77,19 +83,16 @@ namespace elsa
         /// variable affecting the stopping condition
         data_t _epsilon;
 
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
-
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;
 
         /**
-         * \brief Solve the optimization problem, i.e. apply iterations number of iterations of CG
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of CG
          *
-         * \param[in] iterations number of iterations to execute (the default 0 value executes
+         * @param[in] iterations number of iterations to execute (the default 0 value executes
          * _defaultIterations of iterations)
          *
-         * \returns a reference to the current solution
+         * @returns a reference to the current solution
          */
         DataContainer<data_t>& solveImpl(index_t iterations) override;
 

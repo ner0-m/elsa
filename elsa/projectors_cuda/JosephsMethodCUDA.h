@@ -16,12 +16,12 @@
 namespace elsa
 {
     /**
-     * \brief GPU-operator representing the discretized X-ray transform in 2d/3d using Joseph's
+     * @brief GPU-operator representing the discretized X-ray transform in 2d/3d using Joseph's
      * method.
      *
-     * \author Nikola Dinev
+     * @author Nikola Dinev
      *
-     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * The volume is traversed along the rays as specified by the Geometry. For interior voxels
      * the sampling point is located in the middle of the two planes orthogonal to the main
@@ -38,8 +38,8 @@ namespace elsa
      * Currently only utilizes a single GPU. Volume and images should both fit in device memory at
      * the same time.
      *
-     * \warning Hardware interpolation is only supported for JosephsMethodCUDA<float>
-     * \warning Hardware interpolation is significantly less accurate than the software
+     * @warning Hardware interpolation is only supported for JosephsMethodCUDA<float>
+     * @warning Hardware interpolation is significantly less accurate than the software
      * interpolation
      */
     template <typename data_t = real_t>
@@ -47,12 +47,12 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for Joseph's traversal method.
+         * @brief Constructor for Joseph's traversal method.
          *
-         * \param[in] domainDescriptor describing the domain of the operator (the volume)
-         * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
-         * \param[in] geometryList vector containing the geometries for the acquisition poses
-         * \param[in] fast performs fast backward projection if set, otherwise matched; forward
+         * @param[in] domainDescriptor describing the domain of the operator (the volume)
+         * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         * @param[in] geometryList vector containing the geometries for the acquisition poses
+         * @param[in] fast performs fast backward projection if set, otherwise matched; forward
          * projection is unaffected
          *
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
@@ -110,15 +110,16 @@ namespace elsa
         /// convenience typedef for cuda array flags
         using cudaArrayFlags = unsigned int;
 
+        enum class ContainerCpyKind { cpyContainerToRawGPU, cpyRawGPUToContainer };
         /**
-         * \brief Copies contents of a 3D data container between GPU and host memory
+         * @brief Copies contents of a 3D data container between GPU and host memory
          *
-         * \tparam direction specifies the direction of the copy operation
-         * \tparam async whether the copy should be performed asynchronously wrt. the host
+         * @tparam direction specifies the direction of the copy operation
+         * @tparam async whether the copy should be performed asynchronously wrt. the host
          *
-         * \param hostData pointer to host data
-         * \param gpuData pointer to gpu data
-         * \param[in] extent specifies the amount of data to be copied
+         * @param hostData pointer to host data
+         * @param gpuData pointer to gpu data
+         * @param[in] extent specifies the amount of data to be copied
          *
          * Note that hostData is expected to be a pointer to a linear memory region with no padding
          * between dimensions - e.g. the data in DataContainer is stored as a vector with no extra
@@ -127,19 +128,19 @@ namespace elsa
          * DataContainer x;
          * void* hostData = (void*)&x[0];
          */
-        template <cudaMemcpyKind direction, bool async = true>
+        template <ContainerCpyKind direction, bool async = true>
         void copy3DDataContainer(void* hostData, const cudaPitchedPtr& gpuData,
                                  const cudaExtent& extent) const;
 
         /**
-         * \brief Copies the entire contents of DataContainer to the GPU texture memory
+         * @brief Copies the entire contents of DataContainer to the GPU texture memory
          *
-         * \tparam cudaArrayFlags flags used for the creation of the cudaArray which will contain
+         * @tparam cudaArrayFlags flags used for the creation of the cudaArray which will contain
          * the data
          *
-         * \param[in] hostData the host data container
+         * @param[in] hostData the host data container
          *
-         * \returns a pair of the created texture object and its associated cudaArray
+         * @returns a pair of the created texture object and its associated cudaArray
          */
         template <cudaArrayFlags flags = 0U>
         std::pair<cudaTextureObject_t, cudaArray*>

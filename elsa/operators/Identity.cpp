@@ -1,5 +1,6 @@
 #include "Identity.h"
 #include "Timer.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -37,8 +38,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherIdentity = dynamic_cast<const Identity*>(&other);
-        return static_cast<bool>(otherIdentity);
+        return is<Identity>(other);
     }
 
     // ------------------------------------------

@@ -1,12 +1,13 @@
 /**
- * \file test_PGMHandler.cpp
+ * @file test_PGMHandler.cpp
  *
- * \brief Tests for the PGMHandler class
+ * @brief Tests for the PGMHandler class
  *
- * \author David Frank - initial code
+ * @author David Frank - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
+#include "Error.h"
 #include "PGMHandler.h"
 
 #include "VolumeDescriptor.h"
@@ -15,6 +16,7 @@
 #include <string_view>
 
 using namespace elsa;
+using namespace doctest;
 
 inline bool file_exists(std::string name)
 {
@@ -22,7 +24,9 @@ inline bool file_exists(std::string name)
     return f.good();
 }
 
-SCENARIO("Write PGM file")
+TEST_SUITE_BEGIN("io");
+
+TEST_CASE("PGMHandler: Write PGM file")
 {
     GIVEN("A 2D DataContainer")
     {
@@ -56,15 +60,15 @@ SCENARIO("Write PGM file")
             };
 
             // Check header
-            REQUIRE(nextToken(str, "\n") == "P2");
-            REQUIRE(nextToken(str, "\n") == "10 10");
-            REQUIRE(nextToken(str, "\n") == "255");
+            REQUIRE_EQ(nextToken(str, "\n"), "P2");
+            REQUIRE_EQ(nextToken(str, "\n"), "10 10");
+            REQUIRE_EQ(nextToken(str, "\n"), "255");
 
             // Now check the content
             int counter = 0;
             while (!str.empty()) {
                 auto val = static_cast<int>(static_cast<real_t>(counter) * scaleFactor);
-                REQUIRE(std::to_string(val) == nextToken(str, "\n"));
+                REQUIRE_EQ(std::to_string(val), nextToken(str, "\n"));
                 counter++;
             }
         }
@@ -75,9 +79,9 @@ SCENARIO("Write PGM file")
         IndexVector_t numCoeff1d{{10}};
         VolumeDescriptor dd1d(numCoeff1d);
         DataContainer dc1d(dd1d);
-        THEN("A exception is raised")
+        THEN("An exception is raised")
         {
-            REQUIRE_THROWS_AS(PGM::write(dc1d, "test.pgm"), std::invalid_argument);
+            REQUIRE_THROWS_AS(PGM::write(dc1d, "test.pgm"), InvalidArgumentError);
         }
     }
 
@@ -86,9 +90,11 @@ SCENARIO("Write PGM file")
         IndexVector_t numCoeff3d{{10, 8, 17}};
         VolumeDescriptor dd(numCoeff3d);
         DataContainer dc(dd);
-        THEN("A exception is raised")
+        THEN("An exception is raised")
         {
-            REQUIRE_THROWS_AS(PGM::write(dc, "test.pgm"), std::invalid_argument);
+            REQUIRE_THROWS_AS(PGM::write(dc, "test.pgm"), InvalidArgumentError);
         }
     }
 }
+
+TEST_SUITE_END();

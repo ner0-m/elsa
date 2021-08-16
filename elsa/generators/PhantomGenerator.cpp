@@ -13,13 +13,13 @@ namespace elsa
     {
         // sanity check
         if (sizes.size() < 2 || sizes.size() > 3)
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "PhantomGenerator::createModifiedSheppLogan: only 2d or 3d supported");
         if (sizes.size() == 2 && sizes[0] != sizes[1])
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "PhantomGenerator::createModifiedSheppLogan: 2d size has to be square");
         if (sizes.size() == 3 && (sizes[0] != sizes[1] || sizes[0] != sizes[2]))
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "PhantomGenerator::createModifiedSheppLogan: 3d size has to be cubed");
 
         Logger::get("PhantomGenerator")

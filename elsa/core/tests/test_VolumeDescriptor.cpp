@@ -1,23 +1,27 @@
 /**
- * \file test_VolumeDescriptor.cpp
+ * @file test_VolumeDescriptor.cpp
  *
- * \brief Tests for VolumeDescriptor class
+ * @brief Tests for VolumeDescriptor class
  *
- * \author Matthias Wieczorek - initial code
- * \author David Frank - rewrite to use Catch and BDD
- * \author Tobias Lasser - rewrite and added code coverage
- * \author Nikola Dinev - tests for automatic descriptor generation
+ * @author Matthias Wieczorek - initial code
+ * @author David Frank - rewrite to use doctest and BDD
+ * @author Tobias Lasser - rewrite and added code coverage
+ * @author Nikola Dinev - tests for automatic descriptor generation
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
+#include "Error.h"
 #include "VolumeDescriptor.h"
 #include "PartitionDescriptor.h"
 #include "DescriptorUtils.h"
 #include <stdexcept>
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Constructing VolumeDescriptors")
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE("VolumeDescriptor: Constructing VolumeDescriptors")
 {
     GIVEN("various 1D descriptor sizes")
     {
@@ -36,23 +40,22 @@ SCENARIO("Constructing VolumeDescriptors")
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd.getSpacingPerDimension() == RealVector_t::Ones(1));
-                REQUIRE(dd.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd.getSpacingPerDimension(), RealVector_t::Ones(1));
+                REQUIRE_EQ(dd.getLocationOfOrigin(), origin);
             }
 
             const VolumeDescriptor dd1({20});
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd.getSpacingPerDimension() == RealVector_t::Ones(1));
-                RealVector_t origin = 0.5 * (validNumCoeff.cast<real_t>().array());
-                REQUIRE(dd.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd.getSpacingPerDimension(), RealVector_t::Ones(1));
+                REQUIRE_EQ(dd.getLocationOfOrigin(), origin);
             }
         }
 
@@ -60,8 +63,7 @@ SCENARIO("Constructing VolumeDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({-10}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({-10}), InvalidArgumentError);
             }
         }
 
@@ -71,8 +73,8 @@ SCENARIO("Constructing VolumeDescriptors")
             {
                 // Try all possible combinations of constructors with initializer list
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff, validSpacing),
-                                  std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({-10}, {2.5}), std::invalid_argument);
+                                  InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({-10}, {2.5}), InvalidArgumentError);
             }
         }
 
@@ -86,22 +88,22 @@ SCENARIO("Constructing VolumeDescriptors")
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd1.getSpacingPerDimension() == validSpacing);
-                REQUIRE(dd1.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd1.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd1.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd1.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd1.getSpacingPerDimension(), validSpacing);
+                REQUIRE_EQ(dd1.getLocationOfOrigin(), origin);
             }
 
             const VolumeDescriptor dd2({20}, {2.5});
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd2.getSpacingPerDimension() == validSpacing);
-                REQUIRE(dd2.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd2.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd2.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd2.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd2.getSpacingPerDimension(), validSpacing);
+                REQUIRE_EQ(dd2.getLocationOfOrigin(), origin);
             }
         }
 
@@ -111,9 +113,9 @@ SCENARIO("Constructing VolumeDescriptors")
             {
                 // Try all possible combinations of constructors
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
-                                  std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {3.5, 1.5}), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {-3.5}), std::invalid_argument);
+                                  InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {3.5, 1.5}), InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({20}, {-3.5}), InvalidArgumentError);
             }
         }
     }
@@ -134,22 +136,22 @@ SCENARIO("Constructing VolumeDescriptors")
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd1.getSpacingPerDimension() == RealVector_t::Ones(2));
-                REQUIRE(dd1.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd1.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd1.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd1.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd1.getSpacingPerDimension(), RealVector_t::Ones(2));
+                REQUIRE_EQ(dd1.getLocationOfOrigin(), origin);
             }
 
             const VolumeDescriptor dd2({12, 15});
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd2.getSpacingPerDimension() == RealVector_t::Ones(2));
-                REQUIRE(dd2.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd2.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd2.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd2.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd2.getSpacingPerDimension(), RealVector_t::Ones(2));
+                REQUIRE_EQ(dd2.getLocationOfOrigin(), origin);
             }
         }
 
@@ -157,9 +159,8 @@ SCENARIO("Constructing VolumeDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1, 18}), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1, 18}), InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}), InvalidArgumentError);
             }
         }
 
@@ -171,9 +172,9 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff2, validSpacing),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
 
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}, {1.5, 2.5}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, -1}, {1.5, 2.5}), InvalidArgumentError);
             }
         }
 
@@ -187,22 +188,22 @@ SCENARIO("Constructing VolumeDescriptors")
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd1.getSpacingPerDimension() == validSpacing);
-                REQUIRE(dd1.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd1.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd1.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd1.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd1.getSpacingPerDimension(), validSpacing);
+                REQUIRE_EQ(dd1.getLocationOfOrigin(), origin);
             }
 
             const VolumeDescriptor dd2({12, 15}, {1.5, 2.5});
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd2.getSpacingPerDimension() == validSpacing);
-                REQUIRE(dd2.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd2.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd2.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd2.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd2.getSpacingPerDimension(), validSpacing);
+                REQUIRE_EQ(dd2.getLocationOfOrigin(), origin);
             }
         }
 
@@ -211,10 +212,10 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
-                                  std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {-1.5, 2.0}), std::invalid_argument);
+                                  InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {-1.5, 2.0}), InvalidArgumentError);
                 REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {1.5, 2.0, 3.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
     }
@@ -234,22 +235,22 @@ SCENARIO("Constructing VolumeDescriptors")
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd1.getSpacingPerDimension() == RealVector_t::Ones(3));
-                REQUIRE(dd1.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd1.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd1.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd1.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd1.getSpacingPerDimension(), RealVector_t::Ones(3));
+                REQUIRE_EQ(dd1.getLocationOfOrigin(), origin);
             }
 
             const VolumeDescriptor dd2({12, 15, 25});
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd2.getSpacingPerDimension() == RealVector_t::Ones(3));
-                REQUIRE(dd2.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd2.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd2.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd2.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd2.getSpacingPerDimension(), RealVector_t::Ones(3));
+                REQUIRE_EQ(dd2.getLocationOfOrigin(), origin);
             }
         }
 
@@ -257,8 +258,7 @@ SCENARIO("Constructing VolumeDescriptors")
         {
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff), std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, -1}), std::invalid_argument);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, -1}), InvalidArgumentError);
             }
         }
 
@@ -267,11 +267,11 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(invalidNumCoeff, validSpacing),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, -1}, {1.5, 2.5, 4.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
                 REQUIRE_THROWS_AS(VolumeDescriptor({12, 15}, {1.5, 2.5, 4.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -284,22 +284,22 @@ SCENARIO("Constructing VolumeDescriptors")
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd1.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd1.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd1.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd1.getSpacingPerDimension() == validSpacing);
-                REQUIRE(dd1.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd1.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd1.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd1.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd1.getSpacingPerDimension(), validSpacing);
+                REQUIRE_EQ(dd1.getLocationOfOrigin(), origin);
             }
 
             const VolumeDescriptor dd2({12, 15, 25}, {1.5, 2.5, 4.5});
 
             THEN("everything is set correctly")
             {
-                REQUIRE(dd2.getNumberOfDimensions() == validNumCoeff.size());
-                REQUIRE(dd2.getNumberOfCoefficients() == validNumCoeff.prod());
-                REQUIRE(dd2.getNumberOfCoefficientsPerDimension() == validNumCoeff);
-                REQUIRE(dd2.getSpacingPerDimension() == validSpacing);
-                REQUIRE(dd2.getLocationOfOrigin() == origin);
+                REQUIRE_EQ(dd2.getNumberOfDimensions(), validNumCoeff.size());
+                REQUIRE_EQ(dd2.getNumberOfCoefficients(), validNumCoeff.prod());
+                REQUIRE_EQ(dd2.getNumberOfCoefficientsPerDimension(), validNumCoeff);
+                REQUIRE_EQ(dd2.getSpacingPerDimension(), validSpacing);
+                REQUIRE_EQ(dd2.getLocationOfOrigin(), origin);
             }
         }
 
@@ -308,17 +308,16 @@ SCENARIO("Constructing VolumeDescriptors")
             THEN("an exception is thrown")
             {
                 REQUIRE_THROWS_AS(VolumeDescriptor(validNumCoeff, invalidSpacing),
-                                  std::invalid_argument);
-                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, 25}, {1.5, 2.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
+                REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, 25}, {1.5, 2.5}), InvalidArgumentError);
                 REQUIRE_THROWS_AS(VolumeDescriptor({12, 15, 25}, {1.5, 2.5, -4.5}),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
     }
 }
 
-SCENARIO("Cloning VolumeDescriptors")
+TEST_CASE("VolumeDescriptor: Testing clone()")
 {
     GIVEN("1D descriptors")
     {
@@ -332,11 +331,11 @@ SCENARIO("Cloning VolumeDescriptors")
 
             THEN("everything matches")
             {
-                REQUIRE(ddClone.get() != &dd);
-                REQUIRE(*ddClone == dd);
+                REQUIRE_NE(ddClone.get(), &dd);
+                REQUIRE_EQ(*ddClone, dd);
 
-                REQUIRE(ddWithSpacingClone.get() != &ddWithSpacing);
-                REQUIRE(*ddWithSpacingClone == ddWithSpacing);
+                REQUIRE_NE(ddWithSpacingClone.get(), &ddWithSpacing);
+                REQUIRE_EQ(*ddWithSpacingClone, ddWithSpacing);
             }
         }
     }
@@ -353,11 +352,11 @@ SCENARIO("Cloning VolumeDescriptors")
 
             THEN("everything matches")
             {
-                REQUIRE(ddClone.get() != &dd);
-                REQUIRE(*ddClone == dd);
+                REQUIRE_NE(ddClone.get(), &dd);
+                REQUIRE_EQ(*ddClone, dd);
 
-                REQUIRE(ddWithSpacingClone.get() != &ddWithSpacing);
-                REQUIRE(*ddWithSpacingClone == ddWithSpacing);
+                REQUIRE_NE(ddWithSpacingClone.get(), &ddWithSpacing);
+                REQUIRE_EQ(*ddWithSpacingClone, ddWithSpacing);
             }
         }
     }
@@ -374,17 +373,17 @@ SCENARIO("Cloning VolumeDescriptors")
 
             THEN("everything matches")
             {
-                REQUIRE(ddClone.get() != &dd);
-                REQUIRE(*ddClone == dd);
+                REQUIRE_NE(ddClone.get(), &dd);
+                REQUIRE_EQ(*ddClone, dd);
 
-                REQUIRE(ddWithSpacingClone.get() != &ddWithSpacing);
-                REQUIRE(*ddWithSpacingClone == ddWithSpacing);
+                REQUIRE_NE(ddWithSpacingClone.get(), &ddWithSpacing);
+                REQUIRE_EQ(*ddWithSpacingClone, ddWithSpacing);
             }
         }
     }
 }
 
-SCENARIO("Coordinates and indices")
+TEST_CASE("VolumeDescriptor: Testing calculation of Coordinates and indices")
 {
     GIVEN("1D descriptors")
     {
@@ -404,10 +403,10 @@ SCENARIO("Coordinates and indices")
 
             THEN("the index is correct")
             {
-                REQUIRE(dd.getIndexFromCoordinate(coordinate1) == 0);
-                REQUIRE(dd.getIndexFromCoordinate(coordinate2) == numCoeffs(0) - 1);
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate1), 0);
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate2), numCoeffs(0) - 1);
                 REQUIRE_THROWS_AS(dd.getIndexFromCoordinate(coordinateInvalid),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -420,11 +419,11 @@ SCENARIO("Coordinates and indices")
 
             THEN("the coordinate is correct")
             {
-                REQUIRE(dd.getCoordinateFromIndex(index1) == IndexVector_t::Constant(1, 0));
-                REQUIRE(dd.getCoordinateFromIndex(index2)
-                        == IndexVector_t::Constant(1, numCoeffs(0) - 1));
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), std::invalid_argument);
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), std::invalid_argument);
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index1), IndexVector_t::Constant(1, 0));
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index2),
+                           IndexVector_t::Constant(1, numCoeffs(0) - 1));
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), InvalidArgumentError);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), InvalidArgumentError);
             }
         }
     }
@@ -448,13 +447,13 @@ SCENARIO("Coordinates and indices")
 
             THEN("the index is correct")
             {
-                REQUIRE(dd.getIndexFromCoordinate(coordinate1) == 0);
-                REQUIRE(dd.getIndexFromCoordinate(coordinate2)
-                        == numCoeffs(0) * (numCoeffs(1) - 1));
-                REQUIRE(dd.getIndexFromCoordinate(coordinate3)
-                        == numCoeffs(0) - 1 + numCoeffs(0) * (numCoeffs(1) - 1));
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate1), 0);
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate2),
+                           numCoeffs(0) * (numCoeffs(1) - 1));
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate3),
+                           numCoeffs(0) - 1 + numCoeffs(0) * (numCoeffs(1) - 1));
                 REQUIRE_THROWS_AS(dd.getIndexFromCoordinate(coordinateInvalid),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -470,18 +469,18 @@ SCENARIO("Coordinates and indices")
             {
                 IndexVector_t coordinate1(2);
                 coordinate1 << 0, 0;
-                REQUIRE(dd.getCoordinateFromIndex(index1) == coordinate1);
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index1), coordinate1);
 
                 IndexVector_t coordinate2(2);
                 coordinate2 << numCoeffs(0) - 1, 0;
-                REQUIRE(dd.getCoordinateFromIndex(index2) == coordinate2);
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index2), coordinate2);
 
                 IndexVector_t coordinate3(2);
                 coordinate3 << numCoeffs(0) - 3, numCoeffs(1) - 1;
-                REQUIRE(dd.getCoordinateFromIndex(index3) == coordinate3);
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index3), coordinate3);
 
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), std::invalid_argument);
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), std::invalid_argument);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), InvalidArgumentError);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), InvalidArgumentError);
             }
         }
     }
@@ -507,15 +506,15 @@ SCENARIO("Coordinates and indices")
 
             THEN("the index is correct")
             {
-                REQUIRE(dd.getIndexFromCoordinate(coordinate1) == 0);
-                REQUIRE(dd.getIndexFromCoordinate(coordinate2) == numCoeffs(0) - 2);
-                REQUIRE(dd.getIndexFromCoordinate(coordinate3)
-                        == numCoeffs(0) - 5 + numCoeffs(0) * (numCoeffs(1) - 3));
-                REQUIRE(dd.getIndexFromCoordinate(coordinate4)
-                        == numCoeffs(0) - 4 + numCoeffs(0) * (numCoeffs(1) - 2)
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate1), 0);
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate2), numCoeffs(0) - 2);
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate3),
+                           numCoeffs(0) - 5 + numCoeffs(0) * (numCoeffs(1) - 3));
+                REQUIRE_EQ(dd.getIndexFromCoordinate(coordinate4),
+                           numCoeffs(0) - 4 + numCoeffs(0) * (numCoeffs(1) - 2)
                                + numCoeffs(0) * numCoeffs(1) * (numCoeffs(2) - 1));
                 REQUIRE_THROWS_AS(dd.getIndexFromCoordinate(coordinateInvalid),
-                                  std::invalid_argument);
+                                  InvalidArgumentError);
             }
         }
 
@@ -533,28 +532,28 @@ SCENARIO("Coordinates and indices")
             {
                 IndexVector_t coordinate1(3);
                 coordinate1 << 0, 0, 0;
-                REQUIRE(dd.getCoordinateFromIndex(index1) == coordinate1);
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index1), coordinate1);
 
                 IndexVector_t coordinate2(3);
                 coordinate2 << numCoeffs(0) - 7, 0, 0;
-                REQUIRE(dd.getCoordinateFromIndex(index2) == coordinate2);
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index2), coordinate2);
 
                 IndexVector_t coordinate3(3);
                 coordinate3 << numCoeffs(0) - 6, numCoeffs(1) - 8, 0;
-                REQUIRE(dd.getCoordinateFromIndex(index3) == coordinate3);
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index3), coordinate3);
 
                 IndexVector_t coordinate4(3);
                 coordinate4 << numCoeffs(0) - 5, numCoeffs(1) - 7, numCoeffs(2) - 3;
-                REQUIRE(dd.getCoordinateFromIndex(index4) == coordinate4);
+                REQUIRE_EQ(dd.getCoordinateFromIndex(index4), coordinate4);
 
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), std::invalid_argument);
-                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), std::invalid_argument);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid1), InvalidArgumentError);
+                REQUIRE_THROWS_AS(dd.getCoordinateFromIndex(indexInvalid2), InvalidArgumentError);
             }
         }
     }
 }
 
-SCENARIO("Finding the best common descriptor")
+TEST_CASE("VolumeDescriptor: Finding the best common descriptor")
 {
     IndexVector_t numCoeffs{{9, 13, 17}};
     VolumeDescriptor dd{numCoeffs};
@@ -564,7 +563,7 @@ SCENARIO("Finding the best common descriptor")
         THEN("trying to determine the best common descriptor throws an error")
         {
             REQUIRE_THROWS_AS(bestCommon(std::vector<const DataDescriptor*>{}),
-                              std::invalid_argument);
+                              InvalidArgumentError);
         }
     }
 
@@ -576,8 +575,8 @@ SCENARIO("Finding the best common descriptor")
             auto common1 = bestCommon(dd);
             auto common2 = bestCommon(pd);
 
-            REQUIRE(*common1 == dd);
-            REQUIRE(*common2 == pd);
+            REQUIRE_EQ(*common1, dd);
+            REQUIRE_EQ(*common2, pd);
         }
     }
 
@@ -589,8 +588,8 @@ SCENARIO("Finding the best common descriptor")
         THEN("the best common descriptor is the same as the input descriptors")
         {
             auto common = bestCommon(pd1, pd2);
-            REQUIRE(pd1 == *common);
-            REQUIRE(pd2 == *common);
+            REQUIRE_EQ(pd1, *common);
+            REQUIRE_EQ(pd2, *common);
         }
     }
 
@@ -603,8 +602,8 @@ SCENARIO("Finding the best common descriptor")
             auto common1 = bestCommon(pd, dd);
             auto common2 = bestCommon(dd, pd);
 
-            REQUIRE(*common1 == dd);
-            REQUIRE(*common2 == dd);
+            REQUIRE_EQ(*common1, dd);
+            REQUIRE_EQ(*common2, dd);
         }
     }
 
@@ -621,10 +620,10 @@ SCENARIO("Finding the best common descriptor")
             auto common3 = bestCommon(pds2, dd);
             auto common4 = bestCommon(dd, pds2);
 
-            REQUIRE(*common1 == dd);
-            REQUIRE(*common2 == dd);
-            REQUIRE(*common3 == dd);
-            REQUIRE(*common4 == dd);
+            REQUIRE_EQ(*common1, dd);
+            REQUIRE_EQ(*common2, dd);
+            REQUIRE_EQ(*common3, dd);
+            REQUIRE_EQ(*common4, dd);
         }
     }
 
@@ -636,7 +635,7 @@ SCENARIO("Finding the best common descriptor")
         {
             auto common = bestCommon(dd, dd2);
 
-            REQUIRE(*common == dd);
+            REQUIRE_EQ(*common, dd);
         }
     }
 
@@ -650,8 +649,8 @@ SCENARIO("Finding the best common descriptor")
             auto common1 = bestCommon(dds2, dds3);
             auto common2 = bestCommon(dds3, dds2);
 
-            REQUIRE(*common1 == dd);
-            REQUIRE(*common2 == dd);
+            REQUIRE_EQ(*common1, dd);
+            REQUIRE_EQ(*common2, dd);
         }
     }
 
@@ -672,10 +671,10 @@ SCENARIO("Finding the best common descriptor")
             auto common4 = bestCommon(dd2s2, dds2);
 
             VolumeDescriptor expected{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
-            REQUIRE(*common1 == expected);
-            REQUIRE(*common2 == expected);
-            REQUIRE(*common3 == expected);
-            REQUIRE(*common4 == expected);
+            REQUIRE_EQ(*common1, expected);
+            REQUIRE_EQ(*common2, expected);
+            REQUIRE_EQ(*common3, expected);
+            REQUIRE_EQ(*common4, expected);
         }
     }
 
@@ -691,8 +690,8 @@ SCENARIO("Finding the best common descriptor")
             auto common2 = bestCommon(dd, dd2);
 
             VolumeDescriptor expected{IndexVector_t::Constant(1, dd.getNumberOfCoefficients())};
-            REQUIRE(*common1 == expected);
-            REQUIRE(*common2 == expected);
+            REQUIRE_EQ(*common1, expected);
+            REQUIRE_EQ(*common2, expected);
         }
     }
 
@@ -704,8 +703,10 @@ SCENARIO("Finding the best common descriptor")
 
         THEN("trying to determine the best common descriptor throws an error")
         {
-            REQUIRE_THROWS_AS(bestCommon(dd2, dd), std::invalid_argument);
-            REQUIRE_THROWS_AS(bestCommon(dd, dd2), std::invalid_argument);
+            REQUIRE_THROWS_AS(bestCommon(dd2, dd), InvalidArgumentError);
+            REQUIRE_THROWS_AS(bestCommon(dd, dd2), InvalidArgumentError);
         }
     }
 }
+
+TEST_SUITE_END();

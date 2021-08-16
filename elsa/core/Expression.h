@@ -1,9 +1,11 @@
 #pragma once
 
-#include "elsaDefines.h"
 #include <tuple>
 #include <variant>
 #include <optional>
+
+#include "elsaDefines.h"
+#include "TypeCasts.hpp"
 #include "DataDescriptor.h"
 #include "ExpressionPredicates.h"
 #include "DataHandlerCPU.h"
@@ -37,23 +39,23 @@ namespace elsa
 
         if constexpr (GPU) {
 #ifdef ELSA_CUDA_VECTOR
-            if (auto handler = dynamic_cast<DataHandlerGPU<data_t>*>(operand._dataHandler.get())) {
+            if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapGPU<data_t>*>(operand._dataHandler.get())) {
+                           downcast_safe<DataHandlerMapGPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else {
-                throw std::logic_error("Unknown handler type");
+                throw InternalError("Unknown handler type");
             }
 #endif
         } else {
-            if (auto handler = dynamic_cast<DataHandlerCPU<data_t>*>(operand._dataHandler.get())) {
+            if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else if (auto handler =
-                           dynamic_cast<DataHandlerMapCPU<data_t>*>(operand._dataHandler.get())) {
+                           downcast_safe<DataHandlerMapCPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else {
-                throw std::logic_error("Unknown handler type");
+                throw InternalError("Unknown handler type");
             }
         }
     }
@@ -68,12 +70,12 @@ namespace elsa
     };
 
     /**
-     * \brief Temporary expression type which enables lazy-evaluation of expression
+     * @brief Temporary expression type which enables lazy-evaluation of expression
      *
-     * \author Jens Petit
+     * @author Jens Petit
      *
-     * \tparam Callable - the operation to be performed
-     * \tparam Operands - the objects on which the operation is performed
+     * @tparam Callable - the operation to be performed
+     * @tparam Operands - the objects on which the operation is performed
      *
      */
     template <typename Callable, typename... Operands>
@@ -133,7 +135,7 @@ namespace elsa
                 if (auto info = getMetaInfoFromExpressions(args...); info.has_value()) {
                     return *info;
                 } else {
-                    throw std::logic_error("No meta info available, cannot create expression");
+                    throw LogicError("No meta info available, cannot create expression");
                 }
             }
         }

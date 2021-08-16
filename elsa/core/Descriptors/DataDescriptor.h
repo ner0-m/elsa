@@ -9,13 +9,13 @@ namespace elsa
 {
 
     /**
-     * \brief Base class for representing metadata for linearized n-dimensional signal stored in
+     * @brief Base class for representing metadata for linearized n-dimensional signal stored in
      * memory
      *
-     * \author Matthias Wieczorek - initial code
-     * \author Tobias Lasser - modularization, modernization
-     * \author Maximilian Hornung - various enhancements
-     * \author David Frank - inheritance restructuring
+     * @author Matthias Wieczorek - initial code
+     * @author Tobias Lasser - modularization, modernization
+     * @author Maximilian Hornung - various enhancements
+     * @author David Frank - inheritance restructuring
      *
      * This class provides an interface for metadata about a signal that is stored in memory. This
      * base class provides other descriptor subclasses with a fundamental interface to access the
@@ -32,23 +32,23 @@ namespace elsa
         virtual ~DataDescriptor() = 0;
 
         /**
-         * \brief Constructor for DataDescriptor, accepts dimension and size
+         * @brief Constructor for DataDescriptor, accepts dimension and size
          *
-         * \param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
+         * @param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
          * per dimension, (dimension is set implicitly from the size of the vector)
          *
-         * \throw std::invalid_argument if any number of coefficients is non-positive
+         * @throw InvalidArgumentError if any number of coefficients is non-positive
          */
         explicit DataDescriptor(IndexVector_t numberOfCoefficientsPerDimension);
 
         /**
-         * \brief Constructor for DataDescriptor, accepts dimension, size and spacing
+         * @brief Constructor for DataDescriptor, accepts dimension, size and spacing
          *
-         * \param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
+         * @param[in] numberOfCoefficientsPerDimension vector containing the number of coefficients
          * per dimension, (dimension is set implicitly from the size of the vector)
-         * \param[in] spacingPerDimension vector containing the spacing per dimension
+         * @param[in] spacingPerDimension vector containing the spacing per dimension
          *
-         * \throw std::invalid_argument if any number of coefficients is non-positive,
+         * @throw InvalidArgumentError if any number of coefficients is non-positive,
          *        or sizes of numberOfCoefficientsPerDimension and spacingPerDimension do not match
          */
         explicit DataDescriptor(IndexVector_t numberOfCoefficientsPerDimension,
@@ -70,10 +70,10 @@ namespace elsa
         RealVector_t getLocationOfOrigin() const;
 
         /**
-         * \brief computes the linearized index in the data vector from local coordinates
+         * @brief computes the linearized index in the data vector from local coordinates
          *
-         * \param[in] coordinate vector containing the local coordinate
-         * \return the index into the linearized data vector
+         * @param[in] coordinate vector containing the local coordinate
+         * @return the index into the linearized data vector
          *
          * The local coordinates are integers, running from 0 to
          * _numberOfCoefficientsPerDimension[i]-1 for every dimension i = 0,...,_numberOfDimensions.
@@ -82,10 +82,10 @@ namespace elsa
         index_t getIndexFromCoordinate(IndexVector_t coordinate) const;
 
         /**
-         * \brief computes the local coordinates from a linearized index
+         * @brief computes the local coordinates from a linearized index
          *
-         * \param[in] index into the linearized data vector
-         * \return the local coordinate corresponding to the index
+         * @param[in] index into the linearized data vector
+         * @return the local coordinate corresponding to the index
          *
          * The local coordinates are integers, running from 0 to
          * _numberOfCoefficientsPerDimension[i]-1 for every dimension i = 0,...,_numberOfDimensions.

@@ -1,20 +1,25 @@
 /**
- * \file test_Timer.cpp
+ * @file test_Timer.cpp
  *
- * \brief Tests for Timer class
+ * @brief Tests for Timer class
  *
- * \author Maximilian Hornung
+ * @author Maximilian Hornung
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "Timer.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Using Timer")
+TEST_SUITE_BEGIN("logging");
+
+TEST_CASE("Timer: Testing usage")
 {
     Timer("who", "what");
     // cannot test much more than creation/destruction...
 
     REQUIRE(true);
 }
+
+TEST_SUITE_END();

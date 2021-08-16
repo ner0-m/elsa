@@ -3,6 +3,7 @@
 #include "WeightedL2NormPow2.h"
 #include "LinearOperator.h"
 #include "Identity.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -60,43 +61,44 @@ namespace elsa
         const auto lambda = regTerm.getWeight();
         const Scaling<data_t> lambdaOp{regTerm.getFunctional().getDomainDescriptor(), lambda};
 
-        if (auto regFuncPtr = dynamic_cast<const L2NormPow2<data_t>*>(&regTerm.getFunctional())) {
+        if (is<L2NormPow2<data_t>>(regTerm.getFunctional())) {
+            const auto& regFunc = downcast<L2NormPow2<data_t>>(regTerm.getFunctional());
 
-            const auto regTermResidualPtr =
-                dynamic_cast<const LinearResidual<data_t>*>(&regFuncPtr->getResidual());
-            if (!regTermResidualPtr)
-                throw std::logic_error("QuadricProblem: cannot convert a non-linear regularization "
-                                       "term to quadric form");
+            if (!is<LinearResidual<data_t>>(regFunc.getResidual())) {
+                throw LogicError("QuadricProblem: cannot convert a non-linear regularization "
+                                 "term to quadric form");
+            }
+            const auto& regTermResidual = downcast<LinearResidual<data_t>>(regFunc.getResidual());
 
-            if (regTermResidualPtr->hasOperator()) {
-                const auto& regTermOp = regTermResidualPtr->getOperator();
+            if (regTermResidual.hasOperator()) {
+                const auto& regTermOp = regTermResidual.getOperator();
                 LinearOperator<data_t> A = lambdaOp * adjoint(regTermOp) * regTermOp;
 
-                if (regTermResidualPtr->hasDataVector()) {
+                if (regTermResidual.hasDataVector()) {
                     DataContainer<data_t> b =
-                        lambda * regTermOp.applyAdjoint(regTermResidualPtr->getDataVector());
+                        lambda * regTermOp.applyAdjoint(regTermResidual.getDataVector());
                     return LinearResidual<data_t>{A, b};
                 } else {
                     return LinearResidual<data_t>{A};
                 }
             } else {
-                if (regTermResidualPtr->hasDataVector()) {
-                    DataContainer<data_t> b = lambda * regTermResidualPtr->getDataVector();
+                if (regTermResidual.hasDataVector()) {
+                    DataContainer<data_t> b = lambda * regTermResidual.getDataVector();
                     return LinearResidual<data_t>{lambdaOp, b};
                 } else {
                     return LinearResidual<data_t>{lambdaOp};
                 }
             }
-        } else if (auto regFuncPtr =
-                       dynamic_cast<const WeightedL2NormPow2<data_t>*>(&regTerm.getFunctional())) {
+        } else if (is<WeightedL2NormPow2<data_t>>(regTerm.getFunctional())) {
+            const auto& regFunc = downcast<WeightedL2NormPow2<data_t>>(regTerm.getFunctional());
 
-            const auto regTermResidualPtr =
-                dynamic_cast<const LinearResidual<data_t>*>(&regFuncPtr->getResidual());
-            if (!regTermResidualPtr)
-                throw std::logic_error("QuadricProblem: cannot convert a non-linear regularization "
-                                       "term to quadric form");
+            if (!is<LinearResidual<data_t>>(regFunc.getResidual()))
+                throw LogicError("QuadricProblem: cannot convert a non-linear regularization "
+                                 "term to quadric form");
 
-            const auto& W = regFuncPtr->getWeightingOperator();
+            const auto& regTermResidual = downcast<LinearResidual<data_t>>(regFunc.getResidual());
+
+            const auto& W = regFunc.getWeightingOperator();
             std::unique_ptr<Scaling<data_t>> lambdaWPtr;
 
             if (W.isIsotropic())
@@ -108,28 +110,28 @@ namespace elsa
 
             const auto& lambdaW = *lambdaWPtr;
 
-            if (regTermResidualPtr->hasOperator()) {
-                auto& regTermOp = regTermResidualPtr->getOperator();
+            if (regTermResidual.hasOperator()) {
+                auto& regTermOp = regTermResidual.getOperator();
                 LinearOperator<data_t> A = adjoint(regTermOp) * lambdaW * regTermOp;
 
-                if (regTermResidualPtr->hasDataVector()) {
+                if (regTermResidual.hasDataVector()) {
                     DataContainer<data_t> b =
-                        regTermOp.applyAdjoint(lambdaW.apply(regTermResidualPtr->getDataVector()));
+                        regTermOp.applyAdjoint(lambdaW.apply(regTermResidual.getDataVector()));
                     return LinearResidual<data_t>{A, b};
                 } else {
                     return LinearResidual<data_t>{A};
                 }
             } else {
-                if (regTermResidualPtr->hasDataVector()) {
-                    DataContainer<data_t> b = lambdaW.apply(regTermResidualPtr->getDataVector());
+                if (regTermResidual.hasDataVector()) {
+                    DataContainer<data_t> b = lambdaW.apply(regTermResidual.getDataVector());
                     return LinearResidual<data_t>{lambdaW, b};
                 } else {
                     return LinearResidual<data_t>{lambdaW};
                 }
             }
-        } else if (auto regFuncPtr =
-                       dynamic_cast<const Quadric<data_t>*>(&regTerm.getFunctional())) {
-            const auto& quadricResidual = regFuncPtr->getGradientExpression();
+        } else if (is<Quadric<data_t>>(regTerm.getFunctional())) {
+            const auto& regFunc = downcast<Quadric<data_t>>(regTerm.getFunctional());
+            const auto& quadricResidual = regFunc.getGradientExpression();
             if (quadricResidual.hasOperator()) {
                 LinearOperator<data_t> A = lambdaOp * quadricResidual.getOperator();
 
@@ -148,8 +150,8 @@ namespace elsa
                 }
             }
         } else {
-            throw std::invalid_argument("QuadricProblem: regularization terms should be of type "
-                                        "(Weighted)L2NormPow2 or Quadric");
+            throw InvalidArgumentError("QuadricProblem: regularization terms should be of type "
+                                       "(Weighted)L2NormPow2 or Quadric");
         }
     }
 
@@ -158,17 +160,16 @@ namespace elsa
         QuadricProblem<data_t>::quadricFromProblem(const Problem<data_t>& problem)
     {
         const auto& functional = problem.getDataTerm();
-        if (const auto trueFunctionalPtr = dynamic_cast<const Quadric<data_t>*>(&functional)
-                                           && problem.getRegularizationTerms().empty()) {
-            return std::unique_ptr<Quadric<data_t>>{
-                static_cast<Quadric<data_t>*>(functional.clone().release())};
+        if (is<Quadric<data_t>>(functional) && problem.getRegularizationTerms().empty()) {
+            return downcast<Quadric<data_t>>(functional.clone());
         } else {
             std::unique_ptr<LinearOperator<data_t>> dataTermOp;
             std::unique_ptr<DataContainer<data_t>> quadricVec;
 
             // convert data term
-            if (const auto trueFunctionalPtr = dynamic_cast<const Quadric<data_t>*>(&functional)) {
-                const LinearResidual<data_t>& residual = trueFunctionalPtr->getGradientExpression();
+            if (is<Quadric<data_t>>(functional)) {
+                const auto& trueFunctional = downcast<Quadric<data_t>>(functional);
+                const LinearResidual<data_t>& residual = trueFunctional.getGradientExpression();
 
                 if (residual.hasOperator()) {
                     dataTermOp = residual.getOperator().clone();
@@ -179,60 +180,62 @@ namespace elsa
                 if (residual.hasDataVector()) {
                     quadricVec = std::make_unique<DataContainer<data_t>>(residual.getDataVector());
                 }
-            } else if (const auto trueFunctionalPtr =
-                           dynamic_cast<const L2NormPow2<data_t>*>(&functional)) {
-                const auto residualPtr =
-                    dynamic_cast<const LinearResidual<data_t>*>(&trueFunctionalPtr->getResidual());
-                if (!residualPtr)
-                    throw std::logic_error(
+            } else if (is<L2NormPow2<data_t>>(functional)) {
+                const auto& trueFunctional = downcast<L2NormPow2<data_t>>(functional);
+
+                if (!is<LinearResidual<data_t>>(trueFunctional.getResidual()))
+                    throw LogicError(
                         "QuadricProblem: cannot convert a non-linear term to quadric form");
 
-                if (residualPtr->hasOperator()) {
-                    const auto& A = residualPtr->getOperator();
+                const auto& residual =
+                    downcast<LinearResidual<data_t>>(trueFunctional.getResidual());
+
+                if (residual.hasOperator()) {
+                    const auto& A = residual.getOperator();
                     dataTermOp = std::make_unique<LinearOperator<data_t>>(adjoint(A) * A);
 
-                    if (residualPtr->hasDataVector()) {
+                    if (residual.hasDataVector()) {
                         quadricVec = std::make_unique<DataContainer<data_t>>(
-                            A.applyAdjoint(residualPtr->getDataVector()));
+                            A.applyAdjoint(residual.getDataVector()));
                     }
                 } else {
-                    dataTermOp =
-                        std::make_unique<Identity<data_t>>(residualPtr->getDomainDescriptor());
+                    dataTermOp = std::make_unique<Identity<data_t>>(residual.getDomainDescriptor());
 
-                    if (residualPtr->hasDataVector()) {
+                    if (residual.hasDataVector()) {
                         quadricVec =
-                            std::make_unique<DataContainer<data_t>>(residualPtr->getDataVector());
+                            std::make_unique<DataContainer<data_t>>(residual.getDataVector());
                     }
                 }
-            } else if (const auto trueFunctionalPtr =
-                           dynamic_cast<const WeightedL2NormPow2<data_t>*>(&functional)) {
-                const auto residualPtr =
-                    dynamic_cast<const LinearResidual<data_t>*>(&trueFunctionalPtr->getResidual());
-                if (!residualPtr)
-                    throw std::logic_error(
+            } else if (is<WeightedL2NormPow2<data_t>>(functional)) {
+                const auto& trueFunctional = downcast<WeightedL2NormPow2<data_t>>(functional);
+
+                if (!is<LinearResidual<data_t>>(trueFunctional.getResidual()))
+                    throw LogicError(
                         "QuadricProblem: cannot convert a non-linear term to quadric form");
+                const auto& residual =
+                    downcast<LinearResidual<data_t>>(trueFunctional.getResidual());
 
-                const auto& W = trueFunctionalPtr->getWeightingOperator();
+                const auto& W = trueFunctional.getWeightingOperator();
 
-                if (residualPtr->hasOperator()) {
-                    const auto& A = residualPtr->getOperator();
+                if (residual.hasOperator()) {
+                    const auto& A = residual.getOperator();
                     dataTermOp = std::make_unique<LinearOperator<data_t>>(adjoint(A) * W * A);
 
-                    if (residualPtr->hasDataVector()) {
+                    if (residual.hasDataVector()) {
                         quadricVec = std::make_unique<DataContainer<data_t>>(
-                            A.applyAdjoint(W.apply(residualPtr->getDataVector())));
+                            A.applyAdjoint(W.apply(residual.getDataVector())));
                     }
                 } else {
                     dataTermOp = W.clone();
 
-                    if (residualPtr->hasDataVector()) {
+                    if (residual.hasDataVector()) {
                         quadricVec = std::make_unique<DataContainer<data_t>>(
-                            W.apply(residualPtr->getDataVector()));
+                            W.apply(residual.getDataVector()));
                     }
                 }
             } else {
-                throw std::logic_error("QuadricProblem: can only convert functionals of type "
-                                       "(Weighted)L2NormPow2 to Quadric");
+                throw LogicError("QuadricProblem: can only convert functionals of type "
+                                 "(Weighted)L2NormPow2 to Quadric");
             }
 
             if (problem.getRegularizationTerms().empty()) {

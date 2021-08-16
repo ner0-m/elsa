@@ -19,16 +19,16 @@ void example3d()
 
     // generate circular trajectory
     index_t numAngles{180}, arc{360};
+    real_t distance = static_cast<real_t>(size(0));
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-        numAngles, phantom.getDataDescriptor(), arc, size(0) * 100, size(0));
-
-    // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
-    // VolumeDescriptor
+        numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
     // setup operator for 2d X-ray transform
     Logger::get("Info")->info("Simulating sinogram using Siddon's method");
-    JosephsMethodCUDA projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                *sinoDescriptor);
+
+    // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
+    // VolumeDescriptor
+    JosephsMethodCUDA projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);
@@ -43,7 +43,7 @@ void example3d()
     CG solver(problem);
 
     index_t noIterations{20};
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of gradient descent",
+    Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
                               noIterations);
     auto reconstruction = solver.solve(noIterations);
 

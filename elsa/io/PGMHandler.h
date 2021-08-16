@@ -8,11 +8,7 @@
 namespace elsa
 {
     /**
-     * \brief class to write PGM images
-     *
-     * \author David Frank - initial code
-     *
-     * Class to handle writing PGM image files from DataContainers.
+     * @brief Class to handle writing PGM image files from DataContainers.
      *
      * The fileformat is split into the header and the body (with image data).
      * The header starts with a magic number, then width and height (in ASCII) are specified and the
@@ -29,7 +25,11 @@ namespace elsa
      *
      * Then the body prints one value in each line
      *
+     * Note: This class currently only handels 2D `DataContainer`s.
+     *
      * Reference: http://paulbourke.net/dataformats/ppm/
+     *
+     * @author David Frank - initial code
      */
     class PGM
     {

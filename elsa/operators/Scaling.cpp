@@ -1,5 +1,6 @@
 #include "Scaling.h"
 #include "Timer.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -30,7 +31,7 @@ namespace elsa
     data_t Scaling<data_t>::getScaleFactor() const
     {
         if (!_isIsotropic)
-            throw std::logic_error("Scaling: scaling is not isotropic");
+            throw LogicError("Scaling: scaling is not isotropic");
 
         return _scaleFactor;
     }
@@ -39,7 +40,7 @@ namespace elsa
     const DataContainer<data_t>& Scaling<data_t>::getScaleFactors() const
     {
         if (_isIsotropic)
-            throw std::logic_error("Scaling: scaling is isotropic");
+            throw LogicError("Scaling: scaling is isotropic");
 
         return *_scaleFactors;
     }
@@ -82,7 +83,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherScaling = dynamic_cast<const Scaling*>(&other);
+        auto otherScaling = downcast_safe<Scaling>(&other);
         if (!otherScaling)
             return false;
 

@@ -52,11 +52,19 @@ Set it in your e.g. `.bashrc`.
 You can run the elsa unit tests by running `ctest` in the build folder. To specify which tests run,
 filter with `ctest -R regular_expression`.
 
-We use a testing style described as [Behaviour-Driven
-Development](https://github.com/catchorg/Catch2/blob/master/docs/tutorial.md#bdd-style) (BDD). Please
-follow this style when adding new tests.
-
+We use a testing style similar described in [Behaviour-Driven
+Development](https://github.com/onqtam/doctest/blob/master/doc/markdown/testcases.md#bdd-style-test-cases) (BDD). Please
+follow this style when adding new tests. However, isntead of using `SCENARIO` use `TEST_CASE` with the name of the
+class under test at the beginning of the test name. Also be sure to add the tests to the test suite associated
+to the module of the test.
+ 
+We're currently relying on [doctest](https://github.com/onqtam/doctest/) as our testing framework, when 
+using assertion macros, please try to use the 
+[binary and unary asserts](https://github.com/onqtam/doctest/blob/master/doc/markdown/assertions.md#binary-and-unary-asserts)
+as much as possible. 
+ 
 ## Benchmarking
+ 
 You can use the catch testing framework to do [benchmarking
 ](https://github.com/catchorg/Catch2/blob/master/docs/benchmarks.md). If so, add your benchmarking
 case following this template
@@ -84,6 +92,16 @@ currently use version 10.0.0, different versions might produce errors.
 We use `clang-tidy` with the enabled checks specified in [the configuration file](.clang-tidy). Note
 that currently all `readability-*` checks have to pass, otherwise the CI will fail. We encourage
 developers to check their code with `clang-tidy` and remove all warnings if applicable.
+ 
+#### CMake 
+
+We use [cmakelang](https://cmake-format.readthedocs.io/en/latest/index.html) to enforce
+certain style guide and reduce the changes of error in our CMake code, please check the guide to install it.
+
+Currently, only the `cmake-lint` is used, but sooner rather than later, we'll also start
+using `cmake-format` of the same package.
+
+Please check the link above on how to install the package.
 
 ## Code Coverage
 We use `lcov` with `gcov` for test coverage information. If you want to run this locally you have to
@@ -97,3 +115,26 @@ make test_coverage
 ```
 and then the results should be available at `build/test_coverage/index.html`. You can compare your
 local results to [the latest master coverage results](https://ciip.in.tum.de/elsacoverage/).
+
+## pre-commit
+
+There is also a basic `.pre-commit-config.yaml` file to install pre-commit hooks using 
+[pre-commit](https://pre-commit.com/). You are highly encouraged to install the pre-commits
+with `pre-commit install` such that they are run before each commit.
+
+None of the commit hooks will change anything in your commit, they mearly check and error if
+something is wrong.
+
+## Building the Documentation
+The [elsa documentation](https://ciip.in.tum.de/elsadocs/) is automatically built and deployed through the CI for each commit to master.
+To build it locally the following packages are required: `sphinx doxygen` which should be available in
+most major linux distributions or via pip. Additionally, the following sphinx extensions need to be installed via pip:
+`sphinx-rtd-theme m2r2 breathe`.
+Then simply build the documentation using ninja
+```
+mkdir -p build
+cd build
+cmake .. -GNinja
+ninja docs
+```
+The docs should then be available at `build/docs/sphinx`.

@@ -48,7 +48,7 @@ namespace elsa
                 return 8;
 
             default:
-                throw std::invalid_argument("DataUtils::getSizeOfDataType: unknown data type");
+                throw InvalidArgumentError("DataUtils::getSizeOfDataType: unknown data type");
         }
     }
 
@@ -59,7 +59,7 @@ namespace elsa
         std::stringstream convert(str);
         convert >> value;
         if (convert.fail())
-            throw std::runtime_error("DataUtils::parse: failed to interpret string");
+            throw Error("DataUtils::parse: failed to interpret string");
         return value;
     }
 
@@ -73,7 +73,7 @@ namespace elsa
         while (!convert.eof()) {
             convert >> value;
             if (convert.fail())
-                throw std::runtime_error("DataUtils::parseVector: failed to interpret string");
+                throw Error("DataUtils::parseVector: failed to interpret string");
             dataVector.push_back(value);
         }
 
@@ -81,7 +81,7 @@ namespace elsa
     }
 
     template <typename raw_data_t, typename data_t>
-    void DataUtils::parseRawData(std::ifstream& file, DataContainer<data_t>& data)
+    void DataUtils::parseRawData(std::istream& file, DataContainer<data_t>& data)
     {
         auto sizeInElements = static_cast<std::size_t>(data.getSize());
         auto sizeInBytes = static_cast<index_t>(sizeInElements * sizeof(raw_data_t));
@@ -89,12 +89,12 @@ namespace elsa
         // allocate temporary storage
         auto ptr = std::make_unique<raw_data_t[]>(sizeInElements);
         if (!ptr)
-            throw std::runtime_error("DataUtils::parseRawData: failed allocating memory");
+            throw Error("DataUtils::parseRawData: failed allocating memory");
 
         // parse data into the storage
         file.read(reinterpret_cast<char*>(ptr.get()), sizeInBytes);
         if (file.gcount() != sizeInBytes)
-            throw std::runtime_error("DataUtils::parseRawData: failed to read sufficient data");
+            throw Error("DataUtils::parseRawData: failed to read sufficient data");
 
         // perform a component-wise copy to the data container
         for (std::size_t i = 0; i < sizeInElements; ++i)
@@ -131,14 +131,14 @@ namespace elsa
     template std::vector<double> DataUtils::parseVector(const std::string&);
     template std::vector<index_t> DataUtils::parseVector(const std::string&);
 
-    template void DataUtils::parseRawData<uint16_t, float>(std::ifstream&, DataContainer<float>&);
-    template void DataUtils::parseRawData<float, float>(std::ifstream&, DataContainer<float>&);
-    template void DataUtils::parseRawData<double, float>(std::ifstream&, DataContainer<float>&);
-    template void DataUtils::parseRawData<uint16_t, double>(std::ifstream&, DataContainer<double>&);
-    template void DataUtils::parseRawData<float, double>(std::ifstream&, DataContainer<double>&);
-    template void DataUtils::parseRawData<double, double>(std::ifstream&, DataContainer<double>&);
-    template void DataUtils::parseRawData<uint16_t, index_t>(std::ifstream&,
+    template void DataUtils::parseRawData<uint16_t, float>(std::istream&, DataContainer<float>&);
+    template void DataUtils::parseRawData<float, float>(std::istream&, DataContainer<float>&);
+    template void DataUtils::parseRawData<double, float>(std::istream&, DataContainer<float>&);
+    template void DataUtils::parseRawData<uint16_t, double>(std::istream&, DataContainer<double>&);
+    template void DataUtils::parseRawData<float, double>(std::istream&, DataContainer<double>&);
+    template void DataUtils::parseRawData<double, double>(std::istream&, DataContainer<double>&);
+    template void DataUtils::parseRawData<uint16_t, index_t>(std::istream&,
                                                              DataContainer<index_t>&);
-    template void DataUtils::parseRawData<float, index_t>(std::ifstream&, DataContainer<index_t>&);
-    template void DataUtils::parseRawData<double, index_t>(std::ifstream&, DataContainer<index_t>&);
+    template void DataUtils::parseRawData<float, index_t>(std::istream&, DataContainer<index_t>&);
+    template void DataUtils::parseRawData<double, index_t>(std::istream&, DataContainer<index_t>&);
 } // namespace elsa

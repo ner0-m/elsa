@@ -1,9 +1,9 @@
 /**
- * \file test_RayGenerationBench.cpp
+ * @file test_RayGenerationBench.cpp
  *
- * \brief Benchmarks for projectors
+ * @brief Benchmarks for projectors
  *
- * \author David Frank
+ * @author David Frank
  */
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
@@ -36,7 +36,7 @@ void runProjector2D(index_t coeffsPerDim)
     // generate circular trajectory
     index_t noAngles{180}, arc{360};
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-        noAngles, phantom.getDataDescriptor(), arc, 20, 20);
+        noAngles, phantom.getDataDescriptor(), arc, 20.0f, 20.0f);
 
     // setup operator for 2d X-ray transform
     Projector projector(dynamic_cast<const VolumeDescriptor&>(phantom.getDataDescriptor()),
@@ -67,7 +67,7 @@ void runProjector3D(index_t coeffsPerDim)
     // generate circular trajectory
     index_t noAngles{180}, arc{360};
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-        noAngles, phantom.getDataDescriptor(), arc, 20, 20);
+        noAngles, phantom.getDataDescriptor(), arc, 20.0f, 20.0f);
 
     // setup operator for 2d X-ray transform
     Projector projector(dynamic_cast<const VolumeDescriptor&>(phantom.getDataDescriptor()),

@@ -73,6 +73,9 @@ namespace elsa
         using data_t = typename Expression<Callable, Operands...>::data_t;
     };
 
+    template <typename T>
+    using GetOperandDataType_t = typename GetOperandDataType<T>::data_t;
+
     /* Uses the data type used in the first or last operand depending on whether the first operand
      * is an anrithmetic type
      */

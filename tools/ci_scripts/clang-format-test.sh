@@ -1,53 +1,64 @@
 #!/bin/bash
 
-# Applies clang-format
+# Check for all C++-like files if they need formatting. 
+# Only consider files which are different from master.
+# clang-format version 10 is required.
+# return 1 when changes have to be made, so the CI step fails.
 
-# set exit on error 
-set -e 
- 
-# check that we are in a clean state in order to prevent accidential changes
-git status --untracked-files=no
-if [ ! -z "$(git status --untracked-files=no  --porcelain)" ]; then
-  echo "Script must be applied on a clean git state"
-  exit 1
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
+NC='\033[0m' # No Color
+
+# preference list
+clang_format_version=10
+clang_format_tool_candiates=(clang-format-$clang_format_version clang-format)
+
+# update origin
+git fetch origin
+master_ahead=$(git log HEAD..origin/master --oneline | wc -l)
+
+if [[ "$master_ahead" -gt "0" ]]; then
+    echo -e "[${ORANGE}WARNING${NC}]: Not all commits which are part of origin/master are part of your branch, maybe you need to rebase?"
 fi
 
-echo
+files=($(git diff origin/master --name-only | egrep ".+\.(h|hpp|cpp|cu|cuh)$"))
 
-if type clang-format-10 2>/dev/null; then
-    echo "Checking formatting using the following clang-format version:"
-    clang-format-10 --version
+if (( ${#files[@]} )); then
+    clang_format_tool=false
+    # Check all possible candidates
+    for candidate in ${clang_format_tool_candiates[@]}; do
+        if command -v "$candidate" >/dev/null 2>&1 && "$candidate" --version | grep -qF ' 10.'; then
+            clang_format_tool=$candidate
+            break
+        fi
+    done
+
+    # Check that it's really set
+    if [ $clang_format_tool = false ]; then
+        echo -e "[${RED}FAIL${NC}]: clang-format-10 is not available, but C++ files need linting! Please install clang-format-10."
+        exit 1
+    fi
+
+    echo -e "[${BLUE}INFO${NC}]: Formatting check with: `$clang_format_tool --version`"
+    echo -e "[${BLUE}INFO${NC}]: Running '$clang_format_tool --dry-run -Werror -style=file' on files..."
+
+    # Dry run clang-format with -Werror set
+    if ! "$clang_format_tool" --dry-run -Werror -style=file "${files[@]}"; then
+        echo -e "[${RED}FAIL${NC}]: Oops, something isn't correct with the formatting, please check the errors above"
+        echo -e "[${BLUE}INFO${NC}]: From the root directory you can also run:"
+        echo "find elsa/ benchmarks/ examples/ | egrep \".+\.(h|hpp|cpp|cu|cuh)$\" | xargs $clang_format_tool -style=file"
+
+        if [[ "$master_ahead" -gt "0" ]]; then
+            echo -e "[${BLUE}INFO${NC}]: Files considered:"
+            printf '--> %s\n' "${files[@]}" 
+        fi
+
+        exit 1
+    else
+        echo -e "[${GREEN}OK${NC}]: Excellent. Formatting check passed"
+    fi
 else
-    echo "clang-format-10 not correctly installed"
-    exit 1
+    echo -e "[${GREEN}OK${NC}]: No C++-like files to check"
 fi
-
-echo
-
-# perform clang-format on all cpp-files
-find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1
-find benchmarks/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1
-find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1
-
-# check if something was modified
-notcorrectlist=`git status --porcelain | grep '^ M' | cut -c4-`
-# if nothing changed ok
-if [[ -z $notcorrectlist ]]; then
-  # send a negative message to gitlab
-  echo "Excellent. Very good formatting!"
-  exit 0;
-else
-  echo "The following files have clang-format problems:"
-  git diff --stat $notcorrectlist
-  echo "Please run"
-  echo
-  echo "find elsa/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1"
-  echo "find benchmarks/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1"
-  echo "find examples/ -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.cu' -or -name '*.cuh' | xargs clang-format-10 -i -style=file $1"
-  echo
-  echo "to solve the issue."
-  # cleanup changes in git
-  git reset HEAD --hard
-fi
-
-exit 1

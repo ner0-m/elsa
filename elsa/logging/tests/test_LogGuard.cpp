@@ -1,20 +1,25 @@
 /**
- * \file test_LogGuard.cpp
+ * @file test_LogGuard.cpp
  *
- * \brief Tests for LogGuard class
+ * @brief Tests for LogGuard class
  *
- * \author Maximilian Hornung
+ * @author Maximilian Hornung
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "LogGuard.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Using LogGuard")
+TEST_SUITE_BEGIN("logging");
+
+TEST_CASE("LogGuard: Testing usage")
 {
     LogGuard("logger", "message");
     // cannot test much more than creation/destruction...
 
-    REQUIRE(true);
+    REQUIRE_UNARY(true);
 }
+
+TEST_SUITE_END();

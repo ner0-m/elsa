@@ -31,14 +31,14 @@ namespace elsa
                    .all()
                && "PlanarDetectorDescriptor::computeRayToDetector: Assumption detectorCoord in "
                   "bounds, wrong");
-        assert(std::make_unsigned_t<std::size_t>(poseIndex) < _geometry.size()
+        assert(asUnsigned(poseIndex) < _geometry.size()
                && "PlanarDetectorDescriptor::computeRayToDetector: Assumption poseIndex smaller "
                   "than number of poses, wrong");
 
         auto dim = getNumberOfDimensions();
 
         // get the pose of trajectory
-        auto geometry = _geometry[std::make_unsigned_t<index_t>(poseIndex)];
+        auto geometry = _geometry[asUnsigned(poseIndex)];
 
         auto projInvMatrix = geometry.getInverseProjectionMatrix();
 
@@ -61,7 +61,7 @@ namespace elsa
                                                               const index_t poseIndex) const
     {
         auto dim = getNumberOfDimensions();
-        auto geometry = _geometry[(poseIndex)];
+        auto geometry = _geometry[static_cast<std::size_t>(poseIndex)];
 
         auto projMatrix = geometry.getProjectionMatrix();
 

@@ -15,15 +15,15 @@
 namespace elsa
 {
     /**
-     * \brief Operator representing the discretized X-ray transform in 2d/3d using a simplistic
+     * @brief Operator representing the discretized X-ray transform in 2d/3d using a simplistic
      * binary hit/miss method.
      *
-     * \author Tobias Lasser - initial code, modernization
-     * \author David Frank - rewrite and fixes
-     * \author Maximilian Hornung - modularization
-     * \author Nikola Dinev - fixes
+     * @author Tobias Lasser - initial code, modernization
+     * @author David Frank - rewrite and fixes
+     * @author Maximilian Hornung - modularization
+     * @author Nikola Dinev - fixes
      *
-     * \tparam data_t data type for the domain and range of the operator, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * The volume is traversed along the rays as specified by the Geometry. Each ray is traversed in
      * a continguous fashion (i.e. along long voxel borders, not diagonally) and each traversed
@@ -42,10 +42,10 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for the binary voxel traversal method.
+         * @brief Constructor for the binary voxel traversal method.
          *
-         * \param[in] domainDescriptor describing the domain of the operator (the volume)
-         * \param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         * @param[in] domainDescriptor describing the domain of the operator (the volume)
+         * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
          *
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).

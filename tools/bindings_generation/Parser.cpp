@@ -393,17 +393,17 @@ public:
                     f.numDefaultArgs++;
 
                     if (f.posFirstNonBindableDefaultArg == method->getNumParams()) {
-                        auto defaultArg = param->getDefaultArg();
-
-                        // uninstantiated default args must be retrieved using a different method
-                        if (!defaultArg)
-                            defaultArg = param->getUninstantiatedDefaultArg();
+                        auto defaultArg = param->hasUninstantiatedDefaultArg()
+                                              ? param->getUninstantiatedDefaultArg()
+                                              : param->getDefaultArg();
 
                         Expr::EvalResult result;
                         if (defaultArg && !defaultArg->isInstantiationDependent()
                             && !defaultArg->isValueDependent() && !defaultArg->isTypeDependent()
                             && defaultArg->EvaluateAsRValue(result, *context)
-                            && !result.hasSideEffects() && !result.Val.isStruct()) {
+                            && !result.hasSideEffects()
+                            && (result.Val.isInt() || result.Val.isFloat()
+                                || result.Val.isComplexInt() || result.Val.isComplexFloat())) {
 
                             f.params.back().defaultValue =
                                 result.Val.getAsString(*context, param->getType());
@@ -789,15 +789,8 @@ int main(int argc, const char** argv)
     m.noPythonModule = noModule.getValue();
 
     if (!hintsPath.empty()) {
-        const char* argv2[2];
-        argv2[0] = argv[0];
-        argv2[1] = &std::string_view(hintsPath).front();
-        int argc2 = 2;
-
-        CommonOptionsParser hints(argc2, argv2, bindingsOptions);
-
-        ClangTool hintsParser(hints.getCompilations(), hints.getSourcePathList());
-        hintsParser.appendArgumentsAdjuster(optionsParser.getArgumentsAdjuster());
+        ClangTool hintsParser(optionsParser.getCompilations(), std::vector{hintsPath.getValue()});
+        // hintsParser.appendArgumentsAdjuster(optionsParser.getArgumentsAdjuster());
 
         auto factory = newFrontendActionFactory<HintsParserAction>();
         int retCode = hintsParser.run(factory.get());

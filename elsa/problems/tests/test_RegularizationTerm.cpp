@@ -1,15 +1,15 @@
-/**
- *
- */
+#include "doctest/doctest.h"
 
-#include <catch2/catch.hpp>
 #include "RegularizationTerm.h"
 #include "L2NormPow2.h"
 #include "VolumeDescriptor.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing RegularizationTerm")
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE("RegularizationTerm: Test a simple term")
 {
     GIVEN("some term")
     {
@@ -26,8 +26,8 @@ SCENARIO("Testing RegularizationTerm")
 
             THEN("everything is as expected")
             {
-                REQUIRE(regTerm.getWeight() == weight);
-                REQUIRE(regTerm.getFunctional() == functional);
+                REQUIRE_EQ(regTerm.getWeight(), Approx(weight));
+                REQUIRE_EQ(regTerm.getFunctional(), functional);
             }
         }
     }
@@ -49,10 +49,10 @@ SCENARIO("Testing RegularizationTerm")
 
             THEN("it copied correctly")
             {
-                REQUIRE(rt.getWeight() == regTerm.getWeight());
-                REQUIRE(rt.getFunctional() == regTerm.getFunctional());
+                REQUIRE_EQ(rt.getWeight(), Approx(regTerm.getWeight()));
+                REQUIRE_EQ(rt.getFunctional(), regTerm.getFunctional());
 
-                REQUIRE(rt == regTerm);
+                REQUIRE_EQ(rt, regTerm);
             }
         }
 
@@ -63,10 +63,10 @@ SCENARIO("Testing RegularizationTerm")
 
             THEN("it copied correctly")
             {
-                REQUIRE(rt.getWeight() == regTerm.getWeight());
-                REQUIRE(rt.getFunctional() == regTerm.getFunctional());
+                REQUIRE_EQ(rt.getWeight(), Approx(regTerm.getWeight()));
+                REQUIRE_EQ(rt.getFunctional(), regTerm.getFunctional());
 
-                REQUIRE(rt == regTerm);
+                REQUIRE_EQ(rt, regTerm);
             }
         }
 
@@ -78,10 +78,10 @@ SCENARIO("Testing RegularizationTerm")
 
             THEN("it moved correctly")
             {
-                REQUIRE(rt.getWeight() == oldOtherRt.getWeight());
-                REQUIRE(rt.getFunctional() == oldOtherRt.getFunctional());
+                REQUIRE_EQ(rt.getWeight(), Approx(oldOtherRt.getWeight()));
+                REQUIRE_EQ(rt.getFunctional(), oldOtherRt.getFunctional());
 
-                REQUIRE(rt == oldOtherRt);
+                REQUIRE_EQ(rt, oldOtherRt);
             }
         }
 
@@ -94,11 +94,13 @@ SCENARIO("Testing RegularizationTerm")
 
             THEN("it moved correctly")
             {
-                REQUIRE(rt.getWeight() == oldOtherRt.getWeight());
-                REQUIRE(rt.getFunctional() == oldOtherRt.getFunctional());
+                REQUIRE_EQ(rt.getWeight(), Approx(oldOtherRt.getWeight()));
+                REQUIRE_EQ(rt.getFunctional(), oldOtherRt.getFunctional());
 
-                REQUIRE(rt == oldOtherRt);
+                REQUIRE_EQ(rt, oldOtherRt);
             }
         }
     }
 }
+
+TEST_SUITE_END();

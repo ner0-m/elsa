@@ -1,7 +1,7 @@
 elsa - an elegant framework for tomographic reconstruction
 ==========================================================
 
-**elsa** is a modern, flexible C++ library intended for use in tomographic reconstruction. 
+**elsa** is a modern, flexible C++ library intended for use in tomographic reconstruction.
 Using concepts such as data containers, operators, and functionals, inverse problems can be modelled and then solved.
 **elsa** supports any imaging modality in general, but currently only implements forward models for X-ray Computed Tomography.
 Seamless GPU computing based on CUDA is supported, along with Python bindings for ease of use.
@@ -14,8 +14,12 @@ Continuous Integration status (master)
 Documentation
 -------------
 
-The current documentation is available [here](https://ciip.in.tum.de/elsadocs/).
-
+The current documentation of the master branch is available [here](https://ciip.in.tum.de/elsadocs/).
+There is also
+*  a [quickstart guide](https://ciip.in.tum.de/elsadocs/guides/quickstart-cxx.html)
+*  a [guide for Python bindings](https://ciip.in.tum.de/elsadocs/guides/python_bindings.html)
+*  a [tutorial for choosing solvers](https://ciip.in.tum.de/elsadocs/modules/solvers/choosing_a_solver.html)
+*  a [tutorial on the Alternating Direction Method of Multipliers solver](https://ciip.in.tum.de/elsadocs/guides/admm-cxx.html)
 
 Requirements
 ------------
@@ -50,6 +54,18 @@ You can build and run the elsa unit tests by running (in the build folder):
 make tests
 ```
 
+We also provide a `CMakePresets.json` to support [CMake's presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html).
+You can use them the following way from the root of the repository:
+
+```
+cmake --preset=<name>
+```
+
+A couple of useful presets provided here are: `default-gcc`, `default-clang`, `default-clang-libcxx` and
+`default-coverage`. For more configurations such as configurations with sanitizers check
+the `CMakePresets.json` file. The preset names are rather long, that way it's
+easy to overwrite them with shorter names in your personal `CMakeUserPresets.json`.
+
 Building against the elsa library
 ---------------------------------
 
@@ -58,11 +74,9 @@ Then you can configure elsa via the `find_package(elsa)` statement and link your
 Alternatively, you can link more specifically only against the required elsa modules, such as `target_link_libraries(myTarget elsa::core)`.
 In your source code, `#include "elsa.h"` to include all of elsa; alternatively, include only the header files you are actually using to minimize compilation times.
 
-As elsa depends on Eigen3 (version 3.3.9 or newer) and spdlog (version 1.7 or newer), you will need to have these packages installed on your system, and you have to point CMake to those installations.
-
 Contributing
 ------------
-To get involved, please see our [contributing page](CONTRIBUTING.md).
+To get involved, please see our [contributing page](https://gitlab.lrz.de/IP/elsa/-/blob/master/CONTRIBUTING.md).
 
 Contributors
 ------------
@@ -80,6 +94,8 @@ The **contributors** to elsa are:
 - Jonas Jelten
 - Andi Braimllari
 - Michael Loipfuehrer
+- Jonas Buerger
+
 
 History
 -------
@@ -92,3 +108,26 @@ This open-source version is a modernized and cleaned up version of our internal 
 - v0.6: major feature release, e.g. seamless GPU-computing, Python bindings (February 2, 2021)
 - v0.5: the "projector" release (September 18, 2019)
 - v0.4: first public release (July 19, 2019)
+
+Citation
+--------
+
+If you are using elsa in your work, we would like to ask you to cite us:
+
+```txt
+@inproceedings{LasserElsa2019,
+author = {Tobias Lasser and Maximilian Hornung and David Frank},
+title = {{elsa - an elegant framework for tomographic reconstruction}},
+volume = {11072},
+booktitle = {15th International Meeting on Fully Three-Dimensional Image Reconstruction in Radiology and Nuclear Medicine},
+editor = {Samuel Matej and Scott D. Metzler},
+organization = {International Society for Optics and Photonics},
+publisher = {SPIE},
+pages = {570 -- 573},
+keywords = {tomography, tomographic reconstruction, inverse problems, software framework, C++, Python},
+year = {2019},
+doi = {10.1117/12.2534833},
+URL = {https://doi.org/10.1117/12.2534833}
+}
+```
+

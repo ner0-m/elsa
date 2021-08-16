@@ -1,19 +1,21 @@
 /**
- * \file test_PhantomGenerator.cpp
+ * @file test_PhantomGenerator.cpp
  *
- * \brief Tests for the PhantomGenerator class
+ * @brief Tests for the PhantomGenerator class
  *
- * \author Tobias Lasser - nothing to see here...
+ * @author Tobias Lasser - nothing to see here...
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "PhantomGenerator.h"
+#include "testHelpers.h"
 
 using namespace elsa;
+using namespace doctest;
 
 RealVector_t get2dModifiedSheppLogan45x45();
 
-SCENARIO("Drawing a 2d Shepp-Logan phantom")
+TEST_CASE("PhantomGenerator: Drawing a 2d Shepp-Logan phantom")
 {
     GIVEN("a volume size")
     {
@@ -32,7 +34,7 @@ SCENARIO("Drawing a 2d Shepp-Logan phantom")
     }
 }
 
-SCENARIO("Drawing a 3d Shepp-Logan phantom")
+TEST_CASE("PhantomGenerator: Drawing a 3d Shepp-Logan phantom")
 {
     GIVEN("a volume size")
     {

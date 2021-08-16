@@ -10,27 +10,27 @@ stages:
 ### variables ###
 
 variables:
-  CLANG_FORMAT_IMAGE: "elsa/clang-format:10"
-  CLANG_TIDY_IMAGE: "elsa/clang-tidy:8"
-  GCC_IMAGE: "elsa/gcc-pybinds:10"
-  CLANG9_IMAGE: "elsa/clang-pybinds:9"
-  CLANG10_IMAGE: "elsa/clang-pybinds:10"
-  CUDA_IMAGE: "elsa/cuda:10.2"
-  UBUNTU_IMAGE: "elsa/ubuntu:20.04"
-  GPU_ONLY_IMAGE: "elsa/cuda-clang:10.0"
-  COVERAGE_IMAGE: "elsa/coverage:10.2"
-  CPM_SOURCE_CACHE: "/tmp/.cache/CPM"
+  DOCKER_REGISTRY_URL: "docker.ciip.in.tum.de:5000" 
+  CLANG_FORMAT_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-format:10"
+  CLANG_TIDY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-tidy:8"
+  GCC_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc-pybinds:10"
+  CLANG9_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:9"
+  CLANG10_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:10"
+  CUDA_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda:10.2"
+  UBUNTU_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/ubuntu:20.04"
+  GPU_ONLY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda-clang:10.0"
+  SANITIZER_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc:10"
+  COVERAGE_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/coverage:10.2"
 
 ### Cache setup ###
 
-# Caches should only be used for caching
-# between pipelines not jobs, artifacts should be prefered for that
-# We store the CPM cache, for a given branch. 
-# TODO dfrank: Is it possible to cache it project wide? 
+# Caches should only be used for caching between pipelines not jobs
+# By default, have a unique and separate cache for each branch and job in the CI, otherwhise it can happen that 
+# different build configurations are spilled into different jobs and sporadic build failure occures.
 cache:
-  key: "$CI_COMMIT_REF_SLUG"
+  key: "$CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME" 
   paths:
-    - $CPM_SOURCE_CACHE
+    - build/_deps/*
 
 ### job templates ###
 
@@ -61,26 +61,66 @@ cache:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     paths:
-      - build/
+      # The actual build artifacts
+      - build/bin
+      - build/lib
+      - build/pyelsa/
+      - build/elsa/elsaConfig.cmake
+      - build/elsa/elsaConfigVersion.cmake
+
+      # If we ever generate headers, store them as well
+      - build/elsa/**/*.h
+
+      # CTest files
+      - build/**/CTestTestfile.cmake
+      - build/**/tests/test_*include-*.cmake
+      - build/**/tests/test_*tests-*.cmake
+      - build/Testing
+
+      # Add elsa install to artifact
+      - install-elsa/include/elsa/**/*.h
+      - install-elsa/include/elsa/**/*.hpp
+      - install-elsa/include/elsa/**/*.cuh
+      - install-elsa/lib/cmake/elsa/**/*.cmake
+      - install-elsa/lib/libelsa*.a
+      # Add quickvec install to artifact
+      - install-elsa/include/quickvec/**/*.h
+      - install-elsa/include/quickvec/**/*.hpp
+      - install-elsa/lib/cmake/quickvec/*.cmake
+      - install-elsa/lib/libquickvec.a
+      # Add doctest install to artifact
+      - install-elsa/include/doctest/**/*.h
+      - install-elsa/lib/cmake/doctest/**/*.cmake
+      # Add spdlog install to artifact
+      - install-elsa/include/spdlog/**/*.h
+      - install-elsa/lib/cmake/spdlog/**/*.cmake
+      - install-elsa/lib/libspdlog.a
+      - install-elsa/lib/pkgconfig/spdlog.pc
+    exclude:
+      - build/_deps/*
     expire_in: 60 mins
 
 .buildjob_script_clang:
   script: &buildjob_clang
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
+    - ninja build-tests
     - ninja build-benchmarks
     - ninja build-examples
+    - ninja install
 
 .buildjob_script_normal:
   script: &buildjob_normal
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa"
     - ninja
+    - ninja build-tests
     - ninja build-benchmarks
     - ninja build-examples
+    - ninja install
 
 #### Test job templates ####
 
@@ -88,7 +128,7 @@ cache:
   <<: *run_always
   script:
     - cd build
-    - ninja tests
+    - ctest --output-on-failure --schedule-random
   artifacts:
     name: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
     paths:
@@ -104,7 +144,7 @@ cache:
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
     - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
 
 .installjob_default_anchors:
@@ -112,19 +152,11 @@ cache:
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
     - mkdir -p build/ && cd build/
-    - cmake .. -GNinja
+    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa"
     - ninja
 
 .installjob_anchors: &install_job
   <<: *run_on_merge_requests
-  before_script: &installjob_before_script
-    - cd build
-    - ninja install
-  cache: &install_cache
-    key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
-    paths:
-      - $CPM_SOURCE_CACHE
-      - /tmp/elsa_testing
 
 ### static test ###
 
@@ -150,6 +182,39 @@ clang-tidy:
     - elsa
     - clang
 
+comment-formating:
+  <<: *run_always
+  stage: static-test
+  image: $CLANG_FORMAT_IMAGE
+  script:
+    ./tools/ci_scripts/check-comment-style.sh
+  allow_failure: true
+  tags:
+    - linux
+    - elsa
+    - clang
+
+.cmake-format:
+  <<: *run_always
+  stage: static-test
+  image: $CLANG_FORMAT_IMAGE
+  script:
+    ./tools/ci_scripts/cmake-format-test.sh
+  tags:
+    - linux
+    - elsa
+    - clang
+
+cmake-lint:
+  <<: *run_always
+  stage: static-test
+  image: $CLANG_FORMAT_IMAGE
+  script:
+    ./tools/ci_scripts/cmake-lint-test.sh
+  tags:
+    - linux
+    - elsa
+    - clang
 
 ### compile jobs ###
 
@@ -164,7 +229,8 @@ build-ubuntu:
 build-gcc:
   <<: *build_job_artifact
   image: $GCC_IMAGE
-  script: *buildjob_normal
+  script:
+  - *buildjob_normal
   tags:
     - linux
     - elsa
@@ -173,7 +239,10 @@ build-gcc:
 build-clang9:
   <<: *build_job_artifact
   image: $CLANG9_IMAGE
-  script: *buildjob_clang
+  script:
+  - *buildjob_clang
+  - pip3 install matplotlib
+  - PYTHONPATH="$PYTHONPATH:$(pwd)" python3 ../examples/solver_experiments.py --headless --max-iterations 1 --problem-size 16
   tags:
     - linux
     - elsa
@@ -182,7 +251,10 @@ build-clang9:
 build-clang10:
   <<: *build_job_artifact
   image: $CLANG10_IMAGE
-  script: *buildjob_clang
+  script:
+  - *buildjob_clang
+  - pip3 install matplotlib
+  - PYTHONPATH="$PYTHONPATH:$(pwd)" python3 ../examples/solver_experiments.py --headless --max-iterations 1 --problem-size 16
   tags:
     - linux
     - elsa
@@ -204,10 +276,12 @@ build-gpu-only:
   script:
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CUDA_VECTOR=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
+    - ninja build-tests
     - ninja build-benchmarks
     - ninja build-examples
+    - ninja install
   tags:
     - linux
     - elsa
@@ -343,7 +417,7 @@ install-gpu-only:
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
     - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
+    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -Dquickvec_DIR="$CI_PROJECT_DIR/install-elsa/lib/cmake/quickvec" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
     - ninja
   tags:
     - linux
@@ -371,7 +445,7 @@ cuda-memcheck:
 asan-ubsan:
   <<: *run_on_merge_requests
   stage: sanitizer
-  image: $CUDA_IMAGE
+  image: $SANITIZER_IMAGE
   dependencies: []
   script:
     - mkdir -p build
@@ -399,11 +473,6 @@ test-coverage:
     - CXX=g++ cmake .. -GNinja -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
     - ninja tests
     - ninja test_coverage
-  cache:
-    key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
-    paths:
-      - $CPM_SOURCE_CACHE
-      - build/
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
     paths:

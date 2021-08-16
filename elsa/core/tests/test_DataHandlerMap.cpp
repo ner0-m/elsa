@@ -1,14 +1,14 @@
 /**
- * \file test_DataHandlerMap.cpp
+ * @file test_DataHandlerMap.cpp
  *
- * \brief Tests for DataHandlerMaps - DataHandlerMapCPU and DataHandlerMapGPU
+ * @brief Tests for DataHandlerMaps - DataHandlerMapCPU and DataHandlerMapGPU
  *
- * \author David Frank - initial code
- * \author Tobias Lasser - rewrite and code coverage
- * \author Jens Petit - refactoring into TEMPLATE_PRODUCT_TEST_CASE
+ * @author David Frank - initial code
+ * @author Tobias Lasser - rewrite and code coverage
+ * @author Jens Petit - refactoring into TEMPLATE_PRODUCT_TEST_CASE
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "DataHandlerMapCPU.h"
 #include "DataHandlerCPU.h"
 #include "testHelpers.h"
@@ -18,6 +18,7 @@
 #include "DataHandlerMapGPU.h"
 #endif
 
+using namespace elsa;
 using namespace elsa;
 
 // for testing the copy-on-write mechanism
@@ -49,14 +50,32 @@ struct MapToHandler {
 #endif
 };
 
+using CPUTypeTuple =
+    std::tuple<DataHandlerCPU<float>, DataHandlerCPU<double>, DataHandlerCPU<std::complex<float>>,
+               DataHandlerCPU<std::complex<double>>, DataHandlerCPU<index_t>>;
+
+TYPE_TO_STRING(DataHandlerCPU<float>);
+TYPE_TO_STRING(DataHandlerCPU<double>);
+TYPE_TO_STRING(DataHandlerCPU<index_t>);
+TYPE_TO_STRING(DataHandlerCPU<std::complex<float>>);
+TYPE_TO_STRING(DataHandlerCPU<std::complex<double>>);
+
 #ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandlerMap", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandlerMap", "", (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
+using GPUTypeTuple =
+    std::tuple<DataHandlerGPU<float>, DataHandlerGPU<double>, DataHandlerGPU<std::complex<float>>,
+               DataHandlerGPU<std::complex<double>>, DataHandlerGPU<index_t>>;
+
+TYPE_TO_STRING(DataHandlerGPU<float>);
+TYPE_TO_STRING(DataHandlerGPU<double>);
+TYPE_TO_STRING(DataHandlerGPU<index_t>);
+TYPE_TO_STRING(DataHandlerGPU<std::complex<float>>);
+TYPE_TO_STRING(DataHandlerGPU<std::complex<double>>);
 #endif
+
+TEST_SUITE_BEGIN("core");
+
+TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing construction", TestType,
+                          datahandlermap_construction)
 {
     using data_t = typename TestType::value_type;
 
@@ -66,23 +85,23 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandlerMap", "", (DataHan
 
         WHEN("constructing with a given vector")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size * 2};
+            Vector_t<data_t> randVec{size * 2};
             randVec.setRandom();
             const TestType dh{randVec};
             const auto dhMap = dh.getBlock(size / 3, size / 3);
 
             THEN("the DataHandlerMap references the actual vector")
             {
-                REQUIRE(dhMap->getSize() == size / 3);
+                REQUIRE_EQ(dhMap->getSize(), size / 3);
 
                 for (index_t i = 0; i < size / 3; ++i)
-                    REQUIRE(&(*dhMap)[i] == &dh[i + size / 3]);
+                    REQUIRE_EQ(&(*dhMap)[i], &dh[i + size / 3]);
             }
         }
 
         WHEN("copy constructing")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size * 2};
+            Vector_t<data_t> randVec{size * 2};
             randVec.setRandom();
             const TestType dh{randVec};
             const auto dhMap = dh.getBlock(size / 3, size / 3);
@@ -93,32 +112,26 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Constructing DataHandlerMap", "", (DataHan
 
             THEN("the copy references the actual vector")
             {
-                REQUIRE(dhMap->getSize() == size / 3);
+                REQUIRE_EQ(dhMap->getSize(), size / 3);
 
                 for (index_t i = 0; i < size / 3; ++i)
-                    REQUIRE(&dhMapCopy[i] == &dh[i + size / 3]);
+                    REQUIRE_EQ(&dhMapCopy[i], &dh[i + size / 3]);
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandlerMap", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandlerMap", "",
-                           (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing equality operator", TestType,
+                          datahandlermap_eqoperator)
 {
     using data_t = typename TestType::value_type;
 
     GIVEN("some DataHandlerMap")
     {
         index_t size = 314;
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+        Vector_t<data_t> randVec{size};
         randVec.setRandom();
+
         const TestType realDh{randVec};
         const auto dhPtr = realDh.getBlock(0, size);
         const auto& dh = *dhPtr;
@@ -138,8 +151,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandlerMa
             const auto dh2 = realDh;
             THEN("the result is true")
             {
-                REQUIRE(dh == dh2);
-                REQUIRE(dh == *realDh.getBlock(0, size));
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(dh, *realDh.getBlock(0, size));
             }
         }
 
@@ -148,8 +161,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandlerMa
             const TestType dh2{randVec};
             THEN("the result is true")
             {
-                REQUIRE(dh == dh2);
-                REQUIRE(dh == *dh2.getBlock(0, size));
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(dh, *dh2.getBlock(0, size));
             }
         }
 
@@ -166,222 +179,303 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing equality operator on DataHandlerMa
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap", TestType,
+                          datahandlermap_assign)
 {
     using data_t = typename TestType::value_type;
+    using MapType = typename MapToHandler<TestType>::map;
 
-    GIVEN("a partial DataHandlerMap")
+    const index_t size = 314;
+
+    // Constructo DataHandler with 2x the size
+    TestType dh{2 * size};
+    dh = 0;
+
+    // Create map to the first half of the DH
+    const auto dhMap = dh.getBlock(0, size);
+
+    REQUIRE_EQ(dhMap->getSize(), size);
+    REQUIRE_EQ(dhMap->getSize(), dh.getSize() / 2);
+
+    GIVEN("A reference to the concrete DataHandlerMap (TestType)")
     {
-        index_t size = 314;
-        TestType dh{2 * size};
-        dh = 0;
-        const auto dhMap = dh.getBlock(0, size);
+        auto& dhMapRef = static_cast<typename MapToHandler<TestType>::map&>(*dhMap);
 
-        WHEN("copy assigning")
+        WHEN("Copy-assigning a DataHandler with the same size to the map")
         {
-            auto& dhMapRef = static_cast<typename MapToHandler<TestType>::map&>(*dhMap);
+            Vector_t<data_t> randVec{size};
+            randVec.setRandom();
+            const TestType dh2{randVec};
+            const auto dh2Map = dh2.getBlock(0, size);
+            const auto& dh2MapRef = static_cast<const MapType&>(*dh2Map);
 
-            THEN("sizes must match")
-            {
-                const TestType dh2{3 * size};
-                const auto dh2Map = dh2.getBlock(0, 3 * size);
-                const auto& dh2MapRef =
-                    static_cast<const typename MapToHandler<TestType>::map&>(*dh2Map);
-                REQUIRE_THROWS(dhMapRef = dh2MapRef);
-            }
+            dhMapRef = dh2MapRef;
 
             THEN("a deep copy is performed")
             {
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-                randVec.setRandom();
-                const TestType dh2{randVec};
-                const auto dh2Map = dh2.getBlock(0, size);
-                const auto& dh2MapRef =
-                    static_cast<const typename MapToHandler<TestType>::map&>(*dh2Map);
+                REQUIRE_EQ(useCount(dh), 1);
+                REQUIRE_EQ(useCount(dh2), 1);
 
-                dhMapRef = dh2MapRef;
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dh2) == 1);
-                REQUIRE(&dh[0] == &dhMapRef[0]);
-                REQUIRE(dhMapRef == dh2);
-                REQUIRE(&dh[0] != &dh2MapRef[0]);
+                REQUIRE_EQ(dhMapRef, dh2);
+                REQUIRE_UNARY(isCwiseApprox(dhMapRef, dh2MapRef));
+
+                REQUIRE_EQ(&dh[0], &dhMapRef[0]);
+                REQUIRE_NE(&dh[0], &dh2MapRef[0]);
+
+                // Changing the original DataHandler, doesn't change the new one
+                dh[0] *= 4;
+
+                THEN("Changing the original DataHandler doesn't affect the new one")
+                {
+                    REQUIRE_UNARY(checkApproxEq(dh[0], dhMapRef[0]));
+                    REQUIRE_UNARY(checkApproxNe(dh[0], dh2[0]));
+                    REQUIRE_UNARY(checkApproxNe(dh[0], dh2MapRef[0]));
+                }
             }
         }
 
-        WHEN("copy assigning a DataHandlerMap through base pointers")
+        WHEN("Copy-assigning a DataHandler with a different size to the map")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
-            randVec.setRandom();
-            const std::unique_ptr<const DataHandler<data_t>> dh2Ptr =
-                std::make_unique<const TestType>(randVec);
+            const TestType dh2{3 * size};
+            const auto dh2Map = dh2.getBlock(0, 3 * size);
+            const auto& dh2MapRef =
+                static_cast<const typename MapToHandler<TestType>::map&>(*dh2Map);
 
-            THEN("sizes must match")
-            {
-                const std::unique_ptr<DataHandler<data_t>> bigDh =
-                    std::make_unique<TestType>(2 * size);
-                REQUIRE_THROWS(*dhMap = *bigDh);
-            }
+            THEN("the assignment throws") { REQUIRE_THROWS(dhMapRef = dh2MapRef); }
+        }
+    }
 
+    GIVEN("Given the base pointer to the map")
+    {
+        Vector_t<data_t> randVec{size};
+        randVec.setRandom();
+        const std::unique_ptr<const DataHandler<data_t>> dh2Ptr =
+            std::make_unique<const TestType>(randVec);
+
+        WHEN("Copy-assigning a DataHandler base pointer of the same size")
+        {
+            // TODO: why do we need dhCopy?
             const auto dhCopy = dh;
             *dhMap = *dh2Ptr;
             THEN("a deep copy is performed")
             {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
+                REQUIRE_EQ(useCount(dh), 1);
+                REQUIRE_EQ(useCount(dhCopy), 1);
 
                 for (index_t i = 0; i < size; i++)
-                    REQUIRE(dh[i] == (*dh2Ptr)[i]);
+                    REQUIRE_EQ(dh[i], (*dh2Ptr)[i]);
 
-                REQUIRE(*dhMap == *dh2Ptr);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                REQUIRE_EQ(*dhMap, *dh2Ptr);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+
+                // Changing the original DataHandler, doesn't change the new one
+                dh[0] *= 2;
+
+                THEN("Changing the original DataHandler doesn't affect the new one")
+                {
+                    REQUIRE_UNARY(checkApproxEq((*dhMap)[0], dh[0]));
+                    REQUIRE_UNARY(checkApproxNe((*dhMap)[0], (*dh2Ptr)[0]));
+                }
             }
         }
 
-        WHEN("copy assigning a partial DataHandlerMap through base pointers")
+        WHEN("Copy-assigning a DataHandler base pointer of a different size")
+        {
+            const std::unique_ptr<DataHandler<data_t>> bigDh = std::make_unique<TestType>(2 * size);
+            THEN("The assigning throws") { REQUIRE_THROWS(*dhMap = *bigDh); }
+        }
+
+        WHEN("Copy-assigning a block of a DataHandlerMap though the base pointer")
         {
             const auto dhCopy = dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{2 * size};
+            Vector_t<data_t> randVec{2 * size};
             randVec.setRandom();
+
             const TestType dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
 
-            THEN("sizes must match")
+            WHEN("The sizes of the block and DataHandler are the same")
+            {
+                *dhMap = *dh2Map;
+                THEN("a deep copy is performed")
+                {
+                    REQUIRE_EQ(useCount(dh), 1);
+                    REQUIRE_EQ(useCount(dhCopy), 1);
+
+                    for (index_t i = 0; i < size; i++)
+                        REQUIRE_EQ(dh[i], dh2[i]);
+
+                    REQUIRE_EQ(*dhMap, *dh2Map);
+                    REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                }
+            }
+
+            WHEN("The sizes of the block and DataHandler are different")
             {
                 const auto bigDh = dh2.getBlock(0, 2 * size);
-                REQUIRE_THROWS(*dhMap = *bigDh);
-            }
-
-            *dhMap = *dh2Map;
-            THEN("a deep copy is performed")
-            {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
-
-                for (index_t i = 0; i < size; i++)
-                    REQUIRE(dh[i] == dh2[i]);
-
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                THEN("Assignment throws") { REQUIRE_THROWS(*dhMap = *bigDh); }
             }
         }
 
-        WHEN("copy assigning a full DataHandlerMap (aka a view) through base pointers")
+        WHEN("Copy-assigning a full DataHandlerMap (aka a view) through the base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+            Vector_t<data_t> randVec{size};
             randVec.setRandom();
+
             const TestType dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
 
-            THEN("sizes must match")
+            WHEN("The sizes are the same")
+            {
+                *dhMap = *dh2Map;
+                THEN("a deep copy is performed")
+                {
+                    REQUIRE_EQ(useCount(dh), 1);
+                    REQUIRE_EQ(useCount(dhCopy), 1);
+
+                    for (index_t i = 0; i < size; i++)
+                        REQUIRE_UNARY(checkApproxEq(dh[i], dh2[i]));
+
+                    REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                }
+            }
+
+            WHEN("The sizes are different")
             {
                 const std::unique_ptr<DataHandler<data_t>> bigDh =
                     std::make_unique<TestType>(2 * size);
-                REQUIRE_THROWS(*dhMap = *bigDh->getBlock(0, 2 * size));
-            }
-
-            *dhMap = *dh2Map;
-            THEN("a deep copy is performed")
-            {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
-
-                for (index_t i = 0; i < size; i++)
-                    REQUIRE(dh[i] == dh2[i]);
-
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                THEN("sizes must match") { REQUIRE_THROWS(*dhMap = *bigDh->getBlock(0, 2 * size)); }
             }
         }
 
-        WHEN("\"move\" assigning a DataHandlerMap through base pointers")
+        WHEN("\"move\" assigning a DataHandlerMap through the base pointer")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+            Vector_t<data_t> randVec{size};
             randVec.setRandom();
             const std::unique_ptr<DataHandler<data_t>> dh2Ptr = std::make_unique<TestType>(randVec);
 
-            THEN("sizes must match")
+            WHEN("The sizes are the same")
+            {
+                const auto dhCopy = dh;
+
+                *dhMap = std::move(*dh2Ptr);
+                THEN("a deep copy is performed")
+                {
+                    REQUIRE_EQ(useCount(dh), 1);
+                    REQUIRE_EQ(useCount(dhCopy), 1);
+
+                    for (index_t i = 0; i < size; i++)
+                        REQUIRE_UNARY(checkApproxEq(dh[i], (*dh2Ptr)[i]));
+
+                    REQUIRE_EQ(*dhMap, *dh2Ptr);
+                    REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                }
+            }
+
+            WHEN("The sizes are different")
             {
                 const std::unique_ptr<DataHandler<data_t>> bigDh =
                     std::make_unique<TestType>(2 * size);
-                REQUIRE_THROWS(*dhMap = std::move(*bigDh));
-            }
-
-            const auto dhCopy = dh;
-            *dhMap = std::move(*dh2Ptr);
-            THEN("a deep copy is performed")
-            {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
-
-                for (index_t i = 0; i < size; i++)
-                    REQUIRE(dh[i] == (*dh2Ptr)[i]);
-
-                REQUIRE(*dhMap == *dh2Ptr);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                THEN("the assignment throws") { REQUIRE_THROWS(*dhMap = std::move(*bigDh)); }
             }
         }
 
-        WHEN("\"move\" assigning a partial DataHandlerMap through base pointers")
+        WHEN("\"move\" assigning a block of a  DataHandlerMap through the base pointer")
         {
             const auto dhCopy = dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{2 * size};
+            Vector_t<data_t> randVec{2 * size};
             randVec.setRandom();
             TestType dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
 
-            THEN("sizes must match")
+            WHEN("The sizes are the same")
+            {
+                *dhMap = std::move(*dh2Map);
+                THEN("a deep copy is performed")
+                {
+                    REQUIRE_EQ(useCount(dh), 1);
+                    REQUIRE_EQ(useCount(dhCopy), 1);
+
+                    for (index_t i = 0; i < size; i++)
+                        REQUIRE_UNARY(checkApproxEq(dh[i], dh2[i]));
+
+                    REQUIRE_EQ(*dhMap, *dh2Map);
+                    REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                }
+            }
+
+            WHEN("The sizes are different")
             {
                 const auto bigDh = dh2.getBlock(0, 2 * size);
-                REQUIRE_THROWS(*dhMap = std::move(*bigDh));
-            }
-
-            *dhMap = std::move(*dh2Map);
-            THEN("a deep copy is performed")
-            {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
-
-                for (index_t i = 0; i < size; i++)
-                    REQUIRE(dh[i] == dh2[i]);
-
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                THEN("the assignment throws") { REQUIRE_THROWS(*dhMap = std::move(*bigDh)); }
             }
         }
 
-        WHEN("\"move\" assigning a full DataHandlerMap (aka a view) through base pointers")
+        WHEN("\"move\" assigning a full DataHandlerMap (aka a view) through the base pointer")
         {
             const auto dhCopy = dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+            Vector_t<data_t> randVec{size};
             randVec.setRandom();
             TestType dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
 
-            THEN("sizes must match")
+            WHEN("The sizes are the same")
+            {
+                *dhMap = std::move(*dh2Map);
+                THEN("a deep copy is performed")
+                {
+                    REQUIRE_EQ(useCount(dh), 1);
+                    REQUIRE_EQ(useCount(dhCopy), 1);
+
+                    for (index_t i = 0; i < size; i++)
+                        REQUIRE_UNARY(checkApproxEq(dh[i], dh2[i]));
+
+                    REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                }
+            }
+
+            WHEN("The sizes are different")
             {
                 const std::unique_ptr<DataHandler<data_t>> bigDh =
                     std::make_unique<TestType>(2 * size);
-                REQUIRE_THROWS(*dhMap = std::move(*bigDh->getBlock(0, 2 * size)));
+                THEN("the assignment throws") { REQUIRE_THROWS(*dhMap = std::move(*bigDh)); }
             }
+        }
+    }
 
-            *dhMap = std::move(*dh2Map);
-            THEN("a deep copy is performed")
+    GIVEN("A reference to a full concrete DataHandlerMap (aka a view)")
+    {
+        index_t size = 314;
+        TestType dh{size};
+        const auto dhMap = dh.getBlock(0, size);
+        auto& dhMapRef = static_cast<MapType&>(*dhMap);
+
+        WHEN("Copy-assigning an equally sized view to the map")
+        {
+            const TestType dh2{size};
+            const auto dh2Map = dh2.getBlock(0, size);
+            const auto& dh2MapRef = static_cast<const MapType&>(*dh2Map);
+            dhMapRef = dh2MapRef;
+
+            THEN("a shallow copy is performed")
             {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
-
-                for (index_t i = 0; i < size; i++)
-                    REQUIRE(dh[i] == dh2[i]);
-
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(dh, dhMapRef);
+                REQUIRE_EQ(dh, dh2MapRef);
+                dhMapRef[0] = 1;
+                REQUIRE_EQ(&dhMapRef[0], &dh[0]);
+                REQUIRE_NE(&dhMapRef[0], &dh2MapRef[0]);
             }
+        }
+        WHEN("Copy-assigning an differently sized view to the map")
+        {
+            const TestType dh2{3 * size};
+            const auto dh2Map = dh2.getBlock(0, 3 * size);
+            const auto& dh2MapRef = static_cast<const MapType&>(*dh2Map);
+
+            THEN("The assigning throws") { REQUIRE_THROWS(dhMapRef = dh2MapRef); }
         }
     }
 
@@ -391,39 +485,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHan
         TestType dh{size};
         const auto dhMap = dh.getBlock(0, size);
 
-        WHEN("copy assigning and both maps are views")
-        {
-            auto& dhMapRef = static_cast<typename MapToHandler<TestType>::map&>(*dhMap);
-
-            THEN("sizes must match")
-            {
-                const TestType dh2{3 * size};
-                const auto dh2Map = dh2.getBlock(0, 3 * size);
-                const auto& dh2MapRef =
-                    static_cast<const typename MapToHandler<TestType>::map&>(*dh2Map);
-                REQUIRE_THROWS(dhMapRef = dh2MapRef);
-            }
-
-            THEN("a shallow copy is performed")
-            {
-                const TestType dh2{size};
-                const auto dh2Map = dh2.getBlock(0, size);
-                const auto& dh2MapRef =
-                    static_cast<const typename MapToHandler<TestType>::map&>(*dh2Map);
-                dhMapRef = dh2MapRef;
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == dh2);
-                REQUIRE(dh == dhMapRef);
-                REQUIRE(dh == dh2MapRef);
-                dhMapRef[0] = 1;
-                REQUIRE(&dhMapRef[0] == &dh[0]);
-                REQUIRE(&dhMapRef[0] != &dh2MapRef[0]);
-            }
-        }
-
         WHEN("copy assigning a DataHandlerMap through base pointers")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+            Vector_t<data_t> randVec{size};
             randVec.setRandom();
             const std::unique_ptr<DataHandler<data_t>> dh2Ptr = std::make_unique<TestType>(randVec);
 
@@ -437,20 +501,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHan
             *dhMap = *dh2Ptr;
             THEN("a shallow copy is performed")
             {
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == *dh2Ptr);
-                REQUIRE(*dhMap == *dh2Ptr);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, *dh2Ptr);
+                REQUIRE_EQ(*dhMap, *dh2Ptr);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
                 dh[0] = 1;
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
-                REQUIRE(&dh[0] != &(*dh2Ptr)[0]);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                REQUIRE_NE(&dh[0], &(*dh2Ptr)[0]);
             }
         }
 
         WHEN("copy assigning a partial DataHandlerMap through base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{2 * size};
+            Vector_t<data_t> randVec{2 * size};
             randVec.setRandom();
             const TestType dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -464,20 +528,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHan
             *dhMap = *dh2Map;
             THEN("a deep copy is performed")
             {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
+                REQUIRE_EQ(useCount(dh), 1);
+                REQUIRE_EQ(useCount(dhCopy), 1);
 
                 for (index_t i = 0; i < size; i++)
-                    REQUIRE(dh[i] == dh2[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], dh2[i]));
 
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                REQUIRE_EQ(*dhMap, *dh2Map);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
             }
         }
 
         WHEN("copy assigning a full DataHandlerMap (aka a view) through base pointers")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+            Vector_t<data_t> randVec{size};
             randVec.setRandom();
             const TestType dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -492,19 +556,19 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHan
             *dhMap = *dh2Map;
             THEN("a shallow copy is performed")
             {
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == dh2);
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(*dhMap, *dh2Map);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
                 dh[0] = 1;
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
-                REQUIRE(&dh[0] != &dh2[0]);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                REQUIRE_NE(&dh[0], &dh2[0]);
             }
         }
 
         WHEN("\"move\" assigning a DataHandler through base pointers")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+            Vector_t<data_t> randVec{size};
             randVec.setRandom();
             const std::unique_ptr<DataHandler<data_t>> dh2Ptr = std::make_unique<TestType>(randVec);
 
@@ -518,20 +582,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHan
             *dhMap = std::move(*dh2Ptr);
             THEN("a shallow copy is performed")
             {
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == *dh2Ptr);
-                REQUIRE(*dhMap == *dh2Ptr);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, *dh2Ptr);
+                REQUIRE_EQ(*dhMap, *dh2Ptr);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
                 dh[0] = 1;
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
-                REQUIRE(&dh[0] != &(*dh2Ptr)[0]);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                REQUIRE_NE(&dh[0], &(*dh2Ptr)[0]);
             }
         }
 
         WHEN("\"move\" assigning a partial DataHandlerMap through base pointers")
         {
             const auto dhCopy = dh;
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{2 * size};
+            Vector_t<data_t> randVec{2 * size};
             randVec.setRandom();
             TestType dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -545,20 +609,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHan
             *dhMap = std::move(*dh2Map);
             THEN("a deep copy is performed")
             {
-                REQUIRE(useCount(dh) == 1);
-                REQUIRE(useCount(dhCopy) == 1);
+                REQUIRE_EQ(useCount(dh), 1);
+                REQUIRE_EQ(useCount(dhCopy), 1);
 
                 for (index_t i = 0; i < size; i++)
-                    REQUIRE(dh[i] == dh2[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], dh2[i]));
 
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                REQUIRE_EQ(*dhMap, *dh2Map);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
             }
         }
 
         WHEN("\"move\" assigning a full DataHandlerMap (aka a view) through base pointers")
         {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec{size};
+            Vector_t<data_t> randVec{size};
             randVec.setRandom();
             TestType dh2{randVec};
             const auto dh2Map = dh2.getBlock(0, size);
@@ -573,32 +637,26 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Assigning to DataHandlerMap", "", (DataHan
             *dhMap = std::move(*dh2Map);
             THEN("a shallow copy is performed")
             {
-                REQUIRE(useCount(dh) == 2);
-                REQUIRE(dh == dh2);
-                REQUIRE(*dhMap == *dh2Map);
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
+                REQUIRE_EQ(useCount(dh), 2);
+                REQUIRE_EQ(dh, dh2);
+                REQUIRE_EQ(*dhMap, *dh2Map);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
                 dh[0] = 1;
-                REQUIRE(&(*dhMap)[0] == &dh[0]);
-                REQUIRE(&dh[0] != &dh2[0]);
+                REQUIRE_EQ(&(*dhMap)[0], &dh[0]);
+                REQUIRE_NE(&dh[0], &dh2[0]);
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Cloning DataHandlerMap", "", (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Cloning DataHandlerMap", "", (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing clone()", TestType, datahandlermap_clone)
 {
     using data_t = typename TestType::value_type;
 
     GIVEN("a full DataHandlerMap (aka a view)")
     {
         index_t size = 728;
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> dataVec(size);
+        Vector_t<data_t> dataVec(size);
         dataVec.setRandom();
         TestType realDh(dataVec);
         auto dhPtr = realDh.getBlock(0, size);
@@ -610,16 +668,16 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Cloning DataHandlerMap", "", (DataHandlerC
 
             THEN("a shallow copy is produced")
             {
-                REQUIRE(dhClone.get() != &dh);
+                REQUIRE_NE(dhClone.get(), &dh);
 
-                REQUIRE(dhClone->getSize() == dh.getSize());
+                REQUIRE_EQ(dhClone->getSize(), dh.getSize());
 
-                REQUIRE(useCount(realDh) == 2);
+                REQUIRE_EQ(useCount(realDh), 2);
 
-                REQUIRE(*dhClone == dh);
+                REQUIRE_EQ(*dhClone, dh);
 
                 dh[0] = 1;
-                REQUIRE(*dhClone != dh);
+                REQUIRE_NE(*dhClone, dh);
             }
         }
     }
@@ -627,7 +685,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Cloning DataHandlerMap", "", (DataHandlerC
     GIVEN("a partial DataHandlerMap")
     {
         index_t size = 728;
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> dataVec(size);
+        Vector_t<data_t> dataVec(size);
         dataVec.setRandom();
         TestType realDh(dataVec);
         auto dhPtr = realDh.getBlock(0, size / 2);
@@ -639,27 +697,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Cloning DataHandlerMap", "", (DataHandlerC
 
             THEN("everything matches")
             {
-                REQUIRE(dhClone.get() != &dh);
+                REQUIRE_NE(dhClone.get(), &dh);
 
-                REQUIRE(dhClone->getSize() == dh.getSize());
+                REQUIRE_EQ(dhClone->getSize(), dh.getSize());
 
-                REQUIRE(useCount(realDh) == 1);
+                REQUIRE_EQ(useCount(realDh), 1);
 
-                REQUIRE(dh == *dhClone);
+                REQUIRE_EQ(dh, *dhClone);
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataHandlerMap", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataHandlerMap", "",
-                           (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing the reduction operations", TestType,
+                          datahandlermap_reduction)
 {
     using data_t = typename TestType::value_type;
 
@@ -676,48 +727,47 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the reduction operations of DataHa
 
             THEN("the reductions work as expected")
             {
-                REQUIRE(checkSameNumbers(dh.sum(), randVec.middleRows(size / 3, size).sum()));
-                REQUIRE(checkSameNumbers(dh.l1Norm(),
-                                         randVec.middleRows(size / 3, size).array().abs().sum()));
-                REQUIRE(checkSameNumbers(
+                REQUIRE_UNARY(checkApproxEq(dh.sum(), randVec.middleRows(size / 3, size).sum()));
+                REQUIRE_EQ(dh.l0PseudoNorm(),
+                           (randVec.middleRows(size / 3, size).array().cwiseAbs()
+                            >= std::numeric_limits<GetFloatingPointType_t<data_t>>::epsilon())
+                               .count());
+                REQUIRE_UNARY(checkApproxEq(
+                    dh.l1Norm(), randVec.middleRows(size / 3, size).array().abs().sum()));
+                REQUIRE_UNARY(checkApproxEq(
                     dh.lInfNorm(), randVec.middleRows(size / 3, size).array().abs().maxCoeff()));
-                REQUIRE(checkSameNumbers(dh.squaredL2Norm(),
-                                         randVec.middleRows(size / 3, size).squaredNorm()));
+                REQUIRE_UNARY(checkApproxEq(dh.squaredL2Norm(),
+                                            randVec.middleRows(size / 3, size).squaredNorm()));
+                REQUIRE_UNARY(
+                    checkApproxEq(dh.l2Norm(), randVec.middleRows(size / 3, size).norm()));
 
                 auto randVec2 = generateRandomMatrix<data_t>(size);
                 TestType realDh2(randVec2);
                 auto dh2Ptr = realDh2.getBlock(0, size);
                 auto& dh2 = *dh2Ptr;
-                REQUIRE(checkSameNumbers(dh.dot(dh2),
-                                         randVec.middleRows(size / 3, size).dot(randVec2)));
+                REQUIRE_UNARY(
+                    checkApproxEq(dh.dot(dh2), randVec.middleRows(size / 3, size).dot(randVec2)));
 
                 TestType dhCPU(randVec2);
-                REQUIRE(checkSameNumbers(dh.dot(dhCPU),
-                                         randVec.middleRows(size / 3, size).dot(randVec2)));
+                REQUIRE_UNARY(
+                    checkApproxEq(dh.dot(dhCPU), randVec.middleRows(size / 3, size).dot(randVec2)));
             }
 
             THEN("the dot product expects correctly sized arguments")
             {
                 index_t wrongSize = size - 1;
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> randVec2(wrongSize);
+                Vector_t<data_t> randVec2(wrongSize);
                 randVec2.setRandom();
                 TestType dh2(randVec2);
 
-                REQUIRE_THROWS_AS(dh.dot(dh2), std::invalid_argument);
+                REQUIRE_THROWS_AS(dh.dot(dh2), InvalidArgumentError);
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataHandlerMap", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of DataHandlerMap", "",
-                           (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing the element-wise operations", TestType,
+                          datahandlermap_elemwise)
 {
     using data_t = typename TestType::value_type;
 
@@ -754,46 +804,46 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
                 dh += dh2;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] + dh2[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] + dh2[i]));
 
                 dh = oldDh;
                 dh += dhCPU;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] + dhCPU[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] + dhCPU[i]));
 
                 dh = oldDh;
                 dh -= dh2;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] - dh2[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] - dh2[i]));
 
                 dh = oldDh;
                 dh -= dhCPU;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] - dhCPU[i]);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] - dhCPU[i]));
 
                 dh = oldDh;
                 dh *= dh2;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] * dh2[i]));
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] * dh2[i]));
 
                 dh = oldDh;
                 dh *= dhCPU;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] * dhCPU[i]));
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] * dhCPU[i]));
 
                 dh = oldDh;
                 dh /= dh2;
                 for (index_t i = 0; i < size; ++i)
                     if (dh2[i] != data_t(0))
                         // due to floating point arithmetic less precision
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dh2[i]));
+                        REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] / dh2[i]));
 
                 dh = oldDh;
                 dh /= dhCPU;
                 for (index_t i = 0; i < size; ++i)
                     if (dhCPU[i] != data_t(0))
                         // due to floating point arithmetic less precision
-                        REQUIRE(checkSameNumbers(dh[i], oldDh[i] / dhCPU[i]));
+                        REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] / dhCPU[i]));
             }
 
             THEN("the element-wise binary scalar operations work as expected")
@@ -805,22 +855,22 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
                 dh += scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] + scalar);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] + scalar));
 
                 dh = oldDh;
                 dh -= scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] - scalar);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] - scalar));
 
                 dh = oldDh;
                 dh *= scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == oldDh[i] * scalar);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] * scalar));
 
                 dh = oldDh;
                 dh /= scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(checkSameNumbers(dh[i], oldDh[i] / scalar));
+                    REQUIRE_UNARY(checkApproxEq(dh[i], oldDh[i] / scalar));
             }
 
             THEN("the element-wise assignment of a scalar works as expected")
@@ -829,27 +879,21 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Testing the element-wise operations of Dat
 
                 dh = scalar;
                 for (index_t i = 0; i < size; ++i)
-                    REQUIRE(dh[i] == scalar);
+                    REQUIRE_UNARY(checkApproxEq(dh[i], scalar));
             }
         }
     }
 }
 
-#ifdef ELSA_CUDA_VECTOR
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandlerMap", "",
-                           (DataHandlerCPU, DataHandlerGPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#else
-TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandlerMap", "", (DataHandlerCPU),
-                           (float, double, std::complex<float>, std::complex<double>, index_t))
-#endif
+TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing referencing blocks", TestType,
+                          datahandlermap_blockref)
 {
     using data_t = typename TestType::value_type;
 
     GIVEN("some DataHandlerMap")
     {
         index_t size = 728;
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> dataVec(size);
+        Vector_t<data_t> dataVec(size);
         TestType realDh(dataVec);
         auto dhPtr = realDh.getBlock(0, size);
         auto& dh = *dhPtr;
@@ -863,10 +907,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandlerMap", "",
 
             THEN("returned data handler references the correct elements")
             {
-                REQUIRE(dhBlock->getSize() == size / 2);
+                REQUIRE_EQ(dhBlock->getSize(), size / 2);
 
                 for (index_t i = 0; i < size / 2; i++)
-                    REQUIRE(&(*dhBlock)[i] == &dh[i + size / 3]);
+                    REQUIRE_EQ(&(*dhBlock)[i], &dh[i + size / 3]);
             }
         }
     }
@@ -874,7 +918,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandlerMap", "",
     GIVEN("a const DataHandlerMap")
     {
         index_t size = 728;
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> dataVec(size);
+        Vector_t<data_t> dataVec(size);
         const TestType realDh(dataVec);
         auto dhPtr = realDh.getBlock(0, size);
         auto& dh = *dhPtr;
@@ -888,11 +932,33 @@ TEMPLATE_PRODUCT_TEST_CASE("Scenario: Referencing blocks of DataHandlerMap", "",
 
             THEN("returned data handler references the correct elements")
             {
-                REQUIRE(dhBlock->getSize() == size / 2);
+                REQUIRE_EQ(dhBlock->getSize(), size / 2);
 
                 for (index_t i = 0; i < size / 2; i++)
-                    REQUIRE(&(*dhBlock)[i] == &dh[i + size / 3]);
+                    REQUIRE_EQ(&(*dhBlock)[i], &dh[i + size / 3]);
             }
         }
     }
 }
+
+// "instantiate" the test templates for CPU types
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_construction, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_eqoperator, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_assign, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_clone, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_reduction, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_elemwise, CPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_blockref, CPUTypeTuple);
+
+#ifdef ELSA_CUDA_VECTOR
+// "instantiate" the test templates for GPU types
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_construction, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_eqoperator, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_assign, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_clone, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_reduction, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_elemwise, GPUTypeTuple);
+TEST_CASE_TEMPLATE_APPLY(datahandlermap_blockref, GPUTypeTuple);
+#endif
+
+TEST_SUITE_END();

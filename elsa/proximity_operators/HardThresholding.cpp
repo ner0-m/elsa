@@ -1,4 +1,6 @@
 #include "HardThresholding.h"
+#include "Error.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -14,7 +16,7 @@ namespace elsa
                                              DataContainer<data_t>& prox) const
     {
         if (v.getSize() != prox.getSize()) {
-            throw std::logic_error("HardThresholding: sizes of v and prox must match");
+            throw LogicError("HardThresholding: sizes of v and prox must match");
         }
 
         auto vIter = v.begin();
@@ -42,7 +44,7 @@ namespace elsa
             return false;
         }
 
-        auto otherDerived = dynamic_cast<const HardThresholding<data_t>*>(&other);
+        auto otherDerived = downcast_safe<HardThresholding<data_t>>(&other);
 
         return static_cast<bool>(otherDerived);
     }

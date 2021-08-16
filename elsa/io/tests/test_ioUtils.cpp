@@ -1,18 +1,21 @@
 /**
- * \file test_ioUtils.cpp
+ * @file test_ioUtils.cpp
  *
- * \brief Tests for the ioUtils
+ * @brief Tests for the ioUtils
  *
- * \author Tobias Lasser - initial code
+ * @author Tobias Lasser - initial code
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
 #include "ioUtils.h"
 #include "elsaDefines.h"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("testing the StringUtils")
+TEST_SUITE_BEGIN("io");
+
+TEST_CASE("ioUtils: testing the StringUtils")
 {
     GIVEN("a string with whitespace at beginning/end")
     {
@@ -25,7 +28,7 @@ SCENARIO("testing the StringUtils")
             THEN("the string is trimmed")
             {
                 std::string expectedTrimmedString("Test String");
-                REQUIRE(testString == expectedTrimmedString);
+                REQUIRE_EQ(testString, expectedTrimmedString);
             }
         }
     }
@@ -41,7 +44,7 @@ SCENARIO("testing the StringUtils")
             THEN("the string is lower case")
             {
                 std::string expectedLowerCaseString("abcdefghijklm");
-                REQUIRE(testString == expectedLowerCaseString);
+                REQUIRE_EQ(testString, expectedLowerCaseString);
             }
         }
 
@@ -52,13 +55,13 @@ SCENARIO("testing the StringUtils")
             THEN("the string is upper case")
             {
                 std::string expectedUpperCaseString("ABCDEFGHIJKLM");
-                REQUIRE(testString == expectedUpperCaseString);
+                REQUIRE_EQ(testString, expectedUpperCaseString);
             }
         }
     }
 }
 
-SCENARIO("testing the DataUtils")
+TEST_CASE("ioUtils: testing the DataUtils")
 {
     GIVEN("a data type")
     {
@@ -66,14 +69,14 @@ SCENARIO("testing the DataUtils")
         {
             THEN("the results is as expected")
             {
-                REQUIRE(DataUtils::getSizeOfDataType(DataUtils::DataType::INT8) == 1);
-                REQUIRE(DataUtils::getSizeOfDataType(DataUtils::DataType::UINT8) == 1);
-                REQUIRE(DataUtils::getSizeOfDataType(DataUtils::DataType::INT16) == 2);
-                REQUIRE(DataUtils::getSizeOfDataType(DataUtils::DataType::UINT16) == 2);
-                REQUIRE(DataUtils::getSizeOfDataType(DataUtils::DataType::INT32) == 4);
-                REQUIRE(DataUtils::getSizeOfDataType(DataUtils::DataType::UINT32) == 4);
-                REQUIRE(DataUtils::getSizeOfDataType(DataUtils::DataType::FLOAT32) == 4);
-                REQUIRE(DataUtils::getSizeOfDataType(DataUtils::DataType::FLOAT64) == 8);
+                REQUIRE_EQ(DataUtils::getSizeOfDataType(DataUtils::DataType::INT8), 1);
+                REQUIRE_EQ(DataUtils::getSizeOfDataType(DataUtils::DataType::UINT8), 1);
+                REQUIRE_EQ(DataUtils::getSizeOfDataType(DataUtils::DataType::INT16), 2);
+                REQUIRE_EQ(DataUtils::getSizeOfDataType(DataUtils::DataType::UINT16), 2);
+                REQUIRE_EQ(DataUtils::getSizeOfDataType(DataUtils::DataType::INT32), 4);
+                REQUIRE_EQ(DataUtils::getSizeOfDataType(DataUtils::DataType::UINT32), 4);
+                REQUIRE_EQ(DataUtils::getSizeOfDataType(DataUtils::DataType::FLOAT32), 4);
+                REQUIRE_EQ(DataUtils::getSizeOfDataType(DataUtils::DataType::FLOAT64), 8);
             }
         }
     }
@@ -90,8 +93,8 @@ SCENARIO("testing the DataUtils")
 
             THEN("the result is correct")
             {
-                REQUIRE(intNumber == 12345);
-                REQUIRE(floatNumber == 12.456f);
+                REQUIRE_EQ(intNumber, 12345);
+                REQUIRE_EQ(floatNumber, Approx(12.456f));
             }
         }
 
@@ -101,7 +104,7 @@ SCENARIO("testing the DataUtils")
 
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataUtils::parse<index_t>(testStringGarbage), std::runtime_error);
+                REQUIRE_THROWS_AS(DataUtils::parse<index_t>(testStringGarbage), Error);
             }
         }
     }
@@ -118,14 +121,14 @@ SCENARIO("testing the DataUtils")
 
             THEN("the result is correct")
             {
-                REQUIRE(intVector.size() == 3);
-                REQUIRE(intVector[0] == 1);
-                REQUIRE(intVector[1] == 2);
-                REQUIRE(intVector[2] == 3);
+                REQUIRE_EQ(intVector.size(), 3);
+                REQUIRE_EQ(intVector[0], 1);
+                REQUIRE_EQ(intVector[1], 2);
+                REQUIRE_EQ(intVector[2], 3);
 
-                REQUIRE(floatVector.size() == 2);
-                REQUIRE(floatVector[0] == 1.2f);
-                REQUIRE(floatVector[1] == 3.4f);
+                REQUIRE_EQ(floatVector.size(), 2);
+                REQUIRE_EQ(floatVector[0], Approx(1.2f));
+                REQUIRE_EQ(floatVector[1], Approx(3.4f));
             }
         }
 
@@ -135,9 +138,10 @@ SCENARIO("testing the DataUtils")
 
             THEN("an exception is thrown")
             {
-                REQUIRE_THROWS_AS(DataUtils::parseVector<index_t>(testStringGarbage),
-                                  std::runtime_error);
+                REQUIRE_THROWS_AS(DataUtils::parseVector<index_t>(testStringGarbage), Error);
             }
         }
     }
 }
+
+TEST_SUITE_END();

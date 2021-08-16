@@ -1,4 +1,6 @@
 #include "PartitionDescriptor.h"
+#include "Error.h"
+#include "TypeCasts.hpp"
 
 #include <unordered_map>
 #include <type_traits>
@@ -13,13 +15,13 @@ namespace elsa
           _blockOffsets(numberOfBlocks)
     {
         if (numberOfBlocks < 2)
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "PartitionDescriptor: number of blocks must be greater than one");
 
         index_t lastDimSize = _numberOfCoefficientsPerDimension[_numberOfDimensions - 1];
 
         if (numberOfBlocks > lastDimSize)
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "PartitionDescriptor: number of blocks too large for given descriptor");
 
         index_t rest = lastDimSize % numberOfBlocks;
@@ -48,16 +50,16 @@ namespace elsa
           _blockOffsets(slicesInBlock.size())
     {
         if (slicesInBlock.size() < 2)
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "PartitionDescriptor: number of blocks must be greater than one");
 
         if ((slicesInBlock.array() <= 0).any())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "PartitionDescriptor: non-positive number of coefficients not allowed");
 
         if (slicesInBlock.sum() != _numberOfCoefficientsPerDimension[_numberOfDimensions - 1])
-            throw std::invalid_argument("PartitionDescriptor: cumulative size of partitioned "
-                                        "descriptor does not match size of original descriptor");
+            throw InvalidArgumentError("PartitionDescriptor: cumulative size of partitioned "
+                                       "descriptor does not match size of original descriptor");
 
         std::unordered_map<index_t, index_t> sizeToIndex;
         _blockOffsets[0] = 0;
@@ -67,11 +69,11 @@ namespace elsa
 
             if (it != sizeToIndex.end()) {
                 _indexMap[i] = it->second;
-                auto index = std::make_unsigned_t<index_t>(it->second);
+                auto index = asSigned(it->second);
                 numCoeffs = _blockDescriptors[index]->getNumberOfCoefficients();
             } else {
                 sizeToIndex.insert({slicesInBlock[i], _blockDescriptors.size()});
-                _indexMap[i] = std::make_signed_t<long>(_blockDescriptors.size());
+                _indexMap[i] = asUnsigned(_blockDescriptors.size());
                 _blockDescriptors.push_back(generateDescriptorOfPartition(slicesInBlock[i]));
                 numCoeffs = _blockDescriptors.back()->getNumberOfCoefficients();
             }
@@ -93,16 +95,16 @@ namespace elsa
     const DataDescriptor& PartitionDescriptor::getDescriptorOfBlock(index_t i) const
     {
         if (i < 0 || i >= getNumberOfBlocks())
-            throw std::invalid_argument("BlockDescriptor: index i is out of bounds");
+            throw InvalidArgumentError("BlockDescriptor: index i is out of bounds");
 
-        auto index = std::make_unsigned_t<long>(_indexMap[i]);
+        auto index = asUnsigned(_indexMap[i]);
         return *_blockDescriptors[index];
     }
 
     index_t PartitionDescriptor::getOffsetOfBlock(index_t i) const
     {
         if (i < 0 || i >= getNumberOfBlocks())
-            throw std::invalid_argument("BlockDescriptor: index i is out of bounds");
+            throw InvalidArgumentError("BlockDescriptor: index i is out of bounds");
 
         return _blockOffsets[i];
     }

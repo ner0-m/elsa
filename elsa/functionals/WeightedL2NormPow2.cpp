@@ -1,5 +1,6 @@
 #include "WeightedL2NormPow2.h"
 #include "LinearOperator.h"
+#include "TypeCasts.hpp"
 
 #include <stdexcept>
 
@@ -21,7 +22,7 @@ namespace elsa
         // sanity check
         if (residual.getRangeDescriptor().getNumberOfCoefficients()
             != weightingOp.getDomainDescriptor().getNumberOfCoefficients())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "WeightedL2NormPow2: sizes of residual and weighting operator do not match");
     }
 
@@ -57,8 +58,9 @@ namespace elsa
     WeightedL2NormPow2<data_t>* WeightedL2NormPow2<data_t>::cloneImpl() const
     {
         // this ugly cast has to go away at some point..
-        auto* scaling = dynamic_cast<const Scaling<data_t>*>(_weightingOp.get());
-        return new WeightedL2NormPow2(this->getResidual(), *scaling);
+        // Still not nice, but still safe as _weightingOp is allways of type Scaling
+        const auto& scaling = downcast<Scaling<data_t>>(*_weightingOp);
+        return new WeightedL2NormPow2(this->getResidual(), scaling);
     }
 
     template <typename data_t>
@@ -67,7 +69,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherWL2 = dynamic_cast<const WeightedL2NormPow2*>(&other);
+        auto otherWL2 = downcast_safe<WeightedL2NormPow2>(&other);
         if (!otherWL2)
             return false;
 

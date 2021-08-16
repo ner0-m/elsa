@@ -10,7 +10,7 @@ import os
 
 class PyelsaTest(unittest.TestCase):
     def assert_same_shape(
-        self, arr: np.array, dc: elsa.DataContainer, fail_msg: str = None
+            self, arr: np.array, dc: elsa.DataContainer, fail_msg: str = None
     ):
         "Assert whether arr and dc have the same shape"
 
@@ -189,7 +189,7 @@ class PyelsaTest(unittest.TestCase):
 
         # generate circular trajectory
         sinoDesc = elsa.CircleTrajectoryGenerator.createTrajectory(
-            numAngles, volDesc, arc, size * 100, size
+            numAngles, volDesc, arc, size * 100.0, size
         )
 
         # setup operator for 2d X-ray transform

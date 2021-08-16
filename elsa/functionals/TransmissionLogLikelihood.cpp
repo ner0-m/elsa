@@ -1,8 +1,9 @@
 #include "TransmissionLogLikelihood.h"
 #include "Scaling.h"
+#include "Error.h"
+#include "TypeCasts.hpp"
 
 #include <cmath>
-#include <stdexcept>
 
 namespace elsa
 {
@@ -19,7 +20,7 @@ namespace elsa
         // sanity check
         if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != b.getDataDescriptor()
             || domainDescriptor != r.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "TransmissionLogLikelihood: descriptor and y/b/r not matching in size.");
     }
 
@@ -33,7 +34,7 @@ namespace elsa
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != b.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "TransmissionLogLikelihood: descriptor and y/b not matching in size.");
     }
 
@@ -51,7 +52,7 @@ namespace elsa
         if (residual.getRangeDescriptor() != y.getDataDescriptor()
             || residual.getRangeDescriptor() != b.getDataDescriptor()
             || residual.getRangeDescriptor() != r.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "TransmissionLogLikelihood: residual and y/b/r not matching in size.");
     }
 
@@ -66,7 +67,7 @@ namespace elsa
         // sanity check
         if (residual.getRangeDescriptor() != y.getDataDescriptor()
             || residual.getRangeDescriptor() != b.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "TransmissionLogLikelihood: residual and y/b not matching in size.");
     }
 
@@ -132,7 +133,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherTLL = dynamic_cast<const TransmissionLogLikelihood*>(&other);
+        auto otherTLL = downcast_safe<TransmissionLogLikelihood>(&other);
         if (!otherTLL)
             return false;
 

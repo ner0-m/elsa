@@ -1,3 +1,16 @@
+# Create binaries for benchmarks in bin/benchmarks
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/benchmarks) 
+ 
+# add Catch2 only here to still use it in benchmarks 
+CPMAddPackage(
+     NAME Catch2
+     GITHUB_REPOSITORY catchorg/Catch2
+     VERSION 2.10.1 # <-- Current, update to: 2.13.1
+)
+
+# add the CMake modules for automatic test discovery
+set(CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/contrib" ${CMAKE_MODULE_PATH})
+ 
 # enable ctest and Catch test discovery
 include(CTest)
 include(Catch)

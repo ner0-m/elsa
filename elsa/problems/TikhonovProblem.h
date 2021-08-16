@@ -5,11 +5,11 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a Tikhonov regularized weighted least squares problem
+     * @brief Class representing a Tikhonov regularized weighted least squares problem
      *
-     * \author Nikola Dinev
+     * @author Nikola Dinev
      *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a Tikhonov regularized weighted least squares problem.
      * Some common examples are:
@@ -32,20 +32,20 @@ namespace elsa
     {
     public:
         /**
-         * \brief Constructor for a Tikhonov problem
+         * @brief Constructor for a Tikhonov problem
          *
-         * \param[in] wlsProblem a wls problem specifying the data term and the initial solution
-         * \param[in] regTerms the regularization terms, all should be of type L2NormPow2 or
+         * @param[in] wlsProblem a wls problem specifying the data term and the initial solution
+         * @param[in] regTerms the regularization terms, all should be of type L2NormPow2 or
          * WeightedL2NormPow2
          */
         TikhonovProblem(const WLSProblem<data_t>& wlsProblem,
                         const std::vector<RegularizationTerm<data_t>>& regTerms);
 
         /**
-         * \brief Constructor for a Tikhonov problem
+         * @brief Constructor for a Tikhonov problem
          *
-         * \param[in] wlsProblem a wls problem specifying the data term and the initial solution
-         * \param[in] regTerm the regularization term, should be of type L2NormPow2 or
+         * @param[in] wlsProblem a wls problem specifying the data term and the initial solution
+         * @param[in] regTerm the regularization term, should be of type L2NormPow2 or
          * WeightedL2NormPow2
          */
         TikhonovProblem(const WLSProblem<data_t>& wlsProblem,

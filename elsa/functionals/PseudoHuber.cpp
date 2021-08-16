@@ -1,5 +1,6 @@
 #include "PseudoHuber.h"
 #include "Scaling.h"
+#include "TypeCasts.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -12,7 +13,7 @@ namespace elsa
     {
         // sanity check delta
         if (delta <= static_cast<real_t>(0.0))
-            throw std::invalid_argument("PseudoHuber: delta has to be positive.");
+            throw InvalidArgumentError("PseudoHuber: delta has to be positive.");
     }
 
     template <typename data_t>
@@ -21,7 +22,7 @@ namespace elsa
     {
         // sanity check delta
         if (delta <= static_cast<real_t>(0.0))
-            throw std::invalid_argument("PseudoHuber: delta has to be positive.");
+            throw InvalidArgumentError("PseudoHuber: delta has to be positive.");
     }
 
     template <typename data_t>
@@ -77,7 +78,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherPHuber = dynamic_cast<const PseudoHuber*>(&other);
+        auto otherPHuber = downcast_safe<PseudoHuber>(&other);
         if (!otherPHuber)
             return false;
 

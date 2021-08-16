@@ -1,5 +1,6 @@
 #include "EmissionLogLikelihood.h"
 #include "Scaling.h"
+#include "TypeCasts.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -16,7 +17,7 @@ namespace elsa
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != r.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EmissionLogLikelihood: descriptor and y/r not matching in size.");
     }
 
@@ -27,7 +28,7 @@ namespace elsa
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EmissionLogLikelihood: descriptor and y not matching in size.");
     }
 
@@ -42,7 +43,7 @@ namespace elsa
         // sanity check
         if (residual.getRangeDescriptor() != y.getDataDescriptor()
             || residual.getRangeDescriptor() != r.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EmissionLogLikelihood: residual and y/r not matching in size.");
     }
 
@@ -53,7 +54,7 @@ namespace elsa
     {
         // sanity check
         if (residual.getRangeDescriptor() != y.getDataDescriptor())
-            throw std::invalid_argument(
+            throw InvalidArgumentError(
                 "EmissionLogLikelihood: residual and y not matching in size.");
     }
 
@@ -116,7 +117,7 @@ namespace elsa
         if (!Functional<data_t>::isEqual(other))
             return false;
 
-        auto otherELL = dynamic_cast<const EmissionLogLikelihood*>(&other);
+        auto otherELL = downcast_safe<EmissionLogLikelihood>(&other);
         if (!otherELL)
             return false;
 

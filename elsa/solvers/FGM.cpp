@@ -1,6 +1,6 @@
-#include <iostream>
 #include "FGM.h"
 #include "Logger.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -8,6 +8,22 @@ namespace elsa
     FGM<data_t>::FGM(const Problem<data_t>& problem, data_t epsilon)
         : Solver<data_t>(problem), _epsilon{epsilon}
     {
+    }
+
+    template <typename data_t>
+    FGM<data_t>::FGM(const Problem<data_t>& problem,
+                     const LinearOperator<data_t>& preconditionerInverse, data_t epsilon)
+        : Solver<data_t>(problem),
+          _epsilon{epsilon},
+          _preconditionerInverse{preconditionerInverse.clone()}
+    {
+        // check that preconditioner is compatible with problem
+        if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
+                != _problem->getCurrentSolution().getSize()
+            || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
+                   != _problem->getCurrentSolution().getSize()) {
+            throw InvalidArgumentError("FGM: incorrect size of preconditioner");
+        }
     }
 
     template <typename data_t>
@@ -29,6 +45,9 @@ namespace elsa
             auto& x = getCurrentSolution();
 
             auto gradient = _problem->getGradient();
+
+            if (_preconditionerInverse)
+                gradient = _preconditionerInverse->apply(gradient);
 
             DataContainer<data_t> y = x - gradient / lipschitz;
             const auto theta = (static_cast<data_t>(1.0)
@@ -55,6 +74,9 @@ namespace elsa
     template <typename data_t>
     FGM<data_t>* FGM<data_t>::cloneImpl() const
     {
+        if (_preconditionerInverse)
+            return new FGM(*_problem, *_preconditionerInverse, _epsilon);
+
         return new FGM(*_problem, _epsilon);
     }
 
@@ -64,12 +86,20 @@ namespace elsa
         if (!Solver<data_t>::isEqual(other))
             return false;
 
-        auto otherFGM = dynamic_cast<const FGM*>(&other);
+        auto otherFGM = downcast_safe<FGM>(&other);
         if (!otherFGM)
             return false;
 
         if (_epsilon != otherFGM->_epsilon)
             return false;
+
+        if ((_preconditionerInverse && !otherFGM->_preconditionerInverse)
+            || (!_preconditionerInverse && otherFGM->_preconditionerInverse))
+            return false;
+
+        if (_preconditionerInverse && otherFGM->_preconditionerInverse)
+            if (*_preconditionerInverse != *otherFGM->_preconditionerInverse)
+                return false;
 
         return true;
     }

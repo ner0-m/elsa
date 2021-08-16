@@ -8,19 +8,21 @@
 namespace elsa
 {
     /**
-     * \brief Class representing an Iterative Shrinkage-Thresholding Algorithm solver
-     *
-     * \tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @brief Class representing an Iterative Shrinkage-Thresholding Algorithm solver
      *
      * This class represents an ISTA solver i.e.
      *
-     *  - \f$ x_{k+1} = shrinkageOperator(x_k - \mu * A^T (Ax_k - b)) \f$
+     *  - @f$ x_{k+1} = shrinkageOperator(x_k - \mu * A^T (Ax_k - b)) @f$
      *
-     * in which shrinkageOperator is the SoftThresholding operator defined as \f$
-     * shrinkageOperator(z_k) = sign(z_k)·(|z_k| - \mu*\lambda)_+\f$. Each iteration of ISTA
+     * in which shrinkageOperator is the SoftThresholding operator defined as @f$
+     * shrinkageOperator(z_{k}) = sign(z_{k})·(|z_{k}| - \mu*\lambda)_+ @f$. Each iteration of ISTA
      * involves a gradient descent update followed by a shrinkage/soft-threshold step:
      *
-     * ISTA has a worst-case complexity result of \f$ O(1/k) \f$.
+     * ISTA has a worst-case complexity result of @f$ O(1/k) @f$.
+     *
+     * @author Andi Braimllari - initial code
+     *
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * References:
      * http://www.cs.cmu.edu/afs/cs/Web/People/airg/readings/2012_02_21_a_fast_iterative_shrinkage-thresholding.pdf
@@ -30,13 +32,16 @@ namespace elsa
     class ISTA : public Solver<data_t>
     {
     public:
+        /// Scalar alias
+        using Scalar = typename Solver<data_t>::Scalar;
+
         /**
-         * \brief Constructor for ISTA, accepting a problem, a fixed step size and optionally, a
+         * @brief Constructor for ISTA, accepting a problem, a fixed step size and optionally, a
          * value for epsilon
          *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] mu the fixed step size to be used while solving
-         * \param[in] epsilon affects the stopping condition
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] mu the fixed step size to be used while solving
+         * @param[in] epsilon affects the stopping condition
          *
          * Conversion to a LASSOProblem will be attempted. Throws if conversion fails. See
          * LASSOProblem for further details.
@@ -45,13 +50,14 @@ namespace elsa
              data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /**
-         * \brief Constructor for ISTA, accepting a problem and optionally, a value for
+         * @brief Constructor for ISTA, accepting a problem and optionally, a value for
          * epsilon
          *
-         * \param[in] problem the problem that is supposed to be solved
-         * \param[in] epsilon affects the stopping condition
+         * @param[in] problem the problem that is supposed to be solved
+         * @param[in] epsilon affects the stopping condition
          *
-         * The step size is set to 1 / Lipschitz Constant of the WLSProblem.
+         * The step size will be computed as @f$ 1 \over L @f$ with @f$ L @f$ being the Lipschitz
+         * constant of the WLSProblem.
          *
          * Conversion to a LASSOProblem will be attempted. Throws if conversion fails. See
          * LASSOProblem for further details.
@@ -65,24 +71,21 @@ namespace elsa
         /// default destructor
         ~ISTA() override = default;
 
-    protected:
-        /// the step size
-        data_t _mu;
-
         /// lift the base class method getCurrentSolution
         using Solver<data_t>::getCurrentSolution;
 
+    protected:
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;
 
         /**
-         * \brief Solve the optimization problem, i.e. apply iterations number of iterations of
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * ISTA
          *
-         * \param[in] iterations number of iterations to execute (the default 0 value executes
+         * @param[in] iterations number of iterations to execute (the default 0 value executes
          * _defaultIterations of iterations)
          *
-         * \returns a reference to the current solution
+         * @returns a reference to the current solution
          */
         auto solveImpl(index_t iterations) -> DataContainer<data_t>& override;
 
@@ -99,6 +102,9 @@ namespace elsa
 
         /// the default number of iterations
         const index_t _defaultIterations{100};
+
+        /// the step size
+        data_t _mu;
 
         /// variable affecting the stopping condition
         data_t _epsilon;

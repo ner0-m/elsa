@@ -1,8 +1,9 @@
 #include "JosephsMethod.h"
 #include "Timer.h"
 #include "TraverseAABBJosephsMethod.h"
+#include "Error.h"
+#include "TypeCasts.hpp"
 
-#include <stdexcept>
 #include <type_traits>
 
 namespace elsa
@@ -19,15 +20,15 @@ namespace elsa
     {
         auto dim = _domainDescriptor->getNumberOfDimensions();
         if (dim != 2 && dim != 3) {
-            throw std::invalid_argument("JosephsMethod:only supporting 2d/3d operations");
+            throw InvalidArgumentError("JosephsMethod:only supporting 2d/3d operations");
         }
 
         if (dim != _rangeDescriptor->getNumberOfDimensions()) {
-            throw std::invalid_argument("JosephsMethod: domain and range dimension need to match");
+            throw InvalidArgumentError("JosephsMethod: domain and range dimension need to match");
         }
 
         if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
-            throw std::invalid_argument("JosephsMethod: geometry list was empty");
+            throw InvalidArgumentError("JosephsMethod: geometry list was empty");
         }
     }
 
@@ -35,7 +36,7 @@ namespace elsa
     void JosephsMethod<data_t>::applyImpl(const DataContainer<data_t>& x,
                                           DataContainer<data_t>& Ax) const
     {
-        Timer<> timeguard("JosephsMethod", "apply");
+        Timer timeguard("JosephsMethod", "apply");
         traverseVolume<false>(x, Ax);
     }
 
@@ -43,7 +44,7 @@ namespace elsa
     void JosephsMethod<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
                                                  DataContainer<data_t>& Aty) const
     {
-        Timer<> timeguard("JosephsMethod", "applyAdjoint");
+        Timer timeguard("JosephsMethod", "applyAdjoint");
         traverseVolume<true>(y, Aty);
     }
 
@@ -59,7 +60,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherJM = dynamic_cast<const JosephsMethod*>(&other);
+        auto otherJM = downcast_safe<JosephsMethod>(&other);
         if (!otherJM)
             return false;
 

@@ -3,6 +3,7 @@
 #include "elsaDefines.h"
 #include "DataHandler.h"
 #include "Quickvec.h"
+#include "Badge.hpp"
 
 #include <Eigen/Core>
 
@@ -15,14 +16,14 @@ namespace elsa
     class DataHandlerGPU;
 
     /**
-     * \brief Class referencing a vector stored in GPU main memory, or a part thereof
+     * @brief Class referencing a vector stored in GPU main memory, or a part thereof
      *
-     * \tparam data_t data type of vector
+     * @tparam data_t data type of vector
      *
-     * \author David Frank - main code
-     * \author Tobias Lasser - modularization, fixes
-     * \author Nikola Dinev - integration with the copy-on-write mechanism
-     * \author Jens Petit - adaption of CPU version for GPU
+     * @author David Frank - main code
+     * @author Tobias Lasser - modularization, fixes
+     * @author Nikola Dinev - integration with the copy-on-write mechanism
+     * @author Jens Petit - adaption of CPU version for GPU
      *
      * This class does not own or manage its own memory. It is bound to a DataHandlerGPU (the data
      * owner) at its creation, and serves as a reference to a sequential block of memory owned by
@@ -54,6 +55,30 @@ namespace elsa
         friend DataContainer<data_t>;
 
     public:
+        /**
+         * @brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
+         * DataHandlerGPU. Only accessible by DataHandlerGPU
+         *
+         * @param[in] badge Badge that it can only be called
+         * @param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
+         * @param[in] data pointer to start of segment
+         * @param[in] n number of elements in block
+         */
+        DataHandlerMapGPU(Badge<DataHandlerGPU<data_t>> badge, DataHandlerGPU<data_t>* dataOwner,
+                          data_t* data, index_t n);
+
+        /**
+         * @brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
+         * DataHandlerGPU. Only accessible by DataHandlerMapGPU.
+         *
+         * @param[in] badge Badge that it can only be called
+         * @param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
+         * @param[in] data pointer to start of segment
+         * @param[in] n number of elements in block
+         */
+        DataHandlerMapGPU(Badge<DataHandlerMapGPU<data_t>> badge, DataHandlerGPU<data_t>* dataOwner,
+                          data_t* data, index_t n);
+
         /// copy constructor
         DataHandlerMapGPU(const DataHandlerMapGPU<data_t>& other);
 
@@ -77,6 +102,12 @@ namespace elsa
 
         /// return the squared l2 norm of the data vector (dot product with itself)
         GetFloatingPointType_t<data_t> squaredL2Norm() const override;
+
+        /// return the l2 norm of the data vector (square root of the dot product with itself)
+        GetFloatingPointType_t<data_t> l2Norm() const override;
+
+        /// return the l0 pseudo-norm of the data vector (number of non-zero values)
+        index_t l0PseudoNorm() const override;
 
         /// return the l1 norm of the data vector (sum of absolute values)
         GetFloatingPointType_t<data_t> l1Norm() const override;
@@ -160,12 +191,13 @@ namespace elsa
 
     private:
         /**
-         * \brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
-         * DataHandlerGPU
+         * @brief Construct a DataHandlerMapGPU referencing a sequential block of data owned by
+         * DataHandlerGPU. Private implementation, called by multiple different callers
+         * which are granted access via a `Badge`
          *
-         * \param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
-         * \param[in] data pointer to start of segment
-         * \param[in] n number of elements in block
+         * @param[in] dataOwner pointer to the DataHandlerGPU owning the data vector
+         * @param[in] data pointer to start of segment
+         * @param[in] n number of elements in block
          */
         DataHandlerMapGPU(DataHandlerGPU<data_t>* dataOwner, data_t* data, index_t n);
     };

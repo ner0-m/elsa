@@ -14,7 +14,7 @@ namespace elsa
         // open the meta file
         std::ifstream metaFile(filename);
         if (!metaFile.good())
-            throw std::runtime_error("MHD::read: cannot read from '" + filename + "'");
+            throw Error("MHD::read: cannot read from '" + filename + "'");
 
         // get the meta data from the meta file
         auto properties = readHeader(metaFile);
@@ -23,7 +23,7 @@ namespace elsa
         std::string dataFilename = FileSystemUtils::getAbsolutePath(dataPath, filename);
         std::ifstream dataFile(dataFilename, std::ios::binary | std::ios::in);
         if (!dataFile.good())
-            throw std::runtime_error("MHD::read: can not read from '" + dataPath + "'");
+            throw Error("MHD::read: can not read from '" + dataPath + "'");
 
         // read in the data
         DataContainer<data_t> dataContainer(*descriptor);
@@ -35,7 +35,7 @@ namespace elsa
         else if (dataType == DataUtils::DataType::FLOAT64)
             DataUtils::parseRawData<double, data_t>(dataFile, dataContainer);
         else
-            throw std::logic_error("MHD::read: invalid/unsupported data type");
+            throw LogicError("MHD::read: invalid/unsupported data type");
 
         return dataContainer;
     }
@@ -50,7 +50,7 @@ namespace elsa
         // open the meta file
         std::ofstream metaFile(metaFilename);
         if (!metaFile.good())
-            throw std::runtime_error("MHD::write: cannot write to '" + metaFilename + "'");
+            throw Error("MHD::write: cannot write to '" + metaFilename + "'");
 
         // output the header to the meta file
         writeHeader(metaFile, data, rawFilename);
@@ -58,7 +58,7 @@ namespace elsa
         // open the raw file
         std::ofstream rawFile(rawFilename, std::ios::binary);
         if (!rawFile.good())
-            throw std::runtime_error("MHD::write: cannot write to '" + rawFilename + "'");
+            throw Error("MHD::write: cannot write to '" + rawFilename + "'");
 
         // output the raw data
         // TODO: this would be more efficient if we had a data pointer...
@@ -83,8 +83,7 @@ namespace elsa
             // split the header line into name and value
             size_t delim = metaLine.find('=');
             if (delim == std::string::npos)
-                throw std::runtime_error(
-                    "MHD::readHeader: found non-empty line without name/value pair");
+                throw Error("MHD::readHeader: found non-empty line without name/value pair");
 
             std::string name = metaLine.substr(0, delim);
             StringUtils::trim(name);
@@ -107,7 +106,7 @@ namespace elsa
         if (nDimsIt != properties.end())
             nDims = DataUtils::parse<index_t>(nDimsIt->second);
         else
-            throw std::runtime_error("MHD::parseHeader: tag 'ndims' not found");
+            throw Error("MHD::parseHeader: tag 'ndims' not found");
 
         // check for a byte order tag, but fall back to the default value
         auto byteOrderIt = properties.find("elementbyteordermsb");
@@ -116,8 +115,7 @@ namespace elsa
             StringUtils::toLower(byteOrderValue);
 
             if (byteOrderValue != "false" && byteOrderValue != "no")
-                throw std::runtime_error(
-                    "MHD::parseHeader: only supporting little endian byte order");
+                throw Error("MHD::parseHeader: only supporting little endian byte order");
         }
 
         // check for the 'element type' value
@@ -140,10 +138,9 @@ namespace elsa
             else if (elementTypeValue == "MET_DOUBLE")
                 dataType = DataUtils::DataType::FLOAT64;
             else
-                throw std::runtime_error(
-                    "MHD::parseHeader: tag 'element type' of unsupported value");
+                throw Error("MHD::parseHeader: tag 'element type' of unsupported value");
         } else
-            throw std::runtime_error("MHD::parseHeader: tag 'element type' not found");
+            throw Error("MHD::parseHeader: tag 'element type' not found");
 
         // extract the data path
         std::string rawDataPath;
@@ -151,7 +148,7 @@ namespace elsa
         if (elementDataFileIt != properties.end())
             rawDataPath = elementDataFileIt->second;
         else
-            throw std::runtime_error("MHD::parseHeader: tag 'element data file' not found");
+            throw Error("MHD::parseHeader: tag 'element data file' not found");
 
         // parse the extents
         std::vector<index_t> dimSizeVec;
@@ -159,9 +156,9 @@ namespace elsa
         if (dimSizeIt != properties.end()) {
             dimSizeVec = DataUtils::parseVector<index_t>(dimSizeIt->second);
             if (static_cast<index_t>(dimSizeVec.size()) != nDims)
-                throw std::runtime_error("MHD::parseHeader: dimension size mismatch");
+                throw Error("MHD::parseHeader: dimension size mismatch");
         } else
-            throw std::runtime_error("MHD::parseHeader: tag 'dim size' not found");
+            throw Error("MHD::parseHeader: tag 'dim size' not found");
 
         // check for spacing
         std::vector<real_t> dimSpacingVec;
@@ -169,7 +166,7 @@ namespace elsa
         if (dimSpacingIt != properties.end()) {
             dimSpacingVec = DataUtils::parseVector<real_t>(dimSpacingIt->second);
             if (static_cast<index_t>(dimSpacingVec.size()) != nDims)
-                throw std::runtime_error("MHD::parseHeader: spacing size mismatch");
+                throw Error("MHD::parseHeader: spacing size mismatch");
         }
 
         // convert size
@@ -214,7 +211,7 @@ namespace elsa
     template <typename data_t>
     std::string MHD::getDataTypeName([[maybe_unused]] const DataContainer<data_t>& data)
     {
-        throw std::invalid_argument("MHD::getDataTypeName: invalid/unsupported data type");
+        throw InvalidArgumentError("MHD::getDataTypeName: invalid/unsupported data type");
     }
 
     template <>

@@ -1,13 +1,14 @@
 /**
- * \file test_Problem.cpp
+ * @file test_Problem.cpp
  *
- * \brief Tests for the Problem class
+ * @brief Tests for the Problem class
  *
- * \author David Frank - initial code
- * \author Tobias Lasser - rewrite
+ * @author David Frank - initial code
+ * @author Tobias Lasser - rewrite
  */
 
-#include <catch2/catch.hpp>
+#include "doctest/doctest.h"
+
 #include <iostream>
 #include <Logger.h>
 #include "Problem.h"
@@ -16,10 +17,15 @@
 #include "LinearResidual.h"
 #include "L2NormPow2.h"
 #include "VolumeDescriptor.h"
+#include "testHelpers.h"
+#include "TypeCasts.hpp"
 
 using namespace elsa;
+using namespace doctest;
 
-SCENARIO("Testing Problem without regularization")
+TEST_SUITE_BEGIN("problems");
+
+TEST_CASE("Problem: Testing without regularization")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);
@@ -50,25 +56,25 @@ SCENARIO("Testing Problem without regularization")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcZero);
+                REQUIRE_EQ(prob.getCurrentSolution(), dcZero);
 
-                REQUIRE(prob.evaluate() == Approx(0.5 * dataVec.squaredNorm()));
-                REQUIRE(prob.getGradient() == -1.0f * dcScaling * dcData);
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(), 0.5f * dataVec.squaredNorm()));
+                REQUIRE_UNARY(checkApproxEq(prob.getGradient(), -1.0f * dcScaling * dcData));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE(result[i] == Approx(scaling[i] * scaling[i] * dataVec[i]));
+                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f).margin(0.05));
+                REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0f));
             }
         }
 
@@ -84,37 +90,37 @@ SCENARIO("Testing Problem without regularization")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == dcX0);
+                REQUIRE_EQ(prob.getCurrentSolution(), dcX0);
 
-                REQUIRE(prob.evaluate()
-                        == Approx(0.5
-                                  * (scaling.array() * x0Vec.array() - dataVec.array())
-                                        .matrix()
-                                        .squaredNorm()));
+                REQUIRE_UNARY(checkApproxEq(
+                    prob.evaluate(), 0.5f
+                                         * (scaling.array() * x0Vec.array() - dataVec.array())
+                                               .matrix()
+                                               .squaredNorm()));
 
                 DataContainer gradientDirect = dcScaling * (dcScaling * dcX0 - dcData);
                 auto gradient = prob.getGradient();
                 for (index_t i = 0; i < gradientDirect.getSize(); ++i)
-                    REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE(result[i] == Approx(scaling[i] * scaling[i] * dataVec[i]));
+                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f).margin(0.05));
+                REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0f));
             }
         }
     }
 }
 
-SCENARIO("Testing Problem with one regularization term")
+TEST_CASE("Problem: Testing with one regularization term")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);
@@ -151,26 +157,26 @@ SCENARIO("Testing Problem with one regularization term")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcZero);
+                REQUIRE_UNARY(checkApproxEq(prob.getCurrentSolution(), dcZero));
 
-                REQUIRE(prob.evaluate() == Approx(0.5 * dataVec.squaredNorm()));
-                REQUIRE(prob.getGradient() == -1.0f * dcScaling * dcData);
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(), 0.5f * dataVec.squaredNorm()));
+                REQUIRE_UNARY(checkApproxEq(prob.getGradient(), -1.0f * dcScaling * dcData));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE(result[i]
-                            == Approx(scaling[i] * scaling[i] * dataVec[i] + weight * dataVec[i]));
+                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
+                                                               + weight * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f + weight).margin(0.05));
+                REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0f + weight));
             }
         }
 
@@ -186,38 +192,39 @@ SCENARIO("Testing Problem with one regularization term")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == dcX0);
+                REQUIRE_EQ(prob.getCurrentSolution(), dcX0);
 
                 auto valueData =
-                    0.5
+                    0.5f
                     * (scaling.array() * x0Vec.array() - dataVec.array()).matrix().squaredNorm();
-                REQUIRE(prob.evaluate() == Approx(valueData + weight * 0.5 * x0Vec.squaredNorm()));
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
+                                            valueData + weight * 0.5f * x0Vec.squaredNorm()));
 
                 DataContainer gradientDirect =
                     dcScaling * (dcScaling * dcX0 - dcData) + weight * dcX0;
                 auto gradient = prob.getGradient();
                 for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE(gradient[i] == Approx(gradientDirect[i]));
+                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE(result[i]
-                            == Approx(scaling[i] * scaling[i] * dataVec[i] + weight * dataVec[i]));
+                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
+                                                               + weight * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100) == Approx(1.0f + weight).margin(0.05));
+                REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0f + weight));
             }
         }
     }
 }
 
-SCENARIO("Testing Problem with several regularization terms")
+TEST_CASE("Problem: Testing with several regularization terms")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::WARN);
@@ -259,28 +266,28 @@ SCENARIO("Testing Problem with several regularization terms")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
                 DataContainer dcZero(dd);
                 dcZero = 0;
-                REQUIRE(prob.getCurrentSolution() == dcZero);
+                REQUIRE_UNARY(checkApproxEq(prob.getCurrentSolution(), dcZero));
 
-                REQUIRE(prob.evaluate() == Approx(0.5 * dataVec.squaredNorm()));
-                REQUIRE(prob.getGradient() == -1.0f * dcScaling * dcData);
+                REQUIRE_UNARY(checkApproxEq(prob.evaluate(), 0.5f * dataVec.squaredNorm()));
+                REQUIRE_UNARY(checkApproxEq(prob.getGradient(), -1.0f * dcScaling * dcData));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE(result[i]
-                            == Approx(scaling[i] * scaling[i] * dataVec[i] + weight1 * dataVec[i]
-                                      + weight2 * dataVec[i]));
+                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
+                                                               + weight1 * dataVec[i]
+                                                               + weight2 * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100)
-                        == Approx(1.0f + weight1 + weight2).margin(0.05));
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.getLipschitzConstant(100), 1.0f + weight1 + weight2));
             }
         }
 
@@ -296,37 +303,39 @@ SCENARIO("Testing Problem with several regularization terms")
             {
                 auto probClone = prob.clone();
 
-                REQUIRE(probClone.get() != &prob);
-                REQUIRE(*probClone == prob);
+                REQUIRE_NE(probClone.get(), &prob);
+                REQUIRE_EQ(*probClone, prob);
             }
 
             THEN("the problem behaves as expected")
             {
-                REQUIRE(prob.getCurrentSolution() == dcX0);
+                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcX0));
 
                 auto valueData =
-                    0.5
+                    0.5f
                     * (scaling.array() * x0Vec.array() - dataVec.array()).matrix().squaredNorm();
-                REQUIRE(prob.evaluate()
-                        == Approx(valueData + weight1 * 0.5 * x0Vec.squaredNorm()
-                                  + weight2 * 0.5 * x0Vec.squaredNorm()));
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.evaluate(), valueData + weight1 * 0.5f * x0Vec.squaredNorm()
+                                                       + weight2 * 0.5f * x0Vec.squaredNorm()));
 
                 auto gradient = prob.getGradient();
                 DataContainer gradientDirect =
                     dcScaling * (dcScaling * dcX0 - dcData) + weight1 * dcX0 + weight2 * dcX0;
                 for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE(gradient[i] == Approx(gradientDirect[i]).margin(0.00001));
+                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
 
                 auto hessian = prob.getHessian();
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE(result[i]
-                            == Approx(scaling[i] * scaling[i] * dataVec[i] + weight1 * dataVec[i]
-                                      + weight2 * dataVec[i]));
+                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
+                                                               + weight1 * dataVec[i]
+                                                               + weight2 * dataVec[i]));
 
-                REQUIRE(prob.getLipschitzConstant(100)
-                        == Approx(1.0f + weight1 + weight2).margin(0.05));
+                REQUIRE_UNARY(
+                    checkApproxEq(prob.getLipschitzConstant(100), 1.0f + weight1 + weight2));
             }
         }
     }
 }
+
+TEST_SUITE_END();

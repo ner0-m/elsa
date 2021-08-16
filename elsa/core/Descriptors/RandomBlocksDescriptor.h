@@ -7,13 +7,13 @@
 namespace elsa
 {
     /**
-     * \brief Class representing a block descriptor whose different blocks may have completely
+     * @brief Class representing a block descriptor whose different blocks may have completely
      * different descriptors.
      *
-     * \author Matthias Wieczorek - initial code
-     * \author David Frank - rewrite
-     * \author Nikola Dinev - various enhancements
-     * \author Tobias Lasser - rewrite, modularization, modernization
+     * @author Matthias Wieczorek - initial code
+     * @author David Frank - rewrite
+     * @author Nikola Dinev - various enhancements
+     * @author Tobias Lasser - rewrite, modularization, modernization
      *
      * There are no restrictions whatsoever imposed on the descriptors of different blocks.
      * Different blocks may even have different number of dimensions.
@@ -26,21 +26,21 @@ namespace elsa
     {
     public:
         /**
-         * \brief Construct a RandomBlocksDescriptor from a list of descriptors
+         * @brief Construct a RandomBlocksDescriptor from a list of descriptors
          *
-         * \param[in] blockDescriptors the list of descriptors of each block
+         * @param[in] blockDescriptors the list of descriptors of each block
          *
-         * \throw std::invalid_argument if the list is empty
+         * @throw InvalidArgumentError if the list is empty
          */
         RandomBlocksDescriptor(
             const std::vector<std::unique_ptr<DataDescriptor>>& blockDescriptors);
 
         /**
-         * \brief Construct a RandomBlocksDescriptor from a list of descriptors
+         * @brief Construct a RandomBlocksDescriptor from a list of descriptors
          *
-         * \param[in] blockDescriptors the list of descriptors of each block
+         * @param[in] blockDescriptors the list of descriptors of each block
          *
-         * \throw std::invalid_argument if the list is empty
+         * @throw InvalidArgumentError if the list is empty
          */
         RandomBlocksDescriptor(std::vector<std::unique_ptr<DataDescriptor>>&& blockDescriptors);
 

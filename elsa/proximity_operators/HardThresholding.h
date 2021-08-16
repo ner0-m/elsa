@@ -5,12 +5,14 @@
 namespace elsa
 {
     /**
-     * \brief Class representing the proximity operator of the l1 norm
+     * @brief Class representing the proximity operator of the l0 pseudo-norm
      *
-     * \tparam data_t data type for the values of the operator, defaulting to real_t
+     * @author Andi Braimllari - initial code
      *
-     * This class represents the soft thresholding operator, expressed by its apply method
-     * through the function i.e. \f$ prox(v) = v·1_{\{|v| > t\}}. \f$
+     * @tparam data_t data type for the values of the operator, defaulting to real_t
+     *
+     * This class represents the hard thresholding operator, expressed by its apply method through
+     * the function i.e. @f$ prox(v) = v·1_{\{|v| > t\}}. @f$
      *
      * References:
      * http://sfb649.wiwi.hu-berlin.de/fedc_homepage/xplore/tutorials/xlghtmlnode93.html
@@ -20,9 +22,9 @@ namespace elsa
     {
     public:
         /**
-         * \brief Construct a HardThresholding operator from the given DataDescriptor
+         * @brief Construct a HardThresholding operator from the given DataDescriptor
          *
-         * \param[in] descriptor DataDescriptor describing the operator values
+         * @param[in] descriptor DataDescriptor describing the operator values
          */
         HardThresholding(const DataDescriptor& descriptor);
 
@@ -31,11 +33,12 @@ namespace elsa
 
     protected:
         /**
-         * \brief apply the proximity operator of the l0 norm to an element in the operator's domain
+         * @brief apply the proximity operator of the l0 pseudo-norm to an element in the operator's
+         * domain
          *
-         * \param[in] x input DataContainer
-         * \param[in] t input Threshold
-         * \param[out] prox output DataContainer
+         * @param[in] v input DataContainer
+         * @param[in] t input Threshold
+         * @param[out] prox output DataContainer
          */
         void applyImpl(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
                        DataContainer<data_t>& prox) const override;
@@ -46,5 +49,4 @@ namespace elsa
         /// implement the polymorphic comparison operation
         auto isEqual(const ProximityOperator<data_t>& other) const -> bool override;
     };
-
 } // namespace elsa

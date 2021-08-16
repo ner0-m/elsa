@@ -5,12 +5,12 @@
 namespace elsa::detail
 {
     /**
-     * \brief iterator which uses a non-owning raw pointer to iterate over a container. The iterator
+     * @brief iterator which uses a non-owning raw pointer to iterate over a container. The iterator
      * is random access and assumes contiguous memory layout.
      *
-     * \author David Frank - initial implementation
+     * @author David Frank - initial implementation
      *
-     * \tparam T - the type of the container
+     * @tparam T - the type of the container
      *
      * Note: comparing iterators from different containers is undefined behavior, so we do not check
      * for it.
@@ -119,13 +119,13 @@ namespace elsa::detail
     };
 
     /**
-     * \brief constant iterator which uses a non-owning raw pointer to iterate over a container. The
+     * @brief constant iterator which uses a non-owning raw pointer to iterate over a container. The
      * iterator is random access and assumes contiguous memory layout. It is const in the sense that
      * it cannot mutate the state of the object it iterates over.
      *
-     * \author David Frank - initial implementation
+     * @author David Frank - initial implementation
      *
-     * \tparam T - the type of the container
+     * @tparam T - the type of the container
      *
      * Note: comparing iterators from different containers is undefined behavior, so we do not check
      * for it.

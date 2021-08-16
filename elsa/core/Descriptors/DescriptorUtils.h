@@ -5,14 +5,14 @@
 namespace elsa
 {
     /**
-     * \brief Finds the descriptor with the same number of coefficients as the descriptors in
+     * @brief Finds the descriptor with the same number of coefficients as the descriptors in
      * the list that retains as much information as possible
      *
-     * \param[in] descriptorList a vector of plain pointers to DataDescriptor
+     * @param[in] descriptorList a vector of plain pointers to DataDescriptor
      *
-     * \return std::unique_ptr<DataDescriptor> the best common descriptor
+     * @return std::unique_ptr<DataDescriptor> the best common descriptor
      *
-     * \throw std::invalid_argument if the vector is empty or the descriptors in the vector
+     * @throw InvalidArgumentError if the vector is empty or the descriptors in the vector
      * don't all have the same size
      *
      * If all descriptors are equal, a clone of the first descriptor in the list is returned.

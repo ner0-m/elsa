@@ -1,6 +1,7 @@
 #include "FiniteDifferences.h"
 #include "Timer.h"
 #include "VolumeDescriptor.h"
+#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -60,7 +61,7 @@ namespace elsa
     void FiniteDifferences<data_t>::applyImpl(const DataContainer<data_t>& x,
                                               DataContainer<data_t>& Ax) const
     {
-        Timer<> timeguard("FiniteDifferences", "apply");
+        Timer timeguard("FiniteDifferences", "apply");
 
         Ax = 0;
 
@@ -75,7 +76,7 @@ namespace elsa
                 applyHelper(x, Ax, DiffType::CENTRAL);
                 break;
             default:
-                throw std::logic_error("FiniteDifferences::apply: invalid DiffType");
+                throw LogicError("FiniteDifferences::apply: invalid DiffType");
         }
     }
 
@@ -83,7 +84,7 @@ namespace elsa
     void FiniteDifferences<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
                                                      DataContainer<data_t>& Aty) const
     {
-        Timer<> timeguard("FiniteDifferences", "applyAdjoint");
+        Timer timeguard("FiniteDifferences", "applyAdjoint");
 
         Aty = 0;
 
@@ -98,7 +99,7 @@ namespace elsa
                 applyAdjointHelper(y, Aty, DiffType::CENTRAL);
                 break;
             default:
-                throw std::logic_error("FiniteDifferences::applyAdjoint: invalid DiffType");
+                throw LogicError("FiniteDifferences::applyAdjoint: invalid DiffType");
         }
     }
 
@@ -216,7 +217,7 @@ namespace elsa
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherFD = dynamic_cast<const FiniteDifferences*>(&other);
+        auto otherFD = downcast_safe<FiniteDifferences>(&other);
         if (!otherFD)
             return false;
 

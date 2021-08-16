@@ -2,6 +2,7 @@
 
 #include "elsaDefines.h"
 #include "Cloneable.h"
+#include "Error.h"
 #include "ExpressionPredicates.h"
 
 #ifdef ELSA_CUDA_VECTOR
@@ -14,12 +15,12 @@ namespace elsa
 {
 
     /**
-     * \brief Base class encapsulating data handling. The data is stored transparently, for example
+     * @brief Base class encapsulating data handling. The data is stored transparently, for example
      * on CPU or GPU.
      *
-     * \author David Frank - initial code
-     * \author Tobias Lasser - modularization, modernization
-     * \author Nikola Dinev - add block support
+     * @author David Frank - initial code
+     * @author Tobias Lasser - modularization, modernization
+     * @author Nikola Dinev - add block support
      *
      * This abstract base class serves as an interface for data handlers, which encapsulate the
      * actual data being stored e.g. in main memory of the CPU or in various memory types of GPUs.
@@ -58,6 +59,12 @@ namespace elsa
 
         /// return the squared l2 norm of the data vector (dot product with itself)
         virtual GetFloatingPointType_t<data_t> squaredL2Norm() const = 0;
+
+        /// return the l2 norm of the data vector (square root of dot product with itself)
+        virtual GetFloatingPointType_t<data_t> l2Norm() const = 0;
+
+        /// return the l0 pseudo-norm of the data vector (number of non-zero values)
+        virtual index_t l0PseudoNorm() const = 0;
 
         /// return the l1 norm of the data vector (sum of absolute values)
         virtual GetFloatingPointType_t<data_t> l1Norm() const = 0;
@@ -99,7 +106,7 @@ namespace elsa
         DataHandler<data_t>& operator=(const DataHandler<data_t>& other)
         {
             if (other.getSize() != getSize())
-                throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+                throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
             assign(other);
             return *this;
@@ -109,7 +116,7 @@ namespace elsa
         DataHandler<data_t>& operator=(DataHandler<data_t>&& other)
         {
             if (other.getSize() != getSize())
-                throw std::invalid_argument("DataHandler: assignment argument has wrong size");
+                throw InvalidArgumentError("DataHandler: assignment argument has wrong size");
 
             assign(std::move(other));
             return *this;
