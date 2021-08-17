@@ -58,8 +58,8 @@ namespace elsa::ml
         Conv2D<data_t> _convContr3 = ml::Conv2D<data_t>(64, VolumeDescriptor{3, 3, 32},
                                                         ml::Activation::Relu, 1, ml::Padding::Same);
 
-        MaxPooling2D<data_t> _maxPool1 = ml::MaxPooling2D();
-        MaxPooling2D<data_t> _maxPool2 = ml::MaxPooling2D();
+        MaxPooling2D<data_t> _maxPool1 = ml::MaxPooling2D<data_t>();
+        MaxPooling2D<data_t> _maxPool2 = ml::MaxPooling2D<data_t>();
 
         UpSampling2D<data_t> _upsample1 =
             ml::UpSampling2D<data_t>({2, 2}, ml::Interpolation::Bilinear);
