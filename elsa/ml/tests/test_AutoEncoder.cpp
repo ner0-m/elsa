@@ -6,9 +6,8 @@
  * @author Andi Braimllari
  */
 
-#include "Error.h"
-#include "SoftThresholding.h"
 #include "VolumeDescriptor.h"
+#include "Error.h"
 
 #include "doctest/doctest.h"
 #include <testHelpers.h>
@@ -16,7 +15,7 @@
 using namespace elsa;
 using namespace doctest;
 
-TEST_SUITE_BEGIN("ml_models");
+TEST_SUITE_BEGIN("ml");
 
 TEST_CASE_TEMPLATE("AutoEncoder: Testing construction", data_t, float, double)
 {
@@ -26,29 +25,27 @@ TEST_CASE_TEMPLATE("AutoEncoder: Testing construction", data_t, float, double)
         numCoeff << 45, 11, 7;
         VolumeDescriptor volDescr(numCoeff);
 
-        WHEN("instantiating a SoftThresholding operator")
+        WHEN("instantiating an AutoEncoder model")
         {
-            SoftThresholding<data_t> sThrOp(volDescr);
+            // TODO create object here
 
             THEN("the DataDescriptors are equal")
             {
-                REQUIRE_EQ(sThrOp.getRangeDescriptor(), volDescr);
+                //                REQUIRE_EQ(sThrOp.getRangeDescriptor(), volDescr);
             }
         }
 
-        WHEN("cloning a SoftThresholding operator")
+        WHEN("cloning an AutoEncoder model")
         {
-            SoftThresholding<data_t> sThrOp(volDescr);
-            auto sThrOpClone = sThrOp.clone();
+            // TODO clone object here
 
-            THEN("cloned SoftThresholding operator equals original SoftThresholding operator")
+            THEN("cloned AutoEncoder model equals original AutoEncoder model")
             {
-                REQUIRE_NE(sThrOpClone.get(), &sThrOp);
-                REQUIRE_EQ(*sThrOpClone, sThrOp);
+                //                REQUIRE_NE(sThrOpClone.get(), &sThrOp);
+                //                REQUIRE_EQ(*sThrOpClone, sThrOp);
             }
         }
     }
 }
-
 
 TEST_SUITE_END();

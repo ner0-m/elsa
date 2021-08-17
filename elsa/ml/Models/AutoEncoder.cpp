@@ -2,6 +2,9 @@
 
 #include "Model.h"
 #include "Softmax.h"
+#include "Reshape.h"
+#include "Conv.h"
+#include "Pooling.h"
 
 namespace elsa::ml
 {
@@ -10,10 +13,10 @@ namespace elsa::ml
      *
      * @author Andi Braimllari - initial code
      *
-     * @tparam data_t The type of all coefficients used in this model. This parameter is optional
-     * and defaults to real_t.
-     * @tparam Backend The MlBackend that will be used for inference and training. This parameter is
-     * optional and defaults to MlBackend::Auto.
+     * @tparam data_t The type of all coefficients used in this model. This parameter is
+     * optional and defaults to real_t.
+     * @tparam Backend The MlBackend that will be used for inference and training. This
+     * parameter is optional and defaults to MlBackend::Auto.
      *
      * References:
      * https://arxiv.org/pdf/2003.05991.pdf

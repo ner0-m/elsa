@@ -11,4 +11,4 @@
 #include "Reshape.h"
 #include "Softmax.h"
 #include "Utils.h"
-#include "ml/models/AutoEncoder.h"
+#include "AutoEncoder.cpp"

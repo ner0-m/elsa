@@ -76,6 +76,7 @@ set(MODULE_SOURCES
     Model.cpp
     Model.cpp
     State.cpp
+    Models/AutoEncoder.cpp
 )
 
 # elsa modules ml depends on  
@@ -105,6 +106,11 @@ ADD_ELSA_MODULE(
     ml "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
+
+# Add additional folder for ml
+target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC
+        $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/Models>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Models>)
 
 # Link Dnnl if wanted and available
 if(ELSA_HAS_DNNL_BACKEND)
