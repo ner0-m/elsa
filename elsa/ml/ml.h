@@ -11,4 +11,4 @@
 #include "Reshape.h"
 #include "Softmax.h"
 #include "Utils.h"
-#include "AutoEncoder.cpp"
+#include "AutoEncoder.h"

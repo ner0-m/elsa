@@ -56,6 +56,7 @@ set(MODULE_HEADERS
     Graph.h
     BackendAdaptor.h
     CudnnDataContainerInterface.h
+    Models/AutoEncoder.h
 )
 
 # list all the code files of the module
