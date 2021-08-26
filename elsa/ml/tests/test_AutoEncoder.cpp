@@ -6,6 +6,7 @@
  * @author Andi Braimllari
  */
 
+#include "AutoEncoder.h"
 #include "VolumeDescriptor.h"
 #include "Error.h"
 
@@ -21,13 +22,12 @@ TEST_CASE_TEMPLATE("AutoEncoder: Testing construction", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 45, 11, 7;
-        VolumeDescriptor volDescr(numCoeff);
+        // ...
 
         WHEN("instantiating an AutoEncoder model")
         {
-            // TODO create object here
+            ml::AutoEncoder<real_t, elsa::ml::MlBackend::Cudnn> aeModel(VolumeDescriptor{{28, 28}},
+                                                                        32);
 
             THEN("the DataDescriptors are equal")
             {
@@ -43,6 +43,24 @@ TEST_CASE_TEMPLATE("AutoEncoder: Testing construction", data_t, float, double)
             {
                 //                REQUIRE_NE(sThrOpClone.get(), &sThrOp);
                 //                REQUIRE_EQ(*sThrOpClone, sThrOp);
+            }
+        }
+    }
+}
+
+TEST_CASE_TEMPLATE("AutoEncoder: Pre-training testing", data_t, float, double)
+{
+    GIVEN("a DataDescriptor")
+    {
+        // ...
+
+        WHEN("instantiating an AutoEncoder model")
+        {
+            // ...
+
+            THEN("the spatial dimensions of the input match to those of the output")
+            {
+                // ...
             }
         }
     }
