@@ -3,37 +3,46 @@
 namespace elsa
 {
     template <typename data_t>
-    ImageDenoisingTask::ImageDenoisingTask(const DataContainer<data_t>& image, index_t blockSize,
-                                           index_t stride, index_t sparsityLevel,
-                                           index_t nIterations,
-                                           data_t epsilon = std::numeric_limits<data_t>::epsilon())
+    ImageDenoisingTask<data_t>::ImageDenoisingTask(index_t patchSize, index_t stride,
+                                                   index_t sparsityLevel, index_t nAtoms,
+                                                   index_t nIterations, data_t epsilon)
+        : _patchSize(patchSize),
+          _stride(stride),
+          _sparsityLevel(sparsityLevel),
+          _nAtoms(nAtoms),
+          _nIterations(nIterations),
+          _epsilon(epsilon)
     {
     }
 
     template <typename data_t>
-    ImageDenoisingTask<data_t>* ImageDenoisingTask<data_t>::cloneImpl() const
+    DataContainer<data_t> ImageDenoisingTask<data_t>::train(const DataContainer<data_t>& image)
     {
-        return new ImageDenoisingTask(*this);
-    }
+        const auto& imageDescriptor =
+            dynamic_cast<const VolumeDescriptor&>(image.getDataDescriptor());
+        Patchifier<data_t> patchifier(imageDescriptor, _patchSize, _stride);
+        auto patches = patchifier.im2patches(image);
 
-    template <typename data_t>
-    bool ImageDenoisingTask<data_t>::isEqual(const ImageDenoisingTask<data_t>& other) const
-    {
-        if (typeid(*this) != typeid(other))
-            return false;
+        DictionaryLearningProblem<data_t> dlProblem(patches, _nAtoms);
+        KSVD<data_t> solver(dlProblem, _sparsityLevel, _epsilon);
+        auto representations = solver.solve(_nIterations);
+        const auto& dictionary = solver.getLearnedDictionary();
 
-        if (_image != other._image)
-            return false;
+        DataContainer<data_t> denoised_patches(patches.getDataDescriptor());
 
-        // what else?
+        index_t nSamples =
+            dynamic_cast<const IdenticalBlocksDescriptor&>(patches.getDataDescriptor())
+                .getNumberOfBlocks();
+        for (index_t i = 0; i < nSamples; ++i) {
+            denoised_patches.getBlock(i) = dictionary.apply(representations.getBlock(i));
+        }
 
-        return true;
+        return patchifier.patches2im(denoised_patches);
     }
 
     // ------------------------------------------
     // explicit template instantiation
     template class ImageDenoisingTask<float>;
-
     template class ImageDenoisingTask<double>;
 
 } // namespace elsa
