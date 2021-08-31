@@ -139,8 +139,9 @@ namespace elsa
     {
         Timer timeguard("Dictionary", "applyAdjoint");
 
-        if (Aty.getSize() != _nAtoms || y.getDataDescriptor() != *_rangeDescriptor)
+        if (Aty.getSize() != _nAtoms || y.getDataDescriptor() != *_rangeDescriptor) {
             throw InvalidArgumentError("Dictionary::applyAdjoint: incorrect input/output sizes");
+        }
 
         index_t i = 0;
         Aty = 0;
