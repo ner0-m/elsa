@@ -55,6 +55,7 @@ namespace elsa
     DataContainer<data_t> Patchifier<data_t>::patches2im(const DataContainer<data_t>& patches)
     {
         DataContainer<data_t> image(_imageShape);
+        image = 0;
         // keep track how many patches where used per pixel
         DataContainer<data_t> coefficients(_imageShape);
         coefficients = 0;
