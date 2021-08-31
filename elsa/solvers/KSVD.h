@@ -64,8 +64,9 @@ namespace elsa
 
         auto calculateSVD(DataContainer<data_t> data);
 
-        DataContainer<data_t> getNextAtom(
-            Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd);
+        DataContainer<data_t>
+            getNextAtom(Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd,
+                        const DataDescriptor& atomDescriptor);
 
         DataContainer<data_t> getNextRepresentation(
             Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd);

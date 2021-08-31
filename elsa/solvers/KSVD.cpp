@@ -51,10 +51,16 @@ namespace elsa
 
             // then optimize atom by atom
             for (index_t k = 0; k < dict.getNumberOfAtoms(); ++k) {
+                const auto atom = dict.getAtom(k);
+                const auto& atomDescriptor =
+                    atom.getDataDescriptor(); // needed for constructing a new atom
+                auto descriptorClone = atomDescriptor.clone();
                 try {
                     auto modifiedError = _problem.getRestrictedError(k);
                     auto svd = calculateSVD(modifiedError);
-                    _problem.updateAtom(k, getNextAtom(svd), getNextRepresentation(svd));
+                    auto nextAtom = getNextAtom(svd, atomDescriptor);
+                    auto nextRepresentation = getNextRepresentation(svd);
+                    _problem.updateAtom(k, nextAtom, nextRepresentation);
                     if (_problem.getGlobalError().l2Norm() < _epsilon)
                         break;
                 } catch (LogicError& e) {
@@ -90,10 +96,11 @@ namespace elsa
 
     template <typename data_t>
     DataContainer<data_t> KSVD<data_t>::getNextAtom(
-        Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd)
+        Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>> svd,
+        const DataDescriptor& atomDescriptor)
     {
         auto firstLeft = svd.matrixU().col(0);
-        DataContainer<data_t> firstLeftSingular(VolumeDescriptor({firstLeft.rows()}), firstLeft);
+        DataContainer<data_t> firstLeftSingular(atomDescriptor, firstLeft);
         return firstLeftSingular;
     }
 
