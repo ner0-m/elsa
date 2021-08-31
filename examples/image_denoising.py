@@ -94,24 +94,39 @@ raccoon /= 2.0
 noise = np.random.normal(0,sigma,raccoon.shape)
 noisy_raccoon = raccoon + noise 
 
-patched_raccoon = im2patches(noisy_raccoon, blocksize, stride)
-n_patches = patched_raccoon.shape[0]
-patchlength = patched_raccoon.shape[1]
-patch_descriptor = elsa.pyelsa_core.VolumeDescriptor([patchlength])
-raccoon_descriptor = elsa.pyelsa_core.IdenticalBlocksDescriptor(n_patches, patch_descriptor)
-raccoon_dc = elsa.pyelsa_core.DataContainer(raccoon_descriptor, patched_raccoon.flatten())
+image_descriptor = elsa.pyelsa_core.VolumeDescriptor(noisy_raccoon.shape);
+image_dc = elsa.pyelsa_core.DataContainer(image_descriptor, noisy_raccoon.flatten())
 
-print("Image Denoising: Learning dictionary and representations...")
-problem = elsa.pyelsa_problems.DictionaryLearningProblem(raccoon_dc, nAtoms)
-solver = elsa.pyelsa_solvers.KSVD(problem, sparsityLevel)
-representations = solver.solve(nIterations)
-dictionary = solver.getLearnedDictionary()
+denoising_task = elsa.pyelsa_tasks.ImageDenoisingTask(blocksize, stride, sparsityLevel, nAtoms, nIterations)
 
-reconstructed_raccoon_patches = np.zeros(patched_raccoon.shape)
-for i in range(n_patches):
-    reconstructed_raccoon_patches[i] = np.array(dictionary.apply(representations.getBlock(i)))
-
-print("Image Denoising: Reconstructing image from resulting patches")
-reconstructed_raccoon = patches2im(reconstructed_raccoon_patches, raccoon.shape, blocksize, stride)
+reconstructed_raccoon = denoising_task.train(image_dc)
+reconstructed_raccoon = np.array(reconstructed_raccoon)
+print("Non-zeros:")
+print(np.count_nonzero(reconstructed_raccoon))
+print("Reconstruciton shape:")
+print(reconstructed_raccoon.shape)
 
 save_results(raccoon, noisy_raccoon, reconstructed_raccoon)
+# OLD STUFF:
+
+#patched_raccoon = im2patches(noisy_raccoon, blocksize, stride)
+#n_patches = patched_raccoon.shape[0]
+#patchlength = patched_raccoon.shape[1]
+#patch_descriptor = elsa.pyelsa_core.VolumeDescriptor([patchlength])
+#raccoon_descriptor = elsa.pyelsa_core.IdenticalBlocksDescriptor(n_patches, patch_descriptor)
+#raccoon_dc = elsa.pyelsa_core.DataContainer(raccoon_descriptor, patched_raccoon.flatten())
+
+#print("Image Denoising: Learning dictionary and representations...")
+#problem = elsa.pyelsa_problems.DictionaryLearningProblem(raccoon_dc, nAtoms)
+#solver = elsa.pyelsa_solvers.KSVD(problem, sparsityLevel)
+#representations = solver.solve(nIterations)
+#dictionary = solver.getLearnedDictionary()
+
+#reconstructed_raccoon_patches = np.zeros(patched_raccoon.shape)
+#for i in range(n_patches):
+    #reconstructed_raccoon_patches[i] = np.array(dictionary.apply(representations.getBlock(i)))
+
+#print("Image Denoising: Reconstructing image from resulting patches")
+#reconstructed_raccoon = patches2im(reconstructed_raccoon_patches, raccoon.shape, blocksize, stride)
+
+#save_results(raccoon, noisy_raccoon, reconstructed_raccoon)
