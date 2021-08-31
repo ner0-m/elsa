@@ -2,6 +2,9 @@
 
 #include "elsaDefines.h"
 #include "DataContainer.h"
+#include "Patchifier.h"
+#include "DictionaryLearningProblem.h"
+#include "KSVD.h"
 
 #include <limits>
 
@@ -26,17 +29,21 @@ namespace elsa
          *
          * @param[in] dataTerm functional expressing the data term
          */
-        ImageDenoisingTask(const DataContainer<data_t>& image, index_t blockSize, index_t stride,
-                           index_t sparsityLevel, index_t nIterations,
+        ImageDenoisingTask(index_t patchSize, index_t stride, index_t sparsityLevel,
+                           index_t nIterations, index_t nAtoms,
                            data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
-        DataContainer<data_t> denoise();
+        // DataContainer<data_t> denoise(const DataContainer<data_t>& image);
+
+        DataContainer<data_t> train(const DataContainer<data_t>& image);
+
+        // void train(const std::vector<DataContainer<data_t>>& images);
 
     private:
-        DataContainer<data_t> _image;
-        index_t _blockSize;
+        index_t _patchSize;
         index_t _stride;
         index_t _sparsityLevel;
+        index_t _nAtoms;
         index_t _nIterations;
         data_t _epsilon;
     };
