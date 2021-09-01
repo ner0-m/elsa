@@ -113,6 +113,22 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataHandler<data_t>& DataHandlerMapCPU<data_t>::fft(const DataDescriptor& source_desc)
+    {
+        // detaches internally
+        this->_dataOwner->fft(source_desc);
+        return *this;
+    }
+
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerMapCPU<data_t>::ifft(const DataDescriptor& source_desc)
+    {
+        // detaches internally
+        this->_dataOwner->ifft(source_desc);
+        return *this;
+    }
+
+    template <typename data_t>
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())

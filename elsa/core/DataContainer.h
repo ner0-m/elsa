@@ -31,6 +31,7 @@ namespace elsa
      * @author David Frank - added DataHandler concept, iterators
      * @author Nikola Dinev - add block support
      * @author Jens Petit - expression templates
+     * @author Jonas Jelten - various enhancements, fft, complex handling, pretty formatting
      *
      * @tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
      *
@@ -49,7 +50,8 @@ namespace elsa
         DataContainer() = delete;
 
         /**
-         * @brief Constructor for empty DataContainer, no initialisation is performed
+         * @brief Constructor for empty DataContainer, no initialisation is performed,
+         *        but the underlying space is allocated.
          *
          * @param[in] dataDescriptor containing the associated metadata
          * @param[in] handlerType the data handler (default: CPU)
@@ -241,6 +243,12 @@ namespace elsa
 
         /// return the sum of all elements of this signal
         data_t sum() const;
+
+        /// convert to the fourier transformed signal
+        void fft() const;
+
+        /// convert to the inverse fourier transformed signal
+        void ifft() const;
 
         /// if the datacontainer is already complex, return itself.
         template <typename _data_t = data_t>

@@ -69,6 +69,27 @@ if(${ELSA_BUILD_WITH_QUICKVEC})
     list(APPEND MODULE_PUBLIC_DEPS "Quickvec::quickvec")
 endif()
 
+
+# use FFTW if available
+option(WITH_FFTW "Build elsa using fftw for faster fourier transforms" ON)
+
+# workaround for
+# https://github.com/FFTW/fftw3/issues/130
+# better would be find_package(fftw3)
+# fftw3f: float, fftw3: double, fftw3l: 128bit, _omp: OpenMP
+if(WITH_FFTW)
+    find_package(PkgConfig)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(FFTW3d IMPORTED_TARGET "fftw3")
+        pkg_check_modules(FFTW3f IMPORTED_TARGET "fftw3f")
+        if(FFTW3d_FOUND AND FFTW3f_FOUND)
+            set(FFTW3_FOUND TRUE)
+            list(APPEND MODULE_PUBLIC_DEPS "PkgConfig::FFTW3d" "PkgConfig::FFTW3f")
+            # TODO: also add fftw3_omp if supported
+        endif()
+    endif()
+endif()
+
 ADD_ELSA_MODULE(
     core "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
@@ -92,6 +113,11 @@ target_include_directories(
 if(${ELSA_BUILD_WITH_QUICKVEC})
     target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
 endif()
+
+if(WITH_FFTW AND FFTW3_FOUND)
+    target_compile_definitions("${ELSA_MODULE_TARGET_NAME}" PRIVATE WITH_FFTW)
+endif()
+
 
 if(ELSA_BUILD_PYTHON_BINDINGS)
     set(BINDINGS_SOURCES
