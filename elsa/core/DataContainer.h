@@ -246,6 +246,32 @@ namespace elsa
         /// return the max of all elements of this signal
         data_t maxElement() const;
 
+        /// if the datacontainer is already complex, return itself.
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>, DataContainer<_data_t>> asComplex() const
+        {
+            return *this;
+        }
+
+        /// if the datacontainer is not complex,
+        /// return a copy and fill in 0 as imaginary values
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<not isComplex<_data_t>, DataContainer<std::complex<_data_t>>>
+            asComplex() const
+        {
+            DataContainer<std::complex<data_t>> ret{
+                *this->_dataDescriptor,
+                this->_dataHandlerType,
+            };
+
+            // extend with complex zero value
+            for (index_t idx = 0; idx < this->getSize(); ++idx) {
+                ret[idx] = std::complex<data_t>{(*this)[idx], 0};
+            }
+
+            return ret;
+        }
+
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
 
