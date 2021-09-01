@@ -105,6 +105,12 @@ namespace elsa
         /// return the max of all elements of the data vector
         data_t maxElement() const override;
 
+        /// create the fourier transformed of the data vector
+        DataHandler<data_t>& fft(const DataDescriptor& source_desc) override;
+
+        /// create the inverse fourier transformed of the data vector
+        DataHandler<data_t>& ifft(const DataDescriptor& source_desc) override;
+
         /// compute in-place element-wise addition of another vector v
         DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) override;
 
