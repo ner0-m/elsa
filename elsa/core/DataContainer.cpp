@@ -1,4 +1,5 @@
 #include "DataContainer.h"
+#include "DataContainerFormatter.hpp"
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
@@ -493,6 +494,13 @@ namespace elsa
     DataHandlerType DataContainer<data_t>::getDataHandlerType() const
     {
         return _dataHandlerType;
+    }
+
+    template <typename data_t>
+    void DataContainer<data_t>::format(std::ostream& os) const
+    {
+        DataContainerFormatter<data_t> fmt;
+        fmt.format(os, *this);
     }
 
     template <typename data_t>
