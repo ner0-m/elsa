@@ -479,6 +479,9 @@ namespace elsa
         template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
+        /// write a pretty-formatted string representation to stream
+        void format(std::ostream& os) const;
+
         /**
          * @brief Factory function which returns GPU based DataContainers
          *
@@ -560,6 +563,15 @@ namespace elsa
             return ret;
         }
     };
+
+    /// pretty output formatting.
+    /// for configurable output, use `DataContainerFormatter` directly.
+    template <typename T>
+    std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<T>& dc)
+    {
+        dc.format(os);
+        return os;
+    }
 
     /// Concatenate two DataContainers to one (requires copying of both)
     template <typename data_t>
