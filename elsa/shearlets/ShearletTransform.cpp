@@ -109,7 +109,7 @@ namespace elsa
         auto dims = spectraDescr.getNumberOfDimensions();
         auto sizeOfLastDim = spectraDescr.getNumberOfCoefficientsPerDimension()[dims - 1];
         auto sliceDesc = PartitionDescriptor(spectraDescr, sizeOfLastDim);
-        spectra = 0; // is this mandatory? probably not if everything is replaced
+        spectra = 0;
 
         index_t i = 0;
 
