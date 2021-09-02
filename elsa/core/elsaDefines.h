@@ -94,7 +94,8 @@ namespace elsa
      * }
      */
     template <bool nope = false>
-    void branch_match_failure() {
+    void branch_match_failure()
+    {
         static_assert(nope, "no static branch match found");
     }
 } // namespace elsa
