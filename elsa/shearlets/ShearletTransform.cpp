@@ -1,6 +1,5 @@
 #include "ShearletTransform.h"
 #include "VolumeDescriptor.h"
-#include "PartitionDescriptor.h"
 #include "Timer.h"
 
 namespace elsa
@@ -17,7 +16,7 @@ namespace elsa
     template <typename data_t>
     ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height)
         : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
-                                 VolumeDescriptor{{calculateL(width, height), width, height}}),
+                                 VolumeDescriptor{{width, height, calculateL(width, height)}}),
           _width{width},
           _height{height},
           _jZero{calculatejZero(width, height)},
@@ -31,7 +30,7 @@ namespace elsa
     template <typename data_t>
     ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height, index_t jZero)
         : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
-                                 VolumeDescriptor{{calculateL(jZero), width, height}}),
+                                 VolumeDescriptor{{width, height, calculateL(jZero)}}),
           _width{width},
           _height{height},
           _jZero{jZero},
@@ -43,6 +42,28 @@ namespace elsa
         if (jZero < 0) {
             throw LogicError("ShearletTransform: negative number of scales was provided");
         }
+    }
+
+    // TODO remove me or change me before final MR
+    template <typename data_t>
+    DataContainer<data_t> ShearletTransform<data_t>::sumByLastAxis(DataContainer<data_t> dc) const
+    {
+        index_t width = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0];
+        index_t height = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1];
+        index_t layers = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2];
+        DataContainer<data_t> summedDC(VolumeDescriptor{{width, height}});
+
+        for (index_t j = 0; j < width; j++) {
+            for (index_t k = 0; k < height; k++) {
+                data_t currValue = 0;
+                for (index_t i = 0; i < layers; i++) {
+                    currValue += dc(j, k, i);
+                }
+                summedDC(j, k) = currValue;
+            }
+        }
+
+        return summedDC;
     }
 
     template <typename data_t>
@@ -68,6 +89,20 @@ namespace elsa
         }
 
         // TODO use fft when available
+
+        DataContainer<data_t> fftImg = f;
+        // fftImg.fft();
+
+        DataContainer<data_t> intermRes(_spectra.value().getDataDescriptor());
+
+        for (index_t i = 0;
+             i < intermRes.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2]; i++) {
+            DataContainer<data_t> fftSlice = _spectra.value().slice(i) * fftImg;
+            // fftSlice.ifft();
+            intermRes.slice(i) = fftSlice;
+        }
+
+        SHf = intermRes; // TODO inline SHf after testing this
 
         // DataContainer<std::complex<data_t>> fftImg = fft.fft2(f);
         // // AFAIK SHf's imaginary parts should all be 0 here, cast to float
@@ -98,6 +133,20 @@ namespace elsa
 
         // TODO use fft when available
 
+        DataContainer<data_t> fftY = y;
+        // fftY.fft();
+
+        DataContainer<data_t> intermRes(_spectra.value().getDataDescriptor());
+
+        for (index_t i = 0;
+             i < intermRes.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2]; i++) {
+            // DataContainer<data_t> fftSlice = _spectra.value().slice(i) * fftY;
+            // fftSlice.ifft();
+            // intermRes.slice(i) = fftSlice;
+        }
+
+        SHty = sumByLastAxis(intermRes); // TODO inline SHty after testing this
+
         // SHty = getReals(np.sum(fft.ifft2(fft.fft2(y) * getSpectra()), axis = 0));
     }
 
@@ -114,10 +163,6 @@ namespace elsa
     void ShearletTransform<data_t>::computeSpectra() const
     {
         DataContainer<data_t> spectra(VolumeDescriptor{{_width, _height, _L}});
-        const DataDescriptor& spectraDescr = spectra.getDataDescriptor();
-        auto dims = spectraDescr.getNumberOfDimensions();
-        auto sizeOfLastDim = spectraDescr.getNumberOfCoefficientsPerDimension()[dims - 1];
-        auto sliceDesc = PartitionDescriptor(spectraDescr, sizeOfLastDim);
         spectra = 0;
 
         index_t i = 0;
@@ -180,7 +225,7 @@ namespace elsa
             }
         }
 
-        _spectra = DataContainer<data_t>(spectra);
+        _spectra = spectra;
 
         _isSpectraComputed = true;
     }

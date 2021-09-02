@@ -1,7 +1,6 @@
 #pragma once
 
 #include "LinearOperator.h"
-#include "VolumeDescriptor.h"
 
 namespace elsa
 {
@@ -72,6 +71,9 @@ namespace elsa
 
         /// return the oversampling factor
         auto getL() const -> index_t;
+
+        // TODO remove me or change me before final MR
+        DataContainer<data_t> sumByLastAxis(DataContainer<data_t> container) const;
 
     protected:
         void applyImpl(const DataContainer<data_t>& f, DataContainer<data_t>& SHf) const override;
