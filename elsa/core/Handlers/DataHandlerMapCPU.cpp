@@ -113,13 +113,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DataHandlerMapCPU<data_t>::fft(const DataDescriptor& source_desc) const
+    DataHandler<data_t>& DataHandlerMapCPU<data_t>::fft(const DataDescriptor& source_desc)
     {
         throw std::runtime_error{"todo implement"};
     }
 
     template <typename data_t>
-    void DataHandlerMapCPU<data_t>::ifft(const DataDescriptor& source_desc) const
+    DataHandler<data_t>& DataHandlerMapCPU<data_t>::ifft(const DataDescriptor& source_desc)
     {
         throw std::runtime_error{"todo implement"};
     }

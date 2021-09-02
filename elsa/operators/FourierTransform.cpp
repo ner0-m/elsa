@@ -1,14 +1,17 @@
 #include "FourierTransform.h"
 
 #include "Error.h"
+#include "ExpressionPredicates.h"
 #include "Timer.h"
 
 #include <iostream>
 
-namespace elsa {
+namespace elsa
+{
     template <typename data_t>
-    FourierTransform<data_t>::FourierTransform(const DataDescriptor &domainDescriptor)
-            : B(domainDescriptor, domainDescriptor) {
+    FourierTransform<data_t>::FourierTransform(const DataDescriptor& domainDescriptor)
+        : B(domainDescriptor, domainDescriptor)
+    {
     }
 
     template <typename data_t>
@@ -18,11 +21,10 @@ namespace elsa {
 
         Timer timeguard("FourierTransform", "apply()");
 
+        // TODO: if domain and range descriptors dont match,
+        //       resize the datacontainer appropriately.
         auto x_values = x.getDataDescriptor().getNumberOfCoefficientsPerDimension();
-        auto x_dims = x.getDataDescriptor().getNumberOfDimensions();
-
-        // input container size must match dimensionality of operator setup
-        assert(x_values.size() == this->_domainDescriptor->getNumberOfDimensions());
+        assert(x_values == this->_domainDescriptor->getNumberOfCoefficientsPerDimension());
 
         // copy the input and fouriertransform it
         Ax = x;
@@ -35,13 +37,11 @@ namespace elsa {
     {
         Timer timeguard("FourierTransform", "applyAdjoint()");
 
+        // TODO: same as applyImpl
         auto x_values = x.getDataDescriptor().getNumberOfCoefficientsPerDimension();
-        auto x_dims = x.getDataDescriptor().getNumberOfDimensions();
+        assert(x_values == this->_domainDescriptor->getNumberOfCoefficientsPerDimension());
 
-        // input container size must match dimensionality of operator setup
-        assert(x_values.size() == this->_domainDescriptor->getNumberOfDimensions());
-
-        // copy the input and fouriertransform it
+        // copy the input and inverse-fouriertransform it
         Atx = x;
         Atx.ifft();
     }
@@ -60,11 +60,11 @@ namespace elsa {
         if (!B::isEqual(other))
             return false;
 
-        auto otherOP = dynamic_cast<const FourierTransform *>(&other);
+        auto otherOP = dynamic_cast<const FourierTransform*>(&other);
         if (!otherOP)
             return false;
 
-        // TODO actually check for equality!
+        // fourier transforms have no configuration yet
         return true;
     }
 

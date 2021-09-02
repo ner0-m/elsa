@@ -16,7 +16,6 @@ namespace elsa
 
     class DataDescriptor;
 
-
     /**
      * @brief Base class encapsulating data handling. The data is stored transparently, for example
      * on CPU or GPU.
@@ -79,10 +78,10 @@ namespace elsa
         virtual data_t sum() const = 0;
 
         /// in-place create the fourier transformed of the data vector
-        virtual void fft(const DataDescriptor& source_desc) const = 0;
+        virtual DataHandler<data_t>& fft(const DataDescriptor& source_desc) = 0;
 
         /// in-place create the inverse fourier transformed of the data vector
-        virtual void ifft(const DataDescriptor& source_desc) const = 0;
+        virtual DataHandler<data_t>& ifft(const DataDescriptor& source_desc) = 0;
 
         /// compute in-place element-wise addition of another vector v
         virtual DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) = 0;
