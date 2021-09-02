@@ -6,6 +6,15 @@
 namespace elsa
 {
     template <typename data_t>
+    ShearletTransform<data_t>::ShearletTransform(IndexVector_t spatialDimensions)
+        : ShearletTransform(spatialDimensions[0], spatialDimensions[1])
+    {
+        if (spatialDimensions.size() != 2) {
+            throw LogicError("ShearletTransform: a non-2D shape of input was provided");
+        }
+    }
+
+    template <typename data_t>
     ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height)
         : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
                                  VolumeDescriptor{{calculateL(width, height), width, height}}),

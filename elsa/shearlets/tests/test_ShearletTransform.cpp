@@ -92,6 +92,16 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
         randomData.setRandom();
         DataContainer<TestType> signal(volDescr, randomData);
 
+        WHEN("not generating the spectra")
+        {
+            ShearletTransform<TestType> shearletTransform(size);
+
+            THEN("an error is thrown when fetching it")
+            {
+                REQUIRE_THROWS_AS(shearletTransform.getSpectra(), LogicError);
+            }
+        }
+
         WHEN("generating the spectra")
         {
             ShearletTransform<TestType> shearletTransform(size[0], size[1], 4);

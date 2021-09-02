@@ -30,6 +30,13 @@ namespace elsa
         /**
          * @brief Constructor for a (regular) cone-adapted discrete shearlet transform.
          *
+         * @param[in] spatialDimensions the width and height of the input image
+         */
+        ShearletTransform(IndexVector_t spatialDimensions);
+
+        /**
+         * @brief Constructor for a (regular) cone-adapted discrete shearlet transform.
+         *
          * @param[in] width the width of the input image
          * @param[in] height the height of the input image
          */
@@ -43,16 +50,6 @@ namespace elsa
          * @param[in] jZero the number of scales
          */
         ShearletTransform(index_t width, index_t height, index_t jZero);
-
-        //        /**
-        //         * @brief Constructor for a (regular) cone-adapted discrete shearlet transform.
-        //         *
-        //         * @param[in] width the width of the input image
-        //         * @param[in] height the height of the input image
-        //         * @param[in] jZero the number of scales for
-        //         */
-        //        ShearletTransform(index_t width, index_t height, index_t jZero, ShearletType:
-        //        smooth etc);
 
         /// default destructor
         ~ShearletTransform() override = default;
@@ -96,16 +93,16 @@ namespace elsa
         mutable bool _isSpectraComputed{false};
 
         /// variables to store the spatial extents
-        index_t _width{-1};
-        index_t _height{-1};
+        index_t _width;
+        index_t _height;
 
         /// variable to store the number of scales
-        index_t _jZero{-1};
+        index_t _jZero;
 
         index_t calculatejZero(index_t width, index_t height);
 
         /// variable to store the oversampling factor
-        index_t _L{-1};
+        index_t _L;
 
         index_t calculateL(index_t width, index_t height);
 
