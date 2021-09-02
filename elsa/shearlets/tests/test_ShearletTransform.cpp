@@ -44,8 +44,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
             THEN("cloned ShearletTransform operator equals original ShearletTransform operator")
             {
                 REQUIRE_NE(shearletTransformClone.get(), &shearletTransform);
-                // TODO this throws an error, double check
-                // REQUIRE_EQ(*shearletTransformClone, shearletTransformClone);
+                REQUIRE_EQ(*shearletTransformClone, shearletTransform);
             }
         }
     }
@@ -95,7 +94,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
         WHEN("generating the spectra")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1]);
+            ShearletTransform<TestType> shearletTransform(size[0], size[1], 4);
 
             shearletTransform.computeSpectra();
 
@@ -123,16 +122,17 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                         for (index_t i = 0; i < layers; i++) {
                             currFrameSum += spectra(w1, w2, i) * spectra(w1, w2, i);
                         }
-                        frameCorrectness(w1, w2) = currFrameSum; // TODO why not -1 here?
+                        frameCorrectness(w1, w2) = currFrameSum - 1;
                     }
                 }
 
                 DataContainer<TestType> zeroes(VolumeDescriptor{{width, height}});
                 zeroes = 0;
 
-                REQUIRE_UNARY(isApprox(frameCorrectness, zeroes));
+                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.0000001);
+                // REQUIRE_UNARY(isApprox(frameCorrectness, zeroes, 0.05f));
 
-                // spectra here is of shape (L, W, H), square its elements and get the sum by the
+                // spectra here is of shape (W, H, L), square its elements and get the sum by the
                 // last axis and subtract 1, the output will be of shape (W, H), its elements
                 // should be zeroes, or very close to it
             }

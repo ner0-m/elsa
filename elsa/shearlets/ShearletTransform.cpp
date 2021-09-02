@@ -7,33 +7,33 @@ namespace elsa
 {
     template <typename data_t>
     ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height)
-        : ShearletTransform(width, height, calculatejZero(width, height))
-    {
-    }
-
-    template <typename data_t>
-    ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height, index_t jZero)
         : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
                                  VolumeDescriptor{{calculateL(width, height), width, height}}),
           _width{width},
           _height{height},
-          _jZero{jZero},
+          _jZero{calculatejZero(width, height)},
           _L{calculateL(width, height)}
     {
         if (width < 0 || height < 0) {
             throw LogicError("ShearletTransform: negative width/height were provided");
         }
-        // TODO check for jZero < 0? probably yes
     }
 
-    // TODO remove me before final MR, implement in some other place
-    DataContainer<double> getReals(DataContainer<std::complex<double>> dc)
+    template <typename data_t>
+    ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height, index_t jZero)
+        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
+                                 VolumeDescriptor{{calculateL(jZero), width, height}}),
+          _width{width},
+          _height{height},
+          _jZero{jZero},
+          _L{calculateL(jZero)}
     {
-        DataContainer<double> reals(dc.getDataDescriptor());
-        for (index_t i = 0; i < dc.getSize(); i++) {
-            reals[i] = dc[i].real();
+        if (width < 0 || height < 0) {
+            throw LogicError("ShearletTransform: negative width/height were provided");
         }
-        return reals;
+        if (jZero < 0) {
+            throw LogicError("ShearletTransform: negative number of scales was provided");
+        }
     }
 
     template <typename data_t>
@@ -115,12 +115,12 @@ namespace elsa
 
         DataContainer<data_t> sectionZero(VolumeDescriptor{{_width, _height}});
         sectionZero = 0;
-        for (auto w1 = static_cast<int>(-std::floor(_width / 2)); w1 < std::ceil(_width / 2);
-             w1++) {
-            for (auto w2 = static_cast<int>(-std::floor(_height / 2)); w2 < std::ceil(_height / 2);
-                 w2++) {
-                sectionZero(w1 < 0 ? w1 + _width : w1, w2 < 0 ? w2 + _height : w2) =
-                    phiHat(w1 < 0 ? w1 + _width : w1, w2 < 0 ? w2 + _height : w2);
+        for (auto w = static_cast<int>(-std::floor(_width / 2.0)); w < std::ceil(_width / 2.0);
+             w++) {
+            for (auto h = static_cast<int>(-std::floor(_height / 2.0));
+                 h < std::ceil(_height / 2.0); h++) {
+                sectionZero(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                    phiHat(static_cast<data_t>(w), static_cast<data_t>(h));
             }
         }
         spectra.slice(i) = sectionZero;
@@ -135,25 +135,24 @@ namespace elsa
                 sectionv = 0;
                 DataContainer<data_t> sectionhxv(VolumeDescriptor{{_width, _height}});
                 sectionhxv = 0;
-                for (auto w1 = static_cast<int>(-std::floor(_width / 2));
-                     w1 < static_cast<int>(std::ceil(_width / 2)); w1++) {
-                    for (auto w2 = static_cast<int>(-std::floor(_height / 2));
-                         w2 < static_cast<int>(std::ceil(_height / 2)); w2++) {
+                for (auto w = static_cast<index_t>(-std::floor(_width / 2.0));
+                     w < static_cast<index_t>(std::ceil(_width / 2.0)); w++) {
+                    for (auto h = static_cast<index_t>(-std::floor(_height / 2.0));
+                         h < static_cast<index_t>(std::ceil(_height / 2.0)); h++) {
                         data_t horiz = 0;
                         data_t vertic = 0;
-                        if (std::abs(w2) <= std::abs(w1)) {
-                            horiz = psiHat(std::pow(4, -j) * w1,
-                                           std::pow(4, -j) * k * w1 + std::pow(2, -j) * w2);
+                        if (std::abs(h) <= std::abs(w)) {
+                            horiz = psiHat(std::pow(4, -j) * w,
+                                           std::pow(4, -j) * k * w + std::pow(2, -j) * h);
                         } else {
-                            vertic = psiHat(std::pow(4, -j) * w2,
-                                            std::pow(4, -j) * k * w2 + std::pow(2, -j) * w1);
+                            vertic = psiHat(std::pow(4, -j) * h,
+                                            std::pow(4, -j) * k * h + std::pow(2, -j) * w);
                         }
                         if (std::abs(k) <= static_cast<index_t>(std::pow(2, j)) - 1) {
-                            sectionh(w1 < 0 ? w1 + _width : w1, w2 < 0 ? w2 + _height : w2) = horiz;
-                            sectionv(w1 < 0 ? w1 + _width : w1, w2 < 0 ? w2 + _height : w2) =
-                                vertic;
+                            sectionh(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = horiz;
+                            sectionv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = vertic;
                         } else if (std::abs(k) == static_cast<index_t>(std::pow(2, j))) {
-                            sectionhxv(w1 < 0 ? w1 + _width : w1, w2 < 0 ? w2 + _height : w2) =
+                            sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
                                 horiz + vertic;
                         }
                     }
@@ -172,7 +171,7 @@ namespace elsa
             }
         }
 
-        _spectra = std::make_unique<DataContainer<data_t>>(spectra);
+        _spectra = DataContainer<data_t>(spectra);
 
         _isSpectraComputed = true;
     }
@@ -194,9 +193,9 @@ namespace elsa
     data_t ShearletTransform<data_t>::b(data_t w) const
     {
         if (1 <= std::abs(w) && std::abs(w) <= 2) {
-            return std::sin(pi<data_t> / 2 * meyerFunction(std::abs(w) - 1));
+            return std::sin(pi<data_t> / 2.0 * meyerFunction(std::abs(w) - 1));
         } else if (2 < std::abs(w) && std::abs(w) <= 4) {
-            return std::cos(pi<data_t> / 2 * meyerFunction(1 / 2 * std::abs(w) - 1));
+            return std::cos(pi<data_t> / 2.0 * meyerFunction(1.0 / 2 * std::abs(w) - 1));
         } else {
             return 0;
         }
@@ -205,22 +204,22 @@ namespace elsa
     template <typename data_t>
     data_t ShearletTransform<data_t>::phi(data_t w) const
     {
-        if (std::abs(w) <= 1 / 2) {
+        if (std::abs(w) <= 1.0 / 2) {
             return 1;
-        } else if (1 / 2 < std::abs(w) && std::abs(w) < 1) {
-            return std::cos(pi<data_t> / 2 * meyerFunction(2 * std::abs(w) - 1));
+        } else if (1.0 / 2 < std::abs(w) && std::abs(w) < 1) {
+            return std::cos(pi<data_t> / 2.0 * meyerFunction(2 * std::abs(w) - 1));
         } else {
             return 0;
         }
     }
 
     template <typename data_t>
-    data_t ShearletTransform<data_t>::phiHat(data_t w1, data_t w2) const
+    data_t ShearletTransform<data_t>::phiHat(data_t w, data_t h) const
     {
-        if (std::abs(w2) <= std::abs(w1)) {
-            return phi(w1);
+        if (std::abs(h) <= std::abs(w)) {
+            return phi(w);
         } else {
-            return phi(w2);
+            return phi(h);
         }
     }
 
@@ -241,19 +240,22 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t ShearletTransform<data_t>::psiHat(data_t w1, data_t w2) const
+    data_t ShearletTransform<data_t>::psiHat(data_t w, data_t h) const
     {
-        if (w1 == 0) {
+        if (w == 0) {
             return 0;
         } else {
-            return psiHat1(w1) * psiHat2(w2 / w1);
+            return psiHat1(w) * psiHat2(h / w);
         }
     }
 
     template <typename data_t>
     auto ShearletTransform<data_t>::getSpectra() const -> DataContainer<data_t>
     {
-        return *_spectra;
+        if (!_spectra.has_value()) {
+            throw LogicError(std::string("ShearletTransform: the spectra is not yet computed"));
+        }
+        return _spectra.value();
     }
 
     template <typename data_t>
@@ -265,13 +267,37 @@ namespace elsa
     template <typename data_t>
     index_t ShearletTransform<data_t>::calculatejZero(index_t width, index_t height)
     {
-        return static_cast<index_t>(std::log2(std::max(width, height)) / 2);
+        return static_cast<index_t>(std::log2(std::max(width, height)) / 2.0);
     }
 
     template <typename data_t>
     index_t ShearletTransform<data_t>::calculateL(index_t width, index_t height)
     {
         return static_cast<index_t>(std::pow(2, (calculatejZero(width, height) + 2)) - 3);
+    }
+
+    template <typename data_t>
+    index_t ShearletTransform<data_t>::calculateL(index_t jZero)
+    {
+        return static_cast<index_t>(std::pow(2, jZero + 2) - 3);
+    }
+
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getWidth() const -> index_t
+    {
+        return _width;
+    }
+
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getHeight() const -> index_t
+    {
+        return _height;
+    }
+
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getL() const -> index_t
+    {
+        return _L;
     }
 
     template <typename data_t>
@@ -301,24 +327,6 @@ namespace elsa
             return false;
 
         return true;
-    }
-
-    template <typename data_t>
-    auto ShearletTransform<data_t>::getWidth() const -> index_t
-    {
-        return _width;
-    }
-
-    template <typename data_t>
-    auto ShearletTransform<data_t>::getHeight() const -> index_t
-    {
-        return _height;
-    }
-
-    template <typename data_t>
-    auto ShearletTransform<data_t>::getL() const -> index_t
-    {
-        return _L;
     }
 
     // ------------------------------------------

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LinearOperator.h"
+#include "VolumeDescriptor.h"
 
 namespace elsa
 {
@@ -89,7 +90,7 @@ namespace elsa
 
     private:
         /// variable to store the spectra
-        mutable std::unique_ptr<DataContainer<data_t>> _spectra;
+        mutable std::optional<DataContainer<data_t>> _spectra = std::nullopt;
 
         /// variable indicating if the spectra is already computed
         mutable bool _isSpectraComputed{false};
@@ -108,6 +109,8 @@ namespace elsa
 
         index_t calculateL(index_t width, index_t height);
 
+        index_t calculateL(index_t jZero);
+
         /// defined in Y. Meyer. Oscillating Patterns in Image Processing and Nonlinear Evolution
         /// Equations. AMS, 2001.
         data_t meyerFunction(data_t x) const;
@@ -116,12 +119,12 @@ namespace elsa
 
         data_t phi(data_t w) const;
 
-        data_t phiHat(data_t w1, data_t w2) const;
+        data_t phiHat(data_t w, data_t h) const;
 
         data_t psiHat1(data_t w) const;
 
         data_t psiHat2(data_t w) const;
 
-        data_t psiHat(data_t w1, data_t w2) const;
+        data_t psiHat(data_t w, data_t h) const;
     };
 } // namespace elsa
