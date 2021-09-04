@@ -10,7 +10,7 @@
 #include "L2NormPow2.h"
 #include "LinearResidual.h"
 #include "Logger.h"
-//#include "ShearletTransform.h"
+#include "ShearletTransform.h"
 
 namespace elsa
 {
@@ -57,15 +57,9 @@ namespace elsa
 
         DataContainer<data_t> maxWithZero(DataContainer<data_t> dC)
         {
-            DataContainer<data_t> resDC(dC.getDataDescriptor());
-            for (int i = 0; i < dC.getSize(); i++) {
-                if (dC[i] > 0) {
-                    resDC[i] = dC[i];
-                } else {
-                    resDC[i] = 0;
-                }
-            }
-            return resDC;
+            DataContainer<data_t> zeroes(dC.getDataDescriptor());
+            zeroes = 0;
+            return cwiseMax(dC, zeroes);
         }
 
         DataContainer<data_t> getFirstNElements(index_t n, DataContainer<data_t> dc)
@@ -99,8 +93,8 @@ namespace elsa
 
             auto& splittingProblem = downcast<SplittingProblem<data_t>>(*_problem);
 
-            const auto& F = splittingProblem->getF();
-            const auto& G = splittingProblem->getG();
+            const auto& F = splittingProblem.getF();
+            const auto& G = splittingProblem.getG();
 
             const auto& dataTerm = F;
 
@@ -125,14 +119,16 @@ namespace elsa
             }
 
             if (!is<WeightedL1Norm<data_t>>(&G[0].getFunctional())
-                && !is<Indicator<data_t>>(&G[1].getFunctional())) {
+                || !is<Indicator<data_t>>(&G[1].getFunctional())) {
                 throw std::invalid_argument("SHADMM::solveImpl: supported regularization terms are "
                                             "of type WeightedL1Norm and Indicator, respectively");
             }
 
-            auto w = static_cast<DataContainer<data_t>>(G[0].getWeight());
+            auto wL1NormRegTerm = downcast<WeightedL1Norm<data_t>>(&G[0].getFunctional());
 
-            const auto& constraint = splittingProblem->getConstraint();
+            auto w = static_cast<DataContainer<data_t>>(wL1NormRegTerm->getWeightingOperator());
+
+            const auto& constraint = splittingProblem.getConstraint();
             /// should come as // AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
             const BlockLinearOperator<data_t>& A =
                 downcast<BlockLinearOperator<data_t>>(constraint.getOperatorA());
@@ -142,7 +138,7 @@ namespace elsa
             /// should come as the zero vector
             const DataContainer<data_t>& c = constraint.getDataVectorC();
 
-            ShearletTransform<data_t> shearletTransform = A.getIthOperator(0);
+            auto shearletTransform = downcast<ShearletTransform<data_t>>(A.getIthOperator(0));
 
             if (shearletTransform.getWidth() != shearletTransform.getHeight()) {
                 throw std::invalid_argument(
@@ -169,11 +165,11 @@ namespace elsa
             DataContainer<data_t> u(volDescrOfLp1n2);
             u = 0;
 
-            /// this means P1u ∈ R ^ Ln^2
+            /// this means P1z ∈ R ^ Ln^2
             DataContainer<data_t> P1z(volDescrOfLn2);
             P1z = 0;
 
-            /// this means P2u ∈ R ^ n^2
+            /// this means P2z ∈ R ^ n^2
             DataContainer<data_t> P2z(volDescrOfn2);
             P2z = 0;
 
@@ -209,11 +205,11 @@ namespace elsa
 
                 /// this means shrink ∈ R ^ Ln^2
                 SoftThresholding<data_t> shrink(volDescrOfLn2);
-
                 // w is pulled from the WeightedL1Norm
+                // TODO w[i] instead of w[0]
                 P1z =
                     shrink.apply(shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}})) + P1u,
-                                 geometry::Threshold(_rho0 * w / _rho1));
+                                 geometry::Threshold(_rho0 * w[0] / _rho1));
                 // TODO element-wise max?
                 P2z = maxWithZero(f + P2u); // TODO is this ReLU-like functionality present already?
                 // z is concatenating P1z and P2z? if not, what is it then?
@@ -299,8 +295,8 @@ namespace elsa
 
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};
-        data_t _rho0{1}; // consider as hyperparameters
-        data_t _rho1{1}; // consider as hyperparameters
+        data_t _rho0{1}; // consider as hyper-parameters
+        data_t _rho1{1}; // consider as hyper-parameters
         data_t _rho2{1}; // just set it to 1, at least initially
 
         /// variables for the stopping criteria

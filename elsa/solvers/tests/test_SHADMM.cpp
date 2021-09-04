@@ -9,13 +9,14 @@
 #include "doctest/doctest.h"
 
 #include "SHADMM.h"
+#include "VolumeDescriptor.h"
+#include "BlockLinearOperator.h"
 #include "CG.h"
 #include "SoftThresholding.h"
 #include "Identity.h"
 #include "FISTA.h"
 #include "Logger.h"
-#include "VolumeDescriptor.h"
-#include "BlockLinearOperator.h"
+
 #include <testHelpers.h>
 
 using namespace elsa;
@@ -23,7 +24,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("solvers");
 
-TEST_CASE_TEMPLATE("SHADMM: Solving problems", data_t, float, double)
+TEST_CASE_TEMPLATE("SHADMM: Solving problems", TestType, float, double)
 {
     Logger::setLevel(Logger::LogLevel::OFF);
 
@@ -33,21 +34,22 @@ TEST_CASE_TEMPLATE("SHADMM: Solving problems", data_t, float, double)
         size << 7, 7;
         VolumeDescriptor volDescr(size);
 
-        Vector_t<data_t> bVec(volDescr.getNumberOfCoefficients());
+        Vector_t<TestType> bVec(volDescr.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer<data_t> dcB(volDescr, bVec);
+        DataContainer<TestType> dcB(volDescr, bVec);
 
-        Identity<data_t> idOp(volDescr);
+        Identity<TestType> idOp(volDescr);
 
-        WLSProblem<data_t> wlsProb(idOp, dcB);
+        WLSProblem<TestType> wlsProb(idOp, dcB);
 
         // random number
-        data_t rho1 = 23;
+        // TODO ShearletTransform<data_t> shearletTransform(rho, size[0], size[1])
+        TestType rho1 = 23;
         // random number
-        data_t rho2 = 86;
+        TestType rho2 = 86;
 
-        ShearletTransform<data_t> shearletTransform(rho1, size[0], size[1]);
-        index_t L = shearletTransorm.getL();
+        ShearletTransform<TestType> shearletTransform(size[0], size[1]);
+        index_t L = shearletTransform.getL();
         // size[0] == size[1], for now at least
         index_t n = shearletTransform.getWidth();
 
@@ -56,45 +58,45 @@ TEST_CASE_TEMPLATE("SHADMM: Solving problems", data_t, float, double)
         VolumeDescriptor volDescrOfLp1n2({(L + 1) * n * n});
 
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
-        std::vector<std::unique_ptr<LinearOperator<data_t>>> opsOfA(2);
-        DataContainer<data_t> rho2s(volDescrOfn2);
+        std::vector<std::unique_ptr<LinearOperator<TestType>>> opsOfA(0);
+        DataContainer<TestType> rho2s(volDescrOfn2);
         rho2s = rho2;
-        Scaling<data_t> scaling1(volDescrOfn2, rho2s);
-        opsOfA.push_back(std::move(shearletTransorm.clone()));
+        Scaling<TestType> scaling1(volDescrOfn2, rho2s);
+        opsOfA.push_back(std::move(shearletTransform.clone()));
         opsOfA.push_back(std::move(scaling1.clone()));
-        BlockLinearOperator<data_t> A{opsOfA, BlockLinearOperator<data_t>::BlockType::COL};
+        BlockLinearOperator<TestType> A{opsOfA, BlockLinearOperator<TestType>::BlockType::COL};
 
         /// B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-        std::vector<std::unique_ptr<LinearOperator<data_t>>> opsOfB(2);
-        DataContainer<data_t> nRho1s(volDescrOfLn2);
+        std::vector<std::unique_ptr<LinearOperator<TestType>>> opsOfB(0);
+        DataContainer<TestType> nRho1s(volDescrOfLn2);
         nRho1s = -rho1;
-        Scaling<data_t> scaling2(volDescrOfLn2, nRho1s);
-        DataContainer<data_t> nRho2s(volDescrOfn2);
+        Scaling<TestType> scaling2(volDescrOfLn2, nRho1s);
+        DataContainer<TestType> nRho2s(volDescrOfn2);
         nRho2s = -rho2;
-        Scaling<data_t> scaling3(volDescrOfn2, nRho2s);
+        Scaling<TestType> scaling3(volDescrOfn2, nRho2s);
         opsOfB.push_back(std::move(scaling2.clone()));
         opsOfB.push_back(std::move(scaling3.clone()));
-        BlockLinearOperator<data_t> B{opsOfB, BlockLinearOperator<data_t>::BlockType::COL};
+        BlockLinearOperator<TestType> B{opsOfB, BlockLinearOperator<TestType>::BlockType::COL};
 
-        DataContainer<data_t> dCC(volDescr);
+        DataContainer<TestType> dCC(volDescr);
         dCC = 0;
 
-        Constraint<data_t> constraint(A, B, dCC);
+        Constraint<TestType> constraint(A, B, dCC);
 
         WHEN("setting up SHADMM to solve a problem")
         {
-            DataContainer<data_t> ones(volDescr);
+            DataContainer<TestType> ones(volDescr);
             ones = 1;
-            WeightedL1Norm weightedL1Norm(ones);
-            RegularizationTerm<data_t> wL1NormRegTerm(1, weightedL1Norm);
+            WeightedL1Norm<TestType> weightedL1Norm(ones);
+            RegularizationTerm<TestType> wL1NormRegTerm(1, weightedL1Norm);
 
-            Indicator<data_t> indicator(volDescr);
-            RegularizationTerm<data_t> indicRegTerm(1, indicator);
+            Indicator<TestType> indicator(volDescr);
+            RegularizationTerm<TestType> indicRegTerm(1, indicator);
 
-            SplittingProblem<data_t> splittingProblem(
+            SplittingProblem<TestType> splittingProblem(
                 wlsProb.getDataTerm(), std::vector{wL1NormRegTerm, indicRegTerm}, constraint);
 
-            SHADMM<CG, data_t> shadmm(splittingProblem);
+            SHADMM<CG, TestType> shadmm(splittingProblem);
 
             THEN("the solution doesn't throw, is not nan and is approximate to the bvector")
             {

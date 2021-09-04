@@ -45,7 +45,7 @@ namespace elsa
     data_t WeightedL1Norm<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         // TODO
-        return _weightingOp.dot(abs(Rx));
+        return _weightingOp.dot(cwiseAbs(Rx));
     }
 
     template <typename data_t>

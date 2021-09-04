@@ -26,7 +26,7 @@ set(MODULE_SOURCES
     OrthogonalMatchingPursuit.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximity_operators)
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximity_operators elsa_shearlets)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 ADD_ELSA_MODULE(
@@ -41,4 +41,4 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
     )
 endif()
  
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_problems elsa_proximity_operators)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_problems elsa_proximity_operators elsa_shearlets)
