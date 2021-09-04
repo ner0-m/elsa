@@ -3,11 +3,19 @@
 include(CMakeFindDependencyMacro)
 
 set(_dependend_components @INSTALL_MODULE_DEPENDENCIES@)
+set(_module_name @module_name@)
 
-foreach(_comp ${_dependend_components}) 
-    message(STATUS "Loading: ${_comp}") 
+foreach(_comp ${_dependend_components})
+    # no need to find everything again,
+    # this list is filled up recursively
+    list(FIND _elsa_modules_found "${_comp}" MOD_LOADED)
+    if(NOT MOD_LOADED EQUAL "-1")
+        continue()
+    endif()
+    message(STATUS "Elsa module ${_module_name}: loading component ${_comp} in ${CMAKE_CURRENT_LIST_DIR}")
     find_dependency(${_comp} REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR})
     if (${_comp}_FOUND)
         include(${CMAKE_CURRENT_LIST_DIR}/${_comp}Targets.cmake)
-    endif(${_comp}_FOUND) 
+        list(APPEND _elsa_modules_found "${_comp}")
+    endif()
 endforeach()

@@ -317,6 +317,19 @@ namespace elsa
         /// return a const view of this DataContainer with a different descriptor
         const DataContainer<data_t> viewAs(const DataDescriptor& dataDescriptor) const;
 
+        /// @brief Slice the container in the last dimension
+        ///
+        /// Access a portion of the container via a slice. The slicing always is in the last
+        /// dimension. So for a 3D volume, the slice would be an sliced in the z direction and would
+        /// be a part of the x-y plane.
+        ///
+        /// A slice is always the same dimension as the original DataContainer, but with a thickness
+        /// of 1 in the last dimension (i.e. the coefficient of the last dimension is 1)
+        const DataContainer<data_t> slice(index_t i) const;
+
+        /// @overload non-canst/read-write overload
+        DataContainer<data_t> slice(index_t i);
+
         /// iterator for DataContainer (random access and continuous)
         using iterator = DataContainerIterator<DataContainer<data_t>>;
 
@@ -577,13 +590,52 @@ namespace elsa
         }
     }
 
+    /// Element-wise maximum value operation between two operands
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto cwiseMax(LHS const& lhs, RHS const& rhs)
+    {
+        constexpr bool isLHSComplex = isComplex<GetOperandDataType_t<LHS>>;
+        constexpr bool isRHSComplex = isComplex<GetOperandDataType_t<RHS>>;
+
+#ifdef ELSA_CUDA_VECTOR
+        auto cwiseMaxGPU = [](auto const& lhs, auto const& rhs, bool) {
+            return quickvec::cwiseMax(lhs, rhs);
+        };
+#endif
+        auto cwiseMax = [] {
+            if constexpr (isLHSComplex && isRHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().abs().max(right.array().abs())).matrix();
+                };
+            } else if constexpr (isLHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().abs().max(right.array())).matrix();
+                };
+            } else if constexpr (isRHSComplex) {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().max(right.array().abs())).matrix();
+                };
+            } else {
+                return [](auto const& left, auto const& right) {
+                    return (left.array().max(right.array())).matrix();
+                };
+            }
+        }();
+
+#ifdef ELSA_CUDA_VECTOR
+        return Expression{Callables{cwiseMax, cwiseMaxGPU}, lhs, rhs};
+#else
+        return Expression{cwiseMax, lhs, rhs};
+#endif
+    }
+
     /// Element-wise absolute value operation
     template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto abs(Operand const& operand)
+    auto cwiseAbs(Operand const& operand)
     {
         auto abs = [](auto const& operand) { return (operand.array().abs()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR // TODO if this will be accepted, make the respective changes in quickvec
-        auto absGPU = [](auto const& operand, bool /**/) { return quickvec::abs(operand); };
+#ifdef ELSA_CUDA_VECTOR
+        auto absGPU = [](auto const& operand, bool) { return quickvec::cwiseAbs(operand); };
         return Expression{Callables{abs, absGPU}, operand};
 #else
         return Expression{abs, operand};
@@ -641,5 +693,4 @@ namespace elsa
         return Expression{log, operand};
 #endif
     }
-
 } // namespace elsa
