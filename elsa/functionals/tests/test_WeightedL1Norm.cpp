@@ -64,7 +64,7 @@ TEST_CASE_TEMPLATE("WeightedL1Norm: Testing the weighted, l1 norm functional", T
 
             THEN("the evaluate works as expected")
             {
-                REQUIRE(func.evaluate(x) == Approx(scaleFactors.dot(abs(x))));
+                REQUIRE(func.evaluate(x) == Approx(scaleFactors.dot(cwiseAbs(x))));
             }
 
             THEN("the gradient and Hessian throw as expected")
@@ -123,7 +123,7 @@ TEST_CASE_TEMPLATE("WeightedL1Norm: Testing the weighted, l1 norm functional", T
                 dataVec.setRandom();
                 DataContainer<TestType> x(dd, dataVec);
 
-                REQUIRE(func.evaluate(x) == Approx(scaleFactors.dot(abs(x - b))));
+                REQUIRE(func.evaluate(x) == Approx(scaleFactors.dot(cwiseAbs(x - b))));
                 REQUIRE_THROWS_AS(func.getGradient(x), LogicError);
                 REQUIRE_THROWS_AS(func.getHessian(x), LogicError);
             }
