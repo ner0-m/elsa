@@ -6,7 +6,7 @@
 namespace elsa
 {
     /**
-     * @brief Class representing the Peak Signal-to-Noise Ratio (PSNR)
+     * @brief Class representing the Relative Error (RE)
      *
      * @author Andi Braimllari - initial code
      *
@@ -15,12 +15,10 @@ namespace elsa
      * References:
      */
     template <typename data_t = real_t>
-    class PSNR
+    class RelativeError
     {
     public:
-        static data_t calculate(DataContainer<data_t> x, DataContainer<data_t> y,
-                                unsigned int dataRange);
-
-        static data_t calculate(DataContainer<data_t> x, DataContainer<data_t> y);
+        static long double calculate(DataContainer<data_t> leftSignal,
+                                     DataContainer<data_t> rightSignal);
     };
 } // namespace elsa

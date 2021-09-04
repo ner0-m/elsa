@@ -1,13 +1,13 @@
 /**
- * @file test_MSE.cpp
+ * @file test_RelativeError.cpp
  *
- * @brief Tests for the MSE class
+ * @brief Tests for the RelativeError class
  *
  * @author Andi Braimllari
  */
 
 #include "Error.h"
-#include "MSE.h"
+#include "RelativeError.h"
 #include "VolumeDescriptor.h"
 
 #include "doctest/doctest.h"
@@ -18,7 +18,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("metrics");
 
-TEST_CASE_TEMPLATE("MSE: Testing construction", data_t, float, double)
+TEST_CASE_TEMPLATE("RelativeError: Testing construction", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
@@ -26,14 +26,14 @@ TEST_CASE_TEMPLATE("MSE: Testing construction", data_t, float, double)
         numCoeff << 8, 4, 52;
         VolumeDescriptor volDescr(numCoeff);
 
-        WHEN("instantiating an MSE operator")
+        WHEN("instantiating an RelativeError operator")
         {
             THEN("the DataDescriptors are equal") {}
         }
 
-        WHEN("cloning an MSE operator")
+        WHEN("cloning an RelativeError operator")
         {
-            THEN("cloned MSE operator equals original MSE operator") {}
+            THEN("cloned RelativeError operator equals original RelativeError operator") {}
         }
     }
 }
