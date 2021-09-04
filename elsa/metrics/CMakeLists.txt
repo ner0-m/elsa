@@ -1,8 +1,8 @@
 # list all the headers of the module
-set(MODULE_HEADERS MSE.h PSNR.h)
+set(MODULE_HEADERS RelativeError.h PeakSignaltoNoiseRatio.h)
 
 # list all the code files of the module
-set(MODULE_SOURCES MSE.cpp PSNR.cpp)
+set(MODULE_SOURCES RelativeError.cpp PeakSignaltoNoiseRatio.cpp)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)
