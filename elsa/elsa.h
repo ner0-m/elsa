@@ -74,6 +74,9 @@
 #include "JosephsMethodCUDA.h"
 #endif
 
+// Shearlet headers
+#include "ShearletTransform.h"
+
 // Solver headers
 #include "Solver.h"
 #include "GradientDescent.h"

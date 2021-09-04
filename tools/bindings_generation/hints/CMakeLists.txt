@@ -15,6 +15,7 @@ if (PYTHONLIBS_FOUND)
                     projectors_cuda_hints.cpp
                     projectors_hints.cpp
                     proximity_operators_hints.cpp
+                    shearlets_hints.cpp
                     solvers_hints.cpp)
 
     target_include_directories(${ELSA_PYBIND_HINTS} PUBLIC ${PYTHON_INCLUDE_DIRS})

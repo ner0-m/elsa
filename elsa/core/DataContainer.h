@@ -9,12 +9,14 @@
 #include "Error.h"
 #include "Expression.h"
 #include "TypeCasts.hpp"
+#include <limits>
 
 #ifdef ELSA_CUDA_VECTOR
 #include "DataHandlerGPU.h"
 #include "DataHandlerMapGPU.h"
 #endif
 
+#include <iostream>
 #include <memory>
 #include <type_traits>
 
@@ -29,6 +31,7 @@ namespace elsa
      * @author David Frank - added DataHandler concept, iterators
      * @author Nikola Dinev - add block support
      * @author Jens Petit - expression templates
+     * @author Jonas Jelten - various enhancements, fft, complex handling, pretty formatting
      *
      * @tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
      *
@@ -47,7 +50,8 @@ namespace elsa
         DataContainer() = delete;
 
         /**
-         * @brief Constructor for empty DataContainer, no initialisation is performed
+         * @brief Constructor for empty DataContainer, no initialisation is performed,
+         *        but the underlying space is allocated.
          *
          * @param[in] dataDescriptor containing the associated metadata
          * @param[in] handlerType the data handler (default: CPU)
@@ -240,6 +244,84 @@ namespace elsa
         /// return the sum of all elements of this signal
         data_t sum() const;
 
+        /// convert to the fourier transformed signal
+        void fft() const;
+
+        /// convert to the inverse fourier transformed signal
+        void ifft() const;
+
+        /// if the datacontainer is already complex, return itself.
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>, DataContainer<_data_t>> asComplex() const
+        {
+            return *this;
+        }
+
+        /// if the datacontainer is not complex,
+        /// return a copy and fill in 0 as imaginary values
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<not isComplex<_data_t>, DataContainer<std::complex<_data_t>>>
+            asComplex() const
+        {
+            DataContainer<std::complex<data_t>> ret{
+                *this->_dataDescriptor,
+                this->_dataHandlerType,
+            };
+
+            // extend with complex zero value
+            for (index_t idx = 0; idx < this->getSize(); ++idx) {
+                ret[idx] = std::complex<data_t>{(*this)[idx], 0};
+            }
+
+            return ret;
+        }
+
+        /// get only the real part and discard the imaginary values
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>,
+                                  DataContainer<GetFloatingPointType_t<_data_t>>>
+            getReal() const
+        {
+            return this->getComplexSplitup<true>();
+        }
+
+        /// get only the imaginary part and discard the real values
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>,
+                                  DataContainer<GetFloatingPointType_t<_data_t>>>
+            getImaginary() const
+        {
+            return this->getComplexSplitup<false>();
+        }
+
+        /// return the minimum element of all the stored values
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<!isComplex<_data_t>, _data_t> min() const
+        {
+            data_t min = std::numeric_limits<data_t>::max();
+            for (index_t idx = 0; idx < this->getSize(); ++idx) {
+                auto&& elem = (*this)[idx];
+                if (elem < min) {
+                    min = elem;
+                }
+            }
+            return min;
+        }
+
+        /// return the maximum element of all the stored values
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<!isComplex<_data_t>, _data_t> max() const
+        {
+            data_t max = std::numeric_limits<data_t>::min();
+            for (index_t idx = 0; idx < this->getSize(); ++idx) {
+                auto&& elem = (*this)[idx];
+                if (elem > max) {
+                    max = elem;
+                }
+            }
+            return max;
+        }
+
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
 
@@ -403,6 +485,9 @@ namespace elsa
         template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
+        /// write a pretty-formatted string representation to stream
+        void format(std::ostream& os) const;
+
         /**
          * @brief Factory function which returns GPU based DataContainers
          *
@@ -457,7 +542,42 @@ namespace elsa
          * assignment should be performed or not.
          */
         bool canAssign(DataHandlerType handlerType);
+
+        /// helper function to get either the real or imaginary part
+        /// from the complex values
+        template <bool get_real, typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>,
+                                  DataContainer<GetFloatingPointType_t<_data_t>>>
+            getComplexSplitup() const
+        {
+            using f_type = GetFloatingPointType_t<_data_t>;
+            DataContainer<f_type> ret{
+                *this->_dataDescriptor,
+                this->_dataHandlerType,
+            };
+
+            // drop one of real/imaginary parts
+            for (index_t idx = 0; idx < this->getSize(); ++idx) {
+                auto&& val = (*this)[idx];
+                if constexpr (get_real) {
+                    ret[idx] = val.real();
+                } else {
+                    ret[idx] = val.imag();
+                }
+            }
+
+            return ret;
+        }
     };
+
+    /// pretty output formatting.
+    /// for configurable output, use `DataContainerFormatter` directly.
+    template <typename T>
+    std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<T>& dc)
+    {
+        dc.format(os);
+        return os;
+    }
 
     /// Concatenate two DataContainers to one (requires copying of both)
     template <typename data_t>
