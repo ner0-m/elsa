@@ -76,10 +76,10 @@ namespace elsa
         DataContainer<data_t> sumByLastAxis(DataContainer<data_t> container) const;
 
     protected:
-        void applyImpl(const DataContainer<data_t>& f, DataContainer<data_t>& SHf) const override;
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& SHty) const override;
+                              DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         ShearletTransform<data_t>* cloneImpl() const override;

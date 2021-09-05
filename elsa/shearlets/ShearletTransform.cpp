@@ -67,8 +67,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void ShearletTransform<data_t>::applyImpl(const DataContainer<data_t>& f,
-                                              DataContainer<data_t>& SHf) const
+    void ShearletTransform<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                              DataContainer<data_t>& Ax) const
     {
         Timer timeguard("ShearletTransform", "apply");
 
@@ -90,19 +90,19 @@ namespace elsa
 
         // TODO use fft when available
 
-        DataContainer<data_t> fftImg = f;
+        DataContainer<data_t> fftImg = x;
         // fftImg.fft();
 
-        DataContainer<data_t> intermRes(_spectra.value().getDataDescriptor());
+        DataContainer<data_t> intermRes(getSpectra().getDataDescriptor());
 
         for (index_t i = 0;
              i < intermRes.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2]; i++) {
-            DataContainer<data_t> fftSlice = _spectra.value().slice(i) * fftImg;
+            DataContainer<data_t> fftSlice = getSpectra().slice(i) * fftImg;
             // fftSlice.ifft();
             intermRes.slice(i) = fftSlice;
         }
 
-        SHf = intermRes; // TODO inline SHf after testing this
+        Ax = intermRes; // TODO inline SHf after testing this
 
         // DataContainer<std::complex<data_t>> fftImg = fft.fft2(f);
         // // AFAIK SHf's imaginary parts should all be 0 here, cast to float
@@ -111,7 +111,7 @@ namespace elsa
 
     template <typename data_t>
     void ShearletTransform<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                     DataContainer<data_t>& SHty) const
+                                                     DataContainer<data_t>& Aty) const
     {
         Timer timeguard("ShearletTransform", "applyAdjoint");
 
@@ -136,16 +136,16 @@ namespace elsa
         DataContainer<data_t> fftY = y;
         // fftY.fft();
 
-        DataContainer<data_t> intermRes(_spectra.value().getDataDescriptor());
+        DataContainer<data_t> intermRes(getSpectra().getDataDescriptor());
 
         for (index_t i = 0;
              i < intermRes.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2]; i++) {
-            // DataContainer<data_t> fftSlice = _spectra.value().slice(i) * fftY;
+            // DataContainer<data_t> fftSlice = getSpectra().slice(i) * fftY;
             // fftSlice.ifft();
             // intermRes.slice(i) = fftSlice;
         }
 
-        SHty = sumByLastAxis(intermRes); // TODO inline SHty after testing this
+        Aty = sumByLastAxis(intermRes); // TODO inline SHty after testing this
 
         // SHty = getReals(np.sum(fft.ifft2(fft.fft2(y) * getSpectra()), axis = 0));
     }
