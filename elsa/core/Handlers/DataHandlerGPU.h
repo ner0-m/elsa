@@ -128,6 +128,12 @@ namespace elsa
         /// return the sum of all elements of the data vector
         data_t sum() const override;
 
+        /// return the min of all elements of the data vector
+        data_t minElement() const override;
+
+        /// return the max of all elements of the data vector
+        data_t maxElement() const override;
+
         /// copy assign another DataHandlerGPU
         DataHandlerGPU<data_t>& operator=(const DataHandlerGPU<data_t>& v);
 

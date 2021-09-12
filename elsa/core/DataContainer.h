@@ -240,6 +240,12 @@ namespace elsa
         /// return the sum of all elements of this signal
         data_t sum() const;
 
+        /// return the min of all elements of this signal
+        data_t minElement() const;
+
+        /// return the max of all elements of this signal
+        data_t maxElement() const;
+
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
 

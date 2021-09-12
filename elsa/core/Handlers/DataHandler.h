@@ -75,6 +75,12 @@ namespace elsa
         /// return the sum of all elements of the data vector
         virtual data_t sum() const = 0;
 
+        /// return the min of all elements of the data vector
+        virtual data_t minElement() const = 0;
+
+        /// return the max of all elements of the data vector
+        virtual data_t maxElement() const = 0;
+
         /// compute in-place element-wise addition of another vector v
         virtual DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) = 0;
 

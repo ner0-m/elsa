@@ -217,6 +217,14 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing the reduction operations", Tes
                 auto [dc2, randVec2] = generateRandomContainer<data_t>(desc, TestType::handler_t);
 
                 REQUIRE_UNARY(checkApproxEq(dc.dot(dc2), randVec.dot(randVec2)));
+
+                if constexpr (isComplex<data_t>) {
+                    CHECK_THROWS(dc.minElement());
+                    CHECK_THROWS(dc.maxElement());
+                } else {
+                    REQUIRE_UNARY(checkApproxEq(dc.minElement(), randVec.array().minCoeff()));
+                    REQUIRE_UNARY(checkApproxEq(dc.maxElement(), randVec.array().maxCoeff()));
+                }
             }
         }
     }
@@ -293,8 +301,8 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(dcSqrt[i], randVec.array().square().sqrt()[i]));
 
-                // do exponent check only for floating point types as for integer will likely lead
-                // to overflow due to random init over full value range
+                // do exponent check only for floating point types as for integer will likely
+                // lead to overflow due to random init over full value range
                 if constexpr (!std::is_integral_v<data_t>) {
                     DataContainer dcExp = exp(dc);
                     for (index_t i = 0; i < dc.getSize(); ++i)
@@ -399,7 +407,8 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
             auto [dcComps1, compsVec1] =
                 generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
 
-            THEN("the element-wise maximum operation works as expected for two real DataContainers")
+            THEN("the element-wise maximum operation works as expected for two real "
+                 "DataContainers")
             {
                 auto [dcReals2, realsVec2] =
                     generateRandomContainer<real_t>(desc, TestType::handler_t);

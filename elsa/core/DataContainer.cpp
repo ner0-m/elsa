@@ -171,6 +171,18 @@ namespace elsa
     }
 
     template <typename data_t>
+    data_t DataContainer<data_t>::minElement() const
+    {
+        return _dataHandler->minElement();
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::maxElement() const
+    {
+        return _dataHandler->maxElement();
+    }
+
+    template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(const DataContainer<data_t>& dc)
     {
         *_dataHandler += *dc._dataHandler;
