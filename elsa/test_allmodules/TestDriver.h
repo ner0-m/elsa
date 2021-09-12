@@ -167,8 +167,8 @@ namespace elsa
 
             // Setup a phantom, default a Modified Shepp Logan
             auto phantom = phantomSetup(dim, size);
-            // Calculate the norm of the ground truth TODO: add L2Norm to DataDescriptor
-            const auto phantomNorm = std::sqrt(phantom.squaredL2Norm());
+            // Calculate the norm of the ground truth
+            const auto phantomNorm = phantom.l2Norm();
 
             // Add noise, default NoNoiseGenerator
             phantom = noiseGen(phantom);
@@ -214,7 +214,7 @@ namespace elsa
 
                     // Calculate error
                     DataContainer diff = rec - phantom;
-                    const auto absError = std::sqrt(diff.squaredL2Norm());
+                    const auto absError = diff.l2Norm();
                     const auto relError = absError / phantomNorm;
 
                     stats[i] = {time, absError, relError};

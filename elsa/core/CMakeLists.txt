@@ -4,6 +4,7 @@ set(MODULE_HEADERS
     Backtrace.h
     Cloneable.h
     Utilities/Badge.hpp
+    Utilities/Metrics.hpp
     Utilities/Statistics.hpp
     Utilities/TypeCasts.hpp
     Descriptors/DataDescriptor.h
