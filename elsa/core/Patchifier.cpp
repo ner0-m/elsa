@@ -8,8 +8,8 @@ namespace elsa
         : _imageShape(imageShape), _blockSize(blockSize), _stride(stride)
     {
         IndexVector_t coeffsPerDim = imageShape.getNumberOfCoefficientsPerDimension();
-        _nPatchesRow = (1 + (coeffsPerDim[0] - blockSize) / stride);
-        _nPatchesCol = (1 + (coeffsPerDim[1] - blockSize) / stride);
+        _nPatchesCol = (1 + (coeffsPerDim[0] - blockSize) / stride);
+        _nPatchesRow = (1 + (coeffsPerDim[1] - blockSize) / stride);
     }
 
     template <typename data_t>
@@ -18,9 +18,6 @@ namespace elsa
         if (image.getDataDescriptor() != _imageShape)
             throw InvalidArgumentError(
                 "Patchifier::im2patches: image has non-matching data descriptor");
-
-        IndexVector_t coeffsPerDim =
-            image.getDataDescriptor().getNumberOfCoefficientsPerDimension();
 
         index_t nPatches = _nPatchesRow * _nPatchesCol;
 
@@ -81,6 +78,13 @@ namespace elsa
                 }
             }
         }
+
+        // avoid divison by zero for pixels that haven't been touched
+        for (auto& coeff : coefficients) {
+            if (coeff == 0)
+                coeff = 1;
+        }
+
         image /= coefficients;
 
         return image;
@@ -90,13 +94,12 @@ namespace elsa
     IndexVector_t Patchifier<data_t>::getImageIdx(index_t patchNr)
     {
         IndexVector_t idx(2);
-        idx[0] = _stride * (patchNr % _nPatchesRow); // col
-        idx[1] = _stride * (patchNr / _nPatchesRow); // row
+        idx[0] = _stride * (patchNr % _nPatchesCol); // col
+        idx[1] = _stride * (patchNr / _nPatchesCol); // row
         return idx;
     }
     // ------------------------------------------
     // explicit template instantiation
     template class Patchifier<float>;
     template class Patchifier<double>;
-
 } // namespace elsa
