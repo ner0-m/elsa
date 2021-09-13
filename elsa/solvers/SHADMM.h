@@ -3,6 +3,7 @@
 #include "Solver.h"
 #include "VolumeDescriptor.h"
 #include "SoftThresholding.h"
+#include "ProximityOperator.h"
 #include "SplittingProblem.h"
 #include "BlockLinearOperator.h"
 #include "WeightedL1Norm.h"
@@ -206,17 +207,21 @@ namespace elsa
                 /// this means shrink ∈ R ^ Ln^2
                 SoftThresholding<data_t> shrink(volDescrOfLn2);
                 // w is pulled from the WeightedL1Norm
-                // TODO w[i] instead of w[0]
                 P1z =
-                    shrink.apply(shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}})) + P1u,
-                                 geometry::Threshold(_rho0 * w[0] / _rho1));
+                    shrink.apply(shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}}))
+                                         .viewAs(volDescrOfLn2)
+                                     + P1u,
+                                 ProximityOperator<data_t>::valuesToThresholds(_rho0 * w / _rho1));
                 // TODO element-wise max?
                 P2z = maxWithZero(f + P2u); // TODO is this ReLU-like functionality present already?
                 // z is concatenating P1z and P2z? if not, what is it then?
                 // TODO consider using BlockLinearOperator for the final ADMM
 
                 /// P1u = P1u + SH.apply(f) - P1z; // not accounting for reshaping f
-                P1u = P1u + shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}})) - P1z;
+                P1u = P1u
+                      + shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}}))
+                            .viewAs(volDescrOfLn2)
+                      - P1z;
                 P2u = P2u + f - P2z;
                 // u is concatenating P1u and P2u? if not, what is it then?
                 // TODO consider using BlockLinearOperator for the final ADMM

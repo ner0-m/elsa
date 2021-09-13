@@ -22,6 +22,10 @@ namespace elsa
         : Functional<data_t>(residual), _weightingOp{weightingOp}
     {
         // sanity check
+        if (weightingOp.getDataDescriptor().getNumberOfDimensions() != 1) {
+            throw InvalidArgumentError("WeightedL1Norm: non-1D weighting operator");
+        }
+        // sanity check
         if (residual.getRangeDescriptor().getNumberOfCoefficients()
             != weightingOp.getDataDescriptor().getNumberOfCoefficients())
             throw InvalidArgumentError(

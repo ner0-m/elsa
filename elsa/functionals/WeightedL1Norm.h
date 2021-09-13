@@ -34,7 +34,7 @@ namespace elsa
          * a scalar
          *
          * @param[in] residual to be used when evaluating the functional (or its derivatives)
-         * @param[in] weightingOp diagonal scaling operator used for weights
+         * @param[in] weightingOp vector used for weights
          */
         WeightedL1Norm(const Residual<data_t>& residual, const DataContainer<data_t>& weightingOp);
 

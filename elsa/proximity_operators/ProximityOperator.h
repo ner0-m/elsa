@@ -110,6 +110,17 @@ namespace elsa
                    std::vector<geometry::Threshold<data_t>> thresholds,
                    DataContainer<data_t>& prox) const;
 
+        /// conversion of a list of values to a list of Thresholds
+        static std::vector<geometry::Threshold<data_t>>
+            valuesToThresholds(DataContainer<data_t> values)
+        {
+            std::vector<geometry::Threshold<data_t>> thresholds(0);
+            for (data_t value : values) {
+                thresholds.push_back(geometry::Threshold<data_t>(value));
+            }
+            return thresholds;
+        }
+
     protected:
         std::unique_ptr<DataDescriptor> _rangeDescriptor;
 
