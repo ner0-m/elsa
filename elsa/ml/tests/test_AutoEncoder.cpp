@@ -18,49 +18,22 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("ml");
 
-TEST_CASE_TEMPLATE("AutoEncoder: Testing construction", data_t, float, double)
+TEST_CASE_TEMPLATE("AutoEncoder: Pre-training testing", TestType, float, double)
 {
     GIVEN("a DataDescriptor")
     {
-        // ...
+        VolumeDescriptor mnistShape({28, 28});
+        index_t batchSize = 32;
 
         WHEN("instantiating an AutoEncoder model")
         {
-            ml::AutoEncoder<real_t, elsa::ml::MlBackend::Cudnn> aeModel(VolumeDescriptor{{28, 28}},
-                                                                        32);
+            ml::AutoEncoder<TestType, elsa::ml::MlBackend::Cudnn> aeModel(mnistShape, batchSize);
 
-            THEN("the DataDescriptors are equal")
+            THEN("the shape of the input matches the shape of the output")
             {
-                //                REQUIRE_EQ(sThrOp.getRangeDescriptor(), volDescr);
-            }
-        }
-
-        WHEN("cloning an AutoEncoder model")
-        {
-            // TODO clone object here
-
-            THEN("cloned AutoEncoder model equals original AutoEncoder model")
-            {
-                //                REQUIRE_NE(sThrOpClone.get(), &sThrOp);
-                //                REQUIRE_EQ(*sThrOpClone, sThrOp);
-            }
-        }
-    }
-}
-
-TEST_CASE_TEMPLATE("AutoEncoder: Pre-training testing", data_t, float, double)
-{
-    GIVEN("a DataDescriptor")
-    {
-        // ...
-
-        WHEN("instantiating an AutoEncoder model")
-        {
-            // ...
-
-            THEN("the spatial dimensions of the input match to those of the output")
-            {
-                // ...
+                DataContainer<TestType> randomValues(mnistShape);
+                DataContainer<TestType> prediction = aeModel.predict(randomValues);
+                REQUIRE_EQ(prediction.getDataDescriptor(), mnistShape);
             }
         }
     }

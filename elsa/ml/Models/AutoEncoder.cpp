@@ -37,4 +37,7 @@ namespace elsa::ml
         setInputDescriptors();
     }
     // TODO add here more code
+
+    template class AutoEncoder<float>;
+    template class AutoEncoder<double>;
 } // namespace elsa::ml

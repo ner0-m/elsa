@@ -49,14 +49,14 @@ namespace elsa::ml
     private:
         Input<data_t> _input;
 
-        Conv2D<data_t> _convContr1 = ml::Conv2D<data_t>(16, VolumeDescriptor{{3, 3, 1}},
-                                                        ml::Activation::Relu, 1, ml::Padding::Same);
+        Conv2D<data_t> _convContr1 =
+            ml::Conv2D<data_t>(16, {3, 3, 1}, ml::Activation::Relu, 1, ml::Padding::Same);
 
-        Conv2D<data_t> _convContr2 = ml::Conv2D<data_t>(32, VolumeDescriptor{3, 3, 16},
-                                                        ml::Activation::Relu, 1, ml::Padding::Same);
+        Conv2D<data_t> _convContr2 =
+            ml::Conv2D<data_t>(32, {3, 3, 16}, ml::Activation::Relu, 1, ml::Padding::Same);
 
-        Conv2D<data_t> _convContr3 = ml::Conv2D<data_t>(64, VolumeDescriptor{3, 3, 32},
-                                                        ml::Activation::Relu, 1, ml::Padding::Same);
+        Conv2D<data_t> _convContr3 =
+            ml::Conv2D<data_t>(64, {3, 3, 32}, ml::Activation::Relu, 1, ml::Padding::Same);
 
         MaxPooling2D<data_t> _maxPool1 = ml::MaxPooling2D<data_t>();
         MaxPooling2D<data_t> _maxPool2 = ml::MaxPooling2D<data_t>();
@@ -66,11 +66,11 @@ namespace elsa::ml
         UpSampling2D<data_t> _upsample2 =
             ml::UpSampling2D<data_t>({2, 2}, ml::Interpolation::Bilinear);
 
-        Conv2D<data_t> _convExpan1 = ml::Conv2D<data_t>(32, VolumeDescriptor{3, 3, 64},
-                                                        ml::Activation::Relu, 1, ml::Padding::Same);
+        Conv2D<data_t> _convExpan1 =
+            ml::Conv2D<data_t>(32, {3, 3, 64}, ml::Activation::Relu, 1, ml::Padding::Same);
 
-        Conv2D<data_t> _convExpan2 = ml::Conv2D<data_t>(16, VolumeDescriptor{3, 3, 32},
-                                                        ml::Activation::Relu, 1, ml::Padding::Same);
+        Conv2D<data_t> _convExpan2 =
+            ml::Conv2D<data_t>(16, {3, 3, 32}, ml::Activation::Relu, 1, ml::Padding::Same);
 
         Conv2D<data_t> _conv1x1;
     };
