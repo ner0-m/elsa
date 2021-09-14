@@ -164,42 +164,6 @@ if(ELSA_MASTER_PROJECT)
       find_package(Npp)
     endif(ELSA_BUILD_ML_CUDNN)
 
-    # Adding quickvec
-    if(ELSA_CUDA_VECTOR)
-        message(STATUS "CUDA support requested...")
-        include(CheckLanguage)
-        check_language(CUDA)
-        find_package(CUDA 11.0 REQUIRED)
-
-        if(CMAKE_CUDA_COMPILER)
-            enable_language(CUDA)
-            CPMAddPackage(
-                NAME Quickvec
-                GIT_REPOSITORY https://gitlab.lrz.de/IP/quickvec.git
-                GIT_TAG cuda_11
-            )
-
-            if(Quickvec_ADDED)
-                message(STATUS "CUDA support enabled")
-                message(STATUS "Enabling DataHandlerGPU")
-                message(STATUS "The default container type will be on the GPU")
-
-                set(ELSA_BUILD_WITH_QUICKVEC TRUE)
-                add_definitions(-DELSA_CUDA_VECTOR)
-            else()
-                message(FATAL_ERROR "CUDA_VECTOR library quickvec could not be added.")
-                message(STATUS "CUDA compiler not found!")
-                message(STATUS "Compiling without a DataHandlerGPU")
-                message(STATUS "The default container type will be CPU")
-
-                set(ELSA_BUILD_WITH_QUICKVEC FALSE)
-                set(ELSA_CUDA_VECTOR OFF)
-            endif()
-        else()
-            message(FATAL_ERROR "CUDA_VECTOR language support not found")
-        endif()
-    endif()
-
     if (${ELSA_BUILD_PYTHON_BINDINGS})
         CPMAddPackage(
             NAME pybind11
@@ -210,6 +174,37 @@ if(ELSA_MASTER_PROJECT)
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
 endif()
+
+# Enable quickvec if requested
+if(ELSA_CUDA_VECTOR)
+    message(STATUS "CUDA support requested...")
+    include(CheckLanguage)
+    check_language(CUDA)
+    find_package(CUDA 11.0 REQUIRED)
+
+    if(CMAKE_CUDA_COMPILER)
+        enable_language(CUDA)
+        message(STATUS "CUDA support enabled")
+        message(STATUS "Enabling DataHandlerGPU")
+        message(STATUS "The default container type will be on the GPU")
+
+        set(ELSA_BUILD_WITH_QUICKVEC TRUE)
+        add_definitions(-DELSA_CUDA_VECTOR)
+    else()
+        message(FATAL_ERROR "CUDA compiler not found!")
+        message(STATUS "Compiling without a DataHandlerGPU")
+        message(STATUS "The default container type will be CPU")
+
+        set(ELSA_BUILD_WITH_QUICKVEC FALSE)
+        set(ELSA_CUDA_VECTOR OFF)
+    endif()
+endif()
+
+
+# set where to install the exports/targets
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
 # include the install_elsa_module function
 include(InstallElsaModule)

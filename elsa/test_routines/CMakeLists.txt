@@ -34,7 +34,7 @@ set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT
 if(${ELSA_BUILD_WITH_QUICKVEC})
     set_source_files_properties(${MODULE_SOURCES} PROPERTIES LANGUAGE CUDA)
     target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC "Quickvec::quickvec")
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC "elsa_quickvec")
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cuda_std_17)
 endif()
 

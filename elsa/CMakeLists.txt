@@ -7,6 +7,20 @@ macro(REGISTER_MODULE name)
     set(ELSA_REGISTERED_TARGETS "${ELSA_REGISTERED_TARGETS};elsa_${name}" PARENT_SCOPE)
 endmacro()
 
+macro(SET_QUICKVEC_OPTIONS elsa_module_target_name module_sources)
+    # link Quickvec for DataHandlerGPU
+    # Also add the necessary compile definition for quickvec
+    if(${ELSA_BUILD_WITH_QUICKVEC} AND (NOT ${elsa_module_target_name} STREQUAL "elsa_quickvec"))
+        set_source_files_properties(${module_sources} PROPERTIES LANGUAGE CUDA)
+        target_compile_definitions(${elsa_module_target_name} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+        target_link_libraries(${elsa_module_target_name} PUBLIC "elsa_quickvec")
+        target_compile_features(${elsa_module_target_name} PUBLIC cuda_std_17)
+
+        # CMake does not pass -fopenmp to the host compiler when building with NVCC, so set manually
+        target_compile_options(${elsa_module_target_name} PRIVATE -Xcompiler=-fopenmp)
+    endif()
+endmacro()
+
 # Simple macro to add a module
 macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     # Parse arguments
@@ -29,7 +43,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     # Add public dependencies
     target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC "${ADD_MODULE_PUBLIC_DEPS}")
     # Add private dependencies
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE "${ADD_MODULE_PRIVATE_DPES}")
+    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE "${ADD_MODULE_PRIVATE_DEPS}")
     # require C++17
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
     # set -fPIC and -fvisibility=hidden
@@ -40,6 +54,8 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
         ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${elsa_module_name}>
                                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     )
+
+    SET_QUICKVEC_OPTIONS(${ELSA_MODULE_TARGET_NAME} "${MODULE_SOURCES}")
 
     if(ELSA_MASTER_PROJECT)
         set_target_warnings(${ELSA_MODULE_TARGET_NAME} LEVEL ${ELSA_WARNINGS_LEVEL}) 
@@ -63,6 +79,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
         install_elsa_module(${elsa_module_name} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
     endif()
 endmacro()
+
 
 # macro for the unit tests
 macro(ELSA_DOCTEST name)
@@ -92,12 +109,7 @@ macro(ELSA_DOCTEST name)
         ${_testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}"
     )
     
-    if(${ELSA_BUILD_WITH_QUICKVEC})
-        set_source_files_properties(${_testname}.cpp PROPERTIES LANGUAGE CUDA)
-        target_compile_definitions(${_testname} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
-        target_link_libraries(${_testname} PUBLIC "Quickvec::quickvec")
-        target_compile_features(${_testname} PUBLIC cuda_std_17)
-    endif()
+    SET_QUICKVEC_OPTIONS(${_testname} "${_testname}.cpp;test_docmain.cpp")
     # Add test to global dependency
     add_dependencies(tests ${_testname})
     add_dependencies(build-tests ${_testname})
@@ -134,6 +146,8 @@ macro(ELSA_DOCTEST name)
         add_dependencies(build-tests-ml_dnnl ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_ml_cudnn_backend")
         add_dependencies(build-tests-ml_cudnn ${_testname})
+    elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_quickvec")
+        add_dependencies(build-tests-quickvec ${_testname})
     else()
         message(
             WARNING "No test build target for module \"${ELSA_MODULE_TARGET_NAME}\" when adding test \"${_testname}\""
@@ -148,6 +162,9 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
 endif()
 
 # add the elsa modules
+if(ELSA_BUILD_WITH_QUICKVEC)
+    add_subdirectory(quickvec)
+endif(ELSA_BUILD_WITH_QUICKVEC)
 add_subdirectory(core)
 add_subdirectory(logging)
 add_subdirectory(io)

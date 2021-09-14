@@ -26,15 +26,17 @@ macro(ELSA_BENCHMARK NAME)
     # add catch and the corresponding elsa library
     target_link_libraries(bench_${NAME} PRIVATE Catch2::Catch2 elsa::all)
 
-    if (CMAKE_CUDA_COMPILER)
-        enable_language(CUDA)
-        find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-        target_include_directories(bench_${NAME}
-            PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+    if(${ELSA_BUILD_WITH_QUICKVEC})
+        # build with nvcc when using quickvec
+        set_source_files_properties(bench_${NAME}.cpp bench_main PROPERTIES LANGUAGE CUDA)
+        target_compile_definitions(bench_${NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+        target_link_libraries(bench_${NAME} PUBLIC "elsa_quickvec")
+        target_compile_features(bench_${NAME} PUBLIC cuda_std_17)
+    else()
+        # enable C++17
+        target_compile_features(bench_${NAME} PUBLIC cxx_std_17)
     endif()
 
-    # enable C++17
-    target_compile_features(bench_${NAME} PUBLIC cxx_std_17)
     # include helpers
     target_include_directories(bench_${NAME} PRIVATE ${CMAKE_SOURCE_DIR}/elsa/test_routines/)
 
@@ -47,6 +49,7 @@ ELSA_BENCHMARK(Projectors)
 ELSA_BENCHMARK(Intersection)
 ELSA_BENCHMARK(DataContainerConstruction)
 ELSA_BENCHMARK(ExpressionTemplates)
+ELSA_BENCHMARK(Quickvec)
 
 # Add a single executable for all benchmarks, as CTest removes a lot of the output
 add_executable(bench_all EXCLUDE_FROM_ALL bench_main.cpp ${BENCHMARK_SOURCES})

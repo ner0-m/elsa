@@ -51,4 +51,4 @@ REGISTER_MODULE(${ELSA_MODULE_NAME})
 # install the kernels as a module
 install_elsa_module(${ELSA_MODULE_NAME} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
  
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES)
+write_module_config(${ELSA_MODULE_NAME})

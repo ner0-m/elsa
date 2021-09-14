@@ -59,7 +59,7 @@ endif()
 list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen")
 list(APPEND MODULE_PRIVATE_DEPS)
 
-# use OpenMP is available
+# use OpenMP if available
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     list(APPEND MODULE_PUBLIC_DEPS "OpenMP::OpenMP_CXX")
@@ -67,7 +67,7 @@ endif()
 
 # link Quickvec for DataHandlerGPU
 if(${ELSA_BUILD_WITH_QUICKVEC})
-    list(APPEND MODULE_PUBLIC_DEPS "Quickvec::quickvec")
+    list(APPEND MODULE_PUBLIC_DEPS "elsa_quickvec")
 endif()
 
 
@@ -95,16 +95,6 @@ ADD_ELSA_MODULE(
     core "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
-
-# link Quickvec for DataHandlerGPU
-# Also add the necessary compile definition for quickvec
-if(${ELSA_BUILD_WITH_QUICKVEC})
-    set_source_files_properties(Handlers/DataHandlerMapGPU.cpp Handlers/DataHandlerGPU.cpp Handlers/DataHandlerCPU.cpp Handlers/DataHandlerMapCPU.cpp PROPERTIES LANGUAGE CUDA)
-    set_source_files_properties(DataContainer.cpp LinearOperator.cpp PROPERTIES LANGUAGE CUDA)
-    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC "Quickvec::quickvec")
-    target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cuda_std_17)
-endif()
 
 # CMAKE_DL_LIBS is a weird name, so I can't figure out now, how to pass it via argument, so add it later...
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE ${CMAKE_DL_LIBS})
