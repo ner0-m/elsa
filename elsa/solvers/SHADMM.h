@@ -149,37 +149,33 @@ namespace elsa
             index_t L = shearletTransform.getL();
             index_t n = shearletTransform.getWidth();
 
-            VolumeDescriptor volDescrOfn2({n * n});
-            VolumeDescriptor volDescrOfLn2({L * n * n});
-            VolumeDescriptor volDescrOfLp1n2({(L + 1) * n * n});
-
             /// f ∈ R ^ n^2, f is the same as x in the regular ADMM
-            DataContainer<data_t> f(volDescrOfn2);
+            DataContainer<data_t> f(VolumeDescriptor{n * n});
             /// set me to R_φTy, try 0 start as well
             f = 0; // dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
 
             /// this means z ∈ R ^ (L+1)n^2
-            DataContainer<data_t> z(volDescrOfLp1n2);
+            DataContainer<data_t> z(VolumeDescriptor{(L + 1) * n * n});
             z = 0;
 
             /// this means u ∈ R ^ (L+1)n^2
-            DataContainer<data_t> u(volDescrOfLp1n2);
+            DataContainer<data_t> u(VolumeDescriptor{(L + 1) * n * n});
             u = 0;
 
             /// this means P1z ∈ R ^ Ln^2
-            DataContainer<data_t> P1z(volDescrOfLn2);
+            DataContainer<data_t> P1z(VolumeDescriptor{L * n * n});
             P1z = 0;
 
             /// this means P2z ∈ R ^ n^2
-            DataContainer<data_t> P2z(volDescrOfn2);
+            DataContainer<data_t> P2z(VolumeDescriptor{n * n});
             P2z = 0;
 
             /// this means P1u ∈ R ^ Ln^2
-            DataContainer<data_t> P1u(volDescrOfLn2);
+            DataContainer<data_t> P1u(VolumeDescriptor{L * n * n});
             P1u = 0;
 
             /// this means P2u ∈ R ^ n^2
-            DataContainer<data_t> P2u(volDescrOfn2);
+            DataContainer<data_t> P2u(VolumeDescriptor{n * n});
             P2u = 0;
 
             Logger::get("SHADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
@@ -205,11 +201,11 @@ namespace elsa
                 // TODO should f be called x in the merged ADMM? probably yes
 
                 /// this means shrink ∈ R ^ Ln^2
-                SoftThresholding<data_t> shrink(volDescrOfLn2);
+                SoftThresholding<data_t> shrink(VolumeDescriptor{L * n * n});
                 // w is pulled from the WeightedL1Norm
                 P1z =
                     shrink.apply(shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}}))
-                                         .viewAs(volDescrOfLn2)
+                                         .viewAs(VolumeDescriptor{L * n * n})
                                      + P1u,
                                  ProximityOperator<data_t>::valuesToThresholds(_rho0 * w / _rho1));
                 // TODO element-wise max?
@@ -220,7 +216,7 @@ namespace elsa
                 /// P1u = P1u + SH.apply(f) - P1z; // not accounting for reshaping f
                 P1u = P1u
                       + shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}}))
-                            .viewAs(volDescrOfLn2)
+                            .viewAs(VolumeDescriptor{L * n * n})
                       - P1z;
                 P2u = P2u + f - P2z;
                 // u is concatenating P1u and P2u? if not, what is it then?
