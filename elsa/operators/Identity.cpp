@@ -11,6 +11,13 @@ namespace elsa
     }
 
     template <typename data_t>
+    Identity<data_t>::Identity(const DataDescriptor& domainDescriptor,
+                               const DataDescriptor& rangeDescriptor)
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor)
+    {
+    }
+
+    template <typename data_t>
     void Identity<data_t>::applyImpl(const DataContainer<data_t>& x,
                                      DataContainer<data_t>& Ax) const
     {
