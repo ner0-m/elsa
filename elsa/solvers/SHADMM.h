@@ -18,15 +18,15 @@ namespace elsa
     /**
      * @brief Class representing an Alternating Direction Method of Multipliers solver for
      *
-     *  - @f$ argmin_{f>=0}(\frac{1}{2}·\|R_{\phi}f - y\|^2_{2} + \lambda·\|SH(f)\|_{1,w}) @f$
+     *  - @f$ argmin_{x>=0}(\frac{1}{2}·\|R_{\phi}x - y\|^2_{2} + \lambda·\|SH(x)\|_{1,w}) @f$
      *
      * which is essentially a LASSO problem but with @f$ \|SH(x)\|_{1,w} @f$ instead of the usual
-     * @f$ \|x\|_{1} @f$, as well as f restricted to >= 0.
+     * @f$ \|x\|_{1} @f$, as well as x restricted to >= 0.
      *
-     * TODO note that here we also require for f >= 0, unlike in the regular ADMM
+     * TODO note that here we also require for x >= 0, unlike in the regular ADMM
      *
      * TODO potential initial setup
-     *  f^0 := R_φTy
+     *  x^0 := R_φTy
      *  z^0 := 0
      *  u^0 := 0
      *  ρ_2 = 1
@@ -36,21 +36,25 @@ namespace elsa
      * @author Andi Braimllari - initial code
      *
      * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
-     * @tparam FSolver Solver type handling the f update
+     * @tparam XSolver Solver type handling the x update
+     * @tparam ZSolver ProximityOperator type handling the z update
      *
      * TODO this class should EVENTUALLY be merged to the existing ADMM solver
      *
      * References:
      * https://arxiv.org/pdf/1811.04602.pdf
      */
-    template <template <typename> class FSolver, typename data_t = real_t>
+    template <template <typename> class XSolver, template <typename> class ZSolver,
+              typename data_t = real_t>
     class SHADMM : public Solver<data_t>
     {
     public:
         SHADMM(const SplittingProblem<data_t>& splittingProblem) : Solver<data_t>(splittingProblem)
         {
-            static_assert(std::is_base_of<Solver<data_t>, FSolver<data_t>>::value,
-                          "ADMM: FSolver must extend Solver");
+            static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
+                          "ADMM: XSolver must extend Solver");
+            static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
+                          "ADMM: ZSolver must extend ProximityOperator");
         }
 
         /// default destructor
@@ -61,30 +65,6 @@ namespace elsa
             DataContainer<data_t> zeroes(dC.getDataDescriptor());
             zeroes = 0;
             return cwiseMax(dC, zeroes);
-        }
-
-        DataContainer<data_t> getFirstNElements(index_t n, DataContainer<data_t> dc)
-        {
-            DataContainer<data_t> res(dc.getDataDescriptor());
-            for (index_t i = 0; i < dc.getSize(); i++) {
-                if (i >= n) {
-                    res[i] = 0;
-                }
-                res[i] = dc[i];
-            }
-            return res;
-        }
-
-        DataContainer<data_t> getLastNElements(index_t n, DataContainer<data_t> dc)
-        {
-            DataContainer<data_t> res(dc.getDataDescriptor());
-            for (index_t i = 0; i < dc.getSize(); i++) {
-                if (i >= n) {
-                    res[i] = dc[i];
-                }
-                res[i] = 0;
-            }
-            return res;
         }
 
         auto solveImpl(index_t iterations) -> DataContainer<data_t>& override
@@ -149,10 +129,10 @@ namespace elsa
             index_t L = shearletTransform.getL();
             index_t n = shearletTransform.getWidth();
 
-            /// f ∈ R ^ n^2, f is the same as x in the regular ADMM
-            DataContainer<data_t> f(VolumeDescriptor{n * n});
+            /// x ∈ R ^ n^2
+            DataContainer<data_t> x(VolumeDescriptor{n * n});
             /// set me to R_φTy, try 0 start as well
-            f = 0; // dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
+            x = 0; // dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
 
             /// this means z ∈ R ^ (L+1)n^2
             DataContainer<data_t> z(VolumeDescriptor{(L + 1) * n * n});
@@ -179,48 +159,39 @@ namespace elsa
             P2u = 0;
 
             Logger::get("SHADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
-                                        "iteration", "fL2NormSq", "zL2NormSq", "uL2NormSq",
+                                        "iteration", "xL2NormSq", "zL2NormSq", "uL2NormSq",
                                         "rkL2Norm", "skL2Norm");
             for (index_t iter = 0; iter < iterations; ++iter) {
-                LinearResidual<data_t> fLinearResidual(A, c - B.apply(z) - u); // c is 0 in SHADMM
-                RegularizationTerm fRegTerm(_rho / 2, L2NormPow2<data_t>(fLinearResidual));
-                Problem<data_t> fUpdateProblem(dataTerm, fRegTerm, f);
+                LinearResidual<data_t> xLinearResidual(A, c - B.apply(z) - u); // c is 0 in SHADMM
+                RegularizationTerm xRegTerm(_rho / 2, L2NormPow2<data_t>(xLinearResidual));
+                Problem<data_t> xUpdateProblem(dataTerm, xRegTerm, x);
 
-                // TODO for SHADMM we can use CG here
-                FSolver<data_t> fSolver(fUpdateProblem);
-                f = fSolver.solve(_defaultFSolverIterations);
+                XSolver<data_t> xSolver(xUpdateProblem);
+                x = xSolver.solve(_defaultXSolverIterations);
 
-                DataContainer<data_t> rk = f;
+                DataContainer<data_t> rk = A.apply(x) + B.apply(z) - c;
                 DataContainer<data_t> zPrev = z;
-                data_t Afnorm = f.l2Norm();
+                data_t Axnorm = x.l2Norm();
 
                 // ===== here starts very SHADMM specific code =====
-                // TODO add vector of thresholds to SoftThresholding? use ProjectionOperator?
-
                 /// first Ln^2 for P1, last n^2 for P2
-                // TODO should f be called x in the merged ADMM? probably yes
 
-                /// this means shrink ∈ R ^ Ln^2
-                SoftThresholding<data_t> shrink(VolumeDescriptor{L * n * n});
-                // w is pulled from the WeightedL1Norm
+                ZSolver<data_t> zProxOp(VolumeDescriptor{L * n * n});
+                /// w is the weighting operator of the WeightedL1Norm
                 P1z =
-                    shrink.apply(shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}}))
-                                         .viewAs(VolumeDescriptor{L * n * n})
-                                     + P1u,
-                                 ProximityOperator<data_t>::valuesToThresholds(_rho0 * w / _rho1));
-                // TODO element-wise max?
-                P2z = maxWithZero(f + P2u); // TODO is this ReLU-like functionality present already?
-                // z is concatenating P1z and P2z? if not, what is it then?
-                // TODO consider using BlockLinearOperator for the final ADMM
+                    zProxOp.apply(shearletTransform.apply(x.viewAs(VolumeDescriptor{{n, n}}))
+                                          .viewAs(VolumeDescriptor{L * n * n})
+                                      + P1u,
+                                  ProximityOperator<data_t>::valuesToThresholds(_rho0 * w / _rho1));
 
-                /// P1u = P1u + SH.apply(f) - P1z; // not accounting for reshaping f
+                P2z = maxWithZero(x + P2u);
+
+                /// P1u = P1u + SH.apply(x) - P1z
                 P1u = P1u
-                      + shearletTransform.apply(f.viewAs(VolumeDescriptor{{n, n}}))
+                      + shearletTransform.apply(x.viewAs(VolumeDescriptor{{n, n}}))
                             .viewAs(VolumeDescriptor{L * n * n})
                       - P1z;
-                P2u = P2u + f - P2z;
-                // u is concatenating P1u and P2u? if not, what is it then?
-                // TODO consider using BlockLinearOperator for the final ADMM
+                P2u = P2u + x - P2z;
 
                 u = concatenate(P1u, P2u);
                 z = concatenate(P1z, P2z);
@@ -232,7 +203,7 @@ namespace elsa
 
                 // TODO this might just work out of the box instead of the sliced parts as done
                 //  above
-                // u += A.apply(f) + B.apply(z) - c;
+                // u += A.apply(x) + B.apply(z) - c;
 
                 DataContainer<data_t> Atu = u;
                 Atu *= _rho;
@@ -240,7 +211,7 @@ namespace elsa
                 data_t skL2Norm = sk.l2Norm();
 
                 Logger::get("SHADMM")->info("{:<19}| {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", iter,
-                                            f.squaredL2Norm(), z.squaredL2Norm(), u.squaredL2Norm(),
+                                            x.squaredL2Norm(), z.squaredL2Norm(), u.squaredL2Norm(),
                                             rkL2Norm, skL2Norm);
 
                 /// variables for the stopping criteria
@@ -248,7 +219,7 @@ namespace elsa
                                            ? static_cast<data_t>(0.0)
                                            : dataTermResidual.getDataVector().l2Norm();
                 const data_t epsRelMax =
-                    _epsilonRel * std::max(std::max(Afnorm, z.l2Norm()), cL2Norm);
+                    _epsilonRel * std::max(std::max(Axnorm, z.l2Norm()), cL2Norm);
                 const auto epsilonPri = (std::sqrt(rk.getSize()) * _epsilonAbs) + epsRelMax;
 
                 const data_t epsRelL2Norm = _epsilonRel * Atu.l2Norm();
@@ -258,7 +229,7 @@ namespace elsa
                     Logger::get("SHADMM")->info("SUCCESS: Reached convergence at {}/{} iterations ",
                                                 iter, iterations);
 
-                    getCurrentSolution() = f;
+                    getCurrentSolution() = x;
                     return getCurrentSolution();
                 }
 
@@ -267,7 +238,7 @@ namespace elsa
 
             Logger::get("SHADMM")->warn("Failed to reach convergence at {} iterations", iterations);
 
-            getCurrentSolution() = f;
+            getCurrentSolution() = x;
             return getCurrentSolution();
         }
 
@@ -276,23 +247,24 @@ namespace elsa
         using Solver<data_t>::getCurrentSolution;
 
         /// implement the polymorphic clone operation
-        auto cloneImpl() const -> SHADMM<FSolver, data_t>* override
+        auto cloneImpl() const -> SHADMM<XSolver, ZSolver, data_t>* override
         {
-            return new SHADMM<FSolver, data_t>(downcast<SplittingProblem<data_t>>(*_problem));
+            return new SHADMM<XSolver, ZSolver, data_t>(
+                downcast<SplittingProblem<data_t>>(*_problem));
         }
 
     private:
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;
 
-        /// the default number of iterations for SHADMM
-        bool _positiveSolutions{false};
+        /// flag to indicate whether to solve for positive solutions or for unrestricted solutions
+        bool _positiveSolutions{false}; // TODO utilize me when merging with ADMM
 
         /// the default number of iterations for SHADMM
         index_t _defaultIterations{100};
 
-        /// the default number of iterations for the FSolver
-        index_t _defaultFSolverIterations{5};
+        /// the default number of iterations for the XSolver
+        index_t _defaultXSolverIterations{5};
 
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};
