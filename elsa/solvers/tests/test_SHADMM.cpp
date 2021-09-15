@@ -123,7 +123,7 @@ TEST_CASE_TEMPLATE("SHADMM: Solving problems", TestType, float, double)
             SplittingProblem<TestType> splittingProblem(
                 wlsProb.getDataTerm(), std::vector{wL1NormRegTerm, indicRegTerm}, constraint);
 
-            SHADMM<CG, TestType> shadmm(splittingProblem);
+            SHADMM<CG, SoftThresholding, TestType> shadmm(splittingProblem);
 
             THEN("the solution doesn't throw, is not nan and is approximate to the bvector")
             {
