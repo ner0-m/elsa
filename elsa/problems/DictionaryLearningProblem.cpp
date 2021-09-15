@@ -58,6 +58,7 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> DictionaryLearningProblem<data_t>::getRestrictedError(index_t atom)
     {
+        // TODO add bounds check for atom
         findAffectedSignals(atom);
         if (_currentAffectedSignals.size() < 1)
             throw LogicError(
@@ -104,7 +105,7 @@ namespace elsa
                                                        const DataContainer<data_t>& atom,
                                                        const DataContainer<data_t>& representation)
     {
-        // we should add some sanity checks on atom and representation here
+        // TODO we should add some sanity checks on atom and representation here
 
         bool hasValidError = true;
         if (atomIdx != _currentAtomIdx) {
@@ -143,6 +144,7 @@ namespace elsa
     template <typename data_t>
     void DictionaryLearningProblem<data_t>::findAffectedSignals(index_t atom)
     {
+        // TODO add bounds check for atom
         _currentAffectedSignals = IndexVector_t(0);
         _currentAtomIdx = atom;
         index_t nSignals = getIdenticalBlocksDescriptor(_signals).getNumberOfBlocks();
