@@ -6,9 +6,9 @@ namespace elsa
     KSVD<data_t>::KSVD(DictionaryLearningProblem<data_t>& problem, index_t sparsityLevel,
                        data_t epsilon)
         : _problem{problem},
+          _nSamples{getNumberOfSamples(problem.getSignals())},
           _sparsityLevel{sparsityLevel},
-          _epsilon{epsilon},
-          _nSamples{getNumberOfSamples(problem.getSignals())}
+          _epsilon{epsilon}
     {
     }
 
@@ -54,7 +54,6 @@ namespace elsa
                 const auto atom = dict.getAtom(k);
                 const auto& atomDescriptor =
                     atom.getDataDescriptor(); // needed for constructing a new atom
-                auto descriptorClone = atomDescriptor.clone();
                 try {
                     auto modifiedError = _problem.getRestrictedError(k);
                     auto svd = calculateSVD(modifiedError);

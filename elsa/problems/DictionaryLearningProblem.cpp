@@ -6,11 +6,12 @@ namespace elsa
     DictionaryLearningProblem<data_t>::DictionaryLearningProblem(
         const DataContainer<data_t>& signals, const index_t nAtoms)
         : _dictionary(getIdenticalBlocksDescriptor(signals).getDescriptorOfBlock(0), nAtoms),
-          _signals(signals),
-          _residual(signals.getDataDescriptor()),
           _representations(
               IdenticalBlocksDescriptor(getIdenticalBlocksDescriptor(signals).getNumberOfBlocks(),
-                                        VolumeDescriptor({nAtoms})))
+                                        VolumeDescriptor({nAtoms}))),
+          _signals(signals),
+          _residual(signals.getDataDescriptor())
+
     {
         _representations = 1; // not the best initialization but OMP starts from scratch anyways
         calculateError();
