@@ -16,6 +16,12 @@ target_link_libraries(example2d_admm elsa::all)
 target_compile_features(example2d_admm PUBLIC cxx_std_17)
 add_dependencies(build-examples example2d_admm)
 
+# build the 2d example shadmm program
+add_executable(example2d_shadmm example2d_shadmm.cpp)
+target_link_libraries(example2d_shadmm elsa::all)
+target_compile_features(example2d_shadmm PUBLIC cxx_std_17)
+add_dependencies(build-examples example2d_shadmm)
+
 # build the shearlet example program
 add_executable(shearlet_example example2d_shearlet.cpp)
 target_link_libraries(shearlet_example elsa::all)

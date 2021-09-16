@@ -114,8 +114,7 @@ namespace elsa
             const BlockLinearOperator<data_t>& A =
                 downcast<BlockLinearOperator<data_t>>(constraint.getOperatorA());
             /// should come as // B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-            const BlockLinearOperator<data_t>& B =
-                downcast<BlockLinearOperator<data_t>>(constraint.getOperatorB());
+            const Scaling<data_t>& B = downcast<Scaling<data_t>>(constraint.getOperatorB());
             /// should come as the zero vector
             const DataContainer<data_t>& c = constraint.getDataVectorC();
 

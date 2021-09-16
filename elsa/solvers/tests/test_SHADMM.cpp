@@ -54,45 +54,20 @@ TEST_CASE_TEMPLATE("SHADMM: Solving problems", TestType, float, double)
         BlockLinearOperator<TestType> A{opsOfA, BlockLinearOperator<TestType>::BlockType::ROW};
 
         /// B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-
-        std::vector<std::unique_ptr<LinearOperator<TestType>>> opsOfB1(0);
-
-        //        //        DataContainer<TestType> nRho1s(VolumeDescriptor{{L * n * n, L * n *
-        //        n}});
-        //        //        nRho1s = -rho1;
-        //        Identity<TestType> B11(VolumeDescriptor{{L * n * n, 1}});
-        //        //        DataContainer<TestType> zeroes12(VolumeDescriptor{{L * n * n, n * n}});
-        //        //        zeroes12 = 0;
-        //        Scaling<TestType> B12(VolumeDescriptor{{n * n, 1}}, VolumeDescriptor{{L * n * n,
-        //        1}}, 0); opsOfB1.push_back(std::move(B11.clone()));
-        //        opsOfB1.push_back(std::move(B12.clone()));
-        //        BlockLinearOperator<TestType> B1{opsOfB1,
-        //        BlockLinearOperator<TestType>::BlockType::COL};
-
-        //        std::vector<std::unique_ptr<LinearOperator<TestType>>> opsOfB2(0);
-        //        DataContainer<TestType> zeroes21(VolumeDescriptor{{n * n, L * n * n}});
-        //        zeroes21 = 0;
-        //        Scaling<TestType> B21(VolumeDescriptor{{n * n, L * n * n}}, zeroes21);
-        //        DataContainer<TestType> nRho2s(VolumeDescriptor{{n * n, n * n}});
-        //        nRho2s = -rho2;
-        //        Scaling<TestType> B22(VolumeDescriptor{{n * n, n * n}}, nRho2s);
-        //        opsOfB2.push_back(std::move(B21.clone()));
-        //        opsOfB2.push_back(std::move(B22.clone()));
-        //        BlockLinearOperator<TestType> B2{opsOfB2,
-        //        BlockLinearOperator<TestType>::BlockType::COL};
-        //
-        //        std::vector<std::unique_ptr<LinearOperator<TestType>>> opsOfB(0);
-        //        opsOfB1.push_back(std::move(B1.clone()));
-        //        opsOfB1.push_back(std::move(B2.clone()));
-        //        BlockLinearOperator<TestType> B{opsOfB,
-        //        BlockLinearOperator<TestType>::BlockType::ROW};
-
-        Identity<TestType> tempId(VolumeDescriptor{(L + 1) * n * n});
+        DataContainer<TestType> factorsOfB(VolumeDescriptor{(L + 1) * n * n});
+        for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
+            if (ind < (L * n * n)) {
+                factorsOfB[ind] = -1 * rho1;
+            } else {
+                factorsOfB[ind] = -1 * rho2;
+            }
+        }
+        Scaling<TestType> B(VolumeDescriptor{(L + 1) * n * n}, factorsOfB);
 
         DataContainer<TestType> dCC(VolumeDescriptor{(L + 1) * n * n});
         dCC = 0;
 
-        Constraint<TestType> constraint(A, tempId, dCC);
+        Constraint<TestType> constraint(A, B, dCC);
 
         WHEN("setting up SHADMM to solve a problem")
         {
