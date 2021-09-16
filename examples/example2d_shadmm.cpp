@@ -3,12 +3,7 @@
 #include "elsa.h"
 
 #include "SHADMM.h"
-#include "VolumeDescriptor.h"
-#include "BlockLinearOperator.h"
-#include "CG.h"
-#include "Identity.h"
-#include "FISTA.h"
-#include "Logger.h"
+#include "NoiseGenerators.h"
 
 #include <iostream>
 
@@ -17,18 +12,19 @@ using namespace elsa;
 void example2d_shadmm()
 {
     // generate 2d phantom
+    index_t n = 128;
     IndexVector_t size(2);
-    size << 128, 128;
+    size << n, n;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
 
     // random numbers
-    real_t rho1 = 23;
-    real_t rho2 = 86;
+    real_t rho1 = 1 / 2;
+    real_t rho2 = 1;
 
     /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
-    ShearletTransform<real_t> shearletTransform(size);
+    // size[0] == size[1], for now at least
+    ShearletTransform<real_t> shearletTransform(n, n);
     index_t L = shearletTransform.getL();
-    index_t n = shearletTransform.getWidth(); // size[0] == size[1], for now at least
 
     std::vector<std::unique_ptr<LinearOperator<real_t>>> opsOfA(0);
     Scaling<real_t> scaling1(VolumeDescriptor{n * n}, rho2);
@@ -60,12 +56,14 @@ void example2d_shadmm()
 
     SiddonsMethod projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
 
-    // simulate no noise // TODO try with noise later on
-    DataContainer<real_t> noNoise(projector.getRangeDescriptor());
-    noNoise = 0;
+    // simulate noise // TODO try with/without noise later on
+    DataContainer<real_t> noise(projector.getRangeDescriptor());
+    PoissonNoiseGenerator pNG(0.5f);
+    GaussianNoiseGenerator gNG(0, 0.1f);
+    noise = pNG(noise) + gNG(noise);
 
     // setup reconstruction problem
-    WLSProblem wlsProblem(projector, noNoise);
+    WLSProblem wlsProblem(projector, noise);
 
     DataContainer<real_t> ones(VolumeDescriptor{L * n * n});
     ones = 1;
@@ -80,7 +78,7 @@ void example2d_shadmm()
 
     SHADMM<CG, SoftThresholding, real_t> shadmm(splittingProblem);
 
-    auto sol = shadmm.solve(10);
+    auto sol = shadmm.solve(35);
     sol = sol.viewAs(VolumeDescriptor{{n, n}});
     printf("square l2 norm of sol. is %f\n", sol.squaredL2Norm());
 

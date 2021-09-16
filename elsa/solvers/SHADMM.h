@@ -130,8 +130,10 @@ namespace elsa
 
             /// x ∈ R ^ n^2
             DataContainer<data_t> x(VolumeDescriptor{n * n});
-            /// set me to R_φTy, try 0 start as well
-            x = 0; // dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
+            /// TODO set me to R_φTy, try 0 start as well
+            x = dataTermResidual.getOperator()
+                    .applyAdjoint(dataTermResidual.getDataVector())
+                    .viewAs(VolumeDescriptor{n * n});
 
             /// this means z ∈ R ^ (L+1)n^2
             DataContainer<data_t> z(VolumeDescriptor{(L + 1) * n * n});
@@ -168,6 +170,8 @@ namespace elsa
                 XSolver<data_t> xSolver(xUpdateProblem);
                 x = xSolver.solve(_defaultXSolverIterations);
 
+                printf("after CG\n");
+
                 DataContainer<data_t> rk = A.apply(x) + B.apply(z) - c;
                 DataContainer<data_t> zPrev = z;
                 data_t Axnorm = x.l2Norm();
@@ -178,18 +182,13 @@ namespace elsa
                 ZSolver<data_t> zProxOp(VolumeDescriptor{L * n * n});
                 /// w is the weighting operator of the WeightedL1Norm
                 P1z =
-                    zProxOp.apply(shearletTransform.apply(x.viewAs(VolumeDescriptor{{n, n}}))
-                                          .viewAs(VolumeDescriptor{L * n * n})
-                                      + P1u,
+                    zProxOp.apply(shearletTransform.apply(x) + P1u,
                                   ProximityOperator<data_t>::valuesToThresholds(_rho0 * w / _rho1));
 
                 P2z = maxWithZero(x + P2u);
 
                 /// P1u = P1u + SH.apply(x) - P1z
-                P1u = P1u
-                      + shearletTransform.apply(x.viewAs(VolumeDescriptor{{n, n}}))
-                            .viewAs(VolumeDescriptor{L * n * n})
-                      - P1z;
+                P1u = P1u + shearletTransform.apply(x) - P1z;
                 P2u = P2u + x - P2z;
 
                 u = concatenate(P1u, P2u);
@@ -267,9 +266,9 @@ namespace elsa
 
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};
-        data_t _rho0{1}; // consider as hyper-parameters
-        data_t _rho1{1}; // consider as hyper-parameters
-        data_t _rho2{1}; // just set it to 1, at least initially
+        data_t _rho0{1 / 2}; // consider as hyper-parameters
+        data_t _rho1{1 / 2}; // consider as hyper-parameters
+        data_t _rho2{1};     // just set it to 1, at least initially
 
         /// variables for the stopping criteria
         data_t _epsilonAbs{1e-5f};
