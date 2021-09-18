@@ -164,7 +164,7 @@ namespace elsa
                     return std::move(std::get<I>(_angles));
                 }
 
-            protected:
+            private:
                 /// Helper constructor to init array
                 template <std::size_t... Is, typename... Ts, typename = AllRadian<Ts...>>
                 constexpr RotationAngles(std::index_sequence<Is...>, Ts&&... vals)
@@ -184,7 +184,7 @@ namespace elsa
          * it (i.e. only with Beta and Alpha)
          *
          */
-        class RotationAngles3D : detail::RotationAngles<3>
+        class RotationAngles3D : public detail::RotationAngles<3>
         {
         public:
             using Base = detail::RotationAngles<3>;
@@ -193,9 +193,6 @@ namespace elsa
             using Base::Base;
 
         public:
-            // using Base::get;
-            using Base::operator[];
-
             /// Construction from Gamma
             constexpr RotationAngles3D(Gamma gamma)
                 : Base(Radian{static_cast<real_t>(gamma)}, Radian{0}, Radian{0})
@@ -257,27 +254,6 @@ namespace elsa
             constexpr Radian beta() const { return operator[](1u); }
             /// Access to alpha
             constexpr Radian alpha() const { return operator[](2); }
-
-            /// get function (non-const reference) to enable structured bindings
-            template <size_t I>
-            Type& get() &
-            {
-                return (std::get<I>(_angles));
-            }
-
-            /// get function (const reference) to enable structured bindings
-            template <size_t I>
-            const Type& get() const&
-            {
-                return (std::get<I>(_angles));
-            }
-
-            /// get function (r-value reference) to enable structured bindings
-            template <size_t I>
-            Type&& get() &&
-            {
-                return std::move(std::get<I>(_angles));
-            }
         };
 
         namespace detail
@@ -349,7 +325,7 @@ namespace elsa
                 operator Vector() const { return _vec; }
 
                 /// Conversion operator to Vector&& (rvalue reference)
-                operator Vector&&() { return std::move(_vec); }
+                operator Vector &&() { return std::move(_vec); }
 
                 /// Access to vector (const reference)
                 const Vector& get() & { return _vec; }
@@ -595,7 +571,7 @@ namespace elsa
                         return std::move(_locationOfOrigin);
                 }
 
-            protected:
+            private:
                 Vector _spacing = Vector::Zero(Size);
                 Vector _locationOfOrigin = Vector::Zero(Size);
             };
@@ -607,41 +583,16 @@ namespace elsa
          *
          * @tparam Size Dimension of problem
          *
-         * We use private inheritance, to avoid retyping everything. The private members are made
-         * public with using statements
+         * This used to be private inheritance, changed to public because of NVCC bug involving
+         * structured bindings and overloaded get() functions lifted with a using statement
          */
         template <index_t Size>
-        class VolumeData : detail::GeometryData<Size>
+        class VolumeData : public detail::GeometryData<Size>
         {
         public:
             using Base = detail::GeometryData<Size>;
 
             using Base::Base;
-            using Base::getSpacing;
-            using Base::getLocationOfOrigin;
-            // using Base::get;
-            using Base::_spacing;
-            using Base::_locationOfOrigin;
-
-            // Get function (const reference overload) for structured bindings
-            template <std::size_t N>
-            decltype(auto) get() const&
-            {
-                if constexpr (N == 0)
-                    return (_spacing);
-                else if constexpr (N == 1)
-                    return (_locationOfOrigin);
-            }
-
-            /// Get function (r-value reference overload) for structured bindings
-            template <std::size_t N>
-            decltype(auto) get() &&
-            {
-                if constexpr (N == 0)
-                    return std::move(_spacing);
-                else if constexpr (N == 1)
-                    return std::move(_locationOfOrigin);
-            }
         };
 
         using VolumeData2D = VolumeData<2>; ///< 2D volume data alias for 2D geometry
@@ -653,41 +604,16 @@ namespace elsa
          *
          * @tparam Size Dimension of problem
          *
-         * We use private inheritance, to avoid retyping everything. The private members are made
-         * public with using statements
+         * This used to be private inheritance, changed to public because of NVCC bug involving
+         * structured bindings and overloaded get() functions lifted with a using statement
          */
         template <index_t Size>
-        class SinogramData : detail::GeometryData<Size>
+        class SinogramData : public detail::GeometryData<Size>
         {
         public:
             using Base = detail::GeometryData<Size>;
 
             using Base::Base;
-            using Base::getSpacing;
-            using Base::getLocationOfOrigin;
-            // using Base::get;
-            using Base::_spacing;
-            using Base::_locationOfOrigin;
-
-            // Get function (const reference overload) for structured bindings
-            template <std::size_t N>
-            decltype(auto) get() const&
-            {
-                if constexpr (N == 0)
-                    return (_spacing);
-                else if constexpr (N == 1)
-                    return (_locationOfOrigin);
-            }
-
-            /// Get function (r-value reference overload) for structured bindings
-            template <std::size_t N>
-            decltype(auto) get() &&
-            {
-                if constexpr (N == 0)
-                    return std::move(_spacing);
-                else if constexpr (N == 1)
-                    return std::move(_locationOfOrigin);
-            }
         };
 
         using SinogramData2D = SinogramData<2>; ///< 2D sinogram data alias for 2D geometry
@@ -717,13 +643,13 @@ namespace elsa
             explicit operator data_t() const { return _threshold; }
 
             /// return -Threshold
-            auto operator-() -> const data_t { return (data_t) (-_threshold); }
+            auto operator-() -> const data_t { return (data_t)(-_threshold); }
 
             /// return computed subtraction
-            auto operator-(const data_t t) const -> data_t { return (data_t) (_threshold - t); }
+            auto operator-(const data_t t) const -> data_t { return (data_t)(_threshold - t); }
 
             /// return computed addition
-            auto operator+(const data_t t) const -> data_t { return (data_t) (_threshold + t); }
+            auto operator+(const data_t t) const -> data_t { return (data_t)(_threshold + t); }
 
             /// return computed less-than comparison
             auto operator<(const data_t t) const -> bool { return _threshold < t; }
@@ -751,14 +677,14 @@ namespace elsa
         template <typename data_t = real_t>
         auto operator-(const data_t a, const Threshold<data_t>& b) -> data_t
         {
-            return (data_t) (-(b - a));
+            return (data_t)(-(b - a));
         }
 
         /// return computed addition of data_t with Threshold<data_t>
         template <typename data_t = real_t>
         auto operator+(const data_t a, const Threshold<data_t>& b) -> data_t
         {
-            return (data_t) (b + a);
+            return (data_t)(b + a);
         }
 
         /// return computed greater-than comparison of data_t with Threshold<data_t>
