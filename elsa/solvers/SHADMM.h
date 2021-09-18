@@ -131,32 +131,30 @@ namespace elsa
             /// x ∈ R ^ n^2
             DataContainer<data_t> x(VolumeDescriptor{n * n});
             /// TODO set me to R_φTy, try 0 start as well
-            x = dataTermResidual.getOperator()
-                    .applyAdjoint(dataTermResidual.getDataVector())
-                    .viewAs(VolumeDescriptor{n * n});
+            x = dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
 
             /// this means z ∈ R ^ (L+1)n^2
-            DataContainer<data_t> z(VolumeDescriptor{(L + 1) * n * n});
+            DataContainer<data_t> z(VolumeDescriptor{{n, n, L + 1}});
             z = 0;
 
             /// this means u ∈ R ^ (L+1)n^2
-            DataContainer<data_t> u(VolumeDescriptor{(L + 1) * n * n});
+            DataContainer<data_t> u(VolumeDescriptor{{n, n, L + 1}});
             u = 0;
 
             /// this means P1z ∈ R ^ Ln^2
-            DataContainer<data_t> P1z(VolumeDescriptor{L * n * n});
+            DataContainer<data_t> P1z(VolumeDescriptor{{n, n, L}});
             P1z = 0;
 
             /// this means P2z ∈ R ^ n^2
-            DataContainer<data_t> P2z(VolumeDescriptor{n * n});
+            DataContainer<data_t> P2z(VolumeDescriptor{{n, n, 1}});
             P2z = 0;
 
             /// this means P1u ∈ R ^ Ln^2
-            DataContainer<data_t> P1u(VolumeDescriptor{L * n * n});
+            DataContainer<data_t> P1u(VolumeDescriptor{{n, n, L}});
             P1u = 0;
 
             /// this means P2u ∈ R ^ n^2
-            DataContainer<data_t> P2u(VolumeDescriptor{n * n});
+            DataContainer<data_t> P2u(VolumeDescriptor{{n, n, 1}});
             P2u = 0;
 
             Logger::get("SHADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
@@ -164,7 +162,7 @@ namespace elsa
                                         "rkL2Norm", "skL2Norm");
             for (index_t iter = 0; iter < iterations; ++iter) {
                 LinearResidual<data_t> xLinearResidual(A, c - B.apply(z) - u); // c is 0 in SHADMM
-                RegularizationTerm xRegTerm(_rho / 2, L2NormPow2<data_t>(xLinearResidual));
+                RegularizationTerm xRegTerm(_rho, L2NormPow2<data_t>(xLinearResidual));
                 Problem<data_t> xUpdateProblem(dataTerm, xRegTerm, x);
 
                 XSolver<data_t> xSolver(xUpdateProblem);
@@ -172,20 +170,18 @@ namespace elsa
 
                 printf("after CG\n");
 
-                DataContainer<data_t> rk = A.apply(x) + B.apply(z) - c;
                 DataContainer<data_t> zPrev = z;
-                data_t Axnorm = x.l2Norm();
 
                 // ===== here starts very SHADMM specific code =====
                 /// first Ln^2 for P1, last n^2 for P2
 
-                ZSolver<data_t> zProxOp(VolumeDescriptor{L * n * n});
+                ZSolver<data_t> zProxOp(VolumeDescriptor{{n, n, L}});
                 /// w is the weighting operator of the WeightedL1Norm
                 P1z =
                     zProxOp.apply(shearletTransform.apply(x) + P1u,
                                   ProximityOperator<data_t>::valuesToThresholds(_rho0 * w / _rho1));
 
-                P2z = maxWithZero(x + P2u);
+                P2z = maxWithZero(x.viewAs(VolumeDescriptor{{n, n, 1}}) + P2u);
 
                 /// P1u = P1u + SH.apply(x) - P1z
                 P1u = P1u + shearletTransform.apply(x) - P1z;
@@ -195,16 +191,15 @@ namespace elsa
                 z = concatenate(P1z, P2z);
                 // ===== here ends very SHADMM specific code =====
 
-                rk -= z;
-                DataContainer<data_t> sk = zPrev - z;
-                sk *= _rho;
+                ///  primal residual at iteration k
+                DataContainer<data_t> rk = A.apply(x) + B.apply(z) - c;
+                /// dual residual at iteration k
+                DataContainer<data_t> sk = _rho * A.applyAdjoint(B.apply(z - zPrev));
 
                 // TODO this might just work out of the box instead of the sliced parts as done
                 //  above
                 // u += A.apply(x) + B.apply(z) - c;
 
-                DataContainer<data_t> Atu = u;
-                Atu *= _rho;
                 data_t rkL2Norm = rk.l2Norm();
                 data_t skL2Norm = sk.l2Norm();
 
@@ -213,14 +208,17 @@ namespace elsa
                                             rkL2Norm, skL2Norm);
 
                 /// variables for the stopping criteria
+                data_t Axnorm = A.apply(x).l2Norm();
+                data_t Bznorm = B.apply(z).l2Norm();
                 const data_t cL2Norm = !dataTermResidual.hasDataVector()
                                            ? static_cast<data_t>(0.0)
                                            : dataTermResidual.getDataVector().l2Norm();
-                const data_t epsRelMax =
-                    _epsilonRel * std::max(std::max(Axnorm, z.l2Norm()), cL2Norm);
+
+                const data_t epsRelMax = _epsilonRel * std::max(std::max(Axnorm, Bznorm), cL2Norm);
                 const auto epsilonPri = (std::sqrt(rk.getSize()) * _epsilonAbs) + epsRelMax;
 
-                const data_t epsRelL2Norm = _epsilonRel * Atu.l2Norm();
+                data_t Atunorm = A.applyAdjoint(_rho * u).l2Norm();
+                const data_t epsRelL2Norm = _epsilonRel * Atunorm;
                 const auto epsilonDual = (std::sqrt(sk.getSize()) * _epsilonAbs) + epsRelL2Norm;
 
                 if (rkL2Norm <= epsilonPri && skL2Norm <= epsilonDual) {
@@ -262,7 +260,7 @@ namespace elsa
         index_t _defaultIterations{100};
 
         /// the default number of iterations for the XSolver
-        index_t _defaultXSolverIterations{5};
+        index_t _defaultXSolverIterations{10};
 
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};

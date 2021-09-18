@@ -16,8 +16,8 @@ namespace elsa
 
     template <typename data_t>
     ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height)
-        : LinearOperator<data_t>(VolumeDescriptor{width * height},
-                                 VolumeDescriptor{width * height * calculateL(width, height)}),
+        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
+                                 VolumeDescriptor{{width, height, calculateL(width, height)}}),
           _width{width},
           _height{height},
           _jZero{calculatejZero(width, height)},
@@ -30,8 +30,8 @@ namespace elsa
 
     template <typename data_t>
     ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height, index_t jZero)
-        : LinearOperator<data_t>(VolumeDescriptor{width * height},
-                                 VolumeDescriptor{width * height * calculateL(jZero)}),
+        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
+                                 VolumeDescriptor{{width, height, calculateL(jZero)}}),
           _width{width},
           _height{height},
           _jZero{jZero},
@@ -73,20 +73,11 @@ namespace elsa
     {
         Timer timeguard("ShearletTransform", "apply");
 
-        DataContainer<data_t> newF = f;
-        if (f.getDataDescriptor().getNumberOfDimensions() == 1) {
-            newF = f.viewAs(VolumeDescriptor{{getWidth(), getWidth()}});
-        } else {
-            throw LogicError("Should never see me1!");
+        if (_width != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[0]
+            || _height != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[1]) {
+            throw InvalidArgumentError("ShearletTransform: Width and height of the input do not "
+                                       "match to that of this shearlet system1");
         }
-
-        //        if (_width != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[0]
-        //            || _height !=
-        //            this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[1]) { throw
-        //            InvalidArgumentError("ShearletTransform: Width and height of the input do not
-        //            "
-        //                                       "match to that of this shearlet system1");
-        //        }
 
         Logger::get("ShearletTransform")
             ->info("Running the shearlet transform on a 2D signal of shape ({}, {}), on {} "
@@ -101,16 +92,11 @@ namespace elsa
         // TODO use fft when available
 
         std::string command = "python3 ../../ft_delegated.py -d ";
-        EDF::write(newF, "f.edf");
+        EDF::write(f, "f.edf");
         EDF::write(getSpectra(), "spectra.edf");
         system(command.c_str());
 
-        auto tempDC = EDF::read<data_t>("shearTrf.edf");
-        if (f.getDataDescriptor().getNumberOfDimensions() == 1) {
-            SHf = tempDC.viewAs(VolumeDescriptor{getWidth() * getWidth() * getL()});
-        } else {
-            throw LogicError("Should never see me2!");
-        }
+        SHf = EDF::read<data_t>("shearTrf.edf");
 
         // DataContainer<std::complex<data_t>> fftImg = fft.fft2(f);
         // // AFAIK SHf's imaginary parts should all be 0 here, cast to float
@@ -123,20 +109,11 @@ namespace elsa
     {
         Timer timeguard("ShearletTransform", "applyAdjoint");
 
-        DataContainer<data_t> newY = y;
-        if (y.getDataDescriptor().getNumberOfDimensions() == 1) {
-            newY = y.viewAs(VolumeDescriptor{{getWidth(), getWidth(), getL()}});
-        } else {
-            throw LogicError("Should never see me3!");
+        if (_width != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[0]
+            || _height != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[1]) {
+            throw InvalidArgumentError("ShearletTransform: Width and height of the input do not"
+                                       "match to that of this shearlet system2");
         }
-
-        //        if (_width != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[0]
-        //            || _height !=
-        //            this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[1]) { throw
-        //            InvalidArgumentError("ShearletTransform: Width and height of the input do not
-        //            "
-        //                                       "match to that of this shearlet system2");
-        //        }
 
         Logger::get("ShearletTransform")
             ->info("Running the inverse shearlet transform on a 2D signal of shape ({}, {}), on {} "
@@ -150,18 +127,13 @@ namespace elsa
 
         // TODO use fft when available
 
-        EDF::write(newY, "y.edf");
+        EDF::write(y, "y.edf");
         EDF::write(getSpectra(), "spectra.edf");
 
         std::string command = "python3 ../../ft_delegated.py";
         system(command.c_str());
 
-        auto tempDC = EDF::read<data_t>("invShearTrf.edf");
-        if (y.getDataDescriptor().getNumberOfDimensions() == 1) {
-            SHty = tempDC.viewAs(VolumeDescriptor{getWidth() * getWidth()});
-        } else {
-            throw LogicError("Should never see me4!");
-        }
+        SHty = EDF::read<data_t>("invShearTrf.edf");
 
         // SHty = getReals(np.sum(fft.ifft2(fft.fft2(y) * getSpectra()), axis = 0));
     }
