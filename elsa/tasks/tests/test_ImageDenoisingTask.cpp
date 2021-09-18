@@ -37,7 +37,7 @@ TEST_CASE("ImageDenoisingTask: Overfitting a random image")
             const index_t stride = 1;
             const index_t nAtoms = 7;
             const index_t sparsityLevel = 3;
-            const index_t nIterations = 100;
+            const index_t nIterations = 10;
 
             ImageDenoisingTask denoiseTask(blocksize, stride, sparsityLevel, nAtoms, nIterations);
 
@@ -46,7 +46,8 @@ TEST_CASE("ImageDenoisingTask: Overfitting a random image")
                 auto reconstruction = denoiseTask.train(image);
 
                 // with current setttings: intially 9 to <0.05
-                REQUIRE_EQ(image, reconstruction);
+                // only require an error <0.1, can't expect too much when using a random signal
+                REQUIRE_UNARY(isApprox(image, reconstruction, 0.1));
             }
         }
     }
