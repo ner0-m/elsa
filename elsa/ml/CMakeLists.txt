@@ -14,12 +14,8 @@ endif()
 
 # Cudnn backend
 if(Cudnn_FOUND AND Cublas_FOUND AND ELSA_BUILD_ML_CUDNN)
-    include(CheckLanguage)
-    check_language(CUDA)
     if(CMAKE_CUDA_COMPILER)
         message(STATUS "Cudnn backend for ml module is available")
-
-        enable_language(CUDA)
 
         set(ELSA_HAS_CUDNN_BACKEND 1)
         set(ELSA_ML_CUDNN_BACKEND_DIR ${ELSA_BACKEND_DIR}/Cudnn)

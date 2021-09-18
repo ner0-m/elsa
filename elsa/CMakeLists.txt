@@ -10,7 +10,7 @@ endmacro()
 macro(SET_QUICKVEC_OPTIONS elsa_module_target_name module_sources)
     # link Quickvec for DataHandlerGPU
     # Also add the necessary compile definition for quickvec
-    if(${ELSA_BUILD_WITH_QUICKVEC} AND (NOT ${elsa_module_target_name} STREQUAL "elsa_quickvec"))
+    if(ELSA_BUILD_WITH_QUICKVEC AND (NOT ${elsa_module_target_name} STREQUAL "elsa_quickvec"))
         set_source_files_properties(${module_sources} PROPERTIES LANGUAGE CUDA)
         target_compile_definitions(${elsa_module_target_name} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
         target_link_libraries(${elsa_module_target_name} PUBLIC "elsa_quickvec")

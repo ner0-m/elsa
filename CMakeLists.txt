@@ -175,22 +175,34 @@ else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
 endif()
 
-# Enable quickvec if requested
-if(ELSA_CUDA_VECTOR)
+# Enable CUDA support if requested
+if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS OR ELSA_BUILD_ML_CUDNN)
     message(STATUS "CUDA support requested...")
     include(CheckLanguage)
     check_language(CUDA)
-    find_package(CUDA 11.0 REQUIRED)
+    find_package(CUDA 11.0)
 
-    if(CMAKE_CUDA_COMPILER)
+    if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
         enable_language(CUDA)
         message(STATUS "CUDA support enabled")
-        message(STATUS "Enabling DataHandlerGPU")
-        message(STATUS "The default container type will be on the GPU")
 
-        set(ELSA_BUILD_WITH_QUICKVEC TRUE)
-        add_definitions(-DELSA_CUDA_VECTOR)
-    else()
+        # set target CUDA architectures
+        include(ComputeCapabilityCUDA)
+        set_cuda_arch_type(${ELSA_CUDA_ARCH_TYPE})
+
+        foreach(TARGET_GPU ${TARGET_GPUS})
+            string(REPLACE "." "" TARGET_GPU ${TARGET_GPU})
+            list(APPEND CMAKE_CUDA_ARCHITECTURES ${TARGET_GPU})
+        endforeach()
+
+        if (ELSA_CUDA_VECTOR)
+            message(STATUS "Enabling DataHandlerGPU")
+            message(STATUS "The default container type will be on the GPU")
+
+            set(ELSA_BUILD_WITH_QUICKVEC TRUE)
+            add_definitions(-DELSA_CUDA_VECTOR)
+        endif()
+    elseif(ELSA_CUDA_VECTOR)
         message(FATAL_ERROR "CUDA compiler not found!")
         message(STATUS "Compiling without a DataHandlerGPU")
         message(STATUS "The default container type will be CPU")
