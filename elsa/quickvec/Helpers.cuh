@@ -5,7 +5,7 @@
 #include <cublas_v2.h>
 
 /**
- * \brief Custom macro to check CUDA API calls for errors with line information
+ * @brief Custom macro to check CUDA API calls for errors with line information
  */
 #define gpuErrchk(ans)                        \
     {                                         \
@@ -21,7 +21,7 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
 }
 
 /**
- * \brief Custom macro to check cuBLAS API calls for errors with line information
+ * @brief Custom macro to check cuBLAS API calls for errors with line information
  */
 #define cublasErrchk(ans)                        \
     {                                            \

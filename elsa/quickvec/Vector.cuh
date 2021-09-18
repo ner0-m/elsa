@@ -28,14 +28,14 @@ namespace quickvec
     }
 
     /**
-     * \brief The expression evaluation kernel
+     * @brief The expression evaluation kernel
      *
-     * \tparam Source the expression to evaluate
-     * \tparam data_t datatype of the individual elements
+     * @tparam Source the expression to evaluate
+     * @tparam data_t datatype of the individual elements
      *
-     * \param[in] n the number elements to evaluate
-     * \param[in] source device pointer to the expression
-     * \param[in] result device pointer to the beginning of the result array
+     * @param[in] n the number elements to evaluate
+     * @param[in] source device pointer to the expression
+     * @param[in] result device pointer to the beginning of the result array
      *
      * The kernel will descend in each individual thread into the tree which is provided by the
      * "source" expression.
@@ -51,11 +51,11 @@ namespace quickvec
     }
 
     /**
-     * \brief Sets all values of a device array to the same value.
+     * @brief Sets all values of a device array to the same value.
      *
-     * \param[in] n number of elements
-     * \param[in] value resulting value of each element
-     * \param[in] result pointer to the start of the array which will be filled with value
+     * @param[in] n number of elements
+     * @param[in] value resulting value of each element
+     * @param[in] result pointer to the start of the array which will be filled with value
      */
     template <typename data_t>
     __global__ void set(size_t n, data_t value, data_t* result)
@@ -68,12 +68,12 @@ namespace quickvec
     }
 
     /**
-     * \brief Main class in Quickvec representing an ordered collection of n elements stored on the
+     * @brief Main class in Quickvec representing an ordered collection of n elements stored on the
      * GPU.
      *
-     * \author Jens Petit
+     * @author Jens Petit
      *
-     * \tparam data_t arithmetic type stored in
+     * @tparam data_t arithmetic type stored in
      *
      * Implements scalar with vector as well as vector vector arithmetic.
      */
@@ -91,20 +91,20 @@ namespace quickvec
         explicit Vector(size_t size);
 
         /**
-         * \brief Constructor to create vector with existing allocated CUDA memory.
+         * @brief Constructor to create vector with existing allocated CUDA memory.
          *
-         * \param[in] data pointer to the exisitng memory
-         * \param[in] size number of elements at the data location
-         * \param[in] owning indicates if the newly created object own the memory
+         * @param[in] data pointer to the exisitng memory
+         * @param[in] size number of elements at the data location
+         * @param[in] owning indicates if the newly created object own the memory
          *
          * If owning is set to true, the destructor might free the memory.
          */
         Vector(data_t* data, size_t size, bool owning = false);
 
         /**
-         * \brief Copy constructor will do a shallow copy
+         * @brief Copy constructor will do a shallow copy
          *
-         * \param[in] other
+         * @param[in] other
          *
          * This will perform a shallow copy which is intended as Vector is stored by value in the
          * expression. This is necessary to transfer the expression object later to the GPU and have
@@ -114,9 +114,9 @@ namespace quickvec
         Vector(Vector<data_t> const& other) = default;
 
         /**
-         * \brief Move construct will do a shallow copy
+         * @brief Move construct will do a shallow copy
          *
-         * \param[in] other
+         * @param[in] other
          *
          * Same as the copy constructor, this will do a shallow copy, referencing the same data as
          * other.
@@ -136,11 +136,11 @@ namespace quickvec
         ~Vector() = default;
 
         /**
-         * \brief Evaluates the expression and stores results into the object.
+         * @brief Evaluates the expression and stores results into the object.
          *
-         * \param[in] source the expression from which to evaluate
+         * @param[in] source the expression from which to evaluate
          *
-         * \tparam Source the type of the expression which is evaluated
+         * @tparam Source the type of the expression which is evaluated
          *
          * The function copies the expression to the device and calls the compute Kernel with the
          * device expression.

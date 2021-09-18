@@ -10,12 +10,12 @@ namespace quickvec
 {
 
     /**
-     * \brief Reference counter for custom shared pointer implementation
+     * @brief Reference counter for custom shared pointer implementation
      *
      * It inherits from the Managed class so it uses the CUDA unified memory per default. This
      * allows manipulation of the counter in device code.
      *
-     * \author Jens Petit
+     * @author Jens Petit
      */
     class Counter
     {
@@ -62,13 +62,13 @@ namespace quickvec
     };
 
     /**
-     * \brief Shared pointer using CUDA unified memory
+     * @brief Shared pointer using CUDA unified memory
      *
      * It uses a pointer to a counter which does the reference counting.
      *
-     * \author Jens Petit
+     * @author Jens Petit
      *
-     * \tparam data_t - pointed to type
+     * @tparam data_t - pointed to type
      */
     template <class T>
     class SharedPointer
@@ -77,20 +77,20 @@ namespace quickvec
         SharedPointer() = delete;
 
         /**
-         * \brief allocates in unified memory size bytes
+         * @brief allocates in unified memory size bytes
          *
-         * \param size the size in bytes of the heap memory allocated
+         * @param size the size in bytes of the heap memory allocated
          */
         explicit SharedPointer(size_t size);
 
         /**
-         * \brief uses existing pointer which was already allocated memory
+         * @brief uses existing pointer which was already allocated memory
          *
          * If a non-owning SharedPoinerCUDA is constructed, it will start with a reference counter
          * of two, to prevent it from freeing its memory.
          *
-         * \param pointer location of memory, note that this has to be unified memory
-         * \param owning indicates if this instance owns the memory
+         * @param pointer location of memory, note that this has to be unified memory
+         * @param owning indicates if this instance owns the memory
          */
         explicit SharedPointer(T* pointer = nullptr, bool owning = true);
 
