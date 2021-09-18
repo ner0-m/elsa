@@ -8,11 +8,11 @@ void shearlet_example()
 {
     // generate 2d phantom
     IndexVector_t size(2);
-    size << 511, 511;
+    size << 128, 128;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
-    const auto& volumeDescriptor = phantom.getDataDescriptor();
+    EDF::write(phantom, "128phantom.edf");
 
-    ShearletTransform<real_t> shearletTransform(size[0], size[1]);
+    ShearletTransform<real_t> shearletTransform(size[0], size[1], 5);
 
     Logger::get("Info")->info("Applying shearlet transform");
     DataContainer<real_t> shearletCoefficients = shearletTransform.apply(phantom);
