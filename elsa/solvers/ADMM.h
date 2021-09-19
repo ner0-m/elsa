@@ -91,7 +91,7 @@ namespace elsa
             const auto& dataTerm = f;
 
             if (!is<L2NormPow2<data_t>>(dataTerm)) {
-                throw std::invalid_argument(
+                throw InvalidArgumentError(
                     "ADMM::solveImpl: supported data term only of type L2NormPow2");
             }
 
@@ -99,7 +99,7 @@ namespace elsa
             const auto& dataTermResidual = downcast<LinearResidual<data_t>>(f.getResidual());
 
             if (g.size() != 1) {
-                throw std::invalid_argument(
+                throw InvalidArgumentError(
                     "ADMM::solveImpl: supported number of regularization terms is 1");
             }
 
@@ -108,8 +108,8 @@ namespace elsa
 
             if (!is<L0PseudoNorm<data_t>>(regularizationTerm)
                 && !is<L1Norm<data_t>>(regularizationTerm)) {
-                throw std::invalid_argument("ADMM::solveImpl: supported regularization terms are "
-                                            "of type L0PseudoNorm or L1Norm");
+                throw InvalidArgumentError("ADMM::solveImpl: supported regularization terms are "
+                                           "of type L0PseudoNorm or L1Norm");
             }
 
             const auto& constraint = splittingProblem.getConstraint();
@@ -117,13 +117,13 @@ namespace elsa
             const auto& B = constraint.getOperatorB();
             const auto& c = constraint.getDataVectorC();
 
-            DataContainer<data_t> x(A.getRangeDescriptor());
+            DataContainer<data_t> x(A.getDomainDescriptor());
             x = 0;
 
-            DataContainer<data_t> z(B.getRangeDescriptor());
+            DataContainer<data_t> z(B.getDomainDescriptor());
             z = 0;
 
-            DataContainer<data_t> u(c.getDataDescriptor());
+            DataContainer<data_t> u(A.getRangeDescriptor());
             u = 0;
 
             Logger::get("ADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",

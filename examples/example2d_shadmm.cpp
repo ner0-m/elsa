@@ -13,9 +13,9 @@ void example2d_shadmm()
 {
     // generate 2d phantom
     index_t n = 128;
-    IndexVector_t size(2);
-    size << n, n;
-    auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+    IndexVector_t signalSize(2);
+    signalSize << n, n;
+    auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(signalSize);
 
     // random numbers
     real_t rho1 = 1 / 2;
@@ -26,16 +26,22 @@ void example2d_shadmm()
     ShearletTransform<real_t> shearletTransform(n, n);
     index_t L = shearletTransform.getL();
 
+    IndexVector_t slicesInBlock(2);
+    slicesInBlock << L, 1;
+
     std::vector<std::unique_ptr<LinearOperator<real_t>>> opsOfA(0);
-    Scaling<real_t> scaling1(VolumeDescriptor{{n, n}}, rho2);
-    opsOfA.push_back(std::move(shearletTransform.clone())); // TODO mult. with rho1 later on
-    opsOfA.push_back(std::move(scaling1.clone()));
-    BlockLinearOperator<real_t> A{opsOfA, BlockLinearOperator<real_t>::BlockType::ROW};
+    Scaling<real_t> scaling(VolumeDescriptor{{n, n}}, rho2);
+    opsOfA.push_back(shearletTransform.clone()); // TODO mult. with rho1 later on
+    opsOfA.push_back(scaling.clone());
+    BlockLinearOperator<real_t> A{
+        VolumeDescriptor{{n, n}},
+        PartitionDescriptor{VolumeDescriptor{{n, n, L + 1}}, slicesInBlock}, opsOfA,
+        BlockLinearOperator<real_t>::BlockType::ROW};
 
     /// B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-    DataContainer<real_t> factorsOfB(VolumeDescriptor{n * n * (L + 1)});
+    DataContainer<real_t> factorsOfB(VolumeDescriptor{n, n, L + 1});
     for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
-        if (ind < (L * n * n)) {
+        if (ind < (n * n * L)) {
             factorsOfB[ind] = -1 * rho1;
         } else {
             factorsOfB[ind] = -1 * rho2;
@@ -50,7 +56,7 @@ void example2d_shadmm()
 
     // generate circular trajectory
     index_t numAngles{180}, arc{360};
-    const auto distance = static_cast<real_t>(size(0));
+    const auto distance = static_cast<real_t>(n);
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         numAngles, VolumeDescriptor{{n, n}}, arc, distance * 100.0f, distance);
 
@@ -83,7 +89,7 @@ void example2d_shadmm()
 
     SHADMM<CG, SoftThresholding, real_t> shadmm(splittingProblem);
 
-    auto sol = shadmm.solve(15);
+    auto sol = shadmm.solve(5);
     printf("square l2 norm of sol. is %f\n", sol.squaredL2Norm());
 
     // write the solution out

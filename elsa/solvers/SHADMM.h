@@ -128,12 +128,12 @@ namespace elsa
             index_t L = shearletTransform.getL();
             index_t n = shearletTransform.getWidth();
 
-            /// x ∈ R ^ n^2
-            DataContainer<data_t> x(VolumeDescriptor{n * n});
+            /// x ∈ R ^ nxn
+            DataContainer<data_t> x(VolumeDescriptor{n, n});
             /// TODO set me to R_φTy, try 0 start as well
             x = dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
 
-            /// this means z ∈ R ^ (L+1)n^2
+            /// this means z ∈ R ^ nxnx(L+1)
             DataContainer<data_t> z(VolumeDescriptor{{n, n, L + 1}});
             z = 0;
 
@@ -167,8 +167,6 @@ namespace elsa
 
                 XSolver<data_t> xSolver(xUpdateProblem);
                 x = xSolver.solve(_defaultXSolverIterations);
-
-                printf("after CG\n");
 
                 DataContainer<data_t> zPrev = z;
 
@@ -252,9 +250,6 @@ namespace elsa
     private:
         /// lift the base class variable _problem
         using Solver<data_t>::_problem;
-
-        /// flag to indicate whether to solve for positive solutions or for unrestricted solutions
-        bool _positiveSolutions{false}; // TODO utilize me when merging with ADMM
 
         /// the default number of iterations for SHADMM
         index_t _defaultIterations{100};
