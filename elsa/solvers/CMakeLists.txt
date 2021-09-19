@@ -9,6 +9,7 @@ set(MODULE_HEADERS
     OGM.h
     ADMM.h
     SHADMM.h
+    MergedADMM.h
     SQS.h
     OrthogonalMatchingPursuit.h
 )

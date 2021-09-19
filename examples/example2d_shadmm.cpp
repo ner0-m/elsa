@@ -57,13 +57,18 @@ void example2d_shadmm()
     SiddonsMethod projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
 
     // simulate noise // TODO try with/without noise later on
-    DataContainer<real_t> noise(projector.getRangeDescriptor());
-    PoissonNoiseGenerator pNG(0.5f);
-    GaussianNoiseGenerator gNG(0, 0.1f);
-    noise = pNG(noise) + gNG(noise);
+    // DataContainer<real_t> noise(projector.getRangeDescriptor());
+    // TODO do this ?
+    // noise = 0;
+    // PoissonNoiseGenerator pNG(0.5f);
+    // GaussianNoiseGenerator gNG(0, 0.1f);
+    // noise = pNG(noise) + gNG(noise);
+
+    // simulate the sinogram
+    auto sinogram = projector.apply(phantom);
 
     // setup reconstruction problem
-    WLSProblem wlsProblem(projector, noise);
+    WLSProblem wlsProblem(projector, sinogram);
 
     DataContainer<real_t> ones(VolumeDescriptor{{n, n, L}});
     ones = 1;
