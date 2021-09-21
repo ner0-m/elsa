@@ -12,3 +12,4 @@
 #include "Softmax.h"
 #include "Utils.h"
 #include "AutoEncoder.h"
+#include "PhantomNet.h"

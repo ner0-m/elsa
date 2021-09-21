@@ -57,6 +57,7 @@ set(MODULE_HEADERS
     BackendAdaptor.h
     CudnnDataContainerInterface.h
     Models/AutoEncoder.h
+    Models/PhantomNet.h
 )
 
 # list all the code files of the module
@@ -78,6 +79,7 @@ set(MODULE_SOURCES
     Model.cpp
     State.cpp
     Models/AutoEncoder.cpp
+    Models/PhantomNet.cpp
 )
 
 # elsa modules ml depends on  
