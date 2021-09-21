@@ -255,7 +255,7 @@ namespace elsa
         index_t _defaultIterations{100};
 
         /// the default number of iterations for the XSolver
-        index_t _defaultXSolverIterations{10};
+        index_t _defaultXSolverIterations{5};
 
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};

@@ -15,7 +15,7 @@
 namespace elsa
 {
     /**
-     * @brief Class representing an Alternating Direction Method of Multipliers solver for
+     * @brief Class representing an Alternating Direction Method of Multipliers solver
      *
      * ADMM solves minimization splitting problems of the form
      * @f$ x \mapsto f(x) + g(z) @f$ such that @f$ Ax + Bz = c @f$.
@@ -27,6 +27,9 @@ namespace elsa
      *  - @f$ x_{k+1} = argmin_{x}(f(x) + (\rho/2) ·\| Ax + Bz_{k} - c + u_{k}\|^2_2) @f$
      *  - @f$ z_{k+1} = argmin_{z}(g(z) + (\rho/2) ·\| Ax_{k+1} + Bz - c + u_{k}\|^2_2) @f$
      *  - @f$ u_{k+1} = u_{k} + Ax_{k+1} + Bz_{k+1} - c @f$
+     *
+     * If the positiveSolutionsOnly flag is set to true, then it will aim to solve the following
+     * problem only for positive solutions,
      *
      *  - @f$ argmin_{x>=0}(\frac{1}{2}·\|R_{\phi}x - y\|^2_{2} + \lambda·\|SH(x)\|_{1,w}) @f$
      *
