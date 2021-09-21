@@ -1,8 +1,7 @@
 #include "LimitedAngleTrajectoryGenerator.h"
-#include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "PlanarDetectorDescriptor.h"
-#include "StrongTypes.h"
+#include "Logger.h"
 
 #include <stdexcept>
 
@@ -27,27 +26,8 @@ namespace elsa
             ->info("creating 2D trajectory with {} poses in an {} degree arc", numberOfPoses,
                    arcDegrees);
 
-        // Calculate size and spacing for each geometry pose using a IIFE
-        const auto [coeffs, spacing] = [&] {
-            IndexVector_t coeffs(dim);
-            RealVector_t spacing(dim);
-
-            const RealVector_t coeffsPerDim =
-                volumeDescriptor.getNumberOfCoefficientsPerDimension().template cast<real_t>();
-            const real_t sqrt2 = std::sqrt(2.f);
-            const auto coeffsPerDimScaled = (coeffsPerDim * sqrt2).template cast<index_t>();
-
-            const auto spacingPerDim = volumeDescriptor.getSpacingPerDimension();
-
-            coeffs.head(dim - 1) = coeffsPerDimScaled.head(dim - 1);
-            coeffs[dim - 1] = numberOfPoses; // TODO: with eigen 3.4: `coeffs(Eigen::last) = 1`
-
-            spacing.head(dim - 1) = spacingPerDim.head(dim - 1);
-            spacing[dim - 1] = 1; // TODO: same as coeffs
-
-            // return a pair, then split it using structured bindings
-            return std::pair{coeffs, spacing};
-        }();
+        const auto [coeffs, spacing] =
+            calculateSizeAndSpacingPerGeometry(volumeDescriptor, numberOfPoses);
 
         // create vector and reserve the necessary size, minor optimization such that no new
         // allocations are necessary in the loop

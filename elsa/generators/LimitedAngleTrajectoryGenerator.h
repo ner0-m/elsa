@@ -2,6 +2,7 @@
 
 #include "Geometry.h"
 #include "DetectorDescriptor.h"
+#include "TrajectoryGenerator.h"
 
 #include <vector>
 #include <utility>
@@ -14,7 +15,7 @@ namespace elsa
      *
      * @author Andi Braimllari - initial code
      */
-    class LimitedAngleTrajectoryGenerator
+    class LimitedAngleTrajectoryGenerator : public TrajectoryGenerator
     {
     public:
         /**
@@ -50,6 +51,7 @@ namespace elsa
             const DataDescriptor& volumeDescriptor, index_t arcDegrees, real_t sourceToCenter,
             real_t centerToDetector, bool mirrored = true);
 
+    private:
         static bool notInMissingWedge(
             elsa::geometry::Radian angle,
             std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,

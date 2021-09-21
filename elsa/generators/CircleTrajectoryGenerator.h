@@ -3,6 +3,7 @@
 #include "Geometry.h"
 
 #include "DetectorDescriptor.h"
+#include "TrajectoryGenerator.h"
 
 #include <vector>
 #include <utility>
@@ -16,7 +17,7 @@ namespace elsa
      * @author Maximilan Hornung - initial code
      * @author Tobias Lasser - modernization, fixes
      */
-    class CircleTrajectoryGenerator
+    class CircleTrajectoryGenerator : public TrajectoryGenerator
     {
     public:
         /**
