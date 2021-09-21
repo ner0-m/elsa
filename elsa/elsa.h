@@ -45,6 +45,7 @@
 #include "Scaling.h"
 #include "FiniteDifferences.h"
 #include "BlockLinearOperator.h"
+#include "ShearletTransform.h"
 
 // Proximity Operator headers
 #include "ProximityOperator.h"
@@ -73,9 +74,6 @@
 #include "SiddonsMethodCUDA.h"
 #include "JosephsMethodCUDA.h"
 #endif
-
-// Shearlet headers
-#include "ShearletTransform.h"
 
 // Solver headers
 #include "Solver.h"
