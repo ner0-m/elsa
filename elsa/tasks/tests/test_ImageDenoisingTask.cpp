@@ -49,6 +49,16 @@ TEST_CASE("ImageDenoisingTask: Overfitting a random image")
                 // only require an error <0.1, can't expect too much when using a random signal
                 REQUIRE_UNARY(isApprox(image, reconstruction, 0.1));
             }
+
+            AND_THEN("the original image can be reconstructed by training with downsampling")
+            {
+                denoiseTask.train(image, 0.2);
+                auto reconstruction = denoiseTask.denoise(image);
+
+                // with current setttings: intially 9 to <0.05
+                // only require an error <0.1, can't expect too much when using a random signal
+                REQUIRE_UNARY(isApprox(image, reconstruction, 0.1));
+            }
         }
     }
 

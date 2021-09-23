@@ -53,7 +53,8 @@ image_dc = elsa.pyelsa_core.DataContainer(noisy_raccoon)
 denoising_task = elsa.pyelsa_tasks.ImageDenoisingTask(blocksize, stride, sparsityLevel, nAtoms, nIterations)
 
 print("Image Denoising: Training dictionary...")
-reconstructed_raccoon = denoising_task.train(image_dc)
+denoising_task.train(image_dc, 0.3)
+reconstructed_raccoon = denoising_task.denoise(image_dc)
 reconstructed_raccoon = np.array(reconstructed_raccoon)
 
 save_results(raccoon, noisy_raccoon, reconstructed_raccoon)
