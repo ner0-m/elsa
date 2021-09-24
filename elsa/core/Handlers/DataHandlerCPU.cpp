@@ -497,8 +497,14 @@ namespace elsa
                 //   -> src_shape.prod() == 24 / 4 = 6 == 2*3
                 const index_t other_dims_size = src_shape.prod() / dim_size;
 
-// do all the 1d-ffts along the current dimensions axis
+#ifndef EIGEN_FFTW_DEFAULT
+// when using eigen+fftw, this corrupts the memory, so don't parallelize.
+// error messages may include:
+// * double free or corruption (fasttop)
+// * malloc_consolidate(): unaligned fastbin chunk detected
 #pragma omp parallel for
+#endif
+                // do all the 1d-ffts along the current dimensions axis
                 for (index_t i = 0; i < other_dims_size; ++i) {
 
                     index_t ray_start = i;

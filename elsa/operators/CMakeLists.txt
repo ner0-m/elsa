@@ -5,8 +5,7 @@ set(MODULE_HEADERS
     FiniteDifferences.h
     FourierTransform.h
     BlockLinearOperator.h
-    Dictionary.h
-    ShearletTransform.h)
+    Dictionary.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -15,8 +14,7 @@ set(MODULE_SOURCES
     FiniteDifferences.cpp
     FourierTransform.cpp
     BlockLinearOperator.cpp
-    Dictionary.cpp
-    ShearletTransform.cpp)
+    Dictionary.cpp)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)
