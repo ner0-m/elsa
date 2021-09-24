@@ -130,8 +130,8 @@ namespace elsa
 
             /// x ∈ R ^ nxn
             DataContainer<data_t> x(VolumeDescriptor{n, n});
-            /// TODO set me to R_φTy, try 0 start as well
-            x = dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
+            /// TODO consider starting at R_φTy
+            x = 0;
 
             /// this means z ∈ R ^ nxnx(L+1)
             DataContainer<data_t> z(VolumeDescriptor{{n, n, L + 1}});

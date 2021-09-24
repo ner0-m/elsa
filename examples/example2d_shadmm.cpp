@@ -78,7 +78,7 @@ void example2d_shadmm()
 
     DataContainer<real_t> ones(VolumeDescriptor{{n, n, L}});
     ones = 1;
-    WeightedL1Norm<real_t> weightedL1Norm(ones);
+    WeightedL1Norm<real_t> weightedL1Norm(LinearResidual<real_t>{shearletTransform}, ones);
     RegularizationTerm<real_t> wL1NormRegTerm(1, weightedL1Norm);
 
     Indicator<real_t> indicator(VolumeDescriptor{{n, n}});

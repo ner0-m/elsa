@@ -18,7 +18,7 @@ set(MODULE_SOURCES
     Dictionary.cpp
     ShearletTransform.cpp)
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_io)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 # use OpenMP is available
@@ -39,4 +39,4 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
     )
 endif()
  
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_io)

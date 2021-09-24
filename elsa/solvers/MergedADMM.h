@@ -116,21 +116,31 @@ namespace elsa
             for (index_t i = 0; i < dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2];
                  ++i) {
                 if (i >= from && i <= to) {
-                    if (range == 1) {
-                        return dc.slice(i); // because res.slice(0) for last dim. of 1 throws
-                    } else {
-                        res.slice(j++) = dc.slice(i);
-                    }
+                    res.slice(j++) = dc.slice(i);
                 }
             }
 
             return res;
         }
 
-        // TODO read the sliceByRange that is being called
-        DataContainer<data_t> sliceByRange(index_t index, DataContainer<data_t> dc)
+        /// bare-bones implementation of one scenario of torch.unsqueeze, adds a one dimension in
+        /// the end, e.g. from (n, n) to (n, n, 1)
+        // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
+        //  manner, but that might take quite some time, can this make it to master in the meantime?
+        DataContainer<data_t> unsqueezeLastDimension(DataContainer<data_t> dc)
         {
-            return sliceByRange(index, index, dc);
+            const DataDescriptor& dataDescriptor = dc.getDataDescriptor();
+            index_t dims = dataDescriptor.getNumberOfDimensions();
+            IndexVector_t coeffsPerDim = dataDescriptor.getNumberOfCoefficientsPerDimension();
+
+            IndexVector_t expandedCoeffsPerDim(dims + 1);
+
+            for (index_t index = 0; index < dims; ++index) {
+                expandedCoeffsPerDim[index] = coeffsPerDim[index];
+            }
+            expandedCoeffsPerDim[dims] = 1;
+
+            return dc.viewAs(VolumeDescriptor{expandedCoeffsPerDim});
         }
 
         auto solveImpl(index_t iterations) -> DataContainer<data_t>& override
@@ -199,9 +209,6 @@ namespace elsa
 
             DataContainer<data_t> x(A.getDomainDescriptor());
             x = 0;
-            if (_positiveSolutionsOnly) {
-                x = dataTermResidual.getOperator().applyAdjoint(dataTermResidual.getDataVector());
-            }
 
             DataContainer<data_t> z(B.getRangeDescriptor());
             z = 0;
@@ -230,18 +237,16 @@ namespace elsa
                         downcast<BlockLinearOperator<data_t>>(A).getIthOperator(0));
 
                     index_t L = shearletTransform.getL();
-                    index_t n = shearletTransform.getWidth();
 
-                    ZSolver<data_t> zProxOp(VolumeDescriptor{{n, n, L}});
+                    ZSolver<data_t> zProxOp(w->getDataDescriptor());
 
                     DataContainer<data_t> P1u = sliceByRange(0, L - 1, u);
                     DataContainer<data_t> P1z = zProxOp.apply(
                         shearletTransform.apply(x) + P1u,
                         ProximityOperator<data_t>::valuesToThresholds(_rho0 * *w / _rho1));
 
-                    DataContainer<data_t> P2u = sliceByRange(L, u);
-                    DataContainer<data_t> P2z =
-                        maxWithZero(x.viewAs(VolumeDescriptor{{n, n, 1}}) + P2u);
+                    DataContainer<data_t> P2u = u.slice(L);
+                    DataContainer<data_t> P2z = maxWithZero(unsqueezeLastDimension(x) + P2u);
 
                     z = concatenate(P1z, P2z);
                 }
