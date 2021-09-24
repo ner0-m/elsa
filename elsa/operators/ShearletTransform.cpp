@@ -1,4 +1,5 @@
 #include "ShearletTransform.h"
+#include "FourierTransform.h"
 #include "VolumeDescriptor.h"
 #include "Timer.h"
 
@@ -44,18 +45,21 @@ namespace elsa
         }
     }
 
-    // TODO remove me or change me before final MR
+    // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
+    //  manner, but that might take quite some time, can this make it to master in the meantime?
     template <typename data_t>
-    DataContainer<data_t> ShearletTransform<data_t>::sumByLastAxis(DataContainer<data_t> dc) const
+    DataContainer<std::complex<data_t>>
+        ShearletTransform<data_t>::sumByLastAxis(DataContainer<std::complex<data_t>> dc) const
     {
-        index_t width = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0];
-        index_t height = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1];
-        index_t layers = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2];
-        DataContainer<data_t> summedDC(VolumeDescriptor{{width, height}});
+        auto coeffsPerDim = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+        index_t width = coeffsPerDim[0];
+        index_t height = coeffsPerDim[1];
+        index_t layers = coeffsPerDim[2];
+        DataContainer<std::complex<data_t>> summedDC(VolumeDescriptor{{width, height}});
 
         for (index_t j = 0; j < width; j++) {
             for (index_t k = 0; k < height; k++) {
-                data_t currValue = 0;
+                std::complex<data_t> currValue = 0;
                 for (index_t i = 0; i < layers; i++) {
                     currValue += dc(j, k, i);
                 }
@@ -88,25 +92,15 @@ namespace elsa
             computeSpectra();
         }
 
-        // TODO use fft when available
+        FourierTransform<std::complex<data_t>> fourierTransform(x.getDataDescriptor());
 
-        DataContainer<data_t> fftImg = x;
-        // fftImg.fft();
+        DataContainer<std::complex<data_t>> fftImg = fourierTransform.apply(x.asComplex());
 
-        DataContainer<data_t> intermRes(getSpectra().getDataDescriptor());
-
-        for (index_t i = 0;
-             i < intermRes.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2]; i++) {
-            DataContainer<data_t> fftSlice = getSpectra().slice(i) * fftImg;
-            // fftSlice.ifft();
-            intermRes.slice(i) = fftSlice;
+        for (index_t i = 0; i < getL(); i++) {
+            DataContainer<std::complex<data_t>> temp =
+                getSpectra().slice(i).viewAs(x.getDataDescriptor()).asComplex() * fftImg;
+            Ax.slice(i) = fourierTransform.applyAdjoint(temp).getReal();
         }
-
-        Ax = intermRes; // TODO inline SHf after testing this
-
-        // DataContainer<std::complex<data_t>> fftImg = fft.fft2(f);
-        // // AFAIK SHf's imaginary parts should all be 0 here, cast to float
-        // SHf = getReals(fft.ifft2(getSpectra() * fftImg)); // element-wise product
     }
 
     template <typename data_t>
@@ -131,23 +125,18 @@ namespace elsa
             computeSpectra();
         }
 
-        // TODO use fft when available
+        FourierTransform<std::complex<data_t>> fourierTransform(Aty.getDataDescriptor());
 
-        DataContainer<data_t> fftY = y;
-        // fftY.fft();
+        DataContainer<std::complex<data_t>> intermRes(y.getDataDescriptor());
 
-        DataContainer<data_t> intermRes(getSpectra().getDataDescriptor());
-
-        for (index_t i = 0;
-             i < intermRes.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2]; i++) {
-            // DataContainer<data_t> fftSlice = getSpectra().slice(i) * fftY;
-            // fftSlice.ifft();
-            // intermRes.slice(i) = fftSlice;
+        for (index_t i = 0; i < getL(); i++) {
+            DataContainer<std::complex<data_t>> temp =
+                fourierTransform.apply(y.slice(i).viewAs(Aty.getDataDescriptor()).asComplex())
+                * getSpectra().slice(i).viewAs(Aty.getDataDescriptor()).asComplex();
+            intermRes.slice(i) = fourierTransform.applyAdjoint(temp);
         }
 
-        Aty = sumByLastAxis(intermRes); // TODO inline SHty after testing this
-
-        // SHty = getReals(np.sum(fft.ifft2(fft.fft2(y) * getSpectra()), axis = 0));
+        Aty = sumByLastAxis(intermRes).getReal();
     }
 
     // TODO consider simplifying the usage of floor/ceil

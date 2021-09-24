@@ -9,14 +9,13 @@
 #include "ShearletTransform.h"
 #include "VolumeDescriptor.h"
 #include "TypeCasts.hpp"
-#include "testHelpers.h"
 
 #include <doctest/doctest.h>
 
 using namespace elsa;
 using namespace doctest;
 
-TEST_SUITE_BEGIN("shearlets");
+TEST_SUITE_BEGIN("core");
 
 TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, double)
 {

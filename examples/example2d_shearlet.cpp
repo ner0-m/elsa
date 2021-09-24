@@ -8,9 +8,8 @@ void shearlet_example()
 {
     // generate 2d phantom
     IndexVector_t size(2);
-    size << 511, 511;
+    size << 256, 256;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
-    const auto& volumeDescriptor = phantom.getDataDescriptor();
 
     ShearletTransform<real_t> shearletTransform(size[0], size[1]);
 
