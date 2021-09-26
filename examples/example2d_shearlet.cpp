@@ -12,7 +12,7 @@ void shearlet_example()
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
     EDF::write(phantom, "128phantom.edf");
 
-    ShearletTransform<real_t> shearletTransform(size[0], size[1], 5);
+    ShearletTransform<real_t> shearletTransform(size);
 
     Logger::get("Info")->info("Applying shearlet transform");
     DataContainer<real_t> shearletCoefficients = shearletTransform.apply(phantom);
