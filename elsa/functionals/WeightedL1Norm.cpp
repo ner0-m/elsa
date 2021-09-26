@@ -44,14 +44,12 @@ namespace elsa
     template <typename data_t>
     data_t WeightedL1Norm<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
-        // TODO
         return _weightingOp.dot(cwiseAbs(Rx));
     }
 
     template <typename data_t>
     void WeightedL1Norm<data_t>::getGradientInPlaceImpl([[maybe_unused]] DataContainer<data_t>& Rx)
     {
-        // TODO
         throw LogicError("WeightedL1Norm: not differentiable, so no gradient! (busted!)");
     }
 
@@ -59,7 +57,6 @@ namespace elsa
     LinearOperator<data_t>
         WeightedL1Norm<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
     {
-        // TODO
         throw LogicError("WeightedL1Norm: not differentiable, so no Hessian! (busted!)");
     }
 
@@ -89,6 +86,4 @@ namespace elsa
     // explicit template instantiation
     template class WeightedL1Norm<float>;
     template class WeightedL1Norm<double>;
-    //    template class WeightedL1Norm<std::complex<float>>;
-    //    template class WeightedL1Norm<std::complex<double>>;
 } // namespace elsa

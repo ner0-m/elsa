@@ -19,7 +19,6 @@ namespace elsa
     class WeightedL1Norm : public Functional<data_t>
     {
     public:
-        // TODO
         /**
          * @brief Constructor for the weighted l1 norm, mapping domain vector to a scalar
          * (without a residual)
@@ -28,7 +27,6 @@ namespace elsa
          */
         explicit WeightedL1Norm(const DataContainer<data_t>& weightingOp);
 
-        // TODO
         /**
          * @brief Constructor for the weighted l1 norm, using a residual as input to map to
          * a scalar
