@@ -12,11 +12,9 @@ namespace elsa
      * @tparam data_t data type for the domain of the residual of the functional, defaulting to
      * real_t
      *
-     * The indicator function evaluates to @f$ 0 @f$ if the input is @f$ \geq 0 @f$, @f$ +\infty @f$
-     * otherwise.
-     *
-     * TODO ideally we should be able to define the set here instead of simply >=0, do we have this
-     *  in elsa?
+     * The indicator function evaluates to @f$ 0 @f$ if the input satisfies the constraint, @f$
+     * +\infty @f$ otherwise. The constraint is built by the constraint operator (comparison
+     * operators) and the constraint value.
      *
      * References:
      * https://arxiv.org/pdf/0912.3522.pdf
@@ -25,15 +23,27 @@ namespace elsa
     class Indicator : public Functional<data_t>
     {
     public:
+        /// possible comparison operations
+        // TODO this can be improved using lambdas and/or functionals
+        enum ComparisonOperation {
+            EQUAL_TO,
+            NOT_EQUAL_TO,
+            GREATER_THAN,
+            LESS_THAN,
+            GREATER_EQUAL_THAN,
+            LESS_EQUAL_THAN
+        };
+
         /**
          * @brief Constructor for the indicator functional, mapping domain vector to a scalar
          * (without a residual)
          *
          * @param[in] domainDescriptor describing the domain of the functional
+         * @param[in] constraintOperation describing the constraint (comparison) operation
+         * @param[in] constraintValue describing the value to be used in the constraint
          */
-        explicit Indicator(const DataDescriptor& domainDescriptor);
-
-        // TODO add Residual constructor?
+        explicit Indicator(const DataDescriptor& domainDescriptor,
+                           ComparisonOperation constraintOperation, data_t constraintValue);
 
         /// make copy constructor deletion explicit
         Indicator(const Indicator<data_t>&) = delete;
@@ -56,5 +66,11 @@ namespace elsa
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Functional<data_t>& other) const override;
+
+    private:
+        bool constraintIsSatisfied(data_t data);
+
+        ComparisonOperation _constraintOperation;
+        data_t _constraintValue;
     };
 } // namespace elsa

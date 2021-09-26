@@ -16,19 +16,25 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("functionals");
 
-TEST_CASE_TEMPLATE("Testing the indicator functional", TestType, float, double)
+TEST_CASE_TEMPLATE("Indicator: Testing the indicator functional", TestType, float, double)
 {
     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
 
     GIVEN("just data (no residual)")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 7, 17;
+        IndexVector_t numCoeff(1);
+        numCoeff << 4;
         VolumeDescriptor volDescr(numCoeff);
 
         WHEN("instantiating")
         {
-            Indicator<TestType> indicator(volDescr);
+            Indicator<TestType> indicator(
+                volDescr, Indicator<TestType>::ComparisonOperation::GREATER_EQUAL_THAN, 0);
+
+            THEN("the indicator is as expected")
+            {
+                REQUIRE_EQ(indicator.getDomainDescriptor(), volDescr);
+            }
 
             THEN("a clone behaves as expected")
             {
@@ -36,6 +42,34 @@ TEST_CASE_TEMPLATE("Testing the indicator functional", TestType, float, double)
 
                 REQUIRE(indicatorClone.get() != &indicator);
                 REQUIRE(*indicatorClone == indicator);
+            }
+
+            THEN("the evaluate returns 0")
+            {
+                Vector dataVec(volDescr.getNumberOfCoefficients());
+                dataVec << 5, 2, 1, 1;
+                DataContainer<TestType> dc(volDescr, dataVec);
+
+                REQUIRE(checkApproxEq(indicator.evaluate(dc), 0));
+            }
+
+            THEN("the evaluate returns +infinity")
+            {
+                Vector dataVec(volDescr.getNumberOfCoefficients());
+                dataVec << -1, 7, 3, 2;
+                DataContainer<TestType> dc(volDescr, dataVec);
+
+                REQUIRE_UNARY(indicator.evaluate(dc) == std::numeric_limits<TestType>::infinity());
+            }
+
+            THEN("gradient and Hessian work as expected")
+            {
+                Vector dataVec(volDescr.getNumberOfCoefficients());
+                dataVec << -3, -4, 1, 9;
+                DataContainer<TestType> dc(volDescr, dataVec);
+
+                REQUIRE_THROWS_AS(indicator.getGradient(dc), LogicError);
+                REQUIRE_THROWS_AS(indicator.getHessian(dc), LogicError);
             }
         }
     }
