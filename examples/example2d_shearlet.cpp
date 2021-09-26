@@ -11,7 +11,7 @@ void shearlet_example()
     size << 256, 256;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
 
-    ShearletTransform<real_t> shearletTransform(size[0], size[1]);
+    ShearletTransform<real_t> shearletTransform(size);
 
     Logger::get("Info")->info("Applying shearlet transform");
     DataContainer<real_t> shearletCoefficients = shearletTransform.apply(phantom);
