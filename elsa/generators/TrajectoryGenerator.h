@@ -1,3 +1,5 @@
+#pragma once
+
 #include "VolumeDescriptor.h"
 #include "PlanarDetectorDescriptor.h"
 
