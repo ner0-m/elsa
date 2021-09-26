@@ -8,7 +8,7 @@ void shearlet_example()
 {
     // generate 2d phantom
     IndexVector_t size(2);
-    size << 128, 128;
+    size << 256, 256;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
     EDF::write(phantom, "128phantom.edf");
 
