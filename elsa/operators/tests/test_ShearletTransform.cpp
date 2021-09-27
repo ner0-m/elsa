@@ -12,6 +12,8 @@
 
 #include <doctest/doctest.h>
 
+#include "testHelpers.h"
+
 using namespace elsa;
 using namespace doctest;
 
@@ -27,7 +29,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
 
         WHEN("instantiating a ShearletTransform operator")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1]);
+            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1]);
 
             THEN("the DataDescriptors are equal")
             {
@@ -37,7 +39,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
 
         WHEN("cloning a ShearletTransform operator")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1]);
+            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1]);
             auto shearletTransformClone = shearletTransform.clone();
 
             THEN("cloned ShearletTransform operator equals original ShearletTransform operator")
@@ -49,7 +51,8 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
     }
 }
 
-TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestType, float, double)
+TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestType,
+                   std::complex<float>)
 {
     GIVEN("a 2D signal")
     {
@@ -57,22 +60,23 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
         size << 127, 127;
         VolumeDescriptor volDescr(size);
 
-        Vector_t<TestType> randomData(volDescr.getNumberOfCoefficients());
+        Vector_t<real_t> randomData(volDescr.getNumberOfCoefficients());
         randomData.setRandom();
-        DataContainer<TestType> signal(volDescr, randomData);
+        DataContainer<real_t> signal(volDescr, randomData);
 
         WHEN("reconstructing the signal")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1]);
+            ShearletTransform<TestType, real_t> shearletTransform(size[0], size[1], 4);
 
-            DataContainer<TestType> shearletCoefficients = shearletTransform.apply(signal);
+            DataContainer<TestType> shearletCoefficients =
+                shearletTransform.apply(signal.asComplex());
 
-            DataContainer<TestType> reconstruction =
-                shearletTransform.applyAdjoint(shearletCoefficients);
+            DataContainer<real_t> reconstruction =
+                shearletTransform.applyAdjoint(shearletCoefficients).getReal();
 
             THEN("the ground truth and the reconstruction match")
             {
-                // REQUIRE_UNARY(isApprox(reconstruction, signal));
+                REQUIRE_UNARY(isApprox(reconstruction, signal));
             }
         }
     }
@@ -93,7 +97,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
         WHEN("not generating the spectra")
         {
-            ShearletTransform<TestType> shearletTransform(size);
+            ShearletTransform<TestType, TestType> shearletTransform(size);
 
             THEN("an error is thrown when fetching it")
             {
@@ -103,7 +107,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
         WHEN("generating the spectra")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1], 4);
+            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1], 4);
 
             shearletTransform.computeSpectra();
 
