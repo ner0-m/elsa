@@ -39,11 +39,19 @@ namespace elsa
          * (without a residual)
          *
          * @param[in] domainDescriptor describing the domain of the functional
+         */
+        Indicator(const DataDescriptor& domainDescriptor);
+
+        /**
+         * @brief Constructor for the indicator functional, mapping domain vector to a scalar
+         * (without a residual)
+         *
+         * @param[in] domainDescriptor describing the domain of the functional
          * @param[in] constraintOperation describing the constraint (comparison) operation
          * @param[in] constraintValue describing the value to be used in the constraint
          */
-        explicit Indicator(const DataDescriptor& domainDescriptor,
-                           ComparisonOperation constraintOperation, data_t constraintValue);
+        Indicator(const DataDescriptor& domainDescriptor, ComparisonOperation constraintOperation,
+                  data_t constraintValue);
 
         /// make copy constructor deletion explicit
         Indicator(const Indicator<data_t>&) = delete;

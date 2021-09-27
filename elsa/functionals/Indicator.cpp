@@ -3,6 +3,14 @@
 namespace elsa
 {
     template <typename data_t>
+    Indicator<data_t>::Indicator(const DataDescriptor& domainDescriptor)
+        : Functional<data_t>(domainDescriptor),
+          _constraintOperation{ComparisonOperation::GREATER_EQUAL_THAN},
+          _constraintValue{0}
+    {
+    }
+
+    template <typename data_t>
     Indicator<data_t>::Indicator(const DataDescriptor& domainDescriptor,
                                  ComparisonOperation constraintOperation, data_t constraintValue)
         : Functional<data_t>(domainDescriptor),
