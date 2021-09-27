@@ -72,14 +72,16 @@ namespace elsa
         /// return the oversampling factor
         auto getL() const -> index_t;
 
-        // TODO remove me or change me before final MR
-        DataContainer<data_t> sumByLastAxis(DataContainer<data_t> container) const;
+        // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
+        //  manner, but that might take quite some time, can this make it to master in the meantime?
+        DataContainer<std::complex<data_t>>
+            sumByLastAxis(DataContainer<std::complex<data_t>> container) const;
 
     protected:
-        void applyImpl(const DataContainer<data_t>& f, DataContainer<data_t>& SHf) const override;
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& SHty) const override;
+                              DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         ShearletTransform<data_t>* cloneImpl() const override;

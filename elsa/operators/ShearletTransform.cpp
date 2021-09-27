@@ -1,7 +1,7 @@
 #include "ShearletTransform.h"
+#include "FourierTransform.h"
 #include "VolumeDescriptor.h"
 #include "Timer.h"
-#include "../io/EDFHandler.h"
 
 namespace elsa
 {
@@ -45,18 +45,21 @@ namespace elsa
         }
     }
 
-    // TODO remove me or change me before final MR
+    // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
+    //  manner, but that might take quite some time, can this make it to master in the meantime?
     template <typename data_t>
-    DataContainer<data_t> ShearletTransform<data_t>::sumByLastAxis(DataContainer<data_t> dc) const
+    DataContainer<std::complex<data_t>>
+        ShearletTransform<data_t>::sumByLastAxis(DataContainer<std::complex<data_t>> dc) const
     {
-        index_t width = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0];
-        index_t height = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1];
-        index_t layers = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2];
-        DataContainer<data_t> summedDC(VolumeDescriptor{{width, height}});
+        auto coeffsPerDim = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+        index_t width = coeffsPerDim[0];
+        index_t height = coeffsPerDim[1];
+        index_t layers = coeffsPerDim[2];
+        DataContainer<std::complex<data_t>> summedDC(VolumeDescriptor{{width, height}});
 
         for (index_t j = 0; j < width; j++) {
             for (index_t k = 0; k < height; k++) {
-                data_t currValue = 0;
+                std::complex<data_t> currValue = 0;
                 for (index_t i = 0; i < layers; i++) {
                     currValue += dc(j, k, i);
                 }
@@ -68,15 +71,15 @@ namespace elsa
     }
 
     template <typename data_t>
-    void ShearletTransform<data_t>::applyImpl(const DataContainer<data_t>& f,
-                                              DataContainer<data_t>& SHf) const
+    void ShearletTransform<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                              DataContainer<data_t>& Ax) const
     {
         Timer timeguard("ShearletTransform", "apply");
 
         if (_width != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[0]
             || _height != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[1]) {
             throw InvalidArgumentError("ShearletTransform: Width and height of the input do not "
-                                       "match to that of this shearlet system1");
+                                       "match to that of this shearlet system");
         }
 
         Logger::get("ShearletTransform")
@@ -89,30 +92,27 @@ namespace elsa
             computeSpectra();
         }
 
-        // TODO use fft when available
+        FourierTransform<std::complex<data_t>> fourierTransform(x.getDataDescriptor());
 
-        std::string command = "python3 ../../ft_delegated.py -d ";
-        EDF::write(f, "f.edf");
-        EDF::write(getSpectra(), "spectra.edf");
-        system(command.c_str());
+        DataContainer<std::complex<data_t>> fftImg = fourierTransform.apply(x.asComplex());
 
-        SHf = EDF::read<data_t>("shearTrf.edf");
-
-        // DataContainer<std::complex<data_t>> fftImg = fft.fft2(f);
-        // // AFAIK SHf's imaginary parts should all be 0 here, cast to float
-        // SHf = getReals(fft.ifft2(getSpectra() * fftImg)); // element-wise product
+        for (index_t i = 0; i < getL(); i++) {
+            DataContainer<std::complex<data_t>> temp =
+                getSpectra().slice(i).viewAs(x.getDataDescriptor()).asComplex() * fftImg;
+            Ax.slice(i) = fourierTransform.applyAdjoint(temp).getReal();
+        }
     }
 
     template <typename data_t>
     void ShearletTransform<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                     DataContainer<data_t>& SHty) const
+                                                     DataContainer<data_t>& Aty) const
     {
         Timer timeguard("ShearletTransform", "applyAdjoint");
 
         if (_width != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[0]
             || _height != this->getDomainDescriptor().getNumberOfCoefficientsPerDimension()[1]) {
-            throw InvalidArgumentError("ShearletTransform: Width and height of the input do not"
-                                       "match to that of this shearlet system2");
+            throw InvalidArgumentError("ShearletTransform: Width and height of the input do not "
+                                       "match to that of this shearlet system");
         }
 
         Logger::get("ShearletTransform")
@@ -125,17 +125,18 @@ namespace elsa
             computeSpectra();
         }
 
-        // TODO use fft when available
+        FourierTransform<std::complex<data_t>> fourierTransform(Aty.getDataDescriptor());
 
-        EDF::write(y, "y.edf");
-        EDF::write(getSpectra(), "spectra.edf");
+        DataContainer<std::complex<data_t>> intermRes(y.getDataDescriptor());
 
-        std::string command = "python3 ../../ft_delegated.py";
-        system(command.c_str());
+        for (index_t i = 0; i < getL(); i++) {
+            DataContainer<std::complex<data_t>> temp =
+                fourierTransform.apply(y.slice(i).viewAs(Aty.getDataDescriptor()).asComplex())
+                * getSpectra().slice(i).viewAs(Aty.getDataDescriptor()).asComplex();
+            intermRes.slice(i) = fourierTransform.applyAdjoint(temp);
+        }
 
-        SHty = EDF::read<data_t>("invShearTrf.edf");
-
-        // SHty = getReals(np.sum(fft.ifft2(fft.fft2(y) * getSpectra()), axis = 0));
+        Aty = sumByLastAxis(intermRes).getReal();
     }
 
     // TODO consider simplifying the usage of floor/ceil

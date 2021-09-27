@@ -298,6 +298,7 @@ namespace elsa
         template <typename _data_t = data_t>
         typename std::enable_if_t<!isComplex<_data_t>, _data_t> min() const
         {
+            // TODO: dispatch to DataHandler backend and use optimized variants
             data_t min = std::numeric_limits<data_t>::max();
             for (index_t idx = 0; idx < this->getSize(); ++idx) {
                 auto&& elem = (*this)[idx];
@@ -312,6 +313,7 @@ namespace elsa
         template <typename _data_t = data_t>
         typename std::enable_if_t<!isComplex<_data_t>, _data_t> max() const
         {
+            // TODO: dispatch to DataHandler backend and use optimized variants
             data_t max = std::numeric_limits<data_t>::min();
             for (index_t idx = 0; idx < this->getSize(); ++idx) {
                 auto&& elem = (*this)[idx];

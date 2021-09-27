@@ -115,13 +115,17 @@ namespace elsa
     template <typename data_t>
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::fft(const DataDescriptor& source_desc)
     {
-        throw std::runtime_error{"todo implement"};
+        // detaches internally
+        this->_dataOwner->fft(source_desc);
+        return *this;
     }
 
     template <typename data_t>
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::ifft(const DataDescriptor& source_desc)
     {
-        throw std::runtime_error{"todo implement"};
+        // detaches internally
+        this->_dataOwner->ifft(source_desc);
+        return *this;
     }
 
     template <typename data_t>
