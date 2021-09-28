@@ -1,12 +1,12 @@
 /**
- * @file test_AutoEncoder.cpp
+ * @file test_PhantomNet.cpp
  *
- * @brief Tests for the AutoEncoder class
+ * @brief Tests for the PhantomNet class
  *
  * @author Andi Braimllari
  */
 
-#include "AutoEncoder.h"
+#include "PhantomNet.h"
 #include "VolumeDescriptor.h"
 #include "Error.h"
 
@@ -18,16 +18,16 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("ml");
 
-TEST_CASE_TEMPLATE("AutoEncoder: Pre-training testing", TestType, float, double)
+TEST_CASE_TEMPLATE("PhantomNet: Pre-training testing", TestType, float, double)
 {
     GIVEN("a DataDescriptor")
     {
         VolumeDescriptor mnistShape({28, 28});
         index_t batchSize = 32;
 
-        WHEN("instantiating an AutoEncoder model")
+        WHEN("instantiating the PhantomNet model")
         {
-            ml::AutoEncoder<TestType, elsa::ml::MlBackend::Cudnn> aeModel(mnistShape, batchSize);
+            ml::PhantomNet<TestType, elsa::ml::MlBackend::Cudnn> aeModel(mnistShape, batchSize);
 
             THEN("the shape of the input matches the shape of the output")
             {

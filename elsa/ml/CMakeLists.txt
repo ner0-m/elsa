@@ -56,7 +56,6 @@ set(MODULE_HEADERS
     Graph.h
     BackendAdaptor.h
     CudnnDataContainerInterface.h
-    Models/AutoEncoder.h
     Models/PhantomNet.h
 )
 
@@ -78,7 +77,6 @@ set(MODULE_SOURCES
     Model.cpp
     Model.cpp
     State.cpp
-    Models/AutoEncoder.cpp
     Models/PhantomNet.cpp
 )
 
