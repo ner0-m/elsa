@@ -60,28 +60,35 @@ namespace elsa::ml
           _conv4{ml::Conv2D<data_t>(growth_rate, {3, 3, 3 * growth_rate + in_channels},
                                     ml::Activation::Relu, 1, ml::Padding::Same)}
     {
+        index_t lastAxis = _input.getInputDescriptor().getNumberOfDimensions() - 1;
+
         inputs_ = {&_input};
 
+        ml::Tanh tanh1;
         _conv1.setInput(&_input);
-        _conv2.setInput(&_conv1);
-        _conv3.setInput(&_conv2);
-        _conv4.setInput(&_conv3);
+        tanh1.setInput(&_conv1);
 
-        outputs_ = {&_convEnd};
+        ml::Tanh tanh2;
+        _conv2.setInput(ml::Concatenate(lastAxis, {&_input, &tanh1}));
+        tanh2.setInput(&_conv2);
+
+        ml::Tanh tanh3;
+        _conv3.setInput(ml::Concatenate(lastAxis, {&_input, &tanh1, &tanh2}));
+        tanh3.setInput(&_conv3);
+
+        ml::Tanh tanh4;
+        _conv4.setInput(ml::Concatenate(lastAxis, {&_input, &tanh1, &tanh2, &tanh3}));
+        tanh4.setInput(&_conv4);
+
+        ml::Concatenate lastConc(lastAxis, {&tanh1, &tanh2, &tanh3, &tanh4});
+
+        outputs_ = {&lastConc};
 
         // save the batch-size this model uses
         batchSize_ = inputs_.front()->getBatchSize();
 
         // set all input-descriptors by traversing the graph
         setInputDescriptors();
-
-        x0 = x;
-        x1 = F.tanh(self.conv1(x0));
-        x2 = F.tanh(self.conv2(torch.cat((x0, x1), 1)));
-        x3 = F.tanh(self.conv3(torch.cat((x0, x1, x2), 1)));
-        x4 = F.tanh(self.conv4(torch.cat((x0, x1, x2, x3), 1)));
-
-        return torch.cat((x1, x2, x3, x4), 1)
     }
 
     template <typename data_t, MlBackend Backend>
@@ -106,36 +113,55 @@ namespace elsa::ml
           _conv8{ml::Conv2D<data_t>(growth_rate, {3, 3, 7 * growth_rate + in_channels},
                                     ml::Activation::Relu, 1, ml::Padding::Same)}
     {
+        index_t lastAxis = _input.getInputDescriptor().getNumberOfDimensions() - 1;
+
         inputs_ = {&_input};
 
+        ml::Tanh<data_t> tanh1;
         _conv1.setInput(&_input);
-        _conv2.setInput(&_conv1);
-        _conv3.setInput(&_conv2);
-        _conv4.setInput(&_conv3);
-        _conv5.setInput(&_conv4);
-        _conv6.setInput(&_conv5);
-        _conv7.setInput(&_conv6);
-        _conv8.setInput(&_conv7);
+        tanh1.setInput(&_conv1);
 
-        outputs_ = {&_convEnd};
+        ml::Tanh<data_t> tanh2;
+        _conv2.setInput(ml::Concatenate(lastAxis, {&_input, &tanh1}));
+        tanh2.setInput(&_conv2);
+
+        ml::Tanh<data_t> tanh3;
+        _conv3.setInput(ml::Concatenate(lastAxis, {&_input, &tanh1, &tanh2}));
+        tanh3.setInput(&_conv3);
+
+        ml::Tanh<data_t> tanh4;
+        _conv4.setInput(ml::Concatenate(lastAxis, {&_input, &tanh1, &tanh2, &tanh3}));
+        tanh4.setInput(&_conv4);
+
+        ml::Tanh<data_t> tanh5;
+        _conv5.setInput(ml::Concatenate(lastAxis, {&_input, &tanh1, &tanh2, &tanh3, &tanh4}));
+        tanh5.setInput(&_conv5);
+
+        ml::Tanh<data_t> tanh6;
+        _conv6.setInput(
+            ml::Concatenate(lastAxis, {&_input, &tanh1, &tanh2, &tanh3, &tanh4, &tanh5}));
+        tanh6.setInput(&_conv6);
+
+        ml::Tanh<data_t> tanh7;
+        _conv7.setInput(
+            ml::Concatenate(lastAxis, {&_input, &tanh1, &tanh2, &tanh3, &tanh4, &tanh5, &tanh6}));
+        tanh7.setInput(&_conv7);
+
+        ml::Tanh<data_t> tanh8;
+        _conv8.setInput(ml::Concatenate(
+            lastAxis, {&_input, &tanh1, &tanh2, &tanh3, &tanh4, &tanh5, &tanh6, &tanh7}));
+        tanh8.setInput(&_conv8);
+
+        ml::Concatenate lastConc(lastAxis,
+                                 {&tanh1, &tanh2, &tanh3, &tanh4, &tanh5, &tanh6, &tanh7, &tanh8});
+
+        outputs_ = {&lastConc};
 
         // save the batch-size this model uses
         batchSize_ = inputs_.front()->getBatchSize();
 
         // set all input-descriptors by traversing the graph
         setInputDescriptors();
-
-        x0 = x;
-        x1 = F.tanh(self.conv1(x0));
-        x2 = F.tanh(self.conv2(torch.cat((x0, x1), 1)));
-        x3 = F.tanh(self.conv3(torch.cat((x0, x1, x2), 1)));
-        x4 = F.tanh(self.conv4(torch.cat((x0, x1, x2, x3), 1)));
-        x5 = F.tanh(self.conv5(torch.cat((x0, x1, x2, x3, x4), 1)));
-        x6 = F.tanh(self.conv6(torch.cat((x0, x1, x2, x3, x4, x5), 1)));
-        x7 = F.tanh(self.conv7(torch.cat((x0, x1, x2, x3, x4, x5, x6), 1)));
-        x8 = F.tanh(self.conv8(torch.cat((x0, x1, x2, x3, x4, x5, x6, x7), 1)));
-
-        return torch.cat((x1, x2, x3, x4, x5, x6, x7, x8), 1);
     }
 
     template <typename data_t, MlBackend Backend>
@@ -149,19 +175,18 @@ namespace elsa::ml
         inputs_ = {&_input};
 
         _conv.setInput(&_input);
-        _maxPool.setInput(&_conv);
+        ml::Tanh<data_t> tanh;
+        tanh.setInput(&_conv);
 
-        outputs_ = {&_upsample};
+        _maxPool.setInput(&tanh);
+
+        outputs_ = {&_maxPool};
 
         // save the batch-size this model uses
         batchSize_ = inputs_.front()->getBatchSize();
 
         // set all input-descriptors by traversing the graph
         setInputDescriptors();
-
-        x = F.tanh(self.conv(x));
-        x = self.maxPool(x);
-        return x;
     }
 
     template <typename data_t, MlBackend Backend>
@@ -184,8 +209,6 @@ namespace elsa::ml
         // set all input-descriptors by traversing the graph
         setInputDescriptors();
     }
-
-    // TODO add here more code
 
     template class PhantomNet<float>;
     template class PhantomNet<double>;

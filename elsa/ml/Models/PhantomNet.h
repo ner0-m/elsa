@@ -5,6 +5,7 @@
 #include "Reshape.h"
 #include "Conv.h"
 #include "Pooling.h"
+#include "Merging.h"
 
 namespace elsa::ml
 {
@@ -54,6 +55,10 @@ namespace elsa::ml
 
         /// general TDB consisting of 4 convs.
         // TODO consider ml::Concatenate
+        /**
+         * References:
+         * https://arxiv.org/pdf/1811.04602.pdf
+         * */
         class TrimmedDenseBlock4 : public Layer<data_t>
         {
         public:
@@ -67,6 +72,10 @@ namespace elsa::ml
         };
 
         /// TDB used in the middle on the architecture, consists of 8 convs.
+        /**
+         * References:
+         * https://arxiv.org/pdf/1811.04602.pdf
+         * */
         // TODO consider ml::Concatenate
         class TrimmedDenseBlock8 : public Layer<data_t>
         {
@@ -84,7 +93,12 @@ namespace elsa::ml
             Conv2D<data_t> _conv8;
         };
 
-        /// TD
+        /**
+         * TransitionDown block in the PhantomNet architecture.
+         *
+         * References:
+         * https://arxiv.org/pdf/1811.04602.pdf
+         * */
         class TransitionDown : public Layer<data_t>
         {
         public:
@@ -95,7 +109,12 @@ namespace elsa::ml
             MaxPooling2D<data_t> _maxPool = ml::MaxPooling2D<data_t>();
         };
 
-        /// TU
+        /**
+         * TransitionUp block in the PhantomNet architecture.
+         *
+         * References:
+         * https://arxiv.org/pdf/1811.04602.pdf
+         * */
         class TransitionUp : public Layer<data_t>
         {
         public:
