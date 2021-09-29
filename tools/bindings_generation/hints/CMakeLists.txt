@@ -1,7 +1,7 @@
 find_package(PythonLibs)
 if (PYTHONLIBS_FOUND)
     set(ELSA_PYBIND_HINTS "elsa_pybind_hints")
-    
+
     # this target is never actually needed or built
     # its only purpose is to force CMake to emit the compile commands for the hints files
     # hints files must have the extension '.cpp' or this will not work
@@ -15,7 +15,8 @@ if (PYTHONLIBS_FOUND)
                     projectors_cuda_hints.cpp
                     projectors_hints.cpp
                     proximity_operators_hints.cpp
-                    solvers_hints.cpp)
+                    solvers_hints.cpp
+                    tasks_hints.cpp)
 
     target_include_directories(${ELSA_PYBIND_HINTS} PUBLIC ${PYTHON_INCLUDE_DIRS})
     target_include_directories(${ELSA_PYBIND_HINTS} PUBLIC ${PYBIND11_INCLUDE_DIR})
