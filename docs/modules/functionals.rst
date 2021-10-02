@@ -26,7 +26,7 @@ Huber
 .. doxygenclass:: elsa::Huber
 
 Constraint
-======
+==========
 
 .. doxygenclass:: elsa::Constraint
 
@@ -39,6 +39,11 @@ L1Norm
 ======
 
 .. doxygenclass:: elsa::L1Norm
+
+WeightedL1Norm
+==============
+
+.. doxygenclass:: elsa::WeightedL1Norm
 
 L2NormPow2
 ==========
@@ -70,3 +75,8 @@ TransmissionLogLikelihood
 =========================
 
 .. doxygenclass:: elsa::TransmissionLogLikelihood
+
+Indicator
+=========
+
+.. doxygenclass:: elsa::Indicator

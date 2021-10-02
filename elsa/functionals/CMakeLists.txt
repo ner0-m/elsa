@@ -14,6 +14,8 @@ set(MODULE_HEADERS
     EmissionLogLikelihood.h
     TransmissionLogLikelihood.h
     Constraint.h
+    WeightedL1Norm.h
+    Indicator.h
 )
 
 # list all the code files of the module
@@ -32,6 +34,8 @@ set(MODULE_SOURCES
     EmissionLogLikelihood.cpp
     TransmissionLogLikelihood.cpp
     Constraint.cpp
+    WeightedL1Norm.cpp
+    Indicator.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators)

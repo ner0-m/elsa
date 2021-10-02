@@ -35,14 +35,6 @@ namespace elsa
           _currentSolution{dataTerm.getDomainDescriptor()},
           _lipschitzConstant{lipschitzConstant}
     {
-        // sanity check
-        for (auto& regTerm : _regTerms) {
-            if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
-                != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
-                throw InvalidArgumentError(
-                    "Problem: one of the reg terms' domain does not match the data term's");
-        }
-
         _currentSolution = 0;
     }
 

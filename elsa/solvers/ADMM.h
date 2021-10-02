@@ -91,7 +91,7 @@ namespace elsa
             const auto& dataTerm = f;
 
             if (!is<L2NormPow2<data_t>>(dataTerm)) {
-                throw std::invalid_argument(
+                throw InvalidArgumentError(
                     "ADMM::solveImpl: supported data term only of type L2NormPow2");
             }
 
@@ -99,7 +99,7 @@ namespace elsa
             const auto& dataTermResidual = downcast<LinearResidual<data_t>>(f.getResidual());
 
             if (g.size() != 1) {
-                throw std::invalid_argument(
+                throw InvalidArgumentError(
                     "ADMM::solveImpl: supported number of regularization terms is 1");
             }
 
@@ -108,8 +108,8 @@ namespace elsa
 
             if (!is<L0PseudoNorm<data_t>>(regularizationTerm)
                 && !is<L1Norm<data_t>>(regularizationTerm)) {
-                throw std::invalid_argument("ADMM::solveImpl: supported regularization terms are "
-                                            "of type L0PseudoNorm or L1Norm");
+                throw InvalidArgumentError("ADMM::solveImpl: supported regularization terms are "
+                                           "of type L0PseudoNorm or L1Norm");
             }
 
             const auto& constraint = splittingProblem.getConstraint();
@@ -117,13 +117,13 @@ namespace elsa
             const auto& B = constraint.getOperatorB();
             const auto& c = constraint.getDataVectorC();
 
-            DataContainer<data_t> x(A.getRangeDescriptor());
+            DataContainer<data_t> x(A.getDomainDescriptor());
             x = 0;
 
-            DataContainer<data_t> z(B.getRangeDescriptor());
+            DataContainer<data_t> z(B.getDomainDescriptor());
             z = 0;
 
-            DataContainer<data_t> u(c.getDataDescriptor());
+            DataContainer<data_t> u(A.getRangeDescriptor());
             u = 0;
 
             Logger::get("ADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
@@ -132,15 +132,13 @@ namespace elsa
 
             for (index_t iter = 0; iter < iterations; ++iter) {
                 LinearResidual<data_t> xLinearResidual(A, c - B.apply(z) - u);
-                RegularizationTerm xRegTerm(_rho / 2, L2NormPow2<data_t>(xLinearResidual));
+                RegularizationTerm xRegTerm(_rho, L2NormPow2<data_t>(xLinearResidual));
                 Problem<data_t> xUpdateProblem(dataTerm, xRegTerm, x);
 
                 XSolver<data_t> xSolver(xUpdateProblem);
                 x = xSolver.solve(_defaultXSolverIterations);
 
-                DataContainer<data_t> rk = x;
                 DataContainer<data_t> zPrev = z;
-                data_t Axnorm = x.l2Norm();
 
                 /// For future reference, below is listed the problem to be solved by the z update
                 /// solver. Refer to the documentation of ADMM for further details.
@@ -151,14 +149,13 @@ namespace elsa
                 ZSolver<data_t> zProxOp(A.getRangeDescriptor());
                 z = zProxOp.apply(x + u, geometry::Threshold{regWeight / _rho});
 
-                rk -= z;
-                DataContainer<data_t> sk = zPrev - z;
-                sk *= _rho;
+                ///  primal residual at iteration k
+                DataContainer<data_t> rk = A.apply(x) + B.apply(z) - c;
+                /// dual residual at iteration k
+                DataContainer<data_t> sk = _rho * A.applyAdjoint(B.apply(z - zPrev));
 
                 u += A.apply(x) + B.apply(z) - c;
 
-                DataContainer<data_t> Atu = u;
-                Atu *= _rho;
                 data_t rkL2Norm = rk.l2Norm();
                 data_t skL2Norm = sk.l2Norm();
 
@@ -167,14 +164,17 @@ namespace elsa
                                           rkL2Norm, skL2Norm);
 
                 /// variables for the stopping criteria
+                data_t Axnorm = A.apply(x).l2Norm();
+                data_t Bznorm = B.apply(z).l2Norm();
                 const data_t cL2Norm = !dataTermResidual.hasDataVector()
                                            ? static_cast<data_t>(0.0)
                                            : dataTermResidual.getDataVector().l2Norm();
-                const data_t epsRelMax =
-                    _epsilonRel * std::max(std::max(Axnorm, z.l2Norm()), cL2Norm);
+
+                const data_t epsRelMax = _epsilonRel * std::max(std::max(Axnorm, Bznorm), cL2Norm);
                 const auto epsilonPri = (std::sqrt(rk.getSize()) * _epsilonAbs) + epsRelMax;
 
-                const data_t epsRelL2Norm = _epsilonRel * Atu.l2Norm();
+                data_t Atunorm = A.applyAdjoint(_rho * u).l2Norm();
+                const data_t epsRelL2Norm = _epsilonRel * Atunorm;
                 const auto epsilonDual = (std::sqrt(sk.getSize()) * _epsilonAbs) + epsRelL2Norm;
 
                 if (rkL2Norm <= epsilonPri && skL2Norm <= epsilonDual) {

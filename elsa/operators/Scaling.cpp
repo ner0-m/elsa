@@ -13,6 +13,15 @@ namespace elsa
     }
 
     template <typename data_t>
+    Scaling<data_t>::Scaling(const DataDescriptor& domainDescriptor,
+                             const DataDescriptor& rangeDescriptor, data_t scaleFactor)
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+          _isIsotropic{true},
+          _scaleFactor{scaleFactor}
+    {
+    }
+
+    template <typename data_t>
     Scaling<data_t>::Scaling(const DataDescriptor& descriptor,
                              const DataContainer<data_t>& scaleFactors)
         : LinearOperator<data_t>(descriptor, descriptor),

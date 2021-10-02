@@ -28,6 +28,7 @@
 // Generators headers
 #include "PhantomGenerator.h"
 #include "CircleTrajectoryGenerator.h"
+#include "LimitedAngleTrajectoryGenerator.h"
 #include "SphereTrajectoryGenerator.h"
 
 // IO headers
@@ -45,6 +46,7 @@
 #include "Scaling.h"
 #include "FiniteDifferences.h"
 #include "BlockLinearOperator.h"
+#include "ShearletTransform.h"
 
 // Proximity Operator headers
 #include "ProximityOperator.h"

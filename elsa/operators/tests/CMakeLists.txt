@@ -16,5 +16,7 @@ add_custom_target(
 ELSA_DOCTEST(Identity)
 ELSA_DOCTEST(Scaling)
 ELSA_DOCTEST(FiniteDifferences)
+ELSA_DOCTEST(FourierTransform)
 ELSA_DOCTEST(BlockLinearOperator)
 ELSA_DOCTEST(Dictionary)
+ELSA_DOCTEST(ShearletTransform)
