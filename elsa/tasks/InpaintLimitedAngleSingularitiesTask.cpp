@@ -1,7 +1,7 @@
 #include "InpaintLimitedAngleSingularitiesTask.h"
 
 #include "NoiseGenerators.h"
-#include "CircleTrajectoryGenerator.h"
+#include "LimitedAngleTrajectoryGenerator.h"
 #include "Loss.h"
 #include "Optimizer.h"
 #include "Scaling.h"
@@ -13,10 +13,14 @@
 #include "SoftThresholding.h"
 #include "BlockLinearOperator.h"
 #include "SiddonsMethod.h"
-#include "EDFHandler.h"
 #include "Logger.h"
 
 #include "SHADMM.h"
+
+#ifdef ELSA_CUDA_PROJECTORS
+#include "SiddonsMethodCUDA.h"
+#include "JosephsMethodCUDA.h"
+#endif
 
 #include <iostream>
 #include <utility>
@@ -24,50 +28,23 @@
 namespace elsa
 {
     template <typename data_t>
-    void InpaintLimitedAngleSingularitiesTask<data_t>::generateLimitedAngleSinogram(
-        DataContainer<data_t> image,
-        std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,
-        index_t numOfAngles, index_t arc)
+    DataContainer<data_t>
+        InpaintLimitedAngleSingularitiesTask<data_t>::reconstructVisibleCoeffsOfLimitedAngleCT(
+            DataContainer<data_t> image,
+            std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,
+            index_t numOfAngles, index_t arc, index_t solverIterations, data_t rho1, data_t rho2)
     {
         const DataDescriptor& dataDescriptor = image.getDataDescriptor();
 
         if (dataDescriptor.getNumberOfDimensions() != 2) {
-            throw new LogicError("SHADMMTask: only 2D images are supported");
-        }
-
-        // generate limited angle trajectory
-        const auto distance =
-            static_cast<real_t>(dataDescriptor.getNumberOfCoefficientsPerDimension()[0]);
-        auto sinoDescriptor = LimitedAngleTrajectoryGenerator::createTrajectory(
-            numOfAngles, missingWedgeAngles, dataDescriptor, arc, distance * 100.0f, distance);
-
-        // setup operator for 2D X-ray transform
-        Logger::get("Info")->info("Simulating sinogram using Siddon's method");
-
-        SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(dataDescriptor),
-                                *sinoDescriptor);
-
-        // simulate the sinogram
-        auto sinogram = projector.apply(image);
-
-        return sinogram;
-    }
-
-    template <typename data_t>
-    void InpaintLimitedAngleSingularitiesTask<data_t>::reconstructOnLimitedAngleSinogram(
-        DataContainer<data_t> limitedAngleSinogram, index_t numberOfScales,
-        index_t solverIterations, data_t rho1, data_t rho2)
-    {
-        const DataDescriptor& dataDescriptor = image.getDataDescriptor();
-
-        if (dataDescriptor.getNumberOfDimensions() != 2) {
-            throw new LogicError("SHADMMTask: only 2D EDF files are supported");
+            throw new InvalidArgumentError(
+                "InpaintLimitedAngleSingularitiesTask: only 2D images are supported");
         }
 
         index_t width = dataDescriptor.getNumberOfCoefficientsPerDimension()[0];
         index_t height = dataDescriptor.getNumberOfCoefficientsPerDimension()[1];
-        ShearletTransform<data_t> shearletTransform(width, height);
-        index_t layers = _shearletTransform.getL();
+        ShearletTransform<data_t, data_t> shearletTransform(width, height);
+        index_t layers = shearletTransform.getL();
 
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
         std::vector<std::unique_ptr<LinearOperator<data_t>>> opsOfA(0);
@@ -92,14 +69,17 @@ namespace elsa
 
         Constraint<data_t> constraint(A, B, dCC);
 
-        // generate circular trajectory
-        index_t numAngles{180}, arc{360};
+        // generate limited-angle trajectory
         const auto distance = static_cast<real_t>(width);
-        auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, VolumeDescriptor{{width, height}}, arc, distance * 100.0f, distance);
+        auto sinoDescriptor = LimitedAngleTrajectoryGenerator::createTrajectory(
+            numOfAngles, missingWedgeAngles, VolumeDescriptor{{width, height}}, arc,
+            distance * 100.0f, distance);
 
-        // TODO consider enabling SiddonsMethodCUDA
+#ifdef ELSA_CUDA_PROJECTORS
+        SiddonsMethodCUDA<data_t> projector(VolumeDescriptor{{width, height}}, *sinoDescriptor);
+#else
         SiddonsMethod<data_t> projector(VolumeDescriptor{{width, height}}, *sinoDescriptor);
+#endif
 
         // simulate noise
         DataContainer<data_t> noise(projector.getRangeDescriptor());
@@ -111,6 +91,9 @@ namespace elsa
         GaussianNoiseGenerator gNG(0, 0.1f);
         noise = pNG(poissonNoise) + gNG(gaussianNoise);
         // limitedAngleSinogram += noise; // TODO try with noise later on
+
+        // simulate the limited-angle sinogram
+        DataContainer<data_t> limitedAngleSinogram = projector.apply(image);
 
         // setup reconstruction problem
         WLSProblem<data_t> wlsProblem(projector, limitedAngleSinogram);
@@ -131,24 +114,27 @@ namespace elsa
 
         Logger::get("Info")->info("Solving reconstruction using {} iterations of ADMM",
                                   solverIterations);
-        auto solution = shadmm.solve(solverIterations);
-        printf("square l2 norm of sol. is %f\n", solution.squaredL2Norm()); // TODO remove me
-
-        return solution;
+        return shadmm.solve(solverIterations);
     }
 
     template <typename data_t>
     void InpaintLimitedAngleSingularitiesTask<data_t>::trainPhantomNet(
         const std::vector<DataContainer<data_t>>& x, const std::vector<DataContainer<data_t>>& y,
-        index_t epochs, index_t batchSize)
+        index_t epochs)
     {
-        // Define an Adam optimizer
+        if (x.size() != y.size()) {
+            throw new LogicError("InpaintLimitedAngleSingularitiesTask: sizes of the x (inputs) "
+                                 "and y (labels) variables for training the PhantomNet must match");
+        }
+
+        // define an Adam optimizer
         auto opt = ml::Adam();
 
-        // Compile the model
-        _phantomNet.compile(ml::SparseCategoricalCrossentropy(), &opt);
+        // compile the model
+        phantomNet.compile(ml::SparseCategoricalCrossentropy(), &opt);
 
-        _phantomNet.fit(x, y, epochs);
+        // train the model
+        phantomNet.fit(x, y, epochs);
     }
 
     template <typename data_t>
@@ -156,8 +142,23 @@ namespace elsa
         InpaintLimitedAngleSingularitiesTask<data_t>::combineVisCoeffsToInpaintedInvisCoeffs(
             DataContainer<data_t> visCoeffs, DataContainer<data_t> invisCoeffs)
     {
-        ShearletTransform<data_t> shearletTransform(n, n);
-        return _shearletTransform.applyAdjoint(visCoeffs + invisCoeffs);
+        if (visCoeffs.getDataDescriptor() != invisCoeffs.getDataDescriptor()) {
+            throw new LogicError("InpaintLimitedAngleSingularitiesTask: DataDescriptors of the "
+                                 "visible coefficients and invisible coefficients must match");
+        }
+
+        index_t width = visCoeffs.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0];
+        index_t height = visCoeffs.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1];
+
+        if (width != height) {
+            throw new InvalidArgumentError(
+                "InpaintLimitedAngleSingularitiesTask: only 2D images are supported");
+        }
+
+        ShearletTransform<data_t, data_t> shearletTransform(width, height);
+
+        // combine the coefficients
+        return shearletTransform.applyAdjoint(visCoeffs + invisCoeffs);
     }
 
     // ------------------------------------------
