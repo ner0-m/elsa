@@ -7,9 +7,9 @@ set(MODULE_HEADERS
     FISTA.h
     FGM.h
     OGM.h
-    ADMM.h
+    DeprecatedADMM.h
     SHADMM.h
-    MergedADMM.h
+    ADMM.h
     SQS.h
     OrthogonalMatchingPursuit.h
 )
