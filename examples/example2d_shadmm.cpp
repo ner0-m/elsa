@@ -22,7 +22,6 @@ void example2d_shadmm()
     real_t rho2 = 1; /// LtI fixes this to 1
 
     /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
-    // size[0] == size[1], for now at least
     ShearletTransform<real_t> shearletTransform(n, n);
     index_t L = shearletTransform.getL();
 
