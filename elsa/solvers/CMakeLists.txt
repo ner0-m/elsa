@@ -7,7 +7,6 @@ set(MODULE_HEADERS
     FISTA.h
     FGM.h
     OGM.h
-    DeprecatedADMM.h
     SHADMM.h
     ADMM.h
     SQS.h
