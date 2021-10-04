@@ -27,8 +27,8 @@ namespace elsa
                 dynamic_cast<const IdenticalBlocksDescriptor&>(data.getDataDescriptor());
             return identBlocksDesc;
         } catch (std::bad_cast e) {
-            throw InvalidArgumentError("DictionaryLearningProblem: cannot initialize from signals "
-                                       "without IdenticalBlocksDescriptor");
+            throw InvalidArgumentError(
+                "Cannot initialize from signals without IdenticalBlocksDescriptor");
         }
     }
 
@@ -57,13 +57,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> DictionaryLearningProblem<data_t>::getRestrictedError(index_t atom)
+    std::optional<DataContainer<data_t>>
+        DictionaryLearningProblem<data_t>::getRestrictedError(index_t atom)
     {
         // TODO add bounds check for atom
         findAffectedSignals(atom);
         if (_currentAffectedSignals.size() < 1)
-            throw LogicError(
-                "DictionaryLearningProblem::getRestrictedError: atom doesn't affect any signals");
+            return {}; // atom isn't used by any representation
+
         IdenticalBlocksDescriptor errorDescriptor(_currentAffectedSignals.size(),
                                                   _signals.getBlock(0).getDataDescriptor());
         _currentModifiedError = std::make_unique<DataContainer<data_t>>(errorDescriptor);
@@ -94,8 +95,7 @@ namespace elsa
         const DataContainer<data_t>& representations)
     {
         if (_representations.getDataDescriptor() != representations.getDataDescriptor())
-            throw InvalidArgumentError("DictionaryLearningProblem::updateRepresentations: can't "
-                                       "update to representations with different descriptor");
+            throw InvalidArgumentError("Can't update to representations with different descriptor");
 
         _representations = representations;
         calculateError();

@@ -74,7 +74,8 @@ namespace elsa
         data_t _epsilon;
 
         /// calculates the SVD to a given matrix
-        auto calculateSVD(DataContainer<data_t> data);
+        Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>>
+            calculateSVD(const DataContainer<data_t>& data);
 
         /// given a SVD, generate the new atom
         DataContainer<data_t>
