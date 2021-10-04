@@ -17,7 +17,7 @@ namespace elsa
      * \f$ \min_{D,x} \| Y - DX \|_2^2 < \epsilon \f$, where \f$ D \f$ is the
      * dictionary operator that should be learned for the signals \f$ Y \f$ with sparse
      * representations \f$ X \f$. The sparsity condition \f$ \min_x \|\| x \|\|_0 \f$ for the
-     * columns \f$ x \f$ from \f$ X \f$ is not inforced by the class but handled implicitly, either
+     * columns \f$ x \f$ from \f$ X \f$ is not enforced by the class but handled implicitly, either
      * by using a greedy algorithm that starts with the 0-vector as a representation or by creating
      * another problem that explicitly takes sparsity into account and relaxes the L0-Norm to the
      * L1-Norm.
@@ -80,7 +80,7 @@ namespace elsa
          *
          * @returns The error restricted to atom
          */
-        DataContainer<data_t> getRestrictedError(index_t atom);
+        std::optional<DataContainer<data_t>> getRestrictedError(index_t atom);
 
         /**
          * @brief Update all representations \f$ X \f$

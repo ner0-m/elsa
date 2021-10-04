@@ -54,17 +54,15 @@ namespace elsa
                 const auto atom = dict.getAtom(k);
                 const auto& atomDescriptor =
                     atom.getDataDescriptor(); // needed for constructing a new atom
-                try {
-                    auto modifiedError = _problem.getRestrictedError(k);
-                    auto svd = calculateSVD(modifiedError);
+
+                auto modifiedError = _problem.getRestrictedError(k);
+                if (modifiedError) {
+                    auto svd = calculateSVD(modifiedError.value());
                     auto nextAtom = getNextAtom(svd, atomDescriptor);
                     auto nextRepresentation = getNextRepresentation(svd);
                     _problem.updateAtom(k, nextAtom, nextRepresentation);
                     if (_problem.getGlobalError().l2Norm() < _epsilon)
                         break;
-                } catch (LogicError& e) {
-                    // nothing bad, this atom is not used
-                    continue;
                 }
             }
 
@@ -76,7 +74,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    auto KSVD<data_t>::calculateSVD(DataContainer<data_t> error)
+    Eigen::JacobiSVD<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>>
+        KSVD<data_t>::calculateSVD(const DataContainer<data_t>& error)
     {
         const auto& errorDescriptor =
             dynamic_cast<const IdenticalBlocksDescriptor&>(error.getDataDescriptor());
