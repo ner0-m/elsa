@@ -37,8 +37,8 @@ namespace elsa
         real_t wedgeArc = mirrored ? 2 * (missingWedgeAngles.second - missingWedgeAngles.first)
                                    : missingWedgeAngles.second - missingWedgeAngles.first;
 
-        const real_t angleIncrement = (static_cast<real_t>(arcDegrees) - wedgeArc)
-                                      / (static_cast<real_t>(numberOfPoses) - 1.0f);
+        const real_t angleIncrement =
+            (static_cast<real_t>(arcDegrees) - wedgeArc) / (static_cast<real_t>(numberOfPoses));
 
         for (index_t i = 0;; ++i) {
             Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
