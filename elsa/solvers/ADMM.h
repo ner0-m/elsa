@@ -231,7 +231,7 @@ namespace elsa
                     ZSolver<data_t> zProxOp(A.getRangeDescriptor());
                     z = zProxOp.apply(x + u, geometry::Threshold{*regWeight / _rho});
                 } else {
-                    auto shearletTransform = downcast<ShearletTransform<data_t, data_t>>(
+                    auto shearletTransform = downcast<ShearletTransform<data_t>>(
                         downcast<BlockLinearOperator<data_t>>(A).getIthOperator(0));
 
                     index_t L = shearletTransform.getL();

@@ -1,12 +1,12 @@
 #include "ShearletTransform.h"
-#include "FourierTransform.h"
 #include "VolumeDescriptor.h"
 #include "Timer.h"
+#include "EDFHandler.h"
 
 namespace elsa
 {
-    template <typename ret_t, typename data_t>
-    ShearletTransform<ret_t, data_t>::ShearletTransform(IndexVector_t spatialDimensions)
+    template <typename data_t>
+    ShearletTransform<data_t>::ShearletTransform(IndexVector_t spatialDimensions)
         : ShearletTransform(spatialDimensions[0], spatialDimensions[1])
     {
         if (spatialDimensions.size() != 2) {
@@ -14,29 +14,28 @@ namespace elsa
         }
     }
 
-    template <typename ret_t, typename data_t>
-    ShearletTransform<ret_t, data_t>::ShearletTransform(index_t width, index_t height)
-        : LinearOperator<ret_t>(VolumeDescriptor{{width, height}},
-                                VolumeDescriptor{{width, height, calculateL(width, height)}}),
+    template <typename data_t>
+    ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height)
+        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
+                                 VolumeDescriptor{{width, height, 59}}),
           _width{width},
           _height{height},
           _jZero{calculatejZero(width, height)},
-          _L{calculateL(width, height)}
+          _L{59}
     {
         if (width < 0 || height < 0) {
             throw LogicError("ShearletTransform: negative width/height were provided");
         }
     }
 
-    template <typename ret_t, typename data_t>
-    ShearletTransform<ret_t, data_t>::ShearletTransform(index_t width, index_t height,
-                                                        index_t jZero)
-        : LinearOperator<ret_t>(VolumeDescriptor{{width, height}},
-                                VolumeDescriptor{{width, height, calculateL(jZero)}}),
+    template <typename data_t>
+    ShearletTransform<data_t>::ShearletTransform(index_t width, index_t height, index_t jZero)
+        : LinearOperator<data_t>(VolumeDescriptor{{width, height}},
+                                 VolumeDescriptor{{width, height, 59}}),
           _width{width},
           _height{height},
           _jZero{jZero},
-          _L{calculateL(jZero)}
+          _L{59}
     {
         if (width < 0 || height < 0) {
             throw LogicError("ShearletTransform: negative width/height were provided");
@@ -48,9 +47,9 @@ namespace elsa
 
     // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
     //  manner, but that might take quite some time, can this make it to master in the meantime?
-    template <typename ret_t, typename data_t>
-    DataContainer<std::complex<data_t>> ShearletTransform<ret_t, data_t>::sumByLastAxis(
-        DataContainer<std::complex<data_t>> dc) const
+    template <typename data_t>
+    DataContainer<std::complex<data_t>>
+        ShearletTransform<data_t>::sumByLastAxis(DataContainer<std::complex<data_t>> dc) const
     {
         auto coeffsPerDim = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension();
         index_t width = coeffsPerDim[0];
@@ -71,9 +70,9 @@ namespace elsa
         return summedDC;
     }
 
-    template <typename ret_t, typename data_t>
-    void ShearletTransform<ret_t, data_t>::applyImpl(const DataContainer<ret_t>& x,
-                                                     DataContainer<ret_t>& Ax) const
+    template <typename data_t>
+    void ShearletTransform<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                              DataContainer<data_t>& Ax) const
     {
         Timer timeguard("ShearletTransform", "apply");
 
@@ -89,28 +88,18 @@ namespace elsa
                    _width, _height, _jZero, _L,
                    _isSpectraComputed ? "precomputed" : "non-precomputed");
 
-        if (!isSpectraComputed()) {
-            computeSpectra();
-        }
+        std::string command = "python3 ../../ft_delegated.py -d ";
+        EDF::write(x, "f.edf");
+        system(command.c_str());
 
-        FourierTransform<std::complex<data_t>> fourierTransform(x.getDataDescriptor());
+        Ax = EDF::read<data_t>("shearTrf.edf");
 
-        DataContainer<std::complex<data_t>> fftImg = fourierTransform.apply(x.asComplex());
-
-        for (index_t i = 0; i < getL(); i++) {
-            DataContainer<std::complex<data_t>> temp =
-                getSpectra().slice(i).viewAs(x.getDataDescriptor()).asComplex() * fftImg;
-            if constexpr (isComplex<ret_t>) {
-                Ax.slice(i) = fourierTransform.applyAdjoint(temp);
-            } else {
-                Ax.slice(i) = fourierTransform.applyAdjoint(temp).getReal();
-            }
-        }
+        // SHty = getReals(np.sum(fft.ifft2(fft.fft2(y) * getSpectra()), axis = 0));
     }
 
-    template <typename ret_t, typename data_t>
-    void ShearletTransform<ret_t, data_t>::applyAdjointImpl(const DataContainer<ret_t>& y,
-                                                            DataContainer<ret_t>& Aty) const
+    template <typename data_t>
+    void ShearletTransform<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                                     DataContainer<data_t>& Aty) const
     {
         Timer timeguard("ShearletTransform", "applyAdjoint");
 
@@ -126,26 +115,14 @@ namespace elsa
                    _width, _height, _jZero, _L,
                    _isSpectraComputed ? "precomputed" : "non-precomputed");
 
-        if (!isSpectraComputed()) {
-            computeSpectra();
-        }
+        // TODO use fft when available
 
-        FourierTransform<std::complex<data_t>> fourierTransform(Aty.getDataDescriptor());
+        EDF::write(y, "y.edf");
 
-        DataContainer<std::complex<data_t>> intermRes(y.getDataDescriptor());
+        std::string command = "python3 ../../ft_delegated.py";
+        system(command.c_str());
 
-        for (index_t i = 0; i < getL(); i++) {
-            DataContainer<std::complex<data_t>> temp =
-                fourierTransform.apply(y.slice(i).viewAs(Aty.getDataDescriptor()).asComplex())
-                * getSpectra().slice(i).viewAs(Aty.getDataDescriptor()).asComplex();
-            intermRes.slice(i) = fourierTransform.applyAdjoint(temp);
-        }
-
-        if constexpr (isComplex<ret_t>) {
-            Aty = sumByLastAxis(intermRes);
-        } else {
-            Aty = sumByLastAxis(intermRes).getReal();
-        }
+        Aty = EDF::read<data_t>("invShearTrf.edf");
     }
 
     // TODO consider simplifying the usage of floor/ceil
@@ -157,9 +134,10 @@ namespace elsa
     // TODO consider using [i]fftshift for even-sized signals
     // TODO consider adding various generating functions, e.g. smooth shearlets
     // TODO are we supporting real shearlets only? seems so
-    template <typename ret_t, typename data_t>
-    void ShearletTransform<ret_t, data_t>::computeSpectra() const
+    template <typename data_t>
+    void ShearletTransform<data_t>::computeSpectra() const
     {
+        printf("CALCULATING SPECTRA WHEN IT SHOULDN'T\n");
         DataContainer<data_t> spectra(VolumeDescriptor{{_width, _height, _L}});
         spectra = 0;
 
@@ -228,8 +206,8 @@ namespace elsa
         _isSpectraComputed = true;
     }
 
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::meyerFunction(data_t x) const
+    template <typename data_t>
+    data_t ShearletTransform<data_t>::meyerFunction(data_t x) const
     {
         if (x < 0) {
             return 0;
@@ -241,8 +219,8 @@ namespace elsa
         }
     }
 
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::b(data_t w) const
+    template <typename data_t>
+    data_t ShearletTransform<data_t>::b(data_t w) const
     {
         if (1 <= std::abs(w) && std::abs(w) <= 2) {
             return std::sin(pi<data_t> / 2.0 * meyerFunction(std::abs(w) - 1));
@@ -253,8 +231,8 @@ namespace elsa
         }
     }
 
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::phi(data_t w) const
+    template <typename data_t>
+    data_t ShearletTransform<data_t>::phi(data_t w) const
     {
         if (std::abs(w) <= 1.0 / 2) {
             return 1;
@@ -265,8 +243,8 @@ namespace elsa
         }
     }
 
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::phiHat(data_t w, data_t h) const
+    template <typename data_t>
+    data_t ShearletTransform<data_t>::phiHat(data_t w, data_t h) const
     {
         if (std::abs(h) <= std::abs(w)) {
             return phi(w);
@@ -275,14 +253,14 @@ namespace elsa
         }
     }
 
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::psiHat1(data_t w) const
+    template <typename data_t>
+    data_t ShearletTransform<data_t>::psiHat1(data_t w) const
     {
         return std::sqrt(std::pow(b(2 * w), 2) + std::pow(b(w), 2));
     }
 
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::psiHat2(data_t w) const
+    template <typename data_t>
+    data_t ShearletTransform<data_t>::psiHat2(data_t w) const
     {
         if (w <= 0) {
             return std::sqrt(meyerFunction(1 + w));
@@ -291,8 +269,8 @@ namespace elsa
         }
     }
 
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::psiHat(data_t w, data_t h) const
+    template <typename data_t>
+    data_t ShearletTransform<data_t>::psiHat(data_t w, data_t h) const
     {
         if (w == 0) {
             return 0;
@@ -301,8 +279,8 @@ namespace elsa
         }
     }
 
-    template <typename ret_t, typename data_t>
-    auto ShearletTransform<ret_t, data_t>::getSpectra() const -> DataContainer<data_t>
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getSpectra() const -> DataContainer<data_t>
     {
         if (!_spectra.has_value()) {
             throw LogicError(std::string("ShearletTransform: the spectra is not yet computed"));
@@ -310,61 +288,61 @@ namespace elsa
         return _spectra.value();
     }
 
-    template <typename ret_t, typename data_t>
-    bool ShearletTransform<ret_t, data_t>::isSpectraComputed() const
+    template <typename data_t>
+    bool ShearletTransform<data_t>::isSpectraComputed() const
     {
         return _isSpectraComputed;
     }
 
-    template <typename ret_t, typename data_t>
-    index_t ShearletTransform<ret_t, data_t>::calculatejZero(index_t width, index_t height)
+    template <typename data_t>
+    index_t ShearletTransform<data_t>::calculatejZero(index_t width, index_t height)
     {
         return static_cast<index_t>(std::log2(std::max(width, height)) / 2.0);
     }
 
-    template <typename ret_t, typename data_t>
-    index_t ShearletTransform<ret_t, data_t>::calculateL(index_t width, index_t height)
+    template <typename data_t>
+    index_t ShearletTransform<data_t>::calculateL(index_t width, index_t height)
     {
         return static_cast<index_t>(std::pow(2, (calculatejZero(width, height) + 2)) - 3);
     }
 
-    template <typename ret_t, typename data_t>
-    index_t ShearletTransform<ret_t, data_t>::calculateL(index_t jZero)
+    template <typename data_t>
+    index_t ShearletTransform<data_t>::calculateL(index_t jZero)
     {
         return static_cast<index_t>(std::pow(2, jZero + 2) - 3);
     }
 
-    template <typename ret_t, typename data_t>
-    auto ShearletTransform<ret_t, data_t>::getWidth() const -> index_t
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getWidth() const -> index_t
     {
         return _width;
     }
 
-    template <typename ret_t, typename data_t>
-    auto ShearletTransform<ret_t, data_t>::getHeight() const -> index_t
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getHeight() const -> index_t
     {
         return _height;
     }
 
-    template <typename ret_t, typename data_t>
-    auto ShearletTransform<ret_t, data_t>::getL() const -> index_t
+    template <typename data_t>
+    auto ShearletTransform<data_t>::getL() const -> index_t
     {
         return _L;
     }
 
-    template <typename ret_t, typename data_t>
-    ShearletTransform<ret_t, data_t>* ShearletTransform<ret_t, data_t>::cloneImpl() const
+    template <typename data_t>
+    ShearletTransform<data_t>* ShearletTransform<data_t>::cloneImpl() const
     {
-        return new ShearletTransform<ret_t, data_t>(_width, _height, _jZero);
+        return new ShearletTransform<data_t>(_width, _height, _jZero);
     }
 
-    template <typename ret_t, typename data_t>
-    bool ShearletTransform<ret_t, data_t>::isEqual(const LinearOperator<ret_t>& other) const
+    template <typename data_t>
+    bool ShearletTransform<data_t>::isEqual(const LinearOperator<data_t>& other) const
     {
-        if (!LinearOperator<ret_t>::isEqual(other))
+        if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
-        auto otherST = downcast_safe<ShearletTransform<ret_t, data_t>>(&other);
+        auto otherST = downcast_safe<ShearletTransform<data_t>>(&other);
 
         if (!otherST)
             return false;
@@ -383,8 +361,6 @@ namespace elsa
 
     // ------------------------------------------
     // explicit template instantiation
-    template class ShearletTransform<float, float>;
-    template class ShearletTransform<std::complex<float>, float>;
-    template class ShearletTransform<double, double>;
-    template class ShearletTransform<std::complex<double>, double>;
+    template class ShearletTransform<float>;
+    template class ShearletTransform<double>;
 } // namespace elsa

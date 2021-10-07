@@ -43,7 +43,7 @@ namespace elsa
 
         index_t width = dataDescriptor.getNumberOfCoefficientsPerDimension()[0];
         index_t height = dataDescriptor.getNumberOfCoefficientsPerDimension()[1];
-        ShearletTransform<data_t, data_t> shearletTransform(width, height);
+        ShearletTransform<data_t> shearletTransform(width, height);
         index_t layers = shearletTransform.getL();
 
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
@@ -117,25 +117,27 @@ namespace elsa
         return shadmm.solve(solverIterations);
     }
 
-    template <typename data_t>
-    void InpaintLimitedAngleSingularitiesTask<data_t>::trainPhantomNet(
-        const std::vector<DataContainer<data_t>>& x, const std::vector<DataContainer<data_t>>& y,
-        index_t epochs)
-    {
-        if (x.size() != y.size()) {
-            throw new LogicError("InpaintLimitedAngleSingularitiesTask: sizes of the x (inputs) "
-                                 "and y (labels) variables for training the PhantomNet must match");
-        }
-
-        // define an Adam optimizer
-        auto opt = ml::Adam();
-
-        // compile the model
-        phantomNet.compile(ml::SparseCategoricalCrossentropy(), &opt);
-
-        // train the model
-        phantomNet.fit(x, y, epochs);
-    }
+    //    template <typename data_t>
+    //    void InpaintLimitedAngleSingularitiesTask<data_t>::trainPhantomNet(
+    //        const std::vector<DataContainer<data_t>>& x, const std::vector<DataContainer<data_t>>&
+    //        y, index_t epochs)
+    //    {
+    //        if (x.size() != y.size()) {
+    //            throw new LogicError("InpaintLimitedAngleSingularitiesTask: sizes of the x
+    //            (inputs) "
+    //                                 "and y (labels) variables for training the PhantomNet must
+    //                                 match");
+    //        }
+    //
+    //        // define an Adam optimizer
+    //        auto opt = ml::Adam();
+    //
+    //        // compile the model
+    //        phantomNet.compile(ml::SparseCategoricalCrossentropy(), &opt);
+    //
+    //        // train the model
+    //        phantomNet.fit(x, y, epochs);
+    //    }
 
     template <typename data_t>
     DataContainer<data_t>
@@ -155,7 +157,7 @@ namespace elsa
                 "InpaintLimitedAngleSingularitiesTask: only 2D images are supported");
         }
 
-        ShearletTransform<data_t, data_t> shearletTransform(width, height);
+        ShearletTransform<data_t> shearletTransform(width, height);
 
         // combine the coefficients
         return shearletTransform.applyAdjoint(visCoeffs + invisCoeffs);

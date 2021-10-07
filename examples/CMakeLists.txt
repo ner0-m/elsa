@@ -28,6 +28,12 @@ target_link_libraries(example2d_shadmm elsa::all)
 target_compile_features(example2d_shadmm PUBLIC cxx_std_17)
 add_dependencies(build-examples example2d_shadmm)
 
+# build the sdlx example program
+add_executable(sdlx_example sdlx_example.cpp)
+target_link_libraries(sdlx_example elsa::all)
+target_compile_features(sdlx_example PUBLIC cxx_std_17)
+add_dependencies(build-examples sdlx_example)
+
 # build the shearlet example program
 add_executable(shearlet_example example2d_shearlet.cpp)
 target_link_libraries(shearlet_example elsa::all)

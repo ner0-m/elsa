@@ -12,7 +12,7 @@ using namespace elsa;
 void example2d_shadmm()
 {
     // generate 2d phantom
-    index_t n = 128;
+    index_t n = 512;
     IndexVector_t signalSize(2);
     signalSize << n, n;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(signalSize);

@@ -4,7 +4,7 @@
 #include "DataContainer.h"
 #include "StrongTypes.h"
 #include "ShearletTransform.h"
-#include "PhantomNet.h"
+//#include "PhantomNet.h"
 
 namespace elsa
 {
@@ -51,12 +51,12 @@ namespace elsa
             index_t numOfAngles = 180, index_t arc = 360, index_t solverIterations = 50,
             data_t rho1 = 1 / 2, data_t rho2 = 1);
 
-        /// Train the PhantomNet model to be able to learn the invisible coefficients in the Fourier
-        /// domain.
-        // TODO not sure if elsa ml can properly train fully convolutional NNs, if not I'd prefer to
-        //  keep this, but commented out
-        void trainPhantomNet(const std::vector<DataContainer<data_t>>& x,
-                             const std::vector<DataContainer<data_t>>& y, index_t epochs = 20);
+//        /// Train the PhantomNet model to be able to learn the invisible coefficients in the Fourier
+//        /// domain.
+//        // TODO not sure if elsa ml can properly train fully convolutional NNs, if not I'd prefer to
+//        //  keep this, but commented out
+//        void trainPhantomNet(const std::vector<DataContainer<data_t>>& x,
+//                             const std::vector<DataContainer<data_t>>& y, index_t epochs = 20);
 
         /// Simply adds both the coefficients and applies the inverse shearlet transform to it. A
         /// new ShearletTransform object will be created, therefore its spectra has to be
@@ -67,6 +67,6 @@ namespace elsa
             combineVisCoeffsToInpaintedInvisCoeffs(DataContainer<data_t> visCoeffs,
                                                    DataContainer<data_t> invisCoeffs);
 
-        ml::PhantomNet phantomNet;
+//        ml::PhantomNet phantomNet;
     };
 } // namespace elsa
