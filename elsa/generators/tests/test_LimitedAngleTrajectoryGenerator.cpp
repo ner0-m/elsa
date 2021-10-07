@@ -56,7 +56,7 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a mirrored Limited Angle Traj
                 real_t wedgeArc = 2 * (missingWedgeAngles.second - missingWedgeAngles.first);
 
                 const real_t angleIncrement = (static_cast<real_t>(halfCircular) - wedgeArc)
-                                              / (static_cast<real_t>(numberOfAngles) - 1.0f);
+                                              / (static_cast<real_t>(numberOfAngles));
 
                 index_t j = 0;
                 for (index_t i = 0;; ++i) {
@@ -118,7 +118,7 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a mirrored Limited Angle Traj
                 real_t wedgeArc = 2 * (missingWedgeAngles.second - missingWedgeAngles.first);
 
                 const real_t angleIncrement = (static_cast<real_t>(fullyCircular) - wedgeArc)
-                                              / (static_cast<real_t>(numberOfAngles) - 1.0f);
+                                              / (static_cast<real_t>(numberOfAngles));
 
                 index_t j = 0;
                 for (index_t i = 0;; ++i) {
@@ -198,7 +198,7 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a non-mirrored Limited Angle 
                 real_t wedgeArc = missingWedgeAngles.second - missingWedgeAngles.first;
 
                 const real_t angleIncrement = (static_cast<real_t>(halfCircular) - wedgeArc)
-                                              / (static_cast<real_t>(numberOfAngles) - 1.0f);
+                                              / (static_cast<real_t>(numberOfAngles));
 
                 index_t j = 0;
                 for (index_t i = 0;; ++i) {
@@ -258,7 +258,7 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a non-mirrored Limited Angle 
                 real_t wedgeArc = missingWedgeAngles.second - missingWedgeAngles.first;
 
                 const real_t angleIncrement = (static_cast<real_t>(fullyCircular) - wedgeArc)
-                                              / (static_cast<real_t>(numberOfAngles) - 1.0f);
+                                              / (static_cast<real_t>(numberOfAngles));
 
                 index_t j = 0;
                 for (index_t i = 0;; ++i) {

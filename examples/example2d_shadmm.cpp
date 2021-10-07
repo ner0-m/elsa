@@ -22,7 +22,6 @@ void example2d_shadmm()
     real_t rho2 = 1; /// LtI fixes this to 1
 
     /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
-    // size[0] == size[1], for now at least
     ShearletTransform<real_t> shearletTransform(n, n);
     index_t L = shearletTransform.getL();
 
@@ -55,12 +54,13 @@ void example2d_shadmm()
     Constraint<real_t> constraint(A, B, dCC);
 
     // generate circular trajectory
-    index_t numAngles{180}, arc{360};
+    index_t numAngles{360}, arc{360};
     const auto distance = static_cast<real_t>(n);
-    auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-        numAngles, VolumeDescriptor{{n, n}}, arc, distance * 100.0f, distance);
+    auto sinoDescriptor = LimitedAngleTrajectoryGenerator::createTrajectory(
+        numAngles, std::pair(geometry::Degree(60), geometry::Degree(120)), VolumeDescriptor{{n, n}},
+        arc, distance * 100.0f, distance);
 
-    SiddonsMethod projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
+    SiddonsMethodCUDA projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
 
     // simulate noise // TODO try with/without noise later on
     // DataContainer<real_t> noise(projector.getRangeDescriptor());
@@ -77,7 +77,7 @@ void example2d_shadmm()
     WLSProblem wlsProblem(projector, sinogram);
 
     DataContainer<real_t> ones(VolumeDescriptor{{n, n, L}});
-    ones = 1;
+    ones = 0.001f;
     WeightedL1Norm<real_t> weightedL1Norm(LinearResidual<real_t>{shearletTransform}, ones);
     RegularizationTerm<real_t> wL1NormRegTerm(1, weightedL1Norm);
 
@@ -89,7 +89,7 @@ void example2d_shadmm()
 
     SHADMM<CG, SoftThresholding, real_t> shadmm(splittingProblem);
 
-    auto sol = shadmm.solve(5);
+    auto sol = shadmm.solve(50);
     printf("square l2 norm of sol. is %f\n", sol.squaredL2Norm());
 
     // write the solution out

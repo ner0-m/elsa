@@ -6,7 +6,6 @@
  * @author Andi Braimllari
  */
 
-#include "Error.h"
 #include "SoftThresholding.h"
 #include "VolumeDescriptor.h"
 
