@@ -189,43 +189,44 @@ namespace elsa
                 z = concatenate(P1z, P2z);
                 // ===== here ends very SHADMM specific code =====
 
-                ///  primal residual at iteration k
-                DataContainer<data_t> rk = A.apply(x) + B.apply(z) - c;
-                /// dual residual at iteration k
-                DataContainer<data_t> sk = _rho * A.applyAdjoint(B.apply(z - zPrev));
-
-                // TODO this might just work out of the box instead of the sliced parts as done
-                //  above
-                // u += A.apply(x) + B.apply(z) - c;
-
-                data_t rkL2Norm = rk.l2Norm();
-                data_t skL2Norm = sk.l2Norm();
-
-                Logger::get("SHADMM")->info("{:<19}| {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", iter,
-                                            x.squaredL2Norm(), z.squaredL2Norm(), u.squaredL2Norm(),
-                                            rkL2Norm, skL2Norm);
-
-                /// variables for the stopping criteria
-                data_t Axnorm = A.apply(x).l2Norm();
-                data_t Bznorm = B.apply(z).l2Norm();
-                const data_t cL2Norm = !dataTermResidual.hasDataVector()
-                                           ? static_cast<data_t>(0.0)
-                                           : dataTermResidual.getDataVector().l2Norm();
-
-                const data_t epsRelMax = _epsilonRel * std::max(std::max(Axnorm, Bznorm), cL2Norm);
-                const auto epsilonPri = (std::sqrt(rk.getSize()) * _epsilonAbs) + epsRelMax;
-
-                data_t Atunorm = A.applyAdjoint(_rho * u).l2Norm();
-                const data_t epsRelL2Norm = _epsilonRel * Atunorm;
-                const auto epsilonDual = (std::sqrt(sk.getSize()) * _epsilonAbs) + epsRelL2Norm;
-
-                if (rkL2Norm <= epsilonPri && skL2Norm <= epsilonDual) {
-                    Logger::get("SHADMM")->info("SUCCESS: Reached convergence at {}/{} iterations ",
-                                                iter, iterations);
-
-                    getCurrentSolution() = x;
-                    return getCurrentSolution();
-                }
+                // TODO calculating these is not enirely relevant for now
+//                ///  primal residual at iteration k
+//                DataContainer<data_t> rk = A.apply(x) + B.apply(z) - c;
+//                /// dual residual at iteration k
+//                DataContainer<data_t> sk = _rho * A.applyAdjoint(B.apply(z - zPrev));
+//
+//                // TODO this might just work out of the box instead of the sliced parts as done
+//                //  above
+//                // u += A.apply(x) + B.apply(z) - c;
+//
+//                data_t rkL2Norm = rk.l2Norm();
+//                data_t skL2Norm = sk.l2Norm();
+//
+//                Logger::get("SHADMM")->info("{:<19}| {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", iter,
+//                                            x.squaredL2Norm(), z.squaredL2Norm(), u.squaredL2Norm(),
+//                                            rkL2Norm, skL2Norm);
+//
+//                /// variables for the stopping criteria
+//                data_t Axnorm = A.apply(x).l2Norm();
+//                data_t Bznorm = B.apply(z).l2Norm();
+//                const data_t cL2Norm = !dataTermResidual.hasDataVector()
+//                                           ? static_cast<data_t>(0.0)
+//                                           : dataTermResidual.getDataVector().l2Norm();
+//
+//                const data_t epsRelMax = _epsilonRel * std::max(std::max(Axnorm, Bznorm), cL2Norm);
+//                const auto epsilonPri = (std::sqrt(rk.getSize()) * _epsilonAbs) + epsRelMax;
+//
+//                data_t Atunorm = A.applyAdjoint(_rho * u).l2Norm();
+//                const data_t epsRelL2Norm = _epsilonRel * Atunorm;
+//                const auto epsilonDual = (std::sqrt(sk.getSize()) * _epsilonAbs) + epsRelL2Norm;
+//
+//                if (rkL2Norm <= epsilonPri && skL2Norm <= epsilonDual) {
+//                    Logger::get("SHADMM")->info("SUCCESS: Reached convergence at {}/{} iterations ",
+//                                                iter, iterations);
+//
+//                    getCurrentSolution() = x;
+//                    return getCurrentSolution();
+//                }
 
                 // TODO varying penalty parameter was here, add again after development and check
             }
