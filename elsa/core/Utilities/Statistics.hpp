@@ -1,6 +1,7 @@
 #pragma once
 
 #include "elsaDefines.h"
+#include "DataContainer.h"
 
 #include <cmath>
 #include <numeric>
@@ -9,6 +10,25 @@
 
 namespace elsa
 {
+    /**
+     * @brief Compute the Mean Squared Error of two given signals.
+     *
+     * @param dc1 DataContainer signal
+     * @param dc2 DataContainer signal
+     */
+    template <typename data_t = real_t>
+    constexpr auto meanSquaredError(DataContainer<data_t> dc1, DataContainer<data_t> dc2)
+        -> long double
+    {
+        if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
+            throw LogicError(
+                std::string("Statistics::relativeError: shapes of both signals should match"));
+        }
+
+        DataContainer<data_t> diff = dc1 - dc2;
+        return sum(square(diff)) / dc1.getSize();
+    }
+
     /// Calculate mean and standard deviation of a container
     template <typename Container>
     constexpr auto calculateMeanStddev(Container v)
