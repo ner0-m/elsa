@@ -108,7 +108,7 @@ void sdlx_example()
         printf("square l2 norm of sol. is %f\n", sol.squaredL2Norm());
 
         // write the solution out
-        EDF::write(sol, destDir.append(filePath.filename().string()));
+        EDF::write(sol, destDir + filePath.filename().string());
     }
 }
 

@@ -202,9 +202,8 @@ namespace elsa
 //                data_t rkL2Norm = rk.l2Norm();
 //                data_t skL2Norm = sk.l2Norm();
 //
-//                Logger::get("SHADMM")->info("{:<19}| {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", iter,
-//                                            x.squaredL2Norm(), z.squaredL2Norm(), u.squaredL2Norm(),
-//                                            rkL2Norm, skL2Norm);
+                Logger::get("SHADMM")->info("{:<19}| {:<19}| {:<19}| {:<19}", iter,
+                                            x.squaredL2Norm(), z.squaredL2Norm(), u.squaredL2Norm());
 //
 //                /// variables for the stopping criteria
 //                data_t Axnorm = A.apply(x).l2Norm();
