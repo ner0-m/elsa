@@ -10,48 +10,6 @@
 
 namespace elsa
 {
-    // TODO this is already present in DataContainer, import it and use it here, REMOVE ME
-    template <typename data_t = real_t>
-    data_t temp_sum(DataContainer<data_t> dc)
-    {
-        data_t s = 0;
-        for (int i = 0; i < dc.getSize(); ++i) {
-            s += dc[i];
-        }
-        return s;
-    }
-
-    // TODO this is already present in DataContainer, import it and use it here, REMOVE ME
-    template <typename data_t = real_t>
-    DataContainer<data_t> temp_square(DataContainer<data_t> dc)
-    {
-        DataContainer<data_t> sq(dc.getDataDescriptor());
-        for (int i = 0; i < dc.getSize(); ++i) {
-            sq = dc[i] * dc[i];
-        }
-        return sq;
-    }
-
-    // TODO should this be located in Statistics.hpp or Metrics.hpp?
-    /**
-     * @brief Compute the Mean Squared Error of two given signals.
-     *
-     * @param dc1 DataContainer signal
-     * @param dc2 DataContainer signal
-     */
-    template <typename data_t = real_t>
-    constexpr auto meanSquaredError(DataContainer<data_t> dc1, DataContainer<data_t> dc2)
-        -> long double
-    {
-        if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
-            throw LogicError(
-                std::string("Metrics::relativeError: shapes of both signals should match"));
-        }
-
-        DataContainer<data_t> diff = dc1 - dc2;
-        return temp_sum(temp_square(diff)) / dc1.getSize();
-    }
-
     /**
      * @brief Compute the Relative Error between two given signals.
      *
