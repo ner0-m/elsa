@@ -26,7 +26,8 @@ namespace elsa
         }
 
         DataContainer<data_t> diff = dc1 - dc2;
-        return DataContainer{square(diff)}.sum() / dc1.getSize();
+        DataContainer<data_t> squared = DataContainer<data_t>{square(diff)};
+        return squared.sum() / dc1.getSize();
     }
 
     /// Calculate mean and standard deviation of a container
