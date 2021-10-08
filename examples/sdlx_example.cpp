@@ -30,7 +30,7 @@ void sdlx_example()
             throw InvalidArgumentError("Different shapes than expected!");
         }
 
-        index_t noIterations = 5;
+        index_t noIterations = 50;
 
         // random numbers
         real_t rho1 = 1 / 2;
@@ -105,7 +105,7 @@ void sdlx_example()
         SHADMM<CG, SoftThresholding, real_t> shadmm(splittingProblem);
 
         auto sol = shadmm.solve(noIterations);
-        printf("square l2 norm of sol. is %f\n", sol.squaredL2Norm());
+        printf("Squared l2-norm of the sol. is %f\n", sol.squaredL2Norm());
 
         // write the solution out
         EDF::write(sol, destDir + filePath.filename().string());

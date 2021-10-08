@@ -119,6 +119,7 @@ namespace elsa
             const DataContainer<data_t>& c = constraint.getDataVectorC();
 
             auto shearletTransform = downcast<ShearletTransform<data_t>>(A.getIthOperator(0));
+            shearletTransform.computeSpectra();
 
             if (shearletTransform.getWidth() != shearletTransform.getHeight()) {
                 throw std::invalid_argument(
