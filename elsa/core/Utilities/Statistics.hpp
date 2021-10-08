@@ -22,11 +22,11 @@ namespace elsa
     {
         if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
             throw LogicError(
-                std::string("Statistics::relativeError: shapes of both signals should match"));
+                std::string("Statistics::meanSquaredError: shapes of both signals should match"));
         }
 
         DataContainer<data_t> diff = dc1 - dc2;
-        return sum(square(diff)) / dc1.getSize();
+        return DataContainer{square(diff)}.sum() / dc1.getSize();
     }
 
     /// Calculate mean and standard deviation of a container

@@ -2,6 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DataContainer.h"
+#include "Statistics.hpp"
 
 #include <cmath>
 #include <numeric>
@@ -20,7 +21,7 @@ namespace elsa
     constexpr auto relativeError(DataContainer<data_t> dc1, DataContainer<data_t> dc2)
         -> long double
     {
-        if (dc1.getDataDescriptor() != dc2) {
+        if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
             throw LogicError(
                 std::string("Metrics::relativeError: shapes of both signals should match"));
         }
@@ -46,7 +47,7 @@ namespace elsa
                 "Metrics::peakSignalToNoiseRatio: shapes of both signals should match"));
         }
 
-        long double err = meanSquaredError(dc1, dc2);
+        long double err = meanSquaredError<data_t>(dc1, dc2);
         return 10 * std::log10((std::pow(dataRange, 2) / err));
     }
 
