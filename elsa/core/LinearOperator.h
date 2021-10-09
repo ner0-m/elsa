@@ -123,6 +123,12 @@ namespace elsa
             return LinearOperator(lhs, rhs, CompositeMode::MULT);
         }
 
+        /// friend operator* to support composition of a scalar and a LinearOperator
+        friend LinearOperator<data_t> operator*(data_t scalar, const LinearOperator<data_t>& op)
+        {
+            return LinearOperator(scalar, op);
+        }
+
         /// friend function to return the adjoint of a LinearOperator (and its derivatives)
         friend LinearOperator<data_t> adjoint(const LinearOperator<data_t>& op)
         {
@@ -159,6 +165,8 @@ namespace elsa
         /// pointers to nodes in the evaluation tree
         std::unique_ptr<LinearOperator<data_t>> _lhs{}, _rhs{};
 
+        std::optional<data_t> _scalar = {};
+
         /// flag whether this is a leaf-node
         bool _isLeaf{false};
 
@@ -169,7 +177,7 @@ namespace elsa
         bool _isComposite{false};
 
         /// enum class denoting the mode of composition (+, *)
-        enum class CompositeMode { ADD, MULT };
+        enum class CompositeMode { ADD, MULT, SCALAR_MULT };
 
         /// variable storing the composition mode (+, *)
         CompositeMode _mode{CompositeMode::MULT};
@@ -180,6 +188,9 @@ namespace elsa
         /// constructor to produce a composite (internal node) of the evaluation tree
         LinearOperator(const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs,
                        CompositeMode mode);
+
+        /// constructor to produce a composite (internal node) of the evaluation tree
+        LinearOperator(data_t scalar, const LinearOperator<data_t>& op);
     };
 
 } // namespace elsa
