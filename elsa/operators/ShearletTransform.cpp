@@ -46,6 +46,26 @@ namespace elsa
         }
     }
 
+    template <typename ret_t, typename data_t>
+    ShearletTransform<ret_t, data_t>::ShearletTransform(
+        index_t width, index_t height, index_t jZero, std::optional<DataContainer<data_t>> spectra)
+        : LinearOperator<ret_t>(VolumeDescriptor{{width, height}},
+                                VolumeDescriptor{{width, height, calculateL(jZero)}}),
+          _spectra{spectra},
+          _isSpectraComputed{_spectra.has_value()},
+          _width{width},
+          _height{height},
+          _jZero{jZero},
+          _L{calculateL(jZero)}
+    {
+        if (width < 0 || height < 0) {
+            throw LogicError("ShearletTransform: negative width/height were provided");
+        }
+        if (jZero < 0) {
+            throw LogicError("ShearletTransform: negative number of scales was provided");
+        }
+    }
+
     // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
     //  manner, but that might take quite some time, can this make it to master in the meantime?
     template <typename ret_t, typename data_t>
@@ -355,7 +375,7 @@ namespace elsa
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>* ShearletTransform<ret_t, data_t>::cloneImpl() const
     {
-        return new ShearletTransform<ret_t, data_t>(_width, _height, _jZero);
+        return new ShearletTransform<ret_t, data_t>(_width, _height, _jZero, _spectra);
     }
 
     template <typename ret_t, typename data_t>

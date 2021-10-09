@@ -50,6 +50,17 @@ namespace elsa
          */
         ShearletTransform(index_t width, index_t height, index_t jZero);
 
+        /**
+         * @brief Constructor for a (regular) cone-adapted discrete shearlet transform.
+         *
+         * @param[in] width the width of the input image
+         * @param[in] height the height of the input image
+         * @param[in] jZero the number of scales
+         * @param[in] spectra the spectra
+         */
+        ShearletTransform(index_t width, index_t height, index_t jZero,
+                          std::optional<DataContainer<data_t>> spectra);
+
         /// default destructor
         ~ShearletTransform() override = default;
 
