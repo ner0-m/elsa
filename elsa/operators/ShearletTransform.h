@@ -22,8 +22,8 @@ namespace elsa
      * https://www.math.uh.edu/~dlabate/Athens.pdf
      * https://arxiv.org/pdf/1202.1773.pdf
      */
-    template <typename data_t = real_t>
-    class ShearletTransform : public LinearOperator<data_t>
+    template <typename ret_t = real_t, typename data_t = real_t>
+    class ShearletTransform : public LinearOperator<ret_t>
     {
     public:
         /**
@@ -49,6 +49,17 @@ namespace elsa
          * @param[in] jZero the number of scales
          */
         ShearletTransform(index_t width, index_t height, index_t jZero);
+
+        /**
+         * @brief Constructor for a (regular) cone-adapted discrete shearlet transform.
+         *
+         * @param[in] width the width of the input image
+         * @param[in] height the height of the input image
+         * @param[in] jZero the number of scales
+         * @param[in] spectra the spectra
+         */
+        ShearletTransform(index_t width, index_t height, index_t jZero,
+                          std::optional<DataContainer<data_t>> spectra);
 
         /// default destructor
         ~ShearletTransform() override = default;
@@ -78,16 +89,16 @@ namespace elsa
             sumByLastAxis(DataContainer<std::complex<data_t>> container) const;
 
     protected:
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void applyImpl(const DataContainer<ret_t>& x, DataContainer<ret_t>& Ax) const override;
 
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
+        void applyAdjointImpl(const DataContainer<ret_t>& y,
+                              DataContainer<ret_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
-        ShearletTransform<data_t>* cloneImpl() const override;
+        ShearletTransform<ret_t, data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const override;
+        bool isEqual(const LinearOperator<ret_t>& other) const override;
 
     private:
         /// variable to store the spectra
