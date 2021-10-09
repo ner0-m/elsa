@@ -18,11 +18,12 @@ void example2d_shadmm()
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(signalSize);
 
     // random numbers
-    real_t rho1 = 1 / 2;
+    real_t rho1 = 1.0 / 2;
     real_t rho2 = 1; /// LtI fixes this to 1
 
     /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
     ShearletTransform<real_t> shearletTransform(n, n);
+    shearletTransform.computeSpectra();
     index_t L = shearletTransform.getL();
 
     IndexVector_t slicesInBlock(2);

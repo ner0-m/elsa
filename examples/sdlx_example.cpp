@@ -33,7 +33,7 @@ void sdlx_example()
         index_t noIterations = 50;
 
         // random numbers
-        real_t rho1 = 1 / 2;
+        real_t rho1 = 1.0 / 2;
         real_t rho2 = 1; /// LtI fixes this to 1
 
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
@@ -84,7 +84,7 @@ void sdlx_example()
             numAngles, std::pair(geometry::Degree(75), geometry::Degree(105)),
             VolumeDescriptor{{n, n}}, arc, distance * 100.0f, distance);
 
-        SiddonsMethodCUDA projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
+        SiddonsMethodCUDA<real_t> projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
 
         // simulate noise // TODO try with/without noise later on
         // DataContainer<real_t> noise(projector.getRangeDescriptor());
