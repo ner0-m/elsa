@@ -37,7 +37,8 @@ void sdlx_example()
         real_t rho2 = 1; /// LtI fixes this to 1
 
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
-        ShearletTransform<real_t> shearletTransform(n, n);
+        ShearletTransform<real_t, real_t> shearletTransform(n, n);
+        shearletTransform.computeSpectra();
         index_t L = shearletTransform.getL();
 
         IndexVector_t slicesInBlock(2);
@@ -108,7 +109,7 @@ void sdlx_example()
         printf("Squared l2-norm of the sol. is %f\n", sol.squaredL2Norm());
 
         // write the solution out
-        EDF::write(sol, destDir + filePath.filename().string());
+        EDF::write(sol, destDir + "/" + filePath.filename().string());
     }
 }
 
