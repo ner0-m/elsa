@@ -1,30 +1,23 @@
 Shearlets
 ---------
 
-# WIP
+Shearlets are a multiscale framework which provide an optimally sparse approximations of multivariate data governed by
+anisotropic features [1]. They are constructed by applying three operations, translation, parabolic scaling, and
+shearing to mother functions. Here, we offer band-limited cone-adapted [2] shearlets meaning that we have compact
+support in the Fourier domain. For further reading regarding the exact functions used, please refer to the FFST
+paper [3].
 
-Shearlets are a ... Its predecessors are wavelets and curevelets. Shearlets offer an optimally sparse representation,
-meaning that ...
+### Decompose and reconstruct an image using shearlets
 
-We offer band-limited cone-adapted shearlets meaning that we have compact support in the Fourier domain [1].
-
-# TODO by spectra we refer to the generating functions psi and phi, related to the frequency domain (explain this well)
-
-We will briefly explain the `ShearletTransform` component and go through an example.
-
-# TODO say that it works only on one channel images
-
-We use dyadic dilation (parabolic scaling) and shearing, meaning that a = X and s = Y. Also, translation invariant.
+We will now briefly explain the `ShearletTransform` class and go through an example.
 
 ```c++
-// TODO use another image? Maybe a free to use one https://commons.wikimedia.org/wiki/File:Raccoon_(Procyon_lotor)_3.jpg ?
-// generate 2d phantom
+// generate 2D phantom
 IndexVector_t size(2);
-size << 511, 511;
+size << 256, 256;
 auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
-const auto& volumeDescriptor = phantom.getDataDescriptor();
 
-ShearletTransform<real_t> shearletTransform(size[0], size[1]);
+ShearletTransform<real_t, real_t> shearletTransform(size);
 
 Logger::get("Info")->info("Applying shearlet transform");
 DataContainer<real_t> shearletCoefficients = shearletTransform.apply(phantom);
@@ -36,25 +29,33 @@ DataContainer<real_t> reconstruction = shearletTransform.applyAdjoint(shearletCo
 EDF::write(reconstruction, "2dreconstruction_shearlet.edf");
 ```
 
-# TODO applyAdjoint returns complex numbers, but we cut it out, refer to a paper that addresses this
+We start by generating a modified 2D Shepp-Logan phantom and create a `ShearletTransform` object. Afterwards, we apply
+the direct shearlet transform to the image, which generates a `DataContainer<real_t>` of shape (256, 256, 61). The last
+dimension corresponds to the oversampling factor of the operatio. Here, we generate 61 layers.
 
-The shearlet transform does not compute anything when first creating the object.
+Note that `apply` works only on two-dimensional objects, e.g. on a grayscale image.
 
-# TODO talk here about the other types of shearlets that we're going to offer, e.g. smooth shearlets (make these an enum?)
+By default, the `apply` method will return real values, and the imaginary parts cut out. If we want to the complex
+numbers as-generated, then we can simply specify `ShearletTransform<std::complex<real_t>, real_t>`, and go from there.
 
-Applying the shearlet transform to a 2D image, generates the L layers of the same shape.
-
-# TODO add here image of stacked spectra and stacked shearlet coefficients
+As a subclass of the `LinearOperator` class, the `ShearletTransform` does not eagerly perform computations. Therefore,
+the spectra are stored right after they've been generated on the first run of the `apply`/`applyAdjoint` calls. This
+avoids redundant computation.
 
 Given that the spectra are only related to the shape of the image and number of scales, one can reuse such an object
 depending on the context.
 
-# TODO add here two images of frame correctness and reconstruction difference
+After applying the direct and inverse shearlet transform, the phantom reconstruction is generated. From here we can do a
+side-by-side comparison of the original phantom and its reconstruction,
+
+![Modified Shepp-Logan phantom](./images/shearlets_2dphantom.png)
+![Modified Shepp-Logan phantom shearlet reconstruction](./images/shearlets_2dreconstruction.png)
 
 ### References
 
-[1]
+[1] Gitta Kutyniok and Demetrio Labate, *Introduction to Shearlets*, https://www.math.uh.edu/~dlabate/SHBookIntro.pdf.
 
-https://www.math.uh.edu/~dlabate/SHBookIntro.pdf
-https://www.math.uh.edu/~dlabate/Athens.pdf
-https://arxiv.org/pdf/1202.1773.pdf
+[2] Kanghui Guo, Gitta Kutyniok, and Demetrio Labate, *Sparse Multidimensional Representations using Anisotropic
+Dilation and Shear Operators*, ISBN 0-0-9728482-x-x, https://www.math.uh.edu/~dlabate/Athens.pdf.
+
+[3] Sören Häuser, Gabriele Steidl, *Fast Finite Shearlet Transform: a tutorial*, https://arxiv.org/pdf/1202.1773.pdf.
