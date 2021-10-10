@@ -11,6 +11,7 @@
 #include "TypeCasts.hpp"
 
 #include <doctest/doctest.h>
+#include <testHelpers.h>
 
 using namespace elsa;
 using namespace doctest;
@@ -27,7 +28,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
 
         WHEN("instantiating a ShearletTransform operator")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1]);
+            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1]);
 
             THEN("the DataDescriptors are equal")
             {
@@ -37,7 +38,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
 
         WHEN("cloning a ShearletTransform operator")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1]);
+            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1]);
             auto shearletTransformClone = shearletTransform.clone();
 
             THEN("cloned ShearletTransform operator equals original ShearletTransform operator")
@@ -60,19 +61,25 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
         Vector_t<TestType> randomData(volDescr.getNumberOfCoefficients());
         randomData.setRandom();
         DataContainer<TestType> signal(volDescr, randomData);
+        DataContainer<std::complex<TestType>> complexSignal(volDescr);
+        for (index_t i = 0; i < signal.getSize(); ++i) {
+            complexSignal[i] = std::complex<TestType>(signal[i], 0);
+        }
 
         WHEN("reconstructing the signal")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1]);
+            ShearletTransform<std::complex<TestType>, TestType> shearletTransform(size[0], size[1],
+                                                                                  4);
 
-            DataContainer<TestType> shearletCoefficients = shearletTransform.apply(signal);
+            DataContainer<std::complex<TestType>> shearletCoefficients =
+                shearletTransform.apply(complexSignal);
 
             DataContainer<TestType> reconstruction =
-                shearletTransform.applyAdjoint(shearletCoefficients);
+                shearletTransform.applyAdjoint(shearletCoefficients).getReal();
 
             THEN("the ground truth and the reconstruction match")
             {
-                // REQUIRE_UNARY(isApprox(reconstruction, signal));
+                REQUIRE_UNARY(isApprox(reconstruction, signal));
             }
         }
     }
@@ -93,7 +100,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
         WHEN("not generating the spectra")
         {
-            ShearletTransform<TestType> shearletTransform(size);
+            ShearletTransform<TestType, TestType> shearletTransform(size);
 
             THEN("an error is thrown when fetching it")
             {
@@ -103,7 +110,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
         WHEN("generating the spectra")
         {
-            ShearletTransform<TestType> shearletTransform(size[0], size[1], 4);
+            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1], 4);
 
             shearletTransform.computeSpectra();
 
@@ -121,7 +128,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                 DataContainer<TestType> spectra = shearletTransform.getSpectra();
                 index_t width = shearletTransform.getWidth();
                 index_t height = shearletTransform.getHeight();
-                index_t layers = shearletTransform.getL();
+                index_t layers = shearletTransform.getNumOfLayers();
 
                 DataContainer<TestType> frameCorrectness(VolumeDescriptor{{width, height}});
 
@@ -138,8 +145,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                 DataContainer<TestType> zeroes(VolumeDescriptor{{width, height}});
                 zeroes = 0;
 
-                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.0000001);
-                // REQUIRE_UNARY(isApprox(frameCorrectness, zeroes, 0.05f));
+                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
 
                 // spectra here is of shape (W, H, L), square its elements and get the sum by the
                 // last axis and subtract 1, the output will be of shape (W, H), its elements
