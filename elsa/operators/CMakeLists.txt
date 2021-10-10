@@ -1,8 +1,8 @@
 # list all the headers of the module
-set(MODULE_HEADERS Identity.h Scaling.h FiniteDifferences.h BlockLinearOperator.h Dictionary.h)
+set(MODULE_HEADERS Identity.h Scaling.h FiniteDifferences.h BlockLinearOperator.h Dictionary.h DeepDictionary.h Matrix.h)
 
 # list all the code files of the module
-set(MODULE_SOURCES Identity.cpp Scaling.cpp FiniteDifferences.cpp BlockLinearOperator.cpp Dictionary.cpp)
+set(MODULE_SOURCES Identity.cpp Scaling.cpp FiniteDifferences.cpp BlockLinearOperator.cpp Dictionary.cpp DeepDictionary.cpp Matrix.cpp)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)
