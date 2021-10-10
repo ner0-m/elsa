@@ -3,16 +3,6 @@
 namespace elsa
 {
     template <typename data_t>
-    template <typename Comparator>
-    Indicator<data_t>::Indicator(const DataDescriptor& domainDescriptor, Comparator comparator,
-                                 data_t constraintValue)
-        : Functional<data_t>(domainDescriptor),
-          _comparator{comparator},
-          _constraintValue{constraintValue}
-    {
-    }
-
-    template <typename data_t>
     data_t Indicator<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         if (std::any_of(std::begin(Rx), std::end(Rx),
@@ -54,7 +44,7 @@ namespace elsa
     template <typename data_t>
     bool Indicator<data_t>::constraintIsSatisfied(data_t value)
     {
-        return !_comparator(value, _constraintValue);
+        return _comparator(value, _constraintValue);
     }
 
     // ------------------------------------------

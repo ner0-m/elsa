@@ -31,9 +31,14 @@ namespace elsa
          * @param[in] constraintOperation describing the constraint (comparison) operation
          * @param[in] constraintValue describing the value to be used in the constraint
          */
-        template <typename Comparator = std::less_equal<data_t>>
-        Indicator(const DataDescriptor& domainDescriptor, Comparator cmp = Comparator{},
-                  data_t constraintValue = 0);
+        template <typename Comparator = std::greater_equal<data_t>>
+        Indicator(const DataDescriptor& domainDescriptor, Comparator comparator = Comparator{},
+                  data_t constraintValue = 0)
+            : Functional<data_t>(domainDescriptor),
+              _comparator{comparator},
+              _constraintValue{constraintValue}
+        {
+        }
 
         /// make copy constructor deletion explicit
         Indicator(const Indicator<data_t>&) = delete;
