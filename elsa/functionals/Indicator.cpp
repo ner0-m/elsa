@@ -3,18 +3,11 @@
 namespace elsa
 {
     template <typename data_t>
-    Indicator<data_t>::Indicator(const DataDescriptor& domainDescriptor)
+    template <typename Comparator>
+    Indicator<data_t>::Indicator(const DataDescriptor& domainDescriptor, Comparator comparator,
+                                 data_t constraintValue)
         : Functional<data_t>(domainDescriptor),
-          _constraintOperation{ComparisonOperation::GREATER_EQUAL_THAN},
-          _constraintValue{0}
-    {
-    }
-
-    template <typename data_t>
-    Indicator<data_t>::Indicator(const DataDescriptor& domainDescriptor,
-                                 ComparisonOperation constraintOperation, data_t constraintValue)
-        : Functional<data_t>(domainDescriptor),
-          _constraintOperation{constraintOperation},
+          _comparator{comparator},
           _constraintValue{constraintValue}
     {
     }
@@ -22,12 +15,12 @@ namespace elsa
     template <typename data_t>
     data_t Indicator<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
-        for (data_t val : Rx) {
-            if (constraintIsSatisfied(val)) {
-                return std::numeric_limits<data_t>::infinity();
-            }
+        if (std::any_of(std::begin(Rx), std::end(Rx),
+                        [this](auto&& x) { return constraintIsSatisfied(x); })) {
+            return std::numeric_limits<data_t>::infinity();
+        } else {
+            return static_cast<data_t>(0);
         }
-        return static_cast<data_t>(0);
     }
 
     template <typename data_t>
@@ -45,7 +38,7 @@ namespace elsa
     template <typename data_t>
     Indicator<data_t>* Indicator<data_t>::cloneImpl() const
     {
-        return new Indicator(this->getDomainDescriptor(), _constraintOperation, _constraintValue);
+        return new Indicator(this->getDomainDescriptor(), _comparator, _constraintValue);
     }
 
     template <typename data_t>
@@ -58,23 +51,10 @@ namespace elsa
         return static_cast<bool>(otherIndicator);
     }
 
-    // TODO this can be improved using lambdas and/or functionals
     template <typename data_t>
     bool Indicator<data_t>::constraintIsSatisfied(data_t value)
     {
-        if (_constraintOperation == ComparisonOperation::EQUAL_TO) {
-            return !(value == _constraintValue);
-        } else if (_constraintOperation == ComparisonOperation::NOT_EQUAL_TO) {
-            return !(value != _constraintValue);
-        } else if (_constraintOperation == ComparisonOperation::GREATER_THAN) {
-            return !(value > _constraintValue);
-        } else if (_constraintOperation == ComparisonOperation::LESS_THAN) {
-            return !(value < _constraintValue);
-        } else if (_constraintOperation == ComparisonOperation::GREATER_EQUAL_THAN) {
-            return !(value >= _constraintValue);
-        } else if (_constraintOperation == ComparisonOperation::LESS_EQUAL_THAN) {
-            return !(value <= _constraintValue);
-        }
+        return !_comparator(value, _constraintValue);
     }
 
     // ------------------------------------------

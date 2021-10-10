@@ -23,25 +23,6 @@ namespace elsa
     class Indicator : public Functional<data_t>
     {
     public:
-        /// possible comparison operations
-        // TODO this can be improved using lambdas and/or functionals
-        enum ComparisonOperation {
-            EQUAL_TO,
-            NOT_EQUAL_TO,
-            GREATER_THAN,
-            LESS_THAN,
-            GREATER_EQUAL_THAN,
-            LESS_EQUAL_THAN
-        };
-
-        /**
-         * @brief Constructor for the indicator functional, mapping domain vector to a scalar
-         * (without a residual)
-         *
-         * @param[in] domainDescriptor describing the domain of the functional
-         */
-        Indicator(const DataDescriptor& domainDescriptor);
-
         /**
          * @brief Constructor for the indicator functional, mapping domain vector to a scalar
          * (without a residual)
@@ -50,8 +31,9 @@ namespace elsa
          * @param[in] constraintOperation describing the constraint (comparison) operation
          * @param[in] constraintValue describing the value to be used in the constraint
          */
-        Indicator(const DataDescriptor& domainDescriptor, ComparisonOperation constraintOperation,
-                  data_t constraintValue);
+        template <typename Comparator = std::less_equal<data_t>>
+        Indicator(const DataDescriptor& domainDescriptor, Comparator cmp = Comparator{},
+                  data_t constraintValue = 0);
 
         /// make copy constructor deletion explicit
         Indicator(const Indicator<data_t>&) = delete;
@@ -78,7 +60,7 @@ namespace elsa
     private:
         bool constraintIsSatisfied(data_t data);
 
-        ComparisonOperation _constraintOperation;
+        std::function<bool(data_t&, data_t&)> _comparator;
         data_t _constraintValue;
     };
 } // namespace elsa
