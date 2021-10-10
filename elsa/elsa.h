@@ -28,6 +28,7 @@
 // Generators headers
 #include "PhantomGenerator.h"
 #include "CircleTrajectoryGenerator.h"
+#include "LimitedAngleTrajectoryGenerator.h"
 #include "SphereTrajectoryGenerator.h"
 
 // IO headers
