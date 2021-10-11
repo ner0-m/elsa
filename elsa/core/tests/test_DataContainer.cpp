@@ -304,6 +304,20 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                 DataContainer dcLog = log(dcSquare);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(dcLog[i], randVec.array().square().log()[i]));
+
+                DataContainer dcReal = real(dc);
+                for (index_t i = 0; i < dc.getSize(); ++i)
+                    REQUIRE_UNARY(checkApproxEq(dcReal[i], randVec.array().real()[i]));
+
+                DataContainer dcImag = imag(dc);
+
+                if constexpr (isComplex<data_t>) {
+                    for (index_t i = 0; i < dc.getSize(); ++i)
+                        REQUIRE_UNARY(checkApproxEq(dcImag[i], randVec.array().imag()[i]));
+                } else {
+                    for (index_t i = 0; i < dc.getSize(); ++i)
+                        REQUIRE_UNARY(checkApproxEq(dcImag[i], 0));
+                }
             }
 
             auto scalar = static_cast<data_t>(923.41f);

@@ -693,4 +693,30 @@ namespace elsa
         return Expression{log, operand};
 #endif
     }
+
+    /// Element-wise real parts of the Operand
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto real(Operand const& operand)
+    {
+        auto real = [](auto const& operand) { return (operand.array().real()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto realGPU = [](auto const& operand, bool) { return quickvec::real(operand); };
+        return Expression{Callables{real, realGPU}, operand};
+#else
+        return Expression{real, operand};
+#endif
+    }
+
+    /// Element-wise imaginary parts of the Operand
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto imag(Operand const& operand)
+    {
+        auto imag = [](auto const& operand) { return (operand.array().imag()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto imagGPU = [](auto const& operand, bool) { return quickvec::imag(operand); };
+        return Expression{Callables{imag, imagGPU}, operand};
+#else
+        return Expression{imag, operand};
+#endif
+    }
 } // namespace elsa
