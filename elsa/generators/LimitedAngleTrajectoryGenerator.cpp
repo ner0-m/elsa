@@ -43,10 +43,6 @@ namespace elsa
         for (index_t i = 0;; ++i) {
             Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
 
-            if (angle.to_degree() >= static_cast<real_t>(arcDegrees)) {
-                break;
-            }
-
             if (notInMissingWedge(angle, missingWedgeAngles, mirrored)) {
                 // use emplace_back, then no copy is created
                 geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
@@ -55,6 +51,10 @@ namespace elsa
                                           VolumeData2D{volumeDescriptor.getSpacingPerDimension(),
                                                        volumeDescriptor.getLocationOfOrigin()},
                                           SinogramData2D{Size2D{coeffs}, Spacing2D{spacing}});
+            }
+
+            if (angle.to_degree() > static_cast<real_t>(arcDegrees)) {
+                break;
             }
         }
 

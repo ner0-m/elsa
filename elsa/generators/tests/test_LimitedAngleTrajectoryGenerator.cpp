@@ -62,10 +62,6 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a mirrored Limited Angle Traj
                 for (index_t i = 0;; ++i) {
                     Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
 
-                    if (angle.to_degree() >= static_cast<real_t>(halfCircular)) {
-                        break;
-                    }
-
                     if (!((angle.to_degree() >= missingWedgeAngles.first
                            && angle.to_degree() <= missingWedgeAngles.second)
                           || (angle.to_degree() >= (missingWedgeAngles.first + 180)
@@ -89,6 +85,10 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a mirrored Limited Angle Traj
                         REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
                         REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
                         REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    }
+
+                    if (angle.to_degree() > static_cast<real_t>(halfCircular)) {
+                        break;
                     }
                 }
             }
@@ -124,10 +124,6 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a mirrored Limited Angle Traj
                 for (index_t i = 0;; ++i) {
                     Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
 
-                    if (angle.to_degree() > static_cast<real_t>(fullyCircular)) {
-                        break;
-                    }
-
                     if (!((angle.to_degree() >= missingWedgeAngles.first
                            && angle.to_degree() <= missingWedgeAngles.second)
                           || (angle.to_degree() >= (missingWedgeAngles.first + 180)
@@ -151,6 +147,10 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a mirrored Limited Angle Traj
                         REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
                         REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
                         REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    }
+
+                    if (angle.to_degree() > static_cast<real_t>(fullyCircular)) {
+                        break;
                     }
                 }
             }
@@ -204,10 +204,6 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a non-mirrored Limited Angle 
                 for (index_t i = 0;; ++i) {
                     Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
 
-                    if (angle.to_degree() > static_cast<real_t>(halfCircular)) {
-                        break;
-                    }
-
                     if (!(angle.to_degree() >= missingWedgeAngles.first
                           && angle.to_degree() <= missingWedgeAngles.second)) {
                         Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
@@ -229,6 +225,10 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a non-mirrored Limited Angle 
                         REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
                         REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
                         REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    }
+
+                    if (angle.to_degree() > static_cast<real_t>(halfCircular)) {
+                        break;
                     }
                 }
             }
@@ -264,10 +264,6 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a non-mirrored Limited Angle 
                 for (index_t i = 0;; ++i) {
                     Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
 
-                    if (angle.to_degree() > static_cast<real_t>(fullyCircular)) {
-                        break;
-                    }
-
                     if (!(angle.to_degree() >= missingWedgeAngles.first
                           && angle.to_degree() <= missingWedgeAngles.second)) {
                         Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
@@ -289,6 +285,10 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a non-mirrored Limited Angle 
                         REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
                         REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
                         REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    }
+
+                    if (angle.to_degree() > static_cast<real_t>(fullyCircular)) {
+                        break;
                     }
                 }
             }
