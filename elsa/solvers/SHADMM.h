@@ -270,8 +270,8 @@ namespace elsa
 
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};
-        data_t _rho0{1 / 2}; // consider as hyper-parameters
-        data_t _rho1{1 / 2}; // consider as hyper-parameters
+        data_t _rho0{1.0 / 2}; // consider as hyper-parameters
+        data_t _rho1{1.0 / 2}; // consider as hyper-parameters
         data_t _rho2{1};     // just set it to 1, at least initially
 
         /// variables for the stopping criteria

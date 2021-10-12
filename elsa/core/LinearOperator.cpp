@@ -19,6 +19,7 @@ namespace elsa
         : Cloneable<LinearOperator<data_t>>(),
           _domainDescriptor{other._domainDescriptor->clone()},
           _rangeDescriptor{other._rangeDescriptor->clone()},
+          _scalar{other._scalar},
           _isLeaf{other._isLeaf},
           _isAdjoint{other._isAdjoint},
           _isComposite{other._isComposite},
@@ -28,8 +29,14 @@ namespace elsa
             _lhs = other._lhs->clone();
 
         if (_isComposite) {
-            _lhs = other._lhs->clone();
-            _rhs = other._rhs->clone();
+            if (_mode == CompositeMode::ADD || _mode == CompositeMode::MULT) {
+                _lhs = other._lhs->clone();
+                _rhs = other._rhs->clone();
+            }
+
+            if (_mode == CompositeMode::SCALAR_MULT) {
+                _rhs = other._rhs->clone();
+            }
         }
     }
 
@@ -39,6 +46,7 @@ namespace elsa
         if (*this != other) {
             _domainDescriptor = other._domainDescriptor->clone();
             _rangeDescriptor = other._rangeDescriptor->clone();
+            _scalar = other._scalar;
             _isLeaf = other._isLeaf;
             _isAdjoint = other._isAdjoint;
             _isComposite = other._isComposite;
@@ -48,8 +56,14 @@ namespace elsa
                 _lhs = other._lhs->clone();
 
             if (_isComposite) {
-                _lhs = other._lhs->clone();
-                _rhs = other._rhs->clone();
+                if (_mode == CompositeMode::ADD || _mode == CompositeMode::MULT) {
+                    _lhs = other._lhs->clone();
+                    _rhs = other._rhs->clone();
+                }
+
+                if (_mode == CompositeMode::SCALAR_MULT) {
+                    _rhs = other._rhs->clone();
+                }
             }
         }
 
@@ -136,6 +150,21 @@ namespace elsa
                 _lhs->apply(temp, Ax);
                 return;
             }
+
+            if (_mode == CompositeMode::SCALAR_MULT) {
+                // sanity check the arguments for the intended evaluation tree leaf operation
+                if (_rhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize())
+                    throw InvalidArgumentError("LinearOperator::apply: incorrect input/output "
+                                               "sizes for scalar mult. leaf");
+                // sanity check the scalar in the optional
+                if (!_scalar.has_value())
+                    throw InvalidArgumentError(
+                        "LinearOperator::apply: no value found in the scalar optional");
+
+                _rhs->apply(x, Ax);
+                Ax *= _scalar.value();
+                return;
+            }
         }
 
         throw LogicError("LinearOperator: apply called on ill-formed object");
@@ -209,6 +238,21 @@ namespace elsa
                 _rhs->applyAdjoint(temp, Aty);
                 return;
             }
+
+            if (_mode == CompositeMode::SCALAR_MULT) {
+                // sanity check the arguments for the intended evaluation tree leaf operation
+                if (_rhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize())
+                    throw InvalidArgumentError("LinearOperator::apply: incorrect input/output "
+                                               "sizes for scalar mult. leaf");
+                // sanity check the scalar in the optional
+                if (!_scalar.has_value())
+                    throw InvalidArgumentError(
+                        "LinearOperator::apply: no value found in the scalar optional");
+
+                _rhs->applyAdjoint(y, Aty);
+                Aty *= _scalar.value();
+                return;
+            }
         }
 
         throw LogicError("LinearOperator: applyAdjoint called on ill-formed object");
@@ -220,8 +264,15 @@ namespace elsa
         if (_isLeaf)
             return new LinearOperator<data_t>(*_lhs, _isAdjoint);
 
-        if (_isComposite)
-            return new LinearOperator<data_t>(*_lhs, *_rhs, _mode);
+        if (_isComposite) {
+            if (_mode == CompositeMode::ADD || _mode == CompositeMode::MULT) {
+                return new LinearOperator<data_t>(*_lhs, *_rhs, _mode);
+            }
+
+            if (_mode == CompositeMode::SCALAR_MULT) {
+                return new LinearOperator<data_t>(*_rhs, _isAdjoint);
+            }
+        }
 
         return new LinearOperator<data_t>(*_domainDescriptor, *_rangeDescriptor);
     }
@@ -242,8 +293,15 @@ namespace elsa
         if (_isLeaf)
             return (_isAdjoint == other._isAdjoint) && (*_lhs == *other._lhs);
 
-        if (_isComposite)
-            return _mode == other._mode && (*_lhs == *other._lhs) && (*_rhs == *other._rhs);
+        if (_isComposite) {
+            if (_mode == CompositeMode::ADD || _mode == CompositeMode::MULT) {
+                return _mode == other._mode && (*_lhs == *other._lhs) && (*_rhs == *other._rhs);
+            }
+
+            if (_mode == CompositeMode::SCALAR_MULT) {
+                return (_isAdjoint == other._isAdjoint) && (*_rhs == *other._rhs);
+            }
+        }
 
         return true;
     }
@@ -255,6 +313,7 @@ namespace elsa
           _rangeDescriptor{(isAdjoint) ? op.getDomainDescriptor().clone()
                                        : op.getRangeDescriptor().clone()},
           _lhs{op.clone()},
+          _scalar{op._scalar},
           _isLeaf{true},
           _isAdjoint{isAdjoint}
     {
@@ -291,6 +350,17 @@ namespace elsa
             default:
                 throw LogicError("LinearOperator: unknown composition mode");
         }
+    }
+
+    template <typename data_t>
+    LinearOperator<data_t>::LinearOperator(data_t scalar, const LinearOperator<data_t>& rhs)
+        : _domainDescriptor{rhs.getDomainDescriptor().clone()},
+          _rangeDescriptor{rhs.getRangeDescriptor().clone()},
+          _rhs{rhs.clone()},
+          _scalar{scalar},
+          _isComposite{true},
+          _mode{CompositeMode::SCALAR_MULT}
+    {
     }
 
     // ------------------------------------------

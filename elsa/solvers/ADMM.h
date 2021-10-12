@@ -89,6 +89,22 @@ namespace elsa
                           "ADMM: ZSolver must extend ProximityOperator");
         }
 
+        ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations,
+             data_t epsilonAbs, data_t epsilonRel, bool varyingPenaltyParameter,
+             bool positiveSolutionsOnly = false)
+            : Solver<data_t>(splittingProblem),
+              _positiveSolutionsOnly{positiveSolutionsOnly},
+              _defaultXSolverIterations{defaultXSolverIterations},
+              _epsilonAbs{epsilonAbs},
+              _epsilonRel{epsilonRel},
+              _varyingPenaltyParameter{varyingPenaltyParameter}
+        {
+            static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
+                          "ADMM: XSolver must extend Solver");
+            static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
+                          "ADMM: ZSolver must extend ProximityOperator");
+        }
+
         /// default destructor
         ~ADMM() override = default;
 
@@ -286,16 +302,18 @@ namespace elsa
                 }
 
                 /// varying penalty parameter
-                if (std::abs(_tauIncr - static_cast<data_t>(1.0))
-                        > std::numeric_limits<data_t>::epsilon()
-                    || std::abs(_tauDecr - static_cast<data_t>(1.0))
-                           > std::numeric_limits<data_t>::epsilon()) {
-                    if (rkL2Norm > _mu * skL2Norm) {
-                        _rho *= _tauIncr;
-                        u /= _tauIncr;
-                    } else if (skL2Norm > _mu * rkL2Norm) {
-                        _rho /= _tauDecr;
-                        u *= _tauDecr;
+                if (_varyingPenaltyParameter) {
+                    if (std::abs(_tauIncr - static_cast<data_t>(1.0))
+                            > std::numeric_limits<data_t>::epsilon()
+                        || std::abs(_tauDecr - static_cast<data_t>(1.0))
+                               > std::numeric_limits<data_t>::epsilon()) {
+                        if (rkL2Norm > _mu * skL2Norm) {
+                            _rho *= _tauIncr;
+                            u /= _tauIncr;
+                        } else if (skL2Norm > _mu * rkL2Norm) {
+                            _rho /= _tauDecr;
+                            u *= _tauDecr;
+                        }
                     }
                 }
             }
@@ -332,9 +350,13 @@ namespace elsa
 
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};
-        data_t _rho0{1 / 2}; // consider as hyper-parameters
-        data_t _rho1{1 / 2}; // consider as hyper-parameters
+        data_t _rho0{1.0 / 2}; // consider as hyper-parameters
+        data_t _rho1{1.0 / 2}; // consider as hyper-parameters
         data_t _rho2{1};     // just set it to 1, at least initially
+
+        /// flag to indicate whether to utilize the Varying Penalty Parameter extension, refer
+        /// to the section 3.4.1 (Boyd) for further details
+        bool _varyingPenaltyParameter{false};
 
         /// variables for varying penalty parameter @f$ \rho @f$
         data_t _mu{10};

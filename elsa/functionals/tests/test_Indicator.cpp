@@ -28,8 +28,7 @@ TEST_CASE_TEMPLATE("Indicator: Testing the indicator functional", TestType, floa
 
         WHEN("instantiating")
         {
-            Indicator<TestType> indicator(
-                volDescr, Indicator<TestType>::ComparisonOperation::GREATER_EQUAL_THAN, 0);
+            Indicator<TestType> indicator(volDescr, std::less_equal<TestType>(), 0);
 
             THEN("the indicator is as expected")
             {
