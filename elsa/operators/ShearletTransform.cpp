@@ -16,12 +16,13 @@ namespace elsa
 
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>::ShearletTransform(index_t width, index_t height)
-        : LinearOperator<ret_t>(VolumeDescriptor{{width, height}},
-                                VolumeDescriptor{{width, height, calculateL(width, height)}}),
+        : LinearOperator<ret_t>(
+            VolumeDescriptor{{width, height}},
+            VolumeDescriptor{{width, height, calculateNumOfLayers(width, height)}}),
           _width{width},
           _height{height},
-          _jZero{calculatejZero(width, height)},
-          _L{calculateL(width, height)}
+          _numOfScales{calculateNumOfScales(width, height)},
+          _numOfLayers{calculateNumOfLayers(width, height)}
     {
         if (width < 0 || height < 0) {
             throw LogicError("ShearletTransform: negative width/height were provided");
@@ -30,44 +31,46 @@ namespace elsa
 
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>::ShearletTransform(index_t width, index_t height,
-                                                        index_t jZero)
-        : LinearOperator<ret_t>(VolumeDescriptor{{width, height}},
-                                VolumeDescriptor{{width, height, calculateL(jZero)}}),
+                                                        index_t numOfScales)
+        : LinearOperator<ret_t>(
+            VolumeDescriptor{{width, height}},
+            VolumeDescriptor{{width, height, calculateNumOfLayers(numOfScales)}}),
           _width{width},
           _height{height},
-          _jZero{jZero},
-          _L{calculateL(jZero)}
+          _numOfScales{numOfScales},
+          _numOfLayers{calculateNumOfLayers(numOfScales)}
     {
         if (width < 0 || height < 0) {
             throw LogicError("ShearletTransform: negative width/height were provided");
         }
-        if (jZero < 0) {
+        if (numOfScales < 0) {
             throw LogicError("ShearletTransform: negative number of scales was provided");
         }
     }
 
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>::ShearletTransform(
-        index_t width, index_t height, index_t jZero, std::optional<DataContainer<data_t>> spectra)
-        : LinearOperator<ret_t>(VolumeDescriptor{{width, height}},
-                                VolumeDescriptor{{width, height, calculateL(jZero)}}),
+        index_t width, index_t height, index_t numOfScales,
+        std::optional<DataContainer<data_t>> spectra)
+        : LinearOperator<ret_t>(
+            VolumeDescriptor{{width, height}},
+            VolumeDescriptor{{width, height, calculateNumOfLayers(numOfScales)}}),
           _spectra{spectra},
           _isSpectraComputed{_spectra.has_value()},
           _width{width},
           _height{height},
-          _jZero{jZero},
-          _L{calculateL(jZero)}
+          _numOfScales{numOfScales},
+          _numOfLayers{calculateNumOfLayers(numOfScales)}
     {
         if (width < 0 || height < 0) {
             throw LogicError("ShearletTransform: negative width/height were provided");
         }
-        if (jZero < 0) {
+        if (numOfScales < 0) {
             throw LogicError("ShearletTransform: negative number of scales was provided");
         }
     }
 
-    // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
-    //  manner, but that might take quite some time, can this make it to master in the meantime?
+    // TODO implement sumByAxis in DataContainer and remove me
     template <typename ret_t, typename data_t>
     DataContainer<std::complex<data_t>> ShearletTransform<ret_t, data_t>::sumByLastAxis(
         DataContainer<std::complex<data_t>> dc) const
@@ -106,7 +109,7 @@ namespace elsa
         Logger::get("ShearletTransform")
             ->info("Running the shearlet transform on a 2D signal of shape ({}, {}), on {} "
                    "scales with an oversampling factor of {} and {} spectra",
-                   _width, _height, _jZero, _L,
+                   _width, _height, _numOfScales, _numOfLayers,
                    _isSpectraComputed ? "precomputed" : "non-precomputed");
 
         if (!isSpectraComputed()) {
@@ -117,7 +120,7 @@ namespace elsa
 
         DataContainer<std::complex<data_t>> fftImg = fourierTransform.apply(x.asComplex());
 
-        for (index_t i = 0; i < getL(); i++) {
+        for (index_t i = 0; i < getNumOfLayers(); i++) {
             DataContainer<std::complex<data_t>> temp =
                 getSpectra().slice(i).viewAs(x.getDataDescriptor()).asComplex() * fftImg;
             if constexpr (isComplex<ret_t>) {
@@ -143,7 +146,7 @@ namespace elsa
         Logger::get("ShearletTransform")
             ->info("Running the inverse shearlet transform on a 2D signal of shape ({}, {}), on {} "
                    "scales with an oversampling factor of {} and {} spectra",
-                   _width, _height, _jZero, _L,
+                   _width, _height, _numOfScales, _numOfLayers,
                    _isSpectraComputed ? "precomputed" : "non-precomputed");
 
         if (!isSpectraComputed()) {
@@ -154,7 +157,7 @@ namespace elsa
 
         DataContainer<std::complex<data_t>> intermRes(y.getDataDescriptor());
 
-        for (index_t i = 0; i < getL(); i++) {
+        for (index_t i = 0; i < getNumOfLayers(); i++) {
             DataContainer<std::complex<data_t>> temp =
                 fourierTransform.apply(y.slice(i).viewAs(Aty.getDataDescriptor()).asComplex())
                 * getSpectra().slice(i).viewAs(Aty.getDataDescriptor()).asComplex();
@@ -168,19 +171,14 @@ namespace elsa
         }
     }
 
-    // TODO consider simplifying the usage of floor/ceil
-    // TODO consider ordering spectra based on the frequency domain, might be essential when
-    //  training a DL model since it should learn these patterns based on a logical order
-    // TODO consider utilizing OpenMP
-    // TODO address casts
-    // TODO consider accommodating for different type of shearing and parabolic scaling functions
-    // TODO consider using [i]fftshift for even-sized signals
-    // TODO consider adding various generating functions, e.g. smooth shearlets
-    // TODO are we supporting real shearlets only? seems so
     template <typename ret_t, typename data_t>
     void ShearletTransform<ret_t, data_t>::computeSpectra() const
     {
-        DataContainer<data_t> spectra(VolumeDescriptor{{_width, _height, _L}});
+        if (isSpectraComputed()) {
+            return;
+        }
+
+        DataContainer<data_t> spectra(VolumeDescriptor{{_width, _height, _numOfLayers}});
         spectra = 0;
 
         index_t i = 0;
@@ -198,7 +196,7 @@ namespace elsa
         spectra.slice(i) = sectionZero;
         i += 1;
 
-        for (index_t j = 0; j < _jZero; j++) {
+        for (index_t j = 0; j < _numOfScales; j++) {
             for (auto k = static_cast<index_t>(-std::pow(2, j));
                  k <= static_cast<index_t>(std::pow(2, j)); k++) {
                 DataContainer<data_t> sectionh(VolumeDescriptor{{_width, _height}});
@@ -229,8 +227,6 @@ namespace elsa
                         }
                     }
                 }
-                // TODO AFAIK sectionh, sectionv, sectionhxv really should only have reals, double
-                //  check
                 if (std::abs(k) <= static_cast<index_t>(std::pow(2, j)) - 1) {
                     spectra.slice(i) = sectionh;
                     i += 1;
@@ -337,21 +333,21 @@ namespace elsa
     }
 
     template <typename ret_t, typename data_t>
-    index_t ShearletTransform<ret_t, data_t>::calculatejZero(index_t width, index_t height)
+    index_t ShearletTransform<ret_t, data_t>::calculateNumOfScales(index_t width, index_t height)
     {
         return static_cast<index_t>(std::log2(std::max(width, height)) / 2.0);
     }
 
     template <typename ret_t, typename data_t>
-    index_t ShearletTransform<ret_t, data_t>::calculateL(index_t width, index_t height)
+    index_t ShearletTransform<ret_t, data_t>::calculateNumOfLayers(index_t width, index_t height)
     {
-        return static_cast<index_t>(std::pow(2, (calculatejZero(width, height) + 2)) - 3);
+        return static_cast<index_t>(std::pow(2, (calculateNumOfScales(width, height) + 2)) - 3);
     }
 
     template <typename ret_t, typename data_t>
-    index_t ShearletTransform<ret_t, data_t>::calculateL(index_t jZero)
+    index_t ShearletTransform<ret_t, data_t>::calculateNumOfLayers(index_t numOfScales)
     {
-        return static_cast<index_t>(std::pow(2, jZero + 2) - 3);
+        return static_cast<index_t>(std::pow(2, numOfScales + 2) - 3);
     }
 
     template <typename ret_t, typename data_t>
@@ -367,15 +363,15 @@ namespace elsa
     }
 
     template <typename ret_t, typename data_t>
-    auto ShearletTransform<ret_t, data_t>::getL() const -> index_t
+    auto ShearletTransform<ret_t, data_t>::getNumOfLayers() const -> index_t
     {
-        return _L;
+        return _numOfLayers;
     }
 
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>* ShearletTransform<ret_t, data_t>::cloneImpl() const
     {
-        return new ShearletTransform<ret_t, data_t>(_width, _height, _jZero, _spectra);
+        return new ShearletTransform<ret_t, data_t>(_width, _height, _numOfScales, _spectra);
     }
 
     template <typename ret_t, typename data_t>
@@ -395,7 +391,7 @@ namespace elsa
         if (_height != otherST->_height)
             return false;
 
-        if (_jZero != otherST->_jZero)
+        if (_numOfScales != otherST->_numOfScales)
             return false;
 
         return true;

@@ -11,8 +11,7 @@
 #include "TypeCasts.hpp"
 
 #include <doctest/doctest.h>
-
-#include "testHelpers.h"
+#include <testHelpers.h>
 
 using namespace elsa;
 using namespace doctest;
@@ -51,8 +50,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
     }
 }
 
-TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestType,
-                   std::complex<float>)
+TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestType, float, double)
 {
     GIVEN("a 2D signal")
     {
@@ -60,18 +58,23 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
         size << 127, 127;
         VolumeDescriptor volDescr(size);
 
-        Vector_t<real_t> randomData(volDescr.getNumberOfCoefficients());
+        Vector_t<TestType> randomData(volDescr.getNumberOfCoefficients());
         randomData.setRandom();
-        DataContainer<real_t> signal(volDescr, randomData);
+        DataContainer<TestType> signal(volDescr, randomData);
+        DataContainer<std::complex<TestType>> complexSignal(volDescr);
+        for (index_t i = 0; i < signal.getSize(); ++i) {
+            complexSignal[i] = std::complex<TestType>(signal[i], 0);
+        }
 
         WHEN("reconstructing the signal")
         {
-            ShearletTransform<TestType, real_t> shearletTransform(size[0], size[1], 4);
+            ShearletTransform<std::complex<TestType>, TestType> shearletTransform(size[0], size[1],
+                                                                                  4);
 
-            DataContainer<TestType> shearletCoefficients =
-                shearletTransform.apply(signal.asComplex());
+            DataContainer<std::complex<TestType>> shearletCoefficients =
+                shearletTransform.apply(complexSignal);
 
-            DataContainer<real_t> reconstruction =
+            DataContainer<TestType> reconstruction =
                 shearletTransform.applyAdjoint(shearletCoefficients).getReal();
 
             THEN("the ground truth and the reconstruction match")
@@ -125,7 +128,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                 DataContainer<TestType> spectra = shearletTransform.getSpectra();
                 index_t width = shearletTransform.getWidth();
                 index_t height = shearletTransform.getHeight();
-                index_t layers = shearletTransform.getL();
+                index_t layers = shearletTransform.getNumOfLayers();
 
                 DataContainer<TestType> frameCorrectness(VolumeDescriptor{{width, height}});
 
@@ -142,8 +145,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                 DataContainer<TestType> zeroes(VolumeDescriptor{{width, height}});
                 zeroes = 0;
 
-                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.0000001);
-                // REQUIRE_UNARY(isApprox(frameCorrectness, zeroes, 0.05f));
+                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
 
                 // spectra here is of shape (W, H, L), square its elements and get the sum by the
                 // last axis and subtract 1, the output will be of shape (W, H), its elements
