@@ -14,13 +14,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Indicator<data_t>::getGradientInPlaceImpl([[maybe_unused]] DataContainer<data_t>& Rx)
+    void Indicator<data_t>::getGradientInPlaceImpl(DataContainer<data_t>&)
     {
         throw LogicError("Indicator: not differentiable, so no gradient! (busted!)");
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Indicator<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> Indicator<data_t>::getHessianImpl(const DataContainer<data_t>&)
     {
         throw LogicError("Indicator: not differentiable, so no Hessian! (busted!)");
     }
@@ -50,5 +50,7 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class Indicator<float>;
+    template class Indicator<std::complex<float>>;
     template class Indicator<double>;
+    template class Indicator<std::complex<double>>;
 } // namespace elsa
