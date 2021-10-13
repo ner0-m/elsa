@@ -180,6 +180,7 @@ namespace elsa
             std::unique_ptr<data_t> regWeight;
             /// weighting operator of the WeightedL1Norm
             std::unique_ptr<DataContainer<data_t>> w;
+            std::unique_ptr<std::vector<geometry::Threshold<data_t>>> thresholds;
 
             /// TODO now we have two here? the WL1Norm and Indicator, they don't seem to be used (we
             ///  currently only get the weight from WL1Norm), would be used if SoftThresholding
@@ -211,6 +212,8 @@ namespace elsa
 
                 w = std::make_unique<DataContainer<data_t>>(
                     static_cast<DataContainer<data_t>>(wL1NormRegTerm->getWeightingOperator()));
+                thresholds = std::make_unique<std::vector<geometry::Threshold<data_t>>>(
+                    ProximityOperator<data_t>::valuesToThresholds(_rho0 * *w / _rho1));
             } else {
                 throw InvalidArgumentError("ADMM::solveImpl: supported number of "
                                            "regularization terms is either 1 or 2");
@@ -255,9 +258,8 @@ namespace elsa
                     ZSolver<data_t> zProxOp(w->getDataDescriptor());
 
                     DataContainer<data_t> P1u = sliceByRange(0, layers - 1, u);
-                    DataContainer<data_t> P1z = zProxOp.apply(
-                        shearletTransform.apply(x) + P1u,
-                        ProximityOperator<data_t>::valuesToThresholds(_rho0 * *w / _rho1));
+                    DataContainer<data_t> P1z =
+                        zProxOp.apply(shearletTransform.apply(x) + P1u, *thresholds);
 
                     DataContainer<data_t> P2u = u.slice(layers);
                     DataContainer<data_t> P2z = maxWithZero(unsqueezeLastDimension(x) + P2u);

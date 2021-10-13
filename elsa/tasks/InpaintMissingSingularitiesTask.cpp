@@ -120,9 +120,8 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>
         InpaintMissingSingularitiesTask<data_t>::reconstructVisibleCoeffsOfSparseCT(
-            DataContainer<data_t> image,
-            std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,
-            index_t numOfAngles, index_t arc, index_t solverIterations, data_t rho1, data_t rho2)
+            DataContainer<data_t> image, index_t numOfAngles, index_t arc, index_t solverIterations,
+            data_t rho1, data_t rho2)
     {
         const DataDescriptor& dataDescriptor = image.getDataDescriptor();
 

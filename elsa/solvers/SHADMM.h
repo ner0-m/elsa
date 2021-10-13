@@ -129,7 +129,7 @@ namespace elsa
                     "SHADMM::solveImpl: currently only solving square-shaped signals");
             }
 
-            index_t L = shearletTransform.getL();
+            index_t layers = shearletTransform.getNumOfLayers();
             index_t n = shearletTransform.getWidth();
 
             /// x ∈ R ^ nxn
@@ -138,15 +138,15 @@ namespace elsa
             x = 0;
 
             /// this means z ∈ R ^ nxnx(L+1)
-            DataContainer<data_t> z(VolumeDescriptor{{n, n, L + 1}});
+            DataContainer<data_t> z(VolumeDescriptor{{n, n, layers + 1}});
             z = 0;
 
             /// this means u ∈ R ^ (L+1)n^2
-            DataContainer<data_t> u(VolumeDescriptor{{n, n, L + 1}});
+            DataContainer<data_t> u(VolumeDescriptor{{n, n, layers + 1}});
             u = 0;
 
             /// this means P1z ∈ R ^ Ln^2
-            DataContainer<data_t> P1z(VolumeDescriptor{{n, n, L}});
+            DataContainer<data_t> P1z(VolumeDescriptor{{n, n, layers}});
             P1z = 0;
 
             /// this means P2z ∈ R ^ n^2
@@ -154,7 +154,7 @@ namespace elsa
             P2z = 0;
 
             /// this means P1u ∈ R ^ Ln^2
-            DataContainer<data_t> P1u(VolumeDescriptor{{n, n, L}});
+            DataContainer<data_t> P1u(VolumeDescriptor{{n, n, layers}});
             P1u = 0;
 
             /// this means P2u ∈ R ^ n^2
@@ -177,7 +177,7 @@ namespace elsa
                 // ===== here starts very SHADMM specific code =====
                 /// first Ln^2 for P1, last n^2 for P2
 
-                ZSolver<data_t> zProxOp(VolumeDescriptor{{n, n, L}});
+                ZSolver<data_t> zProxOp(VolumeDescriptor{{n, n, layers}});
                 /// w is the weighting operator of the WeightedL1Norm
                 P1z =
                     zProxOp.apply(shearletTransform.apply(x) + P1u,

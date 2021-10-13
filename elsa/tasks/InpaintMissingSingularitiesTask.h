@@ -57,10 +57,8 @@ namespace elsa
         /// l1-regularization with shearlets by utilizing ADMM. By default the CUDA projector will
         /// be used if available.
         DataContainer<data_t> reconstructVisibleCoeffsOfSparseCT(
-            DataContainer<data_t> image,
-            std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,
-            index_t numOfAngles = 180, index_t arc = 360, index_t solverIterations = 50,
-            data_t rho1 = 1 / 2, data_t rho2 = 1);
+            DataContainer<data_t> image, index_t numOfAngles = 180, index_t arc = 360,
+            index_t solverIterations = 50, data_t rho1 = 1 / 2, data_t rho2 = 1);
 
         //        /// Train the PhantomNet model to be able to learn the invisible coefficients in
         //        the Fourier

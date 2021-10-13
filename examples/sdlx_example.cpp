@@ -22,7 +22,7 @@ void sdlx_example()
     std::sort(filePaths.begin(), filePaths.end());
 
     unsigned long from = 800; // inclusive
-    unsigned long to = 1525; // exclusive
+    unsigned long to = 1525;  // exclusive
 
     for (unsigned long i = from; i < to; ++i) {
         std::filesystem::path filePath = filePaths[i];
@@ -41,10 +41,10 @@ void sdlx_example()
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
         ShearletTransform<real_t, real_t> shearletTransform(n, n);
         shearletTransform.computeSpectra();
-        index_t L = shearletTransform.getL();
+        index_t layers = shearletTransform.getNumOfLayers();
 
         IndexVector_t slicesInBlock(2);
-        slicesInBlock << L, 1;
+        slicesInBlock << layers, 1;
 
         std::vector<std::unique_ptr<LinearOperator<real_t>>> opsOfA(0);
         Scaling<real_t> scaling(VolumeDescriptor{{n, n}}, rho2);
@@ -52,28 +52,29 @@ void sdlx_example()
         opsOfA.push_back(scaling.clone());
         BlockLinearOperator<real_t> A{
             VolumeDescriptor{{n, n}},
-            PartitionDescriptor{VolumeDescriptor{{n, n, L + 1}}, slicesInBlock}, opsOfA,
+            PartitionDescriptor{VolumeDescriptor{{n, n, layers + 1}}, slicesInBlock}, opsOfA,
             BlockLinearOperator<real_t>::BlockType::ROW};
 
         /// B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-        DataContainer<real_t> factorsOfB(VolumeDescriptor{n, n, L + 1});
+        DataContainer<real_t> factorsOfB(VolumeDescriptor{n, n, layers + 1});
         for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
-            if (ind < (n * n * L)) {
+            if (ind < (n * n * layers)) {
                 factorsOfB[ind] = -1 * rho1;
             } else {
                 factorsOfB[ind] = -1 * rho2;
             }
         }
-        Scaling<real_t> B(VolumeDescriptor{{n, n, L + 1}}, factorsOfB);
+        Scaling<real_t> B(VolumeDescriptor{{n, n, layers + 1}}, factorsOfB);
 
-        DataContainer<real_t> dCC(VolumeDescriptor{{n, n, L + 1}});
-        dCC = 0;
+        DataContainer<real_t> c(VolumeDescriptor{{n, n, layers + 1}});
+        c = 0;
 
-        Constraint<real_t> constraint(A, B, dCC);
+        Constraint<real_t> constraint(A, B, c);
 
-        DataContainer<real_t> ones(VolumeDescriptor{{n, n, L}});
-        ones = 0.001f;
-        WeightedL1Norm<real_t> weightedL1Norm(LinearResidual<real_t>{shearletTransform}, ones);
+        DataContainer<real_t> wL1NWeights(VolumeDescriptor{{n, n, layers}});
+        wL1NWeights = 0.001f;
+        WeightedL1Norm<real_t> weightedL1Norm(LinearResidual<real_t>{shearletTransform},
+                                              wL1NWeights);
         RegularizationTerm<real_t> wL1NormRegTerm(1, weightedL1Norm);
 
         Indicator<real_t> indicator(VolumeDescriptor{{n, n}});
