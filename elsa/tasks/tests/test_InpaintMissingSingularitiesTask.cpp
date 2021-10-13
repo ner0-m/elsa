@@ -1,12 +1,12 @@
 /**
- * @file test_InpaintLimitedAngleSingularitiesTask.cpp
+ * @file test_InpaintMissingSingularitiesTask.cpp
  *
- * @brief Tests for the InpaintLimitedAngleSingularitiesTask class
+ * @brief Tests for the InpaintMissingSingularitiesTask class
  *
  * @author Andi Braimllari
  */
 
-#include "InpaintLimitedAngleSingularitiesTask.h"
+#include "InpaintMissingSingularitiesTask.h"
 #include "VolumeDescriptor.h"
 #include "doctest/doctest.h"
 
@@ -15,7 +15,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("tasks");
 
-TEST_CASE_TEMPLATE("InpaintLimitedAngleSingularitiesTask: Doing stuff", TestType, float, double)
+TEST_CASE_TEMPLATE("InpaintMissingSingularitiesTask: Doing stuff", TestType, float, double)
 {
     GIVEN("some non-square images and differently-sized vectors of DataContainers")
     {
@@ -31,29 +31,30 @@ TEST_CASE_TEMPLATE("InpaintLimitedAngleSingularitiesTask: Doing stuff", TestType
         threeDimNumCoeff << 128, 256, 512;
         VolumeDescriptor threeDimVolDescr(threeDimNumCoeff);
 
-        WHEN("instantiating a InpaintLimitedAngleSingularitiesTask object")
+        WHEN("instantiating a InpaintMissingSingularitiesTask object")
         {
-            InpaintLimitedAngleSingularitiesTask<TestType> laTask;
+            InpaintMissingSingularitiesTask<TestType> missgSingTask;
             THEN("reconstructVisibleCoeffsOfLimitedAngleCT throws for  works as intended")
             {
                 DataContainer<TestType> threeDimImage(threeDimVolDescr);
                 std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles(
                     elsa::geometry::Degree(40), elsa::geometry::Degree(80));
 
-                REQUIRE_THROWS_AS(laTask.reconstructVisibleCoeffsOfLimitedAngleCT(
+                REQUIRE_THROWS_AS(missgSingTask.reconstructVisibleCoeffsOfLimitedAngleCT(
                                       threeDimImage, missingWedgeAngles),
                                   InvalidArgumentError);
             }
 
-            THEN("trainPhantomNet throws for different count of inputs and labels")
-            {
-                std::vector<DataContainer<TestType>> inputs;
-                DataContainer<TestType> noise(volDescr);
-                inputs.emplace_back(noise);
-                std::vector<DataContainer<TestType>> labels;
-
-                REQUIRE_THROWS_AS(laTask.trainPhantomNet(inputs, labels), LogicError);
-            }
+            //            THEN("trainPhantomNet throws for different count of inputs and labels")
+            //            {
+            //                std::vector<DataContainer<TestType>> inputs;
+            //                DataContainer<TestType> noise(volDescr);
+            //                inputs.emplace_back(noise);
+            //                std::vector<DataContainer<TestType>> labels;
+            //
+            //                REQUIRE_THROWS_AS(missgSingTask.trainPhantomNet(inputs, labels),
+            //                LogicError);
+            //            }
 
             THEN("combineVisCoeffsToInpaintedInvisCoeffs throws for different DataDescriptors of "
                  "the visCoeffs and invisCoeffs, as well as for non-squared images")
@@ -62,10 +63,10 @@ TEST_CASE_TEMPLATE("InpaintLimitedAngleSingularitiesTask: Doing stuff", TestType
                 DataContainer<TestType> invisCoeffs(anotherVolDescr);
 
                 REQUIRE_THROWS_AS(
-                    laTask.combineVisCoeffsToInpaintedInvisCoeffs(visCoeffs, invisCoeffs),
+                    missgSingTask.combineVisCoeffsToInpaintedInvisCoeffs(visCoeffs, invisCoeffs),
                     LogicError);
                 REQUIRE_THROWS_AS(
-                    laTask.combineVisCoeffsToInpaintedInvisCoeffs(visCoeffs, invisCoeffs),
+                    missgSingTask.combineVisCoeffsToInpaintedInvisCoeffs(visCoeffs, invisCoeffs),
                     InvalidArgumentError);
             }
         }

@@ -1,11 +1,11 @@
 # list all the headers of the module
 set(MODULE_HEADERS
-        InpaintLimitedAngleSingularitiesTask.h
+        InpaintMissingSingularitiesTask.h
         )
 
 # list all the code files of the module
 set(MODULE_SOURCES
-        InpaintLimitedAngleSingularitiesTask.cpp
+        InpaintMissingSingularitiesTask.cpp
         )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_io elsa_logging elsa_generators elsa_ml elsa_problems elsa_projectors elsa_proximity_operators elsa_solvers)

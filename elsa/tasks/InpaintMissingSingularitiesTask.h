@@ -10,24 +10,26 @@ namespace elsa
 {
     /**
      * @brief Class representing a task of inpainting missing singularities (coefficients) in
-     * limited-angle scans
+     * limited-angle or sparse CT scans
      *
      * This class offers three functionalities,
-     * 1. Based on a given image, generate a limited-angle sinogram of it, and reconstruct the
-     * original image using an l1-regularization with shearlets. ADMM is chosen as the solver here.
+     * 1. Based on a given image, generate a limited-angle/sparse sinogram of it, and reconstruct
+     * the original image using an l1-regularization with shearlets. ADMM is chosen as the solver
+     * here.
      * 2. Train a PhantomNet model (fully convolutional NN) to learn intrinsic edge patterns of
      * natural-images, so that it can later properly infer the missing data in limited-angle scans,
      * in the Fourier domain.
      * 3. Combine the visible coefficients with the learned invisible coefficients inferred by
      * PhantomNet, i.e. apply the inverse shearlet transform to the sum of the direct shearlet
      * transforms of the l1-regularization with shearlets and shearlet transformed PhantomNet
-     * output. This aims to tackle the limited-angle problem, thus generating a reconstruction as
-     * close to the ground truth as possible, which actually is the final goal of this task.
+     * output. This aims to tackle the limited-angle/sparse problem, thus generating a
+     * reconstruction as close to the ground truth as possible, which actually is the final goal of
+     * this task.
      *
      * Note that, if one requires to have finer-grained control over various elements and aspects of
      * this tasks, feel free to use the already-available relevant classes. This task exists to
-     * offer ease of use in tackling the limited-angle problem through this hybrid approach. For
-     * additional details, please refer to the references section.
+     * offer ease of use in tackling the limited-angle/sparse problem through this hybrid approach.
+     * For additional details, please refer to the references section.
      *
      * @author Andi Braimllari - initial code
      *
@@ -37,10 +39,10 @@ namespace elsa
      * https://arxiv.org/pdf/1811.04602.pdf
      */
     template <typename data_t = real_t>
-    class InpaintLimitedAngleSingularitiesTask // TODO what's a better name here?
+    class InpaintMissingSingularitiesTask // TODO what's a better name here?
     {
     public:
-        InpaintLimitedAngleSingularitiesTask() = default;
+        InpaintMissingSingularitiesTask() = default;
 
         /// Simulates the limited-angle sinogram of the provided image and reconstructs the
         /// l1-regularization with shearlets by utilizing ADMM. By default the CUDA projector will
@@ -51,12 +53,24 @@ namespace elsa
             index_t numOfAngles = 180, index_t arc = 360, index_t solverIterations = 50,
             data_t rho1 = 1 / 2, data_t rho2 = 1);
 
-//        /// Train the PhantomNet model to be able to learn the invisible coefficients in the Fourier
-//        /// domain.
-//        // TODO not sure if elsa ml can properly train fully convolutional NNs, if not I'd prefer to
-//        //  keep this, but commented out
-//        void trainPhantomNet(const std::vector<DataContainer<data_t>>& x,
-//                             const std::vector<DataContainer<data_t>>& y, index_t epochs = 20);
+        /// Simulates the sparse sinogram of the provided image and reconstructs the
+        /// l1-regularization with shearlets by utilizing ADMM. By default the CUDA projector will
+        /// be used if available.
+        DataContainer<data_t> reconstructVisibleCoeffsOfSparseCT(
+            DataContainer<data_t> image,
+            std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles,
+            index_t numOfAngles = 180, index_t arc = 360, index_t solverIterations = 50,
+            data_t rho1 = 1 / 2, data_t rho2 = 1);
+
+        //        /// Train the PhantomNet model to be able to learn the invisible coefficients in
+        //        the Fourier
+        //        /// domain.
+        //        // TODO not sure if elsa ml can properly train fully convolutional NNs, if not I'd
+        //        prefer to
+        //        //  keep this, but commented out
+        //        void trainPhantomNet(const std::vector<DataContainer<data_t>>& x,
+        //                             const std::vector<DataContainer<data_t>>& y, index_t epochs =
+        //                             20);
 
         /// Simply adds both the coefficients and applies the inverse shearlet transform to it. A
         /// new ShearletTransform object will be created, therefore its spectra has to be
@@ -67,6 +81,6 @@ namespace elsa
             combineVisCoeffsToInpaintedInvisCoeffs(DataContainer<data_t> visCoeffs,
                                                    DataContainer<data_t> invisCoeffs);
 
-//        ml::PhantomNet phantomNet;
+        //        ml::PhantomNet phantomNet;
     };
 } // namespace elsa

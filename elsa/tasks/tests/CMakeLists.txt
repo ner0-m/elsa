@@ -15,4 +15,4 @@ add_custom_target(
 
 # the actual tests
 # ELSA_DOCTEST(InpaintLimitedAngleSingularitiesTask PUBLIC_DEPENDENCIES elsa_problems elsa_solvers)
-ELSA_DOCTEST(InpaintLimitedAngleSingularitiesTask)
+ELSA_DOCTEST(InpaintMissingSingularitiesTask)
