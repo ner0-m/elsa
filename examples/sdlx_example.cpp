@@ -13,24 +13,26 @@ using namespace elsa;
 
 void sdlx_example()
 {
-    index_t threads = 6;
-
-    std::vector<std::filesystem::path> filePaths;
     std::string srcDir = nullptr;
     std::string destDir = nullptr;
-    for (const auto& entry : std::filesystem::directory_iterator(srcDir)) {
-        filePaths.emplace_back(entry.path());
-    }
 
-#pragma omp parallel for num_threads(threads)
-    for (const auto& filePath : filePaths) {
+    std::vector<std::filesystem::path> filePaths;
+    std::copy(std::filesystem::directory_iterator(srcDir), std::filesystem::directory_iterator(),
+              std::back_inserter(filePaths));
+    std::sort(filePaths.begin(), filePaths.end());
+
+    unsigned long from = 800; // inclusive
+    unsigned long to = 1525; // exclusive
+
+    for (unsigned long i = from; i < to; ++i) {
+        std::filesystem::path filePath = filePaths[i];
         index_t n = 512;
         DataContainer<real_t> image = EDF::read(filePath);
         if (n != image.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0]) {
             throw InvalidArgumentError("Different shapes than expected!");
         }
 
-        index_t noIterations = 50;
+        index_t noIterations = 10;
 
         // random numbers
         real_t rho1 = 1.0 / 2;
@@ -81,7 +83,7 @@ void sdlx_example()
         index_t numAngles{360}, arc{360};
         const auto distance = static_cast<real_t>(n);
         auto sinoDescriptor = LimitedAngleTrajectoryGenerator::createTrajectory(
-            numAngles, std::pair(geometry::Degree(75), geometry::Degree(105)),
+            numAngles, std::pair(geometry::Degree(-30), geometry::Degree(30)),
             VolumeDescriptor{{n, n}}, arc, distance * 100.0f, distance);
 
         SiddonsMethodCUDA<real_t> projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
