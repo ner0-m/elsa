@@ -81,7 +81,7 @@ namespace elsa
         auto getHeight() const -> index_t;
 
         /// return the oversampling factor
-        auto getL() const -> index_t;
+        auto getNumOfLayers() const -> index_t;
 
         // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
         //  manner, but that might take quite some time, can this make it to master in the meantime?
@@ -112,16 +112,16 @@ namespace elsa
         index_t _height;
 
         /// variable to store the number of scales
-        index_t _jZero;
+        index_t _numOfScales;
 
-        index_t calculatejZero(index_t width, index_t height);
+        index_t calculateNumOfScales(index_t width, index_t height);
 
         /// variable to store the oversampling factor
-        index_t _L;
+        index_t _numOfLayers;
 
-        index_t calculateL(index_t width, index_t height);
+        index_t calculateNumOfLayers(index_t width, index_t height);
 
-        index_t calculateL(index_t jZero);
+        index_t calculateNumOfLayers(index_t numOfScales);
 
         /// defined in Y. Meyer. Oscillating Patterns in Image Processing and Nonlinear Evolution
         /// Equations. AMS, 2001.
