@@ -103,10 +103,10 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
 
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
         ShearletTransform<TestType, TestType> shearletTransform(size);
-        index_t L = shearletTransform.getL();
+        index_t layers = shearletTransform.getNumOfLayers();
 
         IndexVector_t slicesInBlock(2);
-        slicesInBlock << L, 1;
+        slicesInBlock << layers, 1;
 
         std::vector<std::unique_ptr<LinearOperator<TestType>>> opsOfA(0);
         Scaling<TestType> scaling(VolumeDescriptor{{n, n}}, rho2);
@@ -114,24 +114,24 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
         opsOfA.push_back(scaling.clone());
         BlockLinearOperator<TestType> A{
             VolumeDescriptor{{n, n}},
-            PartitionDescriptor{VolumeDescriptor{{n, n, L + 1}}, slicesInBlock}, opsOfA,
+            PartitionDescriptor{VolumeDescriptor{{n, n, layers + 1}}, slicesInBlock}, opsOfA,
             BlockLinearOperator<TestType>::BlockType::ROW};
 
         /// B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-        DataContainer<TestType> factorsOfB(VolumeDescriptor{n, n, L + 1});
+        DataContainer<TestType> factorsOfB(VolumeDescriptor{n, n, layers + 1});
         for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
-            if (ind < (n * n * L)) {
+            if (ind < (n * n * layers)) {
                 factorsOfB[ind] = -1 * rho1;
             } else {
                 factorsOfB[ind] = -1 * rho2;
             }
         }
-        Scaling<TestType> B(VolumeDescriptor{{n, n, L + 1}}, factorsOfB);
+        Scaling<TestType> B(VolumeDescriptor{{n, n, layers + 1}}, factorsOfB);
 
-        DataContainer<TestType> dCC(VolumeDescriptor{{n, n, L + 1}});
-        dCC = 0;
+        DataContainer<TestType> c(VolumeDescriptor{{n, n, layers + 1}});
+        c = 0;
 
-        Constraint<TestType> constraint(A, B, dCC);
+        Constraint<TestType> constraint(A, B, c);
 
         WHEN("setting up ADMM to solve a problem")
         {
@@ -143,10 +143,10 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
 
             WLSProblem<TestType> wlsProb(idOp, dcB);
 
-            DataContainer<TestType> ones(VolumeDescriptor{{n, n, L}});
-            ones = 1;
+            DataContainer<TestType> wL1NWeights(VolumeDescriptor{{n, n, layers}});
+            wL1NWeights = 1;
             WeightedL1Norm<TestType> weightedL1Norm(LinearResidual<TestType>{shearletTransform},
-                                                    ones);
+                                                    wL1NWeights);
             RegularizationTerm<TestType> wL1NormRegTerm(1, weightedL1Norm);
 
             Indicator<TestType> indicator(VolumeDescriptor{{n, n}});
