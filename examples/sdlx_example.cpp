@@ -24,7 +24,7 @@ void sdlx_example()
 
 #pragma omp parallel for num_threads(threads)
     for (const auto& filePath : filePaths) {
-        index_t n = 256;
+        index_t n = 512;
         DataContainer<real_t> image = EDF::read(filePath);
         if (n != image.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0]) {
             throw InvalidArgumentError("Different shapes than expected!");
