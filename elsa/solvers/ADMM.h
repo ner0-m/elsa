@@ -247,19 +247,19 @@ namespace elsa
                     ZSolver<data_t> zProxOp(A.getRangeDescriptor());
                     z = zProxOp.apply(x + u, geometry::Threshold{*regWeight / _rho});
                 } else {
-                    auto shearletTransform = downcast<ShearletTransform<data_t>>(
+                    auto shearletTransform = downcast<ShearletTransform<data_t, data_t>>(
                         downcast<BlockLinearOperator<data_t>>(A).getIthOperator(0));
 
-                    index_t L = shearletTransform.getL();
+                    index_t layers = shearletTransform.getNumOfLayers();
 
                     ZSolver<data_t> zProxOp(w->getDataDescriptor());
 
-                    DataContainer<data_t> P1u = sliceByRange(0, L - 1, u);
+                    DataContainer<data_t> P1u = sliceByRange(0, layers - 1, u);
                     DataContainer<data_t> P1z = zProxOp.apply(
                         shearletTransform.apply(x) + P1u,
                         ProximityOperator<data_t>::valuesToThresholds(_rho0 * *w / _rho1));
 
-                    DataContainer<data_t> P2u = u.slice(L);
+                    DataContainer<data_t> P2u = u.slice(layers);
                     DataContainer<data_t> P2z = maxWithZero(unsqueezeLastDimension(x) + P2u);
 
                     z = concatenate(P1z, P2z);
@@ -352,7 +352,7 @@ namespace elsa
         data_t _rho{1};
         data_t _rho0{1.0 / 2}; // consider as hyper-parameters
         data_t _rho1{1.0 / 2}; // consider as hyper-parameters
-        data_t _rho2{1};     // just set it to 1, at least initially
+        data_t _rho2{1};       // just set it to 1, at least initially
 
         /// flag to indicate whether to utilize the Varying Penalty Parameter extension, refer
         /// to the section 3.4.1 (Boyd) for further details

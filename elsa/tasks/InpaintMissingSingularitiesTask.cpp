@@ -42,8 +42,8 @@ namespace elsa
 
         index_t width = dataDescriptor.getNumberOfCoefficientsPerDimension()[0];
         index_t height = dataDescriptor.getNumberOfCoefficientsPerDimension()[1];
-        ShearletTransform<data_t> shearletTransform(width, height);
-        index_t layers = shearletTransform.getL();
+        ShearletTransform<data_t, data_t> shearletTransform(width, height);
+        index_t layers = shearletTransform.getNumOfLayers();
 
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
         std::vector<std::unique_ptr<LinearOperator<data_t>>> opsOfA(0);
@@ -63,10 +63,10 @@ namespace elsa
         }
         Scaling<data_t> B(VolumeDescriptor{{width, height, layers + 1}}, factorsOfB);
 
-        DataContainer<data_t> dCC(VolumeDescriptor{{width, height, layers + 1}});
-        dCC = 0;
+        DataContainer<data_t> c(VolumeDescriptor{{width, height, layers + 1}});
+        c = 0;
 
-        Constraint<data_t> constraint(A, B, dCC);
+        Constraint<data_t> constraint(A, B, c);
 
         // generate limited-angle trajectory
         const auto distance = static_cast<real_t>(width);
@@ -97,9 +97,10 @@ namespace elsa
         // setup reconstruction problem
         WLSProblem<data_t> wlsProblem(projector, limitedAngleSinogram);
 
-        DataContainer<data_t> ones(VolumeDescriptor{{width, height, layers}});
-        ones = 0.001f;
-        WeightedL1Norm<data_t> weightedL1Norm(LinearResidual<data_t>{shearletTransform}, ones);
+        DataContainer<data_t> wL1NWeights(VolumeDescriptor{{width, height, layers}});
+        wL1NWeights = 0.001f;
+        WeightedL1Norm<data_t> weightedL1Norm(LinearResidual<data_t>{shearletTransform},
+                                              wL1NWeights);
         RegularizationTerm<data_t> wL1NormRegTerm(1, weightedL1Norm);
 
         Indicator<data_t> indicator(VolumeDescriptor{{width, height}});
@@ -132,8 +133,8 @@ namespace elsa
 
         index_t width = dataDescriptor.getNumberOfCoefficientsPerDimension()[0];
         index_t height = dataDescriptor.getNumberOfCoefficientsPerDimension()[1];
-        ShearletTransform<data_t> shearletTransform(width, height);
-        index_t layers = shearletTransform.getL();
+        ShearletTransform<data_t, data_t> shearletTransform(width, height);
+        index_t layers = shearletTransform.getNumOfLayers();
 
         /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
         std::vector<std::unique_ptr<LinearOperator<data_t>>> opsOfA(0);
@@ -153,10 +154,10 @@ namespace elsa
         }
         Scaling<data_t> B(VolumeDescriptor{{width, height, layers + 1}}, factorsOfB);
 
-        DataContainer<data_t> dCC(VolumeDescriptor{{width, height, layers + 1}});
-        dCC = 0;
+        DataContainer<data_t> c(VolumeDescriptor{{width, height, layers + 1}});
+        c = 0;
 
-        Constraint<data_t> constraint(A, B, dCC);
+        Constraint<data_t> constraint(A, B, c);
 
         // generate limited-angle trajectory
         const auto distance = static_cast<real_t>(width);
@@ -180,15 +181,16 @@ namespace elsa
         noise = pNG(poissonNoise) + gNG(gaussianNoise);
         // limitedAngleSinogram += noise; // TODO try with noise later on
 
-        // simulate the limited-angle sinogram
-        DataContainer<data_t> limitedAngleSinogram = projector.apply(image);
+        // simulate the sparse sinogram
+        DataContainer<data_t> sparseSinogram = projector.apply(image);
 
         // setup reconstruction problem
-        WLSProblem<data_t> wlsProblem(projector, limitedAngleSinogram);
+        WLSProblem<data_t> wlsProblem(projector, sparseSinogram);
 
-        DataContainer<data_t> ones(VolumeDescriptor{{width, height, layers}});
-        ones = 0.001f;
-        WeightedL1Norm<data_t> weightedL1Norm(LinearResidual<data_t>{shearletTransform}, ones);
+        DataContainer<data_t> wL1NWeights(VolumeDescriptor{{width, height, layers}});
+        wL1NWeights = 0.001f;
+        WeightedL1Norm<data_t> weightedL1Norm(LinearResidual<data_t>{shearletTransform},
+                                              wL1NWeights);
         RegularizationTerm<data_t> wL1NormRegTerm(1, weightedL1Norm);
 
         Indicator<data_t> indicator(VolumeDescriptor{{width, height}});
@@ -245,7 +247,7 @@ namespace elsa
                 "InpaintMissingSingularitiesTask: only 2D images are supported");
         }
 
-        ShearletTransform<data_t> shearletTransform(width, height);
+        ShearletTransform<data_t, data_t> shearletTransform(width, height);
 
         // combine the coefficients
         return shearletTransform.applyAdjoint(visCoeffs + invisCoeffs);
