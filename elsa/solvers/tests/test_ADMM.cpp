@@ -55,7 +55,8 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", TestType, float, double)
 
             SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, SoftThresholding, TestType> admm(splittingProblem);
+            ADMM<CG, SoftThresholding, TestType> admm(splittingProblem, 5, 1e-5f, 1e-5f, true,
+                                                      false);
 
             LASSOProblem<TestType> lassoProb(wlsProb, regTerm);
             FISTA<TestType> fista(lassoProb);
@@ -73,13 +74,50 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", TestType, float, double)
 
             SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, HardThresholding, TestType> admm(splittingProblem);
+            ADMM<CG, HardThresholding, TestType> admm(splittingProblem, 5, 1e-5f, 1e-5f, true,
+                                                      false);
 
             THEN("the solution doesn't throw, is not nan and is approximate to the b vector")
             {
                 REQUIRE_NOTHROW(admm.solve(10));
                 REQUIRE_UNARY(!std::isnan(admm.solve(20).squaredL2Norm()));
                 REQUIRE_UNARY(isApprox(admm.solve(20), dcB));
+            }
+        }
+
+        WHEN("running unsqueeze")
+        {
+            L0PseudoNorm<TestType> regFunc(volDescr);
+            RegularizationTerm<TestType> regTerm(0.000001f, regFunc);
+
+            SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
+
+            ADMM<CG, HardThresholding, TestType> admm(splittingProblem);
+
+            VolumeDescriptor otherVolDescr({2, 4});
+
+            DataContainer<TestType> dc(otherVolDescr);
+            dc[0] = 5;
+            dc[1] = 9;
+            dc[2] = 2;
+            dc[3] = 2;
+            dc[4] = 8;
+            dc[5] = 1;
+            dc[6] = 0;
+            dc[7] = 4;
+            DataContainer<TestType> resDC = admm.unsqueezeLastDimension(dc);
+
+            VolumeDescriptor unsqueezedVolDescr({2, 4, 1});
+            THEN("data descriptor of the result matches the expected the data descriptor")
+            {
+                REQUIRE_EQ(resDC.getDataDescriptor(), unsqueezedVolDescr);
+            }
+
+            THEN("the contents are the same")
+            {
+                for (index_t i = 0; i < dc.getSize(); ++i) {
+                    REQUIRE_EQ(dc[i], resDC[i]);
+                }
             }
         }
     }

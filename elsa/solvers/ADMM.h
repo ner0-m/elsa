@@ -154,7 +154,13 @@ namespace elsa
             }
             expandedCoeffsPerDim[dims] = 1;
 
-            return dc.viewAs(VolumeDescriptor{expandedCoeffsPerDim});
+            DataContainer<data_t> newDC(VolumeDescriptor{expandedCoeffsPerDim});
+
+            for (index_t i = 0; i < dc.getSize(); ++i) { // TODO improve me
+                newDC[i] = dc[i];
+            }
+
+            return newDC;
         }
 
         auto solveImpl(index_t iterations) -> DataContainer<data_t>& override
