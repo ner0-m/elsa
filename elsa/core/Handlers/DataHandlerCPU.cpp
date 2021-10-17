@@ -141,16 +141,18 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerCPU<data_t>::fft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerCPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                     FFTNorm norm)
     {
-        this->base_fft<true>(source_desc);
+        this->base_fft<true>(source_desc, norm);
         return *this;
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerCPU<data_t>::ifft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerCPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                      FFTNorm norm)
     {
-        this->base_fft<false>(source_desc);
+        this->base_fft<false>(source_desc, norm);
         return *this;
     }
 
@@ -485,7 +487,7 @@ namespace elsa
 
     template <typename data_t>
     template <bool is_forward>
-    void DataHandlerCPU<data_t>::base_fft(const DataDescriptor& source_desc)
+    void DataHandlerCPU<data_t>::base_fft(const DataDescriptor& source_desc, FFTNorm norm)
     {
         if constexpr (isComplex<data_t>) {
 
@@ -539,6 +541,11 @@ namespace elsa
 
                     Eigen::FFT<GetFloatingPointType_t<typename DataVector_t::Scalar>> fft_op;
 
+                    // disable any scaling in eigen - normally it does 1/n for ifft
+                    fft_op.SetFlag(
+                        Eigen::FFT<
+                            GetFloatingPointType_t<typename DataVector_t::Scalar>>::Flag::Unscaled);
+
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> fft_in{dim_size};
                     Eigen::Matrix<data_t, Eigen::Dynamic, 1> fft_out{dim_size};
 
@@ -554,9 +561,18 @@ namespace elsa
                         // they will corrupt wildly otherwise.
                         if constexpr (is_forward) {
                             fft_op.fwd(fft_out, fft_in);
+                            if (norm == FFTNorm::FORWARD) {
+                                fft_out /= dim_size;
+                            } else if (norm == FFTNorm::ORTHO) {
+                                fft_out /= std::sqrt(dim_size);
+                            }
                         } else {
-                            // eigen inv-fft already scales down by dim_size
                             fft_op.inv(fft_out, fft_in);
+                            if (norm == FFTNorm::BACKWARD) {
+                                fft_out /= dim_size;
+                            } else if (norm == FFTNorm::ORTHO) {
+                                fft_out /= std::sqrt(dim_size);
+                            }
                         }
                     }
 

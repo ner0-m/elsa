@@ -131,14 +131,16 @@ namespace elsa
         return _data->maxElement();
     }
 
-    DataHandler<data_t>& DataHandlerGPU<data_t>::fft(const DataDescriptor& source_desc)
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerGPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                     FFTNorm norm)
     {
         // until we have a gpu fft implementation, use the cpu version.
         DataContainer<data_t> tmp{source_desc, DataHandlerType::CPU};
         for (index_t i = 0; i < this->getSize(); i++) {
             tmp[i] = this->operator[](i);
         }
-        tmp.fft();
+        tmp.fft(norm);
         for (index_t i = 0; i < this->getSize(); i++) {
             this->operator[](i) = tmp[i];
         }
@@ -146,14 +148,15 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerGPU<data_t>::ifft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerGPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                      FFTNorm norm)
     {
         // until we have a gpu fft implementation, use the cpu version.
         DataContainer<data_t> tmp{source_desc, DataHandlerType::CPU};
         for (index_t i = 0; i < this->getSize(); i++) {
             tmp[i] = this->operator[](i);
         }
-        tmp.ifft();
+        tmp.ifft(norm);
         for (index_t i = 0; i < this->getSize(); i++) {
             this->operator[](i) = tmp[i];
         }

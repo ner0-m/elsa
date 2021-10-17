@@ -84,10 +84,10 @@ namespace elsa
         virtual data_t maxElement() const = 0;
 
         /// in-place create the fourier transformed of the data vector
-        virtual DataHandler<data_t>& fft(const DataDescriptor& source_desc) = 0;
+        virtual DataHandler<data_t>& fft(const DataDescriptor& source_desc, FFTNorm norm) = 0;
 
         /// in-place create the inverse fourier transformed of the data vector
-        virtual DataHandler<data_t>& ifft(const DataDescriptor& source_desc) = 0;
+        virtual DataHandler<data_t>& ifft(const DataDescriptor& source_desc, FFTNorm norm) = 0;
 
         /// compute in-place element-wise addition of another vector v
         virtual DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) = 0;

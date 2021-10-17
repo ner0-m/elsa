@@ -142,13 +142,15 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerMapGPU<data_t>::fft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerMapGPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                        FFTNorm norm)
     {
         throw std::runtime_error{"todo implement"};
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerMapGPU<data_t>::ifft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerMapGPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                         FFTNorm norm)
     {
         throw std::runtime_error{"todo implement"};
     }

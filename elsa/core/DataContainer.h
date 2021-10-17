@@ -249,10 +249,10 @@ namespace elsa
         data_t maxElement() const;
 
         /// convert to the fourier transformed signal
-        void fft() const;
+        void fft(FFTNorm norm) const;
 
         /// convert to the inverse fourier transformed signal
-        void ifft() const;
+        void ifft(FFTNorm norm) const;
 
         /// if the datacontainer is already complex, return itself.
         template <typename _data_t = data_t>

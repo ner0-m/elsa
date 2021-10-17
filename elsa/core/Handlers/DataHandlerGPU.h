@@ -135,10 +135,10 @@ namespace elsa
         data_t maxElement() const override;
 
         /// create the fourier transformed of the data vector
-        DataHandler<data_t>& fft(const DataDescriptor& source_desc) override;
+        DataHandler<data_t>& fft(const DataDescriptor& source_desc, FFTNorm norm) override;
 
         /// create the inverse fourier transformed of the data vector
-        DataHandler<data_t>& ifft(const DataDescriptor& source_desc) override;
+        DataHandler<data_t>& ifft(const DataDescriptor& source_desc, FFTNorm norm) override;
 
         /// copy assign another DataHandlerGPU
         DataHandlerGPU<data_t>& operator=(const DataHandlerGPU<data_t>& v);
