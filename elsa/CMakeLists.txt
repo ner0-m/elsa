@@ -95,14 +95,8 @@ macro(ELSA_DOCTEST name)
     add_dependencies(tests ${_testname})
     add_dependencies(build-tests ${_testname})
 
-    # if we use JUnit reporter handle arguments
-    if(${ELSA_CREATE_JUNIT_REPORTS})
-        file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/test_reports)
-        set(ELSA_JUNIT_OUTPUT_DIR "${PROJECT_BINARY_DIR}/test_reports/${_testname}.xml")
-    endif(${ELSA_CREATE_JUNIT_REPORTS})
-
-    # let doctest discover the test and add the JUNIT arguments
-    doctest_discover_tests(${_testname} JUNIT_OUTPUT_DIR "${ELSA_JUNIT_OUTPUT_DIR}")
+    # let doctest discover the test
+    doctest_discover_tests(${_testname})
 
     # Add test to the corresponding fine grained dependency
     if(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_core")
