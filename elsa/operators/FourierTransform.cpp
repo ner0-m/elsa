@@ -9,8 +9,8 @@
 namespace elsa
 {
     template <typename data_t>
-    FourierTransform<data_t>::FourierTransform(const DataDescriptor& domainDescriptor)
-        : B(domainDescriptor, domainDescriptor)
+    FourierTransform<data_t>::FourierTransform(const DataDescriptor& domainDescriptor, FFTNorm norm)
+        : B(domainDescriptor, domainDescriptor), _norm{norm}
     {
     }
 
@@ -28,7 +28,7 @@ namespace elsa
 
         // copy the input and fouriertransform it
         Ax = x;
-        Ax.fft();
+        Ax.fft(_norm);
     }
 
     template <typename data_t>
@@ -43,7 +43,7 @@ namespace elsa
 
         // copy the input and inverse-fouriertransform it
         Atx = x;
-        Atx.ifft();
+        Atx.ifft(_norm);
     }
 
     template <typename data_t>

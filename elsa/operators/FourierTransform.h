@@ -31,8 +31,10 @@ namespace elsa
          * @brief create a fourier transform operator
          *
          * @param[in] domainDescriptor metadata defining the domain and range of the transformation
+         * @param[in] norm metadata indicating which forward/inverse transform is scaled and
+         * on which of the predefined normalization factors
          */
-        explicit FourierTransform(const DataDescriptor& domainDescriptor);
+        explicit FourierTransform(const DataDescriptor& domainDescriptor, FFTNorm norm = BACKWARD);
 
         ~FourierTransform() override = default;
 
@@ -57,6 +59,9 @@ namespace elsa
 
         /// implement the polymorphic comparison operation
         bool isEqual(const B& other) const override;
+
+    private:
+        FFTNorm _norm;
     };
 
 } // namespace elsa

@@ -125,10 +125,10 @@ namespace elsa
         data_t sum() const override;
 
         /// create the fourier transformed of the data vector
-        DataHandler<data_t>& fft(const DataDescriptor& source_desc) override;
+        DataHandler<data_t>& fft(const DataDescriptor& source_desc, FFTNorm norm) override;
 
         /// create the inverse fourier transformed of the data vector
-        DataHandler<data_t>& ifft(const DataDescriptor& source_desc) override;
+        DataHandler<data_t>& ifft(const DataDescriptor& source_desc, FFTNorm norm) override;
 
         /// copy assign another DataHandlerCPU to this, other types handled in assign()
         DataHandlerCPU<data_t>& operator=(const DataHandlerCPU<data_t>& v);
@@ -216,7 +216,7 @@ namespace elsa
         void attach(std::shared_ptr<DataVector_t>&& data);
 
         template <bool is_forward>
-        void base_fft(const DataDescriptor& source_desc);
+        void base_fft(const DataDescriptor& source_desc, FFTNorm norm = BACKWARD);
     };
 
 } // namespace elsa

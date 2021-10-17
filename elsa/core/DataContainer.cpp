@@ -172,15 +172,15 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::fft() const
+    void DataContainer<data_t>::fft(FFTNorm norm) const
     {
-        this->_dataHandler->fft(*this->_dataDescriptor);
+        this->_dataHandler->fft(*this->_dataDescriptor, norm);
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::ifft() const
+    void DataContainer<data_t>::ifft(FFTNorm norm) const
     {
-        this->_dataHandler->ifft(*this->_dataDescriptor);
+        this->_dataHandler->ifft(*this->_dataDescriptor, norm);
     }
 
     template <typename data_t>

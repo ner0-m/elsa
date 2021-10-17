@@ -113,18 +113,20 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerMapCPU<data_t>::fft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerMapCPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                        FFTNorm norm)
     {
         // detaches internally
-        this->_dataOwner->fft(source_desc);
+        this->_dataOwner->fft(source_desc, norm);
         return *this;
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerMapCPU<data_t>::ifft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerMapCPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                         FFTNorm norm)
     {
         // detaches internally
-        this->_dataOwner->ifft(source_desc);
+        this->_dataOwner->ifft(source_desc, norm);
         return *this;
     }
 
