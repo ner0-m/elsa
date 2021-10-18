@@ -38,7 +38,7 @@ namespace elsa
     constexpr auto pi_t = pi<real_t>;
 
     /// various values of the different norms of the Fourier transforms
-    enum FFTNorm { FORWARD, ORTHO, BACKWARD };
+    enum class FFTNorm { FORWARD, ORTHO, BACKWARD };
 
     /// type of the DataHandler used to store the actual data
     enum class DataHandlerType {

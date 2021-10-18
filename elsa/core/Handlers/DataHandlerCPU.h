@@ -216,7 +216,7 @@ namespace elsa
         void attach(std::shared_ptr<DataVector_t>&& data);
 
         template <bool is_forward>
-        void base_fft(const DataDescriptor& source_desc, FFTNorm norm = BACKWARD);
+        void base_fft(const DataDescriptor& source_desc, FFTNorm norm = FFTNorm::BACKWARD);
     };
 
 } // namespace elsa

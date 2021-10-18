@@ -34,7 +34,8 @@ namespace elsa
          * @param[in] norm metadata indicating which forward/inverse transform is scaled and
          * on which of the predefined normalization factors
          */
-        explicit FourierTransform(const DataDescriptor& domainDescriptor, FFTNorm norm = BACKWARD);
+        explicit FourierTransform(const DataDescriptor& domainDescriptor,
+                                  FFTNorm norm = FFTNorm::BACKWARD);
 
         ~FourierTransform() override = default;
 
