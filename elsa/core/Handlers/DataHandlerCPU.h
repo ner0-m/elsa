@@ -123,6 +123,12 @@ namespace elsa
         /// return the sum of all elements of the data vector
         data_t sum() const override;
 
+        /// return the min of all elements of the data vector
+        data_t minElement() const override;
+
+        /// return the max of all elements of the data vector
+        data_t maxElement() const override;
+
         /// copy assign another DataHandlerCPU to this, other types handled in assign()
         DataHandlerCPU<data_t>& operator=(const DataHandlerCPU<data_t>& v);
 
@@ -208,5 +214,4 @@ namespace elsa
         /// change the vector being handled (rvalue version)
         void attach(std::shared_ptr<DataVector_t>&& data);
     };
-
 } // namespace elsa

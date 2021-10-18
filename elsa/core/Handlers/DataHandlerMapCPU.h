@@ -99,6 +99,12 @@ namespace elsa
         /// return the sum of all elements of the data vector
         data_t sum() const override;
 
+        /// return the min of all elements of the data vector
+        data_t minElement() const override;
+
+        /// return the max of all elements of the data vector
+        data_t maxElement() const override;
+
         /// compute in-place element-wise addition of another vector v
         DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) override;
 

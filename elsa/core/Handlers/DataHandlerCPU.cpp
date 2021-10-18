@@ -111,6 +111,26 @@ namespace elsa
     }
 
     template <typename data_t>
+    data_t DataHandlerCPU<data_t>::minElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw LogicError("DataHandlerCPU: minElement of complex type not supported");
+        } else {
+            return _data->minCoeff();
+        }
+    }
+
+    template <typename data_t>
+    data_t DataHandlerCPU<data_t>::maxElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw LogicError("DataHandlerCPU: maxElement of complex type not supported");
+        } else {
+            return _data->maxCoeff();
+        }
+    }
+
+    template <typename data_t>
     DataHandler<data_t>& DataHandlerCPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
@@ -446,5 +466,4 @@ namespace elsa
     template class DataHandlerCPU<double>;
     template class DataHandlerCPU<std::complex<double>>;
     template class DataHandlerCPU<index_t>;
-
 } // namespace elsa

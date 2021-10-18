@@ -1,6 +1,6 @@
 # Create binaries for examples in bin/examples 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples) 
- 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples)
+
 # define a target for all examples
 add_custom_target(build-examples)
 
@@ -9,6 +9,12 @@ add_executable(example2d example2d.cpp)
 target_link_libraries(example2d elsa::all)
 target_compile_features(example2d PUBLIC cxx_std_17)
 add_dependencies(build-examples example2d)
+
+# build the 2d limited angle trajectory example program
+add_executable(limited_angle_example2d limited_angle_example2d.cpp limited_angle_example2d.cpp)
+target_link_libraries(limited_angle_example2d elsa::all)
+target_compile_features(limited_angle_example2d PUBLIC cxx_std_17)
+add_dependencies(build-examples limited_angle_example2d)
 
 # build the 2d example admm program
 add_executable(example2d_admm example2d_admm.cpp)

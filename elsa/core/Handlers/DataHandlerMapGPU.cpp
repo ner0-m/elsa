@@ -130,6 +130,18 @@ namespace elsa
     }
 
     template <typename data_t>
+    data_t DataHandlerMapGPU<data_t>::minElement() const
+    {
+        return _map.minElement();
+    }
+
+    template <typename data_t>
+    data_t DataHandlerMapGPU<data_t>::maxElement() const
+    {
+        return _map.maxElement();
+    }
+
+    template <typename data_t>
     DataHandler<data_t>& DataHandlerMapGPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())

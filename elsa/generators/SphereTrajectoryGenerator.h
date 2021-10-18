@@ -2,6 +2,7 @@
 
 #include "Geometry.h"
 #include "DetectorDescriptor.h"
+#include "TrajectoryGenerator.h"
 
 #include <vector>
 #include <utility>
@@ -15,7 +16,7 @@ namespace elsa
      * @author Michael Loipführer - initial code
      */
 
-    class SphereTrajectoryGenerator
+    class SphereTrajectoryGenerator : public TrajectoryGenerator
     {
     public:
         /**

@@ -367,6 +367,68 @@ TEST_CASE("LinearOperator: Testing composite LinearOperator")
         }
     }
 
+    GIVEN("a scalar multiplicative composite linear operator")
+    {
+        IndexVector_t numCoeff(3);
+        numCoeff << 13, 47, 69;
+        IndexVector_t otherNumCoeff(2);
+        otherNumCoeff << 15, 28;
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(otherNumCoeff);
+
+        MockOperator op(ddDomain, ddRange);
+        real_t scalar = 8;
+
+        auto scalarMultOp = scalar * op;
+
+        WHEN("the operator is there")
+        {
+            THEN("the descriptors are set correctly")
+            {
+                REQUIRE_EQ(scalarMultOp.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(scalarMultOp.getRangeDescriptor(), ddRange);
+            }
+        }
+
+        WHEN("given data")
+        {
+            DataContainer dcDomain(ddDomain);
+            DataContainer dcRange(ddRange);
+
+            THEN("the apply operations return the correct result")
+            {
+                auto resultApply = scalarMultOp.apply(dcDomain);
+                for (int i = 0; i < resultApply.getSize(); ++i)
+                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(8));
+
+                auto resultApplyAdjoint = scalarMultOp.applyAdjoint(dcRange);
+                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(24));
+            }
+
+            THEN("the apply operations account for appropriately sized containers")
+            {
+                REQUIRE_THROWS_AS(scalarMultOp.apply(dcRange), InvalidArgumentError);
+                REQUIRE_THROWS_AS(scalarMultOp.applyAdjoint(dcDomain), InvalidArgumentError);
+            }
+        }
+
+        WHEN("copying/assigning")
+        {
+            const auto& newOp = scalarMultOp;
+            auto assignedOp = adjoint(newOp);
+
+            THEN("it should be identical")
+            {
+                REQUIRE_EQ(newOp, scalarMultOp);
+                REQUIRE_EQ(assignedOp, adjoint(newOp));
+
+                assignedOp = newOp;
+                REQUIRE_EQ(assignedOp, newOp);
+            }
+        }
+    }
+
     GIVEN("a complex composite with multiple leafs and levels")
     {
         IndexVector_t numCoeff(2);

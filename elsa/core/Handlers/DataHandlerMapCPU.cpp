@@ -113,6 +113,26 @@ namespace elsa
     }
 
     template <typename data_t>
+    data_t DataHandlerMapCPU<data_t>::minElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw LogicError("DataHandlerCPU: minElement of complex type not supported");
+        } else {
+            return _map.minCoeff();
+        }
+    }
+
+    template <typename data_t>
+    data_t DataHandlerMapCPU<data_t>::maxElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw LogicError("DataHandlerCPU: maxElement of complex type not supported");
+        } else {
+            return _map.maxCoeff();
+        }
+    }
+
+    template <typename data_t>
     DataHandler<data_t>& DataHandlerMapCPU<data_t>::operator+=(const DataHandler<data_t>& v)
     {
         if (v.getSize() != getSize())
