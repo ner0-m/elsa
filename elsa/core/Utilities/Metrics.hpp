@@ -69,8 +69,8 @@ namespace elsa
         data_t dataMin = std::numeric_limits<data_t>::min();
         data_t dataMax = std::numeric_limits<data_t>::max();
 
-        data_t trueMin = std::min(minOfDataContainer(dc1), minOfDataContainer(dc2));
-        data_t trueMax = std::max(maxOfDataContainer(dc1), maxOfDataContainer(dc2));
+        data_t trueMin = std::min(minElement(dc1), minElement(dc2));
+        data_t trueMax = std::max(maxElement(dc1), maxElement(dc2));
 
         if (trueMin < dataMin || trueMax > dataMax) {
             throw LogicError(
@@ -86,35 +86,5 @@ namespace elsa
         }
 
         return peakSignalToNoiseRatio(dc1, dc2, dataRange);
-    }
-
-    // TODO remove me as soon as possible and implement me as a reduction in DataContainer
-    template <typename data_t>
-    data_t maxOfDataContainer(DataContainer<data_t> signal)
-    {
-        data_t currMax = signal[0];
-
-        for (data_t element : signal) {
-            if (element > currMax) {
-                currMax = element;
-            }
-        }
-
-        return currMax;
-    }
-
-    // TODO remove me as soon as possible and implement me as a reduction in DataContainer
-    template <typename data_t>
-    data_t minOfDataContainer(DataContainer<data_t> signal)
-    {
-        data_t currMin = signal[0];
-
-        for (data_t element : signal) {
-            if (element < currMin) {
-                currMin = element;
-            }
-        }
-
-        return currMin;
     }
 } // namespace elsa
