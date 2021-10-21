@@ -175,7 +175,7 @@ namespace elsa
     void ShearletTransform<ret_t, data_t>::computeSpectra() const
     {
         if (isSpectraComputed()) {
-            return;
+            Logger::get("ShearletTransform")->warn("Spectra have already been computed!");
         }
 
         DataContainer<data_t> spectra(VolumeDescriptor{{_width, _height, _numOfLayers}});
@@ -183,6 +183,28 @@ namespace elsa
 
         index_t i = 0;
 
+        _computeSpectraAtLowFreq(spectra, i);
+
+        for (index_t j = 0; j < _numOfScales; j++) {
+            for (auto k = static_cast<index_t>(-std::pow(2, j));
+                 k <= static_cast<index_t>(std::pow(2, j)); k++) {
+                if (std::abs(k) <= static_cast<index_t>(std::pow(2, j)) - 1) {
+                    _computeSpectraAtConicRegions(spectra, i, j, k);
+                } else {
+                    _computeSpectraAtSeamLines(spectra, i, j, k);
+                }
+            }
+        }
+
+        _spectra = spectra;
+
+        _isSpectraComputed = true;
+    }
+
+    template <typename ret_t, typename data_t>
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtLowFreq(DataContainer<data_t>& spectra,
+                                                                    index_t& i) const
+    {
         DataContainer<data_t> sectionZero(VolumeDescriptor{{_width, _height}});
         sectionZero = 0;
         for (auto w = static_cast<int>(-std::floor(_width / 2.0)); w < std::ceil(_width / 2.0);
@@ -195,53 +217,56 @@ namespace elsa
         }
         spectra.slice(i) = sectionZero;
         i += 1;
+    }
 
-        for (index_t j = 0; j < _numOfScales; j++) {
-            for (auto k = static_cast<index_t>(-std::pow(2, j));
-                 k <= static_cast<index_t>(std::pow(2, j)); k++) {
-                DataContainer<data_t> sectionh(VolumeDescriptor{{_width, _height}});
-                sectionh = 0;
-                DataContainer<data_t> sectionv(VolumeDescriptor{{_width, _height}});
-                sectionv = 0;
-                DataContainer<data_t> sectionhxv(VolumeDescriptor{{_width, _height}});
-                sectionhxv = 0;
-                for (auto w = static_cast<index_t>(-std::floor(_width / 2.0));
-                     w < static_cast<index_t>(std::ceil(_width / 2.0)); w++) {
-                    for (auto h = static_cast<index_t>(-std::floor(_height / 2.0));
-                         h < static_cast<index_t>(std::ceil(_height / 2.0)); h++) {
-                        data_t horiz = 0;
-                        data_t vertic = 0;
-                        if (std::abs(h) <= std::abs(w)) {
-                            horiz = psiHat(std::pow(4, -j) * w,
-                                           std::pow(4, -j) * k * w + std::pow(2, -j) * h);
-                        } else {
-                            vertic = psiHat(std::pow(4, -j) * h,
-                                            std::pow(4, -j) * k * h + std::pow(2, -j) * w);
-                        }
-                        if (std::abs(k) <= static_cast<index_t>(std::pow(2, j)) - 1) {
-                            sectionh(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = horiz;
-                            sectionv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = vertic;
-                        } else if (std::abs(k) == static_cast<index_t>(std::pow(2, j))) {
-                            sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                                horiz + vertic;
-                        }
-                    }
-                }
-                if (std::abs(k) <= static_cast<index_t>(std::pow(2, j)) - 1) {
-                    spectra.slice(i) = sectionh;
-                    i += 1;
-                    spectra.slice(i) = sectionv;
-                    i += 1;
-                } else if (std::abs(k) == static_cast<index_t>(std::pow(2, j))) {
-                    spectra.slice(i) = sectionhxv;
-                    i += 1;
+    template <typename ret_t, typename data_t>
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtConicRegions(
+        DataContainer<data_t>& spectra, index_t& i, index_t j, index_t k) const
+    {
+        DataContainer<data_t> sectionh(VolumeDescriptor{{_width, _height}});
+        sectionh = 0;
+        DataContainer<data_t> sectionv(VolumeDescriptor{{_width, _height}});
+        sectionv = 0;
+        for (auto w = static_cast<index_t>(-std::floor(_width / 2.0));
+             w < static_cast<index_t>(std::ceil(_width / 2.0)); w++) {
+            for (auto h = static_cast<index_t>(-std::floor(_height / 2.0));
+                 h < static_cast<index_t>(std::ceil(_height / 2.0)); h++) {
+                if (std::abs(h) <= std::abs(w)) {
+                    sectionh(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        psiHat(std::pow(4, -j) * w, std::pow(4, -j) * k * w + std::pow(2, -j) * h);
+                } else {
+                    sectionv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        psiHat(std::pow(4, -j) * h, std::pow(4, -j) * k * h + std::pow(2, -j) * w);
                 }
             }
         }
+        spectra.slice(i) = sectionh;
+        i += 1;
+        spectra.slice(i) = sectionv;
+        i += 1;
+    }
 
-        _spectra = spectra;
-
-        _isSpectraComputed = true;
+    template <typename ret_t, typename data_t>
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtSeamLines(
+        DataContainer<data_t>& spectra, index_t& i, index_t j, index_t k) const
+    {
+        DataContainer<data_t> sectionhxv(VolumeDescriptor{{_width, _height}});
+        sectionhxv = 0;
+        for (auto w = static_cast<index_t>(-std::floor(_width / 2.0));
+             w < static_cast<index_t>(std::ceil(_width / 2.0)); w++) {
+            for (auto h = static_cast<index_t>(-std::floor(_height / 2.0));
+                 h < static_cast<index_t>(std::ceil(_height / 2.0)); h++) {
+                if (std::abs(h) <= std::abs(w)) {
+                    sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        psiHat(std::pow(4, -j) * w, std::pow(4, -j) * k * w + std::pow(2, -j) * h);
+                } else {
+                    sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        psiHat(std::pow(4, -j) * h, std::pow(4, -j) * k * h + std::pow(2, -j) * w);
+                }
+            }
+        }
+        spectra.slice(i) = sectionhxv;
+        i += 1;
     }
 
     template <typename ret_t, typename data_t>

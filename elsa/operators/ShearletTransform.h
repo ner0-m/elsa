@@ -14,7 +14,7 @@ namespace elsa
      * ShearletTransform represents a band-limited (compact support in Fourier domain)
      * representation system. It oversamples a 2D signal of (W, H) to (W, H, L). Most of the
      * computation is taken for the spectra, which is stored after the first run. It only handles
-     * signals with one channel, e.g. grayscale images. Increasing the number of scales jZero will
+     * signals with one channel, e.g. grayscale images. Increasing the number of scales will
      * increase precision.
      *
      * References:
@@ -46,19 +46,19 @@ namespace elsa
          *
          * @param[in] width the width of the input image
          * @param[in] height the height of the input image
-         * @param[in] jZero the number of scales
+         * @param[in] numOfScales the number of scales
          */
-        ShearletTransform(index_t width, index_t height, index_t jZero);
+        ShearletTransform(index_t width, index_t height, index_t numOfScales);
 
         /**
          * @brief Constructor for a (regular) cone-adapted discrete shearlet transform.
          *
          * @param[in] width the width of the input image
          * @param[in] height the height of the input image
-         * @param[in] jZero the number of scales
+         * @param[in] numOfScales the number of scales
          * @param[in] spectra the spectra
          */
-        ShearletTransform(index_t width, index_t height, index_t jZero,
+        ShearletTransform(index_t width, index_t height, index_t numOfScales,
                           std::optional<DataContainer<data_t>> spectra);
 
         /// default destructor
@@ -138,5 +138,13 @@ namespace elsa
         data_t psiHat2(data_t w) const;
 
         data_t psiHat(data_t w, data_t h) const;
+
+        void _computeSpectraAtLowFreq(DataContainer<data_t>& spectra, index_t& i) const;
+
+        void _computeSpectraAtConicRegions(DataContainer<data_t>& spectra, index_t& i, index_t j,
+                                           index_t k) const;
+
+        void _computeSpectraAtSeamLines(DataContainer<data_t>& spectra, index_t& i, index_t j,
+                                        index_t k) const;
     };
 } // namespace elsa
