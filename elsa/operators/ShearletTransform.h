@@ -104,9 +104,6 @@ namespace elsa
         /// variable to store the spectra
         mutable std::optional<DataContainer<data_t>> _spectra = std::nullopt;
 
-        /// variable indicating if the spectra is already computed
-        mutable bool _isSpectraComputed{false};
-
         /// variables to store the spatial extents
         index_t _width;
         index_t _height;
@@ -123,28 +120,10 @@ namespace elsa
 
         index_t calculateNumOfLayers(index_t numOfScales);
 
-        /// defined in Y. Meyer. Oscillating Patterns in Image Processing and Nonlinear Evolution
-        /// Equations. AMS, 2001.
-        data_t meyerFunction(data_t x) const;
+        void _computeSpectraAtLowFreq(index_t& i) const;
 
-        data_t b(data_t w) const;
+        void _computeSpectraAtConicRegions(index_t& i, index_t j, index_t k) const;
 
-        data_t phi(data_t w) const;
-
-        data_t phiHat(data_t w, data_t h) const;
-
-        data_t psiHat1(data_t w) const;
-
-        data_t psiHat2(data_t w) const;
-
-        data_t psiHat(data_t w, data_t h) const;
-
-        void _computeSpectraAtLowFreq(DataContainer<data_t>& spectra, index_t& i) const;
-
-        void _computeSpectraAtConicRegions(DataContainer<data_t>& spectra, index_t& i, index_t j,
-                                           index_t k) const;
-
-        void _computeSpectraAtSeamLines(DataContainer<data_t>& spectra, index_t& i, index_t j,
-                                        index_t k) const;
+        void _computeSpectraAtSeamLines(index_t& i, index_t j, index_t k) const;
     };
 } // namespace elsa
