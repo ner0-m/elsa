@@ -145,16 +145,14 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                 DataContainer<TestType> zeroes(VolumeDescriptor{{width, height}});
                 zeroes = 0;
 
-                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
-
                 // spectra here is of shape (W, H, L), square its elements and get the sum by the
                 // last axis and subtract 1, the output will be of shape (W, H), its elements
                 // should be zeroes, or very close to it
+
+                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
             }
         }
     }
 }
-
-// TODO what other tests to add? check how wavelets and curvelets are tested
 
 TEST_SUITE_END();
