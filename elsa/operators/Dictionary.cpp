@@ -82,11 +82,42 @@ namespace elsa
     }
 
     template <typename data_t>
+    void Dictionary<data_t>::updateAtoms(const DataContainer<data_t>& atoms)
+    {
+        if (atoms.getDataDescriptor() != _dictionary.getDataDescriptor()) {
+            throw InvalidArgumentError(
+                "Atoms have to have same DataDescriptor as on initialization");
+        }
+        DataContainer<data_t> tmp = atoms;
+
+        for (int i = 0; i < _nAtoms; ++i) {
+            auto block = tmp.getBlock(i);
+            data_t l2Norm = block.l2Norm();
+            if (l2Norm == 0) {
+                throw InvalidArgumentError("Dictionary: initializing with 0-atom not possible");
+            }
+            // don't normalize if the norm is very close to 1 already
+            if (std::abs(l2Norm - 1)
+                > std::numeric_limits<data_t>::epsilon() * std::abs(l2Norm + 1)) {
+                block /= l2Norm;
+            }
+        }
+
+        _dictionary = tmp;
+    }
+
+    template <typename data_t>
     const DataContainer<data_t> Dictionary<data_t>::getAtom(index_t j) const
     {
         if (j < 0 || j >= _nAtoms)
             throw InvalidArgumentError("Dictionary: atom index out of bounds");
         return _dictionary.getBlock(j);
+    }
+
+    template <typename data_t>
+    const DataContainer<data_t>& Dictionary<data_t>::getAtoms() const
+    {
+        return _dictionary;
     }
 
     template <typename data_t>

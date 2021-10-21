@@ -59,6 +59,8 @@ namespace elsa
          */
         void updateAtom(index_t j, const DataContainer<data_t>& atom);
 
+        void updateAtoms(const DataContainer<data_t>& atoms);
+
         /**
          * @brief Get an atom of the dictionary by index
          *
@@ -67,6 +69,14 @@ namespace elsa
          * @throw InvalidArgumentError if index is out of bounds
          */
         const DataContainer<data_t> getAtom(index_t j) const;
+
+        /**
+         * @brief Get the atoms of the dictionary, i.e. the underlying matrix
+         *
+         * @returns The atoms in a data container with IdenticalBlocksDescriptor where each block is
+         * one atom
+         */
+        const DataContainer<data_t>& getAtoms() const;
 
         /**
          * @brief Returns the number of atoms in the dictionary
