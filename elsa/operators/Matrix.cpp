@@ -4,13 +4,6 @@
 namespace elsa
 {
     template <typename data_t>
-    Matrix<data_t>::Matrix(const DataDescriptor& descriptor)
-        : LinearOperator<data_t>(initDomainDescriptor(descriptor), initRangeDescriptor(descriptor)),
-          _matrix{DataContainer<data_t>(descriptor)}
-    {
-    }
-
-    template <typename data_t>
     Matrix<data_t>::Matrix(const DataContainer<data_t>& data)
         : LinearOperator<data_t>(initDomainDescriptor(data.getDataDescriptor()),
                                  initRangeDescriptor(data.getDataDescriptor())),

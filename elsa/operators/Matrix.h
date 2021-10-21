@@ -24,14 +24,6 @@ namespace elsa
     {
     public:
         /**
-         * @brief Constructor for an empty matrix.
-         *
-         * @param[in] signalDescriptor DataDescriptor describing the domain of the signals that
-         * should be produced @param[in] nAtoms The number of atoms that should be in the dictionary
-         */
-        Matrix(const DataDescriptor& descriptor);
-
-        /**
          * @brief Constructor for an initialized dictionary.
          *
          * @param[in] dictionary DataContainer containing the entries of the dictionary
