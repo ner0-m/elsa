@@ -176,7 +176,7 @@ if(ELSA_MASTER_PROJECT)
             CPMAddPackage(
                 NAME Quickvec
                 GIT_REPOSITORY https://gitlab.lrz.de/IP/quickvec.git
-                GIT_TAG master
+                GIT_TAG 960ac64 # current commit on master 
             )
 
             if(Quickvec_ADDED)
