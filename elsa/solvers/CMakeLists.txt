@@ -11,6 +11,7 @@ set(MODULE_HEADERS
     SQS.h
     OrthogonalMatchingPursuit.h
     KSVD.h
+    DeepDictSolver.h
 )
 
 # list all the code files of the module
@@ -25,6 +26,7 @@ set(MODULE_SOURCES
     SQS.cpp
     OrthogonalMatchingPursuit.cpp
     KSVD.cpp
+    DeepDictSolver.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximity_operators)
