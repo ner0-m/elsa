@@ -1,13 +1,14 @@
 #include "DeepDictionary.h"
 #include "TypeCasts.hpp"
 #include <algorithm>
+#include <memory>
 
 namespace elsa
 {
     template <typename data_t>
     DeepDictionary<data_t>::DeepDictionary(
         const DataDescriptor& signalDescriptor, const std::vector<index_t>& nAtoms,
-        const std::vector<std::function<data_t(data_t)>>& activationFunctions)
+        const std::vector<ActivationFunction<data_t>>& activationFunctions)
         : LinearOperator<data_t>(VolumeDescriptor({nAtoms.back()}), signalDescriptor),
           _nAtoms{nAtoms},
           _activationFunctions{activationFunctions},
@@ -19,7 +20,7 @@ namespace elsa
     template <typename data_t>
     DeepDictionary<data_t>::DeepDictionary(
         const std::vector<Dictionary<data_t>>& dictionaries,
-        const std::vector<std::function<data_t(data_t)>>& activationFunctions)
+        const std::vector<ActivationFunction<data_t>>& activationFunctions)
         : LinearOperator<data_t>(dictionaries.back().getDomainDescriptor(),
                                  dictionaries.begin()->getRangeDescriptor()),
           _dictionaries{}, // TODO !! copy ctor
@@ -33,7 +34,7 @@ namespace elsa
     template <typename data_t>
     std::vector<Dictionary<data_t>> DeepDictionary<data_t>::generateInitialData(
         const DataDescriptor& signalDescriptor, const std::vector<index_t>& nAtoms,
-        const std::vector<std::function<data_t(data_t)>>& activationFunctions)
+        const std::vector<ActivationFunction<data_t>>& activationFunctions)
     {
         if (nAtoms.size() - 1 != activationFunctions.size()) {
             throw InvalidArgumentError("foo");
@@ -41,15 +42,33 @@ namespace elsa
 
         std::vector<Dictionary<data_t>> dicts;
 
-        const DataDescriptor* nextSignalDescriptor = &signalDescriptor;
+        auto nextSignalDescriptor = signalDescriptor.clone();
 
         for (index_t n : nAtoms) {
             Dictionary<data_t> dict(*nextSignalDescriptor, n);
-            nextSignalDescriptor = &dict.getDomainDescriptor();
+            nextSignalDescriptor = dict.getDomainDescriptor().clone();
             dicts.push_back(std::move(dict));
         }
 
         return std::move(dicts);
+    }
+
+    template <typename data_t>
+    Dictionary<data_t>& DeepDictionary<data_t>::getDictionary(index_t level)
+    {
+        if (level < 0 || level >= _dictionaries.size()) {
+            throw InvalidArgumentError("Level index out of bounds");
+        }
+        return _dictionaries.at(level);
+    }
+
+    template <typename data_t>
+    const ActivationFunction<data_t> DeepDictionary<data_t>::getActivationFunction(index_t level)
+    {
+        if (level < 0 || level >= _activationFunctions.size()) {
+            throw InvalidArgumentError("Level index out of bounds");
+        }
+        return _activationFunctions.at(level);
     }
 
     template <typename data_t>
@@ -62,16 +81,16 @@ namespace elsa
             || Ax.getDataDescriptor() != *_rangeDescriptor)
             throw InvalidArgumentError("DeepDictionary::apply: incorrect input/output sizes");
 
-        DataContainer<data_t> lastResult = x;
+        auto lastResult = std::make_unique<DataContainer<data_t>>(x);
         index_t i = _activationFunctions.size() - 1;
 
         for (auto dict = _dictionaries.end() - 1; dict > _dictionaries.begin(); --dict) {
-            lastResult = dict->apply(lastResult);
-            std::for_each(lastResult.begin(), lastResult.end(), _activationFunctions.at(i));
+            lastResult = std::make_unique<DataContainer<data_t>>(dict->apply(*lastResult));
+            std::for_each(lastResult->begin(), lastResult->end(), _activationFunctions.at(i).get());
             --i;
         }
 
-        Ax = _dictionaries.begin()->apply(lastResult);
+        Ax = _dictionaries.begin()->apply(*lastResult);
     }
 
     template <typename data_t>
@@ -104,6 +123,12 @@ namespace elsa
             return false;
 
         return true;
+    }
+
+    template <typename data_t>
+    index_t DeepDictionary<data_t>::getNumberOfDictionaries() const
+    {
+        return _dictionaries.size();
     }
 
     // ------------------------------------------

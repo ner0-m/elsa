@@ -10,6 +10,33 @@
 
 namespace elsa
 {
+    template <typename data_t = real_t>
+    class ActivationFunction
+    {
+    public:
+        std::function<data_t(data_t)> get() const { return _f; }
+        std::function<data_t(data_t)> getInverse() const { return _f_inverse; }
+
+    protected:
+        ActivationFunction(std::function<data_t(data_t)> f, std::function<data_t(data_t)> f_inverse)
+            : _f(f), _f_inverse(f_inverse)
+        {
+        }
+
+    private:
+        ActivationFunction();
+        std::function<data_t(data_t)> _f;
+        std::function<data_t(data_t)> _f_inverse;
+    };
+
+    template <typename data_t = real_t>
+    class Identity : public ActivationFunction<data_t>
+    {
+    public:
+        Identity() : ActivationFunction<data_t>([](auto x) { return x; }, [](auto x) { return x; })
+        {
+        }
+    };
     /**
      * @brief Operator representing a dictionary operation.
      *
@@ -31,7 +58,7 @@ namespace elsa
          * should be produced @param[in] nAtoms The number of atoms that should be in the dictionary
          */
         DeepDictionary(const DataDescriptor& signalDescriptor, const std::vector<index_t>& nAtoms,
-                       const std::vector<std::function<data_t(data_t)>>& activationFunctions);
+                       const std::vector<ActivationFunction<data_t>>& activationFunctions);
 
         /**
          * @brief Constructor for an initialized dictionary.
@@ -40,9 +67,8 @@ namespace elsa
          * @throw InvalidArgumentError if dictionary doesn't have a IdenticalBlocksDescriptor or at
          * least one of the atoms is the 0-vector
          */
-        explicit DeepDictionary(
-            const std::vector<Dictionary<data_t>>& dictionaries,
-            const std::vector<std::function<data_t(data_t)>>& activationFunctions);
+        explicit DeepDictionary(const std::vector<Dictionary<data_t>>& dictionaries,
+                                const std::vector<ActivationFunction<data_t>>& activationFunctions);
 
         /// default move constructor
         DeepDictionary(DeepDictionary<data_t>&& other) = default;
@@ -52,6 +78,12 @@ namespace elsa
 
         /// default destructor
         ~DeepDictionary() override = default;
+
+        Dictionary<data_t>& getDictionary(index_t level);
+
+        const ActivationFunction<data_t> getActivationFunction(index_t level);
+
+        index_t getNumberOfDictionaries() const;
 
     protected:
         /// Copy constructor for internal usage
@@ -75,7 +107,7 @@ namespace elsa
         std::vector<index_t> _nAtoms;
 
         /// the activation functions, applied element wise after each layer
-        std::vector<std::function<data_t(data_t)>> _activationFunctions;
+        std::vector<ActivationFunction<data_t>> _activationFunctions;
 
         /// the dictionary operators
         std::vector<Dictionary<data_t>> _dictionaries;
@@ -84,9 +116,10 @@ namespace elsa
         using LinearOperator<data_t>::_rangeDescriptor;
         using LinearOperator<data_t>::_domainDescriptor;
 
-        static std::vector<Dictionary<data_t>> generateInitialData(
-            const DataDescriptor& signalDescriptor, const std::vector<index_t>& nAtoms,
-            const std::vector<std::function<data_t(data_t)>>& activationFunctions);
+        static std::vector<Dictionary<data_t>>
+            generateInitialData(const DataDescriptor& signalDescriptor,
+                                const std::vector<index_t>& nAtoms,
+                                const std::vector<ActivationFunction<data_t>>& activationFunctions);
     };
 
 } // namespace elsa
