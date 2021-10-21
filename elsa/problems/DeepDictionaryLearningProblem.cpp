@@ -1,163 +1,158 @@
-#include "DictionaryLearningProblem.h"
+#include "DeepDictionaryLearningProblem.h"
 
 namespace elsa
 {
     template <typename data_t>
-    DictionaryLearningProblem<data_t>::DictionaryLearningProblem(
-        const DataContainer<data_t>& signals, const index_t nAtoms)
-        : _dictionary(getIdenticalBlocksDescriptor(signals).getDescriptorOfBlock(0), nAtoms),
-          _signals(signals),
-          _residual(signals.getDataDescriptor()),
-          _representations(
-              IdenticalBlocksDescriptor(getIdenticalBlocksDescriptor(signals).getNumberOfBlocks(),
-                                        VolumeDescriptor({nAtoms})))
+    DeepDictionaryLearningProblem<data_t>::DeepDictionaryLearningProblem(
+        const DataContainer<data_t>& signals, std::vector<index_t> nAtoms,
+        std::vector<ActivationFunction<data_t>> activationFunctions)
+        : _deepDict(signals.getDataDescriptor(), nAtoms, activationFunctions), _signals(signals)
     {
-        _representations = 1; // not the best initialization but OMP starts from scratch anyways
-        calculateError();
-    }
-
-    template <typename data_t>
-    const IdenticalBlocksDescriptor&
-        DictionaryLearningProblem<data_t>::getIdenticalBlocksDescriptor(
-            const DataContainer<data_t>& data)
-    {
-        try {
-            const auto& identBlocksDesc =
-                dynamic_cast<const IdenticalBlocksDescriptor&>(data.getDataDescriptor());
-            return identBlocksDesc;
-        } catch (std::bad_cast e) {
-            throw InvalidArgumentError("DictionaryLearningProblem: cannot initialize from signals "
-                                       "without IdenticalBlocksDescriptor");
+        for (index_t i = 0; i < _deepDict.getNumberOfDictionaries(); ++i) {
+            _representations.push_back(
+                DataContainer<data_t>(_deepDict.getDictionary(i).getDomainDescriptor()));
         }
     }
 
     template <typename data_t>
-    const Dictionary<data_t>& DictionaryLearningProblem<data_t>::getDictionary()
+    void DeepDictionaryLearningProblem<data_t>::updateDictionary(
+        const DataContainer<data_t>& wlsSolution, index_t level)
     {
-        return _dictionary;
+        auto dictMatrix = getTranspose(wlsSolution);
+        _deepDict.getDictionary(level).updateAtoms(dictMatrix);
     }
 
     template <typename data_t>
-    const DataContainer<data_t>& DictionaryLearningProblem<data_t>::getRepresentations()
+    void DeepDictionaryLearningProblem<data_t>::updateDictionary(
+        const Dictionary<data_t>& dictSolution, index_t level)
     {
-        return _representations;
+        _deepDict.getDictionary(level).updateAtoms(dictSolution.getAtoms());
     }
 
     template <typename data_t>
-    DataContainer<data_t> DictionaryLearningProblem<data_t>::getSignals()
+    void DeepDictionaryLearningProblem<data_t>::updateRepresentations(
+        const DataContainer<data_t>& wlsSolution, index_t level)
     {
-        return _signals;
+        _representations.at(level) = wlsSolution;
     }
 
     template <typename data_t>
-    DataContainer<data_t> DictionaryLearningProblem<data_t>::getGlobalError()
+    std::vector<WLSProblem<data_t>>
+        DeepDictionaryLearningProblem<data_t>::getDictionaryWLSProblems(index_t level)
     {
-        return _residual;
-    }
-
-    template <typename data_t>
-    DataContainer<data_t> DictionaryLearningProblem<data_t>::getRestrictedError(index_t atom)
-    {
-        findAffectedSignals(atom);
-        if (_currentAffectedSignals.size() < 1)
-            throw LogicError(
-                "DictionaryLearningProblem::getRestrictedError: atom doesn't affect any signals");
-        IdenticalBlocksDescriptor errorDescriptor(_currentAffectedSignals.size(),
-                                                  _signals.getBlock(0).getDataDescriptor());
-        _currentModifiedError = std::make_unique<DataContainer<data_t>>(errorDescriptor);
-
-        index_t i = 0;
-        for (index_t idx : _currentAffectedSignals) {
-            _currentModifiedError->getBlock(i) =
-                _residual.getBlock(idx)
-                + _dictionary.getAtom(atom) * _representations.getBlock(idx)[atom];
-            ++i;
+        if (level < 0 || level >= _deepDict.getNumberOfDictionaries()) {
+            throw InvalidArgumentError("foo");
         }
 
-        return *_currentModifiedError;
-    }
+        DataContainer<data_t> signals = (level == 0 ? _signals : _representations.at(level - 1));
+        if (level > 0)
+            std::for_each(signals.begin(), signals.end(),
+                          _deepDict.getActivationFunction(level).getInverse());
 
-    template <typename data_t>
-    void DictionaryLearningProblem<data_t>::calculateError()
-    {
-        index_t nSignals = getIdenticalBlocksDescriptor(_signals).getNumberOfBlocks();
-        for (index_t i = 0; i < nSignals; ++i) {
-            _residual.getBlock(i) =
-                _signals.getBlock(i) - _dictionary.apply(_representations.getBlock(i));
+        std::vector<WLSProblem<data_t>> problems;
+
+        auto representation = _representations.at(level);
+        const auto& representationDescriptor =
+            downcast_safe<IdenticalBlocksDescriptor>(representation.getDataDescriptor());
+
+        auto representation_T = getTranspose(representation.viewAs(VolumeDescriptor{
+            representationDescriptor.getDescriptorOfBlock(0).getNumberOfCoefficients(),
+            representationDescriptor.getNumberOfBlocks()}));
+
+        Matrix<data_t> matOp(representation_T);
+
+        const auto& signalDescriptor =
+            downcast_safe<IdenticalBlocksDescriptor>(signals.getDataDescriptor());
+
+        for (index_t i = 0; i < signalDescriptor.getNumberOfBlocks(); ++i) {
+            WLSProblem problem(matOp, signals.getBlock(i));
+            problems.push_back(problem);
         }
+
+        return problems;
     }
 
     template <typename data_t>
-    void DictionaryLearningProblem<data_t>::updateRepresentations(
-        const DataContainer<data_t>& representations)
+    std::vector<WLSProblem<data_t>>
+        DeepDictionaryLearningProblem<data_t>::getRepresentationWLSProblems(index_t level)
     {
-        if (_representations.getDataDescriptor() != representations.getDataDescriptor())
-            throw InvalidArgumentError("DictionaryLearningProblem::updateRepresentations: can't "
-                                       "update to representations with different descriptor");
+        std::vector<WLSProblem<data_t>> problems;
 
-        _representations = representations;
-        calculateError();
+        if (level < 0 || level >= _deepDict.getNumberOfDictionaries()) {
+            throw InvalidArgumentError("foo");
+        }
+
+        DataContainer<data_t> signals = (level == 0 ? _signals : _representations.at(level - 1));
+        if (level > 0)
+            std::for_each(signals.begin(), signals.end(),
+                          _deepDict.getActivationFunction(level).getInverse());
+
+        const auto& dict = _deepDict.getDictionary(level);
+
+        auto representation = _representations.at(level);
+        const auto& signalDescriptor =
+            downcast_safe<IdenticalBlocksDescriptor>(signals.getDataDescriptor());
+
+        for (index_t i = 0; i < signalDescriptor.getNumberOfBlocks(); ++i) {
+            WLSProblem problem(dict, signals.getBlock(i));
+            problems.push_back(problem);
+        }
+
+        return problems;
     }
 
     template <typename data_t>
-    void DictionaryLearningProblem<data_t>::updateAtom(index_t atomIdx,
-                                                       const DataContainer<data_t>& atom,
-                                                       const DataContainer<data_t>& representation)
+    DictionaryLearningProblem<data_t>
+        DeepDictionaryLearningProblem<data_t>::getDictionaryLearningProblem()
     {
-        // we should add some sanity checks on atom and representation here
+        auto lastIdx = _deepDict.getNumberOfDictionaries() - 1;
+        return DictionaryLearningProblem(_representations.at(lastIdx),
+                                         _deepDict.getDictionary(lastIdx).getNumberOfAtoms());
+    }
 
-        bool hasValidError = true;
-        if (atomIdx != _currentAtomIdx) {
-            // should not happen as ideally we update the atom
-            // for which we previously calculated the error
-            try {
-                getRestrictedError(atomIdx);
-                // no exception => previous atom affects signals, continue as usual
-            } catch (LogicError&) {
-                hasValidError = false;
-                // previous atom wasn't used, using usual update strategy with restricted error not
-                // possible => update to new atom and calculate global error
+    template <typename data_t>
+    const DeepDictionary<data_t>& DeepDictionaryLearningProblem<data_t>::getDeepDictionary()
+    {
+        return _deepDict;
+    }
+
+    template <typename data_t>
+    const DataDescriptor&
+        DeepDictionaryLearningProblem<data_t>::getRepresentationsDescriptor(index_t level)
+    {
+        return _representations.at(level).getDataDescriptor();
+    }
+
+    template <typename data_t>
+    VolumeDescriptor
+        DeepDictionaryLearningProblem<data_t>::getTransposedDictDescriptor(index_t level)
+    {
+        const auto& dictDescriptor = downcast_safe<IdenticalBlocksDescriptor>(
+            _deepDict.getDictionary(level).getAtoms().getDataDescriptor());
+        return VolumeDescriptor({dictDescriptor.getNumberOfBlocks(),
+                                 dictDescriptor.getDescriptorOfBlock(0).getNumberOfCoefficients()});
+    }
+
+    template <typename data_t>
+    DataContainer<data_t>
+        DeepDictionaryLearningProblem<data_t>::getTranspose(const DataContainer<data_t>& matrix)
+    {
+        // TODO sanity check
+        auto nCoeffsPerDim = matrix.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+        DataContainer<data_t> matrix_T(VolumeDescriptor({nCoeffsPerDim[1], nCoeffsPerDim[0]}));
+
+        for (index_t i = 0; i < nCoeffsPerDim[0]; ++i) {
+            for (index_t j = 0; j < nCoeffsPerDim[1]; ++j) {
+                matrix_T(j, i) = matrix(i, j);
             }
         }
-        _dictionary.updateAtom(atomIdx, atom);
 
-        if (!hasValidError)
-            findAffectedSignals(atomIdx);
-
-        index_t i = 0;
-        for (auto idx : _currentAffectedSignals) {
-            _representations.getBlock(idx)[atomIdx] = representation[i];
-
-            if (hasValidError) {
-                // update relevant part of the error matrix
-                _residual.getBlock(idx) =
-                    _currentModifiedError->getBlock(i) - atom * representation[i];
-            }
-            ++i;
-        }
-
-        if (!hasValidError)
-            calculateError();
-    }
-
-    template <typename data_t>
-    void DictionaryLearningProblem<data_t>::findAffectedSignals(index_t atom)
-    {
-        _currentAffectedSignals = IndexVector_t(0);
-        _currentAtomIdx = atom;
-        index_t nSignals = getIdenticalBlocksDescriptor(_signals).getNumberOfBlocks();
-
-        for (index_t i = 0; i < nSignals; ++i) {
-            if (_representations.getBlock(i)[atom] != 0) {
-                _currentAffectedSignals.conservativeResize(_currentAffectedSignals.size() + 1);
-                _currentAffectedSignals[_currentAffectedSignals.size() - 1] = i;
-            }
-        }
+        return matrix_T;
     }
 
     // ------------------------------------------
     // explicit template instantiation
-    template class DictionaryLearningProblem<float>;
-    template class DictionaryLearningProblem<double>;
+    template class DeepDictionaryLearningProblem<float>;
+    template class DeepDictionaryLearningProblem<double>;
 
 } // namespace elsa

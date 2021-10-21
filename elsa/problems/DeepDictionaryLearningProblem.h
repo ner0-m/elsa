@@ -1,6 +1,9 @@
 #pragma once
 
-#include "Dictionary.h"
+#include "DeepDictionary.h"
+#include "DictionaryLearningProblem.h"
+#include "Matrix.h"
+#include "WLSProblem.h"
 #include <memory>
 
 namespace elsa
@@ -27,37 +30,48 @@ namespace elsa
          * @param[in] nAtoms The number of atoms the learned dictionary will have
          */
         DeepDictionaryLearningProblem(const DataContainer<data_t>& signals,
-                                      std::vector<index_t> nAtoms);
+                                      std::vector<index_t> nAtoms,
+                                      std::vector<ActivationFunction<data_t>> activationFunctions);
 
-        const std::vector<Dictionary<data_t>>& getDictionaries();
+        std::vector<WLSProblem<data_t>> getDictionaryWLSProblems(index_t level);
 
-        const DataContainer<data_t>& getRepresentations();
+        std::vector<WLSProblem<data_t>> getRepresentationWLSProblems(index_t level);
 
-        DataContainer<data_t> getSignals();
+        DictionaryLearningProblem<data_t> getDictionaryLearningProblem();
 
-        DataContainer<data_t> getGlobalError();
+        void updateDictionary(const DataContainer<data_t>& wlsSolution, index_t level);
 
-        DataContainer<data_t> getRestrictedError(index_t atom);
+        void updateDictionary(const Dictionary<data_t>& dictSolution, index_t level);
 
-        void updateRepresentations(const DataContainer<data_t>& representations);
+        void updateRepresentations(const DataContainer<data_t>& wlsSolution, index_t level);
 
-        void updateAtom(index_t atomIdx, const DataContainer<data_t>& atom,
-                        const DataContainer<data_t>& representation);
+        const DeepDictionary<data_t>& getDeepDictionary();
 
+        const DataDescriptor& getRepresentationsDescriptor(index_t level);
+
+        VolumeDescriptor getTransposedDictDescriptor(index_t level);
+        /*
+                const DataContainer<data_t>& getRepresentations();
+
+                DataContainer<data_t> getSignals();
+
+                DataContainer<data_t> getGlobalError();
+
+                DataContainer<data_t> getRestrictedError(index_t atom);
+
+                void updateRepresentations(const DataContainer<data_t>& representations);
+
+                void updateAtom(index_t atomIdx, const DataContainer<data_t>& atom,
+                                const DataContainer<data_t>& representation);
+
+        */
     private:
-        std::vector<Dictionary<data_t>> _dictionaries;
-        std::vector<std::function<data_t(data_t)>> activationFunctions;
-        DataContainer<data_t> _representations;
+        DeepDictionary<data_t> _deepDict;
+
         const DataContainer<data_t> _signals;
-        DataContainer<data_t> _residual;
 
-        IndexVector_t _currentAffectedSignals;
-        index_t _currentAtomIdx;
-        std::unique_ptr<DataContainer<data_t>> _currentModifiedError;
+        std::vector<DataContainer<data_t>> _representations;
 
-        void calculateError();
-        void findAffectedSignals(index_t atom);
-        static const IdenticalBlocksDescriptor&
-            getIdenticalBlocksDescriptor(const DataContainer<data_t>& data);
+        static DataContainer<data_t> getTranspose(const DataContainer<data_t>& matrix);
     };
 } // namespace elsa

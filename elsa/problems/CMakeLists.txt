@@ -12,6 +12,7 @@ set(MODULE_HEADERS
     JacobiPreconditioner.h
     RepresentationProblem.h
     DictionaryLearningProblem.h
+    DeepDictionaryLearningProblem.h
 )
 
 # list all the code files of the module
@@ -28,6 +29,7 @@ set(MODULE_SOURCES
     JacobiPreconditioner.cpp
     RepresentationProblem.cpp
     DictionaryLearningProblem.cpp
+    DeepDictionaryLearningProblem.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators elsa_functionals)
