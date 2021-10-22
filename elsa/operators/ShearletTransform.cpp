@@ -185,20 +185,17 @@ namespace elsa
         _computeSpectraAtLowFreq(i);
 
         for (index_t j = 0; j < _numOfScales; j++) {
-            auto twoPowJ = std::pow(2, j);
-            for (auto k = static_cast<index_t>(-twoPowJ); k <= static_cast<index_t>(twoPowJ); k++) {
-                if (std::abs(k) <= static_cast<index_t>(twoPowJ) - 1) {
-                    _computeSpectraAtConicRegions(i, j, k);
-                } else {
-                    _computeSpectraAtSeamLines(i, j, k);
-                }
+            auto twoPowJ = static_cast<index_t>(std::pow(2, j));
+
+            _computeSpectraAtSeamLines(i, j, -twoPowJ);
+            for (auto k = -twoPowJ + 1; k < twoPowJ; k++) {
+                _computeSpectraAtConicRegions(i, j, k);
             }
+            _computeSpectraAtSeamLines(i, j, twoPowJ);
         }
 
-        if (i != _numOfLayers) {
-            throw InternalError(
-                std::string("ShearletTransform: The layers of the spectra were indexed wrong"));
-        }
+        assert(i == _numOfLayers
+               && "ShearletTransform: The layers of the spectra were indexed wrong");
     }
 
     template <typename ret_t, typename data_t>
@@ -215,7 +212,7 @@ namespace elsa
         for (auto w = negativeHalfWidth; w < halfWidth; w++) {
             for (auto h = negativeHalfHeight; h < halfHeight; h++) {
                 sectionZero(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                    phiHat<data_t>(static_cast<data_t>(w), static_cast<data_t>(h));
+                    phiHat<data_t>(data_t(w), data_t(h));
             }
         }
 
