@@ -1272,6 +1272,35 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             }
         }
     }
+
+    GIVEN("a 3D DataDescriptor and a 3D random Vector")
+    {
+        constexpr index_t size = 28;
+        constexpr index_t one = 1;
+        IndexVector_t numCoeff3D(3);
+        numCoeff3D << size, size, one;
+
+        const VolumeDescriptor desc(numCoeff3D);
+        const Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size * one);
+
+        WHEN("slicing a non-const DataContainer with the size of the last dimension of 1")
+        {
+            DataContainer<data_t> dc(desc, randVec);
+
+            DataContainer<data_t> res = dc.slice(0);
+
+            THEN("the DataContainers match") { REQUIRE_EQ(dc, res); }
+        }
+
+        WHEN("slicing a const DataContainer with the size of the last dimension of 1")
+        {
+            const DataContainer<data_t> dc(desc, randVec);
+
+            const DataContainer<data_t> res = dc.slice(0);
+
+            THEN("the DataContainers match") { REQUIRE_EQ(dc, res); }
+        }
+    }
 }
 
 // "instantiate" the test templates for CPU types
