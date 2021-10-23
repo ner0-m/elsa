@@ -12,7 +12,8 @@ namespace elsa
     DataContainer<data_t> GaussianNoiseGenerator::operator()(const DataContainer<data_t>& dc) const
     {
         // Define random generator with Gaussian distribution
-        std::default_random_engine generator;
+        std::random_device randDevice{};
+        std::default_random_engine generator{randDevice()};
         std::normal_distribution<data_t> dist(_mean, _stddev);
 
         auto newDc = dc;
@@ -27,7 +28,8 @@ namespace elsa
     DataContainer<data_t> PoissonNoiseGenerator::operator()(const DataContainer<data_t>& dc) const
     {
         // Define random generator with Gaussian distribution
-        std::default_random_engine generator;
+        std::random_device randDevice{};
+        std::default_random_engine generator{randDevice()};
         std::exponential_distribution<data_t> dist(_mean);
 
         auto newDc = dc;
