@@ -209,10 +209,11 @@ namespace elsa
         auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
         auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
 
+        // TODO attempt to refactor the negative indexing
         for (auto w = negativeHalfWidth; w < halfWidth; w++) {
             for (auto h = negativeHalfHeight; h < halfHeight; h++) {
                 sectionZero(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                    phiHat<data_t>(data_t(w), data_t(h));
+                    phiHat<data_t>(static_cast<data_t>(w), static_cast<data_t>(h));
             }
         }
 
@@ -233,6 +234,7 @@ namespace elsa
         auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
         auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
 
+        // TODO attempt to refactor the negative indexing
         for (auto w = negativeHalfWidth; w < halfWidth; w++) {
             for (auto h = negativeHalfHeight; h < halfHeight; h++) {
                 if (std::abs(h) <= std::abs(w)) {
@@ -261,6 +263,7 @@ namespace elsa
         auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
         auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
 
+        // TODO attempt to refactor the negative indexing
         for (auto w = negativeHalfWidth; w < halfWidth; w++) {
             for (auto h = negativeHalfHeight; h < halfHeight; h++) {
                 if (std::abs(h) <= std::abs(w)) {
