@@ -16,6 +16,12 @@ target_link_libraries(limited_angle_example2d elsa::all)
 target_compile_features(limited_angle_example2d PUBLIC cxx_std_17)
 add_dependencies(build-examples limited_angle_example2d)
 
+# build the 2d example program
+add_executable(sparse_sdlx_example2d sparse_sdlx_example2d.cpp sparse_sdlx_example2d.cpp)
+target_link_libraries(sparse_sdlx_example2d elsa::all)
+target_compile_features(sparse_sdlx_example2d PUBLIC cxx_std_17)
+add_dependencies(build-examples sparse_sdlx_example2d)
+
 # build the 2d example admm program
 add_executable(example2d_admm example2d_admm.cpp)
 target_link_libraries(example2d_admm elsa::all)
