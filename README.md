@@ -28,7 +28,7 @@ elsa requires a **C++17 compliant compiler**, such as GCC or Clang in recent ver
 Current testing includes Linux-based gcc 9, gcc 10, clang 9, and clang 10.
 The build process is controlled using CMake, version 3.14 or higher.
 
-The main third party dependencies (Eigen3, spdlog, Catch2) are integrated via [CPM](https://github.com/TheLartians/CPM.cmake).
+The main third party dependencies (Eigen3, spdlog, doctest) are integrated via [CPM](https://github.com/TheLartians/CPM.cmake).
 
 For CUDA support, you need a CUDA capable graphics card as well as an installation of the CUDA toolkit.
 Current testing includes CUDA 10.2 combined with gcc 8 or clang 8.
@@ -105,6 +105,7 @@ This open-source version is a modernized and cleaned up version of our internal 
 
 **Releases:** ([changelog](CHANGELOG.md))
 
+- v0.7: major feature release, e.g. deep learning support (October 27, 2021)
 - v0.6: major feature release, e.g. seamless GPU-computing, Python bindings (February 2, 2021)
 - v0.5: the "projector" release (September 18, 2019)
 - v0.4: first public release (July 19, 2019)
@@ -131,3 +132,13 @@ URL = {https://doi.org/10.1117/12.2534833}
 }
 ```
 
+If you are using the deep learning module of elsa, we would like to ask you to cite us as well:
+```txt
+@inproceedings{TellenbachElsa2020,
+author = {David Tellenbach and Tobias Lasser},
+title = {{elsa - an elegant framework for precision learning in tomographic reconstruction}},
+booktitle = {6th International Conference on Image Formation in X-ray Computed Tomography},
+venue = {Regensburg, Germany},
+month = {August},
+year = {2020},
+```
