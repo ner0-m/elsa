@@ -18,7 +18,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("tasks");
 
-TEST_CASE("ImageDenoisingTask: Overfitting a random image")
+TEST_CASE_TEMPLATE("ImageDenoisingTask: Overfitting a random image", data_t, float, double)
 {
     // eliminate the timing info from console for the tests
     // Logger::setLevel(Logger::LogLevel::OFF);
@@ -27,11 +27,11 @@ TEST_CASE("ImageDenoisingTask: Overfitting a random image")
     {
         VolumeDescriptor imageDescriptor({5, 4});
 
-        RealVector_t imageVec(imageDescriptor.getNumberOfCoefficients());
+        Vector_t<data_t> imageVec(imageDescriptor.getNumberOfCoefficients());
         imageVec.setRandom();
-        DataContainer image(imageDescriptor, imageVec);
+        DataContainer<data_t> image(imageDescriptor, imageVec);
 
-        WHEN("setting up a ImageDenoisingTask")
+        WHEN("setting up a ImageDenoisingTask with dictionary learning")
         {
             const index_t blocksize = 2;
             const index_t stride = 1;
@@ -39,7 +39,8 @@ TEST_CASE("ImageDenoisingTask: Overfitting a random image")
             const index_t sparsityLevel = 3;
             const index_t nIterations = 10;
 
-            ImageDenoisingTask denoiseTask(blocksize, stride, sparsityLevel, nAtoms, nIterations);
+            ImageDenoisingTask<data_t> denoiseTask(blocksize, stride, sparsityLevel, nAtoms,
+                                                   nIterations);
 
             THEN("the original image can be reconstructed by overfitting")
             {
@@ -60,41 +61,44 @@ TEST_CASE("ImageDenoisingTask: Overfitting a random image")
                 REQUIRE_UNARY(isApprox(image, reconstruction, 0.1));
             }
         }
-    }
 
-    GIVEN("Multiple random signals")
-    {
-        VolumeDescriptor dd({5});
-        const index_t nAtoms = 10;
-
-        RealVector_t signalVec1(dd.getNumberOfCoefficients());
-        RealVector_t signalVec2(dd.getNumberOfCoefficients());
-        RealVector_t signalVec3(dd.getNumberOfCoefficients());
-        signalVec1.setRandom();
-        signalVec2.setRandom();
-        signalVec3.setRandom();
-
-        IdenticalBlocksDescriptor signalsDescriptor(3, dd);
-        DataContainer signals(signalsDescriptor);
-        signals.getBlock(0) = DataContainer(dd, signalVec1);
-        signals.getBlock(1) = DataContainer(dd, signalVec2);
-        signals.getBlock(2) = DataContainer(dd, signalVec3);
-
-        WHEN("setting up a DictionaryLearningProblem from them")
+        WHEN("setting up a ImageDenoisingTask with deep dictionary learning")
         {
-            DictionaryLearningProblem dictProb(signals, nAtoms);
-            KSVD solver(dictProb, 3);
+            const index_t blocksize = 2;
+            const index_t stride = 1;
+            const std::vector<index_t> nAtoms{7, 6, 5};
+            std::vector<ActivationFunction<data_t>> activations;
+            activations.push_back(IdentityActivation<data_t>());
+            activations.push_back(IdentityActivation<data_t>());
+            const index_t sparsityLevel = 3;
+            const index_t nIterations = 10;
 
-            THEN("a suitable dictionary and representation are found")
+            // ImageDenoisingTask<data_t> denoiseTask(blocksize, stride, sparsityLevel, nIterations,
+            // nAtoms, activations);
+            ImageDenoisingTask<data_t> denoiseTask(blocksize, stride, sparsityLevel, nIterations,
+                                                   nAtoms);
+
+            THEN("the original image can be reconstructed by overfitting")
             {
-                auto solution = solver.solve(10);
-                auto& learnedDict = solver.getLearnedDictionary();
+                auto reconstruction = denoiseTask.train(image);
 
-                for (index_t i = 0; i < 3; ++i) {
-                    REQUIRE_UNARY(
-                        isApprox(signals.getBlock(i), learnedDict.apply(solution.getBlock(i))));
-                }
+                // with current setttings: intially 9 to <0.05
+                // only require an error <0.1, can't expect too much when using a random signal
+                REQUIRE_UNARY(isApprox(image, reconstruction, 0.1));
             }
+
+            /*
+                        AND_THEN("the original image can be reconstructed by training with
+               downsampling")
+                        {
+                            denoiseTask.train(image, 0.2);
+                            auto reconstruction = denoiseTask.denoise(image);
+
+                            // with current setttings: intially 9 to <0.05
+                            // only require an error <0.1, can't expect too much when using a random
+               signal REQUIRE_UNARY(isApprox(image, reconstruction, 0.1));
+                        }
+            */
         }
     }
 }
