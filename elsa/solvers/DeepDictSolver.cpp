@@ -34,6 +34,7 @@ namespace elsa
         for (index_t level = 0; level < nDicts - 1; ++level) {
             index_t i = 0;
             while (i < iterations /*&& _problem.getGlobalError().l2Norm() >= _epsilon */) {
+                Logger::get("DeepDictSolver")->info("Solving level {} in iteration {}", level, i);
                 DataContainer<data_t> representations(_problem.getRepresentationsDescriptor(level));
                 index_t j = 0;
                 for (auto p : _problem.getRepresentationWLSProblems(level)) {
@@ -51,11 +52,12 @@ namespace elsa
                     CG<data_t> cg(p);
                     auto representation = cg.solve(1);
                     for (const auto& x : representation) {
-                        transposedDictMatrix(j) = x;
+                        transposedDictMatrix[j] = x;
                         ++j;
                     }
                 }
                 _problem.updateDictionary(transposedDictMatrix, level);
+                ++i;
             }
         }
 
