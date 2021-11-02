@@ -33,6 +33,9 @@ namespace elsa
                                       std::vector<index_t> nAtoms,
                                       std::vector<ActivationFunction<data_t>> activationFunctions);
 
+        DeepDictionaryLearningProblem(const DataContainer<data_t>& signals,
+                                      std::vector<index_t> nAtoms);
+
         std::vector<WLSProblem<data_t>> getDictionaryWLSProblems(index_t level);
 
         std::vector<WLSProblem<data_t>> getRepresentationWLSProblems(index_t level);
@@ -73,5 +76,8 @@ namespace elsa
         std::vector<DataContainer<data_t>> _representations;
 
         static DataContainer<data_t> getTranspose(const DataContainer<data_t>& matrix);
+
+        static const IdenticalBlocksDescriptor&
+            getIdenticalBlocksDescriptor(const DataContainer<data_t>& data);
     };
 } // namespace elsa

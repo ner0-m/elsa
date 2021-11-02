@@ -6,11 +6,27 @@ namespace elsa
     DeepDictionaryLearningProblem<data_t>::DeepDictionaryLearningProblem(
         const DataContainer<data_t>& signals, std::vector<index_t> nAtoms,
         std::vector<ActivationFunction<data_t>> activationFunctions)
-        : _deepDict(signals.getDataDescriptor(), nAtoms, activationFunctions), _signals(signals)
+        : _deepDict(getIdenticalBlocksDescriptor(signals).getDescriptorOfBlock(0), nAtoms,
+                    activationFunctions),
+          _signals(signals)
     {
+        index_t nBlocks = getIdenticalBlocksDescriptor(signals).getNumberOfBlocks();
         for (index_t i = 0; i < _deepDict.getNumberOfDictionaries(); ++i) {
-            _representations.push_back(
-                DataContainer<data_t>(_deepDict.getDictionary(i).getDomainDescriptor()));
+            _representations.push_back(DataContainer<data_t>(IdenticalBlocksDescriptor(
+                nBlocks, _deepDict.getDictionary(i).getDomainDescriptor())));
+        }
+    }
+
+    template <typename data_t>
+    DeepDictionaryLearningProblem<data_t>::DeepDictionaryLearningProblem(
+        const DataContainer<data_t>& signals, std::vector<index_t> nAtoms)
+        : _deepDict(getIdenticalBlocksDescriptor(signals).getDescriptorOfBlock(0), nAtoms),
+          _signals(signals)
+    {
+        index_t nBlocks = getIdenticalBlocksDescriptor(signals).getNumberOfBlocks();
+        for (index_t i = 0; i < _deepDict.getNumberOfDictionaries(); ++i) {
+            _representations.push_back(DataContainer<data_t>(IdenticalBlocksDescriptor(
+                nBlocks, _deepDict.getDictionary(i).getDomainDescriptor())));
         }
     }
 
@@ -19,7 +35,8 @@ namespace elsa
         const DataContainer<data_t>& wlsSolution, index_t level)
     {
         auto dictMatrix = getTranspose(wlsSolution);
-        _deepDict.getDictionary(level).updateAtoms(dictMatrix);
+        const auto& dictDescriptor = _deepDict.getDictionary(level).getAtoms().getDataDescriptor();
+        _deepDict.getDictionary(level).updateAtoms(dictMatrix.viewAs(dictDescriptor));
     }
 
     template <typename data_t>
@@ -64,8 +81,18 @@ namespace elsa
         const auto& signalDescriptor =
             downcast_safe<IdenticalBlocksDescriptor>(signals.getDataDescriptor());
 
-        for (index_t i = 0; i < signalDescriptor.getNumberOfBlocks(); ++i) {
-            WLSProblem problem(matOp, signals.getBlock(i));
+        auto signals_T = getTranspose(signals.viewAs(
+            VolumeDescriptor{signalDescriptor.getDescriptorOfBlock(0).getNumberOfCoefficients(),
+                             signalDescriptor.getNumberOfBlocks()}));
+
+        for (index_t i = 0;
+             i < signals_T.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1]; ++i) {
+            DataContainer<data_t> signal_T(VolumeDescriptor(
+                {signals_T.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0]}));
+            for (index_t j = 0; j < signal_T.getDataDescriptor().getNumberOfCoefficients(); ++j) {
+                signal_T(j) = signals_T(j, i);
+            }
+            WLSProblem problem(matOp, signal_T);
             problems.push_back(problem);
         }
 
@@ -89,7 +116,6 @@ namespace elsa
 
         const auto& dict = _deepDict.getDictionary(level);
 
-        auto representation = _representations.at(level);
         const auto& signalDescriptor =
             downcast_safe<IdenticalBlocksDescriptor>(signals.getDataDescriptor());
 
@@ -106,7 +132,7 @@ namespace elsa
         DeepDictionaryLearningProblem<data_t>::getDictionaryLearningProblem()
     {
         auto lastIdx = _deepDict.getNumberOfDictionaries() - 1;
-        return DictionaryLearningProblem(_representations.at(lastIdx),
+        return DictionaryLearningProblem(_representations.at(lastIdx - 1),
                                          _deepDict.getDictionary(lastIdx).getNumberOfAtoms());
     }
 
@@ -148,6 +174,21 @@ namespace elsa
         }
 
         return matrix_T;
+    }
+
+    template <typename data_t>
+    const IdenticalBlocksDescriptor&
+        DeepDictionaryLearningProblem<data_t>::getIdenticalBlocksDescriptor(
+            const DataContainer<data_t>& data)
+    {
+        try {
+            const auto& identBlocksDesc =
+                dynamic_cast<const IdenticalBlocksDescriptor&>(data.getDataDescriptor());
+            return identBlocksDesc;
+        } catch (std::bad_cast e) {
+            throw InvalidArgumentError(
+                "Cannot initialize from signals without IdenticalBlocksDescriptor");
+        }
     }
 
     // ------------------------------------------
