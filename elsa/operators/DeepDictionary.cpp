@@ -18,21 +18,33 @@ namespace elsa
     }
 
     template <typename data_t>
+    DeepDictionary<data_t>::DeepDictionary(const DataDescriptor& signalDescriptor,
+                                           const std::vector<index_t>& nAtoms)
+
+        : DeepDictionary(signalDescriptor, nAtoms, generateIdentityActivations(nAtoms.size()))
+    {
+    }
+
+    template <typename data_t>
     DeepDictionary<data_t>::DeepDictionary(
-        const std::vector<Dictionary<data_t>>& dictionaries,
+        const std::vector<std::unique_ptr<Dictionary<data_t>>>& dictionaries,
         const std::vector<ActivationFunction<data_t>>& activationFunctions)
-        : LinearOperator<data_t>(dictionaries.back().getDomainDescriptor(),
-                                 dictionaries.begin()->getRangeDescriptor()),
+        : LinearOperator<data_t>((*dictionaries.back()).getDomainDescriptor(),
+                                 (*dictionaries.begin())->getRangeDescriptor()),
           _dictionaries{}, // TODO !! copy ctor
           _activationFunctions{activationFunctions}
     {
         if (_dictionaries.size() - 1 != _activationFunctions.size()) {
             throw InvalidArgumentError("foo");
         }
+        for (auto& dict : dictionaries) {
+            auto dictPtr = downcast_safe<Dictionary<data_t>>(dict->clone());
+            _dictionaries.push_back(std::move(dictPtr));
+        }
     }
 
     template <typename data_t>
-    std::vector<Dictionary<data_t>> DeepDictionary<data_t>::generateInitialData(
+    std::vector<std::unique_ptr<Dictionary<data_t>>> DeepDictionary<data_t>::generateInitialData(
         const DataDescriptor& signalDescriptor, const std::vector<index_t>& nAtoms,
         const std::vector<ActivationFunction<data_t>>& activationFunctions)
     {
@@ -40,17 +52,38 @@ namespace elsa
             throw InvalidArgumentError("foo");
         }
 
-        std::vector<Dictionary<data_t>> dicts;
+        std::vector<std::unique_ptr<Dictionary<data_t>>> dicts;
 
         auto nextSignalDescriptor = signalDescriptor.clone();
 
         for (index_t n : nAtoms) {
             Dictionary<data_t> dict(*nextSignalDescriptor, n);
             nextSignalDescriptor = dict.getDomainDescriptor().clone();
-            dicts.push_back(std::move(dict));
+            auto dictPtr = downcast_safe<Dictionary<data_t>>(dict.clone());
+            dicts.push_back(std::move(dictPtr));
         }
 
-        return std::move(dicts);
+        return dicts;
+    }
+
+    template <typename data_t>
+    std::vector<ActivationFunction<data_t>>
+        DeepDictionary<data_t>::generateIdentityActivations(const index_t nLevels)
+    {
+        std::vector<ActivationFunction<data_t>> activations;
+        for (index_t i = 0; i < nLevels - 1; ++i) {
+            activations.push_back(IdentityActivation<data_t>());
+        }
+        return activations;
+    }
+
+    template <typename data_t>
+    const Dictionary<data_t>& DeepDictionary<data_t>::getDictionary(index_t level) const
+    {
+        if (level < 0 || level >= _dictionaries.size()) {
+            throw InvalidArgumentError("Level index out of bounds");
+        }
+        return *_dictionaries.at(level);
     }
 
     template <typename data_t>
@@ -59,7 +92,7 @@ namespace elsa
         if (level < 0 || level >= _dictionaries.size()) {
             throw InvalidArgumentError("Level index out of bounds");
         }
-        return _dictionaries.at(level);
+        return *_dictionaries.at(level);
     }
 
     template <typename data_t>
@@ -85,12 +118,12 @@ namespace elsa
         index_t i = _activationFunctions.size() - 1;
 
         for (auto dict = _dictionaries.end() - 1; dict > _dictionaries.begin(); --dict) {
-            lastResult = std::make_unique<DataContainer<data_t>>(dict->apply(*lastResult));
+            lastResult = std::make_unique<DataContainer<data_t>>((*dict)->apply(*lastResult));
             std::for_each(lastResult->begin(), lastResult->end(), _activationFunctions.at(i).get());
             --i;
         }
 
-        Ax = _dictionaries.begin()->apply(*lastResult);
+        Ax = (*_dictionaries.begin())->apply(*lastResult);
     }
 
     template <typename data_t>
@@ -135,5 +168,10 @@ namespace elsa
     // explicit template instantiation
     template class DeepDictionary<float>;
     template class DeepDictionary<double>;
+    namespace activation
+    {
+        template class IdentityActivation<float>;
+        template class IdentityActivation<double>;
+    } // namespace activation
 
 } // namespace elsa

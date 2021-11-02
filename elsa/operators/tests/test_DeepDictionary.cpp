@@ -24,9 +24,9 @@ TEST_CASE_TEMPLATE("Constructing a DeepDictionary operator ", data_t, float, dou
     {
         VolumeDescriptor dd({5});
         std::vector<index_t> nAtoms{10, 12, 5};
-        std::vector<ActivationFunction<data_t>> activations;
-        activations.push_back(Identity<data_t>());
-        activations.push_back(Identity<data_t>());
+        std::vector<activation::ActivationFunction<data_t>> activations;
+        activations.push_back(activation::IdentityActivation<data_t>());
+        activations.push_back(activation::IdentityActivation<data_t>());
 
         WHEN("instantiating a DeepDictionary operator")
         {
@@ -224,9 +224,9 @@ TEST_CASE_TEMPLATE("Using the DeepDictionary ", data_t, float, double)
     {
         VolumeDescriptor dd({10});
         std::vector<index_t> nAtoms{4, 3, 4};
-        std::vector<ActivationFunction<data_t>> activations;
-        activations.push_back(Identity<data_t>());
-        activations.push_back(Identity<data_t>());
+        std::vector<activation::ActivationFunction<data_t>> activations;
+        activations.push_back(activation::IdentityActivation<data_t>());
+        activations.push_back(activation::IdentityActivation<data_t>());
 
         DeepDictionary deepDictOp(dd, nAtoms, activations);
 
