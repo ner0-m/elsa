@@ -221,7 +221,7 @@ public:
         if (!fullLocation.isValid())
             return true;
 
-        if (declaration->isClass() || declaration->isStruct()) {
+        if (declaration->isClass() || declaration->isStruct() || declaration->isEnum()) {
 
             m.includes.insert(getHeaderLocation(declaration));
             parseRecord(declaration);
@@ -259,6 +259,13 @@ public:
         auto id = fullyQualifiedId(context->getEnumType(declaration));
         if (encounteredEnums.find(id) != encounteredEnums.end())
             return;
+
+        // only record an enum when its in the current module,
+        // otherwise we get double-definitions when they are included
+        // between modules
+        if (fileLocation(declaration).find(m.path) != 0) {
+            return;
+        }
 
         auto e = std::make_unique<elsa::Module::Enum>();
 
