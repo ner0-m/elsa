@@ -28,7 +28,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
 
         WHEN("instantiating a ShearletTransform operator")
         {
-            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1]);
+            shearlets::ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1]);
 
             THEN("the DataDescriptors are equal")
             {
@@ -38,7 +38,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
 
         WHEN("cloning a ShearletTransform operator")
         {
-            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1]);
+            shearlets::ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1]);
             auto shearletTransformClone = shearletTransform.clone();
 
             THEN("cloned ShearletTransform operator equals original ShearletTransform operator")
@@ -68,8 +68,8 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
 
         WHEN("reconstructing the signal")
         {
-            ShearletTransform<std::complex<TestType>, TestType> shearletTransform(size[0], size[1],
-                                                                                  4);
+            shearlets::ShearletTransform<std::complex<TestType>, TestType> shearletTransform(
+                size[0], size[1], 4);
 
             DataContainer<std::complex<TestType>> shearletCoefficients =
                 shearletTransform.apply(complexSignal);
@@ -100,7 +100,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
         WHEN("not generating the spectra")
         {
-            ShearletTransform<TestType, TestType> shearletTransform(size);
+            shearlets::ShearletTransform<TestType, TestType> shearletTransform(size);
 
             THEN("an error is thrown when fetching it")
             {
@@ -110,7 +110,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
         WHEN("generating the spectra")
         {
-            ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1], 4);
+            shearlets::ShearletTransform<TestType, TestType> shearletTransform(size[0], size[1], 4);
 
             shearletTransform.computeSpectra();
 

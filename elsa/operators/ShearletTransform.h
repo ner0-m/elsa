@@ -1,8 +1,9 @@
 #pragma once
 
 #include "LinearOperator.h"
+#include "Math.hpp"
 
-namespace elsa
+namespace elsa::shearlets
 {
     /**
      * @brief Class representing a (regular) Cone-Adapted Discrete Shearlet Transform
@@ -13,9 +14,9 @@ namespace elsa
      *
      * ShearletTransform represents a band-limited (compact support in Fourier domain)
      * representation system. It oversamples a 2D signal of (W, H) to (W, H, L). Most of the
-     * computation is taken for the spectra, which is stored after the first run. It only handles
-     * signals with one channel, e.g. grayscale images. Increasing the number of scales will
-     * increase precision.
+     * computation is taken for the spectra, which is stored after the first run. It only
+     * handles signals with one channel, e.g. grayscale images. Increasing the number of scales
+     * will increase precision.
      *
      * References:
      * https://www.math.uh.edu/~dlabate/SHBookIntro.pdf
@@ -64,8 +65,8 @@ namespace elsa
         /// default destructor
         ~ShearletTransform() override = default;
 
-        /// method for computing the spectra, should only be called once as subsequent calls will
-        /// generate the same spectra
+        /// method for computing the spectra, should only be called once as subsequent calls
+        /// will generate the same spectra
         void computeSpectra() const;
 
         /// method indicating if the spectra has already been computed
@@ -84,7 +85,8 @@ namespace elsa
         auto getNumOfLayers() const -> index_t;
 
         // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
-        //  manner, but that might take quite some time, can this make it to master in the meantime?
+        //  manner, but that might take quite some time, can this make it to master in the
+        //  meantime?
         DataContainer<std::complex<data_t>>
             sumByLastAxis(DataContainer<std::complex<data_t>> container) const;
 
@@ -125,5 +127,71 @@ namespace elsa
         void _computeSpectraAtConicRegions(index_t& i, index_t j, index_t k) const;
 
         void _computeSpectraAtSeamLines(index_t& i, index_t j, index_t k) const;
+
+        /// defined in Sören Häuser and Gabriele Steidl, Fast Finite Shearlet Transform: a
+        /// tutorial, 2014
+        data_t b(data_t w) const
+        {
+            if (1 <= std::abs(w) && std::abs(w) <= 2) {
+                return std::sin(pi<data_t> / 2.0 * meyerFunction(std::abs(w) - 1));
+            } else if (2 < std::abs(w) && std::abs(w) <= 4) {
+                return std::cos(pi<data_t> / 2.0 * meyerFunction(1.0 / 2 * std::abs(w) - 1));
+            } else {
+                return 0;
+            }
+        }
+
+        /// defined in Sören Häuser and Gabriele Steidl, Fast Finite Shearlet Transform: a
+        /// tutorial, 2014
+        data_t phi(data_t w) const
+        {
+            if (std::abs(w) <= 1.0 / 2) {
+                return 1;
+            } else if (1.0 / 2 < std::abs(w) && std::abs(w) < 1) {
+                return std::cos(pi<data_t> / 2.0 * meyerFunction(2 * std::abs(w) - 1));
+            } else {
+                return 0;
+            }
+        }
+
+        /// defined in Sören Häuser and Gabriele Steidl, Fast Finite Shearlet Transform: a
+        /// tutorial, 2014
+        data_t phiHat(data_t w, data_t h) const
+        {
+            if (std::abs(h) <= std::abs(w)) {
+                return phi(w);
+            } else {
+                return phi(h);
+            }
+        }
+
+        /// defined in Sören Häuser and Gabriele Steidl, Fast Finite Shearlet Transform: a
+        /// tutorial, 2014
+        data_t psiHat1(data_t w) const
+        {
+            return std::sqrt(std::pow(b(2 * w), 2) + std::pow(b(w), 2));
+        }
+
+        /// defined in Sören Häuser and Gabriele Steidl, Fast Finite Shearlet Transform: a
+        /// tutorial, 2014
+        data_t psiHat2(data_t w) const
+        {
+            if (w <= 0) {
+                return std::sqrt(meyerFunction(1 + w));
+            } else {
+                return std::sqrt(meyerFunction(1 - w));
+            }
+        }
+
+        /// defined in Sören Häuser and Gabriele Steidl, Fast Finite Shearlet Transform: a
+        /// tutorial, 2014
+        data_t psiHat(data_t w, data_t h) const
+        {
+            if (w == 0) {
+                return 0;
+            } else {
+                return psiHat1(w) * psiHat2(h / w);
+            }
+        }
     };
-} // namespace elsa
+} // namespace elsa::shearlets

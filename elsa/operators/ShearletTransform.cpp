@@ -2,9 +2,8 @@
 #include "FourierTransform.h"
 #include "VolumeDescriptor.h"
 #include "Timer.h"
-#include "Math.hpp"
 
-namespace elsa
+namespace elsa::shearlets
 {
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>::ShearletTransform(IndexVector_t spatialDimensions)
@@ -144,7 +143,8 @@ namespace elsa
         }
 
         Logger::get("ShearletTransform")
-            ->info("Running the inverse shearlet transform on a 2D signal of shape ({}, {}), on {} "
+            ->info("Running the inverse shearlet transform on a 2D signal of shape ({}, {}), "
+                   "on {} "
                    "scales with an oversampling factor of {} and {} spectra",
                    _width, _height, _numOfScales, _numOfLayers,
                    isSpectraComputed() ? "precomputed" : "non-precomputed");
@@ -213,7 +213,7 @@ namespace elsa
         for (auto w = negativeHalfWidth; w < halfWidth; w++) {
             for (auto h = negativeHalfHeight; h < halfHeight; h++) {
                 sectionZero(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                    phiHat<data_t>(static_cast<data_t>(w), static_cast<data_t>(h));
+                    phiHat(static_cast<data_t>(w), static_cast<data_t>(h));
             }
         }
 
@@ -238,11 +238,11 @@ namespace elsa
         for (auto w = negativeHalfWidth; w < halfWidth; w++) {
             for (auto h = negativeHalfHeight; h < halfHeight; h++) {
                 if (std::abs(h) <= std::abs(w)) {
-                    sectionh(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = psiHat<data_t>(
-                        std::pow(4, -j) * w, std::pow(4, -j) * k * w + std::pow(2, -j) * h);
+                    sectionh(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        psiHat(std::pow(4, -j) * w, std::pow(4, -j) * k * w + std::pow(2, -j) * h);
                 } else {
-                    sectionv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = psiHat<data_t>(
-                        std::pow(4, -j) * h, std::pow(4, -j) * k * h + std::pow(2, -j) * w);
+                    sectionv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        psiHat(std::pow(4, -j) * h, std::pow(4, -j) * k * h + std::pow(2, -j) * w);
                 }
             }
         }
@@ -267,11 +267,11 @@ namespace elsa
         for (auto w = negativeHalfWidth; w < halfWidth; w++) {
             for (auto h = negativeHalfHeight; h < halfHeight; h++) {
                 if (std::abs(h) <= std::abs(w)) {
-                    sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = psiHat<data_t>(
-                        std::pow(4, -j) * w, std::pow(4, -j) * k * w + std::pow(2, -j) * h);
+                    sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        psiHat(std::pow(4, -j) * w, std::pow(4, -j) * k * w + std::pow(2, -j) * h);
                 } else {
-                    sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = psiHat<data_t>(
-                        std::pow(4, -j) * h, std::pow(4, -j) * k * h + std::pow(2, -j) * w);
+                    sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        psiHat(std::pow(4, -j) * h, std::pow(4, -j) * k * h + std::pow(2, -j) * w);
                 }
             }
         }
@@ -365,4 +365,4 @@ namespace elsa
     template class ShearletTransform<std::complex<float>, float>;
     template class ShearletTransform<double, double>;
     template class ShearletTransform<std::complex<double>, double>;
-} // namespace elsa
+} // namespace elsa::shearlets
