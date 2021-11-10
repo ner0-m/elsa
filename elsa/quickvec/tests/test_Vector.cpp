@@ -12,6 +12,154 @@ using doctest::Approx;
 
 static float margin = 0.000001f;
 
+TEST_CASE_TEMPLATE("Vector, real() and imag()", TestType, thrust::complex<float>,
+                   thrust::complex<double>)
+{
+    using data_t = TestType;
+    using inner_t = GetFloatingPointType_t<data_t>;
+
+    constexpr index_t size = 4;
+
+    GIVEN("A complex vector")
+    {
+        Eigen::Matrix<data_t, Eigen::Dynamic, 1> vec(size);
+
+        vec[0] = data_t(1.f, 1.f);
+        vec[1] = data_t(2.3f, 2.3f);
+        vec[2] = data_t(2.2f, 2.2f);
+        vec[3] = data_t(-3.4f, -3.4f);
+
+        Vector<data_t> x(vec);
+
+        WHEN("getting the real part of the complex vector")
+        {
+            Vector<inner_t> y(size);
+            y.eval(quickvec::real(x));
+
+            THEN("It's extracted correctly")
+            {
+                for (int i = 0; i < x.size(); ++i) {
+                    REQUIRE_EQ(y[i], x[i].real());
+                }
+            }
+        }
+
+        WHEN("getting the imaginary part of the complex vector")
+        {
+            Vector<inner_t> y(size);
+            y.eval(quickvec::imag(x));
+
+            THEN("It's extracted correctly")
+            {
+                for (int i = 0; i < x.size(); ++i) {
+                    REQUIRE_EQ(y[i], x[i].imag());
+                }
+            }
+        }
+    }
+
+    GIVEN("A real vector")
+    {
+        Eigen::Matrix<inner_t, Eigen::Dynamic, 1> vec(size);
+
+        vec[0] = inner_t(1.f);
+        vec[1] = inner_t(2.3f);
+        vec[2] = inner_t(2.2f);
+        vec[3] = inner_t(-3.4f);
+
+        Vector<inner_t> x(vec);
+
+        WHEN("getting the real part of the real vector")
+        {
+            Vector<inner_t> y(size);
+            y.eval(quickvec::real(x));
+
+            THEN("It's extracted correctly")
+            {
+                for (int i = 0; i < x.size(); ++i) {
+                    REQUIRE_EQ(y[i], std::real(x[i]));
+                }
+            }
+        }
+
+        WHEN("getting the imaginary part of the real vector")
+        {
+            Vector<inner_t> y(size);
+            y.eval(quickvec::imag(x));
+
+            THEN("It's extracted correctly")
+            {
+                for (int i = 0; i < x.size(); ++i) {
+                    REQUIRE_EQ(y[i], std::imag(x[i]));
+                    REQUIRE_EQ(y[i], 0.f);
+                }
+            }
+        }
+    }
+}
+
+TEST_CASE_TEMPLATE("Vector, dot product", TestType, float, double, thrust::complex<float>,
+                   thrust::complex<double>)
+{
+    using data_t = TestType;
+    using inner_t = GetFloatingPointType_t<data_t>;
+
+    GIVEN("Two vectors")
+    {
+
+        Eigen::Matrix<data_t, Eigen::Dynamic, 1> v1(4);
+        Eigen::Matrix<data_t, Eigen::Dynamic, 1> v2(4);
+
+        if constexpr (isComplex<data_t>) {
+            v1[0] = data_t{1, 2};
+            v1[1] = data_t{2.3f, 4};
+            v1[2] = data_t{2.2f, -3};
+            v1[3] = data_t{-3.4f, 3};
+
+            v2[0] = data_t{2, 1};
+            v2[1] = data_t{3.3f, 29};
+            v2[2] = data_t{3.2f, 2};
+            v2[3] = data_t{4.4f, 19};
+        } else {
+            v1[0] = data_t{1};
+            v1[1] = data_t{2.3f};
+            v1[2] = data_t{2.2f};
+            v1[3] = data_t{-3.4f};
+
+            v2[0] = data_t{2};
+            v2[1] = data_t{3.3f};
+            v2[2] = data_t{3.2f};
+            v2[3] = data_t{4.4f};
+        }
+
+        Vector<data_t> x(v1);
+        Vector<data_t> y(v2);
+
+        WHEN("Computing the dot product")
+        {
+            data_t mydot = x.dot(y);
+            if constexpr (isComplex<data_t>) {
+                auto otherdot = v1.template cast<std::complex<inner_t>>().dot(
+                    v2.template cast<std::complex<inner_t>>());
+
+                THEN("It's computed correctly")
+                {
+                    CHECK(Approx(mydot.real()) == std::real(otherdot));
+                    CHECK(Approx(mydot.imag()) == std::imag(otherdot));
+                }
+            } else {
+                auto otherdot = v1.dot(v2);
+
+                THEN("It's computed correctly")
+                {
+                    CHECK(Approx(std::real(mydot)) == std::real(otherdot));
+                    CHECK(Approx(std::imag(mydot)) == std::imag(otherdot));
+                }
+            }
+        }
+    }
+}
+
 TEST_CASE_TEMPLATE("Vector", TestType, index_t, float, double, thrust::complex<float>,
                    thrust::complex<double>)
 {
@@ -226,11 +374,29 @@ TEST_CASE_TEMPLATE("Vector", TestType, index_t, float, double, thrust::complex<f
                 REQUIRE(Approx(diffAbs) == 0.f);
             }
 
+            THEN("Max reduction works as expected")
+            {
+                if constexpr (isComplex<TestType>) {
+                    REQUIRE_THROWS(dc.maxElement());
+                } else {
+                    REQUIRE(Approx(dc.maxElement()) == vec.maxCoeff());
+                }
+            }
+            THEN("Min reduction works as expected")
+            {
+                if constexpr (isComplex<TestType>) {
+                    REQUIRE_THROWS(dc.minElement());
+                } else {
+                    REQUIRE(Approx(dc.minElement()) == vec.minCoeff());
+                }
+            }
+
             THEN("L2-norm works as expected")
             {
                 // using thrust directly in norm is unsafe with eigen
                 auto castVec = vec.template cast<std::complex<double>>();
                 REQUIRE(Approx(dc.squaredl2Norm()) == castVec.squaredNorm());
+                REQUIRE(Approx(dc.l2Norm()) == castVec.norm());
             }
 
             THEN("L-infinity-norm works as expected")

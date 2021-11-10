@@ -188,7 +188,7 @@ namespace quickvec
         GetFloatingPointType_t<data_t> squaredl2Norm() const;
 
         /// return the l2 norm (dot product with itself)
-        GetFloatingPointType_t<data_t> l2Norm() const;
+        decltype(std::sqrt(std::declval<GetFloatingPointType_t<data_t>>())) l2Norm() const;
 
         /// return the l1 norm (sum of absolute values)
         GetFloatingPointType_t<data_t> l1Norm() const;
@@ -201,6 +201,12 @@ namespace quickvec
 
         /// return the sum of all elements
         data_t sum() const;
+
+        /// return the maximum coefficient of the vector
+        data_t maxElement() const;
+
+        /// return the minimum coefficient of the vector
+        data_t minElement() const;
 
         /// return the dot product of the data vector with vector v
         data_t dot(const Vector<data_t>& v) const;
@@ -430,6 +436,49 @@ namespace quickvec
     {
         Logarithm log;
         auto expr = Expression<decltype(log), Operand>(log, operand);
+        return expr;
+    }
+
+    struct RealPart {
+        template <typename U>
+        __device__ auto operator()(U u) const
+        {
+            if constexpr (isComplex<U>) {
+                return u.real();
+            } else {
+                return u;
+            }
+        }
+    };
+
+    /// @return real part of a vector. Return type is a real valued vector.
+    template <typename Operand, typename = std::enable_if_t<isVectorOrExpression<Operand>>>
+    auto real(Operand const& operand)
+    {
+        RealPart real;
+        auto expr = Expression<decltype(real), Operand>(real, operand);
+        return expr;
+    }
+
+    struct ImaginaryPart {
+        template <typename U>
+        __device__ auto operator()(U u) const
+        {
+            if constexpr (isComplex<U>) {
+                return u.imag();
+            } else {
+                return static_cast<U>(0);
+            }
+        }
+    };
+
+    /// @return imaginary part of a vector. Return type is a real valued vector. If the input vector
+    /// or expression is real valued, the newly created expression will return a zero vector
+    template <typename Operand, typename = std::enable_if_t<isVectorOrExpression<Operand>>>
+    auto imag(Operand const& operand)
+    {
+        ImaginaryPart imag;
+        auto expr = Expression<decltype(imag), Operand>(imag, operand);
         return expr;
     }
 

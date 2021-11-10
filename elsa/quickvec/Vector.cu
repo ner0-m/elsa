@@ -59,7 +59,8 @@ namespace quickvec
     }
 
     template <typename data_t>
-    GetFloatingPointType_t<data_t> Vector<data_t>::l2Norm() const
+    decltype(std::sqrt(std::declval<GetFloatingPointType_t<data_t>>()))
+        Vector<data_t>::l2Norm() const
     {
         auto norm = squaredl2Norm();
         return std::sqrt(norm);
@@ -131,6 +132,28 @@ namespace quickvec
     data_t Vector<data_t>::sum() const
     {
         return thrust::reduce(_data.get(), _data.get() + _size);
+    }
+
+    template <typename data_t>
+    data_t Vector<data_t>::maxElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw std::logic_error(
+                "quickvec::Vector::maxElement: max of complex type not supported");
+        } else {
+            return *thrust::max_element(_data.get(), _data.get() + _size);
+        }
+    }
+
+    template <typename data_t>
+    data_t Vector<data_t>::minElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw std::logic_error(
+                "quickvec::Vector::minElement: min of complex type not supported");
+        } else {
+            return *thrust::min_element(_data.get(), _data.get() + _size);
+        }
     }
 
     template <typename data_t>
