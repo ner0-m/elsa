@@ -315,6 +315,44 @@ namespace quickvec
         return expr;
     }
 
+    struct CwiseAbs {
+        template <typename U>
+        __device__ auto operator()(U u) const
+        {
+            return abs(u);
+        }
+    };
+
+    /// abs operation returns the corresponding expression
+    template <typename Operand, typename = std::enable_if_t<isVectorOrExpression<Operand>>>
+    auto cwiseAbs(Operand const& operand)
+    {
+        return Expression<CwiseAbs, Operand>(CwiseAbs(), operand);
+    }
+
+    struct CwiseMax {
+        template <typename LHS, typename RHS>
+        __device__ auto operator()(LHS const& lhs, RHS const& rhs) const
+        {
+            if constexpr (isComplex<LHS> && isComplex<RHS>) {
+                return std::max(abs(lhs), abs(rhs));
+            } else if constexpr (isComplex<LHS> && !isComplex<RHS>) {
+                return std::max(abs(lhs), rhs);
+            } else if constexpr (!isComplex<LHS> && isComplex<RHS>) {
+                return std::max(lhs, abs(rhs));
+            } else {
+                return std::max(lhs, rhs);
+            }
+        }
+    };
+
+    /// coefficient wise maximum operation, returns corresponding expression
+    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
+    auto cwiseMax(LHS const& lhs, RHS const& rhs)
+    {
+        return Expression(CwiseMax(), lhs, rhs);
+    }
+
     struct Squaring {
         template <typename U>
         __device__ U operator()(U u) const

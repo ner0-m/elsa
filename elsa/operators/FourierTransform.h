@@ -16,7 +16,7 @@ namespace elsa
      * Implements the n-dimensional signal fourier transformation.
      * Can support multiple backends, by default uses Eigen::FFT with FFTW.
      */
-    template <typename data_t = std::complex<real_t>>
+    template <typename data_t = complex<real_t>>
     class FourierTransform : public LinearOperator<data_t>
     {
     private:

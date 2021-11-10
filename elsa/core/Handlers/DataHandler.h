@@ -13,23 +13,6 @@
 
 namespace elsa
 {
-#ifdef ELSA_CUDA_VECTOR
-    template <typename T>
-    struct GetQuickvecType {
-        using type = T;
-    };
-
-    /// partial specialization to derive correct floating point type
-    template <typename T>
-    struct GetQuickvecType<std::complex<T>> {
-        using type = typename thrust::complex<T>;
-    };
-
-    /// helper typedef to facilitate usage
-    template <typename T>
-    using GetQuickvecType_t = typename GetQuickvecType<T>::type;
-#endif
-
     class DataDescriptor;
 
     /**

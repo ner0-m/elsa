@@ -63,9 +63,9 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing 1d", data_t, float, double)
         WHEN("performing 1d fft transform")
         {
             using namespace std::complex_literals;
-            FourierTransform<std::complex<data_t>> fftOp{dd};
+            FourierTransform<complex<data_t>> fftOp{dd};
 
-            Vector_t<std::complex<data_t>> input{4};
+            Vector_t<complex<data_t>> input{4};
 
             // TODO: somehow magically do complex conversions with eigens , operator
             if constexpr (std::is_same_v<data_t, float>) {
@@ -73,13 +73,13 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing 1d", data_t, float, double)
             } else {
                 input << 0. + 0.i, 42. + 0.i, 42. + 0.i, 0. + 0.i;
             }
-            Vector_t<std::complex<data_t>> expected{4};
+            Vector_t<complex<data_t>> expected{4};
 
             // TODO: also check other datahandlers
 
             THEN("the forward transformed values are correct")
             {
-                DataContainer<std::complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
+                DataContainer<complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
                 auto output = fftOp.apply(inputdc);
 
                 if constexpr (std::is_same_v<data_t, float>) {
@@ -95,7 +95,7 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing 1d", data_t, float, double)
 
             THEN("the inverse transformed values are correct")
             {
-                DataContainer<std::complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
+                DataContainer<complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
                 auto output = fftOp.applyAdjoint(inputdc);
 
                 if constexpr (std::is_same_v<data_t, float>) {
@@ -111,7 +111,7 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing 1d", data_t, float, double)
 
             THEN("the forward-inverse transformed values are correct")
             {
-                DataContainer<std::complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
+                DataContainer<complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
 
                 auto output = fftOp.applyAdjoint(fftOp.apply(inputdc));
 
@@ -142,7 +142,7 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
             size << 4, 4;
             VolumeDescriptor dd{size};
 
-            FourierTransform<std::complex<data_t>> fftOp{dd};
+            FourierTransform<complex<data_t>> fftOp{dd};
 
             DataContainer<data_t> testdata{dd};
             testdata = 0.0;
@@ -153,7 +153,7 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
 
             auto output = fftOp.apply(input);
 
-            Vector_t<std::complex<data_t>> expected{4 * 4};
+            Vector_t<complex<data_t>> expected{4 * 4};
             // transposed because vector!
             expected << 84, 0, 84, 0, -84, 0, -84, 0, 84, 0, 84, 0, -84, 0, -84, 0;
 
@@ -172,7 +172,7 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
             size << 4, 4;
             VolumeDescriptor dd{size};
 
-            FourierTransform<std::complex<data_t>> fftOp{dd};
+            FourierTransform<complex<data_t>> fftOp{dd};
 
             DataContainer<data_t> testdata{dd};
             testdata = 0.0;
@@ -183,7 +183,7 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
 
             auto output = fftOp.apply(input);
 
-            Vector_t<std::complex<data_t>> expected{4 * 4};
+            Vector_t<complex<data_t>> expected{4 * 4};
             // transposed because vector!
             expected << 84, 0, 84, 0, -84, 0, -84, 0, 84, 0, 84, 0, -84, 0, -84, 0;
 
@@ -202,10 +202,10 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
             IndexVector_t size{4};
             size << 5, 10, 15, 20;
             VolumeDescriptor dd{size};
-            FourierTransform<std::complex<data_t>> fftOp{dd};
+            FourierTransform<complex<data_t>> fftOp{dd};
 
             auto [input, randVec] =
-                generateRandomContainer<std::complex<data_t>>(dd, DataHandlerType::CPU);
+                generateRandomContainer<complex<data_t>>(dd, DataHandlerType::CPU);
 
             auto mid = fftOp.apply(input);
             auto output = fftOp.applyAdjoint(mid);
@@ -227,19 +227,19 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
             VolumeDescriptor dd{size};
 
             auto [inputA, randVecA] =
-                generateRandomContainer<std::complex<data_t>>(dd, DataHandlerType::CPU);
+                generateRandomContainer<complex<data_t>>(dd, DataHandlerType::CPU);
             auto [inputB, randVecB] =
-                generateRandomContainer<std::complex<data_t>>(dd, DataHandlerType::CPU);
+                generateRandomContainer<complex<data_t>>(dd, DataHandlerType::CPU);
 
-            FourierTransform<std::complex<data_t>> fftOp{dd};
+            FourierTransform<complex<data_t>> fftOp{dd};
 
             auto fftA = fftOp.apply(inputA);
             auto fftB = fftOp.apply(inputB);
 
             THEN("fft(A + B) = fft(A) + fft(B)")
             {
-                DataContainer<std::complex<data_t>> fftA_plus_fftB = fftA + fftB;
-                DataContainer<std::complex<data_t>> A_plus_B = inputA + inputB;
+                DataContainer<complex<data_t>> fftA_plus_fftB = fftA + fftB;
+                DataContainer<complex<data_t>> A_plus_B = inputA + inputB;
 
                 auto fftAB = fftOp.apply(A_plus_B);
 
@@ -251,8 +251,8 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
 
             THEN("f(x * A) = x * f(A)")
             {
-                std::complex<data_t> x = 42;
-                DataContainer<std::complex<data_t>> fftA_scaled = (fftA * x);
+                complex<data_t> x = 42;
+                DataContainer<complex<data_t>> fftA_scaled = (fftA * x);
 
                 auto fftAx = fftOp.apply(inputA * x);
 

@@ -46,13 +46,13 @@ namespace elsa
         {
             m.def("adjoint", &adjointHelper<float>)
                 .def("adjoint", &adjointHelper<double>)
-                .def("adjoint", &adjointHelper<std::complex<float>>)
-                .def("adjoint", &adjointHelper<std::complex<double>>);
+                .def("adjoint", &adjointHelper<complex<float>>)
+                .def("adjoint", &adjointHelper<complex<double>>);
 
             m.def("leaf", &leafHelper<float>)
                 .def("leaf", &leafHelper<double>)
-                .def("leaf", &leafHelper<std::complex<float>>)
-                .def("leaf", &leafHelper<std::complex<double>>);
+                .def("leaf", &leafHelper<complex<float>>)
+                .def("leaf", &leafHelper<complex<double>>);
 
             m.def("bestCommon", (std::unique_ptr<DataDescriptor>(*)(
                                     const std::vector<const DataDescriptor*>&))(&bestCommon))
