@@ -222,8 +222,6 @@ public:
             return true;
 
         if (declaration->isClass() || declaration->isStruct() || declaration->isEnum()) {
-
-            m.includes.insert(getHeaderLocation(declaration));
             parseRecord(declaration);
         }
         return true;
@@ -284,6 +282,11 @@ public:
     {
         if (!shouldBeRegisteredInCurrentModule(declaration)) {
             return;
+        }
+
+        auto includeFile = getHeaderLocation(declaration);
+        if (includeFile.find(m.path) == 0) {
+            m.includes.insert(includeFile);
         }
 
         auto r = std::make_unique<elsa::Module::Record>();

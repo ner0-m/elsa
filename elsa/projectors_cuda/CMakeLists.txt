@@ -57,9 +57,14 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
     target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)
 
     if(ELSA_BUILD_PYTHON_BINDINGS)
+        set(BINDINGS_SOURCES 
+            SiddonsMethodCUDA.cpp
+            JosephsMethodCUDA.cpp
+        )
+
         GENERATE_BINDINGS(
             ${ELSA_MODULE_TARGET_NAME} bind_${ELSA_MODULE_NAME}.cpp
-            ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${MODULE_SOURCES}
+            ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
         )
     endif()
 else()
