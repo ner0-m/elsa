@@ -643,13 +643,19 @@ namespace elsa
             explicit operator data_t() const { return _threshold; }
 
             /// return -Threshold
-            auto operator-() -> const data_t { return (data_t) (-_threshold); }
+            auto operator-() -> const data_t { return static_cast<data_t>(-_threshold); }
 
             /// return computed subtraction
-            auto operator-(const data_t t) const -> data_t { return (data_t) (_threshold - t); }
+            auto operator-(const data_t t) const -> data_t
+            {
+                return static_cast<data_t>(_threshold - t);
+            }
 
             /// return computed addition
-            auto operator+(const data_t t) const -> data_t { return (data_t) (_threshold + t); }
+            auto operator+(const data_t t) const -> data_t
+            {
+                return static_cast<data_t>(_threshold + t);
+            }
 
             /// return computed less-than comparison
             auto operator<(const data_t t) const -> bool { return _threshold < t; }
@@ -677,14 +683,14 @@ namespace elsa
         template <typename data_t = real_t>
         auto operator-(const data_t a, const Threshold<data_t>& b) -> data_t
         {
-            return (data_t) (-(b - a));
+            return static_cast<data_t>(-(b - a));
         }
 
         /// return computed addition of data_t with Threshold<data_t>
         template <typename data_t = real_t>
         auto operator+(const data_t a, const Threshold<data_t>& b) -> data_t
         {
-            return (data_t) (b + a);
+            return static_cast<data_t>(b + a);
         }
 
         /// return computed greater-than comparison of data_t with Threshold<data_t>
