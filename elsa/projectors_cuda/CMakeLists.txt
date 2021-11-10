@@ -26,7 +26,6 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
         elsa_core
         elsa_logging
         elsa_projectors
-        elsa_projector_kernels
         ${CUDART_LIBRARY}
     )
     list(APPEND MODULE_PRIVATE_DEPS)
