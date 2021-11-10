@@ -49,7 +49,9 @@ ELSA_BENCHMARK(Projectors)
 ELSA_BENCHMARK(Intersection)
 ELSA_BENCHMARK(DataContainerConstruction)
 ELSA_BENCHMARK(ExpressionTemplates)
-ELSA_BENCHMARK(Quickvec)
+if (ELSA_BUILD_WITH_QUICKVEC)
+    ELSA_BENCHMARK(Quickvec)
+endif()
 
 # Add a single executable for all benchmarks, as CTest removes a lot of the output
 add_executable(bench_all EXCLUDE_FROM_ALL bench_main.cpp ${BENCHMARK_SOURCES})
