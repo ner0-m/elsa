@@ -1,6 +1,8 @@
 #pragma once
 
-#include <elsaDefines.h>
+#include "elsaDefines.h"
+#include "DataContainer.h"
+
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -73,7 +75,7 @@ namespace elsa
         }
 
         /// stream a pretty format to is using the current configuration.
-        void format(std::ostream& os, const elsa::DataContainer<data_t>& dc)
+        void format(std::ostream& os, const DataContainer<data_t>& dc)
         {
             using namespace std::string_literals;
 
@@ -224,7 +226,7 @@ namespace elsa
          */
         template <typename T>
         std::function<std::ostream&(std::ostream& os, const T& elem)>
-            get_element_formatter(const elsa::DataContainer<T>& dc)
+            get_element_formatter(const DataContainer<T>& dc)
         {
             if constexpr (elsa::isComplex<T>) {
                 // format both components independently
