@@ -16,7 +16,7 @@ variables:
   GCC_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc-pybinds:10"
   CLANG9_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:9"
   CLANG10_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:10"
-  CUDA_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda:10.2"
+  CUDA_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda:11.2"
   UBUNTU_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/ubuntu:20.04"
   GPU_ONLY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda-clang:10.0"
   SANITIZER_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc:10"
