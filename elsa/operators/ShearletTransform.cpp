@@ -126,7 +126,7 @@ namespace elsa
             if constexpr (isComplex<ret_t>) {
                 Ax.slice(i) = fourierTransform.applyAdjoint(temp);
             } else {
-                Ax.slice(i) = fourierTransform.applyAdjoint(temp).getReal();
+                Ax.slice(i) = real(fourierTransform.applyAdjoint(temp));
             }
         }
     }
@@ -168,7 +168,7 @@ namespace elsa
         if constexpr (isComplex<ret_t>) {
             Aty = sumByLastAxis(intermRes);
         } else {
-            Aty = sumByLastAxis(intermRes).getReal();
+            Aty = real(sumByLastAxis(intermRes));
         }
     }
 
