@@ -604,6 +604,58 @@ namespace elsa
         return concatenated;
     }
 
+    template <typename data_t>
+    DataContainer<data_t> fftShift2D(DataContainer<data_t> dc)
+    {
+        assert(dc.getDataDescriptor().getNumberOfDimensions() == 2
+               && "DataContainer::fftShift2D: currently only supporting 2D signals");
+
+        const DataDescriptor& dataDescriptor = dc.getDataDescriptor();
+        IndexVector_t numOfCoeffsPerDim = dataDescriptor.getNumberOfCoefficientsPerDimension();
+        index_t m = numOfCoeffsPerDim[0];
+        index_t n = numOfCoeffsPerDim[1];
+
+        index_t firstShift = m / 2;
+        index_t secondShift = n / 2;
+
+        DataContainer<data_t> copyDC(dataDescriptor);
+
+        for (index_t i = 0; i < m; ++i) {
+            for (index_t j = 0; j < n; ++j) {
+                copyDC((i + firstShift) % m, (j + secondShift) % n) = dc(i, j);
+            }
+        }
+
+        return copyDC;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> ifftShift2D(DataContainer<data_t> dc)
+    {
+        assert(dc.getDataDescriptor().getNumberOfDimensions() == 2
+               && "DataContainer::ifftShift2D: currently only supporting 2D signals");
+
+        const DataDescriptor& dataDescriptor = dc.getDataDescriptor();
+        IndexVector_t numOfCoeffsPerDim = dataDescriptor.getNumberOfCoefficientsPerDimension();
+        index_t m = numOfCoeffsPerDim[0];
+        index_t n = numOfCoeffsPerDim[1];
+
+        index_t firstShift = -m / 2;
+        index_t secondShift = -n / 2;
+
+        DataContainer<data_t> copyDC(dataDescriptor);
+
+        for (index_t i = 0; i < m; ++i) {
+            for (index_t j = 0; j < n; ++j) {
+                index_t leftIndex = (((i + firstShift) % m) + m) % m;
+                index_t rightIndex = (((j + secondShift) % n) + n) % n;
+                copyDC(leftIndex, rightIndex) = dc(i, j);
+            }
+        }
+
+        return copyDC;
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
@@ -622,5 +674,19 @@ namespace elsa
     template DataContainer<std::complex<double>>
         concatenate<std::complex<double>>(const DataContainer<std::complex<double>>&,
                                           const DataContainer<std::complex<double>>&);
+
+    template DataContainer<float> fftShift2D<float>(DataContainer<float>);
+    template DataContainer<std::complex<float>>
+        fftShift2D<std::complex<float>>(DataContainer<std::complex<float>>);
+    template DataContainer<double> fftShift2D<double>(DataContainer<double>);
+    template DataContainer<std::complex<double>>
+        fftShift2D<std::complex<double>>(DataContainer<std::complex<double>>);
+
+    template DataContainer<float> ifftShift2D<float>(DataContainer<float>);
+    template DataContainer<std::complex<float>>
+        ifftShift2D<std::complex<float>>(DataContainer<std::complex<float>>);
+    template DataContainer<double> ifftShift2D<double>(DataContainer<double>);
+    template DataContainer<std::complex<double>>
+        ifftShift2D<std::complex<double>>(DataContainer<std::complex<double>>);
 
 } // namespace elsa

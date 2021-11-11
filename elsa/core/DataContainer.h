@@ -516,6 +516,18 @@ namespace elsa
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
                                       const DataContainer<data_t>& dc2);
 
+    /// Perform the FFT shift operation to the provided signal. Refer to
+    /// https://numpy.org/doc/stable/reference/generated/numpy.fft.fftshift.html for further
+    /// details.
+    template <typename data_t>
+    DataContainer<data_t> fftShift2D(DataContainer<data_t> dc);
+
+    /// Perform the IFFT shift operation to the provided signal. Refer to
+    /// https://numpy.org/doc/stable/reference/generated/numpy.fft.ifftshift.html for further
+    /// details.
+    template <typename data_t>
+    DataContainer<data_t> ifftShift2D(DataContainer<data_t> dc);
+
     /// User-defined template argument deduction guide for the expression based constructor
     template <typename Source>
     DataContainer(Source const& source) -> DataContainer<typename Source::data_t>;
