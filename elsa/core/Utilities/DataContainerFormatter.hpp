@@ -228,8 +228,8 @@ namespace elsa
         {
             if constexpr (elsa::isComplex<T>) {
                 // format both components independently
-                auto real_formatter = get_element_formatter(dc.getReal());
-                auto imag_formatter = get_element_formatter(dc.getImaginary());
+                auto real_formatter = get_element_formatter(DataContainer<T>{real(dc)});
+                auto imag_formatter = get_element_formatter(DataContainer<T>{imag(dc)});
 
                 return [real_formatter, imag_formatter](std::ostream & os, const T& elem) -> auto&
                 {
@@ -246,8 +246,8 @@ namespace elsa
                 bool suppress_small = true;
                 bool use_exp = false;
 
-                T val_max = dc.max();
-                T val_min = dc.min();
+                T val_max = dc.maxElement();
+                T val_min = dc.minElement();
 
                 if (val_max > 1e7
                     or (not suppress_small and (val_min < 0.0001 or val_max / val_min > 1000.0))) {
@@ -290,8 +290,8 @@ namespace elsa
                 };
             } else {
                 // setw wants int, string::size returns size_t. great.
-                int maxlen = static_cast<int>(
-                    std::max(std::to_string(dc.max()).size(), std::to_string(dc.min()).size()));
+                int maxlen = static_cast<int>(std::max(std::to_string(dc.maxElement()).size(),
+                                                       std::to_string(dc.minElement()).size()));
                 return [maxlen](std::ostream & os, const T& elem) -> auto&
                 {
                     auto&& elem_str = std::to_string(elem);

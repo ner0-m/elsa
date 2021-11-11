@@ -9,14 +9,12 @@
 #include "Error.h"
 #include "Expression.h"
 #include "TypeCasts.hpp"
-#include <limits>
 
 #ifdef ELSA_CUDA_VECTOR
 #include "DataHandlerGPU.h"
 #include "DataHandlerMapGPU.h"
 #endif
 
-#include <iostream>
 #include <memory>
 #include <type_traits>
 
@@ -244,11 +242,17 @@ namespace elsa
         /// return the sum of all elements of this signal
         data_t sum() const;
 
+        /// return the min of all elements of this signal
+        data_t minElement() const;
+
+        /// return the max of all elements of this signal
+        data_t maxElement() const;
+
         /// convert to the fourier transformed signal
-        void fft() const;
+        void fft(FFTNorm norm) const;
 
         /// convert to the inverse fourier transformed signal
-        void ifft() const;
+        void ifft(FFTNorm norm) const;
 
         /// if the datacontainer is already complex, return itself.
         template <typename _data_t = data_t>
@@ -274,54 +278,6 @@ namespace elsa
             }
 
             return ret;
-        }
-
-        /// get only the real part and discard the imaginary values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<isComplex<_data_t>,
-                                  DataContainer<GetFloatingPointType_t<_data_t>>>
-            getReal() const
-        {
-            return this->getComplexSplitup<true>();
-        }
-
-        /// get only the imaginary part and discard the real values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<isComplex<_data_t>,
-                                  DataContainer<GetFloatingPointType_t<_data_t>>>
-            getImaginary() const
-        {
-            return this->getComplexSplitup<false>();
-        }
-
-        /// return the minimum element of all the stored values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<!isComplex<_data_t>, _data_t> min() const
-        {
-            // TODO: dispatch to DataHandler backend and use optimized variants
-            data_t min = std::numeric_limits<data_t>::max();
-            for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                auto&& elem = (*this)[idx];
-                if (elem < min) {
-                    min = elem;
-                }
-            }
-            return min;
-        }
-
-        /// return the maximum element of all the stored values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<!isComplex<_data_t>, _data_t> max() const
-        {
-            // TODO: dispatch to DataHandler backend and use optimized variants
-            data_t max = std::numeric_limits<data_t>::min();
-            for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                auto&& elem = (*this)[idx];
-                if (elem > max) {
-                    max = elem;
-                }
-            }
-            return max;
         }
 
         /// compute in-place element-wise addition of another container
@@ -544,32 +500,6 @@ namespace elsa
          * assignment should be performed or not.
          */
         bool canAssign(DataHandlerType handlerType);
-
-        /// helper function to get either the real or imaginary part
-        /// from the complex values
-        template <bool get_real, typename _data_t = data_t>
-        typename std::enable_if_t<isComplex<_data_t>,
-                                  DataContainer<GetFloatingPointType_t<_data_t>>>
-            getComplexSplitup() const
-        {
-            using f_type = GetFloatingPointType_t<_data_t>;
-            DataContainer<f_type> ret{
-                *this->_dataDescriptor,
-                this->_dataHandlerType,
-            };
-
-            // drop one of real/imaginary parts
-            for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                auto&& val = (*this)[idx];
-                if constexpr (get_real) {
-                    ret[idx] = val.real();
-                } else {
-                    ret[idx] = val.imag();
-                }
-            }
-
-            return ret;
-        }
     };
 
     /// pretty output formatting.
@@ -813,6 +743,32 @@ namespace elsa
         return Expression{Callables{log, logGPU}, operand};
 #else
         return Expression{log, operand};
+#endif
+    }
+
+    /// Element-wise real parts of the Operand
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto real(Operand const& operand)
+    {
+        auto real = [](auto const& operand) { return (operand.array().real()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto realGPU = [](auto const& operand, bool) { return quickvec::real(operand); };
+        return Expression{Callables{real, realGPU}, operand};
+#else
+        return Expression{real, operand};
+#endif
+    }
+
+    /// Element-wise imaginary parts of the Operand
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto imag(Operand const& operand)
+    {
+        auto imag = [](auto const& operand) { return (operand.array().imag()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto imagGPU = [](auto const& operand, bool) { return quickvec::imag(operand); };
+        return Expression{Callables{imag, imagGPU}, operand};
+#else
+        return Expression{imag, operand};
 #endif
     }
 } // namespace elsa

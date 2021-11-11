@@ -76,6 +76,7 @@ cache:
       - build/**/tests/test_*include-*.cmake
       - build/**/tests/test_*tests-*.cmake
       - build/Testing
+      - build/junit_report.xml
 
       # Add elsa install to artifact
       - install-elsa/include/elsa/**/*.h
@@ -104,7 +105,7 @@ cache:
   script: &buildjob_clang
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON  -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
     - ninja build-tests
     - ninja build-benchmarks
@@ -115,7 +116,7 @@ cache:
   script: &buildjob_normal
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa"
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa"
     - ninja
     - ninja build-tests
     - ninja build-benchmarks
@@ -128,14 +129,14 @@ cache:
   <<: *run_always
   script:
     - cd build
-    - ctest --output-on-failure --schedule-random
+    - ctest --schedule-random --output-junit junit_report.xml || ctest --rerun-failed --output-on-failure
   artifacts:
     name: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
     paths:
       - build/
     expire_in: 60 mins
     reports:
-      junit: "build/test_reports/test_*.xml"
+      junit: "build/junit_report.xml"
 
 #### Install job templates ####
 
@@ -276,7 +277,7 @@ build-gpu-only:
   script:
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CUDA_VECTOR=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CUDA_VECTOR=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
     - ninja build-tests
     - ninja build-benchmarks
@@ -532,7 +533,7 @@ deploy-docs:
   script:
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
     - ninja
     - ninja tests
 

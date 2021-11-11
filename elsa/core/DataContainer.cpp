@@ -172,15 +172,27 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::fft() const
+    data_t DataContainer<data_t>::minElement() const
     {
-        this->_dataHandler->fft(*this->_dataDescriptor);
+        return _dataHandler->minElement();
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::ifft() const
+    data_t DataContainer<data_t>::maxElement() const
     {
-        this->_dataHandler->ifft(*this->_dataDescriptor);
+        return _dataHandler->maxElement();
+    }
+
+    template <typename data_t>
+    void DataContainer<data_t>::fft(FFTNorm norm) const
+    {
+        this->_dataHandler->fft(*this->_dataDescriptor, norm);
+    }
+
+    template <typename data_t>
+    void DataContainer<data_t>::ifft(FFTNorm norm) const
+    {
+        this->_dataHandler->ifft(*this->_dataDescriptor, norm);
     }
 
     template <typename data_t>
@@ -387,6 +399,10 @@ namespace elsa
             throw LogicError("Trying to access out of bound slice");
         }
 
+        if (sizeOfLastDim == 1) {
+            return *this;
+        }
+
         auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
 
         // Now set the slice
@@ -402,6 +418,10 @@ namespace elsa
 
         if (i >= sizeOfLastDim) {
             throw LogicError("Trying to access out of bound slice");
+        }
+
+        if (sizeOfLastDim == 1) {
+            return *this;
         }
 
         auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);

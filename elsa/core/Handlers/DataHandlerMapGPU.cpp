@@ -130,13 +130,27 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerMapGPU<data_t>::fft(const DataDescriptor& source_desc)
+    data_t DataHandlerMapGPU<data_t>::minElement() const
+    {
+        return _map.minElement();
+    }
+
+    template <typename data_t>
+    data_t DataHandlerMapGPU<data_t>::maxElement() const
+    {
+        return _map.maxElement();
+    }
+
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerMapGPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                        FFTNorm norm)
     {
         throw std::runtime_error{"todo implement"};
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerMapGPU<data_t>::ifft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerMapGPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                         FFTNorm norm)
     {
         throw std::runtime_error{"todo implement"};
     }
