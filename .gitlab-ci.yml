@@ -264,7 +264,15 @@ build-clang10:
 build-cuda:
   <<: *build_job_artifact
   image: $CUDA_IMAGE
-  script: *buildjob_normal
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -GNinja -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa"
+    - ninja
+    - ninja build-tests
+    - ninja build-benchmarks
+    - ninja build-examples
+    - ninja install
   tags:
     - linux
     - elsa
