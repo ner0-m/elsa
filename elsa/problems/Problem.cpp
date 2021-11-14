@@ -1,5 +1,8 @@
 #include "Problem.h"
 #include "Scaling.h"
+#include "LASSOProblem.h"
+#include "WLSProblem.h"
+#include "Identity.h"
 
 namespace elsa
 {
@@ -226,6 +229,49 @@ namespace elsa
     data_t Problem<data_t>::getLipschitzConstant(index_t nIterations) const
     {
         return getLipschitzConstantImpl(nIterations);
+    }
+
+    template <typename data_t>
+    Problem<data_t>::operator LASSOProblem<data_t>() const
+    {
+        const auto wlsProb = [*this]() -> WLSProblem<data_t> {
+            // All residuals are LinearResidual, so it's safe
+            auto& linResid = downcast<LinearResidual<data_t>>(getDataTerm().getResidual());
+
+            std::unique_ptr<LinearOperator<data_t>> dataTermOp;
+
+            if (linResid.hasOperator()) {
+                dataTermOp = linResid.getOperator().clone();
+            } else {
+                dataTermOp = std::make_unique<Identity<data_t>>(linResid.getDomainDescriptor());
+            }
+
+            const DataContainer<data_t> dataVec = [&] {
+                if (linResid.hasDataVector()) {
+                    return DataContainer<data_t>(linResid.getDataVector());
+                } else {
+                    Eigen::Matrix<data_t, Eigen::Dynamic, 1> zeroes(
+                        linResid.getRangeDescriptor().getNumberOfCoefficients());
+                    zeroes.setZero();
+
+                    return DataContainer<data_t>(linResid.getRangeDescriptor(), zeroes);
+                }
+            }();
+
+            return WLSProblem<data_t>(*dataTermOp, dataVec);
+        }();
+
+        const auto& regTerm = [*this] {
+            const auto& regTerms = getRegularizationTerms();
+
+            if (regTerms.size() != 1) {
+                throw InvalidArgumentError("Problem: Can't convert to LASSOProblem, exactly one "
+                                           "regularization term required");
+            }
+            return getRegularizationTerms()[0];
+        }();
+
+        return LASSOProblem<data_t>(wlsProb, regTerm);
     }
 
     // ------------------------------------------

@@ -5,6 +5,7 @@
 #include "BlockLinearOperator.h"
 #include "Identity.h"
 #include "TypeCasts.hpp"
+#include "LASSOProblem.h"
 
 namespace elsa
 {
@@ -239,6 +240,20 @@ namespace elsa
         BlockLinearOperator<data_t> blockOp{opList, BlockLinearOperator<data_t>::BlockType::ROW};
 
         return std::make_unique<L2NormPow2<data_t>>(LinearResidual<data_t>{blockOp, dataVec});
+    }
+
+    template <typename data_t>
+    WLSProblem<data_t>::operator LASSOProblem<data_t>() const
+    {
+        const auto& regTerm = [*this]() {
+            if (getRegularizationTerms().size() != 1) {
+                throw InvalidArgumentError("WLSProblem: Conversion to LASSOProblem, exactly one "
+                                           "regularization term required");
+            }
+            return getRegularizationTerms()[0];
+        }();
+
+        return LASSOProblem<data_t>(*this, regTerm);
     }
 
     // ------------------------------------------

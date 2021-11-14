@@ -4,6 +4,7 @@
 #include "LinearResidual.h"
 #include "StrongTypes.h"
 #include "LASSOProblem.h"
+#include "Into.hpp"
 
 namespace elsa
 {
@@ -46,7 +47,7 @@ namespace elsa
          * Conversion to a LASSOProblem will be attempted. Throws if conversion fails. See
          * LASSOProblem for further details.
          */
-        ISTA(const Problem<data_t>& problem, geometry::Threshold<data_t> mu,
+        ISTA(Into<LASSOProblem<data_t>> problem, geometry::Threshold<data_t> mu,
              data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /**
@@ -62,7 +63,7 @@ namespace elsa
          * Conversion to a LASSOProblem will be attempted. Throws if conversion fails. See
          * LASSOProblem for further details.
          */
-        ISTA(const Problem<data_t>& problem,
+        ISTA(Into<LASSOProblem<data_t>> problem,
              data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit

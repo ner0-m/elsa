@@ -47,7 +47,7 @@ TEST_CASE("FISTA: Solving a LASSOProblem")
 
         WHEN("setting up a FISTA solver")
         {
-            FISTA solver(lassoProb, geometry::Threshold(0.005f));
+            FISTA<real_t> solver(lassoProb, geometry::Threshold(0.005f));
 
             THEN("cloned FISTA solver equals original FISTA solver")
             {
@@ -89,7 +89,7 @@ TEST_CASE("FISTA: Solving various problems")
 
             THEN("an exception is thrown as no regularization term is provided")
             {
-                REQUIRE_THROWS_AS(FISTA{wlsProb}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(FISTA<real_t>{wlsProb}, InvalidArgumentError);
             }
         }
 
@@ -102,7 +102,7 @@ TEST_CASE("FISTA: Solving various problems")
             THEN("the vector b is initialized with zeroes and the operator A becomes an "
                  "identity operator but an exception is thrown due to missing regularization term")
             {
-                REQUIRE_THROWS_AS(FISTA{quadricProbWithoutAb}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(FISTA<real_t>{quadricProbWithoutAb}, InvalidArgumentError);
             }
         }
     }

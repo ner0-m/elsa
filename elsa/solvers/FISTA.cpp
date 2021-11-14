@@ -1,28 +1,27 @@
 #include "FISTA.h"
 #include "SoftThresholding.h"
+#include "Into.hpp"
 
 #include <Logger.h>
 
 namespace elsa
 {
     template <typename data_t>
-    FISTA<data_t>::FISTA(const Problem<data_t>& problem, geometry::Threshold<data_t> mu,
+    FISTA<data_t>::FISTA(Into<LASSOProblem<data_t>> problem, geometry::Threshold<data_t> mu,
                          data_t epsilon)
-        : Solver<data_t>(LASSOProblem(problem)), _mu{mu}, _epsilon{epsilon}
+        : Solver<data_t>(problem.into()), _mu{mu}, _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
-    FISTA<data_t>::FISTA(const Problem<data_t>& problem, data_t epsilon)
-        : FISTA<data_t>(LASSOProblem(problem), epsilon)
+    FISTA<data_t>::FISTA(Into<LASSOProblem<data_t>> problem, data_t epsilon)
+        : FISTA<data_t>(problem.into(), epsilon)
     {
     }
 
     template <typename data_t>
     FISTA<data_t>::FISTA(const LASSOProblem<data_t>& problem, data_t epsilon)
-        : Solver<data_t>(LASSOProblem(problem)),
-          _mu{1 / problem.getLipschitzConstant()},
-          _epsilon{epsilon}
+        : Solver<data_t>(problem), _mu{1 / problem.getLipschitzConstant()}, _epsilon{epsilon}
     {
     }
 

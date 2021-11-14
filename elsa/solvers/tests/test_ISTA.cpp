@@ -47,7 +47,7 @@ TEST_CASE("ISTA: Solving a LASSOProblem")
 
         WHEN("setting up an ISTA solver")
         {
-            ISTA solver(lassoProb);
+            ISTA<real_t> solver(lassoProb);
 
             THEN("cloned ISTA solver equals original ISTA solver")
             {
@@ -89,7 +89,7 @@ TEST_CASE("ISTA: Solving various problems")
 
             THEN("an exception is thrown as no regularization term is provided")
             {
-                REQUIRE_THROWS_AS(ISTA{wlsProb}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(ISTA<real_t>{wlsProb}, InvalidArgumentError);
             }
         }
 
@@ -102,7 +102,7 @@ TEST_CASE("ISTA: Solving various problems")
             THEN("the vector b is initialized with zeroes and the operator A becomes an "
                  "identity operator but an exception is thrown due to missing regularization term")
             {
-                REQUIRE_THROWS_AS(ISTA{quadricProbWithoutAb}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(ISTA<real_t>{quadricProbWithoutAb}, InvalidArgumentError);
             }
         }
     }

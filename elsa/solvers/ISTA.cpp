@@ -1,21 +1,22 @@
 #include "ISTA.h"
 #include "SoftThresholding.h"
 #include "TypeCasts.hpp"
+#include "LASSOProblem.h"
 
 #include <Logger.h>
 
 namespace elsa
 {
     template <typename data_t>
-    ISTA<data_t>::ISTA(const Problem<data_t>& problem, geometry::Threshold<data_t> mu,
+    ISTA<data_t>::ISTA(Into<LASSOProblem<data_t>> problem, geometry::Threshold<data_t> mu,
                        data_t epsilon)
-        : Solver<data_t>(LASSOProblem(problem)), _mu{mu}, _epsilon{epsilon}
+        : Solver<data_t>(problem.into()), _mu{mu}, _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
-    ISTA<data_t>::ISTA(const Problem<data_t>& problem, data_t epsilon)
-        : ISTA<data_t>(LASSOProblem(problem), epsilon)
+    ISTA<data_t>::ISTA(Into<LASSOProblem<data_t>> problem, data_t epsilon)
+        : ISTA<data_t>(problem.into(), epsilon)
     {
     }
 
@@ -68,7 +69,8 @@ namespace elsa
     template <typename data_t>
     auto ISTA<data_t>::cloneImpl() const -> ISTA<data_t>*
     {
-        return new ISTA(*_problem, geometry::Threshold<data_t>{_mu}, _epsilon);
+        return new ISTA(static_cast<LASSOProblem<data_t>>(*_problem), geometry::Threshold{_mu},
+                        _epsilon);
     }
 
     template <typename data_t>
@@ -94,4 +96,6 @@ namespace elsa
     // explicit template instantiation
     template class ISTA<float>;
     template class ISTA<double>;
+    // template class ISTA<std::complex<float>>;
+    // template class ISTA<std::complex<double>>;
 } // namespace elsa

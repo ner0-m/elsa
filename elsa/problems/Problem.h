@@ -7,6 +7,9 @@
 
 namespace elsa
 {
+    template <typename data_t>
+    class LASSOProblem;
+
     /**
      * @brief Class representing a generic optimization problem consisting of data term and
      * regularization term(s).
@@ -179,6 +182,8 @@ namespace elsa
          * approximated as a diagonal matrix.
          */
         data_t getLipschitzConstant(index_t nIterations = 5) const;
+
+        operator LASSOProblem<data_t>() const;
 
     protected:
         /// the data term

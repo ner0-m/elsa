@@ -6,6 +6,9 @@
 
 namespace elsa
 {
+    template <typename data_t>
+    class LASSOProblem;
+
     /**
      * @brief Class representing a weighted least squares problem.
      *
@@ -92,6 +95,10 @@ namespace elsa
 
         /// default destructor
         ~WLSProblem() override = default;
+
+        using Problem<data_t>::getRegularizationTerms;
+
+        operator LASSOProblem<data_t>() const;
 
     protected:
         /// implement the polymorphic clone operation

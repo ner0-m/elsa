@@ -2,6 +2,7 @@
 
 #include "L1Norm.h"
 #include "WLSProblem.h"
+#include "Into.hpp"
 
 namespace elsa
 {
@@ -45,10 +46,12 @@ namespace elsa
          *
          * Acts as a copy constructor if the supplied optimization problem is a LASSO problem.
          */
-        explicit LASSOProblem(const Problem<data_t>& problem);
+        LASSOProblem(Into<LASSOProblem<data_t>> into);
 
         /// default destructor
         ~LASSOProblem() override = default;
+
+        using Problem<data_t>::getRegularizationTerms;
 
     protected:
         /// implement the polymorphic clone operation
@@ -59,12 +62,5 @@ namespace elsa
 
     private:
         WLSProblem<data_t> _wlsProblem;
-
-        /// converts an optimization problem to a WLSProblem
-        static auto wlsFromProblem(const Problem<data_t>& problem) -> WLSProblem<data_t>;
-
-        /// converts an optimization problem to a RegularizationTerm
-        static auto regTermFromProblem(const Problem<data_t>& problem)
-            -> RegularizationTerm<data_t>;
     };
 } // namespace elsa

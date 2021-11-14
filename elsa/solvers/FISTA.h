@@ -3,6 +3,7 @@
 #include "Solver.h"
 #include "LinearResidual.h"
 #include "StrongTypes.h"
+#include "Into.hpp"
 #include "LASSOProblem.h"
 
 namespace elsa
@@ -47,7 +48,7 @@ namespace elsa
          * Conversion to a LASSOProblem will be attempted. Throws if conversion fails. See
          * LASSOProblem for further details.
          */
-        FISTA(const Problem<data_t>& problem, geometry::Threshold<data_t> mu,
+        FISTA(Into<LASSOProblem<data_t>> problem, geometry::Threshold<data_t> mu,
               data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /**
@@ -63,7 +64,7 @@ namespace elsa
          * Conversion to a LASSOProblem will be attempted. Throws if conversion fails. See
          * LASSOProblem for further details.
          */
-        FISTA(const Problem<data_t>& problem,
+        FISTA(Into<LASSOProblem<data_t>> problem,
               data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
@@ -110,4 +111,5 @@ namespace elsa
         /// variable affecting the stopping condition
         data_t _epsilon;
     };
+
 } // namespace elsa

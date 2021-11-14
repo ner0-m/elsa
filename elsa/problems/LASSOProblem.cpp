@@ -1,6 +1,7 @@
 #include "LASSOProblem.h"
 #include "Error.h"
 #include "Identity.h"
+#include "Into.hpp"
 #include "TypeCasts.hpp"
 
 namespace elsa
@@ -23,8 +24,10 @@ namespace elsa
     }
 
     template <typename data_t>
-    LASSOProblem<data_t>::LASSOProblem(const Problem<data_t>& problem)
-        : LASSOProblem<data_t>{wlsFromProblem(problem), regTermFromProblem(problem)}
+    LASSOProblem<data_t>::LASSOProblem(Into<LASSOProblem<data_t>> into)
+        : LASSOProblem<data_t>(
+            into.into()._wlsProblem,
+            into.into().getRegularizationTerms()[0]) // Save, as else conversion would fail
     {
     }
 
@@ -41,50 +44,10 @@ namespace elsa
         return _wlsProblem.getLipschitzConstant(nIterations);
     }
 
-    template <typename data_t>
-    auto LASSOProblem<data_t>::wlsFromProblem(const Problem<data_t>& problem) -> WLSProblem<data_t>
-    {
-        // All residuals are LinearResidual, so it's safe
-        auto& linResid = downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual());
-
-        std::unique_ptr<LinearOperator<data_t>> dataTermOp;
-
-        if (linResid.hasOperator()) {
-            dataTermOp = linResid.getOperator().clone();
-        } else {
-            dataTermOp = std::make_unique<Identity<data_t>>(linResid.getDomainDescriptor());
-        }
-
-        const DataContainer<data_t> dataVec = [&] {
-            if (linResid.hasDataVector()) {
-                return DataContainer<data_t>(linResid.getDataVector());
-            } else {
-                Eigen::Matrix<data_t, Eigen::Dynamic, 1> zeroes(
-                    linResid.getRangeDescriptor().getNumberOfCoefficients());
-                zeroes.setZero();
-
-                return DataContainer<data_t>(linResid.getRangeDescriptor(), zeroes);
-            }
-        }();
-
-        return WLSProblem<data_t>(*dataTermOp, dataVec);
-    }
-
-    template <typename data_t>
-    auto LASSOProblem<data_t>::regTermFromProblem(const Problem<data_t>& problem)
-        -> RegularizationTerm<data_t>
-    {
-        const auto& regTerms = problem.getRegularizationTerms();
-
-        if (regTerms.size() != 1) {
-            throw InvalidArgumentError("LASSOProblem: exactly one regularization term is required");
-        }
-
-        return regTerms[0];
-    }
-
     // ------------------------------------------
     // explicit template instantiation
     template class LASSOProblem<float>;
     template class LASSOProblem<double>;
+    template class LASSOProblem<std::complex<float>>;
+    template class LASSOProblem<std::complex<double>>;
 } // namespace elsa
