@@ -28,7 +28,8 @@ namespace elsa
          * @param weight the regularization parameter
          * @param functional the actual term
          */
-        RegularizationTerm(data_t weight, const Functional<data_t>& functional);
+        RegularizationTerm(GetFloatingPointType_t<data_t> weight,
+                           const Functional<data_t>& functional);
 
         /// copy constructor
         RegularizationTerm(const RegularizationTerm<data_t>& other);
@@ -46,7 +47,7 @@ namespace elsa
         ~RegularizationTerm() = default;
 
         /// return the weight of the regularization term (the regularization parameter)
-        data_t getWeight() const;
+        GetFloatingPointType_t<data_t> getWeight() const;
 
         /// return the functional of the regularization term
         Functional<data_t>& getFunctional() const;
@@ -59,7 +60,7 @@ namespace elsa
 
     private:
         /// the weight / regularization parameter
-        data_t _weight;
+        GetFloatingPointType_t<data_t> _weight;
 
         /// the functional of the regularization term
         std::unique_ptr<Functional<data_t>> _functional;

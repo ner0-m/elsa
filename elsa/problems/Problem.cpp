@@ -140,7 +140,7 @@ namespace elsa
         auto hessian = _dataTerm->getHessian(_currentSolution);
 
         for (auto& regTerm : _regTerms) {
-            Scaling weight(_currentSolution.getDataDescriptor(), regTerm.getWeight());
+            Scaling<data_t> weight(_currentSolution.getDataDescriptor(), regTerm.getWeight());
             hessian = hessian + (weight * regTerm.getFunctional().getHessian(_currentSolution));
         }
 
@@ -231,11 +231,8 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class Problem<float>;
-
     template class Problem<double>;
-
     template class Problem<std::complex<float>>;
-
     template class Problem<std::complex<double>>;
 
 } // namespace elsa

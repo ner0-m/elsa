@@ -1,10 +1,11 @@
 #include "RegularizationTerm.h"
 #include "L1Norm.h"
+#include "elsaDefines.h"
 
 namespace elsa
 {
     template <typename data_t>
-    RegularizationTerm<data_t>::RegularizationTerm(data_t weight,
+    RegularizationTerm<data_t>::RegularizationTerm(GetFloatingPointType_t<data_t> weight,
                                                    const Functional<data_t>& functional)
         : _weight{weight}, _functional{functional.clone()}
     {
@@ -45,7 +46,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t RegularizationTerm<data_t>::getWeight() const
+    GetFloatingPointType_t<data_t> RegularizationTerm<data_t>::getWeight() const
     {
         return _weight;
     }
