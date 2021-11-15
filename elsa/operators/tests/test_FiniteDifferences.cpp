@@ -20,13 +20,9 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing construction", data_t, float, doub
 {
     GIVEN("a descriptor")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 143, 48;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({143, 48});
 
-        IndexVector_t rangeCoeffs(3);
-        rangeCoeffs << 143, 48, 2;
-        VolumeDescriptor ddRange(rangeCoeffs);
+        VolumeDescriptor ddRange({143, 48, 2});
 
         WHEN("instantiating a FiniteDifferences operator")
         {
@@ -57,9 +53,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 1D", data_t, float, double)
 {
     GIVEN("some data")
     {
-        IndexVector_t numCoeff(1);
-        numCoeff << 5;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({5});
         Vector_t<data_t> data(dd.getNumberOfCoefficients());
         data << 30, 3, 2, -1, 7;
 
@@ -137,9 +131,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 2D", data_t, float, double)
 {
     GIVEN("some data")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 4, 4;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({4, 4});
         Vector_t<data_t> data(dd.getNumberOfCoefficients());
         data << 16, 5, 9, 4, 2, 11, 7, 14, 3, 10, 6, 15, 13, 8, 12, 1;
         DataContainer<data_t> dc(dd, data);
@@ -199,9 +191,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing in 2D with not all dimensions acti
 {
     GIVEN("some data")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 4, 4;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({4, 4});
         Vector_t<data_t> data(dd.getNumberOfCoefficients());
         data << 16, 5, 9, 4, 2, 11, 7, 14, 3, 10, 6, 15, 13, 8, 12, 1;
         DataContainer<data_t> dc(dd, data);

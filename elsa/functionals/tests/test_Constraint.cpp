@@ -27,9 +27,7 @@ TEST_CASE_TEMPLATE("Constraint: Testing construction and clone", TestType, float
 {
     GIVEN("an Identity, a Scaling operator and a DataContainer")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 11, 24});
 
         Identity<TestType> A(dd);
         Scaling<TestType> B(dd, -1);

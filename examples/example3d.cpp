@@ -9,8 +9,7 @@ using namespace elsa;
 void example3d()
 {
     // generate 3d phantom
-    IndexVector_t size(3);
-    size << 128, 128, 128;
+    IndexVector_t size({{128, 128, 128}});
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 

@@ -21,15 +21,12 @@ TEST_CASE("Intersection: Intersect corners of pixels")
 {
     size_t dim = 2;
 
-    IndexVector_t voxel(dim);
-    voxel << 1, 0;
+    IndexVector_t voxel({{1, 0}});
     BoundingBox aabb(voxel);
 
     // top left corner
-    RealVector_t ro(dim);
-    ro << -3, -3;
-    RealVector_t rd(dim);
-    rd << 1.0, 1.0;
+    RealVector_t ro({{-3, -3}});
+    RealVector_t rd({{1.0, 1.0}});
     rd.normalize();
     Ray r(ro, rd);
 
@@ -65,10 +62,8 @@ TEST_CASE("Intersection: Intersect edges of voxels")
     GIVEN("A ray which intersects the edge of a voxel")
     {
         size_t dim = 2;
-        RealVector_t ro(dim);
-        ro << 132, 30;
-        RealVector_t rd(dim);
-        rd << -1.0, 0;
+        RealVector_t ro({{132, 30}});
+        RealVector_t rd({{-1.0, 0}});
         Ray r(ro, rd);
 
         IndexVector_t voxel(dim);

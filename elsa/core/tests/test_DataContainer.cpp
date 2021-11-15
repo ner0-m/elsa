@@ -77,9 +77,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
 
     GIVEN("a DataDescriptor")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 17, 47, 91;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({17, 47, 91});
 
         WHEN("constructing an empty DataContainer")
         {
@@ -113,9 +111,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
 
     GIVEN("another DataContainer")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 32, 57;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({32, 57});
 
         DataContainer<data_t> otherDc(desc, TestType::handler_t);
 
@@ -194,9 +190,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing the reduction operations", Tes
 
     GIVEN("a DataContainer")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 11, 73, 45;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({11, 73, 45});
 
         WHEN("putting in some random data")
         {
@@ -239,9 +233,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
 
     GIVEN("a DataContainer")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 47, 11;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({47, 11});
         DataContainer<data_t> dc(desc, TestType::handler_t);
 
         WHEN("accessing the elements")
@@ -280,9 +272,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
 
     GIVEN("a DataContainer")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 47, 11;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({47, 11});
 
         WHEN("putting in some random data")
         {
@@ -467,9 +457,7 @@ TEST_CASE_TEMPLATE_DEFINE(
 
     GIVEN("some DataContainers")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 52, 7, 29;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({52, 7, 29});
 
         auto [dc, randVec] = generateRandomContainer<data_t>(desc, TestType::handler_t);
         auto [dc2, randVec2] = generateRandomContainer<data_t>(desc, TestType::handler_t);
@@ -543,9 +531,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing creation of Maps through DataC
 
     GIVEN("a non-blocked container")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 52, 7, 29;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({52, 7, 29});
 
         DataContainer<data_t> dc(desc, TestType::handler_t);
         const DataContainer<data_t> constDc(desc, TestType::handler_t);
@@ -561,9 +547,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing creation of Maps through DataC
 
         WHEN("creating a view")
         {
-            IndexVector_t numCoeff(1);
-            numCoeff << desc.getNumberOfCoefficients();
-            VolumeDescriptor linearDesc(numCoeff);
+            VolumeDescriptor linearDesc({desc.getNumberOfCoefficients()});
             auto linearDc = dc.viewAs(linearDesc);
             auto linearConstDc = constDc.viewAs(linearDesc);
 
@@ -594,9 +578,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing creation of Maps through DataC
 
     GIVEN("a blocked container")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 52, 29;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({52, 29});
         index_t numBlocks = 7;
         IdenticalBlocksDescriptor blockDesc(numBlocks, desc);
 
@@ -660,9 +642,7 @@ TEST_CASE_TEMPLATE("DataContainer: Testing load data to GPU and vice versa", Tes
 {
     GIVEN("A CPU DataContainer with random data")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 52, 7, 29;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({52, 7, 29});
 
         DataContainer<TestType> dcCPU(desc, DataHandlerType::CPU);
         DataContainer<TestType> dcGPU(desc, DataHandlerType::GPU);
@@ -760,9 +740,7 @@ TEST_CASE("DataContainer: Testing iterators for DataContainer")
     GIVEN("A 1D container")
     {
         constexpr index_t size = 20;
-        IndexVector_t numCoeff(1);
-        numCoeff << size;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({size});
 
         DataContainer dc1(desc);
         DataContainer dc2(desc);
@@ -818,9 +796,7 @@ TEST_CASE("DataContainer: Testing iterators for DataContainer")
     GIVEN("A 2D container")
     {
         constexpr index_t size = 20;
-        IndexVector_t numCoeff(2);
-        numCoeff << size, size;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({size, size});
 
         DataContainer dc1(desc);
 
@@ -873,9 +849,7 @@ TEST_CASE("DataContainer: Testing iterators for DataContainer")
     GIVEN("A 3D container")
     {
         constexpr index_t size = 20;
-        IndexVector_t numCoeff(3);
-        numCoeff << size, size, size;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({size, size, size});
 
         DataContainer dc1(desc);
 
@@ -933,9 +907,7 @@ TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, floa
     GIVEN("Two equally sized 1D data containers")
     {
         constexpr index_t size = 20;
-        IndexVector_t numCoeff(1);
-        numCoeff << size;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({size});
 
         Vector_t<data_t> randVec1 = Vector_t<data_t>::Random(size);
         Vector_t<data_t> randVec2 = Vector_t<data_t>::Random(size);
@@ -965,15 +937,11 @@ TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, floa
 
     GIVEN("Two differently sized 1D data containers")
     {
-        IndexVector_t numCoeff(1);
-
         constexpr index_t size1 = 20;
-        numCoeff[0] = size1;
-        VolumeDescriptor desc1(numCoeff);
+        VolumeDescriptor desc1({size1});
 
         constexpr index_t size2 = 10;
-        numCoeff[0] = size2;
-        VolumeDescriptor desc2(numCoeff);
+        VolumeDescriptor desc2({size2});
 
         Vector_t<data_t> randVec1 = Vector_t<data_t>::Random(size1);
         Vector_t<data_t> randVec2 = Vector_t<data_t>::Random(size2);
@@ -1005,9 +973,7 @@ TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, floa
     GIVEN("Two equally sized 2D data containers")
     {
         constexpr index_t size = 20;
-        IndexVector_t numCoeff(2);
-        numCoeff << size, size;
-        VolumeDescriptor desc(numCoeff);
+        VolumeDescriptor desc({size, size});
 
         Vector_t<data_t> randVec1 = Vector_t<data_t>::Random(size * size);
         Vector_t<data_t> randVec2 = Vector_t<data_t>::Random(size * size);
@@ -1037,13 +1003,8 @@ TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, floa
 
     GIVEN("DataContainers of different dimension")
     {
-        IndexVector_t numCoeff1D(1);
-        numCoeff1D << 20;
-        VolumeDescriptor desc1D(numCoeff1D);
-
-        IndexVector_t numCoeff2D(2);
-        numCoeff2D << 20, 20;
-        VolumeDescriptor desc2D(numCoeff2D);
+        VolumeDescriptor desc1D({20});
+        VolumeDescriptor desc2D({20, 20});
 
         DataContainer dc1(desc1D);
         DataContainer dc2(desc2D);
@@ -1061,10 +1022,8 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
     GIVEN("A non 3D DataContainer")
     {
         constexpr index_t size = 20;
-        IndexVector_t numCoeff2D(2);
-        numCoeff2D << size, size;
 
-        const VolumeDescriptor desc(numCoeff2D);
+        const VolumeDescriptor desc({size, size});
         const Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size);
         const DataContainer<data_t> dc(desc, randVec);
 
@@ -1145,10 +1104,8 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
     GIVEN("A non-const 3D DataContainer")
     {
         constexpr index_t size = 20;
-        IndexVector_t numCoeff(3);
-        numCoeff << size, size, size;
 
-        const VolumeDescriptor desc(numCoeff);
+        const VolumeDescriptor desc({size, size, size});
         DataContainer<data_t> dc(desc);
         dc = 0;
 
@@ -1277,10 +1234,8 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
     {
         constexpr index_t size = 28;
         constexpr index_t one = 1;
-        IndexVector_t numCoeff3D(3);
-        numCoeff3D << size, size, one;
 
-        const VolumeDescriptor desc(numCoeff3D);
+        const VolumeDescriptor desc({size, size, one});
         const Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size * one);
 
         WHEN("slicing a non-const DataContainer with the size of the last dimension of 1")

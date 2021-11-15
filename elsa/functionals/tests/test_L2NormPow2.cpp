@@ -32,9 +32,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, flo
 
     GIVEN("just data (no residual)")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 11, 13;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({11, 13});
 
         WHEN("instantiating")
         {
@@ -76,9 +74,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, flo
 
     GIVEN("a residual with data")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 47, 11;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({47, 11});
 
         Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();

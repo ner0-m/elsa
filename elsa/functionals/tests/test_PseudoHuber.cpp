@@ -30,9 +30,7 @@ TEST_CASE_TEMPLATE("PseudoHuber: Testing without residual", TestType, float, dou
 
     GIVEN("just data (no residual)")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 34;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 34});
 
         real_t delta = 2;
 
@@ -96,9 +94,7 @@ TEST_CASE_TEMPLATE("PseudoHuber: Testing with residual", TestType, float, double
     GIVEN("a residual with data")
     {
         // linear residual
-        IndexVector_t numCoeff(3);
-        numCoeff << 3, 7, 11;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({3, 7, 11});
 
         Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();

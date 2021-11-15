@@ -30,8 +30,7 @@ TEST_CASE("PGMHandler: Write PGM file")
 {
     GIVEN("A 2D DataContainer")
     {
-        IndexVector_t numCoeff{{10, 10}};
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({10, 10});
         DataContainer dc(dd);
 
         for (int i = 0; i < dc.getSize(); ++i) {
@@ -86,8 +85,7 @@ TEST_CASE("PGMHandler: Write PGM file")
 
     GIVEN("A 1D DataContainer")
     {
-        IndexVector_t numCoeff1d{{10}};
-        VolumeDescriptor dd1d(numCoeff1d);
+        VolumeDescriptor dd1d({10});
         DataContainer dc1d(dd1d);
         THEN("An exception is raised")
         {
@@ -97,8 +95,7 @@ TEST_CASE("PGMHandler: Write PGM file")
 
     GIVEN("A 3D DataContainer")
     {
-        IndexVector_t numCoeff3d{{10, 8, 17}};
-        VolumeDescriptor dd(numCoeff3d);
+        VolumeDescriptor dd({10, 8, 17});
         DataContainer dc(dd);
         THEN("An exception is raised")
         {

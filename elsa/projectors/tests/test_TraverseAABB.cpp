@@ -44,8 +44,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
     size_t dim = 2;
     index_t x = 3;
     index_t y = 3;
-    IndexVector_t volumeDims(dim);
-    volumeDims << x, y;
+    IndexVector_t volumeDims({{x, y}});
 
     RealVector_t spacing(dim);
 
@@ -501,8 +500,7 @@ TEST_CASE("TraverseAABB: Construction of a 3D traversal object")
 {
     // setup
     size_t dim = 3;
-    IndexVector_t volumeDims(dim);
-    volumeDims << 3, 3, 3;
+    IndexVector_t volumeDims({{3, 3, 3}});
 
     RealVector_t spacing(dim);
 
@@ -541,8 +539,7 @@ TEST_CASE("TraverseAABB: Traverse a minimal 3D volume of size 1x1x1")
     index_t x = 1;
     index_t y = 1;
     index_t z = 1;
-    IndexVector_t volumeDims(dim);
-    volumeDims << x, y, z;
+    IndexVector_t volumeDims({{x, y, z}});
 
     RealVector_t spacing(dim);
     RealVector_t ro(dim);
@@ -582,8 +579,7 @@ TEST_CASE("TraverseAABB: Traverse a 2D volume and only check that the endpoint i
     size_t dim = 2;
     index_t x = 10;
     index_t y = 10;
-    IndexVector_t volumeDims(dim);
-    volumeDims << x, y;
+    IndexVector_t volumeDims({{x, y}});
 
     RealVector_t spacing(dim);
     RealVector_t ro(dim);
@@ -623,8 +619,7 @@ TEST_CASE("TraverseAABB: Traverse a 3D Volume diagonally")
     // TODO: make non uniform scaling and run through all 4 diagonals
 
     size_t dim = 3;
-    IndexVector_t volumeDims(dim);
-    volumeDims << 10, 10, 10;
+    IndexVector_t volumeDims({{10, 10, 10}});
 
     RealVector_t spacing(dim);
     RealVector_t ro(dim);
@@ -670,8 +665,7 @@ TEST_CASE("TraverseAABB: Check that the first step into the 2D Volume is correct
     size_t dim = 2;
     index_t x = 5;
     index_t y = 5;
-    IndexVector_t volumeDims(dim);
-    volumeDims << x, y;
+    IndexVector_t volumeDims({{x, y}});
 
     RealVector_t ro(dim);
     RealVector_t rd(dim);
@@ -742,8 +736,7 @@ TEST_CASE("TraverseAABB: Traverse_Volume_2D_EachPointIsTested")
     size_t dim = 2;
     index_t x = 128;
     index_t y = 128;
-    IndexVector_t volumeDims(dim);
-    volumeDims << x, y;
+    IndexVector_t volumeDims({{x, y}});
     BoundingBox aabb(volumeDims);
 
     RealVector_t ro(dim);
@@ -776,8 +769,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
     size_t dim = 2;
     index_t x = 128;
     index_t y = 128;
-    IndexVector_t volumeDims(dim);
-    volumeDims << x, y;
+    IndexVector_t volumeDims({{x, y}});
     BoundingBox aabb(volumeDims);
 
     RealVector_t ro(dim);

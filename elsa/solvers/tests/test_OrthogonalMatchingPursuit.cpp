@@ -33,14 +33,12 @@ TEST_CASE("OrthogonalMatchingPursuit: Solving a RepresentationProblem")
         const index_t nAtoms = 3;
         IdenticalBlocksDescriptor ibd(nAtoms, dd);
 
-        RealVector_t dictVec(ibd.getNumberOfCoefficients());
-        dictVec << 0, 1, 1, 0, 1, -1;
+        RealVector_t dictVec({{0, 1, 1, 0, 1, -1}});
         DataContainer dcDict(ibd, dictVec);
 
         Dictionary dictOp(dcDict);
 
-        RealVector_t signalVec(dd.getNumberOfCoefficients());
-        signalVec << 5, 3;
+        RealVector_t signalVec({{5, 3}});
         DataContainer dcSignal(dd, signalVec);
 
         RepresentationProblem reprProb(dictOp, dcSignal);
@@ -62,8 +60,7 @@ TEST_CASE("OrthogonalMatchingPursuit: Solving a RepresentationProblem")
             {
                 auto solution = solver.solve(2);
 
-                RealVector_t expected(nAtoms);
-                expected << 3, 5, 0;
+                RealVector_t expected({{3, 5, 0}});
 
                 REQUIRE_UNARY(isApprox(solution, expected));
             }

@@ -22,9 +22,7 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing construction", data_t, float, doub
 {
     GIVEN("a DataDescriptor")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 45, 11, 7;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({45, 11, 7});
 
         WHEN("instantiating a SoftThresholding operator")
         {
@@ -54,9 +52,7 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing in 1D", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
-        IndexVector_t numCoeff(1);
-        numCoeff << 8;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({8});
 
         WHEN("Using SoftThresholding operator in 1D")
         {
@@ -83,9 +79,7 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing in 3D", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 3, 2, 3;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({3, 2, 3});
 
         WHEN("Using SoftThresholding operator in 3D")
         {
@@ -112,9 +106,7 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing general behaviour", data_t, float,
 {
     GIVEN("a DataDescriptor")
     {
-        IndexVector_t numCoeff(1);
-        numCoeff << 8;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({8});
 
         WHEN("Using SoftThresholding operator")
         {
@@ -162,9 +154,7 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing general behaviour", data_t, float,
                 data << 0, 0, 0, 0, 0, 0, 0, 0;
                 DataContainer<data_t> dC(volDescr, data);
 
-                IndexVector_t numCoeff1(1);
-                numCoeff1 << 9;
-                VolumeDescriptor volDescr1(numCoeff1);
+                VolumeDescriptor volDescr1({9});
                 Vector_t<data_t> data1(volDescr1.getNumberOfCoefficients());
                 data1 << 0, 0, 0, 0, 0, 0, 0, 0, 0;
                 DataContainer<data_t> dC1(volDescr1, data1);

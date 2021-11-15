@@ -34,9 +34,7 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residua
 
     GIVEN("just data (no residual)")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 3, 7, 13;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({3, 7, 13});
 
         Vector y(dd.getNumberOfCoefficients());
         y.setRandom();
@@ -156,9 +154,7 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with residual", TestType,
 
     GIVEN("a residual with data")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 17;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 17});
 
         Vector resData(dd.getNumberOfCoefficients());
         resData.setRandom();

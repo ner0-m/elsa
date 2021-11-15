@@ -28,9 +28,7 @@ TEST_CASE("SphereTrajectoryGenerator: Create a Spherical Trajectory")
     GIVEN("A 2D descriptor and 256 poses")
     {
         index_t numberOfPoses = 256;
-        IndexVector_t volSize(2);
-        volSize << s, s;
-        VolumeDescriptor desc{volSize};
+        VolumeDescriptor desc({s, s});
 
         WHEN("Trying to create a 2D spherical trajectory")
         {
@@ -46,9 +44,7 @@ TEST_CASE("SphereTrajectoryGenerator: Create a Spherical Trajectory")
     GIVEN("A 3D descriptor and 256 poses")
     {
         index_t numberOfPoses = 256;
-        IndexVector_t volSize(3);
-        volSize << s, s, s;
-        VolumeDescriptor desc{volSize};
+        VolumeDescriptor desc{{s, s, s}};
 
         WHEN("We create a spherical trajectory with 3 circular trajectories and 256 poses for this "
              "scenario")

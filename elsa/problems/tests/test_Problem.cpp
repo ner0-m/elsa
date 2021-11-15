@@ -32,9 +32,7 @@ TEST_CASE("Problem: Testing without regularization")
 
     GIVEN("some data term")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 17, 23;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({17, 23});
 
         RealVector_t scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
@@ -128,9 +126,7 @@ TEST_CASE("Problem: Testing with one regularization term")
     GIVEN("some data term and some regularization term")
     {
         // least squares data term
-        IndexVector_t numCoeff(2);
-        numCoeff << 23, 47;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({23, 47});
 
         RealVector_t scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
@@ -226,9 +222,7 @@ TEST_CASE("Problem: Testing with one regularization term")
              "domain descriptor")
         {
             // three-dimensional data descriptor
-            IndexVector_t otherNumCoeff(3);
-            otherNumCoeff << 15, 38, 22;
-            VolumeDescriptor otherDD(otherNumCoeff);
+            VolumeDescriptor otherDD({15, 38, 22});
 
             // l2 norm regularization term
             L2NormPow2 otherRegFunc(otherDD);
@@ -251,9 +245,7 @@ TEST_CASE("Problem: Testing with several regularization terms")
     GIVEN("some data term and several regularization terms")
     {
         // least squares data term
-        IndexVector_t numCoeff(3);
-        numCoeff << 17, 33, 52;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({17, 33, 52});
 
         RealVector_t scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
@@ -359,14 +351,10 @@ TEST_CASE("Problem: Testing with several regularization terms")
              "domain descriptor")
         {
             // three-dimensional data descriptor
-            IndexVector_t otherNumCoeff(3);
-            otherNumCoeff << 15, 38, 22;
-            VolumeDescriptor otherDD(otherNumCoeff);
+            VolumeDescriptor otherDD({15, 38, 22});
 
             // four-dimensional data descriptor
-            IndexVector_t anotherNumCoeff(4);
-            anotherNumCoeff << 7, 9, 21, 17;
-            VolumeDescriptor anotherDD(anotherNumCoeff);
+            VolumeDescriptor anotherDD({7, 9, 21, 17});
 
             // l2 norm regularization term
             L2NormPow2 otherRegFunc(otherDD);

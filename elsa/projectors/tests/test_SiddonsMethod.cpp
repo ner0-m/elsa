@@ -19,11 +19,9 @@ TEST_CASE("SiddonMethod: Testing projector with only one ray")
     // Turn logger of
     Logger::setLevel(Logger::LogLevel::OFF);
 
-    IndexVector_t sizeDomain(2);
-    sizeDomain << 5, 5;
+    IndexVector_t sizeDomain({{5, 5}});
 
-    IndexVector_t sizeRange(2);
-    sizeRange << 1, 1;
+    IndexVector_t sizeRange({{1, 1}});
 
     auto domain = VolumeDescriptor(sizeDomain);
     auto range = VolumeDescriptor(sizeRange);

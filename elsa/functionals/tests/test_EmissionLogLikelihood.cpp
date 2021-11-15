@@ -31,9 +31,7 @@ TEST_CASE_TEMPLATE("EmissionLogLikelihood: Testing with only data no residual", 
 
     GIVEN("just data (no residual)")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 9, 15, 19;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({9, 15, 19});
 
         Vector y(dd.getNumberOfCoefficients());
         y.setRandom();
@@ -146,9 +144,7 @@ TEST_CASE_TEMPLATE("EmissionLogLikelihood: Testing with residual", TestType, flo
 
     GIVEN("a residual with data")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 3, 15, 21;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({3, 15, 21});
 
         Vector resData(dd.getNumberOfCoefficients());
         resData.setRandom();

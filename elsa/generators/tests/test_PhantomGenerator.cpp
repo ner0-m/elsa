@@ -104,8 +104,7 @@ TEST_CASE("PhantomGenerator: Drawing a 3d Shepp-Logan phantom")
 {
     GIVEN("a volume size")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 64, 64, 64;
+        IndexVector_t numCoeff({{64, 64, 64}});
 
         WHEN("creating a 3d Shepp-Logan")
         {

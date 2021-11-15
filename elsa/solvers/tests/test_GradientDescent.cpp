@@ -42,9 +42,7 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", TestType,
 
     GIVEN("a linear problem")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 24});
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
@@ -117,9 +115,7 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a Tikhonov problem", TestType, Grad
 
     GIVEN("a Tikhonov problem")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 24});
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();

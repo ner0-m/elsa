@@ -21,8 +21,7 @@ TEST_CASE("BoundingBox: Testing 2D AABB")
         std::size_t dim = 2;
         index_t x = 10;
         index_t y = 15;
-        IndexVector_t volumeDims(dim);
-        volumeDims << x, y;
+        IndexVector_t volumeDims({{x, y}});
 
         WHEN("instantiating the AABB")
         {
@@ -74,8 +73,7 @@ TEST_CASE("BoundingBox: Testing 3D aabb")
         index_t x = 10;
         index_t y = 15;
         index_t z = 20;
-        IndexVector_t volumeDims(dim);
-        volumeDims << x, y, z;
+        IndexVector_t volumeDims({{x, y, z}});
 
         WHEN("instantiating the AABB")
         {

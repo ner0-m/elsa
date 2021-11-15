@@ -45,9 +45,7 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
 
     GIVEN("a linear problem")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
-        VolumeDescriptor dd{numCoeff};
+        VolumeDescriptor dd{{13, 24}};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
@@ -127,9 +125,7 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
 
     GIVEN("a Tikhonov problem")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 24});
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
@@ -214,8 +210,7 @@ TEST_CASE("OGM: Solving a simple phantom reconstruction")
 
     GIVEN("a Phantom reconstruction problem")
     {
-        IndexVector_t size(2);
-        size << 16, 16; // TODO: determine optimal phantom size for efficient testing
+        IndexVector_t size({{16, 16}});
         auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 

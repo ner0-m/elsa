@@ -21,9 +21,8 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing construction", TestType, float,
     using OperatoList = std::vector<std::unique_ptr<LinearOperator<TestType>>>;
 
     index_t rows = 6, cols = 8;
-    IndexVector_t size2D(2);
-    size2D << rows, cols;
-    VolumeDescriptor dd{size2D};
+    IndexVector_t size2D({{rows, cols}});
+    VolumeDescriptor dd(size2D);
 
     auto sizeBlock = size2D;
     sizeBlock[1] *= 2;
@@ -291,9 +290,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
     index_t rows = 4, cols = 8, numBlks = 3;
     GIVEN("a 2D volume")
     {
-        IndexVector_t domainIndex(2);
-        domainIndex << rows, cols;
-        VolumeDescriptor domainDesc(domainIndex);
+        VolumeDescriptor domainDesc({rows, cols});
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec(domainDesc.getNumberOfCoefficients());
         vec << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -303,9 +300,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
 
         WHEN("3 Scaling operators are applied to it, in a ROW-Block fashion")
         {
-            IndexVector_t rangeIndex(2);
-            rangeIndex << rows, cols * numBlks;
-            VolumeDescriptor rangeDesc(rangeIndex);
+            VolumeDescriptor rangeDesc({rows, cols * numBlks});
             DataContainer<TestType> range(rangeDesc);
 
             TestType scale1 = 2.f;
@@ -341,9 +336,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
 
     GIVEN("a 2D volume with 3 blocks")
     {
-        IndexVector_t blockIndex(2);
-        blockIndex << rows, cols;
-        VolumeDescriptor blockDesc(blockIndex);
+        VolumeDescriptor blockDesc({rows, cols});
         IdenticalBlocksDescriptor domainDesc(numBlks, blockDesc);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec(domainDesc.getNumberOfCoefficients());
@@ -359,9 +352,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
 
         WHEN("3 Scaling operators are applied to it in a COL-Block fashion")
         {
-            IndexVector_t rangeIndex(2);
-            rangeIndex << rows, cols;
-            VolumeDescriptor rangeDesc(rangeIndex);
+            VolumeDescriptor rangeDesc({rows, cols});
             DataContainer<TestType> range(rangeDesc);
 
             float scale1 = 2.f;
@@ -396,9 +387,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: applyAdjoint", TestType, float, double)
     index_t rows = 4, cols = 8, numBlks = 3;
     GIVEN("a 2D volume with 3 blocks")
     {
-        IndexVector_t rangeIndex(2);
-        rangeIndex << rows, cols * numBlks;
-        VolumeDescriptor rangeDesc(rangeIndex);
+        VolumeDescriptor rangeDesc({rows, cols * numBlks});
 
         const index_t n = rangeDesc.getNumberOfCoefficients();
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> rangeVec(n);
@@ -410,9 +399,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: applyAdjoint", TestType, float, double)
 
         WHEN("applying the adjoint of 3 Scaling operators ordered in a ROW-Block fashion")
         {
-            IndexVector_t domainIndex(2);
-            domainIndex << rows, cols;
-            VolumeDescriptor domainDesc(domainIndex);
+            VolumeDescriptor domainDesc({rows, cols});
 
             TestType scale1 = 2.f;
             TestType scale2 = 3.f;
@@ -438,9 +425,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: applyAdjoint", TestType, float, double)
 
     GIVEN("a 2D volume")
     {
-        IndexVector_t rangeIndex(2);
-        rangeIndex << rows, cols;
-        VolumeDescriptor rangeDesc(rangeIndex);
+        VolumeDescriptor rangeDesc({rows, cols});
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec(rangeDesc.getNumberOfCoefficients());
         vec << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -488,9 +473,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing cloning", TestType, float, doub
     index_t rows = 4, cols = 8;
     GIVEN("a ROW BlockLinearOperator")
     {
-        IndexVector_t domainIndex(2);
-        domainIndex << rows, cols;
-        VolumeDescriptor domainDesc(domainIndex);
+        VolumeDescriptor domainDesc({rows, cols});
 
         TestType scale1 = 2.f;
         TestType scale2 = 3.f;
@@ -518,9 +501,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing cloning", TestType, float, doub
 
     GIVEN("a COL BlockLinearOperator")
     {
-        IndexVector_t rangeIndex(2);
-        rangeIndex << rows, cols;
-        VolumeDescriptor rangeDesc(rangeIndex);
+        VolumeDescriptor rangeDesc({rows, cols});
 
         TestType scale1 = 2.f;
         TestType scale2 = 3.f;
@@ -553,9 +534,7 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing comparison", TestType, float, d
     index_t rows = 4, cols = 8;
     GIVEN("a BlockLinearOperator")
     {
-        IndexVector_t domainIndex(2);
-        domainIndex << rows, cols;
-        VolumeDescriptor domainDesc(domainIndex);
+        VolumeDescriptor domainDesc({rows, cols});
 
         TestType scale1 = 2.f;
         TestType scale2 = 3.f;

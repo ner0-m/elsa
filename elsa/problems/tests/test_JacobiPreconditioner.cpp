@@ -34,9 +34,7 @@ TEST_CASE_TEMPLATE("JacobiPreconditioner: Testing standard use cases", data_t, f
 
     GIVEN("a simple linear operator")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 24});
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();

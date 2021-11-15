@@ -31,9 +31,7 @@ TEST_CASE_TEMPLATE("TikhonovProblem: Testing with one regularization term", data
     GIVEN("some data term and some regularization term")
     {
         // least squares data term
-        IndexVector_t numCoeff(2);
-        numCoeff << 23, 47;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({23, 47});
 
         Vector_t<data_t> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
@@ -168,9 +166,7 @@ TEST_CASE_TEMPLATE("TikhonovProblem: Testing with several regularization terms",
     GIVEN("some data term and several regularization terms")
     {
         // least squares data term
-        IndexVector_t numCoeff(3);
-        numCoeff << 17, 33, 52;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({17, 33, 52});
 
         Vector_t<data_t> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();

@@ -20,12 +20,10 @@ TEST_CASE("Geometry: Testing 2D geometries")
     using namespace geometry;
     GIVEN("some 2D setup")
     {
-        IndexVector_t volCoeff(2);
-        volCoeff << 5, 5;
+        IndexVector_t volCoeff({{5, 5}});
         VolumeDescriptor ddVol(volCoeff);
 
-        IndexVector_t detCoeff(2);
-        detCoeff << 5, 1;
+        IndexVector_t detCoeff({{5, 1}});
         VolumeDescriptor ddDet(detCoeff);
 
         real_t s2c = 10;
@@ -206,12 +204,10 @@ TEST_CASE("Geometry: Testing 3D geometries")
     using namespace geometry;
     GIVEN("some 3D setup")
     {
-        IndexVector_t volCoeff(3);
-        volCoeff << 5, 5, 5;
+        IndexVector_t volCoeff({{5, 5, 5}});
         VolumeDescriptor ddVol(volCoeff);
 
-        IndexVector_t detCoeff(3);
-        detCoeff << 5, 5, 1;
+        IndexVector_t detCoeff({{5, 5, 1}});
         VolumeDescriptor ddDet(detCoeff);
 
         real_t s2c = 10;

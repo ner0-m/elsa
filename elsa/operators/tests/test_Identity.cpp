@@ -19,9 +19,7 @@ TEST_CASE_TEMPLATE("Identity: Testing construction", data_t, float, double)
 {
     GIVEN("a descriptor")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 45, 28;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 45, 28});
 
         WHEN("instantiating an Identity operator")
         {
@@ -53,9 +51,7 @@ TEST_CASE_TEMPLATE("Identity: Testing apply", data_t, float, double, complex<flo
 {
     GIVEN("some data")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 11, 13;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({11, 13});
         DataContainer<data_t> input(dd);
         input = 3.3f;
 

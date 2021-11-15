@@ -199,8 +199,7 @@ TEST_CASE_TEMPLATE("Getting the support of a dictionary ", data_t, float, double
         DataContainer<data_t> dict(ibd, randomDictionary);
         Dictionary dictOp(dict);
 
-        IndexVector_t support(3);
-        support << 1, 5, 7;
+        IndexVector_t support({{1, 5, 7}});
 
         WHEN("getting the support of the dictionary")
         {

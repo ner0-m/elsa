@@ -57,9 +57,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing trivial linear residual", TestType, 
 {
     GIVEN("a descriptor")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 11, 33, 55;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({11, 33, 55});
 
         WHEN("instantiating")
         {
@@ -105,9 +103,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with just an data vector", TestType,
 
     GIVEN("a descriptor and data")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 18, 36;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({18, 36});
 
         Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
@@ -157,13 +153,9 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with just an operator", TestType, fl
 {
     GIVEN("descriptors and an operator")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 11, 33, 55;
-        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddDomain({11, 33, 55});
 
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 18, 36;
-        VolumeDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddRange({18, 36});
 
         MockOperator<TestType> mockOp(ddDomain, ddRange);
 
@@ -210,12 +202,8 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with operator and data", TestType, f
 
     GIVEN("an operator and data")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 11, 33, 55;
-        VolumeDescriptor ddDomain(numCoeff);
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 18, 36;
-        VolumeDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain({11, 33, 55});
+        VolumeDescriptor ddRange({18, 36});
 
         MockOperator<TestType> mockOp(ddDomain, ddRange);
 

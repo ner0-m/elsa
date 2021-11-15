@@ -29,9 +29,7 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", data_t, float, double)
 
     GIVEN("some problems and a constraint")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 21, 11;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({21, 11});
 
         Vector_t<data_t> bVec(volDescr.getNumberOfCoefficients());
         bVec.setRandom();

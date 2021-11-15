@@ -20,20 +20,8 @@ TEST_CASE("CudnnConvolution")
 {
     SECTION("No padding, Stride 1")
     {
-        // Example taken from http://cs231n.github.io/convolutional-networks/
-        IndexVector_t inputVec(4);
-        inputVec << 1, 3, 5, 5;
-        DataDescriptor inputDesc(inputVec);
-
-        IndexVector_t weightsVec(4);
-        weightsVec << 2, 3, 3, 3;
-        DataDescriptor weightsDesc(weightsVec);
-
-        IndexVector_t stridesVec(2);
-        stridesVec << 2, 2;
-
-        IndexVector_t paddingVec(2);
-        paddingVec << 1, 1;
+        DataDescriptor inputDesc({1, 3, 5, 5});
+        DataDescriptor weightsDesc({2, 3, 3, 3});
 
         Eigen::VectorXf vec(1 * 3 * 5 * 5);
         // clang-format off
@@ -90,11 +78,8 @@ TEST_CASE("CudnnConvolution")
 
         DataContainer<float> weights(weightsDesc, vec2);
 
-        Eigen::VectorXf vec3(2);
-        vec3 << 1, 0;
-        IndexVector_t biasVec(1);
-        biasVec << 2;
-        DataDescriptor biasDesc(biasVec);
+        Eigen::VectorXf vec3({{1, 0}});
+        DataDescriptor biasDesc({2});
         DataContainer<float> bias(biasDesc, vec3);
     }
 }

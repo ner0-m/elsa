@@ -33,9 +33,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
 
     GIVEN("no operator and no data")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 7;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 11, 7});
 
         WHEN("instantiating")
         {
@@ -79,9 +77,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
 
     GIVEN("an operator but no data")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 7;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 11, 7});
 
         Scaling scalingOp(dd, static_cast<TestType>(3.0));
 
@@ -128,9 +124,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
 
     GIVEN("data but no operator")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 7;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 11, 7});
 
         Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
@@ -178,9 +172,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
 
     GIVEN("an operator and data")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 7;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 11, 7});
 
         Identity<TestType> idOp(dd);
 

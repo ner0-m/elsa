@@ -24,9 +24,7 @@ TEST_CASE_TEMPLATE("Scenario: Testing LASSOProblem", data_t, float, double)
 {
     GIVEN("some data term and a regularization term")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 17, 53;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({17, 53});
 
         Vector_t<data_t> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();

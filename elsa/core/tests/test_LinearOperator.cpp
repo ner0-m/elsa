@@ -55,12 +55,8 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing construction", TestType, float, doub
 {
     GIVEN("DataDescriptors")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 47, 11;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 31, 23;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain({47, 11});
+        VolumeDescriptor ddRange({31, 23});
 
         WHEN("instantiating a LinearOperator")
         {
@@ -93,12 +89,8 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing clone()", TestType, float, double, c
 {
     GIVEN("a LinearOperator")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 23, 45, 67;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 78, 90;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain({23, 45, 67});
+        VolumeDescriptor ddRange({78, 90});
         LinearOperator<TestType> linOp(ddDomain, ddRange);
 
         WHEN("cloning the LinearOperator")
@@ -125,12 +117,8 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing a leaf LinearOperator", TestType, fl
 {
     GIVEN("a non-adjoint leaf linear operator")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 12, 23;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 34, 45;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain({12, 23});
+        VolumeDescriptor ddRange({34, 45});
         MockOperator<TestType> mockOp(ddDomain, ddRange);
 
         auto leafOp = leaf(mockOp);
@@ -185,12 +173,8 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing a leaf LinearOperator", TestType, fl
 
     GIVEN("an adjoint linear operator")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 12, 23;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 34, 45;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain({12, 23});
+        VolumeDescriptor ddRange({34, 45});
         MockOperator<TestType> mockOp(ddDomain, ddRange);
 
         auto adjointOp = adjoint(mockOp);
@@ -249,12 +233,8 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing composite LinearOperator", TestType,
 {
     GIVEN("an additive composite linear operator")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 45, 67;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 13, 48;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
+        VolumeDescriptor ddDomain({45, 67});
+        VolumeDescriptor ddRange({13, 48});
 
         MockOperator<TestType> op1(ddDomain, ddRange);
         MockOperator<TestType> op2(ddDomain, ddRange);
@@ -311,15 +291,9 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing composite LinearOperator", TestType,
 
     GIVEN("a multiplicative composite linear operator")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 47, 69;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 15, 28;
-        IndexVector_t numCoeff3(4);
-        numCoeff3 << 7, 30, 83, 13;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddMiddle(numCoeff2);
-        VolumeDescriptor ddRange(numCoeff3);
+        VolumeDescriptor ddDomain({13, 47, 69});
+        VolumeDescriptor ddMiddle({15, 28});
+        VolumeDescriptor ddRange({7, 30, 83, 13});
 
         MockOperator<TestType> op1(ddDomain, ddMiddle);
         MockOperator<TestType> op2(ddMiddle, ddRange);
@@ -376,12 +350,8 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing composite LinearOperator", TestType,
 
     GIVEN("a scalar multiplicative composite linear operator")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 47, 69;
-        IndexVector_t otherNumCoeff(2);
-        otherNumCoeff << 15, 28;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(otherNumCoeff);
+        VolumeDescriptor ddDomain({13, 47, 69});
+        VolumeDescriptor ddRange({15, 28});
 
         MockOperator op(ddDomain, ddRange);
         real_t scalar = 8;
@@ -438,15 +408,9 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing composite LinearOperator", TestType,
 
     GIVEN("a complex composite with multiple leafs and levels")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 38;
-        IndexVector_t numCoeff2(1);
-        numCoeff2 << 16;
-        IndexVector_t numCoeff3(3);
-        numCoeff3 << 17, 38, 15;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
-        VolumeDescriptor ddFinalRange(numCoeff3);
+        VolumeDescriptor ddDomain({13, 38});
+        VolumeDescriptor ddRange({16});
+        VolumeDescriptor ddFinalRange({17, 38, 15});
 
         MockOperator<TestType> op1(ddDomain, ddRange);
         MockOperator<TestType> op2(ddFinalRange, ddRange);

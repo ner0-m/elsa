@@ -20,8 +20,7 @@ TEST_CASE("EllipseGenerator: Drawing a rotated filled ellipse in 2d")
 {
     GIVEN("a volume and example ellipse parameters")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 200, 200;
+        IndexVector_t numCoeff({{200, 200}});
         VolumeDescriptor dd(numCoeff);
         DataContainer dc(dd);
 
@@ -80,8 +79,7 @@ TEST_CASE("EllipseGenerator: Drawing a rotated filled ellipsoid in 3d")
 {
     GIVEN("a volume and example ellipsoid parameters")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 64, 64, 64;
+        IndexVector_t numCoeff({{64, 64, 64}});
         VolumeDescriptor dd(numCoeff);
         DataContainer dc(dd);
 

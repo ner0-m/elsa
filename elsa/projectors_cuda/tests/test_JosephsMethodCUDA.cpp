@@ -105,8 +105,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 2D setup with a single ray", TestType,
         // Domain setup
         const index_t volSize = 5;
 
-        IndexVector_t volumeDims(2);
-        volumeDims << volSize, volSize;
+        IndexVector_t volumeDims({{volSize, volSize}});
 
         VolumeDescriptor volumeDescriptor(volumeDims);
         DataContainer<data_t> volume(volumeDescriptor);
@@ -115,8 +114,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 2D setup with a single ray", TestType,
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
 
-        IndexVector_t sinoDims(2);
-        sinoDims << detectorSize, numImgs;
+        IndexVector_t sinoDims({{detectorSize, numImgs}});
 
         // Setup geometry
         auto stc = SourceToCenterOfRotation{20 * volSize};
@@ -626,8 +624,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 2D setup with a single ray", TestType,
         // Domain setup
         const index_t volSize = 4;
 
-        IndexVector_t volumeDims(2);
-        volumeDims << volSize, volSize;
+        IndexVector_t volumeDims({{volSize, volSize}});
 
         VolumeDescriptor volumeDescriptor(volumeDims);
         DataContainer<data_t> volume(volumeDescriptor);
@@ -636,8 +633,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 2D setup with a single ray", TestType,
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
 
-        IndexVector_t sinoDims(2);
-        sinoDims << detectorSize, numImgs;
+        IndexVector_t sinoDims({{detectorSize, numImgs}});
 
         // Setup geometry
         const auto stc = SourceToCenterOfRotation{20 * volSize};
@@ -1299,8 +1295,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 2D setup with a multiple rays", TestType,
         // Domain setup
         const index_t volSize = 5;
 
-        IndexVector_t volumeDims(2);
-        volumeDims << volSize, volSize;
+        IndexVector_t volumeDims({{volSize, volSize}});
 
         VolumeDescriptor volumeDescriptor(volumeDims);
         DataContainer<data_t> volume(volumeDescriptor);
@@ -1309,8 +1304,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 2D setup with a multiple rays", TestType,
         const index_t detectorSize = 1;
         const index_t numImgs = 4;
 
-        IndexVector_t sinoDims(2);
-        sinoDims << detectorSize, numImgs;
+        IndexVector_t sinoDims({{detectorSize, numImgs}});
 
         // Setup geometry
         auto stc = SourceToCenterOfRotation{20 * volSize};
@@ -1389,8 +1383,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 3D setup with a single ray", TestType,
         // Domain setup
         const index_t volSize = 3;
 
-        IndexVector_t volumeDims(3);
-        volumeDims << volSize, volSize, volSize;
+        IndexVector_t volumeDims({{volSize, volSize, volSize}});
 
         VolumeDescriptor volumeDescriptor(volumeDims);
         DataContainer<data_t> volume(volumeDescriptor);
@@ -1399,8 +1392,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 3D setup with a single ray", TestType,
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
 
-        IndexVector_t sinoDims(3);
-        sinoDims << detectorSize, detectorSize, numImgs;
+        IndexVector_t sinoDims({{detectorSize, detectorSize, numImgs}});
 
         // Setup geometry
         const auto stc = SourceToCenterOfRotation{20 * volSize};
@@ -1976,8 +1968,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 3D setup with a single ray", TestType,
         // Domain setup
         const index_t volSize = 5;
 
-        IndexVector_t volumeDims(3);
-        volumeDims << volSize, volSize, volSize;
+        IndexVector_t volumeDims({{volSize, volSize, volSize}});
 
         VolumeDescriptor volumeDescriptor(volumeDims);
         DataContainer<data_t> volume(volumeDescriptor);
@@ -1986,8 +1977,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 3D setup with a single ray", TestType,
         const index_t detectorSize = 1;
         const index_t numImgs = 1;
 
-        IndexVector_t sinoDims(3);
-        sinoDims << detectorSize, detectorSize, numImgs;
+        IndexVector_t sinoDims({{detectorSize, detectorSize, numImgs}});
 
         // Setup geometry
         const auto stc = SourceToCenterOfRotation{20 * volSize};
@@ -2072,8 +2062,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 3D setup with a multiple rays",TestType, 
         // Domain setup
         const index_t volSize = 3;
 
-        IndexVector_t volumeDims(3);
-        volumeDims << volSize, volSize, volSize;
+        IndexVector_t volumeDims({{volSize, volSize, volSize}});
 
         VolumeDescriptor volumeDescriptor(volumeDims);
         DataContainer<data_t> volume(volumeDescriptor);
@@ -2082,8 +2071,7 @@ TEST_CASE_TEMPLATE("JosephsMethodCUDA: 3D setup with a multiple rays",TestType, 
         const index_t detectorSize = 1;
         const index_t numImgs = 6;
 
-        IndexVector_t sinoDims(3);
-        sinoDims << detectorSize, detectorSize, numImgs;
+        IndexVector_t sinoDims({{detectorSize, detectorSize, numImgs}});
 
         // Setup geometry
         const auto stc = SourceToCenterOfRotation{20 * volSize};

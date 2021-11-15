@@ -39,9 +39,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: Construction with a Quadric functional", Tes
 
     GIVEN("a Quadric functional")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 7;
-        VolumeDescriptor dd{numCoeff};
+        VolumeDescriptor dd{{13, 11, 7}};
 
         auto scaleFactor = static_cast<data_t>(3.0);
         Scaling<data_t> scalingOp{dd, scaleFactor};
@@ -124,9 +122,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a Quadric functional with spd operator"
 
     GIVEN("a spd operator")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 7;
-        VolumeDescriptor dd{numCoeff};
+        VolumeDescriptor dd{{13, 11, 7}};
 
         data_t scaleFactor = 3.0;
         Scaling<data_t> scalingOp{dd, scaleFactor};
@@ -207,9 +203,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a Quadric functional with non-spd opera
 
     GIVEN("a non-spd operator")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 7;
-        VolumeDescriptor dd{numCoeff};
+        VolumeDescriptor dd{{13, 11, 7}};
 
         data_t scaleFactor = -3.0;
         Scaling<data_t> scalingOp{dd, scaleFactor};
@@ -291,9 +285,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
 
     GIVEN("an optimization problem")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 11, 7;
-        VolumeDescriptor dd{numCoeff};
+        VolumeDescriptor dd{{13, 11, 7}};
 
         data_t scaleFactor = -3.0;
         Scaling<data_t> scalingOp{dd, scaleFactor};

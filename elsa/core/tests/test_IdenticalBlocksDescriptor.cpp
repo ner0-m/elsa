@@ -46,8 +46,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
             {
                 REQUIRE_EQ(bd.getNumberOfDimensions(), 2);
 
-                IndexVector_t correctSize(2);
-                correctSize << dd.getNumberOfCoefficients(), blocks;
+                IndexVector_t correctSize({{dd.getNumberOfCoefficients(), blocks}});
                 REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
                 REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
@@ -59,8 +58,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
 
             THEN("the new IdenticalBlocksDescriptor does index calculations correctly")
             {
-                IndexVector_t coordinate(2);
-                coordinate << dd.getNumberOfCoefficients() - 1, blocks - 1;
+                IndexVector_t coordinate({{dd.getNumberOfCoefficients() - 1, blocks - 1}});
                 index_t index = coordinate(0) + coordinate(1) * dd.getNumberOfCoefficients();
 
                 REQUIRE_EQ(bd.getIndexFromCoordinate(coordinate), index);
@@ -78,9 +76,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
             THEN("the block descriptor is different from a monolithic descriptor with the same "
                  "dimensions")
             {
-                IndexVector_t monoCoeffs(2);
-                monoCoeffs << size, blocks;
-                VolumeDescriptor mono(monoCoeffs);
+                VolumeDescriptor mono({size, blocks});
                 REQUIRE_NE(mono, bd);
                 REQUIRE_NE(bd, mono);
             }
@@ -89,8 +85,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
 
     GIVEN("a 2D descriptor")
     {
-        IndexVector_t sizeVector(2);
-        sizeVector << 11, 12;
+        IndexVector_t sizeVector({{11, 12}});
         VolumeDescriptor dd(sizeVector);
 
         WHEN("creating 10 blocks")
@@ -112,8 +107,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
             {
                 REQUIRE_EQ(bd.getNumberOfDimensions(), 3);
 
-                IndexVector_t correctSize(3);
-                correctSize << sizeVector(0), sizeVector(1), blocks;
+                IndexVector_t correctSize({{sizeVector(0), sizeVector(1), blocks}});
                 REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
                 REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
@@ -126,8 +120,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
 
             THEN("the new IdenticalBlocksDescriptor does index calculations correctly")
             {
-                IndexVector_t coordinate(3);
-                coordinate << sizeVector(0) - 3, sizeVector(1) - 7, blocks - 2;
+                IndexVector_t coordinate({{sizeVector(0) - 3, sizeVector(1) - 7, blocks - 2}});
                 index_t index = coordinate(0) + coordinate(1) * sizeVector(0)
                                 + coordinate(2) * sizeVector(0) * sizeVector(1);
 
@@ -146,9 +139,8 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
             THEN("the block descriptor is different from a monolithic descriptor with the same "
                  "dimensions")
             {
-                IndexVector_t monoCoeffs(3);
-                monoCoeffs << sizeVector, blocks;
-                VolumeDescriptor mono(monoCoeffs);
+                IndexVector_t monoCoeffs({{sizeVector(0), sizeVector(1), blocks}});
+                VolumeDescriptor mono({sizeVector(0), sizeVector(1), blocks});
                 REQUIRE_NE(mono, bd);
                 REQUIRE_NE(bd, mono);
             }
@@ -168,8 +160,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
 
     GIVEN("a 3D descriptor")
     {
-        IndexVector_t sizeVector(3);
-        sizeVector << 101, 42, 57;
+        IndexVector_t sizeVector({{101, 42, 57}});
         VolumeDescriptor dd(sizeVector);
 
         WHEN("creating 25 blocks")
@@ -191,8 +182,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
             {
                 REQUIRE_EQ(bd.getNumberOfDimensions(), 4);
 
-                IndexVector_t correctSize(4);
-                correctSize << sizeVector(0), sizeVector(1), sizeVector(2), blocks;
+                IndexVector_t correctSize({{sizeVector(0), sizeVector(1), sizeVector(2), blocks}});
                 REQUIRE_EQ(bd.getNumberOfCoefficientsPerDimension(), correctSize);
                 REQUIRE_EQ(bd.getNumberOfCoefficients(), correctSize.prod());
 
@@ -205,9 +195,8 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
 
             THEN("the new IdenticalBlocksDescriptor does index calculations correctly")
             {
-                IndexVector_t coordinate(4);
-                coordinate << sizeVector(0) - 33, sizeVector(1) - 11, sizeVector(2) - 17,
-                    blocks - 19;
+                IndexVector_t coordinate(
+                    {{sizeVector(0) - 33, sizeVector(1) - 11, sizeVector(2) - 17, blocks - 19}});
                 index_t index = coordinate(0) + coordinate(1) * sizeVector(0)
                                 + coordinate(2) * sizeVector(0) * sizeVector(1)
                                 + coordinate(3) * sizeVector(0) * sizeVector(1) * sizeVector(2);
@@ -227,9 +216,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
             THEN("the block descriptor is different from a monolithic descriptor with the same "
                  "dimensions")
             {
-                IndexVector_t monoCoeffs(4);
-                monoCoeffs << sizeVector, blocks;
-                VolumeDescriptor mono(monoCoeffs);
+                VolumeDescriptor mono({sizeVector(0), sizeVector(1), blocks});
                 REQUIRE_NE(mono, bd);
                 REQUIRE_NE(bd, mono);
             }
@@ -252,9 +239,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Testing cloning")
 {
     GIVEN("a 1D IdenticalBlocksDescriptor")
     {
-        IndexVector_t sizeVector(1);
-        sizeVector << 13;
-        VolumeDescriptor dd(sizeVector);
+        VolumeDescriptor dd({13});
         index_t blocks = 21;
 
         WHEN("cloning the descriptor")
@@ -273,9 +258,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Testing cloning")
 
     GIVEN("a 2D IdenticalBlocksDescriptor")
     {
-        IndexVector_t sizeVector(2);
-        sizeVector << 43, 112;
-        VolumeDescriptor dd(sizeVector);
+        VolumeDescriptor dd({43, 112});
         index_t blocks = 77;
 
         WHEN("cloning the descriptor")
@@ -295,8 +278,7 @@ TEST_CASE("IdenticalBlocksDescriptor: Testing cloning")
     GIVEN("a 3D IdenticalBlocksDescriptor")
     {
         IndexVector_t sizeVector(3);
-        sizeVector << 47, 11, 53;
-        VolumeDescriptor dd(sizeVector);
+        VolumeDescriptor dd({47, 11, 53});
         index_t blocks = 13;
 
         WHEN("cloning the descriptor")

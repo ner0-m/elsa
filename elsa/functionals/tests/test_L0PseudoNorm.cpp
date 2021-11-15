@@ -26,9 +26,7 @@ TEST_CASE_TEMPLATE("L0PseudoNorm: Testing without residual", TestType, float, do
 
     GIVEN("just data (no residual)")
     {
-        IndexVector_t numCoeff(1);
-        numCoeff << 4;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({4});
 
         WHEN("instantiating")
         {
@@ -73,9 +71,7 @@ TEST_CASE_TEMPLATE("L0PseudoNorm: Testing with residual", TestType, float, doubl
 
     GIVEN("a residual with data")
     {
-        IndexVector_t numCoeff(1);
-        numCoeff << 4;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({4});
 
         Vector randomData(volDescr.getNumberOfCoefficients());
         randomData.setRandom();

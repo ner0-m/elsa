@@ -23,12 +23,10 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
 {
     GIVEN("Given a 5x5 Volume and a single 5 wide detector pose")
     {
-        IndexVector_t volSize(2);
-        volSize << 5, 5;
+        IndexVector_t volSize({{5, 5}});
         VolumeDescriptor ddVol(volSize);
 
-        IndexVector_t sinoSize(2);
-        sinoSize << 5, 1;
+        IndexVector_t sinoSize({{5, 1}});
 
         real_t s2c = 10;
         real_t c2d = 4;
@@ -112,12 +110,10 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
 
         GIVEN("Given a 5x5 Volume and a multiple 5 wide detector pose")
         {
-            IndexVector_t volSize(2);
-            volSize << 5, 5;
+            IndexVector_t volSize({{5, 5}});
             VolumeDescriptor ddVol(volSize);
 
-            IndexVector_t sinoSize(2);
-            sinoSize << 5, 4;
+            IndexVector_t sinoSize({{5, 4}});
 
             real_t s2c = 10;
             real_t c2d = 4;
@@ -168,8 +164,7 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
                 for (index_t pose : {0, 1, 2, 3}) {
 
                     for (index_t detPixel : {0, 2, 4}) {
-                        IndexVector_t pixel(2);
-                        pixel << detPixel, pose;
+                        IndexVector_t pixel({{detPixel, pose}});
 
                         RealVector_t pixelReal(1);
                         pixelReal << static_cast<real_t>(detPixel) + 0.5f;
@@ -208,12 +203,10 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 3D PlanarDetectorDescriptor")
 {
     GIVEN("Given a 5x5x5 Volume and a single 5x5 wide detector pose")
     {
-        IndexVector_t volSize(3);
-        volSize << 5, 5, 5;
+        IndexVector_t volSize({{5, 5, 5}});
         VolumeDescriptor ddVol(volSize);
 
-        IndexVector_t sinoSize(3);
-        sinoSize << 5, 5, 1;
+        IndexVector_t sinoSize({{5, 5, 1}});
 
         real_t s2c = 10;
         real_t c2d = 4;

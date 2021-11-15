@@ -23,9 +23,7 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing construction", data_t, float, doub
 {
     GIVEN("a descriptor")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 45, 28;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 45, 28});
 
         WHEN("instantiating a FourierTransform operator")
         {
@@ -56,9 +54,7 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing 1d", data_t, float, double)
 {
     GIVEN("a volume descriptor")
     {
-        IndexVector_t numCoeff{1};
-        numCoeff << 4;
-        VolumeDescriptor dd{numCoeff};
+        VolumeDescriptor dd({4});
 
         WHEN("performing 1d fft transform")
         {
@@ -138,9 +134,7 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
 
         WHEN("applying the fft")
         {
-            IndexVector_t size{2};
-            size << 4, 4;
-            VolumeDescriptor dd{size};
+            VolumeDescriptor dd{{4, 4}};
 
             FourierTransform<complex<data_t>> fftOp{dd};
 
@@ -168,9 +162,7 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
 
         WHEN("applying the adjoint of fft")
         {
-            IndexVector_t size{2};
-            size << 4, 4;
-            VolumeDescriptor dd{size};
+            VolumeDescriptor dd{{4, 4}};
 
             FourierTransform<complex<data_t>> fftOp{dd};
 

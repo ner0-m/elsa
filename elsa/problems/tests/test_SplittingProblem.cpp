@@ -23,9 +23,7 @@ TEST_CASE_TEMPLATE("SplittingProblem: Simple Test", data_t, float, complex<float
 {
     GIVEN("some data terms, a regularization term and a constraint")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 91, 32;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({91, 32});
 
         Vector_t<data_t> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();

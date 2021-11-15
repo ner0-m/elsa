@@ -13,8 +13,7 @@ TEST_SUITE_BEGIN("ml");
 
 TEST_CASE_TEMPLATE("BinaryCrossentropy", TestType, float)
 {
-    IndexVector_t dims{{2, 4}};
-    VolumeDescriptor dd(dims);
+    VolumeDescriptor dd({2, 4});
 
     // predictions
     Eigen::VectorX<TestType> data_x{{0.6f, 0.4f, 0.4f, 0.6f, 1.f, 0.f, 0.3f, 0.7f}};
@@ -62,8 +61,7 @@ TEST_CASE_TEMPLATE("BinaryCrossentropy", TestType, float)
 
 TEST_CASE_TEMPLATE("CategoricalCrossentropy", TestType, float)
 {
-    IndexVector_t dims{{3, 4}};
-    VolumeDescriptor dd(dims);
+    VolumeDescriptor dd({3, 4});
 
     // predictions
     // clang-format off
@@ -132,16 +130,14 @@ TEST_CASE_TEMPLATE("CategoricalCrossentropy", TestType, float)
 
 TEST_CASE_TEMPLATE("SparseCategoricalCrossentropy", TestType, float)
 {
-    IndexVector_t predictionDims{{3, 4}};
-    VolumeDescriptor predictionDesc(predictionDims);
+    VolumeDescriptor predictionDesc({3, 4});
 
     // predictions
     Eigen::VectorX<TestType> data_x{
         {0.05f, 0.95f, 0.f, 0.1f, 0.8f, 0.1f, 0.2f, 0.3f, 0.5f, 0.0f, 0.2f, 0.8f}};
     DataContainer<TestType> x(predictionDesc, data_x);
 
-    IndexVector_t labelDims{{4}};
-    VolumeDescriptor labelDesc(labelDims);
+    VolumeDescriptor labelDesc({4});
 
     // labels
     Eigen::VectorX<TestType> data_y{{1.f, 2.f, 0.f, 1.f}};
@@ -184,8 +180,7 @@ TEST_CASE_TEMPLATE("SparseCategoricalCrossentropy", TestType, float)
 
 TEST_CASE_TEMPLATE("MeanSquaredError", TestType, float)
 {
-    IndexVector_t dims{{3, 2}};
-    VolumeDescriptor dd(dims);
+    VolumeDescriptor dd({3, 2});
 
     // predictions
     Eigen::VectorX<TestType> data_x{{1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f}};

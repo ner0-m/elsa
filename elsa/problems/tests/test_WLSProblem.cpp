@@ -33,9 +33,7 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing with operator and data", TestType, floa
 {
     GIVEN("the operator and data")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 7, 13;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({7, 13});
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
@@ -107,9 +105,7 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing with weights, operator and data", TestT
 {
     GIVEN("weights, operator and data")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 7, 13, 17;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({7, 13, 17});
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();

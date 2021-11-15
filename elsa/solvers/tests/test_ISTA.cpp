@@ -28,9 +28,7 @@ TEST_CASE("ISTA: Solving a LASSOProblem")
 
     GIVEN("a LASSOProblem")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 25, 31;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({25, 31});
 
         RealVector_t bVec(volDescr.getNumberOfCoefficients());
         bVec.setRandom();
@@ -73,9 +71,7 @@ TEST_CASE("ISTA: Solving various problems")
 
     GIVEN("a DataContainer")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 25, 31;
-        VolumeDescriptor volDescr(numCoeff);
+        VolumeDescriptor volDescr({25, 31});
 
         RealVector_t bVec(volDescr.getNumberOfCoefficients());
         bVec.setRandom();

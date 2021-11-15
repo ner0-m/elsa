@@ -229,8 +229,7 @@ TEST_CASE("StrongTypes: Testing VolumeData")
 
     GIVEN("Size coefficients for 2D")
     {
-        IndexVector_t size(2);
-        size << 10, 10;
+        IndexVector_t size({{10, 10}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -248,11 +247,9 @@ TEST_CASE("StrongTypes: Testing VolumeData")
 
     GIVEN("Size coefficients and Spacing for 2D")
     {
-        IndexVector_t size(2);
-        size << 10, 10;
+        IndexVector_t size({{10, 10}});
 
-        RealVector_t spacing(2);
-        spacing << 0.5, 2;
+        RealVector_t spacing({{0.5, 2}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -282,8 +279,7 @@ TEST_CASE("StrongTypes: Testing VolumeData")
 
     GIVEN("Size coefficients for 3D")
     {
-        IndexVector_t size(3);
-        size << 10, 10, 10;
+        IndexVector_t size({{10, 10, 10}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -303,11 +299,8 @@ TEST_CASE("StrongTypes: Testing VolumeData")
 
     GIVEN("Size coefficients and Spacing for 2D")
     {
-        IndexVector_t size(3);
-        size << 10, 10, 10;
-
-        RealVector_t spacing(3);
-        spacing << 0.5, 2, 1;
+        IndexVector_t size({{10, 10, 10}});
+        RealVector_t spacing({{0.5, 2, 1}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -332,8 +325,7 @@ TEST_CASE("StrongTypes: Testing SinogramData")
 
     GIVEN("Size coefficients for 2D")
     {
-        IndexVector_t size(2);
-        size << 10, 10;
+        IndexVector_t size({{10, 10}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -351,11 +343,8 @@ TEST_CASE("StrongTypes: Testing SinogramData")
 
     GIVEN("Size coefficients and Spacing for 2D")
     {
-        IndexVector_t size(2);
-        size << 10, 10;
-
-        RealVector_t spacing(2);
-        spacing << 0.5, 2;
+        IndexVector_t size({{10, 10}});
+        RealVector_t spacing({{0.5, 2}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -375,11 +364,9 @@ TEST_CASE("StrongTypes: Testing SinogramData")
 
     GIVEN("Spacing and Origin shift in 2D")
     {
-        RealVector_t spacing(2);
-        spacing << 1, 1;
+        RealVector_t spacing({{1, 1}});
 
-        RealVector_t shift(2);
-        shift << 1, 1;
+        RealVector_t shift({{1, 1}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -402,8 +389,7 @@ TEST_CASE("StrongTypes: Testing SinogramData")
 
     GIVEN("Size coefficients for 3D")
     {
-        IndexVector_t size(3);
-        size << 10, 10, 10;
+        IndexVector_t size({{10, 10, 10}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -423,11 +409,9 @@ TEST_CASE("StrongTypes: Testing SinogramData")
 
     GIVEN("Size coefficients and Spacing for 2D")
     {
-        IndexVector_t size(3);
-        size << 10, 10, 10;
+        IndexVector_t size({{10, 10, 10}});
 
-        RealVector_t spacing(3);
-        spacing << 0.5, 2, 1;
+        RealVector_t spacing({{0.5, 2, 1}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {
@@ -447,11 +431,9 @@ TEST_CASE("StrongTypes: Testing SinogramData")
 
     GIVEN("Spacing and Origin shift in 3D")
     {
-        RealVector_t spacing(3);
-        spacing << 1, 1, 1;
+        RealVector_t spacing({{1, 1, 1}});
 
-        RealVector_t shift(3);
-        shift << 1, 1, 1;
+        RealVector_t shift({{1, 1, 1}});
 
         THEN("Then Spacing and location of origin is calculated correctly")
         {

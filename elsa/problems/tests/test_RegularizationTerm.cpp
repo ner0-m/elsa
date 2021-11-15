@@ -13,9 +13,7 @@ TEST_CASE("RegularizationTerm: Test a simple term")
 {
     GIVEN("some term")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 7, 16;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({7, 16});
 
         real_t weight = 2.5;
         L2NormPow2 functional(dd);
@@ -34,9 +32,7 @@ TEST_CASE("RegularizationTerm: Test a simple term")
 
     GIVEN("another regularization term")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 11, 17, 23;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({11, 17, 23});
 
         auto weight = real_t{3.1f};
         L2NormPow2 functional(dd);

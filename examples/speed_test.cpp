@@ -62,8 +62,7 @@ int main()
         Logger::get("Setup")->info("Running test for a volume with {}^3 voxels\n", size);
 
         // create 3d phantom
-        IndexVector_t volumeSize(3);
-        volumeSize << size, size, size;
+        IndexVector_t volumeSize({{size, size, size}});
         auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(volumeSize);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 

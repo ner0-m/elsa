@@ -170,8 +170,7 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a non-mirrored Limited Angle 
     GIVEN("A 2D descriptor and 256 angles")
     {
         index_t numberOfAngles = 256;
-        IndexVector_t volSize(2);
-        volSize << s, s;
+        IndexVector_t volSize({{s, s}});
         VolumeDescriptor desc{volSize};
 
         WHEN("We create a half circular limited angle trajectory for this scenario")

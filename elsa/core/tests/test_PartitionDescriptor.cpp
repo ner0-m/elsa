@@ -78,10 +78,10 @@ TEST_CASE("PartitionDescriptor: Testing construction")
 
         WHEN("partitioning it into 5 blocks with chosen sizes")
         {
-            index_t blocks = 5;
-            IndexVector_t split(blocks);
-            split << 1, 2, 3, 1, 3;
+            IndexVector_t split({{1, 2, 3, 1, 3}});
             PartitionDescriptor bd(dd, split);
+
+            const index_t blocks = split.size();
 
             THEN("the partitioned descriptor has the same number of coefficients and spacing per "
                  "dimension as the original")
@@ -123,12 +123,10 @@ TEST_CASE("PartitionDescriptor: Testing construction")
 
     GIVEN("a 2D descriptor with blocks")
     {
-        IndexVector_t sizeVector(2);
-        sizeVector << 11, 102;
+        IndexVector_t sizeVector({{11, 102}});
         VolumeDescriptor dd(sizeVector);
 
-        IndexVector_t coeffs(2);
-        coeffs << 11, 10;
+        IndexVector_t coeffs({{11, 10}});
         VolumeDescriptor bd0(coeffs, dd.getSpacingPerDimension());
 
         coeffs[1] = 11;
@@ -183,10 +181,10 @@ TEST_CASE("PartitionDescriptor: Testing construction")
 
         WHEN("partitioning it into 10 blocks with chosen sizes")
         {
-            index_t blocks = 10;
-            IndexVector_t split(blocks);
-            split << 1, 2, 3, 4, 5, 6, 7, 8, 9, 57;
+            IndexVector_t split({{1, 2, 3, 4, 5, 6, 7, 8, 9, 57}});
             PartitionDescriptor bd(dd, split);
+
+            index_t blocks = split.size();
 
             THEN("the partitioned descriptor has the same number of coefficients and spacing per "
                  "dimension as the original")
@@ -232,12 +230,12 @@ TEST_CASE("PartitionDescriptor: Testing construction")
 
     GIVEN("a 3D descriptor with blocks")
     {
-        IndexVector_t sizeVector(3);
-        sizeVector << 101, 42, 750;
+        IndexVector_t sizeVector({{101, 42, 750}});
         VolumeDescriptor dd(sizeVector);
 
         sizeVector[2] = 30;
         VolumeDescriptor bd0(sizeVector);
+
         WHEN("creating 25 blocks")
         {
             index_t blocks = 25;
@@ -331,8 +329,7 @@ TEST_CASE("PartitionDescriptor: Testing clone()")
 {
     GIVEN("a 1D PartitionDescriptor")
     {
-        IndexVector_t sizeVector(1);
-        sizeVector << 3891;
+        IndexVector_t sizeVector({{3891}});
         VolumeDescriptor dd(sizeVector);
         index_t blocks = 21;
 
@@ -352,8 +349,7 @@ TEST_CASE("PartitionDescriptor: Testing clone()")
 
     GIVEN("a 2D PartitionDescriptor")
     {
-        IndexVector_t sizeVector(2);
-        sizeVector << 43, 112;
+        IndexVector_t sizeVector({{43, 112}});
         VolumeDescriptor dd(sizeVector);
         index_t blocks = 77;
 
@@ -373,8 +369,7 @@ TEST_CASE("PartitionDescriptor: Testing clone()")
 
     GIVEN("a 3D PartitionDescriptor")
     {
-        IndexVector_t sizeVector(3);
-        sizeVector << 47, 11, 53;
+        IndexVector_t sizeVector({{47, 11, 53}});
         VolumeDescriptor dd(sizeVector);
         index_t blocks = 13;
 

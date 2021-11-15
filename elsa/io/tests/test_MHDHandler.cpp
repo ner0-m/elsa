@@ -19,9 +19,7 @@ TEST_CASE("MHDHandler: Reading and writing data")
 {
     GIVEN("a DataContainer")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 11, 17;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({11, 17});
         DataContainer dc(dd);
         dc = 1;
 

@@ -32,9 +32,7 @@ TEST_CASE_TEMPLATE("L1Norm: Testing without residual", TestType, float, double, 
 
     GIVEN("just data (no residual)")
     {
-        IndexVector_t numCoeff(1);
-        numCoeff << 4;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({4});
 
         WHEN("instantiating")
         {
@@ -80,9 +78,7 @@ TEST_CASE_TEMPLATE("L1Norm: Testing with residual", TestType, float, double, com
 
     GIVEN("a residual with data")
     {
-        IndexVector_t numCoeff(1);
-        numCoeff << 4;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({4});
 
         Vector randomData(dd.getNumberOfCoefficients());
         randomData.setRandom();
