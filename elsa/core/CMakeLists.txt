@@ -5,6 +5,7 @@ set(MODULE_HEADERS
     Cloneable.h
     Utilities/Badge.hpp
     Utilities/DataContainerFormatter.hpp
+    Utilities/FormatConfig.h
     Utilities/Statistics.hpp
     Utilities/TypeCasts.hpp
     Descriptors/DataDescriptor.h

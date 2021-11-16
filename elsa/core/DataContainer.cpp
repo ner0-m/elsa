@@ -1,5 +1,6 @@
 #include "DataContainer.h"
 #include "DataContainerFormatter.hpp"
+#include "FormatConfig.h"
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
@@ -509,9 +510,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::format(std::ostream& os) const
+    void DataContainer<data_t>::format(std::ostream& os, format_config cfg) const
     {
-        DataContainerFormatter<data_t> fmt;
+        DataContainerFormatter<data_t> fmt{cfg};
         fmt.format(os, *this);
     }
 

@@ -8,6 +8,7 @@
 #include "DataContainerIterator.h"
 #include "Error.h"
 #include "Expression.h"
+#include "FormatConfig.h"
 #include "TypeCasts.hpp"
 
 #ifdef ELSA_CUDA_VECTOR
@@ -20,7 +21,6 @@
 
 namespace elsa
 {
-
     /**
      * @brief class representing and storing a linearized n-dimensional signal
      *
@@ -444,15 +444,15 @@ namespace elsa
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
         /// write a pretty-formatted string representation to stream
-        void format(std::ostream& os) const;
+        void format(std::ostream& os, format_config cfg = {}) const;
 
         /**
          * @brief Factory function which returns GPU based DataContainers
          *
          * @return the GPU based DataContainer
          *
-         * Note that if this function is called on a container which is already GPU based, it will
-         * throw an exception.
+         * Note that if this function is called on a container which is already GPU based, it
+         * will throw an exception.
          */
         DataContainer loadToGPU();
 

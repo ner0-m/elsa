@@ -2,6 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DataContainer.h"
+#include "FormatConfig.h"
 
 #include <iomanip>
 #include <iostream>
@@ -27,29 +28,7 @@ namespace elsa
     template <typename data_t>
     class DataContainerFormatter
     {
-
     public:
-        /**
-         * Formatting output configuration.
-         */
-        struct format_config {
-            /// for too many elements, abbreviate the output
-            bool summary_enabled = true;
-
-            /// number of summary items to display - this also triggers the summary enabling
-            /// if theres more than 2 * summary_items elements.
-            index_t summary_items = 6;
-
-            /// what is inserted between the summary items
-            std::string summary_elem = "...";
-
-            // what is inserted vertically between summary items
-            std::string summary_elem_vertical = "\u22EE";
-
-            // what's inserted between elements and newlines
-            std::string separator = ", ";
-        };
-
         /**
          * Create a formatter with default config.
          */
@@ -273,9 +252,14 @@ namespace elsa
                     teststream.str("");
                     teststream.clear();
 
-                    auto&& elem = dc[idx];
+                    auto&& elem = config.suppress_close_to_zero
+                                          && std::abs(dc[idx]) < config.suppression_epsilon
+                                      ? static_cast<data_t>(0)
+                                      : dc[idx];
+
                     teststream << elem;
                     auto len = static_cast<int>(teststream.tellp());
+
                     if (len > maxlen) {
                         maxlen = len;
                     }
@@ -283,11 +267,14 @@ namespace elsa
 
                 auto streamflags = teststream.flags();
 
-                return [maxlen, streamflags](std::ostream & os, const T& elem) -> auto&
+                return [
+                    maxlen, streamflags, do_suppress = config.suppress_close_to_zero,
+                    eps = config.suppression_epsilon
+                ](std::ostream & os, const T& elem) -> auto&
                 {
                     os.flags(streamflags);
                     os << std::setw(maxlen);
-                    os << elem;
+                    os << (do_suppress && std::abs(elem) < eps ? static_cast<data_t>(0) : elem);
                     return os;
                 };
             } else {
