@@ -41,6 +41,7 @@ set(ELSA_SANITIZER
 set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures") 
 
 option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
+option(SYSTEM_BACKWARD "Build elsa using the system backward-cpp installation" OFF)
 option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
 
 # ------------ general setup -----------
@@ -78,10 +79,12 @@ set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
 # only add the dependencies if elsa is stand-alone
 if(ELSA_MASTER_PROJECT)
+
     if(SYSTEM_EIGEN)
         message(STATUS "Using system-wide Eigen library...")
         find_package(Eigen3 REQUIRED)
     else()
+         
         # setup custom Eigen Library
         # once there's a proper release,
         # the system-eigen has to be a drop-in replacement for the git-version
@@ -152,6 +155,13 @@ if(ELSA_MASTER_PROJECT)
         )
         # SPDLOG_INSTALL will manage install and includedir setup
         # to $CMAKE_INSTALL_INCLUDEDIR/spdlog
+    endif()
+     
+    if(SYSTEM_BACKWARD)
+        message(STATUS "Using system-wide backward-cpp library...")
+        find_package(Eigen3 REQUIRED)
+    else()
+        CPMAddPackage(NAME backward GIT_REPOSITORY https://github.com/bombela/backward-cpp VERSION 1.6)
     endif()
 
     # setup Dnnl library

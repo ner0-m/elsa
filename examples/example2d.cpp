@@ -76,6 +76,8 @@ int main()
 {
     try {
         example2d();
+    } catch (Error& e) {
+        std::cerr << "An exception occurred:\n" << e << "\n";
     } catch (std::exception& e) {
         std::cerr << "An exception occurred: " << e.what() << "\n";
     }

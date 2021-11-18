@@ -1,7 +1,6 @@
 # list all the headers of the module
 set(MODULE_HEADERS
     elsaDefines.h
-    Backtrace.h
     Cloneable.h
     Utilities/Badge.hpp
     Utilities/DataContainerFormatter.hpp
@@ -33,7 +32,6 @@ set(MODULE_HEADERS
 # list all the code files of the module
 set(MODULE_SOURCES
     elsaDefines.cpp
-    Backtrace.cpp
     Descriptors/DataDescriptor.cpp
     Descriptors/VolumeDescriptor.cpp
     Descriptors/PlanarDetectorDescriptor.cpp

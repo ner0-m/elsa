@@ -37,7 +37,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     set(ELSA_MODULE_EXPORT_TARGET elsa_${elsa_module_name}Targets)
 
     # build the module library
-    add_library(${ELSA_MODULE_TARGET_NAME} ${module_headers} ${module_sources})
+    add_library(${ELSA_MODULE_TARGET_NAME} ${module_headers} ${module_sources} ${BACKWARD_ENABLE})
     add_library(elsa::${ELSA_MODULE_NAME} ALIAS ${ELSA_MODULE_TARGET_NAME})
 
     # Add public dependencies
@@ -46,6 +46,9 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE "${ADD_MODULE_PRIVATE_DEPS}")
     # require C++17
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
+    # Add Backward dependecy 
+    add_backward(${ELSA_MODULE_TARGET_NAME})
+
     # set -fPIC and -fvisibility=hidden
     set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON
                                                                 CXX_VISIBILITY_PRESET hidden)
@@ -60,7 +63,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     if(ELSA_MASTER_PROJECT)
         set_target_warnings(${ELSA_MODULE_TARGET_NAME} LEVEL ${ELSA_WARNINGS_LEVEL}) 
     endif()
-
+    
     # build the tests (if enabled)
     if(ELSA_TESTING AND NOT ADD_MODULE_NO_TESTS)
         add_subdirectory(tests)
@@ -92,7 +95,7 @@ macro(ELSA_DOCTEST name)
     # set the name for the test once
     set(_testname test_${name})
     # create the test executable
-    add_executable(${_testname} EXCLUDE_FROM_ALL ${_testname}.cpp test_docmain.cpp)
+    add_executable(${_testname} EXCLUDE_FROM_ALL ${_testname}.cpp test_docmain.cpp ${BACKWARD_ENABLE})
     # add catch and the corresponding elsa library
     target_link_libraries(
         ${_testname} PRIVATE doctest::doctest ${ELSA_MODULE_TARGET_NAME} elsa::test_routines
@@ -104,6 +107,12 @@ macro(ELSA_DOCTEST name)
     target_include_directories(${_testname} PRIVATE ${CMAKE_SOURCE_DIR}/elsa/test_routines/)
     # Improve compile times for tests
     target_compile_definitions(${_testname} PRIVATE DOCTEST_CONFIG_SUPER_FAST_ASSERTS)
+     
+    set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON
+                                                                CXX_VISIBILITY_PRESET hidden)
+    # Add Backward dependecy 
+    add_backward(${_testname})
+     
     # Set output directory to bin/tests/<module>
     set_target_properties(
         ${_testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}"

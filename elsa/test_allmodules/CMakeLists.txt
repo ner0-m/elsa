@@ -18,9 +18,10 @@ set(HEADERS
     TestDriver.h)
 
 # Create executable and link to elsa::all
-add_executable(integration-tests ${SOURCES})
+add_executable(integration-tests ${SOURCES} ${BACKWARD_ENABLE})
 target_link_libraries(integration-tests elsa::all)
 target_compile_features(integration-tests PUBLIC cxx_std_17)
+add_backward(integration-tests)
 
 # link Quickvec for DataHandlerGPU
 # Also add the necessary compile definition for quickvec
