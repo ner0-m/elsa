@@ -8,6 +8,7 @@
 #include "DataContainerIterator.h"
 #include "Error.h"
 #include "Expression.h"
+#include "FormatConfig.h"
 #include "TypeCasts.hpp"
 
 #ifdef ELSA_CUDA_VECTOR
@@ -20,7 +21,6 @@
 
 namespace elsa
 {
-
     /**
      * @brief class representing and storing a linearized n-dimensional signal
      *
@@ -444,15 +444,15 @@ namespace elsa
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
         /// write a pretty-formatted string representation to stream
-        void format(std::ostream& os) const;
+        void format(std::ostream& os, format_config cfg = {}) const;
 
         /**
          * @brief Factory function which returns GPU based DataContainers
          *
          * @return the GPU based DataContainer
          *
-         * Note that if this function is called on a container which is already GPU based, it will
-         * throw an exception.
+         * Note that if this function is called on a container which is already GPU based, it
+         * will throw an exception.
          */
         DataContainer loadToGPU();
 
@@ -515,6 +515,18 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
                                       const DataContainer<data_t>& dc2);
+
+    /// Perform the FFT shift operation to the provided signal. Refer to
+    /// https://numpy.org/doc/stable/reference/generated/numpy.fft.fftshift.html for further
+    /// details.
+    template <typename data_t>
+    DataContainer<data_t> fftShift2D(DataContainer<data_t> dc);
+
+    /// Perform the IFFT shift operation to the provided signal. Refer to
+    /// https://numpy.org/doc/stable/reference/generated/numpy.fft.ifftshift.html for further
+    /// details.
+    template <typename data_t>
+    DataContainer<data_t> ifftShift2D(DataContainer<data_t> dc);
 
     /// User-defined template argument deduction guide for the expression based constructor
     template <typename Source>
