@@ -112,14 +112,14 @@ namespace elsa
         /// variable to store the number of scales
         index_t _numOfScales;
 
-        index_t calculateNumOfScales(index_t width, index_t height);
+        static index_t calculateNumOfScales(index_t width, index_t height);
 
         /// variable to store the oversampling factor
         index_t _numOfLayers;
 
-        index_t calculateNumOfLayers(index_t width, index_t height);
+        static index_t calculateNumOfLayers(index_t width, index_t height);
 
-        index_t calculateNumOfLayers(index_t numOfScales);
+        static index_t calculateNumOfLayers(index_t numOfScales);
 
         void _computeSpectraAtLowFreq(index_t& i) const;
 
