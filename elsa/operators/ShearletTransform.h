@@ -17,6 +17,8 @@ namespace elsa
      * handles signals with one channel, e.g. grayscale images. Increasing the number of scales
      * will increase precision.
      *
+     * Note that this class only handles the 2D scenario.
+     *
      * References:
      * https://www.math.uh.edu/~dlabate/SHBookIntro.pdf
      * https://www.math.uh.edu/~dlabate/Athens.pdf

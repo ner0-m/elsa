@@ -17,36 +17,15 @@ namespace elsa
 
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>::ShearletTransform(index_t width, index_t height)
-        : LinearOperator<ret_t>(
-            VolumeDescriptor{{width, height}},
-            VolumeDescriptor{{width, height, calculateNumOfLayers(width, height)}}),
-          _width{width},
-          _height{height},
-          _numOfScales{calculateNumOfScales(width, height)},
-          _numOfLayers{calculateNumOfLayers(width, height)}
+        : ShearletTransform(width, height, calculateNumOfScales(width, height))
     {
-        if (width < 0 || height < 0) {
-            throw LogicError("ShearletTransform: Only positive width and height is supported");
-        }
     }
 
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>::ShearletTransform(index_t width, index_t height,
                                                         index_t numOfScales)
-        : LinearOperator<ret_t>(
-            VolumeDescriptor{{width, height}},
-            VolumeDescriptor{{width, height, calculateNumOfLayers(numOfScales)}}),
-          _width{width},
-          _height{height},
-          _numOfScales{numOfScales},
-          _numOfLayers{calculateNumOfLayers(numOfScales)}
+        : ShearletTransform(width, height, numOfScales, std::nullopt)
     {
-        if (width < 0 || height < 0) {
-            throw LogicError("ShearletTransform: Only positive width and height is supported");
-        }
-        if (numOfScales < 0) {
-            throw LogicError("ShearletTransform: Only positive number of scales are supported");
-        }
     }
 
     template <typename ret_t, typename data_t>

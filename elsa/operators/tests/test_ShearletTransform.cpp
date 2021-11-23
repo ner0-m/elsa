@@ -23,7 +23,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
     GIVEN("a DataDescriptor")
     {
         IndexVector_t size(2);
-        size << 256, 256;
+        size << 64, 64;
         VolumeDescriptor volDescr(size);
 
         WHEN("instantiating a ShearletTransform operator")
