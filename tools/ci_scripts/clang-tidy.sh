@@ -24,7 +24,7 @@ fi
 # for compilation database
 mkdir -p build
 cd build
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
 cd ..
 
 if [ ! -f build/compile_commands.json ]; then
