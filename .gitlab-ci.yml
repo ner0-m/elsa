@@ -279,23 +279,24 @@ build-cuda:
     - gcc
     - cuda
 
-build-gpu-only:
-  <<: *build_job_artifact
-  image: $GPU_ONLY_IMAGE
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CUDA_VECTOR=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja
-    - ninja build-tests
-    - ninja build-benchmarks
-    - ninja build-examples
-    - ninja install
-  tags:
-    - linux
-    - elsa
-    - gcc
-    - cuda
+# TODO: CUDA compilation with clang no longer supported, change to nvcc build with clang as host compiler later
+# build-gpu-only:
+#   <<: *build_job_artifact
+#   image: $GPU_ONLY_IMAGE
+#   script:
+#     - mkdir -p build
+#     - cd build
+#     - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DELSA_CUDA_VECTOR=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+#     - ninja
+#     - ninja build-tests
+#     - ninja build-benchmarks
+#     - ninja build-examples
+#     - ninja install
+#   tags:
+#     - linux
+#     - elsa
+#     - gcc
+#     - cuda
 
 
 ### test jobs ###
@@ -355,17 +356,17 @@ test-cuda:
     - gcc
     - cuda
 
-test-gpu-only:
-  <<: *test_job_artifact
-  stage: test
-  image: $GPU_ONLY_IMAGE
-  dependencies:
-    - build-gpu-only
-  tags:
-    - linux
-    - elsa
-    - gcc
-    - cuda
+# test-gpu-only:
+#   <<: *test_job_artifact
+#   stage: test
+#   image: $GPU_ONLY_IMAGE
+#   dependencies:
+#     - build-gpu-only
+#   tags:
+#     - linux
+#     - elsa
+#     - gcc
+#     - cuda
 
 install-gcc:
   <<: *install_job
@@ -416,34 +417,34 @@ install-cuda:
     - gcc
     - cuda
 
-install-gpu-only:
-  <<: *install_job
-  stage: test
-  image: $GPU_ONLY_IMAGE
-  dependencies:
-    - build-gpu-only
-  script:
-    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
-    - cd /tmp/elsa_testing
-    - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -Dquickvec_DIR="$CI_PROJECT_DIR/install-elsa/lib/cmake/quickvec" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
-    - ninja
-  tags:
-    - linux
-    - elsa
-    - gcc
-    - cuda
+# install-gpu-only:
+#   <<: *install_job
+#   stage: test
+#   image: $GPU_ONLY_IMAGE
+#   dependencies:
+#     - build-gpu-only
+#   script:
+#     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
+#     - cd /tmp/elsa_testing
+#     - mkdir -p build/ && cd build/
+#     - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -Dquickvec_DIR="$CI_PROJECT_DIR/install-elsa/lib/cmake/quickvec" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi" -DELSA_CUDA_VECTOR=ON
+#     - ninja
+#   tags:
+#     - linux
+#     - elsa
+#     - gcc
+#     - cuda
 
 ### sanitizers ###
 
 cuda-memcheck:
   <<: *run_on_merge_requests
   stage: sanitizer
-  image: $GPU_ONLY_IMAGE
+  image: $CUDA_IMAGE
   script:
     ./tools/ci_scripts/cuda-memcheck.sh
   dependencies:
-    - test-gpu-only
+    - test-cuda
   tags:
     - linux
     - elsa
