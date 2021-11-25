@@ -84,11 +84,6 @@ cache:
       - install-elsa/include/elsa/**/*.cuh
       - install-elsa/lib/cmake/elsa/**/*.cmake
       - install-elsa/lib/libelsa*.a
-      # Add quickvec install to artifact
-      - install-elsa/include/quickvec/**/*.h
-      - install-elsa/include/quickvec/**/*.hpp
-      - install-elsa/lib/cmake/quickvec/*.cmake
-      - install-elsa/lib/libquickvec.a
       # Add doctest install to artifact
       - install-elsa/include/doctest/**/*.h
       - install-elsa/lib/cmake/doctest/**/*.cmake
