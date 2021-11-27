@@ -8,6 +8,7 @@
 #include "DataContainerIterator.h"
 #include "Error.h"
 #include "Expression.h"
+#include "FormatConfig.h"
 #include "TypeCasts.hpp"
 
 #ifdef ELSA_CUDA_VECTOR
@@ -20,7 +21,6 @@
 
 namespace elsa
 {
-
     /**
      * @brief class representing and storing a linearized n-dimensional signal
      *
@@ -29,6 +29,7 @@ namespace elsa
      * @author David Frank - added DataHandler concept, iterators
      * @author Nikola Dinev - add block support
      * @author Jens Petit - expression templates
+     * @author Jonas Jelten - various enhancements, fft, complex handling, pretty formatting
      *
      * @tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
      *
@@ -47,7 +48,8 @@ namespace elsa
         DataContainer() = delete;
 
         /**
-         * @brief Constructor for empty DataContainer, no initialisation is performed
+         * @brief Constructor for empty DataContainer, no initialisation is performed,
+         *        but the underlying space is allocated.
          *
          * @param[in] dataDescriptor containing the associated metadata
          * @param[in] handlerType the data handler (default: CPU)
@@ -246,6 +248,38 @@ namespace elsa
         /// return the max of all elements of this signal
         data_t maxElement() const;
 
+        /// convert to the fourier transformed signal
+        void fft(FFTNorm norm) const;
+
+        /// convert to the inverse fourier transformed signal
+        void ifft(FFTNorm norm) const;
+
+        /// if the datacontainer is already complex, return itself.
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<isComplex<_data_t>, DataContainer<_data_t>> asComplex() const
+        {
+            return *this;
+        }
+
+        /// if the datacontainer is not complex,
+        /// return a copy and fill in 0 as imaginary values
+        template <typename _data_t = data_t>
+        typename std::enable_if_t<not isComplex<_data_t>, DataContainer<std::complex<_data_t>>>
+            asComplex() const
+        {
+            DataContainer<std::complex<data_t>> ret{
+                *this->_dataDescriptor,
+                this->_dataHandlerType,
+            };
+
+            // extend with complex zero value
+            for (index_t idx = 0; idx < this->getSize(); ++idx) {
+                ret[idx] = std::complex<data_t>{(*this)[idx], 0};
+            }
+
+            return ret;
+        }
+
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
 
@@ -409,13 +443,16 @@ namespace elsa
         template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
+        /// write a pretty-formatted string representation to stream
+        void format(std::ostream& os, format_config cfg = {}) const;
+
         /**
          * @brief Factory function which returns GPU based DataContainers
          *
          * @return the GPU based DataContainer
          *
-         * Note that if this function is called on a container which is already GPU based, it will
-         * throw an exception.
+         * Note that if this function is called on a container which is already GPU based, it
+         * will throw an exception.
          */
         DataContainer loadToGPU();
 
@@ -465,10 +502,31 @@ namespace elsa
         bool canAssign(DataHandlerType handlerType);
     };
 
+    /// pretty output formatting.
+    /// for configurable output, use `DataContainerFormatter` directly.
+    template <typename T>
+    std::ostream& operator<<(std::ostream& os, const elsa::DataContainer<T>& dc)
+    {
+        dc.format(os);
+        return os;
+    }
+
     /// Concatenate two DataContainers to one (requires copying of both)
     template <typename data_t>
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
                                       const DataContainer<data_t>& dc2);
+
+    /// Perform the FFT shift operation to the provided signal. Refer to
+    /// https://numpy.org/doc/stable/reference/generated/numpy.fft.fftshift.html for further
+    /// details.
+    template <typename data_t>
+    DataContainer<data_t> fftShift2D(DataContainer<data_t> dc);
+
+    /// Perform the IFFT shift operation to the provided signal. Refer to
+    /// https://numpy.org/doc/stable/reference/generated/numpy.fft.ifftshift.html for further
+    /// details.
+    template <typename data_t>
+    DataContainer<data_t> ifftShift2D(DataContainer<data_t> dc);
 
     /// User-defined template argument deduction guide for the expression based constructor
     template <typename Source>

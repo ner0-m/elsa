@@ -3,6 +3,25 @@ Change Log
 
 All notable changes are documented in this file.
 
+v0.7 (October 27, 2021)
+-----------------------
+- add deep learning module, with backends for cuDNN and OneDNN
+- add initial support for dictionary learning (representation problem using OMP)
+- add ADMM solver
+- add preconditioning support to FGM, OGM, SQS
+- add ordered subset support for SQS
+- upgrades to DataContainers (e.g. reductions)
+- replace Catch2 with doctest
+- many improvements to the CMake setup
+- add support for CMake presets
+- add linting for CMake files
+- use docker registry for CI images
+- updates to documentation, add some guides
+- improvements on unit tests
+- various code clean-ups
+- various bugfixes
+
+
 v0.6 (February 2, 2021)
 -----------------------
 - switch to CPM for third party dependencies (away from git submodules)

@@ -37,6 +37,9 @@ namespace elsa
     /// global constexpr for the number pi
     constexpr auto pi_t = pi<real_t>;
 
+    /// various values of the different norms of the Fourier transforms
+    enum class FFTNorm { FORWARD, ORTHO, BACKWARD };
+
     /// type of the DataHandler used to store the actual data
     enum class DataHandlerType {
         CPU,     ///< data is stored as an Eigen::Matrix in CPU main memory
@@ -83,3 +86,17 @@ namespace elsa
     constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, std::complex<float>>::value
                                || std::is_same<RemoveCvRef_t<T>, std::complex<double>>::value;
 } // namespace elsa
+
+/*
+ * Branch prediction tuning.
+ * the expression is expected to be true (=likely) or false (=unlikely).
+ *
+ * btw, this implementation was taken from the Linux kernel.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) (x)
+#define unlikely(x) (x)
+#endif

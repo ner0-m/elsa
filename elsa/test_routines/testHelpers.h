@@ -74,7 +74,7 @@ namespace elsa
      * @param margin allowed tolerance in percentage
      */
     template <typename T>
-    [[nodiscard]] bool checkApproxEq(T left, SelfType_t<T> right, double margin = 0.01)
+    [[nodiscard]] bool checkApproxEq(T left, SelfType_t<T> right, double margin = epsilon)
     {
         using Approx = doctest::Approx;
 
@@ -95,7 +95,7 @@ namespace elsa
     }
 
     template <typename T>
-    [[nodiscard]] bool checkApproxNe(T left, SelfType_t<T> right, double margin = 0.01)
+    [[nodiscard]] bool checkApproxNe(T left, SelfType_t<T> right, double margin = epsilon)
     {
         using Approx = doctest::Approx;
 

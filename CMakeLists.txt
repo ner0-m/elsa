@@ -138,7 +138,7 @@ if(ELSA_MASTER_PROJECT)
         CPMAddPackage(
             NAME spdlog
             GITHUB_REPOSITORY gabime/spdlog
-            VERSION 1.9.0
+            VERSION 1.8.5
             OPTIONS "SPDLOG_INSTALL ON"
         )
         message(STATUS "Using bundled spdlog version in ${spdlog_SOURCE_DIR}")
