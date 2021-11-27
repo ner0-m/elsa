@@ -75,7 +75,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
                 shearletTransform.apply(complexSignal);
 
             DataContainer<TestType> reconstruction =
-                shearletTransform.applyAdjoint(shearletCoefficients).getReal();
+                real(shearletTransform.applyAdjoint(shearletCoefficients));
 
             THEN("the ground truth and the reconstruction match")
             {
