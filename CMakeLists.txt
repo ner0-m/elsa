@@ -17,7 +17,6 @@ if(NOT DEFINED ELSA_MASTER_PROJECT)
 endif ()
 
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
-option(ELSA_CREATE_JUNIT_REPORTS "Enable creating JUnit style reports when running tests" ON)
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
 option(ELSA_BENCHMARKS "Enable elsa benchmark test cases" OFF)
 
@@ -139,7 +138,7 @@ if(ELSA_MASTER_PROJECT)
         CPMAddPackage(
             NAME spdlog
             GITHUB_REPOSITORY gabime/spdlog
-            VERSION 1.9.0
+            VERSION 1.8.5
             OPTIONS "SPDLOG_INSTALL ON"
         )
         message(STATUS "Using bundled spdlog version in ${spdlog_SOURCE_DIR}")
@@ -176,7 +175,7 @@ if(ELSA_MASTER_PROJECT)
             CPMAddPackage(
                 NAME Quickvec
                 GIT_REPOSITORY https://gitlab.lrz.de/IP/quickvec.git
-                GIT_TAG master
+                GIT_TAG 960ac64 # current commit on master 
             )
 
             if(Quickvec_ADDED)

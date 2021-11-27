@@ -8,21 +8,19 @@
 #include "DataContainerIterator.h"
 #include "Error.h"
 #include "Expression.h"
+#include "FormatConfig.h"
 #include "TypeCasts.hpp"
-#include <limits>
 
 #ifdef ELSA_CUDA_VECTOR
 #include "DataHandlerGPU.h"
 #include "DataHandlerMapGPU.h"
 #endif
 
-#include <iostream>
 #include <memory>
 #include <type_traits>
 
 namespace elsa
 {
-
     /**
      * @brief class representing and storing a linearized n-dimensional signal
      *
@@ -244,11 +242,17 @@ namespace elsa
         /// return the sum of all elements of this signal
         data_t sum() const;
 
+        /// return the min of all elements of this signal
+        data_t minElement() const;
+
+        /// return the max of all elements of this signal
+        data_t maxElement() const;
+
         /// convert to the fourier transformed signal
-        void fft() const;
+        void fft(FFTNorm norm) const;
 
         /// convert to the inverse fourier transformed signal
-        void ifft() const;
+        void ifft(FFTNorm norm) const;
 
         /// if the datacontainer is already complex, return itself.
         template <typename _data_t = data_t>
@@ -274,54 +278,6 @@ namespace elsa
             }
 
             return ret;
-        }
-
-        /// get only the real part and discard the imaginary values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<isComplex<_data_t>,
-                                  DataContainer<GetFloatingPointType_t<_data_t>>>
-            getReal() const
-        {
-            return this->getComplexSplitup<true>();
-        }
-
-        /// get only the imaginary part and discard the real values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<isComplex<_data_t>,
-                                  DataContainer<GetFloatingPointType_t<_data_t>>>
-            getImaginary() const
-        {
-            return this->getComplexSplitup<false>();
-        }
-
-        /// return the minimum element of all the stored values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<!isComplex<_data_t>, _data_t> min() const
-        {
-            // TODO: dispatch to DataHandler backend and use optimized variants
-            data_t min = std::numeric_limits<data_t>::max();
-            for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                auto&& elem = (*this)[idx];
-                if (elem < min) {
-                    min = elem;
-                }
-            }
-            return min;
-        }
-
-        /// return the maximum element of all the stored values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<!isComplex<_data_t>, _data_t> max() const
-        {
-            // TODO: dispatch to DataHandler backend and use optimized variants
-            data_t max = std::numeric_limits<data_t>::min();
-            for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                auto&& elem = (*this)[idx];
-                if (elem > max) {
-                    max = elem;
-                }
-            }
-            return max;
         }
 
         /// compute in-place element-wise addition of another container
@@ -488,15 +444,15 @@ namespace elsa
         friend constexpr auto evaluateOrReturn(Operand const& operand);
 
         /// write a pretty-formatted string representation to stream
-        void format(std::ostream& os) const;
+        void format(std::ostream& os, format_config cfg = {}) const;
 
         /**
          * @brief Factory function which returns GPU based DataContainers
          *
          * @return the GPU based DataContainer
          *
-         * Note that if this function is called on a container which is already GPU based, it will
-         * throw an exception.
+         * Note that if this function is called on a container which is already GPU based, it
+         * will throw an exception.
          */
         DataContainer loadToGPU();
 
@@ -585,6 +541,18 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
                                       const DataContainer<data_t>& dc2);
+
+    /// Perform the FFT shift operation to the provided signal. Refer to
+    /// https://numpy.org/doc/stable/reference/generated/numpy.fft.fftshift.html for further
+    /// details.
+    template <typename data_t>
+    DataContainer<data_t> fftShift2D(DataContainer<data_t> dc);
+
+    /// Perform the IFFT shift operation to the provided signal. Refer to
+    /// https://numpy.org/doc/stable/reference/generated/numpy.fft.ifftshift.html for further
+    /// details.
+    template <typename data_t>
+    DataContainer<data_t> ifftShift2D(DataContainer<data_t> dc);
 
     /// User-defined template argument deduction guide for the expression based constructor
     template <typename Source>
@@ -816,19 +784,6 @@ namespace elsa
 #endif
     }
 
-    /// Element-wise imaginary parts of the Operand
-    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto imag(Operand const& operand)
-    {
-        auto imag = [](auto const& operand) { return (operand.array().imag()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR
-        auto imagGPU = [](auto const& operand, bool) { return quickvec::imag(operand); };
-        return Expression{Callables{imag, imagGPU}, operand};
-#else
-        return Expression{imag, operand};
-#endif
-    }
-
     /// Element-wise real parts of the Operand
     template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
     auto real(Operand const& operand)
@@ -839,6 +794,19 @@ namespace elsa
         return Expression{Callables{real, realGPU}, operand};
 #else
         return Expression{real, operand};
+#endif
+    }
+
+    /// Element-wise imaginary parts of the Operand
+    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
+    auto imag(Operand const& operand)
+    {
+        auto imag = [](auto const& operand) { return (operand.array().imag()).matrix(); };
+#ifdef ELSA_CUDA_VECTOR
+        auto imagGPU = [](auto const& operand, bool) { return quickvec::imag(operand); };
+        return Expression{Callables{imag, imagGPU}, operand};
+#else
+        return Expression{imag, operand};
 #endif
     }
 } // namespace elsa
