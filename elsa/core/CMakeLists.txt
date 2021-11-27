@@ -6,6 +6,7 @@ set(MODULE_HEADERS
     Utilities/Badge.hpp
     Utilities/DataContainerFormatter.hpp
     Utilities/FormatConfig.h
+    Utilities/Math.hpp
     Utilities/Statistics.hpp
     Utilities/TypeCasts.hpp
     Descriptors/DataDescriptor.h

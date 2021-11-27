@@ -2,6 +2,7 @@
 #include "FourierTransform.h"
 #include "VolumeDescriptor.h"
 #include "Timer.h"
+#include "Math.hpp"
 
 namespace elsa
 {
@@ -10,42 +11,21 @@ namespace elsa
         : ShearletTransform(spatialDimensions[0], spatialDimensions[1])
     {
         if (spatialDimensions.size() != 2) {
-            throw LogicError("ShearletTransform: a non-2D shape of input was provided");
+            throw LogicError("ShearletTransform: Only 2D shape supported");
         }
     }
 
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>::ShearletTransform(index_t width, index_t height)
-        : LinearOperator<ret_t>(
-            VolumeDescriptor{{width, height}},
-            VolumeDescriptor{{width, height, calculateNumOfLayers(width, height)}}),
-          _width{width},
-          _height{height},
-          _numOfScales{calculateNumOfScales(width, height)},
-          _numOfLayers{calculateNumOfLayers(width, height)}
+        : ShearletTransform(width, height, calculateNumOfScales(width, height))
     {
-        if (width < 0 || height < 0) {
-            throw LogicError("ShearletTransform: negative width/height were provided");
-        }
     }
 
     template <typename ret_t, typename data_t>
     ShearletTransform<ret_t, data_t>::ShearletTransform(index_t width, index_t height,
                                                         index_t numOfScales)
-        : LinearOperator<ret_t>(
-            VolumeDescriptor{{width, height}},
-            VolumeDescriptor{{width, height, calculateNumOfLayers(numOfScales)}}),
-          _width{width},
-          _height{height},
-          _numOfScales{numOfScales},
-          _numOfLayers{calculateNumOfLayers(numOfScales)}
+        : ShearletTransform(width, height, numOfScales, std::nullopt)
     {
-        if (width < 0 || height < 0) {
-            throw LogicError("ShearletTransform: negative width/height were provided");
-        }
-        if (numOfScales < 0) {
-            throw LogicError("ShearletTransform: negative number of scales was provided");
-        }
     }
 
     template <typename ret_t, typename data_t>
@@ -56,7 +36,6 @@ namespace elsa
             VolumeDescriptor{{width, height}},
             VolumeDescriptor{{width, height, calculateNumOfLayers(numOfScales)}}),
           _spectra{spectra},
-          _isSpectraComputed{_spectra.has_value()},
           _width{width},
           _height{height},
           _numOfScales{numOfScales},
@@ -110,7 +89,7 @@ namespace elsa
             ->info("Running the shearlet transform on a 2D signal of shape ({}, {}), on {} "
                    "scales with an oversampling factor of {} and {} spectra",
                    _width, _height, _numOfScales, _numOfLayers,
-                   _isSpectraComputed ? "precomputed" : "non-precomputed");
+                   isSpectraComputed() ? "precomputed" : "non-precomputed");
 
         if (!isSpectraComputed()) {
             computeSpectra();
@@ -144,10 +123,11 @@ namespace elsa
         }
 
         Logger::get("ShearletTransform")
-            ->info("Running the inverse shearlet transform on a 2D signal of shape ({}, {}), on {} "
+            ->info("Running the inverse shearlet transform on a 2D signal of shape ({}, {}), "
+                   "on {} "
                    "scales with an oversampling factor of {} and {} spectra",
                    _width, _height, _numOfScales, _numOfLayers,
-                   _isSpectraComputed ? "precomputed" : "non-precomputed");
+                   isSpectraComputed() ? "precomputed" : "non-precomputed");
 
         if (!isSpectraComputed()) {
             computeSpectra();
@@ -175,146 +155,112 @@ namespace elsa
     void ShearletTransform<ret_t, data_t>::computeSpectra() const
     {
         if (isSpectraComputed()) {
-            return;
+            Logger::get("ShearletTransform")->warn("Spectra have already been computed!");
         }
 
-        DataContainer<data_t> spectra(VolumeDescriptor{{_width, _height, _numOfLayers}});
-        spectra = 0;
+        _spectra = DataContainer<data_t>(VolumeDescriptor{{_width, _height, _numOfLayers}});
 
         index_t i = 0;
 
-        DataContainer<data_t> sectionZero(VolumeDescriptor{{_width, _height}});
-        sectionZero = 0;
-        for (auto w = static_cast<int>(-std::floor(_width / 2.0)); w < std::ceil(_width / 2.0);
-             w++) {
-            for (auto h = static_cast<int>(-std::floor(_height / 2.0));
-                 h < std::ceil(_height / 2.0); h++) {
-                sectionZero(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                    phiHat(static_cast<data_t>(w), static_cast<data_t>(h));
-            }
-        }
-        spectra.slice(i) = sectionZero;
-        i += 1;
+        _computeSpectraAtLowFreq(i);
 
         for (index_t j = 0; j < _numOfScales; j++) {
-            for (auto k = static_cast<index_t>(-std::pow(2, j));
-                 k <= static_cast<index_t>(std::pow(2, j)); k++) {
-                DataContainer<data_t> sectionh(VolumeDescriptor{{_width, _height}});
-                sectionh = 0;
-                DataContainer<data_t> sectionv(VolumeDescriptor{{_width, _height}});
-                sectionv = 0;
-                DataContainer<data_t> sectionhxv(VolumeDescriptor{{_width, _height}});
-                sectionhxv = 0;
-                for (auto w = static_cast<index_t>(-std::floor(_width / 2.0));
-                     w < static_cast<index_t>(std::ceil(_width / 2.0)); w++) {
-                    for (auto h = static_cast<index_t>(-std::floor(_height / 2.0));
-                         h < static_cast<index_t>(std::ceil(_height / 2.0)); h++) {
-                        data_t horiz = 0;
-                        data_t vertic = 0;
-                        if (std::abs(h) <= std::abs(w)) {
-                            horiz = psiHat(std::pow(4, -j) * w,
-                                           std::pow(4, -j) * k * w + std::pow(2, -j) * h);
-                        } else {
-                            vertic = psiHat(std::pow(4, -j) * h,
-                                            std::pow(4, -j) * k * h + std::pow(2, -j) * w);
-                        }
-                        if (std::abs(k) <= static_cast<index_t>(std::pow(2, j)) - 1) {
-                            sectionh(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = horiz;
-                            sectionv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) = vertic;
-                        } else if (std::abs(k) == static_cast<index_t>(std::pow(2, j))) {
-                            sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                                horiz + vertic;
-                        }
-                    }
-                }
-                if (std::abs(k) <= static_cast<index_t>(std::pow(2, j)) - 1) {
-                    spectra.slice(i) = sectionh;
-                    i += 1;
-                    spectra.slice(i) = sectionv;
-                    i += 1;
-                } else if (std::abs(k) == static_cast<index_t>(std::pow(2, j))) {
-                    spectra.slice(i) = sectionhxv;
-                    i += 1;
+            auto twoPowJ = static_cast<index_t>(std::pow(2, j));
+
+            _computeSpectraAtSeamLines(i, j, -twoPowJ);
+            for (auto k = -twoPowJ + 1; k < twoPowJ; k++) {
+                _computeSpectraAtConicRegions(i, j, k);
+            }
+            _computeSpectraAtSeamLines(i, j, twoPowJ);
+        }
+
+        assert(i == _numOfLayers
+               && "ShearletTransform: The layers of the spectra were indexed wrong");
+    }
+
+    template <typename ret_t, typename data_t>
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtLowFreq(index_t& i) const
+    {
+        DataContainer<data_t> sectionZero(VolumeDescriptor{{_width, _height}});
+        sectionZero = 0;
+
+        auto negativeHalfWidth = static_cast<index_t>(-std::floor(_width / 2.0));
+        auto halfWidth = static_cast<index_t>(std::ceil(_width / 2.0));
+        auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
+        auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
+
+        // TODO attempt to refactor the negative indexing
+        for (auto w = negativeHalfWidth; w < halfWidth; w++) {
+            for (auto h = negativeHalfHeight; h < halfHeight; h++) {
+                sectionZero(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                    shearlet::phiHat<data_t>(static_cast<data_t>(w), static_cast<data_t>(h));
+            }
+        }
+
+        _spectra.value().slice(i++) = sectionZero;
+    }
+
+    template <typename ret_t, typename data_t>
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtConicRegions(index_t& i, index_t j,
+                                                                         index_t k) const
+    {
+        DataContainer<data_t> sectionh(VolumeDescriptor{{_width, _height}});
+        sectionh = 0;
+        DataContainer<data_t> sectionv(VolumeDescriptor{{_width, _height}});
+        sectionv = 0;
+
+        auto negativeHalfWidth = static_cast<index_t>(-std::floor(_width / 2.0));
+        auto halfWidth = static_cast<index_t>(std::ceil(_width / 2.0));
+        auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
+        auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
+
+        // TODO attempt to refactor the negative indexing
+        for (auto w = negativeHalfWidth; w < halfWidth; w++) {
+            for (auto h = negativeHalfHeight; h < halfHeight; h++) {
+                if (std::abs(h) <= std::abs(w)) {
+                    sectionh(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        shearlet::psiHat<data_t>(std::pow(4, -j) * w,
+                                                 std::pow(4, -j) * k * w + std::pow(2, -j) * h);
+                } else {
+                    sectionv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        shearlet::psiHat<data_t>(std::pow(4, -j) * h,
+                                                 std::pow(4, -j) * k * h + std::pow(2, -j) * w);
                 }
             }
         }
 
-        _spectra = spectra;
-
-        _isSpectraComputed = true;
+        _spectra.value().slice(i++) = sectionh;
+        _spectra.value().slice(i++) = sectionv;
     }
 
     template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::meyerFunction(data_t x) const
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtSeamLines(index_t& i, index_t j,
+                                                                      index_t k) const
     {
-        if (x < 0) {
-            return 0;
-        } else if (0 <= x && x <= 1) {
-            return 35 * std::pow(x, 4) - 84 * std::pow(x, 5) + 70 * std::pow(x, 6)
-                   - 20 * std::pow(x, 7);
-        } else {
-            return 1;
+        DataContainer<data_t> sectionhxv(VolumeDescriptor{{_width, _height}});
+        sectionhxv = 0;
+
+        auto negativeHalfWidth = static_cast<index_t>(-std::floor(_width / 2.0));
+        auto halfWidth = static_cast<index_t>(std::ceil(_width / 2.0));
+        auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
+        auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
+
+        // TODO attempt to refactor the negative indexing
+        for (auto w = negativeHalfWidth; w < halfWidth; w++) {
+            for (auto h = negativeHalfHeight; h < halfHeight; h++) {
+                if (std::abs(h) <= std::abs(w)) {
+                    sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        shearlet::psiHat<data_t>(std::pow(4, -j) * w,
+                                                 std::pow(4, -j) * k * w + std::pow(2, -j) * h);
+                } else {
+                    sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
+                        shearlet::psiHat<data_t>(std::pow(4, -j) * h,
+                                                 std::pow(4, -j) * k * h + std::pow(2, -j) * w);
+                }
+            }
         }
-    }
 
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::b(data_t w) const
-    {
-        if (1 <= std::abs(w) && std::abs(w) <= 2) {
-            return std::sin(pi<data_t> / 2.0 * meyerFunction(std::abs(w) - 1));
-        } else if (2 < std::abs(w) && std::abs(w) <= 4) {
-            return std::cos(pi<data_t> / 2.0 * meyerFunction(1.0 / 2 * std::abs(w) - 1));
-        } else {
-            return 0;
-        }
-    }
-
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::phi(data_t w) const
-    {
-        if (std::abs(w) <= 1.0 / 2) {
-            return 1;
-        } else if (1.0 / 2 < std::abs(w) && std::abs(w) < 1) {
-            return std::cos(pi<data_t> / 2.0 * meyerFunction(2 * std::abs(w) - 1));
-        } else {
-            return 0;
-        }
-    }
-
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::phiHat(data_t w, data_t h) const
-    {
-        if (std::abs(h) <= std::abs(w)) {
-            return phi(w);
-        } else {
-            return phi(h);
-        }
-    }
-
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::psiHat1(data_t w) const
-    {
-        return std::sqrt(std::pow(b(2 * w), 2) + std::pow(b(w), 2));
-    }
-
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::psiHat2(data_t w) const
-    {
-        if (w <= 0) {
-            return std::sqrt(meyerFunction(1 + w));
-        } else {
-            return std::sqrt(meyerFunction(1 - w));
-        }
-    }
-
-    template <typename ret_t, typename data_t>
-    data_t ShearletTransform<ret_t, data_t>::psiHat(data_t w, data_t h) const
-    {
-        if (w == 0) {
-            return 0;
-        } else {
-            return psiHat1(w) * psiHat2(h / w);
-        }
+        _spectra.value().slice(i++) = sectionhxv;
     }
 
     template <typename ret_t, typename data_t>
@@ -329,7 +275,7 @@ namespace elsa
     template <typename ret_t, typename data_t>
     bool ShearletTransform<ret_t, data_t>::isSpectraComputed() const
     {
-        return _isSpectraComputed;
+        return _spectra.has_value();
     }
 
     template <typename ret_t, typename data_t>
