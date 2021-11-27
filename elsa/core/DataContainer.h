@@ -500,32 +500,6 @@ namespace elsa
          * assignment should be performed or not.
          */
         bool canAssign(DataHandlerType handlerType);
-
-        /// helper function to get either the real or imaginary part
-        /// from the complex values
-        template <bool get_real, typename _data_t = data_t>
-        typename std::enable_if_t<isComplex<_data_t>,
-                                  DataContainer<GetFloatingPointType_t<_data_t>>>
-            getComplexSplitup() const
-        {
-            using f_type = GetFloatingPointType_t<_data_t>;
-            DataContainer<f_type> ret{
-                *this->_dataDescriptor,
-                this->_dataHandlerType,
-            };
-
-            // drop one of real/imaginary parts
-            for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                auto&& val = (*this)[idx];
-                if constexpr (get_real) {
-                    ret[idx] = val.real();
-                } else {
-                    ret[idx] = val.imag();
-                }
-            }
-
-            return ret;
-        }
     };
 
     /// pretty output formatting.
