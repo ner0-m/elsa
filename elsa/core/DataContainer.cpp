@@ -386,6 +386,10 @@ namespace elsa
             throw LogicError("Trying to access out of bound slice");
         }
 
+        if (sizeOfLastDim == 1) {
+            return *this;
+        }
+
         auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
 
         // Now set the slice
@@ -401,6 +405,10 @@ namespace elsa
 
         if (i >= sizeOfLastDim) {
             throw LogicError("Trying to access out of bound slice");
+        }
+
+        if (sizeOfLastDim == 1) {
+            return *this;
         }
 
         auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);

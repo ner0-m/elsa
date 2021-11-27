@@ -17,7 +17,6 @@ if(NOT DEFINED ELSA_MASTER_PROJECT)
 endif ()
 
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
-option(ELSA_CREATE_JUNIT_REPORTS "Enable creating JUnit style reports when running tests" ON)
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
 option(ELSA_BENCHMARKS "Enable elsa benchmark test cases" OFF)
 
@@ -176,7 +175,7 @@ if(ELSA_MASTER_PROJECT)
             CPMAddPackage(
                 NAME Quickvec
                 GIT_REPOSITORY https://gitlab.lrz.de/IP/quickvec.git
-                GIT_TAG master
+                GIT_TAG 960ac64 # current commit on master 
             )
 
             if(Quickvec_ADDED)
