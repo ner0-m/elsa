@@ -7,7 +7,6 @@ set(MODULE_HEADERS
     FISTA.h
     FGM.h
     OGM.h
-    SHADMM.h
     ADMM.h
     SQS.h
     OrthogonalMatchingPursuit.h

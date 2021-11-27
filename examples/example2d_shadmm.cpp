@@ -1,9 +1,6 @@
-/// Elsa example program: basic 2d X-ray CT simulation and reconstruction
+/// elsa example program: basic 2D X-ray CT simulation and reconstruction
 
 #include "elsa.h"
-
-#include "SHADMM.h"
-#include "NoiseGenerators.h"
 
 #include <iostream>
 
@@ -33,7 +30,7 @@ void example2d_shadmm()
     WLSProblem<real_t> wlsProblem(projector, sinogram);
 
     ShearletTransform<real_t, real_t> shearletTransform(n, n);
-    shearletTransform.computeSpectra(); // TODO remove to further simplify
+    shearletTransform.computeSpectra();
     index_t layers = shearletTransform.getNumOfLayers();
 
     DataContainer<real_t> wL1NWeights(shearletTransform.getRangeDescriptor());
@@ -45,15 +42,15 @@ void example2d_shadmm()
     SplittingProblem<real_t> splittingProblem(wlsProblem.getDataTerm(), wL1NormRegTerm,
                                               VolumeDescriptor{{n, n, layers + 1}});
 
-    ADMM<CG, SoftThresholding, real_t> shadmm(splittingProblem, true);
+    ADMM<CG, SoftThresholding, real_t> admm(splittingProblem, true);
 
     index_t noIterations{5};
 
     Logger::get("Info")->info("Solving reconstruction using {} iterations of ADMM", noIterations);
-    auto sol = shadmm.solve(5);
+    auto solution = admm.solve(5);
 
     // write the reconstruction out
-    EDF::write(sol, "2dreconstruction_sdlx.edf");
+    EDF::write(solution, "2dreconstruction_sdlx.edf");
 }
 
 int main()
