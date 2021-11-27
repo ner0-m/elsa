@@ -21,7 +21,8 @@ void example2d_shadmm()
         numOfAngles, std::pair(geometry::Degree(60), geometry::Degree(120)),
         phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
-    SiddonsMethodCUDA<real_t> projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
+    // consider using the CUDA version if available
+    SiddonsMethod<real_t> projector(VolumeDescriptor{{n, n}}, *sinoDescriptor);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);
