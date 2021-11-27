@@ -130,46 +130,19 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
 
     GIVEN("some problems and a constraint")
     {
-        index_t n = 128;
+        index_t n = 32;
         IndexVector_t size(2);
         size << n, n;
         VolumeDescriptor volDescr(size);
 
-        // random number
-        real_t rho1 = 1 / 2;
+        real_t rho1 = 1.0 / 2;
         real_t rho2 = 1;
 
-        /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
         ShearletTransform<TestType, TestType> shearletTransform(size);
         index_t layers = shearletTransform.getNumOfLayers();
 
         IndexVector_t slicesInBlock(2);
         slicesInBlock << layers, 1;
-
-        std::vector<std::unique_ptr<LinearOperator<TestType>>> opsOfA(0);
-        Scaling<TestType> scaling(VolumeDescriptor{{n, n}}, rho2);
-        opsOfA.push_back(shearletTransform.clone()); // TODO mult. with rho1 later on
-        opsOfA.push_back(scaling.clone());
-        BlockLinearOperator<TestType> A{
-            VolumeDescriptor{{n, n}},
-            PartitionDescriptor{VolumeDescriptor{{n, n, layers + 1}}, slicesInBlock}, opsOfA,
-            BlockLinearOperator<TestType>::BlockType::ROW};
-
-        /// B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-        DataContainer<TestType> factorsOfB(VolumeDescriptor{n, n, layers + 1});
-        for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
-            if (ind < (n * n * layers)) {
-                factorsOfB[ind] = -1 * rho1;
-            } else {
-                factorsOfB[ind] = -1 * rho2;
-            }
-        }
-        Scaling<TestType> B(VolumeDescriptor{{n, n, layers + 1}}, factorsOfB);
-
-        DataContainer<TestType> c(VolumeDescriptor{{n, n, layers + 1}});
-        c = 0;
-
-        Constraint<TestType> constraint(A, B, c);
 
         WHEN("setting up ADMM to solve a problem")
         {
@@ -182,16 +155,13 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
             WLSProblem<TestType> wlsProb(idOp, dcB);
 
             DataContainer<TestType> wL1NWeights(VolumeDescriptor{{n, n, layers}});
-            wL1NWeights = 1;
+            wL1NWeights = 0.001f;
             WeightedL1Norm<TestType> weightedL1Norm(LinearResidual<TestType>{shearletTransform},
                                                     wL1NWeights);
             RegularizationTerm<TestType> wL1NormRegTerm(1, weightedL1Norm);
 
-            Indicator<TestType> indicator(VolumeDescriptor{{n, n}});
-            RegularizationTerm<TestType> indicRegTerm(1, indicator);
-
-            SplittingProblem<TestType> splittingProblem(
-                wlsProb.getDataTerm(), std::vector{wL1NormRegTerm, indicRegTerm}, constraint);
+            SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), wL1NormRegTerm,
+                                                        VolumeDescriptor{{n, n, layers + 1}});
 
             ADMM<CG, SoftThresholding, TestType> admm(splittingProblem, true);
 

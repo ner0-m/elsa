@@ -259,6 +259,28 @@ namespace elsa
     }
 
     template <typename data_t>
+    data_t LinearOperator<data_t>::getScalar()
+    {
+        if (_scalar.has_value()) {
+            return _scalar.value();
+        } else {
+            throw LogicError("LinearOperator: no scalar found");
+        }
+    }
+
+    template <typename data_t>
+    LinearOperator<data_t>& LinearOperator<data_t>::getLHS()
+    {
+        return *_lhs;
+    }
+
+    template <typename data_t>
+    LinearOperator<data_t>& LinearOperator<data_t>::getRHS()
+    {
+        return *_rhs;
+    }
+
+    template <typename data_t>
     LinearOperator<data_t>* LinearOperator<data_t>::cloneImpl() const
     {
         if (_isLeaf)

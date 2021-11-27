@@ -109,6 +109,13 @@ namespace elsa
          */
         void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const;
 
+        /// get the scalar if it has one, else throw an error
+        data_t getScalar();
+
+        LinearOperator<data_t>& getLHS();
+
+        LinearOperator<data_t>& getRHS();
+
         /// friend operator+ to support composition of LinearOperators (and its derivatives)
         friend LinearOperator<data_t> operator+(const LinearOperator<data_t>& lhs,
                                                 const LinearOperator<data_t>& rhs)

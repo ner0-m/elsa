@@ -2,11 +2,11 @@
 
 #include "Solver.h"
 #include "VolumeDescriptor.h"
+#include "PartitionDescriptor.h"
 #include "SoftThresholding.h"
 #include "SplittingProblem.h"
 #include "BlockLinearOperator.h"
 #include "WeightedL1Norm.h"
-#include "Indicator.h"
 #include "L2NormPow2.h"
 #include "LinearResidual.h"
 #include "ShearletTransform.h"
@@ -173,12 +173,12 @@ namespace elsa
             const auto& f = splittingProblem.getF();
             const auto& g = splittingProblem.getG();
 
-            const auto& dataTerm = f;
-
-            if (!is<L2NormPow2<data_t>>(dataTerm)) {
+            if (!is<L2NormPow2<data_t>>(f)) {
                 throw InvalidArgumentError(
                     "ADMM::solveImpl: supported data term only of type L2NormPow2");
             }
+
+            const auto& dataTerm = f;
 
             // safe as long as only LinearResidual exits
             const auto& dataTermResidual = downcast<LinearResidual<data_t>>(f.getResidual());
@@ -188,62 +188,103 @@ namespace elsa
             std::unique_ptr<DataContainer<data_t>> w;
             std::unique_ptr<std::vector<geometry::Threshold<data_t>>> thresholds;
 
-            /// TODO now we have two here? the WL1Norm and Indicator, they don't seem to be used (we
-            ///  currently only get the weight from WL1Norm), would be used if SoftThresholding
-            ///  accepted them in the constructor
             if (g.size() == 1) {
                 regWeight = std::make_unique<data_t>(g[0].getWeight());
                 Functional<data_t>& regularizationTerm = g[0].getFunctional();
 
                 if (!is<L0PseudoNorm<data_t>>(regularizationTerm)
-                    && !is<L1Norm<data_t>>(regularizationTerm)) {
+                    && !is<L1Norm<data_t>>(regularizationTerm)
+                    && !is<WeightedL1Norm<data_t>>(regularizationTerm)) {
                     throw InvalidArgumentError(
                         "ADMM::solveImpl: supported regularization terms are "
-                        "of type L0PseudoNorm or L1Norm");
-                }
-            } else if (g.size() == 2) {
-                if (g[0].getWeight() != g[1].getWeight()) {
-                    throw InvalidArgumentError(
-                        "ADMM::solveImpl: regularization weights should match");
+                        "of type L0PseudoNorm or L1Norm or WeightedL1Norm");
                 }
 
-                if (!is<WeightedL1Norm<data_t>>(&g[0].getFunctional())
-                    || !is<Indicator<data_t>>(&g[1].getFunctional())) {
-                    throw InvalidArgumentError(
-                        "ADMM::solveImpl: supported regularization terms are "
-                        "of type WeightedL1Norm and Indicator, respectively");
+                if (is<WeightedL1Norm<data_t>>(regularizationTerm)) {
+                    auto wL1NormRegTerm = downcast<WeightedL1Norm<data_t>>(&g[0].getFunctional());
+
+                    w = std::make_unique<DataContainer<data_t>>(
+                        static_cast<DataContainer<data_t>>(wL1NormRegTerm->getWeightingOperator()));
+                    thresholds = std::make_unique<std::vector<geometry::Threshold<data_t>>>(
+                        ProximityOperator<data_t>::valuesToThresholds(_rho0 * *w / _rho1));
                 }
-
-                auto wL1NormRegTerm = downcast<WeightedL1Norm<data_t>>(&g[0].getFunctional());
-
-                w = std::make_unique<DataContainer<data_t>>(
-                    static_cast<DataContainer<data_t>>(wL1NormRegTerm->getWeightingOperator()));
-                thresholds = std::make_unique<std::vector<geometry::Threshold<data_t>>>(
-                    ProximityOperator<data_t>::valuesToThresholds(_rho0 * *w / _rho1));
             } else {
-                throw InvalidArgumentError("ADMM::solveImpl: supported number of "
-                                           "regularization terms is either 1 or 2");
+                throw InvalidArgumentError(
+                    "ADMM::solveImpl: supported number of regularization terms is 1");
             }
 
             const auto& constraint = splittingProblem.getConstraint();
-            const auto& A = constraint.getOperatorA();
-            const auto& B = constraint.getOperatorB();
-            const auto& c = constraint.getDataVectorC();
+            const LinearOperator<data_t>* A = &constraint.getOperatorA();
+            const LinearOperator<data_t>* B = &constraint.getOperatorB();
+            const DataContainer<data_t>* c = &constraint.getDataVectorC();
 
-            DataContainer<data_t> x(A.getDomainDescriptor());
+            std::unique_ptr<LinearOperator<data_t>> tA;
+            std::unique_ptr<LinearOperator<data_t>> tB;
+
+            if (_positiveSolutionsOnly) {
+                const DataDescriptor& domainDescriptor = dataTerm.getDomainDescriptor();
+
+                ShearletTransform<data_t, data_t> shearletTransform =
+                    downcast<ShearletTransform<data_t, data_t>>(
+                        downcast<LinearResidual<data_t>>(g[0].getFunctional().getResidual())
+                            .getOperator());
+
+                index_t n = domainDescriptor.getNumberOfCoefficientsPerDimension()[0];
+                index_t layers = shearletTransform.getNumOfLayers();
+
+                VolumeDescriptor layersPlusOneDescriptor{{n, n, layers + 1}};
+
+                IndexVector_t slicesInBlock(2);
+                slicesInBlock << layers, 1;
+
+                /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
+                std::vector<std::unique_ptr<LinearOperator<data_t>>> opsOfA(0);
+                Scaling<data_t> scaling(domainDescriptor, _rho2);
+                opsOfA.push_back(shearletTransform.clone()); // TODO mult. with rho1 later on
+                opsOfA.push_back(scaling.clone());
+                BlockLinearOperator<data_t> tempA(
+                    domainDescriptor, PartitionDescriptor{layersPlusOneDescriptor, slicesInBlock},
+                    opsOfA, BlockLinearOperator<data_t>::BlockType::ROW);
+
+                tA = tempA.clone();
+                A = &(*tA);
+
+                /// B = diag(−ρ_1*1_Ln^2, −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
+                DataContainer<data_t> factorsOfB(layersPlusOneDescriptor);
+                for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
+                    if (ind < (n * n * layers)) {
+                        factorsOfB[ind] = -1 * _rho1;
+                    } else {
+                        factorsOfB[ind] = -1 * _rho2;
+                    }
+                }
+                Scaling<data_t> tempB(layersPlusOneDescriptor, factorsOfB);
+
+                tB = tempB.clone();
+                B = &(*tB);
+
+                DataContainer<data_t> tempC(layersPlusOneDescriptor);
+                tempC = 0;
+
+                if (*c != tempC) {
+                    throw InvalidArgumentError("ADMM: the vector c of the constraint should be 0");
+                }
+            }
+
+            DataContainer<data_t> x(A->getDomainDescriptor());
             x = 0;
 
-            DataContainer<data_t> z(B.getRangeDescriptor());
+            DataContainer<data_t> z(B->getDomainDescriptor());
             z = 0;
 
-            DataContainer<data_t> u(A.getRangeDescriptor());
+            DataContainer<data_t> u(c->getDataDescriptor());
             u = 0;
 
             Logger::get("ADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
                                       "iteration", "xL2NormSq", "zL2NormSq", "uL2NormSq",
                                       "rkL2Norm", "skL2Norm");
             for (index_t iter = 0; iter < iterations; ++iter) {
-                LinearResidual<data_t> xLinearResidual(A, c - B.apply(z) - u);
+                LinearResidual<data_t> xLinearResidual(*A, *c - B->apply(z) - u);
                 RegularizationTerm xRegTerm(_rho, L2NormPow2<data_t>(xLinearResidual));
                 Problem<data_t> xUpdateProblem(dataTerm, xRegTerm, x);
 
@@ -253,16 +294,17 @@ namespace elsa
                 DataContainer<data_t> zPrev = z;
 
                 if (!_positiveSolutionsOnly) {
-                    ZSolver<data_t> zProxOp(A.getRangeDescriptor());
+                    ZSolver<data_t> zProxOp(A->getRangeDescriptor());
                     z = zProxOp.apply(x + u, geometry::Threshold{*regWeight / _rho});
                 } else {
-                    auto shearletTransform = downcast<ShearletTransform<data_t, data_t>>(
-                        downcast<BlockLinearOperator<data_t>>(A).getIthOperator(0));
-
-                    index_t layers = shearletTransform.getNumOfLayers();
-
                     ZSolver<data_t> zProxOp(w->getDataDescriptor());
 
+                    ShearletTransform<data_t, data_t> shearletTransform =
+                        downcast<ShearletTransform<data_t, data_t>>(
+                            downcast<LinearResidual<data_t>>(g[0].getFunctional().getResidual())
+                                .getOperator());
+
+                    index_t layers = shearletTransform.getNumOfLayers();
                     DataContainer<data_t> P1u = sliceByRange(0, layers - 1, u);
                     DataContainer<data_t> P1z =
                         zProxOp.apply(shearletTransform.apply(x) + P1u, *thresholds);
@@ -273,12 +315,12 @@ namespace elsa
                     z = concatenate(P1z, P2z);
                 }
 
-                u += A.apply(x) + B.apply(z) - c;
+                u += A->apply(x) + B->apply(z) - *c;
 
                 /// primal residual at iteration k
-                DataContainer<data_t> rk = A.apply(x) + B.apply(z) - c;
+                DataContainer<data_t> rk = A->apply(x) + B->apply(z) - *c;
                 /// dual residual at iteration k
-                DataContainer<data_t> sk = _rho * A.applyAdjoint(B.apply(z - zPrev));
+                DataContainer<data_t> sk = _rho * A->applyAdjoint(B->apply(z - zPrev));
 
                 data_t rkL2Norm = rk.l2Norm();
                 data_t skL2Norm = sk.l2Norm();
@@ -288,8 +330,8 @@ namespace elsa
                                           rkL2Norm, skL2Norm);
 
                 /// variables for the stopping criteria
-                data_t Axnorm = A.apply(x).l2Norm();
-                data_t Bznorm = B.apply(z).l2Norm();
+                data_t Axnorm = A->apply(x).l2Norm();
+                data_t Bznorm = B->apply(z).l2Norm();
                 const data_t cL2Norm = !dataTermResidual.hasDataVector()
                                            ? static_cast<data_t>(0.0)
                                            : dataTermResidual.getDataVector().l2Norm();
@@ -297,7 +339,7 @@ namespace elsa
                 const data_t epsRelMax = _epsilonRel * std::max(std::max(Axnorm, Bznorm), cL2Norm);
                 const auto epsilonPri = (std::sqrt(rk.getSize()) * _epsilonAbs) + epsRelMax;
 
-                data_t Atunorm = A.applyAdjoint(_rho * u).l2Norm();
+                data_t Atunorm = A->applyAdjoint(_rho * u).l2Norm();
                 const data_t epsRelL2Norm = _epsilonRel * Atunorm;
                 const auto epsilonDual = (std::sqrt(sk.getSize()) * _epsilonAbs) + epsRelL2Norm;
 
@@ -359,6 +401,7 @@ namespace elsa
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};
         data_t _rho0{1.0 / 2}; // consider as hyper-parameters
+        /// values specific to the problem statement in T. A. Bubba et al.
         data_t _rho1{1.0 / 2}; // consider as hyper-parameters
         data_t _rho2{1};       // just set it to 1, at least initially
 
