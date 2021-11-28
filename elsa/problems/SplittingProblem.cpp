@@ -1,5 +1,7 @@
 #include "SplittingProblem.h"
 #include "Identity.h"
+#include "RegularizationTerm.h"
+#include "Scaling.h"
 
 namespace elsa
 {
@@ -23,28 +25,17 @@ namespace elsa
     SplittingProblem<data_t>::SplittingProblem(const Functional<data_t>& f,
                                                const RegularizationTerm<data_t>& g,
                                                const DataDescriptor& rangeDescriptorOfConstraint)
-        : SplittingProblem(f, std::vector{g}, rangeDescriptorOfConstraint)
-    {
-    }
-
-    template <typename data_t>
-    SplittingProblem<data_t>::SplittingProblem(const Functional<data_t>& f,
-                                               const std::vector<RegularizationTerm<data_t>>& g,
-                                               const DataDescriptor& rangeDescriptorOfConstraint)
         : Problem<data_t>(f, g), _f{f.clone()}, _g{g}
     {
-        const DataDescriptor& dd = g[0].getFunctional().getDomainDescriptor();
-        for (unsigned long i = 0; i < g.size(); ++i) {
-            if (dd != g[i].getFunctional().getDomainDescriptor()) {
-                throw InvalidArgumentError("SplittingProblem: reg. terms have different domain "
-                                           "descriptors of functionals, use another constructor to "
-                                           "explicitly build the constraint instead");
-            }
+        const DataDescriptor& dd = g.getFunctional().getDomainDescriptor();
+        if (dd != g.getFunctional().getDomainDescriptor()) {
+            throw InvalidArgumentError("SplittingProblem: reg. term has different domain "
+                                       "descriptor of functional, use another constructor to "
+                                       "explicitly build the constraint instead");
         }
 
         Identity<data_t> A(f.getDomainDescriptor(), rangeDescriptorOfConstraint);
-        Scaling<data_t> B(g[0].getFunctional().getDomainDescriptor(), rangeDescriptorOfConstraint,
-                          -1);
+        Scaling<data_t> B(g.getFunctional().getDomainDescriptor(), rangeDescriptorOfConstraint, -1);
         DataContainer<data_t> c(rangeDescriptorOfConstraint);
         c = 0;
         Constraint<data_t> constraint(A, B, c);

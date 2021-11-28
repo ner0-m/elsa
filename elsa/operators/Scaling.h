@@ -31,8 +31,8 @@ namespace elsa
         /**
          * @brief Constructor for a scalar, isotropic scaling operator.
          *
-         * @param[in] descriptor DataDescriptor describing the domain of the operator
-         * @param[in] descriptor DataDescriptor describing the range of the operator
+         * @param[in] domainDescriptor DataDescriptor describing the domain of the operator
+         * @param[in] rangeDescriptor DataDescriptor describing the range of the operator
          * @param[in] scaleFactor the scalar factor to scale with
          */
         Scaling(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor,

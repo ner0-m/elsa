@@ -55,8 +55,8 @@ namespace elsa
         /**
          * @brief apply the proximity operator to an element in the operator's domain
          *
-         * @param[in] v input DataContainer
-         * @param[in] t input Threshold
+         * @param[in] v the input DataContainer
+         * @param[in] t the input Threshold
          *
          * @returns prox DataContainer containing the application of the proximity operator to
          * data v, i.e. in the range of the operator
@@ -69,8 +69,8 @@ namespace elsa
         /**
          * @brief apply the proximity operator to an element in the operator's domain
          *
-         * @param[in] v input DataContainer
-         * @param[in] thresholds input vector<Threshold>
+         * @param[in] v the input DataContainer
+         * @param[in] thresholds the input vector<Threshold>
          *
          * @returns prox DataContainer containing the application of the proximity operator to
          * data v, i.e. in the range of the operator
@@ -85,9 +85,9 @@ namespace elsa
         /**
          * @brief apply the proximity operator to an element in the operator's domain
          *
-         * @param[in] v input DataContainer
-         * @param[in] t input Threshold
-         * @param[out] prox output DataContainer
+         * @param[in] v the input DataContainer
+         * @param[in] t the input Threshold
+         * @param[out] prox the output DataContainer
          *
          * Please note: this method calls the method applyImpl that has to be overridden in derived
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
@@ -98,9 +98,9 @@ namespace elsa
         /**
          * @brief apply the proximity operator to an element in the operator's domain
          *
-         * @param[in] v input DataContainer
-         * @param[in] thresholds input vector<Threshold>
-         * @param[out] prox output DataContainer
+         * @param[in] v the input DataContainer
+         * @param[in] thresholds the input vector<Threshold>
+         * @param[out] prox the output DataContainer
          *
          * Please note: this method calls the method applyImpl that has to be overridden in derived
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
