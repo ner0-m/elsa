@@ -12,6 +12,7 @@
 #include "L1Norm.h"
 #include "VolumeDescriptor.h"
 #include "Identity.h"
+#include "WLSProblem.h"
 
 using namespace elsa;
 using namespace doctest;
