@@ -12,9 +12,7 @@
 #include "CG.h"
 #include "SoftThresholding.h"
 #include "HardThresholding.h"
-#include "Identity.h"
 #include "FISTA.h"
-#include "L0PseudoNorm.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 
