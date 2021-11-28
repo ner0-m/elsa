@@ -16,7 +16,6 @@
 #include "FISTA.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
-#include "PartitionDescriptor.h"
 
 #include <testHelpers.h>
 
@@ -135,9 +134,6 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
         size << n, n;
         VolumeDescriptor volDescr(size);
 
-        real_t rho1 = 1.0 / 2;
-        real_t rho2 = 1;
-
         ShearletTransform<TestType, TestType> shearletTransform(size);
         index_t layers = shearletTransform.getNumOfLayers();
 
@@ -146,9 +142,9 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
 
         WHEN("setting up ADMM to solve a problem")
         {
-            Vector_t<TestType> bVec(VolumeDescriptor{n * n}.getNumberOfCoefficients());
+            Vector_t<TestType> bVec(VolumeDescriptor{n, n}.getNumberOfCoefficients());
             bVec.setRandom();
-            DataContainer<TestType> dcB(VolumeDescriptor{n * n}, bVec);
+            DataContainer<TestType> dcB(VolumeDescriptor{n, n}, bVec);
 
             Identity<TestType> idOp(VolumeDescriptor{n, n});
 
@@ -169,7 +165,6 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
             {
                 REQUIRE_NOTHROW(admm.solve(1));
                 REQUIRE_UNARY(!std::isnan(admm.solve(2).squaredL2Norm()));
-                // REQUIRE_UNARY(isApprox(admm.solve(20), dcB));
             }
         }
     }
