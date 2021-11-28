@@ -7,6 +7,7 @@
 #include "Identity.h"
 #include "L2NormPow2.h"
 #include "LinearResidual.h"
+#include "Scaling.h"
 #include "ShearletTransform.h"
 #include "SoftThresholding.h"
 #include "SplittingProblem.h"
