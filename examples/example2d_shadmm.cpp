@@ -34,6 +34,7 @@ void example2d_shadmm()
     shearletTransform.computeSpectra();
     index_t layers = shearletTransform.getNumOfLayers();
 
+    // construct shearlet-based l1 regularization
     DataContainer<real_t> wL1NWeights(shearletTransform.getRangeDescriptor());
     wL1NWeights = 0.001f;
     WeightedL1Norm<real_t> weightedL1Norm(LinearResidual<real_t>{shearletTransform}, wL1NWeights);

@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Solver.h"
+#include "BlockLinearOperator.h"
 #include "VolumeDescriptor.h"
 #include "PartitionDescriptor.h"
-#include "SoftThresholding.h"
-#include "SplittingProblem.h"
-#include "BlockLinearOperator.h"
-#include "WeightedL1Norm.h"
+#include "Identity.h"
 #include "L2NormPow2.h"
 #include "LinearResidual.h"
 #include "ShearletTransform.h"
+#include "SoftThresholding.h"
+#include "SplittingProblem.h"
 #include "Logger.h"
+#include "WeightedL1Norm.h"
 
 namespace elsa
 {
@@ -239,9 +240,9 @@ namespace elsa
 
                 /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
                 std::vector<std::unique_ptr<LinearOperator<data_t>>> opsOfA(0);
-                Scaling<data_t> scaling(domainDescriptor, _rho2);
-                opsOfA.push_back(shearletTransform.clone()); // TODO mult. with rho1 later on
-                opsOfA.push_back(scaling.clone());
+                Identity<data_t> identity(domainDescriptor);
+                opsOfA.push_back((_rho1 * shearletTransform).clone());
+                opsOfA.push_back((_rho2 * identity).clone());
                 BlockLinearOperator<data_t> tempA(
                     domainDescriptor, PartitionDescriptor{layersPlusOneDescriptor, slicesInBlock},
                     opsOfA, BlockLinearOperator<data_t>::BlockType::ROW);
