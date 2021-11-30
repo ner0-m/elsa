@@ -9,7 +9,6 @@
 #include "DataDescriptor.h"
 #include "ExpressionPredicates.h"
 #include "DataHandlerCPU.h"
-#include "DataHandlerMapCPU.h"
 
 #ifdef ELSA_CUDA_VECTOR
 #include "DataHandlerGPU.h"
@@ -50,9 +49,6 @@ namespace elsa
 #endif
         } else {
             if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(operand._dataHandler.get())) {
-                return handler->accessData();
-            } else if (auto handler =
-                           downcast_safe<DataHandlerMapCPU<data_t>>(operand._dataHandler.get())) {
                 return handler->accessData();
             } else {
                 throw InternalError("Unknown handler type");

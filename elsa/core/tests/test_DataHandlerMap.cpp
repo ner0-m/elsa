@@ -1,7 +1,7 @@
 /**
  * @file test_DataHandlerMap.cpp
  *
- * @brief Tests for DataHandlerMaps - DataHandlerMapCPU and DataHandlerMapGPU
+ * @brief Tests for DataHandlerMaps - DataHandlerMapGPU
  *
  * @author David Frank - initial code
  * @author Tobias Lasser - rewrite and code coverage
@@ -9,7 +9,6 @@
  */
 
 #include "doctest/doctest.h"
-#include "DataHandlerMapCPU.h"
 #include "DataHandlerCPU.h"
 #include "testHelpers.h"
 
@@ -25,7 +24,7 @@ using namespace elsa;
 template <typename data_t>
 long elsa::useCount(const DataHandlerCPU<data_t>& dh)
 {
-    return dh._data.use_count();
+    return dh.data_.use_count();
 }
 
 #ifdef ELSA_CUDA_VECTOR
@@ -42,11 +41,10 @@ template <typename Handler>
 struct MapToHandler {
     using map =
         std::conditional_t<std::is_same_v<DataHandlerCPU<typename Handler::value_type>, Handler>,
-                           DataHandlerMapCPU<typename Handler::value_type>,
 #ifdef ELSA_CUDA_VECTOR
                            DataHandlerMapGPU<typename Handler::value_type>>;
 #else
-                           DataHandlerMapCPU<typename Handler::value_type>>;
+                           void>;
 #endif
 };
 

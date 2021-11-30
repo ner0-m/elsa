@@ -4,6 +4,7 @@ set(MODULE_HEADERS
     Backtrace.h
     Cloneable.h
     Utilities/Badge.hpp
+    Utilities/AccessPointer.hpp
     Utilities/DataContainerFormatter.hpp
     Utilities/FormatConfig.h
     Utilities/Statistics.hpp
@@ -22,7 +23,6 @@ set(MODULE_HEADERS
     Error.h
     Handlers/DataHandler.h
     Handlers/DataHandlerCPU.h
-    Handlers/DataHandlerMapCPU.h
     LinearOperator.h
     Expression.h
     ExpressionPredicates.h
@@ -45,7 +45,6 @@ set(MODULE_SOURCES
     DataContainer.cpp
     Error.cpp
     Handlers/DataHandlerCPU.cpp
-    Handlers/DataHandlerMapCPU.cpp
     LinearOperator.cpp
     Geometry.cpp
     StrongTypes.cpp
@@ -70,14 +69,11 @@ if(${ELSA_BUILD_WITH_QUICKVEC})
     list(APPEND MODULE_PUBLIC_DEPS "elsa_quickvec")
 endif()
 
-
 # use FFTW if available
 option(WITH_FFTW "Build elsa using fftw for faster fourier transforms" ON)
 
-# workaround for
-# https://github.com/FFTW/fftw3/issues/130
-# better would be find_package(fftw3)
-# fftw3f: float, fftw3: double, fftw3l: 128bit, _omp: OpenMP
+# workaround for https://github.com/FFTW/fftw3/issues/130 better would be find_package(fftw3) fftw3f: float, fftw3:
+# double, fftw3l: 128bit, _omp: OpenMP
 if(WITH_FFTW)
     find_package(PkgConfig)
     if(PKG_CONFIG_FOUND)
@@ -91,9 +87,15 @@ if(WITH_FFTW)
     endif()
 endif()
 
-ADD_ELSA_MODULE(
-    core "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
-    PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
+add_elsa_module(
+    core
+    "${MODULE_HEADERS}"
+    "${MODULE_SOURCES}"
+    INSTALL_DIR
+    PUBLIC_DEPS
+    ${MODULE_PUBLIC_DEPS}
+    PRIVATE_DEPS
+    ${MODULE_PRIVATE_DEPS}
 )
 
 # CMAKE_DL_LIBS is a weird name, so I can't figure out now, how to pass it via argument, so add it later...
@@ -113,7 +115,6 @@ target_include_directories(
 if(WITH_FFTW AND FFTW3_FOUND)
     target_compile_definitions("${ELSA_MODULE_TARGET_NAME}" PRIVATE WITH_FFTW)
 endif()
-
 
 if(ELSA_BUILD_PYTHON_BINDINGS)
     set(BINDINGS_SOURCES
@@ -135,7 +136,7 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
     list(FILTER BINDINGS_SOURCES EXCLUDE REGEX Geometry.cpp)
     list(FILTER BINDINGS_SOURCES EXCLUDE REGEX StrongTypes.cpp)
 
-    GENERATE_BINDINGS(
+    generate_bindings(
         ${ELSA_MODULE_TARGET_NAME} bind_${ELSA_MODULE_NAME}.cpp
         ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
     )

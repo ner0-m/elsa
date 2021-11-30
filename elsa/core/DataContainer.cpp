@@ -2,7 +2,6 @@
 #include "DataContainerFormatter.hpp"
 #include "FormatConfig.h"
 #include "DataHandlerCPU.h"
-#include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
 #include "RandomBlocksDescriptor.h"
 #include "PartitionDescriptor.h"

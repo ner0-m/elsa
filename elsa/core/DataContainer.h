@@ -4,7 +4,6 @@
 #include "DataDescriptor.h"
 #include "DataHandler.h"
 #include "DataHandlerCPU.h"
-#include "DataHandlerMapCPU.h"
 #include "DataContainerIterator.h"
 #include "Error.h"
 #include "Expression.h"
@@ -126,9 +125,6 @@ namespace elsa
         {
             if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(_dataHandler.get())) {
                 handler->accessData() = source.template eval<false>();
-            } else if (auto handler =
-                           downcast_safe<DataHandlerMapCPU<data_t>>(_dataHandler.get())) {
-                handler->accessData() = source.template eval<false>();
 #ifdef ELSA_CUDA_VECTOR
             } else if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(_dataHandler.get())) {
                 handler->accessData().eval(source.template eval<true>());
@@ -207,9 +203,6 @@ namespace elsa
         data_t dot(const Source& source) const
         {
             if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(_dataHandler.get())) {
-                return (*this * source).template eval<false>().sum();
-            } else if (auto handler =
-                           downcast_safe<DataHandlerMapCPU<data_t>>(_dataHandler.get())) {
                 return (*this * source).template eval<false>().sum();
 #ifdef ELSA_CUDA_VECTOR
             } else if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(_dataHandler.get())) {
