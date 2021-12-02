@@ -32,6 +32,8 @@ option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" 
 option(ELSA_BUILD_ML_DNNL "Try to build the elsa_ml module with Intel(R) Dnnl backend" ON)
 option(ELSA_BUILD_ML_CUDNN "Try to build the elsa_ml module with Nvidia(R) Cudnn backend" ON)
 
+option(ELSA_ENABLE_ASSERTIONS "Enable internal assertions (This will enable them in release as well)" ON)
+ 
 set(ELSA_WARNING_LEVEL "base" CACHE STRING "Warning level with which elsa is build. Options are: base, all")
 set(ELSA_SANITIZER
         "" CACHE STRING

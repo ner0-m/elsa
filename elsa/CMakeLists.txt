@@ -47,9 +47,14 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     # require C++17
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
     # set -fPIC and -fvisibility=hidden
-    set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                                                CXX_VISIBILITY_PRESET hidden)
-    
+    set_target_properties(
+        ${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden
+    )
+    # Enable assertions if activated
+    if(${ELSA_ENABLE_ASSERTIONS})
+        target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_ASSERTIONS)
+    endif()
+
     target_include_directories(
         ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${elsa_module_name}>
                                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -58,7 +63,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     SET_QUICKVEC_OPTIONS(${ELSA_MODULE_TARGET_NAME} "${MODULE_SOURCES}")
 
     if(ELSA_MASTER_PROJECT)
-        set_target_warnings(${ELSA_MODULE_TARGET_NAME} LEVEL ${ELSA_WARNINGS_LEVEL}) 
+        set_target_warnings(${ELSA_MODULE_TARGET_NAME} LEVEL ${ELSA_WARNINGS_LEVEL})
     endif()
 
     # build the tests (if enabled)
@@ -67,10 +72,9 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     endif()
 
     # register the module
-    REGISTER_MODULE(${elsa_module_name})
+    register_module(${elsa_module_name})
 
-    # install the module
-    # if INSTALL_DIR arg is set, recurse the whole directory
+    # install the module if INSTALL_DIR arg is set, recurse the whole directory
     if(${ADD_MODULE_INSTALL_DIR})
         install_elsa_module_dir(
             ${elsa_module_name} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/"
@@ -104,6 +108,12 @@ macro(ELSA_DOCTEST name)
     target_include_directories(${_testname} PRIVATE ${CMAKE_SOURCE_DIR}/elsa/test_routines/)
     # Improve compile times for tests
     target_compile_definitions(${_testname} PRIVATE DOCTEST_CONFIG_SUPER_FAST_ASSERTS)
+
+    # Enable assertions if activated
+    if(${ELSA_ENABLE_ASSERTIONS})
+        target_compile_definitions(${_testname} PUBLIC ELSA_ENABLE_ASSERTIONS)
+    endif()
+
     # Set output directory to bin/tests/<module>
     set_target_properties(
         ${_testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}"
@@ -158,7 +168,7 @@ endmacro()
 include(PythonBindings)
 
 if(ELSA_BUILD_PYTHON_BINDINGS)
-    SetupPythonBindings()
+    setuppythonbindings()
 endif()
 
 # add the elsa modules
@@ -183,7 +193,7 @@ add_subdirectory(test_routines)
 add_subdirectory(test_allmodules)
 
 if(ELSA_BUILD_PYTHON_BINDINGS)
-    AddLoggerToBindings()
+    addloggertobindings()
 endif()
 
 # library to build and add all registered components of the library
@@ -195,11 +205,11 @@ target_link_libraries(elsa_all INTERFACE ${ELSA_REGISTERED_TARGETS})
 target_include_directories(
     elsa_all INTERFACE $<INSTALL_INTERFACE:include/elsa/> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
- 
+
 write_module_config(all DEPENDENCIES ${ELSA_REGISTERED_TARGETS})
 
 # register the all "module"
-REGISTER_MODULE(all)
+register_module(all)
 
 # install the all module and the elsa.h file
 install_elsa_module(all elsa_all elsa_allTargets)
