@@ -1,4 +1,4 @@
-/// Elsa example program: basic 2d X-ray CT simulation and reconstruction
+/// Elsa example program: basic 2d X-ray CT simulation and reconstruction through ADMM
 
 #include "elsa.h"
 
@@ -15,7 +15,7 @@ void example2d_admm()
     const auto& volumeDescriptor = phantom.getDataDescriptor();
 
     // write the phantom out
-    EDF::write<real_t>(phantom, "2dphantom.edf");
+    EDF::write(phantom, "2dphantom.edf");
 
     // generate circular trajectory
     index_t numOfAngles{180}, arc{360};
@@ -34,7 +34,7 @@ void example2d_admm()
     auto sinogram = projector.apply(phantom);
 
     // write the sinogram out
-    EDF::write<real_t>(sinogram, "2dsinogram.edf");
+    EDF::write(sinogram, "2dsinogram.edf");
 
     // setup reconstruction problem
     WLSProblem<real_t> wlsProblem(projector, sinogram);
@@ -53,7 +53,7 @@ void example2d_admm()
     auto admmReconstruction = admm.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write<real_t>(admmReconstruction, "2dreconstruction_admm.edf");
+    EDF::write(admmReconstruction, "2dreconstruction_admm.edf");
 }
 
 int main()
