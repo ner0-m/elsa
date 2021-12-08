@@ -31,6 +31,10 @@ if(EXISTS "@CMAKE_CUDA_COMPILER@")
     find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 endif()
 
+if(@ELSA_BUILD_WITH_QUICKVEC@) # ELSA_BUILD_WITH_QUICKVEC
+    message(NOTICE "this build of elsa uses quickvec, use a CUDA compiler for all targets that depend on elsa")
+endif()
+
 set(_supported_components @ELSA_REGISTERED_COMPONENTS@)
 
 if(NOT elsa_FIND_COMPONENTS)
