@@ -57,6 +57,6 @@ namespace elsa
 
     template class WLSSubsetProblemHints<float>;
     template class WLSSubsetProblemHints<double>;
-    template class WLSSubsetProblemHints<std::complex<float>>;
-    template class WLSSubsetProblemHints<std::complex<double>>;
+    template class WLSSubsetProblemHints<complex<float>>;
+    template class WLSSubsetProblemHints<complex<double>>;
 } // namespace elsa

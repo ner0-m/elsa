@@ -33,6 +33,7 @@ set(MODULE_HEADERS
 
 # list all the code files of the module
 set(MODULE_SOURCES
+    elsaDefines.cpp
     Backtrace.cpp
     Descriptors/DataDescriptor.cpp
     Descriptors/VolumeDescriptor.cpp
@@ -53,14 +54,13 @@ set(MODULE_SOURCES
 
 if(${ELSA_BUILD_WITH_QUICKVEC})
     set(MODULE_HEADERS ${MODULE_HEADERS} Handlers/DataHandlerGPU.h Handlers/DataHandlerMapGPU.h)
-
     set(MODULE_SOURCES ${MODULE_SOURCES} Handlers/DataHandlerGPU.cpp Handlers/DataHandlerMapGPU.cpp)
 endif()
 
 list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen")
 list(APPEND MODULE_PRIVATE_DEPS)
 
-# use OpenMP is available
+# use OpenMP if available
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     list(APPEND MODULE_PUBLIC_DEPS "OpenMP::OpenMP_CXX")
@@ -68,7 +68,7 @@ endif()
 
 # link Quickvec for DataHandlerGPU
 if(${ELSA_BUILD_WITH_QUICKVEC})
-    list(APPEND MODULE_PUBLIC_DEPS "Quickvec::quickvec")
+    list(APPEND MODULE_PUBLIC_DEPS "elsa_quickvec")
 endif()
 
 
@@ -111,11 +111,6 @@ target_include_directories(
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Utilities>
 )
 
-# Also add the necessary compile definition for quickvec
-if(${ELSA_BUILD_WITH_QUICKVEC})
-    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
-endif()
-
 if(WITH_FFTW AND FFTW3_FOUND)
     target_compile_definitions("${ELSA_MODULE_TARGET_NAME}" PRIVATE WITH_FFTW)
 endif()
@@ -146,5 +141,5 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
         ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
     )
 endif()
- 
+
 write_module_config(${ELSA_MODULE_NAME})

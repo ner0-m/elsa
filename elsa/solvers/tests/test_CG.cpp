@@ -23,11 +23,11 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("solvers");
 
-TYPE_TO_STRING(CG<float>);
-TYPE_TO_STRING(CG<double>);
-
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
+
+TYPE_TO_STRING(CG<float>);
+TYPE_TO_STRING(CG<double>);
 
 TEST_CASE_TEMPLATE("CG: Solving a simple linear problem", TestType, CG<float>, CG<double>)
 {

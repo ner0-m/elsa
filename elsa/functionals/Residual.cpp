@@ -59,7 +59,7 @@ namespace elsa
     // explicit template instantiation
     template class Residual<float>;
     template class Residual<double>;
-    template class Residual<std::complex<float>>;
-    template class Residual<std::complex<double>>;
+    template class Residual<complex<float>>;
+    template class Residual<complex<double>>;
 
 } // namespace elsa

@@ -68,6 +68,6 @@ namespace elsa
         return true;
     }
 
-    template class FourierTransform<std::complex<float>>;
-    template class FourierTransform<std::complex<double>>;
+    template class FourierTransform<complex<float>>;
+    template class FourierTransform<complex<double>>;
 } // namespace elsa

@@ -264,17 +264,17 @@ namespace elsa
         /// if the datacontainer is not complex,
         /// return a copy and fill in 0 as imaginary values
         template <typename _data_t = data_t>
-        typename std::enable_if_t<not isComplex<_data_t>, DataContainer<std::complex<_data_t>>>
+        typename std::enable_if_t<not isComplex<_data_t>, DataContainer<complex<_data_t>>>
             asComplex() const
         {
-            DataContainer<std::complex<data_t>> ret{
+            DataContainer<complex<data_t>> ret{
                 *this->_dataDescriptor,
                 this->_dataHandlerType,
             };
 
             // extend with complex zero value
             for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                ret[idx] = std::complex<data_t>{(*this)[idx], 0};
+                ret[idx] = complex<data_t>{(*this)[idx], 0};
             }
 
             return ret;

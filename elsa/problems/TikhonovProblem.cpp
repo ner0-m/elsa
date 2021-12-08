@@ -47,7 +47,7 @@ namespace elsa
     // explicit template instantiation
     template class TikhonovProblem<float>;
     template class TikhonovProblem<double>;
-    template class TikhonovProblem<std::complex<float>>;
-    template class TikhonovProblem<std::complex<double>>;
+    template class TikhonovProblem<complex<float>>;
+    template class TikhonovProblem<complex<double>>;
 
 } // namespace elsa

@@ -660,34 +660,34 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
-    template class DataContainer<std::complex<float>>;
+    template class DataContainer<complex<float>>;
     template class DataContainer<double>;
-    template class DataContainer<std::complex<double>>;
+    template class DataContainer<complex<double>>;
     template class DataContainer<index_t>;
 
     template DataContainer<float> concatenate<float>(const DataContainer<float>&,
                                                      const DataContainer<float>&);
     template DataContainer<double> concatenate<double>(const DataContainer<double>&,
                                                        const DataContainer<double>&);
-    template DataContainer<std::complex<float>>
-        concatenate<std::complex<float>>(const DataContainer<std::complex<float>>&,
-                                         const DataContainer<std::complex<float>>&);
-    template DataContainer<std::complex<double>>
-        concatenate<std::complex<double>>(const DataContainer<std::complex<double>>&,
-                                          const DataContainer<std::complex<double>>&);
+    template DataContainer<complex<float>>
+        concatenate<complex<float>>(const DataContainer<complex<float>>&,
+                                    const DataContainer<complex<float>>&);
+    template DataContainer<complex<double>>
+        concatenate<complex<double>>(const DataContainer<complex<double>>&,
+                                     const DataContainer<complex<double>>&);
 
     template DataContainer<float> fftShift2D<float>(DataContainer<float>);
-    template DataContainer<std::complex<float>>
-        fftShift2D<std::complex<float>>(DataContainer<std::complex<float>>);
+    template DataContainer<complex<float>>
+        fftShift2D<complex<float>>(DataContainer<complex<float>>);
     template DataContainer<double> fftShift2D<double>(DataContainer<double>);
-    template DataContainer<std::complex<double>>
-        fftShift2D<std::complex<double>>(DataContainer<std::complex<double>>);
+    template DataContainer<complex<double>>
+        fftShift2D<complex<double>>(DataContainer<complex<double>>);
 
     template DataContainer<float> ifftShift2D<float>(DataContainer<float>);
-    template DataContainer<std::complex<float>>
-        ifftShift2D<std::complex<float>>(DataContainer<std::complex<float>>);
+    template DataContainer<complex<float>>
+        ifftShift2D<complex<float>>(DataContainer<complex<float>>);
     template DataContainer<double> ifftShift2D<double>(DataContainer<double>);
-    template DataContainer<std::complex<double>>
-        ifftShift2D<std::complex<double>>(DataContainer<std::complex<double>>);
+    template DataContainer<complex<double>>
+        ifftShift2D<complex<double>>(DataContainer<complex<double>>);
 
 } // namespace elsa

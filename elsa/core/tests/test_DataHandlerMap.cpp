@@ -51,25 +51,25 @@ struct MapToHandler {
 };
 
 using CPUTypeTuple =
-    std::tuple<DataHandlerCPU<float>, DataHandlerCPU<double>, DataHandlerCPU<std::complex<float>>,
-               DataHandlerCPU<std::complex<double>>, DataHandlerCPU<index_t>>;
+    std::tuple<DataHandlerCPU<float>, DataHandlerCPU<double>, DataHandlerCPU<complex<float>>,
+               DataHandlerCPU<complex<double>>, DataHandlerCPU<index_t>>;
 
 TYPE_TO_STRING(DataHandlerCPU<float>);
 TYPE_TO_STRING(DataHandlerCPU<double>);
 TYPE_TO_STRING(DataHandlerCPU<index_t>);
-TYPE_TO_STRING(DataHandlerCPU<std::complex<float>>);
-TYPE_TO_STRING(DataHandlerCPU<std::complex<double>>);
+TYPE_TO_STRING(DataHandlerCPU<complex<float>>);
+TYPE_TO_STRING(DataHandlerCPU<complex<double>>);
 
 #ifdef ELSA_CUDA_VECTOR
 using GPUTypeTuple =
-    std::tuple<DataHandlerGPU<float>, DataHandlerGPU<double>, DataHandlerGPU<std::complex<float>>,
-               DataHandlerGPU<std::complex<double>>, DataHandlerGPU<index_t>>;
+    std::tuple<DataHandlerGPU<float>, DataHandlerGPU<double>, DataHandlerGPU<complex<float>>,
+               DataHandlerGPU<complex<double>>, DataHandlerGPU<index_t>>;
 
 TYPE_TO_STRING(DataHandlerGPU<float>);
 TYPE_TO_STRING(DataHandlerGPU<double>);
 TYPE_TO_STRING(DataHandlerGPU<index_t>);
-TYPE_TO_STRING(DataHandlerGPU<std::complex<float>>);
-TYPE_TO_STRING(DataHandlerGPU<std::complex<double>>);
+TYPE_TO_STRING(DataHandlerGPU<complex<float>>);
+TYPE_TO_STRING(DataHandlerGPU<complex<double>>);
 #endif
 
 TEST_SUITE_BEGIN("core");

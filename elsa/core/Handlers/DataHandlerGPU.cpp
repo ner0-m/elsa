@@ -86,7 +86,7 @@ namespace elsa
     template <typename data_t>
     GetFloatingPointType_t<data_t> DataHandlerGPU<data_t>::squaredL2Norm() const
     {
-        return _data->squaredL2Norm();
+        return _data->squaredl2Norm();
     }
 
     template <typename data_t>
@@ -509,9 +509,9 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataHandlerGPU<float>;
-    template class DataHandlerGPU<std::complex<float>>;
+    template class DataHandlerGPU<complex<float>>;
     template class DataHandlerGPU<double>;
-    template class DataHandlerGPU<std::complex<double>>;
+    template class DataHandlerGPU<complex<double>>;
     template class DataHandlerGPU<index_t>;
 
 } // namespace elsa

@@ -68,6 +68,28 @@ else()
                                 ${LLVM_LIBRARY})
     endif()
 
+    if(ELSA_BUILD_WITH_QUICKVEC)
+        set(CREATE_COMPILE_COMMANDS_FOR_GENERATOR
+            ${CMAKE_COMMAND} -DCLANG=${CLANG} -DCOMPILE_COMMANDS=${CMAKE_BINARY_DIR}/compile_commands.json
+            -DOUTPUT_DIR=${CMAKE_BINARY_DIR}/tools/bindings_generation
+            -P ${CMAKE_SOURCE_DIR}/cmake/CompileCommandsConversion.cmake
+        )
+    else()
+        set(CREATE_COMPILE_COMMANDS_FOR_GENERATOR
+            ${CMAKE_COMMAND} -E copy
+            ${CMAKE_BINARY_DIR}/compile_commands.json
+            ${CMAKE_BINARY_DIR}/tools/bindings_generation/compile_commands.json
+        )
+    endif()
+    add_custom_command(
+        TARGET pybind11_generator
+        PRE_LINK
+        COMMAND 
+            ${CREATE_COMPILE_COMMANDS_FOR_GENERATOR}
+        COMMENT
+            "Converting compile_commands.json to a clang-compatible version"
+    )
+
     add_subdirectory(hints)
     if (NOT ELSA_BUILD_PYTHON_BINDINGS)
         # propagate to parent scope

@@ -23,7 +23,7 @@ if [[ "$master_ahead" -gt "0" ]]; then
     echo -e "[${ORANGE}WARNING${NC}]: Not all commits which are part of origin/master are part of your branch, maybe you need to rebase?"
 fi
 
-files=($(git diff origin/master --name-only | egrep ".+\.(h|hpp|cpp|cu|cuh)$"))
+files=($(git diff origin/master --name-only --diff-filter=d | egrep ".+\.(h|hpp|cpp|cu|cuh)$"))
 
 if (( ${#files[@]} )); then
     clang_format_tool=false

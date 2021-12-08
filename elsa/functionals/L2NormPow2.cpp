@@ -54,7 +54,7 @@ namespace elsa
     // explicit template instantiation
     template class L2NormPow2<float>;
     template class L2NormPow2<double>;
-    template class L2NormPow2<std::complex<float>>;
-    template class L2NormPow2<std::complex<double>>;
+    template class L2NormPow2<complex<float>>;
+    template class L2NormPow2<complex<double>>;
 
 } // namespace elsa

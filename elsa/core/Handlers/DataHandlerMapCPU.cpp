@@ -401,9 +401,9 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataHandlerMapCPU<float>;
-    template class DataHandlerMapCPU<std::complex<float>>;
+    template class DataHandlerMapCPU<complex<float>>;
     template class DataHandlerMapCPU<double>;
-    template class DataHandlerMapCPU<std::complex<double>>;
+    template class DataHandlerMapCPU<complex<double>>;
     template class DataHandlerMapCPU<index_t>;
 
 } // namespace elsa
