@@ -61,17 +61,17 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
         Vector_t<TestType> randomData(volDescr.getNumberOfCoefficients());
         randomData.setRandom();
         DataContainer<TestType> signal(volDescr, randomData);
-        DataContainer<std::complex<TestType>> complexSignal(volDescr);
+        DataContainer<elsa::complex<TestType>> complexSignal(volDescr);
         for (index_t i = 0; i < signal.getSize(); ++i) {
-            complexSignal[i] = std::complex<TestType>(signal[i], 0);
+            complexSignal[i] = elsa::complex<TestType>(signal[i], 0);
         }
 
         WHEN("reconstructing the signal")
         {
-            ShearletTransform<std::complex<TestType>, TestType> shearletTransform(size[0], size[1],
-                                                                                  4);
+            ShearletTransform<elsa::complex<TestType>, TestType> shearletTransform(size[0], size[1],
+                                                                                   4);
 
-            DataContainer<std::complex<TestType>> shearletCoefficients =
+            DataContainer<elsa::complex<TestType>> shearletCoefficients =
                 shearletTransform.apply(complexSignal);
 
             DataContainer<TestType> reconstruction =

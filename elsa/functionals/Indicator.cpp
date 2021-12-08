@@ -50,7 +50,7 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class Indicator<float>;
-    template class Indicator<std::complex<float>>;
+    template class Indicator<elsa::complex<float>>;
     template class Indicator<double>;
-    template class Indicator<std::complex<double>>;
+    template class Indicator<elsa::complex<double>>;
 } // namespace elsa

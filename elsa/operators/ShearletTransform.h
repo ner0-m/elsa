@@ -88,8 +88,8 @@ namespace elsa
         // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
         //  manner, but that might take quite some time, can this make it to master in the
         //  meantime?
-        DataContainer<std::complex<data_t>>
-            sumByLastAxis(DataContainer<std::complex<data_t>> container) const;
+        DataContainer<elsa::complex<data_t>>
+            sumByLastAxis(DataContainer<elsa::complex<data_t>> container) const;
 
     protected:
         void applyImpl(const DataContainer<ret_t>& x, DataContainer<ret_t>& Ax) const override;
