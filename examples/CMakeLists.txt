@@ -11,6 +11,13 @@ target_compile_features(example2d PUBLIC cxx_std_17)
 set_quickvec_options(example2d example2d.cpp)
 add_dependencies(build-examples example2d)
 
+# build a temporary 2d example program
+add_executable(example2d_ctm example2d_ctm.cpp)
+target_link_libraries(example2d_ctm PRIVATE elsa::all)
+target_compile_features(example2d_ctm PUBLIC cxx_std_17)
+set_quickvec_options(example2d_ctm example2d_ctm.cpp)
+add_dependencies(build-examples example2d_ctm)
+
 # build the 2d limited angle trajectory example program
 add_executable(limited_angle_example2d limited_angle_example2d.cpp limited_angle_example2d.cpp)
 target_link_libraries(limited_angle_example2d PRIVATE elsa::all)
