@@ -24,18 +24,19 @@ namespace elsa
     /**
      * @brief class representing and storing a linearized n-dimensional signal
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Tobias Lasser - rewrite, modularization, modernization
-     * @author David Frank - added DataHandler concept, iterators
-     * @author Nikola Dinev - add block support
-     * @author Jens Petit - expression templates
-     * @author Jonas Jelten - various enhancements, fft, complex handling, pretty formatting
-     *
-     * @tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
-     *
      * This class provides a container for a signal that is stored in memory. This signal can
      * be n-dimensional, and will be stored in memory in a linearized fashion. The information
      * on how this linearization is performed is provided by an associated DataDescriptor.
+     *
+     * @tparam data_t data type that is stored in the DataContainer, defaulting to real_t.
+     *
+     * @author
+     * - Matthias Wieczorek - initial code
+     * - Tobias Lasser - rewrite, modularization, modernization
+     * - David Frank - added DataHandler concept, iterators
+     * - Nikola Dinev - add block support
+     * - Jens Petit - expression templates
+     * - Jonas Jelten - various enhancements, fft, complex handling, pretty formatting
      */
     template <typename data_t>
     class DataContainer
@@ -367,7 +368,10 @@ namespace elsa
         /// of 1 in the last dimension (i.e. the coefficient of the last dimension is 1)
         const DataContainer<data_t> slice(index_t i) const;
 
-        /// @overload non-canst/read-write overload
+        /// @brief Slice the container in the last dimension, non-const overload
+        ///
+        /// @overload
+        /// @see slice(index_t) const
         DataContainer<data_t> slice(index_t i);
 
         /// iterator for DataContainer (random access and continuous)

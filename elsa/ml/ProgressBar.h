@@ -23,7 +23,7 @@
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /**
- * @file progressbar.hpp
+ * @file ProgressBar.h
  * @brief Implements a progessbar
  * @author Prakhar Srivastav <prakhar@prakhar.me>
  * @author David Tellenbach <david.tellenbach@in.tum.de>

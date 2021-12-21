@@ -11,7 +11,7 @@ namespace elsa
      * efficiently optimize convex functions with Lipschitz-Continuous gradients.
      *
      * @details
-     * # Algorithm overview #
+     * # Nesterov's fast gradient method algorithm overview #
      * The algorithm repeats the following update steps for \f$i = 0, \dots, N-1\f$
      * \f{align*}{
      * y_{i+1} &= x_i - \frac{1}{L} f'(x_i) \\
@@ -32,7 +32,7 @@ namespace elsa
      * In the current implementation, no particular stopping rule is implemented, only a fixed
      * number of iterations is used.
      *
-     * ## References ##
+     * ## FGM References ##
      * - Kim, D., Fessler, J.A. _Optimized first-order methods for smooth convex minimization_
      (2016) https://doi.org/10.1007/s10107-015-0949-3
      *

@@ -1,8 +1,8 @@
 .. _elsa-solvers-api:
 
-***********
+****************
 elsa solvers API
-***********
+****************
 
 .. contents:: Table of Contents
 
@@ -17,28 +17,28 @@ CG
 .. doxygenclass:: elsa::CG
 
 Iterative Shrinkage-Thresholding Algorithm
-====
+==========================================
 
 .. doxygenclass:: elsa::ISTA
 
 Fast Iterative Shrinkage-Thresholding Algorithm
-=====
+===============================================
 
 .. doxygenclass:: elsa::FISTA
 
 
 Alternating Direction Method of Multipliers
-=====
+===========================================
 
 .. doxygenclass:: elsa::ADMM
 
 SQS Ordered Subsets
-===============
+===================
 
 .. doxygenclass:: elsa::SQS
 
 Orthogonal Matching Pursuit
-===============
+===========================
 
 .. doxygenclass:: elsa::OrthogonalMatchingPursuit
  

@@ -13,7 +13,7 @@ namespace elsa
      * Method.
      *
      * @details
-     * # Algorithm overview #
+     * # Optimized Gradient method algorithm overview #
      * The algorithm repeats the following update steps for \f$i = 0, \dots, N-1\f$
      * \f{align*}{
      * y_{i+1} &= x_i - \frac{1}{L} f'(x_i) \\
@@ -32,7 +32,7 @@ namespace elsa
      * The presented algorithm accelerates FGM by introducing an additional momentum term, which
      * doesn't add a great computational amount.
      *
-     * ## References ##
+     * ## OGM References ##
      * - Kim, D., Fessler, J.A. _Optimized first-order methods for smooth convex minimization_
      (2016) https://doi.org/10.1007/s10107-015-0949-3
      *

@@ -49,8 +49,8 @@ namespace elsa
 
         /**
          * @brief perform the inverse fourier transformation
-         * @param x inputData (image matrix in frequency domain)
-         * @param Atx outputData (inversely fourier transformed image matrix)
+         * @param y inputData (image matrix in frequency domain)
+         * @param Aty outputData (inversely fourier transformed image matrix)
          */
         void applyAdjointImpl(const DataContainer<data_t>& y,
                               DataContainer<data_t>& Aty) const override;
