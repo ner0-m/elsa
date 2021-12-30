@@ -2,21 +2,23 @@
 set(MODULE_HEADERS
         EllipseGenerator.h
         PhantomGenerator.h
+        NoiseGenerators.h
         CircleTrajectoryGenerator.h
         LimitedAngleTrajectoryGenerator.h
-        NoiseGenerators.h
         SphereTrajectoryGenerator.h
-        TrajectoryGenerator.h)
+        TrajectoryGenerator.h
+        Trajectories.h)
 
 # list all the code files of the module
 set(MODULE_SOURCES
         EllipseGenerator.cpp
         PhantomGenerator.cpp
+        NoiseGenerators.cpp
         CircleTrajectoryGenerator.cpp
         LimitedAngleTrajectoryGenerator.cpp
-        NoiseGenerators.cpp
         SphereTrajectoryGenerator.cpp
-        TrajectoryGenerator.cpp)
+        TrajectoryGenerator.cpp
+        Trajectories.cpp)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)

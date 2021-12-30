@@ -1,6 +1,7 @@
 /// Elsa example program: basic 2d X-ray CT simulation and reconstruction
 
 #include "elsa.h"
+#include "Trajectories.h"
 
 #include <iostream>
 
@@ -15,13 +16,10 @@ void example2d()
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
     // write the phantom out
-    EDF::write(phantom, "2dphantom.edf");
+    PGM::write(phantom, "2dphantom.pgm");
 
     // generate circular trajectory
-    index_t numAngles{180}, arc{360};
-    const auto distance = static_cast<real_t>(size(0));
-    auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-        numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
+    auto sinoDescriptor = trajectories::circular(volumeDescriptor);
 
     // setup operator for 2d X-ray transform
     Logger::get("Info")->info("Simulating sinogram using Siddon's method");
@@ -29,13 +27,13 @@ void example2d()
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
     // VolumeDescriptor
     SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                            *sinoDescriptor);
+                            sinoDescriptor);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);
 
     // write the sinogram out
-    EDF::write(sinogram, "2dsinogram.edf");
+    PGM::write(sinogram, "2dsinogram.pgm");
 
     // setup reconstruction problem
     WLSProblem wlsProblem(projector, sinogram);
@@ -49,7 +47,7 @@ void example2d()
     auto cgReconstruction = cgSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(cgReconstruction, "2dreconstruction_cg.edf");
+    PGM::write(cgReconstruction, "2dreconstruction_cg.pgm");
 
     LASSOProblem lassoProb(projector, sinogram);
 
@@ -60,7 +58,7 @@ void example2d()
     auto istaReconstruction = istaSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(istaReconstruction, "2dreconstruction_ista.edf");
+    PGM::write(istaReconstruction, "2dreconstruction_ista.pgm");
 
     // solve the reconstruction problem with FISTA
     FISTA fistaSolver(lassoProb);
@@ -69,7 +67,7 @@ void example2d()
     auto fistaReconstruction = fistaSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(fistaReconstruction, "2dreconstruction_fista.edf");
+    PGM::write(fistaReconstruction, "2dreconstruction_fista.pgm");
 }
 
 int main()
