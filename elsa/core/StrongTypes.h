@@ -62,6 +62,9 @@ namespace elsa
             /// Conversion (implicit) to real_t
             constexpr operator real_t() const { return _degree; }
 
+            /// Conversion (explicit) to index_t
+            constexpr explicit operator index_t() const { return static_cast<index_t>(_degree); }
+
         private:
             real_t _degree;
         };
