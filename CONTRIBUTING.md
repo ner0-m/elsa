@@ -45,9 +45,9 @@ as an example for our usage.
 
 It is recommended to set `CPM_SOURCE_CACHE` (see [here](https://github.com/TheLartians/CPM.cmake#cpm_source_cache) for
 more info). It's an environment variable, that will save all dependencies outside of the build directory and -
-for all projects using CPM - only one version of the dependency. This way no re-downloading is necessary. 
+for all projects using CPM - only one version of the dependency. This way no re-downloading is necessary.
 Set it in your e.g. `.bashrc`.
- 
+
 ## Testing
 You can run the elsa unit tests by running `ctest` in the build folder. To specify which tests run,
 filter with `ctest -R regular_expression`.
@@ -57,14 +57,14 @@ Development](https://github.com/onqtam/doctest/blob/master/doc/markdown/testcase
 follow this style when adding new tests. However, isntead of using `SCENARIO` use `TEST_CASE` with the name of the
 class under test at the beginning of the test name. Also be sure to add the tests to the test suite associated
 to the module of the test.
- 
-We're currently relying on [doctest](https://github.com/onqtam/doctest/) as our testing framework, when 
-using assertion macros, please try to use the 
+
+We're currently relying on [doctest](https://github.com/onqtam/doctest/) as our testing framework, when
+using assertion macros, please try to use the
 [binary and unary asserts](https://github.com/onqtam/doctest/blob/master/doc/markdown/assertions.md#binary-and-unary-asserts)
-as much as possible. 
- 
+as much as possible.
+
 ## Benchmarking
- 
+
 You can use the catch testing framework to do [benchmarking
 ](https://github.com/catchorg/Catch2/blob/master/docs/benchmarks.md). If so, add your benchmarking
 case following this template
@@ -92,8 +92,8 @@ currently use version 10.0.0, different versions might produce errors.
 We use `clang-tidy` with the enabled checks specified in [the configuration file](.clang-tidy). Note
 that currently all `readability-*` checks have to pass, otherwise the CI will fail. We encourage
 developers to check their code with `clang-tidy` and remove all warnings if applicable.
- 
-#### CMake 
+
+#### CMake
 
 We use [cmakelang](https://cmake-format.readthedocs.io/en/latest/index.html) to enforce
 certain style guide and reduce the changes of error in our CMake code, please check the guide to install it.
@@ -118,9 +118,9 @@ local results to [the latest master coverage results](https://ciip.in.tum.de/els
 
 ## pre-commit
 
-There is also a basic `.pre-commit-config.yaml` file to install pre-commit hooks using 
+There is also a basic `.pre-commit-config.yaml` file to install pre-commit hooks using
 [pre-commit](https://pre-commit.com/). You are highly encouraged to install the pre-commits
-with `pre-commit install` such that they are run before each commit.
+with `pre-commit install -t pre-commit -t commit-msg` such that they are run before each commit.
 
 None of the commit hooks will change anything in your commit, they mearly check and error if
 something is wrong.
