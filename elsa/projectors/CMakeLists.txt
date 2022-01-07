@@ -4,6 +4,7 @@ set(MODULE_HEADERS
     Intersection.h
     TraverseAABB.h
     TraverseAABBJosephsMethod.h
+    SliceTraversal.h
     BinaryMethod.h
     SiddonsMethod.h
     JosephsMethod.h
@@ -16,6 +17,7 @@ set(MODULE_SOURCES
     Intersection.cpp
     TraverseAABB.cpp
     TraverseAABBJosephsMethod.cpp
+    SliceTraversal.cpp
     BinaryMethod.cpp
     SiddonsMethod.cpp
     JosephsMethod.cpp

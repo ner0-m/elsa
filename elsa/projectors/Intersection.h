@@ -3,6 +3,8 @@
 #include "elsaDefines.h"
 #include "BoundingBox.h"
 
+#include "spdlog/fmt/fmt.h"
+
 #include <Eigen/Geometry>
 #include <limits>
 #include <optional>
@@ -57,6 +59,9 @@ namespace elsa
          */
         static std::optional<IntersectionResult> withRay(const BoundingBox& aabb,
                                                          const RealRay_t& r);
+
+        static std::optional<IntersectionResult> xPlanesWithRay(BoundingBox aabb,
+                                                                const RealRay_t& r);
     };
 
     /**
@@ -92,3 +97,18 @@ namespace elsa
     }
 
 } // namespace elsa
+
+template <>
+struct fmt::formatter<elsa::IntersectionResult> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
+
+    template <typename FormatContext>
+    auto format(const elsa::IntersectionResult& hit, FormatContext& ctx)
+    {
+        return fmt::format_to(ctx.out(), "{{ tmin: {}, tmax: {} }}", hit._tmin, hit._tmax);
+    }
+};
