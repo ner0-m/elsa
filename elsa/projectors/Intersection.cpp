@@ -2,7 +2,8 @@
 
 namespace elsa
 {
-    std::optional<IntersectionResult> Intersection::withRay(const BoundingBox& aabb, const Ray& r)
+    std::optional<IntersectionResult> Intersection::withRay(const BoundingBox& aabb,
+                                                            const RealRay_t& r)
     {
         real_t invDir = 1 / r.direction()(0);
 
@@ -28,5 +29,4 @@ namespace elsa
             return std::make_optional<IntersectionResult>(tmin, tmax);
         return std::nullopt;
     }
-
 } // namespace elsa

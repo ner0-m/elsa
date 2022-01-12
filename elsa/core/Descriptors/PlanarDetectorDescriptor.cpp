@@ -15,13 +15,13 @@ namespace elsa
     {
     }
 
-    DetectorDescriptor::Ray
+    RealRay_t
         PlanarDetectorDescriptor::computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
                                                               const index_t poseIndex) const
     {
         // Assert that for all dimension of detectorCoord is in bounds and poseIndex can
         // be index in the _geometry. If not the calculation will not be correct, but
-        // as this is the hot path, I don't want execptions and unpacking everything
+        // as this is the hot path, I don't want exceptions and unpacking everything
         // We'll just have to ensure, that we don't mess up in our hot path! :-)
         assert((detectorCoord.block(0, 0, getNumberOfDimensions() - 1, 0).array()
                 < getNumberOfCoefficientsPerDimension()
@@ -53,11 +53,11 @@ namespace elsa
                       .head(dim)                          // Transform to non-homogeneous
                       .normalized();                      // normalize vector
 
-        return Ray(ro, rd);
+        return RealRay_t(ro, rd);
     }
 
     RealVector_t
-        PlanarDetectorDescriptor::computeDetectorCoordFromRay(const Ray& ray,
+        PlanarDetectorDescriptor::computeDetectorCoordFromRay(const RealRay_t& ray,
                                                               const index_t poseIndex) const
     {
         auto dim = getNumberOfDimensions();

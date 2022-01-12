@@ -8,7 +8,7 @@ namespace elsa
         : DataDescriptor(numOfCoeffsPerDim), _geometry(geometryList)
     {
         // TODO Clarify: What about empty geometryList? Do we want to support it, or throw an
-        // execption?
+        // exception?
     }
 
     DetectorDescriptor::DetectorDescriptor(const IndexVector_t& numOfCoeffsPerDim,
@@ -18,8 +18,7 @@ namespace elsa
     {
     }
 
-    DetectorDescriptor::Ray
-        DetectorDescriptor::computeRayFromDetectorCoord(const index_t detectorIndex) const
+    RealRay_t DetectorDescriptor::computeRayFromDetectorCoord(const index_t detectorIndex) const
     {
 
         // Return empty, if access out of bounds
@@ -31,8 +30,7 @@ namespace elsa
         return computeRayFromDetectorCoord(coord);
     }
 
-    DetectorDescriptor::Ray
-        DetectorDescriptor::computeRayFromDetectorCoord(const IndexVector_t coord) const
+    RealRay_t DetectorDescriptor::computeRayFromDetectorCoord(const IndexVector_t coord) const
     {
         // Assume all of the coordinates are inside of the volume
         // auto tmp = (coord.array() < getNumberOfCoefficientsPerDimension().array());

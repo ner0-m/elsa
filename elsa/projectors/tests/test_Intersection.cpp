@@ -15,8 +15,6 @@
 using namespace elsa;
 using namespace doctest;
 
-using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
-
 TEST_CASE("Intersection: Intersect corners of pixels")
 {
     size_t dim = 2;
@@ -31,7 +29,7 @@ TEST_CASE("Intersection: Intersect corners of pixels")
     RealVector_t rd(dim);
     rd << 1.0, 1.0;
     rd.normalize();
-    Ray r(ro, rd);
+    RealRay_t r(ro, rd);
 
     REQUIRE_UNARY(Intersection::withRay(aabb, r));
 
@@ -39,7 +37,7 @@ TEST_CASE("Intersection: Intersect corners of pixels")
     ro << 1, 2;
     rd << 1.0, -1.0;
     rd.normalize();
-    r = Ray(ro, rd);
+    r = RealRay_t(ro, rd);
 
     REQUIRE_UNARY_FALSE(Intersection::withRay(aabb, r));
 
@@ -47,7 +45,7 @@ TEST_CASE("Intersection: Intersect corners of pixels")
     ro << 3, -2;
     rd << -1.0, 1.0;
     rd.normalize();
-    r = Ray(ro, rd);
+    r = RealRay_t(ro, rd);
 
     REQUIRE_UNARY(Intersection::withRay(aabb, r));
 
@@ -55,7 +53,7 @@ TEST_CASE("Intersection: Intersect corners of pixels")
     ro << 3, 1;
     rd << -1.0, -1.0;
     rd.normalize();
-    r = Ray(ro, rd);
+    r = RealRay_t(ro, rd);
 
     REQUIRE_UNARY_FALSE(Intersection::withRay(aabb, r));
 }
@@ -69,7 +67,7 @@ TEST_CASE("Intersection: Intersect edges of voxels")
         ro << 132, 30;
         RealVector_t rd(dim);
         rd << -1.0, 0;
-        Ray r(ro, rd);
+        RealRay_t r(ro, rd);
 
         IndexVector_t voxel(dim);
 
@@ -98,7 +96,7 @@ TEST_CASE("Intersection: Intersect edges of voxels")
         // vertical check
         ro << 30, -35;
         rd << 0, 1.0;
-        r = Ray(ro, rd);
+        r = RealRay_t(ro, rd);
 
         voxel << 31, 30;
         THEN("the ray intersects")
@@ -123,7 +121,7 @@ TEST_CASE("Intersection: Intersect edges of voxels")
 
         rd << 0.0, 1.0;
         ro << 1.5, -10;
-        r = Ray(ro, rd);
+        r = RealRay_t(ro, rd);
 
         voxel << 0, 1;
         THEN("the ray does not intersect")

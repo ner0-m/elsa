@@ -39,10 +39,6 @@ namespace elsa
      */
     class Intersection
     {
-    private:
-        /// the type for a ray using Eigen
-        using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
-
     public:
         /**
          * @brief Compute entry and exit point of ray in a volume (given as an AABB)
@@ -59,7 +55,8 @@ namespace elsa
          * Method adapted from
          https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/
          */
-        static std::optional<IntersectionResult> withRay(const BoundingBox& aabb, const Ray& r);
+        static std::optional<IntersectionResult> withRay(const BoundingBox& aabb,
+                                                         const RealRay_t& r);
     };
 
     /**
