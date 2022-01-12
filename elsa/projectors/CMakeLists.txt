@@ -5,10 +5,12 @@ set(MODULE_HEADERS
     TraverseAABB.h
     TraverseAABBJosephsMethod.h
     SliceTraversal.h
+    LutProjector.h
     BinaryMethod.h
     SiddonsMethod.h
     JosephsMethod.h
     SubsetSampler.h
+    Blobs.h
 )
 
 # list all the code files of the module
@@ -18,10 +20,12 @@ set(MODULE_SOURCES
     TraverseAABB.cpp
     TraverseAABBJosephsMethod.cpp
     SliceTraversal.cpp
+    LutProjector.cpp
     BinaryMethod.cpp
     SiddonsMethod.cpp
     JosephsMethod.cpp
     SubsetSampler.cpp
+    Blobs.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
@@ -44,5 +48,5 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
         ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${MODULE_SOURCES}
     )
 endif()
- 
+
 write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)

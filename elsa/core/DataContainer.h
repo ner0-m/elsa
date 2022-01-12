@@ -177,6 +177,8 @@ namespace elsa
         /// return an element by n-dimensional coordinate as read-only (not bounds-checked!)
         const data_t& operator()(IndexVector_t coordinate) const;
 
+        data_t at(IndexVector_t coordinate) const;
+
         /// return an element by its coordinates (not bounds-checked!)
         template <typename idx0_t, typename... idx_t,
                   typename = std::enable_if_t<

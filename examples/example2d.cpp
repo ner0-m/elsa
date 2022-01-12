@@ -1,7 +1,7 @@
 /// Elsa example program: basic 2d X-ray CT simulation and reconstruction
 
 #include "elsa.h"
-#include "IO.h"
+#include "LutProjector.h"
 
 #include <iostream>
 
@@ -16,7 +16,7 @@ void example2d()
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
     // write the phantom out
-    io::write(phantom, "2dphantom.edf");
+    io::write(phantom, "2dphantom.pgm");
 
     // generate circular trajectory
     index_t numAngles{180}, arc{360};
@@ -24,19 +24,19 @@ void example2d()
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
-    // setup operator for 2d X-ray transform
-    Logger::get("Info")->info("Simulating sinogram using Siddon's method");
-
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
     // VolumeDescriptor
-    SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
+    Logger::get("Info")->info("Create BlobProjector");
+    BlobProjector projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
                             *sinoDescriptor);
 
     // simulate the sinogram
+    Logger::get("Info")->info("Calculate sinogram");
     auto sinogram = projector.apply(phantom);
 
     // write the sinogram out
-    io::write(sinogram, "2dsinogram.edf");
+    Logger::get("Info")->info("Write sinogram");
+    io::write(sinogram, "2dsinogram.pgm");
 
     // setup reconstruction problem
     WLSProblem wlsProblem(projector, sinogram);
@@ -50,27 +50,27 @@ void example2d()
     auto cgReconstruction = cgSolver.solve(noIterations);
 
     // write the reconstruction out
-    io::write(cgReconstruction, "2dreconstruction_cg.edf");
+    io::write(cgReconstruction, "2dreconstruction_cg.pgm");
 
-    LASSOProblem lassoProb(projector, sinogram);
-
-    // solve the reconstruction problem with ISTA
-    ISTA istaSolver(lassoProb);
-
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of ISTA", noIterations);
-    auto istaReconstruction = istaSolver.solve(noIterations);
-
-    // write the reconstruction out
-    io::write(istaReconstruction, "2dreconstruction_ista.edf");
-
-    // solve the reconstruction problem with FISTA
-    FISTA fistaSolver(lassoProb);
-
-    Logger::get("Info")->info("Solving reconstruction using {} iterations of FISTA", noIterations);
-    auto fistaReconstruction = fistaSolver.solve(noIterations);
-
-    // write the reconstruction out
-    io::write(fistaReconstruction, "2dreconstruction_fista.edf");
+    // LASSOProblem lassoProb(projector, sinogram);
+    //
+    // // solve the reconstruction problem with ISTA
+    // ISTA istaSolver(lassoProb);
+    //
+    // Logger::get("Info")->info("Solving reconstruction using {} iterations of ISTA",
+    // noIterations); auto istaReconstruction = istaSolver.solve(noIterations);
+    //
+    // // write the reconstruction out
+    // EDF::write(istaReconstruction, "2dreconstruction_ista.edf");
+    //
+    // // solve the reconstruction problem with FISTA
+    // FISTA fistaSolver(lassoProb);
+    //
+    // Logger::get("Info")->info("Solving reconstruction using {} iterations of FISTA",
+    // noIterations); auto fistaReconstruction = fistaSolver.solve(noIterations);
+    //
+    // // write the reconstruction out
+    // EDF::write(fistaReconstruction, "2dreconstruction_fista.edf");
 }
 
 int main()
