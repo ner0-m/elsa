@@ -58,7 +58,7 @@ include(SetDefaultBuildType)
 # Forbid extensions (such as gnu++) for this project
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# export compile_commands.json for language servers such as ccls
+# export compile_commands.json for lsp language servers (e.g. clangd)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # By default set all output to lib or bin directories
