@@ -19,6 +19,16 @@ namespace elsa
          */
         BoundingBox(const IndexVector_t& volumeDimensions);
 
+        RealVector_t center() const;
+
+        void recomputeBounds();
+
+        friend bool operator==(const BoundingBox& box1, const BoundingBox& box2);
+
+        friend bool operator!=(const BoundingBox& box1, const BoundingBox& box2);
+
+        friend std::ostream& operator<<(std::ostream& stream, const BoundingBox& aabb);
+
         /// the number of dimensions (2 or 3)
         index_t _dim;
         /// the front corner of the box
@@ -28,4 +38,5 @@ namespace elsa
         /// helper to convert coordinates to indices
         IndexVector_t _voxelCoordToIndexVector{_dim};
     };
+
 } // namespace elsa
