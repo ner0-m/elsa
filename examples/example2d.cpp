@@ -11,7 +11,8 @@ void example2d()
 {
     // generate 2d phantom
     IndexVector_t size(2);
-    size << 128, 128;
+    // size << 128, 128;
+    size << 512, 512;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
@@ -19,7 +20,7 @@ void example2d()
     io::write(phantom, "2dphantom.pgm");
 
     // generate circular trajectory
-    index_t numAngles{180}, arc{360};
+    index_t numAngles{512}, arc{360};
     const auto distance = static_cast<real_t>(size(0));
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
@@ -44,10 +45,11 @@ void example2d()
     // solve the reconstruction problem
     CG cgSolver(wlsProblem);
 
-    index_t noIterations{20};
+    index_t noIterations{10};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
                               noIterations);
     auto cgReconstruction = cgSolver.solve(noIterations);
+    std::cout << cgReconstruction.l2Norm() << "\n";
 
     // write the reconstruction out
     io::write(cgReconstruction, "2dreconstruction_cg.pgm");
