@@ -79,9 +79,11 @@ protected:
             for (std::size_t i = 0; i < ctsd->getTemplateArgs().size(); i++) {
 
                 const auto& tmpArg = ctsd->getTemplateArgs()[i];
+                llvm::SmallString<1024> nameSmallStr(namespaceStrippedName);
                 switch (tmpArg.getKind()) {
                     case TemplateArgument::ArgKind::Integral:
-                        namespaceStrippedName += tmpArg.getAsIntegral().toString(10);
+                        tmpArg.getAsIntegral().toString(nameSmallStr);
+                        namespaceStrippedName = nameSmallStr.c_str();
                         break;
 
                     case TemplateArgument::ArgKind::Type:
@@ -221,9 +223,7 @@ public:
         if (!fullLocation.isValid())
             return true;
 
-        if (declaration->isClass() || declaration->isStruct()) {
-
-            m.includes.insert(getHeaderLocation(declaration));
+        if (declaration->isClass() || declaration->isStruct() || declaration->isEnum()) {
             parseRecord(declaration);
         }
         return true;
@@ -260,13 +260,22 @@ public:
         if (encounteredEnums.find(id) != encounteredEnums.end())
             return;
 
+        // only record an enum when its in the current module,
+        // otherwise we get double-definitions when they are included
+        // between modules
+        if (fileLocation(declaration).find(m.path) != 0) {
+            return;
+        }
+
         auto e = std::make_unique<elsa::Module::Enum>();
 
         e->name = id;
         e->namespaceStrippedName = getNamespaceStrippedName(declaration);
         e->isScoped = declaration->isScoped();
         for (auto enumerator : declaration->enumerators()) {
-            e->values.emplace(enumerator->getNameAsString(), enumerator->getInitVal().toString(10));
+            llvm::SmallString<32> valueAsStr;
+            enumerator->getInitVal().toString(valueAsStr);
+            e->values.emplace(enumerator->getNameAsString(), valueAsStr.c_str());
         }
 
         m.enums.push_back(std::move(e));
@@ -277,6 +286,11 @@ public:
     {
         if (!shouldBeRegisteredInCurrentModule(declaration)) {
             return;
+        }
+
+        auto includeFile = getHeaderLocation(declaration);
+        if (includeFile.find(m.path) == 0) {
+            m.includes.insert(includeFile);
         }
 
         auto r = std::make_unique<elsa::Module::Record>();
@@ -769,7 +783,14 @@ int main(int argc, const char** argv)
 {
     noModule.setInitialValue(false);
 
+#if LLVM_VERSION_MAJOR < 13
     CommonOptionsParser optionsParser(argc, argv, bindingsOptions);
+#else
+    auto optionsParserExp = CommonOptionsParser::create(argc, argv, bindingsOptions);
+    assert((optionsParserExp) && "Failed to parse command line arguments");
+
+    auto& optionsParser = optionsParserExp.get();
+#endif
 
     assert((!moduleName.empty() || !pythonModuleName.empty())
            && "-name or -pyname should be specified");

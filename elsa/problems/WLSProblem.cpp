@@ -123,7 +123,7 @@ namespace elsa
                     }
                 }
 
-                sqrtW = std::make_unique<Scaling<data_t>>(desc, std::sqrt(fac));
+                sqrtW = std::make_unique<Scaling<data_t>>(desc, sqrt(fac));
             } else {
                 const auto& fac = scaling.getScaleFactors();
 
@@ -184,7 +184,7 @@ namespace elsa
                         }
                     }
 
-                    sqrtLambdaW = std::make_unique<Scaling<data_t>>(desc, std::sqrt(lambda * fac));
+                    sqrtLambdaW = std::make_unique<Scaling<data_t>>(desc, sqrt(lambda * fac));
                 } else {
                     const auto& fac = scaling.getScaleFactors();
 
@@ -219,11 +219,11 @@ namespace elsa
                     }
                 }
 
-                auto sqrtLambdaScaling = std::make_unique<Scaling<data_t>>(
-                    residual->getRangeDescriptor(), std::sqrt(lambda));
+                auto sqrtLambdaScaling =
+                    std::make_unique<Scaling<data_t>>(residual->getRangeDescriptor(), sqrt(lambda));
 
                 if (residual->hasDataVector())
-                    dataVec.getBlock(blockNum) = std::sqrt(lambda) * residual->getDataVector();
+                    dataVec.getBlock(blockNum) = sqrt(lambda) * residual->getDataVector();
 
                 if (residual->hasOperator()) {
                     const auto composite = *sqrtLambdaScaling * residual->getOperator();
@@ -245,7 +245,7 @@ namespace elsa
     // explicit template instantiation
     template class WLSProblem<float>;
     template class WLSProblem<double>;
-    template class WLSProblem<std::complex<float>>;
-    template class WLSProblem<std::complex<double>>;
+    template class WLSProblem<complex<float>>;
+    template class WLSProblem<complex<double>>;
 
 } // namespace elsa

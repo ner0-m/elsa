@@ -32,7 +32,7 @@ if(EXISTS "@CMAKE_CUDA_COMPILER@")
 endif()
 
 if(@ELSA_BUILD_WITH_QUICKVEC@) # ELSA_BUILD_WITH_QUICKVEC
-    find_dependency(quickvec REQUIRED)
+    message(NOTICE "this build of elsa uses quickvec, use a CUDA compiler for all targets that depend on elsa")
 endif()
 
 set(_supported_components @ELSA_REGISTERED_COMPONENTS@)

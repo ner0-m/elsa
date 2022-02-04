@@ -261,6 +261,8 @@ namespace elsa::ml
             ///   `void(T* data, index_t index)`.
             /// The visitor will be applied to every node in a breadth-first
             /// traversal. The semantics of the parameter is
+            /// @param nextVisitor
+            /// @param stop
             ///
             /// - `data` is the data held by the current node in the traversal
             /// - `index` is the index of the current node

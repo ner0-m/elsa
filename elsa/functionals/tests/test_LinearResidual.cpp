@@ -47,13 +47,13 @@ protected:
     }
 };
 
-TYPE_TO_STRING(std::complex<float>);
-TYPE_TO_STRING(std::complex<double>);
+TYPE_TO_STRING(complex<float>);
+TYPE_TO_STRING(complex<double>);
 
 TEST_SUITE_BEGIN("functionals");
 
 TEST_CASE_TEMPLATE("LinearResidual: Testing trivial linear residual", TestType, float, double,
-                   std::complex<float>, std::complex<double>)
+                   complex<float>, complex<double>)
 {
     GIVEN("a descriptor")
     {
@@ -99,7 +99,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing trivial linear residual", TestType, 
 }
 
 TEST_CASE_TEMPLATE("LinearResidual: Testing with just an data vector", TestType, float, double,
-                   std::complex<float>, std::complex<double>)
+                   complex<float>, complex<double>)
 {
     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
 
@@ -153,7 +153,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with just an data vector", TestType,
 }
 
 TEST_CASE_TEMPLATE("LinearResidual: Testing with just an operator", TestType, float, double,
-                   std::complex<float>, std::complex<double>)
+                   complex<float>, complex<double>)
 {
     GIVEN("descriptors and an operator")
     {
@@ -204,7 +204,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with just an operator", TestType, fl
 }
 
 TEST_CASE_TEMPLATE("LinearResidual: Testing with operator and data", TestType, float, double,
-                   std::complex<float>, std::complex<double>)
+                   complex<float>, complex<double>)
 {
     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
 

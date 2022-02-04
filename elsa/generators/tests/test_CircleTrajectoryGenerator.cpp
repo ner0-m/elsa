@@ -81,12 +81,12 @@ TEST_CASE("CircleTrajectoryGenerator: Create a Circular Trajectory")
 
         WHEN("We create a full circular trajectory for this scenario")
         {
-            index_t halfCircular = 359;
+            index_t fullyCircular = 359;
             real_t diffCenterSource{s * 100};
             real_t diffCenterDetector{s};
 
             auto sdesc = CircleTrajectoryGenerator::createTrajectory(
-                numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
+                numberOfAngles, desc, fullyCircular, diffCenterSource, diffCenterDetector);
 
             // Check that the detector size is correct
             REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[0], expectedDetectorSize);
@@ -97,7 +97,7 @@ TEST_CASE("CircleTrajectoryGenerator: Create a Circular Trajectory")
                 const real_t sourceToCenter = diffCenterSource;
                 const real_t centerToDetector = diffCenterDetector;
 
-                real_t angle = static_cast<real_t>(1.0) * static_cast<real_t>(halfCircular)
+                real_t angle = static_cast<real_t>(1.0) * static_cast<real_t>(fullyCircular)
                                / static_cast<real_t>(numberOfAngles - 1);
                 for (index_t i = 0; i < numberOfAngles; ++i) {
                     real_t currAngle = static_cast<real_t>(i) * angle * pi_t / 180.0f;
@@ -182,12 +182,12 @@ TEST_CASE("CircleTrajectoryGenerator: Create a Circular Trajectory")
         }
         WHEN("We create a full circular trajectory for this scenario")
         {
-            const index_t halfCircular = 359;
+            const index_t fullyCircular = 359;
             real_t diffCenterSource{s * 100};
             real_t diffCenterDetector{s};
 
             auto sdesc = CircleTrajectoryGenerator::createTrajectory(
-                numberOfAngles, desc, halfCircular, diffCenterSource, diffCenterDetector);
+                numberOfAngles, desc, fullyCircular, diffCenterSource, diffCenterDetector);
 
             // Check that the detector size is correct
             REQUIRE_EQ(sdesc->getNumberOfCoefficientsPerDimension()[0], expectedDetectorSize);
@@ -199,7 +199,7 @@ TEST_CASE("CircleTrajectoryGenerator: Create a Circular Trajectory")
                 const auto sourceToCenter = diffCenterSource;
                 const auto centerToDetector = diffCenterDetector;
 
-                real_t angleInc = 1.0f * static_cast<real_t>(halfCircular)
+                real_t angleInc = 1.0f * static_cast<real_t>(fullyCircular)
                                   / static_cast<real_t>(numberOfAngles - 1);
                 for (index_t i = 0; i < numberOfAngles; ++i) {
                     real_t angle = static_cast<real_t>(i) * angleInc * pi_t / 180.0f;

@@ -10,7 +10,7 @@ ORANGE='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-files=($(git diff origin/master --name-only | egrep ".+(CMakeLists.txt|\.cmake(\.in)?)$"))
+files=($(git diff origin/master --name-only --diff-filter=d | egrep ".+(CMakeLists.txt|\.cmake(\.in)?)$"))
  
 if (( ${#files[@]} )); then
     cmake_lint_tool=false 

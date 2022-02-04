@@ -19,7 +19,7 @@ CircleTrajectoryGenerator
 SphereTrajectoryGenerator
 =========================
 
-.. doxygenclass:: elsa::CircleTrajectoryGenerator
+.. doxygenclass:: elsa::SphereTrajectoryGenerator
 
 
 Implementation Details

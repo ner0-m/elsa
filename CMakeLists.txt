@@ -17,7 +17,6 @@ if(NOT DEFINED ELSA_MASTER_PROJECT)
 endif ()
 
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
-option(ELSA_CREATE_JUNIT_REPORTS "Enable creating JUnit style reports when running tests" ON)
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
 option(ELSA_BENCHMARKS "Enable elsa benchmark test cases" OFF)
 
@@ -43,6 +42,8 @@ set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures")
 
 option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
 option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
+option(SYSTEM_DOCTEST "Build elsa using the system doctest installation" OFF)
+option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
 
 # ------------ general setup -----------
 # ------------
@@ -57,10 +58,7 @@ include(SetDefaultBuildType)
 # Forbid extensions (such as gnu++) for this project
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Include CPM dependency manager
-include(CPM)
-
-# export compile_commands.json for language servers such as ccls
+# export compile_commands.json for lsp language servers (e.g. clangd)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # By default set all output to lib or bin directories
@@ -76,6 +74,12 @@ set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
 # ------------ dependencies ------------
 # ------------
+
+if (NOT (SYSTEM_EIGEN AND SYSTEM_SPDLOG AND SYSTEM_DOCTEST AND SYSTEM_CATCH))
+    # Include CPM dependency manager for bundling dependencies
+    include(CPM)
+endif()
+
 
 # only add the dependencies if elsa is stand-alone
 if(ELSA_MASTER_PROJECT)
@@ -139,7 +143,7 @@ if(ELSA_MASTER_PROJECT)
         CPMAddPackage(
             NAME spdlog
             GITHUB_REPOSITORY gabime/spdlog
-            VERSION 1.9.0
+            VERSION 1.8.5
             OPTIONS "SPDLOG_INSTALL ON"
         )
         message(STATUS "Using bundled spdlog version in ${spdlog_SOURCE_DIR}")
@@ -165,45 +169,59 @@ if(ELSA_MASTER_PROJECT)
       find_package(Npp)
     endif(ELSA_BUILD_ML_CUDNN)
 
-    # Adding quickvec
-    if(ELSA_CUDA_VECTOR)
-        message(STATUS "CUDA support requested...")
-        include(CheckLanguage)
-        check_language(CUDA)
-
-        if(CMAKE_CUDA_COMPILER)
-            enable_language(CUDA)
-            CPMAddPackage(
-                NAME Quickvec
-                GIT_REPOSITORY https://gitlab.lrz.de/IP/quickvec.git
-                GIT_TAG master
-            )
-
-            if(Quickvec_ADDED)
-                message(STATUS "CUDA support enabled")
-                message(STATUS "Enabling DataHandlerGPU")
-                message(STATUS "The default container type will be on the GPU")
-
-                set(ELSA_BUILD_WITH_QUICKVEC TRUE)
-                add_definitions(-DELSA_CUDA_VECTOR)
-            else()
-                message(FATAL_ERROR "CUDA_VECTOR library quickvec could not be added.")
-            endif()
-        else()
-            message(FATAL_ERROR "CUDA_VECTOR language support not found")
-        endif()
-    endif()
-
     if (${ELSA_BUILD_PYTHON_BINDINGS})
         CPMAddPackage(
             NAME pybind11
             GITHUB_REPOSITORY pybind/pybind11
-            VERSION 2.6.0
+            VERSION 2.8.0
         )
     endif()
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
 endif()
+
+# Enable CUDA support if requested
+if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS OR ELSA_BUILD_ML_CUDNN)
+    message(STATUS "CUDA support requested...")
+    include(CheckLanguage)
+    check_language(CUDA)
+    find_package(CUDA 11.0)
+
+    if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
+        enable_language(CUDA)
+        message(STATUS "CUDA support enabled")
+
+        # set target CUDA architectures
+        include(ComputeCapabilityCUDA)
+        set_cuda_arch_type(${ELSA_CUDA_ARCH_TYPE})
+
+        foreach(TARGET_GPU ${TARGET_GPUS})
+            string(REPLACE "." "" TARGET_GPU ${TARGET_GPU})
+            list(APPEND CMAKE_CUDA_ARCHITECTURES ${TARGET_GPU})
+        endforeach()
+
+        if (ELSA_CUDA_VECTOR)
+            message(STATUS "Enabling DataHandlerGPU")
+            message(STATUS "The default container type will be on the GPU")
+
+            set(ELSA_BUILD_WITH_QUICKVEC TRUE)
+            add_definitions(-DELSA_CUDA_VECTOR)
+        endif()
+    elseif(ELSA_CUDA_VECTOR)
+        message(FATAL_ERROR "CUDA compiler not found!")
+        message(STATUS "Compiling without a DataHandlerGPU")
+        message(STATUS "The default container type will be CPU")
+
+        set(ELSA_BUILD_WITH_QUICKVEC FALSE)
+        set(ELSA_CUDA_VECTOR OFF)
+    endif()
+endif()
+
+
+# set where to install the exports/targets
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
 # include the install_elsa_module function
 include(InstallElsaModule)
@@ -226,14 +244,19 @@ endif(NOT ELSA_MASTER_PROJECT)
 if(ELSA_TESTING OR ELSA_BENCHMARKS)
     enable_testing()
 
-    CPMAddPackage(
-         NAME doctest
-         GITHUB_REPOSITORY onqtam/doctest
-         GIT_TAG 2.4.4
-    )
+    if(SYSTEM_DOCTEST)
+        message(STATUS "Using system-wide doctest library...")
+        find_package(doctest REQUIRED)
+    else()
+        CPMAddPackage(
+            NAME doctest
+            GITHUB_REPOSITORY onqtam/doctest
+            GIT_TAG 2.4.4
+        )
 
-    # add the CMake modules for automatic test discovery
-    set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
+        # add the CMake modules for automatic test discovery
+        set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
+    endif()
 
     if(ELSA_TESTING)
         message(STATUS "elsa testing is enabled")

@@ -24,8 +24,14 @@ fi
 # for compilation database
 mkdir -p build
 cd build
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
 cd ..
+
+if [ ! -f build/compile_commands.json ]; then
+    echo "Compilation database not found!"
+    echo "--> Most likely the configuration failed"
+    exit 1 
+fi
 
 echo
 echo "clang-tidy checking changed files compared to target branch ${target_branch}"
