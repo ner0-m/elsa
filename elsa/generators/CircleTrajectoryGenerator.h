@@ -3,6 +3,7 @@
 #include "Geometry.h"
 
 #include "DetectorDescriptor.h"
+#include "TrajectoryGenerator.h"
 
 #include <vector>
 #include <utility>
@@ -16,7 +17,7 @@ namespace elsa
      * @author Maximilan Hornung - initial code
      * @author Tobias Lasser - modernization, fixes
      */
-    class CircleTrajectoryGenerator
+    class CircleTrajectoryGenerator : public TrajectoryGenerator
     {
     public:
         /**
@@ -26,8 +27,10 @@ namespace elsa
          * @param numberOfPoses the number of (equally spaced) acquisition poses to be generated
          * @param volumeDescriptor the volume around which the trajectory should go
          * @param arcDegrees the size of the arc of the circle covered by the trajectory (in
-         * degrees, 360 for full circle) @param sourceToCenter the distance of the X-ray source to
-         * the center of the volume @param centerToDetector the distance of the center of the volume
+         * degrees, 360 for full circle)
+         * @param sourceToCenter the distance of the X-ray source to
+         * the center of the volume
+         * @param centerToDetector the distance of the center of the volume
          * to the X-ray detector
          *
          * @returns a pair containing the list of geometries with a circular trajectory, and the

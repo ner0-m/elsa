@@ -6,13 +6,14 @@
 #include "ExpressionPredicates.h"
 
 #ifdef ELSA_CUDA_VECTOR
-#include "Quickvec.h"
+#include "Quickvec.cuh"
 #endif
 
 #include <Eigen/Core>
 
 namespace elsa
 {
+    class DataDescriptor;
 
     /**
      * @brief Base class encapsulating data handling. The data is stored transparently, for example
@@ -74,6 +75,18 @@ namespace elsa
 
         /// return the sum of all elements of the data vector
         virtual data_t sum() const = 0;
+
+        /// return the min of all elements of the data vector
+        virtual data_t minElement() const = 0;
+
+        /// return the max of all elements of the data vector
+        virtual data_t maxElement() const = 0;
+
+        /// in-place create the fourier transformed of the data vector
+        virtual DataHandler<data_t>& fft(const DataDescriptor& source_desc, FFTNorm norm) = 0;
+
+        /// in-place create the inverse fourier transformed of the data vector
+        virtual DataHandler<data_t>& ifft(const DataDescriptor& source_desc, FFTNorm norm) = 0;
 
         /// compute in-place element-wise addition of another vector v
         virtual DataHandler<data_t>& operator+=(const DataHandler<data_t>& v) = 0;

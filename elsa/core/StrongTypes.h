@@ -184,7 +184,7 @@ namespace elsa
          * it (i.e. only with Beta and Alpha)
          *
          */
-        class RotationAngles3D : detail::RotationAngles<3>
+        class RotationAngles3D : public detail::RotationAngles<3>
         {
         public:
             using Base = detail::RotationAngles<3>;
@@ -193,9 +193,6 @@ namespace elsa
             using Base::Base;
 
         public:
-            using Base::get;
-            using Base::operator[];
-
             /// Construction from Gamma
             constexpr RotationAngles3D(Gamma gamma)
                 : Base(Radian{static_cast<real_t>(gamma)}, Radian{0}, Radian{0})
@@ -586,19 +583,16 @@ namespace elsa
          *
          * @tparam Size Dimension of problem
          *
-         * We use private inheritance, to avoid retyping everything. The private members are made
-         * public with using statements
+         * This used to be private inheritance, changed to public because of NVCC bug involving
+         * structured bindings and overloaded get() functions lifted with a using statement
          */
         template <index_t Size>
-        class VolumeData : detail::GeometryData<Size>
+        class VolumeData : public detail::GeometryData<Size>
         {
         public:
             using Base = detail::GeometryData<Size>;
 
             using Base::Base;
-            using Base::getSpacing;
-            using Base::getLocationOfOrigin;
-            using Base::get;
         };
 
         using VolumeData2D = VolumeData<2>; ///< 2D volume data alias for 2D geometry
@@ -610,19 +604,16 @@ namespace elsa
          *
          * @tparam Size Dimension of problem
          *
-         * We use private inheritance, to avoid retyping everything. The private members are made
-         * public with using statements
+         * This used to be private inheritance, changed to public because of NVCC bug involving
+         * structured bindings and overloaded get() functions lifted with a using statement
          */
         template <index_t Size>
-        class SinogramData : detail::GeometryData<Size>
+        class SinogramData : public detail::GeometryData<Size>
         {
         public:
             using Base = detail::GeometryData<Size>;
 
             using Base::Base;
-            using Base::getSpacing;
-            using Base::getLocationOfOrigin;
-            using Base::get;
         };
 
         using SinogramData2D = SinogramData<2>; ///< 2D sinogram data alias for 2D geometry
@@ -652,13 +643,19 @@ namespace elsa
             explicit operator data_t() const { return _threshold; }
 
             /// return -Threshold
-            auto operator-() -> const data_t { return (data_t)(-_threshold); }
+            auto operator-() -> const data_t { return static_cast<data_t>(-_threshold); }
 
             /// return computed subtraction
-            auto operator-(const data_t t) const -> data_t { return (data_t)(_threshold - t); }
+            auto operator-(const data_t t) const -> data_t
+            {
+                return static_cast<data_t>(_threshold - t);
+            }
 
             /// return computed addition
-            auto operator+(const data_t t) const -> data_t { return (data_t)(_threshold + t); }
+            auto operator+(const data_t t) const -> data_t
+            {
+                return static_cast<data_t>(_threshold + t);
+            }
 
             /// return computed less-than comparison
             auto operator<(const data_t t) const -> bool { return _threshold < t; }
@@ -686,14 +683,14 @@ namespace elsa
         template <typename data_t = real_t>
         auto operator-(const data_t a, const Threshold<data_t>& b) -> data_t
         {
-            return (data_t)(-(b - a));
+            return static_cast<data_t>(-(b - a));
         }
 
         /// return computed addition of data_t with Threshold<data_t>
         template <typename data_t = real_t>
         auto operator+(const data_t a, const Threshold<data_t>& b) -> data_t
         {
-            return (data_t)(b + a);
+            return static_cast<data_t>(b + a);
         }
 
         /// return computed greater-than comparison of data_t with Threshold<data_t>

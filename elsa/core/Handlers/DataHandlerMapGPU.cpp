@@ -96,7 +96,7 @@ namespace elsa
     template <typename data_t>
     GetFloatingPointType_t<data_t> DataHandlerMapGPU<data_t>::squaredL2Norm() const
     {
-        return _map.squaredL2Norm();
+        return _map.squaredl2Norm();
     }
 
     template <typename data_t>
@@ -127,6 +127,32 @@ namespace elsa
     data_t DataHandlerMapGPU<data_t>::sum() const
     {
         return _map.sum();
+    }
+
+    template <typename data_t>
+    data_t DataHandlerMapGPU<data_t>::minElement() const
+    {
+        return _map.minElement();
+    }
+
+    template <typename data_t>
+    data_t DataHandlerMapGPU<data_t>::maxElement() const
+    {
+        return _map.maxElement();
+    }
+
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerMapGPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                        FFTNorm norm)
+    {
+        throw std::runtime_error{"todo implement"};
+    }
+
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerMapGPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                         FFTNorm norm)
+    {
+        throw std::runtime_error{"todo implement"};
     }
 
     template <typename data_t>
@@ -386,9 +412,9 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataHandlerMapGPU<float>;
-    template class DataHandlerMapGPU<std::complex<float>>;
+    template class DataHandlerMapGPU<complex<float>>;
     template class DataHandlerMapGPU<double>;
-    template class DataHandlerMapGPU<std::complex<double>>;
+    template class DataHandlerMapGPU<complex<double>>;
     template class DataHandlerMapGPU<index_t>;
 
 } // namespace elsa

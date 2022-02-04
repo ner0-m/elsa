@@ -54,7 +54,7 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class Constraint<float>;
-    template class Constraint<std::complex<float>>;
+    template class Constraint<complex<float>>;
     template class Constraint<double>;
-    template class Constraint<std::complex<double>>;
+    template class Constraint<complex<double>>;
 } // namespace elsa

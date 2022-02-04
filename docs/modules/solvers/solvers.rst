@@ -1,3 +1,5 @@
+.. _elsa_solvers_index:
+    
 *******
 elsa solvers
 *******

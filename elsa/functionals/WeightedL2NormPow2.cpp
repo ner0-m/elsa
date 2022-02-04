@@ -83,7 +83,7 @@ namespace elsa
     // explicit template instantiation
     template class WeightedL2NormPow2<float>;
     template class WeightedL2NormPow2<double>;
-    template class WeightedL2NormPow2<std::complex<float>>;
-    template class WeightedL2NormPow2<std::complex<double>>;
+    template class WeightedL2NormPow2<complex<float>>;
+    template class WeightedL2NormPow2<complex<double>>;
 
 } // namespace elsa

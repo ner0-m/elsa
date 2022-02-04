@@ -6,7 +6,6 @@ function(set_cuda_arch_type elsa_arch_type)
     string( TOLOWER "${elsa_arch_type}" _arch_type) 
 
     if (${_arch_type} STREQUAL "auto")
-        find_package(CUDA)
         cuda_detect_installed_gpus(_detected_capabilities)
         string(STRIP "${_detected_capabilities}" _detected_capabilities)
         if (CUDA_GPU_DETECT_OUTPUT)

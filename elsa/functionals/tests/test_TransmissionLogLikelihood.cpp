@@ -22,8 +22,8 @@
 using namespace elsa;
 using namespace doctest;
 
-TYPE_TO_STRING(std::complex<float>);
-TYPE_TO_STRING(std::complex<double>);
+TYPE_TO_STRING(complex<float>);
+TYPE_TO_STRING(complex<double>);
 
 TEST_SUITE_BEGIN("functionals");
 

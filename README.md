@@ -28,7 +28,7 @@ elsa requires a **C++17 compliant compiler**, such as GCC or Clang in recent ver
 Current testing includes Linux-based gcc 9, gcc 10, clang 9, and clang 10.
 The build process is controlled using CMake, version 3.14 or higher.
 
-The main third party dependencies (Eigen3, spdlog, Catch2) are integrated via [CPM](https://github.com/TheLartians/CPM.cmake).
+The main third party dependencies (Eigen3, spdlog, doctest) are integrated via [CPM](https://github.com/TheLartians/CPM.cmake).
 
 For CUDA support, you need a CUDA capable graphics card as well as an installation of the CUDA toolkit.
 Current testing includes CUDA 10.2 combined with gcc 8 or clang 8.
@@ -36,23 +36,49 @@ Current testing includes CUDA 10.2 combined with gcc 8 or clang 8.
 Compiling
 ---------
 
-Once you have cloned the git repository, compilation can be done by following these steps:
-
-- go to the elsa folder and create a build folder (e.g. `mkdir build; cd build`)
-- run the following commands in the build folder:
+Once you have cloned the git repository, compilation can be done by simply by running
 
 ```
+make build
+```
+
+The build CMake-based but a Makefile is provided as a convenience.
+
+Calling make will configure the project with certain default configurations and create a sub-folder structured of the
+form `build/$BUILD_TYPE/$compiler`.
+
+Currently, if you want to change the install prefix, you have to directly call CMake. Provide `-DCMAKE_INSTALL_PREFIX=folder` during the CMake
+step to select an installation destination other than the default (`/usr/local` on Unix-like systems).
+
+To run all tests just run (from the root directory):
+
+```
+make tests
+```
+
+Once configuration was run once, other interesting targets for developers could be:
+
+* test <test-name>
+* watch <test-name>
+
+You might need to install [fzf](https://github.com/junegunn/fzf), [chromaterm](https://github.com/hSaria/ChromaTerm),
+[ag](https://github.com/ggreer/the_silver_searcher) and/or [entr](http://eradman.com/entrproject/) for the best
+experience. ag and entr are necessary for the watch command. If you have fzf installed, you can also use partial test names and
+you can select one interactively.
+
+Other build options you can pass: `USE_CUDA`, `USE_DNNL`, `GENERATE_PYBINDS` and `ENABLE_BENCHMARKS`. You can pass either `y` or `n` to any of these.
+
+Compilation can also be done using plain CMake, without the Makefile. For create a build folder (e.g. `mkdir build; cd build`)
+and run the following commands:
+
+```bash
 cmake ..
 make
 make install
 ```
 
-You can provide `-DCMAKE_INSTALL_PREFIX=folder` during the cmake step to select an installation destination other than the default (`/usr/local` on Unix-like systems).
-
-You can build and run the elsa unit tests by running (in the build folder):
-```
-make tests
-```
+You can provide the usual CMake options with a prefix of `-D` (e.g. `-DCMAKE_INSTALL_PREFIX=path/to/install/dir`)
+or use [ninja](https://ninja-build.org/) to build instead of make by appending `-G Ninja` to the CMake call.
 
 We also provide a `CMakePresets.json` to support [CMake's presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html).
 You can use them the following way from the root of the repository:
@@ -105,6 +131,7 @@ This open-source version is a modernized and cleaned up version of our internal 
 
 **Releases:** ([changelog](CHANGELOG.md))
 
+- v0.7: major feature release, e.g. deep learning support (October 27, 2021)
 - v0.6: major feature release, e.g. seamless GPU-computing, Python bindings (February 2, 2021)
 - v0.5: the "projector" release (September 18, 2019)
 - v0.4: first public release (July 19, 2019)
@@ -131,3 +158,13 @@ URL = {https://doi.org/10.1117/12.2534833}
 }
 ```
 
+If you are using the deep learning module of elsa, we would like to ask you to cite us as well:
+```txt
+@inproceedings{TellenbachElsa2020,
+author = {David Tellenbach and Tobias Lasser},
+title = {{elsa - an elegant framework for precision learning in tomographic reconstruction}},
+booktitle = {6th International Conference on Image Formation in X-ray Computed Tomography},
+venue = {Regensburg, Germany},
+month = {August},
+year = {2020},
+```

@@ -184,6 +184,6 @@ namespace elsa
     // explicit template instantiation
     template class SubsetSampler<PlanarDetectorDescriptor, float>;
     template class SubsetSampler<PlanarDetectorDescriptor, double>;
-    template class SubsetSampler<PlanarDetectorDescriptor, std::complex<float>>;
-    template class SubsetSampler<PlanarDetectorDescriptor, std::complex<double>>;
+    template class SubsetSampler<PlanarDetectorDescriptor, complex<float>>;
+    template class SubsetSampler<PlanarDetectorDescriptor, complex<double>>;
 } // namespace elsa

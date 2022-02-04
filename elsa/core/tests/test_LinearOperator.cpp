@@ -45,9 +45,13 @@ protected:
     }
 };
 
+TYPE_TO_STRING(complex<float>);
+TYPE_TO_STRING(complex<double>);
+
 TEST_SUITE_BEGIN("core");
 
-TEST_CASE("LinearOperator: Testing construction")
+TEST_CASE_TEMPLATE("LinearOperator: Testing construction", TestType, float, double, complex<float>,
+                   complex<double>)
 {
     GIVEN("DataDescriptors")
     {
@@ -60,7 +64,7 @@ TEST_CASE("LinearOperator: Testing construction")
 
         WHEN("instantiating a LinearOperator")
         {
-            LinearOperator linOp(ddDomain, ddRange);
+            LinearOperator<TestType> linOp(ddDomain, ddRange);
 
             THEN("the DataDescriptors are as expected")
             {
@@ -70,7 +74,7 @@ TEST_CASE("LinearOperator: Testing construction")
 
             THEN("the apply* operations throw")
             {
-                DataContainer dc(ddDomain);
+                DataContainer<TestType> dc(ddDomain);
                 REQUIRE_THROWS_AS(linOp.apply(dc), LogicError);
                 REQUIRE_THROWS_AS(linOp.applyAdjoint(dc), LogicError);
             }
@@ -84,7 +88,8 @@ TEST_CASE("LinearOperator: Testing construction")
     }
 }
 
-TEST_CASE("LinearOperator: Testing clone()")
+TEST_CASE_TEMPLATE("LinearOperator: Testing clone()", TestType, float, double, complex<float>,
+                   complex<double>)
 {
     GIVEN("a LinearOperator")
     {
@@ -94,7 +99,7 @@ TEST_CASE("LinearOperator: Testing clone()")
         numCoeff2 << 78, 90;
         VolumeDescriptor ddDomain(numCoeff);
         VolumeDescriptor ddRange(numCoeff2);
-        LinearOperator linOp(ddDomain, ddRange);
+        LinearOperator<TestType> linOp(ddDomain, ddRange);
 
         WHEN("cloning the LinearOperator")
         {
@@ -115,7 +120,8 @@ TEST_CASE("LinearOperator: Testing clone()")
     }
 }
 
-TEST_CASE("LinearOperator: Testing a leaf LinearOperator")
+TEST_CASE_TEMPLATE("LinearOperator: Testing a leaf LinearOperator", TestType, float, double,
+                   complex<float>, complex<double>)
 {
     GIVEN("a non-adjoint leaf linear operator")
     {
@@ -125,7 +131,7 @@ TEST_CASE("LinearOperator: Testing a leaf LinearOperator")
         numCoeff2 << 34, 45;
         VolumeDescriptor ddDomain(numCoeff);
         VolumeDescriptor ddRange(numCoeff2);
-        MockOperator mockOp(ddDomain, ddRange);
+        MockOperator<TestType> mockOp(ddDomain, ddRange);
 
         auto leafOp = leaf(mockOp);
 
@@ -140,18 +146,18 @@ TEST_CASE("LinearOperator: Testing a leaf LinearOperator")
 
         WHEN("given data")
         {
-            DataContainer dcDomain(ddDomain);
-            DataContainer dcRange(ddRange);
+            DataContainer<TestType> dcDomain(ddDomain);
+            DataContainer<TestType> dcRange(ddRange);
 
             THEN("the apply operations return the correct result")
             {
                 auto resultApply = leafOp.apply(dcDomain);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(1));
+                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(1));
 
                 auto resultApplyAdjoint = leafOp.applyAdjoint(dcRange);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(3));
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(3));
             }
 
             THEN("the apply operations care for appropriately sized containers")
@@ -185,7 +191,7 @@ TEST_CASE("LinearOperator: Testing a leaf LinearOperator")
         numCoeff2 << 34, 45;
         VolumeDescriptor ddDomain(numCoeff);
         VolumeDescriptor ddRange(numCoeff2);
-        MockOperator mockOp(ddDomain, ddRange);
+        MockOperator<TestType> mockOp(ddDomain, ddRange);
 
         auto adjointOp = adjoint(mockOp);
 
@@ -200,18 +206,18 @@ TEST_CASE("LinearOperator: Testing a leaf LinearOperator")
 
         WHEN("given data")
         {
-            DataContainer dcDomain(ddDomain);
-            DataContainer dcRange(ddRange);
+            DataContainer<TestType> dcDomain(ddDomain);
+            DataContainer<TestType> dcRange(ddRange);
 
             THEN("the apply operations return the correct result")
             {
                 auto resultApply = adjointOp.apply(dcRange);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(3));
+                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(3));
 
                 auto resultApplyAdjoint = adjointOp.applyAdjoint(dcDomain);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(1));
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(1));
             }
 
             THEN("the apply operations care for appropriately sized containers")
@@ -238,7 +244,8 @@ TEST_CASE("LinearOperator: Testing a leaf LinearOperator")
     }
 }
 
-TEST_CASE("LinearOperator: Testing composite LinearOperator")
+TEST_CASE_TEMPLATE("LinearOperator: Testing composite LinearOperator", TestType, float, double,
+                   complex<float>, complex<double>)
 {
     GIVEN("an additive composite linear operator")
     {
@@ -249,8 +256,8 @@ TEST_CASE("LinearOperator: Testing composite LinearOperator")
         VolumeDescriptor ddDomain(numCoeff);
         VolumeDescriptor ddRange(numCoeff2);
 
-        MockOperator op1(ddDomain, ddRange);
-        MockOperator op2(ddDomain, ddRange);
+        MockOperator<TestType> op1(ddDomain, ddRange);
+        MockOperator<TestType> op2(ddDomain, ddRange);
 
         auto addOp = op1 + op2;
 
@@ -265,18 +272,18 @@ TEST_CASE("LinearOperator: Testing composite LinearOperator")
 
         WHEN("given data")
         {
-            DataContainer dcDomain(ddDomain);
-            DataContainer dcRange(ddRange);
+            DataContainer<TestType> dcDomain(ddDomain);
+            DataContainer<TestType> dcRange(ddRange);
 
             THEN("the apply operations return the correct result")
             {
                 auto resultApply = addOp.apply(dcDomain);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(2));
+                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(2));
 
                 auto resultApplyAdjoint = addOp.applyAdjoint(dcRange);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(6));
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(6));
             }
 
             THEN("the apply operations care for appropriately sized containers")
@@ -314,8 +321,8 @@ TEST_CASE("LinearOperator: Testing composite LinearOperator")
         VolumeDescriptor ddMiddle(numCoeff2);
         VolumeDescriptor ddRange(numCoeff3);
 
-        MockOperator op1(ddDomain, ddMiddle);
-        MockOperator op2(ddMiddle, ddRange);
+        MockOperator<TestType> op1(ddDomain, ddMiddle);
+        MockOperator<TestType> op2(ddMiddle, ddRange);
 
         auto multOp = op2 * op1;
 
@@ -330,18 +337,18 @@ TEST_CASE("LinearOperator: Testing composite LinearOperator")
 
         WHEN("given data")
         {
-            DataContainer dcDomain(ddDomain);
-            DataContainer dcRange(ddRange);
+            DataContainer<TestType> dcDomain(ddDomain);
+            DataContainer<TestType> dcRange(ddRange);
 
             THEN("the apply operations return the correct result")
             {
                 auto resultApply = multOp.apply(dcDomain);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(1));
+                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(1));
 
                 auto resultApplyAdjoint = multOp.applyAdjoint(dcRange);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(3));
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(3));
             }
 
             THEN("the apply operations care for appropriately sized containers")
@@ -367,6 +374,68 @@ TEST_CASE("LinearOperator: Testing composite LinearOperator")
         }
     }
 
+    GIVEN("a scalar multiplicative composite linear operator")
+    {
+        IndexVector_t numCoeff(3);
+        numCoeff << 13, 47, 69;
+        IndexVector_t otherNumCoeff(2);
+        otherNumCoeff << 15, 28;
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(otherNumCoeff);
+
+        MockOperator op(ddDomain, ddRange);
+        real_t scalar = 8;
+
+        auto scalarMultOp = scalar * op;
+
+        WHEN("the operator is there")
+        {
+            THEN("the descriptors are set correctly")
+            {
+                REQUIRE_EQ(scalarMultOp.getDomainDescriptor(), ddDomain);
+                REQUIRE_EQ(scalarMultOp.getRangeDescriptor(), ddRange);
+            }
+        }
+
+        WHEN("given data")
+        {
+            DataContainer dcDomain(ddDomain);
+            DataContainer dcRange(ddRange);
+
+            THEN("the apply operations return the correct result")
+            {
+                auto resultApply = scalarMultOp.apply(dcDomain);
+                for (int i = 0; i < resultApply.getSize(); ++i)
+                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(8));
+
+                auto resultApplyAdjoint = scalarMultOp.applyAdjoint(dcRange);
+                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(24));
+            }
+
+            THEN("the apply operations account for appropriately sized containers")
+            {
+                REQUIRE_THROWS_AS(scalarMultOp.apply(dcRange), InvalidArgumentError);
+                REQUIRE_THROWS_AS(scalarMultOp.applyAdjoint(dcDomain), InvalidArgumentError);
+            }
+        }
+
+        WHEN("copying/assigning")
+        {
+            const auto& newOp = scalarMultOp;
+            auto assignedOp = adjoint(newOp);
+
+            THEN("it should be identical")
+            {
+                REQUIRE_EQ(newOp, scalarMultOp);
+                REQUIRE_EQ(assignedOp, adjoint(newOp));
+
+                assignedOp = newOp;
+                REQUIRE_EQ(assignedOp, newOp);
+            }
+        }
+    }
+
     GIVEN("a complex composite with multiple leafs and levels")
     {
         IndexVector_t numCoeff(2);
@@ -379,9 +448,9 @@ TEST_CASE("LinearOperator: Testing composite LinearOperator")
         VolumeDescriptor ddRange(numCoeff2);
         VolumeDescriptor ddFinalRange(numCoeff3);
 
-        MockOperator op1(ddDomain, ddRange);
-        MockOperator op2(ddFinalRange, ddRange);
-        MockOperator op3(ddRange, ddFinalRange);
+        MockOperator<TestType> op1(ddDomain, ddRange);
+        MockOperator<TestType> op2(ddFinalRange, ddRange);
+        MockOperator<TestType> op3(ddRange, ddFinalRange);
 
         auto compositeOp = (op3 + adjoint(op2)) * op1;
 
@@ -396,18 +465,18 @@ TEST_CASE("LinearOperator: Testing composite LinearOperator")
 
         WHEN("given data")
         {
-            DataContainer dcDomain(ddDomain);
-            DataContainer dcFinalRange(ddFinalRange);
+            DataContainer<TestType> dcDomain(ddDomain);
+            DataContainer<TestType> dcFinalRange(ddFinalRange);
 
             THEN("the apply operations return the correct result")
             {
                 auto resultApply = compositeOp.apply(dcDomain);
                 for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(4));
+                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(4));
 
                 auto resultApplyAdjoint = compositeOp.applyAdjoint(dcFinalRange);
                 for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(3));
+                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(3));
             }
 
             THEN("the apply operations expect appropriately sized containers")

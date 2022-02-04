@@ -74,12 +74,11 @@ namespace elsa
      * @param margin allowed tolerance in percentage
      */
     template <typename T>
-    [[nodiscard]] bool checkApproxEq(T left, SelfType_t<T> right, double margin = 0.01)
+    [[nodiscard]] bool checkApproxEq(T left, SelfType_t<T> right, double margin = epsilon)
     {
         using Approx = doctest::Approx;
 
-        if constexpr (std::is_same_v<
-                          T, std::complex<float>> || std::is_same_v<T, std::complex<double>>) {
+        if constexpr (std::is_same_v<T, complex<float>> || std::is_same_v<T, complex<double>>) {
             CHECK_EQ(Approx(left.real()).epsilon(margin), right.real());
             CHECK_EQ(Approx(left.imag()).epsilon(margin), right.imag());
 
@@ -95,12 +94,11 @@ namespace elsa
     }
 
     template <typename T>
-    [[nodiscard]] bool checkApproxNe(T left, SelfType_t<T> right, double margin = 0.01)
+    [[nodiscard]] bool checkApproxNe(T left, SelfType_t<T> right, double margin = epsilon)
     {
         using Approx = doctest::Approx;
 
-        if constexpr (std::is_same_v<
-                          T, std::complex<float>> || std::is_same_v<T, std::complex<double>>) {
+        if constexpr (std::is_same_v<T, complex<float>> || std::is_same_v<T, complex<double>>) {
             CHECK_NE(Approx(left.real()).epsilon(margin), right.real());
             CHECK_NE(Approx(left.imag()).epsilon(margin), right.imag());
 
@@ -120,8 +118,7 @@ namespace elsa
     {
         using Approx = doctest::Approx;
 
-        if constexpr (std::is_same_v<
-                          T, std::complex<float>> || std::is_same_v<T, std::complex<double>>) {
+        if constexpr (std::is_same_v<T, complex<float>> || std::is_same_v<T, complex<double>>) {
             return Approx(left.real()).epsilon(epsilon) == right.real()
                    && Approx(left.imag()).epsilon(epsilon) == right.imag();
         } else if constexpr (std::is_floating_point_v<T>) {
@@ -293,8 +290,7 @@ namespace elsa
      * @tparam T [const] [volatile] complex<float>[&] should be accepted
      */
     template <typename T>
-    struct TypeName<T,
-                    std::enable_if_t<std::is_same_v<std::complex<float>, UnqualifiedType_t<T>>>> {
+    struct TypeName<T, std::enable_if_t<std::is_same_v<complex<float>, UnqualifiedType_t<T>>>> {
         static constexpr char name[] = "complex<float>";
     };
 
@@ -303,8 +299,7 @@ namespace elsa
      * @tparam T [const] [volatile] complex<double>[&] should be accepted
      */
     template <typename T>
-    struct TypeName<T,
-                    std::enable_if_t<std::is_same_v<std::complex<double>, UnqualifiedType_t<T>>>> {
+    struct TypeName<T, std::enable_if_t<std::is_same_v<complex<double>, UnqualifiedType_t<T>>>> {
         static constexpr char name[] = "complex<double>";
     };
 

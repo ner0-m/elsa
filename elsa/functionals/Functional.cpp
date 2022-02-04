@@ -120,6 +120,6 @@ namespace elsa
     // explicit template instantiation
     template class Functional<float>;
     template class Functional<double>;
-    template class Functional<std::complex<float>>;
-    template class Functional<std::complex<double>>;
+    template class Functional<complex<float>>;
+    template class Functional<complex<double>>;
 } // namespace elsa

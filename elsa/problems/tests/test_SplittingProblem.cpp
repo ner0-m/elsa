@@ -18,8 +18,8 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("problems");
 
-TEST_CASE_TEMPLATE("SplittingProblem: Simple Test", data_t, float, std::complex<float>, double,
-                   std::complex<double>)
+TEST_CASE_TEMPLATE("SplittingProblem: Simple Test", data_t, float, complex<float>, double,
+                   complex<double>)
 {
     GIVEN("some data terms, a regularization term and a constraint")
     {

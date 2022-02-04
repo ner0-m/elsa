@@ -51,10 +51,7 @@ void example2d()
     // write the reconstruction out
     EDF::write(cgReconstruction, "2dreconstruction_cg.edf");
 
-    L1Norm regFunc(projector.getDomainDescriptor());
-    RegularizationTerm regTerm(0.5f, regFunc);
-
-    LASSOProblem lassoProb(wlsProblem, regTerm);
+    LASSOProblem lassoProb(projector, sinogram);
 
     // solve the reconstruction problem with ISTA
     ISTA istaSolver(lassoProb);

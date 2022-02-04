@@ -28,7 +28,9 @@
 // Generators headers
 #include "PhantomGenerator.h"
 #include "CircleTrajectoryGenerator.h"
+#include "LimitedAngleTrajectoryGenerator.h"
 #include "SphereTrajectoryGenerator.h"
+#include "NoiseGenerators.h"
 
 // IO headers
 #include "EDFHandler.h"

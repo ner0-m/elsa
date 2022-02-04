@@ -71,7 +71,6 @@
       "binaryDir": "${sourceDir}/build/",
       "cacheVariables": {
         "ELSA_BENCHMAKRS": "ON",
-        "ELSA_CREATE_JUNIT_REPORTS": "ON",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/install-elsa"
       }
     },

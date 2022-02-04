@@ -72,7 +72,7 @@ namespace elsa
     // explicit template instantiation
     template class RegularizationTerm<float>;
     template class RegularizationTerm<double>;
-    template class RegularizationTerm<std::complex<float>>;
-    template class RegularizationTerm<std::complex<double>>;
+    template class RegularizationTerm<complex<float>>;
+    template class RegularizationTerm<complex<double>>;
 
 } // namespace elsa

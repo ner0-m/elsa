@@ -44,8 +44,8 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class Identity<float>;
-    template class Identity<std::complex<float>>;
+    template class Identity<complex<float>>;
     template class Identity<double>;
-    template class Identity<std::complex<double>>;
+    template class Identity<complex<double>>;
 
 } // namespace elsa

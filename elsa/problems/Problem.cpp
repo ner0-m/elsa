@@ -17,13 +17,6 @@ namespace elsa
         if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
             != this->_currentSolution.getSize())
             throw InvalidArgumentError("Problem: domain of dataTerm and solution do not match");
-
-        for (auto& regTerm : _regTerms) {
-            if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
-                != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
-                throw InvalidArgumentError(
-                    "Problem: one of the reg terms' domain does not match the data term's");
-        }
     }
 
     template <typename data_t>
@@ -35,14 +28,6 @@ namespace elsa
           _currentSolution{dataTerm.getDomainDescriptor()},
           _lipschitzConstant{lipschitzConstant}
     {
-        // sanity check
-        for (auto& regTerm : _regTerms) {
-            if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
-                != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
-                throw InvalidArgumentError(
-                    "Problem: one of the reg terms' domain does not match the data term's");
-        }
-
         _currentSolution = 0;
     }
 
@@ -60,11 +45,6 @@ namespace elsa
         if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
             != this->_currentSolution.getSize())
             throw InvalidArgumentError("Problem: domain of dataTerm and solution do not match");
-
-        if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
-            != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
-            throw InvalidArgumentError(
-                "Problem: one of the reg terms' domain does not match the data term's");
     }
 
     template <typename data_t>
@@ -76,12 +56,6 @@ namespace elsa
           _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType},
           _lipschitzConstant{lipschitzConstant}
     {
-        // sanity check
-        if (dataTerm.getDomainDescriptor().getNumberOfCoefficients()
-            != regTerm.getFunctional().getDomainDescriptor().getNumberOfCoefficients())
-            throw InvalidArgumentError(
-                "Problem: one of the reg terms' domain does not match the data term's");
-
         _currentSolution = 0;
     }
 
@@ -187,7 +161,7 @@ namespace elsa
         DataContainer<data_t> dcB(hessian.getDomainDescriptor(), bVec);
         for (index_t i = 0; i < nIterations; i++) {
             dcB = hessian.apply(dcB);
-            dcB = dcB / std::sqrt(dcB.dot(dcB));
+            dcB = dcB / sqrt(dcB.dot(dcB));
         }
 
         return dcB.dot(hessian.apply(dcB)) / (dcB.dot(dcB));
@@ -260,8 +234,8 @@ namespace elsa
 
     template class Problem<double>;
 
-    template class Problem<std::complex<float>>;
+    template class Problem<complex<float>>;
 
-    template class Problem<std::complex<double>>;
+    template class Problem<complex<double>>;
 
 } // namespace elsa
