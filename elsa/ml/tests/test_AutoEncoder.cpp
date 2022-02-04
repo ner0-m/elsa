@@ -70,7 +70,7 @@ TEST_CASE_TEMPLATE("AutoEncoder: testing of training", TestType, float, double)
             // compile the model
             aeModel.compile(ml::SparseCategoricalCrossentropy<TestType>(), &optimizer);
 
-            ml::Model<TestType, ml::MlBackend::Cudnn>::History history =
+            typename ml::Model<TestType, ml::MlBackend::Cudnn>::History history =
                 aeModel.fit(inputs, labels, 2);
 
             THEN("all losses are non-NaNs")
