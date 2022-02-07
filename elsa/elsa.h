@@ -47,6 +47,7 @@
 #include "Scaling.h"
 #include "FiniteDifferences.h"
 #include "BlockLinearOperator.h"
+#include "ShearletTransform.h"
 
 // Proximity Operator headers
 #include "ProximityOperator.h"
