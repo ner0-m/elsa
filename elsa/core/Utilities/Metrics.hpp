@@ -48,7 +48,7 @@ namespace elsa
         }
 
         long double err = meanSquaredError<data_t>(dc1, dc2);
-        return 10 * std::log10((std::pow(dataRange, 2) / err));
+        return 10 * std::log10l((std::pow(dataRange, 2) / err));
     }
 
     /**
