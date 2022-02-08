@@ -108,7 +108,9 @@ macro(ELSA_DOCTEST name)
     set_target_properties(
         ${_testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}"
     )
-    
+    set_target_properties(${_testname} PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden)
+
+
     SET_QUICKVEC_OPTIONS(${_testname} "${_testname}.cpp;test_docmain.cpp")
     # Add test to global dependency
     add_dependencies(tests ${_testname})
