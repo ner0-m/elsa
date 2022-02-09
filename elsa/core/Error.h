@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 
+#include "spdlog/fmt/fmt.h"
+
 namespace elsa
 {
 
@@ -29,6 +31,12 @@ namespace elsa
     class Error : public std::runtime_error
     {
     public:
+        template <typename FormatString, typename... Args>
+        explicit Error(const FormatString& fmt, Args&&... args)
+            : Error(fmt::format(fmt, std::forward<Args>(args)...))
+        {
+        }
+
         Error(std::string msg, bool generate_backtrace = true, bool store_cause = true);
 
         ~Error() override = default;

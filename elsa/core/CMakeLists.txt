@@ -57,7 +57,7 @@ if(${ELSA_BUILD_WITH_QUICKVEC})
     set(MODULE_SOURCES ${MODULE_SOURCES} Handlers/DataHandlerGPU.cpp Handlers/DataHandlerMapGPU.cpp)
 endif()
 
-list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen")
+list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 # use OpenMP if available
@@ -142,4 +142,4 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
     )
 endif()
 
-write_module_config(${ELSA_MODULE_NAME})
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging)
