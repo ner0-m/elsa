@@ -38,6 +38,6 @@ namespace elsa::ml
     }
     // TODO add here more code
 
-    template class AutoEncoder<float>;
-    template class AutoEncoder<double>;
+    template class AutoEncoder<float, MlBackend::Dnnl>;
+    template class AutoEncoder<float, MlBackend::Cudnn>;
 } // namespace elsa::ml

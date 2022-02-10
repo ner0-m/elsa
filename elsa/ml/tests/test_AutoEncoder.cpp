@@ -18,11 +18,11 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("ml");
 
-TEST_CASE_TEMPLATE("AutoEncoder: pre-training testing", TestType, float, double)
+TEST_CASE_TEMPLATE("AutoEncoder: pre-training testing", TestType, float)
 {
     GIVEN("a DataDescriptor")
     {
-        VolumeDescriptor mnistShape({28, 28});
+        VolumeDescriptor mnistShape({28, 28, 1});
         index_t batchSize = 32;
 
         WHEN("instantiating an AutoEncoder model")
@@ -48,11 +48,11 @@ TEST_CASE_TEMPLATE("AutoEncoder: pre-training testing", TestType, float, double)
     }
 }
 
-TEST_CASE_TEMPLATE("AutoEncoder: testing of training", TestType, float, double)
+TEST_CASE_TEMPLATE("AutoEncoder: testing of training", TestType, float)
 {
     GIVEN("a DataDescriptor")
     {
-        VolumeDescriptor mnistShape({28, 28});
+        VolumeDescriptor mnistShape({28, 28, 1});
         index_t batchSize = 32;
 
         std::vector<DataContainer<TestType>> inputs;
