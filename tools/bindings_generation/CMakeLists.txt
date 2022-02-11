@@ -8,6 +8,9 @@ if (NOT LLVM_FOUND)
     set(ELSA_BUILD_PYTHON_BINDINGS OFF PARENT_SCOPE)
 else()
     add_executable(pybind11_generator Parser.cpp)
+    # target_compile_features() doesn't set the c++ standard when setting to the compiler default - e.g. -std=c++17 for gcc-11
+    # this leads to the standard specified by LLVM_CXXFLAGS being erroneously used instead
+    list(FILTER LLVM_CXXFLAGS EXCLUDE REGEX "-std=c\\+\\+[0-9][0-9]")
     target_compile_options(pybind11_generator PUBLIC ${LLVM_CXXFLAGS})
     target_compile_features(pybind11_generator PUBLIC cxx_std_17)
     target_include_directories(pybind11_generator PUBLIC ${LLVM_INCLUDE_DIR})

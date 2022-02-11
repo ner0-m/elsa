@@ -35,16 +35,16 @@ LASSOProblem
 .. doxygenclass:: elsa::LASSOProblem
 
 SplittingProblem
-============
+================
 
 .. doxygenclass:: elsa::SplittingProblem
 
 SubsetProblem
-============
+=============
 
 .. doxygenclass:: elsa::SubsetProblem
 
 WLSSubsetProblem
-============
+================
 
 .. doxygenclass:: elsa::WLSSubsetProblem

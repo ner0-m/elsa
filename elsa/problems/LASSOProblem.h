@@ -2,15 +2,13 @@
 
 #include "L1Norm.h"
 #include "WLSProblem.h"
+#include "LinearOperator.h"
+#include "DataContainer.h"
 
 namespace elsa
 {
     /**
      * @brief Class representing a Least Absolute Shrinkage and Selection Operator problem
-     *
-     * @author Andi Braimllari - initial code
-     *
-     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class represents a LASSO problem i.e.
      *
@@ -20,13 +18,29 @@ namespace elsa
      * b @f$ is a data vector and @f$ \lambda @f$ is the regularization parameter.
      *
      * References:
-     * https://www.stat.cmu.edu/~ryantibs/papers/lassounique.pdf
-     * https://arxiv.org/pdf/1501.02888.pdf
+     * - Ryan J. Tibshirani _The Lasso Problem and Uniqueness_ (2013)
+     *   https://www.stat.cmu.edu/~ryantibs/papers/lassounique.pdf
+     * - Tao, S., Boley, D., Zhang, S. _Local Linear Convergence of ISTA and FISTA on the LASSO
+     *   Problem_ (2015) https://arxiv.org/pdf/1501.02888.pdf
+     *
+     * @author Andi Braimllari - initial code
+     *
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      */
     template <typename data_t = real_t>
     class LASSOProblem : public Problem<data_t>
     {
     public:
+        /**
+         * @brief Constructor for the lasso problem, construction a WLSProblem
+         *
+         * @param[in] A a linear operator
+         * @param[in] b a data vector
+         * @param[in] regTerm RegularizationTerm
+         */
+        LASSOProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
+                     real_t lambda = 0.5f);
+
         /**
          * @brief Constructor for the lasso problem, accepting wlsProblem and regTerm
          *

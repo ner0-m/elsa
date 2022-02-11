@@ -66,8 +66,9 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
             ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
         )
     endif()
+
+    write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors)
+
 else()
     message(STATUS "CUDA compiler NOT found! CUDA projector support disabled")
 endif()
- 
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors)

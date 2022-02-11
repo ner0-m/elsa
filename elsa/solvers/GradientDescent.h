@@ -7,13 +7,18 @@ namespace elsa
     /**
      * @brief Class representing a simple gradient descent solver with a fixed, given step size.
      *
-     * @author Tobias Lasser - initial code
-     *
-     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
-     *
      * This class implements a simple gradient descent iterative solver with a fixed, given step
      * size. No particular stopping rule is currently implemented (only a fixed number of
      * iterations, default to 100).
+     *
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     *
+     * @see \verbatim embed:rst
+     For a basic introduction and problem statement of first-order methods, see
+     :ref:`here <elsa-first-order-methods-doc>` \endverbatim
+     *
+     * @author
+     * - Tobias Lasser - initial code
      */
     template <typename data_t = real_t>
     class GradientDescent : public Solver<data_t>

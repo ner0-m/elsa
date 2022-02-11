@@ -42,6 +42,8 @@ set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures")
 
 option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
 option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
+option(SYSTEM_DOCTEST "Build elsa using the system doctest installation" OFF)
+option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
 
 # ------------ general setup -----------
 # ------------
@@ -56,10 +58,7 @@ include(SetDefaultBuildType)
 # Forbid extensions (such as gnu++) for this project
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Include CPM dependency manager
-include(CPM)
-
-# export compile_commands.json for language servers such as ccls
+# export compile_commands.json for lsp language servers (e.g. clangd)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # By default set all output to lib or bin directories
@@ -75,6 +74,12 @@ set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
 # ------------ dependencies ------------
 # ------------
+
+if (NOT (SYSTEM_EIGEN AND SYSTEM_SPDLOG AND SYSTEM_DOCTEST AND SYSTEM_CATCH))
+    # Include CPM dependency manager for bundling dependencies
+    include(CPM)
+endif()
+
 
 # only add the dependencies if elsa is stand-alone
 if(ELSA_MASTER_PROJECT)
@@ -239,14 +244,19 @@ endif(NOT ELSA_MASTER_PROJECT)
 if(ELSA_TESTING OR ELSA_BENCHMARKS)
     enable_testing()
 
-    CPMAddPackage(
-         NAME doctest
-         GITHUB_REPOSITORY onqtam/doctest
-         GIT_TAG 2.4.4
-    )
+    if(SYSTEM_DOCTEST)
+        message(STATUS "Using system-wide doctest library...")
+        find_package(doctest REQUIRED)
+    else()
+        CPMAddPackage(
+            NAME doctest
+            GITHUB_REPOSITORY onqtam/doctest
+            GIT_TAG 2.4.4
+        )
 
-    # add the CMake modules for automatic test discovery
-    set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
+        # add the CMake modules for automatic test discovery
+        set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
+    endif()
 
     if(ELSA_TESTING)
         message(STATUS "elsa testing is enabled")
