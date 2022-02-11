@@ -218,12 +218,9 @@ namespace elsa
             }
 
             const auto& constraint = splittingProblem.getConstraint();
-            const LinearOperator<data_t>* A = &constraint.getOperatorA();
-            const LinearOperator<data_t>* B = &constraint.getOperatorB();
-            const DataContainer<data_t>* c = &constraint.getDataVectorC();
-
-            std::unique_ptr<LinearOperator<data_t>> tA;
-            std::unique_ptr<LinearOperator<data_t>> tB;
+            std::unique_ptr<LinearOperator<data_t>> A = constraint.getOperatorA().clone();
+            std::unique_ptr<LinearOperator<data_t>> B = constraint.getOperatorB().clone();
+            const DataContainer<data_t>& c = constraint.getDataVectorC();
 
             if (_positiveSolutionsOnly) {
                 const DataDescriptor& domainDescriptor = dataTerm.getDomainDescriptor();
@@ -250,12 +247,11 @@ namespace elsa
                     domainDescriptor, PartitionDescriptor{layersPlusOneDescriptor, slicesInBlock},
                     opsOfA, BlockLinearOperator<data_t>::BlockType::ROW);
 
-                tA = tempA.clone();
-                A = &(*tA);
+                A = tempA.clone();
 
                 /// B = diag(−ρ_1*1_Ln^2, −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
                 DataContainer<data_t> factorsOfB(layersPlusOneDescriptor);
-                for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
+                for (int ind = 0; ind < factorsOfB.getSize(); ++ind) { // TODO double check
                     if (ind < (n * n * layers)) {
                         factorsOfB[ind] = -1 * _rho1;
                     } else {
@@ -264,13 +260,12 @@ namespace elsa
                 }
                 Scaling<data_t> tempB(layersPlusOneDescriptor, factorsOfB);
 
-                tB = tempB.clone();
-                B = &(*tB);
+                B = tempB.clone();
 
                 DataContainer<data_t> tempC(layersPlusOneDescriptor);
                 tempC = 0;
 
-                if (*c != tempC) {
+                if (c != tempC) {
                     throw InvalidArgumentError("ADMM: the vector c of the constraint should be 0");
                 }
             }
@@ -281,14 +276,14 @@ namespace elsa
             DataContainer<data_t> z(B->getDomainDescriptor());
             z = 0;
 
-            DataContainer<data_t> u(c->getDataDescriptor());
+            DataContainer<data_t> u(c.getDataDescriptor());
             u = 0;
 
             Logger::get("ADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
                                       "iteration", "xL2NormSq", "zL2NormSq", "uL2NormSq",
                                       "rkL2Norm", "skL2Norm");
             for (index_t iter = 0; iter < iterations; ++iter) {
-                LinearResidual<data_t> xLinearResidual(*A, *c - B->apply(z) - u);
+                LinearResidual<data_t> xLinearResidual(*A, c - B->apply(z) - u);
                 RegularizationTerm xRegTerm(_rho, L2NormPow2<data_t>(xLinearResidual));
                 Problem<data_t> xUpdateProblem(dataTerm, xRegTerm, x);
 
@@ -319,10 +314,10 @@ namespace elsa
                     z = concatenate(P1z, P2z);
                 }
 
-                u += A->apply(x) + B->apply(z) - *c;
+                u += A->apply(x) + B->apply(z) - c;
 
                 /// primal residual at iteration k
-                DataContainer<data_t> rk = A->apply(x) + B->apply(z) - *c;
+                DataContainer<data_t> rk = A->apply(x) + B->apply(z) - c;
                 /// dual residual at iteration k
                 DataContainer<data_t> sk = _rho * A->applyAdjoint(B->apply(z - zPrev));
 

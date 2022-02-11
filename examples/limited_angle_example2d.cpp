@@ -29,8 +29,8 @@ void limited_angle_example2d()
 
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
     // VolumeDescriptor
-    SiddonsMethod<real_t> projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                    *sinoDescriptor);
+    SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
+                            *sinoDescriptor);
 
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);
@@ -39,10 +39,10 @@ void limited_angle_example2d()
     EDF::write(sinogram, "2dsinogram.edf");
 
     // setup reconstruction problem
-    WLSProblem<real_t> wlsProblem(projector, sinogram);
+    WLSProblem wlsProblem(projector, sinogram);
 
     // solve the reconstruction problem
-    CG<real_t> cgSolver(wlsProblem);
+    CG cgSolver(wlsProblem);
 
     index_t noIterations{20};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
