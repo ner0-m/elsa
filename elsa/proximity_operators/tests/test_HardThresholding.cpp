@@ -174,4 +174,36 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing general behaviour", data_t, float,
     }
 }
 
+TEST_CASE_TEMPLATE("Using HardThresholding with a vector of Thresholds", data_t, float, double)
+{
+    GIVEN("a DataDescriptor")
+    {
+        IndexVector_t numCoeff(1);
+        numCoeff << 4;
+        VolumeDescriptor volDescr(numCoeff);
+
+        WHEN("Using HardThresholding operator")
+        {
+            HardThresholding<data_t> hThrOp(volDescr);
+
+            THEN("HardThresholding operator throws exception for differently sized v and prox")
+            {
+                Vector_t<data_t> data(volDescr.getNumberOfCoefficients());
+                data << -7, 2, 1, 8;
+                DataContainer<data_t> dataCont(volDescr, data);
+
+                std::vector<geometry::Threshold<data_t>> thresholds = {
+                    geometry::Threshold<data_t>{1}, geometry::Threshold<data_t>{1},
+                    geometry::Threshold<data_t>{2}, geometry::Threshold<data_t>{5}};
+
+                Vector_t<data_t> expectedRes(hThrOp.getRangeDescriptor().getNumberOfCoefficients());
+                expectedRes << -7, 2, 0, 8;
+                DataContainer<data_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
+
+                REQUIRE(isApprox(dCRes, hThrOp.apply(dataCont, thresholds)));
+            }
+        }
+    }
+}
+
 TEST_SUITE_END();
