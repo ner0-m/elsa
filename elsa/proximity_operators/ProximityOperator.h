@@ -55,8 +55,8 @@ namespace elsa
         /**
          * @brief apply the proximity operator to an element in the operator's domain
          *
-         * @param[in] v input DataContainer
-         * @param[in] t input Threshold
+         * @param[in] v the input DataContainer
+         * @param[in] t the input Threshold
          *
          * @returns prox DataContainer containing the application of the proximity operator to
          * data v, i.e. in the range of the operator
@@ -69,9 +69,25 @@ namespace elsa
         /**
          * @brief apply the proximity operator to an element in the operator's domain
          *
-         * @param[in] v input DataContainer
-         * @param[in] t input Threshold
-         * @param[out] prox output DataContainer
+         * @param[in] v the input DataContainer
+         * @param[in] thresholds the input vector<Threshold>
+         *
+         * @returns prox DataContainer containing the application of the proximity operator to
+         * data v, i.e. in the range of the operator
+         *
+         * Please note: this method uses apply(v, thresholds, prox(v)) to perform the actual
+         * operation.
+         */
+        auto apply(const DataContainer<data_t>& v,
+                   std::vector<geometry::Threshold<data_t>> thresholds) const
+            -> DataContainer<data_t>;
+
+        /**
+         * @brief apply the proximity operator to an element in the operator's domain
+         *
+         * @param[in] v the input DataContainer
+         * @param[in] t the input Threshold
+         * @param[out] prox the output DataContainer
          *
          * Please note: this method calls the method applyImpl that has to be overridden in derived
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
@@ -79,12 +95,42 @@ namespace elsa
          */
         void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
                    DataContainer<data_t>& prox) const;
+        /**
+         * @brief apply the proximity operator to an element in the operator's domain
+         *
+         * @param[in] v the input DataContainer
+         * @param[in] thresholds the input vector<Threshold>
+         * @param[out] prox the output DataContainer
+         *
+         * Please note: this method calls the method applyImpl that has to be overridden in derived
+         * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
+         * function overloading a virtual one [apply with one vs. two arguments]).
+         */
+        void apply(const DataContainer<data_t>& v,
+                   std::vector<geometry::Threshold<data_t>> thresholds,
+                   DataContainer<data_t>& prox) const;
+
+        /// conversion of a list of values to a list of Thresholds
+        static std::vector<geometry::Threshold<data_t>>
+            valuesToThresholds(DataContainer<data_t> values)
+        {
+            std::vector<geometry::Threshold<data_t>> thresholds;
+            for (data_t value : values) {
+                thresholds.push_back(geometry::Threshold<data_t>(value));
+            }
+            return thresholds;
+        }
 
     protected:
         std::unique_ptr<DataDescriptor> _rangeDescriptor;
 
         /// the apply method that has to be overridden in derived classes
         virtual void applyImpl(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+                               DataContainer<data_t>& prox) const = 0;
+
+        /// the apply method that has to be overridden in derived classes
+        virtual void applyImpl(const DataContainer<data_t>& v,
+                               std::vector<geometry::Threshold<data_t>> thresholds,
                                DataContainer<data_t>& prox) const = 0;
 
         /// overridden comparison method based on the DataDescriptor

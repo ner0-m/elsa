@@ -27,12 +27,32 @@ namespace elsa
     }
 
     template <typename data_t>
+    auto ProximityOperator<data_t>::apply(const DataContainer<data_t>& v,
+                                          std::vector<geometry::Threshold<data_t>> thresholds) const
+        -> DataContainer<data_t>
+    {
+        Timer timeguard("ProximityOperator", "apply");
+        DataContainer<data_t> prox(*_rangeDescriptor, v.getDataHandlerType());
+        applyImpl(v, thresholds, prox);
+        return prox;
+    }
+
+    template <typename data_t>
     void ProximityOperator<data_t>::apply(const DataContainer<data_t>& v,
                                           geometry::Threshold<data_t> t,
                                           DataContainer<data_t>& prox) const
     {
         Timer timeguard("ProximityOperator", "apply");
         applyImpl(v, t, prox);
+    }
+
+    template <typename data_t>
+    void ProximityOperator<data_t>::apply(const DataContainer<data_t>& v,
+                                          std::vector<geometry::Threshold<data_t>> thresholds,
+                                          DataContainer<data_t>& prox) const
+    {
+        Timer timeguard("ProximityOperator", "apply");
+        applyImpl(v, thresholds, prox);
     }
 
     template <typename data_t>
