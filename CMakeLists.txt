@@ -280,6 +280,7 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             append_coverage_compiler_flags()
             set(COVERAGE_LCOV_EXCLUDES
                 '${CPM_SOURCE_CACHE}/*'
+                '*/tests/*'
                 '${PROJECT_BINARY_DIR}/_deps/*'
                 '/usr/*')
             setup_target_for_coverage_lcov(NAME test_coverage EXECUTABLE ctest)
