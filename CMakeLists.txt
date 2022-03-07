@@ -38,7 +38,7 @@ set(ELSA_SANITIZER
         "Compile with a sanitizer. Options are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak, 'Address;Undefined'"
         )
 
-set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures") 
+set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures")
 
 option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
 option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
@@ -251,7 +251,7 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
         CPMAddPackage(
             NAME doctest
             GITHUB_REPOSITORY onqtam/doctest
-            GIT_TAG 2.4.4
+            GIT_TAG 2.4.7
         )
 
         # add the CMake modules for automatic test discovery
