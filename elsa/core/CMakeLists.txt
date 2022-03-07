@@ -4,6 +4,7 @@ set(MODULE_HEADERS
     Backtrace.h
     Cloneable.h
     Utilities/Badge.hpp
+    Utilities/CartesianIndices.h
     Utilities/DataContainerFormatter.hpp
     Utilities/FormatConfig.h
     Utilities/Math.hpp
@@ -35,6 +36,7 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     elsaDefines.cpp
     Backtrace.cpp
+    Utilities/CartesianIndices.cpp
     Descriptors/DataDescriptor.cpp
     Descriptors/VolumeDescriptor.cpp
     Descriptors/PlanarDetectorDescriptor.cpp
