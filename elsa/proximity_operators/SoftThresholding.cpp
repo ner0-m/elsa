@@ -15,16 +15,15 @@ namespace elsa
                                              geometry::Threshold<data_t> t,
                                              DataContainer<data_t>& prox) const
     {
-        std::transform(std::begin(v), std::end(v), std::begin(prox),
-                       [t](auto x) {
-                           if (x > t) {
-                               return x - t;
-                           } else if (t < -x) {
-                               return x + t;
-                           } else {
-                               return data_t(0);
-                           }
-                       });
+        std::transform(std::begin(v), std::end(v), std::begin(prox), [t](auto x) {
+            if (x > t) {
+                return x - t;
+            } else if (t < -x) {
+                return x + t;
+            } else {
+                return data_t(0);
+            }
+        });
     }
 
     template <typename data_t>
