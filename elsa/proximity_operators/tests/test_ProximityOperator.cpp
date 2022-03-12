@@ -45,7 +45,7 @@ TEST_CASE_TEMPLATE("ProximityOperator: Testing valuesToThresholds", data_t, floa
                 expectedRes.push_back(geometry::Threshold<data_t>{5});
 
                 for (index_t i = 0; i < dataCont.getSize(); ++i) {
-                    REQUIRE_UNARY(dataCont[i] == expectedRes[i]);
+                    CHECK_EQ(dataCont[i], expectedRes[i]);
                 }
             }
         }

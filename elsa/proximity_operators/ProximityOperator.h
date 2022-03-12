@@ -115,9 +115,11 @@ namespace elsa
             valuesToThresholds(DataContainer<data_t> values)
         {
             std::vector<geometry::Threshold<data_t>> thresholds;
-            for (data_t value : values) {
-                thresholds.push_back(geometry::Threshold<data_t>(value));
-            }
+            thresholds.reserve(values.getSize());
+
+            std::transform(std::begin(values), std::end(values), std::back_inserter(thresholds),
+                           [](auto value) { return geometry::Threshold<data_t>(value); });
+
             return thresholds;
         }
 

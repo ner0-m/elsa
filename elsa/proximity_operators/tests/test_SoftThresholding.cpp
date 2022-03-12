@@ -202,7 +202,7 @@ TEST_CASE_TEMPLATE("Using SoftThresholding with a vector of Thresholds", data_t,
                 expectedRes << 0, 2, 6, 0;
                 DataContainer<data_t> dCRes(sThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, sThrOp.apply(dataCont, thresholds)));
+                CHECK_UNARY(isApprox(dCRes, sThrOp.apply(dataCont, thresholds)));
             }
         }
     }

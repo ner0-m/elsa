@@ -15,20 +15,9 @@ namespace elsa
                                              geometry::Threshold<data_t> t,
                                              DataContainer<data_t>& prox) const
     {
-        if (v.getSize() != prox.getSize()) {
-            throw LogicError("HardThresholding: sizes of v and prox must match");
-        }
-
-        auto vIter = v.begin();
-        auto proxIter = prox.begin();
-
-        for (; vIter != v.end() && proxIter != prox.end(); vIter++, proxIter++) {
-            if ((*vIter > t) || (*vIter < -t)) {
-                *proxIter = *vIter;
-            } else {
-                *proxIter = 0;
-            }
-        }
+        prox = 0;
+        std::copy_if(std::begin(v), std::end(v), std::begin(prox),
+                     [t](auto x) { return std::abs(x) >= t; });
     }
 
     template <typename data_t>
@@ -36,26 +25,14 @@ namespace elsa
                                              std::vector<geometry::Threshold<data_t>> thresholds,
                                              DataContainer<data_t>& prox) const
     {
-        if (v.getSize() != prox.getSize()) {
-            throw LogicError("HardThresholding: sizes of v and prox must match");
-        }
-
-        if (v.getSize() != thresholds.size()) {
-            throw LogicError("HardThresholding: sizes of v and thresholds must match");
-        }
-
-        auto vIter = v.begin();
-        auto thresholdsIter = thresholds.begin();
-        auto proxIter = prox.begin();
-
-        for (; vIter != v.end() && proxIter != prox.end() && thresholdsIter != thresholds.end();
-             vIter++, thresholdsIter++, proxIter++) {
-            if ((*vIter > *thresholdsIter) || (*vIter < -*thresholdsIter)) {
-                *proxIter = *vIter;
-            } else {
-                *proxIter = 0;
-            }
-        }
+        std::transform(std::begin(v), std::end(v), std::begin(thresholds), std::begin(prox),
+                       [](auto x, auto t) {
+                           if (std::abs(x) > t) {
+                               return x;
+                           } else {
+                               return data_t(0);
+                           }
+                       });
     }
 
     template <typename data_t>

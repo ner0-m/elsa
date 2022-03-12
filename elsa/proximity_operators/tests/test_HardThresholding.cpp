@@ -200,7 +200,7 @@ TEST_CASE_TEMPLATE("Using HardThresholding with a vector of Thresholds", data_t,
                 expectedRes << -7, 2, 0, 8;
                 DataContainer<data_t> dCRes(hThrOp.getRangeDescriptor(), expectedRes);
 
-                REQUIRE(isApprox(dCRes, hThrOp.apply(dataCont, thresholds)));
+                CHECK_UNARY(isApprox(dCRes, hThrOp.apply(dataCont, thresholds)));
             }
         }
     }

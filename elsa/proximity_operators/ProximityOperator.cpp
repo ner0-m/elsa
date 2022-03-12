@@ -43,6 +43,11 @@ namespace elsa
                                           DataContainer<data_t>& prox) const
     {
         Timer timeguard("ProximityOperator", "apply");
+
+        if (v.getSize() != prox.getSize()) {
+            throw LogicError("ProximityOperator: sizes of v and prox must match");
+        }
+
         applyImpl(v, t, prox);
     }
 
@@ -52,6 +57,15 @@ namespace elsa
                                           DataContainer<data_t>& prox) const
     {
         Timer timeguard("ProximityOperator", "apply");
+
+        if (v.getSize() != prox.getSize()) {
+            throw LogicError("ProximityOperator: sizes of v and prox must match");
+        }
+
+        if (v.getSize() != thresholds.size()) {
+            throw LogicError("ProximityOperator: sizes of v and thresholds must match");
+        }
+
         applyImpl(v, thresholds, prox);
     }
 
