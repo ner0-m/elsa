@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Error.h"
 #include "elsaDefines.h"
+#include "Bessel.h"
 
 namespace elsa
 {
@@ -14,15 +16,19 @@ namespace elsa
 
     namespace blobs
     {
+        // The devinition given by Lewitt (1992):
+        // \f$
+        // b_{m, alpha, a}(r) = \frac{I_m(\alpha * \sqrt{1 - (r/a)^2)}{I_m(\alpha)} * (\sqrt{1 -
+        // (r/a)^2})^m \f$ for any \f$ 0 <= r <= a \f$.
         template <typename data_t>
         constexpr data_t blob_evaluate(data_t r, SelfType_t<data_t> a, SelfType_t<data_t> alpha,
-                                       SelfType_t<data_t> m)
+                                       int m) noexcept
         {
             const auto w = static_cast<data_t>(1) - std::pow(r / a, static_cast<data_t>(2));
             if (w >= 0) {
-                const data_t Im1 = std::cyl_bessel_i(m, alpha);
+                const data_t Im1 = math::bessi(m, alpha);
                 const data_t arg = std::sqrt(w);
-                const data_t Im2 = std::cyl_bessel_i(m, alpha * arg);
+                const data_t Im2 = math::bessi(m, alpha * arg);
 
                 return Im2 / Im1 * std::pow(arg, m);
             }
@@ -30,13 +36,35 @@ namespace elsa
         }
 
         /// @brief Compute line integral of blob through a straight line
+        /// The exact formulations are quite easily derived using the fact, that the line
+        /// integral for a single blob is given by:
+        ///
+        /// \f$
+        /// \frac{a}{I_m(\alpha)} \sqrt{\frac{2 \pi}{\alpha}} \left(\sqrt{1 -
+        /// \left(\frac{s}{a}\right)^2}\right)^{m + 0.5} I_{m + 0.5}\left(\alpha \sqrt{1 -
+        /// \left(\frac{s}{a}\right)^2}\right)
+        /// \f$
+        ///
+        /// Then for a given order substitute I_{m + 0.5}(x) with the elementary function
+        /// representations, as they can be found in Abramowitz and Stegun's Handbook of
+        /// mathematical functions (1972):
+        /// \f$ I_{0.5}(x) = \sqrt{\frac{2}{\pi x}} \sinh(x)\$f
+        /// \f$ I_{1.5}(x) = \sqrt{\frac{2}{\pi x}} \left( \cosh(x) \frac{\sinh(x)}{x} \right) \$f
+        /// \f$ I_{2.5}(x) = \sqrt{\frac{2}{\pi x}} \left(\left(\frac{3}{x^2} +
+        /// \frac{1}{x}\right)\sinh(x) - \frac{3}{x^2} \cosh(x)\right)\$f
+        ///
+        /// Which will result in the below formulations. In theory using the recurrent relations,
+        /// this could be extended to further orders, but is deemed unnecessary for now.
+        ///
+        /// TODO: What about alpha = 0? Check if you find anything in the literature for that.
+        ///
         /// @param distance distance of blob center to straight line, in literature often referred
         /// to as `r`
         /// @param radius radius of blob, often referred to as `a`
-        /// @param alpha smoothness factor of blob
+        /// @param alpha smoothness factor of blob, expected to be larger than 0
         /// @param order order of Bessel function, often referred to as `m`
+        ///
         /// Ref:
-        /// https://github.com/I2PC/xmipp/blob/3d4cc3f430cbc99a337635edbd95ebbcef33fc44/src/xmipp/libraries/data/blobs.cpp#L91A
         /// Distance-Driven Projection and Backprojection for Spherically Symmetric Basis Functions
         /// in CT - Levakhina
         /// Spherically symmetric volume elements as basis functions for image reconstructions in
@@ -44,25 +72,32 @@ namespace elsa
         /// Semi-Discrete Iteration Methods in X-Ray Tomography - Jonas Vogelgesang
         template <typename data_t>
         constexpr data_t blob_projected(data_t s, SelfType_t<data_t> a, SelfType_t<data_t> alpha,
-                                        SelfType_t<data_t> m)
+                                        int m)
         {
-            // Equation derived in Lewitt 1990
-            const data_t w = static_cast<data_t>(1) - ((s * s) / (a * a));
+            // expect alpha > 0
+            using namespace elsa::math;
 
-            // If `w` is close to zero or negative, `s` > `a`, and therefore just return 0
-            if (w > 1e-10) {
-                const data_t root = std::sqrt(w);
+            const data_t sda = s / a;
+            const data_t sdas = std::pow(sda, 2);
+            const data_t w = 1.0 - sdas;
 
-                // First three terms of equation
-                const data_t q1 = a / std::cyl_bessel_i(m, alpha);
-                const data_t q2 = std::sqrt(2 * pi<data_t> / alpha);
-                const data_t q3 = std::pow(root, m + static_cast<data_t>(0.5));
+            if (w > 1.0e-10) {
+                const auto arg = alpha * std::sqrt(w);
+                if (m == 0) {
+                    return (2.0 * a / alpha) * std::sinh(arg) / math::bessi0(alpha);
+                } else if (m == 1) {
+                    return (2.0 * a / alpha) * std::sqrt(w)
+                           * (std::cosh(arg) - std::sinh(arg) / arg) / math::bessi1(alpha);
 
-                const data_t q4 = std::cyl_bessel_i(m + static_cast<data_t>(0.5), alpha * root);
-
-                return q1 * q2 * q3 * q4;
+                } else if (m == 2) {
+                    return (2.0 * a / alpha) * w
+                           * ((3.0 / (arg * arg) + 1.0) * std::sinh(arg) - (3.0 / arg) * cosh(arg))
+                           / bessi2(alpha);
+                } else {
+                    throw Error("m out of range in blob_projected()");
+                }
             }
-            return 0;
+            return 0.0;
         }
 
         template <typename data_t>
@@ -76,7 +111,7 @@ namespace elsa
     class Blob
     {
     public:
-        constexpr Blob(data_t radius, SelfType_t<data_t> alpha, SelfType_t<data_t> order);
+        constexpr Blob(data_t radius, SelfType_t<data_t> alpha, int order);
 
         constexpr data_t operator()(data_t s);
 
@@ -84,19 +119,19 @@ namespace elsa
 
         constexpr data_t alpha() const;
 
-        constexpr data_t order() const;
+        constexpr int order() const;
 
     private:
         data_t radius_;
         data_t alpha_;
-        data_t order_;
+        int order_;
     };
 
     template <typename data_t>
     class ProjectedBlob
     {
     public:
-        constexpr ProjectedBlob(data_t radius, SelfType_t<data_t> alpha, SelfType_t<data_t> order)
+        constexpr ProjectedBlob(data_t radius, SelfType_t<data_t> alpha, int order)
             : radius_(radius), alpha_(alpha), order_(order)
         {
         }
@@ -105,17 +140,17 @@ namespace elsa
         {
             return blobs::blob_projected(s, radius_, alpha_, order_);
         }
-#
+
         data_t radius() const { return radius_; }
 
         data_t alpha() const { return alpha_; }
 
-        data_t order() const { return order_; }
+        int order() const { return order_; }
 
     private:
         data_t radius_;
         data_t alpha_;
-        data_t order_;
+        int order_;
     };
 
 } // namespace elsa

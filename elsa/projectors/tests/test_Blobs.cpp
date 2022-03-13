@@ -84,7 +84,7 @@ TEST_CASE_TEMPLATE("Blobs: Test projected values", data_t, float, double)
     constexpr std::array<data_t, 3> scales{100, 50, 30};
     constexpr std::array<data_t, 3> as{1, 2, 3};
     constexpr std::array<data_t, 4> alphas{2.5, 5., 7.5, 10.83};
-    constexpr std::array<index_t, 4> ms{0, 1, 2, 3};
+    constexpr std::array<index_t, 3> ms{0, 1, 2};
 
     for (const auto a : as) {
         const auto scale = scales[static_cast<index_t>(a - 1)];

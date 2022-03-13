@@ -74,8 +74,10 @@ namespace elsa
             const auto b = static_cast<std::size_t>(std::ceil(index));
 
             // Get the function values
-            const auto fa = data_[a];
-            const auto fb = data_[b];
+            const auto fa = a == N ? 0 : data_[a];
+            const auto fb = b == N ? 0 : data_[b];
+
+            auto ret = detail::lerp(fa, fb, index - static_cast<data_t>(a));
 
             // Bilinear interpolation
             return detail::lerp(fa, fb, index - static_cast<data_t>(a));
@@ -98,6 +100,12 @@ namespace elsa
             : blob_(radius, alpha, order), lut_(detail::blob_lut<data_t, N>(blob_))
         {
         }
+
+        data_t radius() const { return blob_.radius(); }
+
+        data_t alpha() const { return blob_.alpha(); }
+
+        data_t order() const { return blob_.order(); }
 
         data_t operator()(data_t distance) const { return lut_((distance / blob_.radius()) * N); }
 

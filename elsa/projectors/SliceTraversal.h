@@ -76,6 +76,9 @@ namespace elsa
         static RealMatrix_t create2DRotation(const real_t leadingCoeff,
                                              const index_t leadingAxisIndex);
 
+        static RealMatrix_t create3DRotation(const real_t leadingCoeff,
+                                             const index_t leadingAxisIndex);
+
         static RealMatrix_t createRotation(RealRay_t ray);
 
         static RealMatrix_t createTransformation(const RealRay_t& ray,

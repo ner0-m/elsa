@@ -1,8 +1,6 @@
 #include "doctest/doctest.h"
 
 #include "LutProjector.h"
-#include "JosephsMethod.h"
-#include "SiddonsMethod.h"
 #include "PlanarDetectorDescriptor.h"
 
 #include "PrettyPrint/Eigen.h"
@@ -13,62 +11,62 @@ using namespace elsa;
 using namespace elsa::geometry;
 using namespace doctest;
 
-namespace doctest
-{
-    template <typename T, int Rows, int Cols>
-    struct StringMaker<Eigen::Matrix<T, Rows, Cols>> {
-        static String convert(const Eigen::Matrix<T, Rows, Cols>& mat)
-        {
-            std::ostringstream oss;
-            Eigen::IOFormat fmt(4, 0, ", ", "\n", "[", "]");
-            oss << "\n" << mat.format(fmt);
-            return oss.str().c_str();
-        }
-    };
-
-    template <typename T, int Rows>
-    struct StringMaker<Eigen::Matrix<T, Rows, 1>> {
-        static String convert(const Eigen::Matrix<T, Rows, 1>& vec)
-        {
-            std::ostringstream oss;
-            Eigen::IOFormat fmt(10, 0, ", ", ", ", "", "", "[", "]");
-            oss << "\n" << vec.format(fmt);
-            return oss.str().c_str();
-        }
-    };
-
-    template <typename T>
-    struct StringMaker<std::optional<T>> {
-        static String convert(std::optional<T> opt)
-        {
-            std::ostringstream oss;
-
-            if (opt) {
-                oss << "{ " << *opt << " }";
-            } else {
-                oss << "{ empty }";
-            }
-            return oss.str().c_str();
-        }
-    };
-} // namespace doctest
-
 TEST_SUITE_BEGIN("projectors");
 
 Eigen::IOFormat vecfmt(10, 0, ", ", ", ", "", "", "[", "]");
 Eigen::IOFormat matfmt(10, 0, ", ", "\n", "\t\t[", "]");
 
 TYPE_TO_STRING(BlobProjector<float>);
-TYPE_TO_STRING(JosephsMethod<float>);
-TYPE_TO_STRING(SiddonsMethod<float>);
-
-// TEST_CASE_TEMPLATE("LutProjector: Test single rays forward projection", Proj,
-// JosephsMethod<float>,
-//                    BlobProjector<float>)
 
 // Redefine GIVEN such that it's nicely usable inside an loop
 #undef GIVEN
 #define GIVEN(...) DOCTEST_SUBCASE((std::string("   Given: ") + std::string(__VA_ARGS__)).c_str())
+
+TEST_CASE_TEMPLATE("BlobProjector: Testing rays going through the center of the volume", data_t,
+                   float, double)
+{
+    const IndexVector_t sizeDomain({{5, 5, 5}});
+    const IndexVector_t sizeRange({{1, 1, 1}});
+
+    auto domain = VolumeDescriptor(sizeDomain);
+    auto x = DataContainer<data_t>(domain);
+    x = 0;
+
+    auto stc = SourceToCenterOfRotation{100};
+    auto ctr = CenterOfRotationToDetector{5};
+
+    // set center voxel to 1
+    x(2, 2, 2) = 1;
+
+    for (int i = 0; i < 360; ++i) {
+        GIVEN("Ray of angle " + std::to_string(i))
+        {
+            std::vector<Geometry> geom;
+            geom.emplace_back(stc, ctr, VolumeData3D{Size3D{sizeDomain}},
+                              SinogramData3D{Size3D{sizeRange}},
+                              RotationAngles3D{Gamma{static_cast<real_t>(i)}});
+            auto range = PlanarDetectorDescriptor(sizeRange, geom);
+            auto op = BlobProjector<data_t>(domain, range);
+
+            auto Ax = DataContainer<data_t>(range);
+            Ax = 0;
+
+            WHEN("projecting forward and only the center voxel is set to 1")
+            {
+                op.apply(x, Ax);
+
+                const auto weight = op.weight(0);
+                CAPTURE(weight);
+
+                THEN("The detector value is the weight for distance 0")
+                {
+                    CAPTURE(Ax[0]);
+                    CHECK_EQ(weight, Approx(Ax[0]));
+                }
+            }
+        }
+    }
+}
 
 TEST_CASE_TEMPLATE("BlobProjector: Testing rays going through the center of the volume", data_t,
                    float, double)

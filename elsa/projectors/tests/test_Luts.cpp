@@ -97,6 +97,26 @@ TEST_CASE_TEMPLATE("ProjectedBlobLut: ", data_t, float, double)
     const auto alpha = 10.83;
     const auto m = 2;
 
+    ProjectedBlobLut<data_t, 50> lut(a, alpha, m);
+
+    for (int i = 0; i < 10000; ++i) {
+        const auto distance = i / 25.;
+
+        CAPTURE(i);
+        CAPTURE(distance);
+        CAPTURE(lut(distance));
+        CHECK_FALSE(std::isnan(lut(distance)));
+    }
+
+    CHECK_FALSE(std::isnan(lut(1.9907628)));
+}
+
+TEST_CASE_TEMPLATE("ProjectedBlobLut: ", data_t, float, double)
+{
+    const auto a = 2;
+    const auto alpha = 10.83;
+    const auto m = 2;
+
     std::array<double, 101> expected{1.3671064952680276,
                                      1.366209140520679,
                                      1.3635202864368146,

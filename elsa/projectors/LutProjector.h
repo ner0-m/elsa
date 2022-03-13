@@ -11,6 +11,11 @@
 #include "BoundingBox.h"
 #include "Logger.h"
 #include "Blobs.h"
+#include "CartesianIndices.h"
+
+#include "spdlog/fmt/bundled/core.h"
+#include "spdlog/fmt/fmt.h"
+#include "spdlog/fmt/ostr.h"
 
 namespace elsa
 {
@@ -60,8 +65,12 @@ namespace elsa
             const auto sizeRange = Ax.getSize();
             const auto volume_shape = x.getDataDescriptor().getNumberOfCoefficientsPerDimension();
 
-            // Loop over all the poses, and for each pose loop over all detector pixels
+            const IndexVector_t lower = _boundingBox._min.template cast<index_t>();
+            const IndexVector_t upper = _boundingBox._max.template cast<index_t>();
+            const auto support = self().support();
+
 #pragma omp parallel for
+            // Loop over all the poses, and for each pose loop over all detector pixels
             for (index_t rangeIndex = 0; rangeIndex < sizeRange; ++rangeIndex) {
                 // --> get the current ray to the detector center
                 auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
@@ -69,7 +78,7 @@ namespace elsa
                 index_t leadingdir = 0;
                 ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
 
-                auto& rangeVal = Ax[rangeIndex];
+                auto rangeVal = Ax[rangeIndex];
 
                 // Expand bounding box as rays have larger support now
                 auto aabb = _boundingBox;
@@ -88,10 +97,14 @@ namespace elsa
                         // Correct position, such that the distance is still correct
                         auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
 
-                    const auto distance = ray.distance(curPos);
-                    const auto weight = self().weight(distance);
-                    rangeVal += weight * x.at(curVoxel);
+                        const auto distance = ray.distance(correctedPos);
+                        const auto weight = self().weight(distance);
+
+                        rangeVal += weight * x.at(neighbour);
+                    }
                 }
+
+                Ax[rangeIndex] = rangeVal;
             }
         }
 
@@ -105,6 +118,10 @@ namespace elsa
             Aty = 0;
 
             const auto shape = _domainDescriptor->getNumberOfCoefficientsPerDimension();
+
+            const IndexVector_t lower = _boundingBox._min.template cast<index_t>();
+            const IndexVector_t upper = _boundingBox._max.template cast<index_t>();
+            const auto support = self().support();
 
 #pragma omp parallel for
             // Loop over all the poses, and for each pose loop over all detector pixels
@@ -190,6 +207,8 @@ namespace elsa
                       const DetectorDescriptor& rangeDescriptor);
 
         data_t weight(data_t distance) const { return lut_(distance); }
+
+        index_t support() const { return static_cast<index_t>(std::ceil(lut_.radius())); }
 
         /// implement the polymorphic clone operation
         BlobProjector<data_t>* cloneImpl() const override
