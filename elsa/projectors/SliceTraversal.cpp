@@ -162,6 +162,13 @@ namespace elsa
         }
     }
 
+    index_t SliceTraversal::leadingDirection() const
+    {
+        index_t idx = 0;
+        ray_.direction().array().cwiseAbs().maxCoeff(&idx);
+        return idx;
+    }
+
     SliceTraversal::Iter SliceTraversal::begin() const { return {startIndex_, ray_, tDelta_, t_}; }
 
     SliceTraversal::Iter SliceTraversal::end() const { return {endIndex_, ray_, tDelta_, t_}; }

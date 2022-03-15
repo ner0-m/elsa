@@ -240,5 +240,8 @@ namespace elsa
 
         // Get the index of the one past the last visited voxel
         index_t endIndex() const;
+
+        // Get the leading direction of the ray
+        index_t leadingDirection() const;
     };
 } // namespace elsa
