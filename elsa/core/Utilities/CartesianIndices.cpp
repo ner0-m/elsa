@@ -289,23 +289,26 @@ namespace elsa
     CartesianIndices neighbours_in_slice(const IndexVector_t& pos, const IndexVector_t& dist,
                                          const IndexVector_t& lower, const IndexVector_t& upper)
     {
-
         IndexVector_t from = pos;
-        from.tail(pos.size() - 1).array() -= dist.array();
+        from.array() -= dist.array();
         from = from.cwiseMax(lower);
 
         IndexVector_t to = pos;
-        to.tail(pos.size() - 1).array() += dist.array() + 1;
-        to[0] += 1;
+        to.array() += dist.array() + 1;
         to = to.cwiseMin(upper);
+
+        // FIXME: sometimes this happens when padding is added to an aabb
+        from = (to.array() == from.array()).select(from.array() - 1, from);
 
         return {from, to};
     }
 
-    CartesianIndices neighbours_in_slice(const IndexVector_t& pos, index_t dist,
+    CartesianIndices neighbours_in_slice(const IndexVector_t& pos, index_t dist, index_t leadingDim,
                                          const IndexVector_t& lower, const IndexVector_t& upper)
     {
-        return neighbours_in_slice(pos, IndexVector_t::Constant(pos.size() - 1, dist), lower,
-                                   upper);
+        IndexVector_t distvec = IndexVector_t::Constant(pos.size(), dist);
+        distvec[leadingDim] = 0;
+
+        return neighbours_in_slice(pos, distvec, lower, upper);
     }
 } // namespace elsa

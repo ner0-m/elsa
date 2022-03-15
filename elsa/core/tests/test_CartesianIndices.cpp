@@ -627,8 +627,8 @@ TEST_CASE("Visit neighbours in 2D with bounds")
         auto cur = IndexVector_t({{2, 1}});
         auto lower = IndexVector_t({{0, 0}});
         auto upper = IndexVector_t({{5, 5}});
-        // auto grid = CartesianIndices(lower, upper);
-        auto grid = neighbours_in_slice(cur, 2, lower, upper);
+
+        auto grid = neighbours_in_slice(cur, 2, 0, lower, upper);
 
         CHECK_EQ(grid.first(), IndexVector_t({{2, 0}}));
         CHECK_EQ(grid.last(), IndexVector_t({{3, 4}}));
@@ -649,7 +649,7 @@ TEST_CASE("Visit neighbours in 2D with bounds")
         auto lower = IndexVector_t({{0, 0}});
         auto upper = IndexVector_t({{5, 5}});
         // auto grid = CartesianIndices(lower, upper);
-        auto grid = neighbours_in_slice(cur, 2, lower, upper);
+        auto grid = neighbours_in_slice(cur, 2, 0, lower, upper);
 
         CHECK_EQ(grid.first(), IndexVector_t({{2, 2}}));
         CHECK_EQ(grid.last(), IndexVector_t({{3, 5}}));

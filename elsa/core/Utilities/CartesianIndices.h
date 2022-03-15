@@ -238,7 +238,7 @@ namespace elsa
                                          const IndexVector_t& lower, const IndexVector_t& upper);
 
     /// @overload
-    CartesianIndices neighbours_in_slice(const IndexVector_t& pos, index_t dist,
+    CartesianIndices neighbours_in_slice(const IndexVector_t& pos, index_t dist, index_t leadingDim,
                                          const IndexVector_t& lower, const IndexVector_t& upper);
 } // namespace elsa
 
