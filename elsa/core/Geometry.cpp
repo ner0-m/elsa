@@ -158,6 +158,10 @@ namespace elsa
           _S{RealMatrix_t::Identity(3 + 1, 3 + 1)},
           _C{RealVector_t::Zero(3)}
     {
+        auto [volSpacing, volOrigin] = std::move(volData);
+        _S << volSpacing[0], 0, 0, 0, 0, volSpacing[1], 0, 0, 0, 0, volSpacing[2], 0, 0, 0, 0, 1;
+
+
         _R = R;
         _t = t;
         _K = K;
