@@ -5,6 +5,8 @@
 #include <exception>
 
 #include "Error.h"
+#include "spdlog/fmt/bundled/core.h"
+#include "spdlog/fmt/bundled/ostream.h"
 
 namespace elsa
 {
@@ -24,8 +26,10 @@ namespace elsa
         using CastType = std::conditional_t<std::is_floating_point_v<data_t>, data_t, real_t>;
 
         const auto dim = data.getDataDescriptor().getNumberOfDimensions();
+        const auto shape = data.getDataDescriptor().getNumberOfCoefficientsPerDimension();
 
-        if (dim != 2) {
+        // print 3D containers with last dim 1 (this way we can slice it)
+        if (dim != 2 && !(dim == 3 && shape[dim - 1] == 1)) {
             throw InvalidArgumentError("PGM:: Can only handle 2D data");
         }
 
