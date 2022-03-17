@@ -1,5 +1,7 @@
 #include "Problem.h"
 #include "Scaling.h"
+#include "Logger.h"
+#include "Timer.h"
 
 namespace elsa
 {
@@ -150,6 +152,9 @@ namespace elsa
     template <typename data_t>
     data_t Problem<data_t>::getLipschitzConstantImpl(index_t nIterations) const
     {
+        Timer guard("Problem", "Calculating Lipschitz constant");
+        Logger::get("Problem")->info("Calculating Lipschitz constant");
+
         if (_lipschitzConstant.has_value()) {
             return _lipschitzConstant.value();
         }
