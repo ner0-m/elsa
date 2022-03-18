@@ -5,6 +5,7 @@ set(MODULE_HEADERS
     Cloneable.h
     Utilities/Assertions.h
     Utilities/Badge.hpp
+    Utilities/Bessel.h
     Utilities/CartesianIndices.h
     Utilities/DataContainerFormatter.hpp
     Utilities/FormatConfig.h
@@ -37,6 +38,7 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     elsaDefines.cpp
     Backtrace.cpp
+    Utilities/Bessel.cpp
     Utilities/CartesianIndices.cpp
     Utilities/Assertions.cpp
     Descriptors/DataDescriptor.cpp
