@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Blobs.h"
+#include "BSplines.h"
 #include "Logger.h"
 #include "Timer.h"
 
@@ -22,6 +23,24 @@ namespace elsa
 
             for (std::size_t i = 0; i < N; ++i) {
                 lut[i] = blob(t);
+                t += step;
+            }
+
+            return lut;
+        }
+
+        template <typename data_t, index_t N>
+        constexpr std::array<data_t, N> bspline_lut(ProjectedBSpline<data_t> bspline)
+        {
+            Logger::get("bspline_lut")->debug("Calculating lut");
+
+            std::array<data_t, N> lut;
+
+            auto t = static_cast<data_t>(0);
+            const auto step = 2. / N;
+
+            for (std::size_t i = 0; i < N; ++i) {
+                lut[i] = bspline(t);
                 t += step;
             }
 
@@ -117,6 +136,27 @@ namespace elsa
 
     private:
         ProjectedBlob<data_t> blob_;
+        Lut<data_t, N> lut_;
+    };
+
+    template <typename data_t, index_t N>
+    class ProjectedBSplineLut
+    {
+    public:
+        constexpr ProjectedBSplineLut(int dim, int degree)
+            : bspline_(dim, degree), lut_(detail::bspline_lut<data_t, N>(bspline_))
+        {
+        }
+
+        constexpr data_t order() const { return bspline_.order(); }
+
+        constexpr data_t operator()(data_t distance) const
+        {
+            return lut_((std::abs(distance) / 2.) * N);
+        }
+
+    private:
+        ProjectedBSpline<data_t> bspline_;
         Lut<data_t, N> lut_;
     };
 } // namespace elsa

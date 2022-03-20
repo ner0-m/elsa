@@ -25,6 +25,78 @@ TYPE_TO_STRING(BlobProjector<float>);
 TEST_CASE_TEMPLATE("BlobProjector: Testing rays going through the center of the volume", data_t,
                    float, double)
 {
+    // const IndexVector_t sizeDomain({{5, 5, 5}});
+    // const IndexVector_t sizeRange({{1, 1, 1}});
+    const IndexVector_t sizeDomain({{1, 1}});
+    const IndexVector_t sizeRange({{1, 1}});
+
+    auto domain = VolumeDescriptor(sizeDomain);
+    auto x = DataContainer<data_t>(domain);
+    x = 0;
+
+    auto stc = SourceToCenterOfRotation{100};
+    auto ctr = CenterOfRotationToDetector{0};
+
+    const auto theta = 0;
+    const auto thetad = Degree{theta}.to_radian();
+    const auto beta = 0;
+    const auto betad = Degree{beta}.to_radian();
+    const auto alpha = 0;
+    const auto alphad = Degree{alpha}.to_radian();
+    std::vector<Geometry> geom;
+    // geom.emplace_back(stc, ctr, VolumeData3D{Size3D{sizeDomain}},
+    // SinogramData3D{Size3D{sizeRange}},
+    //                   RotationAngles3D{Gamma{theta}, Beta{beta}, Alpha{alpha}});
+    geom.emplace_back(stc, ctr, Degree{theta}, VolumeData2D{Size2D{sizeDomain}},
+                      SinogramData2D{Size2D{sizeRange}}, PrincipalPointOffset{0},
+                      RotationOffset2D{-0.5, -0.5});
+    auto range = PlanarDetectorDescriptor(sizeRange, geom);
+
+    Geometry& g = geom[0];
+
+    auto projInvMatrix = g.getInverseProjectionMatrix();
+
+    MESSAGE(fmt::format("camera center: {}", g.getCameraCenter().format(vecfmt)));
+    MESSAGE(fmt::format("Projection Matrix:\n{}", g.getProjectionMatrix().format(matfmt)));
+
+    const RealVector_t principalpoint =
+        (projInvMatrix * RealVector_t({{0.5, 1}})).head(2).normalized();
+    MESSAGE(fmt::format("principal point: {}", principalpoint.format(vecfmt)));
+
+    const auto projMatrix = g.getProjectionMatrix();
+    const auto proj = RealMatrix_t({{std::cos(thetad), std::sin(thetad)}});
+    MESSAGE(fmt::format("My Projection Matrix: {}", proj.format(vecfmt)));
+
+    // const auto xaxis = RealMatrix_t({{1, 0, 0}});
+    // const auto yaxis = RealMatrix_t({{0, 1, 0}});
+    // const auto zaxis = RealMatrix_t({{0, 0, 1}});
+    // const auto xaxish = RealMatrix_t({{1, 0, 0, 1}});
+    // const auto yaxish = RealMatrix_t({{0, 1, 0, 1}});
+    // const auto zaxish = RealMatrix_t({{0, 0, 1, 1}});
+
+    const auto xaxis = RealVector_t({{1, 0}});
+    const auto yaxis = RealVector_t({{0, 1}});
+    const auto xaxish = RealVector_t({{1, 0, 1}});
+    const auto yaxish = RealVector_t({{0, 1, 1}});
+
+    const RealVector_t projx = (projMatrix.block(0, 0, 2, 2) * xaxis).head(1);
+    const RealVector_t projy = (projMatrix.block(0, 0, 2, 2) * yaxis).head(1);
+    // const RealVector_t projx = (projMatrix * xaxish).hnormalized();
+    // const RealVector_t projy = (projMatrix * yaxish).hnormalized();
+    // const RealVector_t projz = (projMatrix * zaxish);
+
+    MESSAGE(fmt::format("project xaxis: {}", projx.format(vecfmt)));
+    MESSAGE(fmt::format("project yaxis: {}", projy.format(vecfmt)));
+
+    const RealVector_t myprojx = proj * xaxis;
+    const RealVector_t myprojy = proj * yaxis;
+    MESSAGE(fmt::format("project xaxis: {}", myprojx.format(vecfmt)));
+    MESSAGE(fmt::format("project yaxis: {}", myprojy.format(vecfmt)));
+}
+
+TEST_CASE_TEMPLATE("BlobProjector: Testing rays going through the center of the volume", data_t,
+                   float, double)
+{
     const IndexVector_t sizeDomain({{5, 5, 5}});
     const IndexVector_t sizeRange({{1, 1, 1}});
 

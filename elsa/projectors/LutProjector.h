@@ -233,4 +233,32 @@ namespace elsa
         using Base::_detectorDescriptor;
         using Base::_volumeDescriptor;
     };
+
+    template <typename data_t = real_t>
+    class BSplineProjector : public LutProjector<data_t, BSplineProjector<data_t>>
+    {
+    public:
+        BSplineProjector(data_t degree, const VolumeDescriptor& domainDescriptor,
+                         const DetectorDescriptor& rangeDescriptor);
+
+        BSplineProjector(const VolumeDescriptor& domainDescriptor,
+                         const DetectorDescriptor& rangeDescriptor);
+
+        data_t weight(data_t distance) const;
+
+        index_t support() const;
+
+        /// implement the polymorphic clone operation
+        BSplineProjector<data_t>* cloneImpl() const override;
+
+        /// implement the polymorphic comparison operation
+        bool isEqual(const LinearOperator<data_t>& other) const override;
+
+    private:
+        ProjectedBSplineLut<data_t, 100> lut_;
+
+        using Base = LutProjector<data_t, BSplineProjector<data_t>>;
+        using Base::_detectorDescriptor;
+        using Base::_volumeDescriptor;
+    };
 } // namespace elsa

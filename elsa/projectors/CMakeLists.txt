@@ -11,6 +11,8 @@ set(MODULE_HEADERS
     JosephsMethod.h
     SubsetSampler.h
     Blobs.h
+    BSplines.h
+    Luts.hpp
 )
 
 # list all the code files of the module
@@ -26,6 +28,7 @@ set(MODULE_SOURCES
     JosephsMethod.cpp
     SubsetSampler.cpp
     Blobs.cpp
+    BSplines.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)

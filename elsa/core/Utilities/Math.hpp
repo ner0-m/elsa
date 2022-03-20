@@ -4,6 +4,48 @@
 
 namespace elsa
 {
+    namespace math
+    {
+        /// Compute factorial \f$n!\f$ recursively
+        constexpr inline index_t factorial(index_t n) noexcept
+        {
+            return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+        }
+
+        /// Compute binomial coefficient
+        constexpr inline index_t binom(index_t n, index_t k) noexcept
+        {
+            return (k > n)
+                       ? 0
+                       : (k == 0 || k == n) ? 1
+                                            : (k == 1 || k == n - 1)
+                                                  ? n
+                                                  : (k + k < n) ? (binom(n - 1, k - 1) * n) / k
+                                                                : (binom(n - 1, k) * n) / (n - k);
+        }
+
+        /// Compute Heaviside-function
+        /// \f[
+        /// x \mapsto
+        /// \begin{cases}
+        /// 0: & x < 0 \\
+        /// c: & x = 0 \\
+        /// 1: & x > 0
+        /// \end{cases}
+        /// \f]
+        template <typename data_t>
+        constexpr data_t heaviside(data_t x1, data_t c)
+        {
+            if (x1 == 0) {
+                return c;
+            } else if (x1 < 0) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+    } // namespace math
+
     /// proposed in Y. Meyer, Oscillating Patterns in Image Processing and Nonlinear Evolution
     /// Equations. AMS, 2001
     template <typename data_t>

@@ -129,10 +129,7 @@ elsa::DataContainer<elsa::real_t> reconstruct(const elsa::DataContainer<elsa::re
     auto reconstruction = solver.solve(iters);
 
     elsa::io::write(reconstruction, fmt::format("{}dreconstruction_{}.edf", dims, projector_kind));
-    if (dims == 2) {
-        elsa::io::write(reconstruction,
-                        fmt::format("{}dreconstruction_{}.pgm", dims, projector_kind));
-    }
+
     if (dims == 2) {
         elsa::io::write(reconstruction,
                         fmt::format("{}dreconstruction_{}.pgm", dims, projector_kind));

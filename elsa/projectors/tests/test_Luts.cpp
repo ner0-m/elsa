@@ -91,24 +91,33 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
     }
 }
 
-TEST_CASE_TEMPLATE("ProjectedBlobLut: ", data_t, float, double)
+// Redefine GIVEN such that it's nicely usable inside an loop
+#undef GIVEN
+#define GIVEN(...) DOCTEST_SUBCASE((std::string("   Given: ") + std::string(__VA_ARGS__)).c_str())
+
+TEST_CASE_TEMPLATE("ProjectedBSlineLut: testing with various degrees", data_t, float, double)
 {
-    const auto a = 2;
-    const auto alpha = 10.83;
-    const auto m = 2;
+    for (int degree = 0; degree < 4; ++degree) {
+        for (int dim = 2; dim < 4; ++dim) {
+            GIVEN("BSpline Lut of degree " + std::to_string(degree)
+                  + " with dim: " + std::to_string(dim))
+            {
+                ProjectedBSplineLut<data_t, 50> lut(dim, degree);
+                ProjectedBSpline<data_t> proj_blob(dim, degree);
 
-    ProjectedBlobLut<data_t, 50> lut(a, alpha, m);
+                for (int i = 0; i < 100; ++i) {
+                    const auto distance = i / 25.;
 
-    for (int i = 0; i < 10000; ++i) {
-        const auto distance = i / 25.;
+                    CAPTURE(i);
+                    CAPTURE(distance);
+                    CAPTURE(lut(distance));
 
-        CAPTURE(i);
-        CAPTURE(distance);
-        CAPTURE(lut(distance));
-        CHECK_FALSE(std::isnan(lut(distance)));
+                    CHECK_EQ(lut(distance), Approx(proj_blob(distance)));
+                    CHECK_EQ(lut(-distance), Approx(proj_blob(-distance)));
+                }
+            }
+        }
     }
-
-    CHECK_FALSE(std::isnan(lut(1.9907628)));
 }
 
 TEST_CASE_TEMPLATE("ProjectedBlobLut: ", data_t, float, double)
