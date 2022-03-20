@@ -118,7 +118,7 @@ if [ "${compiler}" == "-" ]; then
 fi 
  
 # CMake flags, we'll need at some point, so make them available 
-CMAKE_FLAGS="-GNinja -DELSA_BENCHMARKS=ON -DELSA_CREATE_JUNIT_REPORTS=ON"
+CMAKE_FLAGS="-GNinja -DELSA_BENCHMARKS=ON"
  
 # If we use clang, be sure to use libc++ and libc++abi 
 if eval ${cxx} --version | grep -q clang ; then

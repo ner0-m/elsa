@@ -48,8 +48,8 @@ TEST_CASE_TEMPLATE("Identity: Testing construction", data_t, float, double)
     }
 }
 
-TEST_CASE_TEMPLATE("Identity: Testing apply", data_t, float, double, std::complex<float>,
-                   std::complex<double>)
+TEST_CASE_TEMPLATE("Identity: Testing apply", data_t, float, double, complex<float>,
+                   complex<double>)
 {
     GIVEN("some data")
     {

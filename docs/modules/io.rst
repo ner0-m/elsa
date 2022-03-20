@@ -4,6 +4,12 @@ elsa io
 
 .. contents:: Table of Contents
 
+General
+=======
+
+.. doxygenfunction:: elsa::io::write
+.. doxygenfunction:: elsa::io::read
+
 EDF
 ===
 

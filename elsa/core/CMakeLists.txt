@@ -3,7 +3,12 @@ set(MODULE_HEADERS
     elsaDefines.h
     Backtrace.h
     Cloneable.h
+    Utilities/Assertions.h
     Utilities/Badge.hpp
+    Utilities/CartesianIndices.h
+    Utilities/DataContainerFormatter.hpp
+    Utilities/FormatConfig.h
+    Utilities/Math.hpp
     Utilities/Statistics.hpp
     Utilities/TypeCasts.hpp
     Descriptors/DataDescriptor.h
@@ -30,7 +35,10 @@ set(MODULE_HEADERS
 
 # list all the code files of the module
 set(MODULE_SOURCES
+    elsaDefines.cpp
     Backtrace.cpp
+    Utilities/CartesianIndices.cpp
+    Utilities/Assertions.cpp
     Descriptors/DataDescriptor.cpp
     Descriptors/VolumeDescriptor.cpp
     Descriptors/PlanarDetectorDescriptor.cpp
@@ -50,14 +58,13 @@ set(MODULE_SOURCES
 
 if(${ELSA_BUILD_WITH_QUICKVEC})
     set(MODULE_HEADERS ${MODULE_HEADERS} Handlers/DataHandlerGPU.h Handlers/DataHandlerMapGPU.h)
-
     set(MODULE_SOURCES ${MODULE_SOURCES} Handlers/DataHandlerGPU.cpp Handlers/DataHandlerMapGPU.cpp)
 endif()
 
-list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen")
+list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)
 
-# use OpenMP is available
+# use OpenMP if available
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     list(APPEND MODULE_PUBLIC_DEPS "OpenMP::OpenMP_CXX")
@@ -65,7 +72,28 @@ endif()
 
 # link Quickvec for DataHandlerGPU
 if(${ELSA_BUILD_WITH_QUICKVEC})
-    list(APPEND MODULE_PUBLIC_DEPS "Quickvec::quickvec")
+    list(APPEND MODULE_PUBLIC_DEPS "elsa_quickvec")
+endif()
+
+
+# use FFTW if available
+option(WITH_FFTW "Build elsa using fftw for faster fourier transforms" ON)
+
+# workaround for
+# https://github.com/FFTW/fftw3/issues/130
+# better would be find_package(fftw3)
+# fftw3f: float, fftw3: double, fftw3l: 128bit, _omp: OpenMP
+if(WITH_FFTW)
+    find_package(PkgConfig)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(FFTW3d IMPORTED_TARGET "fftw3")
+        pkg_check_modules(FFTW3f IMPORTED_TARGET "fftw3f")
+        if(FFTW3d_FOUND AND FFTW3f_FOUND)
+            set(FFTW3_FOUND TRUE)
+            list(APPEND MODULE_PUBLIC_DEPS "PkgConfig::FFTW3d" "PkgConfig::FFTW3f")
+            # TODO: also add fftw3_omp if supported
+        endif()
+    endif()
 endif()
 
 ADD_ELSA_MODULE(
@@ -87,10 +115,10 @@ target_include_directories(
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Utilities>
 )
 
-# Also add the necessary compile definition for quickvec
-if(${ELSA_BUILD_WITH_QUICKVEC})
-    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+if(WITH_FFTW AND FFTW3_FOUND)
+    target_compile_definitions("${ELSA_MODULE_TARGET_NAME}" PRIVATE WITH_FFTW)
 endif()
+
 
 if(ELSA_BUILD_PYTHON_BINDINGS)
     set(BINDINGS_SOURCES
@@ -117,5 +145,5 @@ if(ELSA_BUILD_PYTHON_BINDINGS)
         ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
     )
 endif()
- 
-write_module_config(${ELSA_MODULE_NAME})
+
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging)

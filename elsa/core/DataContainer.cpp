@@ -1,4 +1,6 @@
 #include "DataContainer.h"
+#include "DataContainerFormatter.hpp"
+#include "FormatConfig.h"
 #include "DataHandlerCPU.h"
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
@@ -168,6 +170,30 @@ namespace elsa
     data_t DataContainer<data_t>::sum() const
     {
         return _dataHandler->sum();
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::minElement() const
+    {
+        return _dataHandler->minElement();
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::maxElement() const
+    {
+        return _dataHandler->maxElement();
+    }
+
+    template <typename data_t>
+    void DataContainer<data_t>::fft(FFTNorm norm) const
+    {
+        this->_dataHandler->fft(*this->_dataDescriptor, norm);
+    }
+
+    template <typename data_t>
+    void DataContainer<data_t>::ifft(FFTNorm norm) const
+    {
+        this->_dataHandler->ifft(*this->_dataDescriptor, norm);
     }
 
     template <typename data_t>
@@ -374,6 +400,10 @@ namespace elsa
             throw LogicError("Trying to access out of bound slice");
         }
 
+        if (sizeOfLastDim == 1) {
+            return *this;
+        }
+
         auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
 
         // Now set the slice
@@ -389,6 +419,10 @@ namespace elsa
 
         if (i >= sizeOfLastDim) {
             throw LogicError("Trying to access out of bound slice");
+        }
+
+        if (sizeOfLastDim == 1) {
+            return *this;
         }
 
         auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
@@ -473,6 +507,13 @@ namespace elsa
     DataHandlerType DataContainer<data_t>::getDataHandlerType() const
     {
         return _dataHandlerType;
+    }
+
+    template <typename data_t>
+    void DataContainer<data_t>::format(std::ostream& os, format_config cfg) const
+    {
+        DataContainerFormatter<data_t> fmt{cfg};
+        fmt.format(os, *this);
     }
 
     template <typename data_t>
@@ -564,23 +605,89 @@ namespace elsa
         return concatenated;
     }
 
+    template <typename data_t>
+    DataContainer<data_t> fftShift2D(DataContainer<data_t> dc)
+    {
+        assert(dc.getDataDescriptor().getNumberOfDimensions() == 2
+               && "DataContainer::fftShift2D: currently only supporting 2D signals");
+
+        const DataDescriptor& dataDescriptor = dc.getDataDescriptor();
+        IndexVector_t numOfCoeffsPerDim = dataDescriptor.getNumberOfCoefficientsPerDimension();
+        index_t m = numOfCoeffsPerDim[0];
+        index_t n = numOfCoeffsPerDim[1];
+
+        index_t firstShift = m / 2;
+        index_t secondShift = n / 2;
+
+        DataContainer<data_t> copyDC(dataDescriptor);
+
+        for (index_t i = 0; i < m; ++i) {
+            for (index_t j = 0; j < n; ++j) {
+                copyDC((i + firstShift) % m, (j + secondShift) % n) = dc(i, j);
+            }
+        }
+
+        return copyDC;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> ifftShift2D(DataContainer<data_t> dc)
+    {
+        assert(dc.getDataDescriptor().getNumberOfDimensions() == 2
+               && "DataContainer::ifftShift2D: currently only supporting 2D signals");
+
+        const DataDescriptor& dataDescriptor = dc.getDataDescriptor();
+        IndexVector_t numOfCoeffsPerDim = dataDescriptor.getNumberOfCoefficientsPerDimension();
+        index_t m = numOfCoeffsPerDim[0];
+        index_t n = numOfCoeffsPerDim[1];
+
+        index_t firstShift = -m / 2;
+        index_t secondShift = -n / 2;
+
+        DataContainer<data_t> copyDC(dataDescriptor);
+
+        for (index_t i = 0; i < m; ++i) {
+            for (index_t j = 0; j < n; ++j) {
+                index_t leftIndex = (((i + firstShift) % m) + m) % m;
+                index_t rightIndex = (((j + secondShift) % n) + n) % n;
+                copyDC(leftIndex, rightIndex) = dc(i, j);
+            }
+        }
+
+        return copyDC;
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
-    template class DataContainer<std::complex<float>>;
+    template class DataContainer<complex<float>>;
     template class DataContainer<double>;
-    template class DataContainer<std::complex<double>>;
+    template class DataContainer<complex<double>>;
     template class DataContainer<index_t>;
 
     template DataContainer<float> concatenate<float>(const DataContainer<float>&,
                                                      const DataContainer<float>&);
     template DataContainer<double> concatenate<double>(const DataContainer<double>&,
                                                        const DataContainer<double>&);
-    template DataContainer<std::complex<float>>
-        concatenate<std::complex<float>>(const DataContainer<std::complex<float>>&,
-                                         const DataContainer<std::complex<float>>&);
-    template DataContainer<std::complex<double>>
-        concatenate<std::complex<double>>(const DataContainer<std::complex<double>>&,
-                                          const DataContainer<std::complex<double>>&);
+    template DataContainer<complex<float>>
+        concatenate<complex<float>>(const DataContainer<complex<float>>&,
+                                    const DataContainer<complex<float>>&);
+    template DataContainer<complex<double>>
+        concatenate<complex<double>>(const DataContainer<complex<double>>&,
+                                     const DataContainer<complex<double>>&);
+
+    template DataContainer<float> fftShift2D<float>(DataContainer<float>);
+    template DataContainer<complex<float>>
+        fftShift2D<complex<float>>(DataContainer<complex<float>>);
+    template DataContainer<double> fftShift2D<double>(DataContainer<double>);
+    template DataContainer<complex<double>>
+        fftShift2D<complex<double>>(DataContainer<complex<double>>);
+
+    template DataContainer<float> ifftShift2D<float>(DataContainer<float>);
+    template DataContainer<complex<float>>
+        ifftShift2D<complex<float>>(DataContainer<complex<float>>);
+    template DataContainer<double> ifftShift2D<double>(DataContainer<double>);
+    template DataContainer<complex<double>>
+        ifftShift2D<complex<double>>(DataContainer<complex<double>>);
 
 } // namespace elsa

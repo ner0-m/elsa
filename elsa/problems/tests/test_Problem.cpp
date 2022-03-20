@@ -221,6 +221,25 @@ TEST_CASE("Problem: Testing with one regularization term")
                 REQUIRE_UNARY(checkApproxEq(prob.getLipschitzConstant(100), 1.0f + weight));
             }
         }
+
+        WHEN("given a different data descriptor and another regularization term with a different "
+             "domain descriptor")
+        {
+            // three-dimensional data descriptor
+            IndexVector_t otherNumCoeff(3);
+            otherNumCoeff << 15, 38, 22;
+            VolumeDescriptor otherDD(otherNumCoeff);
+
+            // l2 norm regularization term
+            L2NormPow2 otherRegFunc(otherDD);
+            RegularizationTerm otherRegTerm(weight, otherRegFunc);
+
+            THEN("no exception is thrown when setting up a problem with different domain "
+                 "descriptors")
+            {
+                REQUIRE_NOTHROW(Problem{func, otherRegTerm});
+            }
+        }
     }
 }
 
@@ -333,6 +352,34 @@ TEST_CASE("Problem: Testing with several regularization terms")
 
                 REQUIRE_UNARY(
                     checkApproxEq(prob.getLipschitzConstant(100), 1.0f + weight1 + weight2));
+            }
+        }
+
+        WHEN("given two different data descriptors and two regularization terms with a different "
+             "domain descriptor")
+        {
+            // three-dimensional data descriptor
+            IndexVector_t otherNumCoeff(3);
+            otherNumCoeff << 15, 38, 22;
+            VolumeDescriptor otherDD(otherNumCoeff);
+
+            // four-dimensional data descriptor
+            IndexVector_t anotherNumCoeff(4);
+            anotherNumCoeff << 7, 9, 21, 17;
+            VolumeDescriptor anotherDD(anotherNumCoeff);
+
+            // l2 norm regularization term
+            L2NormPow2 otherRegFunc(otherDD);
+            RegularizationTerm otherRegTerm(weight1, otherRegFunc);
+
+            // l2 norm regularization term
+            L2NormPow2 anotherRegFunc(anotherDD);
+            RegularizationTerm anotherRegTerm(weight2, anotherRegFunc);
+
+            THEN("no exception is thrown when setting up a problem with different domain "
+                 "descriptors")
+            {
+                REQUIRE_NOTHROW(Problem{func, std::vector{otherRegTerm, anotherRegTerm}});
             }
         }
     }

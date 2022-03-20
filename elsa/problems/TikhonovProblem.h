@@ -32,6 +32,17 @@ namespace elsa
     {
     public:
         /**
+         * @brief Construct a Tikhonov problem of the form
+         * \f$ \argmin_x \frac{1}{2} \| Ax - b \|_2^2 + \lambda \| x \|_2^2 \f$
+         *
+         * @param[in] A a linear operator
+         * @param[in] b a data vector
+         * @param[in] lambda regularization weight
+         */
+        TikhonovProblem(const LinearOperator<data_t>& A, const DataContainer<data_t> b,
+                        real_t lambda = 0.5f);
+
+        /**
          * @brief Constructor for a Tikhonov problem
          *
          * @param[in] wlsProblem a wls problem specifying the data term and the initial solution

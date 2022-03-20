@@ -1,6 +1,7 @@
 /// Elsa example program: basic 2d X-ray CT simulation and reconstruction
 
 #include "elsa.h"
+#include "IO.h"
 
 #include <iostream>
 
@@ -15,7 +16,7 @@ void example2d()
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
     // write the phantom out
-    EDF::write(phantom, "2dphantom.edf");
+    io::write(phantom, "2dphantom.edf");
 
     // generate circular trajectory
     index_t numAngles{180}, arc{360};
@@ -35,7 +36,7 @@ void example2d()
     auto sinogram = projector.apply(phantom);
 
     // write the sinogram out
-    EDF::write(sinogram, "2dsinogram.edf");
+    io::write(sinogram, "2dsinogram.edf");
 
     // setup reconstruction problem
     WLSProblem wlsProblem(projector, sinogram);
@@ -49,12 +50,9 @@ void example2d()
     auto cgReconstruction = cgSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(cgReconstruction, "2dreconstruction_cg.edf");
+    io::write(cgReconstruction, "2dreconstruction_cg.edf");
 
-    L1Norm regFunc(projector.getDomainDescriptor());
-    RegularizationTerm regTerm(0.5f, regFunc);
-
-    LASSOProblem lassoProb(wlsProblem, regTerm);
+    LASSOProblem lassoProb(projector, sinogram);
 
     // solve the reconstruction problem with ISTA
     ISTA istaSolver(lassoProb);
@@ -63,7 +61,7 @@ void example2d()
     auto istaReconstruction = istaSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(istaReconstruction, "2dreconstruction_ista.edf");
+    io::write(istaReconstruction, "2dreconstruction_ista.edf");
 
     // solve the reconstruction problem with FISTA
     FISTA fistaSolver(lassoProb);
@@ -72,7 +70,7 @@ void example2d()
     auto fistaReconstruction = fistaSolver.solve(noIterations);
 
     // write the reconstruction out
-    EDF::write(fistaReconstruction, "2dreconstruction_fista.edf");
+    io::write(fistaReconstruction, "2dreconstruction_fista.edf");
 }
 
 int main()

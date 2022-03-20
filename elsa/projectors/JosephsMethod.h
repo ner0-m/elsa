@@ -97,9 +97,6 @@ namespace elsa
         void traverseVolume(const DataContainer<data_t>& vector,
                             DataContainer<data_t>& result) const;
 
-        /// convenience typedef for ray
-        using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
-
         /**
          * @brief  Linear interpolation, works in any dimension
          *

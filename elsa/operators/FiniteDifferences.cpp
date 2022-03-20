@@ -231,7 +231,7 @@ namespace elsa
     // explicit template instantiation
     template class FiniteDifferences<float>;
     template class FiniteDifferences<double>;
-    template class FiniteDifferences<std::complex<float>>;
-    template class FiniteDifferences<std::complex<double>>;
+    template class FiniteDifferences<complex<float>>;
+    template class FiniteDifferences<complex<double>>;
 
 } // namespace elsa

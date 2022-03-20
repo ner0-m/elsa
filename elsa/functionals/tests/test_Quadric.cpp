@@ -21,13 +21,13 @@
 using namespace elsa;
 using namespace doctest;
 
-TYPE_TO_STRING(std::complex<float>);
-TYPE_TO_STRING(std::complex<double>);
+TYPE_TO_STRING(complex<float>);
+TYPE_TO_STRING(complex<double>);
 
 TEST_SUITE_BEGIN("functionals");
 
-TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
-                   std::complex<float>, std::complex<double>)
+TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double, complex<float>,
+                   complex<double>)
 {
     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
 

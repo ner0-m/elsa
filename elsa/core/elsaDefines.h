@@ -3,13 +3,20 @@
 #include <complex>
 #include <cstddef>
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <type_traits>
+
+#ifdef ELSA_CUDA_VECTOR
+#include <thrust/complex.h>
+#endif
+
+#include "Complex.h"
 
 namespace elsa
 {
-    using real_t = float;                   ///< global type for real numbers
-    using complex_t = std::complex<real_t>; ///< global type for complex numbers
-    using index_t = std::ptrdiff_t;         ///< global type for indices
+    using real_t = float;              ///< global type for real numbers
+    using complex_t = complex<real_t>; ///< global type for complex numbers
+    using index_t = std::ptrdiff_t;    ///< global type for indices
 
     /// global type for vectors of real numbers
     using RealVector_t = Eigen::Matrix<real_t, Eigen::Dynamic, 1>;
@@ -30,12 +37,22 @@ namespace elsa
     /// global type for matrices of real numbers
     using RealMatrix_t = Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic>;
 
+    /// global type alias for rays
+    using RealRay_t = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
+
+    /// global type alias for rays
+    template <typename data_t>
+    using Ray_t = Eigen::ParametrizedLine<data_t, Eigen::Dynamic>;
+
     /// template global constexpr for the number pi
     template <typename T>
     constexpr auto pi = static_cast<T>(3.14159265358979323846);
 
     /// global constexpr for the number pi
     constexpr auto pi_t = pi<real_t>;
+
+    /// various values of the different norms of the Fourier transforms
+    enum class FFTNorm { FORWARD, ORTHO, BACKWARD };
 
     /// type of the DataHandler used to store the actual data
     enum class DataHandlerType {
@@ -59,7 +76,7 @@ namespace elsa
 
     /// partial specialization to derive correct floating point type
     template <typename T>
-    struct GetFloatingPointType<std::complex<T>> {
+    struct GetFloatingPointType<complex<T>> {
         using type = T;
     };
 
@@ -80,6 +97,20 @@ namespace elsa
 
     /// Predicate to check if of complex type
     template <typename T>
-    constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, std::complex<float>>::value
-                               || std::is_same<RemoveCvRef_t<T>, std::complex<double>>::value;
+    constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, complex<float>>::value
+                               || std::is_same<RemoveCvRef_t<T>, complex<double>>::value;
 } // namespace elsa
+
+/*
+ * Branch prediction tuning.
+ * the expression is expected to be true (=likely) or false (=unlikely).
+ *
+ * btw, this implementation was taken from the Linux kernel.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) (x)
+#define unlikely(x) (x)
+#endif

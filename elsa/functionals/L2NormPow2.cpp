@@ -1,6 +1,7 @@
 #include "L2NormPow2.h"
 
 #include "LinearOperator.h"
+#include "LinearResidual.h"
 #include "Identity.h"
 #include "TypeCasts.hpp"
 
@@ -14,6 +15,12 @@ namespace elsa
 
     template <typename data_t>
     L2NormPow2<data_t>::L2NormPow2(const Residual<data_t>& residual) : Functional<data_t>(residual)
+    {
+    }
+
+    template <typename data_t>
+    L2NormPow2<data_t>::L2NormPow2(const LinearOperator<data_t>& A, const DataContainer<data_t>& b)
+        : Functional<data_t>(LinearResidual<data_t>(A, b))
     {
     }
 
@@ -54,7 +61,7 @@ namespace elsa
     // explicit template instantiation
     template class L2NormPow2<float>;
     template class L2NormPow2<double>;
-    template class L2NormPow2<std::complex<float>>;
-    template class L2NormPow2<std::complex<double>>;
+    template class L2NormPow2<complex<float>>;
+    template class L2NormPow2<complex<double>>;
 
 } // namespace elsa

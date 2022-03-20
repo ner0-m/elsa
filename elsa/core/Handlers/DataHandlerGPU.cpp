@@ -1,6 +1,9 @@
 #include "DataHandlerGPU.h"
+
+#include "DataContainer.h"
 #include "DataHandlerMapGPU.h"
 #include "TypeCasts.hpp"
+#include "elsaDefines.h"
 
 #include <cublas_v2.h>
 
@@ -83,7 +86,7 @@ namespace elsa
     template <typename data_t>
     GetFloatingPointType_t<data_t> DataHandlerGPU<data_t>::squaredL2Norm() const
     {
-        return _data->squaredL2Norm();
+        return _data->squaredl2Norm();
     }
 
     template <typename data_t>
@@ -114,6 +117,50 @@ namespace elsa
     data_t DataHandlerGPU<data_t>::sum() const
     {
         return _data->sum();
+    }
+
+    template <typename data_t>
+    data_t DataHandlerGPU<data_t>::minElement() const
+    {
+        return _data->minElement();
+    }
+
+    template <typename data_t>
+    data_t DataHandlerGPU<data_t>::maxElement() const
+    {
+        return _data->maxElement();
+    }
+
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerGPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                     FFTNorm norm)
+    {
+        // until we have a gpu fft implementation, use the cpu version.
+        DataContainer<data_t> tmp{source_desc, DataHandlerType::CPU};
+        for (index_t i = 0; i < this->getSize(); i++) {
+            tmp[i] = this->operator[](i);
+        }
+        tmp.fft(norm);
+        for (index_t i = 0; i < this->getSize(); i++) {
+            this->operator[](i) = tmp[i];
+        }
+        return *this;
+    }
+
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerGPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                      FFTNorm norm)
+    {
+        // until we have a gpu fft implementation, use the cpu version.
+        DataContainer<data_t> tmp{source_desc, DataHandlerType::CPU};
+        for (index_t i = 0; i < this->getSize(); i++) {
+            tmp[i] = this->operator[](i);
+        }
+        tmp.ifft(norm);
+        for (index_t i = 0; i < this->getSize(); i++) {
+            this->operator[](i) = tmp[i];
+        }
+        return *this;
     }
 
     template <typename data_t>
@@ -462,9 +509,9 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataHandlerGPU<float>;
-    template class DataHandlerGPU<std::complex<float>>;
+    template class DataHandlerGPU<complex<float>>;
     template class DataHandlerGPU<double>;
-    template class DataHandlerGPU<std::complex<double>>;
+    template class DataHandlerGPU<complex<double>>;
     template class DataHandlerGPU<index_t>;
 
 } // namespace elsa

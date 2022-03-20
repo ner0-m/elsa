@@ -1,10 +1,21 @@
 #include "LASSOProblem.h"
+#include "LinearOperator.h"
+#include "DataContainer.h"
 #include "Error.h"
 #include "Identity.h"
 #include "TypeCasts.hpp"
 
 namespace elsa
 {
+    template <typename data_t>
+    LASSOProblem<data_t>::LASSOProblem(const LinearOperator<data_t>& A,
+                                       const DataContainer<data_t>& b, const real_t lambda)
+        : LASSOProblem<data_t>(
+            WLSProblem<data_t>(A, b),
+            RegularizationTerm<data_t>(lambda, L1Norm<data_t>{A.getDomainDescriptor()}))
+    {
+    }
+
     template <typename data_t>
     LASSOProblem<data_t>::LASSOProblem(WLSProblem<data_t> wlsProblem,
                                        const RegularizationTerm<data_t>& regTerm)

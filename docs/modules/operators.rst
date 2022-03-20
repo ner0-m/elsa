@@ -28,3 +28,8 @@ Dictionary
 ===================
 
 .. doxygenclass:: elsa::Dictionary
+
+ShearletTransform
+=================
+
+.. doxygenclass:: elsa::ShearletTransform

@@ -1,8 +1,9 @@
 #include "ISTA.h"
 #include "SoftThresholding.h"
 #include "TypeCasts.hpp"
+#include "Logger.h"
 
-#include <Logger.h>
+#include "spdlog/stopwatch.h"
 
 namespace elsa
 {
@@ -31,6 +32,8 @@ namespace elsa
         if (iterations == 0)
             iterations = _defaultIterations;
 
+        spdlog::stopwatch aggregate_time;
+
         SoftThresholding<data_t> shrinkageOp{getCurrentSolution().getDataDescriptor()};
 
         data_t lambda = _problem->getRegularizationTerms()[0].getWeight();
@@ -45,14 +48,19 @@ namespace elsa
         DataContainer<data_t> Atb = A.applyAdjoint(b);
         DataContainer<data_t> gradient = A.applyAdjoint(A.apply(x)) - Atb;
 
+        Logger::get("ISTA")->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "gradient", "time",
+                                  "elapsed");
+
         auto deltaZero = gradient.squaredL2Norm();
         for (index_t iter = 0; iter < iterations; ++iter) {
-            Logger::get("ISTA")->info("iteration {} of {}", iter + 1, iterations);
+            spdlog::stopwatch iter_time;
 
             gradient = A.applyAdjoint(A.apply(x)) - Atb;
 
             x = shrinkageOp.apply(x - _mu * gradient, geometry::Threshold{_mu * lambda});
 
+            Logger::get("ISTA")->info("{:>5} |{:>15} | {:>6.3} |{:>6.3}s |", iter,
+                                      gradient.squaredL2Norm(), iter_time, aggregate_time);
             if (gradient.squaredL2Norm() <= _epsilon * _epsilon * deltaZero) {
                 Logger::get("ISTA")->info("SUCCESS: Reached convergence at {}/{} iteration",
                                           iter + 1, iterations);
