@@ -2,6 +2,7 @@
 
 #include "Blobs.h"
 #include "Logger.h"
+#include "Timer.h"
 
 #include <array>
 
@@ -12,6 +13,8 @@ namespace elsa
         template <typename data_t, index_t N>
         constexpr std::array<data_t, N> blob_lut(ProjectedBlob<data_t> blob)
         {
+            Logger::get("blob_lut")->debug("Calculating lut");
+
             std::array<data_t, N> lut;
 
             auto t = static_cast<data_t>(0);
@@ -47,10 +50,10 @@ namespace elsa
     class Lut
     {
     public:
-        Lut(std::array<data_t, N> data) : data_(std::move(data)) {}
+        constexpr Lut(std::array<data_t, N> data) : data_(std::move(data)) {}
 
         template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
-        data_t operator()(T index) const
+        constexpr data_t operator()(T index) const
         {
             if (index < 0 || index > N) {
                 return 0;
@@ -63,7 +66,7 @@ namespace elsa
         /// lerp(last, last+1, t), for some t > 0, yields f(last) / 2, as f(last + 1) = 0,
         /// this should be handled
         template <typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
-        data_t operator()(T index) const
+        constexpr data_t operator()(T index) const
         {
             if (index < 0 || index > N) {
                 return 0;
@@ -101,13 +104,16 @@ namespace elsa
         {
         }
 
-        data_t radius() const { return blob_.radius(); }
+        constexpr data_t radius() const { return blob_.radius(); }
 
-        data_t alpha() const { return blob_.alpha(); }
+        constexpr data_t alpha() const { return blob_.alpha(); }
 
-        data_t order() const { return blob_.order(); }
+        constexpr data_t order() const { return blob_.order(); }
 
-        data_t operator()(data_t distance) const { return lut_((distance / blob_.radius()) * N); }
+        constexpr data_t operator()(data_t distance) const
+        {
+            return lut_((distance / blob_.radius()) * N);
+        }
 
     private:
         ProjectedBlob<data_t> blob_;

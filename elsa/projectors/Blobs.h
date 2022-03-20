@@ -141,11 +141,11 @@ namespace elsa
             return blobs::blob_projected(s, radius_, alpha_, order_);
         }
 
-        data_t radius() const { return radius_; }
+        constexpr data_t radius() const { return radius_; }
 
-        data_t alpha() const { return alpha_; }
+        constexpr data_t alpha() const { return alpha_; }
 
-        int order() const { return order_; }
+        constexpr int order() const { return order_; }
 
     private:
         data_t radius_;

@@ -82,11 +82,11 @@ namespace elsa
 
                 // Expand bounding box as rays have larger support now
                 auto aabb = _boundingBox;
-                aabb._min.array() -= support;
-                aabb._min[leadingdir] += support;
+                aabb._min.array() -= static_cast<real_t>(support);
+                aabb._min[leadingdir] += static_cast<real_t>(support);
 
-                aabb._max.array() += support;
-                aabb._max[leadingdir] -= support;
+                aabb._max.array() += static_cast<real_t>(support);
+                aabb._max[leadingdir] -= static_cast<real_t>(support);
 
                 // --> setup traversal algorithm
                 SliceTraversal traversal(aabb, ray);
@@ -135,11 +135,11 @@ namespace elsa
 
                 // Expand bounding box as rays have larger support now
                 auto aabb = _boundingBox;
-                aabb._min.array() -= support;
-                aabb._min[leadingdir] += support;
+                aabb._min.array() -= static_cast<real_t>(support);
+                aabb._min[leadingdir] += static_cast<real_t>(support);
 
-                aabb._max.array() += support;
-                aabb._max[leadingdir] -= support;
+                aabb._max.array() += static_cast<real_t>(support);
+                aabb._max[leadingdir] -= static_cast<real_t>(support);
 
                 // --> setup traversal algorithm
                 SliceTraversal traversal(aabb, ray);
