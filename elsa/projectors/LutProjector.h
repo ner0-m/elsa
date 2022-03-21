@@ -211,20 +211,10 @@ namespace elsa
         index_t support() const { return static_cast<index_t>(std::ceil(lut_.radius())); }
 
         /// implement the polymorphic clone operation
-        BlobProjector<data_t>* cloneImpl() const override
-        {
-            return new BlobProjector(_volumeDescriptor, _detectorDescriptor);
-        }
+        BlobProjector<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const override
-        {
-            if (!Base::isEqual(other))
-                return false;
-
-            auto otherOp = downcast_safe<BlobProjector>(&other);
-            return static_cast<bool>(otherOp);
-        }
+        bool isEqual(const LinearOperator<data_t>& other) const override;
 
     private:
         ProjectedBlobLut<data_t, 100> lut_;

@@ -35,6 +35,22 @@ namespace elsa
     }
 
     template <typename data_t>
+    BlobProjector<data_t>* BlobProjector<data_t>::cloneImpl() const
+    {
+        return new BlobProjector(_volumeDescriptor, _detectorDescriptor);
+    }
+
+    template <typename data_t>
+    bool BlobProjector<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    {
+        if (!Base::isEqual(other))
+            return false;
+
+        auto otherOp = downcast_safe<BlobProjector>(&other);
+        return static_cast<bool>(otherOp);
+    }
+
+    template <typename data_t>
     BSplineProjector<data_t>::BSplineProjector(data_t degree,
                                                const VolumeDescriptor& domainDescriptor,
                                                const DetectorDescriptor& rangeDescriptor)
