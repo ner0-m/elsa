@@ -78,6 +78,9 @@ namespace elsa
                 index_t leadingdir = 0;
                 ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
 
+                IndexVector_t distvec = IndexVector_t::Constant(lower.size(), support);
+                distvec[leadingdir] = 0;
+
                 auto rangeVal = Ax[rangeIndex];
 
                 // Expand bounding box as rays have larger support now
@@ -88,19 +91,21 @@ namespace elsa
                 aabb._max.array() += static_cast<real_t>(support);
                 aabb._max[leadingdir] -= static_cast<real_t>(support);
 
+                // Keep this here, as it saves us a couple of allocations on clang
+                CartesianIndices neighbours(upper);
+
                 // --> setup traversal algorithm
                 SliceTraversal traversal(aabb, ray);
 
-                for (const auto [curPos, curVoxel, t] : traversal) {
-                    for (auto neighbour :
-                         neighbours_in_slice(curVoxel, support, leadingdir, lower, upper)) {
+                for (const auto& curVoxel : traversal) {
+                    neighbours = neighbours_in_slice(curVoxel, distvec, lower, upper);
+                    for (auto neighbour : neighbours) {
                         // Correct position, such that the distance is still correct
-                        auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
-
+                        const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
                         const auto distance = ray.distance(correctedPos);
                         const auto weight = self().weight(distance);
 
-                        rangeVal += weight * x.at(neighbour);
+                        rangeVal += weight * x(neighbour);
                     }
                 }
 
@@ -112,7 +117,7 @@ namespace elsa
         void applyAdjointImpl(const DataContainer<data_t>& y,
                               DataContainer<data_t>& Aty) const override
         {
-            Timer t("LutProjector", "apply");
+            Timer t("LutProjector", "applyAdjoint");
 
             const auto sizeRange = y.getSize();
             Aty = 0;
@@ -133,6 +138,9 @@ namespace elsa
                 index_t leadingdir = 0;
                 ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
 
+                IndexVector_t distvec = IndexVector_t::Constant(lower.size(), support);
+                distvec[leadingdir] = 0;
+
                 // Expand bounding box as rays have larger support now
                 auto aabb = _boundingBox;
                 aabb._min.array() -= static_cast<real_t>(support);
@@ -141,19 +149,22 @@ namespace elsa
                 aabb._max.array() += static_cast<real_t>(support);
                 aabb._max[leadingdir] -= static_cast<real_t>(support);
 
+                // Keep this here, as it saves us a couple of allocations on clang
+                CartesianIndices neighbours(upper);
+
                 // --> setup traversal algorithm
                 SliceTraversal traversal(aabb, ray);
 
                 const auto val = y[rangeIndex];
 
-                for (const auto [curPos, curVoxel, t] : traversal) {
-                    for (auto neighbour :
-                         neighbours_in_slice(curVoxel, support, leadingdir, lower, upper)) {
+                for (const auto& curVoxel : traversal) {
+                    neighbours = neighbours_in_slice(curVoxel, distvec, lower, upper);
+                    for (auto neighbour : neighbours) {
                         // Correct position, such that the distance is still correct
-                        auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
-
+                        const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
                         const auto distance = ray.distance(correctedPos);
                         const auto weight = self().weight(distance);
+
 #pragma omp atomic
                         Aty(neighbour) += weight * val;
                     }

@@ -196,9 +196,16 @@ namespace elsa
         return idx;
     }
 
-    SliceTraversal::Iter SliceTraversal::begin() const { return {startIndex_, ray_, tDelta_, t_}; }
+    real_t SliceTraversal::t() const { return t_; }
 
-    SliceTraversal::Iter SliceTraversal::end() const { return {endIndex_, ray_, tDelta_, t_}; }
+    real_t SliceTraversal::tDelta() const { return tDelta_; }
+
+    SliceTraversal::Iter SliceTraversal::begin() const
+    {
+        return {startIndex_, ray_.pointAt(t_), ray_.direction() * tDelta_};
+    }
+
+    SliceTraversal::Iter SliceTraversal::end() const { return {endIndex_}; }
 
     index_t SliceTraversal::startIndex() const { return startIndex_; }
 
@@ -206,15 +213,13 @@ namespace elsa
 
     SliceTraversal::Iter::value_type SliceTraversal::Iter::operator*() const
     {
-        const RealVector_t curPos = ray_.pointAt(t_);
-        const IndexVector_t curVoxel = curPos.template cast<index_t>();
-        return {curPos, curVoxel, t_};
+        return cur_.template cast<index_t>();
     }
 
     SliceTraversal::Iter& SliceTraversal::Iter::operator++()
     {
         ++pos_;
-        t_ += tDelta_;
+        cur_ += dir_;
         return *this;
     }
 

@@ -405,6 +405,8 @@ index_t checkTraversal(BoundingBox aabb, RealRay_t ray, std::deque<RealVector_t>
     // INFO("exitPoint := ", traversal.exitPoint_.format(fmt));
 
     index_t counter = 0;
+    auto t = traversal.t();
+    auto tdelta = traversal.tDelta();
     for (auto iter = traversal.begin(); iter != traversal.end(); ++iter) {
         auto value = *iter;
 
@@ -412,9 +414,9 @@ index_t checkTraversal(BoundingBox aabb, RealRay_t ray, std::deque<RealVector_t>
         REQUIRE_MESSAGE(!visitedVoxels.empty(), "Visiting more voxels than expected");
 
         RealVector_t expected = visitedVoxels.front();
-        RealVector_t point = ray.pointAt(value.t_);
+        RealVector_t point = ray.pointAt(t);
 
-        CAPTURE(value.t_);
+        CAPTURE(t);
         INFO("RealRay_t hit: ", point.format(fmt));
         INFO("Should hit: ", expected.format(fmt));
 
@@ -425,6 +427,7 @@ index_t checkTraversal(BoundingBox aabb, RealRay_t ray, std::deque<RealVector_t>
 
         // increment counter
         ++counter;
+        t += tdelta;
     }
 
     INFO("Voxels left in list: ", visitedVoxels.size());
