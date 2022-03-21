@@ -160,16 +160,14 @@ namespace elsa
         }
         // compute the Lipschitz Constant as the largest eigenvalue of the Hessian
         const auto hessian = getHessian();
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> bVec(
-            hessian.getDomainDescriptor().getNumberOfCoefficients());
-        bVec.setOnes();
-        DataContainer<data_t> dcB(hessian.getDomainDescriptor(), bVec);
+        DataContainer<data_t> dcB(hessian.getDomainDescriptor());
+        dcB = 1;
         for (index_t i = 0; i < nIterations; i++) {
             dcB = hessian.apply(dcB);
-            dcB = dcB / sqrt(dcB.dot(dcB));
+            dcB = dcB / dcB.l2Norm();
         }
 
-        return dcB.dot(hessian.apply(dcB)) / (dcB.dot(dcB));
+        return dcB.dot(hessian.apply(dcB)) / dcB.l2Norm();
     }
 
     template <typename data_t>
