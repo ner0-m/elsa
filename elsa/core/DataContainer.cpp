@@ -125,7 +125,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t DataContainer<data_t>::at(IndexVector_t coordinate) const
+    data_t DataContainer<data_t>::at(const IndexVector_t& coordinate) const
     {
         const auto arr = coordinate.array();
         if ((arr < 0).any()
@@ -133,22 +133,22 @@ namespace elsa
             return 0;
         }
 
-        return (*this)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
+        return (*this)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
     template <typename data_t>
-    data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate)
+    data_t& DataContainer<data_t>::operator()(const IndexVector_t& coordinate)
     {
         // const auto arr = coordinate.array();
         // const auto shape = _dataDescriptor->getNumberOfCoefficientsPerDimension().array();
         // ELSA_VERIFY((arr >= 0).all());
         // ELSA_VERIFY((arr < shape).all());
 
-        return (*this)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
+        return (*this)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
     template <typename data_t>
-    const data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate) const
+    const data_t& DataContainer<data_t>::operator()(const IndexVector_t& coordinate) const
     {
         // const auto arr = coordinate.array();
         // const auto shape = _dataDescriptor->getNumberOfCoefficientsPerDimension().array();
