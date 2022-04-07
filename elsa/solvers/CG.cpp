@@ -1,6 +1,7 @@
 #include "CG.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
+#include "spdlog/stopwatch.h"
 
 namespace elsa
 {
@@ -33,6 +34,9 @@ namespace elsa
         if (iterations == 0)
             iterations = _defaultIterations;
 
+        spdlog::stopwatch aggregate_time;
+        Logger::get("CG")->info("Start preparations...");
+
         // get references to some variables in the Quadric
         auto& x = _problem->getCurrentSolution();
         const auto& gradientExpr =
@@ -61,11 +65,17 @@ namespace elsa
         auto deltaNew = r.dot(d);
         auto deltaZero = deltaNew;
 
+        Logger::get("CG")->info("Preparations done, tooke {}s", aggregate_time);
+
+        Logger::get("CG")->info("epsilon: {}", _epsilon);
+        Logger::get("CG")->info("delta zero: {}", std::sqrt(deltaZero));
+
         // log history legend
-        Logger::get("CG")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}", "iteration", "deltaNew",
-                                "deltaZero", "epsilon", "objval");
+        Logger::get("CG")->info("{:^6}|{:*^16}|{:*^16}|{:*^8}|{:*^8}|", "iter", "deltaNew",
+                                "deltaZero", "time", "elapsed");
 
         for (index_t it = 0; it != iterations; ++it) {
+            spdlog::stopwatch iter_time;
             auto Ad = A ? A->apply(d) : d;
 
             data_t alpha = deltaNew / d.dot(Ad);
@@ -88,8 +98,8 @@ namespace elsa
                 objVal = static_cast<data_t>(-0.5) * x.dot(*b + r);
             }
 
-            Logger::get("CG")->info(" {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", it,
-                                    std::sqrt(deltaNew), std::sqrt(deltaZero), _epsilon, objVal);
+            Logger::get("CG")->info("{:>5} |{:>15} |{:>15} | {:>6.3} |{:>6.3}s |", it,
+                                    std::sqrt(deltaNew), objVal, iter_time, aggregate_time);
 
             if (deltaNew <= _epsilon * _epsilon * deltaZero) {
                 // check that we are not stopping prematurely due to accumulated roundoff error

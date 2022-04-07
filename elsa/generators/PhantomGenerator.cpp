@@ -2,12 +2,50 @@
 #include "EllipseGenerator.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
+#include "CartesianIndices.h"
 
 #include <cmath>
 #include <stdexcept>
 
 namespace elsa
 {
+    template <typename data_t>
+    DataContainer<data_t> PhantomGenerator<data_t>::createCirclePhantom(IndexVector_t volumesize,
+                                                                        data_t radius)
+    {
+        VolumeDescriptor dd(volumesize);
+        DataContainer<data_t> dc(dd);
+        dc = 0;
+
+        const Vector_t<data_t> sizef = volumesize.template cast<data_t>();
+        const auto center = (sizef.array() / 2).matrix();
+
+        for (auto pos : CartesianIndices(volumesize)) {
+            const Vector_t<data_t> p = pos.template cast<data_t>();
+            if ((p - center).norm() <= radius) {
+                dc(pos) = 1;
+            }
+        }
+
+        return dc;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> PhantomGenerator<data_t>::createRectanglePhantom(IndexVector_t volumesize,
+                                                                           IndexVector_t lower,
+                                                                           IndexVector_t upper)
+    {
+        VolumeDescriptor dd(volumesize);
+        DataContainer<data_t> dc(dd);
+        dc = 0;
+
+        for (auto pos : CartesianIndices(lower, upper)) {
+            dc(pos) = 1;
+        }
+
+        return dc;
+    }
+
     template <typename data_t>
     DataContainer<data_t> PhantomGenerator<data_t>::createModifiedSheppLogan(IndexVector_t sizes)
     {

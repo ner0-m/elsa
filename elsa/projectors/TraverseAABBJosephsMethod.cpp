@@ -3,12 +3,13 @@
 namespace elsa
 {
 
-    TraverseAABBJosephsMethod::TraverseAABBJosephsMethod(const BoundingBox& aabb, const Ray& r)
+    TraverseAABBJosephsMethod::TraverseAABBJosephsMethod(const BoundingBox& aabb,
+                                                         const RealRay_t& r)
         : _aabb{aabb}
     {
         initStepDirection(r.direction());
 
-        Ray rt(r.origin(), r.direction());
+        RealRay_t rt(r.origin(), r.direction());
 
         // determinge length of entire intersection with AABB
         real_t intersectionLength = calculateAABBIntersections(rt);
@@ -108,7 +109,7 @@ namespace elsa
         // determine main direction
         rd.cwiseAbs().maxCoeff(&_ignoreDirection);
 
-        // intialize _nextStep as the step for interior pixels
+        // initialize _nextStep as the step for interior pixels
         _nextStep(_ignoreDirection) = _stepDirection(_ignoreDirection);
         for (int i = 0; i < _aabb._dim; ++i) {
             if (i != _ignoreDirection) {
@@ -185,7 +186,7 @@ namespace elsa
         _stepDirection = rd.array().sign();
     }
 
-    real_t TraverseAABBJosephsMethod::calculateAABBIntersections(const Ray& ray)
+    real_t TraverseAABBJosephsMethod::calculateAABBIntersections(const RealRay_t& ray)
     {
         real_t tmin;
 

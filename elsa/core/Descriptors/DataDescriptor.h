@@ -79,7 +79,7 @@ namespace elsa
          * _numberOfCoefficientsPerDimension[i]-1 for every dimension i = 0,...,_numberOfDimensions.
          * Linearization is assumed to be done in order of the dimensions.
          */
-        index_t getIndexFromCoordinate(IndexVector_t coordinate) const;
+        index_t getIndexFromCoordinate(const elsa::IndexVector_t& coordinate) const;
 
         /**
          * @brief computes the local coordinates from a linearized index
@@ -88,8 +88,9 @@ namespace elsa
          * @return the local coordinate corresponding to the index
          *
          * The local coordinates are integers, running from 0 to
-         * _numberOfCoefficientsPerDimension[i]-1 for every dimension i = 0,...,_numberOfDimensions.
-         * Linearization is assumed to be done in order of the dimensions.
+         * _numberOfCoefficientsPerDimension[i]-1 for every dimension i =
+         * 0,...,_numberOfDimensions. Linearization is assumed to be done in order of the
+         * dimensions.
          */
         IndexVector_t getCoordinateFromIndex(index_t index) const;
 

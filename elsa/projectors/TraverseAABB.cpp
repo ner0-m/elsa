@@ -3,7 +3,7 @@
 
 namespace elsa
 {
-    TraverseAABB::TraverseAABB(const BoundingBox& aabb, const Ray& r) : _aabb{aabb}
+    TraverseAABB::TraverseAABB(const BoundingBox& aabb, const RealRay_t& r) : _aabb{aabb}
     {
         // compute the first intersection
         calculateAABBIntersections(r);
@@ -62,7 +62,7 @@ namespace elsa
         return _currentPos.template cast<IndexVector_t::Scalar>();
     }
 
-    void TraverseAABB::calculateAABBIntersections(const TraverseAABB::Ray& r)
+    void TraverseAABB::calculateAABBIntersections(const RealRay_t& r)
     {
         // entry and exit point parameters
         real_t tmin;

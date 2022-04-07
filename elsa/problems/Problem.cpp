@@ -1,5 +1,7 @@
 #include "Problem.h"
 #include "Scaling.h"
+#include "Logger.h"
+#include "Timer.h"
 
 namespace elsa
 {
@@ -150,21 +152,22 @@ namespace elsa
     template <typename data_t>
     data_t Problem<data_t>::getLipschitzConstantImpl(index_t nIterations) const
     {
+        Timer guard("Problem", "Calculating Lipschitz constant");
+        Logger::get("Problem")->info("Calculating Lipschitz constant");
+
         if (_lipschitzConstant.has_value()) {
             return _lipschitzConstant.value();
         }
         // compute the Lipschitz Constant as the largest eigenvalue of the Hessian
         const auto hessian = getHessian();
-        Eigen::Matrix<data_t, Eigen::Dynamic, 1> bVec(
-            hessian.getDomainDescriptor().getNumberOfCoefficients());
-        bVec.setOnes();
-        DataContainer<data_t> dcB(hessian.getDomainDescriptor(), bVec);
+        DataContainer<data_t> dcB(hessian.getDomainDescriptor());
+        dcB = 1;
         for (index_t i = 0; i < nIterations; i++) {
             dcB = hessian.apply(dcB);
-            dcB = dcB / sqrt(dcB.dot(dcB));
+            dcB = dcB / dcB.l2Norm();
         }
 
-        return dcB.dot(hessian.apply(dcB)) / (dcB.dot(dcB));
+        return dcB.dot(hessian.apply(dcB)) / dcB.l2Norm();
     }
 
     template <typename data_t>

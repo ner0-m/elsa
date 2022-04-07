@@ -15,8 +15,6 @@ using namespace elsa;
 using namespace elsa::geometry;
 using namespace doctest;
 
-using Ray = DetectorDescriptor::Ray;
-
 TEST_SUITE_BEGIN("core");
 
 TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
@@ -88,7 +86,7 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
                 rd << -0.141421f, 0.989949f;
                 rd.normalize();
 
-                auto detCoord = desc.computeDetectorCoordFromRay(Ray(ro, rd), 0);
+                auto detCoord = desc.computeDetectorCoordFromRay(RealRay_t(ro, rd), 0);
                 CHECK_EQ(detCoord[0], Approx(0.5).epsilon(0.05));
             }
             THEN("The detector coord is correct asd")
@@ -96,7 +94,7 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
                 rd << 0.f, 1.f;
                 rd.normalize();
 
-                auto detCoord = desc.computeDetectorCoordFromRay(Ray(ro, rd), 0);
+                auto detCoord = desc.computeDetectorCoordFromRay(RealRay_t(ro, rd), 0);
                 CHECK_EQ(detCoord[0], Approx(2.5));
             }
 
@@ -105,7 +103,7 @@ TEST_CASE("PlanarDetectorDescriptor: Testing 2D PlanarDetectorDescriptor")
                 rd << 0.141421f, 0.989949f;
                 rd.normalize();
 
-                auto detCoord = desc.computeDetectorCoordFromRay(Ray(ro, rd), 0);
+                auto detCoord = desc.computeDetectorCoordFromRay(RealRay_t(ro, rd), 0);
                 CHECK_EQ(detCoord[0], Approx(4.5).epsilon(0.05));
             }
         }

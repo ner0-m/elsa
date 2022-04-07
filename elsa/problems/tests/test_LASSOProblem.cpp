@@ -131,7 +131,7 @@ TEST_CASE_TEMPLATE("Scenario: Testing LASSOProblem", data_t, float, double)
             THEN("the Lipschitz Constant of a LASSOProblem with an Identity Operator as the "
                  "Linear Operator A is 1")
             {
-                REQUIRE_EQ(lipschitzConstant, as<data_t>(1.0));
+                REQUIRE_EQ(lipschitzConstant, Approx(as<data_t>(1.0)));
             }
         }
     }
