@@ -16,7 +16,7 @@ namespace elsa
      * Implements the n-dimensional signal fourier transformation.
      * Can support multiple backends, by default uses Eigen::FFT with FFTW.
      */
-    template <typename data_t = std::complex<real_t>>
+    template <typename data_t = complex<real_t>>
     class FourierTransform : public LinearOperator<data_t>
     {
     private:
@@ -49,8 +49,8 @@ namespace elsa
 
         /**
          * @brief perform the inverse fourier transformation
-         * @param x inputData (image matrix in frequency domain)
-         * @param Atx outputData (inversely fourier transformed image matrix)
+         * @param y inputData (image matrix in frequency domain)
+         * @param Aty outputData (inversely fourier transformed image matrix)
          */
         void applyAdjointImpl(const DataContainer<data_t>& y,
                               DataContainer<data_t>& Aty) const override;

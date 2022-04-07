@@ -74,7 +74,7 @@ namespace elsa
 
     RealVector_t DataDescriptor::getLocationOfOrigin() const { return _locationOfOrigin; }
 
-    index_t DataDescriptor::getIndexFromCoordinate(elsa::IndexVector_t coordinate) const
+    index_t DataDescriptor::getIndexFromCoordinate(const elsa::IndexVector_t& coordinate) const
     {
         // sanity check
         if (coordinate.size() != _productOfCoefficientsPerDimension.size())

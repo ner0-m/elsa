@@ -47,6 +47,13 @@ TraverseAABBJosephsMethod
 -------------------------
 
 .. doxygenclass:: elsa::TraverseAABBJosephsMethod
+    
+SliceTraversal
+------------
+
+.. doxygenclass:: elsa::TransformToTraversal
+
+.. doxygenclass:: elsa::SliceTraversal
 
 SubsetSampler
 -------------------------

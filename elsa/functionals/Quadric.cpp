@@ -105,7 +105,7 @@ namespace elsa
     // explicit template instantiation
     template class Quadric<float>;
     template class Quadric<double>;
-    template class Quadric<std::complex<float>>;
-    template class Quadric<std::complex<double>>;
+    template class Quadric<complex<float>>;
+    template class Quadric<complex<double>>;
 
 } // namespace elsa

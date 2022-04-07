@@ -91,9 +91,6 @@ namespace elsa
         void traverseVolume(const DataContainer<data_t>& vector,
                             DataContainer<data_t>& result) const;
 
-        /// convenience typedef for ray
-        using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
-
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;
         using LinearOperator<data_t>::_rangeDescriptor;

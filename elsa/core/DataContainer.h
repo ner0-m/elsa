@@ -24,18 +24,19 @@ namespace elsa
     /**
      * @brief class representing and storing a linearized n-dimensional signal
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Tobias Lasser - rewrite, modularization, modernization
-     * @author David Frank - added DataHandler concept, iterators
-     * @author Nikola Dinev - add block support
-     * @author Jens Petit - expression templates
-     * @author Jonas Jelten - various enhancements, fft, complex handling, pretty formatting
-     *
-     * @tparam data_t - data type that is stored in the DataContainer, defaulting to real_t.
-     *
      * This class provides a container for a signal that is stored in memory. This signal can
      * be n-dimensional, and will be stored in memory in a linearized fashion. The information
      * on how this linearization is performed is provided by an associated DataDescriptor.
+     *
+     * @tparam data_t data type that is stored in the DataContainer, defaulting to real_t.
+     *
+     * @author
+     * - Matthias Wieczorek - initial code
+     * - Tobias Lasser - rewrite, modularization, modernization
+     * - David Frank - added DataHandler concept, iterators
+     * - Nikola Dinev - add block support
+     * - Jens Petit - expression templates
+     * - Jonas Jelten - various enhancements, fft, complex handling, pretty formatting
      */
     template <typename data_t>
     class DataContainer
@@ -171,10 +172,12 @@ namespace elsa
         const data_t& operator[](index_t index) const;
 
         /// return an element by n-dimensional coordinate (not bounds-checked!)
-        data_t& operator()(IndexVector_t coordinate);
+        data_t& operator()(const IndexVector_t& coordinate);
 
         /// return an element by n-dimensional coordinate as read-only (not bounds-checked!)
-        const data_t& operator()(IndexVector_t coordinate) const;
+        const data_t& operator()(const IndexVector_t& coordinate) const;
+
+        data_t at(const IndexVector_t& coordinate) const;
 
         /// return an element by its coordinates (not bounds-checked!)
         template <typename idx0_t, typename... idx_t,
@@ -264,17 +267,17 @@ namespace elsa
         /// if the datacontainer is not complex,
         /// return a copy and fill in 0 as imaginary values
         template <typename _data_t = data_t>
-        typename std::enable_if_t<not isComplex<_data_t>, DataContainer<std::complex<_data_t>>>
+        typename std::enable_if_t<not isComplex<_data_t>, DataContainer<complex<_data_t>>>
             asComplex() const
         {
-            DataContainer<std::complex<data_t>> ret{
+            DataContainer<complex<data_t>> ret{
                 *this->_dataDescriptor,
                 this->_dataHandlerType,
             };
 
             // extend with complex zero value
             for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                ret[idx] = std::complex<data_t>{(*this)[idx], 0};
+                ret[idx] = complex<data_t>{(*this)[idx], 0};
             }
 
             return ret;
@@ -367,7 +370,10 @@ namespace elsa
         /// of 1 in the last dimension (i.e. the coefficient of the last dimension is 1)
         const DataContainer<data_t> slice(index_t i) const;
 
-        /// @overload non-canst/read-write overload
+        /// @brief Slice the container in the last dimension, non-const overload
+        ///
+        /// @overload
+        /// @see slice(index_t) const
         DataContainer<data_t> slice(index_t i);
 
         /// iterator for DataContainer (random access and continuous)

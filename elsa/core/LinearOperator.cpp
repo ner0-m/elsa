@@ -366,8 +366,8 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class LinearOperator<float>;
-    template class LinearOperator<std::complex<float>>;
+    template class LinearOperator<complex<float>>;
     template class LinearOperator<double>;
-    template class LinearOperator<std::complex<double>>;
+    template class LinearOperator<complex<double>>;
 
 } // namespace elsa

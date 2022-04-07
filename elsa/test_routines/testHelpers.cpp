@@ -128,34 +128,34 @@ namespace elsa
     template bool isCwiseApprox(const DataContainer<index_t>& c, const DataContainer<index_t>& y);
     template bool isCwiseApprox(const DataContainer<float>& c, const DataContainer<float>& y);
     template bool isCwiseApprox(const DataContainer<double>& c, const DataContainer<double>& y);
-    template bool isCwiseApprox(const DataContainer<std::complex<float>>& c,
-                                const DataContainer<std::complex<float>>& y);
-    template bool isCwiseApprox(const DataContainer<std::complex<double>>& c,
-                                const DataContainer<std::complex<double>>& y);
+    template bool isCwiseApprox(const DataContainer<complex<float>>& c,
+                                const DataContainer<complex<float>>& y);
+    template bool isCwiseApprox(const DataContainer<complex<double>>& c,
+                                const DataContainer<complex<double>>& y);
 
     template bool isCwiseApprox(const DataContainer<index_t>& c, const Vector_t<index_t>& y);
     template bool isCwiseApprox(const DataContainer<float>& c, const Vector_t<float>& y);
     template bool isCwiseApprox(const DataContainer<double>& c, const Vector_t<double>& y);
-    template bool isCwiseApprox(const DataContainer<std::complex<float>>& c,
-                                const Vector_t<std::complex<float>>& y);
-    template bool isCwiseApprox(const DataContainer<std::complex<double>>& c,
-                                const Vector_t<std::complex<double>>& y);
+    template bool isCwiseApprox(const DataContainer<complex<float>>& c,
+                                const Vector_t<complex<float>>& y);
+    template bool isCwiseApprox(const DataContainer<complex<double>>& c,
+                                const Vector_t<complex<double>>& y);
 
     template bool isCwiseApprox(const DataHandler<index_t>& c, const DataHandler<index_t>& y);
     template bool isCwiseApprox(const DataHandler<float>& c, const DataHandler<float>& y);
     template bool isCwiseApprox(const DataHandler<double>& c, const DataHandler<double>& y);
-    template bool isCwiseApprox(const DataHandler<std::complex<float>>& c,
-                                const DataHandler<std::complex<float>>& y);
-    template bool isCwiseApprox(const DataHandler<std::complex<double>>& c,
-                                const DataHandler<std::complex<double>>& y);
+    template bool isCwiseApprox(const DataHandler<complex<float>>& c,
+                                const DataHandler<complex<float>>& y);
+    template bool isCwiseApprox(const DataHandler<complex<double>>& c,
+                                const DataHandler<complex<double>>& y);
 
     template bool isCwiseApprox(const DataHandler<index_t>& c, const Vector_t<index_t>& y);
     template bool isCwiseApprox(const DataHandler<float>& c, const Vector_t<float>& y);
     template bool isCwiseApprox(const DataHandler<double>& c, const Vector_t<double>& y);
-    template bool isCwiseApprox(const DataHandler<std::complex<float>>& c,
-                                const Vector_t<std::complex<float>>& y);
-    template bool isCwiseApprox(const DataHandler<std::complex<double>>& c,
-                                const Vector_t<std::complex<double>>& y);
+    template bool isCwiseApprox(const DataHandler<complex<float>>& c,
+                                const Vector_t<complex<float>>& y);
+    template bool isCwiseApprox(const DataHandler<complex<double>>& c,
+                                const Vector_t<complex<double>>& y);
 
     template bool isApprox(const DataContainer<index_t>& x, const DataContainer<index_t>& y,
                            real_t prec);
@@ -163,26 +163,26 @@ namespace elsa
                            real_t prec);
     template bool isApprox(const DataContainer<double>& x, const DataContainer<double>& y,
                            real_t prec);
-    template bool isApprox(const DataContainer<std::complex<float>>& x,
-                           const DataContainer<std::complex<float>>& y, real_t prec);
-    template bool isApprox(const DataContainer<std::complex<double>>& x,
-                           const DataContainer<std::complex<double>>& y, real_t prec);
+    template bool isApprox(const DataContainer<complex<float>>& x,
+                           const DataContainer<complex<float>>& y, real_t prec);
+    template bool isApprox(const DataContainer<complex<double>>& x,
+                           const DataContainer<complex<double>>& y, real_t prec);
 
     template bool isApprox(const DataContainer<index_t>& x, const Vector_t<index_t>& y,
                            real_t prec);
     template bool isApprox(const DataContainer<float>& x, const Vector_t<float>& y, real_t prec);
     template bool isApprox(const DataContainer<double>& x, const Vector_t<double>& y, real_t prec);
-    template bool isApprox(const DataContainer<std::complex<float>>& x,
-                           const Vector_t<std::complex<float>>& y, real_t prec);
-    template bool isApprox(const DataContainer<std::complex<double>>& x,
-                           const Vector_t<std::complex<double>>& y, real_t prec);
+    template bool isApprox(const DataContainer<complex<float>>& x,
+                           const Vector_t<complex<float>>& y, real_t prec);
+    template bool isApprox(const DataContainer<complex<double>>& x,
+                           const Vector_t<complex<double>>& y, real_t prec);
 
     template bool isApprox(const DataHandler<index_t>& x, const DataHandler<index_t>& y,
                            real_t prec);
     template bool isApprox(const DataHandler<float>& x, const DataHandler<float>& y, real_t prec);
     template bool isApprox(const DataHandler<double>& x, const DataHandler<double>& y, real_t prec);
-    template bool isApprox(const DataHandler<std::complex<float>>& x,
-                           const DataHandler<std::complex<float>>& y, real_t prec);
-    template bool isApprox(const DataHandler<std::complex<double>>& x,
-                           const DataHandler<std::complex<double>>& y, real_t prec);
+    template bool isApprox(const DataHandler<complex<float>>& x,
+                           const DataHandler<complex<float>>& y, real_t prec);
+    template bool isApprox(const DataHandler<complex<double>>& x,
+                           const DataHandler<complex<double>>& y, real_t prec);
 } // namespace elsa

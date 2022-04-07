@@ -1,53 +1,50 @@
-# Create binaries for examples in bin/examples 
+# Create binaries for examples in bin/examples
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples)
+
+function(add_example example_name example_source)
+    add_executable(${example_name} ${example_source})
+    target_link_libraries(${example_name} PRIVATE elsa::all)
+    target_compile_features(${example_name} PUBLIC cxx_std_17)
+    set_quickvec_options(${example_name} ${example_source})
+    add_dependencies(build-examples ${example_name})
+endfunction()
 
 # define a target for all examples
 add_custom_target(build-examples)
 
+# build a simple 2D reconstruction
+add_example(simple_recon2d simple_recon2d.cpp)
+
 # build the 2d example program
-add_executable(example2d example2d.cpp)
-target_link_libraries(example2d elsa::all)
-target_compile_features(example2d PUBLIC cxx_std_17)
-add_dependencies(build-examples example2d)
+add_example(example2d example2d.cpp)
 
 # build the 2d limited angle trajectory example program
-add_executable(limited_angle_example2d limited_angle_example2d.cpp limited_angle_example2d.cpp)
-target_link_libraries(limited_angle_example2d elsa::all)
-target_compile_features(limited_angle_example2d PUBLIC cxx_std_17)
-add_dependencies(build-examples limited_angle_example2d)
+add_example(limited_angle_example2d limited_angle_example2d.cpp)
 
 # build the 2d example admm program
-add_executable(example2d_admm example2d_admm.cpp)
-target_link_libraries(example2d_admm elsa::all)
-target_compile_features(example2d_admm PUBLIC cxx_std_17)
-add_dependencies(build-examples example2d_admm)
+add_example(example2d_admm example2d_admm.cpp)
 
-# add_executable(exampleMl exampleMl.cpp)
-# target_link_libraries(exampleMl elsa::all)
-# target_compile_features(exampleMl PUBLIC cxx_std_17)
-# add_dependencies(build-examples exampleMl)
+# build the shearlet example program
+add_example(shearlet_example example2d_shearlet.cpp)
 
-# add_executable(example_MNIST example_MNIST.cpp)
-# target_link_libraries(example_MNIST elsa::all)
-# target_compile_features(example_MNIST PUBLIC cxx_std_17)
-# add_dependencies(build-examples example_MNIST)
+CPMAddPackage(
+    NAME argparse
+    GITHUB_REPOSITORY p-ranav/argparse
+    GIT_TAG v2.2
+)
+
+add_example(example_argparse example_argparse.cpp)
+target_link_libraries(example_argparse PRIVATE argparse::argparse)
 
 if(ELSA_BUILD_CUDA_PROJECTORS)
-    include(CheckLanguage)
-    check_language(CUDA)
-    if(CMAKE_CUDA_COMPILER)
-        enable_language(CUDA)
-
+  include(CheckLanguage)
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
         # build the 3d example program
-        add_executable(example3d example3d.cpp)
-        target_link_libraries(example3d elsa::all)
-        target_compile_features(example3d PUBLIC cxx_std_17)
-        add_dependencies(build-examples example3d)
+        add_example(example3d example3d.cpp)
 
         # build the GPU projector speed test program
-        add_executable(speed_test speed_test.cpp)
-        target_link_libraries(speed_test elsa::all)
-        target_compile_features(speed_test PUBLIC cxx_std_17)
-        add_dependencies(build-examples speed_test)
-    endif()
+        add_example(speed_test speed_test.cpp)
+  endif()
 endif()

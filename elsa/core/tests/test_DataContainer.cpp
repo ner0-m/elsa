@@ -36,34 +36,34 @@ struct TestHelperCPU {
 };
 
 using CPUTypeTuple =
-    std::tuple<TestHelperCPU<float>, TestHelperCPU<double>, TestHelperCPU<std::complex<float>>,
-               TestHelperCPU<std::complex<double>>, TestHelperCPU<index_t>>;
+    std::tuple<TestHelperCPU<float>, TestHelperCPU<double>, TestHelperCPU<complex<float>>,
+               TestHelperCPU<complex<double>>, TestHelperCPU<index_t>>;
 
 TYPE_TO_STRING(TestHelperCPU<float>);
 TYPE_TO_STRING(TestHelperCPU<double>);
 TYPE_TO_STRING(TestHelperCPU<index_t>);
-TYPE_TO_STRING(TestHelperCPU<std::complex<float>>);
-TYPE_TO_STRING(TestHelperCPU<std::complex<double>>);
+TYPE_TO_STRING(TestHelperCPU<complex<float>>);
+TYPE_TO_STRING(TestHelperCPU<complex<double>>);
 
 TYPE_TO_STRING(DataContainer<float>);
 TYPE_TO_STRING(DataContainer<double>);
 TYPE_TO_STRING(DataContainer<index_t>);
-TYPE_TO_STRING(DataContainer<std::complex<float>>);
-TYPE_TO_STRING(DataContainer<std::complex<double>>);
+TYPE_TO_STRING(DataContainer<complex<float>>);
+TYPE_TO_STRING(DataContainer<complex<double>>);
 
-TYPE_TO_STRING(std::complex<float>);
-TYPE_TO_STRING(std::complex<double>);
+TYPE_TO_STRING(complex<float>);
+TYPE_TO_STRING(complex<double>);
 
 #ifdef ELSA_CUDA_VECTOR
 using GPUTypeTuple =
-    std::tuple<TestHelperGPU<float>, TestHelperGPU<double>, TestHelperGPU<std::complex<float>>,
-               TestHelperGPU<std::complex<double>>, TestHelperGPU<index_t>>;
+    std::tuple<TestHelperGPU<float>, TestHelperGPU<double>, TestHelperGPU<complex<float>>,
+               TestHelperGPU<complex<double>>, TestHelperGPU<index_t>>;
 
 TYPE_TO_STRING(TestHelperGPU<float>);
 TYPE_TO_STRING(TestHelperGPU<double>);
 TYPE_TO_STRING(TestHelperGPU<index_t>);
-TYPE_TO_STRING(TestHelperGPU<std::complex<float>>);
-TYPE_TO_STRING(TestHelperGPU<std::complex<double>>);
+TYPE_TO_STRING(TestHelperGPU<complex<float>>);
+TYPE_TO_STRING(TestHelperGPU<complex<double>>);
 #endif
 
 TEST_SUITE_BEGIN("core");
@@ -405,7 +405,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
         {
             auto [dcReals1, realsVec1] = generateRandomContainer<real_t>(desc, TestType::handler_t);
             auto [dcComps1, compsVec1] =
-                generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
+                generateRandomContainer<complex<real_t>>(desc, TestType::handler_t);
 
             THEN("the element-wise maximum operation works as expected for two real "
                  "DataContainers")
@@ -423,7 +423,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                  "DataContainer")
             {
                 auto [dcComps2, compsVec2] =
-                    generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
+                    generateRandomContainer<complex<real_t>>(desc, TestType::handler_t);
 
                 DataContainer dcCWiseMax = cwiseMax(dcReals1, dcComps2);
                 for (index_t i = 0; i < dcCWiseMax.getSize(); ++i)
@@ -435,7 +435,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                  "DataContainer")
             {
                 auto [dcComps2, compsVec2] =
-                    generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
+                    generateRandomContainer<complex<real_t>>(desc, TestType::handler_t);
 
                 DataContainer dcCWiseMax = cwiseMax(dcComps2, dcReals1);
                 for (index_t i = 0; i < dcCWiseMax.getSize(); ++i)
@@ -446,7 +446,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
             THEN("the element-wise maximum operation works as expected for two DataContainers")
             {
                 auto [dcComps2, compsVec2] =
-                    generateRandomContainer<std::complex<real_t>>(desc, TestType::handler_t);
+                    generateRandomContainer<complex<real_t>>(desc, TestType::handler_t);
 
                 DataContainer dcCWiseMax = cwiseMax(dcComps1, dcComps2);
                 for (index_t i = 0; i < dcCWiseMax.getSize(); ++i)
@@ -656,7 +656,7 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing creation of Maps through DataC
 
 #ifdef ELSA_CUDA_VECTOR
 TEST_CASE_TEMPLATE("DataContainer: Testing load data to GPU and vice versa", TestType, float,
-                   double, std::complex<float>, std::complex<double>, index_t)
+                   double, complex<float>, complex<double>, index_t)
 {
     GIVEN("A CPU DataContainer with random data")
     {
@@ -928,7 +928,7 @@ TEST_CASE("DataContainer: Testing iterators for DataContainer")
 }
 
 TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, float, double,
-                   std::complex<float>, std::complex<double>)
+                   complex<float>, complex<double>)
 {
     GIVEN("Two equally sized 1D data containers")
     {
@@ -1052,8 +1052,8 @@ TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, floa
     }
 }
 
-TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double,
-                   std::complex<float>, std::complex<double>)
+TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double, complex<float>,
+                   complex<double>)
 {
     // Set seed for Eigen Matrices!
     srand((unsigned int) 666);
@@ -1304,7 +1304,7 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
 }
 
 TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", data_t, float, double,
-                   std::complex<float>, std::complex<double>)
+                   complex<float>, complex<double>)
 {
     GIVEN("a one-element 2D data container")
     {

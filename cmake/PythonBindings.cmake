@@ -27,24 +27,20 @@ macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
 
         set(PY_TARGET_NAME "py${TARGET_NAME}")
 
-        if(ELSA_CUDA_VECTOR AND NOT ${HINTS_PATH} STREQUAL "")
-            get_filename_component(HINTS_NAME ${HINTS_PATH} NAME)
-            get_filename_component(HINTS_CU_NAME ${HINTS_PATH} NAME_WE)
-            set(HINTS_CU_NAME "${HINTS_CU_NAME}.cu")
-            set(HINTS_FILE "${ELSA_PYTHON_BINDINGS_PATH}/${HINTS_CU_NAME}")
-
-            add_custom_command(
-                OUTPUT ${HINTS_FILE} COMMAND ${CMAKE_COMMAND} -E copy ${HINTS_PATH} ${HINTS_FILE}
-                DEPENDS ${HINTS_PATH}
+        if (ELSA_CUDA_VECTOR)
+            set(
+                PYBIND_GENERATOR_CUDA_FLAGS --extra-arg=-isystem --extra-arg=${CUDA_TOOLKIT_INCLUDE}
+                    --extra-arg-before=-x --extra-arg-before=cuda
             )
         endif()
-
         add_custom_command(
             OUTPUT ${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME}
             COMMAND
                 pybind11_generator ${ARGN} ${ADDITIONAL_SYSTEM_INCLUDE_PATHS_FIX} --extra-arg=-isystem
-                --extra-arg=${CLANG_RESOURCE_DIR}/include --extra-arg=-std=c++17 --extra-arg=-w
-                --extra-arg=--cuda-host-only -p=${CMAKE_BINARY_DIR} --hints=${HINTS_FILE}
+                --extra-arg=${CLANG_RESOURCE_DIR}/include
+                ${PYBIND_GENERATOR_CUDA_FLAGS}
+                --extra-arg=-std=c++17 --extra-arg=-w
+                --extra-arg=--cuda-host-only -p=${CMAKE_BINARY_DIR}/tools/bindings_generation --hints=${HINTS_FILE}
                 --extra-arg=-DEIGEN_DONT_PARALLELIZE
                 -o=${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME} --pyname=${PY_TARGET_NAME}
                 ${SINGLE_MODULE_FLAGS}
@@ -64,6 +60,14 @@ macro(GENERATE_BINDINGS TARGET_NAME BINDINGS_CODE_FILENAME HINTS_PATH)
             )
             target_link_libraries(${PY_TARGET_NAME} PUBLIC ${TARGET_NAME})
             target_compile_features(${PY_TARGET_NAME} PUBLIC cxx_std_17)
+            if(ELSA_BUILD_WITH_QUICKVEC)
+                set_source_files_properties(${ELSA_PYTHON_BINDINGS_PATH}/${BINDINGS_CODE_FILENAME} PROPERTIES LANGUAGE CUDA)
+                target_compile_definitions(${PY_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
+                target_compile_features(${PY_TARGET_NAME} PUBLIC cuda_std_17)
+
+                # CMake does not pass -fopenmp to the host compiler when building with NVCC, so set manually
+                target_compile_options(${PY_TARGET_NAME} PRIVATE -Xcompiler=-fopenmp)
+            endif()
             add_dependencies(pyelsa ${PY_TARGET_NAME})
 
             file(APPEND ${ELSA_PYTHON_BINDINGS_PATH}/__init__.py "from .${PY_TARGET_NAME} import *\n")

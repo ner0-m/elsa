@@ -5,6 +5,15 @@
 namespace elsa
 {
     template <typename data_t>
+    TikhonovProblem<data_t>::TikhonovProblem(const LinearOperator<data_t>& A,
+                                             const DataContainer<data_t> b, real_t weight)
+        : Problem<data_t>{
+            L2NormPow2<data_t>(A, b),
+            RegularizationTerm<data_t>(weight, L2NormPow2<data_t>(A.getDomainDescriptor()))}
+    {
+    }
+
+    template <typename data_t>
     TikhonovProblem<data_t>::TikhonovProblem(
         const WLSProblem<data_t>& wlsProblem,
         const std::vector<RegularizationTerm<data_t>>& regTerms)
@@ -47,7 +56,7 @@ namespace elsa
     // explicit template instantiation
     template class TikhonovProblem<float>;
     template class TikhonovProblem<double>;
-    template class TikhonovProblem<std::complex<float>>;
-    template class TikhonovProblem<std::complex<double>>;
+    template class TikhonovProblem<complex<float>>;
+    template class TikhonovProblem<complex<double>>;
 
 } // namespace elsa

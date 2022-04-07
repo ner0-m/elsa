@@ -34,9 +34,8 @@ namespace elsa
 
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = Rx[i] / _delta;
-            result +=
-                _delta * _delta
-                * (std::sqrt(static_cast<data_t>(1.0) + temp * temp) - static_cast<data_t>(1.0));
+            result += _delta * _delta
+                      * (sqrt(static_cast<data_t>(1.0) + temp * temp) - static_cast<data_t>(1.0));
         }
 
         return result;
@@ -47,7 +46,7 @@ namespace elsa
     {
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = Rx[i] / _delta;
-            Rx[i] = Rx[i] / std::sqrt(static_cast<data_t>(1.0) + temp * temp);
+            Rx[i] = Rx[i] / sqrt(static_cast<data_t>(1.0) + temp * temp);
         }
     }
 
@@ -58,7 +57,7 @@ namespace elsa
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = Rx[i] / _delta;
             data_t tempSq = temp * temp;
-            data_t sqrtOnePTempSq = std::sqrt(static_cast<data_t>(1.0) + tempSq);
+            data_t sqrtOnePTempSq = sqrt(static_cast<data_t>(1.0) + tempSq);
             scaleFactors[i] =
                 (sqrtOnePTempSq - tempSq / sqrtOnePTempSq) / (static_cast<data_t>(1.0) + tempSq);
         }

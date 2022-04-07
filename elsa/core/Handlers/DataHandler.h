@@ -6,14 +6,13 @@
 #include "ExpressionPredicates.h"
 
 #ifdef ELSA_CUDA_VECTOR
-#include "Quickvec.h"
+#include "Quickvec.cuh"
 #endif
 
 #include <Eigen/Core>
 
 namespace elsa
 {
-
     class DataDescriptor;
 
     /**

@@ -2,7 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DataHandler.h"
-#include "Quickvec.h"
+#include "Quickvec.cuh"
 #include "Badge.hpp"
 
 #include <Eigen/Core>

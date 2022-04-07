@@ -44,7 +44,6 @@ namespace elsa
          *
          * @param[in] domainDescriptor describing the domain of the operator (the volume)
          * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
-         * @param[in] geometryList vector containing the geometries for the acquisition poses
          *
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).

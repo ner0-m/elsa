@@ -30,7 +30,10 @@ namespace elsa
         return squared.sum() / dc1.getSize();
     }
 
-    /// Calculate mean and standard deviation of a container
+    /// @brief Calculate mean and standard deviation of a container
+    /// @param v Any container, such as `std::vector`
+    /// @tparam Container Container type of argument (e.g. `std::vector`)
+    /// @return a pair of mean and standard deviation (of type `Conatiner::value_type`)
     template <typename Container>
     constexpr auto calculateMeanStddev(Container v)
         -> std::pair<typename Container::value_type, typename Container::value_type>
@@ -58,8 +61,8 @@ namespace elsa
      * @brief Compute the 95% confidence interval for a given number of samples `n`
      * and the mean and standard deviation of the measurements.
      *
-     * Compute it as \f$[mean - c(n) * stddev, mean + c(n) * stddev]\f$, where
-     * \f$c(n)\$ is the n-th entry in the two tails T distribution table. For \f$n > 30\f$,
+     * Compute it as \f$mean - c(n) * stddev, mean + c(n) * stddev\f$, where
+     * \f$c(n)\f$ is the n-th entry in the two tails T distribution table. For \f$n > 30\f$,
      * it is assumed that \f$n = 1.96\f$.
      *
      * @param n Number of of samples

@@ -8,6 +8,7 @@
 #include "PartitionDescriptor.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
+#include "Assertions.h"
 
 #include <utility>
 
@@ -108,26 +109,53 @@ namespace elsa
     template <typename data_t>
     data_t& DataContainer<data_t>::operator[](index_t index)
     {
+        ELSA_VERIFY(index >= 0);
+        ELSA_VERIFY(index < getSize());
+
         return (*_dataHandler)[index];
     }
 
     template <typename data_t>
     const data_t& DataContainer<data_t>::operator[](index_t index) const
     {
+        ELSA_VERIFY(index >= 0);
+        ELSA_VERIFY(index < getSize());
+
         return static_cast<const DataHandler<data_t>&>(*_dataHandler)[index];
     }
 
     template <typename data_t>
-    data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate)
+    data_t DataContainer<data_t>::at(const IndexVector_t& coordinate) const
     {
-        return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
+        const auto arr = coordinate.array();
+        if ((arr < 0).any()
+            || (arr >= _dataDescriptor->getNumberOfCoefficientsPerDimension().array()).any()) {
+            return 0;
+        }
+
+        return (*this)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
     template <typename data_t>
-    const data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate) const
+    data_t& DataContainer<data_t>::operator()(const IndexVector_t& coordinate)
     {
-        return static_cast<const DataHandler<data_t>&>(
-            *_dataHandler)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
+        // const auto arr = coordinate.array();
+        // const auto shape = _dataDescriptor->getNumberOfCoefficientsPerDimension().array();
+        // ELSA_VERIFY((arr >= 0).all());
+        // ELSA_VERIFY((arr < shape).all());
+
+        return (*this)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
+    }
+
+    template <typename data_t>
+    const data_t& DataContainer<data_t>::operator()(const IndexVector_t& coordinate) const
+    {
+        // const auto arr = coordinate.array();
+        // const auto shape = _dataDescriptor->getNumberOfCoefficientsPerDimension().array();
+        // ELSA_VERIFY((arr >= 0).all());
+        // ELSA_VERIFY((arr < shape).all());
+
+        return (*this)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
     template <typename data_t>
@@ -660,34 +688,34 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
-    template class DataContainer<std::complex<float>>;
+    template class DataContainer<complex<float>>;
     template class DataContainer<double>;
-    template class DataContainer<std::complex<double>>;
+    template class DataContainer<complex<double>>;
     template class DataContainer<index_t>;
 
     template DataContainer<float> concatenate<float>(const DataContainer<float>&,
                                                      const DataContainer<float>&);
     template DataContainer<double> concatenate<double>(const DataContainer<double>&,
                                                        const DataContainer<double>&);
-    template DataContainer<std::complex<float>>
-        concatenate<std::complex<float>>(const DataContainer<std::complex<float>>&,
-                                         const DataContainer<std::complex<float>>&);
-    template DataContainer<std::complex<double>>
-        concatenate<std::complex<double>>(const DataContainer<std::complex<double>>&,
-                                          const DataContainer<std::complex<double>>&);
+    template DataContainer<complex<float>>
+        concatenate<complex<float>>(const DataContainer<complex<float>>&,
+                                    const DataContainer<complex<float>>&);
+    template DataContainer<complex<double>>
+        concatenate<complex<double>>(const DataContainer<complex<double>>&,
+                                     const DataContainer<complex<double>>&);
 
     template DataContainer<float> fftShift2D<float>(DataContainer<float>);
-    template DataContainer<std::complex<float>>
-        fftShift2D<std::complex<float>>(DataContainer<std::complex<float>>);
+    template DataContainer<complex<float>>
+        fftShift2D<complex<float>>(DataContainer<complex<float>>);
     template DataContainer<double> fftShift2D<double>(DataContainer<double>);
-    template DataContainer<std::complex<double>>
-        fftShift2D<std::complex<double>>(DataContainer<std::complex<double>>);
+    template DataContainer<complex<double>>
+        fftShift2D<complex<double>>(DataContainer<complex<double>>);
 
     template DataContainer<float> ifftShift2D<float>(DataContainer<float>);
-    template DataContainer<std::complex<float>>
-        ifftShift2D<std::complex<float>>(DataContainer<std::complex<float>>);
+    template DataContainer<complex<float>>
+        ifftShift2D<complex<float>>(DataContainer<complex<float>>);
     template DataContainer<double> ifftShift2D<double>(DataContainer<double>);
-    template DataContainer<std::complex<double>>
-        ifftShift2D<std::complex<double>>(DataContainer<std::complex<double>>);
+    template DataContainer<complex<double>>
+        ifftShift2D<complex<double>>(DataContainer<complex<double>>);
 
 } // namespace elsa

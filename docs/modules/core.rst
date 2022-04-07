@@ -77,6 +77,8 @@ Expression
 
 
 Utilities
-----------
+=========
+
 .. doxygenclass:: elsa::Badge
+.. doxygenfile:: Statistics.hpp
 

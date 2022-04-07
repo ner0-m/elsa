@@ -22,10 +22,6 @@ namespace elsa
      */
     class TraverseAABB
     {
-    private:
-        /// convenience type def for ray
-        using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
-
     public:
         /**
          * @brief Constructor for traversal, accepting bounding box and ray
@@ -33,7 +29,7 @@ namespace elsa
          * @param[in] aabb axis-aligned boundary box describing the volume
          * @param[in] r the ray to be traversed
          */
-        TraverseAABB(const BoundingBox& aabb, const Ray& r);
+        TraverseAABB(const BoundingBox& aabb, const RealRay_t& r);
 
         /**
          * @brief Update the traverser status by taking the next traversal step
@@ -88,7 +84,7 @@ namespace elsa
             RealVector_t(_aabb._dim).setConstant(std::numeric_limits<real_t>::max())};
 
         /// compute the entry and exit points of ray r with the volume (aabb)
-        void calculateAABBIntersections(const Ray& r);
+        void calculateAABBIntersections(const RealRay_t& r);
         /// setup the step directions (which is basically the sign of the ray direction rd)
         void initStepDirection(const RealVector_t& rd);
         /// select the closest voxel to the entry point

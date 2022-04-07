@@ -35,7 +35,7 @@ namespace elsa
     // explicit template instantiation
     template class Solver<float>;
     template class Solver<double>;
-    template class Solver<std::complex<float>>;
-    template class Solver<std::complex<double>>;
+    template class Solver<complex<float>>;
+    template class Solver<complex<double>>;
 
 } // namespace elsa
