@@ -1,12 +1,12 @@
 /**
- * @file test_Metrics.cpp
+ * @file test_Statistics.cpp
  *
- * @brief Tests for Metrics header
+ * @brief Tests for Statistics header
  *
  * @author Andi Braimllari
  */
 
-#include "Metrics.hpp"
+#include "Statistics.h"
 #include "DataContainer.h"
 #include "VolumeDescriptor.h"
 
@@ -17,8 +17,8 @@ using namespace elsa;
 using namespace doctest;
 
 TEST_SUITE_BEGIN("core");
-
-TEST_CASE_TEMPLATE("Metrics: Testing the metrics", TestType, float, double)
+// TODO do the Statistics' tests here
+TEST_CASE_TEMPLATE("Statistics: Testing the metrics", TestType, float, double)
 {
     GIVEN("a DataContainer")
     {
@@ -33,6 +33,8 @@ TEST_CASE_TEMPLATE("Metrics: Testing the metrics", TestType, float, double)
 
         WHEN("running the Relative Error")
         {
+            Statistics statistics;
+
             long double relErr = relativeError<TestType>(dataCont1, dataCont2);
             THEN("it produces the correct result")
             {

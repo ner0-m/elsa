@@ -1,6 +1,6 @@
 #include "elsa.h"
 #include "LutProjector.h"
-#include "Utilities/Statistics.hpp"
+#include "Utilities/Statistics.h"
 #include "IO.h"
 #include "spdlog/fmt/bundled/core.h"
 
