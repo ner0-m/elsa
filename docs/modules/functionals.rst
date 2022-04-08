@@ -40,6 +40,11 @@ L1Norm
 
 .. doxygenclass:: elsa::L1Norm
 
+WeightedL1Norm
+==============
+
+.. doxygenclass:: elsa::WeightedL1Norm
+
 L2NormPow2
 ==========
 
