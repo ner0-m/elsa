@@ -8,11 +8,9 @@ namespace elsa
         : Functional<data_t>(weightingOp.getDataDescriptor()), _weightingOp{weightingOp}
     {
         // sanity check
-        for (data_t weight : weightingOp) {
-            if (weight < 0) {
-                throw InvalidArgumentError(
-                    "WeightedL1Norm: all weights in the w vector should be >= 0");
-            }
+        if (weightingOp.minElement() < 0) {
+            throw InvalidArgumentError(
+                "WeightedL1Norm: all weights in the w vector should be >= 0");
         }
     }
 
@@ -28,11 +26,9 @@ namespace elsa
                 "WeightedL1Norm: sizes of residual and weighting operator do not match");
         }
         // sanity check
-        for (data_t weight : weightingOp) {
-            if (weight < 0) {
-                throw InvalidArgumentError(
-                    "WeightedL1Norm: all weights in the w vector should be >= 0");
-            }
+        if (weightingOp.minElement() < 0) {
+            throw InvalidArgumentError(
+                "WeightedL1Norm: all weights in the w vector should be >= 0");
         }
     }
 

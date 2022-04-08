@@ -2,6 +2,7 @@
 
 #include "DetectorDescriptor.h"
 #include "TypeCasts.hpp"
+#include "elsaDefines.h"
 
 namespace elsa
 {
@@ -14,8 +15,6 @@ namespace elsa
      */
     class PlanarDetectorDescriptor : public DetectorDescriptor
     {
-        using DetectorDescriptor::Ray;
-
     public:
         PlanarDetectorDescriptor() = delete;
 
@@ -39,10 +38,10 @@ namespace elsa
         using DetectorDescriptor::computeRayFromDetectorCoord;
 
         /// Override function to compute rays for a planar detector
-        Ray computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
-                                        const index_t poseIndex) const override;
+        RealRay_t computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
+                                              const index_t poseIndex) const override;
 
-        RealVector_t computeDetectorCoordFromRay(const Ray& ray,
+        RealVector_t computeDetectorCoordFromRay(const RealRay_t& ray,
                                                  const index_t poseIndex) const override;
 
     private:

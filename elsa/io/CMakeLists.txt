@@ -1,8 +1,8 @@
 # list all the headers of the module
-set(MODULE_HEADERS EDFHandler.h MHDHandler.h PGMHandler.h ioUtils.h)
+set(MODULE_HEADERS EDFHandler.h MHDHandler.h PGMHandler.h IO.h ioUtils.h)
 
 # list all the code files of the module
-set(MODULE_SOURCES EDFHandler.cpp MHDHandler.cpp PGMHandler.cpp ioUtils.cpp)
+set(MODULE_SOURCES EDFHandler.cpp MHDHandler.cpp PGMHandler.cpp IO.cpp ioUtils.cpp)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)

@@ -25,7 +25,37 @@ TEST_CASE_TEMPLATE("WeightedL1Norm: Testing the weighted, l1 norm functional", T
 {
     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
 
-    GIVEN("just data (no residual)")
+    GIVEN("a linear residual and weights with a non-positive element")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 25, 27;
+        VolumeDescriptor dd(numCoeff);
+
+        Vector randomData(dd.getNumberOfCoefficients());
+        randomData.setRandom();
+        DataContainer<TestType> b(dd, randomData);
+
+        Identity<TestType> A(dd);
+
+        LinearResidual<TestType> linRes(A, b);
+
+        // scaling operator
+        DataContainer<TestType> scaleFactors(dd);
+        scaleFactors = 1;
+        scaleFactors[3] = -8;
+
+        WHEN("instantiating an WeightedL1Norm object")
+        {
+            THEN("an InvalidArgumentError is thrown")
+            {
+                REQUIRE_THROWS_AS(WeightedL1Norm<TestType>{scaleFactors}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(WeightedL1Norm<TestType>(linRes, scaleFactors),
+                                  InvalidArgumentError);
+            }
+        }
+    }
+
+    GIVEN("weights of value 1 and no residual")
     {
         IndexVector_t numCoeff(2);
         numCoeff << 7, 17;
@@ -34,7 +64,7 @@ TEST_CASE_TEMPLATE("WeightedL1Norm: Testing the weighted, l1 norm functional", T
         DataContainer<TestType> scaleFactors(dd);
         scaleFactors = 1;
 
-        WHEN("instantiating")
+        WHEN("instantiating an WeightedL1Norm object")
         {
             WeightedL1Norm<TestType> func(scaleFactors);
 
@@ -75,7 +105,41 @@ TEST_CASE_TEMPLATE("WeightedL1Norm: Testing the weighted, l1 norm functional", T
         }
     }
 
-    GIVEN("a residual with data")
+    GIVEN("different sizes of the linear residual and weighting operator")
+    {
+        // linear residual
+        IndexVector_t numCoeff(2);
+        numCoeff << 47, 11;
+        VolumeDescriptor dd(numCoeff);
+
+        // linear residual
+        IndexVector_t otherNumCoeff(3);
+        otherNumCoeff << 15, 24, 4;
+        VolumeDescriptor otherDD(otherNumCoeff);
+
+        Vector randomData(dd.getNumberOfCoefficients());
+        randomData.setRandom();
+        DataContainer<TestType> b(dd, randomData);
+
+        Identity<TestType> A(dd);
+
+        LinearResidual<TestType> linRes(A, b);
+
+        // scaling operator
+        DataContainer<TestType> scaleFactors(otherDD);
+        scaleFactors = 1;
+
+        WHEN("instantiating an WeightedL1Norm object")
+        {
+            THEN("an InvalidArgumentError is thrown")
+            {
+                REQUIRE_THROWS_AS(WeightedL1Norm<TestType>(linRes, scaleFactors),
+                                  InvalidArgumentError);
+            }
+        }
+    }
+
+    GIVEN("weights of value 1 and a linear residual")
     {
         // linear residual
         IndexVector_t numCoeff(2);
@@ -94,7 +158,7 @@ TEST_CASE_TEMPLATE("WeightedL1Norm: Testing the weighted, l1 norm functional", T
         DataContainer<TestType> scaleFactors(dd);
         scaleFactors = 1;
 
-        WHEN("instantiating")
+        WHEN("instantiating an WeightedL1Norm object")
         {
             WeightedL1Norm<TestType> func(linRes, scaleFactors);
 

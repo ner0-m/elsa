@@ -3,6 +3,7 @@
 #include <complex>
 #include <cstddef>
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <type_traits>
 
 #ifdef ELSA_CUDA_VECTOR
@@ -35,6 +36,13 @@ namespace elsa
 
     /// global type for matrices of real numbers
     using RealMatrix_t = Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic>;
+
+    /// global type alias for rays
+    using RealRay_t = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
+
+    /// global type alias for rays
+    template <typename data_t>
+    using Ray_t = Eigen::ParametrizedLine<data_t, Eigen::Dynamic>;
 
     /// template global constexpr for the number pi
     template <typename T>

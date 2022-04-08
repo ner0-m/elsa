@@ -4,7 +4,6 @@
 
 namespace elsa
 {
-    // TODO improve
     /**
      * @brief Class representing a weighted l1 norm functional.
      *
