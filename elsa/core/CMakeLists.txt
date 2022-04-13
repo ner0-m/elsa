@@ -10,7 +10,6 @@ set(MODULE_HEADERS
     Utilities/DataContainerFormatter.hpp
     Utilities/FormatConfig.h
     Utilities/Math.hpp
-    Utilities/Statistics.h
     Utilities/TypeCasts.hpp
     Descriptors/DataDescriptor.h
     Descriptors/DescriptorUtils.h
@@ -43,7 +42,6 @@ set(MODULE_SOURCES
     Utilities/Assertions.cpp
     Descriptors/DataDescriptor.cpp
     Descriptors/VolumeDescriptor.cpp
-    Utilities/Statistics.cpp
     Descriptors/PlanarDetectorDescriptor.cpp
     Descriptors/RandomBlocksDescriptor.cpp
     Descriptors/DescriptorUtils.cpp

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Statistics.h"
+#include "Math.hpp"
 #include "SetupHelpers.h"
 #include "NoiseGenerators.h"
 #include "LoggingHelpers.h"

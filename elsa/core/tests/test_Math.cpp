@@ -1,6 +1,9 @@
 #include "doctest/doctest.h"
 
 #include "Math.hpp"
+#include "VolumeDescriptor.h"
+
+#include <testHelpers.h>
 
 TEST_SUITE_BEGIN("Math");
 
@@ -58,6 +61,56 @@ TEST_CASE("Math::heaviside")
             CHECK_EQ(res, 0);
         } else if (linspace[i] > 0) {
             CHECK_EQ(res, 1);
+        }
+    }
+}
+
+TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
+{
+    GIVEN("a DataContainer")
+    {
+        IndexVector_t sizeVector(2);
+        sizeVector << 2, 4;
+        VolumeDescriptor volDescr(sizeVector);
+
+        Vector_t<TestType> vect1(volDescr.getNumberOfCoefficients());
+        vect1 << 4, 2, 0.7f, 1, 0, 9, 53, 8;
+
+        Vector_t<TestType> vect2(volDescr.getNumberOfCoefficients());
+        vect2 << 5, 1, 6, 12, 22, 23, 9, 9;
+
+        DataContainer<TestType> dataCont1(volDescr, vect1);
+
+        DataContainer<TestType> dataCont2(volDescr, vect2);
+
+        WHEN("running the Mean Squared Error")
+        {
+            auto meanSqErr = statistics::meanSquaredError<TestType>(dataCont1, dataCont2);
+            THEN("it produces the correct result")
+            {
+                REQUIRE_UNARY(checkApproxEq(meanSqErr, 346.01125f));
+            }
+        }
+
+        WHEN("running the Relative Error")
+        {
+            auto relErr = statistics::relativeError<TestType>(dataCont1, dataCont2);
+            THEN("it produces the correct result")
+            {
+                REQUIRE_UNARY(checkApproxEq(relErr, 1.4157718f));
+            }
+        }
+
+        WHEN("running the Peak Signal-to-Noise Ratio")
+        {
+            auto dataRange = static_cast<TestType>(255);
+            auto psnr =
+                statistics::peakSignalToNoiseRatio<TestType>(dataCont1, dataCont2, dataRange);
+            auto expectedpsnr = static_cast<TestType>(22.73990);
+            THEN("it produces the correct result")
+            {
+                REQUIRE_UNARY(checkApproxEq(psnr, expectedpsnr));
+            }
         }
     }
 }
