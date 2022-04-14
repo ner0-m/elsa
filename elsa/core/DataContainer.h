@@ -367,14 +367,15 @@ namespace elsa
         /// be a part of the x-y plane.
         ///
         /// A slice is always the same dimension as the original DataContainer, but with a thickness
-        /// of 1 in the last dimension (i.e. the coefficient of the last dimension is 1)
-        const DataContainer<data_t> slice(index_t i) const;
+        /// of @p thickness in the last dimension (i.e. the coefficient of the last dimension
+        /// is @p thickness), by default set to 1.
+        const DataContainer<data_t> slice(index_t i, index_t thickness = 1) const;
 
         /// @brief Slice the container in the last dimension, non-const overload
         ///
         /// @overload
         /// @see slice(index_t) const
-        DataContainer<data_t> slice(index_t i);
+        DataContainer<data_t> slice(index_t i, index_t thickness = 1);
 
         /// iterator for DataContainer (random access and continuous)
         using iterator = DataContainerIterator<DataContainer<data_t>>;

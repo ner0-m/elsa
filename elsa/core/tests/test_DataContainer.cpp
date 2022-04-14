@@ -1078,7 +1078,7 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             for (int i = 0; i < size; ++i) {
                 auto slice = dc.slice(i);
 
-                THEN("The the slice is a 2D slice of \"thickness\" 1")
+                THEN("The slice is a 2D slice of \"thickness\" 1")
                 {
                     REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 2);
 
@@ -1094,6 +1094,35 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
                     auto vecSlice = randVec.segment(i * size, size);
                     for (int j = 0; j < size; ++j) {
                         REQUIRE_UNARY(checkApproxEq(slice(j, 0), vecSlice[j]));
+                    }
+                }
+            }
+        }
+
+        WHEN("Accessing all the slices of \"thickness\" 4")
+        {
+            index_t thickness = 4;
+            for (index_t i = 0; i <= (size - thickness); i += thickness) {
+                auto slice = dc.slice(i, thickness);
+
+                THEN("The slice is a 2D slice of \"thickness\" 4")
+                {
+                    REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 2);
+
+                    auto coeffs = slice.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+                    auto expectedCoeffs = IndexVector_t(2);
+                    expectedCoeffs << size, thickness;
+                    REQUIRE_EQ(coeffs, expectedCoeffs);
+                }
+
+                THEN("All values are the same as of the original DataContainer")
+                {
+                    // check that it's read correctly
+                    for (int j = 0; j < size; ++j) {
+                        for (int q = 0; q < thickness; ++q) {
+                            auto vecSlice = randVec.segment((i + q) * size, thickness * size);
+                            REQUIRE_UNARY(checkApproxEq(slice(j, q), vecSlice[j]));
+                        }
                     }
                 }
             }
@@ -1118,7 +1147,7 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             for (int i = 0; i < size; ++i) {
                 auto slice = dc.slice(i);
 
-                THEN("The the slice is a 3D slice of \"thickness\" 1")
+                THEN("The slice is a 3D slice of \"thickness\" 1")
                 {
                     REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 3);
 
