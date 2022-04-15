@@ -610,6 +610,20 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t> clip(DataContainer<data_t> dc, data_t min, data_t max)
+    {
+        for (int i = 0; i < dc.getSize(); ++i) {
+            if (dc[i] < min) {
+                dc[i] = min;
+            } else if (dc[i] > max) {
+                dc[i] = max;
+            }
+        }
+
+        return dc;
+    }
+
+    template <typename data_t>
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
                                       const DataContainer<data_t>& dc2)
     {
@@ -692,6 +706,9 @@ namespace elsa
     template class DataContainer<double>;
     template class DataContainer<complex<double>>;
     template class DataContainer<index_t>;
+
+    template DataContainer<float> clip<float>(DataContainer<float> dc, float min, float max);
+    template DataContainer<double> clip<double>(DataContainer<double> dc, double min, double max);
 
     template DataContainer<float> concatenate<float>(const DataContainer<float>&,
                                                      const DataContainer<float>&);
