@@ -469,7 +469,8 @@ namespace elsa
             return *this;
         }
 
-        DataContainer<data_t> partitionedDC = viewAs(PartitionDescriptor(desc, sizeOfLastDim));
+        PartitionDescriptor partitionedDescr(desc, sizeOfLastDim);
+        DataContainer<data_t> partitionedDC = viewAs(partitionedDescr);
 
         if (thickness == 1) {
             return partitionedDC.getBlock(i);
@@ -478,16 +479,15 @@ namespace elsa
             auto thickCoeffsPerDim = coeffsPerDim;
             thickCoeffsPerDim(coeffsPerDim.size() - 1) = thickness;
 
-            VolumeDescriptor thickVolDescr(thickCoeffsPerDim, desc.getSpacingPerDimension());
+            PartitionDescriptor thickPartitionedDescr(
+                VolumeDescriptor{thickCoeffsPerDim, desc.getSpacingPerDimension()}, thickness);
 
-            DataContainer<data_t> thickPartitionedDC(PartitionDescriptor(thickVolDescr, thickness));
+            index_t startIndex = partitionedDescr.getOffsetOfBlock(i);
+            index_t thickBlockSize = thickPartitionedDescr.getNumberOfCoefficients();
 
-            // now set the slices
-            for (index_t j = 0; j < thickness; ++j) {
-                thickPartitionedDC.getBlock(j) = partitionedDC.getBlock(i++);
-            }
-
-            return thickPartitionedDC;
+            return DataContainer<data_t>{thickPartitionedDescr,
+                                         _dataHandler->getBlock(startIndex, thickBlockSize),
+                                         _dataHandlerType};
         }
     }
 

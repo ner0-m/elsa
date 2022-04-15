@@ -1268,6 +1268,62 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             }
         }
 
+        WHEN("Setting the fifth slice to some random data using a 3D DataContainer of "
+             "\"thickness\" 4")
+        {
+            index_t thickness = 4;
+            index_t sliceIndex = 5;
+            Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size * thickness);
+            const DataContainer slice(VolumeDescriptor({size, size, thickness}), randVec);
+
+            dc.slice(sliceIndex, thickness) = slice;
+            THEN("The first 4 slices are still zero")
+            {
+                for (int k = 0; k < sliceIndex; ++k) {
+                    for (int j = 0; j < size; ++j) {
+                        for (int i = 0; i < size; ++i) {
+                            data_t val = dc(i, j, k);
+
+                            INFO("Expected all slices but the first to be ", data_t{0},
+                                 " but it's ", val, " (at (", i, ", ", j, ", 0))");
+                            REQUIRE_UNARY(checkApproxEq(val, 0));
+                        }
+                    }
+                }
+            }
+
+            THEN("The four slices are set correctly")
+            {
+                for (int k = sliceIndex; k < sliceIndex + thickness; ++k) {
+                    for (int j = 0; j < size; ++j) {
+                        for (int i = 0; i < size; ++i) {
+                            data_t val = dc(i, j, k);
+                            auto expected = randVec[i + j * size + (k - sliceIndex) * size * size];
+                            INFO("Expected slice 0 to be ", expected, " but it's ", val, " (at (",
+                                 i, ", ", j, ", 0))");
+                            REQUIRE_UNARY(checkApproxEq(val, expected));
+                        }
+                    }
+                }
+            }
+
+            THEN("The last 11 slices are still zero")
+            {
+                // Check last slices
+                for (int k = 9; k < size; ++k) {
+                    for (int j = 0; j < size; ++j) {
+                        for (int i = 0; i < size; ++i) {
+                            data_t val = dc(i, j, k);
+
+                            INFO("Expected all slices but the first to be ", data_t{0},
+                                 " but it's ", val, " (at (", i, ", ", j, ", 0))");
+                            REQUIRE_UNARY(checkApproxEq(val, 0));
+                        }
+                    }
+                }
+            }
+        }
+
         WHEN("Setting the first slice to some random data using a 2D DataContainer")
         {
             Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size);
