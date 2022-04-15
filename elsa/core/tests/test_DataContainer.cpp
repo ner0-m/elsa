@@ -1073,6 +1073,11 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             REQUIRE_THROWS_AS(dc.slice(20), LogicError);
         }
 
+        THEN("Accessing an out of bounds thick slice throws")
+        {
+            REQUIRE_THROWS_AS(dc.slice(19, 2), LogicError);
+        }
+
         WHEN("Accessing all the slices")
         {
             for (int i = 0; i < size; ++i) {
@@ -1142,6 +1147,11 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             REQUIRE_THROWS_AS(dc.slice(20), LogicError);
         }
 
+        THEN("Accessing an out of bounds thick slice throws")
+        {
+            REQUIRE_THROWS_AS(dc.slice(19, 2), LogicError);
+        }
+
         WHEN("Accessing all the slices")
         {
             for (int i = 0; i < size; ++i) {
@@ -1169,6 +1179,38 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
                 }
             }
         }
+
+        WHEN("Accessing all the slices of \"thickness\" 4")
+        {
+            index_t thickness = 4;
+            for (int i = 0; i <= (size - thickness); i += thickness) {
+                auto slice = dc.slice(i, thickness);
+
+                THEN("The slice is a 3D slice of \"thickness\" 4")
+                {
+                    REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 3);
+
+                    auto coeffs = slice.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+                    auto expectedCoeffs = IndexVector_t(3);
+                    expectedCoeffs << size, size, thickness;
+                    REQUIRE_EQ(coeffs, expectedCoeffs);
+                }
+
+                THEN("All values are the same as of the original DataContainer")
+                {
+                    // Check that it's read correctly
+                    for (int q = 0; q < thickness; ++q) {
+                        auto vecSlice = randVec.segment((i + q) * size * size, size * size);
+                        for (int j = 0; j < size; ++j) {
+                            for (int k = 0; k < size; ++k) {
+                                REQUIRE_UNARY(
+                                    checkApproxEq(slice(k, j, q), vecSlice[k + j * size]));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     GIVEN("A non-const 3D DataContainer")
@@ -1184,6 +1226,11 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
         THEN("Accessing an out of bounds slice throws")
         {
             REQUIRE_THROWS_AS(dc.slice(20), LogicError);
+        }
+
+        THEN("Accessing an out of bounds thick slice throws")
+        {
+            REQUIRE_THROWS_AS(dc.slice(19, 2), LogicError);
         }
 
         WHEN("Setting the first slice to 1")
@@ -1310,7 +1357,7 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             THEN("The last 11 slices are still zero")
             {
                 // Check last slices
-                for (int k = 9; k < size; ++k) {
+                for (int k = sliceIndex + thickness; k < size; ++k) {
                     for (int j = 0; j < size; ++j) {
                         for (int i = 0; i < size; ++i) {
                             data_t val = dc(i, j, k);
