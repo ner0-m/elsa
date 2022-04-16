@@ -11,6 +11,7 @@
 #include "Assertions.h"
 
 #include <utility>
+#include <algorithm>
 
 namespace elsa
 {
@@ -612,13 +613,15 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> clip(DataContainer<data_t> dc, data_t min, data_t max)
     {
-        for (int i = 0; i < dc.getSize(); ++i) {
-            if (dc[i] < min) {
-                dc[i] = min;
-            } else if (dc[i] > max) {
-                dc[i] = max;
+        std::transform(dc.begin(), dc.end(), dc.begin(), [&](auto x) {
+            if (x < min) {
+                return min;
+            } else if (x > max) {
+                return max;
+            } else {
+                return x;
             }
-        }
+        });
 
         return dc;
     }
