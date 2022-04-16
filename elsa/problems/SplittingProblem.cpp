@@ -23,27 +23,6 @@ namespace elsa
 
     template <typename data_t>
     SplittingProblem<data_t>::SplittingProblem(const Functional<data_t>& f,
-                                               const RegularizationTerm<data_t>& g,
-                                               const DataDescriptor& rangeDescriptorOfConstraint)
-        : Problem<data_t>(f, g), _f{f.clone()}, _g{g}
-    {
-        const DataDescriptor& dd = g.getFunctional().getDomainDescriptor();
-        if (dd != g.getFunctional().getDomainDescriptor()) {
-            throw InvalidArgumentError("SplittingProblem: reg. term has different domain "
-                                       "descriptor of functional, use another constructor to "
-                                       "explicitly build the constraint instead");
-        }
-
-        Identity<data_t> A(f.getDomainDescriptor(), rangeDescriptorOfConstraint);
-        Scaling<data_t> B(g.getFunctional().getDomainDescriptor(), rangeDescriptorOfConstraint, -1);
-        DataContainer<data_t> c(rangeDescriptorOfConstraint);
-        c = 0;
-        Constraint<data_t> constraint(A, B, c);
-        _constraint = constraint.clone();
-    }
-
-    template <typename data_t>
-    SplittingProblem<data_t>::SplittingProblem(const Functional<data_t>& f,
                                                const RegularizationTerm<data_t>& g)
         : SplittingProblem<data_t>(f, std::vector{g})
     {

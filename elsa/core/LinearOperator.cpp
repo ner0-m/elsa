@@ -259,6 +259,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    std::optional<data_t> LinearOperator<data_t>::getScalar()
+    {
+        return _scalar;
+    }
+
+    template <typename data_t>
     LinearOperator<data_t>* LinearOperator<data_t>::cloneImpl() const
     {
         if (_isLeaf)
@@ -270,7 +276,7 @@ namespace elsa
             }
 
             if (_mode == CompositeMode::SCALAR_MULT) {
-                return new LinearOperator<data_t>(*_rhs, _isAdjoint);
+                return new LinearOperator<data_t>(*this);
             }
         }
 

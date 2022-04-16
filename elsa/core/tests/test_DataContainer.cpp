@@ -927,6 +927,150 @@ TEST_CASE("DataContainer: Testing iterators for DataContainer")
     }
 }
 
+TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
+{
+    GIVEN("some 1D vectors")
+    {
+        index_t size = 7;
+        IndexVector_t numCoeff(1);
+        numCoeff << size;
+        VolumeDescriptor desc(numCoeff);
+
+        data_t min = 6;
+        data_t max = 19;
+
+        Vector_t<data_t> dataVec1(desc.getNumberOfCoefficients());
+        dataVec1 << 6, 10, 7, 18, 10, 11, 9;
+        Vector_t<data_t> expectedDataVec1(desc.getNumberOfCoefficients());
+        expectedDataVec1 << 6, 10, 7, 18, 10, 11, 9;
+
+        Vector_t<data_t> dataVec2(desc.getNumberOfCoefficients());
+        dataVec2 << 4, -23, 7, 18, 18, 10, 10;
+        Vector_t<data_t> expectedDataVec2(desc.getNumberOfCoefficients());
+        expectedDataVec2 << min, min, 7, 18, 18, 10, 10;
+
+        Vector_t<data_t> dataVec3(desc.getNumberOfCoefficients());
+        dataVec3 << 14, 23, 7, 18, 20, 10, 10;
+        Vector_t<data_t> expectedDataVec3(desc.getNumberOfCoefficients());
+        expectedDataVec3 << 14, max, 7, 18, max, 10, 10;
+
+        Vector_t<data_t> dataVec4(desc.getNumberOfCoefficients());
+        dataVec4 << 1, 23, 5, 28, 20, 30, 0;
+        Vector_t<data_t> expectedDataVec4(desc.getNumberOfCoefficients());
+        expectedDataVec4 << min, max, min, max, max, max, min;
+
+        WHEN("creating a data container out of a vector within bounds")
+        {
+            DataContainer dc(desc, dataVec1);
+            auto clipped = clip(dc, min, max);
+
+            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            {
+                REQUIRE_EQ(clipped.getSize(), size);
+            }
+
+            THEN("the values correspond to the original DataContainers")
+            {
+                for (int i = 0; i < size; ++i) {
+                    INFO("Error at position: ", i);
+                    REQUIRE_EQ(clipped[i], expectedDataVec1[i]);
+                }
+            }
+        }
+
+        WHEN("creating a data container out of a vector within or lower than the bounds")
+        {
+            DataContainer dc(desc, dataVec2);
+            auto clipped = clip(dc, min, max);
+
+            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            {
+                REQUIRE_EQ(clipped.getSize(), size);
+            }
+
+            THEN("the values correspond to the original DataContainers")
+            {
+                for (int i = 0; i < size; ++i) {
+                    INFO("Error at position: ", i);
+                    REQUIRE_EQ(clipped[i], expectedDataVec2[i]);
+                }
+            }
+        }
+
+        WHEN("creating a data container out of a vector within or higher than the bounds")
+        {
+            DataContainer dc(desc, dataVec3);
+            auto clipped = clip(dc, min, max);
+
+            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            {
+                REQUIRE_EQ(clipped.getSize(), size);
+            }
+
+            THEN("the values correspond to the original DataContainers")
+            {
+                for (int i = 0; i < size; ++i) {
+                    INFO("Error at position: ", i);
+                    REQUIRE_EQ(clipped[i], expectedDataVec3[i]);
+                }
+            }
+        }
+
+        WHEN("creating a data container out of a vector outside the bounds")
+        {
+            DataContainer dc(desc, dataVec4);
+            auto clipped = clip(dc, min, max);
+
+            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            {
+                REQUIRE_EQ(clipped.getSize(), size);
+            }
+
+            THEN("the values correspond to the original DataContainers")
+            {
+                for (int i = 0; i < size; ++i) {
+                    INFO("Error at position: ", i);
+                    REQUIRE_EQ(clipped[i], expectedDataVec4[i]);
+                }
+            }
+        }
+    }
+
+    GIVEN("a 2D data container")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 3, 2;
+        VolumeDescriptor desc(numCoeff);
+
+        data_t min = 0;
+        data_t max = 8;
+
+        Vector_t<data_t> dataVec(desc.getNumberOfCoefficients());
+        dataVec << -19, -23, 7, 8, 20, 1;
+        Vector_t<data_t> expectedDataVec(desc.getNumberOfCoefficients());
+        expectedDataVec << min, min, 7, 8, max, 1;
+
+        WHEN("creating a data container out of a vector within and outside of both bounds")
+        {
+            DataContainer dc(desc, dataVec);
+            auto clipped = clip(dc, min, max);
+
+            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            {
+                REQUIRE_EQ(clipped.getSize(), desc.getNumberOfCoefficients());
+            }
+
+            THEN("the values correspond to the original DataContainers")
+            {
+                for (int i = 0; i < desc.getNumberOfCoefficients(); ++i) {
+                    INFO("Error at position: ", i);
+                    REQUIRE_EQ(clipped[i], expectedDataVec[i]);
+                }
+            }
+        }
+    }
+}
+
 TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, float, double,
                    complex<float>, complex<double>)
 {
@@ -1078,7 +1222,7 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             for (int i = 0; i < size; ++i) {
                 auto slice = dc.slice(i);
 
-                THEN("The the slice is a 2D slice of \"thickness\" 1")
+                THEN("The slice is a 2D slice of \"thickness\" 1")
                 {
                     REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 2);
 
@@ -1094,6 +1238,35 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
                     auto vecSlice = randVec.segment(i * size, size);
                     for (int j = 0; j < size; ++j) {
                         REQUIRE_UNARY(checkApproxEq(slice(j, 0), vecSlice[j]));
+                    }
+                }
+            }
+        }
+
+        WHEN("Accessing all the slices of \"thickness\" 2")
+        {
+            index_t thickness = 2;
+            for (index_t i = 0; i <= (size - thickness); i += thickness) {
+                auto slice = dc.slice(i, thickness);
+
+                THEN("The slice is a 2D slice of \"thickness\" 2")
+                {
+                    REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), thickness);
+
+                    auto coeffs = slice.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+                    auto expectedCoeffs = IndexVector_t(2);
+                    expectedCoeffs << size, thickness;
+                    REQUIRE_EQ(coeffs, expectedCoeffs);
+                }
+
+                THEN("All values are the same as of the original DataContainer")
+                {
+                    // Check that it's read correctly
+                    for (int j = 0; j < size; ++j) {
+                        for (int q = 0; q < thickness; ++q) {
+                            auto vecSlice = randVec.segment((i + q) * size, thickness * size);
+                            REQUIRE_UNARY(checkApproxEq(slice(j, q), vecSlice[j]));
+                        }
                     }
                 }
             }
@@ -1118,7 +1291,7 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             for (int i = 0; i < size; ++i) {
                 auto slice = dc.slice(i);
 
-                THEN("The the slice is a 3D slice of \"thickness\" 1")
+                THEN("The slice is a 3D slice of \"thickness\" 1")
                 {
                     REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 3);
 

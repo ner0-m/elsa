@@ -118,6 +118,37 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing clone()", TestType, float, double, c
             }
         }
     }
+
+    GIVEN("a scalar multiplicative composite LinearOperator")
+    {
+        IndexVector_t numCoeff(3);
+        numCoeff << 50, 41, 22;
+        IndexVector_t numCoeff2(2);
+        numCoeff2 << 4, 88;
+        VolumeDescriptor ddDomain(numCoeff);
+        VolumeDescriptor ddRange(numCoeff2);
+        LinearOperator<TestType> linOp(ddDomain, ddRange);
+        TestType scalar = 42;
+
+        LinearOperator<TestType> scalarMultLinOp = scalar * linOp;
+
+        WHEN("cloning the LinearOperator")
+        {
+            auto linOpClone = scalarMultLinOp.clone();
+
+            THEN("everything matches")
+            {
+                REQUIRE_NE(linOpClone.get(), &scalarMultLinOp);
+                REQUIRE_EQ(*linOpClone, scalarMultLinOp);
+            }
+
+            THEN("copies are also identical")
+            {
+                auto newOp = *linOpClone;
+                REQUIRE_EQ(newOp, scalarMultLinOp);
+            }
+        }
+    }
 }
 
 TEST_CASE_TEMPLATE("LinearOperator: Testing a leaf LinearOperator", TestType, float, double,

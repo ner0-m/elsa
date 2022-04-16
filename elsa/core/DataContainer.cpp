@@ -5,6 +5,7 @@
 #include "DataHandlerMapCPU.h"
 #include "BlockDescriptor.h"
 #include "RandomBlocksDescriptor.h"
+#include "IdenticalBlocksDescriptor.h"
 #include "PartitionDescriptor.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
@@ -418,13 +419,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    const DataContainer<data_t> DataContainer<data_t>::slice(index_t i) const
+    const DataContainer<data_t> DataContainer<data_t>::slice(index_t i, index_t thickness) const
     {
         auto& desc = getDataDescriptor();
         auto dim = desc.getNumberOfDimensions();
         auto sizeOfLastDim = desc.getNumberOfCoefficientsPerDimension()[dim - 1];
 
-        if (i >= sizeOfLastDim) {
+        if ((i + thickness) > sizeOfLastDim) {
             throw LogicError("Trying to access out of bound slice");
         }
 
@@ -432,10 +433,26 @@ namespace elsa
             return *this;
         }
 
-        auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
+        DataContainer<data_t> partitionedDC = viewAs(PartitionDescriptor(desc, sizeOfLastDim));
 
-        // Now set the slice
-        return viewAs(sliceDesc).getBlock(i);
+        if (thickness == 1) {
+            return partitionedDC.getBlock(i);
+        } else {
+            const auto coeffsPerDim = desc.getNumberOfCoefficientsPerDimension();
+            auto newCoeffsPerDim = coeffsPerDim;
+            newCoeffsPerDim(coeffsPerDim.size() - 1) = thickness;
+
+            VolumeDescriptor thickVolDescr(newCoeffsPerDim, desc.getSpacingPerDimension());
+
+            DataContainer<data_t> thickPartitionedDC(PartitionDescriptor(thickVolDescr, thickness));
+
+            // now set the slices
+            for (index_t j = 0; j < thickness; ++j) {
+                thickPartitionedDC.getBlock(j) = partitionedDC.getBlock(i++);
+            }
+
+            return thickPartitionedDC;
+        }
     }
 
     template <typename data_t>
@@ -610,6 +627,20 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t> clip(DataContainer<data_t> dc, data_t min, data_t max)
+    {
+        for (int i = 0; i < dc.getSize(); ++i) {
+            if (dc[i] < min) {
+                dc[i] = min;
+            } else if (dc[i] > max) {
+                dc[i] = max;
+            }
+        }
+
+        return dc;
+    }
+
+    template <typename data_t>
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
                                       const DataContainer<data_t>& dc2)
     {
@@ -692,6 +723,9 @@ namespace elsa
     template class DataContainer<double>;
     template class DataContainer<complex<double>>;
     template class DataContainer<index_t>;
+
+    template DataContainer<float> clip<float>(DataContainer<float> dc, float min, float max);
+    template DataContainer<double> clip<double>(DataContainer<double> dc, double min, double max);
 
     template DataContainer<float> concatenate<float>(const DataContainer<float>&,
                                                      const DataContainer<float>&);

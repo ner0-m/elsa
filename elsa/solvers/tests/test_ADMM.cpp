@@ -82,42 +82,6 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", TestType, float, double)
                 REQUIRE_UNARY(isApprox(admm.solve(20), dcB));
             }
         }
-
-        WHEN("running unsqueeze")
-        {
-            L0PseudoNorm<TestType> regFunc(volDescr);
-            RegularizationTerm<TestType> regTerm(0.000001f, regFunc);
-
-            SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
-
-            ADMM<CG, HardThresholding, TestType> admm(splittingProblem);
-
-            VolumeDescriptor otherVolDescr({2, 4});
-
-            DataContainer<TestType> dc(otherVolDescr);
-            dc[0] = 5;
-            dc[1] = 9;
-            dc[2] = 2;
-            dc[3] = 2;
-            dc[4] = 8;
-            dc[5] = 1;
-            dc[6] = 0;
-            dc[7] = 4;
-            DataContainer<TestType> resDC = admm.unsqueezeLastDimension(dc);
-
-            VolumeDescriptor unsqueezedVolDescr({2, 4, 1});
-            THEN("data descriptor of the result matches the expected the data descriptor")
-            {
-                REQUIRE_EQ(resDC.getDataDescriptor(), unsqueezedVolDescr);
-            }
-
-            THEN("the contents are the same")
-            {
-                for (index_t i = 0; i < dc.getSize(); ++i) {
-                    REQUIRE_EQ(dc[i], resDC[i]);
-                }
-            }
-        }
     }
 }
 
@@ -141,13 +105,43 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
 
         WHEN("setting up ADMM to solve a problem")
         {
-            Vector_t<TestType> bVec(VolumeDescriptor{n, n}.getNumberOfCoefficients());
+            Vector_t<TestType> bVec(volDescr.getNumberOfCoefficients());
             bVec.setRandom();
-            DataContainer<TestType> dcB(VolumeDescriptor{n, n}, bVec);
+            DataContainer<TestType> dcB(volDescr, bVec);
 
-            Identity<TestType> idOp(VolumeDescriptor{n, n});
+            Identity<TestType> idOp(volDescr);
 
             WLSProblem<TestType> wlsProb(idOp, dcB);
+
+            real_t rho1 = 1.0 / 2;
+            real_t rho2 = 1;
+
+            VolumeDescriptor layersPlusOneDescriptor{{n, n, layers + 1}};
+
+            IndexVector_t slicesInBlock(2);
+            slicesInBlock << layers, 1;
+            std::vector<std::unique_ptr<LinearOperator<real_t>>> opsOfA(0);
+            Scaling<real_t> scaling(volDescr, rho2);
+            opsOfA.push_back((rho1 * shearletTransform).clone()); // TODO double check
+            opsOfA.push_back(scaling.clone());
+            BlockLinearOperator<real_t> A(
+                volDescr, PartitionDescriptor{layersPlusOneDescriptor, slicesInBlock}, opsOfA,
+                BlockLinearOperator<real_t>::BlockType::ROW);
+
+            DataContainer<real_t> factorsOfB(VolumeDescriptor{n, n, layers + 1});
+            for (int ind = 0; ind < factorsOfB.getSize(); ++ind) { // TODO double check
+                if (ind < (n * n * layers)) {
+                    factorsOfB[ind] = -1 * rho1;
+                } else {
+                    factorsOfB[ind] = -1 * rho2;
+                }
+            }
+            Scaling<real_t> B(layersPlusOneDescriptor, factorsOfB);
+
+            DataContainer<real_t> c(layersPlusOneDescriptor);
+            c = 0;
+
+            Constraint<real_t> constraint(A, B, c);
 
             DataContainer<TestType> wL1NWeights(VolumeDescriptor{{n, n, layers}});
             wL1NWeights = 0.001f;
@@ -156,7 +150,7 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
             RegularizationTerm<TestType> wL1NormRegTerm(1, weightedL1Norm);
 
             SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), wL1NormRegTerm,
-                                                        VolumeDescriptor{{n, n, layers + 1}});
+                                                        constraint);
 
             ADMM<CG, SoftThresholding, TestType> admm(splittingProblem, true);
 
