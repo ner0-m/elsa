@@ -3,13 +3,10 @@
 #include "Solver.h"
 #include "BlockLinearOperator.h"
 #include "VolumeDescriptor.h"
-#include "PartitionDescriptor.h"
-#include "Identity.h"
 #include "L0PseudoNorm.h"
 #include "L1Norm.h"
 #include "L2NormPow2.h"
 #include "LinearResidual.h"
-#include "Scaling.h"
 #include "ShearletTransform.h"
 #include "ProximityOperator.h"
 #include "SplittingProblem.h"
@@ -175,13 +172,6 @@ namespace elsa
             const LinearOperator<data_t>& B = constraint.getOperatorB();
             const DataContainer<data_t>& c = constraint.getDataVectorC();
 
-            //            if (_positiveSolutionsOnly) {
-            //                if (c != 0) {
-            //                    throw InvalidArgumentError(
-            //                        "ADMM: the vector c of the constraint should contain zeroes");
-            //                }
-            //            }
-
             DataContainer<data_t> x(A.getDomainDescriptor());
             x = 0;
 
@@ -215,15 +205,16 @@ namespace elsa
                             downcast<LinearResidual<data_t>>(g[0].getFunctional().getResidual())
                                 .getOperator());
 
-                    index_t layers = shearletTransform.getNumOfLayers();
-                    DataContainer<data_t> P1u = u.slice(0, layers);
+                    index_t numOfLayers = shearletTransform.getNumOfLayers();
+                    DataContainer<data_t> P1u = u.slice(0, numOfLayers);
                     DataContainer<data_t> P1z =
                         zProxOp.apply(shearletTransform.apply(x) + P1u, *thresholds);
 
-                    DataContainer<data_t> P2u = u.slice(layers);
+                    DataContainer<data_t> P2u = u.slice(numOfLayers);
 
-                    DataContainer<data_t> tempdc = x.viewAs(P2u.getDataDescriptor()) + P2u;
-                    DataContainer<data_t> P2z = clip(tempdc, static_cast<data_t>(0.0), std::numeric_limits<data_t>::max());
+                    DataContainer<data_t> sumdc = x.viewAs(P2u.getDataDescriptor()) + P2u;
+                    DataContainer<data_t> P2z =
+                        clip(sumdc, static_cast<data_t>(0.0), std::numeric_limits<data_t>::max());
 
                     z = concatenate(P1z, P2z);
                 }

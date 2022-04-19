@@ -34,37 +34,39 @@ void example2d_shadmm()
 
     ShearletTransform<real_t, real_t> shearletTransform(signalSize);
     shearletTransform.computeSpectra();
-    index_t layers = shearletTransform.getNumOfLayers();
+    index_t numOfLayers = shearletTransform.getNumOfLayers();
 
     /// values specific to the problem statement in T. A. Bubba et al., consider as hyper-parameters
     real_t rho1 = 1.0 / 2;
     real_t rho2 = 1;
 
-    VolumeDescriptor layersPlusOneDescriptor{{n, n, layers + 1}};
+    VolumeDescriptor numOfLayersPlusOneDescriptor{{n, n, numOfLayers + 1}};
 
     /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
     IndexVector_t slicesInBlock(2);
-    slicesInBlock << layers, 1;
+    slicesInBlock << numOfLayers, 1;
     std::vector<std::unique_ptr<LinearOperator<real_t>>> opsOfA(0);
     Scaling<real_t> scaling(domainDescriptor, rho2);
     opsOfA.push_back((rho1 * shearletTransform).clone()); // TODO double check
     opsOfA.push_back(scaling.clone());
     BlockLinearOperator<real_t> A(domainDescriptor,
-                                  PartitionDescriptor{layersPlusOneDescriptor, slicesInBlock},
+                                  PartitionDescriptor{numOfLayersPlusOneDescriptor, slicesInBlock},
                                   opsOfA, BlockLinearOperator<real_t>::BlockType::ROW);
 
     /// B = diag(−ρ_1*1_Ln^2, −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-    DataContainer<real_t> factorsOfB(VolumeDescriptor{n, n, layers + 1});
+    DataContainer<real_t> factorsOfB(numOfLayersPlusOneDescriptor);
+    //        factorsOfB.slice(0, numOfLayers) = -1 * rho1;
+    //        factorsOfB.slice(numOfLayers) = -1 * rho2;
     for (int ind = 0; ind < factorsOfB.getSize(); ++ind) { // TODO double check
-        if (ind < (n * n * layers)) {
+        if (ind < (n * n * numOfLayers)) {
             factorsOfB[ind] = -1 * rho1;
         } else {
             factorsOfB[ind] = -1 * rho2;
         }
     }
-    Scaling<real_t> B(layersPlusOneDescriptor, factorsOfB);
+    Scaling<real_t> B(numOfLayersPlusOneDescriptor, factorsOfB);
 
-    DataContainer<real_t> c(layersPlusOneDescriptor);
+    DataContainer<real_t> c(numOfLayersPlusOneDescriptor);
     c = 0;
 
     Constraint<real_t> constraint(A, B, c);
@@ -72,6 +74,9 @@ void example2d_shadmm()
     // construct shearlet-based l1 regularization
     DataContainer<real_t> wL1NWeights(shearletTransform.getRangeDescriptor());
     wL1NWeights = 0.001f; // TODO address
+    //        for (int j = 1; j < layers; ++j) {
+    //            wL1NWeights.slice(j - 1, j) = j / 5;
+    //        }
     WeightedL1Norm<real_t> weightedL1Norm(LinearResidual<real_t>{shearletTransform}, wL1NWeights);
     RegularizationTerm<real_t> wL1NormRegTerm(1, weightedL1Norm);
 
