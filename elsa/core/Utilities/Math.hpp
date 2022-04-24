@@ -172,9 +172,9 @@ namespace elsa
         /**
          * @brief Compute the Peak Signal-to-Noise Ratio of a given signal S.
          *
-         * Calculate it based on the formula of @f$ 10 * log_{10}(MAX_{I}^{2} / MSE) @f$ in which
-         * @f$ MAX_{I} @f$ is the maximum possible pixel value of the image and @f$ MSE @f$ is the
-         * mean squared error.
+         * Calculate it based on the formula of @f$ 20 * log_{10}(MAX_{I}) - 10 * log_{10}(MSE) @f$
+         * in which @f$ MAX_{I} @f$ is the maximum possible pixel value of the image and @f$ MSE @f$
+         * is the mean squared error.
          *
          * @param dc1 DataContainer signal
          * @param dc2 DataContainer signal
