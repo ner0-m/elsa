@@ -1132,6 +1132,36 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
                 }
             }
         }
+
+        WHEN("Accessing all the slices of \"thickness\" 4 and \"offset\" 1")
+        {
+            index_t thickness = 4;
+            index_t offset = 1;
+            for (index_t i = 0; i <= (size - thickness); i += offset) {
+                auto slice = dc.slice(i, thickness);
+
+                THEN("The slice is a 2D slice of \"thickness\" 4")
+                {
+                    REQUIRE_EQ(slice.getDataDescriptor().getNumberOfDimensions(), 2);
+
+                    auto coeffs = slice.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+                    auto expectedCoeffs = IndexVector_t(2);
+                    expectedCoeffs << size, thickness;
+                    REQUIRE_EQ(coeffs, expectedCoeffs);
+                }
+
+                THEN("All values are the same as of the original DataContainer")
+                {
+                    // check that it's read correctly
+                    for (int j = 0; j < size; ++j) {
+                        for (int q = 0; q < thickness; ++q) {
+                            auto vecSlice = randVec.segment((i + q) * size, thickness * size);
+                            REQUIRE_UNARY(checkApproxEq(slice(j, q), vecSlice[j]));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     GIVEN("A const 3D DataContainer")
@@ -1431,6 +1461,36 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
             const DataContainer<data_t> res = dc.slice(0);
 
             THEN("the DataContainers match") { REQUIRE_EQ(dc, res); }
+        }
+    }
+
+    GIVEN("a 3D DataDescriptor and a 3D random Vector")
+    {
+        index_t size = 7;
+        IndexVector_t numCoeff3D(3);
+        numCoeff3D << size, size, size;
+
+        VolumeDescriptor descr(numCoeff3D);
+        Vector_t<data_t> randVec = Vector_t<data_t>::Random(size * size * size);
+
+        WHEN("slicing a non-const DataContainer")
+        {
+            index_t thickness = 4;
+            index_t fromIndex = 2;
+            DataContainer<data_t> dc(descr, randVec);
+
+            DataContainer<data_t> someSlice = dc.slice(fromIndex, thickness);
+
+            for (int i = 0; i < size; ++i) {
+                for (int j = 0; j < size; ++j) {
+                    for (int k = 0; k < thickness; ++k) {
+                        THEN("the DataContainers match")
+                        {
+                            REQUIRE_EQ(dc(i, j, fromIndex + k), someSlice(i, j, k));
+                        }
+                    }
+                }
+            }
         }
     }
 }
