@@ -216,7 +216,7 @@ namespace elsa
                     DataContainer<data_t> P2z =
                         clip(sumdc, static_cast<data_t>(0.0), std::numeric_limits<data_t>::max());
 
-                    z = concatenate(P1z, P2z);
+                    z = concatenate(P1z, P2z).viewAs(B.getDomainDescriptor());
                 }
 
                 u += A.apply(x) + B.apply(z) - c;
