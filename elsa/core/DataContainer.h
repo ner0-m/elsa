@@ -172,10 +172,12 @@ namespace elsa
         const data_t& operator[](index_t index) const;
 
         /// return an element by n-dimensional coordinate (not bounds-checked!)
-        data_t& operator()(IndexVector_t coordinate);
+        data_t& operator()(const IndexVector_t& coordinate);
 
         /// return an element by n-dimensional coordinate as read-only (not bounds-checked!)
-        const data_t& operator()(IndexVector_t coordinate) const;
+        const data_t& operator()(const IndexVector_t& coordinate) const;
+
+        data_t at(const IndexVector_t& coordinate) const;
 
         /// return an element by its coordinates (not bounds-checked!)
         template <typename idx0_t, typename... idx_t,
@@ -514,6 +516,10 @@ namespace elsa
         dc.format(os);
         return os;
     }
+
+    /// clip the container values outside of the interval, to the interval edges
+    template <typename data_t>
+    DataContainer<data_t> clip(DataContainer<data_t> dc, data_t min, data_t max);
 
     /// Concatenate two DataContainers to one (requires copying of both)
     template <typename data_t>

@@ -15,9 +15,6 @@ namespace elsa
     class TraverseAABBJosephsMethod
     {
     private:
-        /// convenience type def for ray
-        using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
-
         /**
          * @brief Possible stages of the traversal
          *
@@ -38,7 +35,7 @@ namespace elsa
          * @param[in] aabb axis-aligned boundary box describing the volume
          * @param[in] r the ray to be traversed
          */
-        explicit TraverseAABBJosephsMethod(const BoundingBox& aabb, const Ray& r);
+        explicit TraverseAABBJosephsMethod(const BoundingBox& aabb, const RealRay_t& r);
 
         /**
          * @brief Update the traverser status by taking the next traversal step
@@ -124,7 +121,7 @@ namespace elsa
         void initStepDirection(const RealVector_t& rd);
         /// compute the entry and exit points of ray r with the volume (aabb), returns the length of
         /// the intersection
-        real_t calculateAABBIntersections(const Ray& ray);
+        real_t calculateAABBIntersections(const RealRay_t& ray);
         /// select the closest voxel to the entry point (considering the current position)
         void selectClosestVoxel(const RealVector_t& currentPosition);
         /// check if the current index is still in the bounding box
