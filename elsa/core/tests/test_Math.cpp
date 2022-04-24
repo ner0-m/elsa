@@ -85,6 +85,13 @@ TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
 
         WHEN("running the Mean Squared Error")
         {
+            DataContainer<TestType> dataCont3(VolumeDescriptor{{4, 3, 8}});
+            THEN("it throws if the containers have different shapes")
+            {
+                REQUIRE_THROWS_AS(statistics::meanSquaredError<TestType>(dataCont1, dataCont3),
+                                  InvalidArgumentError);
+            }
+
             auto meanSqErr = statistics::meanSquaredError<TestType>(dataCont1, dataCont2);
             THEN("it produces the correct result")
             {
@@ -94,6 +101,13 @@ TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
 
         WHEN("running the Relative Error")
         {
+            DataContainer<TestType> dataCont3(VolumeDescriptor{{7, 6, 5, 4}});
+            THEN("it throws if the containers have different shapes")
+            {
+                REQUIRE_THROWS_AS(statistics::relativeError<TestType>(dataCont1, dataCont3),
+                                  InvalidArgumentError);
+            }
+
             auto relErr = statistics::relativeError<TestType>(dataCont1, dataCont2);
             THEN("it produces the correct result")
             {
@@ -103,6 +117,14 @@ TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
 
         WHEN("running the Peak Signal-to-Noise Ratio")
         {
+            DataContainer<TestType> dataCont3(VolumeDescriptor{4});
+            THEN("it throws if the containers have different shapes")
+            {
+                REQUIRE_THROWS_AS(
+                    statistics::peakSignalToNoiseRatio<TestType>(dataCont1, dataCont3),
+                    InvalidArgumentError);
+            }
+
             auto psnr = statistics::peakSignalToNoiseRatio<TestType>(dataCont1, dataCont2);
             auto expectedpsnr = static_cast<TestType>(9.09461);
             THEN("it produces the correct result")

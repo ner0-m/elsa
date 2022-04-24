@@ -57,9 +57,9 @@ namespace elsa
             relError.push_back(s._relError);
         }
 
-        auto [timeMean, timeStddev] = calculateMeanStddev(time);
-        auto [absMean, absStddev] = calculateMeanStddev(absError);
-        auto [relMean, relStddev] = calculateMeanStddev(relError);
+        auto [timeMean, timeStddev] = statistics::calculateMeanStddev(time);
+        auto [absMean, absStddev] = statistics::calculateMeanStddev(absError);
+        auto [relMean, relStddev] = statistics::calculateMeanStddev(relError);
 
         return std::make_tuple(timeMean, timeStddev, absMean, absStddev, relMean, relStddev);
     }
@@ -224,7 +224,8 @@ namespace elsa
                 auto [timeMean, timeStddev, absErrMean, absErrStddev, relErrMean, relErrStddev] =
                     evaluateStats(stats);
 
-                auto [lower, upper] = confidenceInterval95(benchIters, timeMean, timeStddev);
+                auto [lower, upper] =
+                    statistics::confidenceInterval95(benchIters, timeMean, timeStddev);
 
                 // Log a laps
                 Logging::template logLaps<data_t>(dim, size, benchIters, opName, solName, noIters,

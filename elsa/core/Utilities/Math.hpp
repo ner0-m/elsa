@@ -70,7 +70,7 @@ namespace elsa
         data_t meanSquaredError(DataContainer<data_t> dc1, DataContainer<data_t> dc2)
         {
             if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
-                throw LogicError(
+                throw InvalidArgumentError(
                     "Statistics::meanSquaredError: shapes of both signals should match");
             }
 
