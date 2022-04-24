@@ -518,6 +518,10 @@ namespace elsa
         return os;
     }
 
+    /// clip the container values outside of the interval, to the interval edges
+    template <typename data_t>
+    DataContainer<data_t> clip(DataContainer<data_t> dc, data_t min, data_t max);
+
     /// Concatenate two DataContainers to one (requires copying of both)
     template <typename data_t>
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
