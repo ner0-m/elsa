@@ -103,10 +103,8 @@ TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
 
         WHEN("running the Peak Signal-to-Noise Ratio")
         {
-            auto dataRange = static_cast<TestType>(255);
-            auto psnr =
-                statistics::peakSignalToNoiseRatio<TestType>(dataCont1, dataCont2, dataRange);
-            auto expectedpsnr = static_cast<TestType>(22.73990);
+            auto psnr = statistics::peakSignalToNoiseRatio<TestType>(dataCont1, dataCont2);
+            auto expectedpsnr = static_cast<TestType>(9.09461);
             THEN("it produces the correct result")
             {
                 REQUIRE_UNARY(checkApproxEq(psnr, expectedpsnr));

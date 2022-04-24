@@ -70,8 +70,8 @@ namespace elsa
         data_t meanSquaredError(DataContainer<data_t> dc1, DataContainer<data_t> dc2)
         {
             if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
-                throw LogicError(std::string(
-                    "Statistics::meanSquaredError: shapes of both signals should match"));
+                throw LogicError(
+                    "Statistics::meanSquaredError: shapes of both signals should match");
             }
 
             DataContainer<data_t> diff = dc1 - dc2;
@@ -162,7 +162,7 @@ namespace elsa
         {
             if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
                 throw InvalidArgumentError(
-                    std::string("statistics::relativeError: shapes of both signals should match"));
+                    "statistics::relativeError: shapes of both signals should match");
             }
 
             DataContainer<data_t> diff = dc1 - dc2;
@@ -178,30 +178,6 @@ namespace elsa
          *
          * @param dc1 DataContainer signal
          * @param dc2 DataContainer signal
-         * @param dataRange The data range of the signals (distance between minimum and maximum
-         * possible values).
-         *
-         * @author Andi Braimllari - initial code
-         *
-         * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
-         */
-        template <typename data_t = real_t>
-        data_t peakSignalToNoiseRatio(DataContainer<data_t> dc1, DataContainer<data_t> dc2,
-                                      data_t dataRange)
-        {
-            if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
-                throw InvalidArgumentError(std::string(
-                    "statistics::peakSignalToNoiseRatio: shapes of both signals should match"));
-            }
-
-            return 10 * std::log10((std::pow(dataRange, 2) / meanSquaredError(dc1, dc2)));
-        }
-
-        /**
-         * @brief Compute the Peak Signal-to-Noise Ratio.
-         *
-         * @param dc1 DataContainer signal
-         * @param dc2 DataContainer signal
          *
          * @author Andi Braimllari - initial code
          *
@@ -211,30 +187,11 @@ namespace elsa
         data_t peakSignalToNoiseRatio(DataContainer<data_t> dc1, DataContainer<data_t> dc2)
         {
             if (dc1.getDataDescriptor() != dc2.getDataDescriptor()) {
-                throw InvalidArgumentError(std::string(
-                    "statistics::peakSignalToNoiseRatio: shapes of both signals should match"));
-            }
-
-            data_t dataMin = std::numeric_limits<data_t>::min();
-            data_t dataMax = std::numeric_limits<data_t>::max();
-
-            data_t trueMin = std::min(dc1.minElement(), dc2.minElement());
-            data_t trueMax = std::max(dc1.maxElement(), dc2.maxElement());
-
-            if (trueMin < dataMin || trueMax > dataMax) {
                 throw InvalidArgumentError(
-                    std::string("statistics::peakSignalToNoiseRatio: extreme values of the signals "
-                                "exceed the range expected for its data type"));
+                    "statistics::peakSignalToNoiseRatio: shapes of both signals should match");
             }
 
-            data_t dataRange;
-            if (trueMin >= 0) {
-                dataRange = dataMax;
-            } else {
-                dataRange = dataMax - dataMin;
-            }
-
-            return peakSignalToNoiseRatio(dc1, dc2, dataRange);
+            return 20 * std::log10(dc1.maxElement()) - 10 * std::log10(meanSquaredError(dc1, dc2));
         }
     } // namespace statistics
 
