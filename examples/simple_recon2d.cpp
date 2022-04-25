@@ -1,6 +1,8 @@
 /// [simplerecon header begin]
 #include "elsa.h"
 
+#include <iostream>
+
 using namespace elsa;
 /// [simplerecon header end]
 

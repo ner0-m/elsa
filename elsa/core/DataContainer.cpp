@@ -11,6 +11,7 @@
 #include "Assertions.h"
 
 #include <utility>
+#include <algorithm>
 
 namespace elsa
 {
@@ -610,6 +611,22 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t> clip(DataContainer<data_t> dc, data_t min, data_t max)
+    {
+        std::transform(dc.begin(), dc.end(), dc.begin(), [&](auto x) {
+            if (x < min) {
+                return min;
+            } else if (x > max) {
+                return max;
+            } else {
+                return x;
+            }
+        });
+
+        return dc;
+    }
+
+    template <typename data_t>
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
                                       const DataContainer<data_t>& dc2)
     {
@@ -692,6 +709,9 @@ namespace elsa
     template class DataContainer<double>;
     template class DataContainer<complex<double>>;
     template class DataContainer<index_t>;
+
+    template DataContainer<float> clip<float>(DataContainer<float> dc, float min, float max);
+    template DataContainer<double> clip<double>(DataContainer<double> dc, double min, double max);
 
     template DataContainer<float> concatenate<float>(const DataContainer<float>&,
                                                      const DataContainer<float>&);

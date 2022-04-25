@@ -270,7 +270,7 @@ namespace elsa
             }
 
             if (_mode == CompositeMode::SCALAR_MULT) {
-                return new LinearOperator<data_t>(*_rhs, _isAdjoint);
+                return new LinearOperator<data_t>(*this);
             }
         }
 
