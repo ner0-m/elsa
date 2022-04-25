@@ -101,7 +101,7 @@ namespace elsa
             // Sum of product of each element
             auto sqSum =
                 std::inner_product(std::begin(diff), std::end(diff), std::begin(diff), T());
-            auto stdev = std::sqrt(sqSum / mean);
+            auto stdev = std::sqrt(sqSum / static_cast<T>(std::size(v)));
 
             return std::make_pair(mean, stdev);
         }

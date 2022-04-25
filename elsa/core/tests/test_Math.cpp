@@ -67,7 +67,7 @@ TEST_CASE("Math::heaviside")
 
 TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
 {
-    GIVEN("a DataContainer")
+    GIVEN("some DataContainers")
     {
         IndexVector_t sizeVector(2);
         sizeVector << 2, 4;
@@ -92,9 +92,9 @@ TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
                                   InvalidArgumentError);
             }
 
-            auto meanSqErr = statistics::meanSquaredError<TestType>(dataCont1, dataCont2);
             THEN("it produces the correct result")
             {
+                auto meanSqErr = statistics::meanSquaredError<TestType>(dataCont1, dataCont2);
                 REQUIRE_UNARY(checkApproxEq(meanSqErr, 346.01125f));
             }
         }
@@ -108,9 +108,9 @@ TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
                                   InvalidArgumentError);
             }
 
-            auto relErr = statistics::relativeError<TestType>(dataCont1, dataCont2);
             THEN("it produces the correct result")
             {
+                auto relErr = statistics::relativeError<TestType>(dataCont1, dataCont2);
                 REQUIRE_UNARY(checkApproxEq(relErr, 1.4157718f));
             }
         }
@@ -130,6 +130,67 @@ TEST_CASE_TEMPLATE("Math: Testing the statistics", TestType, float, double)
             THEN("it produces the correct result")
             {
                 REQUIRE_UNARY(checkApproxEq(psnr, expectedpsnr));
+            }
+        }
+    }
+
+    GIVEN("some vectors of numbers")
+    {
+
+        std::vector<TestType> numbers = {5, 0, 14, -4, 8};
+        std::vector<TestType> manyNumbers = {2, 6,  9, 4,  2, 0,  7, 9,  4, 8, 6, 6,
+                                             9, 4,  2, 15, 6, 91, 4, 22, 2, 3, 9, 4,
+                                             1, -2, 6, 9,  4, 2,  5, 6,  4, 4, 9};
+
+        WHEN("calculating the mean, standard deviation and a 95% confidence interval")
+        {
+            auto [mean, stddev] = statistics::calculateMeanStddev(numbers);
+
+            THEN("it produces the correct mean and standard deviation")
+            {
+                TestType expectedmean = 4.6f;
+                TestType expectedstddev = 6.2481997f;
+
+                REQUIRE_UNARY(checkApproxEq(mean, expectedmean));
+                REQUIRE_UNARY(checkApproxEq(stddev, expectedstddev));
+            }
+
+            auto [lower, upper] = statistics::confidenceInterval95(numbers.size(), mean, stddev);
+
+            THEN("it produces the expected 95% confidence interval")
+            {
+                float expectedlower = -12.74778f;
+                float expectedupper = 21.94778f;
+
+                REQUIRE_UNARY(checkApproxEq(lower, expectedlower));
+                REQUIRE_UNARY(checkApproxEq(upper, expectedupper));
+            }
+        }
+
+        WHEN("calculating the mean, standard deviation and a 95% confidence interval for more than "
+             "30 numbers")
+        {
+            auto [mean, stddev] = statistics::calculateMeanStddev(manyNumbers);
+
+            THEN("it produces the correct mean and standard deviation")
+            {
+                TestType expectedmean = 8.0571429f;
+                TestType expectedstddev = 14.851537f;
+
+                REQUIRE_UNARY(checkApproxEq(mean, expectedmean));
+                REQUIRE_UNARY(checkApproxEq(stddev, expectedstddev));
+            }
+
+            auto [lower, upper] =
+                statistics::confidenceInterval95(manyNumbers.size(), mean, stddev);
+
+            THEN("it produces the expected 95% confidence interval")
+            {
+                float expectedlower = -21.05187f;
+                float expectedupper = 37.16616f;
+
+                REQUIRE_UNARY(checkApproxEq(lower, expectedlower));
+                REQUIRE_UNARY(checkApproxEq(upper, expectedupper));
             }
         }
     }
