@@ -7,7 +7,8 @@ namespace elsa::ml
         : Model<data_t, Backend>(),
           _input(ml::Input<data_t>(inputDescriptor, batchSize)),
           _conv1x1(ml::Conv2D<data_t>(inputDescriptor.getNumberOfCoefficientsPerDimension()[2],
-                                      {1, 1, 16}, ml::Activation::Relu, 1, ml::Padding::Same))
+                                      VolumeDescriptor{{1, 1, 16}}, ml::Activation::Relu, 1,
+                                      ml::Padding::Same))
     {
         name_ = "AutoEncoder";
 
