@@ -241,7 +241,7 @@ If you want to pull or push images to the registry, you need to login first: usi
 commands:
 
 ```bash
-docker loging docker.ciip.in.tum.de # you'll need credentials
+docker login docker.ciip.in.tum.de # you'll need credentials
 docker tag elsa/gcc:10 docker.ciip.in.tum.de/<namespace>/<image>:<version>
 docker push docker.ciip.in.tum.de/<namespace>/<image>:<version>
 docker pull docker.ciip.in.tum.de/<namespace>/<image>:<version>
