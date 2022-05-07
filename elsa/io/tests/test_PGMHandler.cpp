@@ -35,14 +35,14 @@ TEST_CASE("PGMHandler: Write PGM file")
         DataContainer dc(dd);
 
         for (int i = 0; i < dc.getSize(); ++i) {
-            dc[i] = static_cast<real_t>(i);
+            dc[i] = static_cast<real_t>(i) + 10;
         }
 
         // Also compute the max value and the scale factor
-        const auto maxVal = dc.getSize() - 1;
-        const auto scaleFactor = 255.f / static_cast<real_t>(std::ceil(maxVal));
+        const auto maxVal = dc.maxElement();
+        const auto minVal = dc.minElement();
 
-        THEN("PGM is written")
+        WHEN("Writing the DataContainer to the PGM format")
         {
             std::stringstream buf;
             PGM::write(dc, buf);
@@ -59,17 +59,27 @@ TEST_CASE("PGMHandler: Write PGM file")
                 return token;
             };
 
-            // Check header
-            REQUIRE_EQ(nextToken(str, "\n"), "P2");
-            REQUIRE_EQ(nextToken(str, "\n"), "10 10");
-            REQUIRE_EQ(nextToken(str, "\n"), "255");
+            THEN("The header is correct")
+            {
+                CHECK_EQ(nextToken(str, "\n"), "P2");
+                CHECK_EQ(nextToken(str, "\n"), "10 10");
+                CHECK_EQ(nextToken(str, "\n"), "255");
+            }
 
-            // Now check the content
-            int counter = 0;
-            while (!str.empty()) {
-                auto val = static_cast<int>(static_cast<real_t>(counter) * scaleFactor);
-                REQUIRE_EQ(std::to_string(val), nextToken(str, "\n"));
-                counter++;
+            THEN("The body is correct")
+            {
+                // Pop the header again
+                nextToken(str, "\n");
+                nextToken(str, "\n");
+                nextToken(str, "\n");
+
+                int counter = 0;
+                while (!str.empty()) {
+                    const auto normalized = (dc[counter] - minVal) / (maxVal - minVal);
+                    auto val = static_cast<int>(normalized * 255.f);
+                    REQUIRE_EQ(std::to_string(val), nextToken(str, " "));
+                    counter++;
+                }
             }
         }
     }

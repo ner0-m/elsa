@@ -30,11 +30,13 @@
 #include "CircleTrajectoryGenerator.h"
 #include "LimitedAngleTrajectoryGenerator.h"
 #include "SphereTrajectoryGenerator.h"
+#include "NoiseGenerators.h"
 
 // IO headers
 #include "EDFHandler.h"
 #include "MHDHandler.h"
 #include "PGMHandler.h"
+#include "IO.h"
 
 // Logging headers
 #include "Logger.h"

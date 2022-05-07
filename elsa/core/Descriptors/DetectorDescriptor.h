@@ -18,9 +18,6 @@ namespace elsa
     class DetectorDescriptor : public DataDescriptor
     {
     public:
-        using Ray = Eigen::ParametrizedLine<real_t, Eigen::Dynamic>;
-
-    public:
         /// There is not default signal
         DetectorDescriptor() = delete;
 
@@ -45,14 +42,14 @@ namespace elsa
          * @brief Overload of computeRayToDetector with a single detectorIndex. Compute the pose and
          * coord index using getCoordinateFromIndex and call overload
          */
-        Ray computeRayFromDetectorCoord(const index_t detectorIndex) const;
+        RealRay_t computeRayFromDetectorCoord(const index_t detectorIndex) const;
 
         /**
          * @brief Overload of computeRayToDetector with a single coord vector. This vector encodes
          * the pose index and the detector coordinate. So for a 1D detector, this will be 2D and the
          * second dimension, will reference the pose index
          */
-        Ray computeRayFromDetectorCoord(const IndexVector_t coord) const;
+        RealRay_t computeRayFromDetectorCoord(const IndexVector_t coord) const;
 
         /**
          * @brief Compute a ray from the source from a pose to the given detector coordinate
@@ -62,13 +59,13 @@ namespace elsa
          * @param[in] poseIndex index into geometryList array, which pose to use for ray computation
          *
          */
-        virtual Ray computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
-                                                const index_t poseIndex) const = 0;
+        virtual RealRay_t computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
+                                                      const index_t poseIndex) const = 0;
 
         /**
          * @brief Compute a ray from the source to trougth a pixel/voxel
          */
-        virtual RealVector_t computeDetectorCoordFromRay(const Ray& ray,
+        virtual RealVector_t computeDetectorCoordFromRay(const RealRay_t& ray,
                                                          const index_t poseIndex) const = 0;
 
         /// Get the number of poses used in the geometry

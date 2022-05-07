@@ -21,8 +21,8 @@ import pyelsa as elsa
 ```
 
 ### 2D example
-To give a short outline into the python usage of elsa we will recreate the 2D example of the [Quickstart](Quickstart) section
-in python.
+To give a short outline into the python usage of elsa we will recreate the 2D example of the
+:doc:`./quickstart-cxx` section in python.
 
 ```python
 import pyelsa as elsa
@@ -55,7 +55,7 @@ n_iterations = 20
 reconstruction = solver.solve(n_iterations)
 
 # plot the reconstruction
-plt.imshow(np.array(reconstruction), '2D Reconstruction')
+plt.imshow(np.array(reconstruction))
 plt.show()
 ```
 

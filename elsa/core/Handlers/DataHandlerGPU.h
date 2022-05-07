@@ -2,7 +2,7 @@
 
 #include "elsaDefines.h"
 #include "DataHandler.h"
-#include "Quickvec.h"
+#include "Quickvec.cuh"
 
 #include <list>
 
@@ -128,11 +128,17 @@ namespace elsa
         /// return the sum of all elements of the data vector
         data_t sum() const override;
 
+        /// return the min of all elements of the data vector
+        data_t minElement() const override;
+
+        /// return the max of all elements of the data vector
+        data_t maxElement() const override;
+
         /// create the fourier transformed of the data vector
-        DataHandler<data_t>& fft(const DataDescriptor& source_desc) override;
+        DataHandler<data_t>& fft(const DataDescriptor& source_desc, FFTNorm norm) override;
 
         /// create the inverse fourier transformed of the data vector
-        DataHandler<data_t>& ifft(const DataDescriptor& source_desc) override;
+        DataHandler<data_t>& ifft(const DataDescriptor& source_desc, FFTNorm norm) override;
 
         /// copy assign another DataHandlerGPU
         DataHandlerGPU<data_t>& operator=(const DataHandlerGPU<data_t>& v);

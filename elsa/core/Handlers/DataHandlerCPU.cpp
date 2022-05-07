@@ -121,16 +121,38 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerCPU<data_t>::fft(const DataDescriptor& source_desc)
+    data_t DataHandlerCPU<data_t>::minElement() const
     {
-        this->base_fft<true>(source_desc);
+        if constexpr (isComplex<data_t>) {
+            throw LogicError("DataHandlerCPU: minElement of complex type not supported");
+        } else {
+            return _data->minCoeff();
+        }
+    }
+
+    template <typename data_t>
+    data_t DataHandlerCPU<data_t>::maxElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw LogicError("DataHandlerCPU: maxElement of complex type not supported");
+        } else {
+            return _data->maxCoeff();
+        }
+    }
+
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerCPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                     FFTNorm norm)
+    {
+        this->base_fft<true>(source_desc, norm);
         return *this;
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerCPU<data_t>::ifft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerCPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                      FFTNorm norm)
     {
-        this->base_fft<false>(source_desc);
+        this->base_fft<false>(source_desc, norm);
         return *this;
     }
 
@@ -465,7 +487,7 @@ namespace elsa
 
     template <typename data_t>
     template <bool is_forward>
-    void DataHandlerCPU<data_t>::base_fft(const DataDescriptor& source_desc)
+    void DataHandlerCPU<data_t>::base_fft(const DataDescriptor& source_desc, FFTNorm norm)
     {
         if constexpr (isComplex<data_t>) {
 
@@ -517,14 +539,20 @@ namespace elsa
                     Eigen::Map<DataVector_t, Eigen::AlignmentType::Unaligned, Eigen::InnerStride<>>
                         input_map(this_data + ray_start, dim_size, Eigen::InnerStride<>(stride));
 
-                    Eigen::FFT<GetFloatingPointType_t<typename DataVector_t::Scalar>> fft_op;
+                    using inner_t = GetFloatingPointType_t<typename DataVector_t::Scalar>;
 
-                    Eigen::Matrix<data_t, Eigen::Dynamic, 1> fft_in{dim_size};
-                    Eigen::Matrix<data_t, Eigen::Dynamic, 1> fft_out{dim_size};
+                    Eigen::FFT<inner_t> fft_op;
+
+                    // disable any scaling in eigen - normally it does 1/n for ifft
+                    fft_op.SetFlag(Eigen::FFT<inner_t>::Flag::Unscaled);
+
+                    Eigen::Matrix<std::complex<inner_t>, Eigen::Dynamic, 1> fft_in{dim_size};
+                    Eigen::Matrix<std::complex<inner_t>, Eigen::Dynamic, 1> fft_out{dim_size};
 
                     // eigen internally copies the fwd input matrix anyway if
                     // it doesn't have stride == 1
-                    fft_in = input_map.block(0, 0, dim_size, 1);
+                    fft_in =
+                        input_map.block(0, 0, dim_size, 1).template cast<std::complex<inner_t>>();
 
                     if (unlikely(dim_size == 1)) {
                         // eigen kiss-fft crashes for size=1...
@@ -534,16 +562,25 @@ namespace elsa
                         // they will corrupt wildly otherwise.
                         if constexpr (is_forward) {
                             fft_op.fwd(fft_out, fft_in);
+                            if (norm == FFTNorm::FORWARD) {
+                                fft_out /= dim_size;
+                            } else if (norm == FFTNorm::ORTHO) {
+                                fft_out /= std::sqrt(dim_size);
+                            }
                         } else {
-                            // eigen inv-fft already scales down by dim_size
                             fft_op.inv(fft_out, fft_in);
+                            if (norm == FFTNorm::BACKWARD) {
+                                fft_out /= dim_size;
+                            } else if (norm == FFTNorm::ORTHO) {
+                                fft_out /= std::sqrt(dim_size);
+                            }
                         }
                     }
 
                     // we can't directly use the map as fft output,
                     // since Eigen internally just uses the pointer to
                     // the map's first element, and doesn't respect stride at all..
-                    input_map.block(0, 0, dim_size, 1) = fft_out;
+                    input_map.block(0, 0, dim_size, 1) = fft_out.template cast<data_t>();
                 }
             }
         } else {
@@ -554,9 +591,8 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataHandlerCPU<float>;
-    template class DataHandlerCPU<std::complex<float>>;
+    template class DataHandlerCPU<complex<float>>;
     template class DataHandlerCPU<double>;
-    template class DataHandlerCPU<std::complex<double>>;
+    template class DataHandlerCPU<complex<double>>;
     template class DataHandlerCPU<index_t>;
-
 } // namespace elsa

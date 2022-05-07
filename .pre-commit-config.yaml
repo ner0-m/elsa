@@ -1,26 +1,36 @@
 repos:
   - repo: local
     hooks:
-      - id: clang-format-ci
-        name: Check if C++-like files are formatted such that CI will be happy
-        entry: bash tools/ci_scripts/clang-format-test.sh
-        stages: [ commit ]
-        language: system
-           
-      - id: doxygen-tag-lint-ci
-        name: Check that Doxygen tags use the @ instead of \, such that CI will be happy
-        entry: bash tools/ci_scripts/check-comment-style.sh
-        stages: [ commit ]
-        language: system
-           
-      - id: cmake-lint-ci
-        name: Check linting for CMake files, such that CI will be happy
-        entry: bash tools/ci_scripts/cmake-lint-test.sh
-        stages: [ commit ]
-        language: system
-           
-      - id: lint-commit
-        name: Lint commit message to ensure commit messages are nicely formatted
-        entry: bash tools/ci_scripts/commit-msg-test.sh
-        stages: [ commit-msg ] 
-        language: system
+    - id: clang-format-ci
+      name: Check if C++-like files are formatted such that CI will be happy
+      entry: bash tools/ci_scripts/clang-format-test.sh
+      stages: [ commit ]
+      language: system
+
+    - id: doxygen-tag-lint-ci
+      name: Check that Doxygen tags use the @ instead of \, such that CI will be happy
+      entry: bash tools/ci_scripts/check-comment-style.sh
+      stages: [ commit ]
+      language: system
+
+    - id: cmake-lint-ci
+      name: Check linting for CMake files, such that CI will be happy
+      entry: bash tools/ci_scripts/cmake-lint-test.sh
+      stages: [ commit ]
+      language: system
+
+    - id: lint-commit
+      name: Lint commit message to ensure commit messages are nicely formatted
+      entry: bash tools/ci_scripts/commit-msg-test.sh
+      stages: [ commit-msg ]
+      language: system
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0  # Use the ref you want to point at
+    hooks:
+    - id: check-added-large-files
+      args: [--maxkb=500]
+    - id: check-merge-conflict
+    - id: no-commit-to-branch
+      args: [--branch, master]
+    - id: trailing-whitespace

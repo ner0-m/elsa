@@ -23,7 +23,7 @@ if [[ "$master_ahead" -gt "0" ]]; then
     echo -e "[${ORANGE}WARNING${NC}]: Not all commits which are part of origin/master are part of your branch, maybe you need to rebase?"
 fi
 
-files=($(git diff origin/master --name-only | egrep ".+\.(h|hpp|cpp|cu|cuh)$"))
+files=($(git diff origin/master --name-only --diff-filter=d | egrep ".+\.(h|hpp|cpp|cu|cuh)$"))
 
 if (( ${#files[@]} )); then
     clang_format_tool=false
@@ -48,7 +48,7 @@ if (( ${#files[@]} )); then
     if ! "$clang_format_tool" --dry-run -Werror -style=file "${files[@]}"; then
         echo -e "[${RED}FAIL${NC}]: Oops, something isn't correct with the formatting, please check the errors above"
         echo -e "[${BLUE}INFO${NC}]: From the root directory you can also run:"
-        echo "find elsa/ benchmarks/ examples/ | egrep \".+\.(h|hpp|cpp|cu|cuh)$\" | xargs $clang_format_tool -style=file"
+        echo "find elsa/ benchmarks/ examples/ | egrep \".+\.(h|hpp|cpp|cu|cuh)$\" | xargs $clang_format_tool -i -style=file"
 
         if [[ "$master_ahead" -gt "0" ]]; then
             echo -e "[${BLUE}INFO${NC}]: Files considered:"

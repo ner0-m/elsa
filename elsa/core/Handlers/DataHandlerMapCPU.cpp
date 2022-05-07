@@ -113,18 +113,40 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerMapCPU<data_t>::fft(const DataDescriptor& source_desc)
+    data_t DataHandlerMapCPU<data_t>::minElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw LogicError("DataHandlerCPU: minElement of complex type not supported");
+        } else {
+            return _map.minCoeff();
+        }
+    }
+
+    template <typename data_t>
+    data_t DataHandlerMapCPU<data_t>::maxElement() const
+    {
+        if constexpr (isComplex<data_t>) {
+            throw LogicError("DataHandlerCPU: maxElement of complex type not supported");
+        } else {
+            return _map.maxCoeff();
+        }
+    }
+
+    template <typename data_t>
+    DataHandler<data_t>& DataHandlerMapCPU<data_t>::fft(const DataDescriptor& source_desc,
+                                                        FFTNorm norm)
     {
         // detaches internally
-        this->_dataOwner->fft(source_desc);
+        this->_dataOwner->fft(source_desc, norm);
         return *this;
     }
 
     template <typename data_t>
-    DataHandler<data_t>& DataHandlerMapCPU<data_t>::ifft(const DataDescriptor& source_desc)
+    DataHandler<data_t>& DataHandlerMapCPU<data_t>::ifft(const DataDescriptor& source_desc,
+                                                         FFTNorm norm)
     {
         // detaches internally
-        this->_dataOwner->ifft(source_desc);
+        this->_dataOwner->ifft(source_desc, norm);
         return *this;
     }
 
@@ -379,9 +401,9 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class DataHandlerMapCPU<float>;
-    template class DataHandlerMapCPU<std::complex<float>>;
+    template class DataHandlerMapCPU<complex<float>>;
     template class DataHandlerMapCPU<double>;
-    template class DataHandlerMapCPU<std::complex<double>>;
+    template class DataHandlerMapCPU<complex<double>>;
     template class DataHandlerMapCPU<index_t>;
 
 } // namespace elsa

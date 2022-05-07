@@ -5,20 +5,46 @@
 namespace elsa
 {
     /**
-     * @brief Class representing Nesterov's Fast Gradient Method.
-     *
-     * @author Michael Loipführer - initial code
-     *
-     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     * @brief Class implementing Nesterov's Fast Gradient Method.
      *
      * This class implements Nesterov's Fast Gradient Method. FGM is a first order method to
      * efficiently optimize convex functions with Lipschitz-Continuous gradients.
      *
-     * No particular stopping rule is currently implemented (only a fixed number of iterations,
-     * default to 100).
+     * @details
+     * # Nesterov's fast gradient method algorithm overview #
+     * The algorithm repeats the following update steps for \f$i = 0, \dots, N-1\f$
+     * \f{align*}{
+     * y_{i+1} &= x_i - \frac{1}{L} f'(x_i) \\
+     * t_{i+1} &= \frac{1 + \sqrt{1 + 4 t^2_i}}{2} \\
+     * x_{i+1} &= y_{i} + \frac{t_i - 1}{t_{i+1}}(y_{i+1} - y_i)
+     * \f}
+     * The inputs are \f$f \in C_{L}^{1, 1}(\mathbb{R}^d)\f$, \f$x_0 \in \mathbb{R}^d\f$,
+     * \f$y_0 = x_0\f$, \f$t_0 = 1\f$
      *
-     * References:
-     * https://doi.org/10.1007/s10107-015-0949-3
+     * The presented (and also implemented) version of the algorithm corresponds to _FGM1_ in the
+     * referenced paper.
+     *
+     * ## Convergence ##
+     * Compared to the standard gradient descent, which has a convergence rate of
+     * \f$\mathcal{O}(\frac{1}{N})\f$, the Nesterov's gradient method boots the convergence rate to
+     * \f$\mathcal{O}(\frac{1}{N}^2)\f$
+     *
+     * In the current implementation, no particular stopping rule is implemented, only a fixed
+     * number of iterations is used.
+     *
+     * ## FGM References ##
+     * - Kim, D., Fessler, J.A. _Optimized first-order methods for smooth convex minimization_
+     (2016) https://doi.org/10.1007/s10107-015-0949-3
+     *
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     *
+     * @see \verbatim embed:rst
+     For a basic introduction and problem statement of first-order methods, see
+     :ref:`here <elsa-first-order-methods-doc>` \endverbatim
+     *
+     * @author
+     * - Michael Loipführer - initial code
+     * - David Frank - Detailed Documentation
      */
     template <typename data_t = real_t>
     class FGM : public Solver<data_t>

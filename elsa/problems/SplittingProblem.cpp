@@ -72,7 +72,7 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class SplittingProblem<float>;
-    template class SplittingProblem<std::complex<float>>;
+    template class SplittingProblem<complex<float>>;
     template class SplittingProblem<double>;
-    template class SplittingProblem<std::complex<double>>;
+    template class SplittingProblem<complex<double>>;
 } // namespace elsa

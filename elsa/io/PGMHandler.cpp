@@ -5,6 +5,8 @@
 #include <exception>
 
 #include "Error.h"
+#include "spdlog/fmt/bundled/core.h"
+#include "spdlog/fmt/bundled/ostream.h"
 
 namespace elsa
 {
@@ -24,25 +26,21 @@ namespace elsa
         using CastType = std::conditional_t<std::is_floating_point_v<data_t>, data_t, real_t>;
 
         const auto dim = data.getDataDescriptor().getNumberOfDimensions();
+        const auto shape = data.getDataDescriptor().getNumberOfCoefficientsPerDimension();
 
-        if (dim != 2) {
+        // print 3D containers with last dim 1 (this way we can slice it)
+        if (dim != 2 && !(dim == 3 && shape[dim - 1] == 1)) {
             throw InvalidArgumentError("PGM:: Can only handle 2D data");
         }
 
         const auto dims = data.getDataDescriptor().getNumberOfCoefficientsPerDimension();
 
-        // Get maximum value, TODO: this should be inside DataContainer....
-        const auto maxValue = [&] {
-            auto tmp = std::numeric_limits<data_t>::min();
-            for (int i = 0; i < data.getSize(); ++i) {
-                if (data[i] > tmp)
-                    tmp = data[i];
-            }
-            return tmp;
-        }();
+        const auto maxValue = data.maxElement();
+        const auto minValue = data.minElement();
 
         // Scale all values from DataContainer to a range from [0, 255]
-        const auto scaleFactor = 255.f / static_cast<CastType>(std::ceil(maxValue));
+        const auto scaleFactor =
+            255.f / static_cast<CastType>(std::ceil(maxValue + std::abs(minValue)));
 
         // P2: Magic number specifying grey scale, then the two dimensions in the next line
         // Then the maximum value of the image in our case always 255
@@ -50,7 +48,11 @@ namespace elsa
 
         // Write data, ugly casts to silence warnings
         for (int i = 0; i < data.getSize(); ++i) {
-            stream << static_cast<int>(static_cast<CastType>(data[i]) * scaleFactor) << "\n";
+            // Scale everything to the range [0, 1]
+            const auto normalized = (data[i] - minValue) / (maxValue - minValue);
+
+            // Then scale it up to the range [0, 255]
+            stream << static_cast<int>(normalized * 255.f) << " ";
         }
     }
 

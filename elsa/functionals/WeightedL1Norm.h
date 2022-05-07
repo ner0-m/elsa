@@ -4,7 +4,6 @@
 
 namespace elsa
 {
-    // TODO improve
     /**
      * @brief Class representing a weighted l1 norm functional.
      *
@@ -23,7 +22,7 @@ namespace elsa
          * @brief Constructor for the weighted l1 norm, mapping domain vector to a scalar
          * (without a residual)
          *
-         * @param[in] weightingOp vector used for weights
+         * @param[in] weightingOp container of the weights
          */
         explicit WeightedL1Norm(const DataContainer<data_t>& weightingOp);
 
@@ -32,7 +31,7 @@ namespace elsa
          * a scalar
          *
          * @param[in] residual to be used when evaluating the functional (or its derivatives)
-         * @param[in] weightingOp vector used for weights
+         * @param[in] weightingOp container of the weights
          */
         WeightedL1Norm(const Residual<data_t>& residual, const DataContainer<data_t>& weightingOp);
 

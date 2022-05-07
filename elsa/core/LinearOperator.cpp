@@ -270,7 +270,7 @@ namespace elsa
             }
 
             if (_mode == CompositeMode::SCALAR_MULT) {
-                return new LinearOperator<data_t>(*_rhs, _isAdjoint);
+                return new LinearOperator<data_t>(*this);
             }
         }
 
@@ -366,8 +366,8 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class LinearOperator<float>;
-    template class LinearOperator<std::complex<float>>;
+    template class LinearOperator<complex<float>>;
     template class LinearOperator<double>;
-    template class LinearOperator<std::complex<double>>;
+    template class LinearOperator<complex<double>>;
 
 } // namespace elsa

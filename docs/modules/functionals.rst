@@ -31,7 +31,7 @@ Constraint
 .. doxygenclass:: elsa::Constraint
 
 L0PseudoNorm
-======
+============
 
 .. doxygenclass:: elsa::L0PseudoNorm
 
@@ -75,8 +75,3 @@ TransmissionLogLikelihood
 =========================
 
 .. doxygenclass:: elsa::TransmissionLogLikelihood
-
-Indicator
-=========
-
-.. doxygenclass:: elsa::Indicator

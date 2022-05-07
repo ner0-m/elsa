@@ -23,7 +23,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
     GIVEN("a DataDescriptor")
     {
         IndexVector_t size(2);
-        size << 256, 256;
+        size << 64, 64;
         VolumeDescriptor volDescr(size);
 
         WHEN("instantiating a ShearletTransform operator")
@@ -61,21 +61,21 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
         Vector_t<TestType> randomData(volDescr.getNumberOfCoefficients());
         randomData.setRandom();
         DataContainer<TestType> signal(volDescr, randomData);
-        DataContainer<std::complex<TestType>> complexSignal(volDescr);
+        DataContainer<elsa::complex<TestType>> complexSignal(volDescr);
         for (index_t i = 0; i < signal.getSize(); ++i) {
-            complexSignal[i] = std::complex<TestType>(signal[i], 0);
+            complexSignal[i] = elsa::complex<TestType>(signal[i], 0);
         }
 
         WHEN("reconstructing the signal")
         {
-            ShearletTransform<std::complex<TestType>, TestType> shearletTransform(size[0], size[1],
-                                                                                  4);
+            ShearletTransform<elsa::complex<TestType>, TestType> shearletTransform(size[0], size[1],
+                                                                                   4);
 
-            DataContainer<std::complex<TestType>> shearletCoefficients =
+            DataContainer<elsa::complex<TestType>> shearletCoefficients =
                 shearletTransform.apply(complexSignal);
 
             DataContainer<TestType> reconstruction =
-                shearletTransform.applyAdjoint(shearletCoefficients).getReal();
+                real(shearletTransform.applyAdjoint(shearletCoefficients));
 
             THEN("the ground truth and the reconstruction match")
             {
@@ -145,16 +145,14 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                 DataContainer<TestType> zeroes(VolumeDescriptor{{width, height}});
                 zeroes = 0;
 
-                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
-
                 // spectra here is of shape (W, H, L), square its elements and get the sum by the
                 // last axis and subtract 1, the output will be of shape (W, H), its elements
                 // should be zeroes, or very close to it
+
+                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
             }
         }
     }
 }
-
-// TODO what other tests to add? check how wavelets and curvelets are tested
 
 TEST_SUITE_END();
