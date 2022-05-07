@@ -16,6 +16,11 @@ minimize $f(x) + g(z)$
 
 subject to  $Ax + Bz = c$.
 
+In some scenarios, it is known beforehand that the expected solutions are non-negative. Explicitly adding this 
+constraint into the stated problem, it tends to improve the reconstruction results [3]. Such a behaviour is triggered by
+setting the `positiveSolutionsOnly` to `true` in the construction of ADMM. Note that of this type, only problems with 
+`$g(z) = \|SH(z)\|_{1, w}$` are currently supported.
+
 A [Least Absolute Shrinkage and Selection Operator](https://www.stat.cmu.edu/~ryantibs/papers/lassounique.pdf) problem
 is of the form,
 
@@ -185,3 +190,6 @@ DOI: [10.1561/2200000016](http://dx.doi.org/10.1561/2200000016)
 [2] M. Wieczorek, J. Frikel, J. Vogel, E. Eggl, F. Kopp, P.B. Noel, F. Pfeiffer, L. Demart, T. Lasser. *X-ray computed 
 tomography using curvelet sparse regularization*. Medical Physics 42(4), 2015. 
 DOI: [10.1118/1.4914368](https://dx.doi.org/10.1118/1.4914368)
+
+[3] Tatiana A. Bubba, G. Kutyniok, M. Lassas, M. März, W. Samek and S. Siltanen, V Srinivasan. *Learning The Invisible: 
+A Hybrid Deep Learning-Shearlet Framework for Limited Angle Computed Tomography*, 2018

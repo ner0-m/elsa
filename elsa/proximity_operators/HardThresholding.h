@@ -36,9 +36,9 @@ namespace elsa
          * @brief apply the proximity operator of the l0 pseudo-norm to an element in the operator's
          * domain
          *
-         * @param[in] v input DataContainer
-         * @param[in] t input Threshold
-         * @param[out] prox output DataContainer
+         * @param[in] v the input DataContainer
+         * @param[in] t the input Threshold
+         * @param[out] prox the output DataContainer
          */
         void applyImpl(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
                        DataContainer<data_t>& prox) const override;
@@ -46,9 +46,9 @@ namespace elsa
         /**
          * @brief apply the proximity operator of the l0 norm to an element in the operator's domain
          *
-         * @param[in] v input DataContainer
-         * @param[in] thresholds input vector<Threshold>
-         * @param[out] prox output DataContainer
+         * @param[in] v the input DataContainer
+         * @param[in] thresholds the input vector<Threshold>
+         * @param[out] prox the output DataContainer
          */
         void applyImpl(const DataContainer<data_t>& v,
                        std::vector<geometry::Threshold<data_t>> thresholds,

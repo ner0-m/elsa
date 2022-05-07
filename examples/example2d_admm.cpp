@@ -1,4 +1,4 @@
-/// Elsa example program: basic 2d X-ray CT simulation and reconstruction
+/// Elsa example program: basic 2d X-ray CT simulation and reconstruction through ADMM
 
 #include "elsa.h"
 
@@ -12,16 +12,16 @@ void example2d_admm()
     IndexVector_t size(2);
     size << 128, 128;
     auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
-    auto& volumeDescriptor = phantom.getDataDescriptor();
+    const auto& volumeDescriptor = phantom.getDataDescriptor();
 
     // write the phantom out
     EDF::write(phantom, "2dphantom.edf");
 
     // generate circular trajectory
-    index_t numAngles{180}, arc{360};
+    index_t numOfAngles{180}, arc{360};
     const auto distance = static_cast<real_t>(size(0));
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-        numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
+        numOfAngles, volumeDescriptor, arc, distance * 100.0f, distance);
 
     // setup operator for 2d X-ray transform
     Logger::get("Info")->info("Simulating sinogram using Siddon's method");
@@ -39,24 +39,15 @@ void example2d_admm()
     // setup reconstruction problem
     WLSProblem<real_t> wlsProblem(projector, sinogram);
 
-    index_t noIterations{20};
-
     L1Norm<real_t> regFunc(projector.getDomainDescriptor());
     RegularizationTerm<real_t> regTerm(0.5f, regFunc);
 
     // solve the reconstruction problem with ADMM
-    const DataDescriptor& regDatDescriptor = regTerm.getFunctional().getDomainDescriptor();
-
-    Identity<real_t> idOp(regDatDescriptor);
-    Scaling<real_t> negativeIdOp(regDatDescriptor, -1);
-    DataContainer<real_t> dCC(regDatDescriptor);
-    dCC = 0;
-
-    Constraint<real_t> constraint(idOp, negativeIdOp, dCC);
-
-    SplittingProblem<real_t> splittingProblem(wlsProblem.getDataTerm(), regTerm, constraint);
+    SplittingProblem<real_t> splittingProblem(wlsProblem.getDataTerm(), regTerm);
 
     ADMM<CG, SoftThresholding> admm(splittingProblem);
+
+    index_t noIterations{5};
 
     Logger::get("Info")->info("Solving reconstruction using {} iterations of ADMM", noIterations);
     auto admmReconstruction = admm.solve(noIterations);

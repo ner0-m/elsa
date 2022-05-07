@@ -25,13 +25,6 @@ namespace elsa
          */
         explicit Identity(const DataDescriptor& descriptor);
 
-        /**
-         * @brief Constructor for the identity operator, specifying the domain (= range).
-         *
-         * @param[in] descriptor DataDescriptor describing the domain and range of the operator
-         */
-        Identity(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor);
-
         /// default destructor
         ~Identity() override = default;
 

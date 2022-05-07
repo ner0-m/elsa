@@ -368,7 +368,7 @@ namespace elsa
         ///
         /// A slice is always the same dimension as the original DataContainer, but with a thickness
         /// of 1 in the last dimension (i.e. the coefficient of the last dimension is 1)
-        const DataContainer<data_t> slice(index_t i) const;
+        const DataContainer<data_t> slice(index_t i, index_t thickness = 1) const;
 
         /// @brief Slice the container in the last dimension, non-const overload
         ///

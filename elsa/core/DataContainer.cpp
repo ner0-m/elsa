@@ -419,13 +419,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    const DataContainer<data_t> DataContainer<data_t>::slice(index_t i) const
+    const DataContainer<data_t> DataContainer<data_t>::slice(index_t i, index_t thickness) const
     {
         auto& desc = getDataDescriptor();
         auto dim = desc.getNumberOfDimensions();
         auto sizeOfLastDim = desc.getNumberOfCoefficientsPerDimension()[dim - 1];
 
-        if (i >= sizeOfLastDim) {
+        if ((i + thickness) > sizeOfLastDim) {
             throw LogicError("Trying to access out of bound slice");
         }
 
@@ -433,10 +433,26 @@ namespace elsa
             return *this;
         }
 
-        auto sliceDesc = PartitionDescriptor(desc, sizeOfLastDim);
+        DataContainer<data_t> partitionedDC = viewAs(PartitionDescriptor(desc, sizeOfLastDim));
 
-        // Now set the slice
-        return viewAs(sliceDesc).getBlock(i);
+        if (thickness == 1) {
+            return partitionedDC.getBlock(i);
+        } else {
+            const auto coeffsPerDim = desc.getNumberOfCoefficientsPerDimension();
+            auto newCoeffsPerDim = coeffsPerDim;
+            newCoeffsPerDim(coeffsPerDim.size() - 1) = thickness;
+
+            VolumeDescriptor thickVolDescr(newCoeffsPerDim, desc.getSpacingPerDimension());
+
+            DataContainer<data_t> thickPartitionedDC(PartitionDescriptor(thickVolDescr, thickness));
+
+            // now set the slices
+            for (index_t j = 0; j < thickness; ++j) {
+                thickPartitionedDC.getBlock(j) = partitionedDC.getBlock(i++);
+            }
+
+            return thickPartitionedDC;
+        }
     }
 
     template <typename data_t>

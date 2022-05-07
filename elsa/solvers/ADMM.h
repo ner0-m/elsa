@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Solver.h"
-#include "VolumeDescriptor.h"
-#include "SoftThresholding.h"
-#include "SplittingProblem.h"
 #include "BlockLinearOperator.h"
-#include "WeightedL1Norm.h"
-#include "Indicator.h"
+#include "VolumeDescriptor.h"
+#include "L0PseudoNorm.h"
+#include "L1Norm.h"
 #include "L2NormPow2.h"
 #include "LinearResidual.h"
 #include "ShearletTransform.h"
+#include "ProximityOperator.h"
+#include "SplittingProblem.h"
 #include "Logger.h"
+#include "WeightedL1Norm.h"
 
 namespace elsa
 {
@@ -108,55 +109,6 @@ namespace elsa
         /// default destructor
         ~ADMM() override = default;
 
-        // TODO can this be put somewhere better? can this make it to master?
-        DataContainer<data_t> maxWithZero(DataContainer<data_t> dC)
-        {
-            DataContainer<data_t> zeroes(dC.getDataDescriptor());
-            zeroes = 0;
-            return cwiseMax(dC, zeroes);
-        }
-
-        /// slice a 3D container based on the specified range (both inclusive)
-        // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
-        //  manner, but that might take quite some time, can this make it to master in the meantime?
-        DataContainer<data_t> sliceByRange(index_t from, index_t to, DataContainer<data_t> dc)
-        {
-            index_t range = to - from + 1;
-            DataContainer<data_t> res(VolumeDescriptor{
-                {dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0],
-                 dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1], range}});
-
-            index_t j = 0;
-            for (index_t i = 0; i < dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[2];
-                 ++i) {
-                if (i >= from && i <= to) {
-                    res.slice(j++) = dc.slice(i);
-                }
-            }
-
-            return res;
-        }
-
-        /// bare-bones implementation of one scenario of torch.unsqueeze, adds a one dimension in
-        /// the end, e.g. from (n, n) to (n, n, 1)
-        // TODO ideally this ought to be implemented somewhere else, perhaps in a more general
-        //  manner, but that might take quite some time, can this make it to master in the meantime?
-        DataContainer<data_t> unsqueezeLastDimension(DataContainer<data_t> dc)
-        {
-            const DataDescriptor& dataDescriptor = dc.getDataDescriptor();
-            index_t dims = dataDescriptor.getNumberOfDimensions();
-            IndexVector_t coeffsPerDim = dataDescriptor.getNumberOfCoefficientsPerDimension();
-
-            IndexVector_t expandedCoeffsPerDim(dims + 1);
-
-            for (index_t index = 0; index < dims; ++index) {
-                expandedCoeffsPerDim[index] = coeffsPerDim[index];
-            }
-            expandedCoeffsPerDim[dims] = 1;
-
-            return dc.viewAs(VolumeDescriptor{expandedCoeffsPerDim});
-        }
-
         auto solveImpl(index_t iterations) -> DataContainer<data_t>& override
         {
             if (iterations == 0)
@@ -167,12 +119,12 @@ namespace elsa
             const auto& f = splittingProblem.getF();
             const auto& g = splittingProblem.getG();
 
-            const auto& dataTerm = f;
-
-            if (!is<L2NormPow2<data_t>>(dataTerm)) {
+            if (!is<L2NormPow2<data_t>>(f)) {
                 throw InvalidArgumentError(
                     "ADMM::solveImpl: supported data term only of type L2NormPow2");
             }
+
+            const auto& dataTerm = f;
 
             // safe as long as only LinearResidual exits
             const auto& dataTermResidual = downcast<LinearResidual<data_t>>(f.getResidual());
@@ -182,55 +134,51 @@ namespace elsa
             std::unique_ptr<DataContainer<data_t>> w;
             std::unique_ptr<std::vector<geometry::Threshold<data_t>>> thresholds;
 
-            /// TODO now we have two here? the WL1Norm and Indicator, they don't seem to be used (we
-            ///  currently only get the weight from WL1Norm), would be used if SoftThresholding
-            ///  accepted them in the constructor
+            const auto& constraint = splittingProblem.getConstraint();
+
             if (g.size() == 1) {
                 regWeight = std::make_unique<data_t>(g[0].getWeight());
                 Functional<data_t>& regularizationTerm = g[0].getFunctional();
 
                 if (!is<L0PseudoNorm<data_t>>(regularizationTerm)
-                    && !is<L1Norm<data_t>>(regularizationTerm)) {
+                    && !is<L1Norm<data_t>>(regularizationTerm)
+                    && !is<WeightedL1Norm<data_t>>(regularizationTerm)) {
                     throw InvalidArgumentError(
                         "ADMM::solveImpl: supported regularization terms are "
-                        "of type L0PseudoNorm or L1Norm");
-                }
-            } else if (g.size() == 2) {
-                if (g[0].getWeight() != g[1].getWeight()) {
-                    throw InvalidArgumentError(
-                        "ADMM::solveImpl: regularization weights should match");
+                        "of type L0PseudoNorm or L1Norm or WeightedL1Norm");
                 }
 
-                if (!is<WeightedL1Norm<data_t>>(&g[0].getFunctional())
-                    || !is<Indicator<data_t>>(&g[1].getFunctional())) {
-                    throw InvalidArgumentError(
-                        "ADMM::solveImpl: supported regularization terms are "
-                        "of type WeightedL1Norm and Indicator, respectively");
+                if (is<WeightedL1Norm<data_t>>(regularizationTerm) && _positiveSolutionsOnly) {
+                    LinearOperator<data_t> scaledShearletTransform =
+                        downcast<LinearOperator<data_t>>(
+                            downcast<BlockLinearOperator<data_t>>(constraint.getOperatorA())
+                                .getIthOperator(0));
+
+                    data_t rho1 = scaledShearletTransform.getScalar().value();
+
+                    auto wL1NormRegTerm = downcast<WeightedL1Norm<data_t>>(&g[0].getFunctional());
+
+                    w = std::make_unique<DataContainer<data_t>>(
+                        static_cast<DataContainer<data_t>>(wL1NormRegTerm->getWeightingOperator()));
+                    thresholds = std::make_unique<std::vector<geometry::Threshold<data_t>>>(
+                        ProximityOperator<data_t>::valuesToThresholds(_rho0 * *w / rho1));
                 }
-
-                auto wL1NormRegTerm = downcast<WeightedL1Norm<data_t>>(&g[0].getFunctional());
-
-                w = std::make_unique<DataContainer<data_t>>(
-                    static_cast<DataContainer<data_t>>(wL1NormRegTerm->getWeightingOperator()));
-                thresholds = std::make_unique<std::vector<geometry::Threshold<data_t>>>(
-                    ProximityOperator<data_t>::valuesToThresholds(_rho0 * *w / _rho1));
             } else {
-                throw InvalidArgumentError("ADMM::solveImpl: supported number of "
-                                           "regularization terms is either 1 or 2");
+                throw InvalidArgumentError(
+                    "ADMM::solveImpl: supported number of regularization terms is 1");
             }
 
-            const auto& constraint = splittingProblem.getConstraint();
-            const auto& A = constraint.getOperatorA();
-            const auto& B = constraint.getOperatorB();
-            const auto& c = constraint.getDataVectorC();
+            const LinearOperator<data_t>& A = constraint.getOperatorA();
+            const LinearOperator<data_t>& B = constraint.getOperatorB();
+            const DataContainer<data_t>& c = constraint.getDataVectorC();
 
             DataContainer<data_t> x(A.getDomainDescriptor());
             x = 0;
 
-            DataContainer<data_t> z(B.getRangeDescriptor());
+            DataContainer<data_t> z(B.getDomainDescriptor());
             z = 0;
 
-            DataContainer<data_t> u(A.getRangeDescriptor());
+            DataContainer<data_t> u(c.getDataDescriptor());
             u = 0;
 
             Logger::get("ADMM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}",
@@ -250,21 +198,25 @@ namespace elsa
                     ZSolver<data_t> zProxOp(A.getRangeDescriptor());
                     z = zProxOp.apply(x + u, geometry::Threshold{*regWeight / _rho});
                 } else {
-                    auto shearletTransform = downcast<ShearletTransform<data_t, data_t>>(
-                        downcast<BlockLinearOperator<data_t>>(A).getIthOperator(0));
-
-                    index_t layers = shearletTransform.getNumOfLayers();
-
                     ZSolver<data_t> zProxOp(w->getDataDescriptor());
 
-                    DataContainer<data_t> P1u = sliceByRange(0, layers - 1, u);
+                    ShearletTransform<data_t, data_t> shearletTransform =
+                        downcast<ShearletTransform<data_t, data_t>>(
+                            downcast<LinearResidual<data_t>>(g[0].getFunctional().getResidual())
+                                .getOperator());
+
+                    index_t numOfLayers = shearletTransform.getNumOfLayers();
+                    DataContainer<data_t> P1u = u.slice(0, numOfLayers);
                     DataContainer<data_t> P1z =
                         zProxOp.apply(shearletTransform.apply(x) + P1u, *thresholds);
 
-                    DataContainer<data_t> P2u = u.slice(layers);
-                    DataContainer<data_t> P2z = maxWithZero(unsqueezeLastDimension(x) + P2u);
+                    DataContainer<data_t> P2u = u.slice(numOfLayers);
 
-                    z = concatenate(P1z, P2z);
+                    DataContainer<data_t> sumdc = x.viewAs(P2u.getDataDescriptor()) + P2u;
+                    DataContainer<data_t> P2z =
+                        clip(sumdc, static_cast<data_t>(0.0), std::numeric_limits<data_t>::max());
+
+                    z = concatenate(P1z, P2z).viewAs(B.getDomainDescriptor());
                 }
 
                 u += A.apply(x) + B.apply(z) - c;
@@ -353,8 +305,6 @@ namespace elsa
         /// @f$ \rho @f$ values from the problem definition
         data_t _rho{1};
         data_t _rho0{1.0 / 2}; // consider as hyper-parameters
-        data_t _rho1{1.0 / 2}; // consider as hyper-parameters
-        data_t _rho2{1};       // just set it to 1, at least initially
 
         /// flag to indicate whether to utilize the Varying Penalty Parameter extension, refer
         /// to the section 3.4.1 (Boyd) for further details

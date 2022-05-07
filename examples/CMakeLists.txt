@@ -24,6 +24,13 @@ add_example(limited_angle_example2d limited_angle_example2d.cpp)
 # build the 2d example admm program
 add_example(example2d_admm example2d_admm.cpp)
 
+# build the 2d example shadmm program
+add_executable(example2d_shadmm example2d_shadmm.cpp)
+target_link_libraries(example2d_shadmm PRIVATE elsa::all)
+target_compile_features(example2d_shadmm PUBLIC cxx_std_17)
+set_quickvec_options(example2d_shadmm example2d_shadmm.cpp)
+add_dependencies(build-examples example2d_shadmm)
+
 # build the shearlet example program
 add_example(shearlet_example example2d_shearlet.cpp)
 

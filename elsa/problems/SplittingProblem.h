@@ -1,10 +1,7 @@
 #pragma once
 
 #include "Constraint.h"
-#include "L0PseudoNorm.h"
-#include "L1Norm.h"
-#include "WLSProblem.h"
-#include "LASSOProblem.h"
+#include "Problem.h"
 
 namespace elsa
 {
@@ -50,6 +47,28 @@ namespace elsa
          */
         SplittingProblem(const Functional<data_t>& f, const RegularizationTerm<data_t>& g,
                          const Constraint<data_t>& constraint);
+
+        /**
+         * @brief Constructor for SplittingProblem, accepting a functional and a regularization term
+         *
+         * @param[in] f the functional from the problem statement
+         * @param[in] g the regularization term from the problem statement
+         *
+         * The constraint is generated based on the DataDescriptor of the domain of f.
+         */
+        SplittingProblem(const Functional<data_t>& f, const RegularizationTerm<data_t>& g);
+
+        /**
+         * @brief Constructor for SplittingProblem, accepting a functional and some regularization
+         * terms
+         *
+         * @param[in] f the functional from the problem statement
+         * @param[in] g the regularization terms from the problem statement
+         *
+         * The constraint is generated based on the DataDescriptor of the domain of f.
+         */
+        SplittingProblem(const Functional<data_t>& f,
+                         const std::vector<RegularizationTerm<data_t>>& g);
 
         /// default destructor
         ~SplittingProblem() override = default;

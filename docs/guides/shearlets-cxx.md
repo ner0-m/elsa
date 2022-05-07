@@ -37,7 +37,7 @@ EDF::write(reconstruction, "2dreconstruction_shearlet.edf");
 Note that `apply` works only on two-dimensional objects, e.g. on a grayscale image.
 
 By default, the `apply` method will return real values, and the imaginary parts cut out. If we want to the complex
-numbers as-generated, then we can simply specify `ShearletTransform<std::complex<real_t>, real_t>`, and go from there.
+numbers as-generated, then we can simply specify `ShearletTransform<elsa::complex<real_t>, real_t>`, and go from there.
 
 As a subclass of the `LinearOperator` class, the `ShearletTransform` does not eagerly perform computations. Therefore,
 the spectra are stored right after they've been generated on the first run of the `apply`/`applyAdjoint` calls. This

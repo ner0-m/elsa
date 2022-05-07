@@ -12,10 +12,8 @@
 #include "CG.h"
 #include "SoftThresholding.h"
 #include "HardThresholding.h"
-#include "Identity.h"
 #include "FISTA.h"
-#include "Logger.h"
-#include "VolumeDescriptor.h"
+#include "Identity.h"
 #include "PartitionDescriptor.h"
 
 #include <testHelpers.h>
@@ -55,7 +53,8 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", TestType, float, double)
 
             SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, SoftThresholding, TestType> admm(splittingProblem);
+            ADMM<CG, SoftThresholding, TestType> admm(splittingProblem, 5, 1e-5f, 1e-5f, true,
+                                                      false);
 
             LASSOProblem<TestType> lassoProb(wlsProb, regTerm);
             FISTA<TestType> fista(lassoProb);
@@ -73,7 +72,8 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", TestType, float, double)
 
             SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, HardThresholding, TestType> admm(splittingProblem);
+            ADMM<CG, HardThresholding, TestType> admm(splittingProblem, 5, 1e-5f, 1e-5f, true,
+                                                      false);
 
             THEN("the solution doesn't throw, is not nan and is approximate to the b vector")
             {
@@ -92,76 +92,74 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems with solutions restricted to only pos
 
     GIVEN("some problems and a constraint")
     {
-        index_t n = 128;
+        index_t n = 32;
         IndexVector_t size(2);
         size << n, n;
         VolumeDescriptor volDescr(size);
 
-        // random number
-        real_t rho1 = 1 / 2;
-        real_t rho2 = 1;
+        Vector_t<TestType> bVec(volDescr.getNumberOfCoefficients());
+        bVec.setRandom();
+        DataContainer<TestType> dcB(volDescr, bVec);
 
-        /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
+        Identity<TestType> idOp(volDescr);
+
+        WLSProblem<TestType> wlsProb(idOp, dcB);
+
+        TestType rho1 = 1.0 / 2;
+        TestType rho2 = 1;
+
         ShearletTransform<TestType, TestType> shearletTransform(size);
-        index_t layers = shearletTransform.getNumOfLayers();
+        index_t numOfLayers = shearletTransform.getNumOfLayers();
+
+        VolumeDescriptor numOfLayersPlusOneDescriptor{{n, n, numOfLayers + 1}};
 
         IndexVector_t slicesInBlock(2);
-        slicesInBlock << layers, 1;
-
+        slicesInBlock << numOfLayers, 1;
         std::vector<std::unique_ptr<LinearOperator<TestType>>> opsOfA(0);
-        Scaling<TestType> scaling(VolumeDescriptor{{n, n}}, rho2);
-        opsOfA.push_back(shearletTransform.clone()); // TODO mult. with rho1 later on
+        Scaling<TestType> scaling(volDescr, rho2);
+        opsOfA.push_back((rho1 * shearletTransform).clone());
         opsOfA.push_back(scaling.clone());
-        BlockLinearOperator<TestType> A{
-            VolumeDescriptor{{n, n}},
-            PartitionDescriptor{VolumeDescriptor{{n, n, layers + 1}}, slicesInBlock}, opsOfA,
-            BlockLinearOperator<TestType>::BlockType::ROW};
+        BlockLinearOperator<TestType> A(
+            volDescr, PartitionDescriptor{numOfLayersPlusOneDescriptor, slicesInBlock}, opsOfA,
+            BlockLinearOperator<TestType>::BlockType::ROW);
 
-        /// B = diag(−ρ_1*1_Ln^2 , −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-        DataContainer<TestType> factorsOfB(VolumeDescriptor{n, n, layers + 1});
+        DataContainer<TestType> factorsOfB(numOfLayersPlusOneDescriptor);
+        //        factorsOfB.slice(0, numOfLayers) = -1 * rho1;
+        //        factorsOfB.slice(numOfLayers) = -1 * rho2;
         for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
-            if (ind < (n * n * layers)) {
+            if (ind < (n * n * numOfLayers)) {
                 factorsOfB[ind] = -1 * rho1;
             } else {
                 factorsOfB[ind] = -1 * rho2;
             }
         }
-        Scaling<TestType> B(VolumeDescriptor{{n, n, layers + 1}}, factorsOfB);
+        Scaling<TestType> B(numOfLayersPlusOneDescriptor, factorsOfB);
 
-        DataContainer<TestType> dCC(VolumeDescriptor{{n, n, layers + 1}});
-        dCC = 0;
+        DataContainer<TestType> c(numOfLayersPlusOneDescriptor);
+        c = 0;
 
-        Constraint<TestType> constraint(A, B, dCC);
+        Constraint<TestType> constraint(A, B, c);
+
+        DataContainer<TestType> wL1NWeights(VolumeDescriptor{{n, n, numOfLayers}});
+        wL1NWeights = 0.001f;
+        //        for (int j = 1; j < layers; ++j) {
+        //            wL1NWeights.slice(j - 1, j) = j / 5;
+        //        }
+        WeightedL1Norm<TestType> weightedL1Norm(LinearResidual<TestType>{shearletTransform},
+                                                wL1NWeights);
+        RegularizationTerm<TestType> wL1NormRegTerm(1, weightedL1Norm);
+
+        SplittingProblem<TestType> splittingProblem(wlsProb.getDataTerm(), wL1NormRegTerm,
+                                                    constraint);
 
         WHEN("setting up ADMM to solve a problem")
         {
-            Vector_t<TestType> bVec(VolumeDescriptor{n * n}.getNumberOfCoefficients());
-            bVec.setRandom();
-            DataContainer<TestType> dcB(VolumeDescriptor{n * n}, bVec);
-
-            Identity<TestType> idOp(VolumeDescriptor{n, n});
-
-            WLSProblem<TestType> wlsProb(idOp, dcB);
-
-            DataContainer<TestType> ones(VolumeDescriptor{{n, n, layers}});
-            ones = 1;
-            WeightedL1Norm<TestType> weightedL1Norm(LinearResidual<TestType>{shearletTransform},
-                                                    ones);
-            RegularizationTerm<TestType> wL1NormRegTerm(1, weightedL1Norm);
-
-            Indicator<TestType> indicator(VolumeDescriptor{{n, n}});
-            RegularizationTerm<TestType> indicRegTerm(1, indicator);
-
-            SplittingProblem<TestType> splittingProblem(
-                wlsProb.getDataTerm(), std::vector{wL1NormRegTerm, indicRegTerm}, constraint);
-
             ADMM<CG, SoftThresholding, TestType> admm(splittingProblem, true);
 
             THEN("the solution doesn't throw, is not nan, and is approximate to the bvector")
             {
                 REQUIRE_NOTHROW(admm.solve(1));
                 REQUIRE_UNARY(!std::isnan(admm.solve(2).squaredL2Norm()));
-                // REQUIRE_UNARY(isApprox(admm.solve(20), dcB));
             }
         }
     }

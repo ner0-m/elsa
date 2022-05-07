@@ -155,6 +155,69 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a mirrored Limited Angle Traj
                 }
             }
         }
+
+        WHEN("We create a full circular limited angle trajectory for this scenario with a missing "
+             "wedge between 60 and 120 degrees")
+        {
+            index_t fullyCircular = 359;
+            real_t diffCenterSource{s * 100};
+            real_t diffCenterDetector{s};
+            std::pair missingWedgeAngles(geometry::Degree(60), geometry::Degree(120));
+
+            auto sinoDescriptor = LimitedAngleTrajectoryGenerator::createTrajectory(
+                numberOfAngles, missingWedgeAngles, desc, fullyCircular, diffCenterSource,
+                diffCenterDetector);
+
+            // check that the detector size is correct
+            REQUIRE_EQ(sinoDescriptor->getNumberOfCoefficientsPerDimension()[0],
+                       expectedDetectorSize);
+
+            THEN("Every geomList in our list has the same camera center and the same projection "
+                 "matrix")
+            {
+                const real_t sourceToCenter = diffCenterSource;
+                const real_t centerToDetector = diffCenterDetector;
+
+                real_t wedgeArc = 2 * (missingWedgeAngles.second - missingWedgeAngles.first);
+
+                const real_t angleIncrement = (static_cast<real_t>(fullyCircular) - wedgeArc)
+                                              / (static_cast<real_t>(numberOfAngles));
+
+                index_t j = 0;
+                for (index_t i = 0;; ++i) {
+                    Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
+
+                    if (!((angle.to_degree() >= missingWedgeAngles.first
+                           && angle.to_degree() <= missingWedgeAngles.second)
+                          || (angle.to_degree() >= (missingWedgeAngles.first + 180)
+                              && angle.to_degree() <= (missingWedgeAngles.second + 180)))) {
+                        Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
+                                         CenterOfRotationToDetector{centerToDetector},
+                                         Radian{angle}, VolumeData2D{volSize},
+                                         SinogramData2D{sinoDescriptor->getSpacingPerDimension(),
+                                                        sinoDescriptor->getLocationOfOrigin()});
+
+                        auto geom = sinoDescriptor->getGeometryAt(j++);
+                        CHECK(geom);
+
+                        const auto centerNorm =
+                            (tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm();
+                        const auto projMatNorm =
+                            (tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm();
+                        const auto invProjMatNorm = (tmpGeom.getInverseProjectionMatrix()
+                                                     - geom->getInverseProjectionMatrix())
+                                                        .norm();
+                        REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
+                        REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
+                        REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    }
+
+                    if (angle.to_degree() > static_cast<real_t>(fullyCircular)) {
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -240,6 +303,67 @@ TEST_CASE("LimitedAngleTrajectoryGenerator: Create a non-mirrored Limited Angle 
             real_t diffCenterSource{s * 100};
             real_t diffCenterDetector{s};
             std::pair missingWedgeAngles(geometry::Degree(20), geometry::Degree(85));
+
+            auto sinoDescriptor = LimitedAngleTrajectoryGenerator::createTrajectory(
+                numberOfAngles, missingWedgeAngles, desc, fullyCircular, diffCenterSource,
+                diffCenterDetector, false);
+
+            // check that the detector size is correct
+            REQUIRE_EQ(sinoDescriptor->getNumberOfCoefficientsPerDimension()[0],
+                       expectedDetectorSize);
+
+            THEN("Every geomList in our list has the same camera center and the same projection "
+                 "matrix")
+            {
+                const real_t sourceToCenter = diffCenterSource;
+                const real_t centerToDetector = diffCenterDetector;
+
+                real_t wedgeArc = missingWedgeAngles.second - missingWedgeAngles.first;
+
+                const real_t angleIncrement = (static_cast<real_t>(fullyCircular) - wedgeArc)
+                                              / (static_cast<real_t>(numberOfAngles));
+
+                index_t j = 0;
+                for (index_t i = 0;; ++i) {
+                    Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
+
+                    if (!(angle.to_degree() >= missingWedgeAngles.first
+                          && angle.to_degree() <= missingWedgeAngles.second)) {
+                        Geometry tmpGeom(SourceToCenterOfRotation{sourceToCenter},
+                                         CenterOfRotationToDetector{centerToDetector},
+                                         Radian{angle}, VolumeData2D{volSize},
+                                         SinogramData2D{sinoDescriptor->getSpacingPerDimension(),
+                                                        sinoDescriptor->getLocationOfOrigin()});
+
+                        auto geom = sinoDescriptor->getGeometryAt(j++);
+                        CHECK(geom);
+
+                        const auto centerNorm =
+                            (tmpGeom.getCameraCenter() - geom->getCameraCenter()).norm();
+                        const auto projMatNorm =
+                            (tmpGeom.getProjectionMatrix() - geom->getProjectionMatrix()).norm();
+                        const auto invProjMatNorm = (tmpGeom.getInverseProjectionMatrix()
+                                                     - geom->getInverseProjectionMatrix())
+                                                        .norm();
+                        REQUIRE_UNARY(checkApproxEq(centerNorm, 0));
+                        REQUIRE_UNARY(checkApproxEq(projMatNorm, 0, 0.0000001));
+                        REQUIRE_UNARY(checkApproxEq(invProjMatNorm, 0, 0.0000001));
+                    }
+
+                    if (angle.to_degree() > static_cast<real_t>(fullyCircular)) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        WHEN("We create a full circular limited angle trajectory for this scenario with a missing "
+             "wedge between 60 and 120 degrees")
+        {
+            index_t fullyCircular = 359;
+            real_t diffCenterSource{s * 100};
+            real_t diffCenterDetector{s};
+            std::pair missingWedgeAngles(geometry::Degree(60), geometry::Degree(120));
 
             auto sinoDescriptor = LimitedAngleTrajectoryGenerator::createTrajectory(
                 numberOfAngles, missingWedgeAngles, desc, fullyCircular, diffCenterSource,
