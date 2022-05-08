@@ -1,12 +1,8 @@
 # list all the headers of the module
-set(MODULE_HEADERS
-        InpaintMissingSingularitiesTask.h
-        )
+set(MODULE_HEADERS Tasks.hpp)
 
 # list all the code files of the module
-set(MODULE_SOURCES
-        InpaintMissingSingularitiesTask.cpp
-        )
+set(MODULE_SOURCES)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_io elsa_logging elsa_generators elsa_ml elsa_problems elsa_projectors elsa_proximity_operators elsa_solvers)
 list(APPEND MODULE_PRIVATE_DEPS)
@@ -14,6 +10,11 @@ list(APPEND MODULE_PRIVATE_DEPS)
 ADD_ELSA_MODULE(
         tasks "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
         PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
+)
+
+target_include_directories(
+        ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 if (ELSA_BUILD_PYTHON_BINDINGS)

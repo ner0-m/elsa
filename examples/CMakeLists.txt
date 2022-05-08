@@ -18,6 +18,9 @@ add_example(simple_recon2d simple_recon2d.cpp)
 # build the 2d example program
 add_example(example2d example2d.cpp)
 
+# build the temporary example program
+add_example(temporary_example temporary_example.cpp)
+
 # build the 2d limited angle trajectory example program
 add_example(limited_angle_example2d limited_angle_example2d.cpp)
 
