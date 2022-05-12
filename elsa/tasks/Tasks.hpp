@@ -37,80 +37,60 @@ namespace elsa::task
      */
     namespace ConstructTrajectory
     {
-        class LimitedAngleTrajectoryBuilder;
-        class CircleTrajectoryBuilder;
-
-        std::unique_ptr<LimitedAngleTrajectoryBuilder> limitedAngle;
-        std::unique_ptr<CircleTrajectoryBuilder> circle;
-
         class LimitedAngleTrajectoryBuilder
         {
         private:
-            float _distance;
             index_t _numberOfPoses;
             std::unique_ptr<DataDescriptor> _volumeDescriptor;
             index_t _arcDegrees;
-            float _sourceToCenter = _distance * 100.0f;
-            float _centerToDetector = _distance;
+            float _sourceToCenter;
+            float _centerToDetector;
 
             std::pair<elsa::geometry::Degree, elsa::geometry::Degree> _missingWedgeAngles;
             bool _mirrored;
 
         public:
-            LimitedAngleTrajectoryBuilder* setDistance(float distance)
-            {
-                _distance = distance;
-                return this;
-            }
-
-            LimitedAngleTrajectoryBuilder* setNumberOfPoses(index_t numberOfPoses)
+            LimitedAngleTrajectoryBuilder& setNumberOfPoses(index_t numberOfPoses)
             {
                 _numberOfPoses = numberOfPoses;
-                return this;
-            };
+                return *this;
+            }
 
-            LimitedAngleTrajectoryBuilder* setMissingWedgeAngles(
+            LimitedAngleTrajectoryBuilder& setMissingWedgeAngles(
                 std::pair<elsa::geometry::Degree, elsa::geometry::Degree> missingWedgeAngles)
             {
                 _missingWedgeAngles = missingWedgeAngles;
-                return this;
+                return *this;
             }
 
-            LimitedAngleTrajectoryBuilder*
-                setDataDescriptor(std::unique_ptr<DataDescriptor> volumeDescriptor)
-            {
-                _volumeDescriptor = volumeDescriptor;
-                return this;
-            }
-
-            LimitedAngleTrajectoryBuilder* setArcDegrees(index_t arcDegrees)
+            LimitedAngleTrajectoryBuilder& setArcDegrees(index_t arcDegrees)
             {
                 _arcDegrees = arcDegrees;
-                return this;
+                return *this;
             }
 
-            LimitedAngleTrajectoryBuilder* setSourceToCenter(float sourceToCenter)
+            LimitedAngleTrajectoryBuilder& setSourceToCenter(float sourceToCenter)
             {
                 _sourceToCenter = sourceToCenter;
-                return this;
+                return *this;
             }
 
-            LimitedAngleTrajectoryBuilder* setCenterToDetector(float centerToDetector)
+            LimitedAngleTrajectoryBuilder& setCenterToDetector(float centerToDetector)
             {
                 _centerToDetector = centerToDetector;
-                return this;
+                return *this;
             }
 
-            LimitedAngleTrajectoryBuilder* setMirrored(bool mirrored)
+            LimitedAngleTrajectoryBuilder& setMirrored(bool mirrored)
             {
                 _mirrored = mirrored;
-                return this;
+                return *this;
             }
 
-            std::unique_ptr<DetectorDescriptor> build()
+            std::unique_ptr<DetectorDescriptor> build(const DataDescriptor& volumeDescriptor)
             {
                 return LimitedAngleTrajectoryGenerator::createTrajectory(
-                    _numberOfPoses, _missingWedgeAngles, *_volumeDescriptor, _arcDegrees,
+                    _numberOfPoses, _missingWedgeAngles, volumeDescriptor, _arcDegrees,
                     _sourceToCenter, _centerToDetector, _mirrored);
             }
         };
@@ -118,54 +98,48 @@ namespace elsa::task
         class CircleTrajectoryBuilder
         {
         private:
-            float _distance;
             index_t _numberOfPoses;
-            std::unique_ptr<DataDescriptor> _volumeDescriptor;
             index_t _arcDegrees;
-            float _sourceToCenter = _distance * 100.0f;
-            float _centerToDetector = _distance;
+            float _sourceToCenter;
+            float _centerToDetector;
 
         public:
-            CircleTrajectoryBuilder* setDistance(float distance)
-            {
-                _distance = distance;
-                return this;
-            }
-
-            CircleTrajectoryBuilder* setNumberOfPoses(index_t numberOfPoses)
+            CircleTrajectoryBuilder& setNumberOfPoses(index_t numberOfPoses)
             {
                 _numberOfPoses = numberOfPoses;
-                return this;
-            };
-
-            CircleTrajectoryBuilder*
-                setDataDescriptor(std::unique_ptr<DataDescriptor> volumeDescriptor)
-            {
-                _volumeDescriptor = volumeDescriptor;
-                return this;
+                return *this;
             }
 
-            CircleTrajectoryBuilder* setArcDegrees(index_t arcDegrees) { _arcDegrees = arcDegrees; }
+            CircleTrajectoryBuilder& setArcDegrees(index_t arcDegrees)
+            {
+                _arcDegrees = arcDegrees;
+                return *this;
+            }
 
-            CircleTrajectoryBuilder* setSourceToCenter(float sourceToCenter)
+            CircleTrajectoryBuilder& setSourceToCenter(float sourceToCenter)
             {
                 _sourceToCenter = sourceToCenter;
-                return this;
+                return *this;
             }
 
-            CircleTrajectoryBuilder* setCenterToDetector(float centerToDetector)
+            CircleTrajectoryBuilder& setCenterToDetector(float centerToDetector)
             {
                 _centerToDetector = centerToDetector;
-                return this;
+                return *this;
             }
 
-            std::unique_ptr<DetectorDescriptor> build()
+            std::unique_ptr<DetectorDescriptor> build(const DataDescriptor& volumeDescriptor)
             {
-                return CircleTrajectoryGenerator::createTrajectory(
-                    _numberOfPoses, *_volumeDescriptor, _arcDegrees, _sourceToCenter,
-                    _centerToDetector);
+                return CircleTrajectoryGenerator::createTrajectory(_numberOfPoses, volumeDescriptor,
+                                                                   _arcDegrees, _sourceToCenter,
+                                                                   _centerToDetector);
             }
         };
+
+        LimitedAngleTrajectoryBuilder limitedAngle = LimitedAngleTrajectoryBuilder();
+        CircleTrajectoryBuilder circle =
+            CircleTrajectoryBuilder(); // TODO would circular be a better name?
+
     } // namespace ConstructTrajectory
 
     /**
@@ -204,89 +178,85 @@ namespace elsa::task
         /// Reconstructs the l1-regularization with shearlets by utilizing ADMM. By default the CUDA
         /// projector will be used if available.
         template <typename data_t = real_t>
-        std::vector<DataContainer<data_t>>
-            reconstructVisibleCoeffs(const std::vector<DataContainer<float>>& images,
+        DataContainer<data_t>
+            reconstructVisibleCoeffs(DataContainer<data_t> image,
                                      std::unique_ptr<DetectorDescriptor> trajectory,
-                                     DataContainer<data_t> noise = 0, index_t solverIterations = 50,
-                                     data_t rho1 = 1.0 / 2, data_t rho2 = 1)
+                                     index_t solverIterations = 50, data_t rho1 = 1.0 / 2,
+                                     data_t rho2 = 1) // DataContainer<data_t> noise = 0,
         {
-            std::vector<DataContainer<data_t>> visibleCoeffs;
+            const DataDescriptor& domainDescriptor = image.getDataDescriptor();
 
-            for (DataContainer<data_t> image : images) {
-                const DataDescriptor& domainDescriptor = image.getDataDescriptor();
-
-                if (domainDescriptor.getNumberOfDimensions() != 2) {
-                    throw new InvalidArgumentError(
-                        "task::InpaintMissingSingularities: only 2D images are supported");
-                }
-
-                index_t width = domainDescriptor.getNumberOfCoefficientsPerDimension()[0];
-                index_t height = domainDescriptor.getNumberOfCoefficientsPerDimension()[1];
-                ShearletTransform<data_t, data_t> shearletTransform(width, height);
-                index_t numOfLayers = shearletTransform.getNumOfLayers();
-
-                VolumeDescriptor numOfLayersPlusOneDescriptor{{width, height, numOfLayers + 1}};
-
-                /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
-                IndexVector_t slicesInBlock(2);
-                slicesInBlock << numOfLayers, 1;
-                std::vector<std::unique_ptr<LinearOperator<real_t>>> opsOfA(0);
-                Scaling<real_t> scaling(domainDescriptor, rho2);
-                opsOfA.push_back((rho1 * shearletTransform).clone()); // TODO double check
-                opsOfA.push_back(scaling.clone());
-                BlockLinearOperator<real_t> A(
-                    domainDescriptor,
-                    PartitionDescriptor{numOfLayersPlusOneDescriptor, slicesInBlock}, opsOfA,
-                    BlockLinearOperator<real_t>::BlockType::ROW);
-
-                /// B = diag(−ρ_1*1_Ln^2, −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
-                DataContainer<data_t> factorsOfB(numOfLayersPlusOneDescriptor);
-                for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
-                    if (ind < (numOfLayers * width * height)) {
-                        factorsOfB[ind] = -1 * rho1;
-                    } else {
-                        factorsOfB[ind] = -1 * rho2;
-                    }
-                }
-                Scaling<data_t> B(numOfLayersPlusOneDescriptor, factorsOfB);
-
-                DataContainer<data_t> c(numOfLayersPlusOneDescriptor);
-                c = 0;
-
-                Constraint<data_t> constraint(A, B, c);
-
-#ifdef ELSA_CUDA_PROJECTORS
-                SiddonsMethodCUDA<data_t> projector(domainDescriptor, *trajectory);
-#else
-                SiddonsMethod<data_t> projector(domainDescriptor, *trajectory);
-#endif
-
-                // simulate the defined sinogram
-                DataContainer<data_t> sinogram = projector.apply(image);
-
-                sinogram += noise;
-
-                // setup reconstruction problem
-                WLSProblem<data_t> wlsProblem(projector, sinogram);
-
-                DataContainer<data_t> wL1NWeights(VolumeDescriptor{{width, height, numOfLayers}});
-                wL1NWeights = 0.001f;
-                WeightedL1Norm<data_t> weightedL1Norm(LinearResidual<data_t>{shearletTransform},
-                                                      wL1NWeights);
-                RegularizationTerm<data_t> wL1NormRegTerm(1, weightedL1Norm);
-
-                SplittingProblem<real_t> splittingProblem(wlsProblem.getDataTerm(), wL1NormRegTerm,
-                                                          constraint);
-
-                // solve the reconstruction problem
-                ADMM<CG, SoftThresholding, data_t> admm(splittingProblem, true);
-
-                Logger::get("Info")->info("Solving reconstruction using {} iterations of ADMM",
-                                          solverIterations);
-                visibleCoeffs.emplace_back(admm.solve(solverIterations));
+            if (domainDescriptor.getNumberOfDimensions() != 2) {
+                throw new InvalidArgumentError(
+                    "task::InpaintMissingSingularities: only 2D images are supported");
             }
 
-            return visibleCoeffs;
+            index_t width = domainDescriptor.getNumberOfCoefficientsPerDimension()[0];
+            index_t height = domainDescriptor.getNumberOfCoefficientsPerDimension()[1];
+            ShearletTransform<data_t, data_t> shearletTransform(width, height);
+            index_t numOfLayers = shearletTransform.getNumOfLayers();
+
+            VolumeDescriptor numOfLayersPlusOneDescriptor{{width, height, numOfLayers + 1}};
+
+            /// AT = (ρ_1*SH^T, ρ_2*I_n^2 ) ∈ R ^ n^2 × (L+1)n^2
+            IndexVector_t slicesInBlock(2);
+            slicesInBlock << numOfLayers, 1;
+            std::vector<std::unique_ptr<LinearOperator<real_t>>> opsOfA(0);
+            Scaling<real_t> scaling(domainDescriptor, rho2);
+            opsOfA.push_back((rho1 * shearletTransform).clone()); // TODO double check
+            opsOfA.push_back(scaling.clone());
+            BlockLinearOperator<real_t> A(
+                domainDescriptor, PartitionDescriptor{numOfLayersPlusOneDescriptor, slicesInBlock},
+                opsOfA, BlockLinearOperator<real_t>::BlockType::ROW);
+
+            /// B = diag(−ρ_1*1_Ln^2, −ρ_2*1_n^2) ∈ R ^ (L+1)n^2 × (L+1)n^2
+            DataContainer<data_t> factorsOfB(numOfLayersPlusOneDescriptor);
+            for (int ind = 0; ind < factorsOfB.getSize(); ++ind) {
+                if (ind < (numOfLayers * width * height)) {
+                    factorsOfB[ind] = -1 * rho1;
+                } else {
+                    factorsOfB[ind] = -1 * rho2;
+                }
+            }
+            Scaling<data_t> B(numOfLayersPlusOneDescriptor, factorsOfB);
+
+            DataContainer<data_t> c(numOfLayersPlusOneDescriptor);
+            c = 0;
+
+            Constraint<data_t> constraint(A, B, c);
+
+#ifdef ELSA_CUDA_PROJECTORS
+            SiddonsMethodCUDA<data_t> projector(downcast<VolumeDescriptor>(domainDescriptor),
+                                                *trajectory);
+#else
+            SiddonsMethod<data_t> projector(downcast<VolumeDescriptor>(domainDescriptor),
+                                            *trajectory);
+#endif
+
+            // simulate the defined sinogram
+            DataContainer<data_t> sinogram = projector.apply(image);
+
+            // sinogram += noise;
+
+            // setup reconstruction problem
+            WLSProblem<data_t> wlsProblem(projector, sinogram);
+
+            DataContainer<data_t> wL1NWeights(VolumeDescriptor{{width, height, numOfLayers}});
+            wL1NWeights = 0.001f;
+            WeightedL1Norm<data_t> weightedL1Norm(LinearResidual<data_t>{shearletTransform},
+                                                  wL1NWeights);
+            RegularizationTerm<data_t> wL1NormRegTerm(1, weightedL1Norm);
+
+            SplittingProblem<real_t> splittingProblem(wlsProblem.getDataTerm(), wL1NormRegTerm,
+                                                      constraint);
+
+            // solve the reconstruction problem
+            ADMM<CG, SoftThresholding, data_t> admm(splittingProblem, true);
+
+            Logger::get("Info")->info("Solving reconstruction using {} iterations of ADMM",
+                                      solverIterations);
+
+            return admm.solve(solverIterations);
         }
 
         /// Train a model (by default PhantomNet) to be able to learn the invisible coefficients
@@ -297,15 +267,24 @@ namespace elsa::task
         ml::Model<data_t, Backend>
             inpaintInvisibleCoeffs(const std::vector<DataContainer<data_t>>& x,
                                    const std::vector<DataContainer<data_t>>& y,
-                                   ml::Model<data_t, Backend> model = ml::PhantomNet(),
+                                   //                                   ml::Model<data_t, Backend>
+                                   //                                   model = ml::PhantomNet(),
                                    ml::Optimizer<data_t> optimizer = ml::Adam(),
                                    ml::Loss<data_t> loss = ml::SparseCategoricalCrossentropy(),
                                    index_t epochs = 20)
         {
+            ml::Model<data_t, Backend> model;
             if (x.size() != y.size()) {
                 throw new InvalidArgumentError(
                     "task::InpaintMissingSingularities: sizes of the x (inputs) and y "
                     "(labels) variables for training the model must match");
+            }
+
+            if (model.getInputs().front()->getInputDescriptor()
+                != model.getOutputs().back()->getOutputDescriptor()) {
+                throw new InvalidArgumentError(
+                    "task::InpaintMissingSingularities: the provided architecture has different "
+                    "shapes for the input and the output");
             }
 
             // TODO ensure here that the input and output of the model are (L, W, H)
@@ -347,6 +326,31 @@ namespace elsa::task
 
             // combine the coefficients
             return shearletTransform.applyAdjoint(visCoeffs + invisCoeffs);
+        }
+
+        /// Method that bootstraps all three steps of the SDLX task. For finer-grained control, call
+        /// the specific methods.
+        template <typename data_t = real_t, elsa::ml::MlBackend Backend = ml::MlBackend::Auto>
+        std::vector<DataContainer<data_t>> run(const std::vector<DataContainer<data_t>>& x,
+                                               const std::vector<DataContainer<data_t>>& y,
+                                               std::unique_ptr<DetectorDescriptor> trajectory,
+                                               const std::vector<DataContainer<data_t>>& images)
+        {
+            std::vector<DataContainer<data_t>> visibleCoeffs;
+            for (DataContainer<data_t> image : x) {
+                visibleCoeffs.emplace_back(reconstructVisibleCoeffs(image, trajectory));
+            }
+
+            auto trainedModel = inpaintInvisibleCoeffs<data_t, Backend>(x, y);
+
+            std::vector<DataContainer<data_t>> sdlxImages;
+            for (DataContainer<data_t> image : images) {
+                sdlxImages.emplace_back(
+                    task::InpaintMissingSingularities::combineVisCoeffsWithInpaintedInvisCoeffs(
+                        visibleCoeffs, trainedModel.predict(image)));
+            }
+
+            return sdlxImages;
         }
     } // namespace InpaintMissingSingularities
 } // namespace elsa::task

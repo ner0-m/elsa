@@ -1,7 +1,6 @@
 /// Elsa example program: basic 2d X-ray CT simulation and reconstruction
 
 #include "elsa.h"
-#include "LutProjector.h"
 #include "Tasks.hpp"
 
 #include <iostream>
@@ -13,31 +12,38 @@ DataContainer<float> runTheSDLXTask(const std::vector<DataContainer<float>>& x,
                                     const std::vector<DataContainer<float>>& y,
                                     DataContainer<float> image)
 {
-    auto trajectory = task::ConstructTrajectory::circle
-                          ->setDistance(static_cast<float>(
-                              image.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0]))
-                          ->setNumberOfPoses(360)
-                          ->setArcDegrees(360)
-                          ->setDataDescriptor(image.getDataDescriptor())
-                          ->build();
+    float distance =
+        static_cast<float>(image.getDataDescriptor().getNumberOfCoefficientsPerDimension()[0]);
 
-    auto visibleCoeffs =
-        task::InpaintMissingSingularities::reconstructVisibleCoeffs(x, trajectory);
+    std::unique_ptr<DetectorDescriptor> trajectory =
+        task::ConstructTrajectory::circle.setNumberOfPoses(360)
+            .setArcDegrees(360)
+            .setSourceToCenter(distance * 100)
+            .setCenterToDetector(distance)
+            .build(image.getDataDescriptor());
 
-    auto trainedModel = task::InpaintMissingSingularities::inpaintInvisibleCoeffs(x, y);
+    DataContainer<float> visibleCoeffs =
+        task::InpaintMissingSingularities::reconstructVisibleCoeffs(image, std::move(trajectory));
+
+    ml::Model trainedModel = task::InpaintMissingSingularities::inpaintInvisibleCoeffs(x, y);
 
     auto result = task::InpaintMissingSingularities::combineVisCoeffsWithInpaintedInvisCoeffs(
         visibleCoeffs, trainedModel.predict(image));
 
     return result;
+
+    // or just do
+    // return task::InpaintMissingSingularities::run(x, y, std::move(trajectory), {image})[0];
 }
 
 int main()
 {
     try {
-        const std::vector<DataContainer<float>>& x = {};
-        const std::vector<DataContainer<float>>& y = {};
-        DataContainer<float> image(VolumeDescriptor{1});
+        DataContainer<float> image(VolumeDescriptor{28, 28, 1});
+        image = 0;
+
+        const std::vector<DataContainer<float>>& x = {image};
+        const std::vector<DataContainer<float>>& y = {image};
 
         runTheSDLXTask(x, y, image);
     } catch (std::exception& e) {
