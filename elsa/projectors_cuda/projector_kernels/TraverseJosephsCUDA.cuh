@@ -67,7 +67,9 @@ namespace elsa
         CUDA_HOST void traverseForwardConstrained(cudaTextureObject_t volume,
                                                   cudaPitchedPtr& sinogram,
                                                   const BoundingBoxCUDA<dim>& volumeBoundingBox,
-                                                  const BoundingBoxCUDA<dim>& sinogramBoundingBox,
+                                                  const BoundingBoxCUDA<dim - 1>& imageBoundingBox,
+                                                  const index_t numPoses,
+                                                  const std::vector<Interval>& poses,
                                                   const cudaStream_t& stream = (cudaStream_t) 0);
         /**
          * @brief Backward projection using Josephs's method

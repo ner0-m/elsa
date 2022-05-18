@@ -25,6 +25,13 @@ namespace elsa
         ~CUDAVariablesAdjoint() override = default;
     };
 
+    struct ForwardProjectionTask {
+        BoundingBox _volumeBox;
+        BoundingBox _imagePatch;
+        std::vector<Interval> _poses;
+        index_t _numPoses;
+    };
+
     template <typename data_t>
     class CUDAProjector : public LinearOperator<data_t>
     {
@@ -43,8 +50,7 @@ namespace elsa
 
         // TODO does not check the boxes' bounds -> probably best to make this protected
         virtual void applyConstrained(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
-                                      const BoundingBox& volumeBoundingBox,
-                                      const BoundingBox& sinogramBoundingBox,
+                                      const ForwardProjectionTask& task,
                                       CUDAVariablesForward& cudaVars) const = 0;
 
         static inline std::mutex deviceLock = std::mutex();
@@ -88,20 +94,32 @@ namespace elsa
             setupCUDAVariablesForward(IndexVector_t chunkSizeDomain,
                                       IndexVector_t chunkSizeRange) const = 0;
 
-        void containerChunkToPinned(const data_t* dcData, PinnedArray<data_t>& pinned,
-                                    const DataDescriptor& dcDesc,
-                                    const BoundingBox& chunkBoundingBox) const
+        void containerChunksToPinned(const DataContainer<data_t>& dc, PinnedArray<data_t>& pinned,
+                                     const BoundingBox& patchBoundingBox,
+                                     const std::vector<Interval>& intervals) const
         {
             containerChunkPinnedMemoryTransfer<PAGEABLE_TO_PINNED>(
-                const_cast<data_t*>(dcData), dcDesc, pinned.get(), chunkBoundingBox);
+                const_cast<DataContainer<data_t>&>(dc), pinned, patchBoundingBox, intervals);
         }
 
-        void pinnedToContainerChunk(data_t* dcData, const DataDescriptor& dcDesc,
-                                    const PinnedArray<data_t>& pinned,
-                                    const BoundingBox& chunkBoundingBox) const
+        void containerChunkToPinned(const DataContainer<data_t>& dc, PinnedArray<data_t>& pinned,
+                                    const BoundingBox& volumeBoundingBox) const
+        {
+            BoundingBox patchBoundingBox{RealVector_t(volumeBoundingBox._min.topRows(2)),
+                                         RealVector_t(volumeBoundingBox._max.topRows(2))};
+            std::vector<Interval> intervals{{static_cast<index_t>(volumeBoundingBox._min[2]),
+                                             static_cast<index_t>(volumeBoundingBox._max[2])}};
+
+            containerChunkPinnedMemoryTransfer<PAGEABLE_TO_PINNED>(
+                const_cast<DataContainer<data_t>&>(dc), pinned, patchBoundingBox, intervals);
+        }
+
+        void pinnedToContainerChunks(DataContainer<data_t>& dc, const PinnedArray<data_t>& pinned,
+                                     const BoundingBox& patchBoundingBox,
+                                     const std::vector<Interval>& intervals) const
         {
             containerChunkPinnedMemoryTransfer<PINNED_TO_PAGEABLE>(
-                dcData, dcDesc, const_cast<data_t*>(pinned.get()), chunkBoundingBox);
+                dc, const_cast<PinnedArray<data_t>&>(pinned), patchBoundingBox, intervals);
         }
 
         /// convenience typedef for the Eigen::Matrix data vector
@@ -119,42 +137,48 @@ namespace elsa
         enum MemcpyDirection { PINNED_TO_PAGEABLE, PAGEABLE_TO_PINNED };
 
         template <MemcpyDirection dir>
-        void containerChunkPinnedMemoryTransfer(data_t* dcData, const DataDescriptor& dcDesc,
-                                                data_t* pinnedChunk,
-                                                const BoundingBox& chunkBoundingBox) const
+        void containerChunkPinnedMemoryTransfer(DataContainer<data_t>& dc,
+                                                PinnedArray<data_t>& pinnedChunk,
+                                                const BoundingBox& patchBoundingBox,
+                                                const std::vector<Interval>& intervals) const
         {
-            auto dcSize = dcDesc.getNumberOfCoefficientsPerDimension();
+            const auto& dcDesc = dc.getDataDescriptor();
+            IndexVector_t dcSize = dcDesc.getNumberOfCoefficientsPerDimension();
 
-            auto minSlice = (chunkBoundingBox._min.array().template cast<index_t>() >= 0)
-                                .select(chunkBoundingBox._min.template cast<index_t>(), 0);
-            auto maxSlice =
-                (chunkBoundingBox._max.array().template cast<index_t>() <= dcSize.array())
-                    .select(chunkBoundingBox._max.template cast<index_t>(), dcSize);
+            const auto& arrSize = pinnedChunk._dims;
+            IndexVector_t patchMin = IndexVector_t::Zero(3);
+            patchMin.topRows(2) = patchBoundingBox._min.template cast<index_t>();
 
-            IndexVector_t chunkSize =
-                (chunkBoundingBox._max - chunkBoundingBox._min).template cast<index_t>();
-            IndexVector_t dcChunkSize = (maxSlice - minSlice);
-
-            auto chunkStartIdx = dcDesc.getIndexFromCoordinate(minSlice);
+            auto patchOffset = dcDesc.getIndexFromCoordinate(patchMin);
             auto dcColumnSize = dcSize[0];
             auto dcSliceSize = dcSize[1] * dcColumnSize;
 
-            data_t* src = dir == PINNED_TO_PAGEABLE ? pinnedChunk : dcData + chunkStartIdx;
-            data_t* dst = dir == PAGEABLE_TO_PINNED ? pinnedChunk : dcData + chunkStartIdx;
-            auto srcColumnSize = dir == PINNED_TO_PAGEABLE ? chunkSize[0] : dcColumnSize;
-            auto srcSliceSize =
-                dir == PINNED_TO_PAGEABLE ? chunkSize[0] * chunkSize[1] : dcSliceSize;
-            auto dstColumnSize = dir == PAGEABLE_TO_PINNED ? chunkSize[0] : dcColumnSize;
-            auto dstSliceSize =
-                dir == PAGEABLE_TO_PINNED ? chunkSize[0] * chunkSize[1] : dcSliceSize;
+            data_t* pinnedData = pinnedChunk.get();
+            data_t* dcData = &dc[0];
+            data_t* src = dir == PINNED_TO_PAGEABLE ? pinnedData : dcData + patchOffset;
+            data_t* dst = dir == PAGEABLE_TO_PINNED ? pinnedData : dcData + patchOffset;
+            auto srcColumnSize = dir == PINNED_TO_PAGEABLE ? arrSize[0] : dcColumnSize;
+            auto srcSliceSize = dir == PINNED_TO_PAGEABLE ? arrSize[0] * arrSize[1] : dcSliceSize;
+            auto dstColumnSize = dir == PAGEABLE_TO_PINNED ? arrSize[0] : dcColumnSize;
+            auto dstSliceSize = dir == PAGEABLE_TO_PINNED ? arrSize[0] * arrSize[1] : dcSliceSize;
+            index_t srcZ, dstZ;
+            index_t arrZ = 0;
 
+            IndexVector_t patchSize =
+                (patchBoundingBox._max.topRows(2) - patchBoundingBox._min.topRows(2))
+                    .template cast<index_t>();
             // assumes 3d container
-            for (index_t z = 0; z < dcChunkSize[2]; z++) {
-                for (index_t y = 0; y < dcChunkSize[1]; y++) {
-                    // copy chunk to pinned memory column by column
-                    std::memcpy((void*) (dst + z * dstSliceSize + y * dstColumnSize),
-                                (const void*) (src + z * srcSliceSize + y * srcColumnSize),
-                                dcChunkSize[0] * sizeof(data_t));
+            for (const auto& [iStart, iEnd] : intervals) {
+                for (index_t dcZ = iStart; dcZ < iEnd; dcZ++) {
+                    for (index_t y = 0; y < patchSize[1]; y++) {
+                        srcZ = dir == PINNED_TO_PAGEABLE ? arrZ : dcZ;
+                        dstZ = dir == PAGEABLE_TO_PINNED ? arrZ : dcZ;
+                        // copy chunk to pinned memory column by column
+                        std::memcpy((void*) (dst + dstZ * dstSliceSize + y * dstColumnSize),
+                                    (const void*) (src + srcZ * srcSliceSize + y * srcColumnSize),
+                                    patchSize[0] * sizeof(data_t));
+                    }
+                    arrZ++;
                 }
             }
         }

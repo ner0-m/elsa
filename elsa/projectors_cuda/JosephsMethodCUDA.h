@@ -62,13 +62,15 @@ namespace elsa
 
         BoundingBox constrainProjectionSpace(const BoundingBox& aabb) const override;
 
+        BoundingBox constrainProjectionSpace2(const BoundingBox& imagePatch,
+                                              const std::vector<Interval>& poses) const;
+
         std::unique_ptr<CUDAVariablesForward>
             setupCUDAVariablesForwardConstrained(IndexVector_t chunkSizeDomain,
                                                  IndexVector_t chunkSizeRange) const override;
 
         void applyConstrained(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
-                              const BoundingBox& volumeBoundingBox,
-                              const BoundingBox& sinogramBoundingBox,
+                              const ForwardProjectionTask& task,
                               CUDAVariablesForward& cudaVars) const override;
 
     protected:
@@ -165,7 +167,7 @@ namespace elsa
         using CUDAProjector<data_t>::_detectorDescriptor;
         using CUDAProjector<data_t>::_device;
         using CUDAProjector<data_t>::containerChunkToPinned;
-        using CUDAProjector<data_t>::pinnedToContainerChunk;
+        using CUDAProjector<data_t>::pinnedToContainerChunks;
         using CUDAProjector<data_t>::deviceLock;
     };
 } // namespace elsa

@@ -26,13 +26,15 @@ namespace elsa
 {
     constexpr static uint32_t MAX_THREADS_PER_BLOCK = 32;
 
+    using Interval = std::pair<index_t, index_t>;
+
     template <typename Scalar, uint32_t dim>
     class VectorCUDA
     {
     public:
         CUDA_HOST_DEV VectorCUDA(){};
 
-        CUDA_HOST_DEV VectorCUDA(std::initializer_list<Scalar> l)
+        CUDA_HOST VectorCUDA(std::initializer_list<Scalar> l)
         {
             if (l.size() != dim) {
                 throw std::invalid_argument("VectorCUDA of size " + std::to_string(dim)
@@ -118,6 +120,12 @@ namespace elsa
         }
 
         CUDA_HOST BoundingBoxCUDA(RealVector_t min, RealVector_t max) : _min(min), _max(max) {}
+
+        CUDA_HOST BoundingBoxCUDA(const VectorCUDA<real_t, dim>& min,
+                                  const VectorCUDA<real_t, dim>& max)
+            : _min(min), _max(max)
+        {
+        }
 
         CUDA_HOST BoundingBoxCUDA(const BoundingBoxCUDA<dim>& other)
             : _min(other._min), _max(other._max)

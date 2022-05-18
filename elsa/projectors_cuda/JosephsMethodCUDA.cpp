@@ -164,6 +164,154 @@ namespace elsa
     }
 
     template <typename data_t>
+    BoundingBox JosephsMethodCUDA<data_t>::constrainProjectionSpace2(
+        const BoundingBox& imagePatch, const std::vector<Interval>& poses) const
+    {
+        const Eigen::Matrix<real_t, 3, 1> boxDims =
+            _volumeDescriptor.getNumberOfCoefficientsPerDimension().template cast<real_t>();
+        RealMatrix_t V(12, 3);
+        RealMatrix_t e(12, 3);
+
+        V << 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1,
+            0, 1, 0, 0, 1, 1, 0;
+        e << 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0,
+            1, 0, 0, 1, 0, 0, 1;
+        V = V.array().rowwise() * boxDims.transpose().array();
+        e = e.array().rowwise() * boxDims.transpose().array();
+
+        const auto intersectionWithPlane =
+            [&V, &e](const Eigen::Hyperplane<real_t, 3>& plane) -> std::vector<RealVector_t> {
+            RealVector_t lambda =
+                (-plane.offset() - (V * plane.normal()).array()) / (e * plane.normal()).array();
+
+            std::vector<RealVector_t> vertices;
+            if ((lambda.array() < static_cast<real_t>(0) || lambda.array() > static_cast<real_t>(1))
+                    .all()) {
+                // plane does not intersect volume, return position of plane wrt. AABB
+                RealVector_t sign =
+                    Eigen::Map<Eigen::Array<real_t, 3, 1>, 0, Eigen::Stride<4, 0>>(lambda.data())
+                        .sign();
+                vertices.push_back(sign);
+            } else {
+                for (int i = 0; i < lambda.rows(); i++) {
+                    if (lambda[i] >= static_cast<real_t>(0) && lambda[i] <= static_cast<real_t>(1))
+                        vertices.emplace_back(V.row(i) + lambda[i] * e.row(i));
+                }
+            }
+
+            return vertices;
+        };
+
+        const auto planeFromRays = [](const DetectorDescriptor::Ray& a,
+                                      const DetectorDescriptor::Ray& b) {
+            Eigen::Vector3f ad = a.direction();
+            Eigen::Vector3f bd = b.direction();
+            const RealVector_t normal = ad.cross(bd).normalized();
+            return Eigen::Hyperplane<real_t, 3>(normal, a.origin());
+        };
+
+        RealVector_t imageSlice = imagePatch._max - imagePatch._min;
+        index_t sliceDir;
+        auto sliceSize = imageSlice.minCoeff(&sliceDir);
+        index_t planeDir = 1 - sliceDir;
+
+        RealVector_t boxMin = boxDims;
+        RealVector_t boxMax = RealVector_t::Zero(3);
+
+        for (const auto& [iStart, iEnd] : poses) {
+            for (index_t pose = iStart; pose < iEnd; pose++) {
+
+                if (sliceSize == 1) {
+                    // dealing with a single row of pixels, only one plane to intersect with
+                    IndexVector_t p1(3);
+                    p1.topRows(2) = imagePatch._min.template cast<index_t>();
+                    p1[2] = pose;
+                    const auto a = _detectorDescriptor.computeRayFromDetectorCoord(p1);
+                    IndexVector_t p2(3);
+                    p2.topRows(2) = imagePatch._max.template cast<index_t>().array() - 1;
+                    p2[2] = pose;
+                    const auto b = _detectorDescriptor.computeRayFromDetectorCoord(p2);
+
+                    const auto verts = intersectionWithPlane(planeFromRays(a, b));
+                    if (verts.size() > 1) {
+                        for (const auto& vertex : verts) {
+                            boxMin = (vertex.array() < boxMin.array()).select(vertex, boxMin);
+                            boxMax = (vertex.array() > boxMax.array()).select(vertex, boxMax);
+                        }
+                    }
+                } else {
+                    // many rows of pixels, compute intersection with top and bottom planes
+                    std::vector<RealVector_t> verts[2]{{}, {}};
+
+                    // bottom plane
+                    IndexVector_t p1(3);
+                    p1.topRows(2) = imagePatch._min.template cast<index_t>();
+                    p1[2] = pose;
+                    auto a = _detectorDescriptor.computeRayFromDetectorCoord(p1);
+                    IndexVector_t p2(3);
+                    p2.topRows(2) = imagePatch._min.template cast<index_t>();
+                    p2[planeDir] = static_cast<index_t>(imagePatch._max[planeDir]) - 1;
+                    p2[2] = pose;
+                    auto b = _detectorDescriptor.computeRayFromDetectorCoord(p2);
+                    verts[0] = intersectionWithPlane(planeFromRays(a, b));
+
+                    // top plane
+                    p1[sliceDir] = static_cast<index_t>(imagePatch._max[sliceDir]) - 1;
+                    a = _detectorDescriptor.computeRayFromDetectorCoord(p1);
+                    p2[sliceDir] = static_cast<index_t>(imagePatch._max[sliceDir]) - 1;
+                    b = _detectorDescriptor.computeRayFromDetectorCoord(p2);
+                    verts[1] = intersectionWithPlane(planeFromRays(a, b));
+
+                    if (verts[0].size() == 1 && verts[1].size() == 1) {
+                        // neither plane intersects volume
+                        if (verts[0][0] != verts[1][0]) {
+                            // planes lie on different sides of volume, entire volume required
+                            return {IndexVector_t(IndexVector_t::Zero(3)),
+                                    _volumeDescriptor.getNumberOfCoefficientsPerDimension()};
+                        } // else planes lie on the same side of the volume, no part is required
+                    } else {
+                        // at least one plane intersects the volume
+                        index_t intersecting = verts[0].size() > 1 ? 0 : 1;
+                        index_t other = 1 - intersecting;
+
+                        // adjust AABB for interesecting plane
+                        for (const auto& vertex : verts[intersecting]) {
+                            boxMin = (vertex.array() < boxMin.array()).select(vertex, boxMin);
+                            boxMax = (vertex.array() > boxMax.array()).select(vertex, boxMax);
+                        }
+
+                        if (verts[other].size() == 1) {
+                            // other plane does not intersect volume
+                            // expanding AABB to max in direction of plane
+                            const auto& planeDir = verts[other][0];
+                            boxMin = (planeDir.array() < 0).select(RealVector_t::Zero(3), boxMin);
+                            boxMax = (planeDir.array() > 0).select(boxDims, boxMax);
+                        } else {
+                            // other plane also intersects volume
+                            // adjust AABB
+                            for (const auto& vertex : verts[other]) {
+                                boxMin = (vertex.array() < boxMin.array()).select(vertex, boxMin);
+                                boxMax = (vertex.array() > boxMax.array()).select(vertex, boxMax);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // nothing hit
+        if ((boxMax.array() == 0).all())
+            return {RealVector_t(RealVector_t::Zero(3)), RealVector_t(RealVector_t::Ones(3))};
+
+        boxMin = boxMin.array().floor();
+        boxMin = (boxMin.array() > 0).select(boxMin.array() - 1, boxMin);
+        boxMax = boxMax.array().ceil();
+        boxMax = (boxMax.array() < boxDims.array()).select(boxMax.array() + 1, boxMax);
+
+        return {boxMin, boxMax};
+    }
+
+    template <typename data_t>
     BoundingBox
         JosephsMethodCUDA<data_t>::constrainProjectionSpace(const BoundingBox& sinogramAABB) const
     {
@@ -196,12 +344,10 @@ namespace elsa
 
         RealVector_t minSlice = volumeCoeffsPerDim.template cast<real_t>();
         RealVector_t maxSlice = RealVector_t::Zero(3);
+
         for (index_t i = sinogramAABB._min[2]; i < sinogramAABB._max[2]; i++) {
             for (auto& corner : corners) {
                 corner[2] = i;
-
-                // Logger::get("JosephsMethodCUDA")
-                //     ->debug("Corner: {} {} {}", corner[0], corner[1], corner[2]);
                 const auto ray = _detectorDescriptor.computeRayFromDetectorCoord(corner);
 
                 // Logger::get("JosephsMethodCUDA")
@@ -216,20 +362,10 @@ namespace elsa
                     auto entryPoint = ray.pointAt(result->_tmin);
                     auto exitPoint = ray.pointAt(result->_tmax);
 
-                    // Logger::get("JosephsMethodCUDA")
-                    //     ->debug("\tentry point: {} {} {}", entryPoint[0], entryPoint[1],
-                    //             entryPoint[2]);
-
-                    // Logger::get("JosephsMethodCUDA")
-                    //     ->debug("\texit point: {} {} {}", exitPoint[0], exitPoint[1],
-                    //     exitPoint[2]);
-
                     minSlice = (entryPoint.array() < minSlice.array()).select(entryPoint, minSlice);
                     minSlice = (exitPoint.array() < minSlice.array()).select(exitPoint, minSlice);
                     maxSlice = (entryPoint.array() > maxSlice.array()).select(entryPoint, maxSlice);
                     maxSlice = (exitPoint.array() > maxSlice.array()).select(exitPoint, maxSlice);
-                } else {
-                    // Logger::get("JosephsMethodCUDA")->debug("no hit");
                 }
             }
         }
@@ -246,6 +382,7 @@ namespace elsa
                     minSlice[0], minSlice[1], minSlice[2], maxSlice[0], maxSlice[1], maxSlice[2],
                     sinogramAABB._min[0], sinogramAABB._min[1], sinogramAABB._min[2],
                     sinogramAABB._max[0], sinogramAABB._max[1], sinogramAABB._max[2]);
+
         return {minSlice, maxSlice};
     }
 
@@ -291,22 +428,20 @@ namespace elsa
     {
         return std::make_unique<CUDAVariablesJosephsForwardConstrained<data_t>>(
             setupCUDAVariablesForward(chunkSizeDomain, chunkSizeRange),
-            PinnedArray<data_t>(chunkSizeDomain.prod()),
-            PinnedArray<data_t>(chunkSizeRange.prod()));
+            PinnedArray<data_t>(chunkSizeDomain), PinnedArray<data_t>(chunkSizeRange));
     }
 
     template <typename data_t>
     void JosephsMethodCUDA<data_t>::applyConstrained(const DataContainer<data_t>& x,
                                                      DataContainer<data_t>& Ax,
-                                                     const BoundingBox& volumeBoundingBox,
-                                                     const BoundingBox& sinogramBoundingBox,
+                                                     const ForwardProjectionTask& task,
                                                      CUDAVariablesForward& cudaVars) const
     {
         auto& cuVars = dynamic_cast<CUDAVariablesJosephsForwardConstrained<data_t>&>(cudaVars);
 
-        containerChunkToPinned(&x[0], cuVars.pvolume, _volumeDescriptor, volumeBoundingBox);
+        containerChunkToPinned(x, cuVars.pvolume, task._volumeBox);
 
-        copyDataForward(cuVars.pvolume.get(), volumeBoundingBox, cuVars);
+        copyDataForward(cuVars.pvolume.get(), BoundingBox(cuVars.pvolume._dims), cuVars);
 
         std::unique_lock lock(deviceLock);
         gpuErrchk(cudaSetDevice(_device));
@@ -314,13 +449,20 @@ namespace elsa
         // assumes 3d
         _traverse3D->traverseForwardConstrained(
             cuVars.volumeTex, cuVars.dsinoPtr,
-            BoundingBoxCUDA<3>(volumeBoundingBox._min, volumeBoundingBox._max),
-            BoundingBoxCUDA<3>(sinogramBoundingBox._min, sinogramBoundingBox._max), cuVars.stream);
+            BoundingBoxCUDA<3>(task._volumeBox._min, task._volumeBox._max),
+            BoundingBoxCUDA<2>(task._imagePatch._min, task._imagePatch._max), task._numPoses,
+            task._poses, cuVars.stream);
 
         lock.unlock();
 
-        retrieveResults(cuVars.psino.get(), cuVars.dsinoPtr, sinogramBoundingBox, cuVars.stream);
-        pinnedToContainerChunk(&Ax[0], _detectorDescriptor, cuVars.psino, sinogramBoundingBox);
+        RealVector_t sinoMin = RealVector_t::Zero(3);
+        sinoMin.topRows(2) = task._imagePatch._min;
+        RealVector_t sinoMax = RealVector_t::Constant(3, task._numPoses);
+        sinoMax.topRows(2) = task._imagePatch._max;
+
+        retrieveResults(cuVars.psino.get(), cuVars.dsinoPtr, BoundingBox(sinoMin, sinoMax),
+                        cuVars.stream);
+        pinnedToContainerChunks(Ax, cuVars.psino, task._imagePatch, task._poses);
     }
 
     template <typename data_t>
@@ -525,9 +667,9 @@ namespace elsa
     template <typename data_t>
     JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other)
         : CUDAProjector<data_t>(other),
-          _fast{other._fast},
           _traverse2D{other._traverse2D},
-          _traverse3D{other._traverse3D}
+          _traverse3D{other._traverse3D},
+          _fast{other._fast}
     {
     }
 
@@ -705,8 +847,7 @@ namespace elsa
                                                             cudaStream_t stream) const
     {
         // transfer volume as texture
-        auto domainDims = aabb._max - aabb._min;
-        auto domainDimsui = domainDims.template cast<unsigned int>();
+        Eigen::Matrix<uint, -1, 1> domainDimsui = (aabb._max - aabb._min).template cast<uint>();
 
         std::scoped_lock lock(deviceLock);
         gpuErrchk(cudaSetDevice(_device));
@@ -714,25 +855,13 @@ namespace elsa
             cudaExtent volumeExtent =
                 make_cudaExtent(domainDimsui[0], domainDimsui[1], domainDimsui[2]);
 
-            cudaMemcpy3DParms cpyParams;
+            cudaMemcpy3DParms cpyParams = {0};
             cpyParams.srcPtr =
                 make_cudaPitchedPtr(const_cast<void*>(hostData), domainDimsui[0] * sizeof(data_t),
                                     domainDimsui[0] * sizeof(data_t), domainDimsui[1]);
-            cpyParams.srcPos = make_cudaPos(0, 0, 0);
-            cpyParams.srcArray = 0;
-            cpyParams.dstPtr = {0, 0, 0, 0};
             cpyParams.dstArray = darray;
-            cpyParams.dstPos = make_cudaPos(0, 0, 0);
             cpyParams.extent = volumeExtent;
-
-            // if host data is a cuda pointer it must be managed unified memory -> internal copy
-            cudaPointerAttributes ptrAttributes;
-            if (cudaPointerGetAttributes(&ptrAttributes, hostData) == cudaSuccess) {
-                // Logger::get("JosephsMethodCUDA")->debug("Internal GPU copy of texture");
-                cpyParams.kind = cudaMemcpyDeviceToDevice;
-            } else {
-                cpyParams.kind = cudaMemcpyHostToDevice;
-            }
+            cpyParams.kind = cudaMemcpyDefault;
 
             gpuErrchk(cudaMemcpy3DAsync(&cpyParams, stream));
 

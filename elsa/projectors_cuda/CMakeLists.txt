@@ -59,7 +59,7 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         target_compile_options(
             ${ELSA_MODULE_TARGET_NAME}
-            PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: --device-debug
+            PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: --device-debug>
         )
     endif()
 
@@ -79,6 +79,16 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
     endif()
 
     write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors)
+
+    add_executable(splitting_main SplittingMain.cpp)
+    target_link_libraries(splitting_main PRIVATE elsa::all)
+    target_compile_features(splitting_main PUBLIC cxx_std_17)
+    set_quickvec_options(splitting_main SplittingMain.cpp)
+
+    add_executable(highly_rotated HighlyRotated.cpp)
+    target_link_libraries(highly_rotated PRIVATE elsa::all)
+    target_compile_features(highly_rotated PUBLIC cxx_std_17)
+    set_quickvec_options(highly_rotated HighlyRotated.cpp)
 
 else()
     message(STATUS "CUDA compiler NOT found! CUDA projector support disabled")

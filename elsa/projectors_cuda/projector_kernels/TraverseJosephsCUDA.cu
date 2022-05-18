@@ -360,10 +360,12 @@ __device__ __forceinline__ uint sinogramSizeY()
 
 template <uint32_t dim>
 __device__ __forceinline__ bool inPaddingRegion(const uint3& coord,
-                                                const elsa::BoundingBoxCUDA<dim>& box)
+                                                const elsa::BoundingBoxCUDA<dim>& box,
+                                                const uint16_t& numPoses)
 {
-    return coord.x >= box._max[0] - box._min[0] || coord.y >= box._max[1] - box._min[1]
-           || (dim == 3 && coord.z >= box._max[2] - box._min[2]) || (dim == 2 && coord.z > 0);
+    return coord.x >= box._max[0] - box._min[0]
+           || (dim == 2 && (coord.y >= box._max[1] - box._min[1] || coord.z >= numPoses))
+           || (dim == 1 && (coord.y >= numPoses || coord.z > 0));
 }
 
 template <typename data_t, uint32_t dim, ExecutionConfigurationType config = Z_Y_X>
@@ -373,7 +375,10 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
                           const uint32_t originPitch, const int8_t* const __restrict__ projInv,
                           const uint32_t projPitch,
                           const elsa::BoundingBoxCUDA<dim> volumeBoundingBox,
-                          const elsa::BoundingBoxCUDA<dim> sinogramBoundingBox)
+                          const elsa::BoundingBoxCUDA<dim - 1> patchBoundingBox,
+                          const uint16_t numPoses,
+                          const elsa::VectorCUDA<std::pair<uint16_t, uint16_t>, 500> poses,
+                          const uint16_t numIntervals)
 {
 
     using real_t = elsa::real_t;
@@ -381,30 +386,35 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
     auto coord = getCoordinates<config>();
 
     // immediately return if in padding region
-    if (inPaddingRegion(coord, sinogramBoundingBox))
+    if (inPaddingRegion(coord, patchBoundingBox, numPoses))
         return;
 
     // homogenous pixel coordinates
     real_t pixelCoord[dim];
-    pixelCoord[0] = coord.x + sinogramBoundingBox._min[0] + 0.5f;
+    pixelCoord[0] = coord.x + patchBoundingBox._min[0] + 0.5f;
     pixelCoord[dim - 1] = 1.0f;
     if (dim == 3)
-        pixelCoord[1] = coord.y + sinogramBoundingBox._min[1] + 0.5f;
+        pixelCoord[1] = coord.y + patchBoundingBox._min[1] + 0.5f;
 
-    const auto& poseIdx = dim == 3 ? coord.z : coord.y;
-    const int8_t* const projInvPtr =
-        projInv
-        + (poseIdx + static_cast<uint32_t>(sinogramBoundingBox._min[dim - 1])) * projPitch * dim;
+    auto poseNum = dim == 3 ? coord.z : coord.y;
+    uint16_t poseIdx;
+    for (uint16_t i = 0; i < numIntervals; i++) {
+        uint16_t intervalSize = poses[i].second - poses[i].first;
+        if (poseNum < intervalSize) {
+            poseIdx = poses[i].first + poseNum;
+            break;
+        } else {
+            poseNum -= intervalSize;
+        }
+    }
+    const int8_t* const projInvPtr = projInv + poseIdx * projPitch * dim;
 
-    const real_t* const rayOrigin =
-        (real_t*) (rayOrigins
-                   + (poseIdx + static_cast<uint32_t>(sinogramBoundingBox._min[dim - 1]))
-                         * originPitch);
+    const real_t* const rayOrigin = (real_t*) (rayOrigins + poseIdx * originPitch);
 
     data_t* sinogramPtr = ((data_t*) (sinogram
                                       + (coord.z
-                                             * static_cast<uint32_t>(sinogramBoundingBox._max[1]
-                                                                     - sinogramBoundingBox._min[1])
+                                             * static_cast<uint32_t>(patchBoundingBox._max[1]
+                                                                     - patchBoundingBox._min[1])
                                          + coord.y)
                                             * sinogramPitch)
                            + coord.x);
@@ -955,16 +965,30 @@ namespace elsa
     void TraverseJosephsCUDA<data_t, dim>::traverseForward(cudaTextureObject_t volume,
                                                            cudaPitchedPtr& sinogram)
     {
-        traverseForwardConstrained(volume, sinogram, _volumeBoundingBox, _sinogramBoundingBox);
+        std::vector<Interval> poses{{static_cast<index_t>(_sinogramBoundingBox._min[dim - 1]),
+                                     static_cast<index_t>(_sinogramBoundingBox._max[dim - 1])}};
+        VectorCUDA<real_t, dim - 1> imagePatchMin;
+        VectorCUDA<real_t, dim - 1> imagePatchMax;
+        for (index_t i = 0; i < dim - 1; i++) {
+            imagePatchMin[i] = _sinogramBoundingBox._min[i];
+            imagePatchMax[i] = _sinogramBoundingBox._max[i];
+        }
+
+        traverseForwardConstrained(volume, sinogram, _volumeBoundingBox,
+                                   BoundingBoxCUDA<dim - 1>{imagePatchMin, imagePatchMax},
+                                   poses[0].second - poses[0].first, poses);
     }
 
     template <uint32_t dim, ExecutionConfigurationType config>
-    dim3 getGrid(const BoundingBoxCUDA<dim>& boundingBox, dim3 threadsPerBlock)
+    dim3 getGrid(const BoundingBoxCUDA<dim - 1>& imageBoundingBox, uint32_t numPoses,
+                 dim3 threadsPerBlock)
     {
-        auto sinogramSizeX = static_cast<uint32_t>(boundingBox._max[0] - boundingBox._min[0]);
-        auto sinogramSizeY = static_cast<uint32_t>(boundingBox._max[1] - boundingBox._min[1]);
-        auto sinogramSizeZ =
-            dim == 3 ? static_cast<uint32_t>(boundingBox._max[2] - boundingBox._min[2]) : 1;
+        auto sinogramSizeX =
+            static_cast<uint32_t>(imageBoundingBox._max[0] - imageBoundingBox._min[0]);
+        auto sinogramSizeY =
+            dim == 3 ? static_cast<uint32_t>(imageBoundingBox._max[1] - imageBoundingBox._min[1])
+                     : numPoses;
+        auto sinogramSizeZ = dim == 3 ? numPoses : 1;
 
         dim3 grid;
         switch (config) {
@@ -1011,14 +1035,21 @@ namespace elsa
     void TraverseJosephsCUDA<data_t, dim>::traverseForwardConstrained(
         cudaTextureObject_t volume, cudaPitchedPtr& sinogram,
         const BoundingBoxCUDA<dim>& volumeBoundingBox,
-        const BoundingBoxCUDA<dim>& sinogramBoundingBox, const cudaStream_t& stream)
+        const BoundingBoxCUDA<dim - 1>& imageBoundingBox, const index_t numPoses,
+        const std::vector<Interval>& poses, const cudaStream_t& stream)
     {
-        auto grid = getGrid<dim, Y_Z_X>(sinogramBoundingBox, _threadsPerBlock);
+        auto grid = getGrid<dim, Y_Z_X>(imageBoundingBox, static_cast<uint32_t>(numPoses),
+                                        _threadsPerBlock);
+
+        VectorCUDA<std::pair<uint16_t, uint16_t>, 500> posesArg;
+        for (std::size_t i = 0; i < poses.size(); i++)
+            posesArg[i] = poses[i];
 
         traverseForwardKernel<data_t, dim, Y_Z_X><<<grid, _threadsPerBlock, 0, stream>>>(
             volume, (int8_t*) sinogram.ptr, sinogram.pitch, (const int8_t*) _rayOrigins.ptr,
             _rayOrigins.pitch, (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
-            volumeBoundingBox, sinogramBoundingBox);
+            volumeBoundingBox, imageBoundingBox, static_cast<uint16_t>(numPoses), posesArg,
+            poses.size());
     }
 
     template <typename data_t, uint32_t dim>

@@ -53,17 +53,30 @@ namespace elsa
     {
     public:
         CUDA_HOST PinnedArray(index_t size)
-            : _ptr{allocate(size), [](data_t* ptr) { gpuErrchkNoAbort(cudaFreeHost((void*) ptr)); }}
+            : _ptr{allocate(size),
+                   [](data_t* ptr) { gpuErrchkNoAbort(cudaFreeHost((void*) ptr)); }},
+              _dims(1)
+        {
+            _dims[0] = size;
+        }
+
+        CUDA_HOST PinnedArray(const IndexVector_t& dims)
+            : _ptr{allocate(dims.prod()),
+                   [](data_t* ptr) { gpuErrchkNoAbort(cudaFreeHost((void*) ptr)); }},
+              _dims{dims}
         {
         }
 
-        CUDA_HOST PinnedArray(PinnedArray<data_t>&& other) : _ptr(std::move(other._ptr)) {}
+        CUDA_HOST PinnedArray(PinnedArray<data_t>&& other) : _ptr(std::move(other._ptr)), _dims{std::move(other._dims)} {}
 
         CUDA_HOST ~PinnedArray() override = default;
 
         CUDA_HOST data_t* get() const noexcept { return _ptr.get(); }
 
         CUDA_HOST data_t& operator[](index_t i) const { return _ptr[i]; }
+
+        // the dimensions of the pinned array
+        IndexVector_t _dims;
 
     private:
         CUDA_HOST data_t* allocate(index_t size)
