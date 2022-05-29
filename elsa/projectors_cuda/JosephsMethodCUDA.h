@@ -65,24 +65,24 @@ namespace elsa
         BoundingBox constrainProjectionSpace2(const BoundingBox& imagePatch,
                                               const std::vector<Interval>& poses) const;
 
-        std::unique_ptr<CUDAVariablesForward>
-            setupCUDAVariablesForwardConstrained(IndexVector_t chunkSizeDomain,
-                                                 IndexVector_t chunkSizeRange) const override;
+        std::unique_ptr<CUDAVariablesForward<data_t>>
+            setupCUDAVariablesForward(IndexVector_t chunkSizeDomain,
+                                      IndexVector_t chunkSizeRange) const override;
 
         void applyConstrained(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
                               const ForwardProjectionTask& task,
-                              CUDAVariablesForward& cudaVars) const override;
+                              CUDAVariablesForward<data_t>& cudaVars) const override;
+
+        std::vector<ForwardProjectionTask>
+            getSubtasks(const ForwardProjectionTask& task, const IndexVector_t& maxVolumeDims,
+                        const IndexVector_t& maxImageDims) const override;
 
     protected:
         /// copy constructor, used for cloning
         JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other);
 
-        std::unique_ptr<CUDAVariablesForward>
-            setupCUDAVariablesForward(IndexVector_t chunkSizeDomain,
-                                      IndexVector_t chunkSizeRange) const override;
-
         void copyDataForward(const data_t* x, const BoundingBox& volumeBox,
-                             const CUDAVariablesForward& cudaVars) const;
+                             const CUDAVariablesForward<data_t>& cudaVars) const;
 
         /// apply Joseph's method (i.e. forward projection)
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
@@ -168,6 +168,5 @@ namespace elsa
         using CUDAProjector<data_t>::_device;
         using CUDAProjector<data_t>::containerChunkToPinned;
         using CUDAProjector<data_t>::pinnedToContainerChunks;
-        using CUDAProjector<data_t>::deviceLock;
     };
 } // namespace elsa

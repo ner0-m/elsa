@@ -368,7 +368,8 @@ __device__ __forceinline__ bool inPaddingRegion(const uint3& coord,
            || (dim == 1 && (coord.y >= numPoses || coord.z > 0));
 }
 
-template <typename data_t, uint32_t dim, ExecutionConfigurationType config = Z_Y_X>
+template <typename data_t, uint32_t dim, ExecutionConfigurationType config = Z_Y_X, bool zeroInit,
+          int32_t paddedDim>
 __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_THREADS_PER_BLOCK)
     traverseForwardKernel(cudaTextureObject_t volume, int8_t* const __restrict__ sinogram,
                           const uint64_t sinogramPitch, const int8_t* const __restrict__ rayOrigins,
@@ -442,7 +443,8 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
     // find volume intersections
     real_t tmin, tmax;
     if (!boxIntersect(rayOrigin, rd, volumeBoundingBox, tmin, tmax)) {
-        *sinogramPtr = 0;
+        if constexpr (zeroInit)
+            *sinogramPtr = 0;
         return;
     }
 
@@ -464,12 +466,15 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
     for (uint32_t i = 0; i < dim; i++)
         currentPosition[i] -= volumeBoundingBox._min[i];
 
+    if constexpr (paddedDim > 0 && paddedDim < 3)
+        currentPosition[paddedDim] += 1;
+
     // first plane intersection may lie outside the bounding box
     if (intersectionLength < minDelta) {
         // use midpoint of entire ray intersection as a constant integration value
         updateTraverse(currentPosition, rd, intersectionLength * 0.5f);
-
-        *sinogramPtr = weight * intersectionLength * tex<data_t, dim>(volume, currentPosition);
+        data_t pixelValue = weight * intersectionLength * tex<data_t, dim>(volume, currentPosition);
+        *sinogramPtr = zeroInit ? pixelValue : *sinogramPtr + pixelValue;
         return;
     }
 
@@ -500,7 +505,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
     updateTraverse(currentPosition, rd, (tmax - tmin + 1.0f) * 0.5f);
     pixelValue += weight * (tmax - tmin) * tex<data_t, dim>(volume, currentPosition);
 
-    *sinogramPtr = pixelValue;
+    *sinogramPtr = zeroInit ? pixelValue : *sinogramPtr + pixelValue;
 }
 
 /// fetches double at position x, layer layer from a 1D layered texture
@@ -1036,7 +1041,8 @@ namespace elsa
         cudaTextureObject_t volume, cudaPitchedPtr& sinogram,
         const BoundingBoxCUDA<dim>& volumeBoundingBox,
         const BoundingBoxCUDA<dim - 1>& imageBoundingBox, const index_t numPoses,
-        const std::vector<Interval>& poses, const cudaStream_t& stream)
+        const std::vector<Interval>& poses, bool zeroInit, index_t paddedDim,
+        const cudaStream_t& stream)
     {
         auto grid = getGrid<dim, Y_Z_X>(imageBoundingBox, static_cast<uint32_t>(numPoses),
                                         _threadsPerBlock);
@@ -1045,11 +1051,50 @@ namespace elsa
         for (std::size_t i = 0; i < poses.size(); i++)
             posesArg[i] = poses[i];
 
-        traverseForwardKernel<data_t, dim, Y_Z_X><<<grid, _threadsPerBlock, 0, stream>>>(
-            volume, (int8_t*) sinogram.ptr, sinogram.pitch, (const int8_t*) _rayOrigins.ptr,
-            _rayOrigins.pitch, (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
-            volumeBoundingBox, imageBoundingBox, static_cast<uint16_t>(numPoses), posesArg,
-            poses.size());
+        if (paddedDim == 1) {
+            if (zeroInit) {
+                traverseForwardKernel<data_t, dim, Y_Z_X, true, 1>
+                    <<<grid, _threadsPerBlock, 0, stream>>>(
+                        volume, (int8_t*) sinogram.ptr, sinogram.pitch,
+                        (const int8_t*) _rayOrigins.ptr, _rayOrigins.pitch,
+                        (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
+                        volumeBoundingBox, imageBoundingBox, static_cast<uint16_t>(numPoses),
+                        posesArg, poses.size());
+            } else {
+                traverseForwardKernel<data_t, dim, Y_Z_X, false, 1>
+                    <<<grid, _threadsPerBlock, 0, stream>>>(
+                        volume, (int8_t*) sinogram.ptr, sinogram.pitch,
+                        (const int8_t*) _rayOrigins.ptr, _rayOrigins.pitch,
+                        (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
+                        volumeBoundingBox, imageBoundingBox, static_cast<uint16_t>(numPoses),
+                        posesArg, poses.size());
+            }
+        } else if (paddedDim == 2) {
+            if (zeroInit) {
+                traverseForwardKernel<data_t, dim, Y_Z_X, true, 2>
+                    <<<grid, _threadsPerBlock, 0, stream>>>(
+                        volume, (int8_t*) sinogram.ptr, sinogram.pitch,
+                        (const int8_t*) _rayOrigins.ptr, _rayOrigins.pitch,
+                        (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
+                        volumeBoundingBox, imageBoundingBox, static_cast<uint16_t>(numPoses),
+                        posesArg, poses.size());
+            } else {
+                traverseForwardKernel<data_t, dim, Y_Z_X, false, 2>
+                    <<<grid, _threadsPerBlock, 0, stream>>>(
+                        volume, (int8_t*) sinogram.ptr, sinogram.pitch,
+                        (const int8_t*) _rayOrigins.ptr, _rayOrigins.pitch,
+                        (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
+                        volumeBoundingBox, imageBoundingBox, static_cast<uint16_t>(numPoses),
+                        posesArg, poses.size());
+            }
+        } else {
+            traverseForwardKernel<data_t, dim, Y_Z_X, true, -1>
+                <<<grid, _threadsPerBlock, 0, stream>>>(
+                    volume, (int8_t*) sinogram.ptr, sinogram.pitch, (const int8_t*) _rayOrigins.ptr,
+                    _rayOrigins.pitch, (const int8_t*) _projInvMatrices.ptr, _projInvMatrices.pitch,
+                    volumeBoundingBox, imageBoundingBox, static_cast<uint16_t>(numPoses), posesArg,
+                    poses.size());
+        }
     }
 
     template <typename data_t, uint32_t dim>

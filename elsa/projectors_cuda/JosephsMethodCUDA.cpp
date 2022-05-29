@@ -8,10 +8,10 @@
 namespace elsa
 {
     template <typename data_t>
-    struct CUDAVariablesJosephsForward : public CUDAVariablesForward {
+    struct CUDAVariablesJosephsForward : public CUDAVariablesForward<data_t> {
         CUDAVariablesJosephsForward(TextureWrapper&& tex, CudaArrayWrapper&& arr,
                                     PitchedPtrWrapper<data_t>&& ptr)
-            : CUDAVariablesForward(),
+            : CUDAVariablesForward<data_t>(),
               volumeTex(std::move(tex)),
               dvolumeArr(std::move(arr)),
               dsinoPtr(std::move(ptr))
@@ -19,7 +19,7 @@ namespace elsa
         }
 
         CUDAVariablesJosephsForward(CUDAVariablesJosephsForward<data_t>&& other)
-            : CUDAVariablesForward(),
+            : CUDAVariablesForward<data_t>(),
               volumeTex(std::move(other.volumeTex)),
               dvolumeArr(std::move(other.dvolumeArr)),
               dsinoPtr(std::move(other.dsinoPtr))
@@ -29,22 +29,6 @@ namespace elsa
         TextureWrapper volumeTex;
         CudaArrayWrapper dvolumeArr;
         PitchedPtrWrapper<data_t> dsinoPtr;
-    };
-
-    template <typename data_t>
-    struct CUDAVariablesJosephsForwardConstrained : public CUDAVariablesJosephsForward<data_t> {
-        CUDAVariablesJosephsForwardConstrained(std::unique_ptr<CUDAVariablesForward>&& base,
-                                               PinnedArray<data_t>&& volume,
-                                               PinnedArray<data_t>&& sinogram)
-            : CUDAVariablesJosephsForward<data_t>(
-                dynamic_cast<CUDAVariablesJosephsForward<data_t>&&>(*base.release())),
-              pvolume(std::move(volume)),
-              psino(std::move(sinogram))
-        {
-        }
-
-        PinnedArray<data_t> pvolume;
-        PinnedArray<data_t> psino;
     };
 
     template <typename data_t>
@@ -387,7 +371,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::unique_ptr<CUDAVariablesForward>
+    std::unique_ptr<CUDAVariablesForward<data_t>>
         JosephsMethodCUDA<data_t>::setupCUDAVariablesForward(IndexVector_t chunkSizeDomain,
                                                              IndexVector_t chunkSizeRange) const
     {
@@ -422,26 +406,20 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::unique_ptr<CUDAVariablesForward>
-        JosephsMethodCUDA<data_t>::setupCUDAVariablesForwardConstrained(
-            IndexVector_t chunkSizeDomain, IndexVector_t chunkSizeRange) const
-    {
-        return std::make_unique<CUDAVariablesJosephsForwardConstrained<data_t>>(
-            setupCUDAVariablesForward(chunkSizeDomain, chunkSizeRange),
-            PinnedArray<data_t>(chunkSizeDomain), PinnedArray<data_t>(chunkSizeRange));
-    }
-
-    template <typename data_t>
     void JosephsMethodCUDA<data_t>::applyConstrained(const DataContainer<data_t>& x,
                                                      DataContainer<data_t>& Ax,
                                                      const ForwardProjectionTask& task,
-                                                     CUDAVariablesForward& cudaVars) const
+                                                     CUDAVariablesForward<data_t>& cudaVars) const
     {
-        auto& cuVars = dynamic_cast<CUDAVariablesJosephsForwardConstrained<data_t>&>(cudaVars);
+        auto& cuVars = dynamic_cast<CUDAVariablesJosephsForward<data_t>&>(cudaVars);
+        BoundingBox paddedVolumeBox(task._volumeBox);
+        if (task._paddedDim >= 0 && task._paddedDim < 3) {
+            paddedVolumeBox._min[task._paddedDim] -= 1;
+            paddedVolumeBox._max[task._paddedDim] += 1;
+        }
+        containerChunkToPinned(x, *cuVars._pvolume, paddedVolumeBox, cuVars.stream);
 
-        containerChunkToPinned(x, cuVars.pvolume, task._volumeBox);
-
-        copyDataForward(cuVars.pvolume.get(), BoundingBox(cuVars.pvolume._dims), cuVars);
+        copyDataForward(cuVars._pvolume->get(), paddedVolumeBox, cuVars);
 
         std::unique_lock lock(deviceLock);
         gpuErrchk(cudaSetDevice(_device));
@@ -451,7 +429,7 @@ namespace elsa
             cuVars.volumeTex, cuVars.dsinoPtr,
             BoundingBoxCUDA<3>(task._volumeBox._min, task._volumeBox._max),
             BoundingBoxCUDA<2>(task._imagePatch._min, task._imagePatch._max), task._numPoses,
-            task._poses, cuVars.stream);
+            task._poses, task._zeroInit, task._paddedDim, cuVars.stream);
 
         lock.unlock();
 
@@ -460,11 +438,89 @@ namespace elsa
         RealVector_t sinoMax = RealVector_t::Constant(3, task._numPoses);
         sinoMax.topRows(2) = task._imagePatch._max;
 
-        retrieveResults(cuVars.psino.get(), cuVars.dsinoPtr, BoundingBox(sinoMin, sinoMax),
-                        cuVars.stream);
-        pinnedToContainerChunks(Ax, cuVars.psino, task._imagePatch, task._poses);
+        if (task._fetchResult) {
+            retrieveResults(cuVars._psino->get(), cuVars.dsinoPtr, BoundingBox(sinoMin, sinoMax),
+                            cuVars.stream);
+            pinnedToContainerChunks(Ax, *cuVars._psino, task._imagePatch, task._poses,
+                                    cuVars.stream);
+        }
     }
 
+    template <typename data_t>
+    std::vector<ForwardProjectionTask>
+        JosephsMethodCUDA<data_t>::getSubtasks(const ForwardProjectionTask& task,
+                                               const IndexVector_t& maxVolumeDims,
+                                               const IndexVector_t& maxImageDims) const
+    {
+        index_t maxNumPoses = maxImageDims[2];
+        index_t splitIdx = 0;
+        IndexVector_t overLimit =
+            (task._volumeBox._max - task._volumeBox._min).template cast<index_t>() - maxVolumeDims;
+        if ((overLimit.array() > 0).any())
+            overLimit.maxCoeff(&splitIdx);
+
+        index_t maxChunkHeight = maxVolumeDims[splitIdx];
+
+        // split task into subtasks if memory is insufficient
+        std::vector<BoundingBox> subtaskVolChunks;
+        std::vector<std::pair<std::vector<Interval>, index_t>> subtaskPoses;
+        if (task._numPoses > maxNumPoses) {
+            index_t numPoses = 0;
+            std::vector<Interval> poses;
+            for (const auto& interval : task._poses) {
+                for (index_t marker = interval.first; marker < interval.second;) {
+                    index_t newMarker = (maxNumPoses - numPoses < interval.second - marker)
+                                            ? marker + maxNumPoses - numPoses
+                                            : interval.second;
+                    subtaskPoses.emplace_back(poses, numPoses);
+                    poses.emplace_back(marker, newMarker);
+                    numPoses += newMarker - marker;
+                    marker = newMarker;
+
+                    if (numPoses == maxNumPoses) {
+                        subtaskPoses.emplace_back(poses, numPoses);
+                        poses.clear();
+                        numPoses = 0;
+                    }
+                }
+            }
+            if (!poses.empty())
+                subtaskPoses.emplace_back(poses, numPoses);
+        } else {
+            subtaskPoses.emplace_back(task._poses, task._numPoses);
+        }
+        index_t chunkHeight =
+            static_cast<index_t>(task._volumeBox._max[splitIdx] - task._volumeBox._min[splitIdx]);
+        // account for padding
+        if (chunkHeight > maxChunkHeight) {
+            maxChunkHeight -= 2;
+            BoundingBox subtaskBox(task._volumeBox._min, task._volumeBox._max);
+            for (real_t marker = task._volumeBox._min[splitIdx];
+                 marker < task._volumeBox._max[splitIdx]; marker += maxChunkHeight) {
+                subtaskBox._min[splitIdx] = marker;
+                subtaskBox._max[splitIdx] = marker + maxChunkHeight < task._volumeBox._max[splitIdx]
+                                                ? marker + maxChunkHeight
+                                                : task._volumeBox._max[splitIdx];
+                subtaskVolChunks.push_back(subtaskBox);
+            }
+        } else {
+            subtaskVolChunks.push_back(task._volumeBox);
+        }
+
+        std::vector<ForwardProjectionTask> subtasks;
+        for (const auto& [poses, numPoses] : subtaskPoses) {
+            for (index_t chunkNum = 0; chunkNum < subtaskVolChunks.size(); chunkNum++) {
+                const auto& chunk = subtaskVolChunks[chunkNum];
+                bool zeroInit = chunkNum == 0 ? true : false;
+                bool fetchResult = chunkNum == subtaskVolChunks.size() - 1 ? true : false;
+                index_t idx = subtaskVolChunks.size() > 1 ? splitIdx : -1;
+                subtasks.push_back(ForwardProjectionTask{chunk, task._imagePatch, poses, numPoses,
+                                                         zeroInit, fetchResult, idx});
+            }
+        }
+
+        return subtasks;
+    }
     template <typename data_t>
     JosephsMethodCUDA<data_t>* JosephsMethodCUDA<data_t>::cloneImpl() const
     {
@@ -674,9 +730,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    void JosephsMethodCUDA<data_t>::copyDataForward(const data_t* volumeData,
-                                                    const BoundingBox& volumeBoundingBox,
-                                                    const CUDAVariablesForward& cudaVars) const
+    void JosephsMethodCUDA<data_t>::copyDataForward(
+        const data_t* volumeData, const BoundingBox& volumeBoundingBox,
+        const CUDAVariablesForward<data_t>& cudaVars) const
     {
         const auto& cuVars = dynamic_cast<const CUDAVariablesJosephsForward<data_t>&>(cudaVars);
 
@@ -852,15 +908,12 @@ namespace elsa
         std::scoped_lock lock(deviceLock);
         gpuErrchk(cudaSetDevice(_device));
         if (aabb._dim == 3) {
-            cudaExtent volumeExtent =
-                make_cudaExtent(domainDimsui[0], domainDimsui[1], domainDimsui[2]);
-
             cudaMemcpy3DParms cpyParams = {0};
             cpyParams.srcPtr =
                 make_cudaPitchedPtr(const_cast<void*>(hostData), domainDimsui[0] * sizeof(data_t),
-                                    domainDimsui[0] * sizeof(data_t), domainDimsui[1]);
+                                    domainDimsui[0], domainDimsui[1]);
             cpyParams.dstArray = darray;
-            cpyParams.extent = volumeExtent;
+            cpyParams.extent = make_cudaExtent(domainDimsui[0], domainDimsui[1], domainDimsui[2]);
             cpyParams.kind = cudaMemcpyDefault;
 
             gpuErrchk(cudaMemcpy3DAsync(&cpyParams, stream));

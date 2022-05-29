@@ -8,7 +8,6 @@
 #include <cstring>
 #include <type_traits>
 #include <memory>
-#include <mutex>
 
 #ifdef __CUDACC__
 #define CUDA_HOST_DEV __host__ __device__

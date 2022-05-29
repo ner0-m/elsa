@@ -33,7 +33,7 @@ namespace elsa
     public:
         void determineChunksForPoses(const std::vector<Interval>& poses, index_t bucket)
         {
-            constexpr real_t SLICE_THICKNESS = 32;
+            real_t SLICE_THICKNESS = 64;
 
             // const DetectorDescriptor& detectorDescriptor =
             // static_cast<const DetectorDescriptor&>(*_rangeDescriptor);
@@ -43,11 +43,15 @@ namespace elsa
             RealVector_t maximal = RealVector_t::Zero(3);
             RealVector_t sliceStart = RealVector_t::Zero(2);
             RealVector_t sliceEnd = detSize.topRows(2);
+            index_t numPoses = 0;
+            for (const auto& I : poses)
+                numPoses += I.second - I.first;
+
+            if (numPoses < 50)
+                SLICE_THICKNESS = 128;
+
             if (bucket != NUM_BUCKETS - 1) {
                 index_t imgAxis = bucket % 6 / 3;
-                index_t numPoses = 0;
-                for (const auto& I : poses)
-                    numPoses += I.second - I.first;
 
                 for (index_t slice = 0; slice * SLICE_THICKNESS < detSize[imgAxis]; slice++) {
                     sliceStart[imgAxis] = slice * SLICE_THICKNESS;
@@ -63,10 +67,6 @@ namespace elsa
                         {volumeBox, imagePatch, poses, numPoses});
                 }
             } else {
-                index_t numPoses = 0;
-                for (const auto& I : poses)
-                    numPoses += I.second - I.first;
-
                 BoundingBox imagePatch(sliceStart, sliceEnd);
                 const auto volumeBox = _projectors[0]->constrainProjectionSpace2(imagePatch, poses);
                 _partitioningForward[bucket].push_back({volumeBox, imagePatch, poses, numPoses});
@@ -184,20 +184,18 @@ namespace elsa
                         it2 = intervals.erase(it2);
                     } else if (otherEnd > iStart && otherEnd <= iEnd) {
                         // partial overlap with end of smaller interval
-                        intervals.emplace(otherEnd - iStart,
-                                          std::tuple(iStart, otherEnd, otherBucket));
+                        intervals.emplace(iStart - otherStart,
+                                          std::tuple(otherStart, iStart, otherBucket));
                         it2 = intervals.erase(it2);
                     } else if (otherStart >= iStart && otherStart < iEnd) {
                         // partial overlap with beginning of smaller interval
-                        intervals.emplace(iEnd - otherStart,
-                                          std::tuple(otherStart, iEnd, otherBucket));
+                        intervals.emplace(otherEnd - iEnd, std::tuple(iEnd, otherEnd, otherBucket));
                         it2 = intervals.erase(it2);
                     } else {
                         it2++;
                     }
                 }
             }
-            std::vector<std::tuple<index_t, index_t, index_t>> smallIntervals;
 
             // determine chunks
             std::array<std::vector<Interval>, NUM_BUCKETS - 1> intervalVecs;
@@ -206,11 +204,14 @@ namespace elsa
                 intervalVecs[bucket].emplace_back(iStart, iEnd);
             }
             for (index_t i = 0; i < intervalVecs.size(); i++) {
-                if (!intervalVecs[i].empty())
+                if (!intervalVecs[i].empty()) {
+                    std::sort(intervalVecs[i].begin(), intervalVecs[i].end());
                     determineChunksForPoses(intervalVecs[i], i);
+                }
             }
 
-            determineChunksForPoses(highlyRotated, NUM_BUCKETS - 1);
+            if (!highlyRotated.empty())
+                determineChunksForPoses(highlyRotated, NUM_BUCKETS - 1);
 
             for (index_t bucket = 0; bucket < NUM_BUCKETS; bucket++) {
                 auto& maxChunk = _maxChunkForward[bucket];
@@ -246,9 +247,11 @@ namespace elsa
             const std::vector<int> targetDevices = makeIndexSequence(numAvailableDevices()))
             : LinearOperator<data_t>{volumeDescriptor, detectorDescriptor},
               _projectors(0),
-              _partitioningForward{{}, {}, {}, {}}
+              _partitioningForward{}
         {
             for (const int& targetDevice : targetDevices) {
+                cudaDeviceProp props;
+                cudaGetDeviceProperties(&props, targetDevice);
                 _projectors.push_back(std::make_unique<ProjectionMethod>(
                     volumeDescriptor, detectorDescriptor, true, targetDevice));
             }
@@ -281,17 +284,70 @@ namespace elsa
 
             std::vector<std::thread> schedulers(0);
 
+            index_t maxChunkDomain = 0;
+            index_t maxChunkRange = 0;
+            for (int j = 1; j < _maxChunkForward.size(); j++) {
+                if (_maxChunkForward[j].first.prod()
+                    > _maxChunkForward[maxChunkDomain].first.prod())
+                    maxChunkDomain = j;
+                if (_maxChunkForward[j].second.prod()
+                    > _maxChunkForward[maxChunkRange].second.prod())
+                    maxChunkRange = j;
+            }
+
             auto scheduler = [this](const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
                                     std::array<std::vector<int>, NUM_BUCKETS>& slices,
-                                    std::mutex& sliceLock, std::size_t i) {
+                                    std::mutex& sliceLock, std::size_t i, index_t maxChunkDomain,
+                                    index_t maxChunkRange, std::size_t freeMemory) {
+                index_t arrMaxElements = freeMemory / (2 * sizeof(data_t));
+
+                // allocate pinned memory buffers
+                const auto pvolume =
+                    std::make_unique<PinnedArray<data_t>>(_maxChunkForward[maxChunkDomain].first);
+                const auto psino =
+                    std::make_unique<PinnedArray<data_t>>(_maxChunkForward[maxChunkRange].second);
+
                 for (int j = 0; j < _maxChunkForward.size(); j++) {
                     if (slices[j].empty())
                         continue;
 
                     const auto& tasks = _partitioningForward[j];
 
-                    auto cudaVars = _projectors[i]->setupCUDAVariablesForwardConstrained(
-                        _maxChunkForward[j].first, _maxChunkForward[j].second);
+                    // determine maxChunkHeight and maxNumPoses based on available memory
+                    real_t rowAlignment = static_cast<real_t>(512 / sizeof(data_t));
+                    IndexVector_t volumeDims = _maxChunkForward[j].first;
+                    volumeDims[0] = static_cast<index_t>(
+                        std::ceil(static_cast<real_t>(volumeDims[0]) / rowAlignment)
+                        * rowAlignment);
+                    IndexVector_t imageDims = _maxChunkForward[j].second;
+                    imageDims[0] = static_cast<index_t>(
+                        std::ceil(static_cast<real_t>(imageDims[0]) / rowAlignment) * rowAlignment);
+                    const auto paddedVolSize = volumeDims.prod();
+                    const auto paddedSinoSize = imageDims.prod();
+                    index_t splitIdx =
+                        _maxChunkForward[j].first[1] > _maxChunkForward[j].first[2] ? 1 : 2;
+                    index_t maxChunkHeight = volumeDims[splitIdx];
+                    index_t maxNumPoses = imageDims[2];
+                    if (paddedVolSize > arrMaxElements) {
+                        const auto numSubtasks = paddedVolSize / arrMaxElements + 1;
+                        maxChunkHeight =
+                            static_cast<index_t>(std::ceil(static_cast<real_t>(maxChunkHeight)
+                                                           / static_cast<real_t>(numSubtasks)));
+                        volumeDims[splitIdx] = maxChunkHeight;
+                    }
+                    if (paddedSinoSize > arrMaxElements) {
+                        const auto numSubtasks = paddedSinoSize / arrMaxElements + 1;
+                        maxNumPoses = static_cast<index_t>(std::ceil(
+                            static_cast<real_t>(maxNumPoses) / static_cast<real_t>(numSubtasks)));
+                        imageDims[2] = maxNumPoses;
+                    }
+
+                    auto cudaVars =
+                        _projectors[i]->setupCUDAVariablesForward(volumeDims, imageDims);
+
+                    // attach pinned memory buffers
+                    cudaVars->_pvolume = pvolume.get();
+                    cudaVars->_psino = psino.get();
 
                     int sliceNum;
                     while (true) {
@@ -308,16 +364,29 @@ namespace elsa
 
                         const auto& task = tasks[sliceNum];
 
-                        _projectors[i]->applyConstrained(x, Ax, task, *cudaVars);
+                        for (const auto& subtask :
+                             _projectors[i]->getSubtasks(task, volumeDims, imageDims)) {
+                            _projectors[i]->applyConstrained(x, Ax, subtask, *cudaVars);
+                        }
                     }
                 }
             };
 
             for (std::size_t i = 0; i < _projectors.size(); i++) {
+                std::size_t free, total;
+                auto device = _projectors[i]->getDevice();
+                std::unique_lock l(deviceLock);
+                cudaSetDevice(device);
+                cudaMemGetInfo(&free, &total);
+                l.unlock();
+
+                // free = 60 * 1000000;
                 schedulers.emplace_back(scheduler, std::cref(x), std::ref(Ax), std::ref(slices),
-                                        std::ref(sliceLock), i);
+                                        std::ref(sliceLock), i, maxChunkDomain, maxChunkRange,
+                                        free / 2);
                 schedulers.emplace_back(scheduler, std::cref(x), std::ref(Ax), std::ref(slices),
-                                        std::ref(sliceLock), i);
+                                        std::ref(sliceLock), i, maxChunkDomain, maxChunkRange,
+                                        free / 2);
             }
 
             for (auto& scheduler : schedulers)

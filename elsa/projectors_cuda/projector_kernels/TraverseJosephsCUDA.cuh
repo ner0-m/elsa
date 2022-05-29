@@ -70,6 +70,7 @@ namespace elsa
                                                   const BoundingBoxCUDA<dim - 1>& imageBoundingBox,
                                                   const index_t numPoses,
                                                   const std::vector<Interval>& poses,
+                                                  bool zeroInit = true, index_t paddedDim = -1,
                                                   const cudaStream_t& stream = (cudaStream_t) 0);
         /**
          * @brief Backward projection using Josephs's method
