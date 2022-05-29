@@ -41,7 +41,7 @@ namespace elsa
     public:
         CUDA_HOST CudaObjectWrapper() {}
 
-        CUDA_HOST virtual ~CudaObjectWrapper() = default;
+        virtual ~CudaObjectWrapper() = default;
 
         CUDA_HOST CudaObjectWrapper(const CudaObjectWrapper&) = delete;
 
@@ -53,23 +53,28 @@ namespace elsa
     {
     public:
         CUDA_HOST PinnedArray(index_t size)
-            : _ptr{allocate(size),
-                   [](data_t* ptr) { gpuErrchkNoAbort(cudaFreeHost((void*) ptr)); }},
-              _dims(1)
+            : _dims(1), _ptr{allocate(size), [](data_t* ptr) {
+                                 gpuErrchkNoAbort(cudaFreeHost((void*) ptr));
+                             }}
+
         {
             _dims[0] = size;
         }
 
         CUDA_HOST PinnedArray(const IndexVector_t& dims)
-            : _ptr{allocate(dims.prod()),
-                   [](data_t* ptr) { gpuErrchkNoAbort(cudaFreeHost((void*) ptr)); }},
-              _dims{dims}
+            : _dims{dims}, _ptr{allocate(dims.prod()), [](data_t* ptr) {
+                                    gpuErrchkNoAbort(cudaFreeHost((void*) ptr));
+                                }}
+
         {
         }
 
-        CUDA_HOST PinnedArray(PinnedArray<data_t>&& other) : _ptr(std::move(other._ptr)), _dims{std::move(other._dims)} {}
+        CUDA_HOST PinnedArray(PinnedArray<data_t>&& other)
+            : _dims{std::move(other._dims)}, _ptr(std::move(other._ptr))
+        {
+        }
 
-        CUDA_HOST ~PinnedArray() override = default;
+        ~PinnedArray() override = default;
 
         CUDA_HOST data_t* get() const noexcept { return _ptr.get(); }
 
@@ -213,8 +218,7 @@ namespace elsa
                         tmp, make_cudaExtent(sizeui[0] * sizeof(data_t), sizeui[1], sizeui[2])));
                     break;
                 default:
-                    throw std::invalid_argument(
-                        "cudaPitchedPtr cannot must be 2- or 3-dimensional");
+                    throw std::invalid_argument("cudaPitchedPtr must be 2- or 3-dimensional");
             }
 
             return tmp;
