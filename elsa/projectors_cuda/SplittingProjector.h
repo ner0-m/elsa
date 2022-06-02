@@ -48,7 +48,7 @@ namespace elsa
                 numPoses += I.second - I.first;
 
             if (numPoses < 50)
-                SLICE_THICKNESS = 128;
+                bucket = NUM_BUCKETS - 1;
 
             if (bucket != NUM_BUCKETS - 1) {
                 index_t imgAxis = bucket % 6 / 3;
@@ -206,12 +206,23 @@ namespace elsa
             for (index_t i = 0; i < intervalVecs.size(); i++) {
                 if (!intervalVecs[i].empty()) {
                     std::sort(intervalVecs[i].begin(), intervalVecs[i].end());
-                    determineChunksForPoses(intervalVecs[i], i);
+
+                    numPoses = 0;
+                    for (const auto& I : intervalVecs[i])
+                        numPoses += I.second - I.first;
+                    if (numPoses >= 50) {
+                        determineChunksForPoses(intervalVecs[i], i);
+                    } else {
+                        highlyRotated.insert(highlyRotated.end(), intervalVecs[i].begin(),
+                                             intervalVecs[i].end());
+                    }
                 }
             }
 
-            if (!highlyRotated.empty())
+            if (!highlyRotated.empty()) {
+                std::sort(highlyRotated.begin(), highlyRotated.end());
                 determineChunksForPoses(highlyRotated, NUM_BUCKETS - 1);
+            }
 
             for (index_t bucket = 0; bucket < NUM_BUCKETS; bucket++) {
                 auto& maxChunk = _maxChunkForward[bucket];
@@ -249,12 +260,16 @@ namespace elsa
               _projectors(0),
               _partitioningForward{}
         {
+            int activeDevice;
+            gpuErrchk(cudaGetDevice(&activeDevice));
             for (const int& targetDevice : targetDevices) {
                 cudaDeviceProp props;
                 cudaGetDeviceProperties(&props, targetDevice);
-                _projectors.push_back(std::make_unique<ProjectionMethod>(
-                    volumeDescriptor, detectorDescriptor, true, targetDevice));
+                gpuErrchk(cudaSetDevice(targetDevice));
+                _projectors.push_back(
+                    std::make_unique<ProjectionMethod>(volumeDescriptor, detectorDescriptor, true));
             }
+            gpuErrchk(cudaSetDevice(activeDevice));
 
             splitProblem();
         }
@@ -274,6 +289,11 @@ namespace elsa
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override
         {
             Timer timeguard("SplittingProjector", "apply");
+
+            const auto AxFlags = cudaHostRegisterPortable;
+            const auto xFlags = AxFlags | cudaHostRegisterReadOnly;
+            gpuErrchk(cudaHostRegister((void*) &x[0], x.getSize() * sizeof(data_t), xFlags));
+            gpuErrchk(cudaHostRegister((void*) &Ax[0], Ax.getSize() * sizeof(data_t), AxFlags));
 
             // TODO: look at different handling orders e.g. slice from middle of container
             // followed by slice from side
@@ -299,22 +319,51 @@ namespace elsa
                                     std::array<std::vector<int>, NUM_BUCKETS>& slices,
                                     std::mutex& sliceLock, std::size_t i, index_t maxChunkDomain,
                                     index_t maxChunkRange, std::size_t freeMemory) {
+                gpuErrchk(cudaSetDevice(_projectors[i]->getDevice()));
+
                 index_t arrMaxElements = freeMemory / (2 * sizeof(data_t));
+                // create a cudaStream for this thread
+                const auto stream = std::make_unique<CudaStreamWrapper>();
 
-                // allocate pinned memory buffers
-                const auto pvolume =
-                    std::make_unique<PinnedArray<data_t>>(_maxChunkForward[maxChunkDomain].first);
-                const auto psino =
-                    std::make_unique<PinnedArray<data_t>>(_maxChunkForward[maxChunkRange].second);
-
+                IndexVector_t domainMaxDims = IndexVector_t::Ones(3);
+                IndexVector_t rangeMaxDims = IndexVector_t::Ones(3);
                 for (int j = 0; j < _maxChunkForward.size(); j++) {
+                    if (slices[j].empty())
+                        continue;
+                    const auto& [d, r] = _maxChunkForward[j];
+                    domainMaxDims = (d.array() > domainMaxDims.array()).select(d, domainMaxDims);
+                    if (r[0] > rangeMaxDims[0])
+                        rangeMaxDims[0] = r[0];
+                    if (r[1] * r[2] > rangeMaxDims[1])
+                        rangeMaxDims[1] = r[1] * r[2];
+                }
+                real_t rowAlignment = static_cast<real_t>(512 / sizeof(data_t));
+                domainMaxDims[0] = static_cast<index_t>(
+                    std::ceil(static_cast<real_t>(domainMaxDims[0]) / rowAlignment) * rowAlignment);
+                rangeMaxDims[0] = static_cast<index_t>(
+                    std::ceil(static_cast<real_t>(rangeMaxDims[0]) / rowAlignment) * rowAlignment);
+                const auto singleAllocSize = domainMaxDims.prod() + rangeMaxDims.prod();
+
+                BoundingBox currentVolumeBox(IndexVector_t::Ones(3));
+                IndexVector_t currentVolumeDims = IndexVector_t::Zero(3);
+                IndexVector_t currentImageDims = IndexVector_t::Zero(3);
+                std::unique_ptr<CUDAVariablesForward<data_t>> cudaVars;
+                if (singleAllocSize <= freeMemory / sizeof(data_t)) {
+                    cudaVars =
+                        _projectors[i]->setupCUDAVariablesForward(domainMaxDims, rangeMaxDims);
+                    cudaVars->stream = stream.get();
+
+                    currentVolumeDims = domainMaxDims;
+                    currentImageDims = rangeMaxDims;
+                }
+
+                for (int j = _maxChunkForward.size() - 1; j >= 0; j--) {
                     if (slices[j].empty())
                         continue;
 
                     const auto& tasks = _partitioningForward[j];
 
-                    // determine maxChunkHeight and maxNumPoses based on available memory
-                    real_t rowAlignment = static_cast<real_t>(512 / sizeof(data_t));
+                    // determine dimensions of padded arrays
                     IndexVector_t volumeDims = _maxChunkForward[j].first;
                     volumeDims[0] = static_cast<index_t>(
                         std::ceil(static_cast<real_t>(volumeDims[0]) / rowAlignment)
@@ -322,32 +371,37 @@ namespace elsa
                     IndexVector_t imageDims = _maxChunkForward[j].second;
                     imageDims[0] = static_cast<index_t>(
                         std::ceil(static_cast<real_t>(imageDims[0]) / rowAlignment) * rowAlignment);
-                    const auto paddedVolSize = volumeDims.prod();
-                    const auto paddedSinoSize = imageDims.prod();
-                    index_t splitIdx =
-                        _maxChunkForward[j].first[1] > _maxChunkForward[j].first[2] ? 1 : 2;
-                    index_t maxChunkHeight = volumeDims[splitIdx];
-                    index_t maxNumPoses = imageDims[2];
-                    if (paddedVolSize > arrMaxElements) {
-                        const auto numSubtasks = paddedVolSize / arrMaxElements + 1;
-                        maxChunkHeight =
-                            static_cast<index_t>(std::ceil(static_cast<real_t>(maxChunkHeight)
-                                                           / static_cast<real_t>(numSubtasks)));
-                        volumeDims[splitIdx] = maxChunkHeight;
-                    }
-                    if (paddedSinoSize > arrMaxElements) {
-                        const auto numSubtasks = paddedSinoSize / arrMaxElements + 1;
-                        maxNumPoses = static_cast<index_t>(std::ceil(
-                            static_cast<real_t>(maxNumPoses) / static_cast<real_t>(numSubtasks)));
-                        imageDims[2] = maxNumPoses;
-                    }
+                    imageDims[1] *= imageDims[2];
+                    imageDims[2] = 1;
+                    // check if reallocation necessary
+                    if ((currentVolumeDims.array() >= volumeDims.array()).all()
+                        && (currentImageDims.array() >= imageDims.array()).all()) {
+                        // no reallocation
+                    } else {
+                        // reallocate
+                        const auto paddedVolSize = volumeDims.prod();
+                        const auto paddedSinoSize = imageDims.prod();
+                        index_t splitIdx =
+                            _maxChunkForward[j].first[1] > _maxChunkForward[j].first[2] ? 1 : 2;
+                        if (paddedVolSize > arrMaxElements) {
+                            const auto numSubtasks = paddedVolSize / arrMaxElements + 1;
+                            volumeDims[splitIdx] = static_cast<index_t>(
+                                std::ceil(static_cast<real_t>(volumeDims[splitIdx])
+                                          / static_cast<real_t>(numSubtasks)));
+                        }
+                        if (paddedSinoSize > arrMaxElements) {
+                            const auto numSubtasks = paddedSinoSize / arrMaxElements + 1;
+                            imageDims[1] =
+                                static_cast<index_t>(std::ceil(static_cast<real_t>(imageDims[1])
+                                                               / static_cast<real_t>(numSubtasks)));
+                        }
 
-                    auto cudaVars =
-                        _projectors[i]->setupCUDAVariablesForward(volumeDims, imageDims);
+                        cudaVars = _projectors[i]->setupCUDAVariablesForward(volumeDims, imageDims);
+                        cudaVars->stream = stream.get();
 
-                    // attach pinned memory buffers
-                    cudaVars->_pvolume = pvolume.get();
-                    cudaVars->_psino = psino.get();
+                        currentVolumeDims = volumeDims;
+                        currentImageDims = imageDims;
+                    }
 
                     int sliceNum;
                     while (true) {
@@ -364,23 +418,22 @@ namespace elsa
 
                         const auto& task = tasks[sliceNum];
 
-                        for (const auto& subtask :
-                             _projectors[i]->getSubtasks(task, volumeDims, imageDims)) {
+                        for (const auto& subtask : _projectors[i]->getSubtasks(
+                                 task, currentVolumeDims, currentImageDims)) {
                             _projectors[i]->applyConstrained(x, Ax, subtask, *cudaVars);
                         }
                     }
                 }
             };
 
+            int activeDevice;
+            gpuErrchk(cudaGetDevice(&activeDevice));
             for (std::size_t i = 0; i < _projectors.size(); i++) {
                 std::size_t free, total;
                 auto device = _projectors[i]->getDevice();
-                std::unique_lock l(deviceLock);
-                cudaSetDevice(device);
-                cudaMemGetInfo(&free, &total);
-                l.unlock();
+                gpuErrchk(cudaSetDevice(device));
+                gpuErrchk(cudaMemGetInfo(&free, &total));
 
-                // free = 60 * 1000000;
                 schedulers.emplace_back(scheduler, std::cref(x), std::ref(Ax), std::ref(slices),
                                         std::ref(sliceLock), i, maxChunkDomain, maxChunkRange,
                                         free / 2);
@@ -391,6 +444,9 @@ namespace elsa
 
             for (auto& scheduler : schedulers)
                 scheduler.join();
+            gpuErrchk(cudaSetDevice(activeDevice));
+            gpuErrchk(cudaHostUnregister((void*) &x[0]));
+            gpuErrchk(cudaHostUnregister((void*) &Ax[0]));
         }
 
         /// apply adjoint of forward projection (i.e. backward projection)

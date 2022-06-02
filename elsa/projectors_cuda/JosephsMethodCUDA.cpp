@@ -34,8 +34,8 @@ namespace elsa
     template <typename data_t>
     JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const VolumeDescriptor& domainDescriptor,
                                                  const DetectorDescriptor& rangeDescriptor,
-                                                 bool fast, int device)
-        : CUDAProjector<data_t>(domainDescriptor, rangeDescriptor, device),
+                                                 bool fast)
+        : CUDAProjector<data_t>(domainDescriptor, rangeDescriptor),
           _traverse2D{},
           _traverse3D{},
           _fast{fast}
@@ -55,9 +55,6 @@ namespace elsa
         }
 
         const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
-
-        std::scoped_lock lock(deviceLock);
-        gpuErrchk(cudaSetDevice(_device));
 
         // allocate device memory and copy ray origins and the inverse of projection matrices to
         // device
@@ -395,9 +392,6 @@ namespace elsa
         texDesc.readMode = cudaReadModeElementType;
         texDesc.normalizedCoords = 0;
 
-        std::scoped_lock lock(deviceLock);
-        cudaSetDevice(_device);
-
         CudaArrayWrapper arr(channelDesc, chunkSizeDomain);
 
         return std::make_unique<CUDAVariablesJosephsForward<data_t>>(
@@ -417,32 +411,29 @@ namespace elsa
             paddedVolumeBox._min[task._paddedDim] -= 1;
             paddedVolumeBox._max[task._paddedDim] += 1;
         }
-        containerChunkToPinned(x, *cuVars._pvolume, paddedVolumeBox, cuVars.stream);
+        // containerChunkToPinned(x, *cuVars._pvolume, paddedVolumeBox, *cuVars.stream);
 
-        copyDataForward(cuVars._pvolume->get(), paddedVolumeBox, cuVars);
-
-        std::unique_lock lock(deviceLock);
-        gpuErrchk(cudaSetDevice(_device));
+        copyDataForward(&x[0], paddedVolumeBox, cuVars);
 
         // assumes 3d
         _traverse3D->traverseForwardConstrained(
             cuVars.volumeTex, cuVars.dsinoPtr,
             BoundingBoxCUDA<3>(task._volumeBox._min, task._volumeBox._max),
             BoundingBoxCUDA<2>(task._imagePatch._min, task._imagePatch._max), task._numPoses,
-            task._poses, task._zeroInit, task._paddedDim, cuVars.stream);
+            task._poses, task._zeroInit, task._paddedDim, *cuVars.stream);
 
-        lock.unlock();
-
-        RealVector_t sinoMin = RealVector_t::Zero(3);
-        sinoMin.topRows(2) = task._imagePatch._min;
-        RealVector_t sinoMax = RealVector_t::Constant(3, task._numPoses);
-        sinoMax.topRows(2) = task._imagePatch._max;
+        // RealVector_t sinoMin = RealVector_t::Zero(3);
+        // sinoMin.topRows(2) = task._imagePatch._min;
+        // RealVector_t sinoMax = RealVector_t::Constant(3, task._numPoses);
+        // sinoMax.topRows(2) = task._imagePatch._max;
 
         if (task._fetchResult) {
-            retrieveResults(cuVars._psino->get(), cuVars.dsinoPtr, BoundingBox(sinoMin, sinoMax),
-                            cuVars.stream);
-            pinnedToContainerChunks(Ax, *cuVars._psino, task._imagePatch, task._poses,
-                                    cuVars.stream);
+            // retrieveResults(cuVars._psino->get(), cuVars.dsinoPtr, BoundingBox(sinoMin, sinoMax),
+            // *cuVars.stream);
+            // pinnedToContainerChunks(Ax, *cuVars._psino, task._imagePatch, task._poses,
+            //                         *cuVars.stream);
+            posesToContainer(Ax, cuVars.dsinoPtr, task._imagePatch, task._poses, *cuVars.stream);
+            cudaStreamSynchronize(*cuVars.stream);
         }
     }
 
@@ -452,7 +443,7 @@ namespace elsa
                                                const IndexVector_t& maxVolumeDims,
                                                const IndexVector_t& maxImageDims) const
     {
-        index_t maxNumPoses = maxImageDims[2];
+        index_t maxImageRows = maxImageDims[1];
         index_t splitIdx = 0;
         IndexVector_t overLimit =
             (task._volumeBox._max - task._volumeBox._min).template cast<index_t>() - maxVolumeDims;
@@ -464,7 +455,10 @@ namespace elsa
         // split task into subtasks if memory is insufficient
         std::vector<BoundingBox> subtaskVolChunks;
         std::vector<std::pair<std::vector<Interval>, index_t>> subtaskPoses;
-        if (task._numPoses > maxNumPoses) {
+        const auto imgRowsPerPose =
+            static_cast<index_t>(task._imagePatch._max[1] - task._imagePatch._min[1]);
+        if (task._numPoses * imgRowsPerPose > maxImageRows) {
+            index_t maxNumPoses = maxImageRows / imgRowsPerPose;
             index_t numPoses = 0;
             std::vector<Interval> poses;
             for (const auto& interval : task._poses) {
@@ -554,12 +548,14 @@ namespace elsa
                                       _detectorDescriptor.getNumberOfCoefficientsPerDimension());
 
         auto& cuVars = static_cast<CUDAVariablesJosephsForward<data_t>&>(*cudaVars);
+        const auto stream = std::make_unique<CudaStreamWrapper>();
 
+        cuVars.stream = stream.get();
         copyDataForward(&x[0], BoundingBox(_volumeDescriptor.getNumberOfCoefficientsPerDimension()),
                         cuVars);
 
         // synchronize because we are using multiple streams
-        cudaStreamSynchronize(cuVars.stream);
+        cudaStreamSynchronize(*cuVars.stream);
         // perform projection
         if (_volumeDescriptor.getNumberOfDimensions() == 3) {
             _traverse3D->traverseForward(cuVars.volumeTex, cuVars.dsinoPtr);
@@ -738,7 +734,7 @@ namespace elsa
 
         // transfer volume as texture
         copyTextureToGPUForward((const void*) volumeData, volumeBoundingBox, cuVars.dvolumeArr,
-                                cuVars.stream);
+                                *cuVars.stream);
     }
 
     template <typename data_t>
@@ -755,8 +751,6 @@ namespace elsa
             copy3DDataContainer<ContainerCpyKind::cpyRawGPUToContainer, true>(
                 (void*) hostData, gpuAdjusted, dataExt, stream);
         } else {
-            std::scoped_lock lock(deviceLock);
-            gpuErrchk(cudaSetDevice(_device));
             gpuErrchk(cudaMemcpy2DAsync((void*) hostData, dataDims[0] * sizeof(data_t), gpuData.ptr,
                                         gpuData.pitch, dataDims[0] * sizeof(data_t), dataDims[1],
                                         cudaMemcpyDeviceToHost, stream));
@@ -786,11 +780,7 @@ namespace elsa
             cpyParams.dstPtr = tmp;
         }
 
-        std::unique_lock lock(deviceLock);
-        gpuErrchk(cudaSetDevice(_device));
-
         gpuErrchk(cudaMemcpy3DAsync(&cpyParams, stream));
-        lock.unlock();
 
         if (!async)
             cudaStreamSynchronize(stream);
@@ -903,17 +893,64 @@ namespace elsa
                                                             cudaStream_t stream) const
     {
         // transfer volume as texture
-        Eigen::Matrix<uint, -1, 1> domainDimsui = (aabb._max - aabb._min).template cast<uint>();
+        Eigen::Matrix<size_t, -1, 1> domainDimsui =
+            _volumeDescriptor.getNumberOfCoefficientsPerDimension().template cast<size_t>();
 
-        std::scoped_lock lock(deviceLock);
-        gpuErrchk(cudaSetDevice(_device));
         if (aabb._dim == 3) {
+            Eigen::Matrix<size_t, -1, 1> zeroPadMin =
+                (aabb._min.array() < 0).select(-aabb._min.template cast<size_t>(), 0);
+            Eigen::Matrix<size_t, -1, 1> zeroPadMax =
+                (aabb._max.array().template cast<size_t>() > domainDimsui.array())
+                    .select(aabb._max.template cast<size_t>() - domainDimsui, 0);
+
+            Eigen::Matrix<size_t, -1, 1> paddedDims =
+                (aabb._max - aabb._min).template cast<size_t>();
+            Eigen::Matrix<size_t, -1, 1> copyExtent = paddedDims - zeroPadMin - zeroPadMax;
+
+            // CUDA does not provide a memset function for cudaArrays, so we roll our own
+            const auto cudaArrayMemset3DAsync =
+                [](cudaArray_t array, Eigen::Matrix<size_t, -1, 1> pos,
+                   Eigen::Matrix<size_t, -1, 1> ext, data_t value, cudaStream_t stream) {
+                    // allocating and setting the values in GPU memory would be more efficient,
+                    // but there might not be enough memory for that
+                    const auto values = std::make_unique<data_t[]>(ext.prod());
+                    std::fill_n(values.get(), ext.prod(), value);
+
+                    cudaMemcpy3DParms cpyParams = {0};
+                    cpyParams.dstArray = array;
+                    cpyParams.dstPos = make_cudaPos(pos[0], pos[1], pos[2]);
+                    cpyParams.extent = make_cudaExtent(ext[0], ext[1], ext[2]);
+                    cpyParams.kind = cudaMemcpyDefault;
+                    cpyParams.srcPtr = make_cudaPitchedPtr(reinterpret_cast<void*>(values.get()),
+                                                           ext[0] * sizeof(data_t),
+                                                           ext[0] * sizeof(data_t), ext[1]);
+
+                    cudaMemcpy3DAsync(&cpyParams, stream);
+                };
+
+            for (int i = 0; i < 3; i++) {
+                Eigen::Matrix<size_t, -1, 1> pos = Eigen::Matrix<size_t, -1, 1>::Zero(3);
+                Eigen::Matrix<size_t, -1, 1> ext = paddedDims;
+                if (zeroPadMin[i] > 0) {
+                    ext[i] = zeroPadMin[i];
+                    cudaArrayMemset3DAsync(darray, pos, ext, static_cast<data_t>(0), stream);
+                }
+                if (zeroPadMax[i] > 0) {
+                    pos[i] = paddedDims[i] - zeroPadMax[i];
+                    ext[i] = zeroPadMax[i];
+                    cudaArrayMemset3DAsync(darray, pos, ext, static_cast<data_t>(0), stream);
+                }
+            }
             cudaMemcpy3DParms cpyParams = {0};
             cpyParams.srcPtr =
                 make_cudaPitchedPtr(const_cast<void*>(hostData), domainDimsui[0] * sizeof(data_t),
                                     domainDimsui[0], domainDimsui[1]);
+            const auto srcPos = aabb._min.template cast<size_t>() + zeroPadMin;
+            cpyParams.srcPos = make_cudaPos(srcPos[0] * sizeof(data_t), srcPos[1], srcPos[2]);
+            cpyParams.dstPos =
+                make_cudaPos(zeroPadMin[0] * sizeof(data_t), zeroPadMin[1], zeroPadMin[2]);
             cpyParams.dstArray = darray;
-            cpyParams.extent = make_cudaExtent(domainDimsui[0], domainDimsui[1], domainDimsui[2]);
+            cpyParams.extent = make_cudaExtent(copyExtent[0], copyExtent[1], copyExtent[2]);
             cpyParams.kind = cudaMemcpyDefault;
 
             gpuErrchk(cudaMemcpy3DAsync(&cpyParams, stream));

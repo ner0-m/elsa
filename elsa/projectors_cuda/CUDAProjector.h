@@ -8,12 +8,10 @@
 
 namespace elsa
 {
-    static std::mutex deviceLock;
-
     /// wrapper for CUDA variables required by traversal kernel
     template <typename data_t>
     struct CUDAVariablesTraversal {
-        CudaStreamWrapper stream;
+        CudaStreamWrapper* stream;
         PinnedArray<data_t>* _pvolume;
         PinnedArray<data_t>* _psino;
 
@@ -79,19 +77,12 @@ namespace elsa
 
     protected:
         CUDAProjector(const VolumeDescriptor& domainDescriptor,
-                      const DetectorDescriptor& rangeDescriptor, int device = 0)
+                      const DetectorDescriptor& rangeDescriptor)
             : LinearOperator<data_t>{domainDescriptor, rangeDescriptor},
               _volumeDescriptor{domainDescriptor},
               _detectorDescriptor{rangeDescriptor},
-              _device{device}
+              _device{getActiveDevice()}
         {
-            int deviceCount;
-            cudaGetDeviceCount(&deviceCount);
-
-            if (_device >= deviceCount)
-                throw std::invalid_argument("CUDAProjector: Tried to select device number "
-                                            + std::to_string(_device) + " but only "
-                                            + std::to_string(deviceCount) + " devices available");
         }
 
         /// default copy constructor, hidden from non-derived classes to prevent potential
@@ -134,6 +125,37 @@ namespace elsa
                 dc, const_cast<PinnedArray<data_t>&>(pinned), patchBoundingBox, intervals, stream);
         }
 
+        void posesToContainer(DataContainer<data_t>& dc, const cudaPitchedPtr& ptr,
+                              const BoundingBox& patchBoundingBox,
+                              const std::vector<Interval>& intervals, cudaStream_t stream) const
+        {
+            IndexVector_t dcSize = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+
+            IndexVector_t patchSize =
+                (patchBoundingBox._max - patchBoundingBox._min).template cast<index_t>();
+
+            cudaMemcpy3DParms parms = {0};
+            parms.srcPtr = make_cudaPitchedPtr(ptr.ptr, ptr.pitch, ptr.xsize, patchSize[1]);
+            parms.dstPtr =
+                make_cudaPitchedPtr(static_cast<void*>(&dc[0]), dcSize[0] * sizeof(data_t),
+                                    dcSize[0] * sizeof(data_t), dcSize[1]);
+            parms.kind = cudaMemcpyDefault;
+
+            index_t pinnedZ = 0;
+            for (const auto& [iStart, iEnd] : intervals) {
+                const auto numPoses = iEnd - iStart;
+                parms.dstPos = make_cudaPos(patchBoundingBox._min[0] * sizeof(data_t),
+                                            patchBoundingBox._min[1], iStart);
+                parms.srcPos = make_cudaPos(0, 0, pinnedZ);
+                parms.extent =
+                    make_cudaExtent(patchSize[0] * sizeof(data_t), patchSize[1], numPoses);
+
+                cudaMemcpy3DAsync(&parms, stream);
+
+                pinnedZ += numPoses;
+            }
+        }
+
         /// convenience typedef for the Eigen::Matrix data vector
         using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
 
@@ -144,6 +166,13 @@ namespace elsa
         const DetectorDescriptor& _detectorDescriptor;
 
         const int _device;
+
+        static int getActiveDevice()
+        {
+            int d;
+            gpuErrchk(cudaGetDevice(&d));
+            return d;
+        }
 
     private:
         enum MemcpyDirection { PINNED_TO_PAGEABLE, PAGEABLE_TO_PINNED };
@@ -172,42 +201,6 @@ namespace elsa
             zeroPadMax = (zeroPadMax.array() > 0).select(zeroPadMax, IndexVector_t::Zero(2));
             zeroPadMin.conservativeResize(3);
             zeroPadMax.conservativeResize(3);
-
-            //     auto patchOffset = dcDesc.getIndexFromCoordinate(patchMin);
-            //     auto dcColumnSize = dcSize[0];
-            //     auto dcSliceSize = dcSize[1] * dcColumnSize;
-
-            //     data_t* pinnedData = pinnedChunk.get();
-            //     data_t* dcData = &dc[0];
-            //     data_t* src = dir == PINNED_TO_PAGEABLE ? pinnedData : dcData +
-            //     patchOffset; data_t* dst = dir == PAGEABLE_TO_PINNED ? pinnedData :
-            //     dcData + patchOffset; auto srcColumnSize = dir == PINNED_TO_PAGEABLE
-            //     ? patchSize[0] : dcColumnSize; auto srcSliceSize =
-            //         dir == PINNED_TO_PAGEABLE ? patchSize[0] * patchSize[1] :
-            //         dcSliceSize;
-            //     auto dstColumnSize = dir == PAGEABLE_TO_PINNED ? patchSize[0] :
-            //     dcColumnSize; auto dstSliceSize =
-            //         dir == PAGEABLE_TO_PINNED ? patchSize[0] * patchSize[1] :
-            //         dcSliceSize;
-            //     index_t srcZ, dstZ;
-            //     index_t arrZ = 0;
-
-            //     // assumes 3d container
-            //     for (const auto& [iStart, iEnd] : intervals) {
-            //         for (index_t dcZ = iStart; dcZ < iEnd; dcZ++) {
-            //             for (index_t y = 0; y < patchSize[1]; y++) {
-            //                 srcZ = dir == PINNED_TO_PAGEABLE ? arrZ : dcZ;
-            //                 dstZ = dir == PAGEABLE_TO_PINNED ? arrZ : dcZ;
-            //                 // copy chunk to pinned memory column by column
-            //                 std::memcpy((void*) (dst + dstZ * dstSliceSize + y *
-            //                 dstColumnSize),
-            //                             (const void*) (src + srcZ * srcSliceSize
-            //                             + y * srcColumnSize), patchSize[0] *
-            //                             sizeof(data_t));
-            //             }
-            //             arrZ++;
-            //         }
-            //     }
 
             auto dcPtr = make_cudaPitchedPtr(static_cast<void*>(&dc[0]), dcSize[0] * sizeof(data_t),
                                              dcSize[0] * sizeof(data_t), dcSize[1]);

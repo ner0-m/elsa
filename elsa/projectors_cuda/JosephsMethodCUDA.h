@@ -54,8 +54,7 @@ namespace elsa
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
         JosephsMethodCUDA(const VolumeDescriptor& domainDescriptor,
-                          const DetectorDescriptor& rangeDescriptor, bool fast = true,
-                          int device = 0);
+                          const DetectorDescriptor& rangeDescriptor, bool fast = true);
 
         /// destructor
         ~JosephsMethodCUDA() override = default;
@@ -168,5 +167,6 @@ namespace elsa
         using CUDAProjector<data_t>::_device;
         using CUDAProjector<data_t>::containerChunkToPinned;
         using CUDAProjector<data_t>::pinnedToContainerChunks;
+        using CUDAProjector<data_t>::posesToContainer;
     };
 } // namespace elsa
