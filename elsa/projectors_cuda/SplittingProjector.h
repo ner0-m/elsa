@@ -33,8 +33,6 @@ namespace elsa
     public:
         void determineChunksForPoses(const std::vector<Interval>& poses, index_t bucket)
         {
-            real_t SLICE_THICKNESS = 64;
-
             // const DetectorDescriptor& detectorDescriptor =
             // static_cast<const DetectorDescriptor&>(*_rangeDescriptor);
             const RealVector_t detSize =
@@ -52,6 +50,16 @@ namespace elsa
 
             if (bucket != NUM_BUCKETS - 1) {
                 index_t imgAxis = bucket % 6 / 3;
+                cudaDeviceProp props;
+                cudaGetDeviceProperties(&props, 0);
+                const int maxBlockDim = 8;
+
+                real_t SLICE_THICKNESS = std::max(
+                    maxBlockDim,
+                    static_cast<int>(std::ceil(static_cast<real_t>(props.maxThreadsPerMultiProcessor
+                                                                   * props.multiProcessorCount)
+                                               / detSize[1 - imgAxis] / maxBlockDim)
+                                     * maxBlockDim));
 
                 for (index_t slice = 0; slice * SLICE_THICKNESS < detSize[imgAxis]; slice++) {
                     sliceStart[imgAxis] = slice * SLICE_THICKNESS;
@@ -263,8 +271,6 @@ namespace elsa
             int activeDevice;
             gpuErrchk(cudaGetDevice(&activeDevice));
             for (const int& targetDevice : targetDevices) {
-                cudaDeviceProp props;
-                cudaGetDeviceProperties(&props, targetDevice);
                 gpuErrchk(cudaSetDevice(targetDevice));
                 _projectors.push_back(
                     std::make_unique<ProjectionMethod>(volumeDescriptor, detectorDescriptor, true));
