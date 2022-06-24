@@ -1,5 +1,54 @@
 # Contributing to elsa
-This page summarizes advice how to contribute to elsa.
+
+We are happy to accept contributions. This should help to get you started.
+
+First, feel free to contact the core developers with whatever inquiry or question you have.
+
+elsa offers many different areas to work in. Check the
+[milestones](https://gitlab.lrz.de/IP/elsa/-/milestones) and/or the [issue
+tracker](https://gitlab.lrz.de/IP/elsa/-/issues) for topics that might interest you. If no issue
+exits, feel free to open one and get in touch with the core developers. To avoid frustration and
+work done for nothing, we encourage you to get in touch with us early. We don't bite
+:stuck_out_tongue_winking_eye:
+
+If you are a student of the Technical University of Munich and want your work to be part of you
+curriculum, also get in touch with us.
+
+## Kind of Contributions
+
+### Bug reports
+
+Report bugs to our [issue tracker](https://gitlab.lrz.de/IP/elsa/-/issues). In the description
+include information about the elsa version, your system, a (if possible minimal) step by step guide
+or example code to reproduce the error and what the expected behaviour should be.
+
+### Fix issues
+
+If you find and issue on the [issue tracker](https://gitlab.lrz.de/IP/elsa/-/issues), you are
+interested in, feel free to work on it. Leave a message in the respective issue, to see if anyone is
+already working on it.
+
+### New features or refactors
+
+There are many different areas elsa still needs improvement and new features.
+As mentioned above, check the [milestones](https://gitlab.lrz.de/IP/elsa/-/milestones) and/or the
+[issue tracker](https://gitlab.lrz.de/IP/elsa/-/issues). If you want to work on something
+interesting, which is not on either of the lists, open an issue explain what you want to do
+and why it would be useful.
+
+If you find some places, don't follow certain best practices for the given area, feel free to get in
+touch and work on it. We are always trying to keep up with best practices.
+
+### Improve documentation and examples
+
+We are always happy to hear back if our documentation is unclear and can be improved. If you want
+and can improve it yourself we are happy to accept contributions!
+
+### Improve workflow (i.e. CI, infrastructure)
+
+There is quite some work involved in keeping things like the CI pipeline and enforce certain best
+practices, if possible, automatically. If you have ideas for improving in this area and are
+interested in digging into DevOp work, feel free to get in touch.
 
 ## General Workflow
 
