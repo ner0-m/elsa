@@ -36,8 +36,8 @@ As mentioned above, check the [milestones](https://gitlab.lrz.de/IP/elsa/-/miles
 interesting, which is not on either of the lists, open an issue explain what you want to do
 and why it would be useful.
 
-If you find some places, don't follow certain best practices for the given area, feel free to get in
-touch and work on it. We are always trying to keep up with best practices.
+If you find some places, which don't follow certain best practices for the given area, feel free to
+get in touch and work on it. We are always trying to keep up with best practices.
 
 ### Improve documentation and examples
 
