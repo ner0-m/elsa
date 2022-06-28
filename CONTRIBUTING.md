@@ -103,7 +103,9 @@ easier.
    to clean up the commit history. This is easiest if you didn't push so far. But **if** you are the
    only person working on the branch, rewriting history isn't a problem. But please be sure you are
    the only one, because else, it can be troublesome.
-4. Commit messages should follow some guidelines (derived from [this
+4. Commit messages should follow [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/).
+
+some guidelines (derived from [this
    blogpost](https://chris.beams.io/posts/git-commit/)):
    - Separate subject from body with a blank line
    - Limit the subject line to 50 characters
@@ -111,10 +113,30 @@ easier.
    - Wrap the body at 72 characters
    - Use the body to explain what and why vs. how
 
+#### Commit messages
+
 Without wanting to sound pedantic, but a good commit history is important! It's not uncommon to
 review code commit by commit. If the commits are not to large, self-contained, in a logical order
 and have good commit messages, reviewing is a hell lot easier. Hence, we'd advice everyone to pay
 attention to it. But also don't worry to much, if you feel unsure what to do, again get in touch!
+
+As mentioned above, we follow the Conventional Commit style. I.e. the commit message header is
+structured as `<type>(<scope>): <short summary>`. The type and summary are mandatory, the scope is
+optional. Following the [Angular commit format](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit),
+the type must be one of the following: `build | ci | docs | feat | fix | perf | refactor | test`.
+For short descriptions of the different types see the above link. The summary should be in present
+tense, not capitalied and without period at the end. The scope should be an issue number if present.
+
+Some further guidelines for good commit message can be taken from [this
+blogpost](https://chris.beams.io/posts/git-commit/):
+   - Separate subject from body with a blank line
+   - Limit the subject line to 50 characters
+   - Use the imperative mood in the subject line
+   - Wrap the body at 72 characters
+   - Use the body to explain what and why vs. how
+
+Further [this blogpost](https://gist.github.com/brianclements/841ea7bffdb01346392c) is a recommended
+read, if you feel unsure about git in general.
 
 ## Merge request checklist
 
