@@ -33,10 +33,8 @@ namespace elsa
         std::vector<Geometry> geometryList;
         geometryList.reserve(static_cast<std::size_t>(numberOfPoses));
 
-        const real_t angleIncrement =
-            static_cast<real_t>(arcDegrees) / (static_cast<real_t>(numberOfPoses) - 1.0f);
-        for (index_t i = 0; i < numberOfPoses; ++i) {
-            const Radian angle = Degree{static_cast<real_t>(i) * angleIncrement};
+        for (auto degree : RealVector_t::LinSpaced(numberOfPoses, 0, arcDegrees)) {
+            const auto angle = Degree{degree}.to_radian();
             if (dim == 2) {
                 // Use emplace_back, then no copy is created
                 geometryList.emplace_back(SourceToCenterOfRotation{sourceToCenter},
