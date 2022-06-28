@@ -176,7 +176,7 @@ comment-formating:
     - elsa
     - clang
 
-.cmake-format:
+cmake-format:
   stage: static-test
   image: $CI_REGISTRY/ip/elsa/clang:14
   script:

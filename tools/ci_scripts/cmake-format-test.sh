@@ -4,46 +4,34 @@
 # Determine the applied differences with git,
 # return 1 when changes had to be made, so the CI step fails.
 
-# set exit on error
-set -e
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-# preference list
-cmake_format_tool_candiates=(cmake-format)
+files=($(git diff origin/master --name-only --diff-filter=d | egrep ".*(CMakeLists.txt|\.cmake(\.in)?)$"))
 
-for candidate in ${cmake_format_tool_candiates[@]}; do
-    if command -v "$candidate" >/dev/null; then
-        echo "Formatting check with $candidate --version:"
-        $candidate --version
-        cmake_format_tool=$candidate
-        break
+if (( ${#files[@]} )); then
+    cmake_lint_tool=false
+    if command -v "cmake-format" >/dev/null 2>&1; then
+        cmake_lint_tool=cmake-format
+    else
+        echo -e "[${RED}FAIL${NC}]: cmake-format is not available, but CMake files need linting! Please install cmake-format"
+        exit 1
     fi
-done
 
-if [[ -z "$cmake_format_tool" ]]; then
-    echo "$cmake_format_tool not correctly installed"
-    exit 1
-fi
+    echo -e "[${BLUE}INFO${NC}]: Formatting check with: `$cmake_lint_tool --version`"
+    echo -e "[${BLUE}INFO${NC}]: Running '$cmake_lint_tool --check' on files..."
 
-echo
-
-# run cmake-format
-format_call="find elsa examples tools cmake -name '*.cmake' -o -name 'CMakeLists.txt' | xargs $cmake_format_tool -l error"
-
-exit_code=0
-eval $format_call --check || exit_code=$?
-
-# if exit code 0, all is good
-if [[ -z $exit_code ]]; then
-    echo "Excellent. You passed the formatting check!"
-    exit 0;
+    if ! "$cmake_lint_tool" --check "${files[@]}"; then
+        echo -e "[${RED}FAIL${NC}]: Ups, something isn't correct with the formatting, please check above errors"
+        echo -e "[${BLUE}INFO${NC}]: From the root directory you can also run:"
+        echo "find CMakeLists.txt elsa benchmarks examples tools cmake -name '*.cmake' -o -name 'CMakeLists.txt' | xargs $cmake_lint_tool -i"
+        exit 1
+    else
+        echo -e "[${GREEN}OK${NC}]: Excellent. Formatting check passed"
+    fi
 else
-    echo
-    echo "The above files have cmake-format problems"
-    echo "Inside the repo, please run"
-    echo
-    echo "$format_call -i"
-    echo
-    echo "to solve the issue."
+    echo -e "[${GREEN}OK${NC}]: No CMake files to check"
 fi
-
-exit 1
