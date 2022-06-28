@@ -87,8 +87,9 @@ function(set_target_warnings target)
         set(msvc_base_warnings ${base_msvc_warnings} /WX)
     endif()
 
-    set(base_gcc_warnings ${base_clang_warnings} -Wmisleading-indentation # warn if indentation implies blocks where blocks
-                                                                     # do not exist
+    set(base_gcc_warnings
+        ${base_clang_warnings} -Wmisleading-indentation # warn if indentation implies blocks where blocks
+        # do not exist
     )
 
     set(all_gcc_warnings

@@ -10,10 +10,8 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-# Credits go to the awesome project of,
-# https://github.com/StableCoder/cmake-scripts
-# mostly this is exactly their script, with some minor tweaks and removals of stuff we don't need.
-# Thanks!
+# Credits go to the awesome project of, https://github.com/StableCoder/cmake-scripts mostly this is exactly their
+# script, with some minor tweaks and removals of stuff we don't need. Thanks!
 
 # USAGE: To enable any code coverage instrumentation/targets, the single CMake option of `ELSA_COVERAGE` needs to be set
 # to 'ON', either by GUI, ccmake, or on the command line.
@@ -214,8 +212,8 @@ function(target_code_coverage TARGET_NAME)
         set(TARGET_VISIBILITY PUBLIC)
         set(TARGET_LINK_VISIBILITY)
     else()
-        set(TARGET_VISIBILITY PUBLIC)
-        set(TARGET_LINK_VISIBILITY PUBLIC)
+        set(TARGET_VISIBILITY PRIVATE)
+        set(TARGET_LINK_VISIBILITY PRIVATE)
     endif()
 
     if(NOT target_code_coverage_COVERAGE_TARGET_NAME)

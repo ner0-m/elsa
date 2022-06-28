@@ -1,17 +1,13 @@
-# This script converts the commands in a compile_commands.json to a version that clang understands
-# and saves the result in the directory specified by OUTPUT_DIR
-# The variables CMAKE_BINARY_DIR and CLANG (path to clang executable) must be defined
-# Conversion must happen after CMake generation step and prior to invoking the pybind11_generator
+# This script converts the commands in a compile_commands.json to a version that clang understands and saves the result
+# in the directory specified by OUTPUT_DIR The variables CMAKE_BINARY_DIR and CLANG (path to clang executable) must be
+# defined Conversion must happen after CMake generation step and prior to invoking the pybind11_generator
 
 # parse all permissible clang flags from the output of "clang --help"
-execute_process(
-    COMMAND ${CLANG} --help
-    OUTPUT_VARIABLE CLANG_OUT
-)
+execute_process(COMMAND ${CLANG} --help OUTPUT_VARIABLE CLANG_OUT)
 string(REGEX MATCHALL "\n[ \t]+--?[+-9A-Za-z_]+" CLANG_ALLOWED_FLAGS ${CLANG_OUT})
 list(TRANSFORM CLANG_ALLOWED_FLAGS REPLACE "\n[ \t]+" "")
-# flags comprised of only a single capital letter require special attention
-# no " " or "=" between the flag and corresponding parameter, e.g. "-I/elsa/core" is perfectly valid
+# flags comprised of only a single capital letter require special attention no " " or "=" between the flag and
+# corresponding parameter, e.g. "-I/elsa/core" is perfectly valid
 string(REGEX MATCHALL "\n[ \t]+-[A-Z] ?<[^>]+>" CAPITAL_LETTER_FLAGS ${CLANG_OUT})
 list(TRANSFORM CAPITAL_LETTER_FLAGS REPLACE "\n[ \t]+-([A-Z]) ?<[^>]+>" "\\1")
 string(REPLACE ";" "" CAPITAL_LETTER_FLAGS ${CAPITAL_LETTER_FLAGS})

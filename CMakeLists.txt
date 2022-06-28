@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-project(elsa VERSION 0.5
-        DESCRIPTION "elsa recon toolbox"
-        LANGUAGES CXX)
-
+project(
+    elsa
+    VERSION 0.5
+    DESCRIPTION "elsa recon toolbox"
+    LANGUAGES CXX
+)
 
 # ------------ elsa options ------------
 # ------------
@@ -14,7 +16,7 @@ if(NOT DEFINED ELSA_MASTER_PROJECT)
     else()
         set(ELSA_MASTER_PROJECT OFF)
     endif()
-endif ()
+endif()
 
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
@@ -30,9 +32,11 @@ option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" 
 
 set(ELSA_WARNING_LEVEL "base" CACHE STRING "Warning level with which elsa is build. Options are: base, all")
 set(ELSA_SANITIZER
-        "" CACHE STRING
+    ""
+    CACHE
+        STRING
         "Compile with a sanitizer. Options are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak, 'Address;Undefined'"
-        )
+)
 
 set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures")
 
@@ -70,11 +74,15 @@ set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 # ------------ dependencies ------------
 # ------------
 
-if (NOT (SYSTEM_EIGEN AND SYSTEM_SPDLOG AND SYSTEM_DOCTEST AND SYSTEM_CATCH))
+if(NOT
+   (SYSTEM_EIGEN
+    AND SYSTEM_SPDLOG
+    AND SYSTEM_DOCTEST
+    AND SYSTEM_CATCH)
+)
     # Include CPM dependency manager for bundling dependencies
     include(CPM)
 endif()
-
 
 # only add the dependencies if elsa is stand-alone
 if(ELSA_MASTER_PROJECT)
@@ -82,32 +90,28 @@ if(ELSA_MASTER_PROJECT)
         message(STATUS "Using system-wide Eigen library...")
         find_package(Eigen3 REQUIRED)
     else()
-        # setup custom Eigen Library
-        # once there's a proper release,
-        # the system-eigen has to be a drop-in replacement for the git-version
+        # setup custom Eigen Library once there's a proper release, the system-eigen has to be a drop-in replacement for
+        # the git-version
         CPMAddPackage(
             NAME eigen3
             GIT_REPOSITORY https://gitlab.com/libeigen/eigen
             # Currently we're on a random master branch commit, until Eigen 3.4 will be released we kind of have to
             # stick with it, see also https://gitlab.lrz.de/IP/elsa/-/issues/91 for a little discussion on it
             GIT_TAG c1b0aea65
-            DOWNLOAD_ONLY YES  # Eigen's CMakelists are not intended for library use
+            DOWNLOAD_ONLY YES # Eigen's CMakelists are not intended for library use
         )
 
         # Add the Eigen library target to link against
         if(eigen3_ADDED)
             message(STATUS "Using bundled Eigen version in ${eigen3_SOURCE_DIR}")
-            # this target is set-up as a drop-in replacement
-            # for a system eigen package.
+            # this target is set-up as a drop-in replacement for a system eigen package.
             set(EIGEN_BUNDLED_INSTALLDIR "elsa/Eigen")
             add_library(Eigen INTERFACE)
             add_library(Eigen3::Eigen ALIAS Eigen)
 
-            target_include_directories(Eigen
-                SYSTEM      # include with -isystem so many warnings are swallowed!
-                INTERFACE
-                $<BUILD_INTERFACE:${eigen3_SOURCE_DIR}>
-                $<INSTALL_INTERFACE:${EIGEN_BUNDLED_INSTALLDIR}>
+            target_include_directories(
+                Eigen SYSTEM # include with -isystem so many warnings are swallowed!
+                INTERFACE $<BUILD_INTERFACE:${eigen3_SOURCE_DIR}> $<INSTALL_INTERFACE:${EIGEN_BUNDLED_INSTALLDIR}>
             )
 
             # register eigen in the build tree
@@ -116,14 +120,15 @@ if(ELSA_MASTER_PROJECT)
             # install custom elsa
             if(ELSA_INSTALL)
                 install(TARGETS Eigen EXPORT eigenExport)
-                install(EXPORT eigenExport
+                install(
+                    EXPORT eigenExport
                     NAMESPACE Eigen3::
                     FILE "eigen3Targets.cmake"
                     DESTINATION ${INSTALL_CONFIG_DIR}
                 )
 
                 install(DIRECTORY "${eigen3_SOURCE_DIR}/Eigen/"
-                    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${EIGEN_BUNDLED_INSTALLDIR}"
+                        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${EIGEN_BUNDLED_INSTALLDIR}"
                 )
             endif()
         endif()
@@ -133,8 +138,7 @@ if(ELSA_MASTER_PROJECT)
         message(STATUS "Using system-wide spdlog library...")
         find_package(spdlog REQUIRED)
     else()
-        # setup bundled spdlog
-        # this already reads spdlog's cmake definitions
+        # setup bundled spdlog this already reads spdlog's cmake definitions
         CPMAddPackage(
             NAME spdlog
             GITHUB_REPOSITORY gabime/spdlog
@@ -142,27 +146,20 @@ if(ELSA_MASTER_PROJECT)
             OPTIONS "SPDLOG_INSTALL ON"
         )
         message(STATUS "Using bundled spdlog version in ${spdlog_SOURCE_DIR}")
-        # because spdlog didn't do that on its own, we export the target.
-        # this is just for the in-buildtree linking, won't be installed.
-        # store in the bindir/elsa/ directory, which may be nested
-        # in other build directories somehow.
-        export(
-            TARGETS spdlog_header_only spdlog
-            FILE "${CMAKE_CURRENT_BINARY_DIR}/elsa/spdlogTargets.cmake"
-        )
-        # SPDLOG_INSTALL will manage install and includedir setup
-        # to $CMAKE_INSTALL_INCLUDEDIR/spdlog
+        # because spdlog didn't do that on its own, we export the target. this is just for the in-buildtree linking,
+        # won't be installed. store in the bindir/elsa/ directory, which may be nested in other build directories
+        # somehow.
+        export(TARGETS spdlog_header_only spdlog FILE "${CMAKE_CURRENT_BINARY_DIR}/elsa/spdlogTargets.cmake")
+        # SPDLOG_INSTALL will manage install and includedir setup to $CMAKE_INSTALL_INCLUDEDIR/spdlog
     endif()
 
-    if (SKBUILD AND ELSA_BUILD_PYTHON_BINDINGS)
-        # Scikit-Build does not add your site-packages to the search path
-        # automatically, so we need to add it _or_ the pybind11 specific directory
-        # here.
+    if(SKBUILD AND ELSA_BUILD_PYTHON_BINDINGS)
+        # Scikit-Build does not add your site-packages to the search path automatically, so we need to add it _or_ the
+        # pybind11 specific directory here.
         execute_process(
-            COMMAND "${PYTHON_EXECUTABLE}" -c
-            "import pybind11; print(pybind11.get_cmake_dir())"
-            OUTPUT_VARIABLE _tmp_dir
-            OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
+            COMMAND "${PYTHON_EXECUTABLE}" -c "import pybind11; print(pybind11.get_cmake_dir())"
+            OUTPUT_VARIABLE _tmp_dir OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT
+        )
         list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
 
         # Now we can find pybind11
@@ -194,7 +191,7 @@ if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
             list(APPEND CMAKE_CUDA_ARCHITECTURES ${TARGET_GPU})
         endforeach()
 
-        if (ELSA_CUDA_VECTOR)
+        if(ELSA_CUDA_VECTOR)
             message(STATUS "Enabling DataHandlerGPU")
             message(STATUS "The default container type will be on the GPU")
 
@@ -211,7 +208,6 @@ if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
     endif()
 endif()
 
-
 # set where to install the exports/targets
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -225,7 +221,6 @@ include(InstallElsaModule)
 
 # Includes sanitizers
 include(Sanitizer)
-
 
 # ------------ setup testing -----------
 # ------------
@@ -242,11 +237,7 @@ if(ELSA_TESTING)
         message(STATUS "Using system-wide doctest library...")
         find_package(doctest REQUIRED)
     else()
-        CPMAddPackage(
-            NAME doctest
-            GITHUB_REPOSITORY onqtam/doctest
-            GIT_TAG 2.4.7
-        )
+        CPMAddPackage(NAME doctest GITHUB_REPOSITORY onqtam/doctest GIT_TAG 2.4.7)
 
         # add the CMake modules for automatic test discovery
         set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
@@ -254,14 +245,15 @@ if(ELSA_TESTING)
 
     message(STATUS "elsa testing is enabled")
 
-    # Run ctest to run all unit tests
-    # All tests are includes ass dependencies to this target, such that they get build
+    # Run ctest to run all unit tests All tests are includes ass dependencies to this target, such that they get build
     # schedule randomly that we don't start depending on some test order
-    add_custom_target(tests
+    add_custom_target(
+        tests
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         USES_TERMINAL
-        COMMENT "Build and run all the tests.")
+        COMMENT "Build and run all the tests."
+    )
 
     # Target to only build all tests
     add_custom_target(build-tests)
@@ -270,13 +262,9 @@ if(ELSA_TESTING)
         message(STATUS "elsa test coverage is enabled")
 
         include(CodeCoverage)
-        add_code_coverage_all_targets(EXCLUDE
-            elsa/test_routines/*
-            */tests/*
-            ${PROJECT_BINARY_DIR}/_deps/*
-            ${CPM_SOURCE_CACHE}/*
-            /usr/*)
-
+        add_code_coverage_all_targets(
+            EXCLUDE elsa/test_routines/* */tests/* ${PROJECT_BINARY_DIR}/_deps/* ${CPM_SOURCE_CACHE}/* /usr/*
+        )
 
     else(ELSA_COVERAGE)
         message(STATUS "elsa test coverage is disabled")
@@ -308,13 +296,10 @@ include(CMakePackageConfigHelpers)
 
 # setup the ElsaConfig*.cmake files
 write_basic_package_version_file(
-    ${CMAKE_BINARY_DIR}/elsa/elsaConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
+    ${CMAKE_BINARY_DIR}/elsa/elsaConfigVersion.cmake VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion
 )
 configure_package_config_file(
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/elsaConfig.cmake.in
-    ${CMAKE_BINARY_DIR}/elsa/elsaConfig.cmake
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/elsaConfig.cmake.in ${CMAKE_BINARY_DIR}/elsa/elsaConfig.cmake
     INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
 )
 
@@ -327,29 +312,25 @@ if(ELSA_INSTALL)
     message(STATUS "setting up elsa installation")
 
     # install the config files
-    install(
-        FILES
-        ${CMAKE_BINARY_DIR}/elsa/elsaConfig.cmake
-        ${CMAKE_BINARY_DIR}/elsa/elsaConfigVersion.cmake
-        DESTINATION ${INSTALL_CONFIG_DIR}
+    install(FILES ${CMAKE_BINARY_DIR}/elsa/elsaConfig.cmake ${CMAKE_BINARY_DIR}/elsa/elsaConfigVersion.cmake
+            DESTINATION ${INSTALL_CONFIG_DIR}
     )
 endif(ELSA_INSTALL)
 
+#
+# Add uninstall target Remove all headers, library and CMake files, which where copied to the install location
 
-##
-# Add uninstall target
-# Remove all headers, library and CMake files, which where copied to the install location
-
-add_custom_target(uninstall
+add_custom_target(
+    uninstall
     COMMAND ${CMAKE_COMMAND} -P "${PROJECT_SOURCE_DIR}/cmake/Uninstall.cmake"
     COMMENT "Uninstalling elsa (Removing all installed files)"
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt"
 )
 
-
 # build information overview
 string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_TYPE_CXX_FLAGS)
-message("
+message(
+    "
           project | ${PROJECT_NAME}
          compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
        build type | ${CMAKE_BUILD_TYPE}
@@ -357,6 +338,7 @@ message("
  build type flags | ${${BUILD_TYPE_CXX_FLAGS}}
         build dir | ${CMAKE_BINARY_DIR}
    install prefix | ${CMAKE_INSTALL_PREFIX}
-")
+"
+)
 
 set_property(GLOBAL PROPERTY TARGET_MESSAGES OFF)

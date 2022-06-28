@@ -8,8 +8,7 @@ macro(REGISTER_MODULE name)
 endmacro()
 
 macro(SET_QUICKVEC_OPTIONS elsa_module_target_name module_sources)
-    # link Quickvec for DataHandlerGPU
-    # Also add the necessary compile definition for quickvec
+    # link Quickvec for DataHandlerGPU Also add the necessary compile definition for quickvec
     if(ELSA_BUILD_WITH_QUICKVEC AND (NOT ${elsa_module_target_name} STREQUAL "elsa_quickvec"))
         set_source_files_properties(${module_sources} PROPERTIES LANGUAGE CUDA)
         target_compile_definitions(${elsa_module_target_name} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
@@ -47,8 +46,9 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     # require C++17
     target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
     # set -fPIC and -fvisibility=hidden
-    set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                                                CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(
+        ${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden
+    )
 
     target_include_directories(
         ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${elsa_module_name}>
@@ -71,8 +71,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     # register the module
     REGISTER_MODULE(${elsa_module_name})
 
-    # install the module
-    # if INSTALL_DIR arg is set, recurse the whole directory
+    # install the module if INSTALL_DIR arg is set, recurse the whole directory
     if(${ADD_MODULE_INSTALL_DIR})
         install_elsa_module_dir(
             ${elsa_module_name} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/"
@@ -86,7 +85,6 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
         target_code_coverage(${ELSA_MODULE_TARGET_NAME} AUTO ALL) # EXCLUDE */tests/*)
     endif()
 endmacro()
-
 
 # macro for the unit tests
 macro(ELSA_DOCTEST name)
@@ -121,7 +119,6 @@ macro(ELSA_DOCTEST name)
     if(ELSA_COVERAGE)
         target_code_coverage(${_testname} AUTO ALL EXCLUDE */tests/*)
     endif()
-
 
     SET_QUICKVEC_OPTIONS(${_testname} "${_testname}.cpp;test_docmain.cpp")
     # Add test to global dependency

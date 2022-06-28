@@ -1,7 +1,6 @@
-##
-# Uninstall routine
-# Removes all files in the <build_folder>/install_manifest.txt
-# Uses cmake -E remove <file> to remove file in a cross platform way (hopefully)
+#
+# Uninstall routine Removes all files in the <build_folder>/install_manifest.txt Uses cmake -E remove <file> to remove
+# file in a cross platform way (hopefully)
 
 set(MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt")
 
@@ -15,15 +14,16 @@ foreach(file ${files})
         message(STATUS "Removing file: '${file}'")
 
         exec_program(
-            ${CMAKE_COMMAND} ARGS "-E remove ${file}"
+            ${CMAKE_COMMAND} ARGS
+            "-E remove ${file}"
             OUTPUT_VARIABLE stdout
             RETURN_VALUE result
         )
-        
+
         if(NOT "${result}" STREQUAL 0)
             message(FATAL_ERROR "Failed to remove file: '${file}'.")
         endif()
     else()
-        MESSAGE(STATUS "File '${file}' does not exist.")
+        message(STATUS "File '${file}' does not exist.")
     endif()
 endforeach(file)

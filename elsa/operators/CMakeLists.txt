@@ -6,7 +6,8 @@ set(MODULE_HEADERS
     FourierTransform.h
     BlockLinearOperator.h
     Dictionary.h
-    ShearletTransform.h)
+    ShearletTransform.h
+)
 
 # list all the code files of the module
 set(MODULE_SOURCES
@@ -16,7 +17,8 @@ set(MODULE_SOURCES
     FourierTransform.cpp
     BlockLinearOperator.cpp
     Dictionary.cpp
-    ShearletTransform.cpp)
+    ShearletTransform.cpp
+)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)
