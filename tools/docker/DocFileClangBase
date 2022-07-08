@@ -1,0 +1,28 @@
+ARG VERSION
+
+FROM silkeh/clang:${VERSION} as base
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+MAINTAINER David Frank <frankd@in.tum.de>
+
+LABEL Description="Base Image for clang"
+
+RUN ( apt-get update -qq && apt-get upgrade -qqy \
+    && apt-get --no-install-recommends install -qq rsync curl build-essential wget git ca-certificates libssl-dev \
+       ninja-build python3 python3-pip python3-setuptools python3-dev \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3 10 \
+    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10 && pip3 install wheel \
+    && update-alternatives --install /usr/bin/cc cc /usr/local/bin/clang 100 \
+    && update-alternatives --install /usr/bin/cxx cxx /usr/local/bin/clang++ 100 \
+    && pip3 install matplotlib numpy \
+    && rm -rf /var/lib/apt/lists/* )
+
+RUN (curl -LO https://github.com/Kitware/CMake/releases/download/v3.23.2/cmake-3.23.2-linux-x86_64.tar.gz \
+    && tar xf cmake-3.23.2-linux-x86_64.tar.gz \
+    && rm cmake-3.23.2-linux-x86_64.tar.gz \
+    && apt-get remove -yq cmake \
+    && rsync -avh -I --progress cmake-3.23.2-linux-x86_64/ /usr/local/ \
+    && apt-get remove -yq rsync \
+    && cmake --version)
+
+ENV CC clang
+ENV CXX clang++

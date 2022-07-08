@@ -1,11 +1,11 @@
 stages:
+- docker-build
 - static-test
 - compile
 - test
 - sanitizer
 - coverage
 - docs
-- docker
 
 ### variables ###
 
@@ -530,6 +530,130 @@ deploy-docs:
     - elsa
     - shell
 
+### Docker jobs ###
+
+.build-docker--base:
+  stage: docker-build
+  # dependencies: []
+  # rules:
+  #   - changes:
+  #     - tools/docker/*
+  image: yobasystems/alpine-docker:latest
+  before_script:
+    - docker info
+  script:
+    - cd tools/docker
+    - echo "Building image for $COMPILER version $COMPILER_VERSION"
+    - image=elsa/$COMPILER:$COMPILER_VERSION
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -f DocFileClangBase -t $image --build-arg="VERSION=$COMPILER_VERSION" .
+    - docker image tag $image $CI_REGISTRY/ip/$image
+    - docker push $CI_REGISTRY/ip/$image
+  tags:
+    - docker
+
+build-docker-clang:
+  extends: .build-docker-base
+  variables:
+    COMPILER: "clang"
+    DOCKER_FILE: DocFileClangBase
+  parallel:
+    matrix:
+      - COMPILER_VERSION: [10, 11, 12, 13, 14]
+
+# .build-docker-clang-base:
+#   extends: .build-docker-base
+#   variables:
+#     COMPILER: "clang"
+#     DOCKER_FILE: DocFileClangBase
+#        
+# build-docker-clang-14:
+#   extends: .build-docker-clang-base
+#   variables:
+#     COMPILER_VERSION: 14
+#
+# build-docker-clang-13:
+#   extends: .build-docker-clang-base
+#   variables:
+#     COMPILER_VERSION: 13
+#
+# build-docker-clang-12:
+#   extends: .build-docker-clang-base
+#   variables:
+#     COMPILER_VERSION: 12
+#
+# build-docker-clang-11:
+#   extends: .build-docker-clang-base
+#   variables:
+#     COMPILER_VERSION: 11
+#
+# build-docker-clang-10:
+#   extends: .build-docker-clang-base
+#   variables:
+#     COMPILER_VERSION: 10
+
+.build-docker-gcc-base:
+  extends: .build-docker-base
+  variables:
+    COMPILER: "gcc"
+
+# build-docker-gcc-12:
+#   extends: .build-docker-gcc-base
+#   variables:
+#     COMPILER_VERSION: 12
+#
+# build-docker-gcc-11:
+#   extends: .build-docker-gcc-base
+#   variables:
+#     COMPILER_VERSION: 11
+#
+# build-docker-gcc-10:
+#   extends: .build-docker-gcc-base
+#   variables:
+#     COMPILER_VERSION: 10
+#
+# build-docker-gcc-9:
+#   extends: .build-docker-gcc-base
+#   variables:
+#     COMPILER_VERSION: 9
+
+.build-docker-pybind-base:
+  stage: docker-build
+  # dependencies: []
+  # rules:
+  #   - changes:
+  #     - tools/docker/*
+  before_script:
+    - docker info
+  script:
+    - cd tools/docker
+    - oldimage=$CI_REGISTRY/ip/elsa/${COMPILER}:${COMPILER_VERSION}
+    - image=elsa/pybinds-${COMPILER}-${COMPILER_VERSION}:$LLVM_VERSION
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build --no-cache -f DocFilePyBinds -t $image --build-arg LLVM_PKG_VERSION="${LLVM_VERSION}" --build-arg IMAGE="$oldimage" .
+    - docker image tag $image $CI_REGISTRY/ip/$image
+    - docker push $CI_REGISTRY/ip/$image
+  tags:
+    - docker
+
+# build-docker-pybind-gcc-9:
+#   extends: .build-docker-pybind-base
+#   dependencies: [build-docker-gcc-9]
+#   variables:
+#     COMPILER: "gcc"
+#     COMPILER_VERSION: 9
+#     LLVM_VERSION: 11
+
+# build-docker-pybind-gcc:
+#   extends: .build-docker-pybind-base
+#   # dependencies: [build-docker-gcc-9]
+#   variables:
+#     COMPILER: "gcc"
+#     COMPILER_VERSION: 9
+#     LLVM_VERSION: 11
+#   parallel:
+#     matrix:
+#       - COMPILER_VERSION: [9, 10, 11, 12]
 
 ### Test jobs ###
 
