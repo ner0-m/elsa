@@ -1,29 +1,20 @@
-# Provide the flag COMPILER_VERSION on the command line using --build-arg
 ARG IMAGE
-ARG COMPILER_VERSION
- 
-# This is based on the clang images TODO: Change this to elsa/clang..., but as long as they don't work properly don't
-# do it.
-FROM elsa/${IMAGE}:${COMPILER_VERSION} AS base 
+
+FROM ${IMAGE}
 MAINTAINER Tobias Lasser <lasser@in.tum.de>
-MAINTAINER David Frank <frankd@in.tum.de> 
-LABEL Description="Clang image with python bindings"
+MAINTAINER David Frank <frankd@in.tum.de>
+LABEL Description="Add Python bindings to an image"
 
-# Pull in global argument into scope 
-ARG LLVM_VERSION 
- 
-# Install python bindings related things
-# libclang-cpp10 is somehow different compared to version 9, so we also need the libclang-cpp10-dev version, but this
-# does not exist for version 9, so we gotta check it...
-RUN apt update && apt --no-install-recommends install llvm-${LLVM_VERSION} llvm-${LLVM_VERSION}-dev \
-    llvm-${LLVM_VERSION}-runtime libclang-cpp${LLVM_VERSION} libclang-cpp${LLVM_VERSION} \
-    libclang-${LLVM_VERSION}-dev python3-dev -qqy \
- && if [ "${LLVM_VERSION}" = "10" ] ; then apt install --no-install-recommends libclang-cpp10-dev -qqy; fi \
- && rm -rf /var/lib/apt/lists/*
+ARG LLVM_PKG_VERSION
+RUN apt update && apt --no-install-recommends install rsync \
+    llvm-${LLVM_PKG_VERSION} llvm-${LLVM_PKG_VERSION}-dev llvm-${LLVM_PKG_VERSION}-runtime \
+    libclang-${LLVM_PKG_VERSION}-dev libclang-cpp${LLVM_PKG_VERSION} libclang-cpp${LLVM_PKG_VERSION}-dev \
+    python3-dev -qqy \
+   && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="$PATH:/usr/lib/llvm-${LLVM_VERSION}/bin/"
- 
-# Add all the test scripts 
+ENV PATH="$PATH:/usr/lib/llvm-${LLVM_PKG_VERSION}/bin/"
+
+# Add all the test scripts
 ADD tests/test_elsa.sh /tmp/tests/test_elsa.sh
- 
+
 CMD bash

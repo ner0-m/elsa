@@ -11,6 +11,7 @@ stages:
 
 variables:
   DOCKER_REGISTRY_URL: "docker.ciip.in.tum.de:5000" 
+  LRZ_REGISTRY: "gitlab.lrz.de:5005/ip/" 
   CLANG_FORMAT_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-format:10"
   CLANG_TIDY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-tidy:8"
   GCC_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc-pybinds:10"
@@ -482,23 +483,26 @@ deploy-docs:
 
 ### Docker jobs ###
 
-.build-docker--base:
+.build-docker-base:
   stage: docker-build
   # dependencies: []
   # rules:
   #   - changes:
   #     - tools/docker/*
-  image: yobasystems/alpine-docker:latest
   before_script:
     - docker info
   script:
     - cd tools/docker
     - echo "Building image for $COMPILER version $COMPILER_VERSION"
     - image=elsa/$COMPILER:$COMPILER_VERSION
+    - pybind=elsa/pybind:$COMPILER-$COMPILER_VERSION
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -f DocFileClangBase -t $image --build-arg="VERSION=$COMPILER_VERSION" .
+    - docker build -f ${DOCKER_FILE} -t $image --build-arg="VERSION=$COMPILER_VERSION" .
     - docker image tag $image $CI_REGISTRY/ip/$image
     - docker push $CI_REGISTRY/ip/$image
+    - docker build -f DocFilePyBinds -t $pybind --build-arg IMAGE="$image" --build-arg LLVM_PKG_VERSION="$LLVM_VERSION" .
+    - docker image tag $pybind $CI_REGISTRY/ip/$pybind
+    - docker push $CI_REGISTRY/ip/$pybind
   tags:
     - docker
 
@@ -507,103 +511,15 @@ build-docker-clang:
   variables:
     COMPILER: "clang"
     DOCKER_FILE: DocFileClangBase
+    LLVM_VERSION: 11 # Debian currently has no other version available
   parallel:
     matrix:
-      - COMPILER_VERSION: [10, 11, 12, 13, 14]
-
-# .build-docker-clang-base:
-#   extends: .build-docker-base
-#   variables:
-#     COMPILER: "clang"
-#     DOCKER_FILE: DocFileClangBase
-#        
-# build-docker-clang-14:
-#   extends: .build-docker-clang-base
-#   variables:
-#     COMPILER_VERSION: 14
-#
-# build-docker-clang-13:
-#   extends: .build-docker-clang-base
-#   variables:
-#     COMPILER_VERSION: 13
-#
-# build-docker-clang-12:
-#   extends: .build-docker-clang-base
-#   variables:
-#     COMPILER_VERSION: 12
-#
-# build-docker-clang-11:
-#   extends: .build-docker-clang-base
-#   variables:
-#     COMPILER_VERSION: 11
-#
-# build-docker-clang-10:
-#   extends: .build-docker-clang-base
-#   variables:
-#     COMPILER_VERSION: 10
-
-.build-docker-gcc-base:
-  extends: .build-docker-base
-  variables:
-    COMPILER: "gcc"
-
-# build-docker-gcc-12:
-#   extends: .build-docker-gcc-base
-#   variables:
-#     COMPILER_VERSION: 12
-#
-# build-docker-gcc-11:
-#   extends: .build-docker-gcc-base
-#   variables:
-#     COMPILER_VERSION: 11
-#
-# build-docker-gcc-10:
-#   extends: .build-docker-gcc-base
-#   variables:
-#     COMPILER_VERSION: 10
-#
-# build-docker-gcc-9:
-#   extends: .build-docker-gcc-base
-#   variables:
-#     COMPILER_VERSION: 9
-
-.build-docker-pybind-base:
-  stage: docker-build
-  # dependencies: []
-  # rules:
-  #   - changes:
-  #     - tools/docker/*
-  before_script:
-    - docker info
-  script:
-    - cd tools/docker
-    - oldimage=$CI_REGISTRY/ip/elsa/${COMPILER}:${COMPILER_VERSION}
-    - image=elsa/pybinds-${COMPILER}-${COMPILER_VERSION}:$LLVM_VERSION
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build --no-cache -f DocFilePyBinds -t $image --build-arg LLVM_PKG_VERSION="${LLVM_VERSION}" --build-arg IMAGE="$oldimage" .
-    - docker image tag $image $CI_REGISTRY/ip/$image
-    - docker push $CI_REGISTRY/ip/$image
-  tags:
-    - docker
-
-# build-docker-pybind-gcc-9:
-#   extends: .build-docker-pybind-base
-#   dependencies: [build-docker-gcc-9]
-#   variables:
-#     COMPILER: "gcc"
-#     COMPILER_VERSION: 9
-#     LLVM_VERSION: 11
-
-# build-docker-pybind-gcc:
-#   extends: .build-docker-pybind-base
-#   # dependencies: [build-docker-gcc-9]
-#   variables:
-#     COMPILER: "gcc"
-#     COMPILER_VERSION: 9
-#     LLVM_VERSION: 11
-#   parallel:
-#     matrix:
-#       - COMPILER_VERSION: [9, 10, 11, 12]
+      - COMPILER: "clang"
+        COMPILER_VERSION: [10, 11, 12, 13, 14]
+        DOCKER_FILE: DocFileClangBase
+      - COMPILER: "gcc"
+        COMPILER_VERSION: [9, 10, 11, 12]
+        DOCKER_FILE: DocFileGccBase
 
 ### Test jobs ###
 
