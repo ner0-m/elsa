@@ -172,7 +172,7 @@ if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
     message(STATUS "CUDA support requested...")
     include(CheckLanguage)
     check_language(CUDA)
-    find_package(CUDA 11.0)
+    find_package(CUDA 11.4)
 
     if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
         enable_language(CUDA)

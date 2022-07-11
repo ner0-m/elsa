@@ -1,0 +1,47 @@
+ARG VERSION
+
+# For a list of supported tags see
+# https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/supported-tags.md
+FROM nvidia/cuda:${VERSION}-devel-ubuntu20.04 as base
+MAINTAINER Tobias Lasser <lasser@in.tum.de>
+MAINTAINER David Frank <frankd@in.tum.de>
+
+LABEL Description="Base Image for nvidia"
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN ( apt-get update -qq && apt-get upgrade -qqy \
+    && apt-get --no-install-recommends install -qq rsync curl software-properties-common build-essential wget git ca-certificates libssl-dev \
+       lcov ninja-build python3 python3-pip python3-setuptools python3-dev \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3 10 \
+    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10 && pip3 install wheel \
+    && pip3 install matplotlib numpy \
+    && rm -rf /var/lib/apt/lists/* )
+
+RUN (curl -LO https://github.com/Kitware/CMake/releases/download/v3.23.2/cmake-3.23.2-linux-x86_64.tar.gz \
+    && tar xf cmake-3.23.2-linux-x86_64.tar.gz \
+    && rm cmake-3.23.2-linux-x86_64.tar.gz \
+    && apt-get remove -yq cmake \
+    && rsync -avh -I --progress cmake-3.23.2-linux-x86_64/ /usr/local/ \
+    && apt-get remove -yq rsync \
+    && cmake --version)
+
+# Check https://gist.github.com/ax3l/9489132
+ARG GCC_VERSION=11
+ARG CLANG_VERSION=12
+RUN (add-apt-repository -y ppa:ubuntu-toolchain-r/test \
+    && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
+    && add-apt-repository -y 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal main' \
+    && apt-get update -qq \
+    && apt install -yq gcc-${GCC_VERSION} g++-${GCC_VERSION} clang-${CLANG_VERSION} clang-tidy-${CLANG_VERSION} \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} 60 --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION} \
+    && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 60 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION} \
+    && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${CLANG_VERSION} 60 \
+    && rm -rf /var/lib/apt/lists/* )
+
+
+ENV CC gcc
+ENV CXX g++
+
+ADD tests/test_elsa.sh /tmp/tests/test_elsa.sh
+
+CMD bash

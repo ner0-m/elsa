@@ -10,12 +10,11 @@ stages:
 ### variables ###
 
 variables:
-  DOCKER_REGISTRY_URL: "docker.ciip.in.tum.de:5000" 
-  CLANG_TIDY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-tidy:8"
-  CUDA_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda:11.2"
+  DOCKER_REGISTRY_URL: "docker.ciip.in.tum.de:5000"
   SANITIZER_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc:10"
   COVERAGE_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/coverage:10.2"
   # Removed soon
+  CLANG_TIDY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-tidy:8"
   CLANG_FORMAT_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-format:10"
   UBUNTU_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/ubuntu:20.04"
   GPU_ONLY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda-clang:10.0"
@@ -26,10 +25,10 @@ variables:
 ### Cache setup ###
 
 # Caches should only be used for caching between pipelines not jobs
-# By default, have a unique and separate cache for each branch and job in the CI, otherwhise it can happen that 
-# different build configurations are spilled into different jobs and sporadic build failure occures.
+# By default, have a unique and separate cache for each branch and job in the CI, otherwise it can happen that
+# different build configurations are spilled into different jobs and sporadic build failure occurs.
 cache:
-  key: "$CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME" 
+  key: "$CI_COMMIT_REF_SLUG-$CI_JOB_STAGE-$CI_JOB_NAME"
   paths:
     - build/_deps/*
 
@@ -102,6 +101,8 @@ cache:
     - mkdir -p build
     - cd build
     - if [ $COMPILER == "clang" ]; then CMAKE_EXTRA_ARGS="-DCMAKE_CXX_FLAGS=\"-stdlib=libc++\" -DCMAKE_EXE_LINKER_FLAGS=\"-lc++abi\""; fi;
+    - if [ $COMPILER == "nvcc" ]; then CMAKE_EXTRA_ARGS="-DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON"; fi;
+    - echo $CMAKE_EXTRA_ARGS
     - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" $CMAKE_EXTRA_ARGS
     - ninja
     - ninja build-tests
@@ -151,7 +152,7 @@ clang-format:
 clang-tidy:
   <<: *run_always
   stage: static-test
-  image: $CLANG_TIDY_IMAGE
+  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   script:
     ./tools/ci_scripts/clang-tidy.sh
   tags:
@@ -213,16 +214,13 @@ build:
 
 build-cuda:
   <<: *build_job_artifact
-  image: $CUDA_IMAGE
+  image: $CI_REGISTRY/ip/elsa/cuda:$CUDA_VERSION
   script:
-    - mkdir -p build
-    - cd build
-    - cmake .. -GNinja -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa"
-    - ninja
-    - ninja build-tests
-    - ninja build-benchmarks
-    - ninja build-examples
-    - ninja install
+    - *buildjob_normal
+  parallel:
+    matrix:
+      - CUDA_VERSION: [11.7.0, 11.6.2, 11.5.2]
+        COMPILER: nvcc
   tags:
     - linux
     - elsa
@@ -232,7 +230,7 @@ build-cuda:
 ### test jobs ###
 
 # At the time of writing, variables from the parallel:matrix can not be used in the dependency list
-# see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/82734 and 
+# see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/82734 and
 # https://forum.gitlab.com/t/ci-specifying-artifact-dependencies-when-using-parallel-matrix/45026/2
 # TODO: Once this is implemented use it!
 test-gcc11:
@@ -245,7 +243,7 @@ test-gcc11:
     - linux
     - elsa
     - gcc
-       
+
 test-gcc12:
   <<: *test_job_artifact
   stage: test
@@ -301,18 +299,94 @@ test-clang13:
     - elsa
     - clang
 
-test-cuda:
+test-cuda-11.7:
   <<: *test_job_artifact
   stage: test
-  image: $CUDA_IMAGE
+  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   dependencies:
-    - build-cuda
+    - "build-cuda: [11.7.0, nvcc]"
   tags:
     - linux
     - elsa
     - gcc
     - cuda
 
+# At the time of writing, variables from the parallel:matrix can not be used in the dependency list
+# see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/82734 and
+# https://forum.gitlab.com/t/ci-specifying-artifact-dependencies-when-using-parallel-matrix/45026/2
+# TODO: Once this is implemented use it!
+test-gcc11:
+  extends: .test-gcc
+  dependencies:
+    - "build: [11, gcc]"
+  variables:
+    COMPILER_VERSION: 11
+
+test-gcc12:
+  extends: .test-gcc
+  dependencies:
+    - "build: [12, gcc]"
+  variables:
+    COMPILER_VERSION: 12
+
+test-clang10:
+  extends: .test-clang
+  dependencies:
+    - "build: [10, clang]"
+  variables:
+    COMPILER_VERSION: 10
+
+test-clang11:
+  extends: .test-clang
+  dependencies:
+    - "build: [11, clang]"
+  variables:
+    COMPILER_VERSION: 11
+
+test-clang12:
+  extends: .test-clang
+  dependencies:
+    - "build: [12, clang]"
+  variables:
+    COMPILER_VERSION: 12
+
+test-clang13:
+  extends: .test-clang
+  dependencies:
+    - "build: [13, clang]"
+  variables:
+    COMPILER_VERSION: 13
+
+test-cuda-11.7:
+  extends: .test-cuda
+  dependencies:
+    - "build-cuda: [11.7.0, nvcc]"
+  variables:
+    CUDA_VERSION: 11.7.0
+
+test-cuda-11.6:
+  <<: *test_job_artifact
+  stage: test
+  image: $CI_REGISTRY/ip/elsa/cuda:11.6.2
+  dependencies:
+    - "build-cuda: [11.6.2, nvcc]"
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
+
+test-cuda-11.5:
+  <<: *test_job_artifact
+  stage: test
+  image: $CI_REGISTRY/ip/elsa/cuda:11.5.2
+  dependencies:
+    - "build-cuda: [11.5.2, nvcc]"
+  tags:
+    - linux
+    - elsa
+    - gcc
+    - cuda
 ### Install jobs ###
 
 install-gcc11:
@@ -389,11 +463,11 @@ install-clang13:
     - elsa
     - clang
 
-       
+
 install-cuda:
   <<: *install_job
   stage: test
-  image: $CUDA_IMAGE
+  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   dependencies:
     - build-cuda
   script:
@@ -408,12 +482,75 @@ install-cuda:
     - gcc
     - cuda
 
+install-gcc11:
+  extends: .install-gcc
+  dependencies:
+    - "build: [11, gcc]"
+  variables:
+    COMPILER_VERSION: 11
+
+install-gcc12:
+  extends: .install-gcc
+  dependencies:
+    - "build: [12, gcc]"
+  variables:
+    COMPILER_VERSION: 12
+
+install-clang10:
+  extends: .install-clang
+  dependencies:
+    - "build: [10, clang]"
+  variables:
+    COMPILER_VERSION: 10
+
+install-clang11:
+  extends: .install-clang
+  dependencies:
+    - "build: [11, clang]"
+  variables:
+    COMPILER_VERSION: 11
+
+install-clang12:
+  extends: .install-clang
+  dependencies:
+    - "build: [12, clang]"
+  variables:
+    COMPILER_VERSION: 12
+
+install-clang13:
+  extends: .install-clang
+  dependencies:
+    - "build: [13, clang]"
+  variables:
+    COMPILER_VERSION: 13
+
+install-cuda-11.5:
+  extends: .install-cuda
+  dependencies:
+    - "build-cuda: [11.5.2, nvcc]"
+  variables:
+    CUDA_VERSION: 11.5.2
+
+install-cuda-11.6:
+  extends: .install-cuda
+  dependencies:
+    - "build-cuda: [11.6.2, nvcc]"
+  variables:
+    CUDA_VERSION: 11.6.2
+
+install-cuda-11.7:
+  extends: .install-cuda
+  dependencies:
+    - "build-cuda: [11.7.0, nvcc]"
+  variables:
+    CUDA_VERSION: 11.7.0
+
 ### sanitizers ###
 
 cuda-memcheck:
   <<: *run_on_merge_requests
   stage: sanitizer
-  image: $CUDA_IMAGE
+  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   script:
     ./tools/ci_scripts/cuda-memcheck.sh
   dependencies:
@@ -448,7 +585,7 @@ asan-ubsan:
 test-coverage:
   <<: *run_on_merge_requests
   stage: coverage
-  image: $COVERAGE_IMAGE
+  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   dependencies: []
   script:
     - mkdir -p build
@@ -507,29 +644,37 @@ deploy-docs:
 
 .build-docker-base:
   stage: docker-build
-  # dependencies: []
-  # rules:
-  #   - changes:
-  #     - tools/docker/*
+  rules:
+    - changes:
+      - tools/docker/**/*
+  allow_failure: true
   before_script:
     - docker info
+  after_script:
+    - docker logout $CI_REGISTRY
+  tags:
+    - docker
+
+.build-docker-base-compiler:
+  extends: .build-docker-base
   script:
     - cd tools/docker
     - echo "Building image for $COMPILER version $COMPILER_VERSION"
     - image=elsa/$COMPILER:$COMPILER_VERSION
     - pybind=elsa/pybind:$COMPILER-$COMPILER_VERSION
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -f ${DOCKER_FILE} -t $image --build-arg="VERSION=$COMPILER_VERSION" .
     - docker image tag $image $CI_REGISTRY/ip/$image
-    - docker push $CI_REGISTRY/ip/$image
     - docker build -f DocFilePyBinds -t $pybind --build-arg IMAGE="$image" --build-arg LLVM_PKG_VERSION="$LLVM_VERSION" .
     - docker image tag $pybind $CI_REGISTRY/ip/$pybind
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo $image
+    - echo $pybind
+    - docker push $CI_REGISTRY/ip/$image
     - docker push $CI_REGISTRY/ip/$pybind
-  tags:
-    - docker
+
 
 build-docker-compiler:
-  extends: .build-docker-base
+  extends: .build-docker-base-compiler
   variables:
     LLVM_VERSION: 11 # Debian currently has no other version available
   parallel:
@@ -540,3 +685,24 @@ build-docker-compiler:
       - COMPILER: "gcc"
         COMPILER_VERSION: [9, 10, 11, 12]
         DOCKER_FILE: DocFileGccBase
+
+build-docker-cuda:
+  extends: .build-docker-base
+  script:
+    - cd tools/docker
+    - echo "Building image for cuda version $CUDA_VERSION"
+    - docker build -f DocFileCudaBase -t elsa/cuda:${CUDA_VERSION}
+        --build-arg="GCC_VERSION=$GCC_VERSION"
+        --build-arg="CLANG_VERSION=$CLANG_VERSION"
+        --build-arg="VERSION=$CUDA_VERSION" .
+    - docker image tag elsa/cuda:${CUDA_VERSION} $CI_REGISTRY/ip/elsa/cuda:${CUDA_VERSION}
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY/ip/elsa/cuda:${CUDA_VERSION}
+  parallel:
+    matrix:
+      - CUDA_VERSION: [11.7.0, 11.6.2, 11.5.2]
+        GCC_VERSION: 11
+        CLANG_VERSION: 12
+      - CUDA_VERSION: [11.4.3, 11.3.1, 11.2.2, 11.1.1, 11.0.3]
+        GCC_VERSION: 10
+        CLANG_VERSION: 10
