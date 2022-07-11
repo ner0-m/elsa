@@ -506,7 +506,7 @@ deploy-docs:
   tags:
     - docker
 
-build-docker-clang:
+build-docker-compiler:
   extends: .build-docker-base
   variables:
     COMPILER: "clang"
