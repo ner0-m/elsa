@@ -11,17 +11,17 @@ stages:
 
 variables:
   DOCKER_REGISTRY_URL: "docker.ciip.in.tum.de:5000" 
-  LRZ_REGISTRY: "gitlab.lrz.de:5005/ip/" 
   CLANG_FORMAT_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-format:10"
   CLANG_TIDY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-tidy:8"
-  GCC_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc-pybinds:10"
-  CLANG9_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:9"
-  CLANG10_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:10"
   CUDA_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda:11.2"
-  UBUNTU_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/ubuntu:20.04"
-  GPU_ONLY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda-clang:10.0"
   SANITIZER_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc:10"
   COVERAGE_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/coverage:10.2"
+  # Removed soon
+  UBUNTU_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/ubuntu:20.04"
+  GPU_ONLY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda-clang:10.0"
+  GCC_IMAGE: "$CI_REGISTRY/ip/elsa/pybinds:gcc-10"
+  CLANG9_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:9"
+  CLANG10_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:10"
 
 ### Cache setup ###
 
@@ -97,22 +97,12 @@ cache:
       - build/_deps/*
     expire_in: 60 mins
 
-.buildjob_script_clang:
-  script: &buildjob_clang
-    - mkdir -p build
-    - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON  -DCMAKE_INSTALL_PREFIX="../install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja
-    - ninja build-tests
-    - ninja build-benchmarks
-    - ninja build-examples
-    - ninja install
-
 .buildjob_script_normal:
   script: &buildjob_normal
     - mkdir -p build
     - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa"
+    - if [ $COMPILER == "clang" ]; then CMAKE_EXTRA_ARGS="-DCMAKE_CXX_FLAGS=\"-stdlib=libc++\" -DCMAKE_EXE_LINKER_FLAGS=\"-lc++abi\""; fi;
+    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" $CMAKE_EXTRA_ARGS
     - ninja
     - ninja build-tests
     - ninja build-benchmarks
@@ -136,24 +126,14 @@ cache:
 
 #### Install job templates ####
 
-.installjob_clang_anchors:
-  script: &installjob_script_clang
-    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
-    - cd /tmp/elsa_testing
-    - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja
-
-.installjob_default_anchors:
-  script: &installjob_script
-    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
-    - cd /tmp/elsa_testing
-    - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa"
-    - ninja
-
 .installjob_anchors: &install_job
   <<: *run_on_merge_requests
+  script:
+    - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
+    - cd /tmp/elsa_testing
+    - mkdir -p build/ && cd build/
+    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" $CMAKE_EXTRA_ARGS
+    - ninja
 
 ### static test ###
 
@@ -215,47 +195,21 @@ cmake-lint:
 
 ### compile jobs ###
 
-build-ubuntu:
+build:
   <<: *build_job_artifact
-  image: $UBUNTU_IMAGE
-  script: *buildjob_normal
-  tags:
-    - linux
-    - elsa
-
-build-gcc:
-  <<: *build_job_artifact
-  image: $GCC_IMAGE
+  image: $CI_REGISTRY/ip/elsa/pybind:$COMPILER-$COMPILER_VERSION
   script:
   - *buildjob_normal
+  parallel:
+    matrix:
+      - COMPILER_VERSION: [10, 11, 12, 13]
+        COMPILER: clang
+      - COMPILER_VERSION: [11, 12]
+        COMPILER: gcc
   tags:
     - linux
     - elsa
-    - gcc
-
-build-clang9:
-  <<: *build_job_artifact
-  image: $CLANG9_IMAGE
-  script:
-  - *buildjob_clang
-  - pip3 install matplotlib
-  - PYTHONPATH="$PYTHONPATH:$(pwd)" python3 ../examples/solver_experiments.py --headless --max-iterations 1 --problem-size 16
-  tags:
-    - linux
-    - elsa
-    - clang
-
-build-clang10:
-  <<: *build_job_artifact
-  image: $CLANG10_IMAGE
-  script:
-  - *buildjob_clang
-  - pip3 install matplotlib
-  - PYTHONPATH="$PYTHONPATH:$(pwd)" python3 ../examples/solver_experiments.py --headless --max-iterations 1 --problem-size 16
-  tags:
-    - linux
-    - elsa
-    - clang
+    - $COMPILER
 
 build-cuda:
   <<: *build_job_artifact
@@ -277,44 +231,71 @@ build-cuda:
 
 ### test jobs ###
 
-test-ubuntu:
+# At the time of writing, variables from the parallel:matrix can not be used in the dependency list
+# see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/82734 and 
+# https://forum.gitlab.com/t/ci-specifying-artifact-dependencies-when-using-parallel-matrix/45026/2
+# TODO: Once this is implemented use it!
+test-gcc11:
   <<: *test_job_artifact
   stage: test
-  image: $UBUNTU_IMAGE
+  image: $CI_REGISTRY/ip/elsa/pybind:gcc-11
   dependencies:
-    - build-ubuntu
+    - "build: [11, gcc]"
   tags:
     - linux
     - elsa
-
-test-gcc:
+    - gcc
+       
+test-gcc12:
   <<: *test_job_artifact
   stage: test
-  image: $GCC_IMAGE
+  image: $CI_REGISTRY/ip/elsa/pybind:gcc-12
   dependencies:
-    - build-gcc
+    - "build: [12, gcc]"
   tags:
     - linux
     - elsa
     - gcc
 
-test-clang9:
+test-clang10:
   <<: *test_job_artifact
   stage: test
-  image: $CLANG9_IMAGE
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-10
   dependencies:
-    - build-clang9
+    - "build: [10, clang]"
   tags:
     - linux
     - elsa
     - clang
 
-test-clang10:
+test-clang11:
   <<: *test_job_artifact
   stage: test
-  image: $CLANG10_IMAGE
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-11
   dependencies:
-    - build-clang10
+    - "build: [11, clang]"
+  tags:
+    - linux
+    - elsa
+    - clang
+
+test-clang12:
+  <<: *test_job_artifact
+  stage: test
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-12
+  dependencies:
+    - "build: [12, clang]"
+  tags:
+    - linux
+    - elsa
+    - clang
+
+test-clang13:
+  <<: *test_job_artifact
+  stage: test
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-13
+  dependencies:
+    - "build: [13, clang]"
   tags:
     - linux
     - elsa
@@ -332,42 +313,83 @@ test-cuda:
     - gcc
     - cuda
 
-install-gcc:
+### Install jobs ###
+
+install-gcc11:
   <<: *install_job
   stage: test
-  image: $GCC_IMAGE
+  image: $CI_REGISTRY/ip/elsa/pybind:gcc-11
   dependencies:
-    - build-gcc
-  script: *installjob_script
+    - "build: [11, gcc]"
   tags:
     - linux
     - elsa
     - gcc
 
-install-clang9:
+install-gcc12:
   <<: *install_job
   stage: test
-  image: $CLANG9_IMAGE
+  image: $CI_REGISTRY/ip/elsa/pybind:gcc-12
   dependencies:
-    - build-clang9
-  script: *installjob_script_clang
+    - "build: [12, gcc]"
   tags:
     - linux
     - elsa
-    - clang
+    - gcc
 
 install-clang10:
   <<: *install_job
   stage: test
-  image: $CLANG10_IMAGE
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-10
   dependencies:
-    - build-clang10
-  script: *installjob_script_clang
+    - "build: [10, clang]"
+  variables:
+    CMAKE_EXTRA_ARGS: "-DCMAKE_CXX_FLAGS=\"-stdlib=libc++\" -DCMAKE_EXE_LINKER_FLAGS=\"-lc++abi\""
   tags:
     - linux
     - elsa
     - clang
 
+install-clang11:
+  <<: *install_job
+  stage: test
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-11
+  dependencies:
+    - "build: [11, clang]"
+  variables:
+    CMAKE_EXTRA_ARGS: "-DCMAKE_CXX_FLAGS=\"-stdlib=libc++\" -DCMAKE_EXE_LINKER_FLAGS=\"-lc++abi\""
+  tags:
+    - linux
+    - elsa
+    - clang
+
+install-clang12:
+  <<: *install_job
+  stage: test
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-12
+  dependencies:
+    - "build: [12, clang]"
+  variables:
+    CMAKE_EXTRA_ARGS: "-DCMAKE_CXX_FLAGS=\"-stdlib=libc++\" -DCMAKE_EXE_LINKER_FLAGS=\"-lc++abi\""
+  tags:
+    - linux
+    - elsa
+    - clang
+
+install-clang13:
+  <<: *install_job
+  stage: test
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-13
+  dependencies:
+    - "build: [13, clang]"
+  variables:
+    CMAKE_EXTRA_ARGS: "-DCMAKE_CXX_FLAGS=\"-stdlib=libc++\" -DCMAKE_EXE_LINKER_FLAGS=\"-lc++abi\""
+  tags:
+    - linux
+    - elsa
+    - clang
+
+       
 install-cuda:
   <<: *install_job
   stage: test
@@ -509,8 +531,6 @@ deploy-docs:
 build-docker-compiler:
   extends: .build-docker-base
   variables:
-    COMPILER: "clang"
-    DOCKER_FILE: DocFileClangBase
     LLVM_VERSION: 11 # Debian currently has no other version available
   parallel:
     matrix:
@@ -520,27 +540,3 @@ build-docker-compiler:
       - COMPILER: "gcc"
         COMPILER_VERSION: [9, 10, 11, 12]
         DOCKER_FILE: DocFileGccBase
-
-### Test jobs ###
-
-# These jobs, are for local build and test all in one job, should not be run with pipeline
-
-.all-clang:
-  image: $CLANG9_IMAGE
-  rules:
-    - when: never
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
-    - ninja
-    - ninja tests
-
-.all-gcc:
-  image: $GCC_IMAGE
-  rules:
-    - when: never
-  script:
-    - *buildjob_normal
-    - ninja tests
-    - *installjob_script
