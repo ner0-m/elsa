@@ -7,21 +7,6 @@ stages:
 - coverage
 - docs
 
-### variables ###
-
-variables:
-  DOCKER_REGISTRY_URL: "docker.ciip.in.tum.de:5000"
-  SANITIZER_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc:10"
-  COVERAGE_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/coverage:10.2"
-  # Removed soon
-  CLANG_TIDY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-tidy:8"
-  CLANG_FORMAT_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-format:10"
-  UBUNTU_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/ubuntu:20.04"
-  GPU_ONLY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda-clang:10.0"
-  GCC_IMAGE: "$CI_REGISTRY/ip/elsa/pybinds:gcc-10"
-  CLANG9_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:9"
-  CLANG10_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-pybinds:10"
-
 ### Cache setup ###
 
 # Caches should only be used for caching between pipelines not jobs
@@ -565,7 +550,7 @@ cuda-memcheck:
 asan-ubsan:
   <<: *run_on_merge_requests
   stage: sanitizer
-  image: $SANITIZER_IMAGE
+  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   dependencies: []
   script:
     - mkdir -p build
