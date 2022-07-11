@@ -13,7 +13,7 @@ RUN ( apt-get update -qq && apt-get upgrade -qqy \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10 && pip3 install wheel \
     && update-alternatives --install /usr/bin/cc cc /usr/local/bin/clang 100 \
     && update-alternatives --install /usr/bin/cxx cxx /usr/local/bin/clang++ 100 \
-    && pip3 install matplotlib numpy \
+    && pip3 install matplotlib numpy cmakelang \
     && rm -rf /var/lib/apt/lists/* )
 
 RUN (curl -LO https://github.com/Kitware/CMake/releases/download/v3.23.2/cmake-3.23.2-linux-x86_64.tar.gz \

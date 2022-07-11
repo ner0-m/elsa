@@ -11,12 +11,12 @@ stages:
 
 variables:
   DOCKER_REGISTRY_URL: "docker.ciip.in.tum.de:5000" 
-  CLANG_FORMAT_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-format:10"
   CLANG_TIDY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-tidy:8"
   CUDA_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda:11.2"
   SANITIZER_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/gcc:10"
   COVERAGE_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/coverage:10.2"
   # Removed soon
+  CLANG_FORMAT_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/clang-format:10"
   UBUNTU_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/ubuntu:20.04"
   GPU_ONLY_IMAGE: "${DOCKER_REGISTRY_URL}/elsa/cuda-clang:10.0"
   GCC_IMAGE: "$CI_REGISTRY/ip/elsa/pybinds:gcc-10"
@@ -140,7 +140,7 @@ cache:
 clang-format:
   <<: *run_always
   stage: static-test
-  image: $CLANG_FORMAT_IMAGE
+  image: $CI_REGISTRY/ip/elsa/clang:14
   script:
     ./tools/ci_scripts/clang-format-test.sh
   tags:
@@ -162,7 +162,7 @@ clang-tidy:
 comment-formating:
   <<: *run_always
   stage: static-test
-  image: $CLANG_FORMAT_IMAGE
+  image: $CI_REGISTRY/ip/elsa/clang:14
   script:
     ./tools/ci_scripts/check-comment-style.sh
   allow_failure: true
@@ -174,7 +174,7 @@ comment-formating:
 .cmake-format:
   <<: *run_always
   stage: static-test
-  image: $CLANG_FORMAT_IMAGE
+  image: $CI_REGISTRY/ip/elsa/clang:14
   script:
     ./tools/ci_scripts/cmake-format-test.sh
   tags:
@@ -185,7 +185,7 @@ comment-formating:
 cmake-lint:
   <<: *run_always
   stage: static-test
-  image: $CLANG_FORMAT_IMAGE
+  image: $CI_REGISTRY/ip/elsa/clang:14
   script:
     ./tools/ci_scripts/cmake-lint-test.sh
   tags:
