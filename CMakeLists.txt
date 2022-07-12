@@ -160,7 +160,7 @@ if(ELSA_MASTER_PROJECT)
         CPMAddPackage(
             NAME pybind11
             GITHUB_REPOSITORY pybind/pybind11
-            VERSION 2.8.0
+            VERSION 2.9.2
         )
     endif()
 else()
