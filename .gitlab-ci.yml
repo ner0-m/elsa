@@ -24,6 +24,23 @@ workflow:
       when: never
     - if: $CI_COMMIT_BRANCH
 
+### workflow ###
+
+# Conditions in plain english:
+# - the pipeline
+# - Create a pipeline if, the pipeline is a merge request pipeline, or
+# - Do not create a pipeline, if a branch pipeline is triggered, but an open merge request exists for that branch, or
+# - Create a pipeline if a branch pipeline is triggered, without an associated open merge requests
+# based on: https://docs.gitlab.com/ee/ci/yaml/workflow.html#switch-between-branch-pipelines-and-merge-request-pipelines
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
 ### Cache setup ###
 
 # Caches should only be used for caching between pipelines not jobs
@@ -38,11 +55,6 @@ cache:
 
 #### Schedule jobs ####
 
-# run job only only on schedules
-.job_template: &nightly_job
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "schedule"'
-
 # run job if connected to a schedule, merge request or some other things
 .job_template: &run_on_merge_requests
   rules:
@@ -50,15 +62,9 @@ cache:
     - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "schedule"'
     - when: never
 
-# always run this job
-.job_template: &run_always
-  rules:
-    - when: always
-
 #### Build job templates ####
 
 .job_template: &build_job_artifact
-  <<: *run_always
   stage: compile
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
@@ -115,7 +121,6 @@ cache:
 #### Test job templates ####
 
 .testjob_template: &test_job_artifact
-  <<: *run_always
   script:
     - cd build
     - ctest --schedule-random --output-junit junit_report.xml || ctest --rerun-failed --output-on-failure
@@ -142,7 +147,6 @@ cache:
 ### static test ###
 
 clang-format:
-  <<: *run_always
   stage: static-test
   image: $CI_REGISTRY/ip/elsa/clang:14
   script:
@@ -153,7 +157,6 @@ clang-format:
     - clang
 
 clang-tidy:
-  <<: *run_always
   stage: static-test
   image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   script:
@@ -164,7 +167,6 @@ clang-tidy:
     - clang
 
 comment-formating:
-  <<: *run_always
   stage: static-test
   image: $CI_REGISTRY/ip/elsa/clang:14
   script:
@@ -176,7 +178,6 @@ comment-formating:
     - clang
 
 .cmake-format:
-  <<: *run_always
   stage: static-test
   image: $CI_REGISTRY/ip/elsa/clang:14
   script:
@@ -187,7 +188,6 @@ comment-formating:
     - clang
 
 cmake-lint:
-  <<: *run_always
   stage: static-test
   image: $CI_REGISTRY/ip/elsa/clang:14
   script:
@@ -497,7 +497,8 @@ test-coverage:
 ### deploy docs and coverage report ###
 
 deploy-docs:
-  <<: *nightly_job
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "schedule"'
   stage: docs
   dependencies:
     - test-coverage
