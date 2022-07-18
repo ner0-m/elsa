@@ -123,10 +123,11 @@ namespace elsa
 
         static index_t calculateNumOfLayers(index_t numOfScales);
 
-        void _computeSpectraAtLowFreq(index_t& i) const;
+        void _computeSpectraAtLowFreq() const;
 
-        void _computeSpectraAtConicRegions(index_t& i, index_t j, index_t k) const;
+        void _computeSpectraAtConicRegions(index_t j, index_t k, index_t hSliceIndex,
+                                           index_t vSliceIndex) const;
 
-        void _computeSpectraAtSeamLines(index_t& i, index_t j, index_t k) const;
+        void _computeSpectraAtSeamLines(index_t j, index_t k, index_t hxvSliceIndex) const;
     };
 } // namespace elsa

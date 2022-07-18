@@ -160,26 +160,36 @@ namespace elsa
 
         _spectra = DataContainer<data_t>(VolumeDescriptor{{_width, _height, _numOfLayers}});
 
-        index_t i = 0;
-
-        _computeSpectraAtLowFreq(i);
+        _computeSpectraAtLowFreq();
 
         for (index_t j = 0; j < _numOfScales; j++) {
             auto twoPowJ = static_cast<index_t>(std::pow(2, j));
+            auto shearletsAtJ = static_cast<index_t>(std::pow(2, j + 2));
+            index_t shearletsUpUntilJ = shearletsAtJ - 3;
+            index_t index = 1;
 
-            _computeSpectraAtSeamLines(i, j, -twoPowJ);
+            _computeSpectraAtSeamLines(j, -twoPowJ, shearletsUpUntilJ + twoPowJ);
             for (auto k = -twoPowJ + 1; k < twoPowJ; k++) {
-                _computeSpectraAtConicRegions(i, j, k);
-            }
-            _computeSpectraAtSeamLines(i, j, twoPowJ);
-        }
+                // modulo instead of remainder for negative numbers is needed here, therefore doing
+                // "((a % b) + b) % b" instead of "a % b"
+                index_t modIndex =
+                    (((twoPowJ - index + 1) % shearletsAtJ) + shearletsAtJ) % shearletsAtJ;
+                if (modIndex == 0) {
+                    modIndex = shearletsAtJ - 1;
+                } else {
+                    --modIndex;
+                }
 
-        assert(i == _numOfLayers
-               && "ShearletTransform: The layers of the spectra were indexed wrong");
+                _computeSpectraAtConicRegions(j, k, shearletsUpUntilJ + modIndex,
+                                              shearletsUpUntilJ + twoPowJ + index);
+                ++index;
+            }
+            _computeSpectraAtSeamLines(j, twoPowJ, shearletsUpUntilJ + twoPowJ + index);
+        }
     }
 
     template <typename ret_t, typename data_t>
-    void ShearletTransform<ret_t, data_t>::_computeSpectraAtLowFreq(index_t& i) const
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtLowFreq() const
     {
         DataContainer<data_t> sectionZero(VolumeDescriptor{{_width, _height}});
         sectionZero = 0;
@@ -197,12 +207,13 @@ namespace elsa
             }
         }
 
-        _spectra.value().slice(i++) = sectionZero;
+        _spectra.value().slice(0) = sectionZero;
     }
 
     template <typename ret_t, typename data_t>
-    void ShearletTransform<ret_t, data_t>::_computeSpectraAtConicRegions(index_t& i, index_t j,
-                                                                         index_t k) const
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtConicRegions(index_t j, index_t k,
+                                                                         index_t hSliceIndex,
+                                                                         index_t vSliceIndex) const
     {
         DataContainer<data_t> sectionh(VolumeDescriptor{{_width, _height}});
         sectionh = 0;
@@ -229,13 +240,13 @@ namespace elsa
             }
         }
 
-        _spectra.value().slice(i++) = sectionh;
-        _spectra.value().slice(i++) = sectionv;
+        _spectra.value().slice(hSliceIndex) = sectionh;
+        _spectra.value().slice(vSliceIndex) = sectionv;
     }
 
     template <typename ret_t, typename data_t>
-    void ShearletTransform<ret_t, data_t>::_computeSpectraAtSeamLines(index_t& i, index_t j,
-                                                                      index_t k) const
+    void ShearletTransform<ret_t, data_t>::_computeSpectraAtSeamLines(index_t j, index_t k,
+                                                                      index_t hxvSliceIndex) const
     {
         DataContainer<data_t> sectionhxv(VolumeDescriptor{{_width, _height}});
         sectionhxv = 0;
@@ -260,7 +271,7 @@ namespace elsa
             }
         }
 
-        _spectra.value().slice(i++) = sectionhxv;
+        _spectra.value().slice(hxvSliceIndex) = sectionhxv;
     }
 
     template <typename ret_t, typename data_t>
