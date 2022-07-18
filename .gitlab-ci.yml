@@ -476,6 +476,7 @@ test-coverage:
   stage: coverage
   image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   dependencies: []
+  coverage: '/^\s+lines.+:.\d+(\.\d+)?%.*\(.*\)$/'
   script:
     - mkdir -p build
     - cd build
