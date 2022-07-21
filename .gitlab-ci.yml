@@ -199,21 +199,36 @@ cmake-lint:
 
 ### compile jobs ###
 
-build:
+build-clang:
   <<: *build_job_artifact
   image: $CI_REGISTRY/ip/elsa/pybind:$COMPILER-$COMPILER_VERSION
   script:
   - *buildjob_normal
+  variables:
+    COMPILER: clang
   parallel:
     matrix:
       - COMPILER_VERSION: [10, 11, 12, 13]
-        COMPILER: clang
-      - COMPILER_VERSION: [11, 12]
-        COMPILER: gcc
   tags:
     - linux
     - elsa
     - $COMPILER
+
+# TODO: find out what is wrong and fix it! I want to build on GCC
+# build-gcc:
+#   <<: *build_job_artifact
+#   image: $CI_REGISTRY/ip/elsa/gcc:$COMPILER_VERSION
+#   script:
+#   - *buildjob_normal
+#   variables:
+#     COMPILER: gcc
+#   parallel:
+#     matrix:
+#       - COMPILER_VERSION: [12]
+#   tags:
+#     - linux
+#     - elsa
+#     - $COMPILER
 
 build-cuda:
   <<: *build_job_artifact
@@ -235,21 +250,24 @@ build-cuda:
 .test-compiler:
   <<: *test_job_artifact
   stage: test
-  image: $CI_REGISTRY/ip/elsa/pybind:$COMPILER-$COMPILER_VERSION
+  image: $CI_REGISTRY/ip/elsa/$IMAGE
   tags:
     - linux
     - elsa
     - $COMPILER
 
-.test-gcc:
-  extends: .test-compiler
-  variables:
-    COMPILER: gcc
+# TODO: find out what is wrong and fix it! I want to build on GCC
+# .test-gcc:
+#   extends: .test-compiler
+#   variables:
+#     COMPILER: gcc
+#     IMAGE: $COMPILER:$COMPILER_VERSION
 
 .test-clang:
   extends: .test-compiler
   variables:
     COMPILER: clang
+    IMAGE: pybind:$COMPILER-$COMPILER_VERSION
 
 .test-cuda:
   <<: *test_job_artifact
@@ -265,38 +283,38 @@ build-cuda:
 # see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/82734 and
 # https://forum.gitlab.com/t/ci-specifying-artifact-dependencies-when-using-parallel-matrix/45026/2
 # TODO: Once this is implemented use it!
-test-gcc12:
-  extends: .test-gcc
-  dependencies:
-    - "build: [12, gcc]"
-  variables:
-    COMPILER_VERSION: 12
+# test-gcc12:
+#   extends: .test-gcc
+#   dependencies:
+#     - "build-gcc: [12]"
+#   variables:
+#     COMPILER_VERSION: 12
 
 test-clang10:
   extends: .test-clang
   dependencies:
-    - "build: [10, clang]"
+    - "build-clang: [10]"
   variables:
     COMPILER_VERSION: 10
 
 test-clang11:
   extends: .test-clang
   dependencies:
-    - "build: [11, clang]"
+    - "build-clang: [11]"
   variables:
     COMPILER_VERSION: 11
 
 test-clang12:
   extends: .test-clang
   dependencies:
-    - "build: [12, clang]"
+    - "build-clang: [12]"
   variables:
     COMPILER_VERSION: 12
 
 test-clang13:
   extends: .test-clang
   dependencies:
-    - "build: [13, clang]"
+    - "build-clang: [13]"
   variables:
     COMPILER_VERSION: 13
 
@@ -326,21 +344,23 @@ test-cuda-11.5:
 .install-compiler:
   <<: *install_job
   stage: test
-  image: $CI_REGISTRY/ip/elsa/pybind:$COMPILER-$COMPILER_VERSION
+  image: $CI_REGISTRY/ip/elsa/$IMAGE
   tags:
     - linux
     - elsa
     - $COMPILER
 
-.install-gcc:
-  extends: .install-compiler
-  variables:
-    COMPILER: gcc
+# .install-gcc:
+#   extends: .install-compiler
+#   variables:
+#     COMPILER: gcc
+#     IMAGE: $COMPILER:$COMPILER_VERSION
 
 .install-clang:
   extends: .install-compiler
   variables:
     COMPILER: clang
+    IMAGE: pybind:$COMPILER-$COMPILER_VERSION
     CMAKE_EXTRA_ARGS: "-DCMAKE_CXX_FLAGS=\"-stdlib=libc++\" -DCMAKE_EXE_LINKER_FLAGS=\"-lc++abi\""
 
 .install-cuda:
@@ -359,38 +379,38 @@ test-cuda-11.5:
     - gcc
     - cuda
 
-install-gcc12:
-  extends: .install-gcc
-  dependencies:
-    - "build: [12, gcc]"
-  variables:
-    COMPILER_VERSION: 12
+# install-gcc12:
+#   extends: .install-gcc
+#   dependencies:
+#     - "build-gcc: [12]"
+#   variables:
+#     COMPILER_VERSION: 12
 
 install-clang10:
   extends: .install-clang
   dependencies:
-    - "build: [10, clang]"
+    - "build-clang: [10]"
   variables:
     COMPILER_VERSION: 10
 
 install-clang11:
   extends: .install-clang
   dependencies:
-    - "build: [11, clang]"
+    - "build-clang: [11]"
   variables:
     COMPILER_VERSION: 11
 
 install-clang12:
   extends: .install-clang
   dependencies:
-    - "build: [12, clang]"
+    - "build-clang: [12]"
   variables:
     COMPILER_VERSION: 12
 
 install-clang13:
   extends: .install-clang
   dependencies:
-    - "build: [13, clang]"
+    - "build-clang: [13]"
   variables:
     COMPILER_VERSION: 13
 
