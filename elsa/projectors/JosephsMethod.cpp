@@ -12,79 +12,78 @@ namespace elsa
     JosephsMethod<data_t>::JosephsMethod(const VolumeDescriptor& domainDescriptor,
                                          const DetectorDescriptor& rangeDescriptor,
                                          Interpolation interpolation)
-        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
-          _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()},
-          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
-          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor)),
-          _interpolation{interpolation}
+        : base_type(domainDescriptor, rangeDescriptor), _interpolation{interpolation}
     {
-        auto dim = _domainDescriptor->getNumberOfDimensions();
+        auto dim = domainDescriptor.getNumberOfDimensions();
         if (dim != 2 && dim != 3) {
             throw InvalidArgumentError("JosephsMethod:only supporting 2d/3d operations");
         }
 
-        if (dim != _rangeDescriptor->getNumberOfDimensions()) {
+        if (dim != rangeDescriptor.getNumberOfDimensions()) {
             throw InvalidArgumentError("JosephsMethod: domain and range dimension need to match");
         }
 
-        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
+        if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
             throw InvalidArgumentError("JosephsMethod: geometry list was empty");
         }
     }
 
     template <typename data_t>
-    void JosephsMethod<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                          DataContainer<data_t>& Ax) const
+    void JosephsMethod<data_t>::forward(const BoundingBox& aabb, const DataContainer<data_t>& x,
+                                        DataContainer<data_t>& Ax) const
     {
         Timer timeguard("JosephsMethod", "apply");
-        traverseVolume<false>(x, Ax);
+        traverseVolume<false>(aabb, x, Ax);
     }
 
     template <typename data_t>
-    void JosephsMethod<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                 DataContainer<data_t>& Aty) const
+    void JosephsMethod<data_t>::backward(const BoundingBox& aabb, const DataContainer<data_t>& y,
+                                         DataContainer<data_t>& Aty) const
     {
         Timer timeguard("JosephsMethod", "applyAdjoint");
-        traverseVolume<true>(y, Aty);
+        traverseVolume<true>(aabb, y, Aty);
     }
 
     template <typename data_t>
-    JosephsMethod<data_t>* JosephsMethod<data_t>::cloneImpl() const
+    JosephsMethod<data_t>* JosephsMethod<data_t>::_cloneImpl() const
     {
-        return new JosephsMethod(_volumeDescriptor, _detectorDescriptor, _interpolation);
+        return new self_type(downcast<VolumeDescriptor>(*this->_domainDescriptor),
+                             downcast<DetectorDescriptor>(*this->_rangeDescriptor), _interpolation);
     }
 
     template <typename data_t>
-    bool JosephsMethod<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    bool JosephsMethod<data_t>::_isEqual(const LinearOperator<data_t>& other) const
     {
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
         auto otherJM = downcast_safe<JosephsMethod>(&other);
-        if (!otherJM)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherJM);
     }
 
     template <typename data_t>
     template <bool adjoint>
-    void JosephsMethod<data_t>::traverseVolume(const DataContainer<data_t>& vector,
+    void JosephsMethod<data_t>::traverseVolume(const BoundingBox& aabb,
+                                               const DataContainer<data_t>& vector,
                                                DataContainer<data_t>& result) const
     {
         if constexpr (adjoint)
             result = 0;
 
-        const auto sizeOfRange = _rangeDescriptor->getNumberOfCoefficients();
-        const auto rangeDim = _rangeDescriptor->getNumberOfDimensions();
+        const auto& domain = adjoint ? result.getDataDescriptor() : vector.getDataDescriptor();
+        const auto& range = downcast<DetectorDescriptor>(adjoint ? vector.getDataDescriptor()
+                                                                 : result.getDataDescriptor());
+
+        const auto sizeOfRange = range.getNumberOfCoefficients();
+        const auto rangeDim = range.getNumberOfDimensions();
 
         // iterate over all rays
 #pragma omp parallel for
         for (index_t ir = 0; ir < sizeOfRange; ir++) {
-            const auto ray = _detectorDescriptor.computeRayFromDetectorCoord(ir);
+            const auto ray = range.computeRayFromDetectorCoord(ir);
 
             // --> setup traversal algorithm
-            TraverseAABBJosephsMethod traverse(_boundingBox, ray);
+            TraverseAABBJosephsMethod traverse(aabb, ray);
 
             if constexpr (!adjoint)
                 result[ir] = 0;
@@ -97,12 +96,11 @@ namespace elsa
 
                 // to avoid code duplicates for apply and applyAdjoint
                 auto [to, from] = [&]() {
-                    const auto curVoxIndex =
-                        _domainDescriptor->getIndexFromCoordinate(currentVoxel);
+                    const auto curVoxIndex = domain.getIndexFromCoordinate(currentVoxel);
                     return adjoint ? std::pair{curVoxIndex, ir} : std::pair{ir, curVoxIndex};
                 }();
 
-                // #dfrank: This supresses a clang-tidy warning:
+                // #dfrank: This suppresses a clang-tidy warning:
                 // "error: reference to local binding 'to' declared in enclosing
                 // context [clang-diagnostic-error]", which seems to be based on
                 // clang-8, and a bug in the standard, as structured bindings are not
@@ -113,7 +111,7 @@ namespace elsa
 
                 switch (_interpolation) {
                     case Interpolation::LINEAR:
-                        linear<adjoint>(vector, result, traverse.getFractionals(), rangeDim,
+                        linear<adjoint>(aabb, vector, result, traverse.getFractionals(), rangeDim,
                                         currentVoxel, intersection, from, to,
                                         traverse.getIgnoreDirection());
                         break;
@@ -136,7 +134,7 @@ namespace elsa
 
     template <typename data_t>
     template <bool adjoint>
-    void JosephsMethod<data_t>::linear(const DataContainer<data_t>& vector,
+    void JosephsMethod<data_t>::linear(const BoundingBox& aabb, const DataContainer<data_t>& vector,
                                        DataContainer<data_t>& result,
                                        const RealVector_t& fractionals, index_t domainDim,
                                        const IndexVector_t& currentVoxel, float intersection,
@@ -153,10 +151,10 @@ namespace elsa
                     interpol(i) += (fractionals(i) < 0.0) ? -1 : 1;
                     // mirror values at border if outside the volume
                     auto interpolVal = static_cast<real_t>(interpol(i));
-                    if (interpolVal < _boundingBox._min(i) || interpolVal > _boundingBox._max(i))
-                        interpol(i) = static_cast<index_t>(_boundingBox._min(i));
-                    else if (interpolVal == _boundingBox._max(i))
-                        interpol(i) = static_cast<index_t>(_boundingBox._max(i)) - 1;
+                    if (interpolVal < aabb._min(i) || interpolVal > aabb._max(i))
+                        interpol(i) = static_cast<index_t>(aabb._min(i));
+                    else if (interpolVal == aabb._max(i))
+                        interpol(i) = static_cast<index_t>(aabb._max(i)) - 1;
                 }
             }
             if constexpr (adjoint) {
@@ -186,10 +184,10 @@ namespace elsa
 
                 // mirror values at border if outside the volume
                 auto interpolVal = static_cast<real_t>(interpol(i));
-                if (interpolVal < _boundingBox._min(i) || interpolVal > _boundingBox._max(i))
-                    interpol(i) = static_cast<index_t>(_boundingBox._min(i));
-                else if (interpolVal == _boundingBox._max(i))
-                    interpol(i) = static_cast<index_t>(_boundingBox._max(i)) - 1;
+                if (interpolVal < aabb._min(i) || interpolVal > aabb._max(i))
+                    interpol(i) = static_cast<index_t>(aabb._min(i));
+                else if (interpolVal == aabb._max(i))
+                    interpol(i) = static_cast<index_t>(aabb._max(i)) - 1;
 
                 if constexpr (adjoint) {
 #pragma omp atomic

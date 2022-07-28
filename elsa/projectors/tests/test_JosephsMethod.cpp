@@ -26,7 +26,6 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
     sizeRange << 1, 1;
 
     auto domain = VolumeDescriptor(sizeDomain);
-    auto range = VolumeDescriptor(sizeRange);
 
     auto stc = SourceToCenterOfRotation{100};
     auto ctr = CenterOfRotationToDetector{5};
@@ -43,9 +42,6 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
         auto dataDomain = DataContainer(domain);
         dataDomain = 1;
 
-        auto dataRange = DataContainer(range);
-        dataRange = 0;
-
         WHEN("We have a single ray with 0 degrees")
         {
             geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
@@ -57,6 +53,8 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
             THEN("A^t A x should be close to the original data")
             {
                 auto AtAx = DataContainer(domain);
+                auto dataRange = DataContainer(detectorDesc);
+                dataRange = 0;
 
                 op.apply(dataDomain, dataRange);
 
@@ -82,6 +80,8 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
             THEN("A^t A x should be close to the original data")
             {
                 auto AtAx = DataContainer(domain);
+                auto dataRange = DataContainer(detectorDesc);
+                dataRange = 0;
 
                 op.apply(dataDomain, dataRange);
 
@@ -107,6 +107,8 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
             THEN("A^t A x should be close to the original data")
             {
                 auto AtAx = DataContainer(domain);
+                auto dataRange = DataContainer(detectorDesc);
+                dataRange = 0;
 
                 op.apply(dataDomain, dataRange);
 
@@ -132,6 +134,8 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
             THEN("A^t A x should be close to the original data")
             {
                 auto AtAx = DataContainer(domain);
+                auto dataRange = DataContainer(detectorDesc);
+                dataRange = 0;
 
                 op.apply(dataDomain, dataRange);
 
@@ -157,6 +161,8 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
             THEN("A^t A x should be close to the original data")
             {
                 auto AtAx = DataContainer(domain);
+                auto dataRange = DataContainer(detectorDesc);
+                dataRange = 0;
 
                 op.apply(dataDomain, dataRange);
                 op.applyAdjoint(dataRange, AtAx);
@@ -180,6 +186,8 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
             THEN("A^t A x should be close to the original data")
             {
                 auto AtAx = DataContainer(domain);
+                auto dataRange = DataContainer(detectorDesc);
+                dataRange = 0;
 
                 op.apply(dataDomain, dataRange);
                 op.applyAdjoint(dataRange, AtAx);
@@ -206,7 +214,6 @@ TEST_CASE("JosephsMethod: Testing with only 4 ray")
     sizeRange << 1, 4;
 
     auto domain = VolumeDescriptor(sizeDomain);
-    auto range = VolumeDescriptor(sizeRange);
 
     auto stc = SourceToCenterOfRotation{100};
     auto ctr = CenterOfRotationToDetector{5};
@@ -223,9 +230,6 @@ TEST_CASE("JosephsMethod: Testing with only 4 ray")
         auto dataDomain = DataContainer(domain);
         dataDomain = 1;
 
-        auto dataRange = DataContainer(range);
-        dataRange = 0;
-
         WHEN("We have a single ray with 0, 90, 180, 270 degrees")
         {
             geom.emplace_back(stc, ctr, Degree{0}, VolumeData2D{Size2D{sizeDomain}},
@@ -239,6 +243,9 @@ TEST_CASE("JosephsMethod: Testing with only 4 ray")
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, geom);
             auto op = JosephsMethod(domain, detectorDesc);
+
+            auto dataRange = DataContainer(detectorDesc);
+            dataRange = 0;
 
             THEN("A^t A x should be close to the original data")
             {
@@ -341,7 +348,7 @@ TEST_CASE("JosephsMethod: Output DataContainer is not zero initialized")
 
         JosephsMethod op(volumeDescriptor, sinoDescriptor, JosephsMethod<>::Interpolation::LINEAR);
 
-        WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
+        WHEN("Sinogram container is not zero initialized and we project through an empty volume")
         {
             volume = 0;
             sino = 1;
@@ -398,7 +405,7 @@ TEST_CASE("JosephsMethod: Output DataContainer is not zero initialized")
 
         DataContainer sino(sinoDescriptor);
 
-        WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
+        WHEN("Sinogram container is not zero initialized and we project through an empty volume")
         {
             volume = 0;
             sino = 1;

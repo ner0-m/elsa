@@ -5,6 +5,7 @@
 #include "BoundingBox.h"
 #include "VolumeDescriptor.h"
 #include "DetectorDescriptor.h"
+#include "XrayProjector.h"
 
 #include <vector>
 #include <utility>
@@ -13,6 +14,16 @@
 
 namespace elsa
 {
+    template <typename data_t = real_t>
+    class JosephsMethod;
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<JosephsMethod<data_t>> {
+        using value_type = data_t;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
+    };
+
     /**
      * @brief Operator representing the discretized X-ray transform in 2d/3d using Joseph's method.
      *
@@ -38,12 +49,18 @@ namespace elsa
      * Forward projection is accomplished using apply(), backward projection using applyAdjoint().
      * This projector is matched.
      */
-    template <typename data_t = real_t>
-    class JosephsMethod : public LinearOperator<data_t>
+    template <typename data_t>
+    class JosephsMethod : public XrayProjector<JosephsMethod<data_t>>
     {
     public:
         /// Available interpolation modes
         enum class Interpolation { NN, LINEAR };
+
+        using self_type = JosephsMethod<data_t>;
+        using base_type = XrayProjector<self_type>;
+        using value_type = typename base_type::value_type;
+        using forward_tag = typename base_type::forward_tag;
+        using backward_tag = typename base_type::backward_tag;
 
         /**
          * @brief Constructor for Joseph's traversal method.
@@ -66,35 +83,27 @@ namespace elsa
         /// default copy constructor, hidden from non-derived classes to prevent potential slicing
         JosephsMethod(const JosephsMethod<data_t>&) = default;
 
+    private:
         /// apply Joseph's method (i.e. forward projection)
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void forward(const BoundingBox& aabb, const DataContainer<data_t>& x,
+                     DataContainer<data_t>& Ax) const;
 
         /// apply the adjoint of Joseph's method (i.e. backward projection)
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
+        void backward(const BoundingBox& aabb, const DataContainer<data_t>& y,
+                      DataContainer<data_t>& Aty) const;
 
         /// implement the polymorphic clone operation
-        JosephsMethod<data_t>* cloneImpl() const override;
+        JosephsMethod<data_t>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const override;
-
-    private:
-        /// the bounding box of the volume
-        BoundingBox _boundingBox;
-
-        /// Reference to DetectorDescriptor stored in LinearOperator
-        DetectorDescriptor& _detectorDescriptor;
-
-        /// Reference to VolumeDescriptor stored in LinearOperator
-        VolumeDescriptor& _volumeDescriptor;
+        bool _isEqual(const LinearOperator<data_t>& other) const;
 
         /// the interpolation mode
         Interpolation _interpolation;
 
         /// the traversal routine (for both apply/applyAdjoint)
         template <bool adjoint>
-        void traverseVolume(const DataContainer<data_t>& vector,
+        void traverseVolume(const BoundingBox& aabb, const DataContainer<data_t>& vector,
                             DataContainer<data_t>& result) const;
 
         /**
@@ -114,13 +123,15 @@ namespace elsa
          * @param[in] mainDirection specifies the main direction of the ray
          */
         template <bool adjoint>
-        void linear(const DataContainer<data_t>& vector, DataContainer<data_t>& result,
-                    const RealVector_t& fractionals, index_t domainDim,
-                    const IndexVector_t& currentVoxel, float intersection, index_t from, index_t to,
-                    int mainDirection) const;
+        void linear(const BoundingBox& aabb, const DataContainer<data_t>& vector,
+                    DataContainer<data_t>& result, const RealVector_t& fractionals,
+                    index_t domainDim, const IndexVector_t& currentVoxel, float intersection,
+                    index_t from, index_t to, int mainDirection) const;
 
         /// lift from base class
-        using LinearOperator<data_t>::_domainDescriptor;
-        using LinearOperator<data_t>::_rangeDescriptor;
+        // using LinearOperator<data_t>::_domainDescriptor;
+        // using LinearOperator<data_t>::_rangeDescriptor;
+
+        friend class XrayProjector<self_type>;
     };
 } // namespace elsa
