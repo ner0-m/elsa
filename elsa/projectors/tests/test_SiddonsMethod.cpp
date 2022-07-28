@@ -26,7 +26,6 @@ TEST_CASE("SiddonMethod: Testing projector with only one ray")
     sizeRange << 1, 1;
 
     auto domain = VolumeDescriptor(sizeDomain);
-    auto range = VolumeDescriptor(sizeRange);
 
     auto stc = SourceToCenterOfRotation{100};
     auto ctr = CenterOfRotationToDetector{5};
@@ -43,14 +42,13 @@ TEST_CASE("SiddonMethod: Testing projector with only one ray")
         auto dataDomain = DataContainer(domain);
         dataDomain = 1;
 
-        auto dataRange = DataContainer(range);
-        dataRange = 0;
-
         WHEN("We have a single ray with 0 degrees")
         {
             geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+            auto dataRange = DataContainer(detectorDesc);
+            dataRange = 0;
 
             auto op = SiddonsMethod(domain, detectorDesc);
 
@@ -74,6 +72,8 @@ TEST_CASE("SiddonMethod: Testing projector with only one ray")
             geom.emplace_back(stc, ctr, Degree{180}, std::move(volData), std::move(sinoData));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+            auto dataRange = DataContainer(detectorDesc);
+            dataRange = 0;
 
             auto op = SiddonsMethod(domain, detectorDesc);
 
@@ -97,6 +97,8 @@ TEST_CASE("SiddonMethod: Testing projector with only one ray")
             geom.emplace_back(stc, ctr, Degree{90}, std::move(volData), std::move(sinoData));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+            auto dataRange = DataContainer(detectorDesc);
+            dataRange = 0;
 
             auto op = SiddonsMethod(domain, detectorDesc);
 
@@ -120,6 +122,8 @@ TEST_CASE("SiddonMethod: Testing projector with only one ray")
             geom.emplace_back(stc, ctr, Degree{270}, std::move(volData), std::move(sinoData));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
+            auto dataRange = DataContainer(detectorDesc);
+            dataRange = 0;
 
             auto op = SiddonsMethod(domain, detectorDesc);
 
@@ -308,7 +312,7 @@ TEST_CASE("SiddoneMethod: Output DataContainer is not zero initialized")
 
         SiddonsMethod op(volumeDescriptor, sinoDescriptor);
 
-        WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
+        WHEN("Sinogram container is not zero initialized and we project through an empty volume")
         {
             volume = 0;
             sino = 1;
@@ -362,7 +366,7 @@ TEST_CASE("SiddoneMethod: Output DataContainer is not zero initialized")
 
         SiddonsMethod op(volumeDescriptor, sinoDescriptor);
 
-        WHEN("Sinogram conatainer is not zero initialized and we project through an empty volume")
+        WHEN("Sinogram container is not zero initialized and we project through an empty volume")
         {
             volume = 0;
             sino = 1;
@@ -568,7 +572,7 @@ TEST_CASE("SidddonMethod: Rays not intersecting the bounding box are present")
         std::string ali[numCases] = {"z", "z", "z", "x", "x", "x", "y", "y", "y"};
 
         for (int i = 0; i < numCases; i++) {
-            WHEN("Tracing along axis-aligned ray trough origins")
+            WHEN("Tracing along axis-aligned ray through origins")
             {
                 INFO("Tracing along a ", ali[i], "-axis-aligned ray with negative ", neg[i],
                      "-coodinate of origin");

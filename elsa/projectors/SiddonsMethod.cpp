@@ -11,13 +11,10 @@ namespace elsa
     template <typename data_t>
     SiddonsMethod<data_t>::SiddonsMethod(const VolumeDescriptor& domainDescriptor,
                                          const DetectorDescriptor& rangeDescriptor)
-        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
-          _boundingBox(domainDescriptor.getNumberOfCoefficientsPerDimension()),
-          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
-          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor))
+        : base_type(domainDescriptor, rangeDescriptor)
     {
-        auto dim = _domainDescriptor->getNumberOfDimensions();
-        if (dim != _rangeDescriptor->getNumberOfDimensions()) {
+        auto dim = domainDescriptor.getNumberOfDimensions();
+        if (dim != rangeDescriptor.getNumberOfDimensions()) {
             throw LogicError("SiddonsMethod: domain and range dimension need to match");
         }
 
@@ -25,87 +22,75 @@ namespace elsa
             throw LogicError("SiddonsMethod: only supporting 2d/3d operations");
         }
 
-        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
+        if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
             throw LogicError("SiddonsMethod: geometry list was empty");
         }
     }
 
     template <typename data_t>
-    void SiddonsMethod<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                          DataContainer<data_t>& Ax) const
+    SiddonsMethod<data_t>* SiddonsMethod<data_t>::_cloneImpl() const
     {
-        Timer t("SiddonsMethod", "apply");
-        traverseVolume<false>(x, Ax);
+        return new self_type(downcast<VolumeDescriptor>(*this->_domainDescriptor),
+                             downcast<DetectorDescriptor>(*this->_rangeDescriptor));
     }
 
     template <typename data_t>
-    void SiddonsMethod<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                 DataContainer<data_t>& Aty) const
-    {
-        Timer t("SiddonsMethod", "applyAdjoint");
-        traverseVolume<true>(y, Aty);
-    }
-
-    template <typename data_t>
-    SiddonsMethod<data_t>* SiddonsMethod<data_t>::cloneImpl() const
-    {
-        return new SiddonsMethod(_volumeDescriptor, _detectorDescriptor);
-    }
-
-    template <typename data_t>
-    bool SiddonsMethod<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    bool SiddonsMethod<data_t>::_isEqual(const LinearOperator<data_t>& other) const
     {
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
 
         auto otherSM = downcast_safe<SiddonsMethod>(&other);
-        if (!otherSM)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherSM);
     }
 
     template <typename data_t>
-    template <bool adjoint>
-    void SiddonsMethod<data_t>::traverseVolume(const DataContainer<data_t>& vector,
-                                               DataContainer<data_t>& result) const
+    data_t SiddonsMethod<data_t>::traverseRayForward(BoundingBox aabb, const RealRay_t& ray,
+                                                     const DataContainer<data_t>& x) const
     {
-        const index_t maxIterations = adjoint ? vector.getSize() : result.getSize();
+        const auto& domain = x.getDataDescriptor();
 
-        if constexpr (adjoint) {
-            result = 0; // initialize volume to 0, because we are not going to hit every voxel!
+        // --> setup traversal algorithm
+        TraverseAABB traverse(aabb, ray);
+
+        data_t accumulator = data_t(0);
+
+        // --> initial index to access the data vector
+        auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+
+        while (traverse.isInBoundingBox()) {
+
+            auto weight = traverse.updateTraverseAndGetDistance();
+            // --> update result depending on the operation performed
+            accumulator += x[dataIndexForCurrentVoxel] * weight;
+
+            dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
         }
 
-        // --> loop either over every voxel that should  updated or every detector
-        // cell that should be calculated
-#pragma omp parallel for
-        for (index_t rangeIndex = 0; rangeIndex < maxIterations; ++rangeIndex) {
-            // --> get the current ray to the detector center
-            const auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
+        return accumulator;
+    }
 
-            // --> setup traversal algorithm
-            TraverseAABB traverse(_boundingBox, ray);
+    template <typename data_t>
+    void SiddonsMethod<data_t>::traverseRayBackward(BoundingBox aabb, const RealRay_t& ray,
+                                                    const value_type& detectorValue,
+                                                    DataContainer<data_t>& Aty) const
+    {
+        const auto& domain = Aty.getDataDescriptor();
 
-            if constexpr (!adjoint)
-                result[rangeIndex] = 0;
+        // --> setup traversal algorithm
+        TraverseAABB traverse(aabb, ray);
 
-            // --> initial index to access the data vector
-            auto dataIndexForCurrentVoxel =
-                _domainDescriptor->getIndexFromCoordinate(traverse.getCurrentVoxel());
+        // --> initial index to access the data vector
+        auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
 
-            while (traverse.isInBoundingBox()) {
+        while (traverse.isInBoundingBox()) {
 
-                auto weight = traverse.updateTraverseAndGetDistance();
-                // --> update result depending on the operation performed
-                if constexpr (adjoint)
+            auto weight = traverse.updateTraverseAndGetDistance();
+
 #pragma omp atomic
-                    result[dataIndexForCurrentVoxel] += vector[rangeIndex] * weight;
-                else
-                    result[rangeIndex] += vector[dataIndexForCurrentVoxel] * weight;
+            Aty[dataIndexForCurrentVoxel] += detectorValue * weight;
 
-                dataIndexForCurrentVoxel =
-                    _domainDescriptor->getIndexFromCoordinate(traverse.getCurrentVoxel());
-            }
+            dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
         }
     }
 
