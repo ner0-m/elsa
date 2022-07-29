@@ -13,6 +13,8 @@
 #include "Blobs.h"
 #include "CartesianIndices.h"
 
+#include "XrayProjector.h"
+
 #include "spdlog/fmt/bundled/core.h"
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/ostr.h"
@@ -20,28 +22,54 @@
 namespace elsa
 {
     template <typename data_t, typename Derived>
-    class LutProjector : public LinearOperator<data_t>
+    class LutProjector;
+
+    template <typename data_t = real_t>
+    class BlobProjector;
+
+    template <typename data_t = real_t>
+    class BSplineProjector;
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<BlobProjector<data_t>> {
+        using value_type = data_t;
+        using forward_tag = ray_driven_tag;
+        using backward_tag = ray_driven_tag;
+    };
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<BSplineProjector<data_t>> {
+        using value_type = data_t;
+        using forward_tag = ray_driven_tag;
+        using backward_tag = ray_driven_tag;
+    };
+
+    template <typename data_t, typename Derived>
+    class LutProjector : public XrayProjector<Derived>
     {
     public:
+        using self_type = LutProjector<data_t, Derived>;
+        using base_type = XrayProjector<Derived>;
+        using value_type = typename base_type::value_type;
+        using forward_tag = typename base_type::forward_tag;
+        using backward_tag = typename base_type::backward_tag;
+
         LutProjector(const VolumeDescriptor& domainDescriptor,
                      const DetectorDescriptor& rangeDescriptor)
-            : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
-              _boundingBox{domainDescriptor.getNumberOfCoefficientsPerDimension()},
-              _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
-              _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor))
+            : base_type(domainDescriptor, rangeDescriptor)
         {
             // sanity checks
-            auto dim = _domainDescriptor->getNumberOfDimensions();
+            auto dim = domainDescriptor.getNumberOfDimensions();
             if (dim < 2 || dim > 3) {
                 throw InvalidArgumentError("LutProjector: only supporting 2d/3d operations");
             }
 
-            if (dim != _rangeDescriptor->getNumberOfDimensions()) {
+            if (dim != rangeDescriptor.getNumberOfDimensions()) {
                 throw InvalidArgumentError(
                     "LutProjector: domain and range dimension need to match");
             }
 
-            if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
+            if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
                 throw InvalidArgumentError("LutProjector: rangeDescriptor without any geometry");
             }
         }
@@ -49,137 +77,102 @@ namespace elsa
         /// default destructor
         ~LutProjector() override = default;
 
-        Derived& self() { return static_cast<Derived&>(*this); }
-
-        const Derived& self() const { return static_cast<const Derived&>(*this); }
-
-    protected:
+    private:
         /// apply the binary method (i.e. forward projection)
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override
+        data_t traverseRayForward(const BoundingBox& boundingbox, const RealRay_t& ray,
+                                  const DataContainer<data_t>& x) const
         {
-            Timer t("LutProjector", "apply");
+            const IndexVector_t lower = boundingbox._min.template cast<index_t>();
+            const IndexVector_t upper = boundingbox._max.template cast<index_t>();
+            const auto support = this->self().support();
 
-            // Be sure to zero out the result
-            Ax = 0;
+            index_t leadingdir = 0;
+            ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
 
-            const auto sizeRange = Ax.getSize();
-            const auto volume_shape = x.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+            IndexVector_t distvec = IndexVector_t::Constant(lower.size(), support);
+            distvec[leadingdir] = 0;
 
-            const IndexVector_t lower = _boundingBox._min.template cast<index_t>();
-            const IndexVector_t upper = _boundingBox._max.template cast<index_t>();
-            const auto support = self().support();
+            auto rangeVal = data_t(0);
 
-#pragma omp parallel for
-            // Loop over all the poses, and for each pose loop over all detector pixels
-            for (index_t rangeIndex = 0; rangeIndex < sizeRange; ++rangeIndex) {
-                // --> get the current ray to the detector center
-                auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
+            // Expand bounding box as rays have larger support now
+            auto aabb = boundingbox;
+            aabb._min.array() -= static_cast<real_t>(support);
+            aabb._min[leadingdir] += static_cast<real_t>(support);
 
-                index_t leadingdir = 0;
-                ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
+            aabb._max.array() += static_cast<real_t>(support);
+            aabb._max[leadingdir] -= static_cast<real_t>(support);
 
-                IndexVector_t distvec = IndexVector_t::Constant(lower.size(), support);
-                distvec[leadingdir] = 0;
+            // Keep this here, as it saves us a couple of allocations on clang
+            CartesianIndices neighbours(upper);
 
-                auto rangeVal = Ax[rangeIndex];
+            // --> setup traversal algorithm
+            SliceTraversal traversal(boundingbox, ray);
 
-                // Expand bounding box as rays have larger support now
-                auto aabb = _boundingBox;
-                aabb._min.array() -= static_cast<real_t>(support);
-                aabb._min[leadingdir] += static_cast<real_t>(support);
+            for (const auto& curVoxel : traversal) {
+                neighbours = neighbours_in_slice(curVoxel, distvec, lower, upper);
+                for (auto neighbour : neighbours) {
+                    // Correct position, such that the distance is still correct
+                    const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
+                    const auto distance = ray.distance(correctedPos);
+                    const auto weight = this->self().weight(distance);
 
-                aabb._max.array() += static_cast<real_t>(support);
-                aabb._max[leadingdir] -= static_cast<real_t>(support);
-
-                // Keep this here, as it saves us a couple of allocations on clang
-                CartesianIndices neighbours(upper);
-
-                // --> setup traversal algorithm
-                SliceTraversal traversal(aabb, ray);
-
-                for (const auto& curVoxel : traversal) {
-                    neighbours = neighbours_in_slice(curVoxel, distvec, lower, upper);
-                    for (auto neighbour : neighbours) {
-                        // Correct position, such that the distance is still correct
-                        const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
-                        const auto distance = ray.distance(correctedPos);
-                        const auto weight = self().weight(distance);
-
-                        rangeVal += weight * x(neighbour);
-                    }
+                    rangeVal += weight * x(neighbour);
                 }
-
-                Ax[rangeIndex] = rangeVal;
             }
+
+            return rangeVal;
         }
 
-        /// apply the adjoint of the binary method (i.e. backward projection)
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override
+        void traverseRayBackward(const BoundingBox& boundingbox, const RealRay_t& ray,
+                                 const value_type& detectorValue, DataContainer<data_t>& Aty) const
         {
-            Timer t("LutProjector", "applyAdjoint");
+            const IndexVector_t lower = boundingbox._min.template cast<index_t>();
+            const IndexVector_t upper = boundingbox._max.template cast<index_t>();
+            const auto support = this->self().support();
 
-            const auto sizeRange = y.getSize();
-            Aty = 0;
+            index_t leadingdir = 0;
+            ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
 
-            const auto shape = _domainDescriptor->getNumberOfCoefficientsPerDimension();
+            IndexVector_t distvec = IndexVector_t::Constant(lower.size(), support);
+            distvec[leadingdir] = 0;
 
-            const IndexVector_t lower = _boundingBox._min.template cast<index_t>();
-            const IndexVector_t upper = _boundingBox._max.template cast<index_t>();
-            const auto support = self().support();
+            // Expand bounding box as rays have larger support now
+            auto aabb = boundingbox;
+            aabb._min.array() -= static_cast<real_t>(support);
+            aabb._min[leadingdir] += static_cast<real_t>(support);
 
-#pragma omp parallel for
-            // Loop over all the poses, and for each pose loop over all detector pixels
-            for (index_t rangeIndex = 0; rangeIndex < sizeRange; ++rangeIndex) {
-                // --> get the current ray to the detector center (from reference to
-                // DetectorDescriptor)
-                auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
+            aabb._max.array() += static_cast<real_t>(support);
+            aabb._max[leadingdir] -= static_cast<real_t>(support);
 
-                index_t leadingdir = 0;
-                ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
+            // Keep this here, as it saves us a couple of allocations on clang
+            CartesianIndices neighbours(upper);
 
-                IndexVector_t distvec = IndexVector_t::Constant(lower.size(), support);
-                distvec[leadingdir] = 0;
+            // --> setup traversal algorithm
+            SliceTraversal traversal(aabb, ray);
 
-                // Expand bounding box as rays have larger support now
-                auto aabb = _boundingBox;
-                aabb._min.array() -= static_cast<real_t>(support);
-                aabb._min[leadingdir] += static_cast<real_t>(support);
-
-                aabb._max.array() += static_cast<real_t>(support);
-                aabb._max[leadingdir] -= static_cast<real_t>(support);
-
-                // Keep this here, as it saves us a couple of allocations on clang
-                CartesianIndices neighbours(upper);
-
-                // --> setup traversal algorithm
-                SliceTraversal traversal(aabb, ray);
-
-                const auto val = y[rangeIndex];
-
-                for (const auto& curVoxel : traversal) {
-                    neighbours = neighbours_in_slice(curVoxel, distvec, lower, upper);
-                    for (auto neighbour : neighbours) {
-                        // Correct position, such that the distance is still correct
-                        const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
-                        const auto distance = ray.distance(correctedPos);
-                        const auto weight = self().weight(distance);
+            for (const auto& curVoxel : traversal) {
+                neighbours = neighbours_in_slice(curVoxel, distvec, lower, upper);
+                for (auto neighbour : neighbours) {
+                    // Correct position, such that the distance is still correct
+                    const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
+                    const auto distance = ray.distance(correctedPos);
+                    const auto weight = this->self().weight(distance);
 
 #pragma omp atomic
-                        Aty(neighbour) += weight * val;
-                    }
+                    Aty(neighbour) += weight * detectorValue;
                 }
             }
         }
 
         /// implement the polymorphic clone operation
-        LutProjector<data_t, Derived>* cloneImpl() const override
+        LutProjector<data_t, Derived>* _cloneImpl() const
         {
-            return new LutProjector(_volumeDescriptor, _detectorDescriptor);
+            return new LutProjector(downcast<VolumeDescriptor>(*this->_domainDescriptor),
+                                    downcast<DetectorDescriptor>(*this->_rangeDescriptor));
         }
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const override
+        bool _isEqual(const LinearOperator<data_t>& other) const
         {
             if (!LinearOperator<data_t>::isEqual(other))
                 return false;
@@ -188,28 +181,15 @@ namespace elsa
             return static_cast<bool>(otherOp);
         }
 
-    private:
-        /// the bounding box of the volume
-        BoundingBox _boundingBox;
-
-        /// Lift from base class
-        using LinearOperator<data_t>::_domainDescriptor;
-
-        /// Lift from base class
-        using LinearOperator<data_t>::_rangeDescriptor;
-
-    protected:
-        /// Reference to DetectorDescriptor stored in LinearOperator
-        DetectorDescriptor& _detectorDescriptor;
-
-        /// Reference to VolumeDescriptor stored in LinearOperator
-        VolumeDescriptor& _volumeDescriptor;
+        friend class XrayProjector<Derived>;
     };
 
-    template <typename data_t = real_t>
+    template <typename data_t>
     class BlobProjector : public LutProjector<data_t, BlobProjector<data_t>>
     {
     public:
+        using self_type = BlobProjector<data_t>;
+
         BlobProjector(data_t radius, data_t alpha, data_t order,
                       const VolumeDescriptor& domainDescriptor,
                       const DetectorDescriptor& rangeDescriptor);
@@ -222,23 +202,25 @@ namespace elsa
         index_t support() const { return static_cast<index_t>(std::ceil(lut_.radius())); }
 
         /// implement the polymorphic clone operation
-        BlobProjector<data_t>* cloneImpl() const override;
+        BlobProjector<data_t>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const override;
+        bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
         ProjectedBlobLut<data_t, 100> lut_;
 
         using Base = LutProjector<data_t, BlobProjector<data_t>>;
-        using Base::_detectorDescriptor;
-        using Base::_volumeDescriptor;
+
+        friend class XrayProjector<self_type>;
     };
 
-    template <typename data_t = real_t>
+    template <typename data_t>
     class BSplineProjector : public LutProjector<data_t, BSplineProjector<data_t>>
     {
     public:
+        using self_type = BlobProjector<data_t>;
+
         BSplineProjector(data_t degree, const VolumeDescriptor& domainDescriptor,
                          const DetectorDescriptor& rangeDescriptor);
 
@@ -250,16 +232,16 @@ namespace elsa
         index_t support() const;
 
         /// implement the polymorphic clone operation
-        BSplineProjector<data_t>* cloneImpl() const override;
+        BSplineProjector<data_t>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const override;
+        bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
         ProjectedBSplineLut<data_t, 100> lut_;
 
         using Base = LutProjector<data_t, BSplineProjector<data_t>>;
-        using Base::_detectorDescriptor;
-        using Base::_volumeDescriptor;
+
+        friend class XrayProjector<self_type>;
     };
 } // namespace elsa

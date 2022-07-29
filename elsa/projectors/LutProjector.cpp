@@ -22,7 +22,7 @@ namespace elsa
             throw InvalidArgumentError("BlobProjector: domain and range dimension need to match");
         }
 
-        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
+        if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
             throw InvalidArgumentError("BlobProjector: rangeDescriptor without any geometry");
         }
     }
@@ -35,13 +35,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    BlobProjector<data_t>* BlobProjector<data_t>::cloneImpl() const
+    BlobProjector<data_t>* BlobProjector<data_t>::_cloneImpl() const
     {
-        return new BlobProjector(_volumeDescriptor, _detectorDescriptor);
+        return new BlobProjector(downcast<VolumeDescriptor>(*this->_domainDescriptor),
+                                 downcast<DetectorDescriptor>(*this->_rangeDescriptor));
     }
 
     template <typename data_t>
-    bool BlobProjector<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    bool BlobProjector<data_t>::_isEqual(const LinearOperator<data_t>& other) const
     {
         if (!Base::isEqual(other))
             return false;
@@ -68,7 +69,7 @@ namespace elsa
                 "BSplineProjector: domain and range dimension need to match");
         }
 
-        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
+        if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
             throw InvalidArgumentError("BSplineProjector: rangeDescriptor without any geometry");
         }
     }
@@ -93,13 +94,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    BSplineProjector<data_t>* BSplineProjector<data_t>::cloneImpl() const
+    BSplineProjector<data_t>* BSplineProjector<data_t>::_cloneImpl() const
     {
-        return new BSplineProjector(_volumeDescriptor, _detectorDescriptor);
+        return new BSplineProjector(downcast<VolumeDescriptor>(*this->_domainDescriptor),
+                                    downcast<DetectorDescriptor>(*this->_rangeDescriptor));
     }
 
     template <typename data_t>
-    bool BSplineProjector<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    bool BSplineProjector<data_t>::_isEqual(const LinearOperator<data_t>& other) const
     {
         if (!Base::isEqual(other))
             return false;
