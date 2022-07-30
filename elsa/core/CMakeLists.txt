@@ -122,30 +122,4 @@ if(WITH_FFTW AND FFTW3_FOUND)
 endif()
 
 
-if(ELSA_BUILD_PYTHON_BINDINGS)
-    set(BINDINGS_SOURCES
-        ${MODULE_SOURCES}
-        Descriptors/DataDescriptor.h
-        Descriptors/DescriptorUtils.h
-        Descriptors/VolumeDescriptor.h
-        Descriptors/BlockDescriptor.h
-        Descriptors/IdenticalBlocksDescriptor.h
-        Descriptors/PartitionDescriptor.h
-        Descriptors/RandomBlocksDescriptor.h
-        Descriptors/DetectorDescriptor.h
-        Descriptors/PlanarDetectorDescriptor.h
-        Geometry.h
-    )
-
-    list(FILTER BINDINGS_SOURCES EXCLUDE REGEX DataHandler.*.cpp)
-    list(FILTER BINDINGS_SOURCES EXCLUDE REGEX .*Descriptor.*.cpp)
-    list(FILTER BINDINGS_SOURCES EXCLUDE REGEX Geometry.cpp)
-    list(FILTER BINDINGS_SOURCES EXCLUDE REGEX StrongTypes.cpp)
-
-    GENERATE_BINDINGS(
-        ${ELSA_MODULE_TARGET_NAME} bind_${ELSA_MODULE_NAME}.cpp
-        ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
-    )
-endif()
-
 write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging)

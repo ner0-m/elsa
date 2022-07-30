@@ -166,12 +166,6 @@ macro(ELSA_DOCTEST name)
     endif()
 endmacro()
 
-include(PythonBindings)
-
-if(ELSA_BUILD_PYTHON_BINDINGS)
-    SetupPythonBindings()
-endif()
-
 # add the elsa modules
 if(ELSA_BUILD_WITH_QUICKVEC)
     add_subdirectory(quickvec)
@@ -192,10 +186,6 @@ endif(ELSA_BUILD_CUDA_PROJECTORS)
 add_subdirectory(generators)
 add_subdirectory(test_routines)
 add_subdirectory(test_allmodules)
-
-if(ELSA_BUILD_PYTHON_BINDINGS)
-    AddLoggerToBindings()
-endif()
 
 # library to build and add all registered components of the library
 add_library(elsa_all INTERFACE)

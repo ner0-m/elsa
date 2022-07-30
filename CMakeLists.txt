@@ -68,18 +68,6 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
-if(SKBUILD)
-  # Scikit-Build does not add your site-packages to the search path
-  # automatically, so we need to add it _or_ the pybind11 specific directory
-  # here.
-  execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}" -c
-            "import pybind11; print(pybind11.get_cmake_dir())"
-    OUTPUT_VARIABLE _tmp_dir
-    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
-  list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
-endif()
-
 # ------------ dependencies ------------
 # ------------
 
@@ -167,17 +155,21 @@ if(ELSA_MASTER_PROJECT)
         # to $CMAKE_INSTALL_INCLUDEDIR/spdlog
     endif()
 
-    if (${ELSA_BUILD_PYTHON_BINDINGS})
-        CPMAddPackage(
-            NAME pybind11
-            GITHUB_REPOSITORY pybind/pybind11
-            VERSION 2.9.2
-        )
+    if (SKBUILD AND ELSA_BUILD_PYTHON_BINDINGS)
+        # Scikit-Build does not add your site-packages to the search path
+        # automatically, so we need to add it _or_ the pybind11 specific directory
+        # here.
+        execute_process(
+            COMMAND "${PYTHON_EXECUTABLE}" -c
+            "import pybind11; print(pybind11.get_cmake_dir())"
+            OUTPUT_VARIABLE _tmp_dir
+            OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
+        list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
+
+        # Now we can find pybind11
+        find_package(pybind11 CONFIG REQUIRED)
 
         add_subdirectory(pyelsa)
-
-        # pybind11_add_module(_core MODULE pyelsa/pyelsa/main.cpp)
-        # install(TARGETS _core DESTINATION .)
     endif()
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
@@ -298,17 +290,6 @@ endif(ELSA_TESTING OR ELSA_BENCHMARKS)
 
 # ------------ add code/docs -----------
 # ------------
-
-# the bindings generator should be added before elsa, as we check whether the target can be built
-if (ELSA_BUILD_PYTHON_BINDINGS)
-    add_subdirectory(tools/bindings_generation EXCLUDE_FROM_ALL)
-
-    # Warn if python bindings and code coverage is activated
-    if(ELSA_COVERAGE)
-        message(WARNING "Python bindings are generated for a coverage build, consider turning one off (set \
-        either \"ELSA_BUILD_PYTHON_BINDINGS\" or \"ELSA_COVERAGE\"to OFF via command line")
-    endif()
-endif()
 
 # the elsa library
 add_subdirectory(elsa)

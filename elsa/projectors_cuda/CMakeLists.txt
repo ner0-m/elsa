@@ -50,25 +50,12 @@ if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
     target_compile_options(
         ${ELSA_MODULE_TARGET_NAME}
         PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--fmad=false --expt-relaxed-constexpr -Wreorder -Xptxas=-warn-spills,-warn-lmem-usage>
-    ) 
+    )
 
     # set define to check cuda projectors in projects
     target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)
 
-    if(ELSA_BUILD_PYTHON_BINDINGS)
-        set(BINDINGS_SOURCES 
-            SiddonsMethodCUDA.cpp
-            JosephsMethodCUDA.cpp
-        )
-
-        GENERATE_BINDINGS(
-            ${ELSA_MODULE_TARGET_NAME} bind_${ELSA_MODULE_NAME}.cpp
-            ${PROJECT_SOURCE_DIR}/tools/bindings_generation/hints/${ELSA_MODULE_NAME}_hints.cpp ${BINDINGS_SOURCES}
-        )
-    endif()
-
     write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors)
-
 else()
     message(STATUS "CUDA compiler NOT found! CUDA projector support disabled")
 endif()

@@ -181,10 +181,10 @@ test: $(BUILD_ROOT)/CMakeCache.txt ## build and run individual test (e.g. make t
 watch: $(BUILD_ROOT)/CMakeCache.txt ## build and run individual test continuously on code changes (e.g. make watch mytest)
 ifneq ($(CT),)
 	$(AG) -l "cpp|h|hpp|cu|cuh" | $(ENTR) -s "make CC=$(CC) CXX=$(CXX) GENERATE_PYBINDS=$(GENERATE_PYBINDS) USE_DNNL=$(USE_DNNL) USE_CUDNN=$(USE_CUDNN) USE_CUDA=$(USE_CUDA) BUILD_TYPE=$(BUILD_TYPE) test $(RUN_TEST_TARGET) | $(CT) && notify-send \"elsa\" \"finished building\" || notify-send \"elsa\" \"build failed\""
-else 
+else
 	$(AG) -l "cpp|h|hpp|cu|cuh" | $(ENTR) -s "make CC=$(CC) CXX=$(CXX) GENERATE_PYBINDS=$(GENERATE_PYBINDS) USE_DNNL=$(USE_DNNL) USE_CUDNN=$(USE_CUDNN) USE_CUDA=$(USE_CUDA) BUILD_TYPE=$(BUILD_TYPE) test $(RUN_TEST_TARGET) && notify-send \"elsa\" \"finished building\" || notify-send \"elsa\" \"build failed\""
-endif 
-	 
+endif
+
 
 ifneq ($(FZF),)
 select-targets: configure ## select one of the available targets to build
@@ -215,4 +215,4 @@ clean:  ## Remove build artifacts
 
 .PHONY: distclean
 distclean:  ## Clean up everything
-	rm -rf build/*
+	rm -rf build/ $(shell find . -name '*.egg-info') _skbuild
