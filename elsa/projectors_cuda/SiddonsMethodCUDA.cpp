@@ -9,8 +9,7 @@ namespace elsa
     template <typename data_t>
     SiddonsMethodCUDA<data_t>::SiddonsMethodCUDA(const VolumeDescriptor& domainDescriptor,
                                                  const DetectorDescriptor& rangeDescriptor)
-        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
-          _boundingBox(_domainDescriptor->getNumberOfCoefficientsPerDimension()),
+        : base_type(domainDescriptor, rangeDescriptor),
           _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
           _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor))
     {
@@ -87,31 +86,32 @@ namespace elsa
     }
 
     template <typename data_t>
-    SiddonsMethodCUDA<data_t>* SiddonsMethodCUDA<data_t>::cloneImpl() const
+    SiddonsMethodCUDA<data_t>* SiddonsMethodCUDA<data_t>::_cloneImpl() const
     {
         return new SiddonsMethodCUDA<data_t>(_volumeDescriptor, _detectorDescriptor);
     }
 
     template <typename data_t>
-    void SiddonsMethodCUDA<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                              DataContainer<data_t>& Ax) const
+    void SiddonsMethodCUDA<data_t>::forward(const BoundingBox& aabb, const DataContainer<data_t>& x,
+                                            DataContainer<data_t>& Ax) const
     {
         Timer timeGuard("SiddonsMethodCUDA", "apply");
 
-        traverseVolume<false>((void*) &(x[0]), (void*) &(Ax[0]));
+        traverseVolume<false>(aabb, (void*) &(x[0]), (void*) &(Ax[0]));
     }
 
     template <typename data_t>
-    void SiddonsMethodCUDA<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                     DataContainer<data_t>& Aty) const
+    void SiddonsMethodCUDA<data_t>::backward(const BoundingBox& aabb,
+                                             const DataContainer<data_t>& y,
+                                             DataContainer<data_t>& Aty) const
     {
         Timer timeguard("SiddonsMethodCUDA", "applyAdjoint");
 
-        traverseVolume<true>((void*) &(Aty[0]), (void*) &(y[0]));
+        traverseVolume<true>(aabb, (void*) &(Aty[0]), (void*) &(y[0]));
     }
 
     template <typename data_t>
-    bool SiddonsMethodCUDA<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    bool SiddonsMethodCUDA<data_t>::_isEqual(const LinearOperator<data_t>& other) const
     {
         if (!LinearOperator<data_t>::isEqual(other))
             return false;
@@ -125,7 +125,8 @@ namespace elsa
 
     template <typename data_t>
     template <bool adjoint>
-    void SiddonsMethodCUDA<data_t>::traverseVolume(void* volumePtr, void* sinoPtr) const
+    void SiddonsMethodCUDA<data_t>::traverseVolume(const BoundingBox& aabb, void* volumePtr,
+                                                   void* sinoPtr) const
     {
         auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
         auto domainDimsui = domainDims.template cast<unsigned int>();
@@ -136,9 +137,9 @@ namespace elsa
 
         if (_domainDescriptor->getNumberOfDimensions() == 3) {
             typename TraverseSiddonsCUDA<data_t, 3>::BoundingBox boundingBox;
-            boundingBox._max[0] = _boundingBox._max.template cast<uint32_t>()[0];
-            boundingBox._max[1] = _boundingBox._max.template cast<uint32_t>()[1];
-            boundingBox._max[2] = _boundingBox._max.template cast<uint32_t>()[2];
+            boundingBox._max[0] = aabb._max.template cast<uint32_t>()[0];
+            boundingBox._max[1] = aabb._max.template cast<uint32_t>()[1];
+            boundingBox._max[2] = aabb._max.template cast<uint32_t>()[2];
 
             // transfer volume and sinogram
             cudaExtent volExt =
@@ -191,8 +192,8 @@ namespace elsa
 
         } else {
             typename TraverseSiddonsCUDA<data_t, 2>::BoundingBox boundingBox;
-            boundingBox._max[0] = _boundingBox._max.template cast<uint32_t>()[0];
-            boundingBox._max[1] = _boundingBox._max.template cast<uint32_t>()[1];
+            boundingBox._max[0] = aabb._max.template cast<uint32_t>()[0];
+            boundingBox._max[1] = aabb._max.template cast<uint32_t>()[1];
 
             // transfer volume and sinogram
 

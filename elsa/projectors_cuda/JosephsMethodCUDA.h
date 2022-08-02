@@ -11,10 +11,22 @@
 #include "VolumeDescriptor.h"
 #include "DetectorDescriptor.h"
 
+#include "XrayProjector.h"
+
 #include "TraverseJosephsCUDA.cuh"
 
 namespace elsa
 {
+    template <typename data_t = real_t>
+    class JosephsMethodCUDA;
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<JosephsMethodCUDA<data_t>> {
+        using value_type = data_t;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
+    };
+
     /**
      * @brief GPU-operator representing the discretized X-ray transform in 2d/3d using Joseph's
      * method.
@@ -42,10 +54,16 @@ namespace elsa
      * @warning Hardware interpolation is significantly less accurate than the software
      * interpolation
      */
-    template <typename data_t = real_t>
-    class JosephsMethodCUDA : public LinearOperator<data_t>
+    template <typename data_t>
+    class JosephsMethodCUDA : public XrayProjector<JosephsMethodCUDA<data_t>>
     {
     public:
+        using self_type = JosephsMethodCUDA<data_t>;
+        using base_type = XrayProjector<self_type>;
+        using value_type = typename base_type::value_type;
+        using forward_tag = typename base_type::forward_tag;
+        using backward_tag = typename base_type::backward_tag;
+
         /**
          * @brief Constructor for Joseph's traversal method.
          *
@@ -67,23 +85,21 @@ namespace elsa
         /// copy constructor, used for cloning
         JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other);
 
-        /// apply Joseph's method (i.e. forward projection)
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        /// apply Siddon's method (i.e. forward projection)
+        void forward(const BoundingBox& aabb, const DataContainer<data_t>& x,
+                     DataContainer<data_t>& Ax) const;
 
-        /// apply the adjoint of Joseph's method (i.e. backward projection)
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
+        /// apply the adjoint of Siddon's method (i.e. backward projection)
+        void backward(const BoundingBox& aabb, const DataContainer<data_t>& y,
+                      DataContainer<data_t>& Aty) const;
 
         /// implement the polymorphic clone operation
-        JosephsMethodCUDA<data_t>* cloneImpl() const override;
+        JosephsMethodCUDA<data_t>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const override;
+        bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        /// the bounding box of the volume
-        BoundingBox _boundingBox;
-
         /// Reference to DetectorDescriptor stored in LinearOperator
         DetectorDescriptor& _detectorDescriptor;
 
@@ -148,5 +164,7 @@ namespace elsa
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;
         using LinearOperator<data_t>::_rangeDescriptor;
+
+        friend class XrayProjector<self_type>;
     };
 } // namespace elsa

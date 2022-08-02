@@ -9,8 +9,7 @@ namespace elsa
     JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const VolumeDescriptor& domainDescriptor,
                                                  const DetectorDescriptor& rangeDescriptor,
                                                  bool fast)
-        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
-          _boundingBox{_domainDescriptor->getNumberOfCoefficientsPerDimension()},
+        : base_type(domainDescriptor, rangeDescriptor),
           _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
           _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor)),
           _fast{fast}
@@ -108,13 +107,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    JosephsMethodCUDA<data_t>* JosephsMethodCUDA<data_t>::cloneImpl() const
+    JosephsMethodCUDA<data_t>* JosephsMethodCUDA<data_t>::_cloneImpl() const
     {
         return new JosephsMethodCUDA(*this);
     }
 
     template <typename data_t>
-    bool JosephsMethodCUDA<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    bool JosephsMethodCUDA<data_t>::_isEqual(const LinearOperator<data_t>& other) const
     {
         // TODO: only need Geometry vector stored internally for comparisons, use kernels instead
         if (!LinearOperator<data_t>::isEqual(other))
@@ -131,8 +130,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void JosephsMethodCUDA<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                              DataContainer<data_t>& Ax) const
+    void JosephsMethodCUDA<data_t>::forward(const BoundingBox& aabb, const DataContainer<data_t>& x,
+                                            DataContainer<data_t>& Ax) const
     {
         Timer timeGuard("JosephsMethodCUDA", "apply");
 
@@ -152,7 +151,7 @@ namespace elsa
             if (cudaMalloc3D(&dsinoPtr, sinoExt) != cudaSuccess)
                 throw std::bad_alloc();
 
-            IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
+            IndexVector_t bmax = aabb._max.template cast<index_t>();
             typename TraverseJosephsCUDA<data_t, 3>::BoundingBox boxMax;
             boxMax._max[0] = static_cast<real_t>(bmax[0]);
             boxMax._max[1] = static_cast<real_t>(bmax[1]);
@@ -178,7 +177,7 @@ namespace elsa
                 != cudaSuccess)
                 throw std::bad_alloc();
 
-            IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
+            IndexVector_t bmax = aabb._max.template cast<index_t>();
             typename TraverseJosephsCUDA<data_t, 2>::BoundingBox boxMax;
             boxMax._max[0] = static_cast<real_t>(bmax[0]);
             boxMax._max[1] = static_cast<real_t>(bmax[1]);
@@ -215,8 +214,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    void JosephsMethodCUDA<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                     DataContainer<data_t>& Aty) const
+    void JosephsMethodCUDA<data_t>::backward(const BoundingBox& aabb,
+                                             const DataContainer<data_t>& y,
+                                             DataContainer<data_t>& Aty) const
     {
         Timer timeguard("JosephsMethodCUDA", "applyAdjoint");
 
@@ -275,7 +275,7 @@ namespace elsa
 
                 // perform projection
 
-                IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
+                IndexVector_t bmax = aabb._max.template cast<index_t>();
                 typename TraverseJosephsCUDA<data_t, 3>::BoundingBox boxMax;
                 boxMax._max[0] = static_cast<real_t>(bmax[0]);
                 boxMax._max[1] = static_cast<real_t>(bmax[1]);
@@ -289,7 +289,7 @@ namespace elsa
                     (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
                     static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
                     static_cast<uint32_t>(_projInvMatrices.pitch), boxMax);
-                // synchonize because we are using multiple streams
+                // synchronize because we are using multiple streams
                 cudaDeviceSynchronize();
 
                 // free allocated memory
@@ -351,7 +351,7 @@ namespace elsa
                     throw LogicError(
                         "JosephsMethodCUDA::applyAdjoint: Couldn't transfer sinogram to GPU.");
 
-                IndexVector_t bmax = _boundingBox._max.template cast<index_t>();
+                IndexVector_t bmax = aabb._max.template cast<index_t>();
                 typename TraverseJosephsCUDA<data_t, 2>::BoundingBox boxMax;
                 boxMax._max[0] = static_cast<real_t>(bmax[0]);
                 boxMax._max[1] = static_cast<real_t>(bmax[1]);
@@ -364,7 +364,7 @@ namespace elsa
                     (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
                     static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
                     static_cast<uint32_t>(_projInvMatrices.pitch), boxMax);
-                // synchonize because we are using multiple streams
+                // synchronize because we are using multiple streams
                 cudaDeviceSynchronize();
 
                 // free allocated memory
@@ -390,10 +390,9 @@ namespace elsa
 
     template <typename data_t>
     JosephsMethodCUDA<data_t>::JosephsMethodCUDA(const JosephsMethodCUDA<data_t>& other)
-        : LinearOperator<data_t>(*other._domainDescriptor, *other._rangeDescriptor),
-          _boundingBox{other._boundingBox},
-          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
-          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor)),
+        : base_type(other._volumeDescriptor, other._detectorDescriptor),
+          _detectorDescriptor(downcast<DetectorDescriptor>(*_rangeDescriptor)),
+          _volumeDescriptor(downcast<VolumeDescriptor>(*_domainDescriptor)),
           _fast{other._fast}
     {
         auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());

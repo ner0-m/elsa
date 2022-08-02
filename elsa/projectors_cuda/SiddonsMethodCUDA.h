@@ -9,10 +9,22 @@
 #include "VolumeDescriptor.h"
 #include "DetectorDescriptor.h"
 
+#include "XrayProjector.h"
+
 #include "TraverseSiddonsCUDA.cuh"
 
 namespace elsa
 {
+    template <typename data_t = real_t>
+    class SiddonsMethodCUDA;
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<SiddonsMethodCUDA<data_t>> {
+        using value_type = data_t;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
+    };
+
     /**
      * @brief GPU-operator representing the discretized X-ray transform in 2d/3d using Siddon's
      * method.
@@ -22,7 +34,7 @@ namespace elsa
      * @tparam data_t data type for the domain and range of the operator, defaulting to real_t
      *
      * The volume is traversed along the rays as specified by the Geometry. Each ray is traversed in
-     * a continguous fashion (i.e. along long voxel borders, not diagonally) and each traversed
+     * a contiguous fashion (i.e. along long voxel borders, not diagonally) and each traversed
      * voxel is counted as a hit with weight according to the length of the path of the ray through
      * the voxel.
      *
@@ -35,10 +47,16 @@ namespace elsa
      * Currently only utilizes a single GPU. Volume and images should both fit in device memory at
      * the same time.
      */
-    template <typename data_t = real_t>
-    class SiddonsMethodCUDA : public LinearOperator<data_t>
+    template <typename data_t>
+    class SiddonsMethodCUDA : public XrayProjector<SiddonsMethodCUDA<data_t>>
     {
     public:
+        using self_type = SiddonsMethodCUDA<data_t>;
+        using base_type = XrayProjector<self_type>;
+        using value_type = typename base_type::value_type;
+        using forward_tag = typename base_type::forward_tag;
+        using backward_tag = typename base_type::backward_tag;
+
         /**
          * @brief Constructor for Siddon's method traversal.
          *
@@ -59,22 +77,20 @@ namespace elsa
         SiddonsMethodCUDA(const SiddonsMethodCUDA<data_t>&) = default;
 
         /// apply Siddon's method (i.e. forward projection)
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void forward(const BoundingBox& aabb, const DataContainer<data_t>& x,
+                     DataContainer<data_t>& Ax) const;
 
         /// apply the adjoint of Siddon's method (i.e. backward projection)
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
+        void backward(const BoundingBox& aabb, const DataContainer<data_t>& y,
+                      DataContainer<data_t>& Aty) const;
 
         /// implement the polymorphic clone operation
-        SiddonsMethodCUDA<data_t>* cloneImpl() const override;
+        SiddonsMethodCUDA<data_t>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const override;
+        bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        /// the bounding box of the volume
-        BoundingBox _boundingBox;
-
         /// Reference to DetectorDescriptor stored in LinearOperator
         DetectorDescriptor& _detectorDescriptor;
 
@@ -93,7 +109,7 @@ namespace elsa
 
         /// sets up and starts the kernel traversal routine (for both apply/applyAdjoint)
         template <bool adjoint>
-        void traverseVolume(void* volumePtr, void* sinoPtr) const;
+        void traverseVolume(const BoundingBox& aabb, void* volumePtr, void* sinoPtr) const;
 
         enum class ContainerCpyKind { cpyContainerToRawGPU, cpyRawGPUToContainer };
         /**
@@ -120,5 +136,7 @@ namespace elsa
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;
         using LinearOperator<data_t>::_rangeDescriptor;
+
+        friend class XrayProjector<self_type>;
     };
 } // namespace elsa
