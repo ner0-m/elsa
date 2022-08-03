@@ -264,13 +264,13 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             message(STATUS "elsa test coverage is enabled")
 
             include(CodeCoverage)
-            append_coverage_compiler_flags()
-            set(COVERAGE_LCOV_EXCLUDES
-                '${CPM_SOURCE_CACHE}/*'
-                '*/tests/*'
-                '${PROJECT_BINARY_DIR}/_deps/*'
-                '/usr/*')
-            setup_target_for_coverage_lcov(NAME test_coverage EXECUTABLE ctest)
+            add_code_coverage_all_targets(EXCLUDE
+                elsa/test_routines/*
+                */tests/*
+                ${PROJECT_BINARY_DIR}/_deps/*
+                ${CPM_SOURCE_CACHE}/*
+                /usr/*)
+
 
         else(ELSA_COVERAGE)
             message(STATUS "elsa test coverage is disabled")

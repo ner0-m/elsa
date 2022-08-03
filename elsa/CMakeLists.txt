@@ -1,4 +1,4 @@
-include(CompilerWarnings) 
+include(CompilerWarnings)
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
 
 # setup macro for component registration, so you can use find_package(elsa COMPONENT name) also sets all target names
@@ -49,7 +49,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     # set -fPIC and -fvisibility=hidden
     set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON
                                                                 CXX_VISIBILITY_PRESET hidden)
-    
+
     target_include_directories(
         ${ELSA_MODULE_TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/${elsa_module_name}>
                                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -58,7 +58,7 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     SET_QUICKVEC_OPTIONS(${ELSA_MODULE_TARGET_NAME} "${MODULE_SOURCES}")
 
     if(ELSA_MASTER_PROJECT)
-        set_target_warnings(${ELSA_MODULE_TARGET_NAME} LEVEL ${ELSA_WARNINGS_LEVEL}) 
+        set_target_warnings(${ELSA_MODULE_TARGET_NAME} LEVEL ${ELSA_WARNINGS_LEVEL})
     endif()
 
     # build the tests (if enabled)
@@ -77,6 +77,11 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
         )
     else()
         install_elsa_module(${elsa_module_name} ${ELSA_MODULE_TARGET_NAME} ${ELSA_MODULE_EXPORT_TARGET})
+    endif()
+
+    if(ELSA_COVERAGE)
+        # target_code_coverage(${elsa_module_name})
+        target_code_coverage(${ELSA_MODULE_TARGET_NAME} AUTO ALL) # EXCLUDE */tests/*)
     endif()
 endmacro()
 
@@ -109,6 +114,10 @@ macro(ELSA_DOCTEST name)
         ${_testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}"
     )
     set_target_properties(${_testname} PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden)
+
+    if(ELSA_COVERAGE)
+        target_code_coverage(${_testname} AUTO ALL EXCLUDE */tests/*)
+    endif()
 
 
     SET_QUICKVEC_OPTIONS(${_testname} "${_testname}.cpp;test_docmain.cpp")
@@ -197,7 +206,7 @@ target_link_libraries(elsa_all INTERFACE ${ELSA_REGISTERED_TARGETS})
 target_include_directories(
     elsa_all INTERFACE $<INSTALL_INTERFACE:include/elsa/> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
- 
+
 write_module_config(all DEPENDENCIES ${ELSA_REGISTERED_TARGETS})
 
 # register the all "module"

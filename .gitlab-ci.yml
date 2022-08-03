@@ -498,11 +498,13 @@ test-coverage:
   dependencies: []
   coverage: '/^\s+lines.+:.\d+(\.\d+)?%.*\(.*\)$/'
   script:
+    - update-alternatives --install /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-12 10
+    - update-alternatives --install /usr/bin/llvm-profdata llvm-profdata /usr/bin/llvm-profdata-12 10
     - mkdir -p build
     - cd build
-    - CXX=g++ cmake .. -GNinja -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
-    - ninja tests
-    - ninja test_coverage
+    - CXX=clang++ cmake .. -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
+    - ninja build-tests
+    - ninja ccov-all
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
     paths:
