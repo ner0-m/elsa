@@ -185,7 +185,6 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
 endif(ELSA_BUILD_CUDA_PROJECTORS)
 add_subdirectory(generators)
 add_subdirectory(test_routines)
-add_subdirectory(test_allmodules)
 
 # library to build and add all registered components of the library
 add_library(elsa_all INTERFACE)

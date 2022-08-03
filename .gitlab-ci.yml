@@ -114,7 +114,6 @@ cache:
     - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" $CMAKE_EXTRA_ARGS
     - ninja
     - ninja build-tests
-    - ninja build-benchmarks
     - ninja build-examples
     - ninja install
 
