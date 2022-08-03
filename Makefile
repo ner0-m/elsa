@@ -86,16 +86,6 @@ else
   BUILD_OPTIONS+=-DELSA_BUILD_PYTHON_BINDINGS=OFF
 endif
 
-ENABLE_BENCHMARKS?=y
-ifeq ($(ENABLE_BENCHMARKS),y)
-  HYPERFINE?=$(shell which hyperfine || echo .hyperfine-not-found)
-  PERF?=$(shell which perf || echo .perf-not-found)
-  BUILD_OPTIONS+=-DELSA_BENCHMARKS=ON
-else
-  BUILD_OPTIONS+=-DELSA_BENCHMARKS=OFF
-endif
-
-
 # all targets defined by cmake, but each on of the line starts with xxx, so that we can split it later as newline gets lost
 CMAKE_TARGETS = $(shell cmake --build $(BUILD_ROOT) --target help | sed s/$$/xxx/)
 
@@ -195,13 +185,6 @@ select-test: configure ## select one of the available tests to build and run
 	$(eval MYTEST = $(shell echo -n $(CMAKE_TARGETS) ' ' | sed 's/xxx/\n/g' | grep test\_ | grep -v '/'  | $(FZF) | cut -d: -f1 | xargs))
 	CXXFLAGS=$(CXXFLAGS) $(CMAKE) --build $(BUILD_ROOT) --target $(MYTEST)
 	$(shell find $(BUILD_ROOT)/bin/tests -iname $(MYTEST)) && notify-send "elsa" "Running $(MYTEST) passed" || notify-send --urgency=critical "elsa" "Running $(MYTEST) failed"
-endif
-
-ifeq ($(ENABLE_BENCHMARKS),y)
-.PHONY: benchmark
-benchmark: configure ## run benchmarks using hyperfine
-	$(CMAKE) --build $(BUILD_ROOT) -- bench_driver
-	$(PERF) record --call-graph dwarf $(HYPERFINE) --show-output "$(BUILD_ROOT)/bin/bench_driver 1"
 endif
 
 $(BUILD_ROOT)/CMakeCache.txt:

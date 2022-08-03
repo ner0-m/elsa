@@ -66,7 +66,7 @@ You might need to install [fzf](https://github.com/junegunn/fzf), [chromaterm](h
 experience. ag and entr are necessary for the watch command. If you have fzf installed, you can also use partial test names and
 you can select one interactively.
 
-Other build options you can pass: `USE_CUDA`, `USE_DNNL`, `GENERATE_PYBINDS` and `ENABLE_BENCHMARKS`. You can pass either `y` or `n` to any of these.
+Other build options you can pass: `USE_CUDA`, `USE_DNNL`, and `GENERATE_PYBINDS`. You can pass either `y` or `n` to any of these.
 
 Compilation can also be done using plain CMake, without the Makefile. For create a build folder (e.g. `mkdir build; cd build`)
 and run the following commands:

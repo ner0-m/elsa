@@ -27,7 +27,7 @@ fi
 echo
 
 # run cmake-format
-format_call="find elsa benchmarks examples tools cmake -name '*.cmake' -o -name 'CMakeLists.txt' | xargs $cmake_format_tool -l error"
+format_call="find elsa examples tools cmake -name '*.cmake' -o -name 'CMakeLists.txt' | xargs $cmake_format_tool -l error"
 
 exit_code=0
 eval $format_call --check || exit_code=$?

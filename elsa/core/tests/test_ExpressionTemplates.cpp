@@ -6,8 +6,6 @@
  * @author Jens Petit
  */
 
-#define CATCH_CONFIG_ENABLE_BENCHMARKING
-
 #include "doctest/doctest.h"
 #include "DataContainer.h"
 #include "IdenticalBlocksDescriptor.h"
@@ -79,7 +77,10 @@ TEST_CASE_TEMPLATE("Expression templates", TestType, float, double)
         {
             result = square(dc * dc2 - dc);
 
-            THEN("the type is a DataContainer again") { INFO(type_name<decltype(result)>()); }
+            THEN("the type is a DataContainer again")
+            {
+                INFO(type_name<decltype(result)>());
+            }
         }
 
         WHEN("Mixing expression and DataContainers")
@@ -333,7 +334,10 @@ TEST_CASE_TEMPLATE("Expression templates: Testing on GPU", TestType, float, doub
         {
             result = square(dc * dc2 - dc);
 
-            THEN("the type is a DataContainer again") { INFO(type_name<decltype(result)>()); }
+            THEN("the type is a DataContainer again")
+            {
+                INFO(type_name<decltype(result)>());
+            }
         }
 
         WHEN("Mixing expression and DataContainers")

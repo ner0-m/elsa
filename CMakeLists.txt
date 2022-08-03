@@ -18,7 +18,6 @@ endif ()
 
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
-option(ELSA_BENCHMARKS "Enable elsa benchmark test cases" OFF)
 
 option(ELSA_INSTALL "Enable generating the install targets for make install" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
@@ -236,7 +235,7 @@ if(NOT ELSA_MASTER_PROJECT)
     set(ELSA_TESTING OFF)
 endif(NOT ELSA_MASTER_PROJECT)
 
-if(ELSA_TESTING OR ELSA_BENCHMARKS)
+if(ELSA_TESTING)
     enable_testing()
 
     if(SYSTEM_DOCTEST)
@@ -284,9 +283,9 @@ if(ELSA_TESTING OR ELSA_BENCHMARKS)
             message(STATUS "elsa test coverage is disabled")
         endif(ELSA_COVERAGE)
     endif(ELSA_TESTING)
-else(ELSA_TESTING OR ELSA_BENCHMARKS)
+else(ELSA_TESTING)
     message(STATUS "    elsa testing is disabled")
-endif(ELSA_TESTING OR ELSA_BENCHMARKS)
+endif(ELSA_TESTING)
 
 # ------------ add code/docs -----------
 # ------------
@@ -301,13 +300,6 @@ add_subdirectory(docs EXCLUDE_FROM_ALL)
 if(ELSA_BUILD_EXAMPLES)
     add_subdirectory(examples EXCLUDE_FROM_ALL)
 endif(ELSA_BUILD_EXAMPLES)
-
-# Add benchmarks after elsa code, such that CUDA is detected correctly and we just add it in the benchmarks
-if (ELSA_BENCHMARKS)
-    message(STATUS "elsa benchmarks are enabled")
-    add_subdirectory(benchmarks)
-endif(ELSA_BENCHMARKS)
-
 
 # ------------ setup installation ------
 # ------------
