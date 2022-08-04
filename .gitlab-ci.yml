@@ -496,7 +496,7 @@ test-coverage:
   stage: coverage
   image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   dependencies: []
-  coverage: '/^\s+lines.+:.\d+(\.\d+)?%.*\(.*\)$/'
+  coverage: /^\s*lines.*:\s*\d+.\d+\%/
   script:
     - update-alternatives --install /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-12 10
     - update-alternatives --install /usr/bin/llvm-profdata llvm-profdata /usr/bin/llvm-profdata-12 10
