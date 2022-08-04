@@ -514,7 +514,6 @@ test-coverage:
     - linux
     - elsa
     - gcc
-    - cuda
 
 
 ### deploy docs and coverage report ###
