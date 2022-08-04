@@ -46,7 +46,7 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
     GIVEN("a linear problem")
     {
         IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
+        numCoeff << 8, 14;
         VolumeDescriptor dd{numCoeff};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
@@ -75,7 +75,7 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(1000);
+                    auto solution = solver.solve(300);
 
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
@@ -101,7 +101,7 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
                 AND_THEN("it works as expected")
                 {
                     // with a good preconditioner we should need fewer iterations than without
-                    auto solution = solver.solve(500);
+                    auto solution = solver.solve(200);
 
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 

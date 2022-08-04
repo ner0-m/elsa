@@ -55,7 +55,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
     GIVEN("a 2D signal")
     {
         IndexVector_t size(2);
-        size << 127, 127;
+        size << 32, 32;
         VolumeDescriptor volDescr(size);
 
         Vector_t<TestType> randomData(volDescr.getNumberOfCoefficients());
@@ -91,7 +91,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
     GIVEN("a 2D signal")
     {
         IndexVector_t size(2);
-        size << 127, 127;
+        size << 32, 32;
         VolumeDescriptor volDescr(size);
 
         Vector_t<TestType> randomData(volDescr.getNumberOfCoefficients());

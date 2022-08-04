@@ -110,7 +110,7 @@ TEST_CASE_TEMPLATE("BlobProjector: Testing rays going through the center of the 
     // set center voxel to 1
     x(2, 2, 2) = 1;
 
-    for (int i = 0; i < 360; ++i) {
+    for (int i = 0; i < 360; i += 4) {
         GIVEN("Ray of angle " + std::to_string(i))
         {
             std::vector<Geometry> geom;
@@ -155,7 +155,7 @@ TEST_CASE_TEMPLATE("BlobProjector: Testing rays going through the center of the 
     auto volData = VolumeData2D{Size2D{sizeDomain}};
     auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
-    for (int i = 0; i < 360; ++i) {
+    for (int i = 0; i < 360; i += 4) {
         GIVEN("Ray of angle " + std::to_string(i))
         {
             std::vector<Geometry> geom;
@@ -202,7 +202,7 @@ TEST_CASE_TEMPLATE("BlobProjector: Testing 2 rays going through the center of th
     auto volData = VolumeData2D{Size2D{sizeDomain}};
     auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
-    for (int i = 0; i < 360; ++i) {
+    for (int i = 0; i < 360; i += 4) {
         GIVEN("Ray of angle " + std::to_string(i))
         {
             std::vector<Geometry> geom;
@@ -251,7 +251,7 @@ TEST_CASE_TEMPLATE("BlobProjector: Testing 3 rays going through the center of th
     auto volData = VolumeData2D{Size2D{sizeDomain}};
     auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
-    for (int i = 0; i < 360; ++i) {
+    for (int i = 0; i < 360; i += 5) {
         GIVEN("Ray of angle " + std::to_string(i))
         {
             std::vector<Geometry> geom;
