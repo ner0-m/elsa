@@ -541,7 +541,11 @@ deploy-docs:
   stage: docker-build
   rules:
     - changes:
-      - tools/docker/**/*
+      - tools/docker/DocFileClangBase
+        tools/docker/DocFileCudaBase
+        tools/docker/DocFileDocumentation
+        tools/docker/DocFileGccBase
+        tools/docker/DocFilePyBinds
   allow_failure: true
   retry: 2
   before_script:
