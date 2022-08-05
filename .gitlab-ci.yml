@@ -508,7 +508,7 @@ test-coverage:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-coverage"
     paths:
-      - build/test_coverage/
+      - build/ccov/
     expire_in: 60 mins
   tags:
     - linux
@@ -531,7 +531,7 @@ deploy-docs:
     - ninja docs
     - cp -r docs/sphinx/* /var/www/ciip/elsadocs/
     - cd ..
-    - cp -r build/test_coverage/* /var/www/ciip/elsacoverage/
+    - cp -r build/ccov/* /var/www/ciip/elsacoverage/
   tags:
     - elsa-docs-deploy
 
