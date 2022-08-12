@@ -104,8 +104,12 @@ Contributing
 ------------
 
 Do you want to contribute in some way? We appreciate and welcome contributions each and from
-everyone. To get involved, please see our [contributing
+everyone. Feel free to join our [Matrix chat room](https://matrix.to/#/#elsa:in.tum.de) and chat
+with us, about areas of interest! Further, see our [contributing
 page](https://gitlab.lrz.de/IP/elsa/-/blob/master/CONTRIBUTING.md).
+
+We also have a couple of defined projects, which you can have a look at
+[here](https://gitlab.lrz.de/IP/elsa/-/issues/?sort=created_date&state=opened&label_name%5B%5D=student%20project)
 
 Contributors
 ------------

@@ -3,6 +3,8 @@
 We are happy to accept contributions. This should help to get you started.
 
 First, feel free to contact the core developers with whatever inquiry or question you have.
+This is easiest if you join our [Matrix chat room](https://matrix.to/#/#elsa:in.tum.de) and start
+chatting!
 
 elsa offers many different areas to work in. Check the
 [milestones](https://gitlab.lrz.de/IP/elsa/-/milestones) and/or the [issue
