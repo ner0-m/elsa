@@ -223,8 +223,8 @@ include(InstallElsaModule)
 # ------------ Setup Tools -----------
 # ------------
 
-# Includes clang-format, clang-tidy, cmake-format, and sanitizers
-include(Tools)
+# Includes sanitizers
+include(Sanitizer)
 
 
 # ------------ setup testing -----------
