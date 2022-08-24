@@ -138,7 +138,7 @@ if(ELSA_MASTER_PROJECT)
         CPMAddPackage(
             NAME spdlog
             GITHUB_REPOSITORY gabime/spdlog
-            VERSION 1.8.5
+            VERSION 1.10.0
             OPTIONS "SPDLOG_INSTALL ON"
         )
         message(STATUS "Using bundled spdlog version in ${spdlog_SOURCE_DIR}")
@@ -252,37 +252,35 @@ if(ELSA_TESTING)
         set(CMAKE_MODULE_PATH "${doctest_SOURCE_DIR}/scripts/cmake" ${CMAKE_MODULE_PATH})
     endif()
 
-    if(ELSA_TESTING)
-        message(STATUS "elsa testing is enabled")
+    message(STATUS "elsa testing is enabled")
 
-        # Run ctest to run all unit tests
-        # All tests are includes ass dependencies to this target, such that they get build
-        # schedule randomly that we don't start depending on some test order
-        add_custom_target(tests
-            COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            USES_TERMINAL
-            COMMENT "Build and run all the tests.")
+    # Run ctest to run all unit tests
+    # All tests are includes ass dependencies to this target, such that they get build
+    # schedule randomly that we don't start depending on some test order
+    add_custom_target(tests
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --schedule-random
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        USES_TERMINAL
+        COMMENT "Build and run all the tests.")
 
-        # Target to only build all tests
-        add_custom_target(build-tests)
+    # Target to only build all tests
+    add_custom_target(build-tests)
 
-        if(ELSA_COVERAGE)
-            message(STATUS "elsa test coverage is enabled")
+    if(ELSA_COVERAGE)
+        message(STATUS "elsa test coverage is enabled")
 
-            include(CodeCoverage)
-            add_code_coverage_all_targets(EXCLUDE
-                elsa/test_routines/*
-                */tests/*
-                ${PROJECT_BINARY_DIR}/_deps/*
-                ${CPM_SOURCE_CACHE}/*
-                /usr/*)
+        include(CodeCoverage)
+        add_code_coverage_all_targets(EXCLUDE
+            elsa/test_routines/*
+            */tests/*
+            ${PROJECT_BINARY_DIR}/_deps/*
+            ${CPM_SOURCE_CACHE}/*
+            /usr/*)
 
 
-        else(ELSA_COVERAGE)
-            message(STATUS "elsa test coverage is disabled")
-        endif(ELSA_COVERAGE)
-    endif(ELSA_TESTING)
+    else(ELSA_COVERAGE)
+        message(STATUS "elsa test coverage is disabled")
+    endif(ELSA_COVERAGE)
 else(ELSA_TESTING)
     message(STATUS "    elsa testing is disabled")
 endif(ELSA_TESTING)
