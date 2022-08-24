@@ -3,7 +3,7 @@
 THIS_DIR = $(shell pwd)
 
 PHONY: help
-help: # with thanks to Ben Rady
+help: # with thanks to Ben Ready
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 CMAKE ?= $(shell which cmake || echo .cmake-not-found)
@@ -52,6 +52,25 @@ else
   endif
 endif
 
+USE_AUBSAN?=n
+ifeq ($(USE_AUBSAN),y)
+  BUILD_OPTIONS+=-DELSA_SANITIZER="Address;Undefined"
+endif
+
+USE_ASAN?=n
+ifeq ($(USE_ASAN),y)
+  BUILD_OPTIONS+=-DELSA_SANITIZER="Address"
+endif
+
+USE_UBSAN?=n
+ifeq ($(USE_UBSAN),y)
+  BUILD_OPTIONS+=-DELSA_SANITIZER="Undefined"
+endif
+
+USE_TSAN?=n
+ifeq ($(USE_TSAN),y)
+  BUILD_OPTIONS+=-DELSA_SANITIZER="Thread"
+endif
 
 USE_CUDA?=y
 ifeq ($(USE_CUDA),y)
@@ -63,20 +82,6 @@ ifeq ($(USE_CUDA),y)
   endif
 else
   BUILD_OPTIONS+=-DELSA_BUILD_CUDA_PROJECTORS=OFF
-endif
-
-USE_DNNL?=y
-ifeq ($(USE_DNNL),y)
-  BUILD_OPTIONS+=-DELSA_BUILD_ML_DNNL=ON
-else
-  BUILD_OPTIONS+=-DELSA_BUILD_ML_DNNL=OFF
-endif
-
-USE_CUDNN?=n
-ifeq ($(USE_CUDNN),y)
-  BUILD_OPTIONS+=-DELSA_BUILD_ML_CUDNN=ON
-else
-  BUILD_OPTIONS+=-DELSA_BUILD_ML_CUDNN=OFF
 endif
 
 GENERATE_PYBINDS?=n
@@ -124,7 +129,7 @@ ifeq ($(selected_test),y)
   ifeq ($(FZF),)
     # If no argument is passed, we can't handle it without fzf
     ifeq ($(SELECTED_TEST_TARGET),)
-      $(error Please specify a test target (or install fzf to interactivly select one))
+      $(error Please specify a test target (or install fzf to interactively select one))
     endif
 
     # Check if grep can find it
@@ -135,7 +140,7 @@ ifeq ($(selected_test),y)
       $(error Can not find unique a unique test target with argument $(SELECTED_TEST_TARGET))
     endif
   else
-    # use fzf to (if necessary interactivly) find a target
+    # use fzf to (if necessary interactively) find a target
     ifneq ($(SELECTED_TEST_TARGET),)
       RUN_TEST_TARGET := $(shell echo -n $(FILTERED_TEST_TARGETS) | tr ' ' '\n' | $(FZF) -q $(SELECTED_TEST_TARGET) -1 -0)
     else

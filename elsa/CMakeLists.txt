@@ -55,6 +55,8 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
                                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     )
 
+    add_sanitizers(${ELSA_MODULE_TARGET_NAME})
+
     SET_QUICKVEC_OPTIONS(${ELSA_MODULE_TARGET_NAME} "${MODULE_SOURCES}")
 
     if(ELSA_MASTER_PROJECT)
@@ -114,6 +116,7 @@ macro(ELSA_DOCTEST name)
         ${_testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests/${ELSA_MODULE_TARGET_NAME}"
     )
     set_target_properties(${_testname} PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden)
+    add_sanitizers(${_testname})
 
     if(ELSA_COVERAGE)
         target_code_coverage(${_testname} AUTO ALL EXCLUDE */tests/*)
