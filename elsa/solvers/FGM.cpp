@@ -6,14 +6,15 @@ namespace elsa
 {
     template <typename data_t>
     FGM<data_t>::FGM(const Problem<data_t>& problem, data_t epsilon)
-        : Solver<data_t>(problem), _epsilon{epsilon}
+        : Solver<data_t>(), _problem(problem.clone()), _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
     FGM<data_t>::FGM(const Problem<data_t>& problem,
                      const LinearOperator<data_t>& preconditionerInverse, data_t epsilon)
-        : Solver<data_t>(problem),
+        : Solver<data_t>(),
+          _problem(problem.clone()),
           _epsilon{epsilon},
           _preconditionerInverse{preconditionerInverse.clone()}
     {
@@ -33,7 +34,7 @@ namespace elsa
             iterations = _defaultIterations;
 
         auto prevTheta = static_cast<data_t>(1.0);
-        auto x0 = DataContainer<data_t>(getCurrentSolution());
+        auto x0 = _problem->getCurrentSolution();
         auto& prevY = x0;
 
         auto deltaZero = _problem->getGradient().squaredL2Norm();
@@ -42,7 +43,7 @@ namespace elsa
 
         for (index_t i = 0; i < iterations; ++i) {
             Logger::get("FGM")->info("iteration {} of {}", i + 1, iterations);
-            auto& x = getCurrentSolution();
+            auto& x = _problem->getCurrentSolution();
 
             auto gradient = _problem->getGradient();
 
@@ -68,7 +69,7 @@ namespace elsa
 
         Logger::get("FGM")->warn("Failed to reach convergence at {} iterations", iterations);
 
-        return getCurrentSolution();
+        return _problem->getCurrentSolution();
     }
 
     template <typename data_t>
@@ -83,9 +84,6 @@ namespace elsa
     template <typename data_t>
     bool FGM<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        if (!Solver<data_t>::isEqual(other))
-            return false;
-
         auto otherFGM = downcast_safe<FGM>(&other);
         if (!otherFGM)
             return false;

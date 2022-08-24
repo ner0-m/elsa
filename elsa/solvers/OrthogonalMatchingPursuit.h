@@ -2,8 +2,6 @@
 
 #include "Solver.h"
 #include "RepresentationProblem.h"
-#include "WLSProblem.h"
-#include "CG.h"
 
 namespace elsa
 {
@@ -38,8 +36,7 @@ namespace elsa
          * @param[in] problem the representation problem that is supposed to be solved
          * @param[in] epsilon affects the stopping condition
          */
-        OrthogonalMatchingPursuit(const RepresentationProblem<data_t>& problem,
-                                  data_t epsilon = std::numeric_limits<data_t>::epsilon());
+        OrthogonalMatchingPursuit(const RepresentationProblem<data_t>& problem, data_t epsilon);
 
         /// make copy constructor deletion explicit
         OrthogonalMatchingPursuit(const OrthogonalMatchingPursuit<data_t>&) = delete;
@@ -47,15 +44,12 @@ namespace elsa
         /// default destructor
         ~OrthogonalMatchingPursuit() override = default;
 
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
-
     private:
+        /// The representation optimization problem
+        RepresentationProblem<data_t> _problem;
+
         /// variable affecting the stopping condition
         data_t _epsilon;
-
-        /// lift the base class variable _problem
-        using Solver<data_t>::_problem;
 
         /// helper method to find the index of the atom that is most correlated with the residual
         index_t mostCorrelatedAtom(const Dictionary<data_t>& dict,

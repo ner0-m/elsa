@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Solver.h"
 #include "ProximityOperator.h"
 #include "SplittingProblem.h"
@@ -42,7 +44,9 @@ namespace elsa
         /// Scalar alias
         using Scalar = typename Solver<data_t>::Scalar;
 
-        ADMM(const SplittingProblem<data_t>& splittingProblem) : Solver<data_t>(splittingProblem)
+        ADMM(const SplittingProblem<data_t>& splittingProblem)
+            : Solver<data_t>(),
+              _problem(static_cast<SplittingProblem<data_t>*>(splittingProblem.clone().release()))
         {
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
                           "ADMM: XSolver must extend Solver");
@@ -52,7 +56,9 @@ namespace elsa
         }
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations)
-            : Solver<data_t>(splittingProblem), _defaultXSolverIterations{defaultXSolverIterations}
+            : Solver<data_t>(),
+              _problem(static_cast<SplittingProblem<data_t>*>(splittingProblem.clone().release())),
+              _defaultXSolverIterations{defaultXSolverIterations}
         {
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
                           "ADMM: XSolver must extend Solver");
@@ -63,7 +69,8 @@ namespace elsa
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations,
              data_t epsilonAbs, data_t epsilonRel)
-            : Solver<data_t>(splittingProblem),
+            : Solver<data_t>(),
+              _problem(splittingProblem),
               _defaultXSolverIterations{defaultXSolverIterations},
               _epsilonAbs{epsilonAbs},
               _epsilonRel{epsilonRel}
@@ -83,10 +90,8 @@ namespace elsa
             if (iterations == 0)
                 iterations = _defaultIterations;
 
-            auto& splittingProblem = downcast<SplittingProblem<data_t>>(*_problem);
-
-            const auto& f = splittingProblem.getF();
-            const auto& g = splittingProblem.getG();
+            const auto& f = _problem->getF();
+            const auto& g = _problem->getG();
 
             const auto& dataTerm = f;
 
@@ -112,7 +117,7 @@ namespace elsa
                                             "of type L0PseudoNorm or L1Norm");
             }
 
-            const auto& constraint = splittingProblem.getConstraint();
+            const auto& constraint = _problem->getConstraint();
             const auto& A = constraint.getOperatorA();
             const auto& B = constraint.getOperatorB();
             const auto& c = constraint.getDataVectorC();
@@ -181,8 +186,8 @@ namespace elsa
                     Logger::get("ADMM")->info("SUCCESS: Reached convergence at {}/{} iterations ",
                                               iter, iterations);
 
-                    getCurrentSolution() = x;
-                    return getCurrentSolution();
+                    _problem->getCurrentSolution() = x;
+                    return _problem->getCurrentSolution();
                 }
 
                 /// varying penalty parameter
@@ -202,12 +207,9 @@ namespace elsa
 
             Logger::get("ADMM")->warn("Failed to reach convergence at {} iterations", iterations);
 
-            getCurrentSolution() = x;
-            return getCurrentSolution();
+            _problem->getCurrentSolution() = x;
+            return _problem->getCurrentSolution();
         }
-
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
 
     protected:
         /// implement the polymorphic clone operation
@@ -217,9 +219,23 @@ namespace elsa
                 downcast<SplittingProblem<data_t>>(*_problem));
         }
 
+        bool isEqual(const Solver<data_t>& other) const
+        {
+            auto otherADMM = downcast_safe<ADMM>(&other);
+            if (!otherADMM)
+                return false;
+
+            if (_problem != otherADMM->_problem)
+                return false;
+
+            return _rho == otherADMM->_rho && _mu == otherADMM->_mu
+                   && _tauIncr == otherADMM->_tauIncr && _tauDecr == otherADMM->_tauDecr;
+        }
+
     private:
-        /// lift the base class variable _problem
-        using Solver<data_t>::_problem;
+        /// Splitting problem to solve
+        /// TODO: Remove requirement of unique_ptr
+        std::unique_ptr<SplittingProblem<data_t>> _problem;
 
         /// the default number of iterations for ADMM
         index_t _defaultIterations{100};

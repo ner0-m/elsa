@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Solver.h"
+#include "Problem.h"
 
 namespace elsa
 {
@@ -50,18 +51,15 @@ namespace elsa
         /// default destructor
         ~GradientDescent() override = default;
 
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
-
     private:
+        /// the differentiable optimizaion problem
+        std::unique_ptr<Problem<data_t>> _problem;
+
         /// the step size
         data_t _stepSize;
 
         /// the default number of iterations
         const index_t _defaultIterations{100};
-
-        /// lift the base class variable _problem
-        using Solver<data_t>::_problem;
 
         /**
          * @brief Solve the optimization problem, i.e. apply iterations number of iterations of

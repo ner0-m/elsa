@@ -9,7 +9,10 @@ namespace elsa
 {
     template <typename data_t>
     SQS<data_t>::SQS(const Problem<data_t>& problem, bool momentumAcceleration, data_t epsilon)
-        : Solver<data_t>(problem), _epsilon{epsilon}, _momentumAcceleration{momentumAcceleration}
+        : Solver<data_t>(),
+          _problem(problem.clone()),
+          _epsilon{epsilon},
+          _momentumAcceleration{momentumAcceleration}
     {
         if (is<SubsetProblem<data_t>>(problem)) {
             Logger::get("SQS")->info(
@@ -23,7 +26,8 @@ namespace elsa
     template <typename data_t>
     SQS<data_t>::SQS(const Problem<data_t>& problem, const LinearOperator<data_t>& preconditioner,
                      bool momentumAcceleration, data_t epsilon)
-        : Solver<data_t>(problem),
+        : Solver<data_t>(),
+          _problem(problem.clone()),
           _epsilon{epsilon},
           _preconditioner{preconditioner.clone()},
           _momentumAcceleration{momentumAcceleration}
@@ -55,7 +59,9 @@ namespace elsa
 
         auto hessian = _problem->getHessian();
 
-        auto ones = DataContainer<data_t>(getCurrentSolution().getDataDescriptor());
+        auto& solutionDesc = _problem->getCurrentSolution().getDataDescriptor();
+
+        auto ones = DataContainer<data_t>(solutionDesc);
         ones = 1;
         auto diagVector = hessian.apply(ones);
         diagVector = static_cast<data_t>(1.0) / diagVector;
@@ -64,10 +70,10 @@ namespace elsa
         data_t prevT = 1;
         data_t t = 1;
         data_t nextT = 0;
-        auto& z = getCurrentSolution();
-        DataContainer<data_t> x = DataContainer<data_t>(getCurrentSolution());
+        auto& z = _problem->getCurrentSolution();
+        DataContainer<data_t> x = _problem->getCurrentSolution();
         DataContainer<data_t> prevX = x;
-        DataContainer<data_t> gradient(getCurrentSolution().getDataDescriptor());
+        DataContainer<data_t> gradient(solutionDesc);
 
         index_t nSubsets = 1;
         if (_subsetMode) {
@@ -111,7 +117,7 @@ namespace elsa
                         if (_momentumAcceleration) {
                             z = x;
                         }
-                        return getCurrentSolution();
+                        return _problem->getCurrentSolution();
                     }
                 }
 
@@ -129,7 +135,7 @@ namespace elsa
         if (_momentumAcceleration) {
             z = x;
         }
-        return getCurrentSolution();
+        return _problem->getCurrentSolution();
     }
 
     template <typename data_t>
@@ -144,9 +150,6 @@ namespace elsa
     template <typename data_t>
     bool SQS<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        if (!Solver<data_t>::isEqual(other))
-            return false;
-
         auto otherSQS = downcast_safe<SQS>(&other);
         if (!otherSQS)
             return false;

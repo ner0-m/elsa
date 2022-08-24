@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Solver.h"
-#include "LinearResidual.h"
 #include "StrongTypes.h"
 #include "LASSOProblem.h"
 
@@ -34,6 +33,17 @@ namespace elsa
     public:
         /// Scalar alias
         using Scalar = typename Solver<data_t>::Scalar;
+
+        /**
+         * @brief Constructor for ISTA, accepting a LASSO problem, a fixed step size and optionally,
+         * a value for epsilon
+         *
+         * @param[in] problem the LASSO problem that is supposed to be solved
+         * @param[in] mu the fixed step size to be used while solving
+         * @param[in] epsilon affects the stopping condition
+         */
+        ISTA(const LASSOProblem<data_t>& problem, geometry::Threshold<data_t> mu,
+             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /**
          * @brief Constructor for ISTA, accepting a problem, a fixed step size and optionally, a
@@ -71,13 +81,7 @@ namespace elsa
         /// default destructor
         ~ISTA() override = default;
 
-        /// lift the base class method getCurrentSolution
-        using Solver<data_t>::getCurrentSolution;
-
     protected:
-        /// lift the base class variable _problem
-        using Solver<data_t>::_problem;
-
         /**
          * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * ISTA
@@ -99,6 +103,9 @@ namespace elsa
         /// private constructor called by a public constructor without the step size so that
         /// getLipschitzConstant is called by a LASSOProblem and not by a non-converted Problem
         ISTA(const LASSOProblem<data_t>& lassoProb, data_t epsilon);
+
+        /// The LASSO optimization problem
+        LASSOProblem<data_t> _problem;
 
         /// the default number of iterations
         const index_t _defaultIterations{100};

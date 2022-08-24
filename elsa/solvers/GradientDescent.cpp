@@ -6,7 +6,7 @@ namespace elsa
 {
     template <typename data_t>
     GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem, data_t stepSize)
-        : Solver<data_t>(problem), _stepSize{stepSize}
+        : Solver<data_t>(), _problem(problem.clone()), _stepSize{stepSize}
     {
         // sanity check
         if (_stepSize <= 0)
@@ -15,7 +15,7 @@ namespace elsa
 
     template <typename data_t>
     GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem)
-        : Solver<data_t>(problem)
+        : Solver<data_t>(), _problem(problem.clone())
     {
         this->_stepSize =
             static_cast<data_t>(1.0) / static_cast<data_t>(problem.getLipschitzConstant());
@@ -29,14 +29,14 @@ namespace elsa
 
         for (index_t i = 0; i < iterations; ++i) {
             Logger::get("GradientDescent")->info("iteration {} of {}", i + 1, iterations);
-            auto& x = getCurrentSolution();
+            auto& x = _problem->getCurrentSolution();
 
             auto gradient = _problem->getGradient();
             gradient *= _stepSize;
             x -= gradient;
         }
 
-        return getCurrentSolution();
+        return _problem->getCurrentSolution();
     }
 
     template <typename data_t>
@@ -48,9 +48,6 @@ namespace elsa
     template <typename data_t>
     bool GradientDescent<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        if (!Solver<data_t>::isEqual(other))
-            return false;
-
         auto otherGD = downcast_safe<GradientDescent<data_t>>(&other);
         if (!otherGD)
             return false;

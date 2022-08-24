@@ -1,8 +1,8 @@
 #pragma once
 
 #include "elsaDefines.h"
+#include "DataContainer.h"
 #include "Cloneable.h"
-#include "Problem.h"
 
 namespace elsa
 {
@@ -24,21 +24,10 @@ namespace elsa
         /// Scalar alias
         using Scalar = data_t;
 
-        /**
-         * @brief Constructor for the solver, accepting an optimization problem
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         */
-        explicit Solver(const Problem<data_t>& problem);
+        Solver() = default;
 
         /// default destructor
         ~Solver() override = default;
-
-        /// return the current estimated solution (const version)
-        const DataContainer<data_t>& getCurrentSolution() const;
-
-        /// return the current estimated solution
-        DataContainer<data_t>& getCurrentSolution();
 
         /**
          * @brief Solve the optimization problem (most likely iteratively)
@@ -53,13 +42,10 @@ namespace elsa
         DataContainer<data_t>& solve(index_t iterations = 0);
 
     protected:
-        /// the optimization problem
-        std::unique_ptr<Problem<data_t>> _problem;
-
         /// the solve method to be overridden in derived classes
         virtual DataContainer<data_t>& solveImpl(index_t iterations) = 0;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const Solver<data_t>& other) const override;
+        // bool isEqual(const Solver<data_t>& other) const override;
     };
 } // namespace elsa

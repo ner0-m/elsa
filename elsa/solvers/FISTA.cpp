@@ -7,9 +7,16 @@
 namespace elsa
 {
     template <typename data_t>
+    FISTA<data_t>::FISTA(const LASSOProblem<data_t>& problem, geometry::Threshold<data_t> mu,
+                         data_t epsilon)
+        : Solver<data_t>(), _problem(problem), _mu{mu}, _epsilon{epsilon}
+    {
+    }
+
+    template <typename data_t>
     FISTA<data_t>::FISTA(const Problem<data_t>& problem, geometry::Threshold<data_t> mu,
                          data_t epsilon)
-        : Solver<data_t>(LASSOProblem(problem)), _mu{mu}, _epsilon{epsilon}
+        : FISTA(LASSOProblem(problem), mu, epsilon)
     {
     }
 
@@ -21,7 +28,8 @@ namespace elsa
 
     template <typename data_t>
     FISTA<data_t>::FISTA(const LASSOProblem<data_t>& problem, data_t epsilon)
-        : Solver<data_t>(LASSOProblem(problem)),
+        : Solver<data_t>(),
+          _problem(LASSOProblem(problem)),
           _mu{1 / problem.getLipschitzConstant()},
           _epsilon{epsilon}
     {
@@ -36,20 +44,20 @@ namespace elsa
         spdlog::stopwatch aggregate_time;
         Logger::get("FISTA")->info("Start preparations...");
 
-        SoftThresholding<data_t> shrinkageOp{getCurrentSolution().getDataDescriptor()};
+        SoftThresholding<data_t> shrinkageOp{_problem.getCurrentSolution().getDataDescriptor()};
 
-        data_t lambda = _problem->getRegularizationTerms()[0].getWeight();
+        data_t lambda = _problem.getRegularizationTerms()[0].getWeight();
 
         // Safe as long as only LinearResidual exits
         const auto& linResid =
-            downcast<LinearResidual<data_t>>((_problem->getDataTerm()).getResidual());
+            downcast<LinearResidual<data_t>>((_problem.getDataTerm()).getResidual());
         const LinearOperator<data_t>& A = linResid.getOperator();
         const DataContainer<data_t>& b = linResid.getDataVector();
 
-        DataContainer<data_t>& x = getCurrentSolution();
-        DataContainer<data_t> xPrev = getCurrentSolution();
-        DataContainer<data_t> y = getCurrentSolution();
-        DataContainer<data_t> yPrev = getCurrentSolution();
+        DataContainer<data_t>& x = _problem.getCurrentSolution();
+        DataContainer<data_t> xPrev = _problem.getCurrentSolution();
+        DataContainer<data_t> y = _problem.getCurrentSolution();
+        DataContainer<data_t> yPrev = _problem.getCurrentSolution();
         data_t t;
         data_t tPrev = 1;
 
@@ -87,21 +95,18 @@ namespace elsa
 
         Logger::get("FISTA")->warn("Failed to reach convergence at {} iterations", iterations);
 
-        return getCurrentSolution();
+        return _problem.getCurrentSolution();
     }
 
     template <typename data_t>
     auto FISTA<data_t>::cloneImpl() const -> FISTA<data_t>*
     {
-        return new FISTA(*_problem, geometry::Threshold<data_t>{_mu}, _epsilon);
+        return new FISTA(_problem, geometry::Threshold<data_t>{_mu}, _epsilon);
     }
 
     template <typename data_t>
     auto FISTA<data_t>::isEqual(const Solver<data_t>& other) const -> bool
     {
-        if (!Solver<data_t>::isEqual(other))
-            return false;
-
         auto otherFISTA = downcast_safe<FISTA>(&other);
         if (!otherFISTA)
             return false;

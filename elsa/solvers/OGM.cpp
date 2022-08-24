@@ -6,14 +6,15 @@ namespace elsa
 {
     template <typename data_t>
     OGM<data_t>::OGM(const Problem<data_t>& problem, data_t epsilon)
-        : Solver<data_t>(problem), _epsilon{epsilon}
+        : Solver<data_t>(), _problem(problem.clone()), _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
     OGM<data_t>::OGM(const Problem<data_t>& problem,
                      const LinearOperator<data_t>& preconditionerInverse, data_t epsilon)
-        : Solver<data_t>(problem),
+        : Solver<data_t>(),
+          _problem(problem.clone()),
           _epsilon{epsilon},
           _preconditionerInverse{preconditionerInverse.clone()}
     {
@@ -33,7 +34,7 @@ namespace elsa
             iterations = _defaultIterations;
 
         auto prevTheta = static_cast<data_t>(1.0);
-        auto x0 = DataContainer<data_t>(getCurrentSolution());
+        auto x0 = _problem->getCurrentSolution();
         auto& prevY = x0;
 
         // OGM is very picky when it comes to the accuracy of the used lipschitz constant therefore
@@ -48,7 +49,7 @@ namespace elsa
                                  "thetaRatio0", "thetaRatio1", "y", "gradient");
 
         for (index_t i = 0; i < iterations; ++i) {
-            auto& x = getCurrentSolution();
+            auto& x = _problem->getCurrentSolution();
 
             auto gradient = _problem->getGradient();
 
@@ -90,7 +91,7 @@ namespace elsa
 
         Logger::get("OGM")->warn("Failed to reach convergence at {} iterations", iterations);
 
-        return getCurrentSolution();
+        return _problem->getCurrentSolution();
     }
 
     template <typename data_t>
@@ -105,9 +106,6 @@ namespace elsa
     template <typename data_t>
     bool OGM<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        if (!Solver<data_t>::isEqual(other))
-            return false;
-
         auto otherOGM = downcast_safe<OGM>(&other);
         if (!otherOGM)
             return false;

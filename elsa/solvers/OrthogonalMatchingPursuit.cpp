@@ -1,37 +1,36 @@
 #include "OrthogonalMatchingPursuit.h"
 #include "TypeCasts.hpp"
+#include "WLSProblem.h"
+#include "CG.h"
 
 namespace elsa
 {
     template <typename data_t>
     OrthogonalMatchingPursuit<data_t>::OrthogonalMatchingPursuit(
         const RepresentationProblem<data_t>& problem, data_t epsilon)
-        : Solver<data_t>(problem), _epsilon{epsilon}
+        : Solver<data_t>(), _problem(problem), _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
     DataContainer<data_t>& OrthogonalMatchingPursuit<data_t>::solveImpl(index_t iterations)
     {
-        // Safe, as it's the only possible input
-        const auto& reprProblem = downcast<RepresentationProblem<data_t>>(*_problem);
-
-        const auto& dict = reprProblem.getDictionary();
-        const auto& residual = _problem->getDataTerm().getResidual();
-        auto& currentRepresentation = _problem->getCurrentSolution();
+        const auto& dict = _problem.getDictionary();
+        const auto& residual = _problem.getDataTerm().getResidual();
+        auto& currentRepresentation = _problem.getCurrentSolution();
 
         IndexVector_t support(0); // the atoms used for the representation
         currentRepresentation = 0;
 
         index_t i = 0;
-        while (i < iterations && _problem->evaluate() > _epsilon) {
+        while (i < iterations && _problem.evaluate() > _epsilon) {
             index_t k = mostCorrelatedAtom(dict, residual.evaluate(currentRepresentation));
 
             support.conservativeResize(support.size() + 1);
             support[support.size() - 1] = k;
             Dictionary<data_t> purgedDict = dict.getSupportedDictionary(support);
 
-            WLSProblem<data_t> wls(purgedDict, reprProblem.getSignal());
+            WLSProblem<data_t> wls(purgedDict, _problem.getSignal());
 
             CG cgSolver(wls);
             const auto& wlsSolution = cgSolver.solve(10);
@@ -47,7 +46,7 @@ namespace elsa
             ++i;
         }
 
-        return getCurrentSolution();
+        return _problem.getCurrentSolution();
     }
 
     template <typename data_t>
@@ -73,16 +72,12 @@ namespace elsa
     template <typename data_t>
     OrthogonalMatchingPursuit<data_t>* OrthogonalMatchingPursuit<data_t>::cloneImpl() const
     {
-        return new OrthogonalMatchingPursuit(downcast<RepresentationProblem<data_t>>(*_problem),
-                                             _epsilon);
+        return new OrthogonalMatchingPursuit(_problem, _epsilon);
     }
 
     template <typename data_t>
     bool OrthogonalMatchingPursuit<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        if (!Solver<data_t>::isEqual(other))
-            return false;
-
         auto otherOMP = downcast_safe<OrthogonalMatchingPursuit>(&other);
         if (!otherOMP)
             return false;
