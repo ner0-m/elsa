@@ -40,11 +40,17 @@ namespace elsa
          */
         explicit Dictionary(const DataContainer<data_t>& dictionary);
 
+        /// default copy constructor
+        Dictionary(const Dictionary<data_t>& other) = default;
+
+        /// default copy assignment
+        Dictionary& operator=(const Dictionary<data_t>& other) = default;
+
         /// default move constructor
-        Dictionary(Dictionary<data_t>&& other) = default;
+        Dictionary(Dictionary<data_t>&& other) noexcept = default;
 
         /// default move assignment
-        Dictionary& operator=(Dictionary<data_t>&& other) = default;
+        Dictionary& operator=(Dictionary<data_t>&& other) noexcept = default;
 
         /// default destructor
         ~Dictionary() override = default;
@@ -85,9 +91,6 @@ namespace elsa
         Dictionary<data_t> getSupportedDictionary(IndexVector_t support) const;
 
     protected:
-        /// Copy constructor for internal usage
-        Dictionary(const Dictionary<data_t>&) = default;
-
         /// apply the dictionary operation
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
