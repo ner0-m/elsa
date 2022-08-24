@@ -1,4 +1,6 @@
 #include "RepresentationProblem.h"
+#include "LinearResidual.h"
+#include "L2NormPow2.h"
 
 namespace elsa
 {
@@ -6,16 +8,14 @@ namespace elsa
     template <typename data_t>
     RepresentationProblem<data_t>::RepresentationProblem(const Dictionary<data_t>& D,
                                                          const DataContainer<data_t>& y)
-        : Problem<data_t>{L2NormPow2<data_t>{LinearResidual<data_t>{D, y}}}, _signal(y)
+        : Problem<data_t>{L2NormPow2<data_t>{LinearResidual<data_t>{D, y}}}, _dict(D), _signal(y)
     {
-        _dict = std::unique_ptr<Dictionary<data_t>>{
-            static_cast<Dictionary<data_t>*>(D.clone().release())};
     }
 
     template <typename data_t>
     const Dictionary<data_t>& RepresentationProblem<data_t>::getDictionary() const
     {
-        return *_dict;
+        return _dict;
     }
 
     template <typename data_t>
@@ -34,7 +34,7 @@ namespace elsa
     template <typename data_t>
     RepresentationProblem<data_t>* RepresentationProblem<data_t>::cloneImpl() const
     {
-        return new RepresentationProblem(*_dict, _signal);
+        return new RepresentationProblem(_dict, _signal);
     }
 
     // ------------------------------------------

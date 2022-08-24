@@ -2,9 +2,6 @@
 
 #include "Dictionary.h"
 #include "Problem.h"
-#include "LinearResidual.h"
-#include "L2NormPow2.h"
-#include <memory>
 
 namespace elsa
 {
@@ -19,7 +16,7 @@ namespace elsa
      * \f$ \min_x \| x \|_0 \f$, s.t. \f$ \| y - Dx \|_2^2 < \epsilon \f$, where \f$ D \f$ is a
      * dictionary operator, \f$ y \f$ is the signal that should be represented, \f$ x \f$ is the
      * sparse representation vector and \f$ \epsilon \f$ is some error bound.
-     * The sparsity condition \f$ \min_x \|\| x \|\|_0 \f$ is not inforced by the class but handled
+     * The sparsity condition \f$ \min_x \|\| x \|\|_0 \f$ is not enforced by the class but handled
      * implicitly, either by using a greedy algorithm that starts with the 0-vector as a
      * representation or by creating another problem that explicitly takes sparsity into account and
      * relaxes the L0-Norm to the L1-Norm.
@@ -52,7 +49,8 @@ namespace elsa
         void getGradientImpl(DataContainer<data_t>& result) override;
 
     private:
-        std::unique_ptr<const Dictionary<data_t>> _dict;
+        Dictionary<data_t> _dict;
+
         DataContainer<data_t> _signal;
     };
 } // namespace elsa
