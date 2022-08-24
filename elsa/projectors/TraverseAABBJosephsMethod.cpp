@@ -34,16 +34,16 @@ namespace elsa
             prevBorder--;
         }
         if (rt.direction()[mainDir] < 0) {
-            _aabb._min[mainDir] = prevBorder + 1;
+            _aabb.min()[mainDir] = prevBorder + 1;
         } else {
-            _aabb._max[mainDir] = prevBorder;
+            _aabb.max()[mainDir] = prevBorder;
         }
     }
 
     void TraverseAABBJosephsMethod::updateTraverse()
     {
         _fractionals += _nextStep;
-        for (int i = 0; i < _aabb._dim; i++) {
+        for (int i = 0; i < _aabb.dim(); i++) {
             //*0.5 because a change of 1 spacing corresponds to a change of
             // fractionals from -0.5 to 0.5  0.5 or -0.5 = voxel border is still
             // ok
@@ -69,8 +69,8 @@ namespace elsa
                 if (!_isInAABB) {
                     // revert to exit position and adjust values
                     real_t prevBorder = _nextStep(_ignoreDirection) < 0
-                                            ? _aabb._min[_ignoreDirection]
-                                            : _aabb._max[_ignoreDirection];
+                                            ? _aabb.min()[_ignoreDirection]
+                                            : _aabb.max()[_ignoreDirection];
                     _nextStep.normalize();
                     _intersectionLength =
                         (_exitPoint[_ignoreDirection] - prevBorder) / (_nextStep[_ignoreDirection]);
@@ -93,12 +93,18 @@ namespace elsa
         }
     }
 
-    const RealVector_t& TraverseAABBJosephsMethod::getFractionals() const { return _fractionals; }
-    int TraverseAABBJosephsMethod::getIgnoreDirection() const { return _ignoreDirection; }
+    const RealVector_t& TraverseAABBJosephsMethod::getFractionals() const
+    {
+        return _fractionals;
+    }
+    int TraverseAABBJosephsMethod::getIgnoreDirection() const
+    {
+        return _ignoreDirection;
+    }
 
     void TraverseAABBJosephsMethod::initFractionals(const RealVector_t& currentPosition)
     {
-        for (int i = 0; i < _aabb._dim; i++)
+        for (int i = 0; i < _aabb.dim(); i++)
             _fractionals(i) =
                 static_cast<real_t>(std::abs(currentPosition(i)) - _currentPos(i) - 0.5);
     }
@@ -111,7 +117,7 @@ namespace elsa
 
         // initialize _nextStep as the step for interior pixels
         _nextStep(_ignoreDirection) = _stepDirection(_ignoreDirection);
-        for (int i = 0; i < _aabb._dim; ++i) {
+        for (int i = 0; i < _aabb.dim(); ++i) {
             if (i != _ignoreDirection) {
                 // tDelta(i) is given in relation to tDelta(_ignoreDirection)
                 _nextStep(i) = _nextStep(_ignoreDirection) * rd(i) / rd(_ignoreDirection);
@@ -153,7 +159,7 @@ namespace elsa
 
     inline bool TraverseAABBJosephsMethod::isCurrentPositionInAABB(index_t index) const
     {
-        return _currentPos(index) < _aabb._max(index) && _currentPos(index) >= _aabb._min(index);
+        return _currentPos(index) < _aabb.max()(index) && _currentPos(index) >= _aabb.min()(index);
     }
 
     void TraverseAABBJosephsMethod::selectClosestVoxel(const RealVector_t& currentPosition)
@@ -161,15 +167,15 @@ namespace elsa
         RealVector_t lowerCorner = currentPosition.array().floor();
         lowerCorner =
             (((lowerCorner.array() == currentPosition.array()) && (_stepDirection.array() < 0.0))
-             || currentPosition.array() == _aabb._max.array())
+             || currentPosition.array() == _aabb.max().array())
                 .select(lowerCorner.array() - 1, lowerCorner);
 
         // --> If ray is parallel and we are close, choose the next previous/next voxel
         _currentPos = lowerCorner;
 
         // check if we are still inside the aabb
-        if ((_currentPos.array() >= _aabb._max.array()).any()
-            || (_currentPos.array() < _aabb._min.array()).any())
+        if ((_currentPos.array() >= _aabb.max().array()).any()
+            || (_currentPos.array() < _aabb.min().array()).any())
             _isInAABB = false;
     }
 
@@ -203,14 +209,14 @@ namespace elsa
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
             _entryPoint =
-                (_entryPoint.array() < _aabb._min.array()).select(_aabb._min, _entryPoint);
+                (_entryPoint.array() < _aabb.min().array()).select(_aabb.min(), _entryPoint);
             _entryPoint =
-                (_entryPoint.array() > _aabb._max.array()).select(_aabb._max, _entryPoint);
+                (_entryPoint.array() > _aabb.max().array()).select(_aabb.max(), _entryPoint);
 
             // exit point stored in _exitPoint
             _exitPoint = ray.pointAt(opt->_tmax);
-            _exitPoint = (_exitPoint.array() < _aabb._min.array()).select(_aabb._min, _exitPoint);
-            _exitPoint = (_exitPoint.array() > _aabb._max.array()).select(_aabb._max, _exitPoint);
+            _exitPoint = (_exitPoint.array() < _aabb.min().array()).select(_aabb.min(), _exitPoint);
+            _exitPoint = (_exitPoint.array() > _aabb.max().array()).select(_aabb.max(), _exitPoint);
 
             return opt->_tmax - opt->_tmin;
         } else {
@@ -218,9 +224,15 @@ namespace elsa
         }
     }
 
-    bool TraverseAABBJosephsMethod::isInBoundingBox() const { return _isInAABB; }
+    bool TraverseAABBJosephsMethod::isInBoundingBox() const
+    {
+        return _isInAABB;
+    }
 
-    real_t TraverseAABBJosephsMethod::getIntersectionLength() const { return _intersectionLength; }
+    real_t TraverseAABBJosephsMethod::getIntersectionLength() const
+    {
+        return _intersectionLength;
+    }
 
     IndexVector_t TraverseAABBJosephsMethod::getCurrentVoxel() const
     {

@@ -62,15 +62,15 @@ namespace elsa
         /// the volume / axis-aligned bounding box
         BoundingBox _aabb;
         /// the entry point parameters of the ray in the aabb
-        RealVector_t _entryPoint{_aabb._dim};
+        RealVector_t _entryPoint{_aabb.dim()};
         /// the step direction of the traverser
-        RealVector_t _stepDirection{_aabb._dim};
+        RealVector_t _stepDirection{_aabb.dim()};
         /// the current position of the traverser in the aabb
-        RealVector_t _currentPos{_aabb._dim};
+        RealVector_t _currentPos{_aabb.dim()};
         /// the current maximum step parameter along the ray
-        RealVector_t _tMax{_aabb._dim};
+        RealVector_t _tMax{_aabb.dim()};
         /// the step sizes for the step parameter along the ray
-        RealVector_t _tDelta{_aabb._dim};
+        RealVector_t _tDelta{_aabb.dim()};
         /// flag if traverser still in bounding box
         bool _isInAABB{false};
         /// the current step parameter exiting the current voxel
@@ -78,10 +78,10 @@ namespace elsa
 
         /// constant vector containing epsilon
         const RealVector_t _EPS{
-            RealVector_t(_aabb._dim).setConstant(std::numeric_limits<real_t>::epsilon())};
+            RealVector_t(_aabb.dim()).setConstant(std::numeric_limits<real_t>::epsilon())};
         /// constant vector containing the maximum number
         const RealVector_t _MAX{
-            RealVector_t(_aabb._dim).setConstant(std::numeric_limits<real_t>::max())};
+            RealVector_t(_aabb.dim()).setConstant(std::numeric_limits<real_t>::max())};
 
         /// compute the entry and exit points of ray r with the volume (aabb)
         void calculateAABBIntersections(const RealRay_t& r);

@@ -262,8 +262,8 @@ TEST_CASE("Intersection: Quick bug tests")
     const IndexVector_t size({{3, 3}});
 
     BoundingBox aabb(size);
-    aabb._min = RealVector_t({{-1.5f, -1.5f}});
-    aabb._max = RealVector_t({{1.5f, 1.5f}});
+    aabb.min() = RealVector_t({{-1.5f, -1.5f}});
+    aabb.max() = RealVector_t({{1.5f, 1.5f}});
 
     const RealVector_t ro({{-2, -3}});
     RealVector_t rd({{1, 1}});
@@ -312,8 +312,8 @@ TEST_CASE("Intersection: Quick bug tests")
     const IndexVector_t size({{3, 3}});
 
     BoundingBox aabb(size);
-    aabb._min = RealVector_t({{-1.5f, -1.5f}});
-    aabb._max = RealVector_t({{1.5f, 1.5f}});
+    aabb.min() = RealVector_t({{-1.5f, -1.5f}});
+    aabb.max() = RealVector_t({{1.5f, 1.5f}});
 
     const RealVector_t ro({{-2, -3}});
     RealVector_t rd({{1, 1}});
@@ -467,8 +467,8 @@ TEST_CASE("Intersection: 3D rays with bounding box")
 {
     const IndexVector_t upperbound({{5, 5, 5}});
     BoundingBox aabb(upperbound);
-    aabb._min = RealVector_t({{-2.5f, -2.5f, -2.5f}});
-    aabb._max = RealVector_t({{2.5f, 2.5f, 2.5f}});
+    aabb.min() = RealVector_t({{-2.5f, -2.5f, -2.5f}});
+    aabb.max() = RealVector_t({{2.5f, 2.5f, 2.5f}});
 
     for (int z = 0; z < 25; ++z) {
         for (int y = 0; y < 25; ++y) {

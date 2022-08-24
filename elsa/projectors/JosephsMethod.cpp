@@ -151,10 +151,10 @@ namespace elsa
                     interpol(i) += (fractionals(i) < 0.0) ? -1 : 1;
                     // mirror values at border if outside the volume
                     auto interpolVal = static_cast<real_t>(interpol(i));
-                    if (interpolVal < aabb._min(i) || interpolVal > aabb._max(i))
-                        interpol(i) = static_cast<index_t>(aabb._min(i));
-                    else if (interpolVal == aabb._max(i))
-                        interpol(i) = static_cast<index_t>(aabb._max(i)) - 1;
+                    if (interpolVal < aabb.min()(i) || interpolVal > aabb.max()(i))
+                        interpol(i) = static_cast<index_t>(aabb.min()(i));
+                    else if (interpolVal == aabb.max()(i))
+                        interpol(i) = static_cast<index_t>(aabb.max()(i)) - 1;
                 }
             }
             if constexpr (adjoint) {
@@ -184,10 +184,10 @@ namespace elsa
 
                 // mirror values at border if outside the volume
                 auto interpolVal = static_cast<real_t>(interpol(i));
-                if (interpolVal < aabb._min(i) || interpolVal > aabb._max(i))
-                    interpol(i) = static_cast<index_t>(aabb._min(i));
-                else if (interpolVal == aabb._max(i))
-                    interpol(i) = static_cast<index_t>(aabb._max(i)) - 1;
+                if (interpolVal < aabb.min()(i) || interpolVal > aabb.max()(i))
+                    interpol(i) = static_cast<index_t>(aabb.min()(i));
+                else if (interpolVal == aabb.max()(i))
+                    interpol(i) = static_cast<index_t>(aabb.max()(i)) - 1;
 
                 if constexpr (adjoint) {
 #pragma omp atomic

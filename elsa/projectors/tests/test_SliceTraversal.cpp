@@ -238,18 +238,18 @@ void checkBoundingBox(BoundingBox aabb, RealVector_t expectedMin, RealVector_t e
 {
     CAPTURE(aabb);
 
-    THEN("_min is as expected")
+    THEN("min() is as expected")
     {
-        INFO("_min := ", aabb._min.format(vecfmt));
-        INFO("expected _min := ", expectedMin.format(vecfmt));
-        CHECK_UNARY(aabb._min.isApprox(expectedMin));
+        INFO("min() := ", aabb.min().format(vecfmt));
+        INFO("expected min() := ", expectedMin.format(vecfmt));
+        CHECK_UNARY(aabb.min().isApprox(expectedMin));
     }
 
-    THEN("_max is as expected")
+    THEN("max() is as expected")
     {
-        INFO("_max := ", aabb._max.format(vecfmt));
-        INFO("expected _max := ", expectedMax.format(vecfmt));
-        CHECK_UNARY(aabb._max.isApprox(expectedMax));
+        INFO("max() := ", aabb.max().format(vecfmt));
+        INFO("expected max() := ", expectedMax.format(vecfmt));
+        CHECK_UNARY(aabb.max().isApprox(expectedMax));
     }
 }
 
@@ -462,7 +462,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid parallel to x-axis, dir [1, 0]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly 3 voxels are visited") { CHECK_EQ(counter, 3); }
+        THEN("Exactly 3 voxels are visited")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 }
 
@@ -488,7 +491,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid parallel to x-axis, dir [-1, 0]"
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly 3 voxels are visited") { CHECK_EQ(counter, 3); }
+        THEN("Exactly 3 voxels are visited")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 }
 
@@ -514,7 +520,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid parallel to y-axis, dir [0, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly 3 voxels are visited") { CHECK_EQ(counter, 3); }
+        THEN("Exactly 3 voxels are visited")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 }
 
@@ -540,7 +549,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid parallel to y-axis, dir [0, -1]"
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly 3 voxels are visited") { CHECK_EQ(counter, 3); }
+        THEN("Exactly 3 voxels are visited")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 }
 
@@ -567,7 +579,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 3); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 
     WHEN("Traversing the grid through the left middle and top middle voxel")
@@ -583,7 +598,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid through the right middle and bottom middle voxel")
@@ -601,7 +619,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid through the bottom right corner")
@@ -616,7 +637,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 
     WHEN("Traversing the grid through the top left corner")
@@ -631,7 +655,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 }
 
@@ -656,7 +683,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly one step is taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly one step is taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 
     WHEN("Traversing the grid through the left middle and top middle voxel")
@@ -672,7 +702,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid through the center diagonally")
@@ -689,7 +722,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly three steps are taken") { CHECK_EQ(counter, 3); }
+        THEN("Exactly three steps are taken")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 
     WHEN("Traversing the grid through the top middle and right middle voxel")
@@ -705,7 +741,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid through the top right voxel")
@@ -720,7 +759,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 }
 
@@ -745,7 +787,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly one step is taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly one step is taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 
     WHEN("Traversing the grid through the top center and right center voxel")
@@ -761,7 +806,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid through the center diagonally")
@@ -778,7 +826,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly three steps are taken") { CHECK_EQ(counter, 3); }
+        THEN("Exactly three steps are taken")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 
     WHEN("Traversing the grid through the left center and bottom center voxel")
@@ -794,7 +845,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid through the bottom left voxel")
@@ -809,7 +863,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, 1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 }
 
@@ -836,7 +893,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly one step is taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly one step is taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 
     WHEN("Traversing the grid through the top left voxel, but not centered")
@@ -851,7 +911,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 
     WHEN("Traversing the grid through the left and top center voxel")
@@ -867,7 +930,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid through the left and top center voxel but not centered")
@@ -883,7 +949,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid slightly above the volume center diagonally")
@@ -900,7 +969,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly three steps are taken") { CHECK_EQ(counter, 3); }
+        THEN("Exactly three steps are taken")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 
     WHEN("Traversing the grid through the volume center diagonally")
@@ -917,7 +989,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly three steps are taken") { CHECK_EQ(counter, 3); }
+        THEN("Exactly three steps are taken")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 
     WHEN("Traversing the grid slightly below the volume center diagonally")
@@ -934,7 +1009,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly three steps are taken") { CHECK_EQ(counter, 3); }
+        THEN("Exactly three steps are taken")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 
     WHEN("Traversing the grid through the bottom and right center voxel")
@@ -950,7 +1028,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 2); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 2);
+        }
     }
 
     WHEN("Traversing the grid through the bottom left corner")
@@ -965,7 +1046,10 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly two steps are taken") { CHECK_EQ(counter, 1); }
+        THEN("Exactly two steps are taken")
+        {
+            CHECK_EQ(counter, 1);
+        }
     }
 }
 
@@ -1254,6 +1338,9 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, 0, 0]")
 
         auto counter = checkTraversal(aabb, ray, visitedVoxels);
 
-        THEN("Exactly one step is taken") { CHECK_EQ(counter, 3); }
+        THEN("Exactly one step is taken")
+        {
+            CHECK_EQ(counter, 3);
+        }
     }
 }

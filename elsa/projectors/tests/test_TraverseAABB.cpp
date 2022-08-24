@@ -30,8 +30,8 @@ bool intersect(const RealVector_t& voxel, const RealRay_t& r)
     IndexVector_t ones(voxel.size());
     ones.setOnes();
     BoundingBox bb(ones);
-    bb._min += voxel;
-    bb._max += voxel;
+    bb.min() += voxel;
+    bb.max() += voxel;
 
     return Intersection::withRay(bb, r).operator bool();
 }
@@ -427,7 +427,10 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
 
             TraverseAABB traverse(aabb, r);
 
-            THEN("the the aabb is not hit") { REQUIRE_UNARY_FALSE(traverse.isInBoundingBox()); }
+            THEN("the the aabb is not hit")
+            {
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+            }
         }
 
         WHEN("A ray with origin = (3.5, 3.0) and direction (-1, 0) hits the top edge of aabb")
@@ -438,7 +441,10 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
 
             TraverseAABB traverse(aabb, r);
 
-            THEN("the the aabb is not hit") { REQUIRE_UNARY_FALSE(traverse.isInBoundingBox()); }
+            THEN("the the aabb is not hit")
+            {
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+            }
         }
 
         WHEN("A ray with origin = (0.0, -0.5) and direction (0, 1) hits the bottom edge of aabb)")
@@ -479,7 +485,10 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
 
             TraverseAABB traverse(aabb, r);
 
-            THEN("the the aabb is not hit") { REQUIRE_UNARY_FALSE(traverse.isInBoundingBox()); }
+            THEN("the the aabb is not hit")
+            {
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+            }
         }
 
         WHEN("A ray with origin = (3.0, 3.5) and direction (0, -1) hits the top edge of aabb)")
@@ -490,7 +499,10 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
 
             TraverseAABB traverse(aabb, r);
 
-            THEN("the the aabb is not hit") { REQUIRE_UNARY_FALSE(traverse.isInBoundingBox()); }
+            THEN("the the aabb is not hit")
+            {
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+            }
         }
     }
 }

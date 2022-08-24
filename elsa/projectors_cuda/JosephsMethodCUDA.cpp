@@ -151,7 +151,7 @@ namespace elsa
             if (cudaMalloc3D(&dsinoPtr, sinoExt) != cudaSuccess)
                 throw std::bad_alloc();
 
-            IndexVector_t bmax = aabb._max.template cast<index_t>();
+            IndexVector_t bmax = aabb.max().template cast<index_t>();
             typename TraverseJosephsCUDA<data_t, 3>::BoundingBox boxMax;
             boxMax._max[0] = static_cast<real_t>(bmax[0]);
             boxMax._max[1] = static_cast<real_t>(bmax[1]);
@@ -177,7 +177,7 @@ namespace elsa
                 != cudaSuccess)
                 throw std::bad_alloc();
 
-            IndexVector_t bmax = aabb._max.template cast<index_t>();
+            IndexVector_t bmax = aabb.max().template cast<index_t>();
             typename TraverseJosephsCUDA<data_t, 2>::BoundingBox boxMax;
             boxMax._max[0] = static_cast<real_t>(bmax[0]);
             boxMax._max[1] = static_cast<real_t>(bmax[1]);
@@ -275,7 +275,7 @@ namespace elsa
 
                 // perform projection
 
-                IndexVector_t bmax = aabb._max.template cast<index_t>();
+                IndexVector_t bmax = aabb.max().template cast<index_t>();
                 typename TraverseJosephsCUDA<data_t, 3>::BoundingBox boxMax;
                 boxMax._max[0] = static_cast<real_t>(bmax[0]);
                 boxMax._max[1] = static_cast<real_t>(bmax[1]);
@@ -351,7 +351,7 @@ namespace elsa
                     throw LogicError(
                         "JosephsMethodCUDA::applyAdjoint: Couldn't transfer sinogram to GPU.");
 
-                IndexVector_t bmax = aabb._max.template cast<index_t>();
+                IndexVector_t bmax = aabb.max().template cast<index_t>();
                 typename TraverseJosephsCUDA<data_t, 2>::BoundingBox boxMax;
                 boxMax._max[0] = static_cast<real_t>(bmax[0]);
                 boxMax._max[1] = static_cast<real_t>(bmax[1]);

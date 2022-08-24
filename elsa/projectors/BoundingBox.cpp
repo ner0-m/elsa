@@ -6,22 +6,67 @@
 
 namespace elsa
 {
-    BoundingBox::BoundingBox(const IndexVector_t& volumeDimensions) : _dim(volumeDimensions.size())
+    BoundingBox::BoundingBox(const IndexVector_t& volDims)
+        : _dim(volDims.size()),
+          _min(RealVector_t::Zero(_dim)),
+          _max(volDims.template cast<real_t>())
     {
-        // sanity check
-        if (volumeDimensions.size() < 2 || volumeDimensions.size() > 3)
-            throw InvalidArgumentError("BoundingBox: can only deal with the 2d/3d cases");
-
-        _min.setZero();
-        _max = volumeDimensions.template cast<real_t>();
-
-        _voxelCoordToIndexVector[0] = 1;
-        _voxelCoordToIndexVector[1] = volumeDimensions[1];
-        if (_dim == 3)
-            _voxelCoordToIndexVector[2] = volumeDimensions[2] * volumeDimensions[2];
     }
 
-    RealVector_t BoundingBox::center() const { return (_max - _min).array() / 2; }
+    BoundingBox::BoundingBox(const RealVector_t& min, const RealVector_t& max)
+        : _dim(min.size()), _min(min), _max(max)
+    {
+    }
+
+    index_t BoundingBox::dim() const
+    {
+        return _dim;
+    }
+
+    RealVector_t BoundingBox::center() const
+    {
+        return (_max - _min).array() / 2;
+    }
+
+    RealVector_t& BoundingBox::min()
+    {
+        return _min;
+    }
+
+    const RealVector_t& BoundingBox::min() const
+    {
+        return _min;
+    }
+
+    RealVector_t& BoundingBox::max()
+    {
+        return _max;
+    }
+
+    const RealVector_t& BoundingBox::max() const
+    {
+        return _max;
+    }
+
+    void BoundingBox::translateMin(const real_t& t)
+    {
+        this->min().array() += t;
+    }
+
+    void BoundingBox::translateMin(const RealVector_t& t)
+    {
+        this->min() += t;
+    }
+
+    void BoundingBox::translateMax(const real_t& t)
+    {
+        this->max().array() += t;
+    }
+
+    void BoundingBox::translateMax(const RealVector_t& t)
+    {
+        this->max() += t;
+    }
 
     void BoundingBox::recomputeBounds()
     {
@@ -37,7 +82,10 @@ namespace elsa
         return box1._min == box2._min && box1._max == box2._max;
     }
 
-    bool operator!=(const BoundingBox& box1, const BoundingBox& box2) { return !(box1 == box2); }
+    bool operator!=(const BoundingBox& box1, const BoundingBox& box2)
+    {
+        return !(box1 == box2);
+    }
 
     std::ostream& operator<<(std::ostream& stream, const BoundingBox& aabb)
     {

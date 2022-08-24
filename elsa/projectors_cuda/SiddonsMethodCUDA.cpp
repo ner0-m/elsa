@@ -137,9 +137,9 @@ namespace elsa
 
         if (_domainDescriptor->getNumberOfDimensions() == 3) {
             typename TraverseSiddonsCUDA<data_t, 3>::BoundingBox boundingBox;
-            boundingBox._max[0] = aabb._max.template cast<uint32_t>()[0];
-            boundingBox._max[1] = aabb._max.template cast<uint32_t>()[1];
-            boundingBox._max[2] = aabb._max.template cast<uint32_t>()[2];
+            boundingBox._max[0] = aabb.max().template cast<uint32_t>()[0];
+            boundingBox._max[1] = aabb.max().template cast<uint32_t>()[1];
+            boundingBox._max[2] = aabb.max().template cast<uint32_t>()[2];
 
             // transfer volume and sinogram
             cudaExtent volExt =
@@ -192,8 +192,8 @@ namespace elsa
 
         } else {
             typename TraverseSiddonsCUDA<data_t, 2>::BoundingBox boundingBox;
-            boundingBox._max[0] = aabb._max.template cast<uint32_t>()[0];
-            boundingBox._max[1] = aabb._max.template cast<uint32_t>()[1];
+            boundingBox._max[0] = aabb.max().template cast<uint32_t>()[0];
+            boundingBox._max[1] = aabb.max().template cast<uint32_t>()[1];
 
             // transfer volume and sinogram
 

@@ -9,19 +9,19 @@ namespace elsa
     {
         real_t invDir = 1 / r.direction()(0);
 
-        real_t t1 = (aabb._min(0) - r.origin()(0)) * invDir;
-        real_t t2 = (aabb._max(0) - r.origin()(0)) * invDir;
+        real_t t1 = (aabb.min()(0) - r.origin()(0)) * invDir;
+        real_t t2 = (aabb.max()(0) - r.origin()(0)) * invDir;
 
         real_t tmin = invDir >= 0 ? t1 : t2;
         real_t tmax = invDir >= 0 ? t2 : t1;
         const auto txmin = tmin;
         const auto txmax = tmax;
 
-        for (int i = 1; i < aabb._min.rows(); ++i) {
+        for (int i = 1; i < aabb.min().rows(); ++i) {
             invDir = 1 / r.direction()(i);
 
-            t1 = (aabb._min(i) - r.origin()(i)) * invDir;
-            t2 = (aabb._max(i) - r.origin()(i)) * invDir;
+            t1 = (aabb.min()(i) - r.origin()(i)) * invDir;
+            t2 = (aabb.max()(i) - r.origin()(i)) * invDir;
 
             tmin = maxNum(tmin, invDir >= 0 ? t1 : t2);
             tmax = minNum(tmax, invDir >= 0 ? t2 : t1);
@@ -47,8 +47,8 @@ namespace elsa
         // Slightly increase the size of the bounding box, such that center of voxels are actually
         // inside the bounding box, parallel rays which directly go through the center of the
         // voxel, will be recognized with this cheapo hack
-        aabb._min[0] += 0.5f;
-        aabb._max[0] -= 0.5f;
+        aabb.min()[0] += 0.5f;
+        aabb.max()[0] -= 0.5f;
 
         auto [tmin, tmax, txmin, txmax] = intersect(aabb, r);
 
@@ -64,7 +64,7 @@ namespace elsa
 
         auto advance_to_next_voxel = [&](auto aabb, auto& tmin) -> real_t {
             // the x-axis coord for voxel centers
-            const auto xvoxelcenter = dist_to_integer(aabb._min[0]);
+            const auto xvoxelcenter = dist_to_integer(aabb.min()[0]);
 
             RealVector_t entry = r.pointAt(tmin);
 
@@ -77,7 +77,7 @@ namespace elsa
         };
 
         auto retreat_to_last_voxel = [&](auto aabb, auto& tmax) -> real_t {
-            const auto xvoxelcenter = dist_to_integer(aabb._min[0]);
+            const auto xvoxelcenter = dist_to_integer(aabb.min()[0]);
 
             RealVector_t exit = r.pointAt(tmax);
 

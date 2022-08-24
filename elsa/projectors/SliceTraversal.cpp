@@ -130,13 +130,16 @@ namespace elsa
     {
         // Only translate, as the rotations are always 90, 180, 270 degrees,
         // TODO: this might be wrong, idk, what about non square things
-        aabb._min = *this * Point(aabb._min);
-        aabb._max = *this * Point(aabb._max);
+        aabb.min() = *this * Point(aabb.min());
+        aabb.max() = *this * Point(aabb.max());
         aabb.recomputeBounds();
         return aabb;
     }
 
-    RealMatrix_t TransformToTraversal::transformation() const { return transformation_; }
+    RealMatrix_t TransformToTraversal::transformation() const
+    {
+        return transformation_;
+    }
 
     RealMatrix_t TransformToTraversal::invTransformation() const
     {
@@ -149,11 +152,20 @@ namespace elsa
         return transformation_.block(0, 0, dim - 1, dim - 1);
     }
 
-    RealMatrix_t TransformToTraversal::invRotation() const { return rotation().transpose(); }
+    RealMatrix_t TransformToTraversal::invRotation() const
+    {
+        return rotation().transpose();
+    }
 
-    RealVector_t TransformToTraversal::translation() const { return translation_; }
+    RealVector_t TransformToTraversal::translation() const
+    {
+        return translation_;
+    }
 
-    RealMatrix_t TransformToTraversal::linear() const { return rotation(); }
+    RealMatrix_t TransformToTraversal::linear() const
+    {
+        return rotation();
+    }
 
     RealVector_t TransformToTraversal::operator*(const Point<real_t>& point) const
     {
@@ -166,7 +178,7 @@ namespace elsa
     }
 
     SliceTraversal::SliceTraversal(BoundingBox aabb, RealRay_t ray)
-        : transformation_(ray, aabb._max.array() / 2), ray_(ray)
+        : transformation_(ray, aabb.max().array() / 2), ray_(ray)
     {
         // Transform ray and aabb to traversal coordinate space
         ray = transformation_.toTraversalCoordinates(ray);
@@ -196,20 +208,35 @@ namespace elsa
         return idx;
     }
 
-    real_t SliceTraversal::t() const { return t_; }
+    real_t SliceTraversal::t() const
+    {
+        return t_;
+    }
 
-    real_t SliceTraversal::tDelta() const { return tDelta_; }
+    real_t SliceTraversal::tDelta() const
+    {
+        return tDelta_;
+    }
 
     SliceTraversal::Iter SliceTraversal::begin() const
     {
         return {startIndex_, ray_.pointAt(t_), ray_.direction() * tDelta_};
     }
 
-    SliceTraversal::Iter SliceTraversal::end() const { return {endIndex_}; }
+    SliceTraversal::Iter SliceTraversal::end() const
+    {
+        return {endIndex_};
+    }
 
-    index_t SliceTraversal::startIndex() const { return startIndex_; }
+    index_t SliceTraversal::startIndex() const
+    {
+        return startIndex_;
+    }
 
-    index_t SliceTraversal::endIndex() const { return endIndex_; }
+    index_t SliceTraversal::endIndex() const
+    {
+        return endIndex_;
+    }
 
     SliceTraversal::Iter::value_type SliceTraversal::Iter::operator*() const
     {

@@ -10,7 +10,8 @@ namespace elsa
      * @author David Frank - initial code
      * @author Tobias Lasser - minor changes
      */
-    struct BoundingBox {
+    class BoundingBox
+    {
     public:
         /**
          * @brief Construct AABB of particular size
@@ -19,7 +20,38 @@ namespace elsa
          */
         BoundingBox(const IndexVector_t& volumeDimensions);
 
+        BoundingBox(const RealVector_t& min, const RealVector_t& max);
+
+        index_t dim() const;
+
         RealVector_t center() const;
+
+        /// Return a reference to the minimum point of the bounding box
+        RealVector_t& min();
+
+        /// Return a reference to the minimum point of the bounding box
+        const RealVector_t& min() const;
+
+        /// Return a reference to the maximum point of the bounding box
+        RealVector_t& max();
+
+        /// Return a reference to the maximum point of the bounding box
+        const RealVector_t& max() const;
+
+        /// Adjust the minimum of the bounding box
+        void translateMin(const real_t& v);
+
+        /// Adjust the minimum of the bounding box
+        void translateMin(const RealVector_t& v);
+
+        /// Adjust the maximum of the bounding box
+        void translateMax(const real_t& v);
+
+        /// Adjust the maximum of the bounding box
+        void translateMax(const RealVector_t& v);
+
+        /// Expand bounding bounding box by vectors `min` and `max`
+        void expand(const RealVector_t& min, const RealVector_t& max);
 
         void recomputeBounds();
 
@@ -29,14 +61,13 @@ namespace elsa
 
         friend std::ostream& operator<<(std::ostream& stream, const BoundingBox& aabb);
 
+    private:
         /// the number of dimensions (2 or 3)
         index_t _dim;
         /// the front corner of the box
         RealVector_t _min{_dim};
         /// the back corner of the box
         RealVector_t _max{_dim};
-        /// helper to convert coordinates to indices
-        IndexVector_t _voxelCoordToIndexVector{_dim};
     };
 
 } // namespace elsa

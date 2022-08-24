@@ -30,16 +30,13 @@ TEST_CASE("BoundingBox: Testing 2D AABB")
 
             THEN("The min is set to the origin (0, 0) and the max is (10, 15)")
             {
-                REQUIRE_EQ(aabb._dim, dim);
+                REQUIRE_EQ(aabb.dim(), dim);
 
-                REQUIRE_UNARY(checkApproxEq(aabb._min(0), 0));
-                REQUIRE_UNARY(checkApproxEq(aabb._min(1), 0));
+                REQUIRE_UNARY(checkApproxEq(aabb.min()(0), 0));
+                REQUIRE_UNARY(checkApproxEq(aabb.min()(1), 0));
 
-                REQUIRE_UNARY(checkApproxEq(aabb._max(0), (real_t) x));
-                REQUIRE_UNARY(checkApproxEq(aabb._max(1), (real_t) y));
-
-                REQUIRE_UNARY(checkApproxEq(aabb._voxelCoordToIndexVector(0), 1));
-                REQUIRE_UNARY(checkApproxEq(aabb._voxelCoordToIndexVector(1), y));
+                REQUIRE_UNARY(checkApproxEq(aabb.max()(0), (real_t) x));
+                REQUIRE_UNARY(checkApproxEq(aabb.max()(1), (real_t) y));
             }
         }
 
@@ -48,18 +45,15 @@ TEST_CASE("BoundingBox: Testing 2D AABB")
             BoundingBox aabb(volumeDims);
             auto aabbcopy = aabb;
 
-            THEN("A copy is created succesfully")
+            THEN("A copy is created successfully")
             {
-                REQUIRE_EQ(aabbcopy._dim, dim);
+                REQUIRE_EQ(aabbcopy.dim(), dim);
 
-                REQUIRE_UNARY(checkApproxEq(aabbcopy._min(0), 0));
-                REQUIRE_UNARY(checkApproxEq(aabbcopy._min(1), 0));
+                REQUIRE_UNARY(checkApproxEq(aabbcopy.min()(0), 0));
+                REQUIRE_UNARY(checkApproxEq(aabbcopy.min()(1), 0));
 
-                REQUIRE_UNARY(checkApproxEq(aabbcopy._max(0), (real_t) x));
-                REQUIRE_UNARY(checkApproxEq(aabbcopy._max(1), (real_t) y));
-
-                REQUIRE_EQ(aabbcopy._voxelCoordToIndexVector(0), 1);
-                REQUIRE_EQ(aabbcopy._voxelCoordToIndexVector(1), y);
+                REQUIRE_UNARY(checkApproxEq(aabbcopy.max()(0), (real_t) x));
+                REQUIRE_UNARY(checkApproxEq(aabbcopy.max()(1), (real_t) y));
             }
         }
     }
@@ -83,19 +77,15 @@ TEST_CASE("BoundingBox: Testing 3D aabb")
 
             THEN("The min is set to the origin (0, 0, 0) and the max is (10, 15, 20)")
             {
-                REQUIRE_EQ(aabb._dim, dim);
+                REQUIRE_EQ(aabb.dim(), dim);
 
-                REQUIRE_UNARY(checkApproxEq(aabb._min(0), 0));
-                REQUIRE_UNARY(checkApproxEq(aabb._min(1), 0));
-                REQUIRE_UNARY(checkApproxEq(aabb._min(2), 0));
+                REQUIRE_UNARY(checkApproxEq(aabb.min()(0), 0));
+                REQUIRE_UNARY(checkApproxEq(aabb.min()(1), 0));
+                REQUIRE_UNARY(checkApproxEq(aabb.min()(2), 0));
 
-                REQUIRE_UNARY(checkApproxEq(aabb._max(0), (real_t) x));
-                REQUIRE_UNARY(checkApproxEq(aabb._max(1), (real_t) y));
-                REQUIRE_UNARY(checkApproxEq(aabb._max(2), (real_t) z));
-
-                REQUIRE_EQ(aabb._voxelCoordToIndexVector(0), 1);
-                REQUIRE_EQ(aabb._voxelCoordToIndexVector(1), y);
-                REQUIRE_EQ(aabb._voxelCoordToIndexVector(2), (z * z));
+                REQUIRE_UNARY(checkApproxEq(aabb.max()(0), (real_t) x));
+                REQUIRE_UNARY(checkApproxEq(aabb.max()(1), (real_t) y));
+                REQUIRE_UNARY(checkApproxEq(aabb.max()(2), (real_t) z));
             }
         }
     }

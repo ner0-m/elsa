@@ -55,7 +55,10 @@ namespace elsa
         return (_tExit - tEntry);
     }
 
-    bool TraverseAABB::isInBoundingBox() const { return _isInAABB; }
+    bool TraverseAABB::isInBoundingBox() const
+    {
+        return _isInAABB;
+    }
 
     IndexVector_t TraverseAABB::getCurrentVoxel() const
     {
@@ -80,9 +83,9 @@ namespace elsa
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
             _entryPoint =
-                (_entryPoint.array() < _aabb._min.array()).select(_aabb._min, _entryPoint);
+                (_entryPoint.array() < _aabb.min().array()).select(_aabb.min(), _entryPoint);
             _entryPoint =
-                (_entryPoint.array() > _aabb._max.array()).select(_aabb._max, _entryPoint);
+                (_entryPoint.array() > _aabb.max().array()).select(_aabb.max(), _entryPoint);
         }
     }
 
@@ -101,8 +104,8 @@ namespace elsa
         _currentPos = lowerCorner;
 
         // check if we are still inside the aabb
-        if ((_currentPos.array() >= _aabb._max.array()).any()
-            || (_currentPos.array() < _aabb._min.array()).any())
+        if ((_currentPos.array() >= _aabb.max().array()).any()
+            || (_currentPos.array() < _aabb.min().array()).any())
             _isInAABB = false;
     }
 
@@ -126,7 +129,7 @@ namespace elsa
 
     bool TraverseAABB::isCurrentPositionInAABB(index_t index) const
     {
-        return _currentPos(index) < _aabb._max(index) && _currentPos(index) >= _aabb._min(index);
+        return _currentPos(index) < _aabb.max()(index) && _currentPos(index) >= _aabb.min()(index);
     }
 
 } // namespace elsa

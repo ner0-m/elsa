@@ -92,18 +92,18 @@ namespace elsa
         /// the volume / axis-aligned bounding box
         BoundingBox _aabb;
         /// the entry point parameters of the ray in the aabb
-        RealVector_t _entryPoint{_aabb._dim};
+        RealVector_t _entryPoint{_aabb.dim()};
         /// the exit point parameters of the ray in the aabb
-        RealVector_t _exitPoint{_aabb._dim};
+        RealVector_t _exitPoint{_aabb.dim()};
         /// the current position of the traverser in the aabb
-        RealVector_t _currentPos{_aabb._dim};
+        RealVector_t _currentPos{_aabb.dim()};
         /// the step direction of the traverser
-        RealVector_t _stepDirection{_aabb._dim};
+        RealVector_t _stepDirection{_aabb.dim()};
         /// the step sizes for the next step along the ray
-        RealVector_t _nextStep{_aabb._dim};
+        RealVector_t _nextStep{_aabb.dim()};
         /// the fractional parts of the current position coordinates (actually frac(_currentPos) -
         /// 0.5)
-        RealVector_t _fractionals{_aabb._dim};
+        RealVector_t _fractionals{_aabb.dim()};
         /// flag if traverser still in bounding box
         bool _isInAABB{false};
         /// length of ray segment currently being handled

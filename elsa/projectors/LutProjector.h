@@ -82,8 +82,10 @@ namespace elsa
         data_t traverseRayForward(const BoundingBox& boundingbox, const RealRay_t& ray,
                                   const DataContainer<data_t>& x) const
         {
-            const IndexVector_t lower = boundingbox._min.template cast<index_t>();
-            const IndexVector_t upper = boundingbox._max.template cast<index_t>();
+            const auto dim = ray.dim();
+
+            const IndexVector_t lower = boundingbox.min().template cast<index_t>();
+            const IndexVector_t upper = boundingbox.max().template cast<index_t>();
             const auto support = this->self().support();
 
             index_t leadingdir = 0;
@@ -96,11 +98,11 @@ namespace elsa
 
             // Expand bounding box as rays have larger support now
             auto aabb = boundingbox;
-            aabb._min.array() -= static_cast<real_t>(support);
-            aabb._min[leadingdir] += static_cast<real_t>(support);
+            aabb.min().array() -= static_cast<real_t>(support);
+            aabb.min()[leadingdir] += static_cast<real_t>(support);
 
-            aabb._max.array() += static_cast<real_t>(support);
-            aabb._max[leadingdir] -= static_cast<real_t>(support);
+            aabb.max().array() += static_cast<real_t>(support);
+            aabb.max()[leadingdir] -= static_cast<real_t>(support);
 
             // Keep this here, as it saves us a couple of allocations on clang
             CartesianIndices neighbours(upper);
@@ -126,8 +128,10 @@ namespace elsa
         void traverseRayBackward(const BoundingBox& boundingbox, const RealRay_t& ray,
                                  const value_type& detectorValue, DataContainer<data_t>& Aty) const
         {
-            const IndexVector_t lower = boundingbox._min.template cast<index_t>();
-            const IndexVector_t upper = boundingbox._max.template cast<index_t>();
+            const auto dim = ray.dim();
+
+            const IndexVector_t lower = boundingbox.min().template cast<index_t>();
+            const IndexVector_t upper = boundingbox.max().template cast<index_t>();
             const auto support = this->self().support();
 
             index_t leadingdir = 0;
@@ -138,11 +142,11 @@ namespace elsa
 
             // Expand bounding box as rays have larger support now
             auto aabb = boundingbox;
-            aabb._min.array() -= static_cast<real_t>(support);
-            aabb._min[leadingdir] += static_cast<real_t>(support);
+            aabb.min().array() -= static_cast<real_t>(support);
+            aabb.min()[leadingdir] += static_cast<real_t>(support);
 
-            aabb._max.array() += static_cast<real_t>(support);
-            aabb._max[leadingdir] -= static_cast<real_t>(support);
+            aabb.max().array() += static_cast<real_t>(support);
+            aabb.max()[leadingdir] -= static_cast<real_t>(support);
 
             // Keep this here, as it saves us a couple of allocations on clang
             CartesianIndices neighbours(upper);
