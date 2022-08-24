@@ -1,5 +1,7 @@
 #include "doctest/doctest.h"
 
+#include <vector>
+
 #include "Bessel.h"
 #include "elsaDefines.h"
 
