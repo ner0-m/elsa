@@ -530,7 +530,7 @@ deploy-docs:
     - ninja docs
     - cp -r docs/sphinx/* /var/www/ciip/elsadocs/
     - cd ..
-    - cp -r build/ccov/* /var/www/ciip/elsacoverage/
+    - cp -r build/ccov/all-merged/* /var/www/ciip/elsacoverage/
   tags:
     - elsa-docs-deploy
 
