@@ -3,6 +3,7 @@
 #include "Vector.cuh"
 #include "Eigen/Dense"
 #include "Defines.cuh"
+#include "Complex.h"
 
 #include <thrust/complex.h>
 
@@ -580,7 +581,10 @@ TEST_CASE_TEMPLATE("Vector memory test simple", TestType, float, double, index_t
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> randVec(size);
         randVec.setRandom();
 
-        WHEN("Constructing and destructing Vector") { Vector dc(randVec); }
+        WHEN("Constructing and destructing Vector")
+        {
+            Vector dc(randVec);
+        }
 
         THEN("Memory should not leak")
         {

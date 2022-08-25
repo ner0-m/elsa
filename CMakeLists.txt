@@ -95,9 +95,7 @@ if(ELSA_MASTER_PROJECT)
         CPMAddPackage(
             NAME eigen3
             GIT_REPOSITORY https://gitlab.com/libeigen/eigen
-            # Currently we're on a random master branch commit, until Eigen 3.4 will be released we kind of have to
-            # stick with it, see also https://gitlab.lrz.de/IP/elsa/-/issues/91 for a little discussion on it
-            GIT_TAG c1b0aea65
+            GIT_TAG 3.4.0
             DOWNLOAD_ONLY YES # Eigen's CMakelists are not intended for library use
         )
 
