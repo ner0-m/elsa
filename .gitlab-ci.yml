@@ -517,6 +517,24 @@ test-coverage:
 
 ### deploy docs and coverage report ###
 
+stage-docs:
+  <<: *run_on_merge_requests
+  stage: docs
+  dependencies:
+    - test-coverage
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -GNinja
+    - ninja docs
+    - mkdir -p /var/www/ciip/elsadocs-${CI_COMMIT_REF_SLUG}/
+    - cp -r docs/sphinx/* /var/www/ciip/elsadocs-${CI_COMMIT_REF_SLUG}/
+    - cd ..
+    - mkdir -p /var/www/ciip/elsacoverage-${CI_COMMIT_REF_SLUG}/
+    - cp -r build/ccov/all-merged/* /var/www/ciip/elsacoverage-${CI_COMMIT_REF_SLUG}/
+  tags:
+    - elsa-docs-deploy
+
 deploy-docs:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "schedule"'
@@ -533,6 +551,7 @@ deploy-docs:
     - cp -r build/ccov/all-merged/* /var/www/ciip/elsacoverage/
   tags:
     - elsa-docs-deploy
+
 
 
 ### Docker jobs ###
