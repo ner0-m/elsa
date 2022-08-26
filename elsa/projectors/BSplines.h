@@ -5,8 +5,6 @@
 #include "Math.hpp"
 
 #include <cmath>
-#include "spdlog/fmt/bundled/core.h"
-#include "spdlog/fmt/fmt.h"
 
 namespace elsa
 {
