@@ -1,10 +1,13 @@
 #pragma once
 
+#include "DisableWarnings.h"
+
 #include <complex>
 #include <cstddef>
+#include <type_traits>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <type_traits>
 
 #ifdef ELSA_CUDA_VECTOR
 #include <thrust/complex.h>
