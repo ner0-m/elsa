@@ -198,6 +198,30 @@ cmake-lint:
 
 ### compile jobs ###
 
+# Do a matrix here as well
+build-pybind:
+  <<: *build_job_artifact
+  image: $CI_REGISTRY/ip/elsa/pybind:clang-14
+  script:
+    - pip install --verbose .
+    - pip install -U pytest
+    - pytest
+  tags:
+    - linux
+    - elsa
+
+build-pybind-cuda:
+  <<: *build_job_artifact
+  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
+  script:
+    - pip install --verbose .
+    - pip install -U pytest
+    - pytest
+  tags:
+    - linux
+    - elsa
+    - cuda
+
 build-clang:
   <<: *build_job_artifact
   image: $CI_REGISTRY/ip/elsa/pybind:$COMPILER-$COMPILER_VERSION
