@@ -74,6 +74,54 @@ set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 # ------------ dependencies ------------
 # ------------
 
+# Enable CUDA support if requested
+if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
+    message(STATUS "CUDA support requested...")
+    include(CheckLanguage)
+    check_language(CUDA)
+    find_package(CUDA 11.4)
+
+    if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
+        enable_language(CUDA)
+        message(STATUS "CUDA support enabled")
+
+        # set target CUDA architectures
+        include(ComputeCapabilityCUDA)
+        set_cuda_arch_type(${ELSA_CUDA_ARCH_TYPE})
+
+        foreach(TARGET_GPU ${TARGET_GPUS})
+            string(REPLACE "." "" TARGET_GPU ${TARGET_GPU})
+            list(APPEND CMAKE_CUDA_ARCHITECTURES ${TARGET_GPU})
+        endforeach()
+
+        if(ELSA_CUDA_VECTOR)
+            message(STATUS "Enabling DataHandlerGPU")
+            message(STATUS "The default container type will be on the GPU")
+
+            set(ELSA_BUILD_WITH_QUICKVEC TRUE)
+            add_definitions(-DELSA_CUDA_VECTOR)
+        endif()
+    elseif(ELSA_CUDA_VECTOR)
+        message(FATAL_ERROR "CUDA compiler not found!")
+        message(STATUS "Compiling without a DataHandlerGPU")
+        message(STATUS "The default container type will be CPU")
+
+        set(ELSA_BUILD_WITH_QUICKVEC FALSE)
+        set(ELSA_CUDA_VECTOR OFF)
+    else()
+        message(STATUS "Deactivate CUDA projectors")
+        # Be sure everything is off
+        set(ELSA_BUILD_CUDA_PROJECTORS OFF)
+        set(ELSA_BUILD_WITH_QUICKVEC OFF)
+        set(ELSA_CUDA_VECTOR OFF)
+    endif()
+else()
+    # Be sure everything is off
+    set(ELSA_BUILD_CUDA_PROJECTORS OFF)
+    set(ELSA_BUILD_WITH_QUICKVEC OFF)
+    set(ELSA_CUDA_VECTOR OFF)
+endif()
+
 if(NOT
    (SYSTEM_EIGEN
     AND SYSTEM_SPDLOG
@@ -156,7 +204,7 @@ if(ELSA_MASTER_PROJECT)
         # pybind11 specific directory here.
         execute_process(
             COMMAND "${PYTHON_EXECUTABLE}" -c "import pybind11; print(pybind11.get_cmake_dir())"
-            OUTPUT_VARIABLE _tmp_dir OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT
+            OUTPUT_VARIABLE _tmp_dir OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
 
@@ -167,43 +215,6 @@ if(ELSA_MASTER_PROJECT)
     endif()
 else()
     message(STATUS "    No dependencies added for elsa, as it is not stand-alone")
-endif()
-
-# Enable CUDA support if requested
-if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
-    message(STATUS "CUDA support requested...")
-    include(CheckLanguage)
-    check_language(CUDA)
-    find_package(CUDA 11.4)
-
-    if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
-        enable_language(CUDA)
-        message(STATUS "CUDA support enabled")
-
-        # set target CUDA architectures
-        include(ComputeCapabilityCUDA)
-        set_cuda_arch_type(${ELSA_CUDA_ARCH_TYPE})
-
-        foreach(TARGET_GPU ${TARGET_GPUS})
-            string(REPLACE "." "" TARGET_GPU ${TARGET_GPU})
-            list(APPEND CMAKE_CUDA_ARCHITECTURES ${TARGET_GPU})
-        endforeach()
-
-        if(ELSA_CUDA_VECTOR)
-            message(STATUS "Enabling DataHandlerGPU")
-            message(STATUS "The default container type will be on the GPU")
-
-            set(ELSA_BUILD_WITH_QUICKVEC TRUE)
-            add_definitions(-DELSA_CUDA_VECTOR)
-        endif()
-    elseif(ELSA_CUDA_VECTOR)
-        message(FATAL_ERROR "CUDA compiler not found!")
-        message(STATUS "Compiling without a DataHandlerGPU")
-        message(STATUS "The default container type will be CPU")
-
-        set(ELSA_BUILD_WITH_QUICKVEC FALSE)
-        set(ELSA_CUDA_VECTOR OFF)
-    endif()
 endif()
 
 # set where to install the exports/targets

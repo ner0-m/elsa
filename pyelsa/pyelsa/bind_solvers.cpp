@@ -61,10 +61,10 @@ void add_definitions_pyelsa_solvers(py::module& m)
                 (elsa::DataContainer<double> & (elsa::Solver<double>::*) (long) )(
                     &elsa::Solver<double>::solve),
                 py::arg("iterations") = static_cast<long>(0),
-                py::return_value_policy::reference_internal)
+                py::return_value_policy::reference_internal);
 
-        py::class_<elsa::Cloneable<elsa::Solver<std::complex<float>>>>
-            CloneableSolvercf(m, "CloneableSolvercf");
+    py::class_<elsa::Cloneable<elsa::Solver<std::complex<float>>>> CloneableSolvercf(
+        m, "CloneableSolvercf");
     CloneableSolvercf
         .def("__ne__",
              (bool(elsa::Cloneable<elsa::Solver<std::complex<float>>>::*)(
@@ -88,10 +88,10 @@ void add_definitions_pyelsa_solvers(py::module& m)
         "solve",
         (elsa::DataContainer<std::complex<float>> & (elsa::Solver<std::complex<float>>::*) (long) )(
             &elsa::Solver<std::complex<float>>::solve),
-        py::arg("iterations") = static_cast<long>(0), py::return_value_policy::reference_internal)
+        py::arg("iterations") = static_cast<long>(0), py::return_value_policy::reference_internal);
 
-        py::class_<elsa::Cloneable<elsa::Solver<std::complex<double>>>>
-            CloneableSolvercd(m, "CloneableSolvercd");
+    py::class_<elsa::Cloneable<elsa::Solver<std::complex<double>>>> CloneableSolvercd(
+        m, "CloneableSolvercd");
     CloneableSolvercd
         .def("__ne__",
              (bool(elsa::Cloneable<elsa::Solver<std::complex<double>>>::*)(
@@ -116,10 +116,10 @@ void add_definitions_pyelsa_solvers(py::module& m)
                       std::complex<double>> & (elsa::Solver<std::complex<double>>::*) (long) )(
                      &elsa::Solver<std::complex<double>>::solve),
                  py::arg("iterations") = static_cast<long>(0),
-                 py::return_value_policy::reference_internal)
+                 py::return_value_policy::reference_internal);
 
-        py::class_<elsa::GradientDescent<float>, elsa::Solver<float>>
-            GradientDescentf(m, "GradientDescentf");
+    py::class_<elsa::GradientDescent<float>, elsa::Solver<float>> GradientDescentf(
+        m, "GradientDescentf");
     GradientDescentf.def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
         .def(py::init<const elsa::Problem<float>&, float>(), py::arg("problem"),
              py::arg("stepSize"));
@@ -133,8 +133,8 @@ void add_definitions_pyelsa_solvers(py::module& m)
              py::arg("stepSize"));
 
     py::class_<elsa::CG<float>, elsa::Solver<float>> CGf(m, "CGf");
-    CGf..def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&>(),
-             py::arg("problem"), py::arg("preconditionerInverse"))
+    CGf.def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&>(),
+            py::arg("problem"), py::arg("preconditionerInverse"))
         .def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&, float>(),
              py::arg("problem"), py::arg("preconditionerInverse"), py::arg("epsilon"))
         .def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
@@ -266,19 +266,15 @@ void add_definitions_pyelsa_solvers(py::module& m)
 
     py::class_<elsa::OrthogonalMatchingPursuit<float>, elsa::Solver<float>>
         OrthogonalMatchingPursuitf(m, "OrthogonalMatchingPursuitf");
-    OrthogonalMatchingPursuitf
-        .def(py::init<const elsa::RepresentationProblem<float>&>(), py::arg("problem"))
-        .def(py::init<const elsa::RepresentationProblem<float>&, float>(), py::arg("problem"),
-             py::arg("epsilon"));
+    OrthogonalMatchingPursuitf.def(py::init<const elsa::RepresentationProblem<float>&, float>(),
+                                   py::arg("problem"), py::arg("epsilon"));
 
     m.attr("OrthogonalMatchingPursuit") = m.attr("OrthogonalMatchingPursuitf");
 
     py::class_<elsa::OrthogonalMatchingPursuit<double>, elsa::Solver<double>>
         OrthogonalMatchingPursuitd(m, "OrthogonalMatchingPursuitd");
-    OrthogonalMatchingPursuitd
-        .def(py::init<const elsa::RepresentationProblem<double>&>(), py::arg("problem"))
-        .def(py::init<const elsa::RepresentationProblem<double>&, double>(), py::arg("problem"),
-             py::arg("epsilon"));
+    OrthogonalMatchingPursuitd.def(py::init<const elsa::RepresentationProblem<double>&, double>(),
+                                   py::arg("problem"), py::arg("epsilon"));
 
     elsa::SolversHints::addCustomFunctions(m);
 }

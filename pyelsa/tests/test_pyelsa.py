@@ -106,7 +106,7 @@ class PyelsaTest(unittest.TestCase):
     def test_intermodule_object_exchange(self):
         """Test whether instances of a class produced by one module (e.g. pyelsa_functionals)
         are recognised as instances of the same class in another module that is only aware of the
-        classes interface (e.g. pyelsa_problems). When that is not the case, dynamic_casts on the 
+        classes interface (e.g. pyelsa_problems). When that is not the case, dynamic_casts on the
         C++ side fail (produce a nullptr). This may occur as a result of pybind11 enforcing
         -fvisibility=hidden and libc++ considering objects coming from different modules to be of
         different types.
@@ -206,42 +206,29 @@ class PyelsaTest(unittest.TestCase):
             mse, 0.004, "Mean squared error of reconstruction too large",
         )
 
-    def test_reconstruction_2d_curved_more_iterations(self):
-        # TODO: is this angle realistic?
-        self._test_reconstruction_2d(
-            elsa.CurvedCircleTrajectoryGenerator, elsa.Radian(2.0), iterCount=40
-        )
-
-    def test_reconstruction_2d_curved_smaller_angle(self):
-        # TODO: is this angle realistic?
-        self._test_reconstruction_2d(elsa.CurvedCircleTrajectoryGenerator, elsa.Radian(0.5))
-
-    def test_reconstruction_2d_planar(self):
-        self._test_reconstruction_2d(elsa.CircleTrajectoryGenerator)
-
-    def test_logging(self):
-        "Test logging module interface"
-
-        # the elsa.Logger appears to bypass the Python-side sys.stdout
-        # so we only test file logging
-        logfile_name = "test_pyelsa_log.txt"
-        if os.path.exists(logfile_name):
-            os.remove(logfile_name)
-        elsa.Logger.enableFileLogging(logfile_name)
-
-        elsa.Logger.setLevel(elsa.LogLevel.OFF)
-        # this should produce no output when logging is off
-        self.test_intermodule_object_exchange()
-        elsa.Logger.flush()
-        with open(logfile_name) as log_file:
-            self.assertTrue(len(log_file.readline()) == 0)
-
-        elsa.Logger.setLevel(elsa.LogLevel.TRACE)
-        # this should produce some output when using a low logging level
-        self.test_intermodule_object_exchange()
-        elsa.Logger.flush()
-        with open(logfile_name) as log_file:
-            self.assertTrue(len(log_file.readline()) > 0)
+    # def test_logging(self):
+    #     "Test logging module interface"
+    #
+    #     # the elsa.Logger appears to bypass the Python-side sys.stdout
+    #     # so we only test file logging
+    #     logfile_name = "test_pyelsa_log.txt"
+    #     if os.path.exists(logfile_name):
+    #         os.remove(logfile_name)
+    #     elsa.Logger.enableFileLogging(logfile_name)
+    #
+    #     elsa.Logger.setLevel(elsa.LogLevel.OFF)
+    #     # this should produce no output when logging is off
+    #     self.test_intermodule_object_exchange()
+    #     elsa.Logger.flush()
+    #     with open(logfile_name) as log_file:
+    #         self.assertTrue(len(log_file.readline()) == 0)
+    #
+    #     elsa.Logger.setLevel(elsa.LogLevel.TRACE)
+    #     # this should produce some output when using a low logging level
+    #     self.test_intermodule_object_exchange()
+    #     elsa.Logger.flush()
+    #     with open(logfile_name) as log_file:
+    #         self.assertTrue(len(log_file.readline()) > 0)
 
 
 if __name__ == "main":

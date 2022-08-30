@@ -1,7 +1,6 @@
 # add_subdirectory(pyelsa/hints)
 
-# pybind11_add_module(_core MODULE pyelsa/main.cpp)
-# target_link_libraries(_core PUBLIC elsa_pybind_hints)
+# pybind11_add_module(_core MODULE pyelsa/main.cpp) target_link_libraries(_core PUBLIC elsa_pybind_hints)
 # install(TARGETS _core DESTINATION .)
 
 function(elsa_add_pymodule name)
@@ -18,6 +17,9 @@ elsa_add_pymodule(io)
 elsa_add_pymodule(operators)
 elsa_add_pymodule(problems)
 elsa_add_pymodule(projectors)
-elsa_add_pymodule(projectors_cuda)
 elsa_add_pymodule(proximity_operators)
 elsa_add_pymodule(solvers)
+
+if(ELSA_BUILD_CUDA_PROJECTORS)
+    elsa_add_pymodule(projectors_cuda)
+endif()
