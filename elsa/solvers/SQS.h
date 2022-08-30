@@ -67,9 +67,6 @@ namespace elsa
         /// TODO: This might be a nice variant?
         std::unique_ptr<Problem<data_t>> _problem;
 
-        /// the default number of iterations
-        const index_t _defaultIterations{100};
-
         /// variable affecting the stopping condition
         data_t _epsilon;
 
@@ -86,8 +83,7 @@ namespace elsa
          * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * gradient descent
          *
-         * @param[in] iterations number of iterations to execute (the default 0 value executes
-         * _defaultIterations of iterations)
+         * @param[in] iterations number of iterations to execute
          *
          * @returns a reference to the current solution
          */

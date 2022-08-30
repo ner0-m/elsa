@@ -39,7 +39,7 @@ namespace elsa
          *
          * Please note: this method calls solveImpl, which has to be overridden in derived classes.
          */
-        DataContainer<data_t>& solve(index_t iterations = 0);
+        DataContainer<data_t>& solve(index_t iterations = 100);
 
     protected:
         /// the solve method to be overridden in derived classes

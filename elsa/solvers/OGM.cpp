@@ -30,9 +30,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& OGM<data_t>::solveImpl(index_t iterations)
     {
-        if (iterations == 0)
-            iterations = _defaultIterations;
-
         auto prevTheta = static_cast<data_t>(1.0);
         auto x0 = _problem->getCurrentSolution();
         auto& prevY = x0;

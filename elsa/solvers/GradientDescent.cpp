@@ -24,9 +24,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& GradientDescent<data_t>::solveImpl(index_t iterations)
     {
-        if (iterations == 0)
-            iterations = _defaultIterations;
-
         for (index_t i = 0; i < iterations; ++i) {
             Logger::get("GradientDescent")->info("iteration {} of {}", i + 1, iterations);
             auto& x = _problem->getCurrentSolution();

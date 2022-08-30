@@ -74,9 +74,6 @@ namespace elsa
         /// The quadric optimization problem
         QuadricProblem<data_t> _problem;
 
-        /// the default number of iterations
-        const index_t _defaultIterations{100};
-
         /// the inverse of the preconditioner (if supplied)
         std::unique_ptr<LinearOperator<data_t>> _preconditionerInverse{};
 

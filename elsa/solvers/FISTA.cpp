@@ -38,9 +38,6 @@ namespace elsa
     template <typename data_t>
     auto FISTA<data_t>::solveImpl(index_t iterations) -> DataContainer<data_t>&
     {
-        if (iterations == 0)
-            iterations = _defaultIterations;
-
         spdlog::stopwatch aggregate_time;
         Logger::get("FISTA")->info("Start preparations...");
 

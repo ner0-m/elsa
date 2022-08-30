@@ -52,9 +52,6 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t>& SQS<data_t>::solveImpl(index_t iterations)
     {
-        if (iterations == 0)
-            iterations = _defaultIterations;
-
         auto convergenceThreshold = _problem->getGradient().squaredL2Norm() * _epsilon * _epsilon;
 
         auto hessian = _problem->getHessian();

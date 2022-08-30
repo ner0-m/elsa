@@ -87,9 +87,6 @@ namespace elsa
 
         auto solveImpl(index_t iterations) -> DataContainer<data_t>& override
         {
-            if (iterations == 0)
-                iterations = _defaultIterations;
-
             const auto& f = _problem->getF();
             const auto& g = _problem->getG();
 
@@ -236,9 +233,6 @@ namespace elsa
         /// Splitting problem to solve
         /// TODO: Remove requirement of unique_ptr
         std::unique_ptr<SplittingProblem<data_t>> _problem;
-
-        /// the default number of iterations for ADMM
-        index_t _defaultIterations{100};
 
         /// the default number of iterations for the XSolver
         index_t _defaultXSolverIterations{5};
