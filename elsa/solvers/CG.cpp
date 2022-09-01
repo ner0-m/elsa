@@ -30,7 +30,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> CG<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> CG<data_t>::solve(index_t iterations)
     {
         spdlog::stopwatch aggregate_time;
         Logger::get("CG")->info("Start preparations...");

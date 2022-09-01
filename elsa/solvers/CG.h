@@ -70,6 +70,16 @@ namespace elsa
         /// default destructor
         ~CG() override = default;
 
+        /**
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of CG
+         *
+         * @param[in] iterations number of iterations to execute (the default 0 value executes
+         * _defaultIterations of iterations)
+         *
+         * @returns a reference to the current solution
+         */
+        DataContainer<data_t> solve(index_t iterations) override;
+
     private:
         /// The quadric optimization problem
         QuadricProblem<data_t> _problem;
@@ -79,16 +89,6 @@ namespace elsa
 
         /// variable affecting the stopping condition
         data_t _epsilon;
-
-        /**
-         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of CG
-         *
-         * @param[in] iterations number of iterations to execute (the default 0 value executes
-         * _defaultIterations of iterations)
-         *
-         * @returns a reference to the current solution
-         */
-        DataContainer<data_t> solveImpl(index_t iterations) override;
 
         /// implement the polymorphic clone operation
         CG<data_t>* cloneImpl() const override;

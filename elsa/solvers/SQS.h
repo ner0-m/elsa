@@ -62,6 +62,16 @@ namespace elsa
         /// default destructor
         ~SQS() override = default;
 
+        /**
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
+         * gradient descent
+         *
+         * @param[in] iterations number of iterations to execute
+         *
+         * @returns a reference to the current solution
+         */
+        DataContainer<data_t> solve(index_t iterations) override;
+
     private:
         /// The optimization to solve
         /// TODO: This might be a nice variant?
@@ -78,16 +88,6 @@ namespace elsa
 
         /// whether to operate in subset based mode
         bool _subsetMode{false};
-
-        /**
-         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
-         * gradient descent
-         *
-         * @param[in] iterations number of iterations to execute
-         *
-         * @returns a reference to the current solution
-         */
-        DataContainer<data_t> solveImpl(index_t iterations) override;
 
         /// implement the polymorphic clone operation
         SQS<data_t>* cloneImpl() const override;

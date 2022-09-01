@@ -28,7 +28,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> OGM<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> OGM<data_t>::solve(index_t iterations)
     {
         auto prevTheta = static_cast<data_t>(1.0);
         auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());

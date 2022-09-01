@@ -85,7 +85,7 @@ namespace elsa
         /// default destructor
         ~ADMM() override = default;
 
-        auto solveImpl(index_t iterations) -> DataContainer<data_t> override
+        auto solve(index_t iterations) -> DataContainer<data_t> override
         {
             const auto& f = _problem->getF();
             const auto& g = _problem->getG();

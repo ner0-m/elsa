@@ -53,13 +53,6 @@ namespace elsa
         /// default destructor
         ~GradientDescent() override = default;
 
-    private:
-        /// the differentiable optimizaion problem
-        std::unique_ptr<Problem<data_t>> _problem;
-
-        /// the step size
-        MaybeUninitialized<data_t> _stepSize;
-
         /**
          * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * gradient descent
@@ -68,7 +61,14 @@ namespace elsa
          *
          * @returns a reference to the current solution
          */
-        DataContainer<data_t> solveImpl(index_t iterations) override;
+        DataContainer<data_t> solve(index_t iterations) override;
+
+    private:
+        /// the differentiable optimizaion problem
+        std::unique_ptr<Problem<data_t>> _problem;
+
+        /// the step size
+        MaybeUninitialized<data_t> _stepSize;
 
         /// implement the polymorphic clone operation
         GradientDescent<data_t>* cloneImpl() const override;

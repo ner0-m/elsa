@@ -84,6 +84,16 @@ namespace elsa
         /// default destructor
         ~OGM() override = default;
 
+        /**
+         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
+         * gradient descent
+         *
+         * @param[in] iterations number of iterations to execute
+         *
+         * @returns a reference to the current solution
+         */
+        DataContainer<data_t> solve(index_t iterations) override;
+
     private:
         /// the differentiable optimizaion problem
         std::unique_ptr<Problem<data_t>> _problem;
@@ -93,16 +103,6 @@ namespace elsa
 
         /// the inverse of the preconditioner (if supplied)
         std::unique_ptr<LinearOperator<data_t>> _preconditionerInverse{};
-
-        /**
-         * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
-         * gradient descent
-         *
-         * @param[in] iterations number of iterations to execute
-         *
-         * @returns a reference to the current solution
-         */
-        DataContainer<data_t> solveImpl(index_t iterations) override;
 
         /// implement the polymorphic clone operation
         OGM<data_t>* cloneImpl() const override;

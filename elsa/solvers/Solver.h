@@ -36,16 +36,7 @@ namespace elsa
          * value lets the solve choose how many iterations to execute)
          *
          * @returns a reference to the current solution (after solving)
-         *
-         * Please note: this method calls solveImpl, which has to be overridden in derived classes.
          */
-        DataContainer<data_t> solve(index_t iterations = 100);
-
-    protected:
-        /// the solve method to be overridden in derived classes
-        virtual DataContainer<data_t> solveImpl(index_t iterations) = 0;
-
-        /// implement the polymorphic comparison operation
-        // bool isEqual(const Solver<data_t>& other) const override;
+        virtual DataContainer<data_t> solve(index_t iterations) = 0;
     };
 } // namespace elsa

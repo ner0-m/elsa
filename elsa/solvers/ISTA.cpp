@@ -34,7 +34,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    auto ISTA<data_t>::solveImpl(index_t iterations) -> DataContainer<data_t>
+    auto ISTA<data_t>::solve(index_t iterations) -> DataContainer<data_t>
     {
         spdlog::stopwatch aggregate_time;
         Logger::get("ISTA")->info("Start preparations...");

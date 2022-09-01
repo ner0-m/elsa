@@ -82,7 +82,6 @@ namespace elsa
         /// default destructor
         ~ISTA() override = default;
 
-    protected:
         /**
          * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * ISTA
@@ -91,8 +90,9 @@ namespace elsa
          *
          * @returns a reference to the current solution
          */
-        auto solveImpl(index_t iterations) -> DataContainer<data_t> override;
+        auto solve(index_t iterations) -> DataContainer<data_t> override;
 
+    protected:
         /// implement the polymorphic clone operation
         auto cloneImpl() const -> ISTA<data_t>* override;
 

@@ -13,7 +13,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> OrthogonalMatchingPursuit<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> OrthogonalMatchingPursuit<data_t>::solve(index_t iterations)
     {
         const auto& dict = _problem.getDictionary();
         const auto& residual = _problem.getDataTerm().getResidual();
@@ -33,7 +33,7 @@ namespace elsa
 
             WLSProblem<data_t> wls(purgedDict, _problem.getSignal());
 
-            CG cgSolver(wls);
+            CG<data_t> cgSolver(wls);
             const auto& wlsSolution = cgSolver.solve(10);
 
             // wlsSolution has only non-zero coefficients, copy those to the full solution with zero

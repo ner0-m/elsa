@@ -50,7 +50,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> SQS<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> SQS<data_t>::solve(index_t iterations)
     {
         auto& solutionDesc = _problem->getDataTerm().getDomainDescriptor();
         auto x = DataContainer<data_t>(solutionDesc);

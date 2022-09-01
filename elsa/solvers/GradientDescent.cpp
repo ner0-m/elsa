@@ -22,7 +22,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> GradientDescent<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> GradientDescent<data_t>::solve(index_t iterations)
     {
         auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());
         x = 0;

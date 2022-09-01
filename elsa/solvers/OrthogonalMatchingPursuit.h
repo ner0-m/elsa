@@ -44,6 +44,17 @@ namespace elsa
         /// default destructor
         ~OrthogonalMatchingPursuit() override = default;
 
+        /**
+         * @brief Solve the representation problem, i.e. apply iterations number of iterations of
+         * matching pursuit
+         *
+         * @param[in] iterations number of iterations to execute. As OrthogonalMatchingPursuit is a
+         * greedy algorithm, this corresponds to the desired sparsity level
+         *
+         * @returns a reference to the current solution
+         */
+        DataContainer<data_t> solve(index_t iterations) override;
+
     private:
         /// The representation optimization problem
         RepresentationProblem<data_t> _problem;
@@ -54,17 +65,6 @@ namespace elsa
         /// helper method to find the index of the atom that is most correlated with the residual
         index_t mostCorrelatedAtom(const Dictionary<data_t>& dict,
                                    const DataContainer<data_t>& evaluatedResidual);
-
-        /**
-         * @brief Solve the representation problem, i.e. apply iterations number of iterations of
-         * matching pursuit
-         *
-         * @param[in] iterations number of iterations to execute. As OrthogonalMatchingPursuit is a
-         * greedy algorithm, this corresponds to the desired sparsity level
-         *
-         * @returns a reference to the current solution
-         */
-        DataContainer<data_t> solveImpl(index_t iterations) override;
 
         /// implement the polymorphic clone operation
         OrthogonalMatchingPursuit<data_t>* cloneImpl() const override;

@@ -84,7 +84,6 @@ namespace elsa
         /// default destructor
         ~FISTA() override = default;
 
-    protected:
         /**
          * @brief Solve the optimization problem, i.e. apply iterations number of iterations of
          * FISTA
@@ -93,8 +92,9 @@ namespace elsa
          *
          * @returns a reference to the current solution
          */
-        auto solveImpl(index_t iterations) -> DataContainer<data_t> override;
+        auto solve(index_t iterations) -> DataContainer<data_t> override;
 
+    protected:
         /// implement the polymorphic clone operation
         auto cloneImpl() const -> FISTA<data_t>* override;
 
