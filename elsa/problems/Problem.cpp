@@ -8,78 +8,24 @@ namespace elsa
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
                              const std::vector<RegularizationTerm<data_t>>& regTerms,
-                             const DataContainer<data_t>& x0,
                              const std::optional<data_t> lipschitzConstant)
-        : _dataTerm{dataTerm.clone()},
-          _regTerms{regTerms},
-          _currentSolution{x0},
-          _lipschitzConstant{lipschitzConstant}
+        : _dataTerm{dataTerm.clone()}, _regTerms{regTerms}, _lipschitzConstant{lipschitzConstant}
     {
-        // sanity checks
-        if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
-            != this->_currentSolution.getSize())
-            throw InvalidArgumentError("Problem: domain of dataTerm and solution do not match");
-    }
-
-    template <typename data_t>
-    Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
-                             const std::vector<RegularizationTerm<data_t>>& regTerms,
-                             const std::optional<data_t> lipschitzConstant)
-        : _dataTerm{dataTerm.clone()},
-          _regTerms{regTerms},
-          _currentSolution{dataTerm.getDomainDescriptor()},
-          _lipschitzConstant{lipschitzConstant}
-    {
-        _currentSolution = 0;
-    }
-
-    template <typename data_t>
-    Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
-                             const RegularizationTerm<data_t>& regTerm,
-                             const DataContainer<data_t>& x0,
-                             const std::optional<data_t> lipschitzConstant)
-        : _dataTerm{dataTerm.clone()},
-          _regTerms{regTerm},
-          _currentSolution{x0},
-          _lipschitzConstant{lipschitzConstant}
-    {
-        // sanity checks
-        if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
-            != this->_currentSolution.getSize())
-            throw InvalidArgumentError("Problem: domain of dataTerm and solution do not match");
     }
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
                              const RegularizationTerm<data_t>& regTerm,
                              const std::optional<data_t> lipschitzConstant)
-        : _dataTerm{dataTerm.clone()},
-          _regTerms{regTerm},
-          _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType},
-          _lipschitzConstant{lipschitzConstant}
+        : _dataTerm{dataTerm.clone()}, _regTerms{regTerm}, _lipschitzConstant{lipschitzConstant}
     {
-        _currentSolution = 0;
-    }
-
-    template <typename data_t>
-    Problem<data_t>::Problem(const Functional<data_t>& dataTerm, const DataContainer<data_t>& x0,
-                             const std::optional<data_t> lipschitzConstant)
-        : _dataTerm{dataTerm.clone()}, _currentSolution{x0}, _lipschitzConstant{lipschitzConstant}
-    {
-        // sanity check
-        if (_dataTerm->getDomainDescriptor().getNumberOfCoefficients()
-            != this->_currentSolution.getSize())
-            throw InvalidArgumentError("Problem: domain of dataTerm and solution do not match");
     }
 
     template <typename data_t>
     Problem<data_t>::Problem(const Functional<data_t>& dataTerm,
                              const std::optional<data_t> lipschitzConstant)
-        : _dataTerm{dataTerm.clone()},
-          _currentSolution{dataTerm.getDomainDescriptor(), defaultHandlerType},
-          _lipschitzConstant{lipschitzConstant}
+        : _dataTerm{dataTerm.clone()}, _lipschitzConstant{lipschitzConstant}
     {
-        _currentSolution = 0;
     }
 
     template <typename data_t>
@@ -87,7 +33,6 @@ namespace elsa
         : Cloneable<Problem<data_t>>(),
           _dataTerm{problem._dataTerm->clone()},
           _regTerms{problem._regTerms},
-          _currentSolution{problem._currentSolution},
           _lipschitzConstant{problem._lipschitzConstant}
     {
     }
@@ -105,52 +50,42 @@ namespace elsa
     }
 
     template <typename data_t>
-    const DataContainer<data_t>& Problem<data_t>::getCurrentSolution() const
+    data_t Problem<data_t>::evaluateImpl(const DataContainer<data_t>& x)
     {
-        return _currentSolution;
-    }
-
-    template <typename data_t>
-    DataContainer<data_t>& Problem<data_t>::getCurrentSolution()
-    {
-        return _currentSolution;
-    }
-
-    template <typename data_t>
-    data_t Problem<data_t>::evaluateImpl()
-    {
-        data_t result = _dataTerm->evaluate(_currentSolution);
+        data_t result = _dataTerm->evaluate(x);
 
         for (auto& regTerm : _regTerms)
-            result += regTerm.getWeight() * regTerm.getFunctional().evaluate(_currentSolution);
+            result += regTerm.getWeight() * regTerm.getFunctional().evaluate(x);
 
         return result;
     }
 
     template <typename data_t>
-    void Problem<data_t>::getGradientImpl(DataContainer<data_t>& result)
+    void Problem<data_t>::getGradientImpl(const DataContainer<data_t>& x,
+                                          DataContainer<data_t>& result)
     {
-        _dataTerm->getGradient(_currentSolution, result);
+        _dataTerm->getGradient(x, result);
 
         for (auto& regTerm : _regTerms)
-            result += regTerm.getWeight() * regTerm.getFunctional().getGradient(_currentSolution);
+            result += regTerm.getWeight() * regTerm.getFunctional().getGradient(x);
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Problem<data_t>::getHessianImpl() const
+    LinearOperator<data_t> Problem<data_t>::getHessianImpl(const DataContainer<data_t>& x) const
     {
-        auto hessian = _dataTerm->getHessian(_currentSolution);
+        auto hessian = _dataTerm->getHessian(x);
 
         for (auto& regTerm : _regTerms) {
-            Scaling weight(_currentSolution.getDataDescriptor(), regTerm.getWeight());
-            hessian = hessian + (weight * regTerm.getFunctional().getHessian(_currentSolution));
+            Scaling weight(x.getDataDescriptor(), regTerm.getWeight());
+            hessian = hessian + (weight * regTerm.getFunctional().getHessian(x));
         }
 
         return hessian;
     }
 
     template <typename data_t>
-    data_t Problem<data_t>::getLipschitzConstantImpl(index_t nIterations) const
+    data_t Problem<data_t>::getLipschitzConstantImpl(const DataContainer<data_t>& x,
+                                                     index_t nIterations) const
     {
         Timer guard("Problem", "Calculating Lipschitz constant");
         Logger::get("Problem")->info("Calculating Lipschitz constant");
@@ -158,8 +93,9 @@ namespace elsa
         if (_lipschitzConstant.has_value()) {
             return _lipschitzConstant.value();
         }
+
         // compute the Lipschitz Constant as the largest eigenvalue of the Hessian
-        const auto hessian = getHessian();
+        const auto hessian = getHessian(x);
         DataContainer<data_t> dcB(hessian.getDomainDescriptor());
         dcB = 1;
         for (index_t i = 0; i < nIterations; i++) {
@@ -182,9 +118,6 @@ namespace elsa
         if (typeid(*this) != typeid(other))
             return false;
 
-        if (_currentSolution != other._currentSolution)
-            return false;
-
         if (*_dataTerm != *other._dataTerm)
             return false;
 
@@ -199,36 +132,36 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t Problem<data_t>::evaluate()
+    data_t Problem<data_t>::evaluate(const DataContainer<data_t>& x)
     {
-        return evaluateImpl();
+        return evaluateImpl(x);
     }
 
     template <typename data_t>
-    DataContainer<data_t> Problem<data_t>::getGradient()
+    DataContainer<data_t> Problem<data_t>::getGradient(const DataContainer<data_t>& x)
     {
-        DataContainer<data_t> result(_currentSolution.getDataDescriptor(),
-                                     _currentSolution.getDataHandlerType());
-        getGradient(result);
+        DataContainer<data_t> result(x.getDataDescriptor(), x.getDataHandlerType());
+        getGradient(x, result);
         return result;
     }
 
     template <typename data_t>
-    void Problem<data_t>::getGradient(DataContainer<data_t>& result)
+    void Problem<data_t>::getGradient(const DataContainer<data_t>& x, DataContainer<data_t>& result)
     {
-        getGradientImpl(result);
+        getGradientImpl(x, result);
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Problem<data_t>::getHessian() const
+    LinearOperator<data_t> Problem<data_t>::getHessian(const DataContainer<data_t>& x) const
     {
-        return getHessianImpl();
+        return getHessianImpl(x);
     }
 
     template <typename data_t>
-    data_t Problem<data_t>::getLipschitzConstant(index_t nIterations) const
+    data_t Problem<data_t>::getLipschitzConstant(const DataContainer<data_t>& x,
+                                                 index_t nIterations) const
     {
-        return getLipschitzConstantImpl(nIterations);
+        return getLipschitzConstantImpl(x, nIterations);
     }
 
     // ------------------------------------------

@@ -7,29 +7,10 @@
 
 namespace elsa
 {
-
-    template <typename data_t>
-    QuadricProblem<data_t>::QuadricProblem(const LinearOperator<data_t>& A,
-                                           const DataContainer<data_t>& b,
-                                           const DataContainer<data_t>& x0, bool spdA)
-        : QuadricProblem<data_t>{spdA ? Quadric{A, b} : Quadric{adjoint(A) * A, A.applyAdjoint(b)},
-                                 x0}
-    {
-        // sanity checks are done in the member constructors already
-    }
-
     template <typename data_t>
     QuadricProblem<data_t>::QuadricProblem(const LinearOperator<data_t>& A,
                                            const DataContainer<data_t>& b, bool spdA)
         : QuadricProblem<data_t>{spdA ? Quadric{A, b} : Quadric{adjoint(A) * A, A.applyAdjoint(b)}}
-    {
-        // sanity checks are done in the member constructors already
-    }
-
-    template <typename data_t>
-    QuadricProblem<data_t>::QuadricProblem(const Quadric<data_t>& quadric,
-                                           const DataContainer<data_t>& x0)
-        : Problem<data_t>{quadric, x0}
     {
         // sanity checks are done in the member constructors already
     }
@@ -43,7 +24,7 @@ namespace elsa
 
     template <typename data_t>
     QuadricProblem<data_t>::QuadricProblem(const Problem<data_t>& problem)
-        : Problem<data_t>{*quadricFromProblem(problem), problem.getCurrentSolution()}
+        : Problem<data_t>{*quadricFromProblem(problem)}
     {
         // sanity checks are done in the member constructors already
     }

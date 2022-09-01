@@ -30,13 +30,11 @@ TYPE_TO_STRING(GradientDescent<double>);
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", TestType,
-                   GradientDescent<float>, GradientDescent<double>)
+TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", data_t, float, double)
 {
     // Set seed for Eigen Matrices!
     srand((unsigned int) 666);
 
-    using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
 
@@ -57,7 +55,7 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", TestType,
 
         WHEN("setting up a Gradient Descent solver with fixed step size")
         {
-            TestType solver{prob, 0.5};
+            GradientDescent<data_t> solver{prob, 0.5};
 
             THEN("the clone works correctly")
             {
@@ -81,7 +79,7 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", TestType,
 
         WHEN("setting up a Gradient Descent solver with lipschitz step size")
         {
-            TestType solver{prob};
+            GradientDescent<data_t> solver{prob};
 
             THEN("the clone works correctly")
             {

@@ -4,7 +4,7 @@
 namespace elsa
 {
     template <typename data_t>
-    DataContainer<data_t>& Solver<data_t>::solve(index_t iterations)
+    DataContainer<data_t> Solver<data_t>::solve(index_t iterations)
     {
         return solveImpl(iterations);
     }

@@ -1,15 +1,17 @@
 #include "GradientDescent.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
+#include <iostream>
 
 namespace elsa
 {
+
     template <typename data_t>
     GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem, data_t stepSize)
         : Solver<data_t>(), _problem(problem.clone()), _stepSize{stepSize}
     {
         // sanity check
-        if (_stepSize <= 0)
+        if (stepSize <= 0)
             throw InvalidArgumentError("GradientDescent: step size has to be positive");
     }
 
@@ -17,29 +19,36 @@ namespace elsa
     GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem)
         : Solver<data_t>(), _problem(problem.clone())
     {
-        this->_stepSize =
-            static_cast<data_t>(1.0) / static_cast<data_t>(problem.getLipschitzConstant());
     }
 
     template <typename data_t>
-    DataContainer<data_t>& GradientDescent<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> GradientDescent<data_t>::solveImpl(index_t iterations)
     {
-        for (index_t i = 0; i < iterations; ++i) {
-            Logger::get("GradientDescent")->info("iteration {} of {}", i + 1, iterations);
-            auto& x = _problem->getCurrentSolution();
+        auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());
+        x = 0;
 
-            auto gradient = _problem->getGradient();
-            gradient *= _stepSize;
-            x -= gradient;
+        // If stepSize is not initialized yet, we do it know with x0
+        if (!_stepSize.isInitialized()) {
+            _stepSize = static_cast<data_t>(1.0) / _problem->getLipschitzConstant(x);
         }
 
-        return _problem->getCurrentSolution();
+        for (index_t i = 0; i < iterations; ++i) {
+            Logger::get("GradientDescent")->info("iteration {} of {}", i + 1, iterations);
+            auto gradient = _problem->getGradient(x);
+            x -= *_stepSize * gradient;
+        }
+
+        return x;
     }
 
     template <typename data_t>
     GradientDescent<data_t>* GradientDescent<data_t>::cloneImpl() const
     {
-        return new GradientDescent(*_problem, _stepSize);
+        if (_stepSize.isInitialized()) {
+            return new GradientDescent(*_problem, *_stepSize);
+        } else {
+            return new GradientDescent(*_problem);
+        }
     }
 
     template <typename data_t>
@@ -49,10 +58,7 @@ namespace elsa
         if (!otherGD)
             return false;
 
-        if (_stepSize != otherGD->_stepSize)
-            return false;
-
-        return true;
+        return _stepSize == otherGD->_stepSize;
     }
 
     // ------------------------------------------

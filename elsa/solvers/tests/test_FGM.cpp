@@ -44,19 +44,19 @@ TEST_CASE_TEMPLATE("FGM: Solving a simple linear problem", TestType, FGM<float>,
     GIVEN("a linear problem")
     {
         IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
+        numCoeff << 13, 11;
         VolumeDescriptor dd{numCoeff};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer<data_t> dcB{dd, bVec};
+        DataContainer<data_t> b{dd, bVec};
 
         bVec.setRandom();
         bVec = bVec.cwiseAbs();
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
         // using WLS problem here for ease of use
-        WLSProblem prob{scalingOp, dcB};
+        WLSProblem prob{scalingOp, b};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -73,13 +73,13 @@ TEST_CASE_TEMPLATE("FGM: Solving a simple linear problem", TestType, FGM<float>,
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(1000);
+                    auto solution = solver.solve(100);
 
-                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - b;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.5f));
+                    CHECK_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
+                                              epsilon * epsilon * b.squaredL2Norm(), 0.5f));
                 }
             }
         }
@@ -99,13 +99,13 @@ TEST_CASE_TEMPLATE("FGM: Solving a simple linear problem", TestType, FGM<float>,
                 AND_THEN("it works as expected")
                 {
                     // with a good preconditioner we should need fewer iterations than without
-                    auto solution = solver.solve(1000);
+                    auto solution = solver.solve(40);
 
-                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - b;
 
                     // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
+                                                epsilon * epsilon * b.squaredL2Norm(), 0.1f));
                 }
             }
         }
@@ -124,12 +124,12 @@ TEST_CASE_TEMPLATE("FGM: Solving a Tikhonov problem", TestType, FGM<float>, FGM<
     GIVEN("a Tikhonov problem")
     {
         IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
+        numCoeff << 13, 12;
         VolumeDescriptor dd(numCoeff);
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer dcB(dd, bVec);
+        DataContainer b(dd, bVec);
 
         // the regularization term
 
@@ -141,7 +141,7 @@ TEST_CASE_TEMPLATE("FGM: Solving a Tikhonov problem", TestType, FGM<float>, FGM<
         Scaling<data_t> lambdaOp{dd, lambda};
 
         // using WLS problem here for ease of use
-        WLSProblem<data_t> prob{scalingOp + lambdaOp, dcB};
+        WLSProblem<data_t> prob{scalingOp + lambdaOp, b};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -161,12 +161,12 @@ TEST_CASE_TEMPLATE("FGM: Solving a Tikhonov problem", TestType, FGM<float>, FGM<
                     auto solution = solver.solve(dd.getNumberOfCoefficients());
 
                     DataContainer<data_t> resultsDifference =
-                        (scalingOp + lambdaOp).apply(solution) - dcB;
+                        (scalingOp + lambdaOp).apply(solution) - b;
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
+                                                epsilon * epsilon * b.squaredL2Norm(), 0.1f));
                 }
             }
         }
@@ -189,11 +189,11 @@ TEST_CASE_TEMPLATE("FGM: Solving a Tikhonov problem", TestType, FGM<float>, FGM<
                     auto solution = solver.solve(dd.getNumberOfCoefficients());
 
                     DataContainer<data_t> resultsDifference =
-                        (scalingOp + lambdaOp).apply(solution) - dcB;
+                        (scalingOp + lambdaOp).apply(solution) - b;
 
                     // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.1f));
+                                                epsilon * epsilon * b.squaredL2Norm(), 0.1f));
                 }
             }
         }
@@ -241,7 +241,7 @@ TEST_CASE("FGM: Solving a simple phantom reconstruction")
 
                 AND_THEN("it works as expected")
                 {
-                    auto reconstruction = solver.solve(15);
+                    auto reconstruction = solver.solve(30);
 
                     DataContainer resultsDifference = reconstruction - phantom;
 

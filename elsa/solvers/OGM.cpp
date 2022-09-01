@@ -20,25 +20,26 @@ namespace elsa
     {
         // check that preconditioner is compatible with problem
         if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
-                != _problem->getCurrentSolution().getSize()
+                != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()
             || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
-                   != _problem->getCurrentSolution().getSize()) {
+                   != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()) {
             throw InvalidArgumentError("OGM: incorrect size of preconditioner");
         }
     }
 
     template <typename data_t>
-    DataContainer<data_t>& OGM<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> OGM<data_t>::solveImpl(index_t iterations)
     {
         auto prevTheta = static_cast<data_t>(1.0);
-        auto x0 = _problem->getCurrentSolution();
-        auto& prevY = x0;
+        auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());
+        x = 0;
+        auto prevY = x;
 
         // OGM is very picky when it comes to the accuracy of the used lipschitz constant therefore
         // we use 20 power iterations instead of 5 here to be more precise.
         // In some cases OGM might still not converge then an even more precise constant is needed
-        auto lipschitz = _problem->getLipschitzConstant(20);
-        auto deltaZero = _problem->getGradient().squaredL2Norm();
+        auto lipschitz = _problem->getLipschitzConstant(x, 20);
+        auto deltaZero = _problem->getGradient(x).squaredL2Norm();
         Logger::get("OGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
 
         // log history legend
@@ -46,9 +47,7 @@ namespace elsa
                                  "thetaRatio0", "thetaRatio1", "y", "gradient");
 
         for (index_t i = 0; i < iterations; ++i) {
-            auto& x = _problem->getCurrentSolution();
-
-            auto gradient = _problem->getGradient();
+            auto gradient = _problem->getGradient(x);
 
             if (_preconditionerInverse)
                 gradient = _preconditionerInverse->apply(gradient);
@@ -88,7 +87,7 @@ namespace elsa
 
         Logger::get("OGM")->warn("Failed to reach convergence at {} iterations", iterations);
 
-        return _problem->getCurrentSolution();
+        return x;
     }
 
     template <typename data_t>

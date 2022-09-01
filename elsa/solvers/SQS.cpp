@@ -42,21 +42,23 @@ namespace elsa
 
         // check that preconditioner is compatible with problem
         if (_preconditioner->getDomainDescriptor().getNumberOfCoefficients()
-                != _problem->getCurrentSolution().getSize()
+                != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()
             || _preconditioner->getRangeDescriptor().getNumberOfCoefficients()
-                   != _problem->getCurrentSolution().getSize()) {
+                   != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()) {
             throw InvalidArgumentError("SQS: incorrect size of preconditioner");
         }
     }
 
     template <typename data_t>
-    DataContainer<data_t>& SQS<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> SQS<data_t>::solveImpl(index_t iterations)
     {
-        auto convergenceThreshold = _problem->getGradient().squaredL2Norm() * _epsilon * _epsilon;
+        auto& solutionDesc = _problem->getDataTerm().getDomainDescriptor();
+        auto x = DataContainer<data_t>(solutionDesc);
+        x = 0;
 
-        auto hessian = _problem->getHessian();
+        auto convergenceThreshold = _problem->getGradient(x).squaredL2Norm() * _epsilon * _epsilon;
 
-        auto& solutionDesc = _problem->getCurrentSolution().getDataDescriptor();
+        auto hessian = _problem->getHessian(x);
 
         auto ones = DataContainer<data_t>(solutionDesc);
         ones = 1;
@@ -67,8 +69,9 @@ namespace elsa
         data_t prevT = 1;
         data_t t = 1;
         data_t nextT = 0;
-        auto& z = _problem->getCurrentSolution();
-        DataContainer<data_t> x = _problem->getCurrentSolution();
+
+        auto& z = x;
+        // z = 0;
         DataContainer<data_t> prevX = x;
         DataContainer<data_t> gradient(solutionDesc);
 
@@ -83,10 +86,10 @@ namespace elsa
 
             for (index_t m = 0; m < nSubsets; m++) {
                 if (_subsetMode) {
-                    gradient =
-                        static_cast<SubsetProblem<data_t>*>(_problem.get())->getSubsetGradient(m);
+                    gradient = static_cast<SubsetProblem<data_t>*>(_problem.get())
+                                   ->getSubsetGradient(x, m);
                 } else {
-                    gradient = _problem->getGradient();
+                    gradient = _problem->getGradient(x);
                 }
 
                 if (_preconditioner)
@@ -106,7 +109,7 @@ namespace elsa
                 // if the gradient is too small we stop
                 if (gradient.squaredL2Norm() <= convergenceThreshold) {
                     if (!_subsetMode
-                        || _problem->getGradient().squaredL2Norm() <= convergenceThreshold) {
+                        || _problem->getGradient(x).squaredL2Norm() <= convergenceThreshold) {
                         Logger::get("SQS")->info("SUCCESS: Reached convergence at {}/{} iteration",
                                                  i + 1, iterations);
 
@@ -114,7 +117,7 @@ namespace elsa
                         if (_momentumAcceleration) {
                             z = x;
                         }
-                        return _problem->getCurrentSolution();
+                        return x;
                     }
                 }
 
@@ -132,7 +135,7 @@ namespace elsa
         if (_momentumAcceleration) {
             z = x;
         }
-        return _problem->getCurrentSolution();
+        return x;
     }
 
     template <typename data_t>

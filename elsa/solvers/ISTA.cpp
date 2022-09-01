@@ -10,7 +10,7 @@ namespace elsa
     template <typename data_t>
     ISTA<data_t>::ISTA(const LASSOProblem<data_t>& problem, geometry::Threshold<data_t> mu,
                        data_t epsilon)
-        : Solver<data_t>(), _problem(problem), _mu{mu}, _epsilon{epsilon}
+        : Solver<data_t>(), _problem(problem), _mu{data_t(mu)}, _epsilon{epsilon}
     {
     }
 
@@ -29,20 +29,17 @@ namespace elsa
 
     template <typename data_t>
     ISTA<data_t>::ISTA(const LASSOProblem<data_t>& lassoProb, data_t epsilon)
-        : Solver<data_t>(),
-          _problem(lassoProb),
-          _mu{1 / lassoProb.getLipschitzConstant()},
-          _epsilon{epsilon}
+        : Solver<data_t>(), _problem(lassoProb), _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
-    auto ISTA<data_t>::solveImpl(index_t iterations) -> DataContainer<data_t>&
+    auto ISTA<data_t>::solveImpl(index_t iterations) -> DataContainer<data_t>
     {
         spdlog::stopwatch aggregate_time;
         Logger::get("ISTA")->info("Start preparations...");
 
-        SoftThresholding<data_t> shrinkageOp{_problem.getCurrentSolution().getDataDescriptor()};
+        SoftThresholding<data_t> shrinkageOp{_problem.getDataTerm().getDomainDescriptor()};
 
         data_t lambda = _problem.getRegularizationTerms()[0].getWeight();
 
@@ -52,9 +49,14 @@ namespace elsa
         const LinearOperator<data_t>& A = linResid.getOperator();
         const DataContainer<data_t>& b = linResid.getDataVector();
 
-        DataContainer<data_t>& x = _problem.getCurrentSolution();
+        auto x = DataContainer<data_t>(_problem.getDataTerm().getDomainDescriptor());
+        x = 0;
         DataContainer<data_t> Atb = A.applyAdjoint(b);
         DataContainer<data_t> gradient = A.applyAdjoint(A.apply(x)) - Atb;
+
+        if (!_mu.isInitialized()) {
+            _mu = 1 / _problem.getLipschitzConstant(x);
+        }
 
         Logger::get("ISTA")->info("Preparations done, tooke {}s", aggregate_time);
         Logger::get("ISTA")->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "gradient", "time",
@@ -66,7 +68,7 @@ namespace elsa
 
             gradient = A.applyAdjoint(A.apply(x)) - Atb;
 
-            x = shrinkageOp.apply(x - _mu * gradient, geometry::Threshold{_mu * lambda});
+            x = shrinkageOp.apply(x - *_mu * gradient, geometry::Threshold{*_mu * lambda});
 
             Logger::get("ISTA")->info("{:>5} |{:>15} | {:>6.3} |{:>6.3}s |", iter,
                                       gradient.squaredL2Norm(), iter_time, aggregate_time);
@@ -79,13 +81,17 @@ namespace elsa
 
         Logger::get("ISTA")->warn("Failed to reach convergence at {} iterations", iterations);
 
-        return _problem.getCurrentSolution();
+        return x;
     }
 
     template <typename data_t>
     auto ISTA<data_t>::cloneImpl() const -> ISTA<data_t>*
     {
-        return new ISTA(_problem, geometry::Threshold<data_t>{_mu}, _epsilon);
+        if (_mu.isInitialized()) {
+            return new ISTA(_problem, geometry::Threshold<data_t>{*_mu}, _epsilon);
+        } else {
+            return new ISTA(_problem, _epsilon);
+        }
     }
 
     template <typename data_t>

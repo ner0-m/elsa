@@ -18,6 +18,59 @@
 
 namespace py = pybind11;
 
+template <class data_t>
+void add_problem_definitions(
+    py::class_<elsa::Problem<data_t>, elsa::Cloneable<elsa::Problem<data_t>>> problem)
+{
+    problem
+        .def("getGradient",
+             (elsa::DataContainer<data_t>(elsa::Problem<data_t>::*)(
+                 const elsa::DataContainer<data_t>&))(&elsa::Problem<data_t>::getGradient),
+             py::return_value_policy::move)
+        .def("getGradient",
+             (void(elsa::Problem<data_t>::*)(const elsa::DataContainer<data_t>&,
+                                             elsa::DataContainer<data_t>&))(
+                 &elsa::Problem<data_t>::getGradient),
+             py::arg("x"), py::arg("result"))
+        .def("getHessian",
+             (elsa::LinearOperator<data_t>(elsa::Problem<data_t>::*)(
+                 const elsa::DataContainer<data_t>&) const)(&elsa::Problem<data_t>::getHessian),
+             py::return_value_policy::move)
+        .def("getDataTerm",
+             (const elsa::Functional<data_t>& (elsa::Problem<data_t>::*) ()
+                  const)(&elsa::Problem<data_t>::getDataTerm),
+             py::return_value_policy::reference_internal)
+        .def(
+            "getRegularizationTerms",
+            (const std::vector<elsa::RegularizationTerm<data_t>,
+                               std::allocator<elsa::RegularizationTerm<data_t>>>& (
+                elsa::Problem<data_t>::*) () const)(&elsa::Problem<data_t>::getRegularizationTerms),
+            py::return_value_policy::reference_internal)
+        .def("getLipschitzConstant",
+             (data_t(elsa::Problem<data_t>::*)(const elsa::DataContainer<data_t>&, long)
+                  const)(&elsa::Problem<data_t>::getLipschitzConstant),
+             py::arg("x"), py::arg("nIterations") = static_cast<long>(5))
+        .def("evaluate", (data_t(elsa::Problem<data_t>::*)(const elsa::DataContainer<data_t>&))(
+                             &elsa::Problem<data_t>::evaluate))
+        .def(py::init<const elsa::Functional<data_t>&>(), py::arg("dataTerm"))
+        .def(py::init<const elsa::Functional<data_t>&, std::optional<data_t>>(),
+             py::arg("dataTerm"), py::arg("lipschitzConstant"))
+        .def(py::init<const elsa::Functional<data_t>&, const elsa::RegularizationTerm<data_t>&>(),
+             py::arg("dataTerm"), py::arg("regTerm"))
+        .def(py::init<const elsa::Functional<data_t>&, const elsa::RegularizationTerm<data_t>&,
+                      std::optional<data_t>>(),
+             py::arg("dataTerm"), py::arg("regTerm"), py::arg("lipschitzConstant"))
+        .def(py::init<const elsa::Functional<data_t>&,
+                      const std::vector<elsa::RegularizationTerm<data_t>,
+                                        std::allocator<elsa::RegularizationTerm<data_t>>>&>(),
+             py::arg("dataTerm"), py::arg("regTerms"))
+        .def(py::init<const elsa::Functional<data_t>&,
+                      const std::vector<elsa::RegularizationTerm<data_t>,
+                                        std::allocator<elsa::RegularizationTerm<data_t>>>&,
+                      std::optional<data_t>>(),
+             py::arg("dataTerm"), py::arg("regTerms"), py::arg("lipschitzConstant"));
+}
+
 void add_definitions_pyelsa_problems(py::module& m)
 {
     py::class_<elsa::RegularizationTerm<float>> RegularizationTermf(m, "RegularizationTermf");
@@ -154,80 +207,7 @@ void add_definitions_pyelsa_problems(py::module& m)
                   const)(&elsa::Cloneable<elsa::Problem<float>>::clone));
 
     py::class_<elsa::Problem<float>, elsa::Cloneable<elsa::Problem<float>>> Problemf(m, "Problemf");
-    Problemf
-        .def("getCurrentSolution",
-             (elsa::DataContainer<float> & (elsa::Problem<float>::*) ())(
-                 &elsa::Problem<float>::getCurrentSolution),
-             py::return_value_policy::reference_internal)
-        .def("getGradient",
-             (elsa::DataContainer<float>(elsa::Problem<float>::*)())(
-                 &elsa::Problem<float>::getGradient),
-             py::return_value_policy::move)
-        .def("getHessian",
-             (elsa::LinearOperator<float>(elsa::Problem<float>::*)()
-                  const)(&elsa::Problem<float>::getHessian),
-             py::return_value_policy::move)
-        .def("getCurrentSolution",
-             (const elsa::DataContainer<float>& (elsa::Problem<float>::*) ()
-                  const)(&elsa::Problem<float>::getCurrentSolution),
-             py::return_value_policy::reference_internal)
-        .def("getDataTerm",
-             (const elsa::Functional<float>& (elsa::Problem<float>::*) ()
-                  const)(&elsa::Problem<float>::getDataTerm),
-             py::return_value_policy::reference_internal)
-        .def("getRegularizationTerms",
-             (const std::vector<elsa::RegularizationTerm<float>,
-                                std::allocator<elsa::RegularizationTerm<float>>>& (
-                 elsa::Problem<float>::*) () const)(&elsa::Problem<float>::getRegularizationTerms),
-             py::return_value_policy::reference_internal)
-        .def("getLipschitzConstant",
-             (float(elsa::Problem<float>::*)(long)
-                  const)(&elsa::Problem<float>::getLipschitzConstant),
-             py::arg("nIterations") = static_cast<long>(5))
-        .def("evaluate", (float(elsa::Problem<float>::*)())(&elsa::Problem<float>::evaluate))
-        .def("getGradient",
-             (void(elsa::Problem<float>::*)(elsa::DataContainer<float>&))(
-                 &elsa::Problem<float>::getGradient),
-             py::arg("result"))
-        .def(py::init<const elsa::Functional<float>&>(), py::arg("dataTerm"))
-        .def(py::init<const elsa::Functional<float>&, std::optional<float>>(), py::arg("dataTerm"),
-             py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<float>&, const elsa::DataContainer<float>&>(),
-             py::arg("dataTerm"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<float>&, const elsa::DataContainer<float>&,
-                      std::optional<float>>(),
-             py::arg("dataTerm"), py::arg("x0"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<float>&, const elsa::RegularizationTerm<float>&>(),
-             py::arg("dataTerm"), py::arg("regTerm"))
-        .def(py::init<const elsa::Functional<float>&, const elsa::RegularizationTerm<float>&,
-                      std::optional<float>>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<float>&, const elsa::RegularizationTerm<float>&,
-                      const elsa::DataContainer<float>&>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<float>&, const elsa::RegularizationTerm<float>&,
-                      const elsa::DataContainer<float>&, std::optional<float>>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("x0"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<float>&,
-                      const std::vector<elsa::RegularizationTerm<float>,
-                                        std::allocator<elsa::RegularizationTerm<float>>>&>(),
-             py::arg("dataTerm"), py::arg("regTerms"))
-        .def(py::init<const elsa::Functional<float>&,
-                      const std::vector<elsa::RegularizationTerm<float>,
-                                        std::allocator<elsa::RegularizationTerm<float>>>&,
-                      std::optional<float>>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<float>&,
-                      const std::vector<elsa::RegularizationTerm<float>,
-                                        std::allocator<elsa::RegularizationTerm<float>>>&,
-                      const elsa::DataContainer<float>&>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<float>&,
-                      const std::vector<elsa::RegularizationTerm<float>,
-                                        std::allocator<elsa::RegularizationTerm<float>>>&,
-                      const elsa::DataContainer<float>&, std::optional<float>>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("x0"), py::arg("lipschitzConstant"));
-
+    add_problem_definitions<float>(Problemf);
     m.attr("Problem") = m.attr("Problemf");
 
     py::class_<elsa::Cloneable<elsa::Problem<double>>> CloneableProblemd(m, "CloneableProblemd");
@@ -247,80 +227,7 @@ void add_definitions_pyelsa_problems(py::module& m)
 
     py::class_<elsa::Problem<double>, elsa::Cloneable<elsa::Problem<double>>> Problemd(m,
                                                                                        "Problemd");
-    Problemd
-        .def("getCurrentSolution",
-             (elsa::DataContainer<double> & (elsa::Problem<double>::*) ())(
-                 &elsa::Problem<double>::getCurrentSolution),
-             py::return_value_policy::reference_internal)
-        .def("getGradient",
-             (elsa::DataContainer<double>(elsa::Problem<double>::*)())(
-                 &elsa::Problem<double>::getGradient),
-             py::return_value_policy::move)
-        .def("getHessian",
-             (elsa::LinearOperator<double>(elsa::Problem<double>::*)()
-                  const)(&elsa::Problem<double>::getHessian),
-             py::return_value_policy::move)
-        .def("getCurrentSolution",
-             (const elsa::DataContainer<double>& (elsa::Problem<double>::*) ()
-                  const)(&elsa::Problem<double>::getCurrentSolution),
-             py::return_value_policy::reference_internal)
-        .def("getDataTerm",
-             (const elsa::Functional<double>& (elsa::Problem<double>::*) ()
-                  const)(&elsa::Problem<double>::getDataTerm),
-             py::return_value_policy::reference_internal)
-        .def(
-            "getRegularizationTerms",
-            (const std::vector<elsa::RegularizationTerm<double>,
-                               std::allocator<elsa::RegularizationTerm<double>>>& (
-                elsa::Problem<double>::*) () const)(&elsa::Problem<double>::getRegularizationTerms),
-            py::return_value_policy::reference_internal)
-        .def("getLipschitzConstant",
-             (double(elsa::Problem<double>::*)(long)
-                  const)(&elsa::Problem<double>::getLipschitzConstant),
-             py::arg("nIterations") = static_cast<long>(5))
-        .def("evaluate", (double(elsa::Problem<double>::*)())(&elsa::Problem<double>::evaluate))
-        .def("getGradient",
-             (void(elsa::Problem<double>::*)(elsa::DataContainer<double>&))(
-                 &elsa::Problem<double>::getGradient),
-             py::arg("result"))
-        .def(py::init<const elsa::Functional<double>&>(), py::arg("dataTerm"))
-        .def(py::init<const elsa::Functional<double>&, std::optional<double>>(),
-             py::arg("dataTerm"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<double>&, const elsa::DataContainer<double>&>(),
-             py::arg("dataTerm"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<double>&, const elsa::DataContainer<double>&,
-                      std::optional<double>>(),
-             py::arg("dataTerm"), py::arg("x0"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<double>&, const elsa::RegularizationTerm<double>&>(),
-             py::arg("dataTerm"), py::arg("regTerm"))
-        .def(py::init<const elsa::Functional<double>&, const elsa::RegularizationTerm<double>&,
-                      std::optional<double>>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<double>&, const elsa::RegularizationTerm<double>&,
-                      const elsa::DataContainer<double>&>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<double>&, const elsa::RegularizationTerm<double>&,
-                      const elsa::DataContainer<double>&, std::optional<double>>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("x0"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<double>&,
-                      const std::vector<elsa::RegularizationTerm<double>,
-                                        std::allocator<elsa::RegularizationTerm<double>>>&>(),
-             py::arg("dataTerm"), py::arg("regTerms"))
-        .def(py::init<const elsa::Functional<double>&,
-                      const std::vector<elsa::RegularizationTerm<double>,
-                                        std::allocator<elsa::RegularizationTerm<double>>>&,
-                      std::optional<double>>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<double>&,
-                      const std::vector<elsa::RegularizationTerm<double>,
-                                        std::allocator<elsa::RegularizationTerm<double>>>&,
-                      const elsa::DataContainer<double>&>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<double>&,
-                      const std::vector<elsa::RegularizationTerm<double>,
-                                        std::allocator<elsa::RegularizationTerm<double>>>&,
-                      const elsa::DataContainer<double>&, std::optional<double>>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("x0"), py::arg("lipschitzConstant"));
+    add_problem_definitions<double>(Problemd);
 
     py::class_<elsa::Cloneable<elsa::Problem<std::complex<float>>>> CloneableProblemcf(
         m, "CloneableProblemcf");
@@ -343,100 +250,7 @@ void add_definitions_pyelsa_problems(py::module& m)
     py::class_<elsa::Problem<std::complex<float>>,
                elsa::Cloneable<elsa::Problem<std::complex<float>>>>
         Problemcf(m, "Problemcf");
-    Problemcf
-        .def(
-            "getCurrentSolution",
-            (elsa::DataContainer<std::complex<float>> & (elsa::Problem<std::complex<float>>::*) ())(
-                &elsa::Problem<std::complex<float>>::getCurrentSolution),
-            py::return_value_policy::reference_internal)
-        .def("getGradient",
-             (elsa::DataContainer<std::complex<float>>(elsa::Problem<std::complex<float>>::*)())(
-                 &elsa::Problem<std::complex<float>>::getGradient),
-             py::return_value_policy::move)
-        .def("getHessian",
-             (elsa::LinearOperator<std::complex<float>>(elsa::Problem<std::complex<float>>::*)()
-                  const)(&elsa::Problem<std::complex<float>>::getHessian),
-             py::return_value_policy::move)
-        .def("getLipschitzConstant",
-             (std::complex<float>(elsa::Problem<std::complex<float>>::*)(long)
-                  const)(&elsa::Problem<std::complex<float>>::getLipschitzConstant),
-             py::arg("nIterations") = static_cast<long>(5), py::return_value_policy::move)
-        .def("evaluate",
-             (std::complex<float>(elsa::Problem<std::complex<float>>::*)())(
-                 &elsa::Problem<std::complex<float>>::evaluate),
-             py::return_value_policy::move)
-        .def("getCurrentSolution",
-             (const elsa::DataContainer<std::complex<float>>& (
-                 elsa::Problem<std::complex<float>>::*) ()
-                  const)(&elsa::Problem<std::complex<float>>::getCurrentSolution),
-             py::return_value_policy::reference_internal)
-        .def(
-            "getDataTerm",
-            (const elsa::Functional<std::complex<float>>& (elsa::Problem<std::complex<float>>::*) ()
-                 const)(&elsa::Problem<std::complex<float>>::getDataTerm),
-            py::return_value_policy::reference_internal)
-        .def("getRegularizationTerms",
-             (const std::vector<elsa::RegularizationTerm<std::complex<float>>,
-                                std::allocator<elsa::RegularizationTerm<std::complex<float>>>>& (
-                 elsa::Problem<std::complex<float>>::*) ()
-                  const)(&elsa::Problem<std::complex<float>>::getRegularizationTerms),
-             py::return_value_policy::reference_internal)
-        .def("getGradient",
-             (void(elsa::Problem<std::complex<float>>::*)(
-                 elsa::DataContainer<std::complex<float>>&))(
-                 &elsa::Problem<std::complex<float>>::getGradient),
-             py::arg("result"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&>(), py::arg("dataTerm"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      std::optional<std::complex<float>>>(),
-             py::arg("dataTerm"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&>(),
-             py::arg("dataTerm"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      std::optional<std::complex<float>>>(),
-             py::arg("dataTerm"), py::arg("x0"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      const elsa::RegularizationTerm<std::complex<float>>&>(),
-             py::arg("dataTerm"), py::arg("regTerm"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      const elsa::RegularizationTerm<std::complex<float>>&,
-                      std::optional<std::complex<float>>>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      const elsa::RegularizationTerm<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      const elsa::RegularizationTerm<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      std::optional<std::complex<float>>>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("x0"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      const std::vector<
-                          elsa::RegularizationTerm<std::complex<float>>,
-                          std::allocator<elsa::RegularizationTerm<std::complex<float>>>>&>(),
-             py::arg("dataTerm"), py::arg("regTerms"))
-        .def(py::init<
-                 const elsa::Functional<std::complex<float>>&,
-                 const std::vector<elsa::RegularizationTerm<std::complex<float>>,
-                                   std::allocator<elsa::RegularizationTerm<std::complex<float>>>>&,
-                 std::optional<std::complex<float>>>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("lipschitzConstant"))
-        .def(py::init<
-                 const elsa::Functional<std::complex<float>>&,
-                 const std::vector<elsa::RegularizationTerm<std::complex<float>>,
-                                   std::allocator<elsa::RegularizationTerm<std::complex<float>>>>&,
-                 const elsa::DataContainer<std::complex<float>>&>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("x0"))
-        .def(py::init<
-                 const elsa::Functional<std::complex<float>>&,
-                 const std::vector<elsa::RegularizationTerm<std::complex<float>>,
-                                   std::allocator<elsa::RegularizationTerm<std::complex<float>>>>&,
-                 const elsa::DataContainer<std::complex<float>>&,
-                 std::optional<std::complex<float>>>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("x0"), py::arg("lipschitzConstant"));
+    add_problem_definitions<std::complex<float>>(Problemcf);
 
     py::class_<elsa::Cloneable<elsa::Problem<std::complex<double>>>> CloneableProblemcd(
         m, "CloneableProblemcd");
@@ -459,100 +273,7 @@ void add_definitions_pyelsa_problems(py::module& m)
     py::class_<elsa::Problem<std::complex<double>>,
                elsa::Cloneable<elsa::Problem<std::complex<double>>>>
         Problemcd(m, "Problemcd");
-    Problemcd
-        .def("getCurrentSolution",
-             (elsa::DataContainer<
-                  std::complex<double>> & (elsa::Problem<std::complex<double>>::*) ())(
-                 &elsa::Problem<std::complex<double>>::getCurrentSolution),
-             py::return_value_policy::reference_internal)
-        .def("getGradient",
-             (elsa::DataContainer<std::complex<double>>(elsa::Problem<std::complex<double>>::*)())(
-                 &elsa::Problem<std::complex<double>>::getGradient),
-             py::return_value_policy::move)
-        .def("getHessian",
-             (elsa::LinearOperator<std::complex<double>>(elsa::Problem<std::complex<double>>::*)()
-                  const)(&elsa::Problem<std::complex<double>>::getHessian),
-             py::return_value_policy::move)
-        .def("getLipschitzConstant",
-             (std::complex<double>(elsa::Problem<std::complex<double>>::*)(long)
-                  const)(&elsa::Problem<std::complex<double>>::getLipschitzConstant),
-             py::arg("nIterations") = static_cast<long>(5), py::return_value_policy::move)
-        .def("evaluate",
-             (std::complex<double>(elsa::Problem<std::complex<double>>::*)())(
-                 &elsa::Problem<std::complex<double>>::evaluate),
-             py::return_value_policy::move)
-        .def("getCurrentSolution",
-             (const elsa::DataContainer<std::complex<double>>& (
-                 elsa::Problem<std::complex<double>>::*) ()
-                  const)(&elsa::Problem<std::complex<double>>::getCurrentSolution),
-             py::return_value_policy::reference_internal)
-        .def("getDataTerm",
-             (const elsa::Functional<std::complex<double>>& (
-                 elsa::Problem<std::complex<double>>::*) ()
-                  const)(&elsa::Problem<std::complex<double>>::getDataTerm),
-             py::return_value_policy::reference_internal)
-        .def("getRegularizationTerms",
-             (const std::vector<elsa::RegularizationTerm<std::complex<double>>,
-                                std::allocator<elsa::RegularizationTerm<std::complex<double>>>>& (
-                 elsa::Problem<std::complex<double>>::*) ()
-                  const)(&elsa::Problem<std::complex<double>>::getRegularizationTerms),
-             py::return_value_policy::reference_internal)
-        .def("getGradient",
-             (void(elsa::Problem<std::complex<double>>::*)(
-                 elsa::DataContainer<std::complex<double>>&))(
-                 &elsa::Problem<std::complex<double>>::getGradient),
-             py::arg("result"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&>(), py::arg("dataTerm"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      std::optional<std::complex<double>>>(),
-             py::arg("dataTerm"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&>(),
-             py::arg("dataTerm"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      std::optional<std::complex<double>>>(),
-             py::arg("dataTerm"), py::arg("x0"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      const elsa::RegularizationTerm<std::complex<double>>&>(),
-             py::arg("dataTerm"), py::arg("regTerm"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      const elsa::RegularizationTerm<std::complex<double>>&,
-                      std::optional<std::complex<double>>>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      const elsa::RegularizationTerm<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("x0"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      const elsa::RegularizationTerm<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      std::optional<std::complex<double>>>(),
-             py::arg("dataTerm"), py::arg("regTerm"), py::arg("x0"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      const std::vector<
-                          elsa::RegularizationTerm<std::complex<double>>,
-                          std::allocator<elsa::RegularizationTerm<std::complex<double>>>>&>(),
-             py::arg("dataTerm"), py::arg("regTerms"))
-        .def(py::init<
-                 const elsa::Functional<std::complex<double>>&,
-                 const std::vector<elsa::RegularizationTerm<std::complex<double>>,
-                                   std::allocator<elsa::RegularizationTerm<std::complex<double>>>>&,
-                 std::optional<std::complex<double>>>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("lipschitzConstant"))
-        .def(py::init<
-                 const elsa::Functional<std::complex<double>>&,
-                 const std::vector<elsa::RegularizationTerm<std::complex<double>>,
-                                   std::allocator<elsa::RegularizationTerm<std::complex<double>>>>&,
-                 const elsa::DataContainer<std::complex<double>>&>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("x0"))
-        .def(py::init<
-                 const elsa::Functional<std::complex<double>>&,
-                 const std::vector<elsa::RegularizationTerm<std::complex<double>>,
-                                   std::allocator<elsa::RegularizationTerm<std::complex<double>>>>&,
-                 const elsa::DataContainer<std::complex<double>>&,
-                 std::optional<std::complex<double>>>(),
-             py::arg("dataTerm"), py::arg("regTerms"), py::arg("x0"), py::arg("lipschitzConstant"));
+    add_problem_definitions<std::complex<double>>(Problemcd);
 
     py::class_<elsa::WLSProblem<float>, elsa::Problem<float>> WLSProblemf(m, "WLSProblemf");
     WLSProblemf
@@ -561,12 +282,6 @@ void add_definitions_pyelsa_problems(py::module& m)
         .def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&,
                       std::optional<float>>(),
              py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&,
-                      const elsa::DataContainer<float>&>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&,
-                      const elsa::DataContainer<float>&, std::optional<float>>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
         .def(py::init<const elsa::Scaling<float>&, const elsa::LinearOperator<float>&,
                       const elsa::DataContainer<float>&>(),
@@ -574,13 +289,6 @@ void add_definitions_pyelsa_problems(py::module& m)
         .def(py::init<const elsa::Scaling<float>&, const elsa::LinearOperator<float>&,
                       const elsa::DataContainer<float>&, std::optional<float>>(),
              py::arg("W"), py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Scaling<float>&, const elsa::LinearOperator<float>&,
-                      const elsa::DataContainer<float>&, const elsa::DataContainer<float>&>(),
-             py::arg("W"), py::arg("A"), py::arg("b"), py::arg("x0"))
-        .def(py::init<const elsa::Scaling<float>&, const elsa::LinearOperator<float>&,
-                      const elsa::DataContainer<float>&, const elsa::DataContainer<float>&,
-                      std::optional<float>>(),
-             py::arg("W"), py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::WLSProblem<float>&>());
 
     m.attr("WLSProblem") = m.attr("WLSProblemf");
@@ -592,12 +300,6 @@ void add_definitions_pyelsa_problems(py::module& m)
         .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&,
                       std::optional<double>>(),
              py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&,
-                      const elsa::DataContainer<double>&>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&,
-                      const elsa::DataContainer<double>&, std::optional<double>>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::Problem<double>&>(), py::arg("problem"))
         .def(py::init<const elsa::Scaling<double>&, const elsa::LinearOperator<double>&,
                       const elsa::DataContainer<double>&>(),
@@ -605,13 +307,6 @@ void add_definitions_pyelsa_problems(py::module& m)
         .def(py::init<const elsa::Scaling<double>&, const elsa::LinearOperator<double>&,
                       const elsa::DataContainer<double>&, std::optional<double>>(),
              py::arg("W"), py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Scaling<double>&, const elsa::LinearOperator<double>&,
-                      const elsa::DataContainer<double>&, const elsa::DataContainer<double>&>(),
-             py::arg("W"), py::arg("A"), py::arg("b"), py::arg("x0"))
-        .def(py::init<const elsa::Scaling<double>&, const elsa::LinearOperator<double>&,
-                      const elsa::DataContainer<double>&, const elsa::DataContainer<double>&,
-                      std::optional<double>>(),
-             py::arg("W"), py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::WLSProblem<double>&>());
 
     py::class_<elsa::WLSProblem<std::complex<float>>, elsa::Problem<std::complex<float>>>
@@ -624,15 +319,6 @@ void add_definitions_pyelsa_problems(py::module& m)
                       const elsa::DataContainer<std::complex<float>>&,
                       std::optional<std::complex<float>>>(),
              py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"))
-        .def(py::init<const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      std::optional<std::complex<float>>>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::Problem<std::complex<float>>&>(), py::arg("problem"))
         .def(py::init<const elsa::Scaling<std::complex<float>>&,
                       const elsa::LinearOperator<std::complex<float>>&,
@@ -643,17 +329,6 @@ void add_definitions_pyelsa_problems(py::module& m)
                       const elsa::DataContainer<std::complex<float>>&,
                       std::optional<std::complex<float>>>(),
              py::arg("W"), py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Scaling<std::complex<float>>&,
-                      const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&>(),
-             py::arg("W"), py::arg("A"), py::arg("b"), py::arg("x0"))
-        .def(py::init<const elsa::Scaling<std::complex<float>>&,
-                      const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      std::optional<std::complex<float>>>(),
-             py::arg("W"), py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::WLSProblem<std::complex<float>>&>());
 
     py::class_<elsa::WLSProblem<std::complex<double>>, elsa::Problem<std::complex<double>>>
@@ -666,15 +341,6 @@ void add_definitions_pyelsa_problems(py::module& m)
                       const elsa::DataContainer<std::complex<double>>&,
                       std::optional<std::complex<double>>>(),
              py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"))
-        .def(py::init<const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      std::optional<std::complex<double>>>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::Problem<std::complex<double>>&>(), py::arg("problem"))
         .def(py::init<const elsa::Scaling<std::complex<double>>&,
                       const elsa::LinearOperator<std::complex<double>>&,
@@ -685,17 +351,6 @@ void add_definitions_pyelsa_problems(py::module& m)
                       const elsa::DataContainer<std::complex<double>>&,
                       std::optional<std::complex<double>>>(),
              py::arg("W"), py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Scaling<std::complex<double>>&,
-                      const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&>(),
-             py::arg("W"), py::arg("A"), py::arg("b"), py::arg("x0"))
-        .def(py::init<const elsa::Scaling<std::complex<double>>&,
-                      const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      std::optional<std::complex<double>>>(),
-             py::arg("W"), py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::WLSProblem<std::complex<double>>&>());
 
     py::class_<elsa::TikhonovProblem<float>, elsa::Problem<float>> TikhonovProblemf(
@@ -762,13 +417,8 @@ void add_definitions_pyelsa_problems(py::module& m)
         .def(
             py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&, bool>(),
             py::arg("A"), py::arg("b"), py::arg("spdA"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&,
-                      const elsa::DataContainer<float>&, bool>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("spdA"))
         .def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
         .def(py::init<const elsa::Quadric<float>&>(), py::arg("quadric"))
-        .def(py::init<const elsa::Quadric<float>&, const elsa::DataContainer<float>&>(),
-             py::arg("quadric"), py::arg("x0"))
         .def(py::init<const elsa::QuadricProblem<float>&>());
 
     m.attr("QuadricProblem") = m.attr("QuadricProblemf");
@@ -779,13 +429,8 @@ void add_definitions_pyelsa_problems(py::module& m)
         .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&,
                       bool>(),
              py::arg("A"), py::arg("b"), py::arg("spdA"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&,
-                      const elsa::DataContainer<double>&, bool>(),
-             py::arg("A"), py::arg("b"), py::arg("x0"), py::arg("spdA"))
         .def(py::init<const elsa::Problem<double>&>(), py::arg("problem"))
         .def(py::init<const elsa::Quadric<double>&>(), py::arg("quadric"))
-        .def(py::init<const elsa::Quadric<double>&, const elsa::DataContainer<double>&>(),
-             py::arg("quadric"), py::arg("x0"))
         .def(py::init<const elsa::QuadricProblem<double>&>());
 
     py::class_<elsa::LASSOProblem<float>, elsa::Problem<float>> LASSOProblemf(m, "LASSOProblemf");
@@ -927,15 +572,17 @@ void add_definitions_pyelsa_problems(py::module& m)
                                                                                 "SubsetProblemf");
     SubsetProblemf
         .def("getSubsetGradient",
-             (elsa::DataContainer<float>(elsa::SubsetProblem<float>::*)(long))(
+             (elsa::DataContainer<float>(elsa::SubsetProblem<float>::*)(
+                 const elsa::DataContainer<float>&, long))(
                  &elsa::SubsetProblem<float>::getSubsetGradient),
-             py::arg("subset"), py::return_value_policy::move)
+             py::arg("x"), py::arg("subset"), py::return_value_policy::move)
         .def("getNumberOfSubsets", (long(elsa::SubsetProblem<float>::*)()
                                         const)(&elsa::SubsetProblem<float>::getNumberOfSubsets))
         .def("getSubsetGradient",
-             (void(elsa::SubsetProblem<float>::*)(elsa::DataContainer<float>&, long))(
+             (void(elsa::SubsetProblem<float>::*)(const elsa::DataContainer<float>&,
+                                                  elsa::DataContainer<float>&, long))(
                  &elsa::SubsetProblem<float>::getSubsetGradient),
-             py::arg("result"), py::arg("subset"));
+             py::arg("x"), py::arg("result"), py::arg("subset"));
 
     m.attr("SubsetProblem") = m.attr("SubsetProblemf");
 
@@ -943,15 +590,17 @@ void add_definitions_pyelsa_problems(py::module& m)
                                                                                   "SubsetProblemd");
     SubsetProblemd
         .def("getSubsetGradient",
-             (elsa::DataContainer<double>(elsa::SubsetProblem<double>::*)(long))(
+             (elsa::DataContainer<double>(elsa::SubsetProblem<double>::*)(
+                 const elsa::DataContainer<double>&, long))(
                  &elsa::SubsetProblem<double>::getSubsetGradient),
-             py::arg("subset"), py::return_value_policy::move)
+             py::arg("x"), py::arg("subset"), py::return_value_policy::move)
         .def("getNumberOfSubsets", (long(elsa::SubsetProblem<double>::*)()
                                         const)(&elsa::SubsetProblem<double>::getNumberOfSubsets))
         .def("getSubsetGradient",
-             (void(elsa::SubsetProblem<double>::*)(elsa::DataContainer<double>&, long))(
+             (void(elsa::SubsetProblem<double>::*)(const elsa::DataContainer<double>&,
+                                                   elsa::DataContainer<double>&, long))(
                  &elsa::SubsetProblem<double>::getSubsetGradient),
-             py::arg("result"), py::arg("subset"));
+             py::arg("x"), py::arg("result"), py::arg("subset"));
 
     py::class_<elsa::WLSSubsetProblem<float>, elsa::SubsetProblem<float>> WLSSubsetProblemf(
         m, "WLSSubsetProblemf");

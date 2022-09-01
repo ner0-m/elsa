@@ -4,6 +4,7 @@
 
 #include "StrongTypes.h"
 #include "LASSOProblem.h"
+#include "MaybeUninitialized.hpp"
 
 namespace elsa
 {
@@ -92,7 +93,7 @@ namespace elsa
          *
          * @returns a reference to the current solution
          */
-        auto solveImpl(index_t iterations) -> DataContainer<data_t>& override;
+        auto solveImpl(index_t iterations) -> DataContainer<data_t> override;
 
         /// implement the polymorphic clone operation
         auto cloneImpl() const -> FISTA<data_t>* override;
@@ -109,7 +110,7 @@ namespace elsa
         LASSOProblem<data_t> _problem;
 
         /// the step size
-        data_t _mu;
+        MaybeUninitialized<data_t> _mu;
 
         /// variable affecting the stopping condition
         data_t _epsilon;

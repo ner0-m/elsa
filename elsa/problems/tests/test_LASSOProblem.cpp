@@ -62,6 +62,7 @@ TEST_CASE_TEMPLATE("Scenario: Testing LASSOProblem", data_t, float, double)
         {
             RegularizationTerm<data_t> invalidRegTerm(weight, invalidRegFunc);
             THEN("an invalid_argument exception is thrown")
+
             {
                 REQUIRE_THROWS_AS(LASSOProblem<data_t>(wlsProblem, invalidRegTerm),
                                   InvalidArgumentError);
@@ -83,24 +84,6 @@ TEST_CASE_TEMPLATE("Scenario: Testing LASSOProblem", data_t, float, double)
             }
         }
 
-        WHEN("setting up a LASSOProblem with an x0")
-        {
-            Eigen::Matrix<data_t, Eigen::Dynamic, 1> x0Vec(dd.getNumberOfCoefficients());
-            x0Vec.setRandom();
-            DataContainer<data_t> dcX0(dd, x0Vec);
-
-            wlsProblem.getCurrentSolution() = dcX0;
-            LASSOProblem<data_t> lassoProb(wlsProblem, regTerm);
-
-            THEN("cloned LASSOProblem equals original LASSOProblem")
-            {
-                auto lassoProbClone = lassoProb.clone();
-
-                REQUIRE_NE(lassoProbClone.get(), &lassoProb);
-                REQUIRE_EQ(*lassoProbClone, lassoProb);
-            }
-        }
-
         Identity<data_t> idOp(dd);
         WLSProblem<data_t> wlsProblemForLC(idOp, dcData);
 
@@ -108,30 +91,14 @@ TEST_CASE_TEMPLATE("Scenario: Testing LASSOProblem", data_t, float, double)
         {
             LASSOProblem<data_t> lassoProb(wlsProblemForLC, regTerm);
 
-            auto lipschitzConstant = lassoProb.getLipschitzConstant();
+            auto x = DataContainer<data_t>(dd);
+            x = 0;
+            auto lipschitzConstant = lassoProb.getLipschitzConstant(x);
 
             THEN("the Lipschitz Constant of a LASSOProblem with an Identity Operator as the "
                  "Linear Operator A is 1")
             {
                 REQUIRE_UNARY(checkApproxEq(lipschitzConstant, as<data_t>(1.0)));
-            }
-        }
-
-        WHEN("setting up the Lipschitz Constant of a LASSOProblem with an x0")
-        {
-            Vector_t<data_t> x0Vec(dd.getNumberOfCoefficients());
-            x0Vec.setRandom();
-            DataContainer<data_t> dcX0(dd, x0Vec);
-            wlsProblemForLC.getCurrentSolution() = dcX0;
-
-            LASSOProblem<data_t> lassoProb(wlsProblemForLC, regTerm);
-
-            auto lipschitzConstant = lassoProb.getLipschitzConstant();
-
-            THEN("the Lipschitz Constant of a LASSOProblem with an Identity Operator as the "
-                 "Linear Operator A is 1")
-            {
-                REQUIRE_EQ(lipschitzConstant, Approx(as<data_t>(1.0)));
             }
         }
     }

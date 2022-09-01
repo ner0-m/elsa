@@ -10,29 +10,10 @@ namespace elsa
 {
     template <typename data_t>
     WLSProblem<data_t>::WLSProblem(const Scaling<data_t>& W, const LinearOperator<data_t>& A,
-                                   const DataContainer<data_t>& b, const DataContainer<data_t>& x0,
-                                   const std::optional<data_t> lipschitzConstant)
-        : Problem<data_t>{WeightedL2NormPow2<data_t>{LinearResidual<data_t>{A, b}, W}, x0,
-                          lipschitzConstant}
-    {
-        // sanity checks are done in the member constructors already
-    }
-
-    template <typename data_t>
-    WLSProblem<data_t>::WLSProblem(const Scaling<data_t>& W, const LinearOperator<data_t>& A,
                                    const DataContainer<data_t>& b,
                                    const std::optional<data_t> lipschitzConstant)
         : Problem<data_t>{WeightedL2NormPow2<data_t>{LinearResidual<data_t>{A, b}, W},
                           lipschitzConstant}
-    {
-        // sanity checks are done in the member constructors already
-    }
-
-    template <typename data_t>
-    WLSProblem<data_t>::WLSProblem(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-                                   const DataContainer<data_t>& x0,
-                                   const std::optional<data_t> lipschitzConstant)
-        : Problem<data_t>{L2NormPow2<data_t>{LinearResidual<data_t>{A, b}}, x0, lipschitzConstant}
     {
         // sanity checks are done in the member constructors already
     }
@@ -47,7 +28,7 @@ namespace elsa
 
     template <typename data_t>
     WLSProblem<data_t>::WLSProblem(const Problem<data_t>& problem)
-        : Problem<data_t>{*wlsFromProblem(problem), problem.getCurrentSolution()}
+        : Problem<data_t>{*wlsFromProblem(problem)}
     {
     }
 

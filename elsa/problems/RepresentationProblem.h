@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Dictionary.h"
 #include "Problem.h"
 
@@ -46,7 +47,8 @@ namespace elsa
 
         /// override getGradient and throw exception if called because L0-Norm, even though only
         /// enforced implicitly, is not differtiable
-        void getGradientImpl(DataContainer<data_t>& result) override;
+        void getGradientImpl(const DataContainer<data_t>& x,
+                             DataContainer<data_t>& result) override;
 
     private:
         Dictionary<data_t> _dict;

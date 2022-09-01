@@ -72,7 +72,7 @@ TEST_CASE_TEMPLATE("TikhonovProblem: Testing with one regularization term", data
             }
         }
 
-        WHEN("setting up the TikhonovProblem without x0")
+        WHEN("setting up the TikhonovProblem")
         {
             TikhonovProblem<data_t> prob(wls, regTerm);
 
@@ -88,62 +88,13 @@ TEST_CASE_TEMPLATE("TikhonovProblem: Testing with one regularization term", data
             {
                 DataContainer<data_t> dcZero(dd);
                 dcZero = 0;
-                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
 
                 REQUIRE_UNARY(
-                    checkApproxEq(prob.evaluate(), as<data_t>(0.5) * dataVec.squaredNorm()));
-                REQUIRE_UNARY(isApprox(prob.getGradient(), as<data_t>(-1.0) * dcScaling * dcData));
+                    checkApproxEq(prob.evaluate(dcZero), as<data_t>(0.5) * dataVec.squaredNorm()));
+                REQUIRE_UNARY(
+                    isApprox(prob.getGradient(dcZero), as<data_t>(-1.0) * dcScaling * dcData));
 
-                auto hessian = prob.getHessian();
-                auto result = hessian.apply(dcData);
-                for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
-                                                               + weight * dataVec[i]));
-            }
-
-            THEN("the TikhonovProblem is different from a Problem with the same terms")
-            {
-                Problem optProb(prob.getDataTerm(), prob.getRegularizationTerms());
-                REQUIRE_NE(prob, optProb);
-                REQUIRE_NE(optProb, prob);
-            }
-        }
-
-        WHEN("setting up the TikhonovProblem with x0")
-        {
-            Vector_t<data_t> x0Vec(dd.getNumberOfCoefficients());
-            x0Vec.setRandom();
-            DataContainer<data_t> dcX0(dd, x0Vec);
-
-            wls.getCurrentSolution() = dcX0;
-            TikhonovProblem<data_t> prob(wls, regTerm);
-
-            THEN("the clone works correctly")
-            {
-                auto probClone = prob.clone();
-
-                REQUIRE_NE(probClone.get(), &prob);
-                REQUIRE_EQ(*probClone, prob);
-            }
-
-            THEN("the TikhonovProblem behaves as expected")
-            {
-                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcX0));
-
-                auto valueData =
-                    as<data_t>(0.5)
-                    * (scaling.array() * x0Vec.array() - dataVec.array()).matrix().squaredNorm();
-                REQUIRE_UNARY(checkApproxEq(
-                    prob.evaluate(), valueData + weight * as<data_t>(0.5) * x0Vec.squaredNorm()));
-
-                auto gradient = prob.getGradient();
-                DataContainer gradientDirect =
-                    dcScaling * (dcScaling * dcX0 - dcData) + weight * dcX0;
-
-                for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
-
-                auto hessian = prob.getHessian();
+                auto hessian = prob.getHessian(dcZero);
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
@@ -208,7 +159,7 @@ TEST_CASE_TEMPLATE("TikhonovProblem: Testing with several regularization terms",
             }
         }
 
-        WHEN("setting up the TikhonovProblem without x0")
+        WHEN("setting up the TikhonovProblem")
         {
             TikhonovProblem<data_t> prob(wls, vecReg);
 
@@ -224,63 +175,13 @@ TEST_CASE_TEMPLATE("TikhonovProblem: Testing with several regularization terms",
             {
                 DataContainer<data_t> dcZero(dd);
                 dcZero = 0;
-                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
 
                 REQUIRE_UNARY(
-                    checkApproxEq(prob.evaluate(), as<data_t>(0.5) * dataVec.squaredNorm()));
-                REQUIRE_UNARY(isApprox(prob.getGradient(), as<data_t>(-1.0) * dcScaling * dcData));
+                    checkApproxEq(prob.evaluate(dcZero), as<data_t>(0.5) * dataVec.squaredNorm()));
+                REQUIRE_UNARY(
+                    isApprox(prob.getGradient(dcZero), as<data_t>(-1.0) * dcScaling * dcData));
 
-                auto hessian = prob.getHessian();
-                auto result = hessian.apply(dcData);
-                for (index_t i = 0; i < result.getSize(); ++i)
-                    REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
-                                                               + weight1 * dataVec[i]
-                                                               + weight2 * dataVec[i]));
-            }
-
-            THEN("the TikhonovProblem is different from a Problem with the same terms")
-            {
-                Problem optProb(prob.getDataTerm(), prob.getRegularizationTerms());
-                REQUIRE_NE(prob, optProb);
-                REQUIRE_NE(optProb, prob);
-            }
-        }
-
-        WHEN("setting up the TikhonovProblem with x0")
-        {
-            Vector_t<data_t> x0Vec(dd.getNumberOfCoefficients());
-            x0Vec.setRandom();
-            DataContainer<data_t> dcX0(dd, x0Vec);
-
-            wls.getCurrentSolution() = dcX0;
-            TikhonovProblem<data_t> prob(wls, vecReg);
-
-            THEN("the clone works correctly")
-            {
-                auto probClone = prob.clone();
-
-                REQUIRE_NE(probClone.get(), &prob);
-                REQUIRE_EQ(*probClone, prob);
-            }
-
-            THEN("the TikhonovProblem behaves as expected")
-            {
-                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcX0));
-
-                auto valueData =
-                    as<data_t>(0.5)
-                    * (scaling.array() * x0Vec.array() - dataVec.array()).matrix().squaredNorm();
-                REQUIRE_UNARY(checkApproxEq(
-                    prob.evaluate(), valueData + weight1 * as<data_t>(0.5) * x0Vec.squaredNorm()
-                                         + weight2 * as<data_t>(0.5) * x0Vec.squaredNorm()));
-
-                auto gradient = prob.getGradient();
-                DataContainer gradientDirect =
-                    dcScaling * (dcScaling * dcX0 - dcData) + weight1 * dcX0 + weight2 * dcX0;
-                for (index_t i = 0; i < gradient.getSize(); ++i)
-                    REQUIRE_UNARY(checkApproxEq(gradient[i], gradientDirect[i]));
-
-                auto hessian = prob.getHessian();
+                auto hessian = prob.getHessian(dcZero);
                 auto result = hessian.apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]

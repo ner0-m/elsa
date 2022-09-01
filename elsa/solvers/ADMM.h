@@ -85,7 +85,7 @@ namespace elsa
         /// default destructor
         ~ADMM() override = default;
 
-        auto solveImpl(index_t iterations) -> DataContainer<data_t>& override
+        auto solveImpl(index_t iterations) -> DataContainer<data_t> override
         {
             const auto& f = _problem->getF();
             const auto& g = _problem->getG();
@@ -135,9 +135,10 @@ namespace elsa
             for (index_t iter = 0; iter < iterations; ++iter) {
                 LinearResidual<data_t> xLinearResidual(A, c - B.apply(z) - u);
                 RegularizationTerm xRegTerm(_rho / 2, L2NormPow2<data_t>(xLinearResidual));
-                Problem<data_t> xUpdateProblem(dataTerm, xRegTerm, x);
+                Problem<data_t> xUpdateProblem(dataTerm, xRegTerm);
 
                 XSolver<data_t> xSolver(xUpdateProblem);
+                // TODO: Pass x as x0 here
                 x = xSolver.solve(_defaultXSolverIterations);
 
                 DataContainer<data_t> rk = x;
@@ -183,8 +184,7 @@ namespace elsa
                     Logger::get("ADMM")->info("SUCCESS: Reached convergence at {}/{} iterations ",
                                               iter, iterations);
 
-                    _problem->getCurrentSolution() = x;
-                    return _problem->getCurrentSolution();
+                    return x;
                 }
 
                 /// varying penalty parameter
@@ -204,8 +204,7 @@ namespace elsa
 
             Logger::get("ADMM")->warn("Failed to reach convergence at {} iterations", iterations);
 
-            _problem->getCurrentSolution() = x;
-            return _problem->getCurrentSolution();
+            return x;
         }
 
     protected:
@@ -216,7 +215,7 @@ namespace elsa
                 downcast<SplittingProblem<data_t>>(*_problem));
         }
 
-        bool isEqual(const Solver<data_t>& other) const
+        bool isEqual(const Solver<data_t>& other) const override
         {
             auto otherADMM = downcast_safe<ADMM>(&other);
             if (!otherADMM)

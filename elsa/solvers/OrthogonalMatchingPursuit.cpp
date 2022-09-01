@@ -13,17 +13,18 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t>& OrthogonalMatchingPursuit<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> OrthogonalMatchingPursuit<data_t>::solveImpl(index_t iterations)
     {
         const auto& dict = _problem.getDictionary();
         const auto& residual = _problem.getDataTerm().getResidual();
-        auto& currentRepresentation = _problem.getCurrentSolution();
-
-        IndexVector_t support(0); // the atoms used for the representation
+        auto currentRepresentation =
+            DataContainer<data_t>(_problem.getDataTerm().getDomainDescriptor());
         currentRepresentation = 0;
 
+        IndexVector_t support(0); // the atoms used for the representation
+
         index_t i = 0;
-        while (i < iterations && _problem.evaluate() > _epsilon) {
+        while (i < iterations && _problem.evaluate(currentRepresentation) > _epsilon) {
             index_t k = mostCorrelatedAtom(dict, residual.evaluate(currentRepresentation));
 
             support.conservativeResize(support.size() + 1);
@@ -46,7 +47,7 @@ namespace elsa
             ++i;
         }
 
-        return _problem.getCurrentSolution();
+        return currentRepresentation;
     }
 
     template <typename data_t>

@@ -20,29 +20,29 @@ namespace elsa
     {
         // check that preconditioner is compatible with problem
         if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
-                != _problem->getCurrentSolution().getSize()
+                != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()
             || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
-                   != _problem->getCurrentSolution().getSize()) {
+                   != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()) {
             throw InvalidArgumentError("FGM: incorrect size of preconditioner");
         }
     }
 
     template <typename data_t>
-    DataContainer<data_t>& FGM<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> FGM<data_t>::solveImpl(index_t iterations)
     {
         auto prevTheta = static_cast<data_t>(1.0);
-        auto x0 = _problem->getCurrentSolution();
-        auto& prevY = x0;
+        auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());
+        x = 0;
+        auto prevY = x;
 
-        auto deltaZero = _problem->getGradient().squaredL2Norm();
-        auto lipschitz = _problem->getLipschitzConstant();
+        auto deltaZero = _problem->getGradient(x).squaredL2Norm();
+        auto lipschitz = _problem->getLipschitzConstant(x);
         Logger::get("FGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
 
         for (index_t i = 0; i < iterations; ++i) {
             Logger::get("FGM")->info("iteration {} of {}", i + 1, iterations);
-            auto& x = _problem->getCurrentSolution();
 
-            auto gradient = _problem->getGradient();
+            auto gradient = _problem->getGradient(x);
 
             if (_preconditionerInverse)
                 gradient = _preconditionerInverse->apply(gradient);
@@ -66,7 +66,7 @@ namespace elsa
 
         Logger::get("FGM")->warn("Failed to reach convergence at {} iterations", iterations);
 
-        return _problem->getCurrentSolution();
+        return x;
     }
 
     template <typename data_t>

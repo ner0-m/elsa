@@ -1,5 +1,6 @@
 #pragma once
 
+#include "MaybeUninitialized.hpp"
 #include "Solver.h"
 #include "StrongTypes.h"
 #include "LASSOProblem.h"
@@ -90,7 +91,7 @@ namespace elsa
          *
          * @returns a reference to the current solution
          */
-        auto solveImpl(index_t iterations) -> DataContainer<data_t>& override;
+        auto solveImpl(index_t iterations) -> DataContainer<data_t> override;
 
         /// implement the polymorphic clone operation
         auto cloneImpl() const -> ISTA<data_t>* override;
@@ -106,8 +107,11 @@ namespace elsa
         /// The LASSO optimization problem
         LASSOProblem<data_t> _problem;
 
+        /// the default number of iterations
+        const index_t _defaultIterations{100};
+
         /// the step size
-        data_t _mu;
+        MaybeUninitialized<data_t> _mu;
 
         /// variable affecting the stopping condition
         data_t _epsilon;

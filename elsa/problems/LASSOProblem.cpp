@@ -20,8 +20,7 @@ namespace elsa
     LASSOProblem<data_t>::LASSOProblem(WLSProblem<data_t> wlsProblem,
                                        const RegularizationTerm<data_t>& regTerm)
         : Problem<data_t>{wlsProblem.getDataTerm(),
-                          std::vector<RegularizationTerm<data_t>>{regTerm},
-                          wlsProblem.getCurrentSolution()},
+                          std::vector<RegularizationTerm<data_t>>{regTerm}},
           _wlsProblem{wlsProblem}
     {
         if (regTerm.getWeight() < 0) {
@@ -46,10 +45,11 @@ namespace elsa
     }
 
     template <typename data_t>
-    auto LASSOProblem<data_t>::getLipschitzConstantImpl(index_t nIterations) const -> data_t
+    auto LASSOProblem<data_t>::getLipschitzConstantImpl(const DataContainer<data_t>& x,
+                                                        index_t nIterations) const -> data_t
     {
         // compute the Lipschitz Constant of the WLSProblem as the reg. term is not differentiable
-        return _wlsProblem.getLipschitzConstant(nIterations);
+        return _wlsProblem.getLipschitzConstant(x, nIterations);
     }
 
     template <typename data_t>

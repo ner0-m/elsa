@@ -88,7 +88,7 @@ namespace elsa
          *
          * @returns a reference to the current solution
          */
-        DataContainer<data_t>& solveImpl(index_t iterations) override;
+        DataContainer<data_t> solveImpl(index_t iterations) override;
 
         /// implement the polymorphic clone operation
         CG<data_t>* cloneImpl() const override;

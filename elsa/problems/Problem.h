@@ -30,21 +30,6 @@ namespace elsa
     public:
         /**
          * @brief Constructor for optimization problem, accepting a data and multiple regularization
-         * terms, and an initial guess x0.
-         *
-         * @param[in] dataTerm functional expressing the data term
-         * @param[in] regTerms vector of RegularizationTerms (weight and functional)
-         * @param[in] x0 initial value for the current estimated solution
-         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
-         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
-         * cases where the numerical approximation is not accurate and the constant is known.
-         */
-        Problem(const Functional<data_t>& dataTerm,
-                const std::vector<RegularizationTerm<data_t>>& regTerms,
-                const DataContainer<data_t>& x0, std::optional<data_t> lipschitzConstant = {});
-
-        /**
-         * @brief Constructor for optimization problem, accepting a data and multiple regularization
          * terms.
          *
          * @param[in] dataTerm functional expressing the data term
@@ -59,21 +44,7 @@ namespace elsa
 
         /**
          * @brief Constructor for optimization problem, accepting a data and one regularization
-         * term, and an initial guess x0.
-         *
-         * @param[in] dataTerm functional expressing the data term
-         * @param[in] regTerm RegularizationTerm (weight and functional)
-         * @param[in] x0 initial value for the current estimated solution
-         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
-         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
-         * cases where the numerical approximation is not accurate and the constant is known.
-         */
-        Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm,
-                const DataContainer<data_t>& x0, std::optional<data_t> lipschitzConstant = {});
-
-        /**
-         * @brief Constructor for optimization problem, accepting a data and one regularization
-         * term.
+         * term
          *
          * @param[in] dataTerm functional expressing the data term
          * @param[in] regTerm RegularizationTerm (weight and functional)
@@ -82,19 +53,6 @@ namespace elsa
          * cases where the numerical approximation is not accurate and the constant is known.
          */
         Problem(const Functional<data_t>& dataTerm, const RegularizationTerm<data_t>& regTerm,
-                std::optional<data_t> lipschitzConstant = {});
-
-        /**
-         * @brief Constructor for optimization problem, accepting a data term and an initial guess
-         * x0.
-         *
-         * @param[in] dataTerm functional expressing the data term
-         * @param[in] x0 initial value for the current estimated solution
-         * @param[in] lipschitzConstant if non-null the known lipschitz constant of the
-         * problem. If null the lipschitz constant will be computed using power-iteration. Useful in
-         * cases where the numerical approximation is not accurate and the constant is known.
-         */
-        Problem(const Functional<data_t>& dataTerm, const DataContainer<data_t>& x0,
                 std::optional<data_t> lipschitzConstant = {});
 
         /**
@@ -117,52 +75,53 @@ namespace elsa
         /// return the vector of regularization terms
         const std::vector<RegularizationTerm<data_t>>& getRegularizationTerms() const;
 
-        /// return the current estimated solution (const version)
-        const DataContainer<data_t>& getCurrentSolution() const;
-
-        /// return the current estimated solution
-        DataContainer<data_t>& getCurrentSolution();
-
         /**
-         * @brief evaluate the problem at the current estimated solution
+         * @brief evaluate the problem at the given estimated solution
          *
-         * @returns the value of the problem evaluated at the current estimated solution
+         * @param[in] x the point the problem should be evaluated
+         *
+         * @returns the value of the problem evaluated at the given estimated solution
          *
          * Please note: this method calls the method evaluateImpl that has to be overridden in
          * derived classes.
          */
-        data_t evaluate();
+        data_t evaluate(const DataContainer<data_t>& x);
 
         /**
-         * @brief return the gradient of the problem at the current estimated solution
+         * @brief return the gradient of the problem at the given estimated solution
+         *
+         * @param[in] x the point the gradient should be estimated
          *
          * @returns DataContainer (in the domain of the problem) containing the result of the
-         * gradient at the current solution
+         * gradient at the given solution
          *
          * Please note: this method used getGradient(result) to perform the actual operation.
          */
-        DataContainer<data_t> getGradient();
+        DataContainer<data_t> getGradient(const DataContainer<data_t>& x);
 
         /**
-         * @brief compute the gradient of the problem at the current estimated solution
+         * @brief compute the gradient of the problem at the given estimated solution
          *
+         * @param[in] x the point the gradient should be estimated
          * @param[out] result output DataContainer containing the gradient (in the domain of the
          * problem)
          *
          * Please note: this method calls the method getGradientImpl that has to be overridden in
          * derived classes.
          */
-        void getGradient(DataContainer<data_t>& result);
+        void getGradient(const DataContainer<data_t>& x, DataContainer<data_t>& result);
 
         /**
-         * @brief return the Hessian of the problem at the current estimated solution
+         * @brief return the Hessian of the problem at the given estimated solution
+         *
+         * @param[in] x the point the hessian should be evaluated
          *
          * @returns a LinearOperator (the Hessian)
          *
          * Please note: this method calls the method getHessianImpl that has to be overridden in
          * derived classes.
          */
-        LinearOperator<data_t> getHessian() const;
+        LinearOperator<data_t> getHessian(const DataContainer<data_t>& x) const;
 
         /**
          * @brief return the Lipschitz Constant of the problem at the current estimated solution. If
@@ -178,7 +137,7 @@ namespace elsa
          * the Lipschitz constant, e.g. by not using power iteration or where the hessian is already
          * approximated as a diagonal matrix.
          */
-        data_t getLipschitzConstant(index_t nIterations = 5) const;
+        data_t getLipschitzConstant(const DataContainer<data_t>& x, index_t nIterations = 5) const;
 
     protected:
         /// the data term
@@ -187,9 +146,6 @@ namespace elsa
         /// the regularization terms
         std::vector<RegularizationTerm<data_t>> _regTerms{};
 
-        /// the current estimated solution
-        DataContainer<data_t> _currentSolution;
-
         /// the known lipschitz constant for a problem, if not given will be computed on demand
         std::optional<data_t> _lipschitzConstant = {};
 
@@ -197,16 +153,17 @@ namespace elsa
         Problem(const Problem<data_t>& problem);
 
         /// the evaluation of the optimization problem
-        virtual data_t evaluateImpl();
+        virtual data_t evaluateImpl(const DataContainer<data_t>& x);
 
         /// the getGradient method for the optimization problem
-        virtual void getGradientImpl(DataContainer<data_t>& result);
+        virtual void getGradientImpl(const DataContainer<data_t>& x, DataContainer<data_t>& result);
 
         /// the getHessian method for the optimization problem
-        virtual LinearOperator<data_t> getHessianImpl() const;
+        virtual LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& x) const;
 
         /// the getLipschitzConstant method for the optimization problem
-        virtual data_t getLipschitzConstantImpl(index_t nIterations) const;
+        virtual data_t getLipschitzConstantImpl(const DataContainer<data_t>& x,
+                                                index_t nIterations) const;
 
         /// implement the polymorphic clone operation
         Problem<data_t>* cloneImpl() const override;

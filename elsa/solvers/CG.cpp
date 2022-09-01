@@ -22,21 +22,22 @@ namespace elsa
     {
         // check that preconditioner is compatible with problem
         if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
-                != _problem.getCurrentSolution().getSize()
+                != _problem.getDataTerm().getDomainDescriptor().getNumberOfCoefficients()
             || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
-                   != _problem.getCurrentSolution().getSize()) {
+                   != _problem.getDataTerm().getDomainDescriptor().getNumberOfCoefficients()) {
             throw InvalidArgumentError("CG: incorrect size of preconditioner");
         }
     }
 
     template <typename data_t>
-    DataContainer<data_t>& CG<data_t>::solveImpl(index_t iterations)
+    DataContainer<data_t> CG<data_t>::solveImpl(index_t iterations)
     {
         spdlog::stopwatch aggregate_time;
         Logger::get("CG")->info("Start preparations...");
 
         // get references to some variables in the Quadric
-        auto& x = _problem.getCurrentSolution();
+        auto x = DataContainer<data_t>(_problem.getDataTerm().getDomainDescriptor());
+        x = 0;
         const auto& gradientExpr =
             static_cast<const Quadric<data_t>&>(_problem.getDataTerm()).getGradientExpression();
         const LinearOperator<data_t>* A = nullptr;
@@ -49,7 +50,7 @@ namespace elsa
             b = &gradientExpr.getDataVector();
 
         // Start CG initialization
-        auto r = _problem.getGradient();
+        auto r = _problem.getGradient(x);
         r *= static_cast<data_t>(-1.0);
 
         auto d = _preconditionerInverse ? _preconditionerInverse->apply(r) : r;
@@ -101,7 +102,7 @@ namespace elsa
 
             if (deltaNew <= _epsilon * _epsilon * deltaZero) {
                 // check that we are not stopping prematurely due to accumulated roundoff error
-                r = _problem.getGradient();
+                r = _problem.getGradient(x);
                 deltaNew = r.squaredL2Norm();
                 if (deltaNew <= _epsilon * _epsilon * deltaZero) {
                     Logger::get("CG")->info("SUCCESS: Reached convergence at {}/{} iteration",

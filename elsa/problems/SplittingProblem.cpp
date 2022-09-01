@@ -31,27 +31,30 @@ namespace elsa
     }
 
     template <typename data_t>
-    auto SplittingProblem<data_t>::evaluateImpl() -> data_t
+    auto SplittingProblem<data_t>::evaluateImpl(const DataContainer<data_t>&) -> data_t
     {
         throw std::runtime_error("SplittingProblem::evaluateImpl: currently unsupported operation");
     }
 
     template <typename data_t>
-    void SplittingProblem<data_t>::getGradientImpl(DataContainer<data_t>&)
+    void SplittingProblem<data_t>::getGradientImpl(const DataContainer<data_t>&,
+                                                   DataContainer<data_t>&)
     {
         throw std::runtime_error(
             "SplittingProblem::getGradientImpl: currently unsupported operation");
     }
 
     template <typename data_t>
-    auto SplittingProblem<data_t>::getHessianImpl() const -> LinearOperator<data_t>
+    auto SplittingProblem<data_t>::getHessianImpl(const DataContainer<data_t>&) const
+        -> LinearOperator<data_t>
     {
         throw std::runtime_error(
             "SplittingProblem::getHessianImpl: currently unsupported operation");
     }
 
     template <typename data_t>
-    auto SplittingProblem<data_t>::getLipschitzConstantImpl(index_t) const -> data_t
+    auto SplittingProblem<data_t>::getLipschitzConstantImpl(const DataContainer<data_t>&,
+                                                            index_t) const -> data_t
     {
         throw std::runtime_error(
             "SplittingProblem::getLipschitzConstantImpl: currently unsupported operation");

@@ -69,7 +69,8 @@ namespace elsa
         auto cloneImpl() const -> LASSOProblem<data_t>* override;
 
         /// the getLipschitzConstant method for the optimization problem
-        auto getLipschitzConstantImpl(index_t nIterations) const -> data_t override;
+        auto getLipschitzConstantImpl(const DataContainer<data_t>& x, index_t nIterations) const
+            -> data_t override;
 
     private:
         WLSProblem<data_t> _wlsProblem;

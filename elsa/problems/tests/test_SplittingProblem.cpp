@@ -27,6 +27,9 @@ TEST_CASE_TEMPLATE("SplittingProblem: Simple Test", data_t, float, complex<float
         numCoeff << 91, 32;
         VolumeDescriptor dd(numCoeff);
 
+        auto x = DataContainer<data_t>(dd);
+        x = 0;
+
         Vector_t<data_t> scaling(dd.getNumberOfCoefficients());
         scaling.setRandom();
         DataContainer<data_t> dcScaling(dd, scaling);
@@ -34,9 +37,9 @@ TEST_CASE_TEMPLATE("SplittingProblem: Simple Test", data_t, float, complex<float
 
         Vector_t<data_t> dataVec(dd.getNumberOfCoefficients());
         dataVec.setRandom();
-        DataContainer<data_t> dcData(dd, dataVec);
+        DataContainer<data_t> b(dd, dataVec);
 
-        WLSProblem<data_t> wlsProblem(scaleOp, dcData);
+        WLSProblem<data_t> wlsProblem(scaleOp, b);
 
         Identity<data_t> A(dd);
         Scaling<data_t> B(dd, -1);
@@ -63,15 +66,15 @@ TEST_CASE_TEMPLATE("SplittingProblem: Simple Test", data_t, float, complex<float
 
             THEN("evaluating SplittingProblem throws an exception as it is not yet supported")
             {
-                REQUIRE_THROWS_AS(splittingProblem.evaluate(), std::runtime_error);
+                REQUIRE_THROWS_AS(splittingProblem.evaluate(x), std::runtime_error);
             }
 
             THEN("calculating the gradient, Hessian and Lipschitz constant from SplittingProblem "
                  "throws an exception as it is not yet supported")
             {
-                REQUIRE_THROWS_AS(splittingProblem.getGradient(), std::runtime_error);
-                REQUIRE_THROWS_AS(splittingProblem.getHessian(), std::runtime_error);
-                REQUIRE_THROWS_AS(splittingProblem.getLipschitzConstant(), std::runtime_error);
+                REQUIRE_THROWS_AS(splittingProblem.getGradient(x), std::runtime_error);
+                REQUIRE_THROWS_AS(splittingProblem.getHessian(x), std::runtime_error);
+                REQUIRE_THROWS_AS(splittingProblem.getLipschitzConstant(x), std::runtime_error);
             }
         }
     }

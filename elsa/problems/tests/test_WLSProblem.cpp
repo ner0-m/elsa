@@ -57,46 +57,15 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing with operator and data", TestType, floa
 
             THEN("the problem behaves as expected")
             {
-                DataContainer<TestType> dcZero(dd);
-                dcZero = 0;
-                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
+                DataContainer<TestType> zero(dd);
+                zero = 0;
 
                 REQUIRE_UNARY(
-                    checkApproxEq(prob.evaluate(), as<TestType>(0.5) * bVec.squaredNorm()));
+                    checkApproxEq(prob.evaluate(zero), as<TestType>(0.5) * bVec.squaredNorm()));
                 REQUIRE_UNARY(
-                    checkApproxEq(prob.getGradient(), static_cast<TestType>(-1.0f) * dcB));
+                    checkApproxEq(prob.getGradient(zero), static_cast<TestType>(-1.0f) * dcB));
 
-                auto hessian = prob.getHessian();
-                REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcB));
-            }
-        }
-
-        WHEN("setting up a ls problem with x0")
-        {
-            Eigen::Matrix<TestType, Eigen::Dynamic, 1> x0Vec(dd.getNumberOfCoefficients());
-            x0Vec.setRandom();
-            DataContainer<TestType> dcX0(dd, x0Vec);
-
-            WLSProblem<TestType> prob(idOp, dcB, dcX0);
-
-            THEN("the clone works correctly")
-            {
-                auto probClone = prob.clone();
-
-                REQUIRE_NE(probClone.get(), &prob);
-                REQUIRE_EQ(*probClone, prob);
-            }
-
-            THEN("the problem behaves as expected")
-            {
-
-                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcX0));
-
-                REQUIRE_UNARY(checkApproxEq(prob.evaluate(),
-                                            as<TestType>(0.5) * (x0Vec - bVec).squaredNorm()));
-                REQUIRE_UNARY(isApprox(prob.getGradient(), dcX0 - dcB));
-
-                auto hessian = prob.getHessian();
+                auto hessian = prob.getHessian(zero);
                 REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcB));
             }
         }
@@ -136,51 +105,16 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing with weights, operator and data", TestT
 
             THEN("the problem behaves as expected")
             {
-                DataContainer<TestType> dcZero(dd);
-                dcZero = 0;
-                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcZero));
+                DataContainer<TestType> zero(dd);
+                zero = 0;
 
                 REQUIRE_UNARY(checkApproxEq(
-                    prob.evaluate(),
+                    prob.evaluate(zero),
                     as<TestType>(0.5) * bVec.dot((weightsVec.array() * bVec.array()).matrix())));
                 DataContainer<TestType> tmpDc = as<TestType>(-1) * dcWeights * dcB;
-                REQUIRE_UNARY(isApprox(prob.getGradient(), tmpDc));
+                REQUIRE_UNARY(isApprox(prob.getGradient(zero), tmpDc));
 
-                auto hessian = prob.getHessian();
-                REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcWeights * dcB));
-            }
-        }
-
-        WHEN("setting up a wls problem with x0")
-        {
-            Eigen::Matrix<TestType, Eigen::Dynamic, 1> x0Vec(dd.getNumberOfCoefficients());
-            x0Vec.setRandom();
-            DataContainer<TestType> dcX0(dd, x0Vec);
-
-            WLSProblem<TestType> prob(scaleOp, idOp, dcB, dcX0);
-
-            THEN("the clone works correctly")
-            {
-                auto probClone = prob.clone();
-
-                REQUIRE_NE(probClone.get(), &prob);
-                REQUIRE_EQ(*probClone, prob);
-            }
-
-            THEN("the problem behaves as expected")
-            {
-                DataContainer<TestType> dcZero(dd);
-                dcZero = 0;
-                REQUIRE_UNARY(isApprox(prob.getCurrentSolution(), dcX0));
-
-                REQUIRE_UNARY(checkApproxEq(
-                    prob.evaluate(),
-                    as<TestType>(0.5)
-                        * (x0Vec - bVec)
-                              .dot((weightsVec.array() * (x0Vec - bVec).array()).matrix())));
-                REQUIRE_UNARY(isApprox(prob.getGradient(), dcWeights * (dcX0 - dcB)));
-
-                auto hessian = prob.getHessian();
+                auto hessian = prob.getHessian(zero);
                 REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcWeights * dcB));
             }
         }
@@ -225,7 +159,10 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestT
 
         WHEN("converting to a WLSProblem")
         {
-            THEN("an exception is thrown") { REQUIRE_THROWS(WLSProblem<TestType>{prob}); }
+            THEN("an exception is thrown")
+            {
+                REQUIRE_THROWS(WLSProblem<TestType>{prob});
+            }
         }
     }
 
@@ -239,7 +176,10 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestT
 
         WHEN("converting to a WLSProblem")
         {
-            THEN("an exception is thrown") { REQUIRE_THROWS(WLSProblem<TestType>{prob}); }
+            THEN("an exception is thrown")
+            {
+                REQUIRE_THROWS(WLSProblem<TestType>{prob});
+            }
         }
     }
 
@@ -395,16 +335,16 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestT
                     Eigen::Matrix<TestType, Eigen::Dynamic, 1> xVec =
                         Eigen::Matrix<TestType, Eigen::Dynamic, 1>::Random(343);
                     DataContainer<TestType> x{desc, xVec};
-                    Problem prob{*dataTerms[i], *regTerms[j], x};
+                    Problem prob{*dataTerms[i], *regTerms[j]};
 
                     THEN("the problem can be converted and all operations yield the same result as "
                          "for the initial problem")
                     {
                         WLSProblem<TestType> converted{prob};
-                        REQUIRE_UNARY(checkApproxEq(prob.evaluate(), converted.evaluate()));
+                        REQUIRE_UNARY(checkApproxEq(prob.evaluate(x), converted.evaluate(x)));
 
-                        auto gradDiff = prob.getGradient();
-                        gradDiff -= converted.getGradient();
+                        auto gradDiff = prob.getGradient(x);
+                        gradDiff -= converted.getGradient(x);
                         REQUIRE_UNARY(checkApproxEq(gradDiff.squaredL2Norm(), 0));
                     }
                 }

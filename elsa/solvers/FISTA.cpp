@@ -9,7 +9,7 @@ namespace elsa
     template <typename data_t>
     FISTA<data_t>::FISTA(const LASSOProblem<data_t>& problem, geometry::Threshold<data_t> mu,
                          data_t epsilon)
-        : Solver<data_t>(), _problem(problem), _mu{mu}, _epsilon{epsilon}
+        : Solver<data_t>(), _problem(problem), _mu{data_t(mu)}, _epsilon{epsilon}
     {
     }
 
@@ -28,20 +28,17 @@ namespace elsa
 
     template <typename data_t>
     FISTA<data_t>::FISTA(const LASSOProblem<data_t>& problem, data_t epsilon)
-        : Solver<data_t>(),
-          _problem(LASSOProblem(problem)),
-          _mu{1 / problem.getLipschitzConstant()},
-          _epsilon{epsilon}
+        : Solver<data_t>(), _problem(LASSOProblem(problem)), _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
-    auto FISTA<data_t>::solveImpl(index_t iterations) -> DataContainer<data_t>&
+    auto FISTA<data_t>::solveImpl(index_t iterations) -> DataContainer<data_t>
     {
         spdlog::stopwatch aggregate_time;
         Logger::get("FISTA")->info("Start preparations...");
 
-        SoftThresholding<data_t> shrinkageOp{_problem.getCurrentSolution().getDataDescriptor()};
+        SoftThresholding<data_t> shrinkageOp{_problem.getDataTerm().getDomainDescriptor()};
 
         data_t lambda = _problem.getRegularizationTerms()[0].getWeight();
 
@@ -51,12 +48,17 @@ namespace elsa
         const LinearOperator<data_t>& A = linResid.getOperator();
         const DataContainer<data_t>& b = linResid.getDataVector();
 
-        DataContainer<data_t>& x = _problem.getCurrentSolution();
-        DataContainer<data_t> xPrev = _problem.getCurrentSolution();
-        DataContainer<data_t> y = _problem.getCurrentSolution();
-        DataContainer<data_t> yPrev = _problem.getCurrentSolution();
+        auto x = DataContainer<data_t>(_problem.getDataTerm().getDomainDescriptor());
+        x = 0;
+        DataContainer<data_t> xPrev = x;
+        DataContainer<data_t> y = x;
+        DataContainer<data_t> yPrev = x;
         data_t t;
         data_t tPrev = 1;
+
+        if (!_mu.isInitialized()) {
+            _mu = 1 / _problem.getLipschitzConstant(x);
+        }
 
         DataContainer<data_t> Atb = A.applyAdjoint(b);
         DataContainer<data_t> gradient = A.applyAdjoint(A.apply(yPrev)) - Atb;
@@ -71,7 +73,7 @@ namespace elsa
             spdlog::stopwatch iter_time;
 
             gradient = A.applyAdjoint(A.apply(yPrev)) - Atb;
-            x = shrinkageOp.apply(yPrev - _mu * gradient, geometry::Threshold{_mu * lambda});
+            x = shrinkageOp.apply(yPrev - *_mu * gradient, geometry::Threshold{*_mu * lambda});
 
             t = (1 + std::sqrt(1 + 4 * tPrev * tPrev)) / 2;
             y = x + ((tPrev - 1) / t) * (x - xPrev);
@@ -92,13 +94,13 @@ namespace elsa
 
         Logger::get("FISTA")->warn("Failed to reach convergence at {} iterations", iterations);
 
-        return _problem.getCurrentSolution();
+        return x;
     }
 
     template <typename data_t>
     auto FISTA<data_t>::cloneImpl() const -> FISTA<data_t>*
     {
-        return new FISTA(_problem, geometry::Threshold<data_t>{_mu}, _epsilon);
+        return new FISTA(_problem, geometry::Threshold<data_t>{*_mu}, _epsilon);
     }
 
     template <typename data_t>
@@ -108,7 +110,10 @@ namespace elsa
         if (!otherFISTA)
             return false;
 
-        if (_mu != otherFISTA->_mu)
+        if (_mu.isInitialized() != otherFISTA->_mu.isInitialized())
+            return false;
+
+        if (*_mu != *otherFISTA->_mu)
             return false;
 
         if (_epsilon != otherFISTA->_epsilon)

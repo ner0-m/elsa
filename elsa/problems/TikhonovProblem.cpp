@@ -17,7 +17,7 @@ namespace elsa
     TikhonovProblem<data_t>::TikhonovProblem(
         const WLSProblem<data_t>& wlsProblem,
         const std::vector<RegularizationTerm<data_t>>& regTerms)
-        : Problem<data_t>{wlsProblem.getDataTerm(), regTerms, wlsProblem.getCurrentSolution()}
+        : Problem<data_t>{wlsProblem.getDataTerm(), regTerms}
     {
         // make sure that at least one regularization term exists
         if (regTerms.empty()) {

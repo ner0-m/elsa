@@ -45,7 +45,7 @@ namespace elsa
          * gradient at the current solution for the given subset
          *
          */
-        DataContainer<data_t> getSubsetGradient(index_t subset);
+        DataContainer<data_t> getSubsetGradient(const DataContainer<data_t>& x, index_t subset);
 
         /**
          * @brief compute the gradient of the problem at the current estimated solution
@@ -55,7 +55,8 @@ namespace elsa
          * problem) evaluated for the given subset
          *
          */
-        void getSubsetGradient(DataContainer<data_t>& result, index_t subset);
+        void getSubsetGradient(const DataContainer<data_t>& x, DataContainer<data_t>& result,
+                               index_t subset);
 
         /**
          * @brief return the number of ordered subsets this problem is divided into

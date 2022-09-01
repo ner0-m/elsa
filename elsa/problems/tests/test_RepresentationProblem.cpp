@@ -51,8 +51,7 @@ TEST_CASE_TEMPLATE("RepresentationProblem: Setup with a dictionary and a signal 
             reprVec.setRandom();
             DataContainer<data_t> dcRepresentation(reprDescriptor, reprVec);
 
-            reprProblem.getCurrentSolution() = dcRepresentation;
-            auto evaluation = reprProblem.evaluate();
+            auto evaluation = reprProblem.evaluate(dcRepresentation);
 
             THEN("the evaluation is as expected")
             {
@@ -67,14 +66,20 @@ TEST_CASE_TEMPLATE("RepresentationProblem: Setup with a dictionary and a signal 
         {
             const auto& reprProblemDict = reprProblem.getDictionary();
 
-            THEN("it equals the original dictionary") { REQUIRE_EQ(reprProblemDict, dictOp); }
+            THEN("it equals the original dictionary")
+            {
+                REQUIRE_EQ(reprProblemDict, dictOp);
+            }
         }
 
         WHEN("getting the signal back")
         {
             auto reprProblemSignal = reprProblem.getSignal();
 
-            THEN("it equals the original signal") { REQUIRE_EQ(reprProblemSignal, dcSignal); }
+            THEN("it equals the original signal")
+            {
+                REQUIRE_EQ(reprProblemSignal, dcSignal);
+            }
         }
     }
 }

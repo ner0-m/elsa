@@ -46,12 +46,12 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
     GIVEN("a linear problem")
     {
         IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
+        numCoeff << 13, 15;
         VolumeDescriptor dd{numCoeff};
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer<data_t> dcB{dd, bVec};
+        DataContainer<data_t> b{dd, bVec};
 
         bVec.setRandom();
         bVec = bVec.cwiseAbs();
@@ -60,7 +60,7 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
         // using WLS problem here for ease of use
         // since OGM is very picky with the precision of the lipschitz constant of a problem we need
         // to pass it explicitly
-        WLSProblem<data_t> prob{scalingOp, dcB, static_cast<data_t>(1.0)};
+        WLSProblem<data_t> prob{scalingOp, b, static_cast<data_t>(1.0)};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -77,13 +77,13 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(1000);
+                    auto solution = solver.solve(100);
 
-                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - b;
 
                     // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm(), 0.5f));
+                                                epsilon * epsilon * b.squaredL2Norm(), 0.5f));
                 }
             }
         }
@@ -103,13 +103,13 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", TestType, OGM<float>,
                 AND_THEN("it works as expected")
                 {
                     // with a good preconditioner we should need fewer iterations than without
-                    auto solution = solver.solve(500);
+                    auto solution = solver.solve(100);
 
-                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - b;
 
                     // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm()));
+                                                epsilon * epsilon * b.squaredL2Norm()));
                 }
             }
         }
@@ -133,7 +133,7 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
 
         Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer dcB(dd, bVec);
+        DataContainer b(dd, bVec);
 
         bVec.setRandom();
         bVec = bVec.cwiseProduct(bVec);
@@ -145,7 +145,7 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
         // using WLS problem here for ease of use
         // since OGM is very picky with the precision of the lipschitz constant of a problem we need
         // to pass it explicitly
-        WLSProblem<data_t> prob{scalingOp + lambdaOp, dcB, static_cast<data_t>(1.2)};
+        WLSProblem<data_t> prob{scalingOp + lambdaOp, b, static_cast<data_t>(1.2)};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -165,12 +165,12 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
                     auto solution = solver.solve(dd.getNumberOfCoefficients());
 
                     DataContainer<data_t> resultsDifference =
-                        (scalingOp + lambdaOp).apply(solution) - dcB;
+                        (scalingOp + lambdaOp).apply(solution) - b;
 
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm()));
+                                                epsilon * epsilon * b.squaredL2Norm()));
                 }
             }
         }
@@ -193,11 +193,11 @@ TEST_CASE_TEMPLATE("OGM: Solving a Tikhonov problem", TestType, OGM<float>, OGM<
                     auto solution = solver.solve(dd.getNumberOfCoefficients());
 
                     DataContainer<data_t> resultsDifference =
-                        (scalingOp + lambdaOp).apply(solution) - dcB;
+                        (scalingOp + lambdaOp).apply(solution) - b;
 
                     // should have converged for the given number of iterations
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm()));
+                                                epsilon * epsilon * b.squaredL2Norm()));
                 }
             }
         }

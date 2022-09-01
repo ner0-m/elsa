@@ -33,11 +33,10 @@ void add_definitions_pyelsa_solvers(py::module& m)
                   const)(&elsa::Cloneable<elsa::Solver<float>>::clone));
 
     py::class_<elsa::Solver<float>, elsa::Cloneable<elsa::Solver<float>>> Solverf(m, "Solverf");
-    Solverf.def("solve",
-                (elsa::DataContainer<float> & (elsa::Solver<float>::*) (long) )(
-                    &elsa::Solver<float>::solve),
-                py::arg("iterations") = static_cast<long>(0),
-                py::return_value_policy::reference_internal);
+    Solverf.def(
+        "solve",
+        (elsa::DataContainer<float>(elsa::Solver<float>::*)(long))(&elsa::Solver<float>::solve),
+        py::arg("iterations"), py::return_value_policy::move);
 
     m.attr("Solver") = m.attr("Solverf");
 
@@ -57,11 +56,10 @@ void add_definitions_pyelsa_solvers(py::module& m)
                   const)(&elsa::Cloneable<elsa::Solver<double>>::clone));
 
     py::class_<elsa::Solver<double>, elsa::Cloneable<elsa::Solver<double>>> Solverd(m, "Solverd");
-    Solverd.def("solve",
-                (elsa::DataContainer<double> & (elsa::Solver<double>::*) (long) )(
-                    &elsa::Solver<double>::solve),
-                py::arg("iterations") = static_cast<long>(0),
-                py::return_value_policy::reference_internal);
+    Solverd.def(
+        "solve",
+        (elsa::DataContainer<double>(elsa::Solver<double>::*)(long))(&elsa::Solver<double>::solve),
+        py::arg("iterations"), py::return_value_policy::move);
 
     py::class_<elsa::Cloneable<elsa::Solver<std::complex<float>>>> CloneableSolvercf(
         m, "CloneableSolvercf");
@@ -84,11 +82,10 @@ void add_definitions_pyelsa_solvers(py::module& m)
     py::class_<elsa::Solver<std::complex<float>>,
                elsa::Cloneable<elsa::Solver<std::complex<float>>>>
         Solvercf(m, "Solvercf");
-    Solvercf.def(
-        "solve",
-        (elsa::DataContainer<std::complex<float>> & (elsa::Solver<std::complex<float>>::*) (long) )(
-            &elsa::Solver<std::complex<float>>::solve),
-        py::arg("iterations") = static_cast<long>(0), py::return_value_policy::reference_internal);
+    Solvercf.def("solve",
+                 (elsa::DataContainer<std::complex<float>>(elsa::Solver<std::complex<float>>::*)(
+                     long))(&elsa::Solver<std::complex<float>>::solve),
+                 py::arg("iterations"), py::return_value_policy::move);
 
     py::class_<elsa::Cloneable<elsa::Solver<std::complex<double>>>> CloneableSolvercd(
         m, "CloneableSolvercd");
@@ -112,11 +109,9 @@ void add_definitions_pyelsa_solvers(py::module& m)
                elsa::Cloneable<elsa::Solver<std::complex<double>>>>
         Solvercd(m, "Solvercd");
     Solvercd.def("solve",
-                 (elsa::DataContainer<
-                      std::complex<double>> & (elsa::Solver<std::complex<double>>::*) (long) )(
-                     &elsa::Solver<std::complex<double>>::solve),
-                 py::arg("iterations") = static_cast<long>(0),
-                 py::return_value_policy::reference_internal);
+                 (elsa::DataContainer<std::complex<double>>(elsa::Solver<std::complex<double>>::*)(
+                     long))(&elsa::Solver<std::complex<double>>::solve),
+                 py::arg("iterations"), py::return_value_policy::move);
 
     py::class_<elsa::GradientDescent<float>, elsa::Solver<float>> GradientDescentf(
         m, "GradientDescentf");

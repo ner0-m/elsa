@@ -68,16 +68,19 @@ namespace elsa
         auto cloneImpl() const -> SplittingProblem<data_t>* override;
 
         /// the evaluation method of the splitting problem
-        auto evaluateImpl() -> data_t override;
+        auto evaluateImpl(const DataContainer<data_t>& x) -> data_t override;
 
         /// the getGradient method for the splitting problem
-        void getGradientImpl(DataContainer<data_t>& result) override;
+        void getGradientImpl(const DataContainer<data_t>& x,
+                             DataContainer<data_t>& result) override;
 
         /// the getHessian method for the splitting problem
-        auto getHessianImpl() const -> LinearOperator<data_t> override;
+        auto getHessianImpl(const DataContainer<data_t>& x) const
+            -> LinearOperator<data_t> override;
 
         /// the getLipschitzConstant method for the splitting problem
-        auto getLipschitzConstantImpl(index_t nIterations) const -> data_t override;
+        auto getLipschitzConstantImpl(const DataContainer<data_t>& x, index_t nIterations) const
+            -> data_t override;
 
     private:
         std::unique_ptr<Functional<data_t>> _f;
