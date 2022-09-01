@@ -3,6 +3,7 @@
 #include "elsaDefines.h"
 #include "DataContainer.h"
 #include "Cloneable.h"
+#include <optional>
 
 namespace elsa
 {
@@ -32,11 +33,12 @@ namespace elsa
         /**
          * @brief Solve the optimization problem (most likely iteratively)
          *
-         * @param[in] iterations number of iterations to execute (optional argument, the default 0
-         * value lets the solve choose how many iterations to execute)
+         * @param[in] iterations number of iterations to execute
+         * @param[in] x0 optional initial solution, initial solution set to zero if not present
          *
-         * @returns a reference to the current solution (after solving)
+         * @returns the current solution (after solving)
          */
-        virtual DataContainer<data_t> solve(index_t iterations) = 0;
+        virtual DataContainer<data_t>
+            solve(index_t iterations, std::optional<DataContainer<data_t>> x0 = std::nullopt) = 0;
     };
 } // namespace elsa

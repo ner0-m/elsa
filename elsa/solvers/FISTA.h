@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Solver.h"
+#include <optional>
 
+#include "Solver.h"
 #include "StrongTypes.h"
 #include "LASSOProblem.h"
 #include "MaybeUninitialized.hpp"
@@ -90,9 +91,11 @@ namespace elsa
          *
          * @param[in] iterations number of iterations to execute
          *
-         * @returns a reference to the current solution
+         * @returns the approximated solution
          */
-        auto solve(index_t iterations) -> DataContainer<data_t> override;
+        DataContainer<data_t>
+            solve(index_t iterations,
+                  std::optional<DataContainer<data_t>> x0 = std::nullopt) override;
 
     protected:
         /// implement the polymorphic clone operation

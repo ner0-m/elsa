@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "MaybeUninitialized.hpp"
 #include "Solver.h"
 #include "StrongTypes.h"
@@ -87,10 +89,13 @@ namespace elsa
          * ISTA
          *
          * @param[in] iterations number of iterations to execute
+         * @param[in] x0 optional initial solution, initial solution set to zero if not present
          *
-         * @returns a reference to the current solution
+         * @returns the approximated solution
          */
-        auto solve(index_t iterations) -> DataContainer<data_t> override;
+        DataContainer<data_t>
+            solve(index_t iterations,
+                  std::optional<DataContainer<data_t>> x0 = std::nullopt) override;
 
     protected:
         /// implement the polymorphic clone operation

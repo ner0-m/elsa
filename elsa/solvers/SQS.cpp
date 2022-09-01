@@ -50,11 +50,16 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> SQS<data_t>::solve(index_t iterations)
+    DataContainer<data_t> SQS<data_t>::solve(index_t iterations,
+                                             std::optional<DataContainer<data_t>> x0)
     {
         auto& solutionDesc = _problem->getDataTerm().getDomainDescriptor();
         auto x = DataContainer<data_t>(solutionDesc);
-        x = 0;
+        if (x0.has_value()) {
+            x = *x0;
+        } else {
+            x = 0;
+        }
 
         auto convergenceThreshold = _problem->getGradient(x).squaredL2Norm() * _epsilon * _epsilon;
 

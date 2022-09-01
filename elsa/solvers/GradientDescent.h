@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "Solver.h"
 #include "Problem.h"
 #include "MaybeUninitialized.hpp"
@@ -59,9 +61,11 @@ namespace elsa
          *
          * @param[in] iterations number of iterations to execute
          *
-         * @returns a reference to the current solution
+         * @returns the approximated solution
          */
-        DataContainer<data_t> solve(index_t iterations) override;
+        DataContainer<data_t>
+            solve(index_t iterations,
+                  std::optional<DataContainer<data_t>> x0 = std::nullopt) override;
 
     private:
         /// the differentiable optimizaion problem

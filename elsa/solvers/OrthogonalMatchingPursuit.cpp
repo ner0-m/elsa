@@ -13,13 +13,19 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> OrthogonalMatchingPursuit<data_t>::solve(index_t iterations)
+    DataContainer<data_t>
+        OrthogonalMatchingPursuit<data_t>::solve(index_t iterations,
+                                                 std::optional<DataContainer<data_t>> x0)
     {
         const auto& dict = _problem.getDictionary();
         const auto& residual = _problem.getDataTerm().getResidual();
         auto currentRepresentation =
             DataContainer<data_t>(_problem.getDataTerm().getDomainDescriptor());
-        currentRepresentation = 0;
+        if (x0.has_value()) {
+            currentRepresentation = *x0;
+        } else {
+            currentRepresentation = 0;
+        }
 
         IndexVector_t support(0); // the atoms used for the representation
 

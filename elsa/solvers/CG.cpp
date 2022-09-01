@@ -30,14 +30,20 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> CG<data_t>::solve(index_t iterations)
+    DataContainer<data_t> CG<data_t>::solve(index_t iterations,
+                                            std::optional<DataContainer<data_t>> x0)
     {
         spdlog::stopwatch aggregate_time;
         Logger::get("CG")->info("Start preparations...");
 
         // get references to some variables in the Quadric
         auto x = DataContainer<data_t>(_problem.getDataTerm().getDomainDescriptor());
-        x = 0;
+        if (x0.has_value()) {
+            x = *x0;
+        } else {
+            x = 0;
+        }
+
         const auto& gradientExpr =
             static_cast<const Quadric<data_t>&>(_problem.getDataTerm()).getGradientExpression();
         const LinearOperator<data_t>* A = nullptr;

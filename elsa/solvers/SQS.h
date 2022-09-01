@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "Solver.h"
 #include "Problem.h"
@@ -67,10 +68,13 @@ namespace elsa
          * gradient descent
          *
          * @param[in] iterations number of iterations to execute
+         * @param[in] x0 optional initial solution, initial solution set to zero if not present
          *
-         * @returns a reference to the current solution
+         * @returns the approximated solution
          */
-        DataContainer<data_t> solve(index_t iterations) override;
+        DataContainer<data_t>
+            solve(index_t iterations,
+                  std::optional<DataContainer<data_t>> x0 = std::nullopt) override;
 
     private:
         /// The optimization to solve

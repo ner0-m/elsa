@@ -34,7 +34,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    auto ISTA<data_t>::solve(index_t iterations) -> DataContainer<data_t>
+    auto ISTA<data_t>::solve(index_t iterations, std::optional<DataContainer<data_t>> x0)
+        -> DataContainer<data_t>
     {
         spdlog::stopwatch aggregate_time;
         Logger::get("ISTA")->info("Start preparations...");
@@ -50,7 +51,11 @@ namespace elsa
         const DataContainer<data_t>& b = linResid.getDataVector();
 
         auto x = DataContainer<data_t>(_problem.getDataTerm().getDomainDescriptor());
-        x = 0;
+        if (x0.has_value()) {
+            x = *x0;
+        } else {
+            x = 0;
+        }
         DataContainer<data_t> Atb = A.applyAdjoint(b);
         DataContainer<data_t> gradient = A.applyAdjoint(A.apply(x)) - Atb;
 

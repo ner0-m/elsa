@@ -85,7 +85,8 @@ namespace elsa
         /// default destructor
         ~ADMM() override = default;
 
-        auto solve(index_t iterations) -> DataContainer<data_t> override
+        auto solve(index_t iterations, std::optional<DataContainer<data_t>> x0 = std::nullopt)
+            -> DataContainer<data_t> override
         {
             const auto& f = _problem->getF();
             const auto& g = _problem->getG();
@@ -120,7 +121,12 @@ namespace elsa
             const auto& c = constraint.getDataVectorC();
 
             DataContainer<data_t> x(A.getRangeDescriptor());
-            x = 0;
+
+            if (x0.has_value()) {
+                x = *x0;
+            } else {
+                x = 0;
+            }
 
             DataContainer<data_t> z(B.getRangeDescriptor());
             z = 0;
@@ -138,8 +144,7 @@ namespace elsa
                 Problem<data_t> xUpdateProblem(dataTerm, xRegTerm);
 
                 XSolver<data_t> xSolver(xUpdateProblem);
-                // TODO: Pass x as x0 here
-                x = xSolver.solve(_defaultXSolverIterations);
+                x = xSolver.solve(_defaultXSolverIterations, x);
 
                 DataContainer<data_t> rk = x;
                 DataContainer<data_t> zPrev = z;
