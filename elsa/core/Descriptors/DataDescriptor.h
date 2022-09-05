@@ -7,7 +7,6 @@
 
 namespace elsa
 {
-
     /**
      * @brief Base class for representing metadata for linearized n-dimensional signal stored in
      * memory
@@ -62,6 +61,9 @@ namespace elsa
 
         /// return the number of coefficients per dimension
         IndexVector_t getNumberOfCoefficientsPerDimension() const;
+
+        /// return the number of coefficients per dimension
+        IndexVector_t getStrides() const;
 
         /// return the spacing per dimension
         RealVector_t getSpacingPerDimension() const;
@@ -121,4 +123,17 @@ namespace elsa
         bool isEqual(const DataDescriptor& other) const override;
     };
 
+    /// Compute the strides for a given shape based on the C-memory layout (i.e. row major)
+    IndexVector_t computeStrides(const IndexVector_t& shape) noexcept;
+
+    /// Convert a multi dimensional coordinate into a memory index given the strides.
+    /// See also numpy's
+    /// [ravel_multi_index](https://numpy.org/doc/stable/reference/generated/numpy.ravel_multi_index.html)
+    index_t ravelIndex(const IndexVector_t& coord, const IndexVector_t& strides) noexcept;
+
+    /// Convert a memory offset index into a multi dimensional coordinate, based on the given
+    /// strides.
+    /// See also numpy's
+    /// [unravel_index](https://numpy.org/doc/stable/reference/generated/numpy.unravel_index.html)
+    IndexVector_t unravelIndex(const index_t& index, const IndexVector_t& strides) noexcept;
 } // namespace elsa
