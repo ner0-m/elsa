@@ -6,7 +6,6 @@
 #include "DDA.h"
 #include "VolumeDescriptor.h"
 #include "DetectorDescriptor.h"
-
 #include "XrayProjector.h"
 
 #include <vector>
@@ -25,6 +24,10 @@ namespace elsa
         using forward_tag = ray_driven_tag;
         using backward_tag = ray_driven_tag;
     };
+
+    template <typename data_t>
+    class SiddonsView;
+
     /**
      * @brief Operator representing the discretized X-ray transform in 2d/3d using Siddon's method.
      *
@@ -81,13 +84,89 @@ namespace elsa
         /// implement the polymorphic comparison operation
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
-        data_t traverseRayForward(const BoundingBox& aabb, const RealRay_t& ray,
-                                  const DataContainer<data_t>& x) const;
-
-        void traverseRayBackward(const BoundingBox& aabb, const RealRay_t& ray,
-                                 const value_type& detectorValue, DataContainer<data_t>& Aty) const;
+        SiddonsView<data_t> traverseRay(const BoundingBox& aabb, const RealRay_t& ray) const;
 
         friend class XrayProjector<self_type>;
+    };
+
+    /// Class providing an iterator interface for the Siddons method. Used in `XrayProjector` to
+    /// provide a common and flexible iterator like interface to the Siddons Method
+    template <typename data_t>
+    class SiddonsView
+    {
+    public:
+        struct SiddonsSentinel;
+
+        /// Iterator over the Siddons method, this wraps the `DDAView::DDAIterator` and provide a
+        /// `DomainElement` as `value_type`
+        class SiddonsIterator
+        {
+        public:
+            using iterator_category = std::input_iterator_tag;
+            using value_type = DomainElement<data_t>;
+            using difference_type = std::ptrdiff_t;
+            using pointer = value_type*;
+            using reference = value_type&;
+
+            /// Construct an iterator form a `DDAView` and strides
+            SiddonsIterator(DDAView::DDAIterator iter, const IndexVector_t strides);
+
+            /// Dereference iterator
+            value_type operator*() const;
+
+            /// Advance iterator
+            SiddonsIterator& operator++();
+
+            /// Advance iterator
+            SiddonsIterator operator++(int);
+
+            friend bool operator==(const SiddonsIterator& lhs, const SiddonsIterator& rhs);
+
+            friend bool operator!=(const SiddonsIterator& lhs, const SiddonsIterator& rhs);
+
+            /// Comparison to sentinel/end
+            friend bool operator==(const SiddonsIterator& iter, SiddonsSentinel sentinel)
+            {
+                return iter.iter_ == sentinel.end_;
+            }
+
+        private:
+            DDAView::DDAIterator iter_;
+            IndexVector_t strides_;
+        };
+
+        /// Sentinel indicating the end of the traversal
+        struct SiddonsSentinel {
+            friend bool operator!=(const SiddonsIterator& lhs, SiddonsSentinel rhs)
+            {
+                return !(lhs == rhs);
+            }
+
+            friend bool operator==(const SiddonsSentinel& lhs, const SiddonsIterator& rhs)
+            {
+                return rhs == lhs;
+            }
+
+            friend bool operator!=(const SiddonsSentinel& lhs, const SiddonsIterator& rhs)
+            {
+                return !(lhs == rhs);
+            }
+
+            DDAView::DDASentinel end_;
+        };
+
+        /// Construct the `SiddonsView` from a bounding box and a ray
+        SiddonsView(const BoundingBox& aabb, const RealRay_t& ray);
+
+        /// Return the begin iterator
+        SiddonsIterator begin() { return SiddonsIterator{dda_.begin(), strides_}; }
+
+        /// Return the end sentinel
+        SiddonsSentinel end() { return SiddonsSentinel{dda_.end()}; }
+
+    private:
+        DDAView dda_;
+        IndexVector_t strides_;
     };
 
 } // namespace elsa

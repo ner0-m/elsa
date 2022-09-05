@@ -18,6 +18,8 @@
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/ostr.h"
 
+#include <stack>
+
 namespace elsa
 {
     template <typename data_t, typename Derived>
@@ -42,6 +44,189 @@ namespace elsa
         using forward_tag = ray_driven_tag;
         using backward_tag = ray_driven_tag;
     };
+
+    /// View interface for the LutProjector
+    template <typename Callable>
+    class LutProjectorView
+    {
+    public:
+        struct LutProjectorSentinel;
+
+        class LutProjectorIterator
+        {
+        public:
+            using iterator_category = std::input_iterator_tag;
+            using value_type = DomainElement<real_t>; // TODO: this shouldn't be real_t fixed
+            using difference_type = std::ptrdiff_t;
+            using pointer = value_type*;
+            using reference = value_type&;
+
+            LutProjectorIterator(SliceTraversal::Iter iter, SliceTraversal::Iter end,
+                                 const RealRay_t& ray, const IndexVector_t strides, Callable fn,
+                                 const IndexVector_t& lower, const IndexVector_t& upper,
+                                 const IndexVector_t& distvec)
+                : fn_(fn),
+                  ray_(ray),
+                  iter_(iter),
+                  end_(end),
+                  strides_(strides),
+                  lower_(lower),
+                  upper_(upper),
+                  distvec_(distvec)
+            {
+                advance();
+            }
+
+            /// Dereference operation for iterator
+            value_type operator*()
+            {
+                auto val = stack_.top();
+                stack_.pop();
+                return val;
+            }
+
+            /// Advance iterator
+            LutProjectorIterator& operator++()
+            {
+                advance();
+                return *this;
+            }
+
+            /// Advance iterator
+            LutProjectorIterator operator++(int)
+            {
+                auto copy = *this;
+                advance();
+                return copy;
+            }
+
+            friend bool operator==(const LutProjectorIterator& lhs, const LutProjectorIterator& rhs)
+            {
+                return lhs.iter_ == rhs.iter && lhs.stack_.size() == rhs.stack_.size();
+            }
+
+            friend bool operator!=(const LutProjectorIterator& lhs, const LutProjectorIterator& rhs)
+            {
+                return !(lhs == rhs);
+            }
+
+            /// Comparison to sentinel/end
+            friend bool operator==(const LutProjectorIterator& iter, LutProjectorSentinel sentinel)
+            {
+                return iter.stack_.empty() && iter.iter_ == iter.end_;
+            }
+
+        private:
+            /// Visit all neighbours of the current voxel in slice (i.e. all voxels that are
+            /// perpendicular to the leading direction of the current ray in a given radius)
+            void visit_neighbours()
+            {
+                auto curVoxel = *iter_;
+                const auto neighbours = neighbours_in_slice(curVoxel, distvec_, lower_, upper_);
+                for (const auto& neighbour : neighbours) {
+                    // Correct position, such that the distance is still correct
+                    const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
+                    const auto distance = ray_.distance(correctedPos);
+                    const auto weight = fn_(distance);
+
+                    auto idx = ravelIndex(neighbour, strides_);
+
+                    stack_.emplace(weight, idx);
+                }
+            }
+
+            /// Advance iterator implementation. Only check neighbours if the stack is empty
+            void advance()
+            {
+                if (stack_.empty() && iter_ != end_) {
+                    visit_neighbours();
+                    ++iter_;
+                }
+            }
+
+            Callable fn_;
+            RealRay_t ray_;
+            SliceTraversal::Iter iter_;
+            SliceTraversal::Iter end_;
+            IndexVector_t strides_;
+
+            IndexVector_t lower_;
+            IndexVector_t upper_;
+            IndexVector_t distvec_;
+
+            std::stack<value_type> stack_;
+        };
+
+        /// End sentinel
+        struct LutProjectorSentinel {
+            friend bool operator!=(const LutProjectorIterator& lhs, LutProjectorSentinel rhs)
+            {
+                return !(lhs == rhs);
+            }
+
+            friend bool operator==(const LutProjectorSentinel& lhs, const LutProjectorIterator& rhs)
+            {
+                return rhs == lhs;
+            }
+
+            friend bool operator!=(const LutProjectorSentinel& lhs, const LutProjectorIterator& rhs)
+            {
+                return !(lhs == rhs);
+            }
+        };
+
+        /// Construct the View
+        LutProjectorView(const BoundingBox& aabb, const RealRay_t& ray, Callable fn,
+                         const IndexVector_t& lower, const IndexVector_t& upper,
+                         const IndexVector_t& distvec)
+            : fn_(fn),
+              ray_(ray),
+              traversal_(aabb, ray),
+              strides_(aabb.strides()),
+              lower_(lower),
+              upper_(upper),
+              distvec_(distvec)
+        {
+        }
+
+        /// Return the begin iterator
+        LutProjectorIterator begin()
+        {
+            return LutProjectorIterator{traversal_.begin(),
+                                        traversal_.end(),
+                                        ray_,
+                                        strides_,
+                                        fn_,
+                                        lower_,
+                                        upper_,
+                                        distvec_};
+        }
+
+        /// Return the end sentinel
+        LutProjectorSentinel end() { return LutProjectorSentinel{}; }
+
+    private:
+        Callable fn_;
+        RealRay_t ray_;
+        SliceTraversal traversal_;
+        IndexVector_t strides_;
+
+        IndexVector_t lower_;
+        IndexVector_t upper_;
+        IndexVector_t distvec_;
+    };
+
+    // additional deduction guide
+    template <class Callable>
+    LutProjectorView(const BoundingBox& aabb, const RealRay_t& ray, Callable fn)
+        -> LutProjectorView<Callable>;
+
+    template <class Callable>
+    bool operator==(const typename LutProjectorView<Callable>::LutProjectorIterator& iter,
+                    const typename LutProjectorView<Callable>::LutProjectorSentinel& sentinel)
+    {
+        return iter.iter_ == sentinel.end_;
+    }
 
     template <typename data_t, typename Derived>
     class LutProjector : public XrayProjector<Derived>
@@ -77,64 +262,15 @@ namespace elsa
         ~LutProjector() override = default;
 
     private:
-        /// apply the binary method (i.e. forward projection)
-        data_t traverseRayForward(const BoundingBox& boundingbox, const RealRay_t& ray,
-                                  const DataContainer<data_t>& x) const
+        auto traverseRay(BoundingBox boundingbox, const RealRay_t& ray) const
         {
-            const auto dim = ray.dim();
-
-            const IndexVector_t lower = boundingbox.min().template cast<index_t>();
-            const IndexVector_t upper = boundingbox.max().template cast<index_t>();
             const auto support = this->self().support();
 
             index_t leadingdir = 0;
             ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
 
-            IndexVector_t distvec = IndexVector_t::Constant(lower.size(), support);
-            distvec[leadingdir] = 0;
-
-            auto rangeVal = data_t(0);
-
-            // Expand bounding box as rays have larger support now
-            auto aabb = boundingbox;
-            aabb.min().array() -= static_cast<real_t>(support);
-            aabb.min()[leadingdir] += static_cast<real_t>(support);
-
-            aabb.max().array() += static_cast<real_t>(support);
-            aabb.max()[leadingdir] -= static_cast<real_t>(support);
-
-            // Keep this here, as it saves us a couple of allocations on clang
-            CartesianIndices neighbours(upper);
-
-            // --> setup traversal algorithm
-            SliceTraversal traversal(boundingbox, ray);
-
-            for (const auto& curVoxel : traversal) {
-                neighbours = neighbours_in_slice(curVoxel, distvec, lower, upper);
-                for (auto neighbour : neighbours) {
-                    // Correct position, such that the distance is still correct
-                    const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
-                    const auto distance = ray.distance(correctedPos);
-                    const auto weight = this->self().weight(distance);
-
-                    rangeVal += weight * x(neighbour);
-                }
-            }
-
-            return rangeVal;
-        }
-
-        void traverseRayBackward(const BoundingBox& boundingbox, const RealRay_t& ray,
-                                 const value_type& detectorValue, DataContainer<data_t>& Aty) const
-        {
-            const auto dim = ray.dim();
-
             const IndexVector_t lower = boundingbox.min().template cast<index_t>();
             const IndexVector_t upper = boundingbox.max().template cast<index_t>();
-            const auto support = this->self().support();
-
-            index_t leadingdir = 0;
-            ray.direction().array().cwiseAbs().maxCoeff(&leadingdir);
 
             IndexVector_t distvec = IndexVector_t::Constant(lower.size(), support);
             distvec[leadingdir] = 0;
@@ -147,24 +283,10 @@ namespace elsa
             aabb.max().array() += static_cast<real_t>(support);
             aabb.max()[leadingdir] -= static_cast<real_t>(support);
 
-            // Keep this here, as it saves us a couple of allocations on clang
-            CartesianIndices neighbours(upper);
-
-            // --> setup traversal algorithm
-            SliceTraversal traversal(aabb, ray);
-
-            for (const auto& curVoxel : traversal) {
-                neighbours = neighbours_in_slice(curVoxel, distvec, lower, upper);
-                for (auto neighbour : neighbours) {
-                    // Correct position, such that the distance is still correct
-                    const auto correctedPos = neighbour.template cast<real_t>().array() + 0.5;
-                    const auto distance = ray.distance(correctedPos);
-                    const auto weight = this->self().weight(distance);
-
-#pragma omp atomic
-                    Aty(neighbour) += weight * detectorValue;
-                }
-            }
+            // With the lambda is still a little weird, but that's how I got it running for now :D
+            return LutProjectorView(
+                aabb, ray, [&](auto dist) { return this->self().weight(dist); }, lower, upper,
+                distvec);
         }
 
         /// implement the polymorphic clone operation
@@ -247,4 +369,5 @@ namespace elsa
 
         friend class XrayProjector<self_type>;
     };
+
 } // namespace elsa

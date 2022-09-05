@@ -3,6 +3,8 @@
 
 namespace elsa
 {
+    // ------------------------------------------
+    // Implementation of DDA
     DDA::DDA(const BoundingBox& aabb, const RealRay_t& r) : _aabb{aabb}
     {
         // compute the first intersection
@@ -32,7 +34,7 @@ namespace elsa
         updateTraverse(indexToChange);
     }
 
-    void TraverseAABB::updateTraverse(const index_t& indexToChange)
+    void DDA::updateTraverse(const index_t& indexToChange)
     {
         // --> step into the current direction
         _currentPos(indexToChange) += _stepDirection(indexToChange);
@@ -137,8 +139,12 @@ namespace elsa
         return _currentPos(index) < _aabb.max()(index) && _currentPos(index) >= _aabb.min()(index);
     }
 
+    // ------------------------------------------
+    // Implementation of DDAView
     DDAView::DDAView(const BoundingBox& aabb, const RealRay_t& ray) : traverse(aabb, ray) {}
 
+    // ------------------------------------------
+    // Implementation of DDAIterator
     DDAView::DDAIterator::DDAIterator(DDA& traverse) : traverse_(traverse)
     {
         // advance once, that is it initialized
@@ -173,19 +179,35 @@ namespace elsa
         return !(lhs == rhs);
     }
 
-    /// Comparison to sentinel/end
+    void DDAView::DDAIterator::advance()
+    {
+        // Order is important! First get the voxel then move forward. Basically, the current
+        // points to the previous position, this is needed to calculate the weight
+        current_ = traverse_.getCurrentVoxel();
+        isInAABB_ = traverse_.isInBoundingBox();
+        weight_ = traverse_.updateTraverseAndGetDistance();
+    }
+
+    // ------------------------------------------
+    // Implementation of DDASentinel
     bool operator==(const DDAView::DDAIterator& iter, DDAView::DDASentinel)
     {
         return !iter.isInAABB_;
     }
 
-    void DDAView::DDAIterator::advance()
+    bool operator!=(const DDAView::DDAIterator& lhs, DDAView::DDASentinel rhs)
     {
-        // Order is important! First get the voxel then move forward Basically, the current
-        // points to the previous position, this is needed to calculate the weight
-        current_ = traverse_.getCurrentVoxel();
-        isInAABB_ = traverse_.isInBoundingBox();
-        weight_ = traverse_.updateTraverseAndGetDistance();
+        return !(lhs == rhs);
+    }
+
+    bool operator==(const DDAView::DDASentinel& lhs, const DDAView::DDAIterator& rhs)
+    {
+        return rhs == lhs;
+    }
+
+    bool operator!=(const DDAView::DDASentinel& lhs, const DDAView::DDAIterator& rhs)
+    {
+        return !(lhs == rhs);
     }
 
     DDAView dda(const BoundingBox& aabb, const RealRay_t& ray)

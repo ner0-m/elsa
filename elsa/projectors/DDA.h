@@ -152,27 +152,20 @@ namespace elsa
         private:
             void advance();
 
+            // TODO: Optimize this a bit, the objects are quite large and expensive to copy
             DDA& traverse_;
             real_t weight_;
             IndexVector_t current_;
             bool isInAABB_;
         };
 
+        /// Sentinel indicating the end of the traversal.
         struct DDASentinel {
-            friend bool operator!=(const DDAIterator& lhs, DDASentinel rhs)
-            {
-                return !(lhs == rhs);
-            }
+            friend bool operator!=(const DDAIterator& lhs, DDASentinel rhs);
 
-            friend bool operator==(const DDASentinel& lhs, const DDAIterator& rhs)
-            {
-                return rhs == lhs;
-            }
+            friend bool operator==(const DDASentinel& lhs, const DDAIterator& rhs);
 
-            friend bool operator!=(const DDASentinel& lhs, const DDAIterator& rhs)
-            {
-                return !(lhs == rhs);
-            }
+            friend bool operator!=(const DDASentinel& lhs, const DDAIterator& rhs);
         };
 
         /// Return the begin iterator

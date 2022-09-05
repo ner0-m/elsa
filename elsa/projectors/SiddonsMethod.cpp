@@ -45,39 +45,71 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t SiddonsMethod<data_t>::traverseRayForward(const BoundingBox& aabb, const RealRay_t& ray,
-                                                     const DataContainer<data_t>& x) const
+    SiddonsView<data_t> SiddonsMethod<data_t>::traverseRay(const BoundingBox& aabb,
+                                                           const RealRay_t& ray) const
     {
-        const auto& domain = x.getDataDescriptor();
+        return SiddonsView<data_t>(aabb, ray);
+    }
 
-        data_t accumulator = data_t(0);
-        for (auto [weight, voxel] : dda(aabb, ray)) {
-            const auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(voxel);
-
-            // --> update result depending on the operation performed
-            accumulator += x[dataIndexForCurrentVoxel] * weight;
-        }
-
-        return accumulator;
+    // ------------------------------------------
+    // Implementation of SiddonsView
+    template <typename data_t>
+    SiddonsView<data_t>::SiddonsView(const BoundingBox& aabb, const RealRay_t& ray)
+        : dda_(aabb, ray), strides_(aabb.strides())
+    {
     }
 
     template <typename data_t>
-    void SiddonsMethod<data_t>::traverseRayBackward(const BoundingBox& aabb, const RealRay_t& ray,
-                                                    const value_type& detectorValue,
-                                                    DataContainer<data_t>& Aty) const
+    SiddonsView<data_t>::SiddonsIterator::SiddonsIterator(DDAView::DDAIterator iter,
+                                                          const IndexVector_t strides)
+        : iter_(iter), strides_(strides)
     {
-        const auto& domain = Aty.getDataDescriptor();
+    }
 
-        for (auto [weight, voxel] : dda(aabb, ray)) {
-            const auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(voxel);
+    template <typename data_t>
+    typename SiddonsView<data_t>::SiddonsIterator::value_type
+        SiddonsView<data_t>::SiddonsIterator::operator*() const
+    {
+        auto [weight, voxel] = *iter_;
+        return {weight, ravelIndex(voxel, strides_)};
+    }
 
-#pragma omp atomic
-            Aty[dataIndexForCurrentVoxel] += detectorValue * weight;
-        }
+    template <typename data_t>
+    typename SiddonsView<data_t>::SiddonsIterator&
+        SiddonsView<data_t>::SiddonsIterator::operator++()
+    {
+        ++iter_;
+        return *this;
+    }
+
+    template <typename data_t>
+    typename SiddonsView<data_t>::SiddonsIterator
+        SiddonsView<data_t>::SiddonsIterator::operator++(int)
+    {
+        auto copy = *this;
+        ++iter_;
+        return copy;
+    }
+
+    template <typename data_t>
+    bool operator==(const typename SiddonsView<data_t>::SiddonsIterator& lhs,
+                    typename SiddonsView<data_t>::SiddonsIterator rhs)
+    {
+        return lhs.iter_ == rhs.iter_;
+    }
+
+    template <typename data_t>
+    bool operator!=(const typename SiddonsView<data_t>::SiddonsIterator& lhs,
+                    typename SiddonsView<data_t>::SiddonsIterator rhs)
+    {
+        return !(lhs == rhs);
     }
 
     // ------------------------------------------
     // explicit template instantiation
     template class SiddonsMethod<float>;
     template class SiddonsMethod<double>;
+
+    template class SiddonsView<float>;
+    template class SiddonsView<double>;
 } // namespace elsa
