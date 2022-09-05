@@ -3,18 +3,29 @@
 #include <stdexcept>
 
 #include "Error.h"
+#include "DataDescriptor.h"
 
 namespace elsa
 {
-    BoundingBox::BoundingBox(const IndexVector_t& volDims)
-        : _dim(volDims.size()),
+    BoundingBox::BoundingBox(const IndexVector_t& volShape)
+        : _dim(volShape.size()),
           _min(RealVector_t::Zero(_dim)),
-          _max(volDims.template cast<real_t>())
+          _max(volShape.template cast<real_t>()),
+          _strides(computeStrides(volShape))
     {
     }
 
-    BoundingBox::BoundingBox(const RealVector_t& min, const RealVector_t& max)
-        : _dim(min.size()), _min(min), _max(max)
+    BoundingBox::BoundingBox(const IndexVector_t& volShape, const IndexVector_t& volStrides)
+        : _dim(volShape.size()),
+          _min(RealVector_t::Zero(_dim)),
+          _max(volShape.template cast<real_t>()),
+          _strides(volStrides)
+    {
+    }
+
+    BoundingBox::BoundingBox(const RealVector_t& min, const RealVector_t& max,
+                             const IndexVector_t& strides)
+        : _dim(min.size()), _min(min), _max(max), _strides(strides)
     {
     }
 
@@ -46,6 +57,16 @@ namespace elsa
     const RealVector_t& BoundingBox::max() const
     {
         return _max;
+    }
+
+    IndexVector_t& BoundingBox::strides()
+    {
+        return _strides;
+    }
+
+    const IndexVector_t& BoundingBox::strides() const
+    {
+        return _strides;
     }
 
     void BoundingBox::translateMin(const real_t& t)
