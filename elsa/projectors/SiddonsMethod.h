@@ -3,6 +3,7 @@
 #include "LinearOperator.h"
 #include "Geometry.h"
 #include "BoundingBox.h"
+#include "DDA.h"
 #include "VolumeDescriptor.h"
 #include "DetectorDescriptor.h"
 

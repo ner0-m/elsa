@@ -9,18 +9,22 @@
 namespace elsa
 {
     /**
-     * @brief Class implementing a voxel traversal of a volume (AABB) along a ray.
-     *
-     * @author Tobias Lasser - initial code
-     * @author David Frank - major rewrite
-     * @author Maximilian Hornung - modularization
-     * @author Nikola Dinev - fixes
+     * @brief Class implementing a voxel traversal of a volume (AABB) along a ray. The volume is
+     * assumed to be a regular grid, this reduces the algorithm to a form of 'Digital differential
+     * analyzer' (DDA). DDA algorithms are commonly known from computer graphics to rasterization
+     * lines and other primitives.
      *
      * This traversal always proceeds along "long" voxel edges, it will never "jump diagonally".
      * The method is based on J. Amantides, A. Woo: A Fast Voxel Traversal Algorithm for Ray
      * Tracing.
+     *
+     * @author
+     * - Tobias Lasser - initial code
+     * - David Frank - major rewrite
+     * - Maximilian Hornung - modularization
+     * - Nikola Dinev - fixes
      */
-    class TraverseAABB
+    class DDA
     {
     public:
         /**
@@ -29,7 +33,7 @@ namespace elsa
          * @param[in] aabb axis-aligned boundary box describing the volume
          * @param[in] r the ray to be traversed
          */
-        TraverseAABB(const BoundingBox& aabb, const RealRay_t& r);
+        DDA(const BoundingBox& aabb, const RealRay_t& r);
 
         /**
          * @brief Update the traverser status by taking the next traversal step in case the
@@ -103,4 +107,86 @@ namespace elsa
         /// check if the current index is still in the bounding box
         bool isCurrentPositionInAABB(index_t index) const;
     };
+
+    /// @brief Simple iterator interface over the DDA traversal algorithm. This class provides an
+    /// begin/end iterator pair/view interface to the `DDA` class. The iterator returned
+    /// models an input iterator using an iterator/sentinel pair.
+    class DDAView
+    {
+    public:
+        /// Construct a view from a bounding box and ray
+        DDAView(const BoundingBox& aabb, const RealRay_t& ray);
+
+        struct DDASentinel;
+
+        /// Iterator returned to the call side, responsible for properly calling the underlying
+        /// `DDA` class.
+        struct DDAIterator {
+            using iterator_category = std::input_iterator_tag;
+            using value_type = std::pair<real_t, IndexVector_t>;
+            using difference_type = std::ptrdiff_t;
+            using pointer = value_type*;
+            using reference = value_type&;
+
+            /// Construct iterator from reference to `DDA`
+            DDAIterator(DDA& traverse);
+
+            /// Dereference the iterator
+            value_type operator*() const;
+
+            /// Increment the iterator
+            DDAIterator& operator++();
+
+            /// Increment the iterator
+            DDAIterator operator++(int);
+
+            /// Compare iterators
+            friend bool operator==(const DDAIterator& lhs, const DDAIterator& rhs);
+
+            /// Compare iterators
+            friend bool operator!=(const DDAIterator& lhs, const DDAIterator& rhs);
+
+            /// Comparison to sentinel/end
+            friend bool operator==(const DDAIterator& iter, DDASentinel);
+
+        private:
+            void advance();
+
+            DDA& traverse_;
+            real_t weight_;
+            IndexVector_t current_;
+            bool isInAABB_;
+        };
+
+        struct DDASentinel {
+            friend bool operator!=(const DDAIterator& lhs, DDASentinel rhs)
+            {
+                return !(lhs == rhs);
+            }
+
+            friend bool operator==(const DDASentinel& lhs, const DDAIterator& rhs)
+            {
+                return rhs == lhs;
+            }
+
+            friend bool operator!=(const DDASentinel& lhs, const DDAIterator& rhs)
+            {
+                return !(lhs == rhs);
+            }
+        };
+
+        /// Return the begin iterator
+        DDAIterator begin() { return {traverse}; }
+
+        /// Return the end sentinel
+        DDASentinel end() { return {}; }
+
+    private:
+        DDA traverse;
+    };
+
+    /// Create a view/range (i.e. an object `begin()` and `end()`) over the bounding box traversing
+    /// along the given ray using DDA style traversal. A usage example can be found in the Siddons
+    /// Method
+    DDAView dda(const BoundingBox& aabb, const RealRay_t& ray);
 } // namespace elsa

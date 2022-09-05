@@ -1,6 +1,6 @@
 #include "SiddonsMethod.h"
 #include "Timer.h"
-#include "TraverseAABB.h"
+#include "DDA.h"
 #include "TypeCasts.hpp"
 
 #include <stdexcept>
@@ -50,21 +50,12 @@ namespace elsa
     {
         const auto& domain = x.getDataDescriptor();
 
-        // --> setup traversal algorithm
-        TraverseAABB traverse(aabb, ray);
-
         data_t accumulator = data_t(0);
+        for (auto [weight, voxel] : dda(aabb, ray)) {
+            const auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(voxel);
 
-        // --> initial index to access the data vector
-        auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
-
-        while (traverse.isInBoundingBox()) {
-
-            auto weight = traverse.updateTraverseAndGetDistance();
             // --> update result depending on the operation performed
             accumulator += x[dataIndexForCurrentVoxel] * weight;
-
-            dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
         }
 
         return accumulator;
@@ -77,20 +68,11 @@ namespace elsa
     {
         const auto& domain = Aty.getDataDescriptor();
 
-        // --> setup traversal algorithm
-        TraverseAABB traverse(aabb, ray);
-
-        // --> initial index to access the data vector
-        auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
-
-        while (traverse.isInBoundingBox()) {
-
-            auto weight = traverse.updateTraverseAndGetDistance();
+        for (auto [weight, voxel] : dda(aabb, ray)) {
+            const auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(voxel);
 
 #pragma omp atomic
             Aty[dataIndexForCurrentVoxel] += detectorValue * weight;
-
-            dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
         }
     }
 

@@ -2,7 +2,7 @@
 set(MODULE_HEADERS
     BoundingBox.h
     Intersection.h
-    TraverseAABB.h
+    DDA.h
     TraverseAABBJosephsMethod.h
     SliceTraversal.h
     LutProjector.h
@@ -19,7 +19,7 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     BoundingBox.cpp
     Intersection.cpp
-    TraverseAABB.cpp
+    DDA.cpp
     TraverseAABBJosephsMethod.cpp
     SliceTraversal.cpp
     LutProjector.cpp

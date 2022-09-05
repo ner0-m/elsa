@@ -38,16 +38,16 @@ Intersection
 
 .. doxygenclass:: elsa::Intersection
 
-TraverseAABB
-------------
+DDA
+---
 
-.. doxygenclass:: elsa::TraverseAABB
+.. doxygenclass:: elsa::DDA
 
 TraverseAABBJosephsMethod
 -------------------------
 
 .. doxygenclass:: elsa::TraverseAABBJosephsMethod
-    
+
 SliceTraversal
 ------------
 

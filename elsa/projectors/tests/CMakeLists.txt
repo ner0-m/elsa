@@ -16,7 +16,7 @@ add_custom_target(build-tests-projectors)
 # the actual tests
 ELSA_DOCTEST(BoundingBox)
 ELSA_DOCTEST(Intersection)
-ELSA_DOCTEST(TraverseAABB)
+ELSA_DOCTEST(DDA)
 ELSA_DOCTEST(SliceTraversal)
 ELSA_DOCTEST(LutProjector)
 ELSA_DOCTEST(Blobs)

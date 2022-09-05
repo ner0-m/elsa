@@ -1,6 +1,6 @@
 #include "BinaryMethod.h"
 #include "Timer.h"
-#include "TraverseAABB.h"
+#include "DDA.h"
 #include "TypeCasts.hpp"
 
 #include <stdexcept>
@@ -83,7 +83,7 @@ namespace elsa
             auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
 
             // --> setup traversal algorithm
-            TraverseAABB traverse(_boundingBox, ray);
+            DDA traverse(_boundingBox, ray);
 
             if constexpr (!adjoint)
                 result[rangeIndex] = 0;

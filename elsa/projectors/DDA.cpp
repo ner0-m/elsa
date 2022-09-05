@@ -1,9 +1,9 @@
-#include "TraverseAABB.h"
+#include "DDA.h"
 #include "Intersection.h"
 
 namespace elsa
 {
-    TraverseAABB::TraverseAABB(const BoundingBox& aabb, const RealRay_t& r) : _aabb{aabb}
+    DDA::DDA(const BoundingBox& aabb, const RealRay_t& r) : _aabb{aabb}
     {
         // compute the first intersection
         calculateAABBIntersections(r);
@@ -23,7 +23,7 @@ namespace elsa
         initMax(r.direction());
     }
 
-    void TraverseAABB::updateTraverse()
+    void DDA::updateTraverse()
     {
         // --> select the index that has lowest t value
         index_t indexToChange;
@@ -44,7 +44,7 @@ namespace elsa
         _isInAABB = isCurrentPositionInAABB(indexToChange);
     }
 
-    real_t TraverseAABB::updateTraverseAndGetDistance()
+    real_t DDA::updateTraverseAndGetDistance()
     {
         // --> select the index that has lowest t value
         index_t indexToChange;
@@ -60,17 +60,17 @@ namespace elsa
         return (_tExit - tEntry);
     }
 
-    bool TraverseAABB::isInBoundingBox() const
+    bool DDA::isInBoundingBox() const
     {
         return _isInAABB;
     }
 
-    IndexVector_t TraverseAABB::getCurrentVoxel() const
+    IndexVector_t DDA::getCurrentVoxel() const
     {
         return _currentPos.template cast<IndexVector_t::Scalar>();
     }
 
-    void TraverseAABB::calculateAABBIntersections(const RealRay_t& r)
+    void DDA::calculateAABBIntersections(const RealRay_t& r)
     {
         // entry and exit point parameters
         real_t tmin;
@@ -94,12 +94,12 @@ namespace elsa
         }
     }
 
-    void TraverseAABB::initStepDirection(const RealVector_t& rd)
+    void DDA::initStepDirection(const RealVector_t& rd)
     {
         _stepDirection = rd.array().sign();
     }
 
-    void TraverseAABB::selectClosestVoxel()
+    void DDA::selectClosestVoxel()
     {
         RealVector_t lowerCorner = _entryPoint.array().floor();
         lowerCorner =
@@ -114,14 +114,14 @@ namespace elsa
             _isInAABB = false;
     }
 
-    void TraverseAABB::initDelta(const RealVector_t& rd)
+    void DDA::initDelta(const RealVector_t& rd)
     {
         RealVector_t tdelta = _stepDirection.template cast<real_t>().cwiseQuotient(rd);
 
         _tDelta = (Eigen::abs(rd.array()) > _EPS.array()).select(tdelta, _MAX);
     }
 
-    void TraverseAABB::initMax(const RealVector_t& rd)
+    void DDA::initMax(const RealVector_t& rd)
     {
         RealVector_t tmax =
             (((rd.array() > 0.0f).select(_currentPos.array() + 1., _currentPos)).matrix()
@@ -132,9 +132,64 @@ namespace elsa
         _tMax = (Eigen::abs(rd.array()) > _EPS.array()).select(tmax, _MAX);
     }
 
-    bool TraverseAABB::isCurrentPositionInAABB(index_t index) const
+    bool DDA::isCurrentPositionInAABB(index_t index) const
     {
         return _currentPos(index) < _aabb.max()(index) && _currentPos(index) >= _aabb.min()(index);
     }
 
+    DDAView::DDAView(const BoundingBox& aabb, const RealRay_t& ray) : traverse(aabb, ray) {}
+
+    DDAView::DDAIterator::DDAIterator(DDA& traverse) : traverse_(traverse)
+    {
+        // advance once, that is it initialized
+        advance();
+    }
+
+    typename DDAView::DDAIterator::value_type DDAView::DDAIterator::operator*() const
+    {
+        return {weight_, current_};
+    }
+
+    DDAView::DDAIterator& DDAView::DDAIterator::operator++()
+    {
+        advance();
+        return *this;
+    }
+
+    DDAView::DDAIterator DDAView::DDAIterator::operator++(int)
+    {
+        auto copy = *this;
+        ++(*this);
+        return copy;
+    }
+
+    bool operator==(const DDAView::DDAIterator& lhs, const DDAView::DDAIterator& rhs)
+    {
+        return lhs.current_ == rhs.current_;
+    }
+
+    bool operator!=(const DDAView::DDAIterator& lhs, const DDAView::DDAIterator& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    /// Comparison to sentinel/end
+    bool operator==(const DDAView::DDAIterator& iter, DDAView::DDASentinel)
+    {
+        return !iter.isInAABB_;
+    }
+
+    void DDAView::DDAIterator::advance()
+    {
+        // Order is important! First get the voxel then move forward Basically, the current
+        // points to the previous position, this is needed to calculate the weight
+        current_ = traverse_.getCurrentVoxel();
+        isInAABB_ = traverse_.isInBoundingBox();
+        weight_ = traverse_.updateTraverseAndGetDistance();
+    }
+
+    DDAView dda(const BoundingBox& aabb, const RealRay_t& ray)
+    {
+        return DDAView(aabb, ray);
+    }
 } // namespace elsa
