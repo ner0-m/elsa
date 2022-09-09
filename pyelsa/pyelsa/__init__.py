@@ -10,5 +10,10 @@ from .pyelsa_projectors import *
 
 try:
     from .pyelsa_projectors_cuda import *
+    importedCudaProjectors = True
 except ModuleNotFoundError:
     print("pyelsa not build with CUDA projector support")
+    importedCudaProjectors = False
+
+def cudaProjectorsEnabled():
+    return importedCudaProjectors
