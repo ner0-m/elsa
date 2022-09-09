@@ -1,7 +1,7 @@
 Python Bindings
 -----------------------------
 
-Elsa also comes with python bindings for almost all aspects of the framework. 
+_elsa_ also comes with python bindings for almost all aspects of the framework.
 This short guide aims to give an introduction into some simple cases and explain how one can
 easily translate C++ code into python code for faster prototyping and experimenting.
 One major benefit that comes with the python bindings is that we are able to natively
@@ -9,16 +9,15 @@ use numpy arrays with our elsa data containers making it easy to work with other
 matplotlib.
 
 ### Setup the python bindings
-In case you installed elsa via a `make install` the bindings should work out of the box.
+Once you've cloned _elsa_, change into the directory and simply run `pip install .`. This will build
+_elsa_ and install including the Python bindings. In case you wonder what is happening, add the
+`--verbose` flag to see the progress.
 
-If you do not want to install elsa to your system or are developing locally make sure to
-add the path to your build folder to the `PYTHONPATH` for python to be able to find and import
-the binding code.
-
-Once everything is set up simply 
+Once everything is set up simply open a Python interpreter and run
 ```python
 import pyelsa as elsa
 ```
+to check everything is working.
 
 ### 2D example
 To give a short outline into the python usage of elsa we will recreate the 2D example of the
@@ -60,11 +59,11 @@ plt.show()
 ```
 
 As you can see the code is essentially equivalent to the C++ code shown in the Quickstart guide.
-All the top level elsa modules normally available through 
+All the top level elsa modules normally available through
 ```cpp
 #include "elsa.h"
 ```
-are available under the top level `pyelsa` module. 
+are available under the top level `pyelsa` module.
 All C++ functions and classes essentially have the same signatures.
 One important aspect of the python bindings is, however, that in places where the C++ code would expect
 `Eigen` vectors or matrices we can natively use `numpy` arrays as well as convert elsa `DataContainer` back to numpy
@@ -150,4 +149,3 @@ fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
 plt.show()
 ```
 and scroll through our 3D reconstruction.
-

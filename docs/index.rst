@@ -11,7 +11,7 @@
    :maxdepth: 2
 
    guides/quickstart-cxx.rst
-   guides/python_bindings.md
+   guides/python_guide/index
    modules/solvers/choosing_a_solver.rst
    guides/admm-cxx.md
 
