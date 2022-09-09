@@ -136,6 +136,17 @@ namespace elsa
 
                      return std::make_unique<elsa::DataContainer<data_t>>(dd, map);
                  }))
+                .def(py::init(
+                    [](py::array_t<data_t, py::array::f_style | py::array::forcecast> array,
+                       const elsa::DataDescriptor& desc) {
+                        elsa::IndexVector_t coeffsPerDim =
+                            desc.getNumberOfCoefficientsPerDimension();
+
+                        auto map = Eigen::Map<const Eigen::Matrix<data_t, Eigen::Dynamic, 1>>(
+                            array.data(), coeffsPerDim.prod());
+
+                        return std::make_unique<elsa::DataContainer<data_t>>(desc, map);
+                    }))
                 .def_buffer([](elsa::DataContainer<data_t>& m) {
                     std::vector<ssize_t> strides;
                     auto coeffsPerDim = m.getDataDescriptor().getNumberOfCoefficientsPerDimension();
