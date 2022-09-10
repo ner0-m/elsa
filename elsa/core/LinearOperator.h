@@ -6,6 +6,7 @@
 #include "DataContainer.h"
 
 #include <memory>
+#include <optional>
 
 namespace elsa
 {
