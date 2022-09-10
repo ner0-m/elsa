@@ -298,12 +298,6 @@ namespace elsa
                 return std::make_unique<DataHandlerCPU<data_t>>(std::forward<Args>(args)...);
             case DataHandlerType::MAP_CPU:
                 return std::make_unique<DataHandlerCPU<data_t>>(std::forward<Args>(args)...);
-#ifdef ELSA_CUDA_VECTOR
-            case DataHandlerType::GPU:
-                return std::make_unique<DataHandlerGPU<data_t>>(std::forward<Args>(args)...);
-            case DataHandlerType::MAP_GPU:
-                return std::make_unique<DataHandlerGPU<data_t>>(std::forward<Args>(args)...);
-#endif
             default:
                 throw InvalidArgumentError("DataContainer: unknown handler type");
         }

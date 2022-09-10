@@ -7,14 +7,8 @@
 #include "DataHandlerMapCPU.h"
 #include "DataContainerIterator.h"
 #include "Error.h"
-#include "Expression.h"
 #include "FormatConfig.h"
 #include "TypeCasts.hpp"
-
-#ifdef ELSA_CUDA_VECTOR
-#include "DataHandlerGPU.h"
-#include "DataHandlerMapGPU.h"
-#endif
 
 #include <memory>
 #include <type_traits>
@@ -113,51 +107,6 @@ namespace elsa
          */
         DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
 
-        /**
-         * @brief Expression evaluation assignment for DataContainer
-         *
-         * @param[in] source expression to evaluate
-         *
-         * This evaluates an expression template term into the underlying data member of
-         * the DataHandler in use.
-         */
-        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator=(Source const& source)
-        {
-            if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(_dataHandler.get())) {
-                handler->accessData() = source.template eval<false>();
-            } else if (auto handler =
-                           downcast_safe<DataHandlerMapCPU<data_t>>(_dataHandler.get())) {
-                handler->accessData() = source.template eval<false>();
-#ifdef ELSA_CUDA_VECTOR
-            } else if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(_dataHandler.get())) {
-                handler->accessData().eval(source.template eval<true>());
-            } else if (auto handler =
-                           downcast_safe<DataHandlerMapGPU<data_t>>(_dataHandler.get())) {
-                handler->accessData().eval(source.template eval<true>());
-#endif
-            } else {
-                throw LogicError("Unknown handler type");
-            }
-
-            return *this;
-        }
-
-        /**
-         * @brief Expression constructor
-         *
-         * @param[in] source expression to evaluate
-         *
-         * It creates a new DataContainer out of an expression. For this the meta information which
-         * is saved in the expression is used.
-         */
-        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>(Source const& source)
-            : DataContainer<data_t>(source.getDataMetaInfo().first, source.getDataMetaInfo().second)
-        {
-            this->operator=(source);
-        }
-
         /// return the current DataDescriptor
         const DataDescriptor& getDataDescriptor() const;
 
@@ -203,29 +152,6 @@ namespace elsa
 
         /// return the dot product of this signal with the one from container other
         data_t dot(const DataContainer<data_t>& other) const;
-
-        /// return the dot product of this signal with the one from an expression
-        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        data_t dot(const Source& source) const
-        {
-            if (auto handler = downcast_safe<DataHandlerCPU<data_t>>(_dataHandler.get())) {
-                return (*this * source).template eval<false>().sum();
-            } else if (auto handler =
-                           downcast_safe<DataHandlerMapCPU<data_t>>(_dataHandler.get())) {
-                return (*this * source).template eval<false>().sum();
-#ifdef ELSA_CUDA_VECTOR
-            } else if (auto handler = downcast_safe<DataHandlerGPU<data_t>>(_dataHandler.get())) {
-                DataContainer temp = (*this * source);
-                return temp.sum();
-            } else if (auto handler =
-                           downcast_safe<DataHandlerMapGPU<data_t>>(_dataHandler.get())) {
-                DataContainer temp = (*this * source);
-                return temp.sum();
-#endif
-            } else {
-                throw LogicError("Unknown handler type");
-            }
-        }
 
         /// return the squared l2 norm of this signal (dot product with itself)
         GetFloatingPointType_t<data_t> squaredL2Norm() const;
@@ -286,46 +212,14 @@ namespace elsa
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
 
-        /// compute in-place element-wise addition with another expression
-        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator+=(Source const& source)
-        {
-            *this = *this + source;
-            return *this;
-        }
-
         /// compute in-place element-wise subtraction of another container
         DataContainer<data_t>& operator-=(const DataContainer<data_t>& dc);
-
-        /// compute in-place element-wise subtraction with another expression
-        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator-=(Source const& source)
-        {
-            *this = *this - source;
-            return *this;
-        }
 
         /// compute in-place element-wise multiplication with another container
         DataContainer<data_t>& operator*=(const DataContainer<data_t>& dc);
 
-        /// compute in-place element-wise multiplication with another expression
-        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator*=(Source const& source)
-        {
-            *this = *this * source;
-            return *this;
-        }
-
         /// compute in-place element-wise division by another container
         DataContainer<data_t>& operator/=(const DataContainer<data_t>& dc);
-
-        /// compute in-place element-wise division with another expression
-        template <typename Source, typename = std::enable_if_t<isExpression<Source>>>
-        DataContainer<data_t>& operator/=(Source const& source)
-        {
-            *this = *this / source;
-            return *this;
-        }
 
         /// compute in-place addition of a scalar
         DataContainer<data_t>& operator+=(data_t scalar);
@@ -538,259 +432,229 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> ifftShift2D(DataContainer<data_t> dc);
 
-    /// User-defined template argument deduction guide for the expression based constructor
-    template <typename Source>
-    DataContainer(Source const& source) -> DataContainer<typename Source::data_t>;
-
-    /// Collects callable lambdas for later dispatch
-    template <typename... Ts>
-    struct Callables : Ts... {
-        using Ts::operator()...;
-    };
-
-    /// Class template deduction guide
-    template <typename... Ts>
-    Callables(Ts...) -> Callables<Ts...>;
-
-    /// Multiplying two operands (including scalars)
-    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
-    auto operator*(LHS const& lhs, RHS const& rhs)
+    /// Multiplying two DataContainers
+    template <typename data_t>
+    inline DataContainer<data_t> operator*(const DataContainer<data_t>& lhs,
+                                           const DataContainer<data_t>& rhs)
     {
-        auto multiplicationGPU = [](auto const& left, auto const& right, bool /**/) {
-            return left * right;
-        };
-
-        if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
-            auto multiplication = [](auto const& left, auto const& right) {
-                return (left.array() * right.array()).matrix();
-            };
-            return Expression{Callables{multiplication, multiplicationGPU}, lhs, rhs};
-        } else if constexpr (isArithmetic<LHS>) {
-            auto multiplication = [](auto const& left, auto const& right) {
-                return (left * right.array()).matrix();
-            };
-            return Expression{Callables{multiplication, multiplicationGPU}, lhs, rhs};
-        } else if constexpr (isArithmetic<RHS>) {
-            auto multiplication = [](auto const& left, auto const& right) {
-                return (left.array() * right).matrix();
-            };
-            return Expression{Callables{multiplication, multiplicationGPU}, lhs, rhs};
-        } else {
-            auto multiplication = [](auto const& left, auto const& right) { return left * right; };
-            return Expression{Callables{multiplication, multiplicationGPU}, lhs, rhs};
-        }
+        auto copy = lhs;
+        copy *= rhs;
+        return copy;
     }
 
-    /// Adding two operands (including scalars)
-    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
-    auto operator+(LHS const& lhs, RHS const& rhs)
+    template <typename data_t, typename Scalar,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+    inline DataContainer<data_t> operator*(const DataContainer<data_t>& dc, const Scalar& s)
     {
-        auto additionGPU = [](auto const& left, auto const& right, bool /**/) {
-            return left + right;
-        };
-
-        if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
-            auto addition = [](auto const& left, auto const& right) { return left + right; };
-            return Expression{Callables{addition, additionGPU}, lhs, rhs};
-        } else if constexpr (isArithmetic<LHS>) {
-            auto addition = [](auto const& left, auto const& right) {
-                return (left + right.array()).matrix();
-            };
-            return Expression{Callables{addition, additionGPU}, lhs, rhs};
-        } else if constexpr (isArithmetic<RHS>) {
-            auto addition = [](auto const& left, auto const& right) {
-                return (left.array() + right).matrix();
-            };
-            return Expression{Callables{addition, additionGPU}, lhs, rhs};
-        } else {
-            auto addition = [](auto const& left, auto const& right) { return left + right; };
-            return Expression{Callables{addition, additionGPU}, lhs, rhs};
-        }
+        auto copy = dc;
+        copy *= s;
+        return copy;
     }
 
-    /// Subtracting two operands (including scalars)
-    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
-    auto operator-(LHS const& lhs, RHS const& rhs)
+    template <typename data_t, typename Scalar,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+    inline DataContainer<data_t> operator*(const Scalar& s, const DataContainer<data_t>& dc)
     {
-        auto subtractionGPU = [](auto const& left, auto const& right, bool /**/) {
-            return left - right;
-        };
-
-        if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
-            auto subtraction = [](auto const& left, auto const& right) { return left - right; };
-            return Expression{Callables{subtraction, subtractionGPU}, lhs, rhs};
-        } else if constexpr (isArithmetic<LHS>) {
-            auto subtraction = [](auto const& left, auto const& right) {
-                return (left - right.array()).matrix();
-            };
-            return Expression{Callables{subtraction, subtractionGPU}, lhs, rhs};
-        } else if constexpr (isArithmetic<RHS>) {
-            auto subtraction = [](auto const& left, auto const& right) {
-                return (left.array() - right).matrix();
-            };
-            return Expression{Callables{subtraction, subtractionGPU}, lhs, rhs};
-        } else {
-            auto subtraction = [](auto const& left, auto const& right) { return left - right; };
-            return Expression{Callables{subtraction, subtractionGPU}, lhs, rhs};
-        }
+        auto copy = dc;
+        copy *= s;
+        return copy;
     }
 
-    /// Dividing two operands (including scalars)
-    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
-    auto operator/(LHS const& lhs, RHS const& rhs)
+    /// Add two DataContainers
+    template <typename data_t>
+    inline DataContainer<data_t> operator+(const DataContainer<data_t>& lhs,
+                                           const DataContainer<data_t>& rhs)
     {
-        auto divisionGPU = [](auto const& left, auto const& right, bool /**/) {
-            return left / right;
-        };
-
-        if constexpr (isDcOrExpr<LHS> && isDcOrExpr<RHS>) {
-            auto division = [](auto const& left, auto const& right) {
-                return (left.array() / right.array()).matrix();
-            };
-            return Expression{Callables{division, divisionGPU}, lhs, rhs};
-        } else if constexpr (isArithmetic<LHS>) {
-            auto division = [](auto const& left, auto const& right) {
-                return (left / right.array()).matrix();
-            };
-            return Expression{Callables{division, divisionGPU}, lhs, rhs};
-        } else if constexpr (isArithmetic<RHS>) {
-            auto division = [](auto const& left, auto const& right) {
-                return (left.array() / right).matrix();
-            };
-            return Expression{Callables{division, divisionGPU}, lhs, rhs};
-        } else {
-            auto division = [](auto const& left, auto const& right) { return left / right; };
-            return Expression{Callables{division, divisionGPU}, lhs, rhs};
-        }
+        auto copy = lhs;
+        copy += rhs;
+        return copy;
     }
 
-    /// Element-wise maximum value operation between two operands
-    template <typename LHS, typename RHS, typename = std::enable_if_t<isBinaryOpOk<LHS, RHS>>>
-    auto cwiseMax(LHS const& lhs, RHS const& rhs)
+    template <typename data_t, typename Scalar,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+    inline DataContainer<data_t> operator+(const DataContainer<data_t>& dc, const Scalar& s)
     {
-        constexpr bool isLHSComplex = isComplex<GetOperandDataType_t<LHS>>;
-        constexpr bool isRHSComplex = isComplex<GetOperandDataType_t<RHS>>;
-
-#ifdef ELSA_CUDA_VECTOR
-        auto cwiseMaxGPU = [](auto const& lhs, auto const& rhs, bool) {
-            return quickvec::cwiseMax(lhs, rhs);
-        };
-#endif
-        auto cwiseMax = [] {
-            if constexpr (isLHSComplex && isRHSComplex) {
-                return [](auto const& left, auto const& right) {
-                    return (left.array().abs().max(right.array().abs())).matrix();
-                };
-            } else if constexpr (isLHSComplex) {
-                return [](auto const& left, auto const& right) {
-                    return (left.array().abs().max(right.array())).matrix();
-                };
-            } else if constexpr (isRHSComplex) {
-                return [](auto const& left, auto const& right) {
-                    return (left.array().max(right.array().abs())).matrix();
-                };
-            } else {
-                return [](auto const& left, auto const& right) {
-                    return (left.array().max(right.array())).matrix();
-                };
-            }
-        }();
-
-#ifdef ELSA_CUDA_VECTOR
-        return Expression{Callables{cwiseMax, cwiseMaxGPU}, lhs, rhs};
-#else
-        return Expression{cwiseMax, lhs, rhs};
-#endif
+        auto copy = dc;
+        copy += s;
+        return copy;
     }
 
-    /// Element-wise absolute value operation
-    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto cwiseAbs(Operand const& operand)
+    template <typename data_t, typename Scalar,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+    inline DataContainer<data_t> operator+(const Scalar& s, const DataContainer<data_t>& dc)
     {
-        auto abs = [](auto const& operand) { return (operand.array().abs()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR
-        auto absGPU = [](auto const& operand, bool) { return quickvec::cwiseAbs(operand); };
-        return Expression{Callables{abs, absGPU}, operand};
-#else
-        return Expression{abs, operand};
-#endif
+        auto copy = dc;
+        copy += s;
+        return copy;
     }
 
-    /// Element-wise square operation
-    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto square(Operand const& operand)
+    /// Subtract two DataContainers
+    template <typename data_t>
+    inline DataContainer<data_t> operator-(const DataContainer<data_t>& lhs,
+                                           const DataContainer<data_t>& rhs)
     {
-        auto square = [](auto const& operand) { return (operand.array().square()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR
-        auto squareGPU = [](auto const& operand, bool /**/) { return quickvec::square(operand); };
-        return Expression{Callables{square, squareGPU}, operand};
-#else
-        return Expression{square, operand};
-#endif
+        auto copy = lhs;
+        copy -= rhs;
+        return copy;
     }
 
-    /// Element-wise square-root operation
-    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto sqrt(Operand const& operand)
+    template <typename data_t, typename Scalar,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+    inline DataContainer<data_t> operator-(const DataContainer<data_t>& dc, const Scalar& s)
     {
-        auto sqrt = [](auto const& operand) { return (operand.array().sqrt()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR
-        auto sqrtGPU = [](auto const& operand, bool /**/) { return quickvec::sqrt(operand); };
-        return Expression{Callables{sqrt, sqrtGPU}, operand};
-#else
-        return Expression{sqrt, operand};
-#endif
+        auto copy = dc;
+        copy -= s;
+        return copy;
     }
 
-    /// Element-wise exponenation operation with euler base
-    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto exp(Operand const& operand)
+    template <typename data_t, typename Scalar,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+    inline DataContainer<data_t> operator-(const Scalar& s, const DataContainer<data_t>& dc)
     {
-        auto exp = [](auto const& operand) { return (operand.array().exp()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR
-        auto expGPU = [](auto const& operand, bool /**/) { return quickvec::exp(operand); };
-        return Expression{Callables{exp, expGPU}, operand};
-#else
-        return Expression{exp, operand};
-#endif
+        auto copy = dc;
+        std::transform(copy.begin(), copy.end(), copy.begin(), [=](auto val) { return s - val; });
+        return copy;
     }
 
-    /// Element-wise natural logarithm
-    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto log(Operand const& operand)
+    /// Divide two DataContainers
+    template <typename data_t>
+    inline DataContainer<data_t> operator/(const DataContainer<data_t>& lhs,
+                                           const DataContainer<data_t>& rhs)
     {
-        auto log = [](auto const& operand) { return (operand.array().log()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR
-        auto logGPU = [](auto const& operand, bool /**/) { return quickvec::log(operand); };
-        return Expression{Callables{log, logGPU}, operand};
-#else
-        return Expression{log, operand};
-#endif
+        auto copy = lhs;
+        copy /= rhs;
+        return copy;
     }
 
-    /// Element-wise real parts of the Operand
-    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto real(Operand const& operand)
+    template <typename data_t, typename Scalar,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+    inline DataContainer<data_t> operator/(const DataContainer<data_t>& dc, const Scalar& s)
     {
-        auto real = [](auto const& operand) { return (operand.array().real()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR
-        auto realGPU = [](auto const& operand, bool) { return quickvec::real(operand); };
-        return Expression{Callables{real, realGPU}, operand};
-#else
-        return Expression{real, operand};
-#endif
+        auto copy = dc;
+        copy /= s;
+        return copy;
     }
 
-    /// Element-wise imaginary parts of the Operand
-    template <typename Operand, typename = std::enable_if_t<isDcOrExpr<Operand>>>
-    auto imag(Operand const& operand)
+    template <typename data_t, typename Scalar,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+    inline DataContainer<data_t> operator/(const Scalar& s, const DataContainer<data_t>& dc)
     {
-        auto imag = [](auto const& operand) { return (operand.array().imag()).matrix(); };
-#ifdef ELSA_CUDA_VECTOR
-        auto imagGPU = [](auto const& operand, bool) { return quickvec::imag(operand); };
-        return Expression{Callables{imag, imagGPU}, operand};
-#else
-        return Expression{imag, operand};
-#endif
+        auto copy = dc;
+        std::transform(copy.begin(), copy.end(), copy.begin(), [=](auto val) { return s / val; });
+        return copy;
+    }
+
+    template <typename data_t>
+    inline DataContainer<data_t> cwiseMax(const DataContainer<std::complex<data_t>>& lhs,
+                                          const DataContainer<std::complex<data_t>>& rhs)
+    {
+        DataContainer<data_t> copy(rhs.getDataDescriptor());
+        std::transform(lhs.begin(), lhs.end(), rhs.begin(), copy.begin(),
+                       [](auto l, auto r) { return std::max(std::abs(l), std::abs(r)); });
+        return copy;
+    }
+
+    template <typename data_t>
+    inline DataContainer<data_t> cwiseMax(const DataContainer<std::complex<data_t>>& lhs,
+                                          const DataContainer<data_t>& rhs)
+    {
+        DataContainer<data_t> copy(rhs.getDataDescriptor());
+        std::transform(lhs.begin(), lhs.end(), rhs.begin(), copy.begin(),
+                       [](auto l, auto r) { return std::max(std::abs(l), r); });
+        return copy;
+    }
+
+    template <typename data_t>
+    inline DataContainer<data_t> cwiseMax(const DataContainer<data_t>& lhs,
+                                          const DataContainer<std::complex<data_t>>& rhs)
+    {
+        DataContainer<data_t> copy(rhs.getDataDescriptor());
+        std::transform(lhs.begin(), lhs.end(), rhs.begin(), copy.begin(),
+                       [](auto l, auto r) { return std::max(l, std::abs(r)); });
+        return copy;
+    }
+
+    template <typename data_t, typename = std::enable_if_t<!isComplex<data_t>>>
+    inline DataContainer<data_t> cwiseMax(const DataContainer<data_t>& lhs,
+                                          const DataContainer<data_t>& rhs)
+    {
+        DataContainer<data_t> copy(rhs.getDataDescriptor());
+        std::transform(lhs.begin(), lhs.end(), rhs.begin(), copy.begin(),
+                       [](auto l, auto r) { return std::max(l, r); });
+        return copy;
+    }
+
+    template <typename data_t>
+    inline DataContainer<data_t> cwiseAbs(const DataContainer<data_t>& dc)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto l) { return std::abs(l); });
+        return copy;
+    }
+
+    template <typename data_t>
+    inline DataContainer<data_t> square(const DataContainer<data_t>& dc)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto x) { return x * x; });
+        return copy;
+    }
+
+    template <typename data_t>
+    inline DataContainer<data_t> sqrt(const DataContainer<data_t>& dc)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto x) { return std::sqrt(x); });
+        return copy;
+    }
+
+    template <typename data_t>
+    inline DataContainer<data_t> exp(const DataContainer<data_t>& dc)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto x) { return std::exp(x); });
+        return copy;
+    }
+
+    template <typename data_t>
+    inline DataContainer<data_t> log(const DataContainer<data_t>& dc)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto x) { return std::log(x); });
+        return copy;
+    }
+
+    /// Real for complex DataContainers
+    template <typename data_t>
+    inline DataContainer<data_t> real(const DataContainer<std::complex<data_t>>& dc)
+    {
+        DataContainer<data_t> result(dc.getDataDescriptor());
+        std::transform(dc.begin(), dc.end(), result.begin(), [](auto x) { return std::real(x); });
+        return result;
+    }
+
+    /// Real for real DataContainers, just a copy
+    template <typename data_t, typename = std::enable_if_t<!isComplex<data_t>>>
+    inline DataContainer<data_t> real(const DataContainer<data_t>& dc)
+    {
+        return dc;
+    }
+
+    /// Imag for complex DataContainers
+    template <typename data_t>
+    inline DataContainer<data_t> imag(const DataContainer<std::complex<data_t>>& dc)
+    {
+        DataContainer<data_t> result(dc.getDataDescriptor());
+        std::transform(dc.begin(), dc.end(), result.begin(), [](auto x) { return std::imag(x); });
+        return result;
+    }
+
+    /// Imag for real DataContainers, returns zero
+    template <typename data_t, typename = std::enable_if_t<!isComplex<data_t>>>
+    inline DataContainer<data_t> imag(const DataContainer<data_t>& dc)
+    {
+        DataContainer<data_t> result(dc.getDataDescriptor());
+        result = 0;
+        return result;
     }
 } // namespace elsa

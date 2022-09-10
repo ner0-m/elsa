@@ -209,8 +209,8 @@ namespace elsa
         {
             if constexpr (elsa::isComplex<T>) {
                 // format both components independently
-                auto real_formatter = get_element_formatter(DataContainer<T>{real(dc)});
-                auto imag_formatter = get_element_formatter(DataContainer<T>{imag(dc)});
+                auto real_formatter = get_element_formatter(real(dc));
+                auto imag_formatter = get_element_formatter(imag(dc));
 
                 return [real_formatter, imag_formatter](std::ostream & os, const T& elem) -> auto&
                 {

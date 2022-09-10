@@ -462,38 +462,38 @@ install-cuda-11.7:
 
 ### sanitizers ###
 
-.cuda-memcheck:
-  <<: *run_on_merge_requests
-  stage: sanitizer
-  image: $CI_REGISTRY/ip/elsa/cuda:$CUDA_VERSION
-  script:
-    - ./tools/ci_scripts/cuda-memcheck.sh
-  tags:
-    - linux
-    - elsa
-    - gcc
-    - cuda
-
-cuda-memcheck-11.7:
-  extends: .cuda-memcheck
-  dependencies:
-    - test-cuda-11.7
-  variables:
-    CUDA_VERSION: 11.7.0
-
-cuda-memcheck-11.6:
-  extends: .cuda-memcheck
-  dependencies:
-    - test-cuda-11.6
-  variables:
-    CUDA_VERSION: 11.6.2
-
-cuda-memcheck-11.5:
-  extends: .cuda-memcheck
-  dependencies:
-    - test-cuda-11.5
-  variables:
-    CUDA_VERSION: 11.5.2
+# .cuda-memcheck:
+#   <<: *run_on_merge_requests
+#   stage: sanitizer
+#   image: $CI_REGISTRY/ip/elsa/cuda:$CUDA_VERSION
+#   script:
+#     - ./tools/ci_scripts/cuda-memcheck.sh
+#   tags:
+#     - linux
+#     - elsa
+#     - gcc
+#     - cuda
+#
+# cuda-memcheck-11.7:
+#   extends: .cuda-memcheck
+#   dependencies:
+#     - test-cuda-11.7
+#   variables:
+#     CUDA_VERSION: 11.7.0
+#
+# cuda-memcheck-11.6:
+#   extends: .cuda-memcheck
+#   dependencies:
+#     - test-cuda-11.6
+#   variables:
+#     CUDA_VERSION: 11.6.2
+#
+# cuda-memcheck-11.5:
+#   extends: .cuda-memcheck
+#   dependencies:
+#     - test-cuda-11.5
+#   variables:
+#     CUDA_VERSION: 11.5.2
 
 # Be sure to run this job with container which has privaledge mode set
 asan-ubsan:
