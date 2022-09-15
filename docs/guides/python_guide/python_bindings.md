@@ -1,27 +1,27 @@
 Python Bindings
 -----------------------------
 
-_elsa_ also comes with python bindings for almost all aspects of the framework.
-This short guide aims to give an introduction into some simple cases and explain how one can
-easily translate C++ code into python code for faster prototyping and experimenting.
-One major benefit that comes with the python bindings is that we are able to natively
-use numpy arrays with our elsa data containers making it easy to work with other tools such as
+_elsa_ also comes with Python bindings for almost all aspects of the framework.
+This short guide aims to give an introduction into some simple use cases and explain how one can
+easily translate C++ code into Python code for faster prototyping and experimenting.
+One major benefit that comes with the Python bindings is that we are able to natively
+use numpy arrays with our elsa data containers, making it easy to work with other tools such as
 matplotlib.
 
 ### Setup the python bindings
-Once you've cloned _elsa_, change into the directory and simply run `pip install .`. This will build
-_elsa_ and install including the Python bindings. In case you wonder what is happening, add the
+Once you have cloned _elsa_, change into the directory and simply run `pip install .`. This will build
+_elsa_ and install it including the Python bindings. In case you wonder what is happening, add the
 `--verbose` flag to see the progress.
 
-Once everything is set up simply open a Python interpreter and run
+Once everything is set up, simply open a Python interpreter and run
 ```python
 import pyelsa as elsa
 ```
-to check everything is working.
+to check that everything is working.
 
 ### 2D example
-To give a short outline into the python usage of elsa we will recreate the 2D example of the
-:doc:`./quickstart-cxx` section in python.
+To give a short introduction into the Python usage of elsa we will recreate the 2D example of the
+:doc:`./quickstart-cxx` section in Python.
 
 ```python
 import pyelsa as elsa
@@ -58,14 +58,14 @@ plt.imshow(np.array(reconstruction))
 plt.show()
 ```
 
-As you can see the code is essentially equivalent to the C++ code shown in the Quickstart guide.
-All the top level elsa modules normally available through
+As you can see the code is essentially equivalent to the C++ code shown in the Quickstart guide :doc:`./quickstart-cxx`.
+All the top level elsa C++ modules normally available through
 ```cpp
 #include "elsa.h"
 ```
-are available under the top level `pyelsa` module.
-All C++ functions and classes essentially have the same signatures.
-One important aspect of the python bindings is, however, that in places where the C++ code would expect
+are also available under the top level `pyelsa` Python module.
+All C++ functions and classes essentially have the same signatures in Python.
+One important aspect of the Python bindings is, however, that in places where the C++ code would expect
 `Eigen` vectors or matrices we can natively use `numpy` arrays as well as convert elsa `DataContainer` back to numpy
 via
 
@@ -74,13 +74,13 @@ data_container: elsa.DataContainer = ...
 back_to_numpy = np.array(data_container)
 ```
 
-This is important if we e.g. want to show a reconstruction image using matplotlib as it does not support the elsa
-data containers.
+This is important if we, for example, want to show a reconstruction image using matplotlib as it does not support the elsa
+data containers directly.
 
 ### 3D reconstruction viewing
-The tight integration with numpy and matplotlib also enables us to directly implement a 3D reconstruction viewer
-within our experimentation code.
-Let's take a simple 3D phantom reconstruction example using a CUDA projector to be more performant
+The tight integration with numpy and matplotlib also enables us to directly implement a 3D slice viewer
+within our Python code.
+Let us take a simple 3D phantom reconstruction example using a CUDA projector to be more performant:
 
 ```python
 import pyelsa as elsa
@@ -113,7 +113,7 @@ n_iterations = 20
 reconstruction = np.array(solver.solve(n_iterations))
 ```
 
-We can now implement a simple matlab viewer plugin to scroll through our 3D reconstruction using the mouse wheel as shown in
+We can now implement a simple matplotlib viewer plugin to scroll through our 3D reconstruction using the mouse wheel as shown in
 the [matplotlib documentation](https://matplotlib.org/stable/gallery/event_handling/image_slices_viewer.html)
 ```python
 class IndexTracker:
@@ -140,7 +140,7 @@ class IndexTracker:
         self.ax.set_ylabel('slice %s' % self.ind)
         self.im.axes.figure.canvas.draw()
 ```
-we then simply set up our viewer
+We then simply setup our viewer
 ```python
 
 fig, ax = plt.subplots(1, 1)

@@ -1,12 +1,12 @@
 Backward projection
 -------------------
 
-Now, you have this sinogram, but so far we only dealt with creating some measurements. If you'd have
-experimental data from a X-ray scanner, you'd load the sinogram and start from here. So now we want
-to reconstruction the the original object of interest. There are many different ways to solve this.
+From the previous section, we created an artifical sinogram through simulations. If you would have
+experimental data from an X-ray scanner, you would load that sinogram and start from there. Now we 
+want a reconstruction of the original object of interest. There are many different ways to do this.
 
-The first and simplest, is to perform the adjoint operations of the forward projection. Simply from
-the previous example run the following code:
+The first and most simple one is to perform the adjoint operation of the forward projection. From
+the previous example, simply run the following code:
 
 ```python
 backprojection = projector.applyAdjoint(sinogram)
@@ -14,8 +14,8 @@ plt.imshow(np.array(backprojection))
 plt.show()
 ```
 
-Uh, that kind of looks like the original phantom, but that is quite blurry. What can we do about
-that? From an engineering point of view, this image needs deblurring, which can be achieved through
+Uh, that kind of looks like the original phantom, but it is quite blurry. What can we do about
+that? From an engineering point of view, this image needs deblurring, which can be achieved in
 many different ways, such as filtering. However, let us step back again and look at the bigger
 picture.
 
@@ -27,20 +27,27 @@ inverse problem:
 1. Analytical reconstruction
 2. Iterative reconstruction
 
-In the next chapter, we will show the analytical reconstruction, the so-called _filtered
-backprojection_. It is a very popular method in the field of X-ray tomography.
+Both approaches mainly differ in the timepoint of discretization - in analytical reconstruction, you
+discretize at the end, for iterative reconstruction you discretize straight away.
+
+In the next section, we will show an analytical reconstruction method, the so-called _filtered
+backprojection_. It is a very popular method in the field of X-ray computed tomography.
 
 However, for all interesting problems, the inverse problem is ill-conditioned or ill-posed. A
 problem is well-posed if all of the following conditions are met:
 1. A solution exits
 2. The solution is unique
 3. The solution is stable
+
 If at least one is not met, the problem is ill-posed. A solution is considered stable, if small
-changes to the measurements, only induces a small change in the solution. Mathemathically speaking,
-the solution depends continuously on the measurements. Hence, an for an unstable problem, a small
-change in the measurements may lead to an arbitrary jump in the solution.
+changes to the measurements only induce small changes in the solution. Mathematically speaking,
+the solution depends continuously on the measurements. Hence, for an unstable problem, a small
+change in the measurements may lead to an arbitrarily large jump in the solution.
 
 Iterative algorithms have been developed and investigated to deal with ill-posed problems.
-Importantly, they are able to handle such situations better then the analytical reconstruction.
-Usually at the cost of runtime efficiency. Still, iterative algorithms are tremendously important
-and interesting, hence we will devote a couple of chapters to different algorithms.
+Importantly, they are typically able to handle such situations better than analytical 
+reconstruction methods, usually at the cost of runtime efficiency. Still, iterative algorithms 
+are very important and interesting, hence we will devote a couple of sections to different algorithms.
+
+
+_(to be continued)_

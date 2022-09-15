@@ -3,22 +3,22 @@ Filtered backprojection
 
 ### Background
 
-The most common reconstruction process is the so called _filtered backprojection_ (FBP). The idea is
+The most common reconstruction method is the so called _filtered backprojection_ (FBP). The idea is
 simple, the basic reconstruction using only a backprojection is blurry, hence perform a filtering
-step. That's it, but there is on key aspect. Filter the projection data, i.e. the sinogram instead
+step. That's it, but there is on key aspect. Filter the projection data, i.e. the sinogram, instead
 of the backprojection. Then backproject the filtered sinogram.
 
 ### Implementation
 
-Let us implement that quickly. First, we need an fast Fourier transformation (FFT) implementation.
-_elsa_ has one, but it's a little more cumbersome than what is necessary here. Hence, we will use
-SciPy's FFT. Import it with:
+Let us implement this method quickly. First, we need a fast Fourier transformation (FFT) 
+implementation. _elsa_ has one, but it's a little more cumbersome than what is necessary here. Hence, 
+we will use SciPy's FFT. Import it with:
 
 ```python
 from scipy.fft import fft, ifft
 ```
 
-Now we need to perform some padding to ensure the FFT works:
+Now we need to perform some padding to ensure the FFT works properly:
 
 ```python
 # Convert to numpy array
@@ -32,14 +32,14 @@ padded_sinogram = np.pad(np_sinogram, pad_width, mode="constant", constant_value
 ```
 
 Note that this step is to some extent optional. It would be sufficient to round to the next even
-number for the padding. However, the reconstruction is worse. Try it for yourself, replace the line
-regarding padding with something like: `int(np.ceil(sinogram_shape / 2)) * 2`, and check the
-reconstruction.
+number for the padding. However, the reconstruction will be worse. Try it for yourself, replace 
+the line regarding padding with something like: `int(np.ceil(sinogram_shape / 2)) * 2`, and check 
+the reconstruction.
 
 The next step is to create the filter. This will determine which frequencies one wishes to suppress
-and by how much. The simplest filter, is the Ideal Ramp filter. It will suppress high frequency
-noises, compared to lower frequency ones. Interestingly, from a mathematical point of view, this is
-the exact solution. So let's create that
+and by how much. The simplest filter, is the ideal Ramp filter. It will suppress high frequency
+noise, compared to lower frequency noise. Interestingly, from a mathematical point of view, this is
+the exact solution. So let us create that
 
 ```python
 def ramp_filter(size):
@@ -63,7 +63,7 @@ fourier_filter = ramp_filter(projection_size_padded)
 ```
 
 Interested readers are encouraged to read the given reference to see more details. These details
-would be out of scope for this guide. Now, we need to perform the convolution, between the sinogram
+would be out of scope for this guide. Now, we need to perform the convolution between the sinogram
 and the filter. In Fourier space, this is just a component wise multiplication, then apply the
 inverse Fourier transform:
 
@@ -86,7 +86,7 @@ plt.show()
 ```
 
 This is a good enough looking reconstruction. Different filters, can improve the results further,
-especially in certain scenarios of noise can be handled well.
+especially certain scenarios of noise might be handled better.
 
 ### Flaws of the Filtered Backprojection
 
@@ -95,17 +95,22 @@ first algorithms developed for X-ray tomographic reconstruction were iterative r
 algorithms. However, due to the immense amount of computation necessary for iterative reconstructions
 to be successful, they were not practical. Hence, the efficiency of the FBP was key in the beginning.
 
-However, the FBP breaks down in so-called _low dose_ scenarios. These are scenarios where the number
-of projection angles is low. You can try this out, change the trajectory given above, to instead of
-420 angles, only say 60. The artifacts take over quickly, and as you will see in the next chapters,
-iterative reconstruction algorithms can deal with these kinds of scenarios better.
+However, the FBP breaks down in so-called _low dose_ scenarios. These are, for example, scenarios where 
+the number of projection angles is low. You can try this out, change the trajectory given above, to 
+instead of 420 angles, only use, say, 60. The artifacts in the reconstruction take over quickly, and 
+as you will see in the next chapters, iterative reconstruction algorithms can deal with these kinds 
+of scenarios better.
 
-Low dose reconstruction is tremendously important, as high dosage of X-ray radiation is dangerous
-and do has health risks associated with it. Hence, in the medical field it is important to reduce
-the dosage to a necessary minimum.
+Another low dose scenario is reducing the tube current, resulting in very noise projection images.
+Also for this scenario, iterative reconstruction algorithms, particular ones with regularization,
+typically perform better than FBP.
 
-Another aspect, the FBP as described here is 2D only, there exists a 3D extension to it and this
-works similarly to the FBP and is still quite efficient, but iterative algorithms are agnostic of
-dimensions. And with the rise of GPU programming, iterative algorithms have become feasible. Much
-research in the field is focused in iterative reconstructions, however, as mentioned above, till
-today, commercial CT scanners still mostly rely on the FBP.
+Low dose reconstruction is tremendously important, as a high dosage of X-ray radiation is dangerous
+and has health risks associated with it. Hence, in the medical field it is important to reduce
+the dosage to a necessary minimum. 
+
+Another aspect is that the FBP as described here is 2D only. There exists a 3D extension (FDK) to it,
+which works similarly to the FBP and is still quite efficient. However, iterative algorithms are 
+agnostic of the dimensions. And with the rise of GPU programming, iterative algorithms have become 
+practically more feasible. Much research in the field is focused in iterative reconstructions, however, 
+as mentioned above, until today, commercial CT scanners still mostly rely on the FBP (FDK).
