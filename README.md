@@ -33,6 +33,21 @@ The main third party dependencies (Eigen3, spdlog, doctest) are integrated via [
 For CUDA support, you need a CUDA capable graphics card as well as an installation of the CUDA toolkit.
 Current testing includes CUDA 10.2 combined with gcc 8 or clang 8.
 
+If you are running an Ubuntu 22.04 based Linux distribution, you can run the following commands to
+install the minimum required dependencies for _elsa_:
+
+```bash
+apt install git build-essential cmake ninja-build
+```
+
+If you plan to use the Python bindings, and/or follow the Python guide in our documentation, you'd
+want to install the following packages in an environment:
+
+```bash
+apt install python3 python3-pip
+pip install numpy matplotlib scipy
+```
+
 Compiling
 ---------
 
