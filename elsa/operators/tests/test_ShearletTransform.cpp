@@ -32,7 +32,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
 
             THEN("the DataDescriptors are equal")
             {
-                REQUIRE_EQ(shearletTransform.getDomainDescriptor(), volDescr);
+                CHECK_EQ(shearletTransform.getDomainDescriptor(), volDescr);
             }
         }
 
@@ -43,8 +43,8 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing construction", TestType, float, d
 
             THEN("cloned ShearletTransform operator equals original ShearletTransform operator")
             {
-                REQUIRE_NE(shearletTransformClone.get(), &shearletTransform);
-                REQUIRE_EQ(*shearletTransformClone, shearletTransform);
+                CHECK_NE(shearletTransformClone.get(), &shearletTransform);
+                CHECK_EQ(*shearletTransformClone, shearletTransform);
             }
         }
     }
@@ -55,7 +55,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
     GIVEN("a 2D signal")
     {
         IndexVector_t size(2);
-        size << 32, 32;
+        size << 16, 16;
         VolumeDescriptor volDescr(size);
 
         Vector_t<TestType> randomData(volDescr.getNumberOfCoefficients());
@@ -79,7 +79,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing reconstruction precision", TestTy
 
             THEN("the ground truth and the reconstruction match")
             {
-                REQUIRE_UNARY(isApprox(reconstruction, signal));
+                CHECK_UNARY(isApprox(reconstruction, signal));
             }
         }
     }
@@ -104,7 +104,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
             THEN("an error is thrown when fetching it")
             {
-                REQUIRE_THROWS_AS(shearletTransform.getSpectra(), LogicError);
+                CHECK_THROWS_AS(shearletTransform.getSpectra(), LogicError);
             }
         }
 
@@ -116,7 +116,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
 
             THEN("the spectra is reported as computed")
             {
-                REQUIRE(shearletTransform.isSpectraComputed());
+                CHECK_UNARY(shearletTransform.isSpectraComputed());
             }
 
             /// If a matrix mxn A has rows that constitute Parseval frame, then AtA = I
@@ -149,7 +149,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                 // last axis and subtract 1, the output will be of shape (W, H), its elements
                 // should be zeroes, or very close to it
 
-                REQUIRE_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
+                CHECK_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
             }
         }
     }

@@ -21,7 +21,7 @@ namespace elsa
         -> DataContainer<data_t>
     {
         Timer timeguard("ProximityOperator", "apply");
-        DataContainer<data_t> prox(*_rangeDescriptor, v.getDataHandlerType());
+        DataContainer<data_t> prox(*_rangeDescriptor);
         applyImpl(v, t, prox);
         return prox;
     }

@@ -120,8 +120,9 @@ namespace elsa
         else
             result = x;
 
-        if (hasDataVector())
+        if (hasDataVector()) {
             result -= *_dataVector;
+        }
     }
 
     template <typename data_t>

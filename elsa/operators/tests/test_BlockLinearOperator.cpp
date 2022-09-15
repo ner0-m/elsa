@@ -289,24 +289,34 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
 {
     using BlockType = typename BlockLinearOperator<TestType>::BlockType;
     index_t rows = 4, cols = 8, numBlks = 3;
+
+    index_t blockSize = rows * cols;
     GIVEN("a 2D volume")
     {
-        IndexVector_t domainIndex(2);
-        domainIndex << rows, cols;
+        IndexVector_t domainIndex({{rows, cols}});
         VolumeDescriptor domainDesc(domainIndex);
 
+        CHECK_EQ(blockSize, domainDesc.getNumberOfCoefficients());
+
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec(domainDesc.getNumberOfCoefficients());
-        vec << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-            2, 2, 2, 2;
+        // clang-format off
+        vec << 1, 1, 1, 1, 1, 1, 1, 1,
+               1, 1, 1, 1, 1, 1, 1, 1,
+               2, 2, 2, 2, 2, 2, 2, 2,
+               2, 2, 2, 2, 2, 2, 2, 2;
+        // clang-format on
 
         DataContainer<TestType> domain(domainDesc, vec);
 
         WHEN("3 Scaling operators are applied to it, in a ROW-Block fashion")
         {
-            IndexVector_t rangeIndex(2);
-            rangeIndex << rows, cols * numBlks;
+            IndexVector_t rangeIndex({{rows, cols * numBlks}});
+
             VolumeDescriptor rangeDesc(rangeIndex);
             DataContainer<TestType> range(rangeDesc);
+            range = 0;
+
+            CHECK_EQ(3 * blockSize, range.getSize());
 
             TestType scale1 = 2.f;
             TestType scale2 = 3.f;
@@ -321,20 +331,25 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
 
             blockOp.apply(domain, range);
 
+            CHECK_EQ(3 * blockSize, range.getSize());
+
             THEN("the for the first block, x was multiplied by 2.")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE_UNARY(checkApproxEq(range[i], vec[i] * scale1));
+                    CHECK_UNARY(checkApproxEq(range[i], vec[i] * scale1));
             }
             THEN("the for the second block, x was multiplied by 3.")
             {
-                for (int i = 0; i < rows * cols; i++)
-                    REQUIRE_UNARY(checkApproxEq(range[i + rows * cols], vec[i] * scale2));
+                for (int i = 0; i < rows * cols; i++) {
+                    INFO(i);
+                    CHECK_LT(i + rows * cols, range.getSize());
+                    CHECK_UNARY(checkApproxEq(range[i + rows * cols], vec[i] * scale2));
+                }
             }
             THEN("the for the third block, x was multiplied by 4.")
             {
                 for (int i = 0; i < rows * cols; i++)
-                    REQUIRE_UNARY(checkApproxEq(range[i + rows * cols * 2], vec[i] * scale3));
+                    CHECK_UNARY(checkApproxEq(range[i + rows * cols * 2], vec[i] * scale3));
             }
         }
     }
@@ -347,13 +362,10 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing apply", TestType, float, double
         IdenticalBlocksDescriptor domainDesc(numBlks, blockDesc);
 
         Eigen::Matrix<TestType, Eigen::Dynamic, 1> vec(domainDesc.getNumberOfCoefficients());
-        vec << 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1,
-
-            1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2,
-
-            2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1,
-
-            1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2;
+        vec << 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2,
+            2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2,
+            2, 2, 1, 1, 1, 1, 2, 2, 2, 2;
 
         DataContainer<TestType> domain(domainDesc, vec);
 

@@ -90,6 +90,8 @@ namespace elsa
          */
         Dictionary<data_t> getSupportedDictionary(IndexVector_t support) const;
 
+        DataContainer<data_t> getDictionary() const { return _dictionary; }
+
     protected:
         /// apply the dictionary operation
         void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;

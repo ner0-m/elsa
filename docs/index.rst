@@ -20,6 +20,7 @@
    :maxdepth: 2
 
    modules/core
+   modules/storage
    modules/logging
    modules/io
    modules/operators

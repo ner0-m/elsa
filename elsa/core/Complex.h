@@ -1,56 +1,31 @@
 #pragma once
 
-#include <Eigen/Core>
-#ifdef ELSA_CUDA_VECTOR
 #include <thrust/complex.h>
-#endif
 
 #include <complex>
 
-#ifdef ELSA_CUDA_VECTOR
-// extend the thrust namespace by some standard mathematical functions
-// this is required for the usage of thrust::complex with Eigen, and can be useful to us too
-namespace thrust
-{
-    template <typename T>
-    inline T real(const complex<T>& z)
-    {
-        return z.real();
-    }
-
-    template <typename T>
-    inline T imag(const complex<T>& z)
-    {
-        return z.imag();
-    }
-
-    // template <typename T>
-    // inline T abs2(const complex<T>& z)
-    // {
-    //     return real(z) * real(z) + imag(z) * imag(z);
-    // }
-} // namespace thrust
-#endif
-
 namespace elsa
 {
-#ifdef ELSA_CUDA_VECTOR
     template <typename T>
     using complex = thrust::complex<T>;
 
-    using thrust::sqrt;
-#else
-    template <typename T>
-    using complex = std::complex<T>;
-#endif
-
     using std::sqrt;
+    using thrust::sqrt;
 } // namespace elsa
+
+namespace std
+{
+    template <class T, class U>
+    struct common_type<thrust::complex<T>, thrust::complex<U>> {
+        using type = thrust::complex<std::common_type_t<T, U>>;
+    };
+} // namespace std
+
+#include <Eigen/Core>
 
 // add Eigen support for elsa::complex
 namespace Eigen
 {
-#ifdef ELSA_CUDA_VECTOR
     // std::complex is supported out-of-the-box, so we only care about thrust::complex
     template <typename T>
     struct NumTraits<thrust::complex<T>> : NumTraits<std::complex<T>> {
@@ -67,5 +42,4 @@ namespace Eigen
             MulCost = 4 * NumTraits<Real>::MulCost + 2 * NumTraits<Real>::AddCost
         };
     };
-#endif
 } // namespace Eigen

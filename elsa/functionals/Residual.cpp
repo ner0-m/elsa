@@ -26,7 +26,7 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> Residual<data_t>::evaluate(const DataContainer<data_t>& x) const
     {
-        DataContainer<data_t> result(*_rangeDescriptor, x.getDataHandlerType());
+        DataContainer<data_t> result(*_rangeDescriptor);
         evaluate(x, result);
         return result;
     }

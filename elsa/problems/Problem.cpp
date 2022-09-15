@@ -140,7 +140,7 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> Problem<data_t>::getGradient(const DataContainer<data_t>& x)
     {
-        DataContainer<data_t> result(x.getDataDescriptor(), x.getDataHandlerType());
+        DataContainer<data_t> result(x.getDataDescriptor());
         getGradient(x, result);
         return result;
     }

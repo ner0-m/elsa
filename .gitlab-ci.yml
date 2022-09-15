@@ -109,7 +109,7 @@ cache:
     - mkdir -p build
     - cd build
     - if [ $COMPILER == "clang" ]; then CMAKE_EXTRA_ARGS="-DCMAKE_CXX_FLAGS=\"-stdlib=libc++\" -DCMAKE_EXE_LINKER_FLAGS=\"-lc++abi\""; fi;
-    - if [ $COMPILER == "nvcc" ]; then CMAKE_EXTRA_ARGS="-DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON"; fi;
+    - if [ $COMPILER == "nvcc" ]; then CMAKE_EXTRA_ARGS="-DThrust_DIR=$Thrust_DIR -DELSA_CUDA_VECTOR=ON -DELSA_BENCHMARKS=ON"; fi;
     - echo $CMAKE_EXTRA_ARGS
     - cmake .. -GNinja -DELSA_BENCHMARKS=ON -DCMAKE_INSTALL_PREFIX="../install-elsa" $CMAKE_EXTRA_ARGS
     - ninja
@@ -158,12 +158,14 @@ clang-format:
 clang-tidy:
   stage: static-test
   image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
+  variables:
+    Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
     ./tools/ci_scripts/clang-tidy.sh
   tags:
     - linux
     - elsa
-    - clang
+    - cuda
 
 comment-formating:
   stage: static-test
@@ -214,6 +216,8 @@ build-pybind:
 build-pybind-cuda:
   <<: *build_job_artifact
   image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
+  variables:
+    Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
     - pip install --verbose .
     - pip install -U pytest
@@ -258,6 +262,8 @@ build-gcc:
 build-cuda:
   <<: *build_job_artifact
   image: $CI_REGISTRY/ip/elsa/cuda:$CUDA_VERSION
+  variables:
+    Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
     - *buildjob_normal
   parallel:
@@ -391,12 +397,15 @@ test-cuda-11.5:
 .install-cuda:
   <<: *install_job
   stage: test
+  variables:
+    CMAKE_EXTRA_ARGS: "-DThrust_DIR=/usr/local/cuda/lib64/cmake/thrust/ -DELSA_CUDA_VECTOR=ON"
   image: $CI_REGISTRY/ip/elsa/cuda:$CUDA_VERSION
   script:
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
     - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -DELSA_BRANCH="$CI_COMMIT_REF_NAME" -DELSA_CUDA_VECTOR=ON
+    - echo $CMAKE_EXTRA_ARGS
+    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -DELSA_BRANCH="$CI_COMMIT_REF_NAME" $CMAKE_EXTRA_ARGS
     - ninja
   tags:
     - linux
@@ -521,13 +530,15 @@ test-coverage:
   stage: coverage
   image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   dependencies: []
+  variables:
+    Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   coverage: /^\s*lines.*:\s*\d+.\d+\%/
   script:
     - update-alternatives --install /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-12 10
     - update-alternatives --install /usr/bin/llvm-profdata llvm-profdata /usr/bin/llvm-profdata-12 10
     - mkdir -p build
     - cd build
-    - CXX=clang++ cmake .. -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
+    - CXX=clang++ cmake .. -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DThrust_DIR=$Thrust_DIR -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
     - ninja build-tests
     - ninja ccov-all
   artifacts:
@@ -631,6 +642,8 @@ build-docker-compiler:
 
 build-docker-cuda:
   extends: .build-docker-base
+  variables:
+    Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
     - cd tools/docker
     - echo "Building image for cuda version $CUDA_VERSION"

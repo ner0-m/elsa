@@ -128,7 +128,7 @@ namespace elsa
 
         const auto numCoeffsPerDim =
             sinogram.getDataDescriptor().getNumberOfCoefficientsPerDimension();
-        auto partitionedData = DataContainer<data_t>(dataDescriptor, sinogram.getDataHandlerType());
+        auto partitionedData = DataContainer<data_t>(dataDescriptor);
 
         // resort the actual measurement partitionedData
         index_t coeffsPerRow = numCoeffsPerDim.head(numCoeffsPerDim.size() - 1).prod();

@@ -148,7 +148,7 @@ namespace elsa
         std::optional<MetaInfo_t> getMetaInfoFromContainers(T& arg, Ts&... args)
         {
             if constexpr (isDataContainer<T>) {
-                return MetaInfo_t{arg.getDataDescriptor(), arg.getDataHandlerType()};
+                return MetaInfo_t{arg.getDataDescriptor()};
             } else {
                 return getMetaInfoFromContainers(args...);
             }

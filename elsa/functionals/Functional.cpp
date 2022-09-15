@@ -51,7 +51,7 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> Functional<data_t>::getGradient(const DataContainer<data_t>& x)
     {
-        DataContainer<data_t> result(_residual->getDomainDescriptor(), x.getDataHandlerType());
+        DataContainer<data_t> result(_residual->getDomainDescriptor());
         getGradient(x, result);
         return result;
     }

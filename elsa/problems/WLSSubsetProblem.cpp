@@ -28,8 +28,10 @@ namespace elsa
 
         auto subProblems = std::make_unique<std::vector<std::unique_ptr<Problem<data_t>>>>(0);
         for (long unsigned int i = 0; i < subsetAs.size(); i++) {
+            // materialize block, as else this can be a dangling pointer and we do not want to store
+            // the view
             subProblems->emplace_back(std::make_unique<WLSProblem<data_t>>(
-                *subsetAs[i], b.getBlock(static_cast<index_t>(i))));
+                *subsetAs[i], materialize(b.getBlock(static_cast<index_t>(i)))));
         }
 
         return subProblems;

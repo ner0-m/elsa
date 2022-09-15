@@ -29,8 +29,6 @@ option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA p
 option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (requires libclang-dev)" ON)
 option(ELSA_BINDINGS_IN_SINGLE_MODULE "Combine the bindings for all elsa modules in a single python module" OFF)
 
-option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
-
 set(ELSA_WARNING_LEVEL "base" CACHE STRING "Warning level with which elsa is build. Options are: base, all")
 set(ELSA_SANITIZER
     ""
@@ -47,6 +45,7 @@ set(ELSA_ALTERNATIVE_LINKER ""
 option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
 option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
 option(SYSTEM_DOCTEST "Build elsa using the system doctest installation" OFF)
+option(SYSTEM_THRUST "Build elsa using the system thrust installation" ON)
 option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
 
 # ------------ general setup -----------
@@ -84,7 +83,6 @@ endif()
 # ------------
 
 function(set_alternate_linker linker)
-    message(STATUS "Looking for linker '${linker}'")
     find_program(LINKER_EXECUTABLE NAMES ld.${linker} ${linker})
 
     # TODO: For mold and GCC <= 12
@@ -98,7 +96,7 @@ function(set_alternate_linker linker)
             add_link_options("-fuse-ld=${linker}")
         endif()
     else()
-        message(STATUS "Looking for linker '${linker}' -- NOT FOUND")
+        message(STATUS "Alternative linker '${linker}' -- NOT FOUND")
         set(ELSA_ALTERNATIVE_LINKER
             ""
             CACHE STRING "Use alternate linker" FORCE
@@ -115,13 +113,14 @@ endif()
 # ------------
 
 # Enable CUDA support if requested
-if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
+if(ELSA_BUILD_CUDA_PROJECTORS)
     message(STATUS "CUDA support requested...")
     include(CheckLanguage)
     check_language(CUDA)
     find_package(CUDA 11.4)
 
     if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr --expt-extended-lambda")
         enable_language(CUDA)
         message(STATUS "CUDA support enabled")
 
@@ -134,40 +133,31 @@ if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
             list(APPEND CMAKE_CUDA_ARCHITECTURES ${TARGET_GPU})
         endforeach()
 
+        # Activate unified memory
         add_definitions(-DELSA_HAS_CUDA_PROJECTORS)
-        if(ELSA_CUDA_VECTOR)
-            message(STATUS "Enabling DataHandlerGPU")
-            message(STATUS "The default container type will be on the GPU")
+        add_definitions(-DELSA_CUDA_UNIFIED_MEMORY)
+        add_definitions(-DELSA_HAS_CUDA_PROJECTORS)
+        set(ELSA_CUDA_UNIFIED_MEMORY ON)
+        set(ELSA_CUDA_ENABLED ON)
 
-            set(ELSA_BUILD_WITH_QUICKVEC TRUE)
-            add_definitions(-DELSA_CUDA_VECTOR)
-        endif()
-    elseif(ELSA_CUDA_VECTOR)
-        message(FATAL_ERROR "CUDA compiler not found!")
-        message(STATUS "Compiling without a DataHandlerGPU")
-        message(STATUS "The default container type will be CPU")
-
-        set(ELSA_BUILD_WITH_QUICKVEC FALSE)
-        set(ELSA_CUDA_VECTOR OFF)
     else()
         message(STATUS "Deactivate CUDA projectors")
         # Be sure everything is off
         set(ELSA_BUILD_CUDA_PROJECTORS OFF)
         set(ELSA_BUILD_WITH_QUICKVEC OFF)
-        set(ELSA_CUDA_VECTOR OFF)
     endif()
 else()
     # Be sure everything is off
     set(ELSA_BUILD_CUDA_PROJECTORS OFF)
     set(ELSA_BUILD_WITH_QUICKVEC OFF)
-    set(ELSA_CUDA_VECTOR OFF)
 endif()
 
 if(NOT
    (SYSTEM_EIGEN
     AND SYSTEM_SPDLOG
     AND SYSTEM_DOCTEST
-    AND SYSTEM_CATCH)
+    AND SYSTEM_CATCH
+    AND SYSTEM_THRUST)
 )
     # Include CPM dependency manager for bundling dependencies
     include(CPM)
@@ -175,6 +165,9 @@ endif()
 
 # only add the dependencies if elsa is stand-alone
 if(ELSA_MASTER_PROJECT)
+    # Check if OpenMP is available
+    find_package(OpenMP)
+
     if(SYSTEM_EIGEN)
         message(STATUS "Using system-wide Eigen library...")
         find_package(Eigen3 REQUIRED)
@@ -220,6 +213,31 @@ if(ELSA_MASTER_PROJECT)
             endif()
         endif()
     endif()
+
+    if(ELSA_CUDA_ENABLED OR SYSTEM_THRUST)
+        message(STATUS "Using thrust library provided by CUDA enviroement...")
+        find_package(Thrust 1.13 REQUIRED CONFIG)
+    else()
+        CPMAddPackage(
+            NAME thrust
+            GITHUB_REPOSITORY NVIDIA/thrust
+            GIT_TAG 1.17.2
+            OPTIONS "THRUST_ENABLE_INSTALL_RULES ON"
+        )
+
+        # This is too conservative  TODO: Try to find OpenMP, if found use it, else fallback to CPP backend
+        set(THRUST_DEVICE_SYSTEM CPP)
+        # TODO: We should export and install thrust properly
+    endif()
+
+    # Follow thrusts defaults, overwrite the by passing THRUST_[HOST|DEVICE]_SYSTEM to CMake
+    thrust_create_target(elsa::Thrust FROM_OPTIONS)
+
+    thrust_is_cuda_system_found(THRUST_CUDA_FOUND)
+    thrust_is_tbb_system_found(THRUST_TBB_FOUND)
+    thrust_is_omp_system_found(THRUST_OMP_FOUND)
+    thrust_is_cpp_system_found(THRUST_CPP_FOUND)
+    thrust_update_system_found_flags()
 
     if(SYSTEM_SPDLOG)
         message(STATUS "Using system-wide spdlog library...")
@@ -319,6 +337,7 @@ if(ELSA_TESTING)
     else(ELSA_COVERAGE)
         message(STATUS "elsa test coverage is disabled")
     endif(ELSA_COVERAGE)
+
 else(ELSA_TESTING)
     message(STATUS "    elsa testing is disabled")
 endif(ELSA_TESTING)
@@ -385,13 +404,17 @@ add_custom_target(
 string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_TYPE_CXX_FLAGS)
 message(
     "
-          project | ${PROJECT_NAME}
-         compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
-       build type | ${CMAKE_BUILD_TYPE}
-         cxxflags | ${CMAKE_CXX_FLAGS}
- build type flags | ${${BUILD_TYPE_CXX_FLAGS}}
-        build dir | ${CMAKE_BINARY_DIR}
-   install prefix | ${CMAKE_INSTALL_PREFIX}
+            project | ${PROJECT_NAME}
+           compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
+         build type | ${CMAKE_BUILD_TYPE}
+           cxxflags | ${CMAKE_CXX_FLAGS}
+   build type flags | ${${BUILD_TYPE_CXX_FLAGS}}
+          build dir | ${CMAKE_BINARY_DIR}
+     install prefix | ${CMAKE_INSTALL_PREFIX}
+ thrust CPP backend | ${THRUST_CPP_FOUND}
+ thrust TBB backend | ${THRUST_TBB_FOUND}
+ thrust OMP backend | ${THRUST_OMP_FOUND}
+thrust CUDA backend | ${THRUST_CUDA_FOUND}
 "
 )
 

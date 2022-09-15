@@ -4,15 +4,11 @@ message(STATUS "finding elsa dependencies...")
 
 include(CMakeFindDependencyMacro)
 find_dependency(OpenMP QUIET)
-find_dependency(Threads REQUIRED)  # for spdlog
+find_dependency(Threads REQUIRED) # for spdlog
 
-# when we bundle/git-download these libs
-# we have to ensure that an elsa-downstream project uses the same version,
-# and the path to this is encoded in our target info files.
-set(BUNDLED_DEPS
-    spdlog
-    eigen3
-)
+# when we bundle/git-download these libs we have to ensure that an elsa-downstream project uses the same version, and
+# the path to this is encoded in our target info files.
+set(BUNDLED_DEPS spdlog eigen3)
 foreach(DEP ${BUNDLED_DEPS})
     if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${DEP}Targets.cmake")
         # use the bundled version
@@ -25,15 +21,13 @@ foreach(DEP ${BUNDLED_DEPS})
     endif()
 endforeach()
 
-
 if(EXISTS "@CMAKE_CUDA_COMPILER@")
     enable_language(CUDA)
     find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 endif()
 
-if(@ELSA_BUILD_WITH_QUICKVEC@) # ELSA_BUILD_WITH_QUICKVEC
-    message(NOTICE "this build of elsa uses quickvec, use a CUDA compiler for all targets that depend on elsa")
-endif()
+find_dependency(Thrust REQUIRED PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH)
+thrust_create_target(elsa::Thrust FROM_OPTIONS)
 
 set(_supported_components @ELSA_REGISTERED_COMPONENTS@)
 
@@ -41,7 +35,7 @@ if(NOT elsa_FIND_COMPONENTS)
     # no specific components requested, include all
     message(STATUS "finding elsa_all module")
     find_dependency(elsa_all REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR})
-    if (elsa_all_FOUND)
+    if(elsa_all_FOUND)
         include(${CMAKE_CURRENT_LIST_DIR}/elsa_allTargets.cmake)
     endif()
     message(STATUS "elsa found, using all modules")
@@ -56,7 +50,7 @@ else()
         endif()
 
         find_dependency(elsa_${_comp} REQUIRED)
-        if (elsa_${_comp}_FOUND)
+        if(elsa_${_comp}_FOUND)
             message(STATUS "Including ${_comp}")
             include(${CMAKE_CURRENT_LIST_DIR}/elsa_${_comp}Targets.cmake)
         endif()

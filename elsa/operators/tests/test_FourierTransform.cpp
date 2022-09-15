@@ -79,7 +79,7 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing 1d", data_t, float, double)
 
             THEN("the forward transformed values are correct")
             {
-                DataContainer<complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
+                DataContainer<complex<data_t>> inputdc{dd, input};
                 auto output = fftOp.apply(inputdc);
 
                 if constexpr (std::is_same_v<data_t, float>) {
@@ -95,7 +95,7 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing 1d", data_t, float, double)
 
             THEN("the inverse transformed values are correct")
             {
-                DataContainer<complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
+                DataContainer<complex<data_t>> inputdc{dd, input};
                 auto output = fftOp.applyAdjoint(inputdc);
 
                 if constexpr (std::is_same_v<data_t, float>) {
@@ -111,7 +111,7 @@ TEST_CASE_TEMPLATE("FourierTransform: Testing 1d", data_t, float, double)
 
             THEN("the forward-inverse transformed values are correct")
             {
-                DataContainer<complex<data_t>> inputdc{dd, input, DataHandlerType::CPU};
+                DataContainer<complex<data_t>> inputdc{dd, input};
 
                 auto output = fftOp.applyAdjoint(fftOp.apply(inputdc));
 
@@ -204,8 +204,7 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
             VolumeDescriptor dd{size};
             FourierTransform<complex<data_t>> fftOp{dd};
 
-            auto [input, randVec] =
-                generateRandomContainer<complex<data_t>>(dd, DataHandlerType::CPU);
+            auto [input, randVec] = generateRandomContainer<complex<data_t>>(dd);
 
             auto mid = fftOp.apply(input);
             auto output = fftOp.applyAdjoint(mid);
@@ -226,10 +225,8 @@ TEST_CASE_TEMPLATE("FourierTransform: 2d test", data_t, float, double)
             size << 20, 10;
             VolumeDescriptor dd{size};
 
-            auto [inputA, randVecA] =
-                generateRandomContainer<complex<data_t>>(dd, DataHandlerType::CPU);
-            auto [inputB, randVecB] =
-                generateRandomContainer<complex<data_t>>(dd, DataHandlerType::CPU);
+            auto [inputA, randVecA] = generateRandomContainer<complex<data_t>>(dd);
+            auto [inputB, randVecB] = generateRandomContainer<complex<data_t>>(dd);
 
             FourierTransform<complex<data_t>> fftOp{dd};
 

@@ -25,9 +25,6 @@ set(MODULE_HEADERS
     DataContainer.h
     DataContainerIterator.h
     Error.h
-    Handlers/DataHandler.h
-    Handlers/DataHandlerCPU.h
-    Handlers/DataHandlerMapCPU.h
     LinearOperator.h
     Expression.h
     ExpressionPredicates.h
@@ -53,30 +50,17 @@ set(MODULE_SOURCES
     Descriptors/PartitionDescriptor.cpp
     DataContainer.cpp
     Error.cpp
-    Handlers/DataHandlerCPU.cpp
-    Handlers/DataHandlerMapCPU.cpp
     LinearOperator.cpp
     Geometry.cpp
     StrongTypes.cpp
 )
 
-if(${ELSA_BUILD_WITH_QUICKVEC})
-    set(MODULE_HEADERS ${MODULE_HEADERS} Handlers/DataHandlerGPU.h Handlers/DataHandlerMapGPU.h)
-    set(MODULE_SOURCES ${MODULE_SOURCES} Handlers/DataHandlerGPU.cpp Handlers/DataHandlerMapGPU.cpp)
-endif()
-
-list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging)
+list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging elsa_storage)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 # use OpenMP if available
-find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     list(APPEND MODULE_PUBLIC_DEPS "OpenMP::OpenMP_CXX")
-endif()
-
-# link Quickvec for DataHandlerGPU
-if(${ELSA_BUILD_WITH_QUICKVEC})
-    list(APPEND MODULE_PUBLIC_DEPS "elsa_quickvec")
 endif()
 
 # use FFTW if available
@@ -118,6 +102,11 @@ target_include_directories(
 
 if(WITH_FFTW AND FFTW3_FOUND)
     target_compile_definitions("${ELSA_MODULE_TARGET_NAME}" PRIVATE WITH_FFTW)
+endif()
+
+# We need to compile the DataContainer with the NVCC compiler, if unified memory is used
+if(ELSA_CUDA_ENABLED)
+    set_source_files_properties(DataContainer.cpp PROPERTIES LANGUAGE CUDA)
 endif()
 
 write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging)

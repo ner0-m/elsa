@@ -293,6 +293,7 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
                 *subsetSampler.getProjector<SiddonsMethod<real_t>>(),
                 subsetSampler.getPartitionedData(sinogram),
                 subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
+
             SQS solver{problem, true, epsilon};
 
             THEN("the clone works correctly")
@@ -304,7 +305,7 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
 
                 AND_THEN("it works as expected")
                 {
-                    auto reconstruction = solver.solve(100);
+                    auto reconstruction = solver.solve(15);
 
                     DataContainer resultsDifference = reconstruction - phantom;
 

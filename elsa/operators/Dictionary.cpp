@@ -1,6 +1,8 @@
 #include "Dictionary.h"
 #include "TypeCasts.hpp"
 
+#include <iostream>
+
 namespace elsa
 {
     template <typename data_t>
@@ -86,7 +88,7 @@ namespace elsa
     {
         if (j < 0 || j >= _nAtoms)
             throw InvalidArgumentError("Dictionary: atom index out of bounds");
-        return _dictionary.getBlock(j);
+        return materialize(_dictionary.getBlock(j));
     }
 
     template <typename data_t>
@@ -101,11 +103,12 @@ namespace elsa
         Dictionary supportDict(*_rangeDescriptor, support.rows());
         index_t j = 0;
 
-        for (const auto& i : support) {
-            if (i < 0 || i >= _nAtoms)
-                throw InvalidArgumentError(
-                    "Dictionary::getSupportedDictionary: support contains out-of-bounds index");
+        if ((support.array() < 0).any() || (support.array() >= _nAtoms).any()) {
+            throw InvalidArgumentError(
+                "Dictionary::getSupportedDictionary: support contains out-of-bounds index");
+        }
 
+        for (const auto& i : support) {
             supportDict.updateAtom(j, getAtom(i));
             ++j;
         }

@@ -3,6 +3,8 @@
 #include "WLSProblem.h"
 #include "CG.h"
 
+#include <iostream>
+
 namespace elsa
 {
     template <typename data_t>
@@ -40,7 +42,7 @@ namespace elsa
             WLSProblem<data_t> wls(purgedDict, _problem.getSignal());
 
             CG<data_t> cgSolver(wls);
-            const auto& wlsSolution = cgSolver.solve(10);
+            const auto wlsSolution = cgSolver.solve(10);
 
             // wlsSolution has only non-zero coefficients, copy those to the full solution with zero
             // coefficients
@@ -73,6 +75,7 @@ namespace elsa
                 argMaxCorrelation = j;
             }
         }
+
         return argMaxCorrelation;
     }
 

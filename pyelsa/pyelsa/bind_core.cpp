@@ -25,12 +25,6 @@ namespace py = pybind11;
 
 void add_definitions_pyelsa_core(py::module& m)
 {
-    py::enum_<elsa::DataHandlerType>(m, "DataHandlerType")
-        .value("CPU", elsa::DataHandlerType::CPU)
-        .value("GPU", elsa::DataHandlerType::GPU)
-        .value("MAP_CPU", elsa::DataHandlerType::MAP_CPU)
-        .value("MAP_GPU", elsa::DataHandlerType::MAP_GPU);
-
     py::enum_<elsa::FFTNorm>(m, "FFTNorm")
         .value("BACKWARD", elsa::FFTNorm::BACKWARD)
         .value("FORWARD", elsa::FFTNorm::FORWARD)
@@ -184,10 +178,6 @@ void add_definitions_pyelsa_core(py::module& m)
              (const float& (elsa::DataContainer<float>::*) (long)
                   const)(&elsa::DataContainer<float>::operator[]),
              py::arg("index"), py::return_value_policy::reference_internal)
-        .def("getDataHandlerType",
-             (elsa::DataHandlerType(elsa::DataContainer<float>::*)()
-                  const)(&elsa::DataContainer<float>::getDataHandlerType),
-             py::return_value_policy::move)
         .def("__getitem__",
              (float& (elsa::DataContainer<float>::*) (long) )(
                  &elsa::DataContainer<float>::operator[]),
@@ -228,13 +218,9 @@ void add_definitions_pyelsa_core(py::module& m)
                   const)(&elsa::DataContainer<float>::format),
              py::arg("os"), py::arg("cfg"))
         .def(py::init<const elsa::DataContainer<float>&>(), py::arg("other"))
-        .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<float, -1, 1, 0, -1, 1>&,
-                      elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"), py::arg("data"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
-        .def(py::init<const elsa::DataDescriptor&, elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
+        .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<float, -1, 1, 0, -1, 1>&>(),
+             py::arg("dataDescriptor"), py::arg("data"))
+        .def(py::init<const elsa::DataDescriptor&>(), py::arg("dataDescriptor"))
         .def("fft",
              (void(elsa::DataContainer<float>::*)(elsa::FFTNorm)
                   const)(&elsa::DataContainer<float>::fft),
@@ -388,10 +374,6 @@ void add_definitions_pyelsa_core(py::module& m)
              (const std::complex<float>& (elsa::DataContainer<std::complex<float>>::*) (long)
                   const)(&elsa::DataContainer<std::complex<float>>::operator[]),
              py::arg("index"), py::return_value_policy::reference_internal)
-        .def("getDataHandlerType",
-             (elsa::DataHandlerType(elsa::DataContainer<std::complex<float>>::*)()
-                  const)(&elsa::DataContainer<std::complex<float>>::getDataHandlerType),
-             py::return_value_policy::move)
         .def("l1Norm", (float(elsa::DataContainer<std::complex<float>>::*)()
                             const)(&elsa::DataContainer<std::complex<float>>::l1Norm))
         .def("l2Norm", (float(elsa::DataContainer<std::complex<float>>::*)()
@@ -416,13 +398,9 @@ void add_definitions_pyelsa_core(py::module& m)
              py::arg("os"), py::arg("cfg"))
         .def(py::init<const elsa::DataContainer<std::complex<float>>&>(), py::arg("other"))
         .def(py::init<const elsa::DataDescriptor&,
-                      const Eigen::Matrix<std::complex<float>, -1, 1, 0, -1, 1>&,
-                      elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"), py::arg("data"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
-        .def(py::init<const elsa::DataDescriptor&, elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
+                      const Eigen::Matrix<std::complex<float>, -1, 1, 0, -1, 1>&>(),
+             py::arg("dataDescriptor"), py::arg("data"))
+        .def(py::init<const elsa::DataDescriptor&>(), py::arg("dataDescriptor"))
         .def("fft",
              (void(elsa::DataContainer<std::complex<float>>::*)(elsa::FFTNorm)
                   const)(&elsa::DataContainer<std::complex<float>>::fft),
@@ -556,10 +534,6 @@ void add_definitions_pyelsa_core(py::module& m)
                                    const)(&elsa::DataContainer<double>::squaredL2Norm))
         .def("sum",
              (double(elsa::DataContainer<double>::*)() const)(&elsa::DataContainer<double>::sum))
-        .def("getDataHandlerType",
-             (elsa::DataHandlerType(elsa::DataContainer<double>::*)()
-                  const)(&elsa::DataContainer<double>::getDataHandlerType),
-             py::return_value_policy::move)
         .def("getSize",
              (long(elsa::DataContainer<double>::*)() const)(&elsa::DataContainer<double>::getSize))
         .def("l0PseudoNorm", (long(elsa::DataContainer<double>::*)()
@@ -575,13 +549,9 @@ void add_definitions_pyelsa_core(py::module& m)
                   const)(&elsa::DataContainer<double>::format),
              py::arg("os"), py::arg("cfg"))
         .def(py::init<const elsa::DataContainer<double>&>(), py::arg("other"))
-        .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<double, -1, 1, 0, -1, 1>&,
-                      elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"), py::arg("data"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
-        .def(py::init<const elsa::DataDescriptor&, elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
+        .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<double, -1, 1, 0, -1, 1>&>(),
+             py::arg("dataDescriptor"), py::arg("data"))
+        .def(py::init<const elsa::DataDescriptor&>(), py::arg("dataDescriptor"))
         .def("fft",
              (void(elsa::DataContainer<double>::*)(elsa::FFTNorm)
                   const)(&elsa::DataContainer<double>::fft),
@@ -749,10 +719,6 @@ void add_definitions_pyelsa_core(py::module& m)
                               const)(&elsa::DataContainer<std::complex<double>>::lInfNorm))
         .def("squaredL2Norm", (double(elsa::DataContainer<std::complex<double>>::*)() const)(
                                   &elsa::DataContainer<std::complex<double>>::squaredL2Norm))
-        .def("getDataHandlerType",
-             (elsa::DataHandlerType(elsa::DataContainer<std::complex<double>>::*)()
-                  const)(&elsa::DataContainer<std::complex<double>>::getDataHandlerType),
-             py::return_value_policy::move)
         .def("getSize", (long(elsa::DataContainer<std::complex<double>>::*)()
                              const)(&elsa::DataContainer<std::complex<double>>::getSize))
         .def("l0PseudoNorm", (long(elsa::DataContainer<std::complex<double>>::*)()
@@ -769,13 +735,9 @@ void add_definitions_pyelsa_core(py::module& m)
              py::arg("os"), py::arg("cfg"))
         .def(py::init<const elsa::DataContainer<std::complex<double>>&>(), py::arg("other"))
         .def(py::init<const elsa::DataDescriptor&,
-                      const Eigen::Matrix<std::complex<double>, -1, 1, 0, -1, 1>&,
-                      elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"), py::arg("data"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
-        .def(py::init<const elsa::DataDescriptor&, elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
+                      const Eigen::Matrix<std::complex<double>, -1, 1, 0, -1, 1>&>(),
+             py::arg("dataDescriptor"), py::arg("data"))
+        .def(py::init<const elsa::DataDescriptor&>(), py::arg("dataDescriptor"))
         .def("fft",
              (void(elsa::DataContainer<std::complex<double>>::*)(elsa::FFTNorm)
                   const)(&elsa::DataContainer<std::complex<double>>::fft),
@@ -883,10 +845,6 @@ void add_definitions_pyelsa_core(py::module& m)
              (const long& (elsa::DataContainer<long>::*) (long)
                   const)(&elsa::DataContainer<long>::operator[]),
              py::arg("index"), py::return_value_policy::reference_internal)
-        .def("getDataHandlerType",
-             (elsa::DataHandlerType(elsa::DataContainer<long>::*)()
-                  const)(&elsa::DataContainer<long>::getDataHandlerType),
-             py::return_value_policy::move)
         .def("__getitem__",
              (long& (elsa::DataContainer<long>::*) (long) )(&elsa::DataContainer<long>::operator[]),
              py::arg("index"), py::return_value_policy::reference_internal)
@@ -925,21 +883,17 @@ void add_definitions_pyelsa_core(py::module& m)
                   const)(&elsa::DataContainer<long>::format),
              py::arg("os"), py::arg("cfg"))
         .def(py::init<const elsa::DataContainer<long>&>(), py::arg("other"))
-        .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<long, -1, 1, 0, -1, 1>&,
-                      elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"), py::arg("data"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
-        .def(py::init<const elsa::DataDescriptor&, elsa::DataHandlerType>(),
-             py::arg("dataDescriptor"),
-             py::arg("handlerType") = static_cast<elsa::DataHandlerType>(0))
-        .def("fft",
-             (void(elsa::DataContainer<long>::*)(elsa::FFTNorm)
-                  const)(&elsa::DataContainer<long>::fft),
-             py::arg("norm"))
-        .def("ifft",
-             (void(elsa::DataContainer<long>::*)(elsa::FFTNorm)
-                  const)(&elsa::DataContainer<long>::ifft),
-             py::arg("norm"));
+        .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<long, -1, 1, 0, -1, 1>&>(),
+             py::arg("dataDescriptor"), py::arg("data")),
+        .def(py::init<const elsa::DataDescriptor&>(), py::arg("dataDescriptor"))
+            .def("fft",
+                 (void(elsa::DataContainer<long>::*)(elsa::FFTNorm)
+                      const)(&elsa::DataContainer<long>::fft),
+                 py::arg("norm"))
+            .def("ifft",
+                 (void(elsa::DataContainer<long>::*)(elsa::FFTNorm)
+                      const)(&elsa::DataContainer<long>::ifft),
+                 py::arg("norm"));
 
     elsa::DataContainerHints<long>::addCustomMethods(DataContainerl);
 

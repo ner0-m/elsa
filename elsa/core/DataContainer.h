@@ -1,15 +1,19 @@
 #pragma once
 
+#include "TypeTraits.hpp"
 #include "elsaDefines.h"
+#include "ExpressionPredicates.h"
 #include "DataDescriptor.h"
-#include "DataHandler.h"
-#include "DataHandlerCPU.h"
-#include "DataHandlerMapCPU.h"
-#include "DataContainerIterator.h"
 #include "Error.h"
 #include "FormatConfig.h"
 #include "TypeCasts.hpp"
+#include "ContiguousStorage.h"
+#include "Span.h"
+#include "Overloaded.hpp"
 
+#include "thrust/complex.h"
+
+#include <variant>
 #include <memory>
 #include <type_traits>
 
@@ -27,7 +31,7 @@ namespace elsa
      * @author
      * - Matthias Wieczorek - initial code
      * - Tobias Lasser - rewrite, modularization, modernization
-     * - David Frank - added DataHandler concept, iterators
+     * - David Frank - added DataHandler concept, iterators, integrated unified memory
      * - Nikola Dinev - add block support
      * - Jens Petit - expression templates
      * - Jonas Jelten - various enhancements, fft, complex handling, pretty formatting
@@ -39,6 +43,15 @@ namespace elsa
         /// Scalar alias
         using Scalar = data_t;
 
+        using reference = typename ContiguousStorage<data_t>::reference;
+        using const_reference = typename ContiguousStorage<data_t>::const_reference;
+
+        /// iterator for DataContainer (random access and continuous)
+        using iterator = typename ContiguousStorage<data_t>::iterator;
+
+        /// const iterator for DataContainer (random access and continuous)
+        using const_iterator = typename ContiguousStorage<data_t>::const_iterator;
+
         /// delete default constructor (without metadata there can be no valid container)
         DataContainer() = delete;
 
@@ -49,8 +62,7 @@ namespace elsa
          * @param[in] dataDescriptor containing the associated metadata
          * @param[in] handlerType the data handler (default: CPU)
          */
-        explicit DataContainer(const DataDescriptor& dataDescriptor,
-                               DataHandlerType handlerType = defaultHandlerType);
+        explicit DataContainer(const DataDescriptor& dataDescriptor);
 
         /**
          * @brief Constructor for DataContainer, initializing it with a DataVector
@@ -60,8 +72,14 @@ namespace elsa
          * @param[in] handlerType the data handler (default: CPU)
          */
         DataContainer(const DataDescriptor& dataDescriptor,
-                      const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data,
-                      DataHandlerType handlerType = defaultHandlerType);
+                      const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data);
+
+        /// constructor accepting a DataDescriptor and a DataHandler
+        DataContainer(const DataDescriptor& dataDescriptor,
+                      const ContiguousStorage<data_t>& storage);
+
+        /// constructor accepting a DataDescriptor and a DataHandler
+        DataContainer(const DataDescriptor& dataDescriptor, ContiguousStorageView<data_t> storage);
 
         /**
          * @brief Copy constructor for DataContainer
@@ -105,26 +123,36 @@ namespace elsa
          * result in an "infectious" copy which means that afterwards the current container will use
          * the same device as "other".
          */
-        DataContainer<data_t>& operator=(DataContainer<data_t>&& other);
+        DataContainer<data_t>& operator=(DataContainer<data_t>&& other) noexcept;
 
         /// return the current DataDescriptor
         const DataDescriptor& getDataDescriptor() const;
+
+        /// return true, if the current DataContainer is owning its memory
+        bool isOwning() const;
+
+        /// return true, if the current DataContainer is a view, i.e. is not owning its memory
+        bool isView() const;
+
+        ContiguousStorage<data_t>& storage();
+
+        const ContiguousStorage<data_t>& storage() const;
 
         /// return the size of the stored data (i.e. the number of elements in the linearized
         /// signal)
         index_t getSize() const;
 
         /// return the index-th element of linearized signal (not bounds-checked!)
-        data_t& operator[](index_t index);
+        reference operator[](index_t index);
 
         /// return the index-th element of the linearized signal as read-only (not bounds-checked!)
-        const data_t& operator[](index_t index) const;
+        const_reference operator[](index_t index) const;
 
         /// return an element by n-dimensional coordinate (not bounds-checked!)
-        data_t& operator()(const IndexVector_t& coordinate);
+        reference operator()(const IndexVector_t& coordinate);
 
         /// return an element by n-dimensional coordinate as read-only (not bounds-checked!)
-        const data_t& operator()(const IndexVector_t& coordinate) const;
+        const_reference operator()(const IndexVector_t& coordinate) const;
 
         data_t at(const IndexVector_t& coordinate) const;
 
@@ -132,7 +160,7 @@ namespace elsa
         template <typename idx0_t, typename... idx_t,
                   typename = std::enable_if_t<
                       std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
-        data_t& operator()(idx0_t idx0, idx_t... indices)
+        reference operator()(idx0_t idx0, idx_t... indices)
         {
             IndexVector_t coordinate(sizeof...(indices) + 1);
             ((coordinate << idx0), ..., indices);
@@ -143,7 +171,7 @@ namespace elsa
         template <typename idx0_t, typename... idx_t,
                   typename = std::enable_if_t<
                       std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
-        const data_t& operator()(idx0_t idx0, idx_t... indices) const
+        const_reference operator()(idx0_t idx0, idx_t... indices) const
         {
             IndexVector_t coordinate(sizeof...(indices) + 1);
             ((coordinate << idx0), ..., indices);
@@ -178,36 +206,13 @@ namespace elsa
         data_t maxElement() const;
 
         /// convert to the fourier transformed signal
-        void fft(FFTNorm norm) const;
+        void fft(FFTNorm norm);
 
         /// convert to the inverse fourier transformed signal
-        void ifft(FFTNorm norm) const;
+        void ifft(FFTNorm norm);
 
         /// if the datacontainer is already complex, return itself.
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<isComplex<_data_t>, DataContainer<_data_t>> asComplex() const
-        {
-            return *this;
-        }
-
-        /// if the datacontainer is not complex,
-        /// return a copy and fill in 0 as imaginary values
-        template <typename _data_t = data_t>
-        typename std::enable_if_t<not isComplex<_data_t>, DataContainer<complex<_data_t>>>
-            asComplex() const
-        {
-            DataContainer<complex<data_t>> ret{
-                *this->_dataDescriptor,
-                this->_dataHandlerType,
-            };
-
-            // extend with complex zero value
-            for (index_t idx = 0; idx < this->getSize(); ++idx) {
-                ret[idx] = complex<data_t>{(*this)[idx], 0};
-            }
-
-            return ret;
-        }
+        DataContainer<add_complex_t<data_t>> asComplex() const;
 
         /// compute in-place element-wise addition of another container
         DataContainer<data_t>& operator+=(const DataContainer<data_t>& dc);
@@ -270,17 +275,6 @@ namespace elsa
         /// @see slice(index_t) const
         DataContainer<data_t> slice(index_t i);
 
-        /// iterator for DataContainer (random access and continuous)
-        using iterator = DataContainerIterator<DataContainer<data_t>>;
-
-        /// const iterator for DataContainer (random access and continuous)
-        using const_iterator = ConstDataContainerIterator<DataContainer<data_t>>;
-
-        /// alias for reverse iterator
-        using reverse_iterator = std::reverse_iterator<iterator>;
-        /// alias for const reverse iterator
-        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-
         /// returns iterator to the first element of the container
         iterator begin();
 
@@ -301,105 +295,24 @@ namespace elsa
         /// data)
         const_iterator cend() const;
 
-        /// returns reversed iterator to the last element of the container
-        reverse_iterator rbegin();
-
-        /// returns const reversed iterator to the last element of the container (cannot mutate
-        /// data)
-        const_reverse_iterator rbegin() const;
-
-        /// returns const reversed iterator to the last element of the container (cannot mutate
-        /// data)
-        const_reverse_iterator crbegin() const;
-
-        /// returns reversed iterator to one past the first element of container
-        reverse_iterator rend();
-
-        /// returns const reversed iterator to one past the first element of container (cannot
-        /// mutate data)
-        const_reverse_iterator rend() const;
-
-        /// returns const reversed iterator to one past the first element of container (cannot
-        /// mutate data)
-        const_reverse_iterator crend() const;
-
         /// value_type of the DataContainer elements for iterators
         using value_type = data_t;
         /// pointer type of DataContainer elements for iterators
         using pointer = data_t*;
         /// const pointer type of DataContainer elements for iterators
         using const_pointer = const data_t*;
-        /// reference type of DataContainer elements for iterators
-        using reference = data_t&;
-        /// const reference type of DataContainer elements for iterators
-        using const_reference = const data_t&;
         /// difference type for iterators
         using difference_type = std::ptrdiff_t;
 
-        /// returns the type of the DataHandler in use
-        DataHandlerType getDataHandlerType() const;
-
-        /// friend constexpr function to implement expression templates
-        template <bool GPU, class Operand, std::enable_if_t<isDataContainer<Operand>, int>>
-        friend constexpr auto evaluateOrReturn(Operand const& operand);
-
         /// write a pretty-formatted string representation to stream
         void format(std::ostream& os, format_config cfg = {}) const;
-
-        /**
-         * @brief Factory function which returns GPU based DataContainers
-         *
-         * @return the GPU based DataContainer
-         *
-         * Note that if this function is called on a container which is already GPU based, it
-         * will throw an exception.
-         */
-        DataContainer loadToGPU();
-
-        /**
-         * @brief Factory function which returns CPU based DataContainers
-         *
-         * @return the CPU based DataContainer
-         *
-         * Note that if this function is called on a container which is already CPU based, it will
-         * throw an exception.
-         */
-        DataContainer loadToCPU();
 
     private:
         /// the current DataDescriptor
         std::unique_ptr<DataDescriptor> _dataDescriptor;
 
         /// the current DataHandler
-        std::unique_ptr<DataHandler<data_t>> _dataHandler;
-
-        /// the current DataHandlerType
-        DataHandlerType _dataHandlerType;
-
-        /// factory method to create DataHandlers based on handlerType with perfect forwarding of
-        /// constructor arguments
-        template <typename... Args>
-        std::unique_ptr<DataHandler<data_t>> createDataHandler(DataHandlerType handlerType,
-                                                               Args&&... args);
-
-        /// private constructor accepting a DataDescriptor and a DataHandler
-        explicit DataContainer(const DataDescriptor& dataDescriptor,
-                               std::unique_ptr<DataHandler<data_t>> dataHandler,
-                               DataHandlerType dataType = defaultHandlerType);
-
-        /**
-         * @brief Helper function to indicate if a regular assignment or a clone should be performed
-         *
-         * @param[in] handlerType the member variable of the other container in
-         * copy-/move-assignment
-         *
-         * @return true if a regular assignment of the pointed to DataHandlers should be done
-         *
-         * An assignment operation with a DataContainer which does not use the same device (CPU /
-         * GPU) has to be handled differently. This helper function indicates if a regular
-         * assignment should be performed or not.
-         */
-        bool canAssign(DataHandlerType handlerType);
+        std::variant<ContiguousStorage<data_t>, ContiguousStorageView<data_t>> storage_;
     };
 
     /// pretty output formatting.
@@ -413,7 +326,7 @@ namespace elsa
 
     /// clip the container values outside of the interval, to the interval edges
     template <typename data_t>
-    DataContainer<data_t> clip(DataContainer<data_t> dc, data_t min, data_t max);
+    DataContainer<data_t> clip(const DataContainer<data_t>& dc, data_t min, data_t max);
 
     /// Concatenate two DataContainers to one (requires copying of both)
     template <typename data_t>
@@ -424,13 +337,13 @@ namespace elsa
     /// https://numpy.org/doc/stable/reference/generated/numpy.fft.fftshift.html for further
     /// details.
     template <typename data_t>
-    DataContainer<data_t> fftShift2D(DataContainer<data_t> dc);
+    DataContainer<data_t> fftShift2D(const DataContainer<data_t>& dc);
 
     /// Perform the IFFT shift operation to the provided signal. Refer to
     /// https://numpy.org/doc/stable/reference/generated/numpy.fft.ifftshift.html for further
     /// details.
     template <typename data_t>
-    DataContainer<data_t> ifftShift2D(DataContainer<data_t> dc);
+    DataContainer<data_t> ifftShift2D(const DataContainer<data_t>& dc);
 
     /// Multiplying two DataContainers
     template <typename data_t>
@@ -443,20 +356,22 @@ namespace elsa
     }
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
+                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator*(const DataContainer<data_t>& dc, const Scalar& s)
     {
         auto copy = dc;
-        copy *= s;
+        copy *= static_cast<data_t>(s);
         return copy;
     }
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
+                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator*(const Scalar& s, const DataContainer<data_t>& dc)
     {
         auto copy = dc;
-        copy *= s;
+        copy *= static_cast<data_t>(s);
         return copy;
     }
 
@@ -471,190 +386,98 @@ namespace elsa
     }
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
+                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator+(const DataContainer<data_t>& dc, const Scalar& s)
     {
         auto copy = dc;
-        copy += s;
+        copy += static_cast<data_t>(s);
         return copy;
     }
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
+                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator+(const Scalar& s, const DataContainer<data_t>& dc)
     {
         auto copy = dc;
-        copy += s;
+        copy += static_cast<data_t>(s);
         return copy;
     }
 
     /// Subtract two DataContainers
     template <typename data_t>
-    inline DataContainer<data_t> operator-(const DataContainer<data_t>& lhs,
-                                           const DataContainer<data_t>& rhs)
-    {
-        auto copy = lhs;
-        copy -= rhs;
-        return copy;
-    }
+    DataContainer<data_t> operator-(const DataContainer<data_t>& lhs,
+                                    const DataContainer<data_t>& rhs);
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
-    inline DataContainer<data_t> operator-(const DataContainer<data_t>& dc, const Scalar& s)
-    {
-        auto copy = dc;
-        copy -= s;
-        return copy;
-    }
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
+                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+    DataContainer<std::common_type_t<data_t, Scalar>> operator-(const DataContainer<data_t>& dc,
+                                                                const Scalar& s);
 
-    template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
-    inline DataContainer<data_t> operator-(const Scalar& s, const DataContainer<data_t>& dc)
-    {
-        auto copy = dc;
-        std::transform(copy.begin(), copy.end(), copy.begin(), [=](auto val) { return s - val; });
-        return copy;
-    }
+    template <typename Scalar, typename data_t,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
+                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+    DataContainer<std::common_type_t<Scalar, data_t>> operator-(const Scalar& s,
+                                                                const DataContainer<data_t>& dc);
 
     /// Divide two DataContainers
     template <typename data_t>
-    inline DataContainer<data_t> operator/(const DataContainer<data_t>& lhs,
-                                           const DataContainer<data_t>& rhs)
-    {
-        auto copy = lhs;
-        copy /= rhs;
-        return copy;
-    }
+    DataContainer<data_t> operator/(const DataContainer<data_t>& lhs,
+                                    const DataContainer<data_t>& rhs);
 
+    /// Divide DataContainer by scalar
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
-    inline DataContainer<data_t> operator/(const DataContainer<data_t>& dc, const Scalar& s)
-    {
-        auto copy = dc;
-        copy /= s;
-        return copy;
-    }
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
+                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+    DataContainer<std::common_type_t<data_t, Scalar>> operator/(const DataContainer<data_t>& dc,
+                                                                const Scalar& s);
 
-    template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>>>
-    inline DataContainer<data_t> operator/(const Scalar& s, const DataContainer<data_t>& dc)
-    {
-        auto copy = dc;
-        std::transform(copy.begin(), copy.end(), copy.begin(), [=](auto val) { return s / val; });
-        return copy;
-    }
+    /// Divide scalar with DataContainer
+    template <typename Scalar, typename data_t,
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
+                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+    DataContainer<std::common_type_t<Scalar, data_t>> operator/(const Scalar& s,
+                                                                const DataContainer<data_t>& dc);
 
-    template <typename data_t>
-    inline DataContainer<data_t> cwiseMax(const DataContainer<std::complex<data_t>>& lhs,
-                                          const DataContainer<std::complex<data_t>>& rhs)
-    {
-        DataContainer<data_t> copy(rhs.getDataDescriptor());
-        std::transform(lhs.begin(), lhs.end(), rhs.begin(), copy.begin(),
-                       [](auto l, auto r) { return std::max(std::abs(l), std::abs(r)); });
-        return copy;
-    }
+    template <typename xdata_t, typename ydata_t>
+    DataContainer<value_type_of_t<std::common_type_t<xdata_t, ydata_t>>>
+        cwiseMax(const DataContainer<xdata_t>& lhs, const DataContainer<ydata_t>& rhs);
+
+    template <typename xdata_t, typename ydata_t>
+    DataContainer<value_type_of_t<std::common_type_t<xdata_t, ydata_t>>>
+        cwiseMin(const DataContainer<xdata_t>& lhs, const DataContainer<ydata_t>& rhs);
 
     template <typename data_t>
-    inline DataContainer<data_t> cwiseMax(const DataContainer<std::complex<data_t>>& lhs,
-                                          const DataContainer<data_t>& rhs)
-    {
-        DataContainer<data_t> copy(rhs.getDataDescriptor());
-        std::transform(lhs.begin(), lhs.end(), rhs.begin(), copy.begin(),
-                       [](auto l, auto r) { return std::max(std::abs(l), r); });
-        return copy;
-    }
+    DataContainer<data_t> square(const DataContainer<data_t>& dc);
 
     template <typename data_t>
-    inline DataContainer<data_t> cwiseMax(const DataContainer<data_t>& lhs,
-                                          const DataContainer<std::complex<data_t>>& rhs)
-    {
-        DataContainer<data_t> copy(rhs.getDataDescriptor());
-        std::transform(lhs.begin(), lhs.end(), rhs.begin(), copy.begin(),
-                       [](auto l, auto r) { return std::max(l, std::abs(r)); });
-        return copy;
-    }
-
-    template <typename data_t, typename = std::enable_if_t<!isComplex<data_t>>>
-    inline DataContainer<data_t> cwiseMax(const DataContainer<data_t>& lhs,
-                                          const DataContainer<data_t>& rhs)
-    {
-        DataContainer<data_t> copy(rhs.getDataDescriptor());
-        std::transform(lhs.begin(), lhs.end(), rhs.begin(), copy.begin(),
-                       [](auto l, auto r) { return std::max(l, r); });
-        return copy;
-    }
+    DataContainer<data_t> sqrt(const DataContainer<data_t>& dc);
 
     template <typename data_t>
-    inline DataContainer<data_t> cwiseAbs(const DataContainer<data_t>& dc)
-    {
-        DataContainer<data_t> copy(dc.getDataDescriptor());
-        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto l) { return std::abs(l); });
-        return copy;
-    }
+    DataContainer<data_t> exp(const DataContainer<data_t>& dc);
 
     template <typename data_t>
-    inline DataContainer<data_t> square(const DataContainer<data_t>& dc)
-    {
-        DataContainer<data_t> copy(dc.getDataDescriptor());
-        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto x) { return x * x; });
-        return copy;
-    }
+    DataContainer<data_t> log(const DataContainer<data_t>& dc);
+
+    /// Return an owning DataContainer, if given an non-owning one, the data is copied to a new
+    /// owning buffer.
+    template <class data_t>
+    DataContainer<data_t> materialize(const DataContainer<data_t>& x);
 
     template <typename data_t>
-    inline DataContainer<data_t> sqrt(const DataContainer<data_t>& dc)
-    {
-        DataContainer<data_t> copy(dc.getDataDescriptor());
-        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto x) { return std::sqrt(x); });
-        return copy;
-    }
+    DataContainer<value_type_of_t<data_t>> cwiseAbs(const DataContainer<data_t>& dc);
 
     template <typename data_t>
-    inline DataContainer<data_t> exp(const DataContainer<data_t>& dc)
-    {
-        DataContainer<data_t> copy(dc.getDataDescriptor());
-        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto x) { return std::exp(x); });
-        return copy;
-    }
-
-    template <typename data_t>
-    inline DataContainer<data_t> log(const DataContainer<data_t>& dc)
-    {
-        DataContainer<data_t> copy(dc.getDataDescriptor());
-        std::transform(dc.begin(), dc.end(), copy.begin(), [](auto x) { return std::log(x); });
-        return copy;
-    }
+    DataContainer<add_complex_t<data_t>> asComplex(const DataContainer<data_t>& dc);
 
     /// Real for complex DataContainers
     template <typename data_t>
-    inline DataContainer<data_t> real(const DataContainer<std::complex<data_t>>& dc)
-    {
-        DataContainer<data_t> result(dc.getDataDescriptor());
-        std::transform(dc.begin(), dc.end(), result.begin(), [](auto x) { return std::real(x); });
-        return result;
-    }
-
-    /// Real for real DataContainers, just a copy
-    template <typename data_t, typename = std::enable_if_t<!isComplex<data_t>>>
-    inline DataContainer<data_t> real(const DataContainer<data_t>& dc)
-    {
-        return dc;
-    }
+    DataContainer<value_type_of_t<data_t>> real(const DataContainer<data_t>& dc);
 
     /// Imag for complex DataContainers
     template <typename data_t>
-    inline DataContainer<data_t> imag(const DataContainer<std::complex<data_t>>& dc)
-    {
-        DataContainer<data_t> result(dc.getDataDescriptor());
-        std::transform(dc.begin(), dc.end(), result.begin(), [](auto x) { return std::imag(x); });
-        return result;
-    }
+    DataContainer<value_type_of_t<data_t>> imag(const DataContainer<data_t>& dc);
 
-    /// Imag for real DataContainers, returns zero
-    template <typename data_t, typename = std::enable_if_t<!isComplex<data_t>>>
-    inline DataContainer<data_t> imag(const DataContainer<data_t>& dc)
-    {
-        DataContainer<data_t> result(dc.getDataDescriptor());
-        result = 0;
-        return result;
-    }
 } // namespace elsa

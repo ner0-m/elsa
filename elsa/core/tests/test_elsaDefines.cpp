@@ -21,7 +21,10 @@ TEST_SUITE_BEGIN("core");
 TEST_CASE("elsaDefines: Testing PI")
 {
 
-    THEN("Pi for real_t and pi_t are equal") { REQUIRE_EQ(pi<real_t>, pi_t); }
+    THEN("Pi for real_t and pi_t are equal")
+    {
+        REQUIRE_EQ(pi<real_t>, pi_t);
+    }
 
     THEN("pi_t is somewhat close to a representation for pi")
     {
@@ -43,15 +46,6 @@ TEST_CASE("elsaDefines: Testing compile-time predicates")
     static_assert(!std::is_same_v<float, GetFloatingPointType_t<double>>);
 
     REQUIRE_UNARY(true);
-}
-
-TEST_CASE("elsaDefines: Printing default handler type")
-{
-#ifdef ELSA_CUDA_VECTOR
-    REQUIRE_EQ(defaultHandlerType, DataHandlerType::GPU);
-#else
-    REQUIRE_EQ(defaultHandlerType, DataHandlerType::CPU);
-#endif
 }
 
 TEST_CASE("TypeCasts: Casting to unsigned")

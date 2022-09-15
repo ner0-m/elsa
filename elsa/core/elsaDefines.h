@@ -57,20 +57,6 @@ namespace elsa
     /// various values of the different norms of the Fourier transforms
     enum class FFTNorm { FORWARD, ORTHO, BACKWARD };
 
-    /// type of the DataHandler used to store the actual data
-    enum class DataHandlerType {
-        CPU,     ///< data is stored as an Eigen::Matrix in CPU main memory
-        MAP_CPU, ///< data is not explicitly stored, but using an Eigen::Map to refer to other
-        GPU,     ///< data is stored as an raw array in the GPU memory
-        MAP_GPU  ///< data is not explicitley stored but mapped through a pointer
-    };
-
-#ifdef ELSA_CUDA_VECTOR
-    constexpr DataHandlerType defaultHandlerType = DataHandlerType::GPU;
-#else
-    constexpr DataHandlerType defaultHandlerType = DataHandlerType::CPU;
-#endif
-
     /// base case for deducing floating point type of std::complex
     template <typename T>
     struct GetFloatingPointType {
