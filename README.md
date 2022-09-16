@@ -17,7 +17,7 @@ Documentation
 The current documentation of the master branch is available [here](https://ciip.in.tum.de/elsadocs/).
 There is also
 *  a [quickstart guide](https://ciip.in.tum.de/elsadocs/guides/quickstart-cxx.html)
-*  a [guide for Python bindings](https://ciip.in.tum.de/elsadocs/guides/python_bindings.html)
+*  a [guide for Python bindings](https://ciip.in.tum.de/elsadocs/guides/python_guide/index.html)
 *  a [tutorial for choosing solvers](https://ciip.in.tum.de/elsadocs/modules/solvers/choosing_a_solver.html)
 *  a [tutorial on the Alternating Direction Method of Multipliers solver](https://ciip.in.tum.de/elsadocs/guides/admm-cxx.html)
 
