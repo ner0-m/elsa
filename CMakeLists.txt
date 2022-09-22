@@ -39,6 +39,9 @@ set(ELSA_SANITIZER
 )
 
 set(ELSA_CUDA_ARCH_TYPE "auto" CACHE STRING "Set CUDA architectures")
+set(ELSA_ALTERNATIVE_LINKER ""
+    CACHE STRING "Use alternate linker. Leave empty for system default; alternatives are 'gold', 'lld', 'bfd', 'mold'"
+)
 
 option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
 option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
@@ -70,6 +73,37 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
+
+# ------------ Setup Linker ------------
+# ------------
+
+function(set_alternate_linker linker)
+    message(STATUS "Looking for linker '${linker}'")
+    find_program(LINKER_EXECUTABLE NAMES ld.${linker} ${linker})
+
+    # TODO: For mold and GCC <= 12
+    if(LINKER_EXECUTABLE)
+        message(STATUS "Looking for linker '${linker}' - ${LINKER_EXECUTABLE}")
+        if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 12.1.0
+           AND "${linker}" STREQUAL "mold"
+        )
+            message(WARNING "Alternative linker '${linker}' is not supported for GCC versions <= 12.1.0")
+        else()
+            add_link_options("-fuse-ld=${linker}")
+        endif()
+    else()
+        message(STATUS "Looking for linker '${linker}' -- NOT FOUND")
+        set(ELSA_ALTERNATIVE_LINKER
+            ""
+            CACHE STRING "Use alternate linker" FORCE
+            PARENT_SCOPE
+        )
+    endif()
+endfunction()
+
+if(NOT "${ELSA_ALTERNATIVE_LINKER}" STREQUAL "")
+    set_alternate_linker(${ELSA_ALTERNATIVE_LINKER})
+endif()
 
 # ------------ dependencies ------------
 # ------------

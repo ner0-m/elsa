@@ -52,6 +52,9 @@ else
   endif
 endif
 
+USE_LINKER?="mold"
+BUILD_OPTIONS+=-DELSA_ALTERNATIVE_LINKER="${USE_LINKER}"
+
 USE_AUBSAN?=n
 ifeq ($(USE_AUBSAN),y)
   BUILD_OPTIONS+=-DELSA_SANITIZER="Address;Undefined"
