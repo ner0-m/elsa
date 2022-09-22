@@ -10,8 +10,8 @@ of the backprojection. Then backproject the filtered sinogram.
 
 ### Implementation
 
-Let us implement this method quickly. First, we need a fast Fourier transformation (FFT) 
-implementation. _elsa_ has one, but it's a little more cumbersome than what is necessary here. Hence, 
+Let us implement this method quickly. First, we need a fast Fourier transformation (FFT)
+implementation. _elsa_ has one, but it's a little more cumbersome than what is necessary here. Hence,
 we will use SciPy's FFT. Import it with:
 
 ```python
@@ -32,8 +32,8 @@ padded_sinogram = np.pad(np_sinogram, pad_width, mode="constant", constant_value
 ```
 
 Note that this step is to some extent optional. It would be sufficient to round to the next even
-number for the padding. However, the reconstruction will be worse. Try it for yourself, replace 
-the line regarding padding with something like: `int(np.ceil(sinogram_shape / 2)) * 2`, and check 
+number for the padding. However, the reconstruction will be worse. Try it for yourself, replace
+the line regarding padding with something like: `int(np.ceil(sinogram_shape / 2)) * 2`, and check
 the reconstruction.
 
 The next step is to create the filter. This will determine which frequencies one wishes to suppress
@@ -56,7 +56,7 @@ def ramp_filter(size):
 
     # See "Principles of Computerized Tomographic Imaging" by Avinash C. Kak and Malcolm Slaney,
     # Chap 3. Equation 61, for a detailed description of these steps
-    return 2 * np.real(fft(f))
+    return 2 * np.real(fft(f))[:, np.newaxis]
 
 # Ramp filter
 fourier_filter = ramp_filter(projection_size_padded)
@@ -76,7 +76,7 @@ Now, finally we perform the backprojection with the filtered sinogram.
 
 ```python
 # Go back into elsa space
-filtered_sinogram = elsa.DataContainer(radon_filtered, sino_descriptor)
+filtered_sinogram = elsa.DataContainer(filtered_sinogram, sino_descriptor)
 
 # Do the backprojection:
 filtered_backprojection = projector.applyAdjoint(filtered_sinogram)
@@ -95,10 +95,10 @@ first algorithms developed for X-ray tomographic reconstruction were iterative r
 algorithms. However, due to the immense amount of computation necessary for iterative reconstructions
 to be successful, they were not practical. Hence, the efficiency of the FBP was key in the beginning.
 
-However, the FBP breaks down in so-called _low dose_ scenarios. These are, for example, scenarios where 
-the number of projection angles is low. You can try this out, change the trajectory given above, to 
-instead of 420 angles, only use, say, 60. The artifacts in the reconstruction take over quickly, and 
-as you will see in the next chapters, iterative reconstruction algorithms can deal with these kinds 
+However, the FBP breaks down in so-called _low dose_ scenarios. These are, for example, scenarios where
+the number of projection angles is low. You can try this out, change the trajectory given above, to
+instead of 420 angles, only use, say, 60. The artifacts in the reconstruction take over quickly, and
+as you will see in the next chapters, iterative reconstruction algorithms can deal with these kinds
 of scenarios better.
 
 Another low dose scenario is reducing the tube current, resulting in very noise projection images.
@@ -107,10 +107,10 @@ typically perform better than FBP.
 
 Low dose reconstruction is tremendously important, as a high dosage of X-ray radiation is dangerous
 and has health risks associated with it. Hence, in the medical field it is important to reduce
-the dosage to a necessary minimum. 
+the dosage to a necessary minimum.
 
 Another aspect is that the FBP as described here is 2D only. There exists a 3D extension (FDK) to it,
-which works similarly to the FBP and is still quite efficient. However, iterative algorithms are 
-agnostic of the dimensions. And with the rise of GPU programming, iterative algorithms have become 
-practically more feasible. Much research in the field is focused in iterative reconstructions, however, 
+which works similarly to the FBP and is still quite efficient. However, iterative algorithms are
+agnostic of the dimensions. And with the rise of GPU programming, iterative algorithms have become
+practically more feasible. Much research in the field is focused in iterative reconstructions, however,
 as mentioned above, until today, commercial CT scanners still mostly rely on the FBP (FDK).
