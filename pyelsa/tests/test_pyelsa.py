@@ -10,7 +10,7 @@ import os
 
 class PyelsaTest(unittest.TestCase):
     def assert_same_shape(
-            self, arr: np.array, dc: elsa.DataContainer, fail_msg: str = None
+        self, arr: np.array, dc: elsa.DataContainer, fail_msg: str = None
     ):
         "Assert whether arr and dc have the same shape"
 
@@ -117,7 +117,7 @@ class PyelsaTest(unittest.TestCase):
         # work as expected
 
         # test converting a Tikhonov Problem to a WLSProblem
-        size = 2 ** 10
+        size = 2**10
         desc = elsa.VolumeDescriptor([size])
         b = elsa.DataContainer(desc, np.random.randn(size, 1))
         A = elsa.Scaling(desc, 2.0)
@@ -171,15 +171,21 @@ class PyelsaTest(unittest.TestCase):
             "WLSProblem was not correctly converted to QuadricProblem",
         )
 
-    def _test_reconstruction_2d(self, trajectory_generator, *args, iterCount = 20, **kwargs):
+    def _test_reconstruction(
+        self,
+        size,
+        phantom,
+        trajectory_generator,
+        *args,
+        iterCount=20,
+        error=0.004,
+        **kwargs
+    ):
         "Try performing a simple reconstruction"
 
-        size = 50.0
         numAngles = 50
         arc = 360
 
-        # generating a 2d phantom
-        phantom = elsa.PhantomGenerator.createModifiedSheppLogan([size, size])
         volDesc = phantom.getDataDescriptor()
 
         # generate circular trajectory
@@ -187,7 +193,7 @@ class PyelsaTest(unittest.TestCase):
             numAngles, volDesc, arc, size * 100.0, size, *args, **kwargs
         )
 
-        # setup operator for 2d X-ray transform
+        # setup operator for X-ray transform
         projector = elsa.SiddonsMethod(volDesc, sinoDesc)
 
         # simulate sinogram
@@ -201,10 +207,53 @@ class PyelsaTest(unittest.TestCase):
         recon = solver.solve(iterCount)
 
         # compute mse and check that it is within bounds
-        mse = (recon - phantom).squaredL2Norm() / size ** 2
+        mse = (recon - phantom).squaredL2Norm() / size**2
         self.assertLess(
-            mse, 0.004, "Mean squared error of reconstruction too large",
+            mse,
+            error,
+            "Mean squared error of reconstruction too large",
         )
+
+    def _test_reconstruction_2d(self, *args, **kwargs):
+        size = 50.0
+        # generating a 2d phantom
+        phantom = elsa.PhantomGenerator.createModifiedSheppLogan([size, size])
+        self._test_reconstruction(size, phantom, *args, **kwargs)
+
+    def _test_reconstruction_3d(self, *args, **kwargs):
+        size = 50.0
+        # generating a 3d phantom
+        phantom = elsa.PhantomGenerator.createModifiedSheppLogan([size, size, size])
+        self._test_reconstruction(size, phantom, *args, **kwargs)
+
+    def test_reconstruction_2d_curved_more_iterations(self):
+        self._test_reconstruction_2d(
+            elsa.CurvedCircleTrajectoryGenerator, elsa.Radian(2.0), iterCount=40
+        )
+
+    def test_reconstruction_2d_curved_smaller_angle(self):
+        self._test_reconstruction_2d(
+            elsa.CurvedCircleTrajectoryGenerator, elsa.Radian(0.5)
+        )
+
+    def test_reconstruction_2d_planar(self):
+        self._test_reconstruction_2d(elsa.CircleTrajectoryGenerator)
+
+    def test_reconstruction_3d_curved_more_iterations(self):
+        self._test_reconstruction_3d(
+            elsa.CurvedCircleTrajectoryGenerator,
+            elsa.Radian(2.0),
+            iterCount=40,
+            error=0.2,
+        )
+
+    def test_reconstruction_3d_curved_smaller_angle(self):
+        self._test_reconstruction_3d(
+            elsa.CurvedCircleTrajectoryGenerator, elsa.Radian(0.5), error=0.2
+        )
+
+    def test_reconstruction_3d_planar(self):
+        self._test_reconstruction_3d(elsa.CircleTrajectoryGenerator, error=0.2)
 
     # def test_logging(self):
     #     "Test logging module interface"

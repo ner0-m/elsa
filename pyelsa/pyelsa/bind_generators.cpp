@@ -1,7 +1,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
 
+#include "BaseCircleTrajectoryGenerator.h"
 #include "CircleTrajectoryGenerator.h"
+#include "CurvedCircleTrajectoryGenerator.h"
 #include "EllipseGenerator.h"
 #include "NoiseGenerators.h"
 #include "PhantomGenerator.h"
@@ -128,16 +131,36 @@ void add_definitions_pyelsa_generators(py::module& m)
         .def(py::init<float>(), py::arg("mean"));
 
     py::class_<elsa::TrajectoryGenerator> TrajectoryGenerator(m, "TrajectoryGenerator");
-    py::class_<elsa::CircleTrajectoryGenerator, elsa::TrajectoryGenerator>
+    py::class_<elsa::BaseCircleTrajectoryGenerator, elsa::TrajectoryGenerator>
+        BaseCircleTrajectoryGenerator(m, "BaseCircleTrajectoryGenerator");
+    py::class_<elsa::CircleTrajectoryGenerator, elsa::BaseCircleTrajectoryGenerator>
         CircleTrajectoryGenerator(m, "CircleTrajectoryGenerator");
     CircleTrajectoryGenerator.def_static(
         "createTrajectory",
         (std::unique_ptr<elsa::DetectorDescriptor,
                          std::default_delete<elsa::DetectorDescriptor>>(*)(
-            long, const elsa::DataDescriptor&, long, float, float))(
-            &elsa::CircleTrajectoryGenerator::createTrajectory),
+            long, const elsa::DataDescriptor&, long, float, float,
+            std::optional<elsa::RealVector_t>, std::optional<elsa::RealVector_t>,
+            std::optional<elsa::IndexVector_t>,
+            std::optional<elsa::RealVector_t>))(&elsa::CircleTrajectoryGenerator::createTrajectory),
         py::arg("numberOfPoses"), py::arg("volumeDescriptor"), py::arg("arcDegrees"),
-        py::arg("sourceToCenter"), py::arg("centerToDetector"));
+        py::arg("sourceToCenter"), py::arg("centerToDetector"),
+        py::arg("principalPointOffset") = py::none(), py::arg("centerOfRotOffset") = py::none(),
+        py::arg("detectorSize") = py::none(), py::arg("detectorSpacing") = py::none());
+    py::class_<elsa::CurvedCircleTrajectoryGenerator, elsa::BaseCircleTrajectoryGenerator>
+        CurvedCircleTrajectoryGenerator(m, "CurvedCircleTrajectoryGenerator");
+    CurvedCircleTrajectoryGenerator.def_static(
+        "createTrajectory",
+        (std::unique_ptr<elsa::DetectorDescriptor,
+                         std::default_delete<elsa::DetectorDescriptor>>(*)(
+            long, const elsa::DataDescriptor&, long, float, float, elsa::geometry::Radian,
+            std::optional<elsa::RealVector_t>, std::optional<elsa::RealVector_t>,
+            std::optional<elsa::IndexVector_t>, std::optional<elsa::RealVector_t>))(
+            &elsa::CurvedCircleTrajectoryGenerator::createTrajectory),
+        py::arg("numberOfPoses"), py::arg("volumeDescriptor"), py::arg("arcDegrees"),
+        py::arg("sourceToCenter"), py::arg("centerToDetector"), py::arg("angle"),
+        py::arg("principalPointOffset") = py::none(), py::arg("centerOfRotOffset") = py::none(),
+        py::arg("detectorSize") = py::none(), py::arg("detectorSpacing") = py::none());
 
     py::class_<elsa::SphereTrajectoryGenerator, elsa::TrajectoryGenerator>
         SphereTrajectoryGenerator(m, "SphereTrajectoryGenerator");

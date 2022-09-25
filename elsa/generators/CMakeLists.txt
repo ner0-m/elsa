@@ -2,7 +2,9 @@
 set(MODULE_HEADERS
     EllipseGenerator.h
     PhantomGenerator.h
+    BaseCircleTrajectoryGenerator.h
     CircleTrajectoryGenerator.h
+    CurvedCircleTrajectoryGenerator.h
     LimitedAngleTrajectoryGenerator.h
     NoiseGenerators.h
     SphereTrajectoryGenerator.h
@@ -13,7 +15,9 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     EllipseGenerator.cpp
     PhantomGenerator.cpp
+    BaseCircleTrajectoryGenerator.cpp
     CircleTrajectoryGenerator.cpp
+    CurvedCircleTrajectoryGenerator.cpp
     LimitedAngleTrajectoryGenerator.cpp
     NoiseGenerators.cpp
     SphereTrajectoryGenerator.cpp

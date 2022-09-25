@@ -1,9 +1,13 @@
 #pragma once
 
-#include "BaseCircleTrajectoryGenerator.h"
-#include "PlanarDetectorDescriptor.h"
+#include "Geometry.h"
+
+#include "DetectorDescriptor.h"
+#include "TrajectoryGenerator.h"
 
 #include <optional>
+#include <vector>
+#include <utility>
 
 namespace elsa
 {
@@ -13,11 +17,10 @@ namespace elsa
      *
      * @author Maximilan Hornung - initial code
      * @author Tobias Lasser - modernization, fixes
-     * @author Julia Spindler, Robert Imschweiler - restructuring
+     * @author Julia Spindler, Robert Imschweiler - refactor
      */
-    class CircleTrajectoryGenerator : public BaseCircleTrajectoryGenerator
+    class BaseCircleTrajectoryGenerator : public TrajectoryGenerator
     {
-    public:
         /**
          * @brief Generate a list of geometries corresponding to a circular trajectory around a
          * volume.
@@ -39,12 +42,13 @@ namespace elsa
          *
          * Please note: the sinogram size/spacing will match the volume size/spacing.
          */
-        static std::unique_ptr<PlanarDetectorDescriptor>
-            createTrajectory(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
-                             index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector,
-                             std::optional<RealVector_t> principalPointOffset = std::nullopt,
-                             std::optional<RealVector_t> centerOfRotOffset = std::nullopt,
-                             std::optional<IndexVector_t> detectorSize = std::nullopt,
-                             std::optional<RealVector_t> detectorSpacing = std::nullopt);
+    protected:
+        static std::tuple<IndexVector_t, RealVector_t, std::vector<Geometry>>
+            createTrajectoryData(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
+                                 index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector,
+                                 std::optional<RealVector_t> principalPointOffset = std::nullopt,
+                                 std::optional<RealVector_t> centerOfRotOffset = std::nullopt,
+                                 std::optional<IndexVector_t> detectorSize = std::nullopt,
+                                 std::optional<RealVector_t> detectorSpacing = std::nullopt);
     };
 } // namespace elsa

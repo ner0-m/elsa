@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseCircleTrajectoryGenerator.h"
-#include "PlanarDetectorDescriptor.h"
+#include "CurvedDetectorDescriptor.h"
 
 #include <optional>
 
@@ -15,7 +15,7 @@ namespace elsa
      * @author Tobias Lasser - modernization, fixes
      * @author Julia Spindler, Robert Imschweiler - restructuring
      */
-    class CircleTrajectoryGenerator : public BaseCircleTrajectoryGenerator
+    class CurvedCircleTrajectoryGenerator : public BaseCircleTrajectoryGenerator
     {
     public:
         /**
@@ -39,9 +39,10 @@ namespace elsa
          *
          * Please note: the sinogram size/spacing will match the volume size/spacing.
          */
-        static std::unique_ptr<PlanarDetectorDescriptor>
+        static std::unique_ptr<CurvedDetectorDescriptor>
             createTrajectory(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
                              index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector,
+                             geometry::Radian angle,
                              std::optional<RealVector_t> principalPointOffset = std::nullopt,
                              std::optional<RealVector_t> centerOfRotOffset = std::nullopt,
                              std::optional<IndexVector_t> detectorSize = std::nullopt,
