@@ -12,3 +12,8 @@ Once everything is set up, simply open a Python interpreter and run
 import pyelsa as elsa
 ```
 to check if everything is working.
+
+### Install with debug information
+
+In order to generate debug information for the Python bindings, run
+`env CMAKE_ARGS="-DCMAKE_BUILD_TYPE:STRING=Debug" pip install .`
