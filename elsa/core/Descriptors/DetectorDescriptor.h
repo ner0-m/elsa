@@ -3,6 +3,7 @@
 #include "elsaDefines.h"
 #include "DataDescriptor.h"
 #include "Geometry.h"
+#include "TypeCasts.hpp"
 
 #include <optional>
 #include "Eigen/Geometry"
@@ -61,12 +62,6 @@ namespace elsa
          */
         virtual RealRay_t computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
                                                       const index_t poseIndex) const = 0;
-
-        /**
-         * @brief Compute a ray from the source to trougth a pixel/voxel
-         */
-        virtual RealVector_t computeDetectorCoordFromRay(const RealRay_t& ray,
-                                                         const index_t poseIndex) const = 0;
 
         /// Get the number of poses used in the geometry
         index_t getNumberOfGeometryPoses() const;

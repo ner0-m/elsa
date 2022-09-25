@@ -1,8 +1,6 @@
 #pragma once
 
 #include "DetectorDescriptor.h"
-#include "TypeCasts.hpp"
-#include "elsaDefines.h"
 
 namespace elsa
 {
@@ -40,9 +38,6 @@ namespace elsa
         /// Override function to compute rays for a planar detector
         RealRay_t computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
                                               const index_t poseIndex) const override;
-
-        RealVector_t computeDetectorCoordFromRay(const RealRay_t& ray,
-                                                 const index_t poseIndex) const override;
 
     private:
         PlanarDetectorDescriptor* cloneImpl() const override;

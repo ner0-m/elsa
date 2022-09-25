@@ -1,5 +1,4 @@
 #include "DetectorDescriptor.h"
-#include "TypeCasts.hpp"
 
 namespace elsa
 {
@@ -52,7 +51,10 @@ namespace elsa
         return computeRayFromDetectorCoord(detectorCoord, poseIndex);
     }
 
-    std::vector<Geometry> DetectorDescriptor::getGeometry() const { return _geometry; }
+    std::vector<Geometry> DetectorDescriptor::getGeometry() const
+    {
+        return _geometry;
+    }
 
     index_t DetectorDescriptor::getNumberOfGeometryPoses() const
     {
@@ -84,4 +86,45 @@ namespace elsa
         return std::equal(std::cbegin(_geometry), std::cend(_geometry),
                           std::cbegin(otherBlock->_geometry));
     }
+
+    RealRay_t DetectorDescriptor::computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
+                                                              const index_t poseIndex) const
+    {
+        // Assert that for all dimension of detectorCoord is in bounds and poseIndex can
+        // be index in the _geometry. If not the calculation will not be correct, but
+        // as this is the hot path, I don't want exceptions and unpacking everything
+        // We'll just have to ensure, that we don't mess up in our hot path! :-)
+        assert((detectorCoord.block(0, 0, getNumberOfDimensions() - 1, 0).array()
+                < getNumberOfCoefficientsPerDimension()
+                      .block(0, 0, getNumberOfDimensions() - 1, 0)
+                      .template cast<real_t>()
+                      .array())
+                   .all()
+               && "PlanarDetectorDescriptor::computeRayToDetector: Assumption detectorCoord in "
+                  "bounds, wrong");
+        assert(asUnsigned(poseIndex) < _geometry.size()
+               && "PlanarDetectorDescriptor::computeRayToDetector: Assumption poseIndex smaller "
+                  "than number of poses, wrong");
+
+        auto dim = getNumberOfDimensions();
+
+        // get the pose of trajectory
+        auto geometry = _geometry[asUnsigned(poseIndex)];
+
+        auto projInvMatrix = geometry.getInverseProjectionMatrix();
+
+        // homogeneous coordinates [p;1], with p in detector space
+        RealVector_t homogeneousPixelCoord(dim);
+        homogeneousPixelCoord << detectorCoord, 1;
+
+        // Camera center is always the ray origin
+        auto ro = geometry.getCameraCenter();
+
+        auto rd = (projInvMatrix * homogeneousPixelCoord) // Matrix-Vector multiplication
+                      .head(dim)                          // Transform to non-homogeneous
+                      .normalized();                      // normalize vector
+
+        return RealRay_t(ro, rd);
+    }
+
 } // namespace elsa

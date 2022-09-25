@@ -1,6 +1,9 @@
 #include "hints_base.h"
 
 #include "DataContainer.h"
+#include "Descriptors/CurvedDetectorDescriptor.h"
+#include "Descriptors/DetectorDescriptor.h"
+#include "Descriptors/PlanarDetectorDescriptor.h"
 #include "Descriptors/VolumeDescriptor.h"
 #include "Descriptors/RandomBlocksDescriptor.h"
 #include "LinearOperator.h"
@@ -208,6 +211,54 @@ namespace elsa
         //             coeffsPerDim,                                  /* Buffer dimensions */
         //             strides);
         //     };
+    };
+
+    template <typename data_t>
+    class DetectorDescriptorHintsBase : public ClassHints<data_t>
+    {
+    public:
+        constexpr static std::array ignoreMethods = {"computeRayFromDetectorCoord"};
+
+        template <typename type_, typename... options>
+        static void addCustomMethods(py::class_<type_, options...>& c)
+        {
+            c.def(
+                "computeRayFromDetectorCoord",
+                [](const DetectorDescriptor& desc, const index_t detectorIndex) {
+                    auto result = desc.computeRayFromDetectorCoord(detectorIndex);
+                    return std::make_tuple(result.origin(), result.direction());
+                },
+                py::arg("detectorIndex"));
+            c.def(
+                "computeRayFromDetectorCoord",
+                [](const DetectorDescriptor& desc, const IndexVector_t coord) {
+                    auto result = desc.computeRayFromDetectorCoord(coord);
+                    return std::make_tuple(result.origin(), result.direction());
+                },
+                py::arg("coord"));
+            c.def(
+                "computeRayFromDetectorCoord",
+                [](const DetectorDescriptor& desc, const RealVector_t& detectorCoord,
+                   const index_t poseIndex) {
+                    auto result = desc.computeRayFromDetectorCoord(detectorCoord, poseIndex);
+                    return std::make_tuple(result.origin(), result.direction());
+                },
+                py::arg("detectorCoord"), py::arg("poseIndex"));
+        }
+    };
+
+    class DetectorDescriptorHints : public DetectorDescriptorHintsBase<DetectorDescriptor>
+    {
+    };
+
+    class CurvedDetectorDescriptorHints
+        : public DetectorDescriptorHintsBase<CurvedDetectorDescriptor>
+    {
+    };
+
+    class PlanarDetectorDescriptorHints
+        : public DetectorDescriptorHintsBase<PlanarDetectorDescriptor>
+    {
     };
 
     class GeometryHints : public ClassHints<Geometry>

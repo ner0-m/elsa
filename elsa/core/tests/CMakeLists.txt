@@ -15,6 +15,7 @@ add_custom_target(build-tests-core)
 
 ELSA_DOCTEST(elsaDefines)
 ELSA_DOCTEST(VolumeDescriptor)
+ELSA_DOCTEST(CurvedDetectorDescriptor)
 ELSA_DOCTEST(PlanarDetectorDescriptor)
 ELSA_DOCTEST(IdenticalBlocksDescriptor)
 ELSA_DOCTEST(PartitionDescriptor)

@@ -16,6 +16,7 @@ set(MODULE_HEADERS
     Descriptors/DescriptorUtils.h
     Descriptors/VolumeDescriptor.h
     Descriptors/DetectorDescriptor.h
+    Descriptors/CurvedDetectorDescriptor.h
     Descriptors/PlanarDetectorDescriptor.h
     Descriptors/BlockDescriptor.h
     Descriptors/IdenticalBlocksDescriptor.h
@@ -43,6 +44,7 @@ set(MODULE_SOURCES
     Utilities/Assertions.cpp
     Descriptors/DataDescriptor.cpp
     Descriptors/VolumeDescriptor.cpp
+    Descriptors/CurvedDetectorDescriptor.cpp
     Descriptors/PlanarDetectorDescriptor.cpp
     Descriptors/RandomBlocksDescriptor.cpp
     Descriptors/DescriptorUtils.cpp

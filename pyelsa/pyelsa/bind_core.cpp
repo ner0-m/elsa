@@ -10,6 +10,7 @@
 #include "Descriptors/DetectorDescriptor.h"
 #include "Descriptors/IdenticalBlocksDescriptor.h"
 #include "Descriptors/PartitionDescriptor.h"
+#include "Descriptors/CurvedDetectorDescriptor.h"
 #include "Descriptors/PlanarDetectorDescriptor.h"
 #include "Descriptors/RandomBlocksDescriptor.h"
 #include "Descriptors/VolumeDescriptor.h"
@@ -1798,11 +1799,6 @@ void add_definitions_pyelsa_core(py::module& m)
     py::class_<elsa::DetectorDescriptor, elsa::DataDescriptor> DetectorDescriptor(
         m, "DetectorDescriptor");
     DetectorDescriptor
-        .def("computeDetectorCoordFromRay",
-             (Eigen::Matrix<float, -1, 1, 0, -1, 1>(elsa::DetectorDescriptor::*)(
-                 const Eigen::ParametrizedLine<float, -1, 0>&, const long)
-                  const)(&elsa::DetectorDescriptor::computeDetectorCoordFromRay),
-             py::arg("ray"), py::arg("poseIndex"), py::return_value_policy::move)
         .def("computeRayFromDetectorCoord",
              (Eigen::ParametrizedLine<float, -1, 0>(elsa::DetectorDescriptor::*)(
                  const Eigen::Matrix<long, -1, 1, 0, -1, 1>)
@@ -1831,11 +1827,6 @@ void add_definitions_pyelsa_core(py::module& m)
     py::class_<elsa::PlanarDetectorDescriptor, elsa::DetectorDescriptor> PlanarDetectorDescriptor(
         m, "PlanarDetectorDescriptor");
     PlanarDetectorDescriptor
-        .def("computeDetectorCoordFromRay",
-             (Eigen::Matrix<float, -1, 1, 0, -1, 1>(elsa::PlanarDetectorDescriptor::*)(
-                 const Eigen::ParametrizedLine<float, -1, 0>&, const long)
-                  const)(&elsa::PlanarDetectorDescriptor::computeDetectorCoordFromRay),
-             py::arg("ray"), py::arg("poseIndex"), py::return_value_policy::move)
         .def("computeRayFromDetectorCoord",
              (Eigen::ParametrizedLine<float, -1, 0>(elsa::PlanarDetectorDescriptor::*)(
                  const Eigen::Matrix<long, -1, 1, 0, -1, 1>)
@@ -1858,6 +1849,36 @@ void add_definitions_pyelsa_core(py::module& m)
                       const std::vector<elsa::Geometry, std::allocator<elsa::Geometry>>&>(),
              py::arg("numOfCoeffsPerDim"), py::arg("geometryList"))
         .def(py::init<const elsa::PlanarDetectorDescriptor&>());
+
+    py::class_<elsa::CurvedDetectorDescriptor, elsa::DetectorDescriptor> CurvedDetectorDescriptor(
+        m, "CurvedDetectorDescriptor");
+    CurvedDetectorDescriptor
+        .def("computeRayFromDetectorCoord",
+             (Eigen::ParametrizedLine<float, -1, 0>(elsa::CurvedDetectorDescriptor::*)(
+                 const Eigen::Matrix<long, -1, 1, 0, -1, 1>)
+                  const)(&elsa::CurvedDetectorDescriptor::computeRayFromDetectorCoord),
+             py::arg("coord"), py::return_value_policy::move)
+        .def("computeRayFromDetectorCoord",
+             (Eigen::ParametrizedLine<float, -1, 0>(elsa::CurvedDetectorDescriptor::*)(
+                 const Eigen::Matrix<float, -1, 1, 0, -1, 1>&, const long)
+                  const)(&elsa::CurvedDetectorDescriptor::computeRayFromDetectorCoord),
+             py::arg("detectorCoord"), py::arg("poseIndex"), py::return_value_policy::move)
+        .def("computeRayFromDetectorCoord",
+             (Eigen::ParametrizedLine<float, -1, 0>(elsa::CurvedDetectorDescriptor::*)(const long)
+                  const)(&elsa::CurvedDetectorDescriptor::computeRayFromDetectorCoord),
+             py::arg("detectorIndex"), py::return_value_policy::move)
+        .def(py::init<const Eigen::Matrix<long, -1, 1, 0, -1, 1>&,
+                      const Eigen::Matrix<float, -1, 1, 0, -1, 1>&,
+                      const std::vector<elsa::Geometry, std::allocator<elsa::Geometry>>&,
+                      elsa::geometry::Radian, float>(),
+             py::arg("numOfCoeffsPerDim"), py::arg("spacingPerDim"), py::arg("geometryList"),
+             py::arg("angle"), py::arg("s2d"))
+        .def(py::init<const Eigen::Matrix<long, -1, 1, 0, -1, 1>&,
+                      const std::vector<elsa::Geometry, std::allocator<elsa::Geometry>>&,
+                      elsa::geometry::Radian, float>(),
+             py::arg("numOfCoeffsPerDim"), py::arg("geometryList"), py::arg("angle"),
+             py::arg("s2d"))
+        .def(py::init<const elsa::CurvedDetectorDescriptor&>());
 
     elsa::CoreHints::addCustomFunctions(m);
 }
