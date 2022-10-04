@@ -31,6 +31,11 @@ namespace elsa
          * @param centerToDetector the distance of the center of the volume
          * to the X-ray detector
          *
+         * @details A new trajectory generator that returns a
+         * CurvedDetectorDescriptor. To avoid code duplication, we extracted common functionality
+         * from the PlanarCircleTrajectoryGenerator and CurvedCircleTrajectoryGenerator into the
+         * BaseCircleTrajectoryGenerator class from which both classes now inherit.
+         *
          * @returns a pair containing the list of geometries with a circular trajectory, and the
          * sinogram data descriptor
          *
