@@ -1,4 +1,10 @@
 #include "TraverseJosephsCUDA.cuh"
+#include "SharedArray.cuh"
+#include "Matrix.cuh"
+#include "Geometry.cuh"
+#include "TraversalUtils.cuh"
+#include "Tex.cuh"
+#include "AtomicAdd.cuh"
 
 #include <type_traits>
 
@@ -6,100 +12,8 @@ constexpr uint32_t MAX_THREADS_PER_BLOCK =
     elsa::TraverseJosephsCUDA<float, 3>::MAX_THREADS_PER_BLOCK;
 
 template <typename data_t, uint32_t size>
-struct EasyAccessSharedArray {
-    data_t* const __restrict__ _p;
-
-    __device__ EasyAccessSharedArray(data_t* p) : _p{p + threadIdx.x} {}
-
-    __device__ __forceinline__ const data_t& operator[](uint32_t index) const
-    {
-        return _p[index * MAX_THREADS_PER_BLOCK];
-    }
-
-    __device__ __forceinline__ data_t& operator[](uint32_t index)
-    {
-        return _p[index * MAX_THREADS_PER_BLOCK];
-    }
-};
-
-template <typename real_t, uint32_t dim, typename Array,
-          typename = std::enable_if_t<std::is_same<Array, EasyAccessSharedArray<real_t, dim>>::value
-                                      || std::is_same<Array, real_t*>::value>>
-__device__ __forceinline__ void gesqmv(const int8_t* const __restrict__ matrix,
-                                       const real_t* const __restrict__ vector, Array result,
-                                       const uint32_t matrixPitch)
-{
-    // initialize result vector
-    real_t* columnPtr = (real_t*) matrix;
-#pragma unroll
-    for (uint32_t x = 0; x < dim; x++) {
-        result[x] = columnPtr[x] * vector[0];
-    }
-
-// accumulate results for remaning columns
-#pragma unroll
-    for (uint32_t y = 1; y < dim; y++) {
-        real_t* columnPtr = (real_t*) (matrix + matrixPitch * y);
-#pragma unroll
-        for (uint32_t x = 0; x < dim; x++) {
-            result[x] += columnPtr[x] * vector[y];
-        }
-    }
-}
-
-/// determine reverse norm of vector of length 2 or 3 using device inbuilt functions
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ real_t rnorm(const EasyAccessSharedArray<real_t, dim>& vector)
-{
-    if (dim == 3)
-        return rnorm3d(vector[0], vector[1], vector[2]);
-    else if (dim == 2)
-        return rhypot(vector[0], vector[1]);
-    else {
-        real_t acc = vector[0];
-#pragma unroll
-        for (uint32_t i = 1; i < dim; i++)
-            acc += vector[i];
-
-        return acc;
-    }
-}
-
-/// normalizes a vector of length 2 or 3 using device inbuilt norm
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void normalize(EasyAccessSharedArray<real_t, dim>& vector)
-{
-    real_t rn = rnorm<real_t, dim>(vector);
-
-#pragma unroll
-    for (uint32_t i = 0; i < dim; i++) {
-        vector[i] *= rn;
-    }
-}
-
-/// calculates the point at a distance delta from the ray origin ro in direction rd
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void
-    pointAt(const real_t* const __restrict__ ro, const EasyAccessSharedArray<real_t, dim>& rd,
-            const real_t delta, EasyAccessSharedArray<real_t, dim>& result)
-{
-#pragma unroll
-    for (uint32_t i = 0; i < dim; i++)
-        result[i] = delta * rd[i] + ro[i];
-}
-
-/// projects a point onto the bounding box by clipping (points inside the bounding box are
-/// unaffected)
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void projectOntoBox(EasyAccessSharedArray<real_t, dim>& point,
-                                               const EasyAccessSharedArray<real_t, dim>& boxMax)
-{
-#pragma unroll
-    for (uint32_t i = 0; i < dim; i++) {
-        point[i] = point[i] < 0.0f ? 0.0f : point[i];
-        point[i] = point[i] > boxMax[i] ? boxMax[i] : point[i];
-    }
-}
+using EasyAccessSharedArray =
+    elsa::detail::EasyAccessSharedArray<data_t, size, MAX_THREADS_PER_BLOCK>;
 
 /// determines the voxel that contains a point, if the point is on a border the voxel in the ray
 /// direction is favored
@@ -121,89 +35,6 @@ __device__ __forceinline__ bool closestVoxel(const EasyAccessSharedArray<real_t,
     return true;
 }
 
-/// initialize step sizes considering the ray direcion
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ void initDelta(const EasyAccessSharedArray<real_t, dim> rd,
-                                          EasyAccessSharedArray<real_t, dim> delta)
-{
-#pragma unroll
-    for (uint32_t i = 0; i < dim; i++) {
-        real_t d = ((rd[i] > 0.0f) - (rd[i] < 0.0f)) / rd[i];
-        delta[i] = rd[i] >= -__FLT_EPSILON__ && rd[i] <= __FLT_EPSILON__ ? __FLT_MAX__ : d;
-    }
-}
-
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ bool
-    boxIntersect(const real_t* const __restrict__ ro, const EasyAccessSharedArray<real_t, dim>& rd,
-                 const EasyAccessSharedArray<real_t, dim>& boxMax, real_t& tmin, real_t& tmax)
-{
-    real_t invDir = 1.0f / rd[0];
-
-    real_t t1 = -ro[0] * invDir;
-    real_t t2 = (boxMax[0] - ro[0]) * invDir;
-
-    /**
-     * fminf and fmaxf adhere to the IEEE standard, and return the non-NaN element if only a single
-     * NaN is present
-     */
-    // tmin and tmax have to be picked for each specific direction without using fmin/fmax
-    // (supressing NaNs is bad in this case)
-    tmin = invDir >= 0 ? t1 : t2;
-    tmax = invDir >= 0 ? t2 : t1;
-
-#pragma unroll
-    for (uint32_t i = 1; i < dim; ++i) {
-        invDir = 1.0f / rd[i];
-
-        t1 = -ro[i] * invDir;
-        t2 = (boxMax[i] - ro[i]) * invDir;
-
-        tmin = fmax(tmin, invDir >= 0 ? t1 : t2);
-        tmax = fmin(tmax, invDir >= 0 ? t2 : t1);
-    }
-
-    if (tmax == 0.0f && tmin == 0.0f)
-        return false;
-    if (tmax >= fmax(tmin, 0.0f)) // hit
-        return true;
-    return false;
-}
-
-/// returns the index of the smallest element in an array
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ uint32_t minIndex(const EasyAccessSharedArray<real_t, dim>& array)
-{
-    uint32_t index = 0;
-    real_t min = array[0];
-
-#pragma unroll
-    for (uint32_t i = 1; i < dim; i++) {
-        bool cond = array[i] < min;
-        index = cond ? i : index;
-        min = cond ? array[i] : min;
-    }
-
-    return index;
-}
-
-/// return the index of the element with the maximum absolute value in array
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ uint32_t maxAbsIndex(const EasyAccessSharedArray<real_t, dim>& array)
-{
-    uint32_t index = 0;
-    real_t max = fabs(array[0]);
-
-#pragma unroll
-    for (uint32_t i = 1; i < dim; i++) {
-        bool cond = fabs(array[i]) > max;
-        index = cond ? i : index;
-        max = cond ? fabs(array[i]) : max;
-    }
-
-    return index;
-}
-
 template <typename real_t, uint32_t dim>
 __device__ __forceinline__ void updateTraverse(EasyAccessSharedArray<real_t, dim>& p,
                                                const EasyAccessSharedArray<real_t, dim>& rd,
@@ -212,92 +43,6 @@ __device__ __forceinline__ void updateTraverse(EasyAccessSharedArray<real_t, dim
 #pragma unroll
     for (uint32_t i = 0; i < dim; i++)
         p[i] += rd[i] * dist;
-}
-
-/// convenience function for texture fetching
-template <typename real_t, uint32_t dim>
-__device__ __forceinline__ real_t tex(cudaTextureObject_t texObj,
-                                      const EasyAccessSharedArray<elsa::real_t, dim> p)
-{
-    if (dim == 3)
-        return tex3D<real_t>(texObj, p[0], p[1], p[2]);
-    else
-        return tex2D<real_t>(texObj, p[0], p[1]);
-}
-
-/// fetches double at position (x,y) from 2D texture
-__device__ __forceinline__ double tex2Dd(cudaTextureObject_t texObj, const float x, const float y)
-{
-    uint2 rt = tex2D<uint2>(texObj, x, y);
-    return __hiloint2double(rt.y, rt.x);
-}
-
-/// template specialization for double texture fetches
-template <>
-__device__ __forceinline__ double tex<double, 2>(cudaTextureObject_t texObj,
-                                                 const EasyAccessSharedArray<elsa::real_t, 2> p)
-{
-    elsa::real_t x = p[0] - 0.5f;
-    elsa::real_t y = p[1] - 0.5f;
-
-    elsa::real_t i = floor(x);
-    elsa::real_t j = floor(y);
-
-    elsa::real_t a = x - i;
-    elsa::real_t b = y - j;
-
-    double T[2][2];
-    T[0][0] = tex2Dd(texObj, i, j);
-    T[1][0] = tex2Dd(texObj, i + 1, j);
-    T[0][1] = tex2Dd(texObj, i, j + 1);
-    T[1][1] = tex2Dd(texObj, i + 1, j + 1);
-
-    return (1 - a) * (1 - b) * T[0][0] + a * (1 - b) * T[1][0] + (1 - a) * b * T[0][1]
-           + a * b * T[1][1];
-}
-
-/// fetches double at position (x,y,z) from 3D texture
-__device__ __forceinline__ double tex3Dd(cudaTextureObject_t texObj, const float x, const float y,
-                                         const float z)
-{
-    uint2 rt = tex3D<uint2>(texObj, x, y, z);
-    return __hiloint2double(rt.y, rt.x);
-}
-
-/// template specialization for double texture fetches
-template <>
-__device__ __forceinline__ double tex<double, 3>(cudaTextureObject_t texObj,
-                                                 const EasyAccessSharedArray<elsa::real_t, 3> p)
-{
-    elsa::real_t x = p[0] - 0.5f;
-    elsa::real_t y = p[1] - 0.5f;
-    elsa::real_t z = p[2] - 0.5f;
-
-    elsa::real_t i = floor(x);
-    elsa::real_t j = floor(y);
-    elsa::real_t k = floor(z);
-
-    elsa::real_t a = x - i;
-    elsa::real_t b = y - j;
-    elsa::real_t c = z - k;
-
-    double T[2][2][2];
-    T[0][0][0] = tex3Dd(texObj, i, j, k);
-    T[1][0][0] = tex3Dd(texObj, i + 1, j, k);
-    T[0][1][0] = tex3Dd(texObj, i, j + 1, k);
-    T[0][0][1] = tex3Dd(texObj, i, j, k + 1);
-    T[1][1][0] = tex3Dd(texObj, i + 1, j + 1, k);
-    T[1][0][1] = tex3Dd(texObj, i + 1, j, k + 1);
-    T[0][1][1] = tex3Dd(texObj, i, j + 1, k + 1);
-    T[1][1][1] = tex3Dd(texObj, i + 1, j + 1, k + 1);
-
-    return (1 - a) * (1 - b) * (1 - c) * T[0][0][0] + a * (1 - b) * (1 - c) * T[1][0][0] +
-
-           (1 - a) * b * (1 - c) * T[0][1][0] + a * b * (1 - c) * T[1][1][0] +
-
-           (1 - a) * (1 - b) * c * T[0][0][1] + a * (1 - b) * c * T[1][0][1] +
-
-           (1 - a) * b * c * T[0][1][1] + a * b * c * T[1][1][1];
 }
 
 template <typename data_t, uint32_t dim>
@@ -358,7 +103,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
 
     // find volume intersections
     real_t tmin, tmax;
-    if (!boxIntersect<real_t, dim>(rayOrigin, rd, boxMax, tmin, tmax))
+    if (!box_intersect<real_t, dim>(rayOrigin, rd, boxMax, tmin, tmax))
         return;
 
     EasyAccessSharedArray<real_t, dim> currentPosition{currentPositionsShared};
@@ -538,29 +283,6 @@ __global__ void __launch_bounds__(MAX_THREADS_PER_BLOCK)
     }
 }
 
-/*
- * atomicAdd() for doubles is only supported on devices of compute capability 6.0 or higher
- * implementation taken straight from the CUDA C programming guide:
- * https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#atomic-functions
- */
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
-__device__ __forceinline__ double atomicAdd(double* address, double val)
-{
-    unsigned long long int* address_as_ull = (unsigned long long int*) address;
-    unsigned long long int old = *address_as_ull, assumed;
-
-    do {
-        assumed = old;
-        old = atomicCAS(address_as_ull, assumed,
-                        __double_as_longlong(val + __longlong_as_double(assumed)));
-
-        // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
-    } while (assumed != old);
-
-    return __longlong_as_double(old);
-}
-#endif
-
 /// backprojects the weighted sinogram value to a given pixel
 template <typename data_t, uint dim>
 __device__ __forceinline__ void
@@ -692,7 +414,7 @@ __global__ void __launch_bounds__(elsa::TraverseJosephsCUDA<data_t, dim>::MAX_TH
 
     // find volume intersections
     real_t tmin, tmax;
-    if (!boxIntersect<real_t, dim>(rayOrigin, rd, boxMax, tmin, tmax))
+    if (!box_intersect<real_t, dim>(rayOrigin, rd, boxMax, tmin, tmax))
         return;
 
     EasyAccessSharedArray<real_t, dim> tdelta{tdeltasShared};
