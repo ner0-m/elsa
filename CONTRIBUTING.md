@@ -21,7 +21,7 @@ curriculum, also get in touch with us.
 ### Bug reports
 
 Report bugs to our [issue tracker](https://gitlab.lrz.de/IP/elsa/-/issues). In the description
-include information about the elsa version, your system, a (if possible minimal) step by step guide
+include information about the elsa version, your system, a (if possible minimal) step-by-step guide
 or example code to reproduce the error and what the expected behaviour should be.
 
 ### Fix issues
@@ -63,7 +63,7 @@ The repository follows a similar workflow to
 [OneFlow](https://www.endoflineblog.com/oneflow-a-git-branching-model-and-workflow). If you are
 unfamiliar with it, you can check it out. But simplified, there exists one main branch (`master`),
 from which all work is started. For your work you create a new branch and push is upstream, we'll
-review it, and once it's done it will be rebased onto the `master` branch. However there is a
+review it, and once it's done it will be rebased onto the `master` branch. However, there is a
 difference for internal developers and externals one, summarized in the following section:
 
 #### a) Internal Developers
@@ -83,7 +83,7 @@ If you've not worked with such a system so far, don't worry. Here are some tips 
 easier.
 
 1. A branch should be short-lived and specific for a feature or bugfix. If you think the single
-   feature is to large, then split it into multiple partial features. It's absolutely acceptable to
+   feature is too large, then split it into multiple partial features. It's absolutely acceptable to
    have a partial feature (e.g. which is not used anywhere yet) merged into the main branch. The
    next merge request can work on that.
 2. If during the development of a feature, `master` received updates, a `git rebase` should be
@@ -116,16 +116,16 @@ some guidelines (derived from [this
 #### Commit messages
 
 Without wanting to sound pedantic, but a good commit history is important! It's not uncommon to
-review code commit by commit. If the commits are not to large, self-contained, in a logical order
-and have good commit messages, reviewing is a hell lot easier. Hence, we'd advice everyone to pay
-attention to it. But also don't worry to much, if you feel unsure what to do, again get in touch!
+review code commit by commit. If the commits are not too large, self-contained, in a logical order
+and have good commit messages, reviewing is a hell lot easier. Hence, we'd advise everyone to pay
+attention to it. But also don't worry too much, if you feel unsure what to do, again get in touch!
 
 As mentioned above, we follow the Conventional Commit style. I.e. the commit message header is
 structured as `<type>(<scope>): <short summary>`. The type and summary are mandatory, the scope is
 optional. Following the [Angular commit format](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit),
 the type must be one of the following: `build | ci | docs | feat | fix | perf | refactor | test`.
 For short descriptions of the different types see the above link. The summary should be in present
-tense, not capitalied and without period at the end. The scope should be an issue number if present.
+tense, not capitalised and without period at the end. The scope should be an issue number if present.
 
 Some further guidelines for good commit message can be taken from [this
 blogpost](https://chris.beams.io/posts/git-commit/):
@@ -145,8 +145,8 @@ Before pushing and finishing your merge request consider ask yourself the follow
 - Do all tests from the complete testsuite still pass?
 - If there are new features, or behaviour, is the documentation updated accordingly?
 - Is the code properly linted?
-- Are commits grouped logically and squshed if appropriate?
-- Are the commit messages clear and emphesize what and why?
+- Are commits grouped logically and squashed if appropriate?
+- Are the commit messages clear and emphasize what and why?
 
 If any of the question is answered with no, clean that up, or clearly state why not. This helps the
 person(s) reviewing a lot and will result in faster merges.
@@ -159,7 +159,7 @@ help improve your workflow.
 ### Dependency Management
 
 As of December 2020, we switched to [CPM](https://github.com/TheLartians/CPM.cmake) for our dependency management.
-Hopefully, you don't really have to know and it doesn't get the way. See the [root CMakeLists.txt file](./CMakeLists.txt),
+Hopefully, you don't really have to know, and it doesn't get in the way. See the [root CMakeLists.txt file](./CMakeLists.txt),
 as an example for our usage.
 
 It is recommended to set `CPM_SOURCE_CACHE` (see [here](https://github.com/TheLartians/CPM.cmake#cpm_source_cache) for
@@ -229,7 +229,7 @@ There is also a basic `.pre-commit-config.yaml` file to install pre-commit hooks
 [pre-commit](https://pre-commit.com/). You are highly encouraged to install the pre-commits
 with `pre-commit install -t pre-commit -t commit-msg` such that they are run before each commit.
 
-None of the commit hooks will change anything in your commit, they mearly check and error if
+None of the commit hooks will change anything in your commit, they merely check and error if
 something is wrong.
 
 ### Building the Documentation
