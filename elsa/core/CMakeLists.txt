@@ -26,7 +26,6 @@ set(MODULE_HEADERS
     DataContainerIterator.h
     Error.h
     LinearOperator.h
-    Expression.h
     ExpressionPredicates.h
     Geometry.h
     StrongTypes.h
@@ -93,10 +92,8 @@ target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE ${CMAKE_DL_LIBS})
 target_include_directories(
     ${ELSA_MODULE_TARGET_NAME}
     PUBLIC $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/Descriptors>
-           $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/Handlers>
            $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/Utilities>
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Descriptors>
-           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Handlers>
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Utilities>
 )
 

@@ -12,7 +12,6 @@
 #include "testHelpers.h"
 #include "FourierTransform.h"
 #include "VolumeDescriptor.h"
-#include "DataHandlerCPU.h"
 #include <type_traits>
 
 using namespace elsa;

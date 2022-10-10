@@ -34,22 +34,6 @@ namespace elsa
         }
     } // namespace detail
 
-    // template <typename data_t>
-    // bool isCwiseApprox(const DataHandler<data_t>& x, const Vector_t<data_t>& y)
-    // {
-    //     CHECK_EQ(x.getSize(), y.size());
-    //
-    //     return detail::isCwiseApproxImpl(x, y);
-    // }
-    //
-    // template <typename data_t>
-    // bool isCwiseApprox(const DataHandler<data_t>& x, const DataHandler<data_t>& y)
-    // {
-    //     CHECK_EQ(x.getSize(), y.getSize());
-    //
-    //     return detail::isCwiseApproxImpl(x, y);
-    // }
-
     template <typename data_t>
     bool isCwiseApprox(const DataContainer<data_t>& x, const Vector_t<data_t>& y)
     {
@@ -89,30 +73,6 @@ namespace elsa
         return detail::isApproxImpl<data_t>(x, yDc, z, prec);
     }
 
-    // template <typename data_t>
-    // bool isApprox(const DataHandler<data_t>& x, const Eigen::Matrix<data_t, Eigen::Dynamic, 1>&
-    // y,
-    //               real_t prec)
-    // {
-    //     // check if size is the same, but do not throw an exception
-    //     REQUIRE_EQ(x.getSize(), y.size());
-
-    //     auto z = x.clone();
-
-    //     return detail::isApproxImpl<data_t>(x, y, *z, prec);
-    // }
-
-    // template <typename data_t>
-    // bool isApprox(const DataHandler<data_t>& x, const DataHandler<data_t>& y, real_t prec)
-    // {
-    //     // check if size is the same, but do not throw an exception
-    //     REQUIRE_EQ(x.getSize(), y.getSize());
-    //
-    //     auto z = x.clone();
-    //
-    //     return detail::isApproxImpl<data_t>(x, y, *z, prec);
-    // }
-
     doctest::Approx operator"" _a(long double val)
     {
         return doctest::Approx(static_cast<double>(val));
@@ -141,22 +101,6 @@ namespace elsa
     template bool isCwiseApprox(const DataContainer<complex<double>>& c,
                                 const Vector_t<complex<double>>& y);
 
-    // template bool isCwiseApprox(const DataHandler<index_t>& c, const DataHandler<index_t>& y);
-    // template bool isCwiseApprox(const DataHandler<float>& c, const DataHandler<float>& y);
-    // template bool isCwiseApprox(const DataHandler<double>& c, const DataHandler<double>& y);
-    // template bool isCwiseApprox(const DataHandler<complex<float>>& c,
-    //                             const DataHandler<complex<float>>& y);
-    // template bool isCwiseApprox(const DataHandler<complex<double>>& c,
-    //                             const DataHandler<complex<double>>& y);
-
-    // template bool isCwiseApprox(const DataHandler<index_t>& c, const Vector_t<index_t>& y);
-    // template bool isCwiseApprox(const DataHandler<float>& c, const Vector_t<float>& y);
-    // template bool isCwiseApprox(const DataHandler<double>& c, const Vector_t<double>& y);
-    // template bool isCwiseApprox(const DataHandler<complex<float>>& c,
-    //                             const Vector_t<complex<float>>& y);
-    // template bool isCwiseApprox(const DataHandler<complex<double>>& c,
-    //                             const Vector_t<complex<double>>& y);
-
     template bool isApprox(const DataContainer<index_t>& x, const DataContainer<index_t>& y,
                            real_t prec);
     template bool isApprox(const DataContainer<float>& x, const DataContainer<float>& y,
@@ -176,13 +120,4 @@ namespace elsa
                            const Vector_t<complex<float>>& y, real_t prec);
     template bool isApprox(const DataContainer<complex<double>>& x,
                            const Vector_t<complex<double>>& y, real_t prec);
-
-    // template bool isApprox(const DataHandler<index_t>& x, const DataHandler<index_t>& y,
-    //                        real_t prec);
-    // template bool isApprox(const DataHandler<float>& x, const DataHandler<float>& y, real_t
-    // prec); template bool isApprox(const DataHandler<double>& x, const DataHandler<double>& y,
-    // real_t prec); template bool isApprox(const DataHandler<complex<float>>& x,
-    //                        const DataHandler<complex<float>>& y, real_t prec);
-    // template bool isApprox(const DataHandler<complex<double>>& x,
-    //                        const DataHandler<complex<double>>& y, real_t prec);
 } // namespace elsa

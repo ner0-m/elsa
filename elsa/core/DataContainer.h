@@ -60,7 +60,6 @@ namespace elsa
          *        but the underlying space is allocated.
          *
          * @param[in] dataDescriptor containing the associated metadata
-         * @param[in] handlerType the data handler (default: CPU)
          */
         explicit DataContainer(const DataDescriptor& dataDescriptor);
 
@@ -69,7 +68,6 @@ namespace elsa
          *
          * @param[in] dataDescriptor containing the associated metadata
          * @param[in] data vector containing the initialization data
-         * @param[in] handlerType the data handler (default: CPU)
          */
         DataContainer(const DataDescriptor& dataDescriptor,
                       const Eigen::Matrix<data_t, Eigen::Dynamic, 1>& data);

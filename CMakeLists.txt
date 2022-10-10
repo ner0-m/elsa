@@ -45,7 +45,7 @@ set(ELSA_ALTERNATIVE_LINKER ""
 option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
 option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
 option(SYSTEM_DOCTEST "Build elsa using the system doctest installation" OFF)
-option(SYSTEM_THRUST "Build elsa using the system thrust installation" ON)
+option(SYSTEM_THRUST "Build elsa using the system thrust installation" OFF)
 option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
 
 # ------------ general setup -----------
@@ -144,12 +144,10 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
         message(STATUS "Deactivate CUDA projectors")
         # Be sure everything is off
         set(ELSA_BUILD_CUDA_PROJECTORS OFF)
-        set(ELSA_BUILD_WITH_QUICKVEC OFF)
     endif()
 else()
     # Be sure everything is off
     set(ELSA_BUILD_CUDA_PROJECTORS OFF)
-    set(ELSA_BUILD_WITH_QUICKVEC OFF)
 endif()
 
 if(NOT

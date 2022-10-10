@@ -6,19 +6,6 @@ macro(REGISTER_MODULE name)
     set(ELSA_REGISTERED_TARGETS "${ELSA_REGISTERED_TARGETS};elsa_${name}" PARENT_SCOPE)
 endmacro()
 
-macro(SET_QUICKVEC_OPTIONS elsa_module_target_name module_sources)
-    # link Quickvec for DataHandlerGPU Also add the necessary compile definition for quickvec
-    if(ELSA_BUILD_WITH_QUICKVEC AND (NOT ${elsa_module_target_name} STREQUAL "elsa_quickvec"))
-        set_source_files_properties(${module_sources} PROPERTIES LANGUAGE CUDA)
-        target_compile_definitions(${elsa_module_target_name} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
-        target_link_libraries(${elsa_module_target_name} PUBLIC "elsa_quickvec")
-        target_compile_features(${elsa_module_target_name} PUBLIC cuda_std_17)
-
-        # CMake does not pass -fopenmp to the host compiler when building with NVCC, so set manually
-        target_compile_options(${elsa_module_target_name} PRIVATE -Xcompiler=-fopenmp)
-    endif()
-endmacro()
-
 # Simple macro to add a module
 macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     # Parse arguments
@@ -55,8 +42,6 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
     )
 
     add_sanitizers(${ELSA_MODULE_TARGET_NAME})
-
-    SET_QUICKVEC_OPTIONS(${ELSA_MODULE_TARGET_NAME} "${MODULE_SOURCES}")
 
     if(ELSA_MASTER_PROJECT)
         set_target_warnings(${ELSA_MODULE_TARGET_NAME} LEVEL ${ELSA_WARNINGS_LEVEL})
@@ -119,7 +104,6 @@ macro(ELSA_DOCTEST name)
         target_code_coverage(${_testname} AUTO ALL EXCLUDE */tests/*)
     endif()
 
-    SET_QUICKVEC_OPTIONS(${_testname} "${_testname}.cpp;test_docmain.cpp")
     # Add test to global dependency
     add_dependencies(tests ${_testname})
     add_dependencies(build-tests ${_testname})
@@ -150,8 +134,6 @@ macro(ELSA_DOCTEST name)
         add_dependencies(build-tests-projectors ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_projectors_cuda")
         add_dependencies(build-tests-projectors_cuda ${_testname})
-    elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_quickvec")
-        add_dependencies(build-tests-quickvec ${_testname})
     elseif(${ELSA_MODULE_TARGET_NAME} STREQUAL "elsa_storage")
         add_dependencies(build-tests-storage ${_testname})
     else()
@@ -162,9 +144,6 @@ macro(ELSA_DOCTEST name)
 endmacro()
 
 # add the elsa modules
-if(ELSA_BUILD_WITH_QUICKVEC)
-    add_subdirectory(quickvec)
-endif(ELSA_BUILD_WITH_QUICKVEC)
 add_subdirectory(config)
 add_subdirectory(storage)
 add_subdirectory(core)

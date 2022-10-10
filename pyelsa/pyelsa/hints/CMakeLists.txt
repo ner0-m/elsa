@@ -21,13 +21,3 @@ target_include_directories(${ELSA_PYBIND_HINTS} PUBLIC ${PYTHON_INCLUDE_DIRS})
 target_include_directories(${ELSA_PYBIND_HINTS} PUBLIC ${PYBIND11_INCLUDE_DIR})
 target_link_libraries(${ELSA_PYBIND_HINTS} PRIVATE elsa::all)
 target_compile_features(${ELSA_PYBIND_HINTS} PUBLIC cxx_std_17)
-
-if(ELSA_BUILD_WITH_QUICKVEC)
-    set_source_files_properties(${MODULE_SOURCES} PROPERTIES LANGUAGE CUDA)
-    target_compile_definitions(${ELSA_PYBIND_HINTS} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
-    target_link_libraries(${ELSA_PYBIND_HINTS} PUBLIC "elsa_quickvec")
-    target_compile_features(${ELSA_PYBIND_HINTS} PUBLIC cuda_std_17)
-
-    # CMake does not pass -fopenmp to the host compiler when building with NVCC, so set manually
-    target_compile_options(${ELSA_PYBIND_HINTS} PRIVATE -Xcompiler=-fopenmp)
-endif()

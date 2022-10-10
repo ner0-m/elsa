@@ -24,12 +24,5 @@ target_include_directories(
 target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cxx_std_17)
 # set -fPIC
 set_target_properties(${ELSA_MODULE_TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-# link Quickvec for DataHandlerGPU Also add the necessary compile definition for quickvec
-if(${ELSA_BUILD_WITH_QUICKVEC})
-    set_source_files_properties(${MODULE_SOURCES} PROPERTIES LANGUAGE CUDA)
-    target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_ENABLE_CUDA_VECTOR)
-    target_link_libraries(${ELSA_MODULE_TARGET_NAME} PUBLIC "elsa_quickvec")
-    target_compile_features(${ELSA_MODULE_TARGET_NAME} PUBLIC cuda_std_17)
-endif()
 
 # This is only used privately for the tests, so we don't bother exporting it and installing it

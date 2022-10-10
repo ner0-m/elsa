@@ -5,7 +5,6 @@ function(add_example example_name example_source)
     add_executable(${example_name} ${example_source})
     target_link_libraries(${example_name} PRIVATE elsa::all)
     target_compile_features(${example_name} PUBLIC cxx_std_17)
-    SET_QUICKVEC_OPTIONS(${example_name} ${example_source})
     add_dependencies(build-examples ${example_name})
 endfunction()
 
