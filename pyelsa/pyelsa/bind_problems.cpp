@@ -127,69 +127,70 @@ void add_definitions_pyelsa_problems(py::module& m)
         .def(py::init<double, const elsa::Functional<double>&>(), py::arg("weight"),
              py::arg("functional"));
 
-    py::class_<elsa::RegularizationTerm<std::complex<float>>> RegularizationTermcf(
+    py::class_<elsa::RegularizationTerm<thrust::complex<float>>> RegularizationTermcf(
         m, "RegularizationTermcf");
     RegularizationTermcf
         .def("__ne__",
-             (bool(elsa::RegularizationTerm<std::complex<float>>::*)(
-                 const elsa::RegularizationTerm<std::complex<float>>&)
-                  const)(&elsa::RegularizationTerm<std::complex<float>>::operator!=),
+             (bool(elsa::RegularizationTerm<thrust::complex<float>>::*)(
+                 const elsa::RegularizationTerm<thrust::complex<float>>&)
+                  const)(&elsa::RegularizationTerm<thrust::complex<float>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::RegularizationTerm<std::complex<float>>::*)(
-                 const elsa::RegularizationTerm<std::complex<float>>&)
-                  const)(&elsa::RegularizationTerm<std::complex<float>>::operator==),
+             (bool(elsa::RegularizationTerm<thrust::complex<float>>::*)(
+                 const elsa::RegularizationTerm<thrust::complex<float>>&)
+                  const)(&elsa::RegularizationTerm<thrust::complex<float>>::operator==),
              py::arg("other"))
         .def("getFunctional",
-             (elsa::Functional<std::complex<
-                  float>> & (elsa::RegularizationTerm<std::complex<float>>::*) () const)(
-                 &elsa::RegularizationTerm<std::complex<float>>::getFunctional),
+             (elsa::Functional<thrust::complex<
+                  float>> & (elsa::RegularizationTerm<thrust::complex<float>>::*) () const)(
+                 &elsa::RegularizationTerm<thrust::complex<float>>::getFunctional),
              py::return_value_policy::reference_internal)
         .def(
             "set",
-            (elsa::RegularizationTerm<std::complex<
-                 float>> & (elsa::RegularizationTerm<std::complex<float>>::*) (const elsa::RegularizationTerm<std::complex<float>>&) )(
-                &elsa::RegularizationTerm<std::complex<float>>::operator=),
+            (elsa::RegularizationTerm<thrust::complex<
+                 float>> & (elsa::RegularizationTerm<thrust::complex<float>>::*) (const elsa::RegularizationTerm<thrust::complex<float>>&) )(
+                &elsa::RegularizationTerm<thrust::complex<float>>::operator=),
             py::arg("other"), py::return_value_policy::reference_internal)
         .def("getWeight",
-             (std::complex<float>(elsa::RegularizationTerm<std::complex<float>>::*)()
-                  const)(&elsa::RegularizationTerm<std::complex<float>>::getWeight),
+             (thrust::complex<float>(elsa::RegularizationTerm<thrust::complex<float>>::*)()
+                  const)(&elsa::RegularizationTerm<thrust::complex<float>>::getWeight),
              py::return_value_policy::move)
-        .def(py::init<std::complex<float>, const elsa::Functional<std::complex<float>>&>(),
+        .def(py::init<thrust::complex<float>, const elsa::Functional<thrust::complex<float>>&>(),
              py::arg("weight"), py::arg("functional"))
-        .def(py::init<const elsa::RegularizationTerm<std::complex<float>>&>(), py::arg("other"));
+        .def(py::init<const elsa::RegularizationTerm<thrust::complex<float>>&>(), py::arg("other"));
 
-    py::class_<elsa::RegularizationTerm<std::complex<double>>> RegularizationTermcd(
+    py::class_<elsa::RegularizationTerm<thrust::complex<double>>> RegularizationTermcd(
         m, "RegularizationTermcd");
     RegularizationTermcd
         .def("__ne__",
-             (bool(elsa::RegularizationTerm<std::complex<double>>::*)(
-                 const elsa::RegularizationTerm<std::complex<double>>&)
-                  const)(&elsa::RegularizationTerm<std::complex<double>>::operator!=),
+             (bool(elsa::RegularizationTerm<thrust::complex<double>>::*)(
+                 const elsa::RegularizationTerm<thrust::complex<double>>&)
+                  const)(&elsa::RegularizationTerm<thrust::complex<double>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::RegularizationTerm<std::complex<double>>::*)(
-                 const elsa::RegularizationTerm<std::complex<double>>&)
-                  const)(&elsa::RegularizationTerm<std::complex<double>>::operator==),
+             (bool(elsa::RegularizationTerm<thrust::complex<double>>::*)(
+                 const elsa::RegularizationTerm<thrust::complex<double>>&)
+                  const)(&elsa::RegularizationTerm<thrust::complex<double>>::operator==),
              py::arg("other"))
         .def("getFunctional",
-             (elsa::Functional<std::complex<
-                  double>> & (elsa::RegularizationTerm<std::complex<double>>::*) () const)(
-                 &elsa::RegularizationTerm<std::complex<double>>::getFunctional),
+             (elsa::Functional<thrust::complex<
+                  double>> & (elsa::RegularizationTerm<thrust::complex<double>>::*) () const)(
+                 &elsa::RegularizationTerm<thrust::complex<double>>::getFunctional),
              py::return_value_policy::reference_internal)
         .def(
             "set",
-            (elsa::RegularizationTerm<std::complex<
-                 double>> & (elsa::RegularizationTerm<std::complex<double>>::*) (const elsa::RegularizationTerm<std::complex<double>>&) )(
-                &elsa::RegularizationTerm<std::complex<double>>::operator=),
+            (elsa::RegularizationTerm<thrust::complex<
+                 double>> & (elsa::RegularizationTerm<thrust::complex<double>>::*) (const elsa::RegularizationTerm<thrust::complex<double>>&) )(
+                &elsa::RegularizationTerm<thrust::complex<double>>::operator=),
             py::arg("other"), py::return_value_policy::reference_internal)
         .def("getWeight",
-             (std::complex<double>(elsa::RegularizationTerm<std::complex<double>>::*)()
-                  const)(&elsa::RegularizationTerm<std::complex<double>>::getWeight),
+             (thrust::complex<double>(elsa::RegularizationTerm<thrust::complex<double>>::*)()
+                  const)(&elsa::RegularizationTerm<thrust::complex<double>>::getWeight),
              py::return_value_policy::move)
-        .def(py::init<std::complex<double>, const elsa::Functional<std::complex<double>>&>(),
+        .def(py::init<thrust::complex<double>, const elsa::Functional<thrust::complex<double>>&>(),
              py::arg("weight"), py::arg("functional"))
-        .def(py::init<const elsa::RegularizationTerm<std::complex<double>>&>(), py::arg("other"));
+        .def(py::init<const elsa::RegularizationTerm<thrust::complex<double>>&>(),
+             py::arg("other"));
 
     py::class_<elsa::Cloneable<elsa::Problem<float>>> CloneableProblemf(m, "CloneableProblemf");
     CloneableProblemf
@@ -229,51 +230,51 @@ void add_definitions_pyelsa_problems(py::module& m)
                                                                                        "Problemd");
     add_problem_definitions<double>(Problemd);
 
-    py::class_<elsa::Cloneable<elsa::Problem<std::complex<float>>>> CloneableProblemcf(
+    py::class_<elsa::Cloneable<elsa::Problem<thrust::complex<float>>>> CloneableProblemcf(
         m, "CloneableProblemcf");
     CloneableProblemcf
         .def("__ne__",
-             (bool(elsa::Cloneable<elsa::Problem<std::complex<float>>>::*)(
-                 const elsa::Problem<std::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::Problem<std::complex<float>>>::operator!=),
+             (bool(elsa::Cloneable<elsa::Problem<thrust::complex<float>>>::*)(
+                 const elsa::Problem<thrust::complex<float>>&)
+                  const)(&elsa::Cloneable<elsa::Problem<thrust::complex<float>>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::Cloneable<elsa::Problem<std::complex<float>>>::*)(
-                 const elsa::Problem<std::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::Problem<std::complex<float>>>::operator==),
+             (bool(elsa::Cloneable<elsa::Problem<thrust::complex<float>>>::*)(
+                 const elsa::Problem<thrust::complex<float>>&)
+                  const)(&elsa::Cloneable<elsa::Problem<thrust::complex<float>>>::operator==),
              py::arg("other"))
-        .def("clone", (std::unique_ptr<elsa::Problem<std::complex<float>>,
-                                       std::default_delete<elsa::Problem<std::complex<float>>>>(
-                          elsa::Cloneable<elsa::Problem<std::complex<float>>>::*)()
-                           const)(&elsa::Cloneable<elsa::Problem<std::complex<float>>>::clone));
+        .def("clone", (std::unique_ptr<elsa::Problem<thrust::complex<float>>,
+                                       std::default_delete<elsa::Problem<thrust::complex<float>>>>(
+                          elsa::Cloneable<elsa::Problem<thrust::complex<float>>>::*)()
+                           const)(&elsa::Cloneable<elsa::Problem<thrust::complex<float>>>::clone));
 
-    py::class_<elsa::Problem<std::complex<float>>,
-               elsa::Cloneable<elsa::Problem<std::complex<float>>>>
+    py::class_<elsa::Problem<thrust::complex<float>>,
+               elsa::Cloneable<elsa::Problem<thrust::complex<float>>>>
         Problemcf(m, "Problemcf");
-    add_problem_definitions<std::complex<float>>(Problemcf);
+    add_problem_definitions<thrust::complex<float>>(Problemcf);
 
-    py::class_<elsa::Cloneable<elsa::Problem<std::complex<double>>>> CloneableProblemcd(
+    py::class_<elsa::Cloneable<elsa::Problem<thrust::complex<double>>>> CloneableProblemcd(
         m, "CloneableProblemcd");
     CloneableProblemcd
         .def("__ne__",
-             (bool(elsa::Cloneable<elsa::Problem<std::complex<double>>>::*)(
-                 const elsa::Problem<std::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::Problem<std::complex<double>>>::operator!=),
+             (bool(elsa::Cloneable<elsa::Problem<thrust::complex<double>>>::*)(
+                 const elsa::Problem<thrust::complex<double>>&)
+                  const)(&elsa::Cloneable<elsa::Problem<thrust::complex<double>>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::Cloneable<elsa::Problem<std::complex<double>>>::*)(
-                 const elsa::Problem<std::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::Problem<std::complex<double>>>::operator==),
+             (bool(elsa::Cloneable<elsa::Problem<thrust::complex<double>>>::*)(
+                 const elsa::Problem<thrust::complex<double>>&)
+                  const)(&elsa::Cloneable<elsa::Problem<thrust::complex<double>>>::operator==),
              py::arg("other"))
-        .def("clone", (std::unique_ptr<elsa::Problem<std::complex<double>>,
-                                       std::default_delete<elsa::Problem<std::complex<double>>>>(
-                          elsa::Cloneable<elsa::Problem<std::complex<double>>>::*)()
-                           const)(&elsa::Cloneable<elsa::Problem<std::complex<double>>>::clone));
+        .def("clone", (std::unique_ptr<elsa::Problem<thrust::complex<double>>,
+                                       std::default_delete<elsa::Problem<thrust::complex<double>>>>(
+                          elsa::Cloneable<elsa::Problem<thrust::complex<double>>>::*)()
+                           const)(&elsa::Cloneable<elsa::Problem<thrust::complex<double>>>::clone));
 
-    py::class_<elsa::Problem<std::complex<double>>,
-               elsa::Cloneable<elsa::Problem<std::complex<double>>>>
+    py::class_<elsa::Problem<thrust::complex<double>>,
+               elsa::Cloneable<elsa::Problem<thrust::complex<double>>>>
         Problemcd(m, "Problemcd");
-    add_problem_definitions<std::complex<double>>(Problemcd);
+    add_problem_definitions<thrust::complex<double>>(Problemcd);
 
     py::class_<elsa::WLSProblem<float>, elsa::Problem<float>> WLSProblemf(m, "WLSProblemf");
     WLSProblemf
@@ -309,49 +310,49 @@ void add_definitions_pyelsa_problems(py::module& m)
              py::arg("W"), py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
         .def(py::init<const elsa::WLSProblem<double>&>());
 
-    py::class_<elsa::WLSProblem<std::complex<float>>, elsa::Problem<std::complex<float>>>
+    py::class_<elsa::WLSProblem<thrust::complex<float>>, elsa::Problem<thrust::complex<float>>>
         WLSProblemcf(m, "WLSProblemcf");
     WLSProblemcf
-        .def(py::init<const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&>(),
+        .def(py::init<const elsa::LinearOperator<thrust::complex<float>>&,
+                      const elsa::DataContainer<thrust::complex<float>>&>(),
              py::arg("A"), py::arg("b"))
-        .def(py::init<const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      std::optional<std::complex<float>>>(),
+        .def(py::init<const elsa::LinearOperator<thrust::complex<float>>&,
+                      const elsa::DataContainer<thrust::complex<float>>&,
+                      std::optional<thrust::complex<float>>>(),
              py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Problem<std::complex<float>>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Scaling<std::complex<float>>&,
-                      const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&>(),
+        .def(py::init<const elsa::Problem<thrust::complex<float>>&>(), py::arg("problem"))
+        .def(py::init<const elsa::Scaling<thrust::complex<float>>&,
+                      const elsa::LinearOperator<thrust::complex<float>>&,
+                      const elsa::DataContainer<thrust::complex<float>>&>(),
              py::arg("W"), py::arg("A"), py::arg("b"))
-        .def(py::init<const elsa::Scaling<std::complex<float>>&,
-                      const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>&,
-                      std::optional<std::complex<float>>>(),
+        .def(py::init<const elsa::Scaling<thrust::complex<float>>&,
+                      const elsa::LinearOperator<thrust::complex<float>>&,
+                      const elsa::DataContainer<thrust::complex<float>>&,
+                      std::optional<thrust::complex<float>>>(),
              py::arg("W"), py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::WLSProblem<std::complex<float>>&>());
+        .def(py::init<const elsa::WLSProblem<thrust::complex<float>>&>());
 
-    py::class_<elsa::WLSProblem<std::complex<double>>, elsa::Problem<std::complex<double>>>
+    py::class_<elsa::WLSProblem<thrust::complex<double>>, elsa::Problem<thrust::complex<double>>>
         WLSProblemcd(m, "WLSProblemcd");
     WLSProblemcd
-        .def(py::init<const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&>(),
+        .def(py::init<const elsa::LinearOperator<thrust::complex<double>>&,
+                      const elsa::DataContainer<thrust::complex<double>>&>(),
              py::arg("A"), py::arg("b"))
-        .def(py::init<const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      std::optional<std::complex<double>>>(),
+        .def(py::init<const elsa::LinearOperator<thrust::complex<double>>&,
+                      const elsa::DataContainer<thrust::complex<double>>&,
+                      std::optional<thrust::complex<double>>>(),
              py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::Problem<std::complex<double>>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Scaling<std::complex<double>>&,
-                      const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&>(),
+        .def(py::init<const elsa::Problem<thrust::complex<double>>&>(), py::arg("problem"))
+        .def(py::init<const elsa::Scaling<thrust::complex<double>>&,
+                      const elsa::LinearOperator<thrust::complex<double>>&,
+                      const elsa::DataContainer<thrust::complex<double>>&>(),
              py::arg("W"), py::arg("A"), py::arg("b"))
-        .def(py::init<const elsa::Scaling<std::complex<double>>&,
-                      const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>&,
-                      std::optional<std::complex<double>>>(),
+        .def(py::init<const elsa::Scaling<thrust::complex<double>>&,
+                      const elsa::LinearOperator<thrust::complex<double>>&,
+                      const elsa::DataContainer<thrust::complex<double>>&,
+                      std::optional<thrust::complex<double>>>(),
              py::arg("W"), py::arg("A"), py::arg("b"), py::arg("lipschitzConstant"))
-        .def(py::init<const elsa::WLSProblem<std::complex<double>>&>());
+        .def(py::init<const elsa::WLSProblem<thrust::complex<double>>&>());
 
     py::class_<elsa::TikhonovProblem<float>, elsa::Problem<float>> TikhonovProblemf(
         m, "TikhonovProblemf");
@@ -381,34 +382,35 @@ void add_definitions_pyelsa_problems(py::module& m)
                                         std::allocator<elsa::RegularizationTerm<double>>>&>(),
              py::arg("wlsProblem"), py::arg("regTerms"));
 
-    py::class_<elsa::TikhonovProblem<std::complex<float>>, elsa::Problem<std::complex<float>>>
+    py::class_<elsa::TikhonovProblem<thrust::complex<float>>, elsa::Problem<thrust::complex<float>>>
         TikhonovProblemcf(m, "TikhonovProblemcf");
     TikhonovProblemcf
-        .def(py::init<const elsa::LinearOperator<std::complex<float>>&,
-                      const elsa::DataContainer<std::complex<float>>, float>(),
+        .def(py::init<const elsa::LinearOperator<thrust::complex<float>>&,
+                      const elsa::DataContainer<thrust::complex<float>>, float>(),
              py::arg("A"), py::arg("b"), py::arg("weight") = static_cast<float>(5.000000e-01))
-        .def(py::init<const elsa::WLSProblem<std::complex<float>>&,
-                      const elsa::RegularizationTerm<std::complex<float>>&>(),
+        .def(py::init<const elsa::WLSProblem<thrust::complex<float>>&,
+                      const elsa::RegularizationTerm<thrust::complex<float>>&>(),
              py::arg("wlsProblem"), py::arg("regTerm"))
-        .def(py::init<const elsa::WLSProblem<std::complex<float>>&,
+        .def(py::init<const elsa::WLSProblem<thrust::complex<float>>&,
                       const std::vector<
-                          elsa::RegularizationTerm<std::complex<float>>,
-                          std::allocator<elsa::RegularizationTerm<std::complex<float>>>>&>(),
+                          elsa::RegularizationTerm<thrust::complex<float>>,
+                          std::allocator<elsa::RegularizationTerm<thrust::complex<float>>>>&>(),
              py::arg("wlsProblem"), py::arg("regTerms"));
 
-    py::class_<elsa::TikhonovProblem<std::complex<double>>, elsa::Problem<std::complex<double>>>
+    py::class_<elsa::TikhonovProblem<thrust::complex<double>>,
+               elsa::Problem<thrust::complex<double>>>
         TikhonovProblemcd(m, "TikhonovProblemcd");
     TikhonovProblemcd
-        .def(py::init<const elsa::LinearOperator<std::complex<double>>&,
-                      const elsa::DataContainer<std::complex<double>>, float>(),
+        .def(py::init<const elsa::LinearOperator<thrust::complex<double>>&,
+                      const elsa::DataContainer<thrust::complex<double>>, float>(),
              py::arg("A"), py::arg("b"), py::arg("weight") = static_cast<float>(5.000000e-01))
-        .def(py::init<const elsa::WLSProblem<std::complex<double>>&,
-                      const elsa::RegularizationTerm<std::complex<double>>&>(),
+        .def(py::init<const elsa::WLSProblem<thrust::complex<double>>&,
+                      const elsa::RegularizationTerm<thrust::complex<double>>&>(),
              py::arg("wlsProblem"), py::arg("regTerm"))
-        .def(py::init<const elsa::WLSProblem<std::complex<double>>&,
+        .def(py::init<const elsa::WLSProblem<thrust::complex<double>>&,
                       const std::vector<
-                          elsa::RegularizationTerm<std::complex<double>>,
-                          std::allocator<elsa::RegularizationTerm<std::complex<double>>>>&>(),
+                          elsa::RegularizationTerm<thrust::complex<double>>,
+                          std::allocator<elsa::RegularizationTerm<thrust::complex<double>>>>&>(),
              py::arg("wlsProblem"), py::arg("regTerms"));
 
     py::class_<elsa::QuadricProblem<float>, elsa::Problem<float>> QuadricProblemf(
@@ -482,34 +484,35 @@ void add_definitions_pyelsa_problems(py::module& m)
 
     m.attr("SplittingProblem") = m.attr("SplittingProblemf");
 
-    py::class_<elsa::SplittingProblem<std::complex<float>>, elsa::Problem<std::complex<float>>>
+    py::class_<elsa::SplittingProblem<thrust::complex<float>>,
+               elsa::Problem<thrust::complex<float>>>
         SplittingProblemcf(m, "SplittingProblemcf");
     SplittingProblemcf
         .def("getConstraint",
-             (const elsa::Constraint<std::complex<float>>& (
-                 elsa::SplittingProblem<std::complex<float>>::*) ()
-                  const)(&elsa::SplittingProblem<std::complex<float>>::getConstraint),
+             (const elsa::Constraint<thrust::complex<float>>& (
+                 elsa::SplittingProblem<thrust::complex<float>>::*) ()
+                  const)(&elsa::SplittingProblem<thrust::complex<float>>::getConstraint),
              py::return_value_policy::reference_internal)
         .def("getF",
-             (const elsa::Functional<std::complex<float>>& (
-                 elsa::SplittingProblem<std::complex<float>>::*) ()
-                  const)(&elsa::SplittingProblem<std::complex<float>>::getF),
+             (const elsa::Functional<thrust::complex<float>>& (
+                 elsa::SplittingProblem<thrust::complex<float>>::*) ()
+                  const)(&elsa::SplittingProblem<thrust::complex<float>>::getF),
              py::return_value_policy::reference_internal)
         .def("getG",
-             (const std::vector<elsa::RegularizationTerm<std::complex<float>>,
-                                std::allocator<elsa::RegularizationTerm<std::complex<float>>>>& (
-                 elsa::SplittingProblem<std::complex<float>>::*) ()
-                  const)(&elsa::SplittingProblem<std::complex<float>>::getG),
+             (const std::vector<elsa::RegularizationTerm<thrust::complex<float>>,
+                                std::allocator<elsa::RegularizationTerm<thrust::complex<float>>>>& (
+                 elsa::SplittingProblem<thrust::complex<float>>::*) ()
+                  const)(&elsa::SplittingProblem<thrust::complex<float>>::getG),
              py::return_value_policy::reference_internal)
-        .def(py::init<const elsa::Functional<std::complex<float>>&,
-                      const elsa::RegularizationTerm<std::complex<float>>&,
-                      const elsa::Constraint<std::complex<float>>&>(),
+        .def(py::init<const elsa::Functional<thrust::complex<float>>&,
+                      const elsa::RegularizationTerm<thrust::complex<float>>&,
+                      const elsa::Constraint<thrust::complex<float>>&>(),
              py::arg("f"), py::arg("g"), py::arg("constraint"))
-        .def(py::init<
-                 const elsa::Functional<std::complex<float>>&,
-                 const std::vector<elsa::RegularizationTerm<std::complex<float>>,
-                                   std::allocator<elsa::RegularizationTerm<std::complex<float>>>>&,
-                 const elsa::Constraint<std::complex<float>>&>(),
+        .def(py::init<const elsa::Functional<thrust::complex<float>>&,
+                      const std::vector<
+                          elsa::RegularizationTerm<thrust::complex<float>>,
+                          std::allocator<elsa::RegularizationTerm<thrust::complex<float>>>>&,
+                      const elsa::Constraint<thrust::complex<float>>&>(),
              py::arg("f"), py::arg("g"), py::arg("constraint"));
 
     py::class_<elsa::SplittingProblem<double>, elsa::Problem<double>> SplittingProblemd(
@@ -538,34 +541,36 @@ void add_definitions_pyelsa_problems(py::module& m)
                       const elsa::Constraint<double>&>(),
              py::arg("f"), py::arg("g"), py::arg("constraint"));
 
-    py::class_<elsa::SplittingProblem<std::complex<double>>, elsa::Problem<std::complex<double>>>
+    py::class_<elsa::SplittingProblem<thrust::complex<double>>,
+               elsa::Problem<thrust::complex<double>>>
         SplittingProblemcd(m, "SplittingProblemcd");
     SplittingProblemcd
         .def("getConstraint",
-             (const elsa::Constraint<std::complex<double>>& (
-                 elsa::SplittingProblem<std::complex<double>>::*) ()
-                  const)(&elsa::SplittingProblem<std::complex<double>>::getConstraint),
+             (const elsa::Constraint<thrust::complex<double>>& (
+                 elsa::SplittingProblem<thrust::complex<double>>::*) ()
+                  const)(&elsa::SplittingProblem<thrust::complex<double>>::getConstraint),
              py::return_value_policy::reference_internal)
         .def("getF",
-             (const elsa::Functional<std::complex<double>>& (
-                 elsa::SplittingProblem<std::complex<double>>::*) ()
-                  const)(&elsa::SplittingProblem<std::complex<double>>::getF),
+             (const elsa::Functional<thrust::complex<double>>& (
+                 elsa::SplittingProblem<thrust::complex<double>>::*) ()
+                  const)(&elsa::SplittingProblem<thrust::complex<double>>::getF),
              py::return_value_policy::reference_internal)
-        .def("getG",
-             (const std::vector<elsa::RegularizationTerm<std::complex<double>>,
-                                std::allocator<elsa::RegularizationTerm<std::complex<double>>>>& (
-                 elsa::SplittingProblem<std::complex<double>>::*) ()
-                  const)(&elsa::SplittingProblem<std::complex<double>>::getG),
-             py::return_value_policy::reference_internal)
-        .def(py::init<const elsa::Functional<std::complex<double>>&,
-                      const elsa::RegularizationTerm<std::complex<double>>&,
-                      const elsa::Constraint<std::complex<double>>&>(),
+        .def(
+            "getG",
+            (const std::vector<elsa::RegularizationTerm<thrust::complex<double>>,
+                               std::allocator<elsa::RegularizationTerm<thrust::complex<double>>>>& (
+                elsa::SplittingProblem<thrust::complex<double>>::*) ()
+                 const)(&elsa::SplittingProblem<thrust::complex<double>>::getG),
+            py::return_value_policy::reference_internal)
+        .def(py::init<const elsa::Functional<thrust::complex<double>>&,
+                      const elsa::RegularizationTerm<thrust::complex<double>>&,
+                      const elsa::Constraint<thrust::complex<double>>&>(),
              py::arg("f"), py::arg("g"), py::arg("constraint"))
-        .def(py::init<
-                 const elsa::Functional<std::complex<double>>&,
-                 const std::vector<elsa::RegularizationTerm<std::complex<double>>,
-                                   std::allocator<elsa::RegularizationTerm<std::complex<double>>>>&,
-                 const elsa::Constraint<std::complex<double>>&>(),
+        .def(py::init<const elsa::Functional<thrust::complex<double>>&,
+                      const std::vector<
+                          elsa::RegularizationTerm<thrust::complex<double>>,
+                          std::allocator<elsa::RegularizationTerm<thrust::complex<double>>>>&,
+                      const elsa::Constraint<thrust::complex<double>>&>(),
              py::arg("f"), py::arg("g"), py::arg("constraint"));
 
     py::class_<elsa::SubsetProblem<float>, elsa::Problem<float>> SubsetProblemf(m,

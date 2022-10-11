@@ -39,25 +39,26 @@ void add_definitions_pyelsa_projectors(py::module& m)
         .value("ROUND_ROBIN", elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
                                                   double>::SamplingStrategy::ROUND_ROBIN);
 
-    py::enum_<
-        elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>::SamplingStrategy>(
+    py::enum_<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+                                  thrust::complex<float>>::SamplingStrategy>(
         m, "SubsetSamplerPlanarDetectorDescriptorcfSamplingStrategy")
         .value("ROTATIONAL_CLUSTERING",
                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                   std::complex<float>>::SamplingStrategy::ROTATIONAL_CLUSTERING)
+                                   thrust::complex<float>>::SamplingStrategy::ROTATIONAL_CLUSTERING)
         .value("ROUND_ROBIN",
                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                   std::complex<float>>::SamplingStrategy::ROUND_ROBIN);
+                                   thrust::complex<float>>::SamplingStrategy::ROUND_ROBIN);
 
     py::enum_<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                  std::complex<double>>::SamplingStrategy>(
+                                  thrust::complex<double>>::SamplingStrategy>(
         m, "SubsetSamplerPlanarDetectorDescriptorcdSamplingStrategy")
-        .value("ROTATIONAL_CLUSTERING",
-               elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                   std::complex<double>>::SamplingStrategy::ROTATIONAL_CLUSTERING)
+        .value(
+            "ROTATIONAL_CLUSTERING",
+            elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+                                thrust::complex<double>>::SamplingStrategy::ROTATIONAL_CLUSTERING)
         .value("ROUND_ROBIN",
                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                   std::complex<double>>::SamplingStrategy::ROUND_ROBIN);
+                                   thrust::complex<double>>::SamplingStrategy::ROUND_ROBIN);
 
     py::class_<elsa::BinaryMethod<float>, elsa::LinearOperator<float>> BinaryMethodf(
         m, "BinaryMethodf");
@@ -224,134 +225,151 @@ void add_definitions_pyelsa_projectors(py::module& m)
     elsa::SubsetSamplerHints<elsa::PlanarDetectorDescriptor, double>::addCustomMethods(
         SubsetSamplerPlanarDetectorDescriptordouble);
 
-    py::class_<
-        elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>>>
-        CloneableSubsetSamplerPlanarDetectorDescriptorcf(
-            m, "CloneableSubsetSamplerPlanarDetectorDescriptorcf");
-    CloneableSubsetSamplerPlanarDetectorDescriptorcf
-        .def("__ne__",
-             (bool(elsa::Cloneable<
-                   elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>>::*)(
-                 const elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                                              std::complex<float>>>::operator!=),
-             py::arg("other"))
-        .def("__eq__",
-             (bool(elsa::Cloneable<
-                   elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>>::*)(
-                 const elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                                              std::complex<float>>>::operator==),
-             py::arg("other"))
-        .def("clone",
-             (std::unique_ptr<
-                 elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>,
-                 std::default_delete<
-                     elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>>>(
-                 elsa::Cloneable<
-                     elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>>::*)()
-                  const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                                              std::complex<float>>>::clone));
-
-    py::class_<
-        elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>,
-        elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>>>
-        SubsetSamplerPlanarDetectorDescriptorcf(m, "SubsetSamplerPlanarDetectorDescriptorcf");
-    SubsetSamplerPlanarDetectorDescriptorcf
-        .def("getPartitionedData",
-             (elsa::DataContainer<std::complex<float>>(
-                 elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<float>>::*)(
-                 const elsa::DataContainer<std::complex<float>>&))(
-                 &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                      std::complex<float>>::getPartitionedData),
-             py::arg("sinogram"), py::return_value_policy::move)
-        .def_static("splitRotationalClustering",
-                    (std::vector<std::vector<long, std::allocator<long>>,
-                                 std::allocator<std::vector<long, std::allocator<long>>>>(*)(
-                        const elsa::PlanarDetectorDescriptor&, long))(
-                        &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                             std::complex<float>>::splitRotationalClustering),
-                    py::arg("detectorDescriptor"), py::arg("nSubsets"),
-                    py::return_value_policy::move)
-        .def_static("splitRoundRobin",
-                    (std::vector<std::vector<long, std::allocator<long>>,
-                                 std::allocator<std::vector<long, std::allocator<long>>>>(*)(
-                        const std::vector<long, std::allocator<long>>&, long))(
-                        &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                             std::complex<float>>::splitRoundRobin),
-                    py::arg("indices"), py::arg("nSubsets"), py::return_value_policy::move)
-        .def(py::init<const elsa::VolumeDescriptor&, const elsa::PlanarDetectorDescriptor&, long>(),
-             py::arg("volumeDescriptor"), py::arg("detectorDescriptor"), py::arg("nSubsets"))
-        .def(py::init<const elsa::VolumeDescriptor&, const elsa::PlanarDetectorDescriptor&, long,
-                      elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                          std::complex<float>>::SamplingStrategy>(),
-             py::arg("volumeDescriptor"), py::arg("detectorDescriptor"), py::arg("nSubsets"),
-             py::arg("samplingStrategy"));
-
-    py::class_<
-        elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>>>
-        CloneableSubsetSamplerPlanarDetectorDescriptorcd(
-            m, "CloneableSubsetSamplerPlanarDetectorDescriptorcd");
-    CloneableSubsetSamplerPlanarDetectorDescriptorcd
-        .def("__ne__",
-             (bool(elsa::Cloneable<
-                   elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>>::*)(
-                 const elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                                              std::complex<double>>>::operator!=),
-             py::arg("other"))
-        .def("__eq__",
-             (bool(elsa::Cloneable<
-                   elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>>::*)(
-                 const elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                                              std::complex<double>>>::operator==),
-             py::arg("other"))
-        .def(
-            "clone",
-            (std::unique_ptr<
-                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>,
-                std::default_delete<
-                    elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>>>(
-                elsa::Cloneable<
-                    elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>>::*)()
-                 const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                                             std::complex<double>>>::clone));
-
-    py::class_<
-        elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>,
-        elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>>>
-        SubsetSamplerPlanarDetectorDescriptorcd(m, "SubsetSamplerPlanarDetectorDescriptorcd");
-    SubsetSamplerPlanarDetectorDescriptorcd
-        .def("getPartitionedData",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, std::complex<double>>::*)(
-                 const elsa::DataContainer<std::complex<double>>&))(
-                 &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                      std::complex<double>>::getPartitionedData),
-             py::arg("sinogram"), py::return_value_policy::move)
-        .def_static("splitRotationalClustering",
-                    (std::vector<std::vector<long, std::allocator<long>>,
-                                 std::allocator<std::vector<long, std::allocator<long>>>>(*)(
-                        const elsa::PlanarDetectorDescriptor&, long))(
-                        &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                             std::complex<double>>::splitRotationalClustering),
-                    py::arg("detectorDescriptor"), py::arg("nSubsets"),
-                    py::return_value_policy::move)
-        .def_static("splitRoundRobin",
-                    (std::vector<std::vector<long, std::allocator<long>>,
-                                 std::allocator<std::vector<long, std::allocator<long>>>>(*)(
-                        const std::vector<long, std::allocator<long>>&, long))(
-                        &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                             std::complex<double>>::splitRoundRobin),
-                    py::arg("indices"), py::arg("nSubsets"), py::return_value_policy::move)
-        .def(py::init<const elsa::VolumeDescriptor&, const elsa::PlanarDetectorDescriptor&, long>(),
-             py::arg("volumeDescriptor"), py::arg("detectorDescriptor"), py::arg("nSubsets"))
-        .def(py::init<const elsa::VolumeDescriptor&, const elsa::PlanarDetectorDescriptor&, long,
-                      elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
-                                          std::complex<double>>::SamplingStrategy>(),
-             py::arg("volumeDescriptor"), py::arg("detectorDescriptor"), py::arg("nSubsets"),
-             py::arg("samplingStrategy"));
+    // py::class_<
+    //     elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //     thrust::complex<float>>>> CloneableSubsetSamplerPlanarDetectorDescriptorcf(
+    //         m, "CloneableSubsetSamplerPlanarDetectorDescriptorcf");
+    // CloneableSubsetSamplerPlanarDetectorDescriptorcf
+    //     .def("__ne__",
+    //          (bool(elsa::Cloneable<
+    //                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                thrust::complex<float>>>::*)(
+    //              const elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //              thrust::complex<float>>&)
+    //               const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                                           thrust::complex<float>>>::operator!=),
+    //          py::arg("other"))
+    //     .def("__eq__",
+    //          (bool(elsa::Cloneable<
+    //                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                thrust::complex<float>>>::*)(
+    //              const elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //              thrust::complex<float>>&)
+    //               const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                                           thrust::complex<float>>>::operator==),
+    //          py::arg("other"))
+    //     .def("clone",
+    //          (std::unique_ptr<
+    //              elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, thrust::complex<float>>,
+    //              std::default_delete<
+    //                  elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                  thrust::complex<float>>>>(
+    //              elsa::Cloneable<
+    //                  elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                  thrust::complex<float>>>::*)()
+    //               const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                                           thrust::complex<float>>>::clone));
+    //
+    // py::class_<
+    //     elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, thrust::complex<float>>,
+    //     elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //     thrust::complex<float>>>> SubsetSamplerPlanarDetectorDescriptorcf(m,
+    //     "SubsetSamplerPlanarDetectorDescriptorcf");
+    // SubsetSamplerPlanarDetectorDescriptorcf
+    //     .def("getPartitionedData",
+    //          (elsa::DataContainer<thrust::complex<float>>(
+    //              elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, thrust::complex<float>>::*)(
+    //              const elsa::DataContainer<thrust::complex<float>>&))(
+    //              &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                   thrust::complex<float>>::getPartitionedData),
+    //          py::arg("sinogram"), py::return_value_policy::move)
+    //     .def_static("splitRotationalClustering",
+    //                 (std::vector<std::vector<long, std::allocator<long>>,
+    //                              std::allocator<std::vector<long, std::allocator<long>>>>(*)(
+    //                     const elsa::PlanarDetectorDescriptor&, long))(
+    //                     &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                          thrust::complex<float>>::splitRotationalClustering),
+    //                 py::arg("detectorDescriptor"), py::arg("nSubsets"),
+    //                 py::return_value_policy::move)
+    //     .def_static("splitRoundRobin",
+    //                 (std::vector<std::vector<long, std::allocator<long>>,
+    //                              std::allocator<std::vector<long, std::allocator<long>>>>(*)(
+    //                     const std::vector<long, std::allocator<long>>&, long))(
+    //                     &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                          thrust::complex<float>>::splitRoundRobin),
+    //                 py::arg("indices"), py::arg("nSubsets"), py::return_value_policy::move)
+    //     .def(py::init<const elsa::VolumeDescriptor&, const elsa::PlanarDetectorDescriptor&,
+    //     long>(),
+    //          py::arg("volumeDescriptor"), py::arg("detectorDescriptor"), py::arg("nSubsets"))
+    //     .def(py::init<const elsa::VolumeDescriptor&, const elsa::PlanarDetectorDescriptor&, long,
+    //                   elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                       thrust::complex<float>>::SamplingStrategy>(),
+    //          py::arg("volumeDescriptor"), py::arg("detectorDescriptor"), py::arg("nSubsets"),
+    //          py::arg("samplingStrategy"));
+    //
+    // py::class_<
+    //     elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //     thrust::complex<double>>>> CloneableSubsetSamplerPlanarDetectorDescriptorcd(
+    //         m, "CloneableSubsetSamplerPlanarDetectorDescriptorcd");
+    // CloneableSubsetSamplerPlanarDetectorDescriptorcd
+    //     .def("__ne__",
+    //          (bool(elsa::Cloneable<
+    //                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                thrust::complex<double>>>::*)(
+    //              const elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //              thrust::complex<double>>&)
+    //               const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                                           thrust::complex<double>>>::operator!=),
+    //          py::arg("other"))
+    //     .def("__eq__",
+    //          (bool(elsa::Cloneable<
+    //                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                thrust::complex<double>>>::*)(
+    //              const elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //              thrust::complex<double>>&)
+    //               const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                                           thrust::complex<double>>>::operator==),
+    //          py::arg("other"))
+    //     .def(
+    //         "clone",
+    //         (std::unique_ptr<
+    //             elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, thrust::complex<double>>,
+    //             std::default_delete<
+    //                 elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                 thrust::complex<double>>>>(
+    //             elsa::Cloneable<
+    //                 elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                 thrust::complex<double>>>::*)()
+    //              const)(&elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                                          thrust::complex<double>>>::clone));
+    //
+    // py::class_<
+    //     elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, thrust::complex<double>>,
+    //     elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //     thrust::complex<double>>>> SubsetSamplerPlanarDetectorDescriptorcd(m,
+    //     "SubsetSamplerPlanarDetectorDescriptorcd");
+    // SubsetSamplerPlanarDetectorDescriptorcd
+    //     .def("getPartitionedData",
+    //          (elsa::DataContainer<thrust::complex<double>>(
+    //              elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //              thrust::complex<double>>::*)( const
+    //              elsa::DataContainer<thrust::complex<double>>&))(
+    //              &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                   thrust::complex<double>>::getPartitionedData),
+    //          py::arg("sinogram"), py::return_value_policy::move)
+    //     .def_static("splitRotationalClustering",
+    //                 (std::vector<std::vector<long, std::allocator<long>>,
+    //                              std::allocator<std::vector<long, std::allocator<long>>>>(*)(
+    //                     const elsa::PlanarDetectorDescriptor&, long))(
+    //                     &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                          thrust::complex<double>>::splitRotationalClustering),
+    //                 py::arg("detectorDescriptor"), py::arg("nSubsets"),
+    //                 py::return_value_policy::move)
+    //     .def_static("splitRoundRobin",
+    //                 (std::vector<std::vector<long, std::allocator<long>>,
+    //                              std::allocator<std::vector<long, std::allocator<long>>>>(*)(
+    //                     const std::vector<long, std::allocator<long>>&, long))(
+    //                     &elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                          thrust::complex<double>>::splitRoundRobin),
+    //                 py::arg("indices"), py::arg("nSubsets"), py::return_value_policy::move)
+    //     .def(py::init<const elsa::VolumeDescriptor&, const elsa::PlanarDetectorDescriptor&,
+    //     long>(),
+    //          py::arg("volumeDescriptor"), py::arg("detectorDescriptor"), py::arg("nSubsets"))
+    //     .def(py::init<const elsa::VolumeDescriptor&, const elsa::PlanarDetectorDescriptor&, long,
+    //                   elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
+    //                                       thrust::complex<double>>::SamplingStrategy>(),
+    //          py::arg("volumeDescriptor"), py::arg("detectorDescriptor"), py::arg("nSubsets"),
+    //          py::arg("samplingStrategy"));
 
     elsa::ProjectorsHints::addCustomFunctions(m);
 }

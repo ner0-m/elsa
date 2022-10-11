@@ -66,51 +66,51 @@ void add_definitions_pyelsa_solvers(py::module& m)
     py::class_<elsa::Solver<double>, elsa::Cloneable<elsa::Solver<double>>> Solverd(m, "Solverd");
     add_definitions_solver<double>(Solverd);
 
-    py::class_<elsa::Cloneable<elsa::Solver<std::complex<float>>>> CloneableSolvercf(
+    py::class_<elsa::Cloneable<elsa::Solver<thrust::complex<float>>>> CloneableSolvercf(
         m, "CloneableSolvercf");
     CloneableSolvercf
         .def("__ne__",
-             (bool(elsa::Cloneable<elsa::Solver<std::complex<float>>>::*)(
-                 const elsa::Solver<std::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::Solver<std::complex<float>>>::operator!=),
+             (bool(elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::*)(
+                 const elsa::Solver<thrust::complex<float>>&)
+                  const)(&elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::Cloneable<elsa::Solver<std::complex<float>>>::*)(
-                 const elsa::Solver<std::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::Solver<std::complex<float>>>::operator==),
+             (bool(elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::*)(
+                 const elsa::Solver<thrust::complex<float>>&)
+                  const)(&elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::operator==),
              py::arg("other"))
-        .def("clone", (std::unique_ptr<elsa::Solver<std::complex<float>>,
-                                       std::default_delete<elsa::Solver<std::complex<float>>>>(
-                          elsa::Cloneable<elsa::Solver<std::complex<float>>>::*)()
-                           const)(&elsa::Cloneable<elsa::Solver<std::complex<float>>>::clone));
+        .def("clone", (std::unique_ptr<elsa::Solver<thrust::complex<float>>,
+                                       std::default_delete<elsa::Solver<thrust::complex<float>>>>(
+                          elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::*)()
+                           const)(&elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::clone));
 
-    py::class_<elsa::Solver<std::complex<float>>,
-               elsa::Cloneable<elsa::Solver<std::complex<float>>>>
+    py::class_<elsa::Solver<thrust::complex<float>>,
+               elsa::Cloneable<elsa::Solver<thrust::complex<float>>>>
         Solvercf(m, "Solvercf");
-    add_definitions_solver<std::complex<float>>(Solvercf);
+    add_definitions_solver<thrust::complex<float>>(Solvercf);
 
-    py::class_<elsa::Cloneable<elsa::Solver<std::complex<double>>>> CloneableSolvercd(
+    py::class_<elsa::Cloneable<elsa::Solver<thrust::complex<double>>>> CloneableSolvercd(
         m, "CloneableSolvercd");
     CloneableSolvercd
         .def("__ne__",
-             (bool(elsa::Cloneable<elsa::Solver<std::complex<double>>>::*)(
-                 const elsa::Solver<std::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::Solver<std::complex<double>>>::operator!=),
+             (bool(elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::*)(
+                 const elsa::Solver<thrust::complex<double>>&)
+                  const)(&elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::Cloneable<elsa::Solver<std::complex<double>>>::*)(
-                 const elsa::Solver<std::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::Solver<std::complex<double>>>::operator==),
+             (bool(elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::*)(
+                 const elsa::Solver<thrust::complex<double>>&)
+                  const)(&elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::operator==),
              py::arg("other"))
-        .def("clone", (std::unique_ptr<elsa::Solver<std::complex<double>>,
-                                       std::default_delete<elsa::Solver<std::complex<double>>>>(
-                          elsa::Cloneable<elsa::Solver<std::complex<double>>>::*)()
-                           const)(&elsa::Cloneable<elsa::Solver<std::complex<double>>>::clone));
+        .def("clone", (std::unique_ptr<elsa::Solver<thrust::complex<double>>,
+                                       std::default_delete<elsa::Solver<thrust::complex<double>>>>(
+                          elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::*)()
+                           const)(&elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::clone));
 
-    py::class_<elsa::Solver<std::complex<double>>,
-               elsa::Cloneable<elsa::Solver<std::complex<double>>>>
+    py::class_<elsa::Solver<thrust::complex<double>>,
+               elsa::Cloneable<elsa::Solver<thrust::complex<double>>>>
         Solvercd(m, "Solvercd");
-    add_definitions_solver<std::complex<double>>(Solvercd);
+    add_definitions_solver<thrust::complex<double>>(Solvercd);
 
     py::class_<elsa::GradientDescent<float>, elsa::Solver<float>> GradientDescentf(
         m, "GradientDescentf");

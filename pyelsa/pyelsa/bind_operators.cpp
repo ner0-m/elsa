@@ -27,17 +27,17 @@ void add_definitions_pyelsa_operators(py::module& m)
         .value("CENTRAL", elsa::FiniteDifferences<double>::DiffType::CENTRAL)
         .value("FORWARD", elsa::FiniteDifferences<double>::DiffType::FORWARD);
 
-    py::enum_<elsa::FiniteDifferences<std::complex<float>>::DiffType>(m,
-                                                                      "FiniteDifferencescfDiffType")
-        .value("BACKWARD", elsa::FiniteDifferences<std::complex<float>>::DiffType::BACKWARD)
-        .value("CENTRAL", elsa::FiniteDifferences<std::complex<float>>::DiffType::CENTRAL)
-        .value("FORWARD", elsa::FiniteDifferences<std::complex<float>>::DiffType::FORWARD);
+    py::enum_<elsa::FiniteDifferences<thrust::complex<float>>::DiffType>(
+        m, "FiniteDifferencescfDiffType")
+        .value("BACKWARD", elsa::FiniteDifferences<thrust::complex<float>>::DiffType::BACKWARD)
+        .value("CENTRAL", elsa::FiniteDifferences<thrust::complex<float>>::DiffType::CENTRAL)
+        .value("FORWARD", elsa::FiniteDifferences<thrust::complex<float>>::DiffType::FORWARD);
 
-    py::enum_<elsa::FiniteDifferences<std::complex<double>>::DiffType>(
+    py::enum_<elsa::FiniteDifferences<thrust::complex<double>>::DiffType>(
         m, "FiniteDifferencescdDiffType")
-        .value("BACKWARD", elsa::FiniteDifferences<std::complex<double>>::DiffType::BACKWARD)
-        .value("CENTRAL", elsa::FiniteDifferences<std::complex<double>>::DiffType::CENTRAL)
-        .value("FORWARD", elsa::FiniteDifferences<std::complex<double>>::DiffType::FORWARD);
+        .value("BACKWARD", elsa::FiniteDifferences<thrust::complex<double>>::DiffType::BACKWARD)
+        .value("CENTRAL", elsa::FiniteDifferences<thrust::complex<double>>::DiffType::CENTRAL)
+        .value("FORWARD", elsa::FiniteDifferences<thrust::complex<double>>::DiffType::FORWARD);
 
     py::enum_<elsa::BlockLinearOperator<float>::BlockType>(m, "BlockLinearOperatorfBlockType")
         .value("COL", elsa::BlockLinearOperator<float>::BlockType::COL)
@@ -49,16 +49,16 @@ void add_definitions_pyelsa_operators(py::module& m)
         .value("ROW", elsa::BlockLinearOperator<double>::BlockType::ROW)
         .export_values();
 
-    py::enum_<elsa::BlockLinearOperator<std::complex<float>>::BlockType>(
+    py::enum_<elsa::BlockLinearOperator<thrust::complex<float>>::BlockType>(
         m, "BlockLinearOperatorcfBlockType")
-        .value("COL", elsa::BlockLinearOperator<std::complex<float>>::BlockType::COL)
-        .value("ROW", elsa::BlockLinearOperator<std::complex<float>>::BlockType::ROW)
+        .value("COL", elsa::BlockLinearOperator<thrust::complex<float>>::BlockType::COL)
+        .value("ROW", elsa::BlockLinearOperator<thrust::complex<float>>::BlockType::ROW)
         .export_values();
 
-    py::enum_<elsa::BlockLinearOperator<std::complex<double>>::BlockType>(
+    py::enum_<elsa::BlockLinearOperator<thrust::complex<double>>::BlockType>(
         m, "BlockLinearOperatorcdBlockType")
-        .value("COL", elsa::BlockLinearOperator<std::complex<double>>::BlockType::COL)
-        .value("ROW", elsa::BlockLinearOperator<std::complex<double>>::BlockType::ROW)
+        .value("COL", elsa::BlockLinearOperator<thrust::complex<double>>::BlockType::COL)
+        .value("ROW", elsa::BlockLinearOperator<thrust::complex<double>>::BlockType::ROW)
         .export_values();
 
     py::class_<elsa::Identity<float>, elsa::LinearOperator<float>> Identityf(m, "Identityf");
@@ -71,14 +71,14 @@ void add_definitions_pyelsa_operators(py::module& m)
 
     m.attr("Identity") = m.attr("Identityf");
 
-    py::class_<elsa::Identity<std::complex<float>>, elsa::LinearOperator<std::complex<float>>>
+    py::class_<elsa::Identity<thrust::complex<float>>, elsa::LinearOperator<thrust::complex<float>>>
         Identitycf(m, "Identitycf");
     Identitycf
         .def(
             "set",
-            (elsa::Identity<std::complex<
-                 float>> & (elsa::Identity<std::complex<float>>::*) (const elsa::Identity<std::complex<float>>&) )(
-                &elsa::Identity<std::complex<float>>::operator=),
+            (elsa::Identity<thrust::complex<
+                 float>> & (elsa::Identity<thrust::complex<float>>::*) (const elsa::Identity<thrust::complex<float>>&) )(
+                &elsa::Identity<thrust::complex<float>>::operator=),
             py::return_value_policy::reference_internal)
         .def(py::init<const elsa::DataDescriptor&>(), py::arg("descriptor"));
 
@@ -91,14 +91,15 @@ void add_definitions_pyelsa_operators(py::module& m)
             py::return_value_policy::reference_internal)
         .def(py::init<const elsa::DataDescriptor&>(), py::arg("descriptor"));
 
-    py::class_<elsa::Identity<std::complex<double>>, elsa::LinearOperator<std::complex<double>>>
+    py::class_<elsa::Identity<thrust::complex<double>>,
+               elsa::LinearOperator<thrust::complex<double>>>
         Identitycd(m, "Identitycd");
     Identitycd
         .def(
             "set",
-            (elsa::Identity<std::complex<
-                 double>> & (elsa::Identity<std::complex<double>>::*) (const elsa::Identity<std::complex<double>>&) )(
-                &elsa::Identity<std::complex<double>>::operator=),
+            (elsa::Identity<thrust::complex<
+                 double>> & (elsa::Identity<thrust::complex<double>>::*) (const elsa::Identity<thrust::complex<double>>&) )(
+                &elsa::Identity<thrust::complex<double>>::operator=),
             py::return_value_policy::reference_internal)
         .def(py::init<const elsa::DataDescriptor&>(), py::arg("descriptor"));
 
@@ -119,24 +120,24 @@ void add_definitions_pyelsa_operators(py::module& m)
 
     m.attr("Scaling") = m.attr("Scalingf");
 
-    py::class_<elsa::Scaling<std::complex<float>>, elsa::LinearOperator<std::complex<float>>>
+    py::class_<elsa::Scaling<thrust::complex<float>>, elsa::LinearOperator<thrust::complex<float>>>
         Scalingcf(m, "Scalingcf");
     Scalingcf
-        .def("isIsotropic", (bool(elsa::Scaling<std::complex<float>>::*)()
-                                 const)(&elsa::Scaling<std::complex<float>>::isIsotropic))
+        .def("isIsotropic", (bool(elsa::Scaling<thrust::complex<float>>::*)()
+                                 const)(&elsa::Scaling<thrust::complex<float>>::isIsotropic))
         .def("getScaleFactor",
-             (std::complex<float>(elsa::Scaling<std::complex<float>>::*)()
-                  const)(&elsa::Scaling<std::complex<float>>::getScaleFactor),
+             (thrust::complex<float>(elsa::Scaling<thrust::complex<float>>::*)()
+                  const)(&elsa::Scaling<thrust::complex<float>>::getScaleFactor),
              py::return_value_policy::move)
         .def("getScaleFactors",
-             (const elsa::DataContainer<std::complex<float>>& (
-                 elsa::Scaling<std::complex<float>>::*) ()
-                  const)(&elsa::Scaling<std::complex<float>>::getScaleFactors),
+             (const elsa::DataContainer<thrust::complex<float>>& (
+                 elsa::Scaling<thrust::complex<float>>::*) ()
+                  const)(&elsa::Scaling<thrust::complex<float>>::getScaleFactors),
              py::return_value_policy::reference_internal)
-        .def(py::init<const elsa::DataDescriptor&, std::complex<float>>(), py::arg("descriptor"),
+        .def(py::init<const elsa::DataDescriptor&, thrust::complex<float>>(), py::arg("descriptor"),
              py::arg("scaleFactor"))
         .def(py::init<const elsa::DataDescriptor&,
-                      const elsa::DataContainer<std::complex<float>>&>(),
+                      const elsa::DataContainer<thrust::complex<float>>&>(),
              py::arg("descriptor"), py::arg("scaleFactors"));
 
     py::class_<elsa::Scaling<double>, elsa::LinearOperator<double>> Scalingd(m, "Scalingd");
@@ -154,24 +155,25 @@ void add_definitions_pyelsa_operators(py::module& m)
         .def(py::init<const elsa::DataDescriptor&, double>(), py::arg("descriptor"),
              py::arg("scaleFactor"));
 
-    py::class_<elsa::Scaling<std::complex<double>>, elsa::LinearOperator<std::complex<double>>>
+    py::class_<elsa::Scaling<thrust::complex<double>>,
+               elsa::LinearOperator<thrust::complex<double>>>
         Scalingcd(m, "Scalingcd");
     Scalingcd
-        .def("isIsotropic", (bool(elsa::Scaling<std::complex<double>>::*)()
-                                 const)(&elsa::Scaling<std::complex<double>>::isIsotropic))
+        .def("isIsotropic", (bool(elsa::Scaling<thrust::complex<double>>::*)()
+                                 const)(&elsa::Scaling<thrust::complex<double>>::isIsotropic))
         .def("getScaleFactor",
-             (std::complex<double>(elsa::Scaling<std::complex<double>>::*)()
-                  const)(&elsa::Scaling<std::complex<double>>::getScaleFactor),
+             (thrust::complex<double>(elsa::Scaling<thrust::complex<double>>::*)()
+                  const)(&elsa::Scaling<thrust::complex<double>>::getScaleFactor),
              py::return_value_policy::move)
         .def("getScaleFactors",
-             (const elsa::DataContainer<std::complex<double>>& (
-                 elsa::Scaling<std::complex<double>>::*) ()
-                  const)(&elsa::Scaling<std::complex<double>>::getScaleFactors),
+             (const elsa::DataContainer<thrust::complex<double>>& (
+                 elsa::Scaling<thrust::complex<double>>::*) ()
+                  const)(&elsa::Scaling<thrust::complex<double>>::getScaleFactors),
              py::return_value_policy::reference_internal)
-        .def(py::init<const elsa::DataDescriptor&, std::complex<double>>(), py::arg("descriptor"),
-             py::arg("scaleFactor"))
+        .def(py::init<const elsa::DataDescriptor&, thrust::complex<double>>(),
+             py::arg("descriptor"), py::arg("scaleFactor"))
         .def(py::init<const elsa::DataDescriptor&,
-                      const elsa::DataContainer<std::complex<double>>&>(),
+                      const elsa::DataContainer<thrust::complex<double>>&>(),
              py::arg("descriptor"), py::arg("scaleFactors"));
 
     py::class_<elsa::FiniteDifferences<float>, elsa::LinearOperator<float>> FiniteDifferencesf(
@@ -212,75 +214,75 @@ void add_definitions_pyelsa_operators(py::module& m)
         .def(py::init<const elsa::DataDescriptor&, elsa::FiniteDifferences<double>::DiffType>(),
              py::arg("domainDescriptor"), py::arg("type"));
 
-    py::class_<elsa::FiniteDifferences<std::complex<float>>,
-               elsa::LinearOperator<std::complex<float>>>
+    py::class_<elsa::FiniteDifferences<thrust::complex<float>>,
+               elsa::LinearOperator<thrust::complex<float>>>
         FiniteDifferencescf(m, "FiniteDifferencescf");
     FiniteDifferencescf
         .def(
             "set",
-            (elsa::FiniteDifferences<std::complex<
-                 float>> & (elsa::FiniteDifferences<std::complex<float>>::*) (const elsa::FiniteDifferences<std::complex<float>>&) )(
-                &elsa::FiniteDifferences<std::complex<float>>::operator=),
+            (elsa::FiniteDifferences<thrust::complex<
+                 float>> & (elsa::FiniteDifferences<thrust::complex<float>>::*) (const elsa::FiniteDifferences<thrust::complex<float>>&) )(
+                &elsa::FiniteDifferences<thrust::complex<float>>::operator=),
             py::return_value_policy::reference_internal)
         .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<bool, -1, 1, 0, -1, 1>&>(),
              py::arg("domainDescriptor"), py::arg("activeDims"))
         .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<bool, -1, 1, 0, -1, 1>&,
-                      elsa::FiniteDifferences<std::complex<float>>::DiffType>(),
+                      elsa::FiniteDifferences<thrust::complex<float>>::DiffType>(),
              py::arg("domainDescriptor"), py::arg("activeDims"), py::arg("type"))
         .def(py::init<const elsa::DataDescriptor&>(), py::arg("domainDescriptor"))
         .def(py::init<const elsa::DataDescriptor&,
-                      elsa::FiniteDifferences<std::complex<float>>::DiffType>(),
+                      elsa::FiniteDifferences<thrust::complex<float>>::DiffType>(),
              py::arg("domainDescriptor"), py::arg("type"));
 
-    py::class_<elsa::FiniteDifferences<std::complex<double>>,
-               elsa::LinearOperator<std::complex<double>>>
+    py::class_<elsa::FiniteDifferences<thrust::complex<double>>,
+               elsa::LinearOperator<thrust::complex<double>>>
         FiniteDifferencescd(m, "FiniteDifferencescd");
     FiniteDifferencescd
         .def(
             "set",
-            (elsa::FiniteDifferences<std::complex<
-                 double>> & (elsa::FiniteDifferences<std::complex<double>>::*) (const elsa::FiniteDifferences<std::complex<double>>&) )(
-                &elsa::FiniteDifferences<std::complex<double>>::operator=),
+            (elsa::FiniteDifferences<thrust::complex<
+                 double>> & (elsa::FiniteDifferences<thrust::complex<double>>::*) (const elsa::FiniteDifferences<thrust::complex<double>>&) )(
+                &elsa::FiniteDifferences<thrust::complex<double>>::operator=),
             py::return_value_policy::reference_internal)
         .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<bool, -1, 1, 0, -1, 1>&>(),
              py::arg("domainDescriptor"), py::arg("activeDims"))
         .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<bool, -1, 1, 0, -1, 1>&,
-                      elsa::FiniteDifferences<std::complex<double>>::DiffType>(),
+                      elsa::FiniteDifferences<thrust::complex<double>>::DiffType>(),
              py::arg("domainDescriptor"), py::arg("activeDims"), py::arg("type"))
         .def(py::init<const elsa::DataDescriptor&>(), py::arg("domainDescriptor"))
         .def(py::init<const elsa::DataDescriptor&,
-                      elsa::FiniteDifferences<std::complex<double>>::DiffType>(),
+                      elsa::FiniteDifferences<thrust::complex<double>>::DiffType>(),
              py::arg("domainDescriptor"), py::arg("type"));
 
-    py::class_<elsa::FourierTransform<std::complex<float>>,
-               elsa::LinearOperator<std::complex<float>>>
+    py::class_<elsa::FourierTransform<thrust::complex<float>>,
+               elsa::LinearOperator<thrust::complex<float>>>
         FourierTransformcf(m, "FourierTransformcf");
     FourierTransformcf
         .def(
             "set",
-            (elsa::FourierTransform<std::complex<
-                 float>> & (elsa::FourierTransform<std::complex<float>>::*) (const elsa::FourierTransform<std::complex<float>>&) )(
-                &elsa::FourierTransform<std::complex<float>>::operator=),
+            (elsa::FourierTransform<thrust::complex<
+                 float>> & (elsa::FourierTransform<thrust::complex<float>>::*) (const elsa::FourierTransform<thrust::complex<float>>&) )(
+                &elsa::FourierTransform<thrust::complex<float>>::operator=),
             py::return_value_policy::reference_internal)
         .def(py::init<const elsa::DataDescriptor&, elsa::FFTNorm>(), py::arg("domainDescriptor"),
              py::arg("norm") = static_cast<elsa::FFTNorm>(2))
-        .def(py::init<const elsa::FourierTransform<std::complex<float>>&>());
+        .def(py::init<const elsa::FourierTransform<thrust::complex<float>>&>());
 
     m.attr("FourierTransform") = m.attr("FourierTransformcf");
 
-    py::class_<elsa::FourierTransform<std::complex<double>>,
-               elsa::LinearOperator<std::complex<double>>>
+    py::class_<elsa::FourierTransform<thrust::complex<double>>,
+               elsa::LinearOperator<thrust::complex<double>>>
         FourierTransformcd(m, "FourierTransformcd");
     FourierTransformcd
         .def(
             "set",
-            (elsa::FourierTransform<std::complex<
-                 double>> & (elsa::FourierTransform<std::complex<double>>::*) (const elsa::FourierTransform<std::complex<double>>&) )(
-                &elsa::FourierTransform<std::complex<double>>::operator=),
+            (elsa::FourierTransform<thrust::complex<
+                 double>> & (elsa::FourierTransform<thrust::complex<double>>::*) (const elsa::FourierTransform<thrust::complex<double>>&) )(
+                &elsa::FourierTransform<thrust::complex<double>>::operator=),
             py::return_value_policy::reference_internal)
         .def(py::init<const elsa::DataDescriptor&, elsa::FFTNorm>(), py::arg("domainDescriptor"),
              py::arg("norm") = static_cast<elsa::FFTNorm>(2))
-        .def(py::init<const elsa::FourierTransform<std::complex<double>>&>());
+        .def(py::init<const elsa::FourierTransform<thrust::complex<double>>&>());
 
     py::class_<elsa::BlockLinearOperator<float>, elsa::LinearOperator<float>> BlockLinearOperatorf(
         m, "BlockLinearOperatorf");
@@ -308,33 +310,34 @@ void add_definitions_pyelsa_operators(py::module& m)
 
     elsa::BlockLinearOperatorHints<double>::addCustomMethods(BlockLinearOperatord);
 
-    py::class_<elsa::BlockLinearOperator<std::complex<float>>,
-               elsa::LinearOperator<std::complex<float>>>
+    py::class_<elsa::BlockLinearOperator<thrust::complex<float>>,
+               elsa::LinearOperator<thrust::complex<float>>>
         BlockLinearOperatorcf(m, "BlockLinearOperatorcf");
     BlockLinearOperatorcf
         .def("getIthOperator",
-             (const elsa::LinearOperator<std::complex<float>>& (
-                 elsa::BlockLinearOperator<std::complex<float>>::*) (long)
-                  const)(&elsa::BlockLinearOperator<std::complex<float>>::getIthOperator),
+             (const elsa::LinearOperator<thrust::complex<float>>& (
+                 elsa::BlockLinearOperator<thrust::complex<float>>::*) (long)
+                  const)(&elsa::BlockLinearOperator<thrust::complex<float>>::getIthOperator),
              py::arg("index"), py::return_value_policy::reference_internal)
-        .def("numberOfOps", (long(elsa::BlockLinearOperator<std::complex<float>>::*)() const)(
-                                &elsa::BlockLinearOperator<std::complex<float>>::numberOfOps));
+        .def("numberOfOps", (long(elsa::BlockLinearOperator<thrust::complex<float>>::*)() const)(
+                                &elsa::BlockLinearOperator<thrust::complex<float>>::numberOfOps));
 
-    elsa::BlockLinearOperatorHints<std::complex<float>>::addCustomMethods(BlockLinearOperatorcf);
+    elsa::BlockLinearOperatorHints<thrust::complex<float>>::addCustomMethods(BlockLinearOperatorcf);
 
-    py::class_<elsa::BlockLinearOperator<std::complex<double>>,
-               elsa::LinearOperator<std::complex<double>>>
+    py::class_<elsa::BlockLinearOperator<thrust::complex<double>>,
+               elsa::LinearOperator<thrust::complex<double>>>
         BlockLinearOperatorcd(m, "BlockLinearOperatorcd");
     BlockLinearOperatorcd
         .def("getIthOperator",
-             (const elsa::LinearOperator<std::complex<double>>& (
-                 elsa::BlockLinearOperator<std::complex<double>>::*) (long)
-                  const)(&elsa::BlockLinearOperator<std::complex<double>>::getIthOperator),
+             (const elsa::LinearOperator<thrust::complex<double>>& (
+                 elsa::BlockLinearOperator<thrust::complex<double>>::*) (long)
+                  const)(&elsa::BlockLinearOperator<thrust::complex<double>>::getIthOperator),
              py::arg("index"), py::return_value_policy::reference_internal)
-        .def("numberOfOps", (long(elsa::BlockLinearOperator<std::complex<double>>::*)() const)(
-                                &elsa::BlockLinearOperator<std::complex<double>>::numberOfOps));
+        .def("numberOfOps", (long(elsa::BlockLinearOperator<thrust::complex<double>>::*)() const)(
+                                &elsa::BlockLinearOperator<thrust::complex<double>>::numberOfOps));
 
-    elsa::BlockLinearOperatorHints<std::complex<double>>::addCustomMethods(BlockLinearOperatorcd);
+    elsa::BlockLinearOperatorHints<thrust::complex<double>>::addCustomMethods(
+        BlockLinearOperatorcd);
 
     py::class_<elsa::Dictionary<float>, elsa::LinearOperator<float>> Dictionaryf(m, "Dictionaryf");
     Dictionaryf
@@ -391,8 +394,8 @@ void add_definitions_pyelsa_operators(py::module& m)
                   const)(&elsa::ShearletTransform<float, float>::getSpectra),
              py::return_value_policy::move)
         .def("sumByLastAxis",
-             (elsa::DataContainer<std::complex<float>>(elsa::ShearletTransform<float, float>::*)(
-                 elsa::DataContainer<std::complex<float>>)
+             (elsa::DataContainer<thrust::complex<float>>(elsa::ShearletTransform<float, float>::*)(
+                 elsa::DataContainer<thrust::complex<float>>)
                   const)(&elsa::ShearletTransform<float, float>::sumByLastAxis),
              py::arg("dc"), py::return_value_policy::move)
         .def(
@@ -420,47 +423,48 @@ void add_definitions_pyelsa_operators(py::module& m)
 
     m.attr("ShearletTransform") = m.attr("ShearletTransformfloatfloat");
 
-    py::class_<elsa::ShearletTransform<std::complex<float>, float>,
-               elsa::LinearOperator<std::complex<float>>>
+    py::class_<elsa::ShearletTransform<thrust::complex<float>, float>,
+               elsa::LinearOperator<thrust::complex<float>>>
         ShearletTransformcffloat(m, "ShearletTransformcffloat");
     ShearletTransformcffloat
         .def("isSpectraComputed",
-             (bool(elsa::ShearletTransform<std::complex<float>, float>::*)()
-                  const)(&elsa::ShearletTransform<std::complex<float>, float>::isSpectraComputed))
-        .def("getSpectra",
-             (elsa::DataContainer<float>(elsa::ShearletTransform<std::complex<float>, float>::*)()
-                  const)(&elsa::ShearletTransform<std::complex<float>, float>::getSpectra),
-             py::return_value_policy::move)
+             (bool(elsa::ShearletTransform<thrust::complex<float>, float>::*)() const)(
+                 &elsa::ShearletTransform<thrust::complex<float>, float>::isSpectraComputed))
+        .def(
+            "getSpectra",
+            (elsa::DataContainer<float>(elsa::ShearletTransform<thrust::complex<float>, float>::*)()
+                 const)(&elsa::ShearletTransform<thrust::complex<float>, float>::getSpectra),
+            py::return_value_policy::move)
         .def("sumByLastAxis",
-             (elsa::DataContainer<std::complex<float>>(
-                 elsa::ShearletTransform<std::complex<float>, float>::*)(
-                 elsa::DataContainer<std::complex<float>>)
-                  const)(&elsa::ShearletTransform<std::complex<float>, float>::sumByLastAxis),
+             (elsa::DataContainer<thrust::complex<float>>(
+                 elsa::ShearletTransform<thrust::complex<float>, float>::*)(
+                 elsa::DataContainer<thrust::complex<float>>)
+                  const)(&elsa::ShearletTransform<thrust::complex<float>, float>::sumByLastAxis),
              py::arg("dc"), py::return_value_policy::move)
         .def(
             "set",
             (elsa::ShearletTransform<
-                 std::complex<float>,
-                 float> & (elsa::ShearletTransform<std::complex<float>, float>::*) (const elsa::ShearletTransform<std::complex<float>, float>&) )(
-                &elsa::ShearletTransform<std::complex<float>, float>::operator=),
+                 thrust::complex<float>,
+                 float> & (elsa::ShearletTransform<thrust::complex<float>, float>::*) (const elsa::ShearletTransform<thrust::complex<float>, float>&) )(
+                &elsa::ShearletTransform<thrust::complex<float>, float>::operator=),
             py::return_value_policy::reference_internal)
-        .def("getHeight", (long(elsa::ShearletTransform<std::complex<float>, float>::*)() const)(
-                              &elsa::ShearletTransform<std::complex<float>, float>::getHeight))
+        .def("getHeight", (long(elsa::ShearletTransform<thrust::complex<float>, float>::*)() const)(
+                              &elsa::ShearletTransform<thrust::complex<float>, float>::getHeight))
         .def("getNumOfLayers",
-             (long(elsa::ShearletTransform<std::complex<float>, float>::*)()
-                  const)(&elsa::ShearletTransform<std::complex<float>, float>::getNumOfLayers))
-        .def("getWidth", (long(elsa::ShearletTransform<std::complex<float>, float>::*)() const)(
-                             &elsa::ShearletTransform<std::complex<float>, float>::getWidth))
+             (long(elsa::ShearletTransform<thrust::complex<float>, float>::*)()
+                  const)(&elsa::ShearletTransform<thrust::complex<float>, float>::getNumOfLayers))
+        .def("getWidth", (long(elsa::ShearletTransform<thrust::complex<float>, float>::*)() const)(
+                             &elsa::ShearletTransform<thrust::complex<float>, float>::getWidth))
         .def(py::init<Eigen::Matrix<long, -1, 1, 0, -1, 1>>(), py::arg("spatialDimensions"))
-        .def(py::init<const elsa::ShearletTransform<std::complex<float>, float>&>())
+        .def(py::init<const elsa::ShearletTransform<thrust::complex<float>, float>&>())
         .def(py::init<long, long>(), py::arg("width"), py::arg("height"))
         .def(py::init<long, long, long>(), py::arg("width"), py::arg("height"),
              py::arg("numOfScales"))
         .def(py::init<long, long, long, std::optional<elsa::DataContainer<float>>>(),
              py::arg("width"), py::arg("height"), py::arg("numOfScales"), py::arg("spectra"))
         .def("computeSpectra",
-             (void(elsa::ShearletTransform<std::complex<float>, float>::*)()
-                  const)(&elsa::ShearletTransform<std::complex<float>, float>::computeSpectra));
+             (void(elsa::ShearletTransform<thrust::complex<float>, float>::*)()
+                  const)(&elsa::ShearletTransform<thrust::complex<float>, float>::computeSpectra));
 
     py::class_<elsa::ShearletTransform<double, double>, elsa::LinearOperator<double>>
         ShearletTransformdoubledouble(m, "ShearletTransformdoubledouble");
@@ -468,8 +472,9 @@ void add_definitions_pyelsa_operators(py::module& m)
         .def("isSpectraComputed", (bool(elsa::ShearletTransform<double, double>::*)() const)(
                                       &elsa::ShearletTransform<double, double>::isSpectraComputed))
         .def("sumByLastAxis",
-             (elsa::DataContainer<std::complex<double>>(elsa::ShearletTransform<double, double>::*)(
-                 elsa::DataContainer<std::complex<double>>)
+             (elsa::DataContainer<thrust::complex<double>>(
+                 elsa::ShearletTransform<double, double>::*)(
+                 elsa::DataContainer<thrust::complex<double>>)
                   const)(&elsa::ShearletTransform<double, double>::sumByLastAxis),
              py::arg("dc"), py::return_value_policy::move)
         .def("getSpectra",
@@ -499,48 +504,50 @@ void add_definitions_pyelsa_operators(py::module& m)
         .def("computeSpectra", (void(elsa::ShearletTransform<double, double>::*)() const)(
                                    &elsa::ShearletTransform<double, double>::computeSpectra));
 
-    py::class_<elsa::ShearletTransform<std::complex<double>, double>,
-               elsa::LinearOperator<std::complex<double>>>
+    py::class_<elsa::ShearletTransform<thrust::complex<double>, double>,
+               elsa::LinearOperator<thrust::complex<double>>>
         ShearletTransformcddouble(m, "ShearletTransformcddouble");
     ShearletTransformcddouble
         .def("isSpectraComputed",
-             (bool(elsa::ShearletTransform<std::complex<double>, double>::*)()
-                  const)(&elsa::ShearletTransform<std::complex<double>, double>::isSpectraComputed))
+             (bool(elsa::ShearletTransform<thrust::complex<double>, double>::*)() const)(
+                 &elsa::ShearletTransform<thrust::complex<double>, double>::isSpectraComputed))
         .def("sumByLastAxis",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::ShearletTransform<std::complex<double>, double>::*)(
-                 elsa::DataContainer<std::complex<double>>)
-                  const)(&elsa::ShearletTransform<std::complex<double>, double>::sumByLastAxis),
+             (elsa::DataContainer<thrust::complex<double>>(
+                 elsa::ShearletTransform<thrust::complex<double>, double>::*)(
+                 elsa::DataContainer<thrust::complex<double>>)
+                  const)(&elsa::ShearletTransform<thrust::complex<double>, double>::sumByLastAxis),
              py::arg("dc"), py::return_value_policy::move)
-        .def(
-            "getSpectra",
-            (elsa::DataContainer<double>(elsa::ShearletTransform<std::complex<double>, double>::*)()
-                 const)(&elsa::ShearletTransform<std::complex<double>, double>::getSpectra),
-            py::return_value_policy::move)
+        .def("getSpectra",
+             (elsa::DataContainer<double>(
+                 elsa::ShearletTransform<thrust::complex<double>, double>::*)()
+                  const)(&elsa::ShearletTransform<thrust::complex<double>, double>::getSpectra),
+             py::return_value_policy::move)
         .def(
             "set",
             (elsa::ShearletTransform<
-                 std::complex<double>,
-                 double> & (elsa::ShearletTransform<std::complex<double>, double>::*) (const elsa::ShearletTransform<std::complex<double>, double>&) )(
-                &elsa::ShearletTransform<std::complex<double>, double>::operator=),
+                 thrust::complex<double>,
+                 double> & (elsa::ShearletTransform<thrust::complex<double>, double>::*) (const elsa::ShearletTransform<thrust::complex<double>, double>&) )(
+                &elsa::ShearletTransform<thrust::complex<double>, double>::operator=),
             py::return_value_policy::reference_internal)
-        .def("getHeight", (long(elsa::ShearletTransform<std::complex<double>, double>::*)() const)(
-                              &elsa::ShearletTransform<std::complex<double>, double>::getHeight))
+        .def("getHeight",
+             (long(elsa::ShearletTransform<thrust::complex<double>, double>::*)()
+                  const)(&elsa::ShearletTransform<thrust::complex<double>, double>::getHeight))
         .def("getNumOfLayers",
-             (long(elsa::ShearletTransform<std::complex<double>, double>::*)()
-                  const)(&elsa::ShearletTransform<std::complex<double>, double>::getNumOfLayers))
-        .def("getWidth", (long(elsa::ShearletTransform<std::complex<double>, double>::*)() const)(
-                             &elsa::ShearletTransform<std::complex<double>, double>::getWidth))
+             (long(elsa::ShearletTransform<thrust::complex<double>, double>::*)()
+                  const)(&elsa::ShearletTransform<thrust::complex<double>, double>::getNumOfLayers))
+        .def("getWidth",
+             (long(elsa::ShearletTransform<thrust::complex<double>, double>::*)()
+                  const)(&elsa::ShearletTransform<thrust::complex<double>, double>::getWidth))
         .def(py::init<Eigen::Matrix<long, -1, 1, 0, -1, 1>>(), py::arg("spatialDimensions"))
-        .def(py::init<const elsa::ShearletTransform<std::complex<double>, double>&>())
+        .def(py::init<const elsa::ShearletTransform<thrust::complex<double>, double>&>())
         .def(py::init<long, long>(), py::arg("width"), py::arg("height"))
         .def(py::init<long, long, long>(), py::arg("width"), py::arg("height"),
              py::arg("numOfScales"))
         .def(py::init<long, long, long, std::optional<elsa::DataContainer<double>>>(),
              py::arg("width"), py::arg("height"), py::arg("numOfScales"), py::arg("spectra"))
         .def("computeSpectra",
-             (void(elsa::ShearletTransform<std::complex<double>, double>::*)()
-                  const)(&elsa::ShearletTransform<std::complex<double>, double>::computeSpectra));
+             (void(elsa::ShearletTransform<thrust::complex<double>, double>::*)() const)(
+                 &elsa::ShearletTransform<thrust::complex<double>, double>::computeSpectra));
 
     elsa::OperatorsHints::addCustomFunctions(m);
 }

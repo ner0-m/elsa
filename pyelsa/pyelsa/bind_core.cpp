@@ -150,14 +150,6 @@ void add_definitions_pyelsa_core(py::module& m)
              (elsa::DataContainer<float>(elsa::DataContainer<float>::*)(long))(
                  &elsa::DataContainer<float>::slice),
              py::arg("i"), py::return_value_policy::move)
-        .def("loadToCPU",
-             (elsa::DataContainer<float>(elsa::DataContainer<float>::*)())(
-                 &elsa::DataContainer<float>::loadToCPU),
-             py::return_value_policy::move)
-        .def("loadToGPU",
-             (elsa::DataContainer<float>(elsa::DataContainer<float>::*)())(
-                 &elsa::DataContainer<float>::loadToGPU),
-             py::return_value_policy::move)
         .def("viewAs",
              (const elsa::DataContainer<float> (elsa::DataContainer<float>::*)(
                  const elsa::DataDescriptor&) const)(&elsa::DataContainer<float>::viewAs),
@@ -236,181 +228,179 @@ void add_definitions_pyelsa_core(py::module& m)
 
     m.attr("DataContainer") = m.attr("DataContainerf");
 
-    py::class_<elsa::DataContainer<std::complex<float>>> DataContainercf(m, "DataContainercf");
+    py::class_<elsa::DataContainer<thrust::complex<float>>> DataContainercf(m, "DataContainercf");
     DataContainercf
         .def("__ne__",
-             (bool(elsa::DataContainer<std::complex<float>>::*)(
-                 const elsa::DataContainer<std::complex<float>>&)
-                  const)(&elsa::DataContainer<std::complex<float>>::operator!=),
+             (bool(elsa::DataContainer<thrust::complex<float>>::*)(
+                 const elsa::DataContainer<thrust::complex<float>>&)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::DataContainer<std::complex<float>>::*)(
-                 const elsa::DataContainer<std::complex<float>>&)
-                  const)(&elsa::DataContainer<std::complex<float>>::operator==),
+             (bool(elsa::DataContainer<thrust::complex<float>>::*)(
+                 const elsa::DataContainer<thrust::complex<float>>&)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::operator==),
              py::arg("other"))
-        .def("__imul__",
-             (elsa::DataContainer<std::complex<
-                  float>> & (elsa::DataContainer<std::complex<float>>::*) (std::complex<float>) )(
-                 &elsa::DataContainer<std::complex<float>>::operator*=),
-             py::arg("scalar"), py::return_value_policy::reference_internal)
-        .def("__iadd__",
-             (elsa::DataContainer<std::complex<
-                  float>> & (elsa::DataContainer<std::complex<float>>::*) (std::complex<float>) )(
-                 &elsa::DataContainer<std::complex<float>>::operator+=),
-             py::arg("scalar"), py::return_value_policy::reference_internal)
-        .def("__isub__",
-             (elsa::DataContainer<std::complex<
-                  float>> & (elsa::DataContainer<std::complex<float>>::*) (std::complex<float>) )(
-                 &elsa::DataContainer<std::complex<float>>::operator-=),
-             py::arg("scalar"), py::return_value_policy::reference_internal)
-        .def("__idiv__",
-             (elsa::DataContainer<std::complex<
-                  float>> & (elsa::DataContainer<std::complex<float>>::*) (std::complex<float>) )(
-                 &elsa::DataContainer<std::complex<float>>::operator/=),
-             py::arg("scalar"), py::return_value_policy::reference_internal)
-        .def("set",
-             (elsa::DataContainer<std::complex<
-                  float>> & (elsa::DataContainer<std::complex<float>>::*) (std::complex<float>) )(
-                 &elsa::DataContainer<std::complex<float>>::operator=),
-             py::arg("scalar"), py::return_value_policy::reference_internal)
         .def(
             "__imul__",
-            (elsa::DataContainer<std::complex<
-                 float>> & (elsa::DataContainer<std::complex<float>>::*) (const elsa::DataContainer<std::complex<float>>&) )(
-                &elsa::DataContainer<std::complex<float>>::operator*=),
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (thrust::complex<float>) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator*=),
+            py::arg("scalar"), py::return_value_policy::reference_internal)
+        .def(
+            "__iadd__",
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (thrust::complex<float>) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator+=),
+            py::arg("scalar"), py::return_value_policy::reference_internal)
+        .def(
+            "__isub__",
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (thrust::complex<float>) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator-=),
+            py::arg("scalar"), py::return_value_policy::reference_internal)
+        .def(
+            "__idiv__",
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (thrust::complex<float>) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator/=),
+            py::arg("scalar"), py::return_value_policy::reference_internal)
+        .def(
+            "set",
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (thrust::complex<float>) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator=),
+            py::arg("scalar"), py::return_value_policy::reference_internal)
+        .def(
+            "__imul__",
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (const elsa::DataContainer<thrust::complex<float>>&) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator*=),
             py::arg("dc"), py::return_value_policy::reference_internal)
         .def(
             "__iadd__",
-            (elsa::DataContainer<std::complex<
-                 float>> & (elsa::DataContainer<std::complex<float>>::*) (const elsa::DataContainer<std::complex<float>>&) )(
-                &elsa::DataContainer<std::complex<float>>::operator+=),
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (const elsa::DataContainer<thrust::complex<float>>&) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator+=),
             py::arg("dc"), py::return_value_policy::reference_internal)
         .def(
             "__isub__",
-            (elsa::DataContainer<std::complex<
-                 float>> & (elsa::DataContainer<std::complex<float>>::*) (const elsa::DataContainer<std::complex<float>>&) )(
-                &elsa::DataContainer<std::complex<float>>::operator-=),
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (const elsa::DataContainer<thrust::complex<float>>&) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator-=),
             py::arg("dc"), py::return_value_policy::reference_internal)
         .def(
             "__idiv__",
-            (elsa::DataContainer<std::complex<
-                 float>> & (elsa::DataContainer<std::complex<float>>::*) (const elsa::DataContainer<std::complex<float>>&) )(
-                &elsa::DataContainer<std::complex<float>>::operator/=),
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (const elsa::DataContainer<thrust::complex<float>>&) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator/=),
             py::arg("dc"), py::return_value_policy::reference_internal)
         .def(
             "set",
-            (elsa::DataContainer<std::complex<
-                 float>> & (elsa::DataContainer<std::complex<float>>::*) (const elsa::DataContainer<std::complex<float>>&) )(
-                &elsa::DataContainer<std::complex<float>>::operator=),
+            (elsa::DataContainer<thrust::complex<
+                 float>> & (elsa::DataContainer<thrust::complex<float>>::*) (const elsa::DataContainer<thrust::complex<float>>&) )(
+                &elsa::DataContainer<thrust::complex<float>>::operator=),
             py::arg("other"), py::return_value_policy::reference_internal)
         .def("viewAs",
-             (elsa::DataContainer<std::complex<float>>(elsa::DataContainer<std::complex<float>>::*)(
-                 const elsa::DataDescriptor&))(&elsa::DataContainer<std::complex<float>>::viewAs),
+             (elsa::DataContainer<thrust::complex<float>>(
+                 elsa::DataContainer<thrust::complex<float>>::*)(const elsa::DataDescriptor&))(
+                 &elsa::DataContainer<thrust::complex<float>>::viewAs),
              py::arg("dataDescriptor"), py::return_value_policy::move)
         .def("getBlock",
-             (elsa::DataContainer<std::complex<float>>(elsa::DataContainer<std::complex<float>>::*)(
-                 long))(&elsa::DataContainer<std::complex<float>>::getBlock),
+             (elsa::DataContainer<thrust::complex<float>>(
+                 elsa::DataContainer<thrust::complex<float>>::*)(long))(
+                 &elsa::DataContainer<thrust::complex<float>>::getBlock),
              py::arg("i"), py::return_value_policy::move)
         .def("slice",
-             (elsa::DataContainer<std::complex<float>>(elsa::DataContainer<std::complex<float>>::*)(
-                 long))(&elsa::DataContainer<std::complex<float>>::slice),
+             (elsa::DataContainer<thrust::complex<float>>(
+                 elsa::DataContainer<thrust::complex<float>>::*)(long))(
+                 &elsa::DataContainer<thrust::complex<float>>::slice),
              py::arg("i"), py::return_value_policy::move)
-        .def("loadToCPU",
-             (elsa::DataContainer<std::complex<float>>(
-                 elsa::DataContainer<std::complex<float>>::*)())(
-                 &elsa::DataContainer<std::complex<float>>::loadToCPU),
-             py::return_value_policy::move)
-        .def("loadToGPU",
-             (elsa::DataContainer<std::complex<float>>(
-                 elsa::DataContainer<std::complex<float>>::*)())(
-                 &elsa::DataContainer<std::complex<float>>::loadToGPU),
-             py::return_value_policy::move)
         .def("__getitem__",
-             (std::complex<float> & (elsa::DataContainer<std::complex<float>>::*) (long) )(
-                 &elsa::DataContainer<std::complex<float>>::operator[]),
+             (thrust::complex<float> & (elsa::DataContainer<thrust::complex<float>>::*) (long) )(
+                 &elsa::DataContainer<thrust::complex<float>>::operator[]),
              py::arg("index"), py::return_value_policy::reference_internal)
         .def("at",
-             (std::complex<float>(elsa::DataContainer<std::complex<float>>::*)(
+             (thrust::complex<float>(elsa::DataContainer<thrust::complex<float>>::*)(
                  const Eigen::Matrix<long, -1, 1, 0, -1, 1>&)
-                  const)(&elsa::DataContainer<std::complex<float>>::at),
+                  const)(&elsa::DataContainer<thrust::complex<float>>::at),
              py::arg("coordinate"), py::return_value_policy::move)
         .def("dot",
-             (std::complex<float>(elsa::DataContainer<std::complex<float>>::*)(
-                 const elsa::DataContainer<std::complex<float>>&)
-                  const)(&elsa::DataContainer<std::complex<float>>::dot),
+             (thrust::complex<float>(elsa::DataContainer<thrust::complex<float>>::*)(
+                 const elsa::DataContainer<thrust::complex<float>>&)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::dot),
              py::arg("other"), py::return_value_policy::move)
         .def("maxElement",
-             (std::complex<float>(elsa::DataContainer<std::complex<float>>::*)()
-                  const)(&elsa::DataContainer<std::complex<float>>::maxElement),
+             (thrust::complex<float>(elsa::DataContainer<thrust::complex<float>>::*)()
+                  const)(&elsa::DataContainer<thrust::complex<float>>::maxElement),
              py::return_value_policy::move)
         .def("minElement",
-             (std::complex<float>(elsa::DataContainer<std::complex<float>>::*)()
-                  const)(&elsa::DataContainer<std::complex<float>>::minElement),
+             (thrust::complex<float>(elsa::DataContainer<thrust::complex<float>>::*)()
+                  const)(&elsa::DataContainer<thrust::complex<float>>::minElement),
              py::return_value_policy::move)
         .def("sum",
-             (std::complex<float>(elsa::DataContainer<std::complex<float>>::*)()
-                  const)(&elsa::DataContainer<std::complex<float>>::sum),
+             (thrust::complex<float>(elsa::DataContainer<thrust::complex<float>>::*)()
+                  const)(&elsa::DataContainer<thrust::complex<float>>::sum),
              py::return_value_policy::move)
         .def("viewAs",
-             (const elsa::DataContainer<std::complex<float>> (
-                 elsa::DataContainer<std::complex<float>>::*)(const elsa::DataDescriptor&)
-                  const)(&elsa::DataContainer<std::complex<float>>::viewAs),
+             (const elsa::DataContainer<thrust::complex<float>> (
+                 elsa::DataContainer<thrust::complex<float>>::*)(const elsa::DataDescriptor&)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::viewAs),
              py::arg("dataDescriptor"), py::return_value_policy::move)
         .def("getBlock",
-             (const elsa::DataContainer<std::complex<float>> (
-                 elsa::DataContainer<std::complex<float>>::*)(long)
-                  const)(&elsa::DataContainer<std::complex<float>>::getBlock),
+             (const elsa::DataContainer<thrust::complex<float>> (
+                 elsa::DataContainer<thrust::complex<float>>::*)(long)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::getBlock),
              py::arg("i"), py::return_value_policy::move)
         .def("slice",
-             (const elsa::DataContainer<std::complex<float>> (
-                 elsa::DataContainer<std::complex<float>>::*)(long)
-                  const)(&elsa::DataContainer<std::complex<float>>::slice),
+             (const elsa::DataContainer<thrust::complex<float>> (
+                 elsa::DataContainer<thrust::complex<float>>::*)(long)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::slice),
              py::arg("i"), py::return_value_policy::move)
         .def("getDataDescriptor",
-             (const elsa::DataDescriptor& (elsa::DataContainer<std::complex<float>>::*) ()
-                  const)(&elsa::DataContainer<std::complex<float>>::getDataDescriptor),
+             (const elsa::DataDescriptor& (elsa::DataContainer<thrust::complex<float>>::*) ()
+                  const)(&elsa::DataContainer<thrust::complex<float>>::getDataDescriptor),
              py::return_value_policy::reference_internal)
         .def("__getitem__",
-             (const std::complex<float>& (elsa::DataContainer<std::complex<float>>::*) (long)
-                  const)(&elsa::DataContainer<std::complex<float>>::operator[]),
+             (const thrust::complex<float>& (elsa::DataContainer<thrust::complex<float>>::*) (long)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::operator[]),
              py::arg("index"), py::return_value_policy::reference_internal)
-        .def("l1Norm", (float(elsa::DataContainer<std::complex<float>>::*)()
-                            const)(&elsa::DataContainer<std::complex<float>>::l1Norm))
-        .def("l2Norm", (float(elsa::DataContainer<std::complex<float>>::*)()
-                            const)(&elsa::DataContainer<std::complex<float>>::l2Norm))
-        .def("lInfNorm", (float(elsa::DataContainer<std::complex<float>>::*)()
-                              const)(&elsa::DataContainer<std::complex<float>>::lInfNorm))
-        .def("squaredL2Norm", (float(elsa::DataContainer<std::complex<float>>::*)()
-                                   const)(&elsa::DataContainer<std::complex<float>>::squaredL2Norm))
-        .def("getSize", (long(elsa::DataContainer<std::complex<float>>::*)()
-                             const)(&elsa::DataContainer<std::complex<float>>::getSize))
-        .def("l0PseudoNorm", (long(elsa::DataContainer<std::complex<float>>::*)()
-                                  const)(&elsa::DataContainer<std::complex<float>>::l0PseudoNorm))
+        .def("l1Norm", (float(elsa::DataContainer<thrust::complex<float>>::*)()
+                            const)(&elsa::DataContainer<thrust::complex<float>>::l1Norm))
+        .def("l2Norm", (float(elsa::DataContainer<thrust::complex<float>>::*)()
+                            const)(&elsa::DataContainer<thrust::complex<float>>::l2Norm))
+        .def("lInfNorm", (float(elsa::DataContainer<thrust::complex<float>>::*)()
+                              const)(&elsa::DataContainer<thrust::complex<float>>::lInfNorm))
+        .def("squaredL2Norm", (float(elsa::DataContainer<thrust::complex<float>>::*)() const)(
+                                  &elsa::DataContainer<thrust::complex<float>>::squaredL2Norm))
+        .def("getSize", (long(elsa::DataContainer<thrust::complex<float>>::*)()
+                             const)(&elsa::DataContainer<thrust::complex<float>>::getSize))
+        .def("l0PseudoNorm", (long(elsa::DataContainer<thrust::complex<float>>::*)() const)(
+                                 &elsa::DataContainer<thrust::complex<float>>::l0PseudoNorm))
         .def("format",
-             (void(elsa::DataContainer<std::complex<float>>::*)(
+             (void(elsa::DataContainer<thrust::complex<float>>::*)(
                  std::basic_ostream<char, std::char_traits<char>>&)
-                  const)(&elsa::DataContainer<std::complex<float>>::format),
+                  const)(&elsa::DataContainer<thrust::complex<float>>::format),
              py::arg("os"))
         .def("format",
-             (void(elsa::DataContainer<std::complex<float>>::*)(
+             (void(elsa::DataContainer<thrust::complex<float>>::*)(
                  std::basic_ostream<char, std::char_traits<char>>&, elsa::format_config)
-                  const)(&elsa::DataContainer<std::complex<float>>::format),
+                  const)(&elsa::DataContainer<thrust::complex<float>>::format),
              py::arg("os"), py::arg("cfg"))
-        .def(py::init<const elsa::DataContainer<std::complex<float>>&>(), py::arg("other"))
+        .def(py::init<const elsa::DataContainer<thrust::complex<float>>&>(), py::arg("other"))
         .def(py::init<const elsa::DataDescriptor&,
-                      const Eigen::Matrix<std::complex<float>, -1, 1, 0, -1, 1>&>(),
+                      const Eigen::Matrix<thrust::complex<float>, -1, 1, 0, -1, 1>&>(),
              py::arg("dataDescriptor"), py::arg("data"))
         .def(py::init<const elsa::DataDescriptor&>(), py::arg("dataDescriptor"))
         .def("fft",
-             (void(elsa::DataContainer<std::complex<float>>::*)(elsa::FFTNorm)
-                  const)(&elsa::DataContainer<std::complex<float>>::fft),
+             (void(elsa::DataContainer<thrust::complex<float>>::*)(elsa::FFTNorm)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::fft),
              py::arg("norm"))
         .def("ifft",
-             (void(elsa::DataContainer<std::complex<float>>::*)(elsa::FFTNorm)
-                  const)(&elsa::DataContainer<std::complex<float>>::ifft),
+             (void(elsa::DataContainer<thrust::complex<float>>::*)(elsa::FFTNorm)
+                  const)(&elsa::DataContainer<thrust::complex<float>>::ifft),
              py::arg("norm"));
 
-    elsa::DataContainerComplexHints<std::complex<float>>::addCustomMethods(DataContainercf);
+    elsa::DataContainerComplexHints<thrust::complex<float>>::addCustomMethods(DataContainercf);
 
     py::class_<elsa::DataContainer<double>> DataContainerd(m, "DataContainerd",
                                                            py::buffer_protocol());
@@ -480,14 +470,6 @@ void add_definitions_pyelsa_core(py::module& m)
              (elsa::DataContainer<double>(elsa::DataContainer<double>::*)(long))(
                  &elsa::DataContainer<double>::slice),
              py::arg("i"), py::return_value_policy::move)
-        .def("loadToCPU",
-             (elsa::DataContainer<double>(elsa::DataContainer<double>::*)())(
-                 &elsa::DataContainer<double>::loadToCPU),
-             py::return_value_policy::move)
-        .def("loadToGPU",
-             (elsa::DataContainer<double>(elsa::DataContainer<double>::*)())(
-                 &elsa::DataContainer<double>::loadToGPU),
-             py::return_value_policy::move)
         .def("viewAs",
              (const elsa::DataContainer<double> (elsa::DataContainer<double>::*)(
                  const elsa::DataDescriptor&) const)(&elsa::DataContainer<double>::viewAs),
@@ -565,189 +547,180 @@ void add_definitions_pyelsa_core(py::module& m)
 
     elsa::DataContainerHints<double>::exposeBufferInfo(DataContainerd);
 
-    py::class_<elsa::DataContainer<std::complex<double>>> DataContainercd(m, "DataContainercd");
+    py::class_<elsa::DataContainer<thrust::complex<double>>> DataContainercd(m, "DataContainercd");
     DataContainercd
         .def("__ne__",
-             (bool(elsa::DataContainer<std::complex<double>>::*)(
-                 const elsa::DataContainer<std::complex<double>>&)
-                  const)(&elsa::DataContainer<std::complex<double>>::operator!=),
+             (bool(elsa::DataContainer<thrust::complex<double>>::*)(
+                 const elsa::DataContainer<thrust::complex<double>>&)
+                  const)(&elsa::DataContainer<thrust::complex<double>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::DataContainer<std::complex<double>>::*)(
-                 const elsa::DataContainer<std::complex<double>>&)
-                  const)(&elsa::DataContainer<std::complex<double>>::operator==),
+             (bool(elsa::DataContainer<thrust::complex<double>>::*)(
+                 const elsa::DataContainer<thrust::complex<double>>&)
+                  const)(&elsa::DataContainer<thrust::complex<double>>::operator==),
              py::arg("other"))
         .def(
             "__imul__",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (std::complex<double>) )(
-                &elsa::DataContainer<std::complex<double>>::operator*=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (thrust::complex<double>) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator*=),
             py::arg("scalar"), py::return_value_policy::reference_internal)
         .def(
             "__iadd__",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (std::complex<double>) )(
-                &elsa::DataContainer<std::complex<double>>::operator+=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (thrust::complex<double>) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator+=),
             py::arg("scalar"), py::return_value_policy::reference_internal)
         .def(
             "__isub__",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (std::complex<double>) )(
-                &elsa::DataContainer<std::complex<double>>::operator-=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (thrust::complex<double>) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator-=),
             py::arg("scalar"), py::return_value_policy::reference_internal)
         .def(
             "__idiv__",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (std::complex<double>) )(
-                &elsa::DataContainer<std::complex<double>>::operator/=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (thrust::complex<double>) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator/=),
             py::arg("scalar"), py::return_value_policy::reference_internal)
         .def(
             "set",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (std::complex<double>) )(
-                &elsa::DataContainer<std::complex<double>>::operator=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (thrust::complex<double>) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator=),
             py::arg("scalar"), py::return_value_policy::reference_internal)
         .def(
             "__imul__",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (const elsa::DataContainer<std::complex<double>>&) )(
-                &elsa::DataContainer<std::complex<double>>::operator*=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (const elsa::DataContainer<thrust::complex<double>>&) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator*=),
             py::arg("dc"), py::return_value_policy::reference_internal)
         .def(
             "__iadd__",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (const elsa::DataContainer<std::complex<double>>&) )(
-                &elsa::DataContainer<std::complex<double>>::operator+=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (const elsa::DataContainer<thrust::complex<double>>&) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator+=),
             py::arg("dc"), py::return_value_policy::reference_internal)
         .def(
             "__isub__",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (const elsa::DataContainer<std::complex<double>>&) )(
-                &elsa::DataContainer<std::complex<double>>::operator-=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (const elsa::DataContainer<thrust::complex<double>>&) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator-=),
             py::arg("dc"), py::return_value_policy::reference_internal)
         .def(
             "__idiv__",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (const elsa::DataContainer<std::complex<double>>&) )(
-                &elsa::DataContainer<std::complex<double>>::operator/=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (const elsa::DataContainer<thrust::complex<double>>&) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator/=),
             py::arg("dc"), py::return_value_policy::reference_internal)
         .def(
             "set",
-            (elsa::DataContainer<std::complex<
-                 double>> & (elsa::DataContainer<std::complex<double>>::*) (const elsa::DataContainer<std::complex<double>>&) )(
-                &elsa::DataContainer<std::complex<double>>::operator=),
+            (elsa::DataContainer<thrust::complex<
+                 double>> & (elsa::DataContainer<thrust::complex<double>>::*) (const elsa::DataContainer<thrust::complex<double>>&) )(
+                &elsa::DataContainer<thrust::complex<double>>::operator=),
             py::arg("other"), py::return_value_policy::reference_internal)
         .def("viewAs",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::DataContainer<std::complex<double>>::*)(const elsa::DataDescriptor&))(
-                 &elsa::DataContainer<std::complex<double>>::viewAs),
+             (elsa::DataContainer<thrust::complex<double>>(
+                 elsa::DataContainer<thrust::complex<double>>::*)(const elsa::DataDescriptor&))(
+                 &elsa::DataContainer<thrust::complex<double>>::viewAs),
              py::arg("dataDescriptor"), py::return_value_policy::move)
         .def("getBlock",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::DataContainer<std::complex<double>>::*)(long))(
-                 &elsa::DataContainer<std::complex<double>>::getBlock),
+             (elsa::DataContainer<thrust::complex<double>>(
+                 elsa::DataContainer<thrust::complex<double>>::*)(long))(
+                 &elsa::DataContainer<thrust::complex<double>>::getBlock),
              py::arg("i"), py::return_value_policy::move)
         .def("slice",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::DataContainer<std::complex<double>>::*)(long))(
-                 &elsa::DataContainer<std::complex<double>>::slice),
+             (elsa::DataContainer<thrust::complex<double>>(
+                 elsa::DataContainer<thrust::complex<double>>::*)(long))(
+                 &elsa::DataContainer<thrust::complex<double>>::slice),
              py::arg("i"), py::return_value_policy::move)
-        .def("loadToCPU",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::DataContainer<std::complex<double>>::*)())(
-                 &elsa::DataContainer<std::complex<double>>::loadToCPU),
-             py::return_value_policy::move)
-        .def("loadToGPU",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::DataContainer<std::complex<double>>::*)())(
-                 &elsa::DataContainer<std::complex<double>>::loadToGPU),
-             py::return_value_policy::move)
         .def("__getitem__",
-             (std::complex<double> & (elsa::DataContainer<std::complex<double>>::*) (long) )(
-                 &elsa::DataContainer<std::complex<double>>::operator[]),
+             (thrust::complex<double> & (elsa::DataContainer<thrust::complex<double>>::*) (long) )(
+                 &elsa::DataContainer<thrust::complex<double>>::operator[]),
              py::arg("index"), py::return_value_policy::reference_internal)
         .def("at",
-             (std::complex<double>(elsa::DataContainer<std::complex<double>>::*)(
+             (thrust::complex<double>(elsa::DataContainer<thrust::complex<double>>::*)(
                  const Eigen::Matrix<long, -1, 1, 0, -1, 1>&)
-                  const)(&elsa::DataContainer<std::complex<double>>::at),
+                  const)(&elsa::DataContainer<thrust::complex<double>>::at),
              py::arg("coordinate"), py::return_value_policy::move)
         .def("dot",
-             (std::complex<double>(elsa::DataContainer<std::complex<double>>::*)(
-                 const elsa::DataContainer<std::complex<double>>&)
-                  const)(&elsa::DataContainer<std::complex<double>>::dot),
+             (thrust::complex<double>(elsa::DataContainer<thrust::complex<double>>::*)(
+                 const elsa::DataContainer<thrust::complex<double>>&)
+                  const)(&elsa::DataContainer<thrust::complex<double>>::dot),
              py::arg("other"), py::return_value_policy::move)
         .def("maxElement",
-             (std::complex<double>(elsa::DataContainer<std::complex<double>>::*)()
-                  const)(&elsa::DataContainer<std::complex<double>>::maxElement),
+             (thrust::complex<double>(elsa::DataContainer<thrust::complex<double>>::*)()
+                  const)(&elsa::DataContainer<thrust::complex<double>>::maxElement),
              py::return_value_policy::move)
         .def("minElement",
-             (std::complex<double>(elsa::DataContainer<std::complex<double>>::*)()
-                  const)(&elsa::DataContainer<std::complex<double>>::minElement),
+             (thrust::complex<double>(elsa::DataContainer<thrust::complex<double>>::*)()
+                  const)(&elsa::DataContainer<thrust::complex<double>>::minElement),
              py::return_value_policy::move)
         .def("sum",
-             (std::complex<double>(elsa::DataContainer<std::complex<double>>::*)()
-                  const)(&elsa::DataContainer<std::complex<double>>::sum),
+             (thrust::complex<double>(elsa::DataContainer<thrust::complex<double>>::*)()
+                  const)(&elsa::DataContainer<thrust::complex<double>>::sum),
              py::return_value_policy::move)
         .def("viewAs",
-             (const elsa::DataContainer<std::complex<double>> (
-                 elsa::DataContainer<std::complex<double>>::*)(const elsa::DataDescriptor&)
-                  const)(&elsa::DataContainer<std::complex<double>>::viewAs),
+             (const elsa::DataContainer<thrust::complex<double>> (
+                 elsa::DataContainer<thrust::complex<double>>::*)(const elsa::DataDescriptor&)
+                  const)(&elsa::DataContainer<thrust::complex<double>>::viewAs),
              py::arg("dataDescriptor"), py::return_value_policy::move)
         .def("getBlock",
-             (const elsa::DataContainer<std::complex<double>> (
-                 elsa::DataContainer<std::complex<double>>::*)(long)
-                  const)(&elsa::DataContainer<std::complex<double>>::getBlock),
+             (const elsa::DataContainer<thrust::complex<double>> (
+                 elsa::DataContainer<thrust::complex<double>>::*)(long)
+                  const)(&elsa::DataContainer<thrust::complex<double>>::getBlock),
              py::arg("i"), py::return_value_policy::move)
         .def("slice",
-             (const elsa::DataContainer<std::complex<double>> (
-                 elsa::DataContainer<std::complex<double>>::*)(long)
-                  const)(&elsa::DataContainer<std::complex<double>>::slice),
+             (const elsa::DataContainer<thrust::complex<double>> (
+                 elsa::DataContainer<thrust::complex<double>>::*)(long)
+                  const)(&elsa::DataContainer<thrust::complex<double>>::slice),
              py::arg("i"), py::return_value_policy::move)
         .def("getDataDescriptor",
-             (const elsa::DataDescriptor& (elsa::DataContainer<std::complex<double>>::*) ()
-                  const)(&elsa::DataContainer<std::complex<double>>::getDataDescriptor),
+             (const elsa::DataDescriptor& (elsa::DataContainer<thrust::complex<double>>::*) ()
+                  const)(&elsa::DataContainer<thrust::complex<double>>::getDataDescriptor),
              py::return_value_policy::reference_internal)
-        .def("__getitem__",
-             (const std::complex<double>& (elsa::DataContainer<std::complex<double>>::*) (long)
-                  const)(&elsa::DataContainer<std::complex<double>>::operator[]),
-             py::arg("index"), py::return_value_policy::reference_internal)
-        .def("l1Norm", (double(elsa::DataContainer<std::complex<double>>::*)()
-                            const)(&elsa::DataContainer<std::complex<double>>::l1Norm))
-        .def("l2Norm", (double(elsa::DataContainer<std::complex<double>>::*)()
-                            const)(&elsa::DataContainer<std::complex<double>>::l2Norm))
-        .def("lInfNorm", (double(elsa::DataContainer<std::complex<double>>::*)()
-                              const)(&elsa::DataContainer<std::complex<double>>::lInfNorm))
-        .def("squaredL2Norm", (double(elsa::DataContainer<std::complex<double>>::*)() const)(
-                                  &elsa::DataContainer<std::complex<double>>::squaredL2Norm))
-        .def("getSize", (long(elsa::DataContainer<std::complex<double>>::*)()
-                             const)(&elsa::DataContainer<std::complex<double>>::getSize))
-        .def("l0PseudoNorm", (long(elsa::DataContainer<std::complex<double>>::*)()
-                                  const)(&elsa::DataContainer<std::complex<double>>::l0PseudoNorm))
+        .def(
+            "__getitem__",
+            (const thrust::complex<double>& (elsa::DataContainer<thrust::complex<double>>::*) (long)
+                 const)(&elsa::DataContainer<thrust::complex<double>>::operator[]),
+            py::arg("index"), py::return_value_policy::reference_internal)
+        .def("l1Norm", (double(elsa::DataContainer<thrust::complex<double>>::*)()
+                            const)(&elsa::DataContainer<thrust::complex<double>>::l1Norm))
+        .def("l2Norm", (double(elsa::DataContainer<thrust::complex<double>>::*)()
+                            const)(&elsa::DataContainer<thrust::complex<double>>::l2Norm))
+        .def("lInfNorm", (double(elsa::DataContainer<thrust::complex<double>>::*)()
+                              const)(&elsa::DataContainer<thrust::complex<double>>::lInfNorm))
+        .def("squaredL2Norm", (double(elsa::DataContainer<thrust::complex<double>>::*)() const)(
+                                  &elsa::DataContainer<thrust::complex<double>>::squaredL2Norm))
+        .def("getSize", (long(elsa::DataContainer<thrust::complex<double>>::*)()
+                             const)(&elsa::DataContainer<thrust::complex<double>>::getSize))
+        .def("l0PseudoNorm", (long(elsa::DataContainer<thrust::complex<double>>::*)() const)(
+                                 &elsa::DataContainer<thrust::complex<double>>::l0PseudoNorm))
         .def("format",
-             (void(elsa::DataContainer<std::complex<double>>::*)(
+             (void(elsa::DataContainer<thrust::complex<double>>::*)(
                  std::basic_ostream<char, std::char_traits<char>>&)
-                  const)(&elsa::DataContainer<std::complex<double>>::format),
+                  const)(&elsa::DataContainer<thrust::complex<double>>::format),
              py::arg("os"))
         .def("format",
-             (void(elsa::DataContainer<std::complex<double>>::*)(
+             (void(elsa::DataContainer<thrust::complex<double>>::*)(
                  std::basic_ostream<char, std::char_traits<char>>&, elsa::format_config)
-                  const)(&elsa::DataContainer<std::complex<double>>::format),
+                  const)(&elsa::DataContainer<thrust::complex<double>>::format),
              py::arg("os"), py::arg("cfg"))
-        .def(py::init<const elsa::DataContainer<std::complex<double>>&>(), py::arg("other"))
+        .def(py::init<const elsa::DataContainer<thrust::complex<double>>&>(), py::arg("other"))
         .def(py::init<const elsa::DataDescriptor&,
-                      const Eigen::Matrix<std::complex<double>, -1, 1, 0, -1, 1>&>(),
+                      const Eigen::Matrix<thrust::complex<double>, -1, 1, 0, -1, 1>&>(),
              py::arg("dataDescriptor"), py::arg("data"))
         .def(py::init<const elsa::DataDescriptor&>(), py::arg("dataDescriptor"))
         .def("fft",
-             (void(elsa::DataContainer<std::complex<double>>::*)(elsa::FFTNorm)
-                  const)(&elsa::DataContainer<std::complex<double>>::fft),
+             (void(elsa::DataContainer<thrust::complex<double>>::*)(elsa::FFTNorm)
+                  const)(&elsa::DataContainer<thrust::complex<double>>::fft),
              py::arg("norm"))
         .def("ifft",
-             (void(elsa::DataContainer<std::complex<double>>::*)(elsa::FFTNorm)
-                  const)(&elsa::DataContainer<std::complex<double>>::ifft),
+             (void(elsa::DataContainer<thrust::complex<double>>::*)(elsa::FFTNorm)
+                  const)(&elsa::DataContainer<thrust::complex<double>>::ifft),
              py::arg("norm"));
 
-    elsa::DataContainerComplexHints<std::complex<double>>::addCustomMethods(DataContainercd);
+    elsa::DataContainerComplexHints<thrust::complex<double>>::addCustomMethods(DataContainercd);
 
     py::class_<elsa::DataContainer<long>> DataContainerl(m, "DataContainerl",
                                                          py::buffer_protocol());
@@ -817,14 +790,6 @@ void add_definitions_pyelsa_core(py::module& m)
              (elsa::DataContainer<long>(elsa::DataContainer<long>::*)(long))(
                  &elsa::DataContainer<long>::slice),
              py::arg("i"), py::return_value_policy::move)
-        .def("loadToCPU",
-             (elsa::DataContainer<long>(elsa::DataContainer<long>::*)())(
-                 &elsa::DataContainer<long>::loadToCPU),
-             py::return_value_policy::move)
-        .def("loadToGPU",
-             (elsa::DataContainer<long>(elsa::DataContainer<long>::*)())(
-                 &elsa::DataContainer<long>::loadToGPU),
-             py::return_value_policy::move)
         .def("viewAs",
              (const elsa::DataContainer<long> (elsa::DataContainer<long>::*)(
                  const elsa::DataDescriptor&) const)(&elsa::DataContainer<long>::viewAs),
@@ -884,16 +849,16 @@ void add_definitions_pyelsa_core(py::module& m)
              py::arg("os"), py::arg("cfg"))
         .def(py::init<const elsa::DataContainer<long>&>(), py::arg("other"))
         .def(py::init<const elsa::DataDescriptor&, const Eigen::Matrix<long, -1, 1, 0, -1, 1>&>(),
-             py::arg("dataDescriptor"), py::arg("data")),
+             py::arg("dataDescriptor"), py::arg("data"))
         .def(py::init<const elsa::DataDescriptor&>(), py::arg("dataDescriptor"))
-            .def("fft",
-                 (void(elsa::DataContainer<long>::*)(elsa::FFTNorm)
-                      const)(&elsa::DataContainer<long>::fft),
-                 py::arg("norm"))
-            .def("ifft",
-                 (void(elsa::DataContainer<long>::*)(elsa::FFTNorm)
-                      const)(&elsa::DataContainer<long>::ifft),
-                 py::arg("norm"));
+        .def("fft",
+             (void(elsa::DataContainer<long>::*)(elsa::FFTNorm)
+                  const)(&elsa::DataContainer<long>::fft),
+             py::arg("norm"))
+        .def("ifft",
+             (void(elsa::DataContainer<long>::*)(elsa::FFTNorm)
+                  const)(&elsa::DataContainer<long>::ifft),
+             py::arg("norm"));
 
     elsa::DataContainerHints<long>::addCustomMethods(DataContainerl);
 
@@ -960,72 +925,72 @@ void add_definitions_pyelsa_core(py::module& m)
 
     m.attr("LinearOperator") = m.attr("LinearOperatorf");
 
-    py::class_<elsa::Cloneable<elsa::LinearOperator<std::complex<float>>>>
+    py::class_<elsa::Cloneable<elsa::LinearOperator<thrust::complex<float>>>>
         CloneableLinearOperatorcf(m, "CloneableLinearOperatorcf");
     CloneableLinearOperatorcf
         .def("__ne__",
-             (bool(elsa::Cloneable<elsa::LinearOperator<std::complex<float>>>::*)(
-                 const elsa::LinearOperator<std::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::LinearOperator<std::complex<float>>>::operator!=),
+             (bool(elsa::Cloneable<elsa::LinearOperator<thrust::complex<float>>>::*)(
+                 const elsa::LinearOperator<thrust::complex<float>>&) const)(
+                 &elsa::Cloneable<elsa::LinearOperator<thrust::complex<float>>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::Cloneable<elsa::LinearOperator<std::complex<float>>>::*)(
-                 const elsa::LinearOperator<std::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::LinearOperator<std::complex<float>>>::operator==),
+             (bool(elsa::Cloneable<elsa::LinearOperator<thrust::complex<float>>>::*)(
+                 const elsa::LinearOperator<thrust::complex<float>>&) const)(
+                 &elsa::Cloneable<elsa::LinearOperator<thrust::complex<float>>>::operator==),
              py::arg("other"))
         .def("clone",
-             (std::unique_ptr<elsa::LinearOperator<std::complex<float>>,
-                              std::default_delete<elsa::LinearOperator<std::complex<float>>>>(
-                 elsa::Cloneable<elsa::LinearOperator<std::complex<float>>>::*)()
-                  const)(&elsa::Cloneable<elsa::LinearOperator<std::complex<float>>>::clone));
+             (std::unique_ptr<elsa::LinearOperator<thrust::complex<float>>,
+                              std::default_delete<elsa::LinearOperator<thrust::complex<float>>>>(
+                 elsa::Cloneable<elsa::LinearOperator<thrust::complex<float>>>::*)()
+                  const)(&elsa::Cloneable<elsa::LinearOperator<thrust::complex<float>>>::clone));
 
-    py::class_<elsa::LinearOperator<std::complex<float>>,
-               elsa::Cloneable<elsa::LinearOperator<std::complex<float>>>>
+    py::class_<elsa::LinearOperator<thrust::complex<float>>,
+               elsa::Cloneable<elsa::LinearOperator<thrust::complex<float>>>>
         LinearOperatorcf(m, "LinearOperatorcf");
     LinearOperatorcf
-        .def(
-            "apply",
-            (elsa::DataContainer<std::complex<float>>(elsa::LinearOperator<std::complex<float>>::*)(
-                const elsa::DataContainer<std::complex<float>>&)
-                 const)(&elsa::LinearOperator<std::complex<float>>::apply),
-            py::arg("x"), py::return_value_policy::move)
-        .def(
-            "applyAdjoint",
-            (elsa::DataContainer<std::complex<float>>(elsa::LinearOperator<std::complex<float>>::*)(
-                const elsa::DataContainer<std::complex<float>>&)
-                 const)(&elsa::LinearOperator<std::complex<float>>::applyAdjoint),
-            py::arg("y"), py::return_value_policy::move)
+        .def("apply",
+             (elsa::DataContainer<thrust::complex<float>>(
+                 elsa::LinearOperator<thrust::complex<float>>::*)(
+                 const elsa::DataContainer<thrust::complex<float>>&)
+                  const)(&elsa::LinearOperator<thrust::complex<float>>::apply),
+             py::arg("x"), py::return_value_policy::move)
+        .def("applyAdjoint",
+             (elsa::DataContainer<thrust::complex<float>>(
+                 elsa::LinearOperator<thrust::complex<float>>::*)(
+                 const elsa::DataContainer<thrust::complex<float>>&)
+                  const)(&elsa::LinearOperator<thrust::complex<float>>::applyAdjoint),
+             py::arg("y"), py::return_value_policy::move)
         .def(
             "set",
-            (elsa::LinearOperator<std::complex<
-                 float>> & (elsa::LinearOperator<std::complex<float>>::*) (const elsa::LinearOperator<std::complex<float>>&) )(
-                &elsa::LinearOperator<std::complex<float>>::operator=),
+            (elsa::LinearOperator<thrust::complex<
+                 float>> & (elsa::LinearOperator<thrust::complex<float>>::*) (const elsa::LinearOperator<thrust::complex<float>>&) )(
+                &elsa::LinearOperator<thrust::complex<float>>::operator=),
             py::arg("other"), py::return_value_policy::reference_internal)
         .def("getDomainDescriptor",
-             (const elsa::DataDescriptor& (elsa::LinearOperator<std::complex<float>>::*) ()
-                  const)(&elsa::LinearOperator<std::complex<float>>::getDomainDescriptor),
+             (const elsa::DataDescriptor& (elsa::LinearOperator<thrust::complex<float>>::*) ()
+                  const)(&elsa::LinearOperator<thrust::complex<float>>::getDomainDescriptor),
              py::return_value_policy::reference_internal)
         .def("getRangeDescriptor",
-             (const elsa::DataDescriptor& (elsa::LinearOperator<std::complex<float>>::*) ()
-                  const)(&elsa::LinearOperator<std::complex<float>>::getRangeDescriptor),
+             (const elsa::DataDescriptor& (elsa::LinearOperator<thrust::complex<float>>::*) ()
+                  const)(&elsa::LinearOperator<thrust::complex<float>>::getRangeDescriptor),
              py::return_value_policy::reference_internal)
         .def("apply",
-             (void(elsa::LinearOperator<std::complex<float>>::*)(
-                 const elsa::DataContainer<std::complex<float>>&,
-                 elsa::DataContainer<std::complex<float>>&)
-                  const)(&elsa::LinearOperator<std::complex<float>>::apply),
+             (void(elsa::LinearOperator<thrust::complex<float>>::*)(
+                 const elsa::DataContainer<thrust::complex<float>>&,
+                 elsa::DataContainer<thrust::complex<float>>&)
+                  const)(&elsa::LinearOperator<thrust::complex<float>>::apply),
              py::arg("x"), py::arg("Ax"))
         .def("applyAdjoint",
-             (void(elsa::LinearOperator<std::complex<float>>::*)(
-                 const elsa::DataContainer<std::complex<float>>&,
-                 elsa::DataContainer<std::complex<float>>&)
-                  const)(&elsa::LinearOperator<std::complex<float>>::applyAdjoint),
+             (void(elsa::LinearOperator<thrust::complex<float>>::*)(
+                 const elsa::DataContainer<thrust::complex<float>>&,
+                 elsa::DataContainer<thrust::complex<float>>&)
+                  const)(&elsa::LinearOperator<thrust::complex<float>>::applyAdjoint),
              py::arg("y"), py::arg("Aty"))
         .def(py::init<const elsa::DataDescriptor&, const elsa::DataDescriptor&>(),
              py::arg("domainDescriptor"), py::arg("rangeDescriptor"))
-        .def(py::init<const elsa::LinearOperator<std::complex<float>>&>(), py::arg("other"));
+        .def(py::init<const elsa::LinearOperator<thrust::complex<float>>&>(), py::arg("other"));
 
-    elsa::LinearOperatorHints<std::complex<float>>::addCustomMethods(LinearOperatorcf);
+    elsa::LinearOperatorHints<thrust::complex<float>>::addCustomMethods(LinearOperatorcf);
 
     py::class_<elsa::Cloneable<elsa::LinearOperator<double>>> CloneableLinearOperatord(
         m, "CloneableLinearOperatord");
@@ -1087,72 +1052,72 @@ void add_definitions_pyelsa_core(py::module& m)
 
     elsa::LinearOperatorHints<double>::addCustomMethods(LinearOperatord);
 
-    py::class_<elsa::Cloneable<elsa::LinearOperator<std::complex<double>>>>
+    py::class_<elsa::Cloneable<elsa::LinearOperator<thrust::complex<double>>>>
         CloneableLinearOperatorcd(m, "CloneableLinearOperatorcd");
     CloneableLinearOperatorcd
         .def("__ne__",
-             (bool(elsa::Cloneable<elsa::LinearOperator<std::complex<double>>>::*)(
-                 const elsa::LinearOperator<std::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::LinearOperator<std::complex<double>>>::operator!=),
+             (bool(elsa::Cloneable<elsa::LinearOperator<thrust::complex<double>>>::*)(
+                 const elsa::LinearOperator<thrust::complex<double>>&) const)(
+                 &elsa::Cloneable<elsa::LinearOperator<thrust::complex<double>>>::operator!=),
              py::arg("other"))
         .def("__eq__",
-             (bool(elsa::Cloneable<elsa::LinearOperator<std::complex<double>>>::*)(
-                 const elsa::LinearOperator<std::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::LinearOperator<std::complex<double>>>::operator==),
+             (bool(elsa::Cloneable<elsa::LinearOperator<thrust::complex<double>>>::*)(
+                 const elsa::LinearOperator<thrust::complex<double>>&) const)(
+                 &elsa::Cloneable<elsa::LinearOperator<thrust::complex<double>>>::operator==),
              py::arg("other"))
         .def("clone",
-             (std::unique_ptr<elsa::LinearOperator<std::complex<double>>,
-                              std::default_delete<elsa::LinearOperator<std::complex<double>>>>(
-                 elsa::Cloneable<elsa::LinearOperator<std::complex<double>>>::*)()
-                  const)(&elsa::Cloneable<elsa::LinearOperator<std::complex<double>>>::clone));
+             (std::unique_ptr<elsa::LinearOperator<thrust::complex<double>>,
+                              std::default_delete<elsa::LinearOperator<thrust::complex<double>>>>(
+                 elsa::Cloneable<elsa::LinearOperator<thrust::complex<double>>>::*)()
+                  const)(&elsa::Cloneable<elsa::LinearOperator<thrust::complex<double>>>::clone));
 
-    py::class_<elsa::LinearOperator<std::complex<double>>,
-               elsa::Cloneable<elsa::LinearOperator<std::complex<double>>>>
+    py::class_<elsa::LinearOperator<thrust::complex<double>>,
+               elsa::Cloneable<elsa::LinearOperator<thrust::complex<double>>>>
         LinearOperatorcd(m, "LinearOperatorcd");
     LinearOperatorcd
         .def("apply",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::LinearOperator<std::complex<double>>::*)(
-                 const elsa::DataContainer<std::complex<double>>&)
-                  const)(&elsa::LinearOperator<std::complex<double>>::apply),
+             (elsa::DataContainer<thrust::complex<double>>(
+                 elsa::LinearOperator<thrust::complex<double>>::*)(
+                 const elsa::DataContainer<thrust::complex<double>>&)
+                  const)(&elsa::LinearOperator<thrust::complex<double>>::apply),
              py::arg("x"), py::return_value_policy::move)
         .def("applyAdjoint",
-             (elsa::DataContainer<std::complex<double>>(
-                 elsa::LinearOperator<std::complex<double>>::*)(
-                 const elsa::DataContainer<std::complex<double>>&)
-                  const)(&elsa::LinearOperator<std::complex<double>>::applyAdjoint),
+             (elsa::DataContainer<thrust::complex<double>>(
+                 elsa::LinearOperator<thrust::complex<double>>::*)(
+                 const elsa::DataContainer<thrust::complex<double>>&)
+                  const)(&elsa::LinearOperator<thrust::complex<double>>::applyAdjoint),
              py::arg("y"), py::return_value_policy::move)
         .def(
             "set",
-            (elsa::LinearOperator<std::complex<
-                 double>> & (elsa::LinearOperator<std::complex<double>>::*) (const elsa::LinearOperator<std::complex<double>>&) )(
-                &elsa::LinearOperator<std::complex<double>>::operator=),
+            (elsa::LinearOperator<thrust::complex<
+                 double>> & (elsa::LinearOperator<thrust::complex<double>>::*) (const elsa::LinearOperator<thrust::complex<double>>&) )(
+                &elsa::LinearOperator<thrust::complex<double>>::operator=),
             py::arg("other"), py::return_value_policy::reference_internal)
         .def("getDomainDescriptor",
-             (const elsa::DataDescriptor& (elsa::LinearOperator<std::complex<double>>::*) ()
-                  const)(&elsa::LinearOperator<std::complex<double>>::getDomainDescriptor),
+             (const elsa::DataDescriptor& (elsa::LinearOperator<thrust::complex<double>>::*) ()
+                  const)(&elsa::LinearOperator<thrust::complex<double>>::getDomainDescriptor),
              py::return_value_policy::reference_internal)
         .def("getRangeDescriptor",
-             (const elsa::DataDescriptor& (elsa::LinearOperator<std::complex<double>>::*) ()
-                  const)(&elsa::LinearOperator<std::complex<double>>::getRangeDescriptor),
+             (const elsa::DataDescriptor& (elsa::LinearOperator<thrust::complex<double>>::*) ()
+                  const)(&elsa::LinearOperator<thrust::complex<double>>::getRangeDescriptor),
              py::return_value_policy::reference_internal)
         .def("apply",
-             (void(elsa::LinearOperator<std::complex<double>>::*)(
-                 const elsa::DataContainer<std::complex<double>>&,
-                 elsa::DataContainer<std::complex<double>>&)
-                  const)(&elsa::LinearOperator<std::complex<double>>::apply),
+             (void(elsa::LinearOperator<thrust::complex<double>>::*)(
+                 const elsa::DataContainer<thrust::complex<double>>&,
+                 elsa::DataContainer<thrust::complex<double>>&)
+                  const)(&elsa::LinearOperator<thrust::complex<double>>::apply),
              py::arg("x"), py::arg("Ax"))
         .def("applyAdjoint",
-             (void(elsa::LinearOperator<std::complex<double>>::*)(
-                 const elsa::DataContainer<std::complex<double>>&,
-                 elsa::DataContainer<std::complex<double>>&)
-                  const)(&elsa::LinearOperator<std::complex<double>>::applyAdjoint),
+             (void(elsa::LinearOperator<thrust::complex<double>>::*)(
+                 const elsa::DataContainer<thrust::complex<double>>&,
+                 elsa::DataContainer<thrust::complex<double>>&)
+                  const)(&elsa::LinearOperator<thrust::complex<double>>::applyAdjoint),
              py::arg("y"), py::arg("Aty"))
         .def(py::init<const elsa::DataDescriptor&, const elsa::DataDescriptor&>(),
              py::arg("domainDescriptor"), py::arg("rangeDescriptor"))
-        .def(py::init<const elsa::LinearOperator<std::complex<double>>&>(), py::arg("other"));
+        .def(py::init<const elsa::LinearOperator<thrust::complex<double>>&>(), py::arg("other"));
 
-    elsa::LinearOperatorHints<std::complex<double>>::addCustomMethods(LinearOperatorcd);
+    elsa::LinearOperatorHints<thrust::complex<double>>::addCustomMethods(LinearOperatorcd);
 
     py::class_<elsa::VolumeDescriptor, elsa::DataDescriptor> VolumeDescriptor(m,
                                                                               "VolumeDescriptor");
