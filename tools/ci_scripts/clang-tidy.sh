@@ -36,7 +36,7 @@ done
 # for compilation database
 mkdir -p build
 cd build
-CX=clang CXX=clang++ cmake ..
+CC=clang CXX=clang++ cmake ..
 cd ..
 
 if [ ! -f build/compile_commands.json ]; then
