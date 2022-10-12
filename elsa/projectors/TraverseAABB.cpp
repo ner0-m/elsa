@@ -29,6 +29,11 @@ namespace elsa
         index_t indexToChange;
         _tMax.minCoeff(&indexToChange);
 
+        updateTraverse(indexToChange);
+    }
+
+    void TraverseAABB::updateTraverse(const index_t& indexToChange)
+    {
         // --> step into the current direction
         _currentPos(indexToChange) += _stepDirection(indexToChange);
 
@@ -50,7 +55,7 @@ namespace elsa
         _tExit = _tMax(indexToChange);
 
         // --> do the update
-        updateTraverse();
+        updateTraverse(indexToChange);
 
         return (_tExit - tEntry);
     }

@@ -32,9 +32,16 @@ namespace elsa
         TraverseAABB(const BoundingBox& aabb, const RealRay_t& r);
 
         /**
-         * @brief Update the traverser status by taking the next traversal step
+         * @brief Update the traverser status by taking the next traversal step in case the
+         * indexToChange is unknown
          */
         void updateTraverse();
+
+        /**
+         * @brief Update the traverser status by taking the next traversal step in case the
+         * indexToChange is known
+         */
+        void updateTraverse(const index_t& indexToChange);
 
         /**
          * @brief Update the traverser status by taking the next traversal step, return the distance
