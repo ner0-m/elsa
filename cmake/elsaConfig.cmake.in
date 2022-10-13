@@ -14,7 +14,8 @@ set(BUNDLED_DEPS
     eigen3
 )
 foreach(DEP ${BUNDLED_DEPS})
-    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${DEP}Targets.cmake")
+    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${DEP}Targets.cmake" OR EXISTS
+            "@CMAKE_INSTALL_PREFIX@/lib/cmake/${DEP}Targets.cmake")
         # use the bundled version
         message(STATUS "using elsa-bundled version of dependency ${DEP}")
         include("${CMAKE_CURRENT_LIST_DIR}/${DEP}Targets.cmake")
