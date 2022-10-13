@@ -1,0 +1,3 @@
+# allows OS line endings in working tree, but forces LF in index/repo
+* text=auto
+
