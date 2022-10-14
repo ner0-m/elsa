@@ -197,7 +197,7 @@ namespace elsa
         real_t tmin;
 
         // --> calculate intersection parameter and if the volume is hit
-        auto opt = Intersection::withRay(_aabb, ray);
+        auto opt = intersectRay(_aabb, ray);
 
         if (opt) {
             _isInAABB = true;

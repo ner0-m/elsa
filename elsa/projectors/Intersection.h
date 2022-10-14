@@ -15,54 +15,60 @@ namespace elsa
     /**
      * @brief Helper struct for results of intersection tests
      */
+    template <class data_t>
     struct IntersectionResult {
         /// the parameters for entry/exit points
-        real_t _tmin, _tmax;
+        data_t _tmin, _tmax;
 
         /// default constructor
         IntersectionResult()
-            : _tmin{std::numeric_limits<real_t>::infinity()},
-              _tmax{std::numeric_limits<real_t>::infinity()}
+            : _tmin{std::numeric_limits<data_t>::infinity()},
+              _tmax{std::numeric_limits<data_t>::infinity()}
         {
         }
 
         /// simple constructor with values tmin, tmax
-        IntersectionResult(real_t tmin, real_t tmax) : _tmin{tmin}, _tmax{tmax} {}
+        IntersectionResult(data_t tmin, data_t tmax) : _tmin{tmin}, _tmax{tmax} {}
     };
+
+    namespace detail
+    {
+        template <class data_t>
+        std::tuple<data_t, data_t, data_t, data_t> intersect(const BoundingBox& aabb,
+                                                             const Ray_t<data_t>& r);
+    } // namespace detail
 
     /**
-     * @brief The intersection class computes intersections between rays and axis-aligned bounding
-     * boxes (AABBs)
+     * @brief Compute entry and exit point of ray in a volume (given as an AABB)
      *
-     * @author Tobias Lasser - initial code, modernization
-     * @author David Frank - various fixes
-     * @author Maximilian Hornung - modularization
-     * @author Nikola Dinev - various fixes
+     * If the ray is running along a border of the bounding box, the lower bound will
+     * be counted as in the bounding and the upper bound will be  counted as outside.
+     *
+     * Method adapted from
+     * https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/
+     *
+     * @param[in] aabb the volume specified through an axis-aligned bounding box
+     * @param[in] r the ray which we test for intersection with aabb
+     *
+     * @returns nullopt if the volume is not hit, otherwise IntersectionResult
+     *          with entry/exit parameters tmin/tmax
      */
-    class Intersection
-    {
-    public:
-        /**
-         * @brief Compute entry and exit point of ray in a volume (given as an AABB)
-         *
-         * @param[in] aabb the volume specified through an axis-aligned bounding box
-         * @param[in] r the ray which we test for intersection with aabb
+    template <class data_t>
+    std::optional<IntersectionResult<data_t>> intersectRay(const BoundingBox& aabb,
+                                                           const Ray_t<data_t>& r);
 
-         * @returns nullopt if the volume is not hit, otherwise IntersectionResult
-         *          with entry/exit parameters tmin/tmax
-         *
-         * If the ray is running along a border of the bounding box, the lower bound will
-         * be counted as in the bounding and the upper bound will be  counted as outside.
-         *
-         * Method adapted from
-         https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/
-         */
-        static std::optional<IntersectionResult> withRay(const BoundingBox& aabb,
-                                                         const RealRay_t& r);
-
-        static std::optional<IntersectionResult> xPlanesWithRay(BoundingBox aabb,
-                                                                const RealRay_t& r);
-    };
+    /**
+     * @brief Compute the intersection of a ray with the nearest x-plane
+     *
+     * @param[in] aabb the volume specified through an axis-aligned bounding box
+     * @param[in] r the ray which we test for intersection with aabb
+     *
+     * @returns nullopt if the volume is not hit, otherwise IntersectionResult
+     *          with entry/exit parameters tmin/tmax
+     */
+    template <class data_t>
+    std::optional<IntersectionResult<data_t>> intersectXPlanes(BoundingBox aabb,
+                                                               const Ray_t<data_t>& r);
 
     /**
      * @brief min helper function which behaves like the IEEE standard suggests
@@ -98,8 +104,8 @@ namespace elsa
 
 } // namespace elsa
 
-template <>
-struct fmt::formatter<elsa::IntersectionResult> {
+template <class data_t>
+struct fmt::formatter<elsa::IntersectionResult<data_t>> {
     template <typename ParseContext>
     constexpr auto parse(ParseContext& ctx)
     {
@@ -107,7 +113,7 @@ struct fmt::formatter<elsa::IntersectionResult> {
     }
 
     template <typename FormatContext>
-    auto format(const elsa::IntersectionResult& hit, FormatContext& ctx)
+    auto format(const elsa::IntersectionResult<data_t>& hit, FormatContext& ctx)
     {
         return fmt::format_to(ctx.out(), "{{ tmin: {}, tmax: {} }}", hit._tmin, hit._tmax);
     }

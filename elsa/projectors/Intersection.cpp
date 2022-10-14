@@ -2,45 +2,52 @@
 
 namespace elsa
 {
-    std::tuple<real_t, real_t, real_t, real_t> intersect(const BoundingBox& aabb,
-                                                         const RealRay_t& r)
+    namespace detail
     {
-        real_t invDir = 1 / r.direction()(0);
+        template <class data_t>
+        std::tuple<data_t, data_t, data_t, data_t> intersect(const BoundingBox& aabb,
+                                                             const Ray_t<data_t>& r)
+        {
+            data_t invDir = 1 / r.direction()(0);
 
-        real_t t1 = (aabb.min()(0) - r.origin()(0)) * invDir;
-        real_t t2 = (aabb.max()(0) - r.origin()(0)) * invDir;
+            data_t t1 = (aabb.min()(0) - r.origin()(0)) * invDir;
+            data_t t2 = (aabb.max()(0) - r.origin()(0)) * invDir;
 
-        real_t tmin = invDir >= 0 ? t1 : t2;
-        real_t tmax = invDir >= 0 ? t2 : t1;
-        const auto txmin = tmin;
-        const auto txmax = tmax;
+            data_t tmin = invDir >= 0 ? t1 : t2;
+            data_t tmax = invDir >= 0 ? t2 : t1;
+            const auto txmin = tmin;
+            const auto txmax = tmax;
 
-        for (int i = 1; i < aabb.min().rows(); ++i) {
-            invDir = 1 / r.direction()(i);
+            for (int i = 1; i < aabb.min().rows(); ++i) {
+                invDir = 1 / r.direction()(i);
 
-            t1 = (aabb.min()(i) - r.origin()(i)) * invDir;
-            t2 = (aabb.max()(i) - r.origin()(i)) * invDir;
+                t1 = (aabb.min()(i) - r.origin()(i)) * invDir;
+                t2 = (aabb.max()(i) - r.origin()(i)) * invDir;
 
-            tmin = maxNum(tmin, invDir >= 0 ? t1 : t2);
-            tmax = minNum(tmax, invDir >= 0 ? t2 : t1);
+                tmin = maxNum(tmin, invDir >= 0 ? t1 : t2);
+                tmax = minNum(tmax, invDir >= 0 ? t2 : t1);
+            }
+
+            return {tmin, tmax, txmin, txmax};
         }
+    } // namespace detail
 
-        return {tmin, tmax, txmin, txmax};
-    }
-    std::optional<IntersectionResult> Intersection::withRay(const BoundingBox& aabb,
-                                                            const RealRay_t& r)
+    template <class data_t>
+    std::optional<IntersectionResult<data_t>> intersectRay(const BoundingBox& aabb,
+                                                           const Ray_t<data_t>& r)
     {
-        const auto [tmin, tmax, txmin, txmax] = intersect(aabb, r);
+        const auto [tmin, tmax, txmin, txmax] = detail::intersect(aabb, r);
 
         if (tmax == 0.0 && tmin == 0.0)
             return std::nullopt;
         if (tmax >= maxNum(tmin, 0.0f)) // hit
-            return std::make_optional<IntersectionResult>(tmin, tmax);
+            return std::make_optional<IntersectionResult<data_t>>(tmin, tmax);
         return std::nullopt;
     }
 
-    std::optional<IntersectionResult> Intersection::xPlanesWithRay(BoundingBox aabb,
-                                                                   const RealRay_t& r)
+    template <class data_t>
+    std::optional<IntersectionResult<data_t>> intersectXPlanes(BoundingBox aabb,
+                                                               const Ray_t<data_t>& r)
     {
         // Slightly increase the size of the bounding box, such that center of voxels are actually
         // inside the bounding box, parallel rays which directly go through the center of the
@@ -48,23 +55,23 @@ namespace elsa
         aabb.min()[0] += 0.5f;
         aabb.max()[0] -= 0.5f;
 
-        auto [tmin, tmax, txmin, txmax] = intersect(aabb, r);
+        auto [tmin, tmax, txmin, txmax] = detail::intersect(aabb, r);
 
         auto dist_to_integer = [](auto real) {
-            const auto aabbmin = static_cast<real_t>(static_cast<int>(std::round(real)));
+            const auto aabbmin = static_cast<data_t>(static_cast<int>(std::round(real)));
             return std::abs(real - aabbmin);
         };
 
         auto fractional = [](auto real) {
-            real_t trash = 0;
+            data_t trash = 0;
             return std::modf(real, &trash);
         };
 
-        auto advance_to_next_voxel = [&](auto aabb, auto& tmin) -> real_t {
+        auto advance_to_next_voxel = [&](auto aabb, auto& tmin) -> data_t {
             // the x-axis coord for voxel centers
             const auto xvoxelcenter = dist_to_integer(aabb.min()[0]);
 
-            RealVector_t entry = r.pointAt(tmin);
+            Vector_t<data_t> entry = r.pointAt(tmin);
 
             // Calculate the distance from entry.x to the x coord of the next voxel
             const auto tmp = std::abs(fractional(entry[0] - xvoxelcenter));
@@ -74,10 +81,10 @@ namespace elsa
             return tmp > 0.00001 && frac > 0.00001 ? frac / r.direction()[0] : 0;
         };
 
-        auto retreat_to_last_voxel = [&](auto aabb, auto& tmax) -> real_t {
+        auto retreat_to_last_voxel = [&](auto aabb, auto& tmax) -> data_t {
             const auto xvoxelcenter = dist_to_integer(aabb.min()[0]);
 
-            RealVector_t exit = r.pointAt(tmax);
+            Vector_t<data_t> exit = r.pointAt(tmax);
 
             // calculate the distance from entry.x to the x coord of the previous voxel
             const auto tmp = std::abs(fractional(exit[0] - xvoxelcenter));
@@ -102,8 +109,32 @@ namespace elsa
             return std::nullopt;
 
         if (tmax - maxNum(tmin, 0.0f) > -0.000001) // hit
-            return std::make_optional<IntersectionResult>(tmin, tmax);
+            return std::make_optional<IntersectionResult<data_t>>(tmin, tmax);
 
         return std::nullopt;
     }
+
+    // ------------------------------------------
+    // explicit template instantiation
+    namespace detail
+    {
+        template std::tuple<float, float, float, float> intersect<float>(const BoundingBox& aabb,
+                                                                         const Ray_t<float>& r);
+        template std::tuple<double, double, double, double>
+            intersect<double>(const BoundingBox& aabb, const Ray_t<double>& r);
+    } // namespace detail
+
+    template struct IntersectionResult<float>;
+    template struct IntersectionResult<double>;
+
+    template std::optional<IntersectionResult<float>> intersectRay<float>(const BoundingBox& aabb,
+                                                                          const Ray_t<float>& r);
+    template std::optional<IntersectionResult<double>> intersectRay<double>(const BoundingBox& aabb,
+                                                                            const Ray_t<double>& r);
+
+    template std::optional<IntersectionResult<float>>
+        intersectXPlanes<float>(BoundingBox aabb, const Ray_t<float>& r);
+    template std::optional<IntersectionResult<double>>
+        intersectXPlanes<double>(BoundingBox aabb, const Ray_t<double>& r);
+
 } // namespace elsa

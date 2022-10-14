@@ -185,7 +185,7 @@ namespace elsa
         aabb = transformation_.toTraversalCoordinates(aabb);
 
         // TODO: We only want to shift in x direction by 0.5, not in y
-        auto hit = Intersection::xPlanesWithRay(aabb, ray);
+        auto hit = intersectXPlanes(aabb, ray);
 
         // Default init is sufficient if we don't hit,  TODO: test that!
         if (hit) {

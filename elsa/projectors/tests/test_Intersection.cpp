@@ -34,7 +34,7 @@ TEST_CASE("Intersection: Intersect corners of pixels")
     rd.normalize();
     RealRay_t r(ro, rd);
 
-    REQUIRE_UNARY(Intersection::withRay(aabb, r));
+    REQUIRE_UNARY(intersectRay(aabb, r));
 
     // top right corner
     ro << 1, 2;
@@ -42,7 +42,7 @@ TEST_CASE("Intersection: Intersect corners of pixels")
     rd.normalize();
     r = RealRay_t(ro, rd);
 
-    REQUIRE_UNARY_FALSE(Intersection::withRay(aabb, r));
+    REQUIRE_UNARY_FALSE(intersectRay(aabb, r));
 
     // bottom left corner
     ro << 3, -2;
@@ -50,7 +50,7 @@ TEST_CASE("Intersection: Intersect corners of pixels")
     rd.normalize();
     r = RealRay_t(ro, rd);
 
-    REQUIRE_UNARY(Intersection::withRay(aabb, r));
+    REQUIRE_UNARY(intersectRay(aabb, r));
 
     // bottom right corner
     ro << 3, 1;
@@ -58,7 +58,7 @@ TEST_CASE("Intersection: Intersect corners of pixels")
     rd.normalize();
     r = RealRay_t(ro, rd);
 
-    REQUIRE_UNARY_FALSE(Intersection::withRay(aabb, r));
+    REQUIRE_UNARY_FALSE(intersectRay(aabb, r));
 }
 
 TEST_CASE("Intersection: Intersect edges of voxels")
@@ -79,21 +79,21 @@ TEST_CASE("Intersection: Intersect edges of voxels")
         THEN("the ray intersects")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY(intersectRay(aabb, r));
         }
 
         voxel << 40, 30;
         THEN("the ray intersects")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY(intersectRay(aabb, r));
         }
 
         voxel << 40, 29;
         THEN("the ray does not intersect")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY_FALSE(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY_FALSE(intersectRay(aabb, r));
         }
 
         // vertical check
@@ -105,21 +105,21 @@ TEST_CASE("Intersection: Intersect edges of voxels")
         THEN("the ray intersects")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY(intersectRay(aabb, r));
         }
 
         voxel << 30, 40;
         THEN("the ray intersects")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY(intersectRay(aabb, r));
         }
 
         voxel << 29, 40;
         THEN("the ray does not intersect")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY_FALSE(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY_FALSE(intersectRay(aabb, r));
         }
 
         rd << 0.0, 1.0;
@@ -130,21 +130,21 @@ TEST_CASE("Intersection: Intersect edges of voxels")
         THEN("the ray does not intersect")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY_FALSE(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY_FALSE(intersectRay(aabb, r));
         }
 
         voxel << 1, 1;
         THEN("the ray does not intersect")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY_FALSE(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY_FALSE(intersectRay(aabb, r));
         }
 
         voxel << 2, 1;
         THEN("the ray intersects")
         {
             BoundingBox aabb(voxel);
-            REQUIRE_UNARY(Intersection::withRay(aabb, r));
+            REQUIRE_UNARY(intersectRay(aabb, r));
         }
     }
 }
@@ -176,7 +176,7 @@ TEST_CASE("Intersection: Ray with voxel center")
 
             RealRay_t ray(origin, dir);
 
-            auto hit = Intersection::xPlanesWithRay(aabb, ray);
+            auto hit = intersectXPlanes(aabb, ray);
 
             CAPTURE(hit);
             REQUIRE(hit);
@@ -225,7 +225,7 @@ TEST_CASE("Intersection: Ray with voxel center")
 
             RealRay_t ray(origin, dir);
 
-            auto hit = Intersection::xPlanesWithRay(aabb, ray);
+            auto hit = intersectXPlanes(aabb, ray);
 
             CAPTURE(hit);
             REQUIRE(hit);
@@ -270,7 +270,7 @@ TEST_CASE("Intersection: Quick bug tests")
     rd.normalize();
     const RealRay_t ray(ro, rd);
 
-    auto hit = Intersection::xPlanesWithRay(aabb, ray);
+    auto hit = intersectXPlanes(aabb, ray);
 
     CAPTURE(hit);
     REQUIRE(hit);
@@ -320,7 +320,7 @@ TEST_CASE("Intersection: Quick bug tests")
     rd.normalize();
     const RealRay_t ray(ro, rd);
 
-    auto hit = Intersection::xPlanesWithRay(aabb, ray);
+    auto hit = intersectXPlanes(aabb, ray);
 
     CAPTURE(hit);
     REQUIRE(hit);
@@ -382,7 +382,7 @@ TEST_CASE("Intersection: 3D rays with bounding box")
 
                 RealRay_t ray(origin, dir);
 
-                auto hit = Intersection::xPlanesWithRay(aabb, ray);
+                auto hit = intersectXPlanes(aabb, ray);
 
                 CAPTURE(hit);
                 REQUIRE(hit);
@@ -430,7 +430,7 @@ TEST_CASE("Intersection: 3D rays with bounding box")
 
                 RealRay_t ray(origin, dir);
 
-                auto hit = Intersection::xPlanesWithRay(aabb, ray);
+                auto hit = intersectXPlanes(aabb, ray);
 
                 CAPTURE(hit);
                 REQUIRE(hit);
@@ -487,7 +487,7 @@ TEST_CASE("Intersection: 3D rays with bounding box")
 
                 RealRay_t ray(origin, dir);
 
-                auto hit = Intersection::xPlanesWithRay(aabb, ray);
+                auto hit = intersectXPlanes(aabb, ray);
 
                 CAPTURE(hit);
                 REQUIRE(hit);
@@ -527,7 +527,7 @@ TEST_CASE("Intersection: 3D rays with bounding box")
 
                 RealRay_t ray(origin, dir);
 
-                auto hit = Intersection::xPlanesWithRay(aabb, ray);
+                auto hit = intersectXPlanes(aabb, ray);
 
                 CAPTURE(hit);
                 REQUIRE(hit);

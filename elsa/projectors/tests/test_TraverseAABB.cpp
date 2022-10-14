@@ -33,7 +33,7 @@ bool intersect(const RealVector_t& voxel, const RealRay_t& r)
     bb.min() += voxel;
     bb.max() += voxel;
 
-    return Intersection::withRay(bb, r).operator bool();
+    return intersectRay(bb, r).operator bool();
 }
 
 TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
