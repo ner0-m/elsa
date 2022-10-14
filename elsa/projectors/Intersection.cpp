@@ -4,9 +4,9 @@ namespace elsa
 {
     namespace detail
     {
-        template <class data_t>
-        std::tuple<data_t, data_t, data_t, data_t> intersect(const BoundingBox& aabb,
-                                                             const Ray_t<data_t>& r)
+        template <class data_t, int Dim>
+        std::tuple<data_t, data_t, data_t, data_t>
+            intersect(const BoundingBox& aabb, const Eigen::ParametrizedLine<data_t, Dim>& r)
         {
             data_t invDir = 1 / r.direction()(0);
 
@@ -32,9 +32,9 @@ namespace elsa
         }
     } // namespace detail
 
-    template <class data_t>
-    std::optional<IntersectionResult<data_t>> intersectRay(const BoundingBox& aabb,
-                                                           const Ray_t<data_t>& r)
+    template <class data_t, int Dim>
+    std::optional<IntersectionResult<data_t>>
+        intersectRay(const BoundingBox& aabb, const Eigen::ParametrizedLine<data_t, Dim>& r)
     {
         const auto [tmin, tmax, txmin, txmax] = detail::intersect(aabb, r);
 
@@ -45,9 +45,9 @@ namespace elsa
         return std::nullopt;
     }
 
-    template <class data_t>
-    std::optional<IntersectionResult<data_t>> intersectXPlanes(BoundingBox aabb,
-                                                               const Ray_t<data_t>& r)
+    template <class data_t, int Dim>
+    std::optional<IntersectionResult<data_t>>
+        intersectXPlanes(BoundingBox aabb, const Eigen::ParametrizedLine<data_t, Dim>& r)
     {
         // Slightly increase the size of the bounding box, such that center of voxels are actually
         // inside the bounding box, parallel rays which directly go through the center of the
@@ -71,7 +71,7 @@ namespace elsa
             // the x-axis coord for voxel centers
             const auto xvoxelcenter = dist_to_integer(aabb.min()[0]);
 
-            Vector_t<data_t> entry = r.pointAt(tmin);
+            Eigen::Vector<data_t, Dim> entry = r.pointAt(tmin);
 
             // Calculate the distance from entry.x to the x coord of the next voxel
             const auto tmp = std::abs(fractional(entry[0] - xvoxelcenter));
@@ -84,7 +84,7 @@ namespace elsa
         auto retreat_to_last_voxel = [&](auto aabb, auto& tmax) -> data_t {
             const auto xvoxelcenter = dist_to_integer(aabb.min()[0]);
 
-            Vector_t<data_t> exit = r.pointAt(tmax);
+            Eigen::Vector<data_t, Dim> exit = r.pointAt(tmax);
 
             // calculate the distance from entry.x to the x coord of the previous voxel
             const auto tmp = std::abs(fractional(exit[0] - xvoxelcenter));
@@ -116,25 +116,38 @@ namespace elsa
 
     // ------------------------------------------
     // explicit template instantiation
-    namespace detail
-    {
-        template std::tuple<float, float, float, float> intersect<float>(const BoundingBox& aabb,
-                                                                         const Ray_t<float>& r);
-        template std::tuple<double, double, double, double>
-            intersect<double>(const BoundingBox& aabb, const Ray_t<double>& r);
-    } // namespace detail
-
     template struct IntersectionResult<float>;
     template struct IntersectionResult<double>;
 
-    template std::optional<IntersectionResult<float>> intersectRay<float>(const BoundingBox& aabb,
-                                                                          const Ray_t<float>& r);
-    template std::optional<IntersectionResult<double>> intersectRay<double>(const BoundingBox& aabb,
-                                                                            const Ray_t<double>& r);
+    namespace detail
+    {
+#define ELSA_INSTANTIATE_INTERSECT(type, dim)                         \
+    template std::tuple<type, type, type, type> intersect<type, dim>( \
+        const BoundingBox& aabb, const Eigen::ParametrizedLine<type, dim>& r);
 
-    template std::optional<IntersectionResult<float>>
-        intersectXPlanes<float>(BoundingBox aabb, const Ray_t<float>& r);
-    template std::optional<IntersectionResult<double>>
-        intersectXPlanes<double>(BoundingBox aabb, const Ray_t<double>& r);
+        ELSA_INSTANTIATE_INTERSECT(float, 2)
+        ELSA_INSTANTIATE_INTERSECT(double, 2)
+        ELSA_INSTANTIATE_INTERSECT(float, 3)
+        ELSA_INSTANTIATE_INTERSECT(double, 3)
+        ELSA_INSTANTIATE_INTERSECT(float, Eigen::Dynamic)
+        ELSA_INSTANTIATE_INTERSECT(double, Eigen::Dynamic)
+    } // namespace detail
 
+#define ELSA_INSTANTIATE_INTERSECTRAY(type, dim)                              \
+    template std::optional<IntersectionResult<type>> intersectRay<type, dim>( \
+        const BoundingBox& aabb, const Eigen::ParametrizedLine<type, dim>& r);
+
+    ELSA_INSTANTIATE_INTERSECTRAY(float, Eigen::Dynamic)
+    ELSA_INSTANTIATE_INTERSECTRAY(double, Eigen::Dynamic)
+
+#define ELSA_INSTANTIATE_INTERSECTXPLANES(type, dim)                              \
+    template std::optional<IntersectionResult<type>> intersectXPlanes<type, dim>( \
+        BoundingBox aabb, const Eigen::ParametrizedLine<type, dim>& r);
+
+    ELSA_INSTANTIATE_INTERSECTXPLANES(float, Eigen::Dynamic)
+    ELSA_INSTANTIATE_INTERSECTXPLANES(double, Eigen::Dynamic)
+
+#undef ELSA_INSTANTIATE_INTERSECT
+#undef ELSA_INSTANTIATE_INTERSECTRAY
+#undef ELSA_INSTANTIATE_INTERSECTXPLANES
 } // namespace elsa
