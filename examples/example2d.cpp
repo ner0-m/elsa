@@ -13,7 +13,7 @@ void example2d()
     IndexVector_t size(2);
     // size << 128, 128;
     size << 512, 512;
-    auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+    auto phantom = phantoms::modifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
     // write the phantom out
@@ -25,7 +25,7 @@ void example2d()
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
-    // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
+    // dynamic_cast to VolumeDescriptor is legal and will not throw, as Phantoms returns a
     // VolumeDescriptor
     Logger::get("Info")->info("Create BlobProjector");
     BlobProjector projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),

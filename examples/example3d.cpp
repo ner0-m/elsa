@@ -11,7 +11,7 @@ void example3d()
     // generate 3d phantom
     IndexVector_t size(3);
     size << 128, 128, 128;
-    auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+    auto phantom = phantoms::modifiedSheppLogan<real_t>(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
     // write the phantom out
@@ -26,7 +26,7 @@ void example3d()
     // setup operator for 2d X-ray transform
     Logger::get("Info")->info("Simulating sinogram using Siddon's method");
 
-    // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
+    // dynamic_cast to VolumeDescriptor is legal and will not throw, as Phantoms returns a
     // VolumeDescriptor
     JosephsMethodCUDA projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 

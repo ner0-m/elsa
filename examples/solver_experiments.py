@@ -54,7 +54,7 @@ def mse(optimized: np.ndarray, original: np.ndarray) -> float:
 def instantiate_solvers(solvers: List[SolverTest], problem_size: int, do_3d=False):
     # generate the phantom
     size = np.array([problem_size, problem_size]) if not do_3d else np.array([problem_size, problem_size, problem_size])
-    phantom = elsa.PhantomGenerator.createModifiedSheppLogan(size)
+    phantom = elsa.phantoms.modifiedSheppLogan(size)
     volume_descriptor = phantom.getDataDescriptor()
 
     num_poses = 180

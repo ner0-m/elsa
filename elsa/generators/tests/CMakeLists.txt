@@ -15,7 +15,7 @@ add_custom_target(build-tests-generators)
 
 # the actual tests
 ELSA_DOCTEST(EllipseGenerator)
-ELSA_DOCTEST(PhantomGenerator)
+ELSA_DOCTEST(Phantoms)
 ELSA_DOCTEST(CircleTrajectoryGenerator)
 ELSA_DOCTEST(LimitedAngleTrajectoryGenerator)
 ELSA_DOCTEST(SphereTrajectoryGenerator)

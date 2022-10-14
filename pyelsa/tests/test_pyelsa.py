@@ -217,13 +217,13 @@ class PyelsaTest(unittest.TestCase):
     def _test_reconstruction_2d(self, *args, **kwargs):
         size = 50.0
         # generating a 2d phantom
-        phantom = elsa.PhantomGenerator.createModifiedSheppLogan([size, size])
+        phantom = elsa.phantoms.modifiedSheppLogan([size, size])
         self._test_reconstruction(size, phantom, *args, **kwargs)
 
     def _test_reconstruction_3d(self, *args, **kwargs):
         size = 50.0
         # generating a 3d phantom
-        phantom = elsa.PhantomGenerator.createModifiedSheppLogan([size, size, size])
+        phantom = elsa.phantoms.modifiedSheppLogan([size, size, size])
         self._test_reconstruction(size, phantom, *args, **kwargs)
 
     def test_reconstruction_2d_curved_more_iterations(self):

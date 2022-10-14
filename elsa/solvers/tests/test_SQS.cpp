@@ -20,7 +20,7 @@
 #include "VolumeDescriptor.h"
 #include "CircleTrajectoryGenerator.h"
 #include "SiddonsMethod.h"
-#include "PhantomGenerator.h"
+#include "Phantoms.h"
 #include "TypeCasts.hpp"
 #include "testHelpers.h"
 
@@ -214,7 +214,7 @@ TEST_CASE("SQS: Solving a simple phantom reconstruction")
     GIVEN("a Phantom reconstruction problem")
     {
         IndexVector_t size({{16, 16}});
-        auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+        auto phantom = phantoms::modifiedSheppLogan(size);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
         index_t numAngles{90}, arc{180};
@@ -267,7 +267,7 @@ TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
     GIVEN("a Phantom reconstruction problem")
     {
         IndexVector_t size({{16, 16}});
-        auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+        auto phantom = phantoms::modifiedSheppLogan(size);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
         index_t numAngles{20}, arc{180};

@@ -26,7 +26,7 @@
 #include "TransmissionLogLikelihood.h"
 
 // Generators headers
-#include "PhantomGenerator.h"
+#include "Phantoms.h"
 #include "CircleTrajectoryGenerator.h"
 #include "LimitedAngleTrajectoryGenerator.h"
 #include "SphereTrajectoryGenerator.h"

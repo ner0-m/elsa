@@ -14,7 +14,7 @@
 #include "CircleTrajectoryGenerator.h"
 #include "SiddonsMethod.h"
 #include "PlanarDetectorDescriptor.h"
-#include "PhantomGenerator.h"
+#include "Phantoms.h"
 #include "SiddonsMethod.h"
 #include "JosephsMethod.h"
 
@@ -170,7 +170,7 @@ TEST_CASE(
 
     IndexVector_t size(2);
     size << 16, 16;
-    auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+    auto phantom = phantoms::modifiedSheppLogan<real_t>(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
     index_t numAngles{20}, arc{360};
@@ -277,7 +277,7 @@ TEST_CASE(
 
     IndexVector_t size(3);
     size << 8, 8, 8;
-    auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+    auto phantom = phantoms::modifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
     index_t numPoses{16}, numCircles{5};

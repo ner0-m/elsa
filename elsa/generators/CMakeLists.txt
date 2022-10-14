@@ -1,7 +1,7 @@
 # list all the headers of the module
 set(MODULE_HEADERS
     EllipseGenerator.h
-    PhantomGenerator.h
+    Phantoms.h
     BaseCircleTrajectoryGenerator.h
     CircleTrajectoryGenerator.h
     CurvedCircleTrajectoryGenerator.h
@@ -14,7 +14,7 @@ set(MODULE_HEADERS
 # list all the code files of the module
 set(MODULE_SOURCES
     EllipseGenerator.cpp
-    PhantomGenerator.cpp
+    Phantoms.cpp
     BaseCircleTrajectoryGenerator.cpp
     CircleTrajectoryGenerator.cpp
     CurvedCircleTrajectoryGenerator.cpp

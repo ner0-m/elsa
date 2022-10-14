@@ -12,14 +12,14 @@ elsa::DataContainer<elsa::real_t> get_phantom(elsa::index_t dims, elsa::index_t 
     const auto size = elsa::IndexVector_t::Constant(dims, s);
 
     if (phantom_kind == "SheppLogan") {
-        return elsa::PhantomGenerator<elsa::real_t>::createModifiedSheppLogan(size);
+        return elsa::phantoms::modifiedSheppLogan(size);
     } else if (phantom_kind == "Rectangle") {
         auto quarter = s / 4;
         const auto lower = elsa::IndexVector_t::Constant(size.size(), quarter);
         const auto upper = elsa::IndexVector_t::Constant(size.size(), s - quarter);
-        return elsa::PhantomGenerator<elsa::real_t>::createRectanglePhantom(size, lower, upper);
+        return elsa::phantoms::rectangle(size, lower, upper);
     } else if (phantom_kind == "Circle") {
-        return elsa::PhantomGenerator<elsa::real_t>::createCirclePhantom(size, s / 4.f);
+        return elsa::phantoms::circular(size, s / 4.f);
     }
     throw elsa::Error("Unknown phantom kind {}", phantom_kind);
 }

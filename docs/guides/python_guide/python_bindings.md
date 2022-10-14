@@ -29,7 +29,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 size = np.array([128, 128])
-phantom = elsa.PhantomGenerator.createModifiedSheppLogan(size)
+phantom = elsa.phantoms.modifiedSheppLogan(size)
 volume_descriptor = phantom.getDataDescriptor()
 
 # generate circular trajectory
@@ -88,7 +88,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 size = np.array([64, 64, 64])  # 3D now
-phantom = elsa.PhantomGenerator.createModifiedSheppLogan(size)
+phantom = elsa.phantoms.modifiedSheppLogan(size)
 volume_descriptor = phantom.getDataDescriptor()
 
 # generate circular trajectory

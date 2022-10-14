@@ -18,7 +18,7 @@ create one simply by:
 ```python
 # determine size
 size = np.array([128, 128])
-phantom = elsa.PhantomGenerator.createModifiedSheppLogan(size)
+phantom = elsa.phantoms.modifiedSheppLogan(size)
 
 # This is used throughout the examples so we store it to a variable
 volume_descriptor = phantom.getDataDescriptor()
@@ -86,7 +86,7 @@ aspects are adapted automatically, such that minimal code changes are necessary.
 ```python
 # determine size
 size = np.array([128, 128, 128])
-phantom = elsa.PhantomGenerator.createModifiedSheppLogan(size)
+phantom = elsa.phantoms.modifiedSheppLogan(size)
 ```
 
 Now the returned sinogram is a stack of 2D slices. Each slice is a measurement taken at a

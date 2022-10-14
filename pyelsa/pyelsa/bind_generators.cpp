@@ -7,7 +7,7 @@
 #include "CurvedCircleTrajectoryGenerator.h"
 #include "EllipseGenerator.h"
 #include "NoiseGenerators.h"
-#include "PhantomGenerator.h"
+#include "Phantoms.h"
 #include "SphereTrajectoryGenerator.h"
 #include "TrajectoryGenerator.h"
 
@@ -53,43 +53,37 @@ void add_definitions_pyelsa_generators(py::module& m)
             py::arg("dc"), py::arg("amplitude"), py::arg("center"), py::arg("sizes"),
             py::arg("angle"));
 
-    py::class_<elsa::PhantomGenerator<float>> PhantomGeneratorf(m, "PhantomGeneratorf");
-    PhantomGeneratorf
-        .def_static("createModifiedSheppLogan",
-                    (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
-                        &elsa::PhantomGenerator<float>::createModifiedSheppLogan),
-                    py::arg("sizes"), py::return_value_policy::move)
-        .def_static("createRectanglePhantom",
-                    (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>,
-                                                   Eigen::Matrix<long, -1, 1, 0, -1, 1>,
-                                                   Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
-                        &elsa::PhantomGenerator<float>::createRectanglePhantom),
-                    py::arg("volumesize"), py::arg("lower"), py::arg("upper"),
-                    py::return_value_policy::move)
-        .def_static("createCirclePhantom",
-                    (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>, float))(
-                        &elsa::PhantomGenerator<float>::createCirclePhantom),
-                    py::arg("volumesize"), py::arg("radius"), py::return_value_policy::move);
+    py::module phantoms = m.def_submodule("phantoms", "A set of phantom generators");
 
-    m.attr("PhantomGenerator") = m.attr("PhantomGeneratorf");
+    phantoms.def("modifiedSheppLogan",
+                 (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                     &elsa::phantoms::modifiedSheppLogan<float>),
+                 py::arg("sizes"), py::return_value_policy::move);
+    phantoms.def("rectangle",
+                 (elsa::DataContainer<float>(*)(
+                     Eigen::Matrix<long, -1, 1, 0, -1, 1>, Eigen::Matrix<long, -1, 1, 0, -1, 1>,
+                     Eigen::Matrix<long, -1, 1, 0, -1, 1>))(&elsa::phantoms::rectangle<float>),
+                 py::arg("volumesize"), py::arg("lower"), py::arg("upper"),
+                 py::return_value_policy::move);
+    phantoms.def("circular",
+                 (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>, float))(
+                     &elsa::phantoms::circular<float>),
+                 py::arg("volumesize"), py::arg("radius"), py::return_value_policy::move);
 
-    py::class_<elsa::PhantomGenerator<double>> PhantomGeneratord(m, "PhantomGeneratord");
-    PhantomGeneratord
-        .def_static("createModifiedSheppLogan",
-                    (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
-                        &elsa::PhantomGenerator<double>::createModifiedSheppLogan),
-                    py::arg("sizes"), py::return_value_policy::move)
-        .def_static("createRectanglePhantom",
-                    (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>,
-                                                    Eigen::Matrix<long, -1, 1, 0, -1, 1>,
-                                                    Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
-                        &elsa::PhantomGenerator<double>::createRectanglePhantom),
-                    py::arg("volumesize"), py::arg("lower"), py::arg("upper"),
-                    py::return_value_policy::move)
-        .def_static("createCirclePhantom",
-                    (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>, double))(
-                        &elsa::PhantomGenerator<double>::createCirclePhantom),
-                    py::arg("volumesize"), py::arg("radius"), py::return_value_policy::move);
+    phantoms.def("modifiedSheppLogan",
+                 (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                     &elsa::phantoms::modifiedSheppLogan<double>),
+                 py::arg("sizes"), py::return_value_policy::move);
+    phantoms.def("rectangle",
+                 (elsa::DataContainer<double>(*)(
+                     Eigen::Matrix<long, -1, 1, 0, -1, 1>, Eigen::Matrix<long, -1, 1, 0, -1, 1>,
+                     Eigen::Matrix<long, -1, 1, 0, -1, 1>))(&elsa::phantoms::rectangle<double>),
+                 py::arg("volumesize"), py::arg("lower"), py::arg("upper"),
+                 py::return_value_policy::move);
+    phantoms.def("circular",
+                 (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>, double))(
+                     &elsa::phantoms::circular<double>),
+                 py::arg("volumesize"), py::arg("radius"), py::return_value_policy::move);
 
     py::class_<elsa::NoNoiseGenerator> NoNoiseGenerator(m, "NoNoiseGenerator");
     NoNoiseGenerator

@@ -64,7 +64,7 @@ int main()
         // create 3d phantom
         IndexVector_t volumeSize(3);
         volumeSize << size, size, size;
-        auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(volumeSize);
+        auto phantom = phantoms::modifiedSheppLogan(volumeSize);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
         // generate circular trajectory with numAngles angles over 360 degrees
@@ -72,7 +72,7 @@ int main()
             numAngles, volumeDescriptor, 360, 30.0f * static_cast<real_t>(size),
             2.0f * static_cast<real_t>(size));
 
-        // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns
+        // dynamic_cast to VolumeDescriptor is legal and will not throw, as Phantoms returns
         // a VolumeDescriptor
         auto& volDescriptor = downcast<VolumeDescriptor>(volumeDescriptor);
 

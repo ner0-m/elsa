@@ -1,4 +1,4 @@
-#include "PhantomGenerator.h"
+#include "Phantoms.h"
 #include "EllipseGenerator.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
@@ -7,11 +7,30 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace elsa
+namespace elsa::phantoms
 {
+
+    // scale sizes from [0,1] to the (square) phantom size, producing indices (integers)
     template <typename data_t>
-    DataContainer<data_t> PhantomGenerator<data_t>::createCirclePhantom(IndexVector_t volumesize,
-                                                                        data_t radius)
+    index_t scale(const DataDescriptor& dd, data_t value)
+    {
+        return std::lround(
+            value * static_cast<data_t>(dd.getNumberOfCoefficientsPerDimension()[0] - 1) / 2.0f);
+    }
+
+    // scale and shift center coordinates to the (square) phantom size, producing indices
+    // (integers)
+    template <typename data_t>
+    index_t scaleShift(const DataDescriptor& dd, data_t value)
+    {
+        return std::lround(value
+                           * static_cast<data_t>(dd.getNumberOfCoefficientsPerDimension()[0] - 1)
+                           / 2.0f)
+               + (dd.getNumberOfCoefficientsPerDimension()[0] / 2);
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> circular(IndexVector_t volumesize, data_t radius)
     {
         VolumeDescriptor dd(volumesize);
         DataContainer<data_t> dc(dd);
@@ -31,9 +50,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> PhantomGenerator<data_t>::createRectanglePhantom(IndexVector_t volumesize,
-                                                                           IndexVector_t lower,
-                                                                           IndexVector_t upper)
+    DataContainer<data_t> rectangle(IndexVector_t volumesize, IndexVector_t lower,
+                                    IndexVector_t upper)
     {
         VolumeDescriptor dd(volumesize);
         DataContainer<data_t> dc(dd);
@@ -47,20 +65,17 @@ namespace elsa
     }
 
     template <typename data_t>
-    DataContainer<data_t> PhantomGenerator<data_t>::createModifiedSheppLogan(IndexVector_t sizes)
+    DataContainer<data_t> modifiedSheppLogan(IndexVector_t sizes)
     {
         // sanity check
         if (sizes.size() < 2 || sizes.size() > 3)
-            throw InvalidArgumentError(
-                "PhantomGenerator::createModifiedSheppLogan: only 2d or 3d supported");
+            throw InvalidArgumentError("phantom::modifiedSheppLogan: only 2d or 3d supported");
         if (sizes.size() == 2 && sizes[0] != sizes[1])
-            throw InvalidArgumentError(
-                "PhantomGenerator::createModifiedSheppLogan: 2d size has to be square");
+            throw InvalidArgumentError("phantom::modifiedSheppLogan: 2d size has to be square");
         if (sizes.size() == 3 && (sizes[0] != sizes[1] || sizes[0] != sizes[2]))
-            throw InvalidArgumentError(
-                "PhantomGenerator::createModifiedSheppLogan: 3d size has to be cubed");
+            throw InvalidArgumentError("phantom::modifiedSheppLogan: 3d size has to be cubed");
 
-        Logger::get("PhantomGenerator")
+        Logger::get("phantom::modifiedSheppLogan")
             ->info("creating modified Shepp Logan phantom of size {}^{}", sizes[0], sizes.size());
 
         VolumeDescriptor dd(sizes);
@@ -136,25 +151,15 @@ namespace elsa
         return dc;
     }
 
-    template <typename data_t>
-    index_t PhantomGenerator<data_t>::scale(const DataDescriptor& dd, data_t value)
-    {
-        return std::lround(
-            value * static_cast<data_t>(dd.getNumberOfCoefficientsPerDimension()[0] - 1) / 2.0f);
-    }
-
-    template <typename data_t>
-    index_t PhantomGenerator<data_t>::scaleShift(const DataDescriptor& dd, data_t value)
-    {
-        return std::lround(value
-                           * static_cast<data_t>(dd.getNumberOfCoefficientsPerDimension()[0] - 1)
-                           / 2.0f)
-               + (dd.getNumberOfCoefficientsPerDimension()[0] / 2);
-    }
-
     // ------------------------------------------
     // explicit template instantiation
-    template class PhantomGenerator<float>;
-    template class PhantomGenerator<double>;
+    template DataContainer<float> circular<float>(IndexVector_t volumesize, float radius);
+    template DataContainer<double> circular<double>(IndexVector_t volumesize, double radius);
+    template DataContainer<float> modifiedSheppLogan<float>(IndexVector_t sizes);
+    template DataContainer<double> modifiedSheppLogan<double>(IndexVector_t sizes);
+    template DataContainer<float> rectangle<float>(IndexVector_t volumesize, IndexVector_t lower,
+                                                   IndexVector_t upper);
+    template DataContainer<double> rectangle<double>(IndexVector_t volumesize, IndexVector_t lower,
+                                                     IndexVector_t upper);
 
-} // namespace elsa
+} // namespace elsa::phantoms

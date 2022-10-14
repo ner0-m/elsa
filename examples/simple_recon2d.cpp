@@ -10,7 +10,7 @@ void example2d()
 {
     /// [simplerecon phantom create]
     IndexVector_t size({{128, 128}});
-    auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+    auto phantom = phantoms::modifiedSheppLogan(size);
     /// [simplerecon phantom create]
 
     /// [simplerecon phantom write]

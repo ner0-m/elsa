@@ -19,7 +19,7 @@
 #include "VolumeDescriptor.h"
 #include "SiddonsMethod.h"
 #include "CircleTrajectoryGenerator.h"
-#include "PhantomGenerator.h"
+#include "Phantoms.h"
 #include "TypeCasts.hpp"
 #include "testHelpers.h"
 
@@ -216,7 +216,7 @@ TEST_CASE("OGM: Solving a simple phantom reconstruction")
     {
         IndexVector_t size(2);
         size << 16, 16; // TODO: determine optimal phantom size for efficient testing
-        auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+        auto phantom = phantoms::modifiedSheppLogan(size);
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
         index_t numAngles{20}, arc{360};

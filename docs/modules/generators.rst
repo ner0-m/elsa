@@ -4,10 +4,11 @@ elsa generators
 
 .. contents:: Table of Contents
 
-PhantomGenerator
-================
+Phantoms
+========
 
-.. doxygenclass:: elsa::PhantomGenerator
+.. doxygennamespace:: elsa::phantoms
+   :content-only:
 
 
 CircleTrajectoryGenerator

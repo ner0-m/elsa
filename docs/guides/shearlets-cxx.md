@@ -20,7 +20,7 @@ inverse shearlet transform to retrieve the reconstruction of the phantom.
 // generate 2D phantom
 IndexVector_t size(2);
 size << 256, 256;
-auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+auto phantom = phantoms::modifiedSheppLogan(size);
 
 ShearletTransform<real_t, real_t> shearletTransform(size);
 

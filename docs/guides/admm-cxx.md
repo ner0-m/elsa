@@ -64,7 +64,7 @@ We start by generating a modified 2D Shepp-Logan phantom by calling
 ```c++
 IndexVector_t size(2);
 size << 256, 256;
-auto phantom = PhantomGenerator<real_t>::createModifiedSheppLogan(size);
+auto phantom = phantoms::modifiedSheppLogan<real_t>(size);
 ```
 
 This generates the following image,
