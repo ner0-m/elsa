@@ -140,7 +140,7 @@ cache:
     - cd /tmp/elsa_testing
     - mkdir -p build/ && cd build/
     - echo $CMAKE_EXTRA_ARGS
-    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" $CMAKE_EXTRA_ARGS
+    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -DELSA_BRANCH="$CI_COMMIT_REF_NAME" $CMAKE_EXTRA_ARGS
     - ninja
 
 ### static test ###
@@ -394,7 +394,7 @@ test-cuda-11.5:
     - git clone https://gitlab.lrz.de/IP/elsa_testing.git /tmp/elsa_testing
     - cd /tmp/elsa_testing
     - mkdir -p build/ && cd build/
-    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -DELSA_CUDA_VECTOR=ON
+    - cmake .. -GNinja -DELSA_INSTALL_DIR="$CI_PROJECT_DIR/install-elsa" -DELSA_BRANCH="$CI_COMMIT_REF_NAME" -DELSA_CUDA_VECTOR=ON
     - ninja
   tags:
     - linux
