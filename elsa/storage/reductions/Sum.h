@@ -16,6 +16,6 @@ namespace elsa
 
         return thrust::transform_reduce(
             first, last, [] __host__ __device__(const data_t& val) { return val; }, data_t(0),
-            elsa::plus{});
+            thrust::plus{});
     }
 } // namespace elsa
