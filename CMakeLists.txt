@@ -23,6 +23,7 @@ option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
 
 option(ELSA_INSTALL "Enable generating the install targets for make install" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
+option(ELSA_BUILD_BENCHMARKS "Enable building of benchmarks" OFF)
 
 option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
 option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (requires libclang-dev)" ON)
@@ -128,6 +129,7 @@ if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
             list(APPEND CMAKE_CUDA_ARCHITECTURES ${TARGET_GPU})
         endforeach()
 
+        add_definitions(-DELSA_HAS_CUDA_PROJECTORS)
         if(ELSA_CUDA_VECTOR)
             message(STATUS "Enabling DataHandlerGPU")
             message(STATUS "The default container type will be on the GPU")
@@ -316,6 +318,10 @@ else(ELSA_TESTING)
     message(STATUS "    elsa testing is disabled")
 endif(ELSA_TESTING)
 
+if(ELSA_BUILD_BENCHMARKS)
+    message(STATUS "elsa benchmarks enabled")
+    add_subdirectory(benchmark)
+endif()
 # ------------ add code/docs -----------
 # ------------
 

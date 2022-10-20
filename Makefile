@@ -75,6 +75,11 @@ ifeq ($(USE_TSAN),y)
   BUILD_OPTIONS+=-DELSA_SANITIZER="Thread"
 endif
 
+BUILD_BENCHMARKS?=y
+ifeq ($(BUILD_BENCHMARKS),y)
+  BUILD_OPTIONS+=-DELSA_BUILD_BENCHMARKS=ON
+endif
+
 USE_CUDA?=y
 ifeq ($(USE_CUDA),y)
 # Check for NVCC
