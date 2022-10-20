@@ -234,9 +234,9 @@ something is wrong.
 
 ### Building the Documentation
 The [elsa documentation](https://ciip.in.tum.de/elsadocs/) is automatically built and deployed through the CI for each commit to master.
-To build it locally the following packages are required: `sphinx doxygen` which should be available in
+To build it locally the following packages are required: `doxygen graphviz ` which should be available in
 most major linux distributions or via pip. Additionally, the following sphinx extensions need to be installed via pip:
-`sphinx-rtd-theme sphinxcontrib-katex m2r2 breathe`.
+`sphinx breathe m2r2 sphinx_rtd_theme sphinxcontrib-katex`.
 Then simply build the documentation using ninja
 ```
 mkdir -p build
