@@ -38,21 +38,6 @@ namespace elsa
         /// Return a reference to the maximum point of the bounding box
         const RealVector_t& max() const;
 
-        /// Adjust the minimum of the bounding box
-        void translateMin(const real_t& v);
-
-        /// Adjust the minimum of the bounding box
-        void translateMin(const RealVector_t& v);
-
-        /// Adjust the maximum of the bounding box
-        void translateMax(const real_t& v);
-
-        /// Adjust the maximum of the bounding box
-        void translateMax(const RealVector_t& v);
-
-        /// Expand bounding bounding box by vectors `min` and `max`
-        void expand(const RealVector_t& min, const RealVector_t& max);
-
         void recomputeBounds();
 
         friend bool operator==(const BoundingBox& box1, const BoundingBox& box2);

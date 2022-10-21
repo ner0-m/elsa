@@ -48,26 +48,6 @@ namespace elsa
         return _max;
     }
 
-    void BoundingBox::translateMin(const real_t& t)
-    {
-        this->min().array() += t;
-    }
-
-    void BoundingBox::translateMin(const RealVector_t& t)
-    {
-        this->min() += t;
-    }
-
-    void BoundingBox::translateMax(const real_t& t)
-    {
-        this->max().array() += t;
-    }
-
-    void BoundingBox::translateMax(const RealVector_t& t)
-    {
-        this->max() += t;
-    }
-
     void BoundingBox::recomputeBounds()
     {
         RealVector_t min = _min.cwiseMin(_max);
