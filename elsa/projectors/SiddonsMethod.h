@@ -80,10 +80,10 @@ namespace elsa
         /// implement the polymorphic comparison operation
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
-        data_t traverseRayForward(BoundingBox aabb, const RealRay_t& ray,
+        data_t traverseRayForward(const BoundingBox& aabb, const RealRay_t& ray,
                                   const DataContainer<data_t>& x) const;
 
-        void traverseRayBackward(BoundingBox aabb, const RealRay_t& ray,
+        void traverseRayBackward(const BoundingBox& aabb, const RealRay_t& ray,
                                  const value_type& detectorValue, DataContainer<data_t>& Aty) const;
 
         friend class XrayProjector<self_type>;

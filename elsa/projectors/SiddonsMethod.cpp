@@ -45,7 +45,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t SiddonsMethod<data_t>::traverseRayForward(BoundingBox aabb, const RealRay_t& ray,
+    data_t SiddonsMethod<data_t>::traverseRayForward(const BoundingBox& aabb, const RealRay_t& ray,
                                                      const DataContainer<data_t>& x) const
     {
         const auto& domain = x.getDataDescriptor();
@@ -71,7 +71,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void SiddonsMethod<data_t>::traverseRayBackward(BoundingBox aabb, const RealRay_t& ray,
+    void SiddonsMethod<data_t>::traverseRayBackward(const BoundingBox& aabb, const RealRay_t& ray,
                                                     const value_type& detectorValue,
                                                     DataContainer<data_t>& Aty) const
     {
