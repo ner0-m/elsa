@@ -1,10 +1,6 @@
 #include "SiddonsMethod.h"
-#include "Timer.h"
 #include "TraverseAABB.h"
 #include "TypeCasts.hpp"
-
-#include <stdexcept>
-#include <type_traits>
 
 namespace elsa
 {
