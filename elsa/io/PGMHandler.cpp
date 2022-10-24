@@ -5,8 +5,7 @@
 #include <exception>
 
 #include "Error.h"
-#include "spdlog/fmt/bundled/core.h"
-#include "spdlog/fmt/bundled/ostream.h"
+#include "spdlog/fmt/ostr.h"
 
 namespace elsa
 {
