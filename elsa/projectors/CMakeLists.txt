@@ -9,6 +9,7 @@ set(MODULE_HEADERS
     LutProjector.h
     BinaryMethod.h
     SiddonsMethod.h
+    SiddonsMethodBranchless.h
     JosephsMethod.h
     SubsetSampler.h
     Blobs.h
@@ -27,6 +28,7 @@ set(MODULE_SOURCES
     LutProjector.cpp
     BinaryMethod.cpp
     SiddonsMethod.cpp
+    SiddonsMethodBranchless.cpp
     JosephsMethod.cpp
     SubsetSampler.cpp
     Blobs.cpp
