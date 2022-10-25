@@ -3,6 +3,7 @@ set(MODULE_HEADERS
     BoundingBox.h
     Intersection.h
     TraverseAABB.h
+    TraverseAABBBranchless.h
     TraverseAABBJosephsMethod.h
     SliceTraversal.h
     LutProjector.h
@@ -20,6 +21,7 @@ set(MODULE_SOURCES
     BoundingBox.cpp
     Intersection.cpp
     TraverseAABB.cpp
+    TraverseAABBBranchless.cpp
     TraverseAABBJosephsMethod.cpp
     SliceTraversal.cpp
     LutProjector.cpp
