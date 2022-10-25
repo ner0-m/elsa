@@ -72,7 +72,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
                 TestType trueValue = static_cast<TestType>(0.5) * x.squaredL2Norm();
                 REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
                 REQUIRE_UNARY(isApprox(func.getGradient(x), x));
-                REQUIRE_EQ(func.getHessian(x), leaf(Identity<TestType>(dd)));
+                REQUIRE_EQ(*func.getHessian(x), Identity<TestType>(dd));
             }
         }
     }
@@ -121,7 +121,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
                     static_cast<TestType>(0.5) * scalingOp.getScaleFactor() * x.squaredL2Norm();
                 REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
                 REQUIRE_EQ(func.getGradient(x), scalingOp.getScaleFactor() * x);
-                REQUIRE_EQ(func.getHessian(x), leaf(scalingOp));
+                REQUIRE_EQ(*func.getHessian(x), scalingOp);
             }
         }
     }
@@ -171,7 +171,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
                 TestType trueValue = static_cast<TestType>(0.5) * x.squaredL2Norm() - x.dot(dc);
                 REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
                 REQUIRE_EQ(func.getGradient(x), x - dc);
-                REQUIRE_EQ(func.getHessian(x), leaf(Identity<TestType>(dd)));
+                REQUIRE_EQ(*func.getHessian(x), Identity<TestType>(dd));
             }
         }
     }
@@ -224,7 +224,7 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
                 REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
                 DataContainer<TestType> grad(dd, (dataVec - randomData).eval());
                 REQUIRE_EQ(func.getGradient(x), grad);
-                REQUIRE_EQ(func.getHessian(x), leaf(idOp));
+                REQUIRE_EQ(*func.getHessian(x), idOp);
             }
         }
     }

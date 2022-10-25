@@ -76,7 +76,7 @@ namespace elsa
 
         /// the getHessian method for the splitting problem
         auto getHessianImpl(const DataContainer<data_t>& x) const
-            -> LinearOperator<data_t> override;
+            -> std::unique_ptr<LinearOperator<data_t>> override;
 
         /// the getLipschitzConstant method for the splitting problem
         auto getLipschitzConstantImpl(const DataContainer<data_t>& x, index_t nIterations) const

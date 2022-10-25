@@ -6,6 +6,7 @@
 #include "DataContainer.h"
 
 #include <memory>
+#include <type_traits>
 
 namespace elsa
 {
@@ -109,38 +110,6 @@ namespace elsa
          */
         void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const;
 
-        /// friend operator+ to support composition of LinearOperators (and its derivatives)
-        friend LinearOperator<data_t> operator+(const LinearOperator<data_t>& lhs,
-                                                const LinearOperator<data_t>& rhs)
-        {
-            return LinearOperator(lhs, rhs, CompositeMode::ADD);
-        }
-
-        /// friend operator* to support composition of LinearOperators (and its derivatives)
-        friend LinearOperator<data_t> operator*(const LinearOperator<data_t>& lhs,
-                                                const LinearOperator<data_t>& rhs)
-        {
-            return LinearOperator(lhs, rhs, CompositeMode::MULT);
-        }
-
-        /// friend operator* to support composition of a scalar and a LinearOperator
-        friend LinearOperator<data_t> operator*(data_t scalar, const LinearOperator<data_t>& op)
-        {
-            return LinearOperator(scalar, op);
-        }
-
-        /// friend function to return the adjoint of a LinearOperator (and its derivatives)
-        friend LinearOperator<data_t> adjoint(const LinearOperator<data_t>& op)
-        {
-            return LinearOperator(op, true);
-        }
-
-        /// friend function to return a leaf node of a LinearOperator (and its derivatives)
-        friend LinearOperator<data_t> leaf(const LinearOperator<data_t>& op)
-        {
-            return LinearOperator(op, false);
-        }
-
     protected:
         /// the data descriptor of the domain of the operator
         std::unique_ptr<DataDescriptor> _domainDescriptor;
@@ -148,49 +117,141 @@ namespace elsa
         /// the data descriptor of the range of the operator
         std::unique_ptr<DataDescriptor> _rangeDescriptor;
 
-        /// implement the polymorphic clone operation
-        LinearOperator<data_t>* cloneImpl() const override;
-
         /// implement the polymorphic comparison operation
         bool isEqual(const LinearOperator<data_t>& other) const override;
 
         /// the apply method that has to be overridden in derived classes
-        virtual void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
+        virtual void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const = 0;
 
         /// the applyAdjoint  method that has to be overridden in derived classes
         virtual void applyAdjointImpl(const DataContainer<data_t>& y,
-                                      DataContainer<data_t>& Aty) const;
+                                      DataContainer<data_t>& Aty) const = 0;
+    };
+
+    template <typename data_t = real_t>
+    class AdjointLinearOperator : public LinearOperator<data_t>
+    {
+    public:
+        AdjointLinearOperator(const LinearOperator<data_t>& op);
+
+    protected:
+        /// the apply method that has to be overridden in derived classes
+        void applyImpl(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
+
+        /// the applyAdjoint  method that has to be overridden in derived classes
+        void applyAdjointImpl(const DataContainer<data_t>& x,
+                              DataContainer<data_t>& Ax) const override;
+
+        /// implement the polymorphic clone operation
+        AdjointLinearOperator<data_t>* cloneImpl() const override;
+
+        bool isEqual(const LinearOperator<data_t>& other) const override;
+
+    private:
+        std::unique_ptr<LinearOperator<data_t>> op_;
+    };
+
+    template <typename data_t = real_t>
+    class ScalarMulLinearOperator : public LinearOperator<data_t>
+    {
+    public:
+        ScalarMulLinearOperator(data_t scalar, const LinearOperator<data_t>& op);
+
+    protected:
+        /// the apply method that has to be overridden in derived classes
+        void applyImpl(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
+
+        /// the applyAdjoint  method that has to be overridden in derived classes
+        void applyAdjointImpl(const DataContainer<data_t>& x,
+                              DataContainer<data_t>& Ax) const override;
+
+        /// implement the polymorphic clone operation
+        ScalarMulLinearOperator<data_t>* cloneImpl() const override;
+
+        bool isEqual(const LinearOperator<data_t>& other) const override;
+
+    private:
+        data_t scalar_;
+        std::unique_ptr<LinearOperator<data_t>> op_;
+    };
+
+    template <typename data_t = real_t>
+    class CompositeAddLinearOperator : public LinearOperator<data_t>
+    {
+    public:
+        CompositeAddLinearOperator(const LinearOperator<data_t>& lhs,
+                                   const LinearOperator<data_t>& rhs);
+
+        /// the apply method that has to be overridden in derived classes
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+
+        /// the applyAdjoint  method that has to be overridden in derived classes
+        void applyAdjointImpl(const DataContainer<data_t>& y,
+                              DataContainer<data_t>& Aty) const override;
+
+        /// implement the polymorphic clone operation
+        CompositeAddLinearOperator<data_t>* cloneImpl() const override;
+
+        bool isEqual(const LinearOperator<data_t>& other) const override;
 
     private:
         /// pointers to nodes in the evaluation tree
-        std::unique_ptr<LinearOperator<data_t>> _lhs{}, _rhs{};
-
-        std::optional<data_t> _scalar = {};
-
-        /// flag whether this is a leaf-node
-        bool _isLeaf{false};
-
-        /// flag whether this is a leaf-node to implement an adjoint operator
-        bool _isAdjoint{false};
-
-        /// flag whether this is a composite (internal node) of the evaluation tree
-        bool _isComposite{false};
-
-        /// enum class denoting the mode of composition (+, *)
-        enum class CompositeMode { ADD, MULT, SCALAR_MULT };
-
-        /// variable storing the composition mode (+, *)
-        CompositeMode _mode{CompositeMode::MULT};
-
-        /// constructor to produce an adjoint leaf node
-        LinearOperator(const LinearOperator<data_t>& op, bool isAdjoint);
-
-        /// constructor to produce a composite (internal node) of the evaluation tree
-        LinearOperator(const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs,
-                       CompositeMode mode);
-
-        /// constructor to produce a composite (internal node) of the evaluation tree
-        LinearOperator(data_t scalar, const LinearOperator<data_t>& op);
+        std::unique_ptr<LinearOperator<data_t>> lhs_{}, rhs_{};
     };
 
+    template <typename data_t = real_t>
+    class CompositeMulLinearOperator : public LinearOperator<data_t>
+    {
+    public:
+        CompositeMulLinearOperator(const LinearOperator<data_t>& lhs,
+                                   const LinearOperator<data_t>& rhs);
+
+        /// the apply method that has to be overridden in derived classes
+        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+
+        /// the applyAdjoint  method that has to be overridden in derived classes
+        void applyAdjointImpl(const DataContainer<data_t>& y,
+                              DataContainer<data_t>& Aty) const override;
+
+        /// implement the polymorphic clone operation
+        CompositeMulLinearOperator<data_t>* cloneImpl() const override;
+
+        bool isEqual(const LinearOperator<data_t>& other) const override;
+
+    private:
+        /// pointers to nodes in the evaluation tree
+        std::unique_ptr<LinearOperator<data_t>> lhs_{}, rhs_{};
+    };
+
+    /// operator+ to support composition of LinearOperators (and its derivatives)
+    template <typename data_t>
+    CompositeAddLinearOperator<data_t> operator+(const LinearOperator<data_t>& lhs,
+                                                 const LinearOperator<data_t>& rhs)
+    {
+        return CompositeAddLinearOperator(lhs, rhs);
+    }
+
+    /// operator* to support composition of LinearOperators (and its derivatives)
+    template <typename data_t>
+    CompositeMulLinearOperator<data_t> operator*(const LinearOperator<data_t>& lhs,
+                                                 const LinearOperator<data_t>& rhs)
+    {
+        return CompositeMulLinearOperator(lhs, rhs);
+    }
+
+    /// operator* to support composition of a scalar and a LinearOperator, enable if magic, to make
+    /// it work without casting to `data_t`
+    template <typename data_t, typename Scalar = data_t,
+              typename = std::enable_if_t<isArithmetic<Scalar>>>
+    ScalarMulLinearOperator<data_t> operator*(Scalar scalar, const LinearOperator<data_t>& op)
+    {
+        return ScalarMulLinearOperator(static_cast<data_t>(scalar), op);
+    }
+
+    /// function to return the adjoint of a LinearOperator (and its derivatives)
+    template <typename data_t>
+    AdjointLinearOperator<data_t> adjoint(const LinearOperator<data_t>& op)
+    {
+        return AdjointLinearOperator(op);
+    }
 } // namespace elsa

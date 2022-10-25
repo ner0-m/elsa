@@ -91,7 +91,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing trivial linear residual", TestType, 
                 DataContainer<TestType> dcX(dd);
                 dcX = 1;
 
-                REQUIRE_EQ(linRes.getJacobian(dcX), leaf(idOp));
+                REQUIRE_EQ(*linRes.getJacobian(dcX), idOp);
                 REQUIRE_UNARY(isApprox(linRes.evaluate(dcX), dcX));
             }
         }
@@ -143,7 +143,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with just an data vector", TestType,
                 DataContainer<TestType> dcX(dd);
                 dcX = 1;
 
-                REQUIRE_EQ(linRes.getJacobian(dcX), leaf(idOp));
+                REQUIRE_EQ(*linRes.getJacobian(dcX), idOp);
 
                 DataContainer<TestType> tmp = dcX - dc;
                 REQUIRE_UNARY(isApprox(linRes.evaluate(dcX), tmp));
@@ -196,7 +196,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with just an operator", TestType, fl
                 DataContainer<TestType> dcX(ddDomain);
                 dcX = 1;
 
-                REQUIRE_EQ(linRes.getJacobian(dcX), leaf(mockOp));
+                REQUIRE_EQ(*linRes.getJacobian(dcX), mockOp);
                 REQUIRE_UNARY(isApprox(linRes.evaluate(dcX), mockOp.apply(dcX)));
             }
         }
@@ -252,7 +252,7 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with operator and data", TestType, f
                 DataContainer<TestType> dcX(ddDomain);
                 dcX = 1;
 
-                REQUIRE_EQ(linRes.getJacobian(dcX), leaf(mockOp));
+                REQUIRE_EQ(*linRes.getJacobian(dcX), mockOp);
 
                 DataContainer<TestType> tmp = mockOp.apply(dcX) - dc;
                 REQUIRE_UNARY(isApprox(linRes.evaluate(dcX), tmp));

@@ -29,7 +29,8 @@ namespace elsa
 
     template <typename data_t>
     auto L0PseudoNorm<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
-        -> LinearOperator<data_t>
+        -> std::unique_ptr<LinearOperator<data_t>>
+
     {
         throw std::logic_error("L0PseudoNorm: not differentiable, so no Hessian! (busted!)");
     }

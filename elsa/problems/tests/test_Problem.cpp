@@ -69,7 +69,7 @@ TEST_CASE("Problem: Testing without regularization")
                 REQUIRE_UNARY(checkApproxEq(prob.getGradient(zero), -1.0f * dcScaling * dcData));
 
                 auto hessian = prob.getHessian(zero);
-                auto result = hessian.apply(dcData);
+                auto result = hessian->apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]));
 
@@ -128,7 +128,7 @@ TEST_CASE("Problem: Testing with one regularization term")
                 REQUIRE_UNARY(checkApproxEq(prob.getGradient(zero), -1.0f * dcScaling * dcData));
 
                 auto hessian = prob.getHessian(zero);
-                auto result = hessian.apply(dcData);
+                auto result = hessian->apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
                                                                + weight * dataVec[i]));
@@ -213,7 +213,7 @@ TEST_CASE("Problem: Testing with several regularization terms")
                 REQUIRE_UNARY(checkApproxEq(prob.getGradient(zero), -1.0f * dcScaling * dcData));
 
                 auto hessian = prob.getHessian(zero);
-                auto result = hessian.apply(dcData);
+                auto result = hessian->apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
                                                                + weight1 * dataVec[i]

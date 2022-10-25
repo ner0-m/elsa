@@ -89,7 +89,8 @@ namespace elsa
          * If A is set, then the Jacobian is A and this returns a copy of A.
          * If A is not set, then an Identity operator is returned.
          */
-        LinearOperator<data_t> getJacobianImpl(const DataContainer<data_t>& x) override;
+        std::unique_ptr<LinearOperator<data_t>>
+            getJacobianImpl(const DataContainer<data_t>& x) override;
 
     private:
         /// the operator A, nullptr implies no operator present

@@ -43,7 +43,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Residual<data_t>::getJacobian(const DataContainer<data_t>& x)
+    std::unique_ptr<LinearOperator<data_t>>
+        Residual<data_t>::getJacobian(const DataContainer<data_t>& x)
     {
         return getJacobianImpl(x);
     }

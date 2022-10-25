@@ -53,7 +53,7 @@ namespace elsa
 
             if (regTermResidual.hasOperator()) {
                 const auto& regTermOp = regTermResidual.getOperator();
-                LinearOperator<data_t> A = lambdaOp * adjoint(regTermOp) * regTermOp;
+                auto A = lambdaOp * adjoint(regTermOp) * regTermOp;
 
                 if (regTermResidual.hasDataVector()) {
                     DataContainer<data_t> b =
@@ -93,7 +93,7 @@ namespace elsa
 
             if (regTermResidual.hasOperator()) {
                 auto& regTermOp = regTermResidual.getOperator();
-                LinearOperator<data_t> A = adjoint(regTermOp) * lambdaW * regTermOp;
+                auto A = adjoint(regTermOp) * lambdaW * regTermOp;
 
                 if (regTermResidual.hasDataVector()) {
                     DataContainer<data_t> b =
@@ -114,7 +114,7 @@ namespace elsa
             const auto& regFunc = downcast<Quadric<data_t>>(regTerm.getFunctional());
             const auto& quadricResidual = regFunc.getGradientExpression();
             if (quadricResidual.hasOperator()) {
-                LinearOperator<data_t> A = lambdaOp * quadricResidual.getOperator();
+                auto A = lambdaOp * quadricResidual.getOperator();
 
                 if (quadricResidual.hasDataVector()) {
                     const DataContainer<data_t>& b = quadricResidual.getDataVector();
@@ -173,7 +173,7 @@ namespace elsa
 
                 if (residual.hasOperator()) {
                     const auto& A = residual.getOperator();
-                    dataTermOp = std::make_unique<LinearOperator<data_t>>(adjoint(A) * A);
+                    dataTermOp = (adjoint(A) * A).clone();
 
                     if (residual.hasDataVector()) {
                         quadricVec = std::make_unique<DataContainer<data_t>>(
@@ -200,7 +200,7 @@ namespace elsa
 
                 if (residual.hasOperator()) {
                     const auto& A = residual.getOperator();
-                    dataTermOp = std::make_unique<LinearOperator<data_t>>(adjoint(A) * W * A);
+                    dataTermOp = (adjoint(A) * W * A).clone();
 
                     if (residual.hasDataVector()) {
                         quadricVec = std::make_unique<DataContainer<data_t>>(
@@ -228,17 +228,13 @@ namespace elsa
             }
 
             // add regularization terms
-            LinearOperator<data_t> quadricOp{dataTermOp->getDomainDescriptor(),
-                                             dataTermOp->getRangeDescriptor()};
+            auto quadricOp = dataTermOp->clone();
 
             for (std::size_t i = 0; i < problem.getRegularizationTerms().size(); i++) {
                 const auto& regTerm = problem.getRegularizationTerms()[i];
                 LinearResidual<data_t> residual = getGradientExpression(regTerm);
 
-                if (i == 0)
-                    quadricOp = (*dataTermOp + residual.getOperator());
-                else
-                    quadricOp = quadricOp + residual.getOperator();
+                quadricOp = (*quadricOp + residual.getOperator()).clone();
 
                 if (residual.hasDataVector()) {
                     if (!quadricVec)
@@ -250,9 +246,9 @@ namespace elsa
             }
 
             if (!quadricVec) {
-                return std::make_unique<Quadric<data_t>>(quadricOp);
+                return std::make_unique<Quadric<data_t>>(*quadricOp);
             } else {
-                return std::make_unique<Quadric<data_t>>(quadricOp, *quadricVec);
+                return std::make_unique<Quadric<data_t>>(*quadricOp, *quadricVec);
             }
         }
     }

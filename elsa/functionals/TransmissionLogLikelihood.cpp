@@ -102,7 +102,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t>
+    std::unique_ptr<LinearOperator<data_t>>
         TransmissionLogLikelihood<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
@@ -115,7 +115,7 @@ namespace elsa
             }
         }
 
-        return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
+        return std::make_unique<Scaling<data_t>>(Rx.getDataDescriptor(), scaleFactors);
     }
 
     template <typename data_t>

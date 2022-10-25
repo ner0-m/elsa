@@ -89,7 +89,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, flo
 
             THEN("the Hessian works as expected")
             {
-                REQUIRE_EQ(func.getHessian(x), leaf(scalingOp));
+                REQUIRE_EQ(*func.getHessian(x), scalingOp);
             }
         }
     }
@@ -172,7 +172,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing with residual", TestType, float,
                 auto hessian = func.getHessian(x);
                 Vector Wx = scalingData.array() * dataVec.array();
                 DataContainer<TestType> dcWx(dd, Wx);
-                REQUIRE_UNARY(isApprox(hessian.apply(x), dcWx));
+                REQUIRE_UNARY(isApprox(hessian->apply(x), dcWx));
             }
         }
     }

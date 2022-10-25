@@ -48,10 +48,10 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t>
+    std::unique_ptr<LinearOperator<data_t>>
         WeightedL2NormPow2<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
     {
-        return leaf(*_weightingOp);
+        return _weightingOp->clone();
     }
 
     template <typename data_t>

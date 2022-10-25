@@ -66,7 +66,7 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing with operator and data", TestType, floa
                     checkApproxEq(prob.getGradient(zero), static_cast<TestType>(-1.0f) * dcB));
 
                 auto hessian = prob.getHessian(zero);
-                REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcB));
+                REQUIRE_UNARY(isApprox(hessian->apply(dcB), dcB));
             }
         }
     }
@@ -115,7 +115,7 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing with weights, operator and data", TestT
                 REQUIRE_UNARY(isApprox(prob.getGradient(zero), tmpDc));
 
                 auto hessian = prob.getHessian(zero);
-                REQUIRE_UNARY(isApprox(hessian.apply(dcB), dcWeights * dcB));
+                REQUIRE_UNARY(isApprox(hessian->apply(dcB), dcWeights * dcB));
             }
         }
     }

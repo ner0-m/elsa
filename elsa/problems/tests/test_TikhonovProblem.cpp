@@ -95,7 +95,7 @@ TEST_CASE_TEMPLATE("TikhonovProblem: Testing with one regularization term", data
                     isApprox(prob.getGradient(dcZero), as<data_t>(-1.0) * dcScaling * dcData));
 
                 auto hessian = prob.getHessian(dcZero);
-                auto result = hessian.apply(dcData);
+                auto result = hessian->apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
                                                                + weight * dataVec[i]));
@@ -182,7 +182,7 @@ TEST_CASE_TEMPLATE("TikhonovProblem: Testing with several regularization terms",
                     isApprox(prob.getGradient(dcZero), as<data_t>(-1.0) * dcScaling * dcData));
 
                 auto hessian = prob.getHessian(dcZero);
-                auto result = hessian.apply(dcData);
+                auto result = hessian->apply(dcData);
                 for (index_t i = 0; i < result.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(result[i], scaling[i] * scaling[i] * dataVec[i]
                                                                + weight1 * dataVec[i]

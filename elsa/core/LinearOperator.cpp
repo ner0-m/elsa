@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <typeinfo>
+#include <iostream>
 
 #include "DescriptorUtils.h"
 
@@ -18,26 +19,8 @@ namespace elsa
     LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& other)
         : Cloneable<LinearOperator<data_t>>(),
           _domainDescriptor{other._domainDescriptor->clone()},
-          _rangeDescriptor{other._rangeDescriptor->clone()},
-          _scalar{other._scalar},
-          _isLeaf{other._isLeaf},
-          _isAdjoint{other._isAdjoint},
-          _isComposite{other._isComposite},
-          _mode{other._mode}
+          _rangeDescriptor{other._rangeDescriptor->clone()}
     {
-        if (_isLeaf)
-            _lhs = other._lhs->clone();
-
-        if (_isComposite) {
-            if (_mode == CompositeMode::ADD || _mode == CompositeMode::MULT) {
-                _lhs = other._lhs->clone();
-                _rhs = other._rhs->clone();
-            }
-
-            if (_mode == CompositeMode::SCALAR_MULT) {
-                _rhs = other._rhs->clone();
-            }
-        }
     }
 
     template <typename data_t>
@@ -46,25 +29,6 @@ namespace elsa
         if (*this != other) {
             _domainDescriptor = other._domainDescriptor->clone();
             _rangeDescriptor = other._rangeDescriptor->clone();
-            _scalar = other._scalar;
-            _isLeaf = other._isLeaf;
-            _isAdjoint = other._isAdjoint;
-            _isComposite = other._isComposite;
-            _mode = other._mode;
-
-            if (_isLeaf)
-                _lhs = other._lhs->clone();
-
-            if (_isComposite) {
-                if (_mode == CompositeMode::ADD || _mode == CompositeMode::MULT) {
-                    _lhs = other._lhs->clone();
-                    _rhs = other._rhs->clone();
-                }
-
-                if (_mode == CompositeMode::SCALAR_MULT) {
-                    _rhs = other._rhs->clone();
-                }
-            }
         }
 
         return *this;
@@ -94,80 +58,19 @@ namespace elsa
     void LinearOperator<data_t>::apply(const DataContainer<data_t>& x,
                                        DataContainer<data_t>& Ax) const
     {
+        if (getDomainDescriptor().getNumberOfCoefficients() != x.getSize()) {
+            throw Error(
+                "LinearOperator::apply: expected differently sized input x (expected {}, is {})",
+                getDomainDescriptor().getNumberOfCoefficients(), x.getSize());
+        }
+
+        if (getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize()) {
+            throw Error(
+                "LinearOperator::apply: expected differently sized input Ax (expected {}, is {})",
+                getRangeDescriptor().getNumberOfCoefficients(), Ax.getSize());
+        }
+
         applyImpl(x, Ax);
-    }
-
-    template <typename data_t>
-    void LinearOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                           DataContainer<data_t>& Ax) const
-    {
-        if (_isLeaf) {
-            if (_isAdjoint) {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != x.getSize()
-                    || _lhs->getDomainDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                    throw InvalidArgumentError(
-                        "LinearOperator::apply: incorrect input/output sizes for adjoint leaf");
-
-                _lhs->applyAdjoint(x, Ax);
-                return;
-            } else {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_lhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
-                    || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                    throw InvalidArgumentError(
-                        "LinearOperator::apply: incorrect input/output sizes for leaf");
-
-                _lhs->apply(x, Ax);
-                return;
-            }
-        }
-
-        if (_isComposite) {
-            if (_mode == CompositeMode::ADD) {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_rhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
-                    || _rhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize()
-                    || _lhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
-                    || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                    throw InvalidArgumentError(
-                        "LinearOperator::apply: incorrect input/output sizes for add leaf");
-
-                _rhs->apply(x, Ax);
-                Ax += _lhs->apply(x);
-                return;
-            }
-
-            if (_mode == CompositeMode::MULT) {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_rhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
-                    || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
-                    throw InvalidArgumentError(
-                        "LinearOperator::apply: incorrect input/output sizes for mult leaf");
-
-                DataContainer<data_t> temp(_rhs->getRangeDescriptor(), x.getDataHandlerType());
-                _rhs->apply(x, temp);
-                _lhs->apply(temp, Ax);
-                return;
-            }
-
-            if (_mode == CompositeMode::SCALAR_MULT) {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_rhs->getDomainDescriptor().getNumberOfCoefficients() != x.getSize())
-                    throw InvalidArgumentError("LinearOperator::apply: incorrect input/output "
-                                               "sizes for scalar mult. leaf");
-                // sanity check the scalar in the optional
-                if (!_scalar.has_value())
-                    throw InvalidArgumentError(
-                        "LinearOperator::apply: no value found in the scalar optional");
-
-                _rhs->apply(x, Ax);
-                Ax *= _scalar.value();
-                return;
-            }
-        }
-
-        throw LogicError("LinearOperator: apply called on ill-formed object");
     }
 
     template <typename data_t>
@@ -182,99 +85,12 @@ namespace elsa
     void LinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y,
                                               DataContainer<data_t>& Aty) const
     {
+        // if (getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
+        //     || getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
+        //     throw InvalidArgumentError(
+        //         "LinearOperator::applyAdjoint: incorrect input/output sizes for leaf");
+
         applyAdjointImpl(y, Aty);
-    }
-
-    template <typename data_t>
-    void LinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                  DataContainer<data_t>& Aty) const
-    {
-        if (_isLeaf) {
-            if (_isAdjoint) {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_lhs->getDomainDescriptor().getNumberOfCoefficients() != y.getSize()
-                    || _lhs->getRangeDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                    throw InvalidArgumentError("LinearOperator::applyAdjoint: incorrect "
-                                               "input/output sizes for adjoint leaf");
-
-                _lhs->apply(y, Aty);
-                return;
-            } else {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
-                    || _lhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                    throw InvalidArgumentError(
-                        "LinearOperator::applyAdjoint: incorrect input/output sizes for leaf");
-
-                _lhs->applyAdjoint(y, Aty);
-                return;
-            }
-        }
-
-        if (_isComposite) {
-            if (_mode == CompositeMode::ADD) {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_rhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
-                    || _rhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize()
-                    || _lhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
-                    || _lhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                    throw InvalidArgumentError(
-                        "LinearOperator::applyAdjoint: incorrect input/output sizes for add leaf");
-
-                _rhs->applyAdjoint(y, Aty);
-                Aty += _lhs->applyAdjoint(y);
-                return;
-            }
-
-            if (_mode == CompositeMode::MULT) {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_lhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
-                    || _rhs->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
-                    throw InvalidArgumentError(
-                        "LinearOperator::applyAdjoint: incorrect input/output sizes for mult leaf");
-
-                DataContainer<data_t> temp(_lhs->getDomainDescriptor(), y.getDataHandlerType());
-                _lhs->applyAdjoint(y, temp);
-                _rhs->applyAdjoint(temp, Aty);
-                return;
-            }
-
-            if (_mode == CompositeMode::SCALAR_MULT) {
-                // sanity check the arguments for the intended evaluation tree leaf operation
-                if (_rhs->getRangeDescriptor().getNumberOfCoefficients() != y.getSize())
-                    throw InvalidArgumentError("LinearOperator::apply: incorrect input/output "
-                                               "sizes for scalar mult. leaf");
-                // sanity check the scalar in the optional
-                if (!_scalar.has_value())
-                    throw InvalidArgumentError(
-                        "LinearOperator::apply: no value found in the scalar optional");
-
-                _rhs->applyAdjoint(y, Aty);
-                Aty *= _scalar.value();
-                return;
-            }
-        }
-
-        throw LogicError("LinearOperator: applyAdjoint called on ill-formed object");
-    }
-
-    template <typename data_t>
-    LinearOperator<data_t>* LinearOperator<data_t>::cloneImpl() const
-    {
-        if (_isLeaf)
-            return new LinearOperator<data_t>(*_lhs, _isAdjoint);
-
-        if (_isComposite) {
-            if (_mode == CompositeMode::ADD || _mode == CompositeMode::MULT) {
-                return new LinearOperator<data_t>(*_lhs, *_rhs, _mode);
-            }
-
-            if (_mode == CompositeMode::SCALAR_MULT) {
-                return new LinearOperator<data_t>(*this);
-            }
-        }
-
-        return new LinearOperator<data_t>(*_domainDescriptor, *_rangeDescriptor);
     }
 
     template <typename data_t>
@@ -287,80 +103,246 @@ namespace elsa
             || *_rangeDescriptor != *other._rangeDescriptor)
             return false;
 
-        if (_isLeaf ^ other._isLeaf || _isComposite ^ other._isComposite)
-            return false;
-
-        if (_isLeaf)
-            return (_isAdjoint == other._isAdjoint) && (*_lhs == *other._lhs);
-
-        if (_isComposite) {
-            if (_mode == CompositeMode::ADD || _mode == CompositeMode::MULT) {
-                return _mode == other._mode && (*_lhs == *other._lhs) && (*_rhs == *other._rhs);
-            }
-
-            if (_mode == CompositeMode::SCALAR_MULT) {
-                return (_isAdjoint == other._isAdjoint) && (*_rhs == *other._rhs);
-            }
-        }
-
         return true;
     }
 
+    // ------------------------------------------
+    // Implementation CompositeAddLinearOperator
     template <typename data_t>
-    LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& op, bool isAdjoint)
-        : _domainDescriptor{(isAdjoint) ? op.getRangeDescriptor().clone()
-                                        : op.getDomainDescriptor().clone()},
-          _rangeDescriptor{(isAdjoint) ? op.getDomainDescriptor().clone()
-                                       : op.getRangeDescriptor().clone()},
-          _lhs{op.clone()},
-          _scalar{op._scalar},
-          _isLeaf{true},
-          _isAdjoint{isAdjoint}
+    AdjointLinearOperator<data_t>::AdjointLinearOperator(const LinearOperator<data_t>& op)
+        : LinearOperator<data_t>(op.getRangeDescriptor(), op.getDomainDescriptor()), op_(op.clone())
     {
     }
 
     template <typename data_t>
-    LinearOperator<data_t>::LinearOperator(const LinearOperator<data_t>& lhs,
-                                           const LinearOperator<data_t>& rhs, CompositeMode mode)
-        : _domainDescriptor{mode == CompositeMode::MULT
-                                ? rhs.getDomainDescriptor().clone()
-                                : bestCommon(*lhs._domainDescriptor, *rhs._domainDescriptor)},
-          _rangeDescriptor{mode == CompositeMode::MULT
-                               ? lhs.getRangeDescriptor().clone()
-                               : bestCommon(*lhs._rangeDescriptor, *rhs._rangeDescriptor)},
-          _lhs{lhs.clone()},
-          _rhs{rhs.clone()},
-          _isComposite{true},
-          _mode{mode}
+    void AdjointLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& y,
+                                                  DataContainer<data_t>& Aty) const
     {
-        // sanity check the descriptors
-        switch (_mode) {
-            case CompositeMode::ADD:
-                /// feasibility checked by bestCommon()
-                break;
-
-            case CompositeMode::MULT:
-                // for multiplication, domain of _lhs should match range of _rhs
-                if (_lhs->getDomainDescriptor().getNumberOfCoefficients()
-                    != _rhs->getRangeDescriptor().getNumberOfCoefficients())
-                    throw InvalidArgumentError(
-                        "LinearOperator: composite mult domain/range mismatch");
-                break;
-
-            default:
-                throw LogicError("LinearOperator: unknown composition mode");
+        if (op_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
+            || op_->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize()) {
+            throw InvalidArgumentError(
+                "AdjointLinearOperator::apply: incorrect input/output sizes for adjoint leaf");
         }
+
+        op_->applyAdjoint(y, Aty);
     }
 
     template <typename data_t>
-    LinearOperator<data_t>::LinearOperator(data_t scalar, const LinearOperator<data_t>& rhs)
-        : _domainDescriptor{rhs.getDomainDescriptor().clone()},
-          _rangeDescriptor{rhs.getRangeDescriptor().clone()},
-          _rhs{rhs.clone()},
-          _scalar{scalar},
-          _isComposite{true},
-          _mode{CompositeMode::SCALAR_MULT}
+    void AdjointLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& x,
+                                                         DataContainer<data_t>& Ax) const
     {
+        if (op_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
+            || op_->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
+            throw InvalidArgumentError("LinearOperator::applyAdjoint: incorrect "
+                                       "input/output sizes for adjoint leaf");
+
+        op_->apply(x, Ax);
+    }
+
+    template <typename data_t>
+    AdjointLinearOperator<data_t>* AdjointLinearOperator<data_t>::cloneImpl() const
+    {
+        return new AdjointLinearOperator<data_t>(*op_);
+    }
+
+    template <typename data_t>
+    bool AdjointLinearOperator<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    {
+
+        if (!LinearOperator<data_t>::isEqual(other))
+            return false;
+
+        auto otherAdjoint = downcast_safe<AdjointLinearOperator>(&other);
+        if (!otherAdjoint)
+            return false;
+
+        return *op_ == *otherAdjoint->op_;
+    }
+
+    // ------------------------------------------
+    // Implementation ScalarMulLinearOperator
+    template <typename data_t>
+    ScalarMulLinearOperator<data_t>::ScalarMulLinearOperator(data_t scalar,
+                                                             const LinearOperator<data_t>& op)
+        : LinearOperator<data_t>(op.getDomainDescriptor(), op.getRangeDescriptor()),
+          scalar_(scalar),
+          op_(op.clone())
+    {
+    }
+
+    template <typename data_t>
+    void ScalarMulLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                                    DataContainer<data_t>& Ax) const
+    {
+        // sanity check the arguments for the intended evaluation tree leaf operation
+        if (op_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize())
+            throw InvalidArgumentError("ScalarMulLinearOperator::apply: incorrect input/output "
+                                       "sizes for scalar mult. leaf");
+
+        op_->apply(x, Ax);
+        Ax *= scalar_;
+    }
+
+    template <typename data_t>
+    void ScalarMulLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                                           DataContainer<data_t>& Aty) const
+    {
+        if (op_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize())
+            throw InvalidArgumentError("ScalarMulLinearOperator::apply: incorrect input/output "
+                                       "sizes for scalar mult. leaf");
+
+        op_->applyAdjoint(y, Aty);
+        Aty *= scalar_;
+    }
+
+    template <typename data_t>
+    ScalarMulLinearOperator<data_t>* ScalarMulLinearOperator<data_t>::cloneImpl() const
+    {
+        return new ScalarMulLinearOperator<data_t>(scalar_, *op_);
+    }
+
+    template <typename data_t>
+    bool ScalarMulLinearOperator<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    {
+
+        if (!LinearOperator<data_t>::isEqual(other))
+            return false;
+
+        auto otherdowncast = downcast_safe<ScalarMulLinearOperator>(&other);
+        if (!otherdowncast)
+            return false;
+
+        return scalar_ == otherdowncast->scalar_ && *op_ == *otherdowncast->op_;
+    }
+
+    // ------------------------------------------
+    // Implementation CompositeAddLinearOperator
+    template <typename data_t>
+    CompositeAddLinearOperator<data_t>::CompositeAddLinearOperator(
+        const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs)
+        : LinearOperator<data_t>(lhs.getDomainDescriptor(), rhs.getRangeDescriptor()),
+          lhs_(lhs.clone()),
+          rhs_(rhs.clone())
+    {
+    }
+
+    template <typename data_t>
+    void CompositeAddLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                                       DataContainer<data_t>& Ax) const
+    {
+        // sanity check the arguments for the intended evaluation tree leaf operation
+        if (rhs_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
+            || rhs_->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize()
+            || lhs_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
+            || lhs_->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
+            throw InvalidArgumentError(
+                "CompositeAddLinearOperator::apply: incorrect input/output sizes for add leaf");
+
+        rhs_->apply(x, Ax);
+        Ax += lhs_->apply(x);
+    }
+
+    template <typename data_t>
+    void CompositeAddLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                                              DataContainer<data_t>& Aty) const
+    {
+        // sanity check the arguments for the intended evaluation tree leaf operation
+        if (rhs_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
+            || rhs_->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize()
+            || lhs_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
+            || lhs_->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
+            throw InvalidArgumentError("CompositeAddLinearOperator::applyAdjoint: incorrect "
+                                       "input/output sizes for add leaf");
+
+        rhs_->applyAdjoint(y, Aty);
+        Aty += lhs_->applyAdjoint(y);
+    }
+
+    template <typename data_t>
+    CompositeAddLinearOperator<data_t>* CompositeAddLinearOperator<data_t>::cloneImpl() const
+    {
+        return new CompositeAddLinearOperator<data_t>(*lhs_, *rhs_);
+    }
+
+    template <typename data_t>
+    bool CompositeAddLinearOperator<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    {
+        if (!LinearOperator<data_t>::isEqual(other))
+            return false;
+
+        auto otherdowncast = downcast_safe<CompositeAddLinearOperator<data_t>>(&other);
+        if (!otherdowncast)
+            return false;
+
+        return *lhs_ == *otherdowncast->lhs_ && *rhs_ == *otherdowncast->rhs_;
+    }
+
+    // ------------------------------------------
+    // Implementation CompositeMulLinearOperator
+    template <typename data_t>
+    CompositeMulLinearOperator<data_t>::CompositeMulLinearOperator(
+        const LinearOperator<data_t>& lhs, const LinearOperator<data_t>& rhs)
+        : LinearOperator<data_t>(rhs.getDomainDescriptor(), lhs.getRangeDescriptor()),
+          lhs_(lhs.clone()),
+          rhs_(rhs.clone())
+    {
+    }
+
+    template <typename data_t>
+    void CompositeMulLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                                       DataContainer<data_t>& Ax) const
+    {
+        // sanity check the arguments for the intended evaluation tree leaf operation
+        if (rhs_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()) {
+            throw Error("CompositeMulLinearOperator::apply:{}: expected differently sized input x "
+                        "(is {}, expected {})",
+                        __LINE__, rhs_->getDomainDescriptor().getNumberOfCoefficients(),
+                        x.getSize());
+        }
+
+        if (lhs_->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize()) {
+            throw Error("CompositeMulLinearOperator::apply: expected differently sized input Ax "
+                        "(is {}, expected {})",
+                        lhs_->getRangeDescriptor().getNumberOfCoefficients(), Ax.getSize());
+        }
+
+        DataContainer<data_t> temp(rhs_->getRangeDescriptor(), x.getDataHandlerType());
+        rhs_->apply(x, temp);
+        lhs_->apply(temp, Ax);
+    }
+
+    template <typename data_t>
+    void CompositeMulLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                                              DataContainer<data_t>& Aty) const
+    {
+        // sanity check the arguments for the intended evaluation tree leaf operation
+        if (lhs_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
+            || rhs_->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
+            throw InvalidArgumentError("CompositeMulLinearOperator::applyAdjoint: incorrect "
+                                       "input/output sizes for mult leaf");
+
+        DataContainer<data_t> temp(lhs_->getDomainDescriptor(), y.getDataHandlerType());
+        lhs_->applyAdjoint(y, temp);
+        rhs_->applyAdjoint(temp, Aty);
+    }
+
+    template <typename data_t>
+    CompositeMulLinearOperator<data_t>* CompositeMulLinearOperator<data_t>::cloneImpl() const
+    {
+        return new CompositeMulLinearOperator<data_t>(*lhs_, *rhs_);
+    }
+
+    template <typename data_t>
+    bool CompositeMulLinearOperator<data_t>::isEqual(const LinearOperator<data_t>& other) const
+    {
+        if (!LinearOperator<data_t>::isEqual(other))
+            return false;
+
+        auto otherdowncast = downcast_safe<CompositeMulLinearOperator<data_t>>(&other);
+        if (!otherdowncast)
+            return false;
+
+        return *lhs_ == *otherdowncast->lhs_ && *rhs_ == *otherdowncast->rhs_;
     }
 
     // ------------------------------------------
@@ -369,5 +351,25 @@ namespace elsa
     template class LinearOperator<complex<float>>;
     template class LinearOperator<double>;
     template class LinearOperator<complex<double>>;
+
+    template class AdjointLinearOperator<float>;
+    template class AdjointLinearOperator<complex<float>>;
+    template class AdjointLinearOperator<double>;
+    template class AdjointLinearOperator<complex<double>>;
+
+    template class ScalarMulLinearOperator<float>;
+    template class ScalarMulLinearOperator<complex<float>>;
+    template class ScalarMulLinearOperator<double>;
+    template class ScalarMulLinearOperator<complex<double>>;
+
+    template class CompositeAddLinearOperator<float>;
+    template class CompositeAddLinearOperator<complex<float>>;
+    template class CompositeAddLinearOperator<double>;
+    template class CompositeAddLinearOperator<complex<double>>;
+
+    template class CompositeMulLinearOperator<float>;
+    template class CompositeMulLinearOperator<complex<float>>;
+    template class CompositeMulLinearOperator<double>;
+    template class CompositeMulLinearOperator<complex<double>>;
 
 } // namespace elsa

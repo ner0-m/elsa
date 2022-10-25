@@ -62,13 +62,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t>
+    std::unique_ptr<LinearOperator<data_t>>
         Quadric<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
     {
         if (_linearResidual.hasOperator())
-            return leaf(_linearResidual.getOperator());
+            return _linearResidual.getOperator().clone();
         else
-            return leaf(Identity<data_t>(*_domainDescriptor));
+            return std::make_unique<Identity<data_t>>(*_domainDescriptor);
     }
 
     template <typename data_t>

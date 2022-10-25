@@ -86,7 +86,7 @@ TEST_CASE_TEMPLATE("EmissionLogLikelihood: Testing with only data no residual", 
                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
 
                 DataContainer<TestType> dcTrueScale(dd, trueScale);
-                REQUIRE_EQ(func.getHessian(x), leaf(Scaling(dd, dcTrueScale)));
+                REQUIRE_EQ(*func.getHessian(x), Scaling(dd, dcTrueScale));
             }
         }
 
@@ -134,7 +134,7 @@ TEST_CASE_TEMPLATE("EmissionLogLikelihood: Testing with only data no residual", 
                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
 
                 DataContainer<TestType> dcTrueScale(dd, trueScale);
-                REQUIRE_EQ(func.getHessian(x), leaf(Scaling(dd, dcTrueScale)));
+                REQUIRE_EQ(*func.getHessian(x), Scaling(dd, dcTrueScale));
             }
         }
     }
@@ -208,7 +208,7 @@ TEST_CASE_TEMPLATE("EmissionLogLikelihood: Testing with residual", TestType, flo
                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
 
                 auto hessian = func.getHessian(x);
-                auto hx = hessian.apply(x);
+                auto hx = hessian->apply(x);
                 for (index_t i = 0; i < hx.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(hx[i], dataVec[i] * trueScale[i]));
             }
@@ -260,7 +260,7 @@ TEST_CASE_TEMPLATE("EmissionLogLikelihood: Testing with residual", TestType, flo
                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
 
                 auto hessian = func.getHessian(x);
-                auto hx = hessian.apply(x);
+                auto hx = hessian->apply(x);
                 for (index_t i = 0; i < hx.getSize(); ++i)
                     REQUIRE_EQ(hx[i], dataVec[i] * trueScale[i]);
             }

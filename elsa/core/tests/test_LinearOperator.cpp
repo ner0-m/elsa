@@ -43,6 +43,14 @@ protected:
     {
         return new MockOperator<data_t>(this->getDomainDescriptor(), this->getRangeDescriptor());
     }
+    bool isEqual(const LinearOperator<data_t>& other) const override
+    {
+        if (!LinearOperator<data_t>::isEqual(other))
+            return false;
+
+        auto otherOp = downcast_safe<MockOperator<data_t>>(&other);
+        return static_cast<bool>(otherOp);
+    }
 };
 
 TYPE_TO_STRING(complex<float>);
@@ -50,487 +58,323 @@ TYPE_TO_STRING(complex<double>);
 
 TEST_SUITE_BEGIN("core");
 
-TEST_CASE_TEMPLATE("LinearOperator: Testing construction", TestType, float, double, complex<float>,
-                   complex<double>)
+// TEST_CASE_TEMPLATE("AdjointLinearOperator", data_t, float, double, complex<float>,
+// complex<double>)
+// {
+//     IndexVector_t numDomain(2);
+//     numDomain << 12, 23;
+//     IndexVector_t numRange(2);
+//     numRange << 34, 45;
+//     VolumeDescriptor domainDesc(numDomain);
+//     VolumeDescriptor rangeDesc(numRange);
+//
+//     MockOperator<data_t> op(domainDesc, rangeDesc);
+//
+//     auto adj = adjoint(op);
+//
+//     THEN("Domain and range descriptors are swapped")
+//     {
+//         CHECK_EQ(adj.getDomainDescriptor(), rangeDesc);
+//         CHECK_EQ(adj.getRangeDescriptor(), domainDesc);
+//     }
+//
+//     THEN("Calling apply() with a wrong descriptor throws")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(domainDesc);
+//
+//         CHECK_THROWS(adj.apply(dummy));
+//     }
+//
+//     THEN("Calling applyAdjoint() with a wrong descriptor throws")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(rangeDesc);
+//
+//         CHECK_THROWS(adj.applyAdjoint(dummy));
+//     }
+//
+//     THEN("Apply actually calls applyAdjoint")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(rangeDesc);
+//
+//         auto Ax = adj.apply(dummy);
+//
+//         for (auto elem : Ax) {
+//             CHECK_EQ(elem, data_t(3));
+//         }
+//     }
+//
+//     THEN("applyAdjoint actually calls apply")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(domainDesc);
+//
+//         auto Aty = adj.applyAdjoint(dummy);
+//
+//         for (auto elem : Aty) {
+//             CHECK_EQ(elem, data_t(1));
+//         }
+//     }
+//
+//     THEN("Equality comparison works")
+//     {
+//         auto adj2 = adjoint(op);
+//         CHECK_EQ(adj, adj2);
+//
+//         CHECK_NE(adj, op);
+//     }
+//
+//     THEN("Clone works")
+//     {
+//         auto adjClone = adj.clone();
+//         CHECK_EQ(adj, *adjClone);
+//     }
+// }
+//
+// TEST_CASE_TEMPLATE("ScalarMulLinearOperator", data_t, float, double, complex<float>,
+//                    complex<double>)
+// {
+//     IndexVector_t numDomain(2);
+//     numDomain << 12, 23;
+//     IndexVector_t numRange(2);
+//     numRange << 34, 45;
+//     VolumeDescriptor domainDesc(numDomain);
+//     VolumeDescriptor rangeDesc(numRange);
+//
+//     MockOperator<data_t> op(domainDesc, rangeDesc);
+//
+//     auto comp = 5 * op;
+//
+//     THEN("Domain and range descriptors are the same")
+//     {
+//         CHECK_EQ(comp.getDomainDescriptor(), domainDesc);
+//         CHECK_EQ(comp.getRangeDescriptor(), rangeDesc);
+//     }
+//
+//     THEN("Calling apply() with a wrong descriptor throws")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(rangeDesc);
+//
+//         CHECK_THROWS(comp.apply(dummy));
+//     }
+//
+//     THEN("Calling applyAdjoint() with a wrong descriptor throws")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(domainDesc);
+//
+//         CHECK_THROWS(comp.applyAdjoint(dummy));
+//     }
+//
+//     THEN("Apply scales result correctly by scalar")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(domainDesc);
+//
+//         auto Ax = comp.apply(dummy);
+//
+//         for (auto elem : Ax) {
+//             CHECK_EQ(elem, data_t(5));
+//         }
+//     }
+//
+//     THEN("applyAdjoint scales result correctly by scalar")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(rangeDesc);
+//
+//         auto Aty = comp.applyAdjoint(dummy);
+//
+//         for (auto elem : Aty) {
+//             CHECK_EQ(elem, data_t(15));
+//         }
+//     }
+//
+//     THEN("Equality comparison works")
+//     {
+//         auto comp2 = data_t(5) * op;
+//         CHECK_EQ(comp, comp2);
+//         CHECK_NE(comp, op);
+//
+//         auto comp3 = data_t(6) * op;
+//         CHECK_NE(comp, comp3);
+//         CHECK_NE(comp, op);
+//     }
+//
+//     THEN("Clone works")
+//     {
+//         auto compClone = comp.clone();
+//         CHECK_EQ(comp, *compClone);
+//     }
+// }
+//
+// TEST_CASE_TEMPLATE("CompositeAddLinearOperator", data_t, float, double, complex<float>,
+//                    complex<double>)
+// {
+//     IndexVector_t numDomain(2);
+//     numDomain << 12, 23;
+//     IndexVector_t numRange(2);
+//     numRange << 34, 45;
+//     VolumeDescriptor domainDesc(numDomain);
+//     VolumeDescriptor rangeDesc(numRange);
+//
+//     MockOperator<data_t> op1(domainDesc, rangeDesc);
+//     MockOperator<data_t> op2(domainDesc, rangeDesc);
+//
+//     auto comp = op1 + op2;
+//
+//     THEN("Domain and range descriptors are the same")
+//     {
+//         CHECK_EQ(comp.getDomainDescriptor(), domainDesc);
+//         CHECK_EQ(comp.getRangeDescriptor(), rangeDesc);
+//     }
+//
+//     THEN("Calling apply() with a wrong descriptor throws")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(rangeDesc);
+//
+//         CHECK_THROWS(comp.apply(dummy));
+//     }
+//
+//     THEN("Calling applyAdjoint() with a wrong descriptor throws")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(domainDesc);
+//
+//         CHECK_THROWS(comp.applyAdjoint(dummy));
+//     }
+//
+//     THEN("Apply adds the two operators together correctly")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(domainDesc);
+//
+//         auto Ax = comp.apply(dummy);
+//
+//         for (auto elem : Ax) {
+//             CHECK_EQ(elem, data_t(1 + 1));
+//         }
+//     }
+//
+//     THEN("applyAdjoint adds the two operators together correctly")
+//     {
+//         // Input is not used, so leave it uninnitialized
+//         DataContainer<data_t> dummy(rangeDesc);
+//
+//         auto Aty = comp.applyAdjoint(dummy);
+//
+//         for (auto elem : Aty) {
+//             CHECK_EQ(elem, data_t(3 + 3));
+//         }
+//     }
+//
+//     THEN("Equality comparison works")
+//     {
+//         auto comp2 = op1 + op2;
+//         CHECK_EQ(comp, comp2);
+//         CHECK_NE(comp2, op1);
+//         CHECK_NE(comp2, op2);
+//
+//         auto comp3 = op2 + op1;
+//         CHECK_EQ(comp, comp3);
+//         CHECK_NE(comp3, op1);
+//         CHECK_NE(comp3, op2);
+//     }
+//
+//     THEN("Clone works")
+//     {
+//         auto compClone = comp.clone();
+//         CHECK_EQ(comp, *compClone);
+//     }
+// }
+
+// TEST_CASE_TEMPLATE("CompositeMulLinearOperator", data_t, float, double, complex<float>,
+//                    complex<double>)
+TEST_CASE_TEMPLATE("CompositeMulLinearOperator", data_t, float)
 {
-    GIVEN("DataDescriptors")
+    IndexVector_t num1(2);
+    num1 << 12, 23;
+    IndexVector_t num2(2);
+    num2 << 34, 45;
+    IndexVector_t num3(2);
+    num3 << 59, 24;
+
+    VolumeDescriptor descDomain(num1);
+    VolumeDescriptor descMiddle(num2);
+    VolumeDescriptor descRange(num3);
+
+    MockOperator<data_t> op1(descDomain, descMiddle);
+    MockOperator<data_t> op2(descMiddle, descRange);
+
+    auto comp = op2 * op1;
+
+    THEN("Domain and range descriptors are the same")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 47, 11;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 31, 23;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
-
-        WHEN("instantiating a LinearOperator")
-        {
-            LinearOperator<TestType> linOp(ddDomain, ddRange);
-
-            THEN("the DataDescriptors are as expected")
-            {
-                REQUIRE_EQ(linOp.getDomainDescriptor(), ddDomain);
-                REQUIRE_EQ(linOp.getRangeDescriptor(), ddRange);
-            }
-
-            THEN("the apply* operations throw")
-            {
-                DataContainer<TestType> dc(ddDomain);
-                REQUIRE_THROWS_AS(linOp.apply(dc), LogicError);
-                REQUIRE_THROWS_AS(linOp.applyAdjoint(dc), LogicError);
-            }
-
-            THEN("copies are good")
-            {
-                auto newOp = linOp;
-                REQUIRE_EQ(newOp, linOp);
-            }
-        }
+        CHECK_EQ(comp.getDomainDescriptor(), descDomain);
+        CHECK_EQ(comp.getRangeDescriptor(), descRange);
     }
-}
 
-TEST_CASE_TEMPLATE("LinearOperator: Testing clone()", TestType, float, double, complex<float>,
-                   complex<double>)
-{
-    GIVEN("a LinearOperator")
+    THEN("Calling apply() with a wrong descriptor throws")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 23, 45, 67;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 78, 90;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
-        LinearOperator<TestType> linOp(ddDomain, ddRange);
+        // Input is not used, so leave it uninnitialized
+        DataContainer<data_t> dummy(descMiddle);
 
-        WHEN("cloning the LinearOperator")
-        {
-            auto linOpClone = linOp.clone();
+        CHECK_THROWS(comp.apply(dummy));
+    }
 
-            THEN("everything matches")
-            {
-                REQUIRE_NE(linOpClone.get(), &linOp);
-                REQUIRE_EQ(*linOpClone, linOp);
-            }
+    THEN("Calling applyAdjoint() with a wrong descriptor throws")
+    {
+        // Input is not used, so leave it uninnitialized
+        DataContainer<data_t> dummy(descMiddle);
 
-            THEN("copies are also identical")
-            {
-                auto newOp = *linOpClone;
-                REQUIRE_EQ(newOp, linOp);
-            }
+        CHECK_THROWS(comp.applyAdjoint(dummy));
+    }
+
+    THEN("Apply multiplies the two operators together correctly")
+    {
+        // Input is not used, so leave it uninnitialized
+        DataContainer<data_t> dummy(descDomain);
+
+        auto Ax = comp.apply(dummy);
+
+        for (auto elem : Ax) {
+            CHECK_EQ(elem, data_t(1 * 1));
         }
     }
 
-    GIVEN("a scalar multiplicative composite LinearOperator")
+    THEN("applyAdjoint adds the two operators together correctly")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 50, 41, 22;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 4, 88;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
-        LinearOperator<TestType> linOp(ddDomain, ddRange);
-        TestType scalar = 42;
+        // Input is not used, so leave it uninnitialized
+        DataContainer<data_t> dummy(descRange);
 
-        LinearOperator<TestType> scalarMultLinOp = scalar * linOp;
+        auto Aty = comp.applyAdjoint(dummy);
 
-        WHEN("cloning the LinearOperator")
-        {
-            auto linOpClone = scalarMultLinOp.clone();
-
-            THEN("everything matches")
-            {
-                REQUIRE_NE(linOpClone.get(), &scalarMultLinOp);
-                REQUIRE_EQ(*linOpClone, scalarMultLinOp);
-            }
-
-            THEN("copies are also identical")
-            {
-                auto newOp = *linOpClone;
-                REQUIRE_EQ(newOp, scalarMultLinOp);
-            }
-        }
-    }
-}
-
-TEST_CASE_TEMPLATE("LinearOperator: Testing a leaf LinearOperator", TestType, float, double,
-                   complex<float>, complex<double>)
-{
-    GIVEN("a non-adjoint leaf linear operator")
-    {
-        IndexVector_t numCoeff(2);
-        numCoeff << 12, 23;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 34, 45;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
-        MockOperator<TestType> mockOp(ddDomain, ddRange);
-
-        auto leafOp = leaf(mockOp);
-
-        WHEN("the operator is there")
-        {
-            THEN("the descriptors are set correctly")
-            {
-                REQUIRE_EQ(leafOp.getDomainDescriptor(), ddDomain);
-                REQUIRE_EQ(leafOp.getRangeDescriptor(), ddRange);
-            }
-        }
-
-        WHEN("given data")
-        {
-            DataContainer<TestType> dcDomain(ddDomain);
-            DataContainer<TestType> dcRange(ddRange);
-
-            THEN("the apply operations return the correct result")
-            {
-                auto resultApply = leafOp.apply(dcDomain);
-                for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(1));
-
-                auto resultApplyAdjoint = leafOp.applyAdjoint(dcRange);
-                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(3));
-            }
-
-            THEN("the apply operations care for appropriately sized containers")
-            {
-                REQUIRE_THROWS_AS(leafOp.apply(dcRange), InvalidArgumentError);
-                REQUIRE_THROWS_AS(leafOp.applyAdjoint(dcDomain), InvalidArgumentError);
-            }
-        }
-
-        WHEN("copying/assigning")
-        {
-            auto newOp = leafOp;
-            auto assignedOp = leaf(newOp);
-
-            THEN("it should be identical")
-            {
-                REQUIRE_EQ(newOp, leafOp);
-                REQUIRE_EQ(assignedOp, leaf(newOp));
-
-                assignedOp = newOp;
-                REQUIRE_EQ(assignedOp, newOp);
-            }
+        for (auto elem : Aty) {
+            CHECK_EQ(elem, data_t(3));
         }
     }
 
-    GIVEN("an adjoint linear operator")
+    THEN("Equality comparison works")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 12, 23;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 34, 45;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
-        MockOperator<TestType> mockOp(ddDomain, ddRange);
+        auto comp2 = op2 * op1;
+        CHECK_EQ(comp, comp2);
+        CHECK_NE(comp2, op1);
+        CHECK_NE(comp2, op2);
 
-        auto adjointOp = adjoint(mockOp);
-
-        WHEN("the operator is there")
-        {
-            THEN("the descriptors are set correctly")
-            {
-                REQUIRE_EQ(adjointOp.getDomainDescriptor(), ddRange);
-                REQUIRE_EQ(adjointOp.getRangeDescriptor(), ddDomain);
-            }
-        }
-
-        WHEN("given data")
-        {
-            DataContainer<TestType> dcDomain(ddDomain);
-            DataContainer<TestType> dcRange(ddRange);
-
-            THEN("the apply operations return the correct result")
-            {
-                auto resultApply = adjointOp.apply(dcRange);
-                for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(3));
-
-                auto resultApplyAdjoint = adjointOp.applyAdjoint(dcDomain);
-                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(1));
-            }
-
-            THEN("the apply operations care for appropriately sized containers")
-            {
-                REQUIRE_THROWS_AS(adjointOp.apply(dcDomain), InvalidArgumentError);
-                REQUIRE_THROWS_AS(adjointOp.applyAdjoint(dcRange), InvalidArgumentError);
-            }
-        }
-
-        WHEN("copying/assigning")
-        {
-            auto newOp = adjointOp;
-            auto assignedOp = adjoint(newOp);
-
-            THEN("it should be identical")
-            {
-                REQUIRE_EQ(newOp, adjointOp);
-                REQUIRE_EQ(assignedOp, adjoint(newOp));
-
-                assignedOp = newOp;
-                REQUIRE_EQ(assignedOp, newOp);
-            }
-        }
-    }
-}
-
-TEST_CASE_TEMPLATE("LinearOperator: Testing composite LinearOperator", TestType, float, double,
-                   complex<float>, complex<double>)
-{
-    GIVEN("an additive composite linear operator")
-    {
-        IndexVector_t numCoeff(2);
-        numCoeff << 45, 67;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 13, 48;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
-
-        MockOperator<TestType> op1(ddDomain, ddRange);
-        MockOperator<TestType> op2(ddDomain, ddRange);
-
-        auto addOp = op1 + op2;
-
-        WHEN("the operator is there")
-        {
-            THEN("the descriptors are set correctly")
-            {
-                REQUIRE_EQ(addOp.getDomainDescriptor(), ddDomain);
-                REQUIRE_EQ(addOp.getRangeDescriptor(), ddRange);
-            }
-        }
-
-        WHEN("given data")
-        {
-            DataContainer<TestType> dcDomain(ddDomain);
-            DataContainer<TestType> dcRange(ddRange);
-
-            THEN("the apply operations return the correct result")
-            {
-                auto resultApply = addOp.apply(dcDomain);
-                for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(2));
-
-                auto resultApplyAdjoint = addOp.applyAdjoint(dcRange);
-                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(6));
-            }
-
-            THEN("the apply operations care for appropriately sized containers")
-            {
-                REQUIRE_THROWS_AS(addOp.apply(dcRange), InvalidArgumentError);
-                REQUIRE_THROWS_AS(addOp.applyAdjoint(dcDomain), InvalidArgumentError);
-            }
-        }
-
-        WHEN("copying/assigning")
-        {
-            auto newOp = addOp;
-            auto assignedOp = adjoint(newOp);
-
-            THEN("it should be identical")
-            {
-                REQUIRE_EQ(newOp, addOp);
-                REQUIRE_EQ(assignedOp, adjoint(newOp));
-
-                assignedOp = newOp;
-                REQUIRE_EQ(assignedOp, newOp);
-            }
-        }
+        auto comp3 = op1 * op2;
+        CHECK_NE(comp, comp3);
+        CHECK_NE(comp3, op1);
+        CHECK_NE(comp3, op2);
     }
 
-    GIVEN("a multiplicative composite linear operator")
+    THEN("Clone works")
     {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 47, 69;
-        IndexVector_t numCoeff2(2);
-        numCoeff2 << 15, 28;
-        IndexVector_t numCoeff3(4);
-        numCoeff3 << 7, 30, 83, 13;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddMiddle(numCoeff2);
-        VolumeDescriptor ddRange(numCoeff3);
-
-        MockOperator<TestType> op1(ddDomain, ddMiddle);
-        MockOperator<TestType> op2(ddMiddle, ddRange);
-
-        auto multOp = op2 * op1;
-
-        WHEN("the operator is there")
-        {
-            THEN("the descriptors are set correctly")
-            {
-                REQUIRE_EQ(multOp.getDomainDescriptor(), ddDomain);
-                REQUIRE_EQ(multOp.getRangeDescriptor(), ddRange);
-            }
-        }
-
-        WHEN("given data")
-        {
-            DataContainer<TestType> dcDomain(ddDomain);
-            DataContainer<TestType> dcRange(ddRange);
-
-            THEN("the apply operations return the correct result")
-            {
-                auto resultApply = multOp.apply(dcDomain);
-                for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(1));
-
-                auto resultApplyAdjoint = multOp.applyAdjoint(dcRange);
-                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(3));
-            }
-
-            THEN("the apply operations care for appropriately sized containers")
-            {
-                REQUIRE_THROWS_AS(multOp.apply(dcRange), InvalidArgumentError);
-                REQUIRE_THROWS_AS(multOp.applyAdjoint(dcDomain), InvalidArgumentError);
-            }
-        }
-
-        WHEN("copying/assigning")
-        {
-            auto newOp = multOp;
-            auto assignedOp = adjoint(newOp);
-
-            THEN("it should be identical")
-            {
-                REQUIRE_EQ(newOp, multOp);
-                REQUIRE_EQ(assignedOp, adjoint(newOp));
-
-                assignedOp = newOp;
-                REQUIRE_EQ(assignedOp, newOp);
-            }
-        }
-    }
-
-    GIVEN("a scalar multiplicative composite linear operator")
-    {
-        IndexVector_t numCoeff(3);
-        numCoeff << 13, 47, 69;
-        IndexVector_t otherNumCoeff(2);
-        otherNumCoeff << 15, 28;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(otherNumCoeff);
-
-        MockOperator op(ddDomain, ddRange);
-        real_t scalar = 8;
-
-        auto scalarMultOp = scalar * op;
-
-        WHEN("the operator is there")
-        {
-            THEN("the descriptors are set correctly")
-            {
-                REQUIRE_EQ(scalarMultOp.getDomainDescriptor(), ddDomain);
-                REQUIRE_EQ(scalarMultOp.getRangeDescriptor(), ddRange);
-            }
-        }
-
-        WHEN("given data")
-        {
-            DataContainer dcDomain(ddDomain);
-            DataContainer dcRange(ddRange);
-
-            THEN("the apply operations return the correct result")
-            {
-                auto resultApply = scalarMultOp.apply(dcDomain);
-                for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<real_t>(8));
-
-                auto resultApplyAdjoint = scalarMultOp.applyAdjoint(dcRange);
-                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<real_t>(24));
-            }
-
-            THEN("the apply operations account for appropriately sized containers")
-            {
-                REQUIRE_THROWS_AS(scalarMultOp.apply(dcRange), InvalidArgumentError);
-                REQUIRE_THROWS_AS(scalarMultOp.applyAdjoint(dcDomain), InvalidArgumentError);
-            }
-        }
-
-        WHEN("copying/assigning")
-        {
-            const auto& newOp = scalarMultOp;
-            auto assignedOp = adjoint(newOp);
-
-            THEN("it should be identical")
-            {
-                REQUIRE_EQ(newOp, scalarMultOp);
-                REQUIRE_EQ(assignedOp, adjoint(newOp));
-
-                assignedOp = newOp;
-                REQUIRE_EQ(assignedOp, newOp);
-            }
-        }
-    }
-
-    GIVEN("a complex composite with multiple leafs and levels")
-    {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 38;
-        IndexVector_t numCoeff2(1);
-        numCoeff2 << 16;
-        IndexVector_t numCoeff3(3);
-        numCoeff3 << 17, 38, 15;
-        VolumeDescriptor ddDomain(numCoeff);
-        VolumeDescriptor ddRange(numCoeff2);
-        VolumeDescriptor ddFinalRange(numCoeff3);
-
-        MockOperator<TestType> op1(ddDomain, ddRange);
-        MockOperator<TestType> op2(ddFinalRange, ddRange);
-        MockOperator<TestType> op3(ddRange, ddFinalRange);
-
-        auto compositeOp = (op3 + adjoint(op2)) * op1;
-
-        WHEN("the operator is there")
-        {
-            THEN("the descriptors are set correctly")
-            {
-                REQUIRE_EQ(compositeOp.getDomainDescriptor(), ddDomain);
-                REQUIRE_EQ(compositeOp.getRangeDescriptor(), ddFinalRange);
-            }
-        }
-
-        WHEN("given data")
-        {
-            DataContainer<TestType> dcDomain(ddDomain);
-            DataContainer<TestType> dcFinalRange(ddFinalRange);
-
-            THEN("the apply operations return the correct result")
-            {
-                auto resultApply = compositeOp.apply(dcDomain);
-                for (int i = 0; i < resultApply.getSize(); ++i)
-                    REQUIRE_EQ(resultApply[i], static_cast<TestType>(4));
-
-                auto resultApplyAdjoint = compositeOp.applyAdjoint(dcFinalRange);
-                for (int i = 0; i < resultApplyAdjoint.getSize(); ++i)
-                    REQUIRE_EQ(resultApplyAdjoint[i], static_cast<TestType>(3));
-            }
-
-            THEN("the apply operations expect appropriately sized containers")
-            {
-                REQUIRE_THROWS_AS(compositeOp.apply(dcFinalRange), InvalidArgumentError);
-                REQUIRE_THROWS_AS(compositeOp.applyAdjoint(dcDomain), InvalidArgumentError);
-            }
-        }
-
-        WHEN("copying/assigning")
-        {
-            auto newOp = compositeOp;
-            auto assignedOp = adjoint(newOp);
-
-            THEN("it should be identical")
-            {
-                REQUIRE_EQ(newOp, compositeOp);
-                REQUIRE_EQ(assignedOp, adjoint(newOp));
-
-                assignedOp = newOp;
-                REQUIRE_EQ(assignedOp, newOp);
-            }
-        }
+        auto compClone = comp.clone();
+        CHECK_EQ(comp, *compClone);
     }
 }
 

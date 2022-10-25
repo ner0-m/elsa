@@ -46,7 +46,7 @@ namespace elsa
 
     template <typename data_t>
     auto SplittingProblem<data_t>::getHessianImpl(const DataContainer<data_t>&) const
-        -> LinearOperator<data_t>
+        -> std::unique_ptr<LinearOperator<data_t>>
     {
         throw std::runtime_error(
             "SplittingProblem::getHessianImpl: currently unsupported operation");

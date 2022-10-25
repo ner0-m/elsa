@@ -86,11 +86,12 @@ namespace elsa
         // the general case
         auto temp = _residual->evaluate(x);
         getGradientInPlaceImpl(temp);
-        _residual->getJacobian(x).applyAdjoint(temp, result); // apply the chain rule
+        _residual->getJacobian(x)->applyAdjoint(temp, result); // apply the chain rule
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Functional<data_t>::getHessian(const DataContainer<data_t>& x)
+    std::unique_ptr<LinearOperator<data_t>>
+        Functional<data_t>::getHessian(const DataContainer<data_t>& x)
     {
         // optimize for trivial and simple LinearResiduals
         if (auto* linearResidual = downcast_safe<LinearResidual<data_t>>(_residual.get())) {
@@ -105,8 +106,10 @@ namespace elsa
 
         // the general case (with chain rule)
         auto jacobian = _residual->getJacobian(x);
-        auto hessian = adjoint(jacobian) * (getHessianImpl(_residual->evaluate(x))) * (jacobian);
-        return hessian;
+        auto adjJacobian = adjoint(*jacobian);
+        auto hessianImpl = getHessianImpl(_residual->evaluate(x));
+        auto hessian = adjJacobian * (*hessianImpl) * (*jacobian);
+        return hessian.clone();
     }
 
     template <typename data_t>

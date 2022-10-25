@@ -83,7 +83,7 @@ TEST_CASE_TEMPLATE("PseudoHuber: Testing without residual", TestType, float, dou
                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
 
                 DataContainer<TestType> dcTrueScale(dd, trueScale);
-                REQUIRE_EQ(func.getHessian(x), leaf(Scaling(dd, dcTrueScale)));
+                REQUIRE_EQ(*func.getHessian(x), Scaling(dd, dcTrueScale));
             }
         }
     }
@@ -156,7 +156,7 @@ TEST_CASE_TEMPLATE("PseudoHuber: Testing with residual", TestType, float, double
                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
 
                 auto hessian = func.getHessian(x);
-                auto hx = hessian.apply(x);
+                auto hx = hessian->apply(x);
                 for (index_t i = 0; i < hx.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(hx[i], dataVec[i] * trueScale[i]));
             }

@@ -71,13 +71,15 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Problem<data_t>::getHessianImpl(const DataContainer<data_t>& x) const
+    std::unique_ptr<LinearOperator<data_t>>
+        Problem<data_t>::getHessianImpl(const DataContainer<data_t>& x) const
     {
         auto hessian = _dataTerm->getHessian(x);
 
         for (auto& regTerm : _regTerms) {
             Scaling weight(x.getDataDescriptor(), regTerm.getWeight());
-            hessian = hessian + (weight * regTerm.getFunctional().getHessian(x));
+            const auto regHessian = regTerm.getFunctional().getHessian(x);
+            hessian = ((*hessian) + (weight * (*regHessian))).clone();
         }
 
         return hessian;
@@ -96,14 +98,14 @@ namespace elsa
 
         // compute the Lipschitz Constant as the largest eigenvalue of the Hessian
         const auto hessian = getHessian(x);
-        DataContainer<data_t> dcB(hessian.getDomainDescriptor());
+        DataContainer<data_t> dcB(hessian->getDomainDescriptor());
         dcB = 1;
         for (index_t i = 0; i < nIterations; i++) {
-            dcB = hessian.apply(dcB);
+            dcB = hessian->apply(dcB);
             dcB = dcB / dcB.l2Norm();
         }
 
-        return dcB.dot(hessian.apply(dcB)) / dcB.l2Norm();
+        return dcB.dot(hessian->apply(dcB)) / dcB.l2Norm();
     }
 
     template <typename data_t>
@@ -152,7 +154,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Problem<data_t>::getHessian(const DataContainer<data_t>& x) const
+    std::unique_ptr<LinearOperator<data_t>>
+        Problem<data_t>::getHessian(const DataContainer<data_t>& x) const
     {
         return getHessianImpl(x);
     }

@@ -54,7 +54,8 @@ namespace elsa
         void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
 
         /// the computation of the Hessian
-        auto getHessianImpl(const DataContainer<data_t>& Rx) -> LinearOperator<data_t> override;
+        std::unique_ptr<LinearOperator<data_t>>
+            getHessianImpl(const DataContainer<data_t>& Rx) override;
 
         /// implement the polymorphic clone operation
         auto cloneImpl() const -> L0PseudoNorm<data_t>* override;

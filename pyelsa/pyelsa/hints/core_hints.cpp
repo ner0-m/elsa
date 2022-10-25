@@ -52,11 +52,6 @@ namespace elsa
                 .def("adjoint", &adjointHelper<complex<float>>)
                 .def("adjoint", &adjointHelper<complex<double>>);
 
-            m.def("leaf", &leafHelper<float>)
-                .def("leaf", &leafHelper<double>)
-                .def("leaf", &leafHelper<complex<float>>)
-                .def("leaf", &leafHelper<complex<double>>);
-
             m.def("bestCommon", (std::unique_ptr<DataDescriptor>(*)(
                                     const std::vector<const DataDescriptor*>&))(&bestCommon))
                 .def("bestCommon", &invokeBestCommonVariadic<const DataDescriptor&, 10>::exec);
@@ -64,15 +59,9 @@ namespace elsa
 
     private:
         template <typename data_t>
-        static LinearOperator<data_t> adjointHelper(const LinearOperator<data_t>& op)
+        static AdjointLinearOperator<data_t> adjointHelper(const LinearOperator<data_t>& op)
         {
             return adjoint(op);
-        }
-
-        template <typename data_t>
-        static LinearOperator<data_t> leafHelper(const LinearOperator<data_t>& op)
-        {
-            return leaf(op);
         }
     };
 

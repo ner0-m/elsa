@@ -57,7 +57,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Huber<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
+    std::unique_ptr<LinearOperator<data_t>>
+        Huber<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
         for (index_t i = 0; i < Rx.getSize(); ++i) {
@@ -67,7 +68,7 @@ namespace elsa
                 scaleFactors[i] = static_cast<data_t>(0);
         }
 
-        return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
+        return std::make_unique<Scaling<data_t>>(Rx.getDataDescriptor(), scaleFactors);
     }
 
     template <typename data_t>

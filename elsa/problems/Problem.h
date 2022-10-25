@@ -121,7 +121,7 @@ namespace elsa
          * Please note: this method calls the method getHessianImpl that has to be overridden in
          * derived classes.
          */
-        LinearOperator<data_t> getHessian(const DataContainer<data_t>& x) const;
+        std::unique_ptr<LinearOperator<data_t>> getHessian(const DataContainer<data_t>& x) const;
 
         /**
          * @brief return the Lipschitz Constant of the problem at the current estimated solution. If
@@ -159,7 +159,8 @@ namespace elsa
         virtual void getGradientImpl(const DataContainer<data_t>& x, DataContainer<data_t>& result);
 
         /// the getHessian method for the optimization problem
-        virtual LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& x) const;
+        virtual std::unique_ptr<LinearOperator<data_t>>
+            getHessianImpl(const DataContainer<data_t>& x) const;
 
         /// the getLipschitzConstant method for the optimization problem
         virtual data_t getLipschitzConstantImpl(const DataContainer<data_t>& x,

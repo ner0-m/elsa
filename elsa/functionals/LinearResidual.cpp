@@ -2,8 +2,6 @@
 #include "Identity.h"
 #include "TypeCasts.hpp"
 
-#include <stdexcept>
-
 namespace elsa
 {
     template <typename data_t>
@@ -125,13 +123,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t>
+    std::unique_ptr<LinearOperator<data_t>>
         LinearResidual<data_t>::getJacobianImpl([[maybe_unused]] const DataContainer<data_t>& x)
     {
         if (hasOperator())
-            return leaf(*_operator);
+            return _operator->clone();
         else
-            return leaf(Identity<data_t>(this->getRangeDescriptor()));
+            return std::make_unique<Identity<data_t>>(this->getRangeDescriptor());
     }
 
     // ------------------------------------------

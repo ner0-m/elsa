@@ -69,7 +69,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, flo
                 REQUIRE_EQ(func.getGradient(x), x);
 
                 Identity<TestType> idOp(dd);
-                REQUIRE_EQ(func.getHessian(x), leaf(idOp));
+                REQUIRE_EQ(*func.getHessian(x), idOp);
             }
         }
     }
@@ -122,7 +122,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, flo
                 REQUIRE_EQ(func.getGradient(x), grad);
 
                 auto hessian = func.getHessian(x);
-                REQUIRE_EQ(hessian.apply(x), x);
+                REQUIRE_EQ(hessian->apply(x), x);
             }
         }
     }

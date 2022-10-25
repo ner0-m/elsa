@@ -73,7 +73,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: Construction with a Quadric functional", Tes
                 REQUIRE_UNARY(checkApproxEq(prob.getGradient(zero), as<data_t>(-1.0) * dc));
 
                 auto hessian = prob.getHessian(zero);
-                REQUIRE_EQ(hessian, leaf(scalingOp));
+                REQUIRE_EQ(*hessian, scalingOp);
             }
         }
     }
@@ -121,7 +121,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a Quadric functional with spd operator"
                 REQUIRE_UNARY(isApprox(prob.getGradient(zero), static_cast<data_t>(-1.0) * b));
 
                 auto hessian = prob.getHessian(zero);
-                REQUIRE_EQ(hessian, leaf(scalingOp));
+                REQUIRE_EQ(*hessian, scalingOp);
             }
         }
     }
@@ -169,7 +169,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a Quadric functional with non-spd opera
                 REQUIRE_UNARY(isApprox(prob.getGradient(zero), as<data_t>(-scaleFactor) * dc));
 
                 auto hessian = prob.getHessian(zero);
-                REQUIRE_EQ(hessian, leaf(adjoint(scalingOp) * scalingOp));
+                REQUIRE_EQ(*hessian, adjoint(scalingOp) * scalingOp);
             }
         }
     }
@@ -242,7 +242,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
                 REQUIRE_UNARY(isApprox(prob.getGradient(x0), (weightFactor * x0) - dc));
 
                 auto hessian = prob.getHessian(x0);
-                REQUIRE_EQ(hessian, leaf(weightingOp));
+                REQUIRE_EQ(*hessian, weightingOp);
             }
         }
 
@@ -275,7 +275,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
                 REQUIRE_UNARY(isApprox(prob.getGradient(x0), (weightFactor * x0) - dc));
 
                 auto hessian = prob.getHessian(x0);
-                REQUIRE_EQ(hessian, leaf(weightingOp));
+                REQUIRE_EQ(*hessian, weightingOp);
             }
         }
 
@@ -329,8 +329,8 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
                             prob.getGradient(x0) - converted.getGradient(x0);
                         REQUIRE_UNARY(checkApproxEq(gradDiff.squaredL2Norm(), 0));
 
-                        REQUIRE_UNARY(isApprox(prob.getHessian(x0).apply(x0),
-                                               converted.getHessian(x0).apply(x0)));
+                        REQUIRE_UNARY(isApprox(prob.getHessian(x0)->apply(x0),
+                                               converted.getHessian(x0)->apply(x0)));
                     }
                 }
             }
@@ -394,17 +394,16 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
 
                         if (isWeighted) {
                             if (res.hasOperator()) {
-                                REQUIRE_EQ(prob.getHessian(zero),
-                                           leaf(adjoint(scalingOp) * weightingOp * scalingOp));
+                                REQUIRE_EQ(*prob.getHessian(zero),
+                                           scalingOp * weightingOp * scalingOp);
                             } else {
-                                REQUIRE_EQ(prob.getHessian(zero), leaf(weightingOp));
+                                REQUIRE_EQ(*prob.getHessian(zero), weightingOp);
                             }
                         } else {
                             if (res.hasOperator()) {
-                                REQUIRE_EQ(prob.getHessian(zero),
-                                           leaf(adjoint(scalingOp) * scalingOp));
+                                REQUIRE_EQ(*prob.getHessian(zero), adjoint(scalingOp) * scalingOp);
                             } else {
-                                REQUIRE_EQ(prob.getHessian(zero), leaf(Identity<data_t>{dd}));
+                                REQUIRE_EQ(*prob.getHessian(zero), Identity<data_t>{dd});
                             }
                         }
                     }
@@ -483,25 +482,23 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
                                 Scaling<data_t> lambdaW{dd, regWeight * weightFactor};
 
                                 if (res.hasOperator()) {
-                                    REQUIRE_EQ(prob.getHessian(zero),
-                                               leaf(adjoint(dataScalingOp) * dataScalingOp
-                                                    + adjoint(scalingOp) * lambdaW * scalingOp));
+                                    REQUIRE_EQ(*prob.getHessian(zero),
+                                               adjoint(dataScalingOp) * dataScalingOp
+                                                   + adjoint(scalingOp) * lambdaW * scalingOp);
                                 } else {
-                                    REQUIRE_EQ(
-                                        prob.getHessian(zero),
-                                        leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaW));
+                                    REQUIRE_EQ(*prob.getHessian(zero),
+                                               adjoint(dataScalingOp) * dataScalingOp + lambdaW);
                                 }
                             } else {
                                 Scaling<data_t> lambdaOp{dd, regWeight};
 
                                 if (res.hasOperator()) {
-                                    REQUIRE_EQ(prob.getHessian(zero),
-                                               leaf(adjoint(dataScalingOp) * dataScalingOp
-                                                    + lambdaOp * adjoint(scalingOp) * scalingOp));
+                                    REQUIRE_EQ(*prob.getHessian(zero),
+                                               adjoint(dataScalingOp) * dataScalingOp
+                                                   + lambdaOp * adjoint(scalingOp) * scalingOp);
                                 } else {
-                                    REQUIRE_EQ(
-                                        prob.getHessian(zero),
-                                        leaf(adjoint(dataScalingOp) * dataScalingOp + lambdaOp));
+                                    REQUIRE_EQ(*prob.getHessian(zero),
+                                               adjoint(dataScalingOp) * dataScalingOp + lambdaOp);
                                 }
                             }
                         }

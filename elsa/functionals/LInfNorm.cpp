@@ -29,7 +29,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t>
+    std::unique_ptr<LinearOperator<data_t>>
         LInfNorm<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
     {
         throw LogicError("LInfNorm: not differentiable, so no Hessian! (busted!)");

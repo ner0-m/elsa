@@ -568,17 +568,6 @@ TEST_CASE_TEMPLATE("BlockLinearOperator: Testing comparison", TestType, float, d
 
         BlockLinearOperator<TestType> blockOp(ops, BlockType::ROW);
 
-        WHEN("comparing the operator to a leaf of itself")
-        {
-            auto blockOpLeaf = leaf(blockOp);
-
-            THEN("they are not equal")
-            {
-                REQUIRE_NE(blockOp, blockOpLeaf);
-                REQUIRE_NE(blockOpLeaf, blockOp);
-            }
-        }
-
         WHEN("comparing the operator to a BlockLinearOperator containing the same operators, but "
              "stacked differently")
         {

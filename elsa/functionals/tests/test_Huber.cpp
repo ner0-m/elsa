@@ -98,7 +98,7 @@ TEST_CASE_TEMPLATE("Huber: Testing without residual only data", TestType, float,
             THEN("the Hessian works as expected")
             {
                 auto hessian = func.getHessian(x);
-                auto hx = hessian.apply(x);
+                auto hx = hessian->apply(x);
                 for (index_t i = 0; i < hx.getSize(); ++i)
                     REQUIRE_UNARY(
                         checkApproxEq(hx[i], ((std::abs(dataVec[i]) <= delta) ? x[i] : 0)));
@@ -181,7 +181,7 @@ TEST_CASE_TEMPLATE("Huber<TestType>: Testing with residual", TestType, float, do
             {
 
                 auto hessian = func.getHessian(x);
-                auto hx = hessian.apply(x);
+                auto hx = hessian->apply(x);
                 for (index_t i = 0; i < hx.getSize(); ++i)
                     REQUIRE(hx[i] == ((std::abs(dataVec[i] - randomData[i]) <= delta) ? x[i] : 0));
             }

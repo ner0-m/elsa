@@ -37,9 +37,10 @@ namespace elsa
     }
 
     template <typename data_t>
-    LinearOperator<data_t> L2NormPow2<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
+    std::unique_ptr<LinearOperator<data_t>>
+        L2NormPow2<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
-        return leaf(Identity<data_t>(Rx.getDataDescriptor()));
+        return std::make_unique<Identity<data_t>>(Rx.getDataDescriptor());
     }
 
     template <typename data_t>

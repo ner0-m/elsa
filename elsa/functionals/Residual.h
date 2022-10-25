@@ -78,7 +78,7 @@ namespace elsa
          * derived classes. (This is not strictly necessary, it's just for consistency with
          * evaluate.)
          */
-        LinearOperator<data_t> getJacobian(const DataContainer<data_t>& x);
+        std::unique_ptr<LinearOperator<data_t>> getJacobian(const DataContainer<data_t>& x);
 
     protected:
         /// the data descriptor of the domain of the residual
@@ -95,6 +95,7 @@ namespace elsa
                                   DataContainer<data_t>& result) const = 0;
 
         /// the getJacobian method that has to be overriden in derived classes
-        virtual LinearOperator<data_t> getJacobianImpl(const DataContainer<data_t>& x) = 0;
+        virtual std::unique_ptr<LinearOperator<data_t>>
+            getJacobianImpl(const DataContainer<data_t>& x) = 0;
     };
 } // namespace elsa

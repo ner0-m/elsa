@@ -67,9 +67,9 @@ namespace elsa
 
         auto ones = DataContainer<data_t>(solutionDesc);
         ones = 1;
-        auto diagVector = hessian.apply(ones);
+        auto diagVector = hessian->apply(ones);
         diagVector = static_cast<data_t>(1.0) / diagVector;
-        auto diag = Scaling<data_t>(hessian.getDomainDescriptor(), diagVector);
+        auto diag = Scaling<data_t>(hessian->getDomainDescriptor(), diagVector);
 
         data_t prevT = 1;
         data_t t = 1;

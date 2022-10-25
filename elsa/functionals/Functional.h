@@ -104,7 +104,7 @@ namespace elsa
          * getHessianImpl that has to be overridden in derived classes to compute the functional's
          * Hessian, and after that the chain rule for the residual is applied (if necessary).
          */
-        LinearOperator<data_t> getHessian(const DataContainer<data_t>& x);
+        std::unique_ptr<LinearOperator<data_t>> getHessian(const DataContainer<data_t>& x);
 
     protected:
         /// the data descriptor of the domain of the functional
@@ -151,6 +151,7 @@ namespace elsa
          * as the application of the chain rule. This method here only has to compute the Hessian of
          * the functional itself.
          */
-        virtual LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) = 0;
+        virtual std::unique_ptr<LinearOperator<data_t>>
+            getHessianImpl(const DataContainer<data_t>& Rx) = 0;
     };
 } // namespace elsa
