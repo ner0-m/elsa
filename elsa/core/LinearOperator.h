@@ -24,7 +24,7 @@ namespace elsa
      * This class represents a linear operator A, expressed through its apply/applyAdjoint methods,
      * which implement Ax and A^ty for DataContainers x,y of appropriate sizes. Concrete
      * implementations of linear operators will derive from this class and override the
-     * applyImpl/applyAdjointImpl methods.
+     * apply/applyAdjoint methods.
      *
      * LinearOperator also provides functionality to support constructs like the operator expression
      * A^t*B+C, where A,B,C are linear operators. This operator composition is implemented via
@@ -79,12 +79,8 @@ namespace elsa
          *
          * @param[in] x input DataContainer (in the domain of the operator)
          * @param[out] Ax output DataContainer (in the range of the operator)
-         *
-         * Please note: this method calls the method applyImpl that has to be overridden in derived
-         * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
-         * function overloading a virtual one [apply with one vs. two arguments]).
          */
-        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const;
+        virtual void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const = 0;
 
         /**
          * @brief apply the adjoint of operator A to an element of the operator's range
@@ -103,12 +99,9 @@ namespace elsa
          *
          * @param[in] y input DataContainer (in the range of the operator)
          * @param[out] Aty output DataContainer (in the domain of the operator)
-         *
-         * Please note: this method calls the method applyAdjointImpl that has to be overridden in
-         * derived classes. (Why is this method not virtual itself? Because you cannot have a
-         * non-virtual function overloading a virtual one [applyAdjoint with one vs. two args]).
          */
-        void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const;
+        virtual void applyAdjoint(const DataContainer<data_t>& y,
+                                  DataContainer<data_t>& Aty) const = 0;
 
     protected:
         /// the data descriptor of the domain of the operator
@@ -119,13 +112,6 @@ namespace elsa
 
         /// implement the polymorphic comparison operation
         bool isEqual(const LinearOperator<data_t>& other) const override;
-
-        /// the apply method that has to be overridden in derived classes
-        virtual void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const = 0;
-
-        /// the applyAdjoint  method that has to be overridden in derived classes
-        virtual void applyAdjointImpl(const DataContainer<data_t>& y,
-                                      DataContainer<data_t>& Aty) const = 0;
     };
 
     template <typename data_t = real_t>
@@ -134,14 +120,17 @@ namespace elsa
     public:
         AdjointLinearOperator(const LinearOperator<data_t>& op);
 
-    protected:
         /// the apply method that has to be overridden in derived classes
-        void applyImpl(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
+        void apply(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
 
         /// the applyAdjoint  method that has to be overridden in derived classes
-        void applyAdjointImpl(const DataContainer<data_t>& x,
-                              DataContainer<data_t>& Ax) const override;
+        void applyAdjoint(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<data_t>::apply;
+        using LinearOperator<data_t>::applyAdjoint;
+
+    protected:
         /// implement the polymorphic clone operation
         AdjointLinearOperator<data_t>* cloneImpl() const override;
 
@@ -157,14 +146,17 @@ namespace elsa
     public:
         ScalarMulLinearOperator(data_t scalar, const LinearOperator<data_t>& op);
 
-    protected:
         /// the apply method that has to be overridden in derived classes
-        void applyImpl(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
+        void apply(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override;
 
         /// the applyAdjoint  method that has to be overridden in derived classes
-        void applyAdjointImpl(const DataContainer<data_t>& x,
-                              DataContainer<data_t>& Ax) const override;
+        void applyAdjoint(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<data_t>::apply;
+        using LinearOperator<data_t>::applyAdjoint;
+
+    protected:
         /// implement the polymorphic clone operation
         ScalarMulLinearOperator<data_t>* cloneImpl() const override;
 
@@ -183,12 +175,17 @@ namespace elsa
                                    const LinearOperator<data_t>& rhs);
 
         /// the apply method that has to be overridden in derived classes
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// the applyAdjoint  method that has to be overridden in derived classes
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
+        void applyAdjoint(const DataContainer<data_t>& y,
+                          DataContainer<data_t>& Aty) const override;
 
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<data_t>::apply;
+        using LinearOperator<data_t>::applyAdjoint;
+
+    protected:
         /// implement the polymorphic clone operation
         CompositeAddLinearOperator<data_t>* cloneImpl() const override;
 
@@ -207,12 +204,17 @@ namespace elsa
                                    const LinearOperator<data_t>& rhs);
 
         /// the apply method that has to be overridden in derived classes
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /// the applyAdjoint  method that has to be overridden in derived classes
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
+        void applyAdjoint(const DataContainer<data_t>& y,
+                          DataContainer<data_t>& Aty) const override;
 
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<data_t>::apply;
+        using LinearOperator<data_t>::applyAdjoint;
+
+    protected:
         /// implement the polymorphic clone operation
         CompositeMulLinearOperator<data_t>* cloneImpl() const override;
 

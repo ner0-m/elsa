@@ -49,48 +49,29 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> LinearOperator<data_t>::apply(const DataContainer<data_t>& x) const
     {
-        DataContainer<data_t> result(*_rangeDescriptor, x.getDataHandlerType());
-        apply(x, result);
-        return result;
-    }
-
-    template <typename data_t>
-    void LinearOperator<data_t>::apply(const DataContainer<data_t>& x,
-                                       DataContainer<data_t>& Ax) const
-    {
         if (getDomainDescriptor().getNumberOfCoefficients() != x.getSize()) {
             throw Error(
                 "LinearOperator::apply: expected differently sized input x (expected {}, is {})",
                 getDomainDescriptor().getNumberOfCoefficients(), x.getSize());
         }
 
-        if (getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize()) {
-            throw Error(
-                "LinearOperator::apply: expected differently sized input Ax (expected {}, is {})",
-                getRangeDescriptor().getNumberOfCoefficients(), Ax.getSize());
-        }
-
-        applyImpl(x, Ax);
+        DataContainer<data_t> result(*_rangeDescriptor, x.getDataHandlerType());
+        apply(x, result);
+        return result;
     }
 
     template <typename data_t>
     DataContainer<data_t> LinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y) const
     {
+        if (getRangeDescriptor().getNumberOfCoefficients() != y.getSize()) {
+            throw Error("LinearOperator::applyAdjoint: expected differently sized input y "
+                        "(expected {}, is {})",
+                        getRangeDescriptor().getNumberOfCoefficients(), y.getSize());
+        }
+
         DataContainer<data_t> result(*_domainDescriptor, y.getDataHandlerType());
         applyAdjoint(y, result);
         return result;
-    }
-
-    template <typename data_t>
-    void LinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y,
-                                              DataContainer<data_t>& Aty) const
-    {
-        // if (getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
-        //     || getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize())
-        //     throw InvalidArgumentError(
-        //         "LinearOperator::applyAdjoint: incorrect input/output sizes for leaf");
-
-        applyAdjointImpl(y, Aty);
     }
 
     template <typename data_t>
@@ -115,8 +96,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void AdjointLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& y,
-                                                  DataContainer<data_t>& Aty) const
+    void AdjointLinearOperator<data_t>::apply(const DataContainer<data_t>& y,
+                                              DataContainer<data_t>& Aty) const
     {
         if (op_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
             || op_->getDomainDescriptor().getNumberOfCoefficients() != Aty.getSize()) {
@@ -128,8 +109,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void AdjointLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& x,
-                                                         DataContainer<data_t>& Ax) const
+    void AdjointLinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& x,
+                                                     DataContainer<data_t>& Ax) const
     {
         if (op_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
             || op_->getRangeDescriptor().getNumberOfCoefficients() != Ax.getSize())
@@ -171,8 +152,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void ScalarMulLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                                    DataContainer<data_t>& Ax) const
+    void ScalarMulLinearOperator<data_t>::apply(const DataContainer<data_t>& x,
+                                                DataContainer<data_t>& Ax) const
     {
         // sanity check the arguments for the intended evaluation tree leaf operation
         if (op_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize())
@@ -184,8 +165,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void ScalarMulLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                           DataContainer<data_t>& Aty) const
+    void ScalarMulLinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y,
+                                                       DataContainer<data_t>& Aty) const
     {
         if (op_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize())
             throw InvalidArgumentError("ScalarMulLinearOperator::apply: incorrect input/output "
@@ -227,8 +208,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void CompositeAddLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                                       DataContainer<data_t>& Ax) const
+    void CompositeAddLinearOperator<data_t>::apply(const DataContainer<data_t>& x,
+                                                   DataContainer<data_t>& Ax) const
     {
         // sanity check the arguments for the intended evaluation tree leaf operation
         if (rhs_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()
@@ -243,8 +224,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void CompositeAddLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                              DataContainer<data_t>& Aty) const
+    void CompositeAddLinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y,
+                                                          DataContainer<data_t>& Aty) const
     {
         // sanity check the arguments for the intended evaluation tree leaf operation
         if (rhs_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()
@@ -289,8 +270,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void CompositeMulLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                                       DataContainer<data_t>& Ax) const
+    void CompositeMulLinearOperator<data_t>::apply(const DataContainer<data_t>& x,
+                                                   DataContainer<data_t>& Ax) const
     {
         // sanity check the arguments for the intended evaluation tree leaf operation
         if (rhs_->getDomainDescriptor().getNumberOfCoefficients() != x.getSize()) {
@@ -312,8 +293,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void CompositeMulLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                              DataContainer<data_t>& Aty) const
+    void CompositeMulLinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y,
+                                                          DataContainer<data_t>& Aty) const
     {
         // sanity check the arguments for the intended evaluation tree leaf operation
         if (lhs_->getRangeDescriptor().getNumberOfCoefficients() != y.getSize()

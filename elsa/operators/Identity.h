@@ -28,17 +28,13 @@ namespace elsa
         /// default destructor
         ~Identity() override = default;
 
-    protected:
-        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
-        Identity(const Identity<data_t>&) = default;
-
         /**
          * @brief apply the identity operator A to x, i.e. Ax = x
          *
          * @param[in] x input DataContainer (in the domain of the operator)
          * @param[out] Ax output DataContainer (in the range of the operator)
          */
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /**
          * @brief apply the adjoint of the identity operator A to y, i.e. A^ty = y
@@ -46,8 +42,16 @@ namespace elsa
          * @param[in] y input DataContainer (in the range of the operator)
          * @param[out] Aty output DataContainer (in the domain of the operator)
          */
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
+        void applyAdjoint(const DataContainer<data_t>& y,
+                          DataContainer<data_t>& Aty) const override;
+
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<data_t>::apply;
+        using LinearOperator<data_t>::applyAdjoint;
+
+    protected:
+        /// default copy constructor, hidden from non-derived classes to prevent potential slicing
+        Identity(const Identity<data_t>&) = default;
 
         /// implement the polymorphic clone operation
         Identity<data_t>* cloneImpl() const override;

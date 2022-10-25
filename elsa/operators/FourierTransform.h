@@ -39,22 +39,26 @@ namespace elsa
 
         ~FourierTransform() override = default;
 
-    protected:
         /**
          * @brief perform the fourier transformation
          * @param x inputData (image matrix)
          * @param Ax outputData (fourier transformed image matrix)
          */
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
 
         /**
          * @brief perform the inverse fourier transformation
          * @param y inputData (image matrix in frequency domain)
          * @param Aty outputData (inversely fourier transformed image matrix)
          */
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
+        void applyAdjoint(const DataContainer<data_t>& y,
+                          DataContainer<data_t>& Aty) const override;
 
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<data_t>::apply;
+        using LinearOperator<data_t>::applyAdjoint;
+
+    protected:
         /// implement the polymorphic clone operation
         FourierTransform* cloneImpl() const override;
 

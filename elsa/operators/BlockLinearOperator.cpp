@@ -106,8 +106,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void BlockLinearOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                                DataContainer<data_t>& Ax) const
+    void BlockLinearOperator<data_t>::apply(const DataContainer<data_t>& x,
+                                            DataContainer<data_t>& Ax) const
     {
         switch (_blockType) {
             case BlockType::COL: {
@@ -140,8 +140,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void BlockLinearOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                       DataContainer<data_t>& Aty) const
+    void BlockLinearOperator<data_t>::applyAdjoint(const DataContainer<data_t>& y,
+                                                   DataContainer<data_t>& Aty) const
     {
         switch (_blockType) {
             case BlockType::COL: {

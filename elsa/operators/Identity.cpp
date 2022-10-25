@@ -11,16 +11,15 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Identity<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                     DataContainer<data_t>& Ax) const
+    void Identity<data_t>::apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer timeguard("Identity", "apply");
         Ax = x;
     }
 
     template <typename data_t>
-    void Identity<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                            DataContainer<data_t>& Aty) const
+    void Identity<data_t>::applyAdjoint(const DataContainer<data_t>& y,
+                                        DataContainer<data_t>& Aty) const
     {
         Timer timeguard("Identity", "applyAdjoint");
         Aty = y;

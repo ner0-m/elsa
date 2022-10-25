@@ -15,8 +15,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void FourierTransform<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                             DataContainer<data_t>& Ax) const
+    void FourierTransform<data_t>::apply(const DataContainer<data_t>& x,
+                                         DataContainer<data_t>& Ax) const
     {
 
         Timer timeguard("FourierTransform", "apply()");
@@ -32,8 +32,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void FourierTransform<data_t>::applyAdjointImpl(const DataContainer<data_t>& x,
-                                                    DataContainer<data_t>& Atx) const
+    void FourierTransform<data_t>::applyAdjoint(const DataContainer<data_t>& x,
+                                                DataContainer<data_t>& Atx) const
     {
         Timer timeguard("FourierTransform", "applyAdjoint()");
 

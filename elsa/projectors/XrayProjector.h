@@ -81,18 +81,21 @@ namespace elsa
         {
         }
 
-    protected:
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override
+        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override
         {
             forward(x, Ax, forward_tag{});
         }
 
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override
+        void applyAdjoint(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const override
         {
             backward(y, Aty, backward_tag{});
         }
 
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<data_t>::apply;
+        using LinearOperator<data_t>::applyAdjoint;
+
+    protected:
         /// implement the polymorphic comparison operation
         bool isEqual(const LinearOperator<data_t>& other) const override
         {

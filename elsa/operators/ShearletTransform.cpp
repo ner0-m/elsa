@@ -74,8 +74,8 @@ namespace elsa
     }
 
     template <typename ret_t, typename data_t>
-    void ShearletTransform<ret_t, data_t>::applyImpl(const DataContainer<ret_t>& x,
-                                                     DataContainer<ret_t>& Ax) const
+    void ShearletTransform<ret_t, data_t>::apply(const DataContainer<ret_t>& x,
+                                                 DataContainer<ret_t>& Ax) const
     {
         Timer timeguard("ShearletTransform", "apply");
 
@@ -111,8 +111,8 @@ namespace elsa
     }
 
     template <typename ret_t, typename data_t>
-    void ShearletTransform<ret_t, data_t>::applyAdjointImpl(const DataContainer<ret_t>& y,
-                                                            DataContainer<ret_t>& Aty) const
+    void ShearletTransform<ret_t, data_t>::applyAdjoint(const DataContainer<ret_t>& y,
+                                                        DataContainer<ret_t>& Aty) const
     {
         Timer timeguard("ShearletTransform", "applyAdjoint");
 

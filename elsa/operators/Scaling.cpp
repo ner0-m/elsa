@@ -46,7 +46,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Scaling<data_t>::applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
+    void Scaling<data_t>::apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
     {
         Timer timeguard("Scaling", "apply");
 
@@ -57,8 +57,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void Scaling<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                           DataContainer<data_t>& Aty) const
+    void Scaling<data_t>::applyAdjoint(const DataContainer<data_t>& y,
+                                       DataContainer<data_t>& Aty) const
     {
         Timer timeguard("Scaling", "applyAdjoint");
 

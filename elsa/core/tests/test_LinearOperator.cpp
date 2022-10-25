@@ -26,17 +26,21 @@ public:
     }
 
 protected:
-    void applyImpl([[maybe_unused]] const DataContainer<data_t>& x,
-                   DataContainer<data_t>& Ax) const override
+    void apply([[maybe_unused]] const DataContainer<data_t>& x,
+               DataContainer<data_t>& Ax) const override
     {
         Ax = 1;
     }
 
-    void applyAdjointImpl([[maybe_unused]] const DataContainer<data_t>& y,
-                          DataContainer<data_t>& Aty) const override
+    void applyAdjoint([[maybe_unused]] const DataContainer<data_t>& y,
+                      DataContainer<data_t>& Aty) const override
     {
         Aty = 3;
     }
+
+    // Pull in apply and applyAdjoint with single argument from base class
+    using LinearOperator<data_t>::apply;
+    using LinearOperator<data_t>::applyAdjoint;
 
 protected:
     MockOperator<data_t>* cloneImpl() const override

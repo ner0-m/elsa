@@ -43,15 +43,15 @@ namespace elsa
     }
 
     template <typename data_t>
-    void JacobiPreconditioner<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                                 DataContainer<data_t>& Ax) const
+    void JacobiPreconditioner<data_t>::apply(const DataContainer<data_t>& x,
+                                             DataContainer<data_t>& Ax) const
     {
         _inverseDiagonal.apply(x, Ax);
     }
 
     template <typename data_t>
-    void JacobiPreconditioner<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                        DataContainer<data_t>& Aty) const
+    void JacobiPreconditioner<data_t>::applyAdjoint(const DataContainer<data_t>& y,
+                                                    DataContainer<data_t>& Aty) const
     {
         _inverseDiagonal.applyAdjoint(y, Aty);
     }

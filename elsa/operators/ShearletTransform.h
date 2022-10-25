@@ -91,12 +91,15 @@ namespace elsa
         DataContainer<elsa::complex<data_t>>
             sumByLastAxis(DataContainer<elsa::complex<data_t>> container) const;
 
+        void apply(const DataContainer<ret_t>& x, DataContainer<ret_t>& Ax) const override;
+
+        void applyAdjoint(const DataContainer<ret_t>& y, DataContainer<ret_t>& Aty) const override;
+
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<ret_t>::apply;
+        using LinearOperator<ret_t>::applyAdjoint;
+
     protected:
-        void applyImpl(const DataContainer<ret_t>& x, DataContainer<ret_t>& Ax) const override;
-
-        void applyAdjointImpl(const DataContainer<ret_t>& y,
-                              DataContainer<ret_t>& Aty) const override;
-
         /// implement the polymorphic clone operation
         ShearletTransform<ret_t, data_t>* cloneImpl() const override;
 

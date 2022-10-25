@@ -58,8 +58,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void FiniteDifferences<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                              DataContainer<data_t>& Ax) const
+    void FiniteDifferences<data_t>::apply(const DataContainer<data_t>& x,
+                                          DataContainer<data_t>& Ax) const
     {
         Timer timeguard("FiniteDifferences", "apply");
 
@@ -81,8 +81,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void FiniteDifferences<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                                     DataContainer<data_t>& Aty) const
+    void FiniteDifferences<data_t>::applyAdjoint(const DataContainer<data_t>& y,
+                                                 DataContainer<data_t>& Aty) const
     {
         Timer timeguard("FiniteDifferences", "applyAdjoint");
 

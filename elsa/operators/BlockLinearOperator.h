@@ -83,16 +83,20 @@ namespace elsa
         /// return the total number of blocks
         index_t numberOfOps() const;
 
+        /// apply the block linear operator
+        void apply(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
+
+        /// apply the adjoint of the block linear operator
+        void applyAdjoint(const DataContainer<data_t>& y,
+                          DataContainer<data_t>& Aty) const override;
+
+        // Pull in apply and applyAdjoint with single argument from base class
+        using LinearOperator<data_t>::apply;
+        using LinearOperator<data_t>::applyAdjoint;
+
     protected:
         /// protected copy constructor; used for cloning
         BlockLinearOperator(const BlockLinearOperator& other);
-
-        /// apply the block linear operator
-        void applyImpl(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const override;
-
-        /// apply the adjoint of the block linear operator
-        void applyAdjointImpl(const DataContainer<data_t>& y,
-                              DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
         BlockLinearOperator<data_t>* cloneImpl() const override;
