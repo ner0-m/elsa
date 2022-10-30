@@ -664,12 +664,12 @@ TEST_CASE("TraverseAABB: Traverse a 3D Volume diagonally")
             while (traverse.isInBoundingBox())
                 traverse.updateTraverse();
 
-            THEN("You leave the volume at (10, 9, 9)")
+            THEN("You leave the volume at (10, 10, 10)")
             {
                 REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 10);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 9);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(2), 9);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(2), 10);
             }
         }
     }

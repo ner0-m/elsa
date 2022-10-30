@@ -32,16 +32,9 @@ namespace elsa
         TraverseAABBBranchless(const BoundingBox& aabb, const RealRay_t& r);
 
         /**
-         * @brief Update the traverser status by taking the next traversal step in case the
-         * indexToChange is unknown
+         * @brief Update the traverser status by taking the next traversal step
          */
         void updateTraverse();
-
-        /**
-         * @brief Update the traverser status by taking the next traversal step in case the
-         * indexToChange is known
-         */
-        void updateTraverse(const index_t& indexToChange);
 
         /**
          * @brief Update the traverser status by taking the next traversal step, return the distance
@@ -82,6 +75,8 @@ namespace elsa
         bool _isInAABB{false};
         /// the current step parameter exiting the current voxel
         real_t _tExit{0.0};
+        /// the current mask, with true for the directions in which we are stepping, and else fals
+        BooleanVector_t _mask{_aabb.dim()};
 
         /// constant vector containing epsilon
         const RealVector_t _EPS{
@@ -101,6 +96,9 @@ namespace elsa
         /// setup the maximum step parameters considering the ray direction rd
         void initT(const RealVector_t& rd);
         /// check if the current index is still in the bounding box
-        bool isCurrentPositionInAABB(index_t index) const;
+        bool isCurrentPositionInAABB() const;
+        /// calculate the mask which masks out all but the minimal coefficients in _T.
+        void calcMask();
+
     };
 } // namespace elsa

@@ -26,37 +26,39 @@ namespace elsa
 
     void TraverseAABBBranchless::updateTraverse()
     {
-        // --> select the index that has lowest t value
-        index_t indexToChange;
-        _T.minCoeff(&indexToChange);
+        // --> calculate the mask that masks out all but the lowest t values
+        calcMask();
 
-        updateTraverse(indexToChange);
-    }
-
-    void TraverseAABBBranchless::updateTraverse(const index_t& indexToChange)
-    {
         // --> step into the current direction
-        _currentPos(indexToChange) += _stepDirection(indexToChange);
+        _currentPos += _mask.select(_stepDirection, 0);
 
         // --> update the T for next iteration
-        _T(indexToChange) += _tDelta(indexToChange);
+        _T += _mask.select(_tDelta, 0);
 
         // --> check if we are still in bounding box
-        _isInAABB = isCurrentPositionInAABB(indexToChange);
+        _isInAABB = isCurrentPositionInAABB();
+    }
+
+    void TraverseAABBBranchless::calcMask()
+    {
+        if (_aabb.dim() == 2) {
+            _mask[0] = (_T[0] <= _T[1]);
+            _mask[1] = (_T[1] <= _T[0]);
+        } else if (_aabb.dim() == 3) {
+            _mask[0] = ((_T[0] <= _T[1]) && (_T[0] <= _T[2]));
+            _mask[1] = ((_T[1] <= _T[0]) && (_T[1] <= _T[2]));
+            _mask[2] = ((_T[2] <= _T[0]) && (_T[2] <= _T[1]));
+        }
     }
 
     real_t TraverseAABBBranchless::updateTraverseAndGetDistance()
     {
-        // --> select the index that has lowest t value
-        index_t indexToChange;
-        _T.minCoeff(&indexToChange);
-
         // --> compute the distance
         real_t tEntry = _tExit;
-        _tExit = _T(indexToChange);
+        _tExit = _T.minCoeff();
 
         // --> do the update
-        updateTraverse(indexToChange);
+        updateTraverse();
 
         return (_tExit - tEntry);
     }
@@ -133,9 +135,10 @@ namespace elsa
         _T = (Eigen::abs(rd.array()) > _EPS.array()).select(T, _MAX);
     }
 
-    bool TraverseAABBBranchless::isCurrentPositionInAABB(index_t index) const
+    bool TraverseAABBBranchless::isCurrentPositionInAABB() const
     {
-        return _currentPos(index) < _aabb.max()(index) && _currentPos(index) >= _aabb.min()(index);
+        return (_currentPos.array() < _aabb.max().array()).all()
+               && (_currentPos.array() >= _aabb.min().array()).all();
     }
 
 } // namespace elsa
