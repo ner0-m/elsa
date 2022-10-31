@@ -81,8 +81,6 @@ namespace elsa
         data_t traverseRayForward(const BoundingBox& boundingbox, const RealRay_t& ray,
                                   const DataContainer<data_t>& x) const
         {
-            const auto dim = ray.dim();
-
             const IndexVector_t lower = boundingbox.min().template cast<index_t>();
             const IndexVector_t upper = boundingbox.max().template cast<index_t>();
             const auto support = this->self().support();
@@ -127,8 +125,6 @@ namespace elsa
         void traverseRayBackward(const BoundingBox& boundingbox, const RealRay_t& ray,
                                  const value_type& detectorValue, DataContainer<data_t>& Aty) const
         {
-            const auto dim = ray.dim();
-
             const IndexVector_t lower = boundingbox.min().template cast<index_t>();
             const IndexVector_t upper = boundingbox.max().template cast<index_t>();
             const auto support = this->self().support();
@@ -193,7 +189,7 @@ namespace elsa
     public:
         using self_type = BlobProjector<data_t>;
 
-        BlobProjector(data_t radius, data_t alpha, data_t order,
+        BlobProjector(data_t radius, data_t alpha, index_t order,
                       const VolumeDescriptor& domainDescriptor,
                       const DetectorDescriptor& rangeDescriptor);
 
@@ -224,7 +220,7 @@ namespace elsa
     public:
         using self_type = BlobProjector<data_t>;
 
-        BSplineProjector(data_t degree, const VolumeDescriptor& domainDescriptor,
+        BSplineProjector(index_t degree, const VolumeDescriptor& domainDescriptor,
                          const DetectorDescriptor& rangeDescriptor);
 
         BSplineProjector(const VolumeDescriptor& domainDescriptor,

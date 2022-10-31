@@ -6,7 +6,7 @@
 namespace elsa
 {
     template <typename data_t>
-    BlobProjector<data_t>::BlobProjector(data_t radius, data_t alpha, data_t order,
+    BlobProjector<data_t>::BlobProjector(data_t radius, data_t alpha, index_t order,
                                          const VolumeDescriptor& domainDescriptor,
                                          const DetectorDescriptor& rangeDescriptor)
         : LutProjector<data_t, BlobProjector<data_t>>(domainDescriptor, rangeDescriptor),
@@ -30,7 +30,7 @@ namespace elsa
     template <typename data_t>
     BlobProjector<data_t>::BlobProjector(const VolumeDescriptor& domainDescriptor,
                                          const DetectorDescriptor& rangeDescriptor)
-        : BlobProjector(2, 10.83, 2, domainDescriptor, rangeDescriptor)
+        : BlobProjector(2.f, 10.83f, 2.f, domainDescriptor, rangeDescriptor)
     {
     }
 
@@ -52,11 +52,11 @@ namespace elsa
     }
 
     template <typename data_t>
-    BSplineProjector<data_t>::BSplineProjector(data_t degree,
+    BSplineProjector<data_t>::BSplineProjector(index_t order,
                                                const VolumeDescriptor& domainDescriptor,
                                                const DetectorDescriptor& rangeDescriptor)
         : LutProjector<data_t, BSplineProjector<data_t>>(domainDescriptor, rangeDescriptor),
-          lut_(domainDescriptor.getNumberOfDimensions(), degree)
+          lut_(domainDescriptor.getNumberOfDimensions(), order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();

@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include "elsaDefines.h"
+
 namespace elsa::math
 {
     /// Modified Bessel Function of the First Kind \f$ I_n(x) \f$, with \f$n = 0\f$
@@ -53,5 +55,5 @@ namespace elsa::math
     double bessi4(double x);
 
     /// See: https://stackoverflow.com/questions/8797722/modified-bessel-functions-of-order-n
-    double bessi(int m, double x);
+    double bessi(index_t m, double x);
 } // namespace elsa::math

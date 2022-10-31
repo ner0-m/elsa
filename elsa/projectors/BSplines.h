@@ -21,15 +21,16 @@ namespace elsa
         template <typename data_t>
         constexpr data_t bspline1d_evaluate(data_t x, index_t m) noexcept
         {
-            const auto xs = x + (m + 1) / data_t{2};
+            const auto xs = x + static_cast<data_t>(m + 1) / data_t{2};
             data_t res = 0;
 
             for (int n = 0; n <= m + 1; ++n) {
-                const auto tmp1 = math::heaviside<data_t>(xs - n, 0);
-                const auto tmp2 = std::pow<data_t>(xs - n, m);
-                const auto tmp3 = math::binom(m + 1, n);
-                const auto tmp4 = std::pow<data_t>(-1, n) / math::factorial(m);
-                res += tmp1 * tmp2 * tmp3 * tmp4;
+                data_t nf = static_cast<data_t>(n);
+                const auto tmp1 = math::heaviside<data_t>(xs - nf, 0);
+                const auto tmp2 = std::pow<data_t>(xs - nf, m);
+                const auto tmp3 = static_cast<data_t>(math::binom(m + 1, n));
+                const auto tmp4 = std::pow<data_t>(-1, n) / static_cast<data_t>(math::factorial(m));
+                res += static_cast<data_t>(tmp1 * tmp2 * tmp3 * tmp4);
             }
 
             return res;
@@ -58,11 +59,11 @@ namespace elsa
         /// @param m order of B-Spline
         /// @param dim dimension of B-Spline
         template <typename data_t>
-        constexpr data_t nd_bspline_centered(data_t x, int m, int dim) noexcept
+        constexpr data_t nd_bspline_centered(data_t x, index_t m, index_t dim) noexcept
         {
             data_t res = bspline1d_evaluate<data_t>(x, m);
             for (int i = 1; i < dim; ++i) {
-                const auto inc = bspline1d_evaluate<data_t>(0., m);
+                const auto inc = bspline1d_evaluate<data_t>(0.f, m);
                 res *= inc;
             }
             return res;

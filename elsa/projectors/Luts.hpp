@@ -38,7 +38,7 @@ namespace elsa
             std::array<data_t, N + 1> lut;
 
             auto t = static_cast<data_t>(0);
-            const auto step = 2. / N;
+            const auto step = 2.f / N;
 
             for (std::size_t i = 0; i <= N; ++i) {
                 lut[i] = bspline(t);
@@ -70,7 +70,7 @@ namespace elsa
     class Lut
     {
     public:
-        constexpr Lut(std::array<data_t, N + 1> data) : data_(std::move(data)) {}
+        constexpr Lut(std::array<data_t, N + 1>&& data) : data_(std::move(data)) {}
 
         template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
         constexpr data_t operator()(T index) const
@@ -128,7 +128,7 @@ namespace elsa
 
         constexpr data_t alpha() const { return blob_.alpha(); }
 
-        constexpr data_t order() const { return blob_.order(); }
+        constexpr index_t order() const { return blob_.order(); }
 
         constexpr data_t operator()(data_t distance) const
         {
@@ -204,8 +204,8 @@ namespace elsa
     class ProjectedBSplineLut
     {
     public:
-        constexpr ProjectedBSplineLut(int dim, int degree)
-            : bspline_(dim, degree), lut_(detail::bspline_lut<data_t, N>(bspline_))
+        constexpr ProjectedBSplineLut(index_t dim, index_t order)
+            : bspline_(dim, order), lut_(detail::bspline_lut<data_t, N>(bspline_))
         {
         }
 
