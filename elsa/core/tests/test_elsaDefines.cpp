@@ -21,7 +21,10 @@ TEST_SUITE_BEGIN("core");
 TEST_CASE("elsaDefines: Testing PI")
 {
 
-    THEN("Pi for real_t and pi_t are equal") { REQUIRE_EQ(pi<real_t>, pi_t); }
+    THEN("Pi for real_t and pi_t are equal")
+    {
+        REQUIRE_EQ(pi<real_t>, pi_t);
+    }
 
     THEN("pi_t is somewhat close to a representation for pi")
     {

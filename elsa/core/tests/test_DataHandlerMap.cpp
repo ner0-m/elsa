@@ -241,7 +241,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap"
             const auto& dh2MapRef =
                 static_cast<const typename MapToHandler<TestType>::map&>(*dh2Map);
 
-            THEN("the assignment throws") { REQUIRE_THROWS(dhMapRef = dh2MapRef); }
+            THEN("the assignment throws")
+            {
+                REQUIRE_THROWS(dhMapRef = dh2MapRef);
+            }
         }
     }
 
@@ -282,7 +285,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap"
         WHEN("Copy-assigning a DataHandler base pointer of a different size")
         {
             const std::unique_ptr<DataHandler<data_t>> bigDh = std::make_unique<TestType>(2 * size);
-            THEN("The assigning throws") { REQUIRE_THROWS(*dhMap = *bigDh); }
+            THEN("The assigning throws")
+            {
+                REQUIRE_THROWS(*dhMap = *bigDh);
+            }
         }
 
         WHEN("Copy-assigning a block of a DataHandlerMap though the base pointer")
@@ -313,7 +319,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap"
             WHEN("The sizes of the block and DataHandler are different")
             {
                 const auto bigDh = dh2.getBlock(0, 2 * size);
-                THEN("Assignment throws") { REQUIRE_THROWS(*dhMap = *bigDh); }
+                THEN("Assignment throws")
+                {
+                    REQUIRE_THROWS(*dhMap = *bigDh);
+                }
             }
         }
 
@@ -345,7 +354,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap"
             {
                 const std::unique_ptr<DataHandler<data_t>> bigDh =
                     std::make_unique<TestType>(2 * size);
-                THEN("sizes must match") { REQUIRE_THROWS(*dhMap = *bigDh->getBlock(0, 2 * size)); }
+                THEN("sizes must match")
+                {
+                    REQUIRE_THROWS(*dhMap = *bigDh->getBlock(0, 2 * size));
+                }
             }
         }
 
@@ -377,7 +389,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap"
             {
                 const std::unique_ptr<DataHandler<data_t>> bigDh =
                     std::make_unique<TestType>(2 * size);
-                THEN("the assignment throws") { REQUIRE_THROWS(*dhMap = std::move(*bigDh)); }
+                THEN("the assignment throws")
+                {
+                    REQUIRE_THROWS(*dhMap = std::move(*bigDh));
+                }
             }
         }
 
@@ -408,7 +423,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap"
             WHEN("The sizes are different")
             {
                 const auto bigDh = dh2.getBlock(0, 2 * size);
-                THEN("the assignment throws") { REQUIRE_THROWS(*dhMap = std::move(*bigDh)); }
+                THEN("the assignment throws")
+                {
+                    REQUIRE_THROWS(*dhMap = std::move(*bigDh));
+                }
             }
         }
 
@@ -439,7 +457,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap"
             {
                 const std::unique_ptr<DataHandler<data_t>> bigDh =
                     std::make_unique<TestType>(2 * size);
-                THEN("the assignment throws") { REQUIRE_THROWS(*dhMap = std::move(*bigDh)); }
+                THEN("the assignment throws")
+                {
+                    REQUIRE_THROWS(*dhMap = std::move(*bigDh));
+                }
             }
         }
     }
@@ -475,7 +496,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlerMap: Testing assignment to DataHandlerMap"
             const auto dh2Map = dh2.getBlock(0, 3 * size);
             const auto& dh2MapRef = static_cast<const MapType&>(*dh2Map);
 
-            THEN("The assigning throws") { REQUIRE_THROWS(dhMapRef = dh2MapRef); }
+            THEN("The assigning throws")
+            {
+                REQUIRE_THROWS(dhMapRef = dh2MapRef);
+            }
         }
     }
 

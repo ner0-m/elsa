@@ -147,13 +147,25 @@ namespace elsa
         buildMatrices();
     }
 
-    const RealMatrix_t& Geometry::getProjectionMatrix() const { return _P; }
+    const RealMatrix_t& Geometry::getProjectionMatrix() const
+    {
+        return _P;
+    }
 
-    const RealMatrix_t& Geometry::getInverseProjectionMatrix() const { return _Pinv; }
+    const RealMatrix_t& Geometry::getInverseProjectionMatrix() const
+    {
+        return _Pinv;
+    }
 
-    const RealVector_t& Geometry::getCameraCenter() const { return _C; }
+    const RealVector_t& Geometry::getCameraCenter() const
+    {
+        return _C;
+    }
 
-    const RealMatrix_t& Geometry::getRotationMatrix() const { return _R; }
+    const RealMatrix_t& Geometry::getRotationMatrix() const
+    {
+        return _R;
+    }
 
     bool Geometry::operator==(const Geometry& other) const
     {

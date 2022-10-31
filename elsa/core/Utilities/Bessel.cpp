@@ -74,11 +74,20 @@ namespace elsa::math
         return x < 0.0 ? -result : result;
     }
 
-    double bessi2(double x) { return (x == 0) ? 0 : bessi0(x) - ((2 * 1) / x) * bessi1(x); }
+    double bessi2(double x)
+    {
+        return (x == 0) ? 0 : bessi0(x) - ((2 * 1) / x) * bessi1(x);
+    }
 
-    double bessi3(double x) { return (x == 0) ? 0 : bessi1(x) - ((2 * 2) / x) * bessi2(x); }
+    double bessi3(double x)
+    {
+        return (x == 0) ? 0 : bessi1(x) - ((2 * 2) / x) * bessi2(x);
+    }
 
-    double bessi4(double x) { return (x == 0) ? 0 : bessi2(x) - ((2 * 3) / x) * bessi3(x); }
+    double bessi4(double x)
+    {
+        return (x == 0) ? 0 : bessi2(x) - ((2 * 3) / x) * bessi3(x);
+    }
 
     double bessi(int m, double x)
     {

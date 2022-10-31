@@ -67,7 +67,10 @@ TEST_CASE("Logger: Use test")
             std::string filename = "log.txt";
             Logger::enableFileLogging(filename);
 
-            THEN("We still should only have one sink") { REQUIRE(testLogger->sinks().size() == 1); }
+            THEN("We still should only have one sink")
+            {
+                REQUIRE(testLogger->sinks().size() == 1);
+            }
 
             THEN("a new logger has file logging enabled")
             {

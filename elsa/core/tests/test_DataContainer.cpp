@@ -85,7 +85,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
         {
             DataContainer<data_t> dc(desc, TestType::handler_t);
 
-            THEN("it has the correct DataDescriptor") { REQUIRE_EQ(dc.getDataDescriptor(), desc); }
+            THEN("it has the correct DataDescriptor")
+            {
+                REQUIRE_EQ(dc.getDataDescriptor(), desc);
+            }
 
             THEN("it has a data vector of correct size")
             {
@@ -99,7 +102,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
 
             DataContainer<data_t> dc(desc, data, TestType::handler_t);
 
-            THEN("it has the correct DataDescriptor") { REQUIRE_EQ(dc.getDataDescriptor(), desc); }
+            THEN("it has the correct DataDescriptor")
+            {
+                REQUIRE_EQ(dc.getDataDescriptor(), desc);
+            }
 
             THEN("it has correctly initialized data")
             {
@@ -163,7 +169,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
                 REQUIRE_EQ(dc, oldOtherDc);
             }
 
-            THEN("the moved from object is still valid (but empty)") { otherDc = dc; }
+            THEN("the moved from object is still valid (but empty)")
+            {
+                otherDc = dc;
+            }
         }
 
         WHEN("move assigning")
@@ -180,7 +189,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
                 REQUIRE_EQ(dc, oldOtherDc);
             }
 
-            THEN("the moved from object is still valid (but empty)") { otherDc = dc; }
+            THEN("the moved from object is still valid (but empty)")
+            {
+                otherDc = dc;
+            }
         }
     }
 }
@@ -676,12 +688,18 @@ TEST_CASE_TEMPLATE("DataContainer: Testing load data to GPU and vice versa", Tes
 
         WHEN("Trying to call loadToCPU on CPU container")
         {
-            THEN("Throws") { REQUIRE_THROWS(dcCPU.loadToCPU()); }
+            THEN("Throws")
+            {
+                REQUIRE_THROWS(dcCPU.loadToCPU());
+            }
         }
 
         WHEN("Trying to call loadToGPU on GPU container")
         {
-            THEN("Throws") { REQUIRE_THROWS(dcGPU.loadToGPU()); }
+            THEN("Throws")
+            {
+                REQUIRE_THROWS(dcGPU.loadToGPU());
+            }
         }
 
         WHEN("Loading to GPU from CPU")
@@ -1192,7 +1210,10 @@ TEST_CASE_TEMPLATE("DataContainer: Concatenate two DataContainers", data_t, floa
         DataContainer dc1(desc1D);
         DataContainer dc2(desc2D);
 
-        THEN("The concatenation throws") { REQUIRE_THROWS_AS(concatenate(dc1, dc2), LogicError); }
+        THEN("The concatenation throws")
+        {
+            REQUIRE_THROWS_AS(concatenate(dc1, dc2), LogicError);
+        }
     }
 }
 
@@ -1433,7 +1454,10 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
 
             DataContainer<data_t> res = dc.slice(0);
 
-            THEN("the DataContainers match") { REQUIRE_EQ(dc, res); }
+            THEN("the DataContainers match")
+            {
+                REQUIRE_EQ(dc, res);
+            }
         }
 
         WHEN("slicing a const DataContainer with the size of the last dimension of 1")
@@ -1442,7 +1466,10 @@ TEST_CASE_TEMPLATE("DataContainer: Slice a DataContainer", data_t, float, double
 
             const DataContainer<data_t> res = dc.slice(0);
 
-            THEN("the DataContainers match") { REQUIRE_EQ(dc, res); }
+            THEN("the DataContainers match")
+            {
+                REQUIRE_EQ(dc, res);
+            }
         }
     }
 }
@@ -1461,7 +1488,10 @@ TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", da
             {
                 REQUIRE_EQ(dc.getDataDescriptor(), fftShiftedDC.getDataDescriptor());
             }
-            THEN("the data containers match") { REQUIRE_UNARY(fftShiftedDC == dc); }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(fftShiftedDC == dc);
+            }
         }
 
         WHEN("running the IFFT shift operation to the container")
@@ -1471,7 +1501,10 @@ TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", da
             {
                 REQUIRE_EQ(dc.getDataDescriptor(), ifftShiftedDC.getDataDescriptor());
             }
-            THEN("the data containers match") { REQUIRE_UNARY(ifftShiftedDC == dc); }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(ifftShiftedDC == dc);
+            }
         }
     }
 
@@ -1507,7 +1540,10 @@ TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", da
                 REQUIRE_EQ(fftShiftedDC.getDataDescriptor(),
                            expectedFFTShiftDC.getDataDescriptor());
             }
-            THEN("the data containers match") { REQUIRE_UNARY(fftShiftedDC == expectedFFTShiftDC); }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(fftShiftedDC == expectedFFTShiftDC);
+            }
         }
 
         DataContainer<data_t> expectedIFFTShiftDC(VolumeDescriptor{{3, 3}});
@@ -1600,7 +1636,10 @@ TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", da
                 REQUIRE_EQ(fftShiftedDC.getDataDescriptor(),
                            expectedFFTShiftDC.getDataDescriptor());
             }
-            THEN("the data containers match") { REQUIRE_UNARY(fftShiftedDC == expectedFFTShiftDC); }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(fftShiftedDC == expectedFFTShiftDC);
+            }
         }
 
         DataContainer<data_t> expectedIFFTShiftDC(VolumeDescriptor{{5, 5}});

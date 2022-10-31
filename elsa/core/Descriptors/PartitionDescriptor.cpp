@@ -90,7 +90,10 @@ namespace elsa
             _blockDescriptors.push_back(blockDesc->clone());
     }
 
-    index_t PartitionDescriptor::getNumberOfBlocks() const { return _indexMap.size(); }
+    index_t PartitionDescriptor::getNumberOfBlocks() const
+    {
+        return _indexMap.size();
+    }
 
     const DataDescriptor& PartitionDescriptor::getDescriptorOfBlock(index_t i) const
     {

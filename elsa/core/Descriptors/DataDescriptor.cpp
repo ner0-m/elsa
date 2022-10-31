@@ -58,7 +58,10 @@ namespace elsa
 
     DataDescriptor::~DataDescriptor() {}
 
-    index_t DataDescriptor::getNumberOfDimensions() const { return _numberOfDimensions; }
+    index_t DataDescriptor::getNumberOfDimensions() const
+    {
+        return _numberOfDimensions;
+    }
 
     index_t DataDescriptor::getNumberOfCoefficients() const
     {
@@ -70,9 +73,15 @@ namespace elsa
         return _numberOfCoefficientsPerDimension;
     }
 
-    RealVector_t DataDescriptor::getSpacingPerDimension() const { return _spacingPerDimension; }
+    RealVector_t DataDescriptor::getSpacingPerDimension() const
+    {
+        return _spacingPerDimension;
+    }
 
-    RealVector_t DataDescriptor::getLocationOfOrigin() const { return _locationOfOrigin; }
+    RealVector_t DataDescriptor::getLocationOfOrigin() const
+    {
+        return _locationOfOrigin;
+    }
 
     index_t DataDescriptor::getIndexFromCoordinate(const elsa::IndexVector_t& coordinate) const
     {

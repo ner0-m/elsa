@@ -21,7 +21,10 @@ TEST_CASE_TEMPLATE("CUDA unified memory shared pointers", TestType, float, doubl
     {
         SharedPointer<TestType> ptr(2 * sizeof(TestType));
 
-        THEN("the counter should be only one") { REQUIRE(ptr.useCount() == 1); }
+        THEN("the counter should be only one")
+        {
+            REQUIRE(ptr.useCount() == 1);
+        }
 
         WHEN("copy constructing the pointer")
         {
@@ -34,13 +37,19 @@ TEST_CASE_TEMPLATE("CUDA unified memory shared pointers", TestType, float, doubl
             }
         }
 
-        THEN("copy of pointer should be destroyed") { REQUIRE(ptr.useCount() == 1); }
+        THEN("copy of pointer should be destroyed")
+        {
+            REQUIRE(ptr.useCount() == 1);
+        }
 
         WHEN("move constructing new pointer")
         {
             SharedPointer ptr2(std::move(ptr));
 
-            THEN("counter should be still only one") { REQUIRE(ptr2.useCount() == 1); }
+            THEN("counter should be still only one")
+            {
+                REQUIRE(ptr2.useCount() == 1);
+            }
         }
 
         WHEN("copy assignment of other pointer")
@@ -48,7 +57,10 @@ TEST_CASE_TEMPLATE("CUDA unified memory shared pointers", TestType, float, doubl
             SharedPointer<TestType> ptr2(3 * sizeof(TestType));
             ptr = ptr2;
 
-            THEN("the counter should be two") { REQUIRE(ptr.useCount() == 2); }
+            THEN("the counter should be two")
+            {
+                REQUIRE(ptr.useCount() == 2);
+            }
         }
 
         WHEN("move assignment of other pointer")
@@ -56,7 +68,10 @@ TEST_CASE_TEMPLATE("CUDA unified memory shared pointers", TestType, float, doubl
             SharedPointer<TestType> ptr2(3 * sizeof(TestType));
             ptr = std::move(ptr2);
 
-            THEN("the counter should be two") { REQUIRE(ptr.useCount() == 2); }
+            THEN("the counter should be two")
+            {
+                REQUIRE(ptr.useCount() == 2);
+            }
         }
     }
 

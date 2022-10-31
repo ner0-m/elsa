@@ -71,7 +71,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Testing Construction", TestType, dataha
         {
             const TestType dh{size};
 
-            THEN("it has the correct size") { REQUIRE_EQ(size, dh.getSize()); }
+            THEN("it has the correct size")
+            {
+                REQUIRE_EQ(size, dh.getSize());
+            }
         }
 
         WHEN("constructing with a given vector")
@@ -731,7 +734,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataHandlers: Testing the copy-on-write mechanism", T
                 dh[i] += 2;
             }
 
-            THEN("copy-on-write should not be invoked") { REQUIRE_EQ(useCount(dh), 1); }
+            THEN("copy-on-write should not be invoked")
+            {
+                REQUIRE_EQ(useCount(dh), 1);
+            }
         }
     }
 }

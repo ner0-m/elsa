@@ -44,12 +44,18 @@ TEST_CASE_TEMPLATE("IO: Testing exception behaviour of write", data_t, float, do
 
     WHEN("Writing an edf file")
     {
-        THEN("it works") { CHECK_NOTHROW(io::write(x, "hellosomething.edf")); }
+        THEN("it works")
+        {
+            CHECK_NOTHROW(io::write(x, "hellosomething.edf"));
+        }
     }
 
     WHEN("Writing an pgm file")
     {
-        THEN("it works") { CHECK_NOTHROW(io::write(x, "hellosomething.pgm")); }
+        THEN("it works")
+        {
+            CHECK_NOTHROW(io::write(x, "hellosomething.pgm"));
+        }
     }
 
     WHEN("Writing an with an unsupported extension")

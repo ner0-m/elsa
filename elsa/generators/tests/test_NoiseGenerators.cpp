@@ -20,7 +20,10 @@ TEST_CASE_TEMPLATE("Noise generators:", data_t, float, double)
             auto generator = NoNoiseGenerator{};
             auto not_noisy = generator(dc);
 
-            THEN("Nothing happens") { CHECK_UNARY(isCwiseApprox(dc, not_noisy)); }
+            THEN("Nothing happens")
+            {
+                CHECK_UNARY(isCwiseApprox(dc, not_noisy));
+            }
         }
 
         WHEN("Adding Gaussian noise (GaussianNoiseGenerator)")
@@ -29,7 +32,10 @@ TEST_CASE_TEMPLATE("Noise generators:", data_t, float, double)
             auto noisy = generator(dc);
 
             // TODO: Find a way to properly test this!
-            THEN("Something happens") { CHECK_UNARY_FALSE(isCwiseApprox(dc, noisy)); }
+            THEN("Something happens")
+            {
+                CHECK_UNARY_FALSE(isCwiseApprox(dc, noisy));
+            }
         }
 
         WHEN("Adding Poisson noise (PoissonNoiseGenerator)")
@@ -38,7 +44,10 @@ TEST_CASE_TEMPLATE("Noise generators:", data_t, float, double)
             auto noisy = generator(dc);
 
             // TODO: Find a way to properly test this!
-            THEN("Something happens") { CHECK_UNARY_FALSE(isCwiseApprox(dc, noisy)); }
+            THEN("Something happens")
+            {
+                CHECK_UNARY_FALSE(isCwiseApprox(dc, noisy));
+            }
         }
     }
 }
