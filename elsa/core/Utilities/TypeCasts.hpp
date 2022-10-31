@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <typeinfo>
 #include <limits>
 #include <cassert>
 #include <memory>
@@ -12,7 +13,7 @@ namespace elsa
 {
     namespace detail
     {
-        /// Type of CopyConst_t is 'const Dst' if Src is 'const Type', else it's 'Dst'
+        /// Type of CopyConst_t is: 'const Dst' if Src is 'const', else it's 'Dst'
         template <typename Src, typename Dst>
         using CopyConst_t =
             typename std::conditional_t<std::is_const_v<Src>, std::add_const_t<Dst>, Dst>;
@@ -22,7 +23,15 @@ namespace elsa
     template <typename Derived, typename Base>
     bool is(Base& input)
     {
-        return dynamic_cast<detail::CopyConst_t<Base, Derived>*>(&input);
+        try {
+            // we can't convert to pointer and check for nullptr,
+            // because the reference can never be nullptr and the compiler knows this :)
+            [[maybe_unused]] const auto& r =
+                dynamic_cast<detail::CopyConst_t<Base, Derived>&>(input);
+            return true;
+        } catch (const std::bad_cast&) {
+            return false;
+        }
     }
 
     /// Overload to check for pointer types directly
