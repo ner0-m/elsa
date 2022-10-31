@@ -194,14 +194,11 @@ namespace elsa
         DataContainer<data_t> sectionZero(VolumeDescriptor{{_width, _height}});
         sectionZero = 0;
 
-        auto negativeHalfWidth = static_cast<index_t>(-std::floor(_width / 2.0));
-        auto halfWidth = static_cast<index_t>(std::ceil(_width / 2.0));
-        auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
-        auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
+        auto shape = getShapeFractions();
 
         // TODO attempt to refactor the negative indexing
-        for (auto w = negativeHalfWidth; w < halfWidth; w++) {
-            for (auto h = negativeHalfHeight; h < halfHeight; h++) {
+        for (auto w = shape.negativeHalfWidth; w < shape.halfWidth; w++) {
+            for (auto h = shape.negativeHalfHeight; h < shape.halfHeight; h++) {
                 sectionZero(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
                     shearlet::phiHat<data_t>(static_cast<data_t>(w), static_cast<data_t>(h));
             }
@@ -220,22 +217,25 @@ namespace elsa
         DataContainer<data_t> sectionv(VolumeDescriptor{{_width, _height}});
         sectionv = 0;
 
-        auto negativeHalfWidth = static_cast<index_t>(-std::floor(_width / 2.0));
-        auto halfWidth = static_cast<index_t>(std::ceil(_width / 2.0));
-        auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
-        auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
+        auto shape = getShapeFractions();
+        auto jr = static_cast<data_t>(j);
+        auto kr = static_cast<data_t>(k);
 
         // TODO attempt to refactor the negative indexing
-        for (auto w = negativeHalfWidth; w < halfWidth; w++) {
-            for (auto h = negativeHalfHeight; h < halfHeight; h++) {
+        for (auto w = shape.negativeHalfWidth; w < shape.halfWidth; w++) {
+            auto wr = static_cast<data_t>(w);
+            for (auto h = shape.negativeHalfHeight; h < shape.halfHeight; h++) {
+                auto hr = static_cast<data_t>(h);
                 if (std::abs(h) <= std::abs(w)) {
                     sectionh(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                        shearlet::psiHat<data_t>(std::pow(4, -j) * w,
-                                                 std::pow(4, -j) * k * w + std::pow(2, -j) * h);
+                        shearlet::psiHat<data_t>(std::pow(4.f, -jr) * wr,
+                                                 std::pow(4.f, -jr) * kr * wr
+                                                     + std::pow(2.f, -jr) * hr);
                 } else {
                     sectionv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                        shearlet::psiHat<data_t>(std::pow(4, -j) * h,
-                                                 std::pow(4, -j) * k * h + std::pow(2, -j) * w);
+                        shearlet::psiHat<data_t>(std::pow(4.f, -jr) * hr,
+                                                 std::pow(4.f, -jr) * kr * hr
+                                                     + std::pow(2.f, -jr) * wr);
                 }
             }
         }
@@ -251,27 +251,48 @@ namespace elsa
         DataContainer<data_t> sectionhxv(VolumeDescriptor{{_width, _height}});
         sectionhxv = 0;
 
-        auto negativeHalfWidth = static_cast<index_t>(-std::floor(_width / 2.0));
-        auto halfWidth = static_cast<index_t>(std::ceil(_width / 2.0));
-        auto negativeHalfHeight = static_cast<index_t>(-std::floor(_height / 2.0));
-        auto halfHeight = static_cast<index_t>(std::ceil(_height / 2.0));
+        auto shape = getShapeFractions();
+        auto jr = static_cast<data_t>(j);
+        auto kr = static_cast<data_t>(k);
 
         // TODO attempt to refactor the negative indexing
-        for (auto w = negativeHalfWidth; w < halfWidth; w++) {
-            for (auto h = negativeHalfHeight; h < halfHeight; h++) {
+        for (auto w = shape.negativeHalfWidth; w < shape.halfWidth; w++) {
+            auto wr = static_cast<data_t>(w);
+            for (auto h = shape.negativeHalfHeight; h < shape.halfHeight; h++) {
+                auto hr = static_cast<data_t>(h);
                 if (std::abs(h) <= std::abs(w)) {
                     sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                        shearlet::psiHat<data_t>(std::pow(4, -j) * w,
-                                                 std::pow(4, -j) * k * w + std::pow(2, -j) * h);
+                        shearlet::psiHat<data_t>(std::pow(4.f, -jr) * wr,
+                                                 std::pow(4.f, -jr) * kr * wr
+                                                     + std::pow(2.f, -jr) * hr);
                 } else {
                     sectionhxv(w < 0 ? w + _width : w, h < 0 ? h + _height : h) =
-                        shearlet::psiHat<data_t>(std::pow(4, -j) * h,
-                                                 std::pow(4, -j) * k * h + std::pow(2, -j) * w);
+                        shearlet::psiHat<data_t>(std::pow(4.f, -jr) * hr,
+                                                 std::pow(4.f, -jr) * kr * hr
+                                                     + std::pow(2.f, -jr) * wr);
                 }
             }
         }
 
         _spectra.value().slice(hxvSliceIndex) = sectionhxv;
+    }
+
+    /**
+     * helper function to calculate input data fractions.
+     */
+    template <typename ret_t, typename data_t>
+    auto ShearletTransform<ret_t, data_t>::getShapeFractions() const -> shape_fractions
+    {
+        shape_fractions ret;
+        auto width = static_cast<real_t>(_width);
+        auto height = static_cast<real_t>(_height);
+
+        ret.negativeHalfWidth = static_cast<index_t>(-std::floor(width / 2.0));
+        ret.halfWidth = static_cast<index_t>(std::ceil(width / 2.0));
+        ret.negativeHalfHeight = static_cast<index_t>(-std::floor(height / 2.0));
+        ret.halfHeight = static_cast<index_t>(std::ceil(height / 2.0));
+
+        return ret;
     }
 
     template <typename ret_t, typename data_t>
