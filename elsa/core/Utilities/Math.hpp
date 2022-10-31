@@ -22,15 +22,17 @@ namespace elsa
                                             : (binom(n - 1, k) * n) / (n - k);
         }
 
-        /// Compute Heaviside-function
-        /// \f[
-        /// x \mapsto
-        /// \begin{cases}
-        /// 0: & x < 0 \\
-        /// c: & x = 0 \\
-        /// 1: & x > 0
-        /// \end{cases}
-        /// \f]
+        /**
+         * Compute Heaviside-function
+         * \f[
+         * x \mapsto
+         * \begin{cases}
+         * 0: & x < 0 \\
+         * c: & x = 0 \\
+         * 1: & x > 0
+         * \end{cases}
+         * \f]
+         */
         template <typename data_t>
         constexpr data_t heaviside(data_t x1, data_t c)
         {
