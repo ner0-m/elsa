@@ -21,14 +21,14 @@ namespace elsa
         initDelta(r.direction());
 
         // initialize the maximum step parameters
-        initMax(r.direction());
+        initT(r.direction());
     }
 
     void TraverseAABBBranchless::updateTraverse()
     {
         // --> select the index that has lowest t value
         index_t indexToChange;
-        _tMax.minCoeff(&indexToChange);
+        _T.minCoeff(&indexToChange);
 
         updateTraverse(indexToChange);
     }
@@ -38,8 +38,8 @@ namespace elsa
         // --> step into the current direction
         _currentPos(indexToChange) += _stepDirection(indexToChange);
 
-        // --> update the tMax for next iteration
-        _tMax(indexToChange) += _tDelta(indexToChange);
+        // --> update the T for next iteration
+        _T(indexToChange) += _tDelta(indexToChange);
 
         // --> check if we are still in bounding box
         _isInAABB = isCurrentPositionInAABB(indexToChange);
@@ -49,11 +49,11 @@ namespace elsa
     {
         // --> select the index that has lowest t value
         index_t indexToChange;
-        _tMax.minCoeff(&indexToChange);
+        _T.minCoeff(&indexToChange);
 
         // --> compute the distance
         real_t tEntry = _tExit;
-        _tExit = _tMax(indexToChange);
+        _tExit = _T(indexToChange);
 
         // --> do the update
         updateTraverse(indexToChange);
@@ -122,15 +122,15 @@ namespace elsa
         _tDelta = (Eigen::abs(rd.array()) > _EPS.array()).select(tdelta, _MAX);
     }
 
-    void TraverseAABBBranchless::initMax(const RealVector_t& rd)
+    void TraverseAABBBranchless::initT(const RealVector_t& rd)
     {
-        RealVector_t tmax =
+        RealVector_t T =
             (((rd.array() > 0.0f).select(_currentPos.array() + 1., _currentPos)).matrix()
              - _entryPoint)
                 .cwiseQuotient(rd)
                 .matrix();
 
-        _tMax = (Eigen::abs(rd.array()) > _EPS.array()).select(tmax, _MAX);
+        _T = (Eigen::abs(rd.array()) > _EPS.array()).select(T, _MAX);
     }
 
     bool TraverseAABBBranchless::isCurrentPositionInAABB(index_t index) const

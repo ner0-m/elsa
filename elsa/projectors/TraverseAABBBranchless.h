@@ -75,7 +75,7 @@ namespace elsa
         /// the current position of the traverser in the aabb
         RealVector_t _currentPos{_aabb.dim()};
         /// the current maximum step parameter along the ray
-        RealVector_t _tMax{_aabb.dim()};
+        RealVector_t _T{_aabb.dim()};
         /// the step sizes for the step parameter along the ray
         RealVector_t _tDelta{_aabb.dim()};
         /// flag if traverser still in bounding box
@@ -99,7 +99,7 @@ namespace elsa
         /// setup the step sizes considering the ray direction rd
         void initDelta(const RealVector_t& rd);
         /// setup the maximum step parameters considering the ray direction rd
-        void initMax(const RealVector_t& rd);
+        void initT(const RealVector_t& rd);
         /// check if the current index is still in the bounding box
         bool isCurrentPositionInAABB(index_t index) const;
     };
