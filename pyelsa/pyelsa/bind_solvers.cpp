@@ -6,6 +6,8 @@
 #include "FGM.h"
 #include "FISTA.h"
 #include "GradientDescent.h"
+#include "Landweber.h"
+#include "SIRT.h"
 #include "ISTA.h"
 #include "OGM.h"
 #include "OrthogonalMatchingPursuit.h"
@@ -288,6 +290,52 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_ogm(m);
     add_sqs(m);
     add_omp(m);
+
+    py::class_<elsa::Landweber<float>, elsa::Solver<float>> Landweberf(m, "Landweberf");
+    Landweberf.def(
+        py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&>(),
+        py::arg("A"), py::arg("b"));
+    Landweberf.def(
+        py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&, float>(),
+        py::arg("A"), py::arg("b"), py::arg("stepSize"));
+    Landweberf.def(py::init<const elsa::WLSProblem<float>&>(), py::arg("problem"));
+    Landweberf.def(py::init<const elsa::WLSProblem<float>&, float>(), py::arg("problem"),
+                   py::arg("stepSize"));
+
+    m.attr("Landweber") = m.attr("Landweberf");
+
+    py::class_<elsa::Landweber<double>, elsa::Solver<double>> Landweberd(m, "Landweberd");
+    Landweberd.def(
+        py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&>(),
+        py::arg("A"), py::arg("b"));
+    Landweberd.def(
+        py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&, double>(),
+        py::arg("A"), py::arg("b"), py::arg("stepSize"));
+    Landweberd.def(py::init<const elsa::WLSProblem<double>&>(), py::arg("problem"));
+    Landweberd.def(py::init<const elsa::WLSProblem<double>&, double>(), py::arg("problem"),
+                   py::arg("stepSize"));
+
+    py::class_<elsa::SIRT<float>, elsa::Solver<float>> sirtf(m, "SIRTf");
+    sirtf.def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&>(),
+              py::arg("A"), py::arg("b"));
+    sirtf.def(
+        py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&, float>(),
+        py::arg("A"), py::arg("b"), py::arg("stepSize"));
+    sirtf.def(py::init<const elsa::WLSProblem<float>&>(), py::arg("problem"));
+    sirtf.def(py::init<const elsa::WLSProblem<float>&, float>(), py::arg("problem"),
+              py::arg("stepSize"));
+
+    m.attr("SIRT") = m.attr("SIRTf");
+
+    py::class_<elsa::SIRT<double>, elsa::Solver<double>> sirtd(m, "SIRTd");
+    sirtd.def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&>(),
+              py::arg("A"), py::arg("b"));
+    sirtd.def(
+        py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&, double>(),
+        py::arg("A"), py::arg("b"), py::arg("stepSize"));
+    sirtd.def(py::init<const elsa::WLSProblem<double>&>(), py::arg("problem"));
+    sirtd.def(py::init<const elsa::WLSProblem<double>&, double>(), py::arg("problem"),
+              py::arg("stepSize"));
 
     elsa::SolversHints::addCustomFunctions(m);
 }

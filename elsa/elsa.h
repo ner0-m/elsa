@@ -91,3 +91,5 @@
 #include "OGM.h"
 #include "ADMM.h"
 #include "SQS.h"
+#include "SIRT.h"
+#include "Landweber.h"

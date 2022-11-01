@@ -10,6 +10,9 @@ set(MODULE_HEADERS
     ADMM.h
     SQS.h
     OrthogonalMatchingPursuit.h
+    LandweberIteration.h
+    Landweber.h
+    SIRT.h
 )
 
 # list all the code files of the module
@@ -23,6 +26,9 @@ set(MODULE_SOURCES
     OGM.cpp
     SQS.cpp
     OrthogonalMatchingPursuit.cpp
+    LandweberIteration.cpp
+    Landweber.cpp
+    SIRT.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximity_operators)

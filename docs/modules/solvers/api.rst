@@ -41,20 +41,36 @@ Orthogonal Matching Pursuit
 ===========================
 
 .. doxygenclass:: elsa::OrthogonalMatchingPursuit
- 
+
 
 .. _elsa-solvers-api-first-order-methods:
-    
+
+
+Landweber iteration
+===================
+
+.. doxygenclass:: elsa::LandweberIteration
+
+Landweber
+#########
+
+.. doxygenclass:: elsa::Landweber
+
+SIRT
+####
+
+.. doxygenclass:: elsa::SIRT
+
 First-order optimization algorithms
 ===================================
 
 .. include:: first_order_methods.rst
 
 .. _elsa-solvers-api-gradientdescent:
-    
+
 GradientDescent
 ###############
-    
+
 .. doxygenclass:: elsa::GradientDescent
 
 .. _elsa-solvers-api-fgm:
@@ -65,7 +81,7 @@ Nesterov's Fast Gradient Method
 .. doxygenclass:: elsa::FGM
 
 .. _elsa-solvers-api-ogm:
-    
+
 Optimized Gradient Method
 #########################
 
