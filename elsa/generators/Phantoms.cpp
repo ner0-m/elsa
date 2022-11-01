@@ -25,9 +25,9 @@ namespace elsa::phantoms
     template <typename data_t>
     index_t scaleShift(const DataDescriptor& dd, data_t value)
     {
-        return std::lround(value
-                           * static_cast<data_t>(dd.getNumberOfCoefficientsPerDimension()[0] - 1)
-                           / 2.0f)
+        return std::lround(static_cast<double>(value)
+                           * static_cast<double>(dd.getNumberOfCoefficientsPerDimension()[0] - 1)
+                           / 2.0)
                + (dd.getNumberOfCoefficientsPerDimension()[0] / 2);
     }
 
