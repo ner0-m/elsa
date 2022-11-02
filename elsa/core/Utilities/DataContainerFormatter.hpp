@@ -124,7 +124,7 @@ namespace elsa
                     // newlines between rows
                     // the more dimensions, the more newlines.
                     auto line_separator = (std::string(this->rstrip(this->config.separator))
-                                           + std::string(dims_left - 1, '\n'));
+                                           + std::string(static_cast<size_t>(dims_left) - 1, '\n'));
 
                     for (index_t i = 0; i < leading_items; i++) {
                         index(current_dim) = i;
