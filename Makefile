@@ -42,14 +42,6 @@ ifeq ($(shell which ninja),)
   CMAKE_GENERATOR_FLAGS?=
 else
   CMAKE_GENERATOR_FLAGS?=-GNinja
-
-  ifeq ($(CXX),clang++)
-    CXXFLAGS += -fcolor-diagnostics
-  endif
-
-  ifeq ($(CXX),g++)
-    CXXFLAGS += -fdiagnostics-color=always
-  endif
 endif
 
 USE_LINKER?="mold"
