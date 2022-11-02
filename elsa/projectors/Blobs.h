@@ -105,6 +105,38 @@ namespace elsa
         {
             return blob_projected(s, 2.f, 10.83f, 2);
         }
+
+        template <typename data_t>
+        constexpr data_t blob_derivative_projected(data_t s, SelfType_t<data_t> a, SelfType_t<data_t> alpha, int m)
+        {
+            // expect alpha > 0
+            using namespace elsa::math;
+
+            const data_t sda = s / a;
+            const data_t sdas = std::pow(sda, 2);
+            const data_t w = 1.0 - sdas;
+
+            if (w > 1.0e-10) {
+                const auto arg = alpha * std::sqrt(w);
+                if (m == 1) {
+                    return (-2.0 * s / a) * std::sinh(arg) / math::bessi1(alpha);
+
+                } else if (m == 2) {
+                    return (-2.0 * s / alpha / a) * std::sinh(arg) * std::cosh(arg) / bessi2(alpha);
+                } else {
+                    throw Error("m out of range in blob_projected()");
+                }
+            }
+            return 0.0;
+        }
+
+        template <typename data_t>
+        constexpr data_t blob_derivative_projected(data_t s)
+        {
+            return blob_derivative_projected(s, 2.f, 10.83f, 2);
+        }
+
+
     } // namespace blobs
 
     template <typename data_t>
