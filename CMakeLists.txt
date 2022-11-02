@@ -75,6 +75,11 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/elsa)
 
+# Setup colored output for both ninja and Makefile generator, only introduced in CMake 3.24
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0")
+    set(CMAKE_COLOR_DIAGNOSTICS ON)
+endif()
+
 # ------------ Setup Linker ------------
 # ------------
 
