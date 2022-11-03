@@ -1,8 +1,6 @@
 #include "Dictionary.h"
 #include "TypeCasts.hpp"
 
-#include <iostream>
-
 namespace elsa
 {
     template <typename data_t>

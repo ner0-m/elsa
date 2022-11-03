@@ -19,12 +19,6 @@
 using namespace elsa;
 using namespace doctest;
 
-// Provides object to be used with TEMPLATE_PRODUCT_TEST_CASE, necessary because enum cannot be
-// passed directly
-template <typename T>
-struct TestHelperGPU {
-    using data_t = T;
-};
 
 // Provides object to be used with TEMPLATE_PRODUCT_TEST_CASE, necessary because enum cannot be
 // passed directly

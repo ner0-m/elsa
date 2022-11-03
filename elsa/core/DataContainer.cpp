@@ -64,7 +64,7 @@ namespace elsa
                 // TODO: fftw variant
 
                 // generalization of an 1D-FFT
-                // walk over each dimenson and 1d-fft one 'line' of data
+                // walk over each dimension and 1d-fft one 'line' of data
                 for (index_t dim_idx = 0; dim_idx < src_dims; ++dim_idx) {
                     // jumps in the data for the current dimension's data
                     // dim_size[0] * dim_size[1] * ...
@@ -413,7 +413,6 @@ namespace elsa
     template <typename data_t>
     GetFloatingPointType_t<data_t> DataContainer<data_t>::lInfNorm() const
     {
-        // TODO: This isn't that nice..
         return elsa::lInf(begin(), end());
     }
 
