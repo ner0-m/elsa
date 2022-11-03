@@ -219,6 +219,37 @@ namespace elsa
     };
 
     template <typename data_t>
+    class DifferentialBlobProjector : public LutProjector<data_t, BlobProjector<data_t>>
+    {
+    public:
+        using self_type = BlobProjector<data_t>;
+
+        DifferentialBlobProjector(data_t radius, data_t alpha, data_t order,
+                                  const VolumeDescriptor& domainDescriptor,
+                                  const DetectorDescriptor& rangeDescriptor);
+
+        DifferentialBlobProjector(const VolumeDescriptor& domainDescriptor,
+                                  const DetectorDescriptor& rangeDescriptor);
+
+        data_t weight(data_t distance) const { return lut_(distance); }
+
+        index_t support() const { return static_cast<index_t>(std::ceil(lut_.radius())); }
+
+        /// implement the polymorphic clone operation
+        DifferentialBlobProjector<data_t>* _cloneImpl() const;
+
+        /// implement the polymorphic comparison operation
+        bool _isEqual(const LinearOperator<data_t>& other) const;
+
+    private:
+        ProjectedBlobDerivativeLut<data_t, 100> lut_;
+
+        using Base = LutProjector<data_t, DifferentialBlobProjector<data_t>>;
+
+        friend class XrayProjector<self_type>;
+    };
+
+    template <typename data_t>
     class BSplineProjector : public LutProjector<data_t, BSplineProjector<data_t>>
     {
     public:

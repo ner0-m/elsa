@@ -52,6 +52,53 @@ namespace elsa
     }
 
     template <typename data_t>
+    DifferentialBlobProjector<data_t>::DifferentialBlobProjector(
+        data_t radius, data_t alpha, data_t order, const VolumeDescriptor& domainDescriptor,
+        const DetectorDescriptor& rangeDescriptor)
+        : LutProjector<data_t, DifferentialBlobProjector<data_t>>(domainDescriptor,
+                                                                  rangeDescriptor),
+          lut_(radius, alpha, order)
+    {
+        // sanity checks
+        auto dim = domainDescriptor.getNumberOfDimensions();
+        if (dim < 2 || dim > 3) {
+            throw InvalidArgumentError("BlobProjector: only supporting 2d/3d operations");
+        }
+
+        if (dim != rangeDescriptor.getNumberOfDimensions()) {
+            throw InvalidArgumentError("BlobProjector: domain and range dimension need to match");
+        }
+
+        if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
+            throw InvalidArgumentError("BlobProjector: rangeDescriptor without any geometry");
+        }
+    }
+
+    template <typename data_t>
+    DifferentialBlobProjector<data_t>::DifferentialBlobProjector(
+        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
+        : DifferentialBlobProjector(2, 10.83, 2, domainDescriptor, rangeDescriptor)
+    {
+    }
+
+    template <typename data_t>
+    DifferentialBlobProjector<data_t>* DifferentialBlobProjector<data_t>::_cloneImpl() const
+    {
+        return new DifferentialBlobProjector(downcast<VolumeDescriptor>(*this->_domainDescriptor),
+                                             downcast<DetectorDescriptor>(*this->_rangeDescriptor));
+    }
+
+    template <typename data_t>
+    bool DifferentialBlobProjector<data_t>::_isEqual(const LinearOperator<data_t>& other) const
+    {
+        if (!Base::isEqual(other))
+            return false;
+
+        auto otherOp = downcast_safe<DifferentialBlobProjector>(&other);
+        return static_cast<bool>(otherOp);
+    }
+
+    template <typename data_t>
     BSplineProjector<data_t>::BSplineProjector(data_t degree,
                                                const VolumeDescriptor& domainDescriptor,
                                                const DetectorDescriptor& rangeDescriptor)
