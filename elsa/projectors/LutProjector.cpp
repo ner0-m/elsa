@@ -62,15 +62,18 @@ namespace elsa
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
         if (dim < 2 || dim > 3) {
-            throw InvalidArgumentError("BlobProjector: only supporting 2d/3d operations");
+            throw InvalidArgumentError(
+                "DifferentialBlobProjector: only supporting 2d/3d operations");
         }
 
         if (dim != rangeDescriptor.getNumberOfDimensions()) {
-            throw InvalidArgumentError("BlobProjector: domain and range dimension need to match");
+            throw InvalidArgumentError(
+                "DifferentialBlobProjector: domain and range dimension need to match");
         }
 
         if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
-            throw InvalidArgumentError("BlobProjector: rangeDescriptor without any geometry");
+            throw InvalidArgumentError(
+                "DifferentialBlobProjector: rangeDescriptor without any geometry");
         }
     }
 
@@ -161,6 +164,9 @@ namespace elsa
     // explicit template instantiation
     template class BlobProjector<float>;
     template class BlobProjector<double>;
+
+    template class DifferentialBlobProjector<float>;
+    template class DifferentialBlobProjector<double>;
 
     template class BSplineProjector<float>;
     template class BSplineProjector<double>;

@@ -27,10 +27,20 @@ namespace elsa
     class BlobProjector;
 
     template <typename data_t = real_t>
+    class DifferentialBlobProjector;
+
+    template <typename data_t = real_t>
     class BSplineProjector;
 
     template <typename data_t>
     struct XrayProjectorInnerTypes<BlobProjector<data_t>> {
+        using value_type = data_t;
+        using forward_tag = ray_driven_tag;
+        using backward_tag = ray_driven_tag;
+    };
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<DifferentialBlobProjector<data_t>> {
         using value_type = data_t;
         using forward_tag = ray_driven_tag;
         using backward_tag = ray_driven_tag;
@@ -219,10 +229,10 @@ namespace elsa
     };
 
     template <typename data_t>
-    class DifferentialBlobProjector : public LutProjector<data_t, BlobProjector<data_t>>
+    class DifferentialBlobProjector : public LutProjector<data_t, DifferentialBlobProjector<data_t>>
     {
     public:
-        using self_type = BlobProjector<data_t>;
+        using self_type = DifferentialBlobProjector<data_t>;
 
         DifferentialBlobProjector(data_t radius, data_t alpha, data_t order,
                                   const VolumeDescriptor& domainDescriptor,
