@@ -130,7 +130,8 @@ namespace elsa
         /// Investigation of discrete imaging models and iterative image reconstruction
         /// in differential X-ray phase-contrast tomography - Qiaofeng Xu (Appendix B)
         template <typename data_t>
-        constexpr data_t blob_derivative_projected(data_t s, SelfType_t<data_t> a, SelfType_t<data_t> alpha, int m)
+        constexpr data_t blob_derivative_projected(data_t s, SelfType_t<data_t> a,
+                                                   SelfType_t<data_t> alpha, int m)
         {
             // expect alpha > 0
             using namespace elsa::math;
@@ -145,7 +146,8 @@ namespace elsa
                     return (-2.0 * s / a) * std::sinh(arg) / bessi1(alpha);
 
                 } else if (m == 2) {
-                    return (-2.0 * s / alpha / a) * (std::cosh(arg)*arg - std::sinh(arg)) / bessi2(alpha);
+                    return (-2.0 * s / alpha / a) * (std::cosh(arg) * arg - std::sinh(arg))
+                           / bessi2(alpha);
                 } else {
                     throw Error("m out of range in blob_projected()");
                 }
@@ -158,7 +160,6 @@ namespace elsa
         {
             return blob_derivative_projected(s, 2.f, 10.83f, 2);
         }
-
 
     } // namespace blobs
 
@@ -198,7 +199,7 @@ namespace elsa
 
         constexpr data_t derivative(data_t s)
         {
-            return blobs::blob_derivative_projected(s, radius_ , alpha_, order_);
+            return blobs::blob_derivative_projected(s, radius_, alpha_, order_);
         }
 
         constexpr data_t radius() const { return radius_; }
