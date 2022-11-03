@@ -49,7 +49,7 @@ namespace elsa
         /// representations, as they can be found in Abramowitz and Stegun's Handbook of
         /// mathematical functions (1972):
         /// \f$ I_{0.5}(x) = \sqrt{\frac{2}{\pi x}} \sinh(x)\$f
-        /// \f$ I_{1.5}(x) = \sqrt{\frac{2}{\pi x}} \left( \cosh(x) \frac{\sinh(x)}{x} \right) \$f
+        /// \f$ I_{1.5}(x) = \sqrt{\frac{2}{\pi x}} \left( \cosh(x) - \frac{\sinh(x)}{x} \right) \$f
         /// \f$ I_{2.5}(x) = \sqrt{\frac{2}{\pi x}} \left(\left(\frac{3}{x^2} +
         /// \frac{1}{x}\right)\sinh(x) - \frac{3}{x^2} \cosh(x)\right)\$f
         ///
@@ -106,6 +106,29 @@ namespace elsa
             return blob_projected(s, 2.f, 10.83f, 2);
         }
 
+        /// @brief Compute line integral of blob derivative through a straight line
+        /// The exact formulations are quite easily derived using the fact, that the line
+        /// integral for the derivative of a single blob is given by:
+        ///
+        /// \f$
+        /// - \frac{\sqrt{2 \pi \alpha}}{I_m(\alpha)} \frac{s}{a} \left(\sqrt{1 -
+        /// \left(\frac{s}{a}\right)^2}\right)^{m - 0.5} I_{m - 0.5}\left(\alpha \sqrt{1 -
+        /// \left(\frac{s}{a}\right)^2}\right)
+        /// \f$
+        ///
+        /// By substitution with the above formulas (blob_projected) one can derive the below
+        /// formulations. In theory using the recurrent relations, this could be extended to
+        /// further orders, but is deemed unnecessary for now.
+        ///
+        /// @param distance distance of blob center to straight line, in literature often referred
+        /// to as `r`
+        /// @param radius radius of blob, often referred to as `a`
+        /// @param alpha smoothness factor of blob, expected to be larger than 0
+        /// @param order order of Bessel function, often referred to as `m`
+        ///
+        /// Ref:
+        /// Investigation of discrete imaging models and iterative image reconstruction
+        /// in differential X-ray phase-contrast tomography - Qiaofeng Xu (Appendix B)
         template <typename data_t>
         constexpr data_t blob_derivative_projected(data_t s, SelfType_t<data_t> a, SelfType_t<data_t> alpha, int m)
         {
@@ -119,10 +142,10 @@ namespace elsa
             if (w > 1.0e-10) {
                 const auto arg = alpha * std::sqrt(w);
                 if (m == 1) {
-                    return (-2.0 * s / a) * std::sinh(arg) / math::bessi1(alpha);
+                    return (-2.0 * s / a) * std::sinh(arg) / bessi1(alpha);
 
                 } else if (m == 2) {
-                    return (-2.0 * s / alpha / a) * std::sinh(arg) * std::cosh(arg) / bessi2(alpha);
+                    return (-2.0 * s / alpha / a) * (std::cosh(arg)*arg - std::sinh(arg)) / bessi2(alpha);
                 } else {
                     throw Error("m out of range in blob_projected()");
                 }
@@ -171,6 +194,11 @@ namespace elsa
         constexpr data_t operator()(data_t s)
         {
             return blobs::blob_projected(s, radius_, alpha_, order_);
+        }
+
+        constexpr data_t derivative(data_t s)
+        {
+            return blobs::blob_derivative_projected(s, radius_ , alpha_, order_);
         }
 
         constexpr data_t radius() const { return radius_; }
