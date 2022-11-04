@@ -2,7 +2,7 @@
 set(MODULE_HEADERS CUDADefines.h)
 
 # list all the code files of the module
-set(MODULE_SOURCES)
+set(MODULE_SOURCES Dummy.cpp)
 
 list(APPEND MODULE_PUBLIC_DEPS)
 list(APPEND MODULE_PRIVATE_DEPS)
