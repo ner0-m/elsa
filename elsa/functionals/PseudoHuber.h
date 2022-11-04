@@ -67,7 +67,7 @@ namespace elsa
 
     private:
         /// the slope delta
-        const real_t _delta;
+        data_t _delta;
     };
 
 } // namespace elsa

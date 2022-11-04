@@ -66,7 +66,7 @@ namespace elsa
 
     private:
         /// the cut-off delta
-        const real_t _delta;
+        data_t _delta;
     };
 
 } // namespace elsa
