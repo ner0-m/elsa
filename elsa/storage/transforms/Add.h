@@ -3,7 +3,7 @@
 #include "TypeTraits.hpp"
 #include "Functions.hpp"
 
-#include "thrust/transform.h"
+#include <thrust/transform.h>
 
 namespace elsa
 {
@@ -16,7 +16,8 @@ namespace elsa
             template <class data_t>
             __host__ __device__ auto operator()(const data_t& x) -> std::common_type_t<T, data_t>
             {
-                return x + scalar_;
+                using U = std::common_type_t<T, data_t>;
+                return static_cast<U>(x) + static_cast<U>(scalar_);
             }
 
             T scalar_;
@@ -30,6 +31,8 @@ namespace elsa
             __host__ __device__ auto operator()(const data_t& x) -> std::common_type_t<T, data_t>
             {
                 return scalar_ + x;
+                using U = std::common_type_t<T, data_t>;
+                return static_cast<U>(scalar_) + static_cast<U>(x);
             }
 
             T scalar_;

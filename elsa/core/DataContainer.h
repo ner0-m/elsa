@@ -11,7 +11,7 @@
 #include "Span.h"
 #include "Overloaded.hpp"
 
-#include "thrust/complex.h"
+#include <thrust/complex.h>
 
 #include <variant>
 #include <memory>

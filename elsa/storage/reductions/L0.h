@@ -2,9 +2,9 @@
 
 #include "functions/Abs.hpp"
 
-#include "thrust/complex.h"
-#include "thrust/count.h"
-#include "thrust/limits.h"
+#include <thrust/complex.h>
+#include <thrust/count.h>
+#include <thrust/limits.h>
 
 namespace elsa
 {

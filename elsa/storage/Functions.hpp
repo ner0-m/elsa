@@ -2,7 +2,7 @@
 
 #include "CUDADefines.h"
 #include <utility>
-#include "thrust/complex.h"
+#include <thrust/complex.h>
 
 namespace elsa
 {

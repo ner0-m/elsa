@@ -2,8 +2,8 @@
 
 #include "functions/Abs.hpp"
 
-#include "thrust/transform.h"
-#include "thrust/extrema.h"
+#include <thrust/transform.h>
+#include <thrust/extrema.h>
 
 namespace elsa
 {
@@ -15,7 +15,7 @@ namespace elsa
                 -> std::common_type_t<T, U>
             {
                 using data_t = std::common_type_t<T, U>;
-                return thrust::max<data_t>(lhs, rhs);
+                return thrust::max(static_cast<data_t>(lhs), static_cast<data_t>(rhs));
             }
 
             template <class T, class U>
@@ -24,7 +24,7 @@ namespace elsa
                 -> std::common_type_t<T, U>
             {
                 using data_t = std::common_type_t<T, U>;
-                return thrust::max<data_t>(elsa::abs(lhs), rhs);
+                return thrust::max(static_cast<data_t>(elsa::abs(lhs)), static_cast<data_t>(rhs));
             }
 
             template <class T, class U>
@@ -33,7 +33,7 @@ namespace elsa
                 -> std::common_type_t<T, U>
             {
                 using data_t = std::common_type_t<T, U>;
-                return thrust::max<data_t>(lhs, elsa::abs(rhs));
+                return thrust::max(static_cast<data_t>(lhs), static_cast<data_t>(elsa::abs(rhs)));
             }
 
             template <class T, class U>
@@ -42,7 +42,8 @@ namespace elsa
                 -> std::common_type_t<T, U>
             {
                 using data_t = std::common_type_t<T, U>;
-                return thrust::max<data_t>(elsa::abs(lhs), elsa::abs(rhs));
+                return thrust::max(static_cast<data_t>(elsa::abs(lhs)),
+                                   static_cast<data_t>(elsa::abs(rhs)));
             }
         };
 
@@ -52,7 +53,7 @@ namespace elsa
                 -> std::common_type_t<T, U>
             {
                 using data_t = std::common_type_t<T, U>;
-                return thrust::min<data_t>(lhs, rhs);
+                return thrust::min(static_cast<data_t>(lhs), static_cast<data_t>(rhs));
             }
 
             template <class T, class U>
@@ -61,7 +62,7 @@ namespace elsa
                 -> std::common_type_t<T, U>
             {
                 using data_t = std::common_type_t<T, U>;
-                return thrust::min<data_t>(elsa::abs(lhs), rhs);
+                return thrust::min(static_cast<data_t>(elsa::abs(lhs)), static_cast<data_t>(rhs));
             }
 
             template <class T, class U>

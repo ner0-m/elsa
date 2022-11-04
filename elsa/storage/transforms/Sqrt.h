@@ -2,7 +2,7 @@
 
 #include "functions/Sqrt.hpp"
 
-#include "thrust/transform.h"
+#include <thrust/transform.h>
 
 namespace elsa
 {

@@ -130,13 +130,13 @@ namespace elsa
     template <class T>
     typename ContiguousStorageView<T>::pointer ContiguousStorageView<T>::data() noexcept
     {
-        return storage().data() + startIdx_;
+        return storage().data() + static_cast<difference_type>(startIdx_);
     }
 
     template <class T>
     typename ContiguousStorageView<T>::const_pointer ContiguousStorageView<T>::data() const noexcept
     {
-        return storage().data() + startIdx_;
+        return storage().data() + static_cast<difference_type>(startIdx_);
     }
 
     template <class T>
@@ -182,13 +182,13 @@ namespace elsa
     template <class T>
     typename ContiguousStorageView<T>::iterator ContiguousStorageView<T>::begin() noexcept
     {
-        return thrust::next(storage().begin(), startIdx_);
+        return thrust::next(storage().begin(), static_cast<difference_type>(startIdx_));
     }
 
     template <class T>
     typename ContiguousStorageView<T>::iterator ContiguousStorageView<T>::end() noexcept
     {
-        return thrust::next(storage().begin(), endIdx_);
+        return thrust::next(storage().begin(), static_cast<difference_type>(endIdx_));
     }
 
     template <class T>
@@ -208,13 +208,13 @@ namespace elsa
     typename ContiguousStorageView<T>::const_iterator
         ContiguousStorageView<T>::cbegin() const noexcept
     {
-        return thrust::next(storage().cbegin(), startIdx_);
+        return thrust::next(storage().cbegin(), static_cast<difference_type>(startIdx_));
     }
 
     template <class T>
     typename ContiguousStorageView<T>::const_iterator
         ContiguousStorageView<T>::cend() const noexcept
     {
-        return thrust::next(storage().cbegin(), endIdx_);
+        return thrust::next(storage().cbegin(), static_cast<difference_type>(endIdx_));
     }
 } // namespace elsa

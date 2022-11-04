@@ -1,9 +1,14 @@
 #pragma once
 
-#include <type_traits>
+#include "DisableWarnings.h"
 
+DISABLE_WARNING_PUSH
+DISABLE_WARNING_SIGN_CONVERSION
+#include <thrust/complex.h>
+DISABLE_WARNING_POP
+
+#include <type_traits>
 #include <complex>
-#include "thrust/complex.h"
 
 namespace elsa
 {

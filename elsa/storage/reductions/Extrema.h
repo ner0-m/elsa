@@ -3,8 +3,8 @@
 #include "Functions.hpp"
 #include "functions/Abs.hpp"
 
-#include "thrust/extrema.h"
-#include "thrust/complex.h"
+#include <thrust/extrema.h>
+#include <thrust/complex.h>
 
 namespace elsa
 {

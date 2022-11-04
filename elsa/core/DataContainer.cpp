@@ -325,7 +325,7 @@ namespace elsa
 
         return std::visit(
             overloaded{
-                [index](auto& storage) -> reference { return storage[index]; },
+                [index](auto& storage) -> reference { return storage[asUnsigned(index)]; },
             },
             storage_);
     }
@@ -339,7 +339,9 @@ namespace elsa
 
         return std::visit(
             overloaded{
-                [index](const auto& storage) -> const_reference { return storage[index]; },
+                [index](const auto& storage) -> const_reference {
+                    return storage[asUnsigned(index)];
+                },
             },
             storage_);
     }

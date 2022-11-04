@@ -4,8 +4,8 @@
 #include "Functions.hpp"
 #include "functions/Abs.hpp"
 
-#include "thrust/transform_reduce.h"
-#include "thrust/iterator/iterator_traits.h"
+#include <thrust/transform_reduce.h>
+#include <thrust/iterator/iterator_traits.h>
 
 namespace elsa
 {

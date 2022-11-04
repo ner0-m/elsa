@@ -4,9 +4,9 @@
 #include "functions/Real.hpp"
 #include "transforms/Cast.h"
 
-#include "thrust/transform.h"
-#include "thrust/copy.h"
-#include "thrust/iterator/iterator_traits.h"
+#include <thrust/transform.h>
+#include <thrust/copy.h>
+#include <thrust/iterator/iterator_traits.h>
 
 namespace elsa
 {

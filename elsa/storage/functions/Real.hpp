@@ -2,7 +2,7 @@
 
 #include "CUDADefines.h"
 #include "TypeTraits.hpp"
-#include "thrust/complex.h"
+#include <thrust/complex.h>
 #include <complex>
 
 namespace elsa::fn

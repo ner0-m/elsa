@@ -5,7 +5,7 @@
 #include "functions/Abs.hpp"
 #include "functions/Square.hpp"
 
-#include "thrust/transform_reduce.h"
+#include <thrust/transform_reduce.h>
 
 namespace elsa
 {

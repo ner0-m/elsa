@@ -1,7 +1,7 @@
 #pragma once
 
-#include "thrust/fill.h"
-#include "thrust/copy.h"
+#include <thrust/fill.h>
+#include <thrust/copy.h>
 #include <type_traits>
 
 namespace elsa

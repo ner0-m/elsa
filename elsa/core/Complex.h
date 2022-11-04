@@ -1,6 +1,10 @@
 #pragma once
 
+#include "DisableWarnings.h"
+DISABLE_WARNING_PUSH
+DISABLE_WARNING_SIGN_CONVERSION
 #include <thrust/complex.h>
+DISABLE_WARNING_POP
 
 #include <complex>
 

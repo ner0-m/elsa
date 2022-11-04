@@ -20,8 +20,8 @@
 
 #include "functions/Abs.hpp"
 
-#include "thrust/equal.h"
-#include "thrust/iterator/transform_iterator.h"
+#include <thrust/equal.h>
+#include <thrust/iterator/transform_iterator.h>
 
 TEST_SUITE_BEGIN("reductions");
 

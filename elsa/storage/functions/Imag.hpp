@@ -2,7 +2,7 @@
 
 #include "CUDADefines.h"
 #include "TypeTraits.hpp"
-#include "thrust/complex.h"
+#include <thrust/complex.h>
 #include <complex>
 
 namespace elsa::fn
@@ -11,7 +11,7 @@ namespace elsa::fn
     {
         struct imag_fn {
             template <class T>
-            __host__ __device__ constexpr auto operator()(const T& arg) const noexcept
+            __host__ __device__ constexpr auto operator()(const T&) const noexcept
                 -> std::enable_if_t<!is_complex_v<T>, T>
             {
                 return 0;

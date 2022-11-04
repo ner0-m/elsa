@@ -2,9 +2,13 @@
 
 #include "TypeTraits.hpp"
 #include "functions/Abs.hpp"
+#include "DisableWarnings.h"
 
-#include "thrust/iterator/transform_iterator.h"
-#include "thrust/extrema.h"
+DISABLE_WARNING_PUSH
+DISABLE_WARNING_SIGN_CONVERSION
+#include <thrust/iterator/transform_iterator.h>
+#include <thrust/extrema.h>
+DISABLE_WARNING_POP
 
 namespace elsa
 {

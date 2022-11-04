@@ -11,7 +11,7 @@
 #include "reductions/LInf.h"
 
 #include "functions/Abs.hpp"
-#include "thrust/complex.h"
+#include <thrust/complex.h>
 
 #include <vector>
 

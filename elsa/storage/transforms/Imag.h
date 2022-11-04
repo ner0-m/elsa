@@ -3,9 +3,9 @@
 #include "TypeTraits.hpp"
 #include "functions/Imag.hpp"
 
-#include "thrust/transform.h"
-#include "thrust/copy.h"
-#include "thrust/iterator/iterator_traits.h"
+#include <thrust/transform.h>
+#include <thrust/copy.h>
+#include <thrust/iterator/iterator_traits.h>
 
 namespace elsa
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CUDADefines.h"
-#include "thrust/complex.h"
+#include <thrust/complex.h>
 #include <complex>
 
 namespace elsa

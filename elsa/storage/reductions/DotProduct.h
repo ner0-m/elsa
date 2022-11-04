@@ -4,9 +4,9 @@
 #include "functions/Conj.hpp"
 #include "Functions.hpp"
 
-#include "thrust/complex.h"
-#include "thrust/inner_product.h"
-#include "thrust/iterator/iterator_traits.h"
+#include <thrust/complex.h>
+#include <thrust/inner_product.h>
+#include <thrust/iterator/iterator_traits.h>
 
 namespace elsa
 {
