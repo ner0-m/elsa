@@ -39,7 +39,7 @@ bool intersect(const RealVector_t& voxel, const RealRay_t& r)
 TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
 {
     // setup
-    size_t dim = 2;
+    const size_t dim = 2;
     index_t x = 3;
     index_t y = 3;
     IndexVector_t volumeDims(dim);
@@ -64,7 +64,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -80,7 +80,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -96,7 +96,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -112,7 +112,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -128,7 +128,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -147,7 +147,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -163,7 +163,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -179,7 +179,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -195,7 +195,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -211,7 +211,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -230,7 +230,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -246,7 +246,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -262,7 +262,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -278,7 +278,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -294,7 +294,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -313,7 +313,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -329,7 +329,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -345,7 +345,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -361,7 +361,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -377,7 +377,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -395,7 +395,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -410,7 +410,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the top left pixel")
             {
@@ -425,7 +425,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
 
             THEN("the the aabb is not hit")
             {
@@ -439,7 +439,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
 
             THEN("the the aabb is not hit")
             {
@@ -453,7 +453,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -468,7 +468,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the top left pixel")
             {
@@ -483,7 +483,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
 
             THEN("the the aabb is not hit")
             {
@@ -497,7 +497,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
 
             THEN("the the aabb is not hit")
             {
@@ -510,7 +510,7 @@ TEST_CASE("TraverseAABB: Construction of a 2D traversal object")
 TEST_CASE("TraverseAABB: Construction of a 3D traversal object")
 {
     // setup
-    size_t dim = 3;
+    const size_t dim = 3;
     IndexVector_t volumeDims(dim);
     volumeDims << 3, 3, 3;
 
@@ -530,7 +530,7 @@ TEST_CASE("TraverseAABB: Construction of a 3D traversal object")
             rd << 0.0, 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The ray intersects the aabb at the voxel (0, 0, 0)")
@@ -547,7 +547,7 @@ TEST_CASE("TraverseAABB: Construction of a 3D traversal object")
 TEST_CASE("TraverseAABB: Traverse a minimal 3D volume of size 1x1x1")
 {
     // setup
-    size_t dim = 3;
+    const size_t dim = 3;
     index_t x = 1;
     index_t y = 1;
     index_t z = 1;
@@ -570,7 +570,7 @@ TEST_CASE("TraverseAABB: Traverse a minimal 3D volume of size 1x1x1")
             rd << 0.0, 1.0, 0.0;
 
             RealRay_t r(ro, rd);
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             traverse.updateTraverse();
@@ -589,7 +589,7 @@ TEST_CASE("TraverseAABB: Traverse a minimal 3D volume of size 1x1x1")
 TEST_CASE("TraverseAABB: Traverse a 2D volume and only check that the endpoint is correct")
 {
     // setup
-    size_t dim = 2;
+    const size_t dim = 2;
     index_t x = 10;
     index_t y = 10;
     IndexVector_t volumeDims(dim);
@@ -610,7 +610,7 @@ TEST_CASE("TraverseAABB: Traverse a 2D volume and only check that the endpoint i
             rd << 1.0, 0;
 
             RealRay_t r(ro, rd);
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             while (traverse.isInBoundingBox())
@@ -632,7 +632,7 @@ TEST_CASE("TraverseAABB: Traverse a 3D Volume diagonally")
     // TODO: make a non cube volume and run through all 4 diagonals
     // TODO: make non uniform scaling and run through all 4 diagonals
 
-    size_t dim = 3;
+    const size_t dim = 3;
     IndexVector_t volumeDims(dim);
     volumeDims << 10, 10, 10;
 
@@ -652,7 +652,7 @@ TEST_CASE("TraverseAABB: Traverse a 3D Volume diagonally")
 
             RealRay_t r(ro, rd);
 
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("You entered at (0, 0, 0)")
@@ -677,7 +677,7 @@ TEST_CASE("TraverseAABB: Traverse a 3D Volume diagonally")
 
 TEST_CASE("TraverseAABB: Check that the first step into the 2D Volume is correct")
 {
-    size_t dim = 2;
+    const size_t dim = 2;
     index_t x = 5;
     index_t y = 5;
     IndexVector_t volumeDims(dim);
@@ -697,7 +697,7 @@ TEST_CASE("TraverseAABB: Check that the first step into the 2D Volume is correct
             rd.normalize();
 
             RealRay_t r(ro, rd);
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The traversal is initially at (0, 0)")
@@ -724,7 +724,7 @@ TEST_CASE("TraverseAABB: Check that the first step into the 2D Volume is correct
             rd.normalize();
 
             RealRay_t r(ro, rd);
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The traversal is initially at (0, 0)")
@@ -749,7 +749,7 @@ TEST_CASE("TraverseAABB: Check that the first step into the 2D Volume is correct
 TEST_CASE("TraverseAABB: Traverse_Volume_2D_EachPointIsTested")
 {
     // setup
-    size_t dim = 2;
+    const size_t dim = 2;
     index_t x = 128;
     index_t y = 128;
     IndexVector_t volumeDims(dim);
@@ -763,7 +763,7 @@ TEST_CASE("TraverseAABB: Traverse_Volume_2D_EachPointIsTested")
     rd.normalize();
     RealRay_t r(ro, rd);
 
-    TraverseAABBBranchless traverse(aabb, r);
+    TraverseAABBBranchless<dim> traverse(aabb, r);
     CHECK_UNARY(traverse.isInBoundingBox());
 
     size_t iter = 0;
@@ -783,7 +783,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
     // TODO make this a stronger test, for first some "easy" direction (parallel ones)
     // TODO Then make some harder ones
     // setup
-    size_t dim = 2;
+    const size_t dim = 2;
     index_t x = 128;
     index_t y = 128;
     IndexVector_t volumeDims(dim);
@@ -804,7 +804,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -830,7 +830,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -856,7 +856,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -882,7 +882,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -908,7 +908,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -934,7 +934,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -960,7 +960,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -989,7 +989,7 @@ TEST_CASE("TraverseAABB: Traversal through 2D volume should be equal to a ray vo
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            TraverseAABBBranchless traverse(aabb, r);
+            TraverseAABBBranchless<dim> traverse(aabb, r);
             traverse.isInBoundingBox();
 
             size_t iter = 0;

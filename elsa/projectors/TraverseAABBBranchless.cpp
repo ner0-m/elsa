@@ -3,9 +3,11 @@
 
 namespace elsa
 {
-    TraverseAABBBranchless::TraverseAABBBranchless(const BoundingBox& aabb, const RealRay_t& r)
+    template <int dim>
+    TraverseAABBBranchless<dim>::TraverseAABBBranchless(const BoundingBox& aabb, const RealRay_t& r)
         : _aabb{aabb}
     {
+        static_assert(dim == 2 || dim == 3);
         // compute the first intersection
         calculateAABBIntersections(r);
         if (!isInBoundingBox()) // early abort if necessary
@@ -24,7 +26,8 @@ namespace elsa
         initT(r.direction());
     }
 
-    void TraverseAABBBranchless::updateTraverse()
+    template <int dim>
+    void TraverseAABBBranchless<dim>::updateTraverse()
     {
         // --> calculate the mask that masks out all but the lowest t values
         calcMask();
@@ -39,19 +42,21 @@ namespace elsa
         _isInAABB = isCurrentPositionInAABB();
     }
 
-    void TraverseAABBBranchless::calcMask()
+    template <int dim>
+    void TraverseAABBBranchless<dim>::calcMask()
     {
-        if (_aabb.dim() == 2) {
+        if constexpr (dim == 2) {
             _mask[0] = (_T[0] <= _T[1]);
             _mask[1] = (_T[1] <= _T[0]);
-        } else if (_aabb.dim() == 3) {
+        } else if constexpr (dim == 3) {
             _mask[0] = ((_T[0] <= _T[1]) && (_T[0] <= _T[2]));
             _mask[1] = ((_T[1] <= _T[0]) && (_T[1] <= _T[2]));
             _mask[2] = ((_T[2] <= _T[0]) && (_T[2] <= _T[1]));
         }
     }
 
-    real_t TraverseAABBBranchless::updateTraverseAndGetDistance()
+    template <int dim>
+    real_t TraverseAABBBranchless<dim>::updateTraverseAndGetDistance()
     {
         // --> compute the distance
         real_t tEntry = _tExit;
@@ -63,17 +68,20 @@ namespace elsa
         return (_tExit - tEntry);
     }
 
-    bool TraverseAABBBranchless::isInBoundingBox() const
+    template <int dim>
+    bool TraverseAABBBranchless<dim>::isInBoundingBox() const
     {
         return _isInAABB;
     }
 
-    IndexVector_t TraverseAABBBranchless::getCurrentVoxel() const
+    template <int dim>
+    Eigen::Array<index_t, dim, 1> TraverseAABBBranchless<dim>::getCurrentVoxel() const
     {
-        return _currentPos.template cast<IndexVector_t::Scalar>();
+        return _currentPos.template cast<index_t>();
     }
 
-    void TraverseAABBBranchless::calculateAABBIntersections(const RealRay_t& r)
+    template <int dim>
+    void TraverseAABBBranchless<dim>::calculateAABBIntersections(const RealRay_t& r)
     {
         // entry and exit point parameters
         real_t tmin;
@@ -90,55 +98,54 @@ namespace elsa
 
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
-            _entryPoint =
-                (_entryPoint.array() < _aabb.min().array()).select(_aabb.min(), _entryPoint);
-            _entryPoint =
-                (_entryPoint.array() > _aabb.max().array()).select(_aabb.max(), _entryPoint);
+            _entryPoint = (_entryPoint < _aabb.min().array()).select(_aabb.min(), _entryPoint);
+            _entryPoint = (_entryPoint > _aabb.max().array()).select(_aabb.max(), _entryPoint);
         }
     }
 
-    void TraverseAABBBranchless::initStepDirection(const RealVector_t& rd)
+    template <int dim>
+    void TraverseAABBBranchless<dim>::initStepDirection(const RealArray_t& rd)
     {
-        _stepDirection = rd.array().sign();
+        _stepDirection = rd.sign();
     }
 
-    void TraverseAABBBranchless::selectClosestVoxel()
+    template <int dim>
+    void TraverseAABBBranchless<dim>::selectClosestVoxel()
     {
-        RealVector_t lowerCorner = _entryPoint.array().floor();
-        lowerCorner =
-            ((lowerCorner.array() == _entryPoint.array()) && (_stepDirection.array() < 0.0))
-                .select(lowerCorner.array() - 1, lowerCorner);
+        RealArray_t lowerCorner = _entryPoint.floor();
+        lowerCorner = ((lowerCorner == _entryPoint) && (_stepDirection < 0.0))
+                          .select(lowerCorner - 1, lowerCorner);
 
         _currentPos = lowerCorner;
 
         // check if we are still inside the aabb
-        if ((_currentPos.array() >= _aabb.max().array()).any()
-            || (_currentPos.array() < _aabb.min().array()).any())
+        if ((_currentPos >= _aabb.max().array()).any() || (_currentPos < _aabb.min().array()).any())
             _isInAABB = false;
     }
 
-    void TraverseAABBBranchless::initDelta(const RealVector_t& rd)
+    template <int dim>
+    void TraverseAABBBranchless<dim>::initDelta(const RealArray_t& rd)
     {
-        RealVector_t tdelta = _stepDirection.template cast<real_t>().cwiseQuotient(rd);
+        RealArray_t tdelta = _stepDirection / rd;
 
-        _tDelta = (Eigen::abs(rd.array()) > _EPS.array()).select(tdelta, _MAX);
+        _tDelta = (Eigen::abs(rd) > _EPS).select(tdelta, _MAX);
     }
 
-    void TraverseAABBBranchless::initT(const RealVector_t& rd)
+    template <int dim>
+    void TraverseAABBBranchless<dim>::initT(const RealArray_t& rd)
     {
-        RealVector_t T =
-            (((rd.array() > 0.0f).select(_currentPos.array() + 1., _currentPos)).matrix()
-             - _entryPoint)
-                .cwiseQuotient(rd)
-                .matrix();
+        RealArray_t T = (((rd > 0.0f).select(_currentPos + 1., _currentPos)) - _entryPoint) / rd;
 
-        _T = (Eigen::abs(rd.array()) > _EPS.array()).select(T, _MAX);
+        _T = (Eigen::abs(rd) > _EPS).select(T, _MAX);
     }
 
-    bool TraverseAABBBranchless::isCurrentPositionInAABB() const
+    template <int dim>
+    bool TraverseAABBBranchless<dim>::isCurrentPositionInAABB() const
     {
-        return (_currentPos.array() < _aabb.max().array()).all()
-               && (_currentPos.array() >= _aabb.min().array()).all();
+        return (_currentPos < _aabb.max().array()).all()
+               && (_currentPos >= _aabb.min().array()).all();
     }
 
+    template class TraverseAABBBranchless<2>;
+    template class TraverseAABBBranchless<3>;
 } // namespace elsa

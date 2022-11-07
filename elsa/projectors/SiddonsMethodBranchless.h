@@ -86,6 +86,14 @@ namespace elsa
         void traverseRayBackward(BoundingBox aabb, const RealRay_t& ray,
                                  const value_type& detectorValue, DataContainer<data_t>& Aty) const;
 
+        template <int dim>
+        data_t doTraverseRayForward(BoundingBox aabb, const RealRay_t& ray,
+                                    const DataContainer<data_t>& x,
+                                    const DataDescriptor& domain) const;
+        template <int dim>
+        void doTraverseRayBackward(BoundingBox aabb, const RealRay_t& ray,
+                                   const value_type& detectorValue,
+                                   DataContainer<data_t>& Aty) const;
         friend class XrayProjector<self_type>;
     };
 

@@ -51,8 +51,39 @@ namespace elsa
     {
         const auto& domain = x.getDataDescriptor();
 
+        if (domain.getNumberOfDimensions() == 2) {
+            return doTraverseRayForward<2>(aabb, ray, x, domain);
+        } else if (domain.getNumberOfDimensions() == 3) {
+            return doTraverseRayForward<3>(aabb, ray, x, domain);
+        }
+
+        return data_t(0);
+    }
+
+    template <typename data_t>
+    void SiddonsMethodBranchless<data_t>::traverseRayBackward(BoundingBox aabb,
+                                                              const RealRay_t& ray,
+                                                              const value_type& detectorValue,
+                                                              DataContainer<data_t>& Aty) const
+    {
+        const auto& domain = Aty.getDataDescriptor();
+
+        if (domain.getNumberOfDimensions() == 2) {
+            doTraverseRayBackward<2>(aabb, ray, detectorValue, Aty);
+        } else if (domain.getNumberOfDimensions() == 3) {
+            doTraverseRayBackward<3>(aabb, ray, detectorValue, Aty);
+        }
+    }
+
+    template <typename data_t>
+    template <int dim>
+    data_t SiddonsMethodBranchless<data_t>::doTraverseRayForward(BoundingBox aabb,
+                                                                 const RealRay_t& ray,
+                                                                 const DataContainer<data_t>& x,
+                                                                 const DataDescriptor& domain) const
+    {
         // --> setup traversal algorithm
-        TraverseAABBBranchless traverse(aabb, ray);
+        TraverseAABBBranchless<dim> traverse(aabb, ray);
 
         data_t accumulator = data_t(0);
 
@@ -72,15 +103,16 @@ namespace elsa
     }
 
     template <typename data_t>
-    void SiddonsMethodBranchless<data_t>::traverseRayBackward(BoundingBox aabb,
-                                                              const RealRay_t& ray,
-                                                              const value_type& detectorValue,
-                                                              DataContainer<data_t>& Aty) const
+    template <int dim>
+    void SiddonsMethodBranchless<data_t>::doTraverseRayBackward(BoundingBox aabb,
+                                                                const RealRay_t& ray,
+                                                                const value_type& detectorValue,
+                                                                DataContainer<data_t>& Aty) const
     {
         const auto& domain = Aty.getDataDescriptor();
 
         // --> setup traversal algorithm
-        TraverseAABBBranchless traverse(aabb, ray);
+        TraverseAABBBranchless<dim> traverse(aabb, ray);
 
         // --> initial index to access the data vector
         auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
