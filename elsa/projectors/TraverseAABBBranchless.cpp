@@ -5,11 +5,12 @@ namespace elsa
 {
     template <int dim>
     TraverseAABBBranchless<dim>::TraverseAABBBranchless(const BoundingBox& aabb, const RealRay_t& r)
-        : _aabb{aabb}
     {
         static_assert(dim == 2 || dim == 3);
+        _aabbMin = aabb.min();
+        _aabbMax = aabb.max();
         // compute the first intersection
-        calculateAABBIntersections(r);
+        calculateAABBIntersections(r, aabb);
         if (!isInBoundingBox()) // early abort if necessary
             return;
 
@@ -81,13 +82,14 @@ namespace elsa
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::calculateAABBIntersections(const RealRay_t& r)
+    void TraverseAABBBranchless<dim>::calculateAABBIntersections(const RealRay_t& r,
+                                                                 const BoundingBox& aabb)
     {
         // entry and exit point parameters
         real_t tmin;
 
         // --> calculate intersection parameter and if the volume is hit
-        auto opt = intersectRay(_aabb, r);
+        auto opt = intersectRay(aabb, r);
 
         if (opt) { // hit!
             _isInAABB = true;
@@ -98,8 +100,8 @@ namespace elsa
 
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
-            _entryPoint = (_entryPoint < _aabb.min().array()).select(_aabb.min(), _entryPoint);
-            _entryPoint = (_entryPoint > _aabb.max().array()).select(_aabb.max(), _entryPoint);
+            _entryPoint = (_entryPoint < _aabbMin).select(_aabbMin, _entryPoint);
+            _entryPoint = (_entryPoint > _aabbMax).select(_aabbMax, _entryPoint);
         }
     }
 
@@ -119,7 +121,7 @@ namespace elsa
         _currentPos = lowerCorner;
 
         // check if we are still inside the aabb
-        if ((_currentPos >= _aabb.max().array()).any() || (_currentPos < _aabb.min().array()).any())
+        if ((_currentPos >= _aabbMax).any() || (_currentPos < _aabbMin).any())
             _isInAABB = false;
     }
 
@@ -142,8 +144,7 @@ namespace elsa
     template <int dim>
     bool TraverseAABBBranchless<dim>::isCurrentPositionInAABB() const
     {
-        return (_currentPos < _aabb.max().array()).all()
-               && (_currentPos >= _aabb.min().array()).all();
+        return (_currentPos < _aabbMax).all() && (_currentPos >= _aabbMin).all();
     }
 
     template class TraverseAABBBranchless<2>;

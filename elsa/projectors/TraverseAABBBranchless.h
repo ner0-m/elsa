@@ -63,8 +63,6 @@ namespace elsa
         IndexVector_t getCurrentVoxel() const;
 
     private:
-        /// the volume / axis-aligned bounding box
-        BoundingBox _aabb;
         /// the entry point parameters of the ray in the aabb
         RealArray_t _entryPoint;
         /// the step direction of the traverser
@@ -81,6 +79,10 @@ namespace elsa
         real_t _tExit{0.0};
         /// the current mask, with true for the directions in which we are stepping, and else fals
         BooleanArray_t _mask;
+        /// result of aabb.min(), the lower corner of the aabb
+        RealArray_t _aabbMin;
+        /// result of aabb.max(), the upper corner of the aabb
+        RealArray_t _aabbMax;
 
         /// constant array containing epsilon
         const RealArray_t _EPS{RealArray_t().setConstant(std::numeric_limits<real_t>::epsilon())};
@@ -88,7 +90,7 @@ namespace elsa
         const RealArray_t _MAX{RealArray_t().setConstant(std::numeric_limits<real_t>::max())};
 
         /// compute the entry and exit points of ray r with the volume (aabb)
-        void calculateAABBIntersections(const RealRay_t& r);
+        void calculateAABBIntersections(const RealRay_t& r, const BoundingBox& aabb);
         /// setup the step directions (which is basically the sign of the ray direction rd)
         void initStepDirection(const RealArray_t& rd);
         /// select the closest voxel to the entry point
