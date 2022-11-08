@@ -59,9 +59,9 @@ namespace elsa
          */
         static void traverseForward(dim3 sinogramDims, int threads, int8_t* __restrict__ volume,
                                     uint64_t volumePitch, int8_t* __restrict__ sinogram,
-                                    uint64_t sinogramPitch, const int8_t* __restrict__ rayOrigins,
-                                    uint32_t originPitch, const int8_t* __restrict__ projInv,
-                                    uint32_t projPitch, const BoundingBox& boundingBox);
+                                    uint64_t sinogramPitch, const real_t* __restrict__ rayOrigins,
+                                    const real_t* __restrict__ projInv,
+                                    const BoundingBox& boundingBox);
 
         /**
          * @brief Backward projection using Siddon's method
@@ -84,8 +84,8 @@ namespace elsa
          */
         static void traverseAdjoint(dim3 blocks, int threads, int8_t* __restrict__ volume,
                                     uint64_t volumePitch, int8_t* __restrict__ sinogram,
-                                    uint64_t sinogramPitch, const int8_t* __restrict__ rayOrigins,
-                                    uint32_t originPitch, const int8_t* __restrict__ projInv,
-                                    uint32_t projPitch, const BoundingBox& boundingBox);
+                                    uint64_t sinogramPitch, const real_t* __restrict__ rayOrigins,
+                                    const real_t* __restrict__ projInv,
+                                    const BoundingBox& boundingBox);
     };
 } // namespace elsa

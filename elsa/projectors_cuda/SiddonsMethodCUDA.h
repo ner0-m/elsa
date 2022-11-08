@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <thrust/device_vector.h>
 
 #include "elsaDefines.h"
 #include "LinearOperator.h"
@@ -70,7 +71,7 @@ namespace elsa
                           const DetectorDescriptor& rangeDescriptor);
 
         /// destructor
-        ~SiddonsMethodCUDA() override;
+        ~SiddonsMethodCUDA() override = default;
 
     protected:
         /// default copy constructor, hidden from non-derived classes to prevent potential slicing
@@ -91,21 +92,16 @@ namespace elsa
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        /// Reference to DetectorDescriptor stored in LinearOperator
-        DetectorDescriptor& _detectorDescriptor;
-
-        /// Reference to VolumeDescriptor stored in LinearOperator
-        VolumeDescriptor& _volumeDescriptor;
-
         /// threads per block used in the kernel execution configuration
         static const unsigned int THREADS_PER_BLOCK =
             TraverseSiddonsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
 
         /// inverse of of projection matrices; stored column-wise on GPU
-        cudaPitchedPtr _projInvMatrices;
+        // cudaPitchedPtr _projInvMatrices;
+        thrust::device_vector<real_t> _invProjMatrices;
 
-        /// ray origins for each acquisition angle
-        cudaPitchedPtr _rayOrigins;
+        /// ray origins for each acquisition angle, TODO: enable kernel to have this as data_t
+        thrust::device_vector<real_t> _rayOrigins;
 
         /// sets up and starts the kernel traversal routine (for both apply/applyAdjoint)
         template <bool adjoint>

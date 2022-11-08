@@ -2,17 +2,19 @@
 #include "LogGuard.h"
 #include "Timer.h"
 #include "TypeCasts.hpp"
-
 #include "Logger.h"
+
+#include <thrust/copy.h>
+#include <thrust/host_vector.h>
+
 namespace elsa
 {
     template <typename data_t>
     SiddonsMethodCUDA<data_t>::SiddonsMethodCUDA(const VolumeDescriptor& domainDescriptor,
                                                  const DetectorDescriptor& rangeDescriptor)
-        : base_type(domainDescriptor, rangeDescriptor),
-          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
-          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor))
+        : base_type(domainDescriptor, rangeDescriptor)
     {
+        const auto& detectorDescriptor = static_cast<const DetectorDescriptor&>(*_rangeDescriptor);
         auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
         if (dim != static_cast<std::size_t>(_rangeDescriptor->getNumberOfDimensions())) {
             throw LogicError(
@@ -23,70 +25,44 @@ namespace elsa
             throw LogicError("SiddonsMethodCUDA: only supporting 2d/3d operations");
         }
 
-        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
+        if (detectorDescriptor.getNumberOfGeometryPoses() == 0) {
             throw LogicError("SiddonsMethodCUDA: geometry list was empty");
         }
 
-        const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
+        const auto numGeometry = asUnsigned(detectorDescriptor.getNumberOfGeometryPoses());
 
         // allocate device memory and copy ray origins and the inverse of the significant part of
         // projection matrices to device
-        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, asUnsigned(numGeometry));
+        _invProjMatrices.resize(dim * dim * numGeometry);
+        auto matricesIter = _invProjMatrices.begin();
 
-        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t),
-                            asUnsigned(numGeometry))
-            != cudaSuccess)
-            throw std::bad_alloc();
-        _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = asUnsigned(numGeometry);
+        // Allocate memory for ray origins
+        _rayOrigins.resize(dim * numGeometry);
+        auto originsIter = _rayOrigins.begin();
 
-        if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
-            throw std::bad_alloc();
-
-        auto* projPtr = (int8_t*) _projInvMatrices.ptr;
-        auto projPitch = _projInvMatrices.pitch;
-        auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
-        auto rayPitch = _rayOrigins.pitch;
-
-        auto poses = _detectorDescriptor.getGeometry();
+        const auto& poses = detectorDescriptor.getGeometry();
         for (std::size_t i = 0; i < poses.size(); ++i) {
-            auto geometry = poses[i];
+            const auto& geometry = poses[i];
 
             RealMatrix_t P = geometry.getInverseProjectionMatrix().block(0, 0, dim, dim);
-            int8_t* slice = projPtr + i * projPitch * dim;
+
             // CUDA also uses a column-major representation, directly transfer matrix
             // transfer inverse of projection matrix
-            if (cudaMemcpy2DAsync(slice, projPitch, P.data(), dim * sizeof(real_t),
-                                  dim * sizeof(real_t), dim, cudaMemcpyDefault)
-                != cudaSuccess)
-                throw LogicError("SiddonsMethodCUDA: Could not transfer inverse projection "
-                                 "matrices to GPU.");
+            matricesIter = thrust::copy(P.data(), P.data() + P.size(), matricesIter);
 
-            int8_t* rayPtr = rayBasePtr + i * rayPitch;
             // get camera center using direct inverse
             RealVector_t ro = geometry.getCameraCenter();
 
             // transfer ray origin
-            if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyDefault)
-                != cudaSuccess)
-                throw LogicError("SiddonsMethodCUDA: Could not transfer ray origins to GPU.");
+            originsIter = thrust::copy(ro.begin(), ro.end(), originsIter);
         }
-    }
-
-    template <typename data_t>
-    SiddonsMethodCUDA<data_t>::~SiddonsMethodCUDA()
-    {
-        // Free CUDA resources
-        if (cudaFree(_rayOrigins.ptr) != cudaSuccess
-            || cudaFree(_projInvMatrices.ptr) != cudaSuccess)
-            Logger::get("SiddonsMethodCUDA")
-                ->error("Couldn't free GPU memory; This may cause problems later.");
     }
 
     template <typename data_t>
     SiddonsMethodCUDA<data_t>* SiddonsMethodCUDA<data_t>::_cloneImpl() const
     {
-        return new SiddonsMethodCUDA<data_t>(_volumeDescriptor, _detectorDescriptor);
+        return new SiddonsMethodCUDA<data_t>(static_cast<VolumeDescriptor&>(*_domainDescriptor),
+                                             static_cast<DetectorDescriptor&>(*_rangeDescriptor));
     }
 
     template <typename data_t>
@@ -167,15 +143,15 @@ namespace elsa
             if (adjoint) {
                 TraverseSiddonsCUDA<data_t, 3>::traverseAdjoint(
                     sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
-                    static_cast<uint32_t>(_projInvMatrices.pitch), boundingBox);
+                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch,
+                    thrust::raw_pointer_cast(_rayOrigins.data()),
+                    thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
             } else {
                 TraverseSiddonsCUDA<data_t, 3>::traverseForward(
                     sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
-                    static_cast<uint32_t>(_projInvMatrices.pitch), boundingBox);
+                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch,
+                    thrust::raw_pointer_cast(_rayOrigins.data()),
+                    thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
             }
             // synchonize because we are using multiple streams
             cudaDeviceSynchronize();
@@ -235,17 +211,17 @@ namespace elsa
             if (adjoint) {
                 TraverseSiddonsCUDA<data_t, 2>::traverseAdjoint(
                     sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
-                    static_cast<uint32_t>(_projInvMatrices.pitch), boundingBox);
+                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch,
+                    thrust::raw_pointer_cast(_rayOrigins.data()),
+                    thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
             } else {
                 TraverseSiddonsCUDA<data_t, 2>::traverseForward(
                     sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
-                    static_cast<uint32_t>(_projInvMatrices.pitch), boundingBox);
+                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch,
+                    thrust::raw_pointer_cast(_rayOrigins.data()),
+                    thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
             }
-            // synchonize because we are using multiple streams
+            // synchronize because we are using multiple streams
             cudaDeviceSynchronize();
 
             // retrieve results from GPU

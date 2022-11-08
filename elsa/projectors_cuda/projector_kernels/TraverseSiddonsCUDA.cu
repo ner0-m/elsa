@@ -88,20 +88,44 @@ __device__ __forceinline__ real_t updateTraverse(EasyAccessSharedArray<uint32_t,
     return texit - tentry;
 }
 
+// TODO: try to move this back to Matrix.cuh
+template <uint32_t dim>
+__device__ __forceinline__ void gesqmv(const elsa::real_t* const __restrict__ matrix,
+                                       elsa::real_t vector[dim], elsa::real_t result[dim],
+                                       uint32_t matrixPitch)
+{
+    // initialize result vector
+    elsa::real_t* columnPtr = (elsa::real_t*) matrix;
+#pragma unroll
+    for (uint32_t x = 0; x < dim; x++) {
+        result[x] = columnPtr[x] * vector[0];
+    }
+
+// accumulate results for remaning columns
+#pragma unroll
+    for (uint32_t y = 1; y < dim; y++) {
+        elsa::real_t* columnPtr = (elsa::real_t*) (matrix + matrixPitch * y);
+#pragma unroll
+        for (uint32_t x = 0; x < dim; x++) {
+            result[x] += columnPtr[x] * vector[y];
+        }
+    }
+}
+
 template <typename data_t, bool adjoint, uint32_t dim>
 __global__ void __launch_bounds__(elsa::TraverseSiddonsCUDA<data_t, dim>::MAX_THREADS_PER_BLOCK)
     traverseVolume(int8_t* const __restrict__ volume, const uint64_t volumePitch,
                    int8_t* const __restrict__ sinogram, const uint64_t sinogramPitch,
-                   const uint32_t sinogramOffsetX, const int8_t* const __restrict__ rayOrigins,
-                   const uint32_t originPitch, const int8_t* const __restrict__ projInv,
-                   const uint32_t projPitch,
+                   const uint32_t sinogramOffsetX,
+                   const elsa::real_t* const __restrict__ rayOrigins,
+                   const elsa::real_t* const __restrict__ projInv,
                    const typename elsa::TraverseSiddonsCUDA<data_t, dim>::BoundingBox boundingBox)
 {
     using real_t = elsa::real_t;
 
-    const int8_t* const projInvPtr = projInv + blockIdx.x * projPitch * dim;
+    const real_t* const projInvPtr = projInv + blockIdx.x * dim * dim;
 
-    const real_t* const rayOrigin = (real_t*) (rayOrigins + blockIdx.x * originPitch);
+    const real_t* const rayOrigin = (real_t*) (rayOrigins + blockIdx.x * dim);
 
     const uint32_t xCoord = sinogramOffsetX + blockDim.x * blockIdx.z + threadIdx.x;
 
@@ -128,7 +152,7 @@ __global__ void __launch_bounds__(elsa::TraverseSiddonsCUDA<data_t, dim>::MAX_TH
 
     // compute ray direction
     real_t rd[dim];
-    gesqmv<real_t, dim>(projInvPtr, pixelCoord, rd, projPitch);
+    gesqmv<dim>(projInvPtr, pixelCoord, rd, dim);
     normalize<real_t, dim>(rd);
 
     // find volume intersections
@@ -186,9 +210,8 @@ namespace elsa
     void TraverseSiddonsCUDA<data_t, dim>::traverseForward(
         const dim3 sinogramDims, const int threads, int8_t* const __restrict__ volume,
         const uint64_t volumePitch, int8_t* const __restrict__ sinogram,
-        const uint64_t sinogramPitch, const int8_t* const __restrict__ rayOrigins,
-        const uint32_t originPitch, const int8_t* const __restrict__ projInv,
-        const uint32_t projPitch, const BoundingBox& boundingBox)
+        const uint64_t sinogramPitch, const real_t* const __restrict__ rayOrigins,
+        const real_t* __restrict__ projInv, const BoundingBox& boundingBox)
     {
         uint32_t numImgBlocks = sinogramDims.z / threads;
         uint32_t remaining = sinogramDims.z % threads;
@@ -196,9 +219,8 @@ namespace elsa
 
         if (numImgBlocks > 0) {
             const dim3 grid(sinogramDims.x, sinogramDims.y, numImgBlocks);
-            traverseVolume<data_t, false, dim>
-                <<<grid, threads>>>(volume, volumePitch, sinogram, sinogramPitch, 0, rayOrigins,
-                                    originPitch, projInv, projPitch, boundingBox);
+            traverseVolume<data_t, false, dim><<<grid, threads>>>(
+                volume, volumePitch, sinogram, sinogramPitch, 0, rayOrigins, projInv, boundingBox);
         }
 
         if (remaining > 0) {
@@ -208,9 +230,9 @@ namespace elsa
                     "TraverseSiddonsCUDA: Couldn't create stream for remaining images");
 
             const dim3 grid(sinogramDims.x, sinogramDims.y, 1);
-            traverseVolume<data_t, false, dim><<<grid, remaining, 0, remStream>>>(
-                volume, volumePitch, sinogram, sinogramPitch, offset, rayOrigins, originPitch,
-                projInv, projPitch, boundingBox);
+            traverseVolume<data_t, false, dim>
+                <<<grid, remaining, 0, remStream>>>(volume, volumePitch, sinogram, sinogramPitch,
+                                                    offset, rayOrigins, projInv, boundingBox);
 
             if (cudaStreamDestroy(remStream) != cudaSuccess)
                 throw std::logic_error("TraverseSiddonsCUDA: Couldn't destroy GPU stream; This may "
@@ -222,9 +244,8 @@ namespace elsa
     void TraverseSiddonsCUDA<data_t, dim>::traverseAdjoint(
         const dim3 sinogramDims, const int threads, int8_t* const __restrict__ volume,
         const uint64_t volumePitch, int8_t* const __restrict__ sinogram,
-        const uint64_t sinogramPitch, const int8_t* const __restrict__ rayOrigins,
-        const uint32_t originPitch, const int8_t* const __restrict__ projInv,
-        const uint32_t projPitch, const BoundingBox& boundingBox)
+        const uint64_t sinogramPitch, const real_t* const __restrict__ rayOrigins,
+        const real_t* __restrict__ projInv, const BoundingBox& boundingBox)
     {
         uint32_t numImgBlocks = sinogramDims.z / threads;
         uint32_t remaining = sinogramDims.z % threads;
@@ -232,9 +253,8 @@ namespace elsa
 
         if (numImgBlocks > 0) {
             const dim3 grid(sinogramDims.x, sinogramDims.y, numImgBlocks);
-            traverseVolume<data_t, true, dim>
-                <<<grid, threads>>>(volume, volumePitch, sinogram, sinogramPitch, 0, rayOrigins,
-                                    originPitch, projInv, projPitch, boundingBox);
+            traverseVolume<data_t, true, dim><<<grid, threads>>>(
+                volume, volumePitch, sinogram, sinogramPitch, 0, rayOrigins, projInv, boundingBox);
         }
 
         if (remaining > 0) {
@@ -244,9 +264,9 @@ namespace elsa
                     "TraverseSiddonsCUDA: Couldn't create stream for remaining images");
 
             const dim3 grid(sinogramDims.x, sinogramDims.y, 1);
-            traverseVolume<data_t, true, dim><<<grid, remaining, 0, remStream>>>(
-                volume, volumePitch, sinogram, sinogramPitch, offset, rayOrigins, originPitch,
-                projInv, projPitch, boundingBox);
+            traverseVolume<data_t, true, dim>
+                <<<grid, remaining, 0, remStream>>>(volume, volumePitch, sinogram, sinogramPitch,
+                                                    offset, rayOrigins, projInv, boundingBox);
 
             if (cudaStreamDestroy(remStream) != cudaSuccess)
                 throw std::logic_error("TraverseSiddonsCUDA: Couldn't destroy GPU stream; This may "
