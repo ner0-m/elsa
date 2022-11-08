@@ -213,7 +213,7 @@ if(ELSA_MASTER_PROJECT)
     endif()
 
     if(ELSA_CUDA_ENABLED OR SYSTEM_THRUST)
-        message(STATUS "Using thrust library provided by CUDA enviroement...")
+        message(STATUS "Using system-wide thrust library (e.g. provided by CUDA environment)...")
         find_package(Thrust 1.13 REQUIRED CONFIG)
     else()
         CPMAddPackage(
@@ -222,10 +222,17 @@ if(ELSA_MASTER_PROJECT)
             GIT_TAG 1.17.2
             OPTIONS "THRUST_ENABLE_INSTALL_RULES ON"
         )
-
-        # This is too conservative  TODO: Try to find OpenMP, if found use it, else fallback to CPP backend
-        set(THRUST_DEVICE_SYSTEM CPP)
         # TODO: We should export and install thrust properly
+    endif()
+
+    if(ELSA_CUDA_ENABLED)
+        set(THRUST_DEVICE_SYSTEM CUDA)
+    else()
+        if(OpenMP_CXX_FOUND)
+            set(THRUST_DEVICE_SYSTEM OMP)
+        else()
+            set(THRUST_DEVICE_SYSTEM CPP)
+        endif()
     endif()
 
     # Follow thrusts defaults, overwrite the by passing THRUST_[HOST|DEVICE]_SYSTEM to CMake
