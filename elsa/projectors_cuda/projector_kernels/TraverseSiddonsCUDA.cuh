@@ -57,9 +57,9 @@ namespace elsa
          *
          * threads should ideally be a multiple of the warp size (32 for all current GPUs).
          */
-        static void traverseForward(dim3 sinogramDims, int threads, int8_t* __restrict__ volume,
-                                    uint64_t volumePitch, int8_t* __restrict__ sinogram,
-                                    uint64_t sinogramPitch, const real_t* __restrict__ rayOrigins,
+        static void traverseForward(dim3 sinogramDims, int threads, data_t* __restrict__ volume,
+                                    uint64_t volumePitch, data_t* __restrict__ sinogram,
+                                    uint64_t sinoPitch, const real_t* __restrict__ rayOrigins,
                                     const real_t* __restrict__ projInv,
                                     const BoundingBox& boundingBox);
 
@@ -82,9 +82,9 @@ namespace elsa
          *
          * threads should ideally be a multiple of the warp size (32 for all current GPUs).
          */
-        static void traverseAdjoint(dim3 blocks, int threads, int8_t* __restrict__ volume,
-                                    uint64_t volumePitch, int8_t* __restrict__ sinogram,
-                                    uint64_t sinogramPitch, const real_t* __restrict__ rayOrigins,
+        static void traverseAdjoint(dim3 blocks, int threads, data_t* __restrict__ volume,
+                                    uint64_t volumePitch, data_t* __restrict__ sinogram,
+                                    uint64_t sinoPitch, const real_t* __restrict__ rayOrigins,
                                     const real_t* __restrict__ projInv,
                                     const BoundingBox& boundingBox);
     };
