@@ -5,7 +5,7 @@
 
 #include "PrettyPrint/Eigen.h"
 #include "PrettyPrint/Stl.h"
-#include "spdlog/fmt/bundled/core.h"
+#include "spdlog/fmt/fmt.h"
 
 using namespace elsa;
 using namespace elsa::geometry;

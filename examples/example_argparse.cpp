@@ -2,7 +2,7 @@
 #include "LutProjector.h"
 #include "Utilities/Statistics.hpp"
 #include "IO.h"
-#include "spdlog/fmt/bundled/core.h"
+#include "spdlog/fmt/fmt.h"
 
 #include <argparse/argparse.hpp>
 

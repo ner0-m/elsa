@@ -4,7 +4,6 @@
 
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/ostr.h"
-#include "spdlog/fmt/bundled/ranges.h"
 #include <utility>
 
 using namespace elsa;

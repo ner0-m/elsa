@@ -6,7 +6,6 @@
 #include <sstream>
 #include <vector>
 #include "spdlog/fmt/fmt.h"
-#include "spdlog/fmt/bundled/ranges.h"
 
 TEST_SUITE_BEGIN("CartesianIndices");
 
