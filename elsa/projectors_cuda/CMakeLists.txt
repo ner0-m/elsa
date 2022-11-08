@@ -47,5 +47,6 @@ target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTOR
 
 # We are using thrust here, so this should be a CUDA file, but do not bother renaming
 set_source_files_properties(VoxelProjectorCUDA.cpp PROPERTIES LANGUAGE CUDA)
+set_source_files_properties(SiddonsMethodCUDA.cpp PROPERTIES LANGUAGE CUDA)
 
 write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors)
