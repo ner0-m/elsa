@@ -48,26 +48,24 @@ namespace elsa
         auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
         auto rayPitch = _rayOrigins.pitch;
 
-        for (unsigned i = 0; i < numGeometry; i++) {
-            auto geometry = _detectorDescriptor.getGeometryAt(i);
+        auto poses = _detectorDescriptor.getGeometry();
+        for (std::size_t i = 0; i < poses.size(); ++i) {
+            auto geometry = poses[i];
 
-            if (!geometry)
-                throw LogicError("JosephsMethodCUDA: Access not existing geometry pose");
-
-            RealMatrix_t P = geometry->getInverseProjectionMatrix().block(0, 0, dim, dim);
+            RealMatrix_t P = geometry.getInverseProjectionMatrix().block(0, 0, dim, dim);
             int8_t* slice = projPtr + i * projPitch * dim;
             // CUDA also uses a column-major representation, directly transfer matrix
             // transfer inverse of projection matrix
             if (cudaMemcpy2DAsync(slice, projPitch, P.data(), dim * sizeof(real_t),
                                   dim * sizeof(real_t), dim, cudaMemcpyDefault)
                 != cudaSuccess)
-                throw LogicError(
-                    "SiddonsMethodCUDA: Could not transfer inverse projection matrices to GPU.");
+                throw LogicError("SiddonsMethodCUDA: Could not transfer inverse projection "
+                                 "matrices to GPU.");
 
             int8_t* rayPtr = rayBasePtr + i * rayPitch;
             // get camera center using direct inverse
-            RealVector_t ro =
-                -P * geometry->getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
+            RealVector_t ro = geometry.getCameraCenter();
+
             // transfer ray origin
             if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyDefault)
                 != cudaSuccess)
