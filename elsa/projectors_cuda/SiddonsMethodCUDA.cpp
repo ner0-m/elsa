@@ -91,10 +91,7 @@ namespace elsa
             return false;
 
         auto otherSM = downcast_safe<SiddonsMethodCUDA>(&other);
-        if (!otherSM)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherSM);
     }
 
     template <typename data_t>
