@@ -110,6 +110,19 @@ namespace elsa
         IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
         auto rangeDimsui = rangeDims.template cast<unsigned int>();
 
+        // Cast to raw device pointesr
+        const auto* dvolume = thrust::raw_pointer_cast(volume.data());
+        auto* dsino = thrust::raw_pointer_cast(sino.data());
+
+        // Prefetch unified memory
+        int device = -1;
+        cudaGetDevice(&device);
+        cudaMemPrefetchAsync(dvolume, volume.size() * sizeof(data_t), device);
+        cudaMemPrefetchAsync(dsino, sino.size() * sizeof(data_t), device);
+
+        // Advice, that volume is read only
+        cudaMemAdvise(dvolume, volume.size(), cudaMemAdviseSetReadMostly, device);
+
         if (_domainDescriptor->getNumberOfDimensions() == 3) {
             typename TraverseSiddonsCUDA<data_t, 3>::BoundingBox boundingBox;
             boundingBox._max[0] = aabb.max().template cast<uint32_t>()[0];
@@ -119,10 +132,8 @@ namespace elsa
             dim3 sinogramDims(rangeDimsui[2], rangeDimsui[1], rangeDimsui[0]);
 
             TraverseSiddonsCUDA<data_t, 3>::traverseForward(
-                sinogramDims, THREADS_PER_BLOCK,
-                const_cast<data_t*>(thrust::raw_pointer_cast(volume.data())), domainDimsui[0],
-                thrust::raw_pointer_cast(sino.data()), rangeDimsui[0],
-                thrust::raw_pointer_cast(_rayOrigins.data()),
+                sinogramDims, THREADS_PER_BLOCK, const_cast<data_t*>(dvolume), domainDimsui[0],
+                dsino, rangeDimsui[0], thrust::raw_pointer_cast(_rayOrigins.data()),
                 thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
         } else {
             typename TraverseSiddonsCUDA<data_t, 2>::BoundingBox boundingBox;
@@ -133,11 +144,8 @@ namespace elsa
             dim3 sinogramDims(rangeDimsui[1], 1, rangeDimsui[0]);
 
             TraverseSiddonsCUDA<data_t, 2>::traverseForward(
-                sinogramDims, THREADS_PER_BLOCK,
-                // sinogramDims, 1,
-                const_cast<data_t*>(thrust::raw_pointer_cast(volume.data())), domainDimsui[0],
-                thrust::raw_pointer_cast(sino.data()), rangeDimsui[0],
-                thrust::raw_pointer_cast(_rayOrigins.data()),
+                sinogramDims, THREADS_PER_BLOCK, const_cast<data_t*>(dvolume), domainDimsui[0],
+                dsino, rangeDimsui[0], thrust::raw_pointer_cast(_rayOrigins.data()),
                 thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
         }
         // synchronize because we are using multiple streams
@@ -154,6 +162,19 @@ namespace elsa
         IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
         auto rangeDimsui = rangeDims.template cast<unsigned int>();
 
+        // Cast to raw device pointesr
+        auto* dvolume = thrust::raw_pointer_cast(volume.data());
+        const auto* dsino = thrust::raw_pointer_cast(sino.data());
+
+        // Prefetch unified memory
+        int device = -1;
+        cudaGetDevice(&device);
+        cudaMemPrefetchAsync(dvolume, volume.size() * sizeof(data_t), device);
+        cudaMemPrefetchAsync(dsino, sino.size() * sizeof(data_t), device);
+
+        // Advice, that sinogram is read only
+        cudaMemAdvise(dsino, sino.size(), cudaMemAdviseSetReadMostly, device);
+
         if (_domainDescriptor->getNumberOfDimensions() == 3) {
             typename TraverseSiddonsCUDA<data_t, 3>::BoundingBox boundingBox;
             boundingBox._max[0] = aabb.max().template cast<uint32_t>()[0];
@@ -163,9 +184,9 @@ namespace elsa
             dim3 sinogramDims(rangeDimsui[2], rangeDimsui[1], rangeDimsui[0]);
 
             TraverseSiddonsCUDA<data_t, 3>::traverseAdjoint(
-                sinogramDims, THREADS_PER_BLOCK, thrust::raw_pointer_cast(volume.data()),
-                domainDimsui[0], const_cast<data_t*>(thrust::raw_pointer_cast(sino.data())),
-                rangeDimsui[0], thrust::raw_pointer_cast(_rayOrigins.data()),
+                sinogramDims, THREADS_PER_BLOCK, dvolume, domainDimsui[0],
+                const_cast<data_t*>(dsino), rangeDimsui[0],
+                thrust::raw_pointer_cast(_rayOrigins.data()),
                 thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
         } else {
             typename TraverseSiddonsCUDA<data_t, 2>::BoundingBox boundingBox;
@@ -176,9 +197,9 @@ namespace elsa
             dim3 sinogramDims(rangeDimsui[1], 1, rangeDimsui[0]);
 
             TraverseSiddonsCUDA<data_t, 2>::traverseAdjoint(
-                sinogramDims, THREADS_PER_BLOCK, thrust::raw_pointer_cast(volume.data()),
-                domainDimsui[0], const_cast<data_t*>(thrust::raw_pointer_cast(sino.data())),
-                rangeDimsui[0], thrust::raw_pointer_cast(_rayOrigins.data()),
+                sinogramDims, THREADS_PER_BLOCK, dvolume, domainDimsui[0],
+                const_cast<data_t*>(dsino), rangeDimsui[0],
+                thrust::raw_pointer_cast(_rayOrigins.data()),
                 thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
         }
         // synchronize because we are using multiple streams
