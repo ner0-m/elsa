@@ -231,6 +231,14 @@ if(ELSA_MASTER_PROJECT)
     # Follow thrusts defaults, overwrite the by passing THRUST_[HOST|DEVICE]_SYSTEM to CMake
     thrust_create_target(elsa::Thrust FROM_OPTIONS)
 
+    # CMake 3.25 introduced the `SYSTEM` properties for targets. It this silences warnings from the library. In this
+    # case thrust, is just emitting many (for us) silly warnings. For users without CMake version >= 3.25, we still have
+    # include guards silencing warnings from thrust, thou they might be leaky. see
+    # https://cmake.org/cmake/help/latest/prop_tgt/SYSTEM.html#prop_tgt:SYSTEM
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.25)
+        set_target_properties(elsa::Thrust PROPERTIES SYSTEM TRUE)
+    endif()
+
     thrust_is_cuda_system_found(THRUST_CUDA_FOUND)
     thrust_is_tbb_system_found(THRUST_TBB_FOUND)
     thrust_is_omp_system_found(THRUST_OMP_FOUND)
