@@ -18,40 +18,22 @@ namespace py = pybind11;
 void add_definitions_pyelsa_generators(py::module& m)
 {
     py::class_<elsa::EllipseGenerator<float>> EllipseGeneratorf(m, "EllipseGeneratorf");
-    EllipseGeneratorf
-        .def_static(
-            "drawFilledEllipsoid3d",
-            (void (*)(elsa::DataContainer<float>&, float, Eigen::Matrix<long, 3, 1, 0, 3, 1>,
-                      Eigen::Matrix<long, 3, 1, 0, 3, 1>, float, float,
-                      float))(&elsa::EllipseGenerator<float>::drawFilledEllipsoid3d),
-            py::arg("dc"), py::arg("amplitude"), py::arg("center"), py::arg("sizes"),
-            py::arg("phi"), py::arg("theta"), py::arg("psi"))
-        .def_static(
-            "drawFilledEllipse2d",
-            (void (*)(elsa::DataContainer<float>&, float, const Eigen::Matrix<long, 2, 1, 0, 2, 1>&,
-                      Eigen::Matrix<long, 2, 1, 0, 2, 1>,
-                      float))(&elsa::EllipseGenerator<float>::drawFilledEllipse2d),
-            py::arg("dc"), py::arg("amplitude"), py::arg("center"), py::arg("sizes"),
-            py::arg("angle"));
+    EllipseGeneratorf.def_static(
+        "drawFilledEllipse2d",
+        (void (*)(elsa::DataContainer<float>&, float, const Eigen::Matrix<long, 2, 1, 0, 2, 1>&,
+                  Eigen::Matrix<long, 2, 1, 0, 2, 1>,
+                  float))(&elsa::EllipseGenerator<float>::drawFilledEllipse2d),
+        py::arg("dc"), py::arg("amplitude"), py::arg("center"), py::arg("sizes"), py::arg("angle"));
 
     m.attr("EllipseGenerator") = m.attr("EllipseGeneratorf");
 
     py::class_<elsa::EllipseGenerator<double>> EllipseGeneratord(m, "EllipseGeneratord");
-    EllipseGeneratord
-        .def_static(
-            "drawFilledEllipsoid3d",
-            (void (*)(elsa::DataContainer<double>&, double, Eigen::Matrix<long, 3, 1, 0, 3, 1>,
-                      Eigen::Matrix<long, 3, 1, 0, 3, 1>, double, double,
-                      double))(&elsa::EllipseGenerator<double>::drawFilledEllipsoid3d),
-            py::arg("dc"), py::arg("amplitude"), py::arg("center"), py::arg("sizes"),
-            py::arg("phi"), py::arg("theta"), py::arg("psi"))
-        .def_static(
-            "drawFilledEllipse2d",
-            (void (*)(elsa::DataContainer<double>&, double,
-                      const Eigen::Matrix<long, 2, 1, 0, 2, 1>&, Eigen::Matrix<long, 2, 1, 0, 2, 1>,
-                      double))(&elsa::EllipseGenerator<double>::drawFilledEllipse2d),
-            py::arg("dc"), py::arg("amplitude"), py::arg("center"), py::arg("sizes"),
-            py::arg("angle"));
+    EllipseGeneratord.def_static(
+        "drawFilledEllipse2d",
+        (void (*)(elsa::DataContainer<double>&, double, const Eigen::Matrix<long, 2, 1, 0, 2, 1>&,
+                  Eigen::Matrix<long, 2, 1, 0, 2, 1>,
+                  double))(&elsa::EllipseGenerator<double>::drawFilledEllipse2d),
+        py::arg("dc"), py::arg("amplitude"), py::arg("center"), py::arg("sizes"), py::arg("angle"));
 
     py::module phantoms = m.def_submodule("phantoms", "A set of phantom generators");
 
@@ -84,6 +66,12 @@ void add_definitions_pyelsa_generators(py::module& m)
                  (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>, double))(
                      &elsa::phantoms::circular<double>),
                  py::arg("volumesize"), py::arg("radius"), py::return_value_policy::move);
+
+    py::module phantoms_old = phantoms.def_submodule("old", "Old approach for testing.");
+    phantoms_old.def("modifiedSheppLogan",
+                     (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                         &elsa::phantoms::old::modifiedSheppLogan<double>),
+                     py::arg("sizes"), py::return_value_policy::move);
 
     py::class_<elsa::NoNoiseGenerator> NoNoiseGenerator(m, "NoNoiseGenerator");
     NoNoiseGenerator

@@ -149,3 +149,5 @@ fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
 plt.show()
 ```
 and scroll through our 3D reconstruction.
+
+For a more advanced IndexTracker with perspective change please have a look at `examples/example3d.py`.

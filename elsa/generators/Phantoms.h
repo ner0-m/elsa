@@ -82,4 +82,52 @@ namespace elsa::phantoms
     template const std::array<std::array<double, 10>, 10> modifiedSheppLoganParameters<double>;
     template const std::array<std::array<float, 10>, 10> modifiedSheppLoganParameters<float>;
 
+    namespace old
+    {
+
+        /// short-hand for 3d vector
+        using Vec3 = Eigen::Matrix<index_t, 3, 1>;
+        /**
+         *
+         * @deprecated Is a reference for testing - @see elsa::phantoms::Ellipsoid
+         *
+         * @brief Draw a rotated, filled 3d ellipsoid
+         *
+         * @param[in,out] dc the DataContainer where the ellipsoid should be drawn in
+         * @param[in] amplitude the "color" of the ellipsoid and its filling
+         * @param[in] center the 3d index of where to place the center of the ellipsoid in dc
+         * @param[in] sizes the radii (in x/y/z) of the ellipsoid
+         * @param[in] phi euler angle of rotation of the ellipsoid
+         * @param[in] theta euler angle of rotation of the ellipsoid
+         * @param[in] psi euler angle of rotation of the ellipsoid
+         *
+         *
+         * Warning: this method is currently using an inefficient, cubic algorithm. Thus it's very
+         * slow for big volumes!
+         *
+         */
+        template <typename data_t = real_t>
+        [[deprecated]] static void drawFilledEllipsoid3d(DataContainer<data_t>& dc,
+                                                         data_t amplitude, Vec3 center, Vec3 sizes,
+                                                         data_t phi, data_t theta, data_t psi);
+
+        /**
+         * @deprecated @see elsa::phantoms::modifiedSheppLogan
+         *
+         * @brief Create a modified Shepp-Logan phantom in 2d or 3d (with enhanced contrast).
+         *
+         * The phantom specifications are adapted from Matlab (which in turn references A.K. Jain,
+         * "Fundamentals of Digital Image Processing", p. 439, and P.A. Toft, "The Radon Transform,
+         * Theory and Implementation", p. 199).
+         *
+         * Warning: the 3D version is currently very inefficient to compute (cubic algorithm).
+         *
+         * @param[in] sizes a 2d/3d vector indicating the requested size (has to be square!)
+         *
+         * @returns DataContainer of specified size containing the phantom.
+         */
+        template <typename data_t = real_t>
+        [[deprecated]] DataContainer<data_t> modifiedSheppLogan(IndexVector_t sizes);
+
+    } // namespace old
 } // namespace elsa::phantoms

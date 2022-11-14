@@ -35,23 +35,6 @@ namespace elsa
         static void drawFilledEllipse2d(DataContainer<data_t>& dc, data_t amplitude,
                                         Vec2 const& center, Vec2 sizes, data_t angle);
 
-        /**
-         * @brief Draw a rotated, filled 3d ellipsoid
-         *
-         * @param[in,out] dc the DataContainer where the ellipsoid should be drawn in
-         * @param[in] amplitude the "color" of the ellipsoid and its filling
-         * @param[in] center the 3d index of where to place the center of the ellipsoid in dc
-         * @param[in] sizes the radii (in x/y/z) of the ellipsoid
-         * @param[in] phi euler angle of rotation of the ellipsoid
-         * @param[in] theta euler angle of rotation of the ellipsoid
-         * @param[in] psi euler angle of rotation of the ellipsoid
-         *
-         * Warning: this method is currently using an inefficient, cubic algorithm. Thus it's very
-         * slow for big volumes!
-         */
-        static void drawFilledEllipsoid3d(DataContainer<data_t>& dc, data_t amplitude, Vec3 center,
-                                          Vec3 sizes, data_t phi, data_t theta, data_t psi);
-
     private:
         /**
          * @brief Draw a sheared filled 2d ellipse using a Bresenham-type algorithm

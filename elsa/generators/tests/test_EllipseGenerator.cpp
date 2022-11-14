@@ -75,27 +75,3 @@ TEST_CASE("EllipseGenerator: Drawing a rotated filled ellipse in 2d")
         }
     }
 }
-
-TEST_CASE("EllipseGenerator: Drawing a rotated filled ellipsoid in 3d")
-{
-    GIVEN("a volume and example ellipsoid parameters")
-    {
-        IndexVector_t numCoeff(3);
-        numCoeff << 64, 64, 64;
-        VolumeDescriptor dd(numCoeff);
-        DataContainer dc(dd);
-
-        Eigen::Matrix<index_t, 3, 1> center{32, 32, 32};
-        Eigen::Matrix<index_t, 3, 1> sizes{10, 25, 5};
-
-        WHEN("creating an ellipse")
-        {
-            EllipseGenerator<real_t>::drawFilledEllipsoid3d(dc, 1.0, center, sizes, -18, 0, 10);
-
-            THEN("somebody should check it...")
-            {
-                REQUIRE(true); // TODO: add a reasonable test here
-            }
-        }
-    }
-}
