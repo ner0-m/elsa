@@ -10,6 +10,7 @@
 #include "ContiguousStorage.h"
 #include "Span.h"
 #include "Overloaded.hpp"
+#include "Vector.h"
 
 #include <thrust/complex.h>
 
@@ -241,6 +242,9 @@ namespace elsa
 
         /// assign a scalar to the DataContainer
         DataContainer<data_t>& operator=(data_t scalar);
+
+        /// assign a `linalg::Vector` to DataContainer
+        DataContainer<data_t>& operator=(const linalg::Vector<data_t>& vec);
 
         /// comparison with another DataContainer
         bool operator==(const DataContainer<data_t>& other) const;

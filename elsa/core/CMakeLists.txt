@@ -54,7 +54,7 @@ set(MODULE_SOURCES
     StrongTypes.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging elsa_storage)
+list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging elsa_storage elsa_linalg)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 # use OpenMP if available
@@ -106,4 +106,4 @@ if(ELSA_CUDA_ENABLED)
     set_source_files_properties(DataContainer.cpp PROPERTIES LANGUAGE CUDA)
 endif()
 
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging elsa_storage elsa_linalg)

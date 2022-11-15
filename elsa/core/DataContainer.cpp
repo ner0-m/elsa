@@ -524,6 +524,13 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t>& DataContainer<data_t>::operator=(const linalg::Vector<data_t>& vec)
+    {
+        elsa::assign(vec.begin(), vec.end(), begin());
+        return *this;
+    }
+
+    template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator=(data_t scalar)
     {
         elsa::fill(begin(), end(), scalar);

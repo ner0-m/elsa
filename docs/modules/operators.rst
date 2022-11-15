@@ -33,3 +33,8 @@ ShearletTransform
 =================
 
 .. doxygenclass:: elsa::ShearletTransform
+
+MatrixOperator
+==============
+
+.. doxygenclass:: elsa::MatrixOperator

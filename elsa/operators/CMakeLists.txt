@@ -7,6 +7,7 @@ set(MODULE_HEADERS
     BlockLinearOperator.h
     Dictionary.h
     ShearletTransform.h
+    MatrixOperator.h
 )
 
 # list all the code files of the module
@@ -18,9 +19,10 @@ set(MODULE_SOURCES
     BlockLinearOperator.cpp
     Dictionary.cpp
     ShearletTransform.cpp
+    MatrixOperator.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_linalg)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 # use OpenMP is available
@@ -34,4 +36,4 @@ ADD_ELSA_MODULE(
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_linalg)
