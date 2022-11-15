@@ -203,6 +203,13 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor,
+                                         const linalg::Vector<data_t>& vec)
+        : _dataDescriptor{dataDescriptor.clone()}, storage_{vec.storage()}
+    {
+    }
+
+    template <typename data_t>
     DataContainer<data_t>::DataContainer(const DataContainer<data_t>& other)
         : _dataDescriptor{other._dataDescriptor->clone()}, storage_{other.storage_}
     {
@@ -1004,6 +1011,12 @@ namespace elsa
         return copy;
     }
 
+    template <class data_t>
+    linalg::Vector<data_t> flatten(const DataContainer<data_t>& dc)
+    {
+        return linalg::Vector<data_t>{dc.storage()};
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
@@ -1026,6 +1039,14 @@ namespace elsa
     template DataContainer<complex<double>>
         concatenate<complex<double>>(const DataContainer<complex<double>>&,
                                      const DataContainer<complex<double>>&);
+
+    template linalg::Vector<index_t> flatten(const DataContainer<index_t>&);
+    template linalg::Vector<float> flatten(const DataContainer<float>&);
+    template linalg::Vector<double> flatten(const DataContainer<double>&);
+    template linalg::Vector<thrust::complex<float>>
+        flatten(const DataContainer<thrust::complex<float>>&);
+    template linalg::Vector<thrust::complex<double>>
+        flatten(const DataContainer<thrust::complex<double>>&);
 
 #define ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET(fn, type) \
     template DataContainer<value_type_of_t<type>> fn<type>(const DataContainer<type>&);

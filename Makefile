@@ -142,7 +142,7 @@ ifeq ($(selected_test),y)
   else
     # use fzf to (if necessary interactively) find a target
     ifneq ($(SELECTED_TEST_TARGET),)
-      RUN_TEST_TARGET := $(shell echo -n $(FILTERED_TEST_TARGETS) | tr ' ' '\n' | $(FZF) -q $(SELECTED_TEST_TARGET) -1 -0)
+      RUN_TEST_TARGET := $(shell echo -n $(FILTERED_TEST_TARGETS) | tr ' ' '\n' | $(FZF) -f $(SELECTED_TEST_TARGET) -1 -0 | head -n1)
     else
       RUN_TEST_TARGET := $(shell echo -n $(FILTERED_TEST_TARGETS) | tr ' ' '\n' | $(FZF) -1 -0)
     endif

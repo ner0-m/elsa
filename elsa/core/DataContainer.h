@@ -79,6 +79,9 @@ namespace elsa
         /// constructor accepting a DataDescriptor and a DataHandler
         DataContainer(const DataDescriptor& dataDescriptor, ContiguousStorageView<data_t> storage);
 
+        /// constructor accepting a `linalg::Vector` and a
+        DataContainer(const DataDescriptor& dataDescriptor, const linalg::Vector<data_t>& vec);
+
         /**
          * @brief Copy constructor for DataContainer
          *
@@ -507,5 +510,9 @@ namespace elsa
     /// Imag for complex DataContainers
     template <typename data_t>
     DataContainer<value_type_of_t<data_t>> imag(const DataContainer<data_t>& dc);
+
+    /// Flatten a DataContainer to an `linalg::Vector`
+    template <class data_t>
+    linalg::Vector<data_t> flatten(const DataContainer<data_t>& dc);
 
 } // namespace elsa

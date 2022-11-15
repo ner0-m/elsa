@@ -21,6 +21,7 @@
 
    modules/core
    modules/storage
+   modules/linalg
    modules/logging
    modules/io
    modules/operators
