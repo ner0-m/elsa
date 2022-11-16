@@ -5,7 +5,8 @@
 
 #include "PrettyPrint/Eigen.h"
 #include "PrettyPrint/Stl.h"
-#include "spdlog/fmt/fmt.h"
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/fmt/ostr.h>
 
 using namespace elsa;
 using namespace elsa::geometry;
@@ -15,6 +16,12 @@ TEST_SUITE_BEGIN("projectors");
 
 Eigen::IOFormat vecfmt(10, 0, ", ", ", ", "", "", "[", "]");
 Eigen::IOFormat matfmt(10, 0, ", ", "\n", "\t\t[", "]");
+
+// https://fmt.dev/latest/api.html#ostream-api
+// allow eigen WithFormat things to be ostream-formatted.
+template <typename... C>
+struct fmt::formatter<Eigen::WithFormat<C...>> : ostream_formatter {
+};
 
 TYPE_TO_STRING(BlobProjector<float>);
 
@@ -39,10 +46,10 @@ TEST_CASE_TEMPLATE("BlobProjector: Testing rays going through the center of the 
 
     const auto theta = 0;
     const auto thetad = Degree{theta}.to_radian();
-    const auto beta = 0;
-    const auto betad = Degree{beta}.to_radian();
-    const auto alpha = 0;
-    const auto alphad = Degree{alpha}.to_radian();
+    // const auto beta = 0;
+    // const auto betad = Degree{beta}.to_radian();
+    // const auto alpha = 0;
+    // const auto alphad = Degree{alpha}.to_radian();
     std::vector<Geometry> geom;
     // geom.emplace_back(stc, ctr, VolumeData3D{Size3D{sizeDomain}},
     // SinogramData3D{Size3D{sizeRange}},
@@ -1333,10 +1340,6 @@ TEST_CASE("LutProjector: Test single rays backward projection")
 
 TEST_CASE_TEMPLATE("BlobProjector: Test weights", data_t, float, double)
 {
-    const auto a = 2;
-    const auto alpha = 10.83;
-    const auto m = 2;
-
     std::array<double, 51> expected{
         1.3671064952680276,     1.3635202864368146,    1.3528128836429958,
         1.3351368521026497,     1.3107428112196733,    1.2799740558068384,
