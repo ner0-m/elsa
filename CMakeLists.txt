@@ -109,6 +109,23 @@ if(NOT "${ELSA_ALTERNATIVE_LINKER}" STREQUAL "")
     set_alternate_linker(${ELSA_ALTERNATIVE_LINKER})
 endif()
 
+# ------------ ccache compiler cache ------------
+# ------------
+
+# distros can also do this but they don't use this mechanism
+option(ENABLE_CCACHE "prefix each compile command with ccache")
+
+if(ENABLE_CCACHE)
+    find_program(CCACHE_FOUND "ccache" REQUIRED)
+
+    if(CCACHE_FOUND)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    else()
+        message(FATAL_ERROR "ccache not found, but you requested it")
+    endif(CCACHE_FOUND)
+endif()
+
 # ------------ dependencies ------------
 # ------------
 
