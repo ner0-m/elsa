@@ -337,7 +337,6 @@ TEST_CASE_TEMPLATE("Reduction with vectors with a single element", T, thrust::co
 
 TEST_CASE_TEMPLATE("Reductions with an arbitrarily sized container", T, float, double)
 {
-    constexpr auto size = 7;
     elsa::ContiguousStorage<T> v;
 
     push(v, 3.2, -4, 0, -6., 1.76, 8, 0);

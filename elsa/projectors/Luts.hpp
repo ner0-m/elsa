@@ -4,6 +4,7 @@
 #include "BSplines.h"
 #include "Logger.h"
 #include "Timer.h"
+#include "TypeCasts.hpp"
 
 #include <array>
 
@@ -72,10 +73,10 @@ namespace elsa
     public:
         constexpr Lut(std::array<data_t, N + 1>&& data) : data_(std::move(data)) {}
 
-        template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+        template <typename T, std::enable_if_t<std::is_integral_v<T>, index_t> = 0>
         constexpr data_t operator()(T index) const
         {
-            if (index < 0 || index > N) {
+            if (index < 0 || index > asSigned(N)) {
                 return 0;
             }
 
@@ -85,10 +86,10 @@ namespace elsa
         /// TODO: Handle boundary conditions
         /// lerp(last, last+1, t), for some t > 0, yields f(last) / 2, as f(last + 1) = 0,
         /// this should be handled
-        template <typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
+        template <typename T, std::enable_if_t<std::is_floating_point_v<T>, index_t> = 0>
         constexpr data_t operator()(T index) const
         {
-            if (index < 0 || index > N) {
+            if (index < 0 || index > asSigned(N)) {
                 return 0;
             }
 

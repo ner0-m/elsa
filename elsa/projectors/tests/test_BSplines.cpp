@@ -74,12 +74,10 @@ data_t bspline_line_integral(data_t s, index_t m, index_t dim)
 
 TEST_CASE_TEMPLATE("BSplines: 1d line integal", data_t, float)
 {
-    constexpr auto size = 21;
-
-    const auto low = -2;
-    const auto high = 2;
-
-    const auto linspace = Vector_t<data_t>::LinSpaced(size, low, high);
+    // constexpr auto size = 21;
+    // const auto low = -2;
+    // const auto high = 2;
+    // const auto linspace = Vector_t<data_t>::LinSpaced(size, low, high);
 
     const int degree = 2;
 

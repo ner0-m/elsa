@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ContiguousStorage.h"
+#include "TypeCasts.hpp"
 
 #include <cstddef>
 #include <iterator>
@@ -143,14 +144,14 @@ namespace elsa
     typename ContiguousStorageView<T>::reference
         ContiguousStorageView<T>::operator[](size_type idx) noexcept
     {
-        return data()[idx];
+        return data()[asSigned(idx)];
     }
 
     template <class T>
     typename ContiguousStorageView<T>::const_reference
         ContiguousStorageView<T>::operator[](size_type idx) const noexcept
     {
-        return data()[idx];
+        return data()[asSigned(idx)];
     }
 
     template <class T>

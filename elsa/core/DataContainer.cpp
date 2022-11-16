@@ -312,7 +312,7 @@ namespace elsa
     {
         return std::visit(
             overloaded{
-                [](const auto& storage) { return storage.size(); },
+                [](const auto& storage) { return asSigned(storage.size()); },
             },
             storage_);
     }
@@ -551,9 +551,9 @@ namespace elsa
         if (i >= blockDesc->getNumberOfBlocks() || i < 0)
             throw InvalidArgumentError("DataContainer: block index out of bounds");
 
-        index_t startIndex = blockDesc->getOffsetOfBlock(i);
+        size_t startIndex = asUnsigned(blockDesc->getOffsetOfBlock(i));
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
-        index_t blockSize = ithDesc.getNumberOfCoefficients();
+        size_t blockSize = asUnsigned(ithDesc.getNumberOfCoefficients());
 
         return std::visit(overloaded{[&](ContiguousStorage<data_t>& storage) {
                                          auto span = ContiguousStorageView<data_t>(
@@ -578,9 +578,9 @@ namespace elsa
         if (i >= blockDesc->getNumberOfBlocks() || i < 0)
             throw InvalidArgumentError("DataContainer: block index out of bounds");
 
-        index_t startIndex = blockDesc->getOffsetOfBlock(i);
+        size_t startIndex = asUnsigned(blockDesc->getOffsetOfBlock(i));
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
-        index_t blockSize = ithDesc.getNumberOfCoefficients();
+        size_t blockSize = asUnsigned(ithDesc.getNumberOfCoefficients());
 
         return std::visit(overloaded{[&](const ContiguousStorage<data_t>& storage) {
                                          auto span = ContiguousStorageView<data_t>(
@@ -606,7 +606,8 @@ namespace elsa
 
         return std::visit(overloaded{[&](ContiguousStorage<data_t>& storage) {
                                          auto span = ContiguousStorageView<data_t>(
-                                             storage, 0, dataDescriptor.getNumberOfCoefficients());
+                                             storage, 0,
+                                             asUnsigned(dataDescriptor.getNumberOfCoefficients()));
                                          return DataContainer<data_t>{dataDescriptor, span};
                                      },
                                      [&](ContiguousStorageView<data_t> storage) {
@@ -625,7 +626,7 @@ namespace elsa
         return std::visit(overloaded{[&](const ContiguousStorage<data_t>& storage) {
                                          auto span = ContiguousStorageView<data_t>(
                                              const_cast<ContiguousStorage<data_t>&>(storage), 0,
-                                             dataDescriptor.getNumberOfCoefficients());
+                                             asUnsigned(dataDescriptor.getNumberOfCoefficients()));
                                          return DataContainer<data_t>{dataDescriptor, span};
                                      },
                                      [&](ContiguousStorageView<data_t> storage) {

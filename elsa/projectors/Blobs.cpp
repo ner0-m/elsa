@@ -3,35 +3,6 @@
 
 namespace elsa
 {
-    template <typename data_t>
-    constexpr Blob<data_t>::Blob(data_t radius, SelfType_t<data_t> alpha, index_t order)
-        : radius_(radius), alpha_(alpha), order_(order)
-    {
-    }
-
-    template <typename data_t>
-    constexpr data_t Blob<data_t>::operator()(data_t s)
-    {
-        return blobs::blob_evaluate(s, radius_, alpha_, order_);
-    }
-
-    template <typename data_t>
-    constexpr data_t Blob<data_t>::radius() const
-    {
-        return radius_;
-    }
-
-    template <typename data_t>
-    constexpr data_t Blob<data_t>::alpha() const
-    {
-        return alpha_;
-    }
-
-    template <typename data_t>
-    constexpr index_t Blob<data_t>::order() const
-    {
-        return order_;
-    }
     // ------------------------------------------
     // explicit template instantiation
     namespace blobs

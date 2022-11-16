@@ -16,7 +16,7 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with an array of ones", data_t, float, doub
     std::array<data_t, size> array;
     std::fill(std::begin(array), std::end(array), 1);
 
-    Lut lut(array);
+    Lut lut(std::move(array));
 
     WHEN("Accessing with at integer values")
     {
@@ -41,7 +41,7 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
     std::array<data_t, size> array;
     std::iota(std::begin(array), std::end(array), 0);
 
-    Lut lut(array);
+    Lut lut(std::move(array));
 
     WHEN("Accessing with at integer values")
     {

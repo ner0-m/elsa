@@ -29,7 +29,7 @@ TEST_CASE_TEMPLATE("Assign transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -41,7 +41,7 @@ TEST_CASE_TEMPLATE("Assign transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -58,11 +58,11 @@ TEST_CASE_TEMPLATE("Assign transformation", T, float, double)
 
     GIVEN("Some container")
     {
-        constexpr std::size_t size = 24;
+        constexpr size_t size = 24;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        for (int i = 0; i < size; ++i) {
+        for (size_t i = 0; i < size; ++i) {
             src[i] = i;
         }
 
@@ -76,7 +76,7 @@ TEST_CASE_TEMPLATE("Absolute value transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -89,7 +89,7 @@ TEST_CASE_TEMPLATE("Absolute value transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -106,11 +106,11 @@ TEST_CASE_TEMPLATE("Absolute value transformation", T, float, double)
 
     GIVEN("Some container")
     {
-        constexpr std::size_t size = 24;
+        constexpr size_t size = 24;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        for (int i = 0; i < size; ++i) {
+        for (size_t i = 0; i < size; ++i) {
             src[i] = i;
         }
 
@@ -118,7 +118,7 @@ TEST_CASE_TEMPLATE("Absolute value transformation", T, float, double)
 
         CHECK_UNARY(thrust::equal(dst.begin(), dst.end(), src.begin()));
 
-        for (int i = 0; i < size; ++i) {
+        for (size_t i = 0; i < size; ++i) {
             src[i] = -i;
         }
 
@@ -131,7 +131,7 @@ TEST_CASE_TEMPLATE("Clip transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> v(size);
 
         elsa::clip(v.begin(), v.end(), v.begin(), 0, 10);
@@ -141,7 +141,7 @@ TEST_CASE_TEMPLATE("Clip transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> v(size);
 
         v[0] = 2;
@@ -165,7 +165,7 @@ TEST_CASE_TEMPLATE("Cast transformation", T, float, double)
 {
     GIVEN("A zero sized container of type float")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<float> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -180,11 +180,11 @@ TEST_CASE_TEMPLATE("Cast transformation", T, float, double)
 
     GIVEN("A zero sized container of type float")
     {
-        constexpr std::size_t size = 24;
+        constexpr size_t size = 24;
         elsa::ContiguousStorage<float> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        for (int i = 0; i < size; ++i) {
+        for (size_t i = 0; i < size; ++i) {
             src[i] = i;
         }
 
@@ -202,7 +202,7 @@ TEST_CASE_TEMPLATE("Inplace Add transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -214,7 +214,7 @@ TEST_CASE_TEMPLATE("Inplace Add transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -232,11 +232,11 @@ TEST_CASE_TEMPLATE("Inplace Add transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({3.2, -4, 0, -6., 1.76, 8, 0})) {
             src[i] = elem;
             ++i;
@@ -262,7 +262,7 @@ TEST_CASE_TEMPLATE("Inplace Sub transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -274,7 +274,7 @@ TEST_CASE_TEMPLATE("Inplace Sub transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -292,11 +292,11 @@ TEST_CASE_TEMPLATE("Inplace Sub transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({3.2, -4, 0, -6., 1.76, 8, 0})) {
             src[i] = elem;
             ++i;
@@ -323,7 +323,7 @@ TEST_CASE_TEMPLATE("Inplace Mul transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -335,7 +335,7 @@ TEST_CASE_TEMPLATE("Inplace Mul transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -353,11 +353,11 @@ TEST_CASE_TEMPLATE("Inplace Mul transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({3.2, -4, 0, -6., 1.76, 8, 0})) {
             src[i] = elem;
             ++i;
@@ -379,7 +379,7 @@ TEST_CASE_TEMPLATE("Inplace division transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -391,7 +391,7 @@ TEST_CASE_TEMPLATE("Inplace division transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -409,11 +409,11 @@ TEST_CASE_TEMPLATE("Inplace division transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({3.2, -4, 4.23, -6., 1.76, 8, -.29})) {
             src[i] = elem;
             ++i;
@@ -435,7 +435,7 @@ TEST_CASE_TEMPLATE("Exp transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -447,7 +447,7 @@ TEST_CASE_TEMPLATE("Exp transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -464,11 +464,11 @@ TEST_CASE_TEMPLATE("Exp transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({3.2, -4, 0, -6., 1.76, 8, 0})) {
             src[i] = elem;
             ++i;
@@ -477,7 +477,7 @@ TEST_CASE_TEMPLATE("Exp transformation", T, float, double)
         elsa::exp(src.begin(), src.end(), dst.begin());
 
         i = 0;
-        for (auto elem : dst) {
+        for ([[maybe_unused]] auto elem : dst) {
             INFO("Pos: ", i);
             CHECK_EQ(std::exp(src[i]), dst[i]);
             ++i;
@@ -489,7 +489,7 @@ TEST_CASE_TEMPLATE("Exp transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -501,7 +501,7 @@ TEST_CASE_TEMPLATE("Exp transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -518,11 +518,11 @@ TEST_CASE_TEMPLATE("Exp transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({2, 4, 8, 16, 32, 64, 128})) {
             src[i] = elem;
             ++i;
@@ -531,7 +531,7 @@ TEST_CASE_TEMPLATE("Exp transformation", T, float, double)
         elsa::log(src.begin(), src.end(), dst.begin());
 
         i = 0;
-        for (auto elem : dst) {
+        for ([[maybe_unused]] auto elem : dst) {
             INFO("Pos: ", i);
             CHECK_EQ(std::log(src[i]), dst[i]);
             ++i;
@@ -543,7 +543,7 @@ TEST_CASE_TEMPLATE("Sqrt transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -555,7 +555,7 @@ TEST_CASE_TEMPLATE("Sqrt transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -572,11 +572,11 @@ TEST_CASE_TEMPLATE("Sqrt transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({2, 4, 8, 16, 32, 64, 128})) {
             src[i] = elem;
             ++i;
@@ -585,7 +585,7 @@ TEST_CASE_TEMPLATE("Sqrt transformation", T, float, double)
         elsa::sqrt(src.begin(), src.end(), dst.begin());
 
         i = 0;
-        for (auto elem : dst) {
+        for ([[maybe_unused]] auto elem : dst) {
             INFO("Pos: ", i);
             CHECK_EQ(std::sqrt(src[i]), dst[i]);
             ++i;
@@ -597,7 +597,7 @@ TEST_CASE_TEMPLATE("Square transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -609,7 +609,7 @@ TEST_CASE_TEMPLATE("Square transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -626,11 +626,11 @@ TEST_CASE_TEMPLATE("Square transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({2, 4, 8, 16, 32, 64, 128})) {
             src[i] = elem;
             ++i;
@@ -639,7 +639,7 @@ TEST_CASE_TEMPLATE("Square transformation", T, float, double)
         elsa::square(src.begin(), src.end(), dst.begin());
 
         i = 0;
-        for (auto elem : dst) {
+        for ([[maybe_unused]] auto elem : dst) {
             INFO("Pos: ", i);
             CHECK_EQ(doctest::Approx(src[i] * src[i]), dst[i]);
             ++i;
@@ -651,7 +651,7 @@ TEST_CASE_TEMPLATE("Real transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -663,7 +663,7 @@ TEST_CASE_TEMPLATE("Real transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
@@ -680,11 +680,11 @@ TEST_CASE_TEMPLATE("Real transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({2, 4, 8, 16, 32, 64, 128})) {
             src[i] = elem;
             ++i;
@@ -693,7 +693,7 @@ TEST_CASE_TEMPLATE("Real transformation", T, float, double)
         elsa::real(src.begin(), src.end(), dst.begin());
 
         i = 0;
-        for (auto elem : dst) {
+        for ([[maybe_unused]] auto elem : dst) {
             INFO("Pos: ", i);
             CHECK_EQ(doctest::Approx(src[i]), dst[i]);
             ++i;
@@ -707,7 +707,7 @@ TEST_CASE_TEMPLATE("Real transformation", T, thrust::complex<float>, thrust::com
 
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<inner_t> dst(size);
 
@@ -719,7 +719,7 @@ TEST_CASE_TEMPLATE("Real transformation", T, thrust::complex<float>, thrust::com
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<inner_t> dst(size);
 
@@ -736,11 +736,11 @@ TEST_CASE_TEMPLATE("Real transformation", T, thrust::complex<float>, thrust::com
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<inner_t> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({2, 4, 8, 16, 32, 64, 128})) {
             src[i] = elem;
             ++i;
@@ -749,7 +749,7 @@ TEST_CASE_TEMPLATE("Real transformation", T, thrust::complex<float>, thrust::com
         elsa::real(src.begin(), src.end(), dst.begin());
 
         i = 0;
-        for (auto elem : dst) {
+        for ([[maybe_unused]] auto elem : dst) {
             INFO("Pos: ", i);
             CHECK_EQ(doctest::Approx(src[i].real()), dst[i]);
             ++i;
@@ -761,7 +761,7 @@ TEST_CASE_TEMPLATE("Real transformation", T, thrust::complex<float>, thrust::com
 // {
 //     GIVEN("An zero sized container")
 //     {
-//         constexpr std::size_t size = 0;
+//         constexpr size_t size = 0;
 //         elsa::ContiguousStorage<T> src1(size);
 //         elsa::ContiguousStorage<T> src2(size);
 //         elsa::ContiguousStorage<T> dst(size);
@@ -775,7 +775,7 @@ TEST_CASE_TEMPLATE("Real transformation", T, thrust::complex<float>, thrust::com
 //
 //     GIVEN("An one sized container")
 //     {
-//         constexpr std::size_t size = 1;
+//         constexpr size_t size = 1;
 //         elsa::ContiguousStorage<T> src1(size);
 //         elsa::ContiguousStorage<T> src2(size);
 //         elsa::ContiguousStorage<T> dst(size);
@@ -795,12 +795,12 @@ TEST_CASE_TEMPLATE("Real transformation", T, thrust::complex<float>, thrust::com
 //
 //     GIVEN("An arbitrarily sized container")
 //     {
-//         constexpr std::size_t size = 7;
+//         constexpr size_t size = 7;
 //         elsa::ContiguousStorage<T> src1(size);
 //         elsa::ContiguousStorage<T> src2(size);
 //         elsa::ContiguousStorage<T> dst(size);
 //
-//         std::size_t i = 0;
+//         size_t i = 0;
 //         for (T elem : std::initializer_list<T>({3.2, -4, 0, -6., 1.76, 8, 0})) {
 //             src1[i] = elem;
 //             ++i;
@@ -826,7 +826,7 @@ TEST_CASE_TEMPLATE("div transformation", T, float, double)
 {
     GIVEN("An zero sized container")
     {
-        constexpr std::size_t size = 0;
+        constexpr size_t size = 0;
         elsa::ContiguousStorage<T> src1(size);
         elsa::ContiguousStorage<T> src2(size);
         elsa::ContiguousStorage<T> dst(size);
@@ -840,7 +840,7 @@ TEST_CASE_TEMPLATE("div transformation", T, float, double)
 
     GIVEN("An one sized container")
     {
-        constexpr std::size_t size = 1;
+        constexpr size_t size = 1;
         elsa::ContiguousStorage<T> src1(size);
         elsa::ContiguousStorage<T> src2(size);
         elsa::ContiguousStorage<T> dst(size);
@@ -872,12 +872,12 @@ TEST_CASE_TEMPLATE("div transformation", T, float, double)
 
     GIVEN("An arbitrarily sized container")
     {
-        constexpr std::size_t size = 7;
+        constexpr size_t size = 7;
         elsa::ContiguousStorage<T> src1(size);
         elsa::ContiguousStorage<T> src2(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        std::size_t i = 0;
+        size_t i = 0;
         for (T elem : std::initializer_list<T>({2, 4, 8, 16, 32, 64, 128})) {
             src1[i] = elem;
             ++i;

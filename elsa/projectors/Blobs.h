@@ -219,15 +219,20 @@ namespace elsa
     class Blob
     {
     public:
-        constexpr Blob(data_t radius, SelfType_t<data_t> alpha, index_t order);
+        constexpr Blob(data_t radius, SelfType_t<data_t> alpha, index_t order)
+            : radius_(radius), alpha_(alpha), order_(order)
+        {
+        }
+        constexpr data_t operator()(data_t s)
+        {
+            return blobs::blob_evaluate(s, radius_, alpha_, order_);
+        }
 
-        constexpr data_t operator()(data_t s);
+        constexpr data_t radius() const { return radius_; }
 
-        constexpr data_t radius() const;
+        constexpr data_t alpha() const { return alpha_; }
 
-        constexpr data_t alpha() const;
-
-        constexpr index_t order() const;
+        constexpr index_t order() const { return order_; }
 
     private:
         data_t radius_;
