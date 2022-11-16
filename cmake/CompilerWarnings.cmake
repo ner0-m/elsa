@@ -49,22 +49,15 @@ function(set_target_warnings target)
         /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
     )
 
-    if(${ELSA_CUDA_ENABLED})
-        # NVCC emits lots of compiler-specific code, so we omit pedantic when quickvec is enabled
-        set(base_clang_warnings
-            -Wall # included -Wmisleading-indentation, -Wmost, -Wparentheses, -Wswitch, -Wswitch-bool.
-            -Wextra # reasonable and standard
-            -Wconversion # warn on type conversions that may lose data
-            -Wfatal-errors
-        )
-    else()
-        set(base_clang_warnings
-            -Wall # included -Wmisleading-indentation, -Wmost, -Wparentheses, -Wswitch, -Wswitch-bool.
-            -Wextra # reasonable and standard
-            -Wconversion # warn on type conversions that may lose data
-            -Wfatal-errors
-        )
-    endif()
+    set(base_clang_warnings
+        -Wall # included -Wmisleading-indentation, -Wmost, -Wparentheses, -Wswitch, -Wswitch-bool.
+        -Wextra # reasonable and standard
+        -Wfatal-errors
+    )
+
+    #if(${ELSA_CUDA_ENABLED})
+    #    # NVCC emits lots of compiler-specific code, so we omit pedantic when cuda is enabled
+    #else()
 
     set(all_clang_warnings
         ${base_clang_warnings}
