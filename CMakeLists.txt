@@ -440,6 +440,7 @@ add_custom_target(
 string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_TYPE_CXX_FLAGS)
 message(
     "
+elsa configuration: |
             project | ${PROJECT_NAME}
            compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
          build type | ${CMAKE_BUILD_TYPE}
@@ -447,10 +448,12 @@ message(
    build type flags | ${${BUILD_TYPE_CXX_FLAGS}}
           build dir | ${CMAKE_BINARY_DIR}
      install prefix | ${CMAKE_INSTALL_PREFIX}
- thrust CPP backend | ${THRUST_CPP_FOUND}
- thrust TBB backend | ${THRUST_TBB_FOUND}
- thrust OMP backend | ${THRUST_OMP_FOUND}
-thrust CUDA backend | ${THRUST_CUDA_FOUND}
+                    |
+   thrust backends: |
+                C++ | ${THRUST_CPP_FOUND}
+          Intel TBB | ${THRUST_TBB_FOUND}
+             OpenMP | ${THRUST_OMP_FOUND}
+               CUDA | ${THRUST_CUDA_FOUND}
 "
 )
 
