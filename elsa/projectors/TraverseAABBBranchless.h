@@ -84,8 +84,6 @@ namespace elsa
         /// result of aabb.max(), the upper corner of the aabb
         RealArray_t _aabbMax;
 
-        /// constant array containing epsilon
-        const RealArray_t _EPS{RealArray_t().setConstant(std::numeric_limits<real_t>::epsilon())};
         /// constant vector containing the maximum number
         const RealArray_t _MAX{RealArray_t().setConstant(std::numeric_limits<real_t>::max())};
 
@@ -96,9 +94,9 @@ namespace elsa
         /// select the closest voxel to the entry point
         void selectClosestVoxel();
         /// setup the step sizes considering the ray direction rd
-        void initDelta(const RealArray_t& rd);
+        void initDelta(const RealArray_t& rd, const RealArray_t& EPS);
         /// setup the maximum step parameters considering the ray direction rd
-        void initT(const RealArray_t& rd);
+        void initT(const RealArray_t& rd, const RealArray_t& EPS);
         /// check if the current index is still in the bounding box
         bool isCurrentPositionInAABB() const;
         /// calculate the mask which masks out all but the minimal coefficients in _T.

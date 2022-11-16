@@ -14,6 +14,9 @@ namespace elsa
         if (!isInBoundingBox()) // early abort if necessary
             return;
 
+        // constant array containing epsilon
+        const RealArray_t EPS{RealArray_t().setConstant(std::numeric_limits<real_t>::epsilon())};
+
         // determine whether we go up/down or left/right
         initStepDirection(r.direction());
 
@@ -21,10 +24,10 @@ namespace elsa
         selectClosestVoxel();
 
         // initialize the step sizes for the step parameter
-        initDelta(r.direction());
+        initDelta(r.direction(), EPS);
 
         // initialize the maximum step parameters
-        initT(r.direction());
+        initT(r.direction(), EPS);
     }
 
     template <int dim>
@@ -126,19 +129,19 @@ namespace elsa
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::initDelta(const RealArray_t& rd)
+    void TraverseAABBBranchless<dim>::initDelta(const RealArray_t& rd, const RealArray_t& EPS)
     {
         RealArray_t tdelta = _stepDirection / rd;
 
-        _tDelta = (Eigen::abs(rd) > _EPS).select(tdelta, _MAX);
+        _tDelta = (Eigen::abs(rd) > EPS).select(tdelta, _MAX);
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::initT(const RealArray_t& rd)
+    void TraverseAABBBranchless<dim>::initT(const RealArray_t& rd, const RealArray_t& EPS)
     {
         RealArray_t T = (((rd > 0.0f).select(_currentPos + 1., _currentPos)) - _entryPoint) / rd;
 
-        _T = (Eigen::abs(rd) > _EPS).select(T, _MAX);
+        _T = (Eigen::abs(rd) > EPS).select(T, _MAX);
     }
 
     template <int dim>
