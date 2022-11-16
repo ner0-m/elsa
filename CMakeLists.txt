@@ -48,6 +48,8 @@ option(SYSTEM_DOCTEST "Build elsa using the system doctest installation" OFF)
 option(SYSTEM_THRUST "Build elsa using the system thrust installation" OFF)
 option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
 
+option(BUILD_SHARED_LIBS "Build elsa as shared (dynamic) libraries" OFF)
+
 # ------------ general setup -----------
 # ------------
 
