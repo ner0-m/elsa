@@ -2,56 +2,139 @@
 #include "LutProjector.h"
 #include "Utilities/Statistics.hpp"
 #include "IO.h"
+#include "spdlog/fmt/bundled/core.h"
 
 #include <argparse/argparse.hpp>
 
-std::pair<elsa::DataContainer<elsa::real_t>, elsa::DataContainer<elsa::real_t>>
-    recon2d(elsa::index_t s, elsa::index_t numAngles, elsa::index_t arc, elsa::index_t iters)
+elsa::DataContainer<elsa::real_t> get_phantom(elsa::index_t dims, elsa::index_t s,
+                                              std::string phantom_kind)
 {
-    elsa::IndexVector_t size({{s, s}});
+    const auto size = elsa::IndexVector_t::Constant(dims, s);
 
-    const auto phantom = elsa::PhantomGenerator<elsa::real_t>::createModifiedSheppLogan(size);
+    if (phantom_kind == "SheppLogan") {
+        return elsa::PhantomGenerator<elsa::real_t>::createModifiedSheppLogan(size);
+    } else if (phantom_kind == "Rectangle") {
+        auto quarter = s / 4;
+        const auto lower = elsa::IndexVector_t::Constant(size.size(), quarter);
+        const auto upper = elsa::IndexVector_t::Constant(size.size(), s - quarter);
+        return elsa::PhantomGenerator<elsa::real_t>::createRectanglePhantom(size, lower, upper);
+    } else if (phantom_kind == "Circle") {
+        return elsa::PhantomGenerator<elsa::real_t>::createCirclePhantom(size, s / 4.f);
+    }
+    throw elsa::Error("Unknown phantom kind {}", phantom_kind);
+}
+
+std::unique_ptr<elsa::LinearOperator<elsa::real_t>>
+    get_projector(std::string projector_kind, const elsa::DataDescriptor& volume,
+                  const elsa::DataDescriptor& sinogram)
+{
+    const auto& vol = dynamic_cast<const elsa::VolumeDescriptor&>(volume);
+    const auto& sino = dynamic_cast<const elsa::DetectorDescriptor&>(sinogram);
+
+    if (projector_kind == "Blob") {
+        elsa::BlobProjector<elsa::real_t> projector(vol, sino);
+        return projector.clone();
+    } else if (projector_kind == "BSpline") {
+        elsa::BSplineProjector<elsa::real_t> projector(vol, sino);
+        return projector.clone();
+    } else if (projector_kind == "Siddon") {
+        elsa::SiddonsMethod<elsa::real_t> projector(vol, sino);
+        return projector.clone();
+    } else if (projector_kind == "Joseph") {
+        elsa::JosephsMethod<elsa::real_t> projector(vol, sino);
+        return projector.clone();
+    }
+    throw elsa::Error("Unknown projector {}", projector_kind);
+}
+
+elsa::DataContainer<elsa::real_t> compute_sinogram(const elsa::DataContainer<elsa::real_t> phantom,
+                                                   elsa::index_t numAngles, elsa::index_t arc,
+                                                   std::string forward_projector)
+{
+    const auto size = phantom.getDataDescriptor().getNumberOfCoefficientsPerDimension();
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
-    // write the phantom out
-    elsa::io::write(phantom, "2dphantom.pgm");
+    const auto dims = size.size();
 
     // generate circular trajectory
     const auto distance = static_cast<elsa::real_t>(size(0));
     auto sinoDescriptor = elsa::CircleTrajectoryGenerator::createTrajectory(
         numAngles, phantom.getDataDescriptor(), arc, distance * 100.0f, distance);
 
-    // dynamic_cast to VolumeDescriptor is legal and will not throw, as PhantomGenerator returns a
-    // VolumeDescriptor
-    elsa::Logger::get("Info")->info("Create BlobProjector");
-    elsa::BlobProjector projector(dynamic_cast<const elsa::VolumeDescriptor&>(volumeDescriptor),
-                                  *sinoDescriptor);
+    // Don't commit the inverse crim (i.e, use a different projector for the initial forward
+    // projection)
+    auto forward_ptr =
+        get_projector(forward_projector, phantom.getDataDescriptor(), *sinoDescriptor);
+    auto& forward = *forward_ptr;
 
     // simulate the sinogram
-    elsa::Logger::get("Info")->info("Calculate sinogram");
-    auto sinogram = projector.apply(phantom);
-    elsa::io::write(sinogram, "2dsinogram.pgm");
+    elsa::Logger::get("Info")->info("Calculate sinogram using {}-Projector", forward_projector);
+    auto sinogram = forward.apply(phantom);
 
-    // setup reconstruction problem
-    elsa::WLSProblem wlsProblem(projector, sinogram);
+    elsa::io::write(sinogram, fmt::format("{}dsinogram_{}.edf", dims, forward_projector));
 
-    elsa::CG cgSolver(wlsProblem);
+    if (dims == 2) {
+        elsa::io::write(sinogram, fmt::format("{}dsinogram_{}.pgm", dims, forward_projector));
+    } else if (dims == 3) {
+        for (int i = 0; i < size[dims - 1]; ++i) {
+            elsa::io::write(sinogram.slice(i),
+                            fmt::format("{}dsinogram_{:02}_{}.pgm", dims, i, forward_projector));
+        }
+    }
 
-    auto cgReconstruction = cgSolver.solve(iters);
-    elsa::PGM::write(cgReconstruction, "2dreconstruction_cg.pgm");
-
-    return {cgReconstruction, phantom};
-    // return {phantom, phantom};
+    return sinogram;
 }
 
-std::pair<elsa::DataContainer<elsa::real_t>, elsa::DataContainer<elsa::real_t>>
-    recon3d(elsa::index_t s, elsa::index_t numAngles, elsa::index_t arc, elsa::index_t iters)
+std::unique_ptr<elsa::Solver<elsa::real_t>>
+    get_solver(std::string solver_kind, const elsa::LinearOperator<elsa::real_t>& projector,
+               const elsa::DataContainer<elsa::real_t>& sinogram)
 {
-    elsa::IndexVector_t size({{s, s}});
+    if (solver_kind == "CG") {
+        elsa::TikhonovProblem problem(projector, sinogram, 0.05);
+        elsa::CG solver(problem);
+        return solver.clone();
+    } else if (solver_kind == "ISTA") {
+        elsa::LASSOProblem problem(projector, sinogram);
+        elsa::ISTA solver(problem);
+        return solver.clone();
+    } else if (solver_kind == "FISTA") {
+        elsa::LASSOProblem problem(projector, sinogram);
+        elsa::FISTA solver(problem);
+        return solver.clone();
+    } else {
+        throw elsa::Error("Unknown Solver {}", solver_kind);
+    }
+}
 
-    const auto phantom = elsa::PhantomGenerator<elsa::real_t>::createModifiedSheppLogan(size);
+elsa::DataContainer<elsa::real_t> reconstruct(const elsa::DataContainer<elsa::real_t>& sinogram,
+                                              const elsa::LinearOperator<elsa::real_t>& projector,
+                                              std::string projector_kind, elsa::index_t iters,
+                                              std::string solver_kind)
+{
+    const auto size = sinogram.getDataDescriptor().getNumberOfCoefficientsPerDimension();
+    const auto dims = size.size();
 
-    return {phantom, phantom};
+    // setup reconstruction problem
+    elsa::Logger::get("Info")->info("Setting up solver {}", solver_kind);
+    auto solver_ptr = get_solver(solver_kind, projector, sinogram);
+    auto& solver = *solver_ptr;
+
+    elsa::Logger::get("Info")->info("Start reconstruction");
+    auto reconstruction = solver.solve(iters);
+
+    elsa::io::write(reconstruction, fmt::format("{}dreconstruction_{}.edf", dims, projector_kind));
+
+    if (dims == 2) {
+        elsa::io::write(reconstruction,
+                        fmt::format("{}dreconstruction_{}.pgm", dims, projector_kind));
+    } else if (dims == 3) {
+        for (int i = 0; i < size[dims - 1]; ++i) {
+            elsa::io::write(reconstruction.slice(i),
+                            fmt::format("{}dreconstruction_{:02}_{}.pgm", dims, i, projector_kind));
+        }
+    }
+
+    return reconstruction;
 }
 
 template <typename data_t>
@@ -101,7 +184,8 @@ data_t standardDeviation(elsa::DataContainer<data_t> a)
 template <typename data_t>
 data_t meanSquaredError(elsa::DataContainer<data_t> a, elsa::DataContainer<data_t> b)
 {
-    return elsa::DataContainer(a - b).l2Norm() / a.getSize();
+    elsa::DataContainer diff = a - b;
+    return diff.l2Norm() / a.getSize();
 }
 
 template <typename data_t>
@@ -164,6 +248,16 @@ int main(int argc, char* argv[])
 {
     argparse::ArgumentParser args("elsa", "0.7");
 
+    args.add_argument("--verbose")
+        .help("increase output verbosity")
+        .default_value(false)
+        .implicit_value(true);
+
+    args.add_argument("--no-recon")
+        .help("Only perform forward projection and no reconstruction")
+        .default_value(false)
+        .implicit_value(true);
+
     args.add_argument("--dims").help("Dimension of the problem").default_value(2).scan<'i', int>();
     args.add_argument("--size").help("Size of the problem").default_value(256).scan<'i', int>();
 
@@ -182,10 +276,29 @@ int main(int argc, char* argv[])
         .default_value(10)
         .scan<'i', int>();
 
+    args.add_argument("--projector")
+        .help("Projector to use for reconstruction (\"Blob\", \"Siddon\", \"Joseph\")")
+        .default_value(std::string("Blob"));
+
+    args.add_argument("--forward")
+        .help("Choose different projector for forward proj (\"Blob\", \"Siddon\", \"Joseph\")")
+        .default_value(std::string("Joseph"));
+
+    args.add_argument("--solver")
+        .help("Choose different solver (\"CG\", \"ISTA\", \"FISTA\")")
+        .default_value(std::string("CG"));
+
+    args.add_argument("--phantom")
+        .help("Choose different solver (\"SheppLogan\", \"Rectangle\", \"Circle\")")
+        .default_value(std::string("SheppLogan"));
+
     args.add_argument("--analyze")
         .help("Analyze reconstruction")
         .default_value(false)
         .implicit_value(true);
+
+    args.add_argument("--baseline")
+        .help("Give a baseline file with which the current reconstruction is compared");
 
     try {
         args.parse_args(argc, argv);
@@ -193,6 +306,11 @@ int main(int argc, char* argv[])
         std::cerr << err.what() << std::endl;
         std::cerr << args;
         std::exit(1);
+    }
+
+    if (args["--verbose"] == true) {
+        elsa::Logger::setLevel(elsa::Logger::LogLevel::DEBUG);
+        elsa::Logger::get("main")->info("Verbose output enabled");
     }
 
     const elsa::index_t dims = args.get<int>("--dims");
@@ -204,20 +322,54 @@ int main(int argc, char* argv[])
         }
         return size;
     }();
+
     const elsa::index_t arc = args.get<int>("--arc");
 
     const elsa::index_t iters = args.get<int>("--iters");
 
-    auto [recon, phantom] = [&]() {
-        if (dims == 2) {
-            return recon2d(size, num_angles, arc, iters);
-        } else {
-            return recon3d(size, num_angles, arc, iters);
+    const auto projector_kind = args.get<std::string>("--projector");
+
+    const auto forward_projector = [&]() {
+        if (args.is_used("--forward")) {
+            return args.get<std::string>("--forward");
         }
+        return projector_kind;
     }();
 
-    if (args["--analyze"] == true) {
-        analyze(phantom, recon);
+    const auto solver_kind = args.get<std::string>("--solver");
+
+    const auto phantom_kind = args.get<std::string>("--phantom");
+
+    /// reconstruction setup
+    const auto phantom = get_phantom(dims, size, phantom_kind);
+
+    // write the phantom out
+    if (dims == 2) {
+        elsa::io::write(phantom, fmt::format("{}dphantom.pgm", dims));
+    }
+    elsa::io::write(phantom, fmt::format("{}dphantom.edf", dims));
+
+    auto sinogram = compute_sinogram(phantom, num_angles, arc, forward_projector);
+
+    if (args["--no-recon"] == false) {
+
+        // Create projector for reconstruction
+        elsa::Logger::get("Info")->info("Create {}-Projector", projector_kind);
+        auto projector_ptr = get_projector(projector_kind, phantom.getDataDescriptor(),
+                                           sinogram.getDataDescriptor());
+        auto& projector = *projector_ptr;
+
+        auto recon = reconstruct(sinogram, projector, projector_kind, iters, solver_kind);
+
+        // if (args["--analyze"] == true) {
+        //     analyze(phantom, recon);
+        //
+        //     if (args.is_used("--baseline")) {
+        //         const auto baseline_file = args.get<std::string>("--baseline");
+        //         const auto baseline = elsa::io::read<elsa::real_t>(baseline_file);
+        //         analyze(baseline, recon);
+        //     }
+        // }
     }
 
     return 0;

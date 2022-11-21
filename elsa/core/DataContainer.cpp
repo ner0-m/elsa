@@ -8,8 +8,10 @@
 #include "PartitionDescriptor.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
+#include "Assertions.h"
 
 #include <utility>
+#include <algorithm>
 
 namespace elsa
 {
@@ -108,26 +110,53 @@ namespace elsa
     template <typename data_t>
     data_t& DataContainer<data_t>::operator[](index_t index)
     {
+        ELSA_VERIFY(index >= 0);
+        ELSA_VERIFY(index < getSize());
+
         return (*_dataHandler)[index];
     }
 
     template <typename data_t>
     const data_t& DataContainer<data_t>::operator[](index_t index) const
     {
+        ELSA_VERIFY(index >= 0);
+        ELSA_VERIFY(index < getSize());
+
         return static_cast<const DataHandler<data_t>&>(*_dataHandler)[index];
     }
 
     template <typename data_t>
-    data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate)
+    data_t DataContainer<data_t>::at(const IndexVector_t& coordinate) const
     {
-        return (*_dataHandler)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
+        const auto arr = coordinate.array();
+        if ((arr < 0).any()
+            || (arr >= _dataDescriptor->getNumberOfCoefficientsPerDimension().array()).any()) {
+            return 0;
+        }
+
+        return (*this)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
     template <typename data_t>
-    const data_t& DataContainer<data_t>::operator()(IndexVector_t coordinate) const
+    data_t& DataContainer<data_t>::operator()(const IndexVector_t& coordinate)
     {
-        return static_cast<const DataHandler<data_t>&>(
-            *_dataHandler)[_dataDescriptor->getIndexFromCoordinate(std::move(coordinate))];
+        // const auto arr = coordinate.array();
+        // const auto shape = _dataDescriptor->getNumberOfCoefficientsPerDimension().array();
+        // ELSA_VERIFY((arr >= 0).all());
+        // ELSA_VERIFY((arr < shape).all());
+
+        return (*this)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
+    }
+
+    template <typename data_t>
+    const data_t& DataContainer<data_t>::operator()(const IndexVector_t& coordinate) const
+    {
+        // const auto arr = coordinate.array();
+        // const auto shape = _dataDescriptor->getNumberOfCoefficientsPerDimension().array();
+        // ELSA_VERIFY((arr >= 0).all());
+        // ELSA_VERIFY((arr < shape).all());
+
+        return (*this)[_dataDescriptor->getIndexFromCoordinate(coordinate)];
     }
 
     template <typename data_t>
@@ -582,6 +611,22 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t> clip(DataContainer<data_t> dc, data_t min, data_t max)
+    {
+        std::transform(dc.begin(), dc.end(), dc.begin(), [&](auto x) {
+            if (x < min) {
+                return min;
+            } else if (x > max) {
+                return max;
+            } else {
+                return x;
+            }
+        });
+
+        return dc;
+    }
+
+    template <typename data_t>
     DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
                                       const DataContainer<data_t>& dc2)
     {
@@ -664,6 +709,9 @@ namespace elsa
     template class DataContainer<double>;
     template class DataContainer<complex<double>>;
     template class DataContainer<index_t>;
+
+    template DataContainer<float> clip<float>(DataContainer<float> dc, float min, float max);
+    template DataContainer<double> clip<double>(DataContainer<double> dc, double min, double max);
 
     template DataContainer<float> concatenate<float>(const DataContainer<float>&,
                                                      const DataContainer<float>&);

@@ -76,6 +76,9 @@ namespace elsa
         static RealMatrix_t create2DRotation(const real_t leadingCoeff,
                                              const index_t leadingAxisIndex);
 
+        static RealMatrix_t create3DRotation(const real_t leadingCoeff,
+                                             const index_t leadingAxisIndex);
+
         static RealMatrix_t createRotation(RealRay_t ray);
 
         static RealMatrix_t createTransformation(const RealRay_t& ray,
@@ -170,14 +173,6 @@ namespace elsa
         RealRay_t ray_;
 
     public:
-        /// The Dereference type of the iterator
-        /// TODO: With C++20 support for proxy iterators is given, maybe this could change then
-        struct IterValue {
-            RealVector_t curPosition_;
-            IndexVector_t curVoxel_;
-            real_t t_;
-        };
-
         /// Traversal iterator, models forward iterator, maybe this should actually be an input
         /// iterator due to the non reference type of the dereference type. IDK, as we use it, this
         /// works, but in the future this might should be different.
@@ -185,15 +180,14 @@ namespace elsa
         public:
             using iterator_category = std::forward_iterator_tag;
             using difference_type = std::ptrdiff_t;
-            using value_type = IterValue;
+            using value_type = IndexVector_t;
             using pointer = value_type*;
             using reference = value_type&;
 
         private:
-            index_t pos_;
-            RealRay_t ray_;
-            real_t tDelta_;
-            real_t t_;
+            index_t pos_{};
+            RealVector_t cur_{};
+            RealVector_t dir_{};
 
         public:
             /// Construct iterator
@@ -202,10 +196,12 @@ namespace elsa
             /// @param ray traversed ray used to compute exact position on dereference
             /// @param deltat increment of t each increment
             /// @param t position along the ray
-            Iter(index_t pos, RealRay_t ray, real_t deltat, real_t t)
-                : pos_(pos), ray_(ray), tDelta_(deltat), t_(t)
+            Iter(index_t pos, const RealVector_t& entry, const RealVector_t& dir)
+                : pos_(pos), cur_(entry), dir_(dir)
             {
             }
+
+            Iter(index_t pos) : pos_(pos) {}
 
             /// Dereference iterator
             value_type operator*() const;
@@ -223,22 +219,31 @@ namespace elsa
             friend bool operator!=(const Iter& lhs, const Iter& rhs);
         };
 
-        // Delete default construction
+        /// Delete default construction
         SliceTraversal() = delete;
 
-        // Construct traversal from bounding box and ray
+        /// Construct traversal from bounding box and ray
         SliceTraversal(BoundingBox aabb, RealRay_t ray);
 
-        // Get the first visited voxel
+        /// Get the first visited voxel
         Iter begin() const;
 
-        // Get on past the end
+        /// Get on past the end
         Iter end() const;
 
-        // Get the index of the first visited voxel
+        /// Get the index of the first visited voxel
         index_t startIndex() const;
 
-        // Get the index of the one past the last visited voxel
+        /// Get the index of the one past the last visited voxel
         index_t endIndex() const;
+
+        /// Get the leading direction of the ray
+        index_t leadingDirection() const;
+
+        /// Get the initial computed t value for the entry point
+        real_t t() const;
+
+        /// Get the computed delta t value
+        real_t tDelta() const;
     };
 } // namespace elsa

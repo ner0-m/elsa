@@ -29,9 +29,6 @@ option(ELSA_BINDINGS_IN_SINGLE_MODULE "Combine the bindings for all elsa modules
 
 option(ELSA_CUDA_VECTOR "Build elsa with GPU DataContainer support and default" OFF)
 
-option(ELSA_BUILD_ML_DNNL "Try to build the elsa_ml module with Intel(R) Dnnl backend" ON)
-option(ELSA_BUILD_ML_CUDNN "Try to build the elsa_ml module with Nvidia(R) Cudnn backend" ON)
-
 set(ELSA_WARNING_LEVEL "base" CACHE STRING "Warning level with which elsa is build. Options are: base, all")
 set(ELSA_SANITIZER
         "" CACHE STRING
@@ -159,21 +156,11 @@ if(ELSA_MASTER_PROJECT)
         # to $CMAKE_INSTALL_INCLUDEDIR/spdlog
     endif()
 
-    # setup Dnnl library
-    find_package(Dnnl)
-
-    # setup Cudnn library
-    if(ELSA_BUILD_ML_CUDNN)
-      find_package(Cudnn)
-      find_package(Cublas)
-      find_package(Npp)
-    endif(ELSA_BUILD_ML_CUDNN)
-
     if (${ELSA_BUILD_PYTHON_BINDINGS})
         CPMAddPackage(
             NAME pybind11
             GITHUB_REPOSITORY pybind/pybind11
-            VERSION 2.8.0
+            VERSION 2.9.2
         )
     endif()
 else()
@@ -181,11 +168,11 @@ else()
 endif()
 
 # Enable CUDA support if requested
-if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS OR ELSA_BUILD_ML_CUDNN)
+if(ELSA_CUDA_VECTOR OR ELSA_BUILD_CUDA_PROJECTORS)
     message(STATUS "CUDA support requested...")
     include(CheckLanguage)
     check_language(CUDA)
-    find_package(CUDA 11.0)
+    find_package(CUDA 11.4)
 
     if(CMAKE_CUDA_COMPILER AND (CUDA_VERSION VERSION_GREATER 11))
         enable_language(CUDA)

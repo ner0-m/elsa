@@ -38,7 +38,7 @@ void checkTransformation(const RealRay_t& ray, const RealVector_t& centerOfRotat
         INFO("R :=\n", matrix.format(matfmt));
         INFO("Expected R :=\n", expectedRotation.format(matfmt));
 
-        CHECK_EQ(matrix, expectedRotation);
+        CHECK_UNARY(matrix.isApprox(expectedRotation));
     }
 
     THEN("The ray direction is transformed correctly")
@@ -65,11 +65,17 @@ void checkTransformation(const RealRay_t& ray, const RealVector_t& centerOfRotat
         CHECK_UNARY(transformed.isApprox(expectedro));
     }
 }
+
 void checkTransformationBasic(const RealRay_t& ray, const RealVector_t& centerOfRotation,
                               RealMatrix_t rotation)
 {
-    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, 0}}), RealVector_t({{1, 0}}),
-                        rotation);
+    RealVector_t expectedro = RealVector_t::Zero(ray.dim());
+    expectedro[0] = -4;
+
+    RealVector_t expectedrd = RealVector_t::Zero(ray.dim());
+    expectedrd[0] = 1;
+
+    checkTransformation(ray, centerOfRotation, expectedro, expectedrd, rotation);
 }
 
 TEST_CASE("TraversalTransformation: Test transformation with ray going in +x")
@@ -399,6 +405,8 @@ index_t checkTraversal(BoundingBox aabb, RealRay_t ray, std::deque<RealVector_t>
     // INFO("exitPoint := ", traversal.exitPoint_.format(fmt));
 
     index_t counter = 0;
+    auto t = traversal.t();
+    auto tdelta = traversal.tDelta();
     for (auto iter = traversal.begin(); iter != traversal.end(); ++iter) {
         auto value = *iter;
 
@@ -406,9 +414,9 @@ index_t checkTraversal(BoundingBox aabb, RealRay_t ray, std::deque<RealVector_t>
         REQUIRE_MESSAGE(!visitedVoxels.empty(), "Visiting more voxels than expected");
 
         RealVector_t expected = visitedVoxels.front();
-        RealVector_t point = ray.pointAt(value.t_);
+        RealVector_t point = ray.pointAt(t);
 
-        CAPTURE(value.t_);
+        CAPTURE(t);
         INFO("RealRay_t hit: ", point.format(fmt));
         INFO("Should hit: ", expected.format(fmt));
 
@@ -419,6 +427,7 @@ index_t checkTraversal(BoundingBox aabb, RealRay_t ray, std::deque<RealVector_t>
 
         // increment counter
         ++counter;
+        t += tdelta;
     }
 
     INFO("Voxels left in list: ", visitedVoxels.size());
@@ -960,4 +969,291 @@ TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [-1, -1]")
     }
 }
 
-TEST_SUITE_END();
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [1, 0, 0]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{-2.5, 1.5, 1.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{1, 0, 0}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformationBasic(ray, centerOfRotation, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [1, 1, 0]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{-2.5, -2.5, 1.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{1, 1, 0}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, -4, 0}}), rd, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [1, -1, 0]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{-2.5, 5.5, 1.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{1, -1, 0}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, 4, 0}}), rd, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [1, 0, 1]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{-2.5, 1.5, -2.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{1, 0, 1}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, 0, -4}}), rd, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [1, 0, -1]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{-2.5, 1.5, 5.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{1, 0, -1}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, 0, 4}}), rd, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [1, 1, 1]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{-2.5, -2.5, -2.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{1, 1, 1}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, -4, -4}}), rd, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [1, 1, -1]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{-2.5, -2.5, 5.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{1, 1, -1}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, -4, 4}}), rd, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [-1, 0, 0]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(pi_t, Eigen::Vector3f::UnitY()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{5.5, 1.5, 1.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{-1, 0, 0}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformationBasic(ray, centerOfRotation, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [-1, 1, 0]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(pi_t, Eigen::Vector3f::UnitY()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{5.5, -2.5, 1.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{-1, 1, 0}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, -4, 0}}),
+                        RealVector_t({{1, 1, 0}}), expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [-1, -1, 0]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(pi_t, Eigen::Vector3f::UnitY()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{5.5, 5.5, 1.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{-1, -1, 0}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, 4, 0}}),
+                        RealVector_t({{1, -1, 0}}), expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [-1, 0, 1]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(pi_t, Eigen::Vector3f::UnitY()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{5.5, 1.5, -2.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{-1, 0, 1}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, 0, 4}}),
+                        RealVector_t({{1, 0, -1}}), expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [-1, 0, -1]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(pi_t, Eigen::Vector3f::UnitY()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{5.5, 1.5, 5.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{-1, 0, -1}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformation(ray, centerOfRotation, RealVector_t({{-4, 0, -4}}),
+                        RealVector_t({{1, 0, 1}}), expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [0, 1, 0]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(-0.5 * pi_t, Eigen::Vector3f::UnitZ()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{1.5, -2.5, 1.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{0, 1, 0}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformationBasic(ray, centerOfRotation, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [0, -1, 0]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0.5 * pi_t, Eigen::Vector3f::UnitZ()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{1.5, 5.5, 1.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{0, -1, 0}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformationBasic(ray, centerOfRotation, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [0, 0, 1]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(0.5 * pi_t, Eigen::Vector3f::UnitY()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{1.5, 1.5, -2.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{0, 0, 1}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformationBasic(ray, centerOfRotation, expectedRotation);
+}
+
+TEST_CASE("TraversalTransformation: Traversing a 3D grid, dir [0, 0, -1]")
+{
+    auto expectedRotation = Eigen::AngleAxisf(-0.5 * pi_t, Eigen::Vector3f::UnitY()).matrix();
+    const RealVector_t centerOfRotation({{1.5, 1.5, 1.5}});
+
+    const RealVector_t ro({{1.5, 1.5, 5.5}});
+    INFO("ro := ", ro.format(vecfmt));
+
+    const RealVector_t rd({{0, 0, -1}});
+    INFO("rd := ", rd.format(vecfmt));
+
+    const RealRay_t ray(ro, rd);
+
+    checkTransformationBasic(ray, centerOfRotation, expectedRotation);
+}
+
+TEST_CASE("SliceTraversal: Traversing a 2D grid diagonally, dir [1, 0, 0]")
+{
+    IndexVector_t size({{3, 3, 3}});
+
+    BoundingBox aabb(size);
+
+    RealVector_t rd({{1, 0, 0}});
+    rd.normalize();
+
+    CAPTURE(aabb);
+
+    WHEN("Traversing the grid through the center of the top left corner")
+    {
+        const RealVector_t ro({{-1.5, 0, 0}});
+
+        const RealRay_t ray(ro, rd);
+
+        // list of points we expect to visit
+        std::deque<RealVector_t> visitedVoxels;
+        visitedVoxels.emplace_back(RealVector_t{{0.5, 0, 0}});
+        visitedVoxels.emplace_back(RealVector_t{{1.5, 0, 0}});
+        visitedVoxels.emplace_back(RealVector_t{{2.5, 0, 0}});
+
+        auto counter = checkTraversal(aabb, ray, visitedVoxels);
+
+        THEN("Exactly one step is taken") { CHECK_EQ(counter, 3); }
+    }
+}

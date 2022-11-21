@@ -1,4 +1,5 @@
 #include "SliceTraversal.h"
+#include "Error.h"
 #include "elsaDefines.h"
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/ostr.h"
@@ -32,6 +33,49 @@ namespace elsa
         return createRotationMatrix(0);
     }
 
+    RealMatrix_t TransformToTraversal::create3DRotation(const real_t leadingCoeff,
+                                                        const index_t leadingAxisIndex)
+    {
+        auto identity = []() { return RealMatrix_t({{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}); };
+
+        auto rotationX = [](real_t radian) {
+            real_t c = std::cos(radian);
+            real_t s = std::sin(radian);
+            return RealMatrix_t({{1, 0, 0}, {0, c, -s}, {0, s, c}});
+        };
+
+        auto rotationY = [](real_t radian) {
+            real_t c = std::cos(radian);
+            real_t s = std::sin(radian);
+            return RealMatrix_t({{c, 0, s}, {0, 1, 0}, {-s, 0, c}});
+        };
+
+        auto rotationZ = [](real_t radian) {
+            real_t c = std::cos(radian);
+            real_t s = std::sin(radian);
+            return RealMatrix_t({{c, -s, 0}, {s, c, 0}, {0, 0, 1}});
+        };
+
+        // TODO: Does a closed form solution exist?
+        // Use conversion to polar coordinates
+        if (leadingAxisIndex == 0 && leadingCoeff >= 0) {
+            // Already identity, so do nothing
+            return identity();
+        } else if (leadingAxisIndex == 0 && leadingCoeff < 0) {
+            return rotationY(pi_t);
+        } else if (leadingAxisIndex == 1 && leadingCoeff >= 0) {
+            return rotationZ(-0.5 * pi_t);
+        } else if (leadingAxisIndex == 1 && leadingCoeff <= 0) {
+            return rotationZ(0.5 * pi_t);
+        } else if (leadingAxisIndex == 2 && leadingCoeff >= 0) {
+            return rotationY(0.5 * pi_t);
+        } else if (leadingAxisIndex == 2 && leadingCoeff <= 0) {
+            return rotationY(-0.5 * pi_t);
+        }
+
+        return identity();
+    }
+
     RealMatrix_t TransformToTraversal::createRotation(RealRay_t ray)
     {
         // Get the leading axis, by absolute value
@@ -41,7 +85,13 @@ namespace elsa
         // Get the signed leading coefficient
         const auto leadingCoeff = ray.direction()(leadingAxisIndex);
 
-        return create2DRotation(leadingCoeff, leadingAxisIndex);
+        if (ray.dim() == 2) {
+            return create2DRotation(leadingCoeff, leadingAxisIndex);
+        } else if (ray.dim() == 3) {
+            return create3DRotation(leadingCoeff, leadingAxisIndex);
+        }
+        throw Error("Can not create a {}-dimensional transformation for the slice traversal",
+                    ray.dim());
     }
 
     RealMatrix_t TransformToTraversal::createTransformation(const RealRay_t& ray,
@@ -118,25 +168,9 @@ namespace elsa
     SliceTraversal::SliceTraversal(BoundingBox aabb, RealRay_t ray)
         : transformation_(ray, aabb._max.array() / 2), ray_(ray)
     {
-        Eigen::IOFormat vecfmt(10, 0, ", ", ", ", "", "", "[", "]");
-        // {
-        //     auto tmphit = Intersection::xPlanesWithRay(aabb, ray);
-        //
-        //     fmt::print("aabb: {}\n", aabb);
-        //     fmt::print("ro: {}\n", ray.origin().format(vecfmt));
-        //     fmt::print("rd: {}\n", ray.direction().format(vecfmt));
-        //     if (tmphit) {
-        //         fmt::print("hit: {}\n", *tmphit);
-        //         fmt::print("diff: {}\n", tmphit->_tmax - tmphit->_tmin);
-        //         fmt::print("firstVoxel: {}\n", ray.pointAt(tmphit->_tmin).format(vecfmt));
-        //         fmt::print("lastVoxel: {}\n", ray.pointAt(tmphit->_tmax).format(vecfmt));
-        //     }
-        // }
-
         // Transform ray and aabb to traversal coordinate space
         ray = transformation_.toTraversalCoordinates(ray);
         aabb = transformation_.toTraversalCoordinates(aabb);
-        // fmt::print("aabb: {}\n", aabb);
 
         // TODO: We only want to shift in x direction by 0.5, not in y
         auto hit = Intersection::xPlanesWithRay(aabb, ray);
@@ -145,13 +179,6 @@ namespace elsa
         if (hit) {
             const auto firstVoxel = ray.pointAt(hit->_tmin);
             const auto lastVoxel = ray.pointAt(hit->_tmax);
-
-            // fmt::print("ro: {}\n", ray.origin().format(vecfmt));
-            // fmt::print("rd: {}\n", ray.direction().format(vecfmt));
-            // fmt::print("hit: {}\n", *hit);
-            // fmt::print("diff: {}\n", hit->_tmax - hit->_tmin);
-            // fmt::print("firstVoxel: {}\n", firstVoxel.format(vecfmt));
-            // fmt::print("lastVoxel: {}\n", lastVoxel.format(vecfmt));
 
             endIndex_ = std::max<index_t>(
                 1, static_cast<index_t>(std::ceil(lastVoxel[0] - firstVoxel[0] + 0.5f)));
@@ -162,9 +189,23 @@ namespace elsa
         }
     }
 
-    SliceTraversal::Iter SliceTraversal::begin() const { return {startIndex_, ray_, tDelta_, t_}; }
+    index_t SliceTraversal::leadingDirection() const
+    {
+        index_t idx = 0;
+        ray_.direction().array().cwiseAbs().maxCoeff(&idx);
+        return idx;
+    }
 
-    SliceTraversal::Iter SliceTraversal::end() const { return {endIndex_, ray_, tDelta_, t_}; }
+    real_t SliceTraversal::t() const { return t_; }
+
+    real_t SliceTraversal::tDelta() const { return tDelta_; }
+
+    SliceTraversal::Iter SliceTraversal::begin() const
+    {
+        return {startIndex_, ray_.pointAt(t_), ray_.direction() * tDelta_};
+    }
+
+    SliceTraversal::Iter SliceTraversal::end() const { return {endIndex_}; }
 
     index_t SliceTraversal::startIndex() const { return startIndex_; }
 
@@ -172,15 +213,13 @@ namespace elsa
 
     SliceTraversal::Iter::value_type SliceTraversal::Iter::operator*() const
     {
-        const RealVector_t curPos = ray_.pointAt(t_);
-        const IndexVector_t curVoxel = curPos.template cast<index_t>();
-        return {curPos, curVoxel, t_};
+        return cur_.template cast<index_t>();
     }
 
     SliceTraversal::Iter& SliceTraversal::Iter::operator++()
     {
         ++pos_;
-        t_ += tDelta_;
+        cur_ += dir_;
         return *this;
     }
 

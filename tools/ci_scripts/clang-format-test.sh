@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Check for all C++-like files if they need formatting. 
+# Check for all C++-like files if they need formatting.
 # Only consider files which are different from master.
 # clang-format version 10 is required.
 # return 1 when changes have to be made, so the CI step fails.
@@ -12,7 +12,7 @@ ORANGE='\033[0;33m'
 NC='\033[0m' # No Color
 
 # preference list
-clang_format_version=10
+clang_format_version=14
 clang_format_tool_candiates=(clang-format-$clang_format_version clang-format)
 
 # update origin
@@ -29,7 +29,8 @@ if (( ${#files[@]} )); then
     clang_format_tool=false
     # Check all possible candidates
     for candidate in ${clang_format_tool_candiates[@]}; do
-        if command -v "$candidate" >/dev/null 2>&1 && "$candidate" --version | grep -qF ' 10.'; then
+        find_str=" ${clang_format_version}."
+        if command -v "$candidate" >/dev/null 2>&1 && "$candidate" --version | grep -qF $find_str; then
             clang_format_tool=$candidate
             break
         fi
@@ -37,7 +38,7 @@ if (( ${#files[@]} )); then
 
     # Check that it's really set
     if [ $clang_format_tool = false ]; then
-        echo -e "[${RED}FAIL${NC}]: clang-format-10 is not available, but C++ files need linting! Please install clang-format-10."
+        echo -e "[${RED}FAIL${NC}]: clang-format-$clang_format_version is not available, but C++ files need linting! Please install clang-format-$clang_format_version."
         exit 1
     fi
 
@@ -52,7 +53,7 @@ if (( ${#files[@]} )); then
 
         if [[ "$master_ahead" -gt "0" ]]; then
             echo -e "[${BLUE}INFO${NC}]: Files considered:"
-            printf '--> %s\n' "${files[@]}" 
+            printf '--> %s\n' "${files[@]}"
         fi
 
         exit 1

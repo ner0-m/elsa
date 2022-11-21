@@ -55,7 +55,9 @@ namespace elsa
     class CartesianIndices
     {
     private:
-        std::vector<IndexRange> idxrange_{};
+        index_t size_;
+        IndexVector_t first_;
+        IndexVector_t last_;
 
         // Tag struct, just to indicate the end iterator as sentinel. TODO: With a switch to C++
         // 20, remove this and let `end()` return a proper sentinel type
@@ -69,36 +71,26 @@ namespace elsa
         CartesianIndices(std::vector<IndexRange> ranges);
 
         /// Create an index space ranging from `0`, to `to` with the dimension of `to`
-        template <typename Vector>
-        // requires ForwardRange + Sized
-        CartesianIndices(Vector to)
-        {
-            idxrange_.reserve(to.size());
+        CartesianIndices(const IndexVector_t& to);
 
+        template <typename Vector>
+        CartesianIndices(const Vector& to)
+            : size_(to.size()), first_(IndexVector_t::Zero(size_)), last_(to.size())
+        {
             using std::begin;
-            using std::end;
-            std::transform(begin(to), end(to), std::back_inserter(idxrange_), [](auto idx) {
-                return std::pair{0, idx};
-            });
+            std::copy_n(begin(to), size_, last_.begin());
         }
 
         /// Create an index space ranging from `from`, to `to` with the dimension of `ranges`
+        CartesianIndices(const IndexVector_t& from, const IndexVector_t& to);
+
         template <typename Vector>
-        // requires ForwardRange + Sized
-        CartesianIndices(Vector from, Vector to)
+        CartesianIndices(const Vector& from, const Vector& to)
+            : size_(to.size()), first_(from.size()), last_(to.size())
         {
-            if (from.size() != to.size()) {
-                throw InvalidArgumentError("CartesianIndices: vectors must be of same size");
-            }
-
-            idxrange_.reserve(asUnsigned(from.size()));
-
             using std::begin;
-            using std::end;
-            std::transform(begin(from), end(from), begin(to), std::back_inserter(idxrange_),
-                           [](auto start, auto end) {
-                               return std::pair{start, end};
-                           });
+            std::copy_n(begin(from), size_, first_.begin());
+            std::copy_n(begin(to), size_, last_.begin());
         }
 
         /// Return the dimension of index space
@@ -111,21 +103,21 @@ namespace elsa
         auto range(index_t i) const -> IndexRange;
 
         /// Return the lower bound of the index space
-        auto first() -> IndexVector_t;
+        auto first() -> IndexVector_t&;
         /// @overload
-        auto first() const -> IndexVector_t;
+        auto first() const -> const IndexVector_t&;
 
         /// Return the upper bound of the index space
-        auto last() -> IndexVector_t;
+        auto last() -> IndexVector_t&;
         /// @overload
-        auto last() const -> IndexVector_t;
+        auto last() const -> const IndexVector_t&;
 
         /// Random Access Iterator for index space
         struct iterator {
         private:
             IndexVector_t cur_;
-            IndexVector_t begins_;
-            IndexVector_t ends_;
+            const IndexVector_t& begins_;
+            const IndexVector_t& ends_;
 
         public:
             using value_type = IndexVector_t;
@@ -136,12 +128,13 @@ namespace elsa
 
             iterator(as_sentinel, const IndexVector_t& begin, const IndexVector_t& end);
 
-            explicit iterator(IndexVector_t vec);
+            explicit iterator(const IndexVector_t& vec);
 
-            iterator(IndexVector_t cur, IndexVector_t begin, IndexVector_t end);
+            iterator(const IndexVector_t& cur, const IndexVector_t& begin,
+                     const IndexVector_t& end);
 
             // Dereference
-            IndexVector_t operator*() const;
+            const IndexVector_t& operator*() const;
 
             // Increment
             iterator& operator++();
@@ -238,7 +231,7 @@ namespace elsa
                                          const IndexVector_t& lower, const IndexVector_t& upper);
 
     /// @overload
-    CartesianIndices neighbours_in_slice(const IndexVector_t& pos, index_t dist,
+    CartesianIndices neighbours_in_slice(const IndexVector_t& pos, index_t dist, index_t leadingDim,
                                          const IndexVector_t& lower, const IndexVector_t& upper);
 } // namespace elsa
 

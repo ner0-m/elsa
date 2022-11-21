@@ -14,45 +14,42 @@ namespace elsa
         return result;
     }
 
-    auto CartesianIndices::dims() const -> index_t { return as<index_t>(idxrange_.size()); }
-
-    auto CartesianIndices::size() const -> index_t
+    template <std::size_t N, typename Fn>
+    auto map(std::array<IndexRange, N> v, index_t size, Fn fn)
     {
-        // TODO: Once the coverage CI image is updated, change this to:
-        // clang-format off
-        // std::transform_reduce(idxrange_.begin(), idxrange_.end(), 1, std::multiplies<>{},
-        //                      [](auto p) { return p.second - p.first; }));
-        // clang-format on
-        std::vector<index_t> tmp;
-        tmp.reserve(idxrange_.size());
-
-        std::transform(idxrange_.begin(), idxrange_.end(), std::back_inserter(tmp),
-                       [](auto p) { return p.second - p.first; });
-
-        return std::accumulate(tmp.begin(), tmp.end(), 1, std::multiplies<>{});
+        IndexVector_t result(size);
+        std::transform(v.begin(), v.begin() + size, result.begin(), std::move(fn));
+        return result;
     }
 
-    auto CartesianIndices::range(index_t i) const -> IndexRange { return idxrange_[asUnsigned(i)]; }
+    CartesianIndices::CartesianIndices(std::vector<IndexRange> ranges) : size_(ranges.size()) {}
 
-    auto CartesianIndices::first() -> IndexVector_t
+    CartesianIndices::CartesianIndices(const IndexVector_t& to)
+        : size_(to.size()), first_(IndexVector_t::Zero(size_)), last_(to)
     {
-        return map(idxrange_, [](auto range) { return range.first; });
     }
 
-    auto CartesianIndices::first() const -> IndexVector_t
+    CartesianIndices::CartesianIndices(const IndexVector_t& from, const IndexVector_t& to)
+        : size_(to.size()), first_(from), last_(to)
     {
-        return map(idxrange_, [](auto range) { return range.first; });
+        if (from.size() != to.size()) {
+            throw InvalidArgumentError("CartesianIndices: vectors must be of same size");
+        }
     }
 
-    auto CartesianIndices::last() -> IndexVector_t
-    {
-        return map(idxrange_, [](auto range) { return range.second; });
-    }
+    auto CartesianIndices::dims() const -> index_t { return size_; }
 
-    auto CartesianIndices::last() const -> IndexVector_t
-    {
-        return map(idxrange_, [](auto range) { return range.second; });
-    }
+    auto CartesianIndices::size() const -> index_t { return (last_ - first_).prod(); }
+
+    auto CartesianIndices::range(index_t i) const -> IndexRange { return {first_[i], last_[i]}; }
+
+    auto CartesianIndices::first() -> IndexVector_t& { return first_; }
+
+    auto CartesianIndices::first() const -> const IndexVector_t& { return first_; }
+
+    auto CartesianIndices::last() -> IndexVector_t& { return last_; }
+
+    auto CartesianIndices::last() const -> const IndexVector_t& { return last_; }
 
     auto CartesianIndices::begin() -> iterator { return iterator(first(), first(), last()); }
 
@@ -70,14 +67,18 @@ namespace elsa
         cur_.tail(cur_.size() - 1) = begin.tail(cur_.size() - 1);
     }
 
-    CartesianIndices::iterator::iterator(IndexVector_t vec) : cur_(vec), begins_(vec), ends_(vec) {}
+    CartesianIndices::iterator::iterator(const IndexVector_t& vec)
+        : cur_(vec), begins_(vec), ends_(vec)
+    {
+    }
 
-    CartesianIndices::iterator::iterator(IndexVector_t cur, IndexVector_t begin, IndexVector_t end)
+    CartesianIndices::iterator::iterator(const IndexVector_t& cur, const IndexVector_t& begin,
+                                         const IndexVector_t& end)
         : cur_(cur), begins_(begin), ends_(end)
     {
     }
 
-    auto CartesianIndices::iterator::operator*() const -> IndexVector_t { return cur_; }
+    auto CartesianIndices::iterator::operator*() const -> const IndexVector_t& { return cur_; }
 
     auto CartesianIndices::iterator::operator++() -> iterator&
     {
@@ -289,23 +290,26 @@ namespace elsa
     CartesianIndices neighbours_in_slice(const IndexVector_t& pos, const IndexVector_t& dist,
                                          const IndexVector_t& lower, const IndexVector_t& upper)
     {
-
         IndexVector_t from = pos;
-        from.tail(pos.size() - 1).array() -= dist.array();
+        from.array() -= dist.array();
         from = from.cwiseMax(lower);
 
         IndexVector_t to = pos;
-        to.tail(pos.size() - 1).array() += dist.array() + 1;
-        to[0] += 1;
+        to.array() += dist.array() + 1;
         to = to.cwiseMin(upper);
+
+        // FIXME: sometimes this happens when padding is added to an aabb
+        from = (to.array() == from.array()).select(from.array() - 1, from);
 
         return {from, to};
     }
 
-    CartesianIndices neighbours_in_slice(const IndexVector_t& pos, index_t dist,
+    CartesianIndices neighbours_in_slice(const IndexVector_t& pos, index_t dist, index_t leadingDim,
                                          const IndexVector_t& lower, const IndexVector_t& upper)
     {
-        return neighbours_in_slice(pos, IndexVector_t::Constant(pos.size() - 1, dist), lower,
-                                   upper);
+        IndexVector_t distvec = IndexVector_t::Constant(pos.size(), dist);
+        distvec[leadingDim] = 0;
+
+        return neighbours_in_slice(pos, distvec, lower, upper);
     }
 } // namespace elsa

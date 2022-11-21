@@ -35,6 +35,7 @@ namespace elsa
             iterations = _defaultIterations;
 
         spdlog::stopwatch aggregate_time;
+        Logger::get("CG")->info("Start preparations...");
 
         // get references to some variables in the Quadric
         auto& x = _problem->getCurrentSolution();
@@ -63,6 +64,8 @@ namespace elsa
 
         auto deltaNew = r.dot(d);
         auto deltaZero = deltaNew;
+
+        Logger::get("CG")->info("Preparations done, tooke {}s", aggregate_time);
 
         Logger::get("CG")->info("epsilon: {}", _epsilon);
         Logger::get("CG")->info("delta zero: {}", std::sqrt(deltaZero));

@@ -33,6 +33,7 @@ namespace elsa
             iterations = _defaultIterations;
 
         spdlog::stopwatch aggregate_time;
+        Logger::get("ISTA")->info("Start preparations...");
 
         SoftThresholding<data_t> shrinkageOp{getCurrentSolution().getDataDescriptor()};
 
@@ -48,6 +49,7 @@ namespace elsa
         DataContainer<data_t> Atb = A.applyAdjoint(b);
         DataContainer<data_t> gradient = A.applyAdjoint(A.apply(x)) - Atb;
 
+        Logger::get("ISTA")->info("Preparations done, tooke {}s", aggregate_time);
         Logger::get("ISTA")->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "gradient", "time",
                                   "elapsed");
 

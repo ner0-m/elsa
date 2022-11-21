@@ -102,7 +102,10 @@ In your source code, `#include "elsa.h"` to include all of elsa; alternatively, 
 
 Contributing
 ------------
-To get involved, please see our [contributing page](https://gitlab.lrz.de/IP/elsa/-/blob/master/CONTRIBUTING.md).
+
+Do you want to contribute in some way? We appreciate and welcome contributions each and from
+everyone. To get involved, please see our [contributing
+page](https://gitlab.lrz.de/IP/elsa/-/blob/master/CONTRIBUTING.md).
 
 Contributors
 ------------

@@ -2,14 +2,16 @@
 
 # set exit on error
 # set -e
- 
+
 exit_flag=false
- 
+
 target_branch="master"
- 
+
 # Retrieve list of cpp-files that were changed in source branch with respect to master (target branch)
 filelist=($(git diff origin/${target_branch} --name-only | grep ".cpp"))
- 
+
+clang_tidy_version=14
+clang_tidy_tool_candiates=clang-tidy-$clang_tidy_version
 
 if [[ "${#filelist[@]}" -eq "0" ]]; then
     echo "==> No cpp files found"
@@ -17,20 +19,30 @@ if [[ "${#filelist[@]}" -eq "0" ]]; then
     exit 0
 else
     echo "==> Found ${#filelist[@]} cpp files"
-    echo "==> ${filelist[*]}" 
+    echo "==> ${filelist[*]}"
     echo "==> Let's start our clang-tidy check"
 fi
+
+clang_tidy_tool=false
+# Check all possible candidates
+for candidate in ${clang_tidy_tool_candiates[@]}; do
+    find_str=" ${clang_tidy_version}."
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" --version | grep -qF $find_str; then
+        clang_tidy_tool=$candidate
+        break
+    fi
+done
 
 # for compilation database
 mkdir -p build
 cd build
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DELSA_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"
+CX=clang CXX=clang++ cmake ..
 cd ..
 
 if [ ! -f build/compile_commands.json ]; then
     echo "Compilation database not found!"
     echo "--> Most likely the configuration failed"
-    exit 1 
+    exit 1
 fi
 
 echo
@@ -44,7 +56,7 @@ function checkCPP(){
     return 1
 }
 
-clang-tidy-8 --version
+$clang_tidy_tool --version
 echo
 
 
@@ -56,8 +68,8 @@ for f in ${filelist[*]}; do
     if checkCPP $f && [[ -n $(grep $f build/compile_commands.json) ]]; then
         echo "Checking matching file ${f}"
         touch output.txt
-        clang-tidy-8 -p=build ${f} --extra-arg=--cuda-host-only > output.txt
-         
+        $clang_tidy_tool -p=build ${f} --extra-arg=--cuda-host-only > output.txt
+
         # decide if error or warning fail
         if [[ -n $(grep "warning: " output.txt) ]] || [[ -n $(grep "error: " output.txt) ]]; then
             echo ""
