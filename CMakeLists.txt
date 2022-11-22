@@ -160,9 +160,9 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
         set(ELSA_CUDA_ENABLED ON)
 
     else()
-        message(FATAL_ERROR
-            "CUDA support requested but no CUDA was found. "
-            "Disable CUDA with: -DELSA_BUILD_CUDA_PROJECTORS=OFF")
+        message(FATAL_ERROR "CUDA support requested but no CUDA was found. "
+                            "Disable CUDA with: -DELSA_BUILD_CUDA_PROJECTORS=OFF"
+        )
     endif()
 else()
     # Be sure everything is off

@@ -60,10 +60,8 @@ function(set_target_warnings target)
         set(msvc_base_warnings ${base_msvc_warnings} /WX)
     endif()
 
-
-    #if(${ELSA_CUDA_ENABLED})
-    #    # NVCC emits lots of compiler-specific code, so we omit pedantic when cuda is enabled
-    #else()
+    # if(${ELSA_CUDA_ENABLED}) # NVCC emits lots of compiler-specific code, so we omit pedantic when cuda is enabled
+    # else()
 
     set(all_clang_warnings
         ${base_gcc_warnings}
