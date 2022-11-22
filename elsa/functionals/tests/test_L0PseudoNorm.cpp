@@ -114,8 +114,8 @@ TEST_CASE_TEMPLATE("L0PseudoNorm: Testing with residual", TestType, float, doubl
                 DataContainer<TestType> x(volDescr, dataVec);
 
                 REQUIRE_UNARY(checkApproxEq(l0PseudoNorm.evaluate(x),
-                                            (TestType)(randomData.array().cwiseAbs()
-                                                       >= std::numeric_limits<TestType>::epsilon())
+                                            (TestType) (randomData.array().cwiseAbs()
+                                                        >= std::numeric_limits<TestType>::epsilon())
                                                 .count()));
                 REQUIRE_THROWS_AS(l0PseudoNorm.getGradient(x), std::logic_error);
                 REQUIRE_THROWS_AS(l0PseudoNorm.getHessian(x), std::logic_error);

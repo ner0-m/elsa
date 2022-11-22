@@ -24,7 +24,10 @@ TEST_CASE("Math::binom")
     {
         const index_t n = 10;
 
-        WHEN("k larger than n") { CHECK_EQ(math::binom(n, 15), 0); }
+        WHEN("k larger than n")
+        {
+            CHECK_EQ(math::binom(n, 15), 0);
+        }
 
         WHEN("k == 0 or k == n")
         {

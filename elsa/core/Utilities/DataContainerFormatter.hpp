@@ -231,7 +231,8 @@ namespace elsa
                 T val_min = dc.minElement();
 
                 if (val_max > 1e7f
-                    or (not suppress_small and (val_min < 0.0001f or val_max / val_min > 1000.0f))) {
+                    or (not suppress_small
+                        and (val_min < 0.0001f or val_max / val_min > 1000.0f))) {
 
                     use_exp = true;
                 }

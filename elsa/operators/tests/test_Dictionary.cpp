@@ -120,7 +120,10 @@ TEST_CASE_TEMPLATE("Accessing Dictionary atoms ", data_t, float, double)
         {
             index_t i = 4;
             DataContainer<data_t> atom = dictOp.getAtom(i);
-            THEN("the data is correct") { REQUIRE_EQ(atom, dict.getBlock(i)); }
+            THEN("the data is correct")
+            {
+                REQUIRE_EQ(atom, dict.getBlock(i));
+            }
         }
 
         WHEN("accessing an atom from a const dictionary reference")
@@ -128,7 +131,10 @@ TEST_CASE_TEMPLATE("Accessing Dictionary atoms ", data_t, float, double)
             index_t i = 4;
             const Dictionary<data_t>& constDictOp(dictOp);
             auto atom = constDictOp.getAtom(i);
-            THEN("the data is correct") { REQUIRE_EQ(atom, dict.getBlock(i)); }
+            THEN("the data is correct")
+            {
+                REQUIRE_EQ(atom, dict.getBlock(i));
+            }
         }
 
         WHEN("accessing an atom with an invalid index")
@@ -161,7 +167,10 @@ TEST_CASE_TEMPLATE("Accessing Dictionary atoms ", data_t, float, double)
             DataContainer<data_t> newAtom = dictOp.getAtom(i);
 
             dictOp.updateAtom(i, newAtom);
-            THEN("the data is identical") { REQUIRE_EQ(dictOp.getAtom(i), newAtom); }
+            THEN("the data is identical")
+            {
+                REQUIRE_EQ(dictOp.getAtom(i), newAtom);
+            }
         }
 
         WHEN("updating an atom with an invalid index")

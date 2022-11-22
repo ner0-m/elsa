@@ -13,7 +13,10 @@ namespace elsa
     {
     }
 
-    index_t IdenticalBlocksDescriptor::getNumberOfBlocks() const { return _numberOfBlocks; }
+    index_t IdenticalBlocksDescriptor::getNumberOfBlocks() const
+    {
+        return _numberOfBlocks;
+    }
 
     const DataDescriptor& IdenticalBlocksDescriptor::getDescriptorOfBlock(index_t i) const
     {
