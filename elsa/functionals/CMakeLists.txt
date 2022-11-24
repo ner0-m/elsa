@@ -15,6 +15,8 @@ set(MODULE_HEADERS
     TransmissionLogLikelihood.h
     Constraint.h
     WeightedL1Norm.h
+        Gibbs/GibbsUtils.h
+        Gibbs/GibbsPenalty.h
 )
 
 # list all the code files of the module
@@ -34,6 +36,8 @@ set(MODULE_SOURCES
     TransmissionLogLikelihood.cpp
     Constraint.cpp
     WeightedL1Norm.cpp
+        Gibbs/GibbsUtils.cpp
+        Gibbs/GibbsPenalty.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators)
