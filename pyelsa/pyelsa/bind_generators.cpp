@@ -129,6 +129,20 @@ void add_definitions_pyelsa_generators(py::module& m)
         py::arg("sourceToCenter"), py::arg("centerToDetector"),
         py::arg("principalPointOffset") = py::none(), py::arg("centerOfRotOffset") = py::none(),
         py::arg("detectorSize") = py::none(), py::arg("detectorSpacing") = py::none());
+
+    CircleTrajectoryGenerator.def_static(
+        "fromAngularIncrement",
+        (std::unique_ptr<elsa::DetectorDescriptor,
+                         std::default_delete<elsa::DetectorDescriptor>>(*)(
+            long, const elsa::DataDescriptor&, float, float, float,
+            std::optional<elsa::RealVector_t>, std::optional<elsa::RealVector_t>,
+            std::optional<elsa::IndexVector_t>, std::optional<elsa::RealVector_t>))(
+            &elsa::CircleTrajectoryGenerator::fromAngularIncrement),
+        py::arg("numberOfPoses"), py::arg("volumeDescriptor"), py::arg("angleInc"),
+        py::arg("sourceToCenter"), py::arg("centerToDetector"),
+        py::arg("principalPointOffset") = py::none(), py::arg("centerOfRotOffset") = py::none(),
+        py::arg("detectorSize") = py::none(), py::arg("detectorSpacing") = py::none());
+
     py::class_<elsa::CurvedCircleTrajectoryGenerator, elsa::BaseCircleTrajectoryGenerator>
         CurvedCircleTrajectoryGenerator(m, "CurvedCircleTrajectoryGenerator");
     CurvedCircleTrajectoryGenerator.def_static(

@@ -46,5 +46,13 @@ namespace elsa
                              std::optional<RealVector_t> centerOfRotOffset = std::nullopt,
                              std::optional<IndexVector_t> detectorSize = std::nullopt,
                              std::optional<RealVector_t> detectorSpacing = std::nullopt);
+
+        static std::unique_ptr<PlanarDetectorDescriptor>
+            fromAngularIncrement(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
+                                 real_t angularInc, real_t sourceToCenter, real_t centerToDetector,
+                                 std::optional<RealVector_t> principalPointOffset = std::nullopt,
+                                 std::optional<RealVector_t> centerOfRotOffset = std::nullopt,
+                                 std::optional<IndexVector_t> detectorSize = std::nullopt,
+                                 std::optional<RealVector_t> detectorSpacing = std::nullopt);
     };
 } // namespace elsa
