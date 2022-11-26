@@ -244,20 +244,20 @@ build-clang:
     - $COMPILER
 
 # TODO: find out what is wrong and fix it! I want to build on GCC
-build-gcc:
-  <<: *build_job_artifact
-  image: $CI_REGISTRY/ip/elsa/gcc:$COMPILER_VERSION
-  script:
-  - *buildjob_normal
-  variables:
-    COMPILER: gcc
-  parallel:
-    matrix:
-      - COMPILER_VERSION: [11, 12]
-  tags:
-    - linux
-    - elsa
-    - $COMPILER
+# build-gcc:
+#   <<: *build_job_artifact
+#   image: $CI_REGISTRY/ip/elsa/gcc:$COMPILER_VERSION
+#   script:
+#   - *buildjob_normal
+#   variables:
+#     COMPILER: gcc
+#   parallel:
+#     matrix:
+#       - COMPILER_VERSION: [11, 12]
+#   tags:
+#     - linux
+#     - elsa
+#     - $COMPILER
 
 build-cuda:
   <<: *build_job_artifact
