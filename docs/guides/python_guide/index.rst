@@ -7,6 +7,7 @@ Python Bindings Guide
   forward_projection.md
   backward_projection.md
   filtered_backprojection.md
+  reconstruct_dataset.md
 
 *elsa* also comes with Python bindings for almost all aspects of the framework.
 This short guide aims to give an introduction into some simple use cases and explains how one can
