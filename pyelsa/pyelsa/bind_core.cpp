@@ -21,6 +21,11 @@
 
 #include "hints/core_hints.cpp"
 
+#include <Eigen/Geometry>
+
+#include "spdlog/fmt/fmt.h"
+#include "spdlog/fmt/ostr.h"
+
 namespace py = pybind11;
 
 void add_definitions_pyelsa_core(py::module& m)
@@ -29,6 +34,22 @@ void add_definitions_pyelsa_core(py::module& m)
         .value("BACKWARD", elsa::FFTNorm::BACKWARD)
         .value("FORWARD", elsa::FFTNorm::FORWARD)
         .value("ORTHO", elsa::FFTNorm::ORTHO);
+
+    // This way we can also use Ray on the Python side
+    using Ray = Eigen::ParametrizedLine<elsa::real_t, Eigen::Dynamic>;
+    py::class_<Ray> ray(m, "Ray");
+    ray.def("direction", [](const Ray& ray) { return ray.direction(); });
+    ray.def("origin", [](const Ray& ray) { return ray.origin(); });
+    ray.def("__repr__", [](const Ray& ray) {
+        Eigen::IOFormat vecfmt(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]");
+        return fmt::format("<Ray origin: {}, direction {}>", ray.origin().format(vecfmt),
+                           ray.direction().format(vecfmt));
+    });
+    ray.def("__str__", [](const Ray& ray) {
+        Eigen::IOFormat vecfmt(Eigen::StreamPrecision, 0, ", ", ", ", "", "", "[", "]");
+        return fmt::format("<Ray origin: {}, direction {}>", ray.origin().format(vecfmt),
+                           ray.direction().format(vecfmt));
+    });
 
     py::class_<elsa::Cloneable<elsa::DataDescriptor>> CloneableDataDescriptor(
         m, "CloneableDataDescriptor");
