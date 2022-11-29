@@ -140,7 +140,7 @@ namespace elsa
                      return std::make_unique<elsa::DataContainer<data_t>>(dd, map);
                  }))
                 .def(py::init(
-                    [](py::array_t<data_t> npspacing,
+                    [](py::array_t<elsa::GetFloatingPointType_t<data_t>> npspacing,
                        py::array_t<data_t, py::array::f_style | py::array::forcecast> array) {
                         elsa::IndexVector_t coeffsPerDim(array.ndim());
 
