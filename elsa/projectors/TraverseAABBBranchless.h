@@ -16,9 +16,10 @@ namespace elsa
      * @author Maximilian Hornung - modularization
      * @author Nikola Dinev - fixes
      *
-     * This traversal always proceeds along "long" voxel edges, it will never "jump diagonally".
-     * The method is based on J. Amantides, A. Woo: A Fast Voxel Traversal Algorithm for Ray
-     * Tracing.
+     * This traversal proceeds along "long" voxel edges, it will "jump diagonally" iff that "long"
+     * voxel edge has the same value along more than one dimension.
+     * The method is based on Xiao et al.:  Efficient implementation of the 3D-DDA ray traversal
+     * algorithm on GPU and its application in radiation dose calculation.
      */
     template <int dim>
     class TraverseAABBBranchless
