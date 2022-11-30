@@ -2,6 +2,7 @@
 set(MODULE_HEADERS
     EllipseGenerator.h
     Ellipsoid.h
+    Sphere.h
     Phantoms.h
     BaseCircleTrajectoryGenerator.h
     CircleTrajectoryGenerator.h
@@ -16,6 +17,7 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     EllipseGenerator.cpp
     Ellipsoid.cpp
+    Sphere.cpp
     Phantoms.cpp
     BaseCircleTrajectoryGenerator.cpp
     CircleTrajectoryGenerator.cpp

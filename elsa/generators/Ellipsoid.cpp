@@ -3,26 +3,6 @@
 namespace elsa::phantoms
 {
 
-    /*
-     *  Constant for this 3 dimensional usecase.
-     *  Not in header to keep the namespace clean.
-     */
-
-    // INDEX of Width vector
-    static const int INDEX_A{0};
-    static const int INDEX_B{1};
-    static const int INDEX_C{2};
-
-    // INDEX of Coordinates
-    static const int INDEX_X{0};
-    static const int INDEX_Y{1};
-    static const int INDEX_Z{2};
-
-    // INDEX for eulers coordinates
-    static const int INDEX_PHI{0};
-    static const int INDEX_THETA{1};
-    static const int INDEX_PSI{2};
-
     template <typename data_t>
     Ellipsoid<data_t>::Ellipsoid(data_t amplit, elsa::phantoms::Vec3i center,
                                  Vec3X<data_t> halfAxis, Vec3X<data_t> eulers)

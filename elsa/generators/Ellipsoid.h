@@ -1,19 +1,8 @@
 #pragma once
-#include "elsaDefines.h"
-#include "VolumeDescriptor.h"
-#include "DataContainer.h"
-#include "Logger.h"
+#include "PhantomDefines.h"
 
 namespace elsa::phantoms
 {
-
-    // Fix 3d vector
-    using Vec3i = Eigen::Matrix<index_t, 3, 1>;
-
-    // Fix 3d vector
-    template <typename data_t = double,
-              typename = std::enable_if_t<std::is_floating_point<data_t>::value>>
-    using Vec3X = Eigen::Matrix<data_t, 3, 1>;
 
     template <typename data_t = double>
     class Ellipsoid
