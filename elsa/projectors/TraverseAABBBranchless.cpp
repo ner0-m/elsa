@@ -9,8 +9,9 @@ namespace elsa
         static_assert(dim == 2 || dim == 3);
         _aabbMin = aabb.min();
         _aabbMax = aabb.max();
+
         // compute the first intersection
-        calculateAABBIntersections(r, aabb);
+        const RealArray_t entryPoint = calculateAABBIntersections(r, aabb);
         if (!isInBoundingBox()) // early abort if necessary
             return;
 
@@ -24,13 +25,13 @@ namespace elsa
         initStepDirection(r.direction());
 
         // select the initial voxel (closest to the entry point)
-        selectClosestVoxel();
+        selectClosestVoxel(entryPoint);
 
         // initialize the step sizes for the step parameter
         initDelta(r.direction(), EPS, MAX);
 
         // initialize the maximum step parameters
-        initT(r.direction(), EPS, MAX);
+        initT(r.direction(), EPS, MAX, entryPoint);
     }
 
     template <int dim>
@@ -88,9 +89,11 @@ namespace elsa
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::calculateAABBIntersections(const RealRay_t& r,
-                                                                 const BoundingBox& aabb)
+    Eigen::Array<real_t, dim, 1>
+        TraverseAABBBranchless<dim>::calculateAABBIntersections(const RealRay_t& r,
+                                                                const BoundingBox& aabb)
     {
+        RealArray_t entryPoint;
         // entry and exit point parameters
         real_t tmin;
 
@@ -102,13 +105,14 @@ namespace elsa
             tmin = opt->_tmin;
 
             // --> get points at which they intersect
-            _entryPoint = r.pointAt(tmin);
+            entryPoint = r.pointAt(tmin);
 
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
-            _entryPoint = (_entryPoint < _aabbMin).select(_aabbMin, _entryPoint);
-            _entryPoint = (_entryPoint > _aabbMax).select(_aabbMax, _entryPoint);
+            entryPoint = (entryPoint < _aabbMin).select(_aabbMin, entryPoint);
+            entryPoint = (entryPoint > _aabbMax).select(_aabbMax, entryPoint);
         }
+        return entryPoint;
     }
 
     template <int dim>
@@ -118,10 +122,10 @@ namespace elsa
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::selectClosestVoxel()
+    void TraverseAABBBranchless<dim>::selectClosestVoxel(const RealArray_t& entryPoint)
     {
-        RealArray_t lowerCorner = _entryPoint.floor();
-        lowerCorner = ((lowerCorner == _entryPoint) && (_stepDirection < 0.0))
+        RealArray_t lowerCorner = entryPoint.floor();
+        lowerCorner = ((lowerCorner == entryPoint) && (_stepDirection < 0.0))
                           .select(lowerCorner - 1, lowerCorner);
 
         _currentPos = lowerCorner;
@@ -142,9 +146,9 @@ namespace elsa
 
     template <int dim>
     void TraverseAABBBranchless<dim>::initT(const RealArray_t& rd, const RealArray_t& EPS,
-                                            const RealArray_t& MAX)
+                                            const RealArray_t& MAX, const RealArray_t& entryPoint)
     {
-        RealArray_t T = (((rd > 0.0f).select(_currentPos + 1., _currentPos)) - _entryPoint) / rd;
+        RealArray_t T = (((rd > 0.0f).select(_currentPos + 1., _currentPos)) - entryPoint) / rd;
 
         _T = (Eigen::abs(rd) > EPS).select(T, MAX);
     }

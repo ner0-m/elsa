@@ -23,6 +23,7 @@ namespace elsa
     template <int dim>
     class TraverseAABBBranchless
     {
+        using IndexArray_t = Eigen::Array<index_t, dim, 1>;
         using RealArray_t = Eigen::Array<real_t, dim, 1>;
         using BooleanArray_t = Eigen::Array<bool, dim, 1>;
 
@@ -60,11 +61,9 @@ namespace elsa
          *
          * @returns coordinate vector
          */
-        IndexVector_t getCurrentVoxel() const;
+        IndexArray_t getCurrentVoxel() const;
 
     private:
-        /// the entry point parameters of the ray in the aabb
-        RealArray_t _entryPoint;
         /// the step direction of the traverser
         RealArray_t _stepDirection;
         /// the current position of the traverser in the aabb
@@ -85,15 +84,16 @@ namespace elsa
         RealArray_t _aabbMax;
 
         /// compute the entry and exit points of ray r with the volume (aabb)
-        void calculateAABBIntersections(const RealRay_t& r, const BoundingBox& aabb);
+        RealArray_t calculateAABBIntersections(const RealRay_t& r, const BoundingBox& aabb);
         /// setup the step directions (which is basically the sign of the ray direction rd)
         void initStepDirection(const RealArray_t& rd);
         /// select the closest voxel to the entry point
-        void selectClosestVoxel();
+        void selectClosestVoxel(const RealArray_t& entryPoint);
         /// setup the step sizes considering the ray direction rd
         void initDelta(const RealArray_t& rd, const RealArray_t& EPS, const RealArray_t& MAX);
         /// setup the maximum step parameters considering the ray direction rd
-        void initT(const RealArray_t& rd, const RealArray_t& EPS, const RealArray_t& MAX);
+        void initT(const RealArray_t& rd, const RealArray_t& EPS, const RealArray_t& MAX,
+                   const RealArray_t& entryPoint);
         /// check if the current index is still in the bounding box
         bool isCurrentPositionInAABB() const;
         /// calculate the mask which masks out all but the minimal coefficients in _T.
