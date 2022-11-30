@@ -113,4 +113,9 @@ namespace elsa
                && (_locationOfOrigin == other._locationOfOrigin);
     }
 
+    IndexVector_t DataDescriptor::getProductOfCoefficientsPerDimension() const
+    {
+        return _productOfCoefficientsPerDimension;
+    }
+
 } // namespace elsa

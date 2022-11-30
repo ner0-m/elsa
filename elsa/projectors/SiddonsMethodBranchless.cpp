@@ -83,12 +83,13 @@ namespace elsa
                                                                  const DataDescriptor& domain) const
     {
         // --> setup traversal algorithm
-        TraverseAABBBranchless<dim> traverse(aabb, ray);
+        TraverseAABBBranchless<dim> traverse(aabb, ray,
+                                             domain.getProductOfCoefficientsPerDimension());
 
         data_t accumulator = data_t(0);
 
         // --> initial index to access the data vector
-        auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+        auto dataIndexForCurrentVoxel = traverse.getCurrentIndex();
 
         while (traverse.isInBoundingBox()) {
 
@@ -96,7 +97,7 @@ namespace elsa
             // --> update result depending on the operation performed
             accumulator += x[dataIndexForCurrentVoxel] * weight;
 
-            dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+            dataIndexForCurrentVoxel = traverse.getCurrentIndex();
         }
 
         return accumulator;
@@ -112,10 +113,10 @@ namespace elsa
         const auto& domain = Aty.getDataDescriptor();
 
         // --> setup traversal algorithm
-        TraverseAABBBranchless<dim> traverse(aabb, ray);
-
+        TraverseAABBBranchless<dim> traverse(aabb, ray,
+                                             domain.getProductOfCoefficientsPerDimension());
         // --> initial index to access the data vector
-        auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+        auto dataIndexForCurrentVoxel = traverse.getCurrentIndex();
 
         while (traverse.isInBoundingBox()) {
 
@@ -124,7 +125,7 @@ namespace elsa
 #pragma omp atomic
             Aty[dataIndexForCurrentVoxel] += detectorValue * weight;
 
-            dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+            dataIndexForCurrentVoxel = traverse.getCurrentIndex();
         }
     }
 

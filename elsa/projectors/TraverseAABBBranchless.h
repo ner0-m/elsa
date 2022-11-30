@@ -34,7 +34,8 @@ namespace elsa
          * @param[in] aabb axis-aligned boundary box describing the volume
          * @param[in] r the ray to be traversed
          */
-        TraverseAABBBranchless(const BoundingBox& aabb, const RealRay_t& r);
+        TraverseAABBBranchless(const BoundingBox& aabb, const RealRay_t& r,
+                               IndexArray_t productOfCoefficientsPerDimension);
 
         /**
          * @brief Update the traverser status by taking the next traversal step
@@ -63,9 +64,14 @@ namespace elsa
          */
         IndexArray_t getCurrentVoxel() const;
 
+        /**
+         * @brief Return the index that corresponds to the current position
+         */
+        index_t getCurrentIndex() const;
+
     private:
         /// the step direction of the traverser
-        RealArray_t _stepDirection;
+        IndexArray_t _stepDirection;
         /// the current position of the traverser in the aabb
         RealArray_t _currentPos;
         /// the current maximum step parameter along the ray
@@ -82,6 +88,10 @@ namespace elsa
         RealArray_t _aabbMin;
         /// result of aabb.max(), the upper corner of the aabb
         RealArray_t _aabbMax;
+        /// the product of coefficients per dimension
+        IndexArray_t _productOfCoefficientsPerDimension;
+        /// the current index which corresponds to the current position
+        index_t _currentIndex;
 
         /// compute the entry and exit points of ray r with the volume (aabb)
         RealArray_t calculateAABBIntersections(const RealRay_t& r, const BoundingBox& aabb);
@@ -98,6 +108,9 @@ namespace elsa
         bool isCurrentPositionInAABB() const;
         /// calculate the mask which masks out all but the minimal coefficients in _T.
         void calcMask();
-
+        /// compute the index that corresponds to the initial position
+        void initCurrentIndex();
+        /// compute the index that corresponds to the current position
+        void updateCurrentIndex();
     };
 } // namespace elsa

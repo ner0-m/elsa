@@ -63,6 +63,9 @@ namespace elsa
         /// return the number of coefficients per dimension
         IndexVector_t getNumberOfCoefficientsPerDimension() const;
 
+        /// return the product of coefficients per dimension
+        IndexVector_t getProductOfCoefficientsPerDimension() const;
+
         /// return the spacing per dimension
         RealVector_t getSpacingPerDimension() const;
 

@@ -4,7 +4,9 @@
 namespace elsa
 {
     template <int dim>
-    TraverseAABBBranchless<dim>::TraverseAABBBranchless(const BoundingBox& aabb, const RealRay_t& r)
+    TraverseAABBBranchless<dim>::TraverseAABBBranchless(
+        const BoundingBox& aabb, const RealRay_t& r, IndexArray_t productOfCoefficientsPerDimension)
+        : _productOfCoefficientsPerDimension{std::move(productOfCoefficientsPerDimension)}
     {
         static_assert(dim == 2 || dim == 3);
         _aabbMin = aabb.min();
@@ -32,6 +34,7 @@ namespace elsa
 
         // initialize the maximum step parameters
         initT(r.direction(), EPS, MAX, entryPoint);
+        initCurrentIndex();
     }
 
     template <int dim>
@@ -41,7 +44,7 @@ namespace elsa
         calcMask();
 
         // --> step into the current direction
-        _currentPos += _mask.select(_stepDirection, 0);
+        _currentPos += _mask.select(_stepDirection.template cast<real_t>(), 0);
 
         // --> update the T for next iteration
         _T += _mask.select(_tDelta, 0);
@@ -72,6 +75,7 @@ namespace elsa
 
         // --> do the update
         updateTraverse();
+        updateCurrentIndex();
 
         return (_tExit - tEntry);
     }
@@ -86,6 +90,12 @@ namespace elsa
     Eigen::Array<index_t, dim, 1> TraverseAABBBranchless<dim>::getCurrentVoxel() const
     {
         return _currentPos.template cast<index_t>();
+    }
+
+    template <int dim>
+    index_t TraverseAABBBranchless<dim>::getCurrentIndex() const
+    {
+        return _currentIndex;
     }
 
     template <int dim>
@@ -118,7 +128,7 @@ namespace elsa
     template <int dim>
     void TraverseAABBBranchless<dim>::initStepDirection(const RealArray_t& rd)
     {
-        _stepDirection = rd.sign();
+        _stepDirection = rd.sign().template cast<index_t>();
     }
 
     template <int dim>
@@ -139,7 +149,7 @@ namespace elsa
     void TraverseAABBBranchless<dim>::initDelta(const RealArray_t& rd, const RealArray_t& EPS,
                                                 const RealArray_t& MAX)
     {
-        RealArray_t tdelta = _stepDirection / rd;
+        RealArray_t tdelta = _stepDirection.template cast<real_t>() / rd;
 
         _tDelta = (Eigen::abs(rd) > EPS).select(tdelta, MAX);
     }
@@ -157,6 +167,18 @@ namespace elsa
     bool TraverseAABBBranchless<dim>::isCurrentPositionInAABB() const
     {
         return (_currentPos < _aabbMax).all() && (_currentPos >= _aabbMin).all();
+    }
+
+    template <int dim>
+    void TraverseAABBBranchless<dim>::updateCurrentIndex()
+    {
+        _currentIndex +=
+            (_stepDirection * _mask.select(_productOfCoefficientsPerDimension, 0)).sum();
+    }
+    template <int dim>
+    void TraverseAABBBranchless<dim>::initCurrentIndex()
+    {
+        _currentIndex = (_productOfCoefficientsPerDimension * getCurrentVoxel()).sum();
     }
 
     template class TraverseAABBBranchless<2>;
