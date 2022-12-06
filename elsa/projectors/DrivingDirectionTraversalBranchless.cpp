@@ -182,14 +182,6 @@ namespace elsa
             _isInAABB = false;
     }
 
-    RealVector_t floorFallback(const RealVector_t& v)
-    {
-        RealVector_t ret(v.rows());
-        for (int i = 0; i < v.rows(); i++)
-            ret(i) = std::floor(v(i));
-        return ret;
-    }
-
     void DrivingDirectionTraversalBranchless::initStepDirection(const RealVector_t& rd)
     {
         _stepDirection = rd.array().sign();
