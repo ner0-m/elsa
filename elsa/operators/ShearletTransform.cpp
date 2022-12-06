@@ -51,18 +51,18 @@ namespace elsa
 
     // TODO implement sumByAxis in DataContainer and remove me
     template <typename ret_t, typename data_t>
-    DataContainer<elsa::complex<data_t>> ShearletTransform<ret_t, data_t>::sumByLastAxis(
-        DataContainer<elsa::complex<data_t>> dc) const
+    DataContainer<complex<data_t>>
+        ShearletTransform<ret_t, data_t>::sumByLastAxis(DataContainer<complex<data_t>> dc) const
     {
         auto coeffsPerDim = dc.getDataDescriptor().getNumberOfCoefficientsPerDimension();
         index_t width = coeffsPerDim[0];
         index_t height = coeffsPerDim[1];
         index_t layers = coeffsPerDim[2];
-        DataContainer<elsa::complex<data_t>> summedDC(VolumeDescriptor{{width, height}});
+        DataContainer<complex<data_t>> summedDC(VolumeDescriptor{{width, height}});
 
         for (index_t j = 0; j < width; j++) {
             for (index_t k = 0; k < height; k++) {
-                elsa::complex<data_t> currValue = 0;
+                complex<data_t> currValue = 0;
                 for (index_t i = 0; i < layers; i++) {
                     currValue += dc(j, k, i);
                 }
@@ -95,12 +95,12 @@ namespace elsa
             computeSpectra();
         }
 
-        FourierTransform<elsa::complex<data_t>> fourierTransform(x.getDataDescriptor());
+        FourierTransform<complex<data_t>> fourierTransform(x.getDataDescriptor());
 
-        DataContainer<elsa::complex<data_t>> fftImg = fourierTransform.apply(x.asComplex());
+        DataContainer<complex<data_t>> fftImg = fourierTransform.apply(x.asComplex());
 
         for (index_t i = 0; i < getNumOfLayers(); i++) {
-            DataContainer<elsa::complex<data_t>> temp =
+            DataContainer<complex<data_t>> temp =
                 getSpectra().slice(i).viewAs(x.getDataDescriptor()).asComplex() * fftImg;
             if constexpr (isComplex<ret_t>) {
                 Ax.slice(i) = fourierTransform.applyAdjoint(temp);
@@ -133,12 +133,12 @@ namespace elsa
             computeSpectra();
         }
 
-        FourierTransform<elsa::complex<data_t>> fourierTransform(Aty.getDataDescriptor());
+        FourierTransform<complex<data_t>> fourierTransform(Aty.getDataDescriptor());
 
-        DataContainer<elsa::complex<data_t>> intermRes(y.getDataDescriptor());
+        DataContainer<complex<data_t>> intermRes(y.getDataDescriptor());
 
         for (index_t i = 0; i < getNumOfLayers(); i++) {
-            DataContainer<elsa::complex<data_t>> temp =
+            DataContainer<complex<data_t>> temp =
                 fourierTransform.apply(y.slice(i).viewAs(Aty.getDataDescriptor()).asComplex())
                 * getSpectra().slice(i).viewAs(Aty.getDataDescriptor()).asComplex();
             intermRes.slice(i) = fourierTransform.applyAdjoint(temp);
@@ -357,7 +357,7 @@ namespace elsa
     // ------------------------------------------
     // explicit template instantiation
     template class ShearletTransform<float, float>;
-    template class ShearletTransform<elsa::complex<float>, float>;
+    template class ShearletTransform<complex<float>, float>;
     template class ShearletTransform<double, double>;
-    template class ShearletTransform<elsa::complex<double>, double>;
+    template class ShearletTransform<complex<double>, double>;
 } // namespace elsa
