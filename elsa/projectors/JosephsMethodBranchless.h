@@ -95,7 +95,7 @@ namespace elsa
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
         /// the traversal routine (for both apply/applyAdjoint)
-        template <bool adjoint>
+        template <bool adjoint, int dim>
         void traverseVolume(const BoundingBox& aabb, const DataContainer<data_t>& vector,
                             DataContainer<data_t>& result) const;
 
@@ -115,11 +115,11 @@ namespace elsa
          * @param[in] to index of the current result position
          * @param[in] mainDirection specifies the main direction of the ray
          */
-        template <bool adjoint>
+        template <bool adjoint, int dim>
         void linear(const BoundingBox& aabb, const DataContainer<data_t>& vector,
-                    DataContainer<data_t>& result, const RealVector_t& fractionals,
-                    index_t domainDim, const IndexVector_t& currentVoxel, float intersection,
-                    index_t from, index_t to, int mainDirection) const;
+                    DataContainer<data_t>& result, const RealArray_t<dim>& fractionals,
+                    const IndexArray_t<dim>& currentVoxel, float intersection, index_t from,
+                    index_t to, int mainDirection) const;
 
         /// lift from base class
         // using LinearOperator<data_t>::_domainDescriptor;

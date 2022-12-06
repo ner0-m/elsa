@@ -34,7 +34,11 @@ namespace elsa
                                                   DataContainer<data_t>& Ax) const
     {
         Timer timeguard("JosephsMethodBranchless", "apply");
-        traverseVolume<false>(aabb, x, Ax);
+        if (aabb.dim() == 2) {
+            traverseVolume<false, 2>(aabb, x, Ax);
+        } else if (aabb.dim() == 3) {
+            traverseVolume<false, 3>(aabb, x, Ax);
+        }
     }
 
     template <typename data_t>
@@ -68,7 +72,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    template <bool adjoint>
+    template <bool adjoint, int dim>
     void JosephsMethodBranchless<data_t>::traverseVolume(const BoundingBox& aabb,
                                                          const DataContainer<data_t>& vector,
                                                          DataContainer<data_t>& result) const
@@ -81,7 +85,6 @@ namespace elsa
                                                                  : result.getDataDescriptor());
 
         const auto sizeOfRange = range.getNumberOfCoefficients();
-        const auto rangeDim = range.getNumberOfDimensions();
 
         // iterate over all rays
 #pragma omp parallel for
@@ -90,7 +93,7 @@ namespace elsa
 
             // --> setup traversal algorithm
 
-            DrivingDirectionTraversalBranchless traverse(aabb, ray);
+            DrivingDirectionTraversalBranchless<dim> traverse(aabb, ray);
 
             if constexpr (!adjoint)
                 result[ir] = 0;
@@ -98,7 +101,7 @@ namespace elsa
             // Make steps through the volume
             while (traverse.isInBoundingBox()) {
 
-                IndexVector_t currentVoxel = traverse.getCurrentVoxel();
+                IndexArray_t<dim> currentVoxel = traverse.getCurrentVoxel();
                 float intersection = traverse.getIntersectionLength();
 
                 // to avoid code duplicates for apply and applyAdjoint
@@ -116,10 +119,8 @@ namespace elsa
                 auto tmpTo = to;
                 auto tmpFrom = from;
 
-                linear<adjoint>(aabb, vector, result, traverse.getFractionals(), rangeDim,
-                                currentVoxel, intersection, from, to,
-                                traverse.getIgnoreDirection());
-
+                linear<adjoint, dim>(aabb, vector, result, traverse.getFractionals(), currentVoxel,
+                                     intersection, from, to, traverse.getIgnoreDirection());
                 // update Traverse
                 traverse.updateTraverse();
             }
@@ -127,18 +128,18 @@ namespace elsa
     }
 
     template <typename data_t>
-    template <bool adjoint>
+    template <bool adjoint, int dim>
     void JosephsMethodBranchless<data_t>::linear(
         const BoundingBox& aabb, const DataContainer<data_t>& vector, DataContainer<data_t>& result,
-        const RealVector_t& fractionals, index_t domainDim, const IndexVector_t& currentVoxel,
+        const RealArray_t<dim>& fractionals, const IndexArray_t<dim>& currentVoxel,
         float intersection, index_t from, index_t to, int mainDirection) const
     {
         data_t weight = intersection;
-        IndexVector_t interpol = currentVoxel;
+        IndexArray_t<dim> interpol = currentVoxel;
 
         // handle diagonal if 3D
-        if (domainDim == 3) {
-            for (int i = 0; i < domainDim; i++) {
+        if constexpr (dim == 3) {
+            for (int i = 0; i < dim; i++) {
                 if (i != mainDirection) {
                     weight *= std::abs(fractionals(i));
                     interpol(i) += (fractionals(i) < 0.0) ? -1 : 1;
@@ -169,7 +170,7 @@ namespace elsa
         }
 
         // handle neighbors not along the main direction
-        for (int i = 0; i < domainDim; i++) {
+        for (int i = 0; i < dim; i++) {
             if (i != mainDirection) {
                 data_t weightn = weight * std::abs(fractionals(i)) / (1 - std::abs(fractionals(i)));
                 interpol = currentVoxel;

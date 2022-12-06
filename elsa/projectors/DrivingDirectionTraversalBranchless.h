@@ -12,7 +12,7 @@ namespace elsa
     /**
      *  @brief Special traversal wrapper for Joseph's method.
      */
-
+    template <int dim>
     class DrivingDirectionTraversalBranchless
     {
     private:
@@ -60,7 +60,7 @@ namespace elsa
          *
          * @return RealVector_t fractionals
          */
-        const RealVector_t& getFractionals() const;
+        const RealArray_t<dim>& getFractionals() const;
 
         /**
          * @brief Get direction to be ignored during interpolation
@@ -87,24 +87,24 @@ namespace elsa
          *
          * @return IndexVector_t coordinates of the voxel which contains the current sampling point
          */
-        IndexVector_t getCurrentVoxel() const;
+        IndexArray_t<dim> getCurrentVoxel() const;
 
     private:
         /// the volume / axis-aligned bounding box
         BoundingBox _aabb;
         /// the entry point parameters of the ray in the aabb
-        RealVector_t _entryPoint{_aabb.dim()};
+        RealArray_t<dim> _entryPoint;
         /// the exit point parameters of the ray in the aabb
-        RealVector_t _exitPoint{_aabb.dim()};
+        RealArray_t<dim> _exitPoint;
         /// the current position of the traverser in the aabb
-        RealVector_t _currentPos{_aabb.dim()};
+        RealArray_t<dim> _currentPos;
         /// the step direction of the traverser
-        RealVector_t _stepDirection{_aabb.dim()};
+        RealArray_t<dim> _stepDirection;
         /// the step sizes for the next step along the ray
-        RealVector_t _nextStep{_aabb.dim()};
+        RealArray_t<dim> _nextStep;
         /// the fractional parts of the current position coordinates (actually frac(_currentPos) -
         /// 0.5)
-        RealVector_t _fractionals{_aabb.dim()};
+        RealArray_t<dim> _fractionals;
         /// flag if traverser still in bounding box
         bool _isInAABB{false};
         /// length of ray segment currently being handled
@@ -117,14 +117,14 @@ namespace elsa
         STAGE _stage{FIRST};
 
         /// initialize fractionals from a coordinate vector
-        void initFractionals(const RealVector_t& currentPosition);
+        void initFractionals(const RealArray_t<dim>& currentPosition);
         /// setup the step directions (which is basically the sign of the ray direction rd)
         void initStepDirection(const RealVector_t& rd);
         /// compute the entry and exit points of ray r with the volume (aabb), returns the length of
         /// the intersection
         real_t calculateAABBIntersections(const RealRay_t& ray);
         /// select the closest voxel to the entry point (considering the current position)
-        void selectClosestVoxel(const RealVector_t& currentPosition);
+        void selectClosestVoxel(const RealArray_t<dim>& currentPosition);
         /// check if the current index is still in the bounding box
         bool isCurrentPositionInAABB(index_t index) const;
         /// advances the traversal algorithm to the first sampling point
