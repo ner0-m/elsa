@@ -24,9 +24,6 @@ namespace elsa
     template <int dim>
     class TraverseAABBBranchless
     {
-        using IndexArray_t = Eigen::Array<index_t, dim, 1>;
-        using RealArray_t = Eigen::Array<real_t, dim, 1>;
-        using BooleanArray_t = Eigen::Array<bool, dim, 1>;
 
     public:
         /**
@@ -36,7 +33,7 @@ namespace elsa
          * @param[in] r the ray to be traversed
          */
         TraverseAABBBranchless(const BoundingBox& aabb, const RealRay_t& r,
-                               IndexArray_t productOfCoefficientsPerDimension);
+                               IndexArray_t<dim> productOfCoefficientsPerDimension);
 
         /**
          * @brief Update the traverser status by taking the next traversal step
@@ -63,7 +60,7 @@ namespace elsa
          *
          * @returns coordinate vector
          */
-        IndexArray_t getCurrentVoxel() const;
+        IndexArray_t<dim> getCurrentVoxel() const;
 
         /**
          * @brief Return the index that corresponds to the current position
@@ -72,39 +69,40 @@ namespace elsa
 
     private:
         /// the step direction of the traverser
-        IndexArray_t _stepDirection;
+        IndexArray_t<dim> _stepDirection;
         /// the current position of the traverser in the aabb
-        RealArray_t _currentPos;
+        RealArray_t<dim> _currentPos;
         /// the current maximum step parameter along the ray
-        RealArray_t _T;
+        RealArray_t<dim> _T;
         /// the step sizes for the step parameter along the ray
-        RealArray_t _tDelta;
+        RealArray_t<dim> _tDelta;
         /// flag if traverser still in bounding box
         bool _isInAABB{false};
         /// the current step parameter exiting the current voxel
         real_t _tExit{0.0};
         /// the current mask, with true for the directions in which we are stepping, and else fals
-        BooleanArray_t _mask;
+        BooleanArray_t<dim> _mask;
         /// result of aabb.min(), the lower corner of the aabb
-        RealArray_t _aabbMin;
+        RealArray_t<dim> _aabbMin;
         /// result of aabb.max(), the upper corner of the aabb
-        RealArray_t _aabbMax;
+        RealArray_t<dim> _aabbMax;
         /// the product of coefficients per dimension
-        IndexArray_t _productOfCoefficientsPerDimension;
+        IndexArray_t<dim> _productOfCoefficientsPerDimension;
         /// the current index which corresponds to the current position
         index_t _currentIndex;
 
         /// compute the entry and exit points of ray r with the volume (aabb)
-        RealArray_t calculateAABBIntersections(const RealRay_t& r, const BoundingBox& aabb);
+        RealArray_t<dim> calculateAABBIntersections(const RealRay_t& r, const BoundingBox& aabb);
         /// setup the step directions (which is basically the sign of the ray direction rd)
-        void initStepDirection(const RealArray_t& rd);
+        void initStepDirection(const RealArray_t<dim>& rd);
         /// select the closest voxel to the entry point
-        void selectClosestVoxel(const RealArray_t& entryPoint);
+        void selectClosestVoxel(const RealArray_t<dim>& entryPoint);
         /// setup the step sizes considering the ray direction rd
-        void initDelta(const RealArray_t& rd, const RealArray_t& EPS, const RealArray_t& MAX);
+        void initDelta(const RealArray_t<dim>& rd, const RealArray_t<dim>& EPS,
+                       const RealArray_t<dim>& MAX);
         /// setup the maximum step parameters considering the ray direction rd
-        void initT(const RealArray_t& rd, const RealArray_t& EPS, const RealArray_t& MAX,
-                   const RealArray_t& entryPoint);
+        void initT(const RealArray_t<dim>& rd, const RealArray_t<dim>& EPS,
+                   const RealArray_t<dim>& MAX, const RealArray_t<dim>& entryPoint);
         /// check if the current index is still in the bounding box
         bool isCurrentPositionInAABB() const;
         /// calculate the mask which masks out all but the minimal coefficients in _T.

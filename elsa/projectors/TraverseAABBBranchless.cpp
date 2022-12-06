@@ -5,7 +5,8 @@ namespace elsa
 {
     template <int dim>
     TraverseAABBBranchless<dim>::TraverseAABBBranchless(
-        const BoundingBox& aabb, const RealRay_t& r, IndexArray_t productOfCoefficientsPerDimension)
+        const BoundingBox& aabb, const RealRay_t& r,
+        IndexArray_t<dim> productOfCoefficientsPerDimension)
         : _productOfCoefficientsPerDimension{std::move(productOfCoefficientsPerDimension)}
     {
         static_assert(dim == 2 || dim == 3);
@@ -13,15 +14,17 @@ namespace elsa
         _aabbMax = aabb.max();
 
         // compute the first intersection
-        const RealArray_t entryPoint = calculateAABBIntersections(r, aabb);
+        const RealArray_t<dim> entryPoint = calculateAABBIntersections(r, aabb);
         if (!isInBoundingBox()) // early abort if necessary
             return;
 
         // constant array containing epsilon
-        const RealArray_t EPS{RealArray_t().setConstant(std::numeric_limits<real_t>::epsilon())};
+        const RealArray_t<dim> EPS{
+            RealArray_t<dim>().setConstant(std::numeric_limits<real_t>::epsilon())};
 
         // constant vector containing the maximum number
-        const RealArray_t MAX{RealArray_t().setConstant(std::numeric_limits<real_t>::max())};
+        const RealArray_t<dim> MAX{
+            RealArray_t<dim>().setConstant(std::numeric_limits<real_t>::max())};
 
         // determine whether we go up/down or left/right
         initStepDirection(r.direction());
@@ -87,7 +90,7 @@ namespace elsa
     }
 
     template <int dim>
-    Eigen::Array<index_t, dim, 1> TraverseAABBBranchless<dim>::getCurrentVoxel() const
+    IndexArray_t<dim> TraverseAABBBranchless<dim>::getCurrentVoxel() const
     {
         return _currentPos.template cast<index_t>();
     }
@@ -99,11 +102,11 @@ namespace elsa
     }
 
     template <int dim>
-    Eigen::Array<real_t, dim, 1>
+    RealArray_t<dim>
         TraverseAABBBranchless<dim>::calculateAABBIntersections(const RealRay_t& r,
                                                                 const BoundingBox& aabb)
     {
-        RealArray_t entryPoint;
+        RealArray_t<dim> entryPoint;
         // entry and exit point parameters
         real_t tmin;
 
@@ -126,15 +129,15 @@ namespace elsa
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::initStepDirection(const RealArray_t& rd)
+    void TraverseAABBBranchless<dim>::initStepDirection(const RealArray_t<dim>& rd)
     {
         _stepDirection = rd.sign().template cast<index_t>();
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::selectClosestVoxel(const RealArray_t& entryPoint)
+    void TraverseAABBBranchless<dim>::selectClosestVoxel(const RealArray_t<dim>& entryPoint)
     {
-        RealArray_t lowerCorner = entryPoint.floor();
+        RealArray_t<dim> lowerCorner = entryPoint.floor();
         lowerCorner = ((lowerCorner == entryPoint) && (_stepDirection < 0.0))
                           .select(lowerCorner - 1, lowerCorner);
 
@@ -146,19 +149,22 @@ namespace elsa
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::initDelta(const RealArray_t& rd, const RealArray_t& EPS,
-                                                const RealArray_t& MAX)
+    void TraverseAABBBranchless<dim>::initDelta(const RealArray_t<dim>& rd,
+                                                const RealArray_t<dim>& EPS,
+                                                const RealArray_t<dim>& MAX)
     {
-        RealArray_t tdelta = _stepDirection.template cast<real_t>() / rd;
+        RealArray_t<dim> tdelta = _stepDirection.template cast<real_t>() / rd;
 
         _tDelta = (Eigen::abs(rd) > EPS).select(tdelta, MAX);
     }
 
     template <int dim>
-    void TraverseAABBBranchless<dim>::initT(const RealArray_t& rd, const RealArray_t& EPS,
-                                            const RealArray_t& MAX, const RealArray_t& entryPoint)
+    void TraverseAABBBranchless<dim>::initT(const RealArray_t<dim>& rd, const RealArray_t<dim>& EPS,
+                                            const RealArray_t<dim>& MAX,
+                                            const RealArray_t<dim>& entryPoint)
     {
-        RealArray_t T = (((rd > 0.0f).select(_currentPos + 1., _currentPos)) - entryPoint) / rd;
+        RealArray_t<dim> T =
+            (((rd > 0.0f).select(_currentPos + 1., _currentPos)) - entryPoint) / rd;
 
         _T = (Eigen::abs(rd) > EPS).select(T, MAX);
     }
