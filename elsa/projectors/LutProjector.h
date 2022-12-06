@@ -27,6 +27,9 @@ namespace elsa
     class BlobProjector;
 
     template <typename data_t = real_t>
+    class VoxelBlobProjector;
+
+    template <typename data_t = real_t>
     class DifferentialBlobProjector;
 
     template <typename data_t = real_t>
@@ -37,6 +40,13 @@ namespace elsa
         using value_type = data_t;
         using forward_tag = ray_driven_tag;
         using backward_tag = ray_driven_tag;
+    };
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<VoxelBlobProjector<data_t>> {
+        using value_type = data_t;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
     };
 
     template <typename data_t>
@@ -224,6 +234,42 @@ namespace elsa
         ProjectedBlobLut<data_t, 100> lut_;
 
         using Base = LutProjector<data_t, BlobProjector<data_t>>;
+
+        friend class XrayProjector<self_type>;
+    };
+
+    template <typename data_t>
+    class VoxelBlobProjector : public LutProjector<data_t, VoxelBlobProjector<data_t>>
+    {
+    public:
+        using self_type = VoxelBlobProjector<data_t>;
+
+        VoxelBlobProjector(data_t radius, data_t alpha, data_t order,
+                           const VolumeDescriptor& domainDescriptor,
+                           const DetectorDescriptor& rangeDescriptor);
+
+        VoxelBlobProjector(const VolumeDescriptor& domainDescriptor,
+                           const DetectorDescriptor& rangeDescriptor);
+
+        data_t weight(data_t distance) const { return lut_(distance); }
+
+        index_t support() const { return static_cast<index_t>(std::ceil(lut_.radius())); }
+
+        void forward(const BoundingBox aabb, const DataContainer<data_t>& x,
+                     DataContainer<data_t>& Ax) const;
+        void backward(const BoundingBox aabb, const DataContainer<data_t>& y,
+                      DataContainer<data_t>& Aty) const;
+
+        /// implement the polymorphic clone operation
+        VoxelBlobProjector<data_t>* _cloneImpl() const;
+
+        /// implement the polymorphic comparison operation
+        bool _isEqual(const LinearOperator<data_t>& other) const;
+
+    private:
+        ProjectedBlobLut<data_t, 100> lut_;
+
+        using Base = LutProjector<data_t, VoxelBlobProjector<data_t>>;
 
         friend class XrayProjector<self_type>;
     };
