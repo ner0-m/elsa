@@ -53,4 +53,6 @@ namespace elsa
     // explicit template instantiation
     template class L0PseudoNorm<float>;
     template class L0PseudoNorm<double>;
+    template class L0PseudoNorm<complex<float>>;
+    template class L0PseudoNorm<complex<double>>;
 } // namespace elsa
