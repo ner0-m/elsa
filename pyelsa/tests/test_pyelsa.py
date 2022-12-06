@@ -8,6 +8,16 @@ import math
 import os
 
 
+class PyLOp(elsa.LinearOperator):
+    """Example of a simple class extending elsa's linear operator"""
+
+    def applyImpl(self, x, Ax):
+        Ax = x
+
+    def applyAdjointImpl(self, y, Aty):
+        Aty = y
+
+
 class PyelsaTest(unittest.TestCase):
     def assert_same_shape(
         self, arr: np.array, dc: elsa.DataContainer, fail_msg: str = None
@@ -278,6 +288,34 @@ class PyelsaTest(unittest.TestCase):
     #     elsa.Logger.flush()
     #     with open(logfile_name) as log_file:
     #         self.assertTrue(len(log_file.readline()) > 0)
+
+    def test_extend_linear_operator(self):
+        size = 10
+        desc = elsa.VolumeDescriptor([size])
+        x = elsa.DataContainer(desc, np.ones((size)))
+        y = elsa.DataContainer(desc, np.ones((size)))
+        op = PyLOp(desc, desc)
+
+        # No testing, just want to be able to call it
+        op.apply(x)
+        op.applyAdjoint(y)
+
+    def test_convert_elsa_to_scipy_operator(self):
+        try:
+            size = 10
+            desc = elsa.VolumeDescriptor([size])
+            x = elsa.DataContainer(desc, np.ones((size)))
+            op = elsa.Scaling(desc, 4)
+
+            converted = elsa.to_scipy(op)
+
+            y = converted.matvec(np.ones((size)))
+            self.assertTrue((y == 4).all())
+
+            y = converted.rmatvec(np.ones((size)))
+            self.assertTrue((y == 4).all())
+        except ModuleNotFoundError:
+            pass
 
 
 if __name__ == "main":

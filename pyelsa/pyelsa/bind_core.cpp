@@ -23,6 +23,37 @@
 
 namespace py = pybind11;
 
+template <typename data_t>
+class PyLinearOperator : public elsa::LinearOperator<data_t>
+{
+public:
+    using elsa::LinearOperator<data_t>::LinearOperator;
+
+    PyLinearOperator(const elsa::LinearOperator<data_t>& other)
+        : elsa::LinearOperator<data_t>(other)
+    {
+    }
+
+    /// make copy constructor deletion explicit
+    PyLinearOperator(const PyLinearOperator<data_t>&) = delete;
+
+    ~PyLinearOperator() = default;
+
+    /// apply the scaling operation
+    void applyImpl(const elsa::DataContainer<data_t>& x,
+                   elsa::DataContainer<data_t>& Ax) const override
+    {
+        PYBIND11_OVERRIDE_PURE(void, elsa::LinearOperator<data_t>, applyImpl, x, Ax);
+    }
+
+    /// apply the adjoint of the scaling operation
+    void applyAdjointImpl(const elsa::DataContainer<data_t>& y,
+                          elsa::DataContainer<data_t>& Aty) const override
+    {
+        PYBIND11_OVERRIDE_PURE(void, elsa::LinearOperator<data_t>, applyAdjointImpl, y, Aty);
+    }
+};
+
 namespace detail
 {
     template <class data_t>
@@ -49,7 +80,7 @@ namespace detail
         auto return_move = py::return_value_policy::move;
         auto ref_internal = py::return_value_policy::reference_internal;
 
-        py::class_<LOp, elsa::Cloneable<LOp>> op(m, name);
+        py::class_<LOp, PyLinearOperator<data_t>> op(m, name);
         op.def("apply", py::overload_cast<ConstDcRef>(&LOp::apply, py::const_), py::arg("x"),
                return_move);
         op.def("apply", py::overload_cast<ConstDcRef, DcRef>(&LOp::apply, py::const_), py::arg("x"),
