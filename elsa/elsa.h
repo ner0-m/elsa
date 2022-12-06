@@ -69,6 +69,7 @@
 #include "Geometry.h"
 #include "BinaryMethod.h"
 #include "JosephsMethod.h"
+#include "JosephsMethodBranchless.h"
 #include "SiddonsMethod.h"
 #include "SiddonsMethodBranchless.h"
 #include "SubsetSampler.h"

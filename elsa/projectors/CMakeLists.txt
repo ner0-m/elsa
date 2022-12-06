@@ -5,6 +5,7 @@ set(MODULE_HEADERS
     TraverseAABB.h
     TraverseAABBBranchless.h
     TraverseAABBJosephsMethod.h
+    DrivingDirectionTraversalBranchless.h
     SliceTraversal.h
     LutProjector.h
     VoxelProjector.h
@@ -12,6 +13,7 @@ set(MODULE_HEADERS
     SiddonsMethod.h
     SiddonsMethodBranchless.h
     JosephsMethod.h
+    JosephsMethodBranchless.h
     SubsetSampler.h
     Blobs.h
     BSplines.h
@@ -25,6 +27,7 @@ set(MODULE_SOURCES
     TraverseAABB.cpp
     TraverseAABBBranchless.cpp
     TraverseAABBJosephsMethod.cpp
+    DrivingDirectionTraversalBranchless.cpp
     SliceTraversal.cpp
     LutProjector.cpp
     VoxelProjector.cpp
@@ -32,6 +35,7 @@ set(MODULE_SOURCES
     SiddonsMethod.cpp
     SiddonsMethodBranchless.cpp
     JosephsMethod.cpp
+    JosephsMethodBranchless.cpp
     SubsetSampler.cpp
     Blobs.cpp
     BSplines.cpp
