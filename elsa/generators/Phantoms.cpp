@@ -123,7 +123,7 @@ namespace elsa::phantoms
                                        data_t(scale(dd, e[3]))};
 
                 if (halfAxis[0] < 1 || halfAxis[1] < 1 || halfAxis[2] < 1 || e[0] == data_t(0)) {
-                    Logger::get("Ellipsoid")
+                    Logger::get("phantom::modifiedSheppLogan")
                         ->warn(
                             "Ellipsoid will not be rendered, because of amplitude=0 or an invalid "
                             "half axis! amplitude {}, half axis ({},{},{}) ",
@@ -139,6 +139,7 @@ namespace elsa::phantoms
                      scaleShift(dd, e[6])},
                     halfAxis,
                     {e[7], e[8], e[9]}};
+                Logger::get("phantom::modifiedSheppLogan")->info("rasterize {}", ellipsoid);
                 rasterize(ellipsoid, dd, dc);
             }
         }

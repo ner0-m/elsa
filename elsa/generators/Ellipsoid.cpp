@@ -47,13 +47,6 @@ namespace elsa::phantoms
 
             rot.transposeInPlace();
         }
-
-        Logger::get("Ellipsoid")
-            ->info("Ellipsoid with amplitude {}, Center ({},{},{}) , half axis ({},{},{}) "
-                   "EulerAngels ({},{},{})",
-                   _amplit, _center[INDEX_X], _center[INDEX_Y], _center[INDEX_Z],
-                   _halfAxis[INDEX_X], _halfAxis[INDEX_Y], _halfAxis[INDEX_Z], _eulers[INDEX_X],
-                   _eulers[INDEX_Y], _eulers[INDEX_Z]);
     };
 
     template <typename data_t>
