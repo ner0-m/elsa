@@ -1,3 +1,4 @@
+
 #pragma once
 #include "elsaDefines.h"
 #include "VolumeDescriptor.h"
@@ -34,4 +35,5 @@ namespace elsa::phantoms
     template <typename data_t = double,
               typename = std::enable_if_t<std::is_floating_point<data_t>::value>>
     using Vec3X = Eigen::Matrix<data_t, 3, 1>;
+
 } // namespace elsa::phantoms

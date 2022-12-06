@@ -91,20 +91,6 @@ namespace elsa::phantoms
         }
     };
 
-    /**
-     * @brief For indexing, the datacontainer calculates the indexing factors for x,y,z dimension.
-     *  The index for datacontainer of voxel{x,y,z} can then be set with
-     *  dataContainer[x*strides[INDEX_X] + y*strides[INDEX_Y] + z*strides[INDEX_Z].
-     */
-    Vec3i getStrides(VolumeDescriptor const& dd)
-    {
-        auto strides = dd.getNumberOfCoefficientsPerDimension();
-        for (index_t i = 0; i < 3; ++i) {
-            strides(i) = dd.getNumberOfCoefficientsPerDimension().head(i).prod();
-        }
-        return strides;
-    }
-
     template <typename data_t>
     void rasterizeNoRotation(const Ellipsoid<data_t>& el, VolumeDescriptor& dd,
                              DataContainer<data_t>& dc)
@@ -113,7 +99,7 @@ namespace elsa::phantoms
         Vec3i idx(3);
         idx << 0, 0, 0;
 
-        auto strides = getStrides(dd);
+        auto strides = dd.getProductOfCoefficientsPerDimension();
 
         // global offests for a fast memory reuse in the for loops
         index_t zOffset = 0;
@@ -244,7 +230,7 @@ namespace elsa::phantoms
 
         auto [minNoCheck, maxNoCheck] = findBoundingBox<data_t>(el);
 
-        auto strides = getStrides(dd);
+        auto strides = dd.getProductOfCoefficientsPerDimension();
 
         auto [min, max] = insidePhantom<data_t>(dd, _center, minNoCheck, maxNoCheck);
 
