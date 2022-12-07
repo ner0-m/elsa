@@ -20,7 +20,8 @@ namespace elsa
           _R{RealMatrix_t::Identity(2, 2)},
           _t{RealVector_t::Zero(2)},
           _S{RealMatrix_t::Identity(2 + 1, 2 + 1)},
-          _C{RealVector_t::Zero(2)}
+          _C{RealVector_t::Zero(2)},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector}
     {
         auto [volSpacing, volOrigin] = std::move(volData);
         auto [sinoSpacing, sinoOrigin] = std::move(sinoData);
@@ -59,7 +60,8 @@ namespace elsa
           _R{RealMatrix_t::Identity(3, 3)},
           _t{RealVector_t::Zero(3)},
           _S{RealMatrix_t::Identity(3 + 1, 3 + 1)},
-          _C{RealVector_t::Zero(3)}
+          _C{RealVector_t::Zero(3)},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector}
     {
         auto [volSpacing, volOrigin] = std::move(volData);
         auto [sinoSpacing, sinoOrigin] = std::move(sinoData);
@@ -115,7 +117,8 @@ namespace elsa
           _R{R},
           _t{RealVector_t::Zero(3)},
           _S{RealMatrix_t::Identity(3 + 1, 3 + 1)},
-          _C{RealVector_t::Zero(3)}
+          _C{RealVector_t::Zero(3)},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector}
     {
         // sanity check
         if (R.rows() != _objectDimension || R.cols() != _objectDimension)
@@ -147,13 +150,30 @@ namespace elsa
         buildMatrices();
     }
 
-    const RealMatrix_t& Geometry::getProjectionMatrix() const { return _P; }
+    const RealMatrix_t& Geometry::getProjectionMatrix() const
+    {
+        return _P;
+    }
 
-    const RealMatrix_t& Geometry::getInverseProjectionMatrix() const { return _Pinv; }
+    const RealMatrix_t& Geometry::getInverseProjectionMatrix() const
+    {
+        return _Pinv;
+    }
 
-    const RealVector_t& Geometry::getCameraCenter() const { return _C; }
+    const RealVector_t& Geometry::getCameraCenter() const
+    {
+        return _C;
+    }
 
-    const RealMatrix_t& Geometry::getRotationMatrix() const { return _R; }
+    const RealMatrix_t& Geometry::getRotationMatrix() const
+    {
+        return _R;
+    }
+
+    real_t Geometry::getSourceDetectorDistance() const
+    {
+        return _sdDistance;
+    }
 
     bool Geometry::operator==(const Geometry& other) const
     {

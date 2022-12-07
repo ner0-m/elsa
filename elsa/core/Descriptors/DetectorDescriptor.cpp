@@ -127,4 +127,37 @@ namespace elsa
         return RealRay_t(ro, rd);
     }
 
+    std::pair<RealVector_t, real_t>
+        DetectorDescriptor::projectAndScaleVoxelOnDetector(const RealVector_t& voxelCoord,
+                                                           const index_t poseIndex) const
+    {
+        assert(asUnsigned(poseIndex) < _geometry.size()
+               && "PlanarDetectorDescriptor::computeRayToDetector: Assumption poseIndex smaller "
+                  "than number of poses, wrong");
+
+        auto dim = getNumberOfDimensions();
+
+        // get the pose of trajectory
+        auto geometry = _geometry[asUnsigned(poseIndex)];
+        auto projMatrix = geometry.getProjectionMatrix();
+
+        // compute direction from source
+        auto sourceVoxelDir = (voxelCoord - geometry.getCameraCenter());
+
+        // compute distance of voxel from camera
+        auto distance = sourceVoxelDir.norm();
+
+        // homogeneous coordinates [p;1], with p in detector space
+        RealVector_t homogeneousVoxelCoord(voxelCoord.size() + 1);
+        homogeneousVoxelCoord << sourceVoxelDir / distance, 0;
+
+        RealVector_t voxelCenterOnDetectorHomogenous = (projMatrix * homogeneousVoxelCoord);
+        voxelCenterOnDetectorHomogenous[dim - 1] = asUnsigned(poseIndex);
+
+        // compute scaling assuming rays orthogonal to detector
+        auto scaling = geometry.getSourceDetectorDistance() / distance;
+
+        return {voxelCenterOnDetectorHomogenous, scaling};
+    }
+
 } // namespace elsa

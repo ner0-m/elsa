@@ -137,12 +137,22 @@ namespace elsa
          */
         const RealMatrix_t& getRotationMatrix() const;
 
+        /**
+         * @brief Return the distance between source and detector
+         *
+         * @returns the distance
+         */
+        real_t getSourceDetectorDistance() const;
+
         /// comparison operator
         bool operator==(const Geometry& other) const;
 
     private:
         /// the dimension of the object space / volume (either 2 or 3)
         index_t _objectDimension;
+
+        /// the distance between source and detector
+        const real_t _sdDistance;
 
         /// the projection matrix (= [_K|0] * [_R|_t] * _S)
         RealMatrix_t _P;
