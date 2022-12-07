@@ -17,11 +17,17 @@ TEST_SUITE_BEGIN("projectors");
 Eigen::IOFormat vecfmt(10, 0, ", ", ", ", "", "", "[", "]");
 Eigen::IOFormat matfmt(10, 0, ", ", "\n", "\t\t[", "]");
 
+// when one uses fmt 8.1.1 bundled with spdlog 1.10.0, ostream_formatter is not available.
+// thus we can only create the ostream_formatter instance if fmt is not bundled.
+// but apparently the older fmt does not requires this fmt::formatter definition to use iostreams at
+// all, so we can just continue without it.
+#if FMT_VERSION > 90000
 // https://fmt.dev/latest/api.html#ostream-api
 // allow eigen WithFormat things to be ostream-formatted.
 template <typename... C>
 struct fmt::formatter<Eigen::WithFormat<C...>> : ostream_formatter {
 };
+#endif
 
 TYPE_TO_STRING(BlobProjector<float>);
 
