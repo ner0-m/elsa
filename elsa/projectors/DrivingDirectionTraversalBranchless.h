@@ -90,8 +90,10 @@ namespace elsa
         IndexArray_t<dim> getCurrentVoxel() const;
 
     private:
-        /// the volume / axis-aligned bounding box
-        BoundingBox _aabb;
+        /// result of aabb.min(), the lower corner of the aabb
+        RealArray_t<dim> _aabbMin;
+        /// result of aabb.max(), the upper corner of the aabb
+        RealArray_t<dim> _aabbMax;
         /// the entry point parameters of the ray in the aabb
         RealArray_t<dim> _entryPoint;
         /// the exit point parameters of the ray in the aabb
@@ -122,7 +124,7 @@ namespace elsa
         void initStepDirection(const RealVector_t& rd);
         /// compute the entry and exit points of ray r with the volume (aabb), returns the length of
         /// the intersection
-        real_t calculateAABBIntersections(const RealRay_t& ray);
+        real_t calculateAABBIntersections(const RealRay_t& ray, const BoundingBox& aabb);
         /// select the closest voxel to the entry point (considering the current position)
         void selectClosestVoxel(const RealArray_t<dim>& currentPosition);
         /// check if the current index is still in the bounding box

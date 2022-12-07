@@ -6,17 +6,17 @@ namespace elsa
     template <int dim>
     DrivingDirectionTraversalBranchless<dim>::DrivingDirectionTraversalBranchless(
         const BoundingBox& aabb, const RealRay_t& r)
-        : _aabb{aabb}
-
     {
         static_assert(dim == 2 || dim == 3);
+        _aabbMin = aabb.min();
+        _aabbMax = aabb.max();
 
         initStepDirection(r.direction());
 
         RealRay_t rt(r.origin(), r.direction());
 
         // determinge length of entire intersection with AABB
-        real_t intersectionLength = calculateAABBIntersections(rt);
+        real_t intersectionLength = calculateAABBIntersections(rt, aabb);
 
         if (!isInBoundingBox())
             return;
@@ -38,9 +38,9 @@ namespace elsa
             prevBorder--;
         }
         if (rt.direction()[mainDir] < 0) {
-            _aabb.min()[mainDir] = prevBorder + 1;
+            _aabbMin[mainDir] = prevBorder + 1;
         } else {
-            _aabb.max()[mainDir] = prevBorder;
+            _aabbMax[mainDir] = prevBorder;
         }
     }
 
@@ -74,8 +74,8 @@ namespace elsa
                 if (!_isInAABB) {
                     // revert to exit position and adjust values
                     real_t prevBorder = _nextStep(_ignoreDirection) < 0
-                                            ? _aabb.min()[_ignoreDirection]
-                                            : _aabb.max()[_ignoreDirection];
+                                            ? _aabbMin[_ignoreDirection]
+                                            : _aabbMax[_ignoreDirection];
                     _nextStep.matrix().normalize();
                     _intersectionLength =
                         (_exitPoint[_ignoreDirection] - prevBorder) / (_nextStep[_ignoreDirection]);
@@ -173,7 +173,7 @@ namespace elsa
     inline bool
         DrivingDirectionTraversalBranchless<dim>::isCurrentPositionInAABB(index_t index) const
     {
-        return _currentPos(index) < _aabb.max()(index) && _currentPos(index) >= _aabb.min()(index);
+        return _currentPos(index) < _aabbMax(index) && _currentPos(index) >= _aabbMin(index);
     }
 
     template <int dim>
@@ -182,14 +182,14 @@ namespace elsa
     {
         RealArray_t<dim> lowerCorner = currentPosition.floor();
         lowerCorner = (((lowerCorner == currentPosition) && (_stepDirection < 0.0))
-                       || currentPosition == _aabb.max().array())
+                       || currentPosition == _aabbMax)
                           .select(lowerCorner - 1, lowerCorner);
 
         // --> If ray is parallel and we are close, choose the next previous/next voxel
         _currentPos = lowerCorner;
 
         // check if we are still inside the aabb
-        if ((_currentPos >= _aabb.max().array()).any() || (_currentPos < _aabb.min().array()).any())
+        if ((_currentPos >= _aabbMax).any() || (_currentPos < _aabbMin).any())
             _isInAABB = false;
     }
 
@@ -200,13 +200,13 @@ namespace elsa
     }
 
     template <int dim>
-    real_t
-        DrivingDirectionTraversalBranchless<dim>::calculateAABBIntersections(const RealRay_t& ray)
+    real_t DrivingDirectionTraversalBranchless<dim>::calculateAABBIntersections(
+        const RealRay_t& ray, const BoundingBox& aabb)
     {
         real_t tmin;
 
         // --> calculate intersection parameter and if the volume is hit
-        auto opt = intersectRay(_aabb, ray);
+        auto opt = intersectRay(aabb, ray);
 
         if (opt) {
             _isInAABB = true;
@@ -217,13 +217,13 @@ namespace elsa
 
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
-            _entryPoint = (_entryPoint < _aabb.min().array()).select(_aabb.min(), _entryPoint);
-            _entryPoint = (_entryPoint > _aabb.max().array()).select(_aabb.max(), _entryPoint);
+            _entryPoint = (_entryPoint < _aabbMin).select(_aabbMin, _entryPoint);
+            _entryPoint = (_entryPoint > _aabbMax).select(_aabbMax, _entryPoint);
 
             // exit point stored in _exitPoint
             _exitPoint = ray.pointAt(opt->_tmax);
-            _exitPoint = (_exitPoint < _aabb.min().array()).select(_aabb.min(), _exitPoint);
-            _exitPoint = (_exitPoint > _aabb.max().array()).select(_aabb.max(), _exitPoint);
+            _exitPoint = (_exitPoint < _aabbMin).select(_aabbMin, _exitPoint);
+            _exitPoint = (_exitPoint > _aabbMax).select(_aabbMax, _exitPoint);
 
             return opt->_tmax - opt->_tmin;
         } else {
