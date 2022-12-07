@@ -25,7 +25,7 @@ option(ELSA_INSTALL "Enable generating the install targets for make install" ${E
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_BENCHMARKS "Enable building of benchmarks" OFF)
 
-option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
+option(ELSA_BUILD_CUDA_PROJECTORS "Enable building CUDA projectors" OFF)
 option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (requires libclang-dev)" ON)
 option(ELSA_BINDINGS_IN_SINGLE_MODULE "Combine the bindings for all elsa modules in a single python module" OFF)
 
