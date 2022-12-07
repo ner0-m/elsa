@@ -257,6 +257,7 @@ namespace elsa
 
         void forward(const BoundingBox aabb, const DataContainer<data_t>& x,
                      DataContainer<data_t>& Ax) const;
+
         void backward(const BoundingBox aabb, const DataContainer<data_t>& y,
                       DataContainer<data_t>& Aty) const;
 

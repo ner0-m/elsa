@@ -110,70 +110,83 @@ namespace elsa
         const DetectorDescriptor& detectorDesc =
             downcast<DetectorDescriptor>(Ax.getDataDescriptor());
         const auto numGeoms = detectorDesc.getNumberOfGeometryPoses();
-        // Logger::get("Voxel")->info("Origin is {}",
-        // detectorDesc.getLocationOfOrigin().format(vecFmt));
 
-        // loop over voxels
-        for (index_t domainIndex = 0; domainIndex < x.getSize(); ++domainIndex) {
-            auto coord = x.getDataDescriptor().getCoordinateFromIndex(domainIndex);
-            auto dim = x.getDataDescriptor().getNumberOfDimensions();
-            // Cast to real_t and shift to center of pixel
-            RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
+        // loop over geometries
+#pragma omp parallel for
+        for (index_t geomIndex = 0; geomIndex < numGeoms; geomIndex++) {
+            // loop over voxels
+            for (index_t domainIndex = 0; domainIndex < x.getSize(); ++domainIndex) {
+                auto coord = x.getDataDescriptor().getCoordinateFromIndex(domainIndex);
+                auto dim = x.getDataDescriptor().getNumberOfDimensions();
+                // Cast to real_t and shift to center of pixel
+                RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
 
-            auto voxelWeight = x[domainIndex];
-            // Logger::get("Voxel")->info("Voxel @ {} with weight {}", volumeCoord.format(vecFmt),
-            // voxelWeight); Logger::get("Voxel")->info("Detector origin @ {}",
-            // detectorDesc.getLocationOfOrigin().format(vecFmt));
+                auto voxelWeight = x[domainIndex];
 
-            // loop through geometries
-            for (index_t geomIndex = 0; geomIndex < numGeoms; geomIndex++) {
-                // TODO check if the voxel center is correct or needs to be offset
-                // project voxel center on detector
-                auto geometry = detectorDesc.getGeometry()[asUnsigned(geomIndex)];
-                auto& projMatrix = geometry.getProjectionMatrix();
-                auto& cameraCenter = geometry.getCameraCenter();
-                // Logger::get("Voxel")->info("Source is @ {}",cameraCenter.format(vecFmt));
+                auto [detectorCoord, scaling] =
+                    detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
-                // compute direction from source
-                auto sourceVoxelDir = (volumeCoord - cameraCenter).normalized();
+                // find all detector pixels that are hit
+                auto radiusOnDetector = static_cast<index_t>(std::ceil(lut_.radius() * scaling));
+                radiusOnDetector = 0;
 
-                // normalize?
-
-                // homogeneous coordinates [p;1], with p in detector space
-                RealVector_t homogeneousPixelCoord(dim + 1);
-                homogeneousPixelCoord << sourceVoxelDir, 0;
-
-                // Logger::get("Voxel")->info("Homogenous Pixel is\n{} and projMatrx is\n{}",
-                // homogeneousPixelCoord.format(vecFmt), projMatrix.format(matFmt));
-
-                RealVector_t voxelCenterOnDetectorHomogenous =
-                    (projMatrix * homogeneousPixelCoord).head(dim);
-                // Logger::get("Voxel")->info("Center @ Detector @ {}",
-                // voxelCenterOnDetectorHomogenous.format(vecFmt));
-
-                // set pose
-                auto dimDetector = detectorDesc.getNumberOfDimensions();
-                IndexVector_t detectorCoord(dimDetector);
-                detectorCoord << voxelCenterOnDetectorHomogenous.head(dimDetector - 1)
-                                     .template cast<index_t>(),
-                    geomIndex;
-                // find detector pixel for this center
-                index_t detector_index = detectorDesc.getIndexFromCoordinate(detectorCoord);
-                if (detector_index >= 0 && detector_index < Ax.getSize()) {
-                    Ax[detector_index] += weight(0) * voxelWeight;
+                // TODO hardcoded for 2D and offset not completely correct
+                // assumes that detectorCoord is already at the center of a detector pixel
+                // find detector pixels for this center
+                for (index_t i = -radiusOnDetector; i <= radiusOnDetector * 2; i++) {
+                    RealVector_t offset(2);
+                    offset << i, 0;
+                    index_t detector_index = detectorDesc.getIndexFromCoordinate(
+                        (detectorCoord + offset).template cast<index_t>());
+                    if (detector_index >= 0 && detector_index < Ax.getSize()) {
+                        Ax[detector_index] += weight(offset.norm()) * voxelWeight;
+                    }
                 }
             }
-
-            // project onto detector
-            // detectorDesc.
         }
     }
 
     template <typename data_t>
     void VoxelBlobProjector<data_t>::backward(const BoundingBox aabb,
-                                              const DataContainer<data_t>& x,
-                                              DataContainer<data_t>& Ax) const
+                                              const DataContainer<data_t>& y,
+                                              DataContainer<data_t>& Aty) const
     {
+        // y is the detector
+        // Aty is the volume
+        // given y, compute Aty
+
+        const DetectorDescriptor& detectorDesc =
+            downcast<DetectorDescriptor>(y.getDataDescriptor());
+        const auto numGeoms = detectorDesc.getNumberOfGeometryPoses();
+
+        // loop over geometries
+        for (index_t geomIndex = 0; geomIndex < numGeoms; geomIndex++) {
+            // loop over voxels
+            for (index_t domainIndex = 0; domainIndex < Aty.getSize(); ++domainIndex) {
+                auto coord = Aty.getDataDescriptor().getCoordinateFromIndex(domainIndex);
+                auto dim = Aty.getDataDescriptor().getNumberOfDimensions();
+                // Cast to real_t and shift to center of pixel
+                RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
+
+                auto [detectorCoord, scaling] =
+                    detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
+
+                // find all detector pixels that are hit
+                auto radiusOnDetector = static_cast<index_t>(std::ceil(lut_.radius() * scaling));
+                radiusOnDetector = 0;
+
+                // find detector pixels for this center
+                for (index_t i = -radiusOnDetector; i <= radiusOnDetector * 2; i++) {
+                    RealVector_t offset(2);
+                    offset << i, 0;
+                    index_t detector_index = detectorDesc.getIndexFromCoordinate(
+                        (detectorCoord + offset).template cast<index_t>());
+                    if (detector_index >= 0 && detector_index < y.getSize()) {
+                        Aty[domainIndex] += weight(offset.norm()) * y[detector_index];
+                    }
+                }
+            }
+        }
     }
 
     template <typename data_t>
