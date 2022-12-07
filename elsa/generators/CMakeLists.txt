@@ -2,6 +2,7 @@
 set(MODULE_HEADERS
     EllipseGenerator.h
     Ellipsoid.h
+    EllipCylinder.h
     Sphere.h
     Box.h
     PhantomDefines.h
@@ -19,6 +20,7 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     EllipseGenerator.cpp
     Ellipsoid.cpp
+    EllipCylinder.cpp
     Sphere.cpp
     Box.cpp
     Phantoms.cpp
