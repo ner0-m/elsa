@@ -92,3 +92,5 @@
 #include "SQS.h"
 #include "SIRT.h"
 #include "Landweber.h"
+#include "AB_GMRES.h"
+#include "BA_GMRES.h"
