@@ -22,6 +22,10 @@ set(MODULE_HEADERS
     Descriptors/IdenticalBlocksDescriptor.h
     Descriptors/PartitionDescriptor.h
     Descriptors/RandomBlocksDescriptor.h
+    Descriptors/DciProjDescriptor.h
+    Descriptors/ParametrizedVolumeDescriptor.h
+    Descriptors/SphericalFunctionDescriptor.h
+    Descriptors/SphericalHarmonicsDescriptor.h
     DataContainer.h
     DataContainerIterator.h
     Error.h
@@ -47,6 +51,10 @@ set(MODULE_SOURCES
     Descriptors/IdenticalBlocksDescriptor.cpp
     Descriptors/DetectorDescriptor.cpp
     Descriptors/PartitionDescriptor.cpp
+    Descriptors/DciProjDescriptor.cpp
+    Descriptors/ParametrizedVolumeDescriptor.cpp
+    Descriptors/SphericalFunctionDescriptor.cpp
+    Descriptors/SphericalHarmonicsDescriptor.cpp
     DataContainer.cpp
     Error.cpp
     LinearOperator.cpp
