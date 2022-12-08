@@ -9,7 +9,7 @@ set(MODULE_HEADERS
     ShearletTransform.h
     SphericalHarmonicsTransform.h
     SphericalFieldsTransform.h
-    #AXDTOperator.h
+    # AXDTOperator.h
 )
 
 # list all the code files of the module
@@ -23,7 +23,7 @@ set(MODULE_SOURCES
     ShearletTransform.cpp
     SphericalHarmonicsTransform.cpp
     SphericalFieldsTransform.cpp
-    #AXDTOperator.cpp
+    # AXDTOperator.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
