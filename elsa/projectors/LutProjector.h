@@ -52,8 +52,8 @@ namespace elsa
     template <typename data_t>
     struct XrayProjectorInnerTypes<DifferentialBlobProjector<data_t>> {
         using value_type = data_t;
-        using forward_tag = ray_driven_tag;
-        using backward_tag = ray_driven_tag;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
     };
 
     template <typename data_t>
@@ -279,7 +279,7 @@ namespace elsa
     class DifferentialBlobProjector : public LutProjector<data_t, DifferentialBlobProjector<data_t>>
     {
     public:
-        using self_type = DifferentialBlobProjector<data_t>;
+        using self_type = VoxelBlobProjector<data_t>;
 
         DifferentialBlobProjector(data_t radius, data_t alpha, data_t order,
                                   const VolumeDescriptor& domainDescriptor,
@@ -291,6 +291,12 @@ namespace elsa
         data_t weight(data_t distance) const { return lut_(distance); }
 
         index_t support() const { return static_cast<index_t>(std::ceil(lut_.radius())); }
+
+        void forward(const BoundingBox aabb, const DataContainer<data_t>& x,
+                     DataContainer<data_t>& Ax) const;
+
+        void backward(const BoundingBox aabb, const DataContainer<data_t>& y,
+                      DataContainer<data_t>& Aty) const;
 
         /// implement the polymorphic clone operation
         DifferentialBlobProjector<data_t>* _cloneImpl() const;

@@ -8,6 +8,14 @@ Eigen::IOFormat matFmt(10, 0, ", ", "\n", "\t\t[", "]");
 
 namespace elsa
 {
+    namespace util
+    {
+        template <typename T>
+        int sgn(T val)
+        {
+            return (T(0) < val) - (val < T(0));
+        }
+    } // namespace util
     template <typename data_t>
     BlobProjector<data_t>::BlobProjector(data_t radius, data_t alpha, data_t order,
                                          const VolumeDescriptor& domainDescriptor,
@@ -99,6 +107,7 @@ namespace elsa
         auto otherOp = downcast_safe<VoxelBlobProjector>(&other);
         return static_cast<bool>(otherOp);
     }
+
     template <typename data_t>
     void VoxelBlobProjector<data_t>::forward(const BoundingBox aabb, const DataContainer<data_t>& x,
                                              DataContainer<data_t>& Ax) const
@@ -205,8 +214,10 @@ namespace elsa
                 auto neighbours =
                     neighbours_in_slice(detectorIndex, distvec, lowerDetector, upperDetector);
                 for (auto neighbour : neighbours) {
-                    const auto distance =
-                        (detectorCoord - neighbour.template cast<real_t>()).norm();
+                    const auto distanceVec = (detectorCoord - neighbour.template cast<real_t>());
+                    const auto distance = distanceVec.norm();
+                    // let first axis always be the differential axis TODO
+                    const auto signum = util::sgn(distanceVec[0]);
                     index_t detector_index = detectorDesc.getIndexFromCoordinate(neighbour);
                     Aty[domainIndex] += weight(distance / scaling) * y[detector_index];
                 }
@@ -225,18 +236,15 @@ namespace elsa
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
         if (dim < 2 || dim > 3) {
-            throw InvalidArgumentError(
-                "DifferentialBlobProjector: only supporting 2d/3d operations");
+            throw InvalidArgumentError("BlobProjector: only supporting 2d/3d operations");
         }
 
         if (dim != rangeDescriptor.getNumberOfDimensions()) {
-            throw InvalidArgumentError(
-                "DifferentialBlobProjector: domain and range dimension need to match");
+            throw InvalidArgumentError("BlobProjector: domain and range dimension need to match");
         }
 
         if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
-            throw InvalidArgumentError(
-                "DifferentialBlobProjector: rangeDescriptor without any geometry");
+            throw InvalidArgumentError("BlobProjector: rangeDescriptor without any geometry");
         }
     }
 
@@ -262,6 +270,126 @@ namespace elsa
 
         auto otherOp = downcast_safe<DifferentialBlobProjector>(&other);
         return static_cast<bool>(otherOp);
+    }
+
+    template <typename data_t>
+    void DifferentialBlobProjector<data_t>::forward(const BoundingBox aabb,
+                                                    const DataContainer<data_t>& x,
+                                                    DataContainer<data_t>& Ax) const
+    {
+        // Ax is the detector
+        // x is the volume
+        // given x, compute Ax
+        const DetectorDescriptor& detectorDesc =
+            downcast<DetectorDescriptor>(Ax.getDataDescriptor());
+
+        auto upperDetector = detectorDesc.getNumberOfCoefficientsPerDimension();
+        auto lowerDetector = IndexVector_t::Constant(upperDetector.size(), 0);
+
+        auto& volume = x.getDataDescriptor();
+        const auto dimVolume = volume.getNumberOfDimensions();
+        const auto dimDetector = detectorDesc.getNumberOfDimensions();
+
+        const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
+        RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
+        detectorOriginShift[dimDetector - 1] = 0; // dont shift in pose dimension
+
+        // loop over geometries
+#pragma omp parallel for
+        for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
+             geomIndex++) {
+            // loop over voxels
+            for (index_t domainIndex = 0; domainIndex < x.getSize(); ++domainIndex) {
+                auto coord = volume.getCoordinateFromIndex(domainIndex);
+                auto voxelWeight = x[domainIndex];
+
+                // Cast to real_t and shift to center of voxel according to origin
+                RealVector_t volumeCoord = coord.template cast<real_t>() + volumeOriginShift;
+
+                // Project onto detector and compute the magnification
+                auto [detectorCoordShifted, scaling] =
+                    detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
+
+                // correct origin shift
+                auto detectorCoord = detectorCoordShifted - detectorOriginShift;
+
+                // find all detector pixels that are hit
+                auto radiusOnDetector = static_cast<index_t>(std::round(lut_.radius() * scaling));
+                IndexVector_t detectorIndex = detectorCoord.template cast<index_t>();
+                IndexVector_t distvec =
+                    IndexVector_t::Constant(detectorIndex.size(), radiusOnDetector);
+                distvec[dimDetector - 1] = 0; // this is the pose index
+                auto neighbours =
+                    neighbours_in_slice(detectorIndex, distvec, lowerDetector, upperDetector);
+                for (auto neighbour : neighbours) {
+                    const auto distanceVec = (detectorCoord - neighbour.template cast<real_t>());
+                    const auto distance = distanceVec.norm();
+                    // let first axis always be the differential axis TODO
+                    const auto signum = util::sgn(distanceVec[0]);
+                    index_t detector_index = detectorDesc.getIndexFromCoordinate(neighbour);
+                    Ax[detector_index] += weight(distance / scaling) * signum * voxelWeight;
+                }
+            }
+        }
+    }
+
+    template <typename data_t>
+    void DifferentialBlobProjector<data_t>::backward(const BoundingBox aabb,
+                                                     const DataContainer<data_t>& y,
+                                                     DataContainer<data_t>& Aty) const
+    {
+        // y is the detector
+        // Aty is the volume
+        // given y, compute Aty
+        const DetectorDescriptor& detectorDesc =
+            downcast<DetectorDescriptor>(y.getDataDescriptor());
+
+        auto upperDetector = detectorDesc.getNumberOfCoefficientsPerDimension();
+        auto lowerDetector = IndexVector_t::Constant(upperDetector.size(), 0);
+
+        auto& volume = Aty.getDataDescriptor();
+        const auto dimVolume = volume.getNumberOfDimensions();
+        const auto dimDetector = detectorDesc.getNumberOfDimensions();
+
+        const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
+        RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
+        detectorOriginShift[dimDetector - 1] = 0; // dont shift in pose dimension
+
+        // loop over geometries
+        for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
+             geomIndex++) {
+            // loop over voxels
+            for (index_t domainIndex = 0; domainIndex < Aty.getSize(); ++domainIndex) {
+                auto coord = volume.getCoordinateFromIndex(domainIndex);
+
+                // Cast to real_t and shift to center of pixel
+                RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
+
+                // Project onto detector and compute the magnification
+                auto [detectorCoordShifted, scaling] =
+                    detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
+
+                // correct origin shift
+                auto detectorCoord = detectorCoordShifted - detectorOriginShift;
+
+                // find all detector pixels that are hit
+                auto radiusOnDetector = static_cast<index_t>(std::round(lut_.radius() * scaling));
+                IndexVector_t detectorIndex = detectorCoord.template cast<index_t>();
+                IndexVector_t distvec =
+                    IndexVector_t::Constant(detectorIndex.size(), radiusOnDetector);
+                distvec[dimDetector - 1] = 0; // this is the pose index
+                auto neighbours =
+                    neighbours_in_slice(detectorIndex, distvec, lowerDetector, upperDetector);
+                for (auto neighbour : neighbours) {
+                    const auto distanceVec = (detectorCoord - neighbour.template cast<real_t>());
+                    const auto distance = distanceVec.norm();
+                    // let first axis always be the differential axis TODO
+                    const auto signum = util::sgn(distanceVec[0]);
+                    index_t detector_index = detectorDesc.getIndexFromCoordinate(neighbour);
+                    Aty[domainIndex] += weight(distance / scaling) * signum * y[detector_index];
+                }
+            }
+        }
     }
 
     template <typename data_t>
