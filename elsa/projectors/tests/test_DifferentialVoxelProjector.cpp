@@ -16,14 +16,14 @@ TEST_SUITE_BEGIN("projectors");
 Eigen::IOFormat vecfmt(10, 0, ", ", ", ", "", "", "[", "]");
 Eigen::IOFormat matfmt(10, 0, ", ", "\n", "\t\t[", "]");
 
-TYPE_TO_STRING(VoxelBlobProjector<float>);
+TYPE_TO_STRING(DifferentialBlobProjector<float>);
 
 // Redefine GIVEN such that it's nicely usable inside an loop
 #undef GIVEN
 #define GIVEN(...) DOCTEST_SUBCASE((std::string("   Given: ") + std::string(__VA_ARGS__)).c_str())
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 3D with one detector pixel", data_t,
-                   float, double)
+TEST_CASE_TEMPLATE("DifferentialVoxelProjector: Testing simple volume 3D with one detector pixel",
+                   data_t, float, double)
 {
     const IndexVector_t sizeDomain({{5, 5, 5}});
     const IndexVector_t sizeRange({{1, 1, 1}});
@@ -46,7 +46,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 3D with one detect
                               SinogramData3D{Size3D{sizeRange}},
                               RotationAngles3D{Gamma{static_cast<real_t>(i)}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = VoxelBlobProjector<data_t>(domain, range);
+            auto op = DifferentialBlobProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -68,8 +68,8 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 3D with one detect
     }
 }
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with one detector Pixel", data_t,
-                   float, double)
+TEST_CASE_TEMPLATE("DifferentialBlobProjector: Testing simple volume 2D with one detector Pixel",
+                   data_t, float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{1, 1}});
@@ -90,7 +90,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with one detect
             geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
                               VolumeData2D{Size2D{sizeDomain}}, SinogramData2D{Size2D{sizeRange}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = VoxelBlobProjector<data_t>(domain, range);
+            auto op = DifferentialBlobProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -108,15 +108,15 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with one detect
                 THEN("The detector value is the weight for distance 0")
                 {
                     CAPTURE(Ax[0]);
-                    CHECK_EQ(weight, Approx(Ax[0]));
+                    CHECK_EQ(weight, Approx(Ax[0]).epsilon(0.0001));
                 }
             }
         }
     }
 }
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with two detector pixels", data_t,
-                   float, double)
+TEST_CASE_TEMPLATE("DifferentialBlobProjector: Testing simple volume 2D with two detector pixels",
+                   data_t, float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{2, 1}});
@@ -137,7 +137,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with two detect
             geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
                               VolumeData2D{Size2D{sizeDomain}}, SinogramData2D{Size2D{sizeRange}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = VoxelBlobProjector<data_t>(domain, range);
+            auto op = DifferentialBlobProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -152,19 +152,19 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with two detect
                 const auto weight_dist_half = op.weight(0.4761878);
                 CAPTURE(weight_dist_half);
 
-                THEN("Detector values are symmetric")
+                THEN("Detector values are inverse symmetric")
                 {
                     CAPTURE(Ax[0]);
                     CAPTURE(Ax[1]);
                     CHECK_EQ(weight_dist_half, Approx(Ax[0]).epsilon(0.01));
-                    CHECK_EQ(weight_dist_half, Approx(Ax[1]).epsilon(0.01));
+                    CHECK_EQ(-weight_dist_half, Approx(Ax[1]).epsilon(0.01));
                 }
             }
         }
     }
 }
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with three detector pixels",
+TEST_CASE_TEMPLATE("DifferentialBlobProjector: Testing simple volume 2D with three detector pixels",
                    data_t, float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
@@ -186,7 +186,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with three dete
             geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
                               VolumeData2D{Size2D{sizeDomain}}, SinogramData2D{Size2D{sizeRange}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = VoxelBlobProjector<data_t>(domain, range);
+            auto op = DifferentialBlobProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -206,15 +206,15 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with three dete
                 THEN("the center detector pixel is correct")
                 {
                     CAPTURE(Ax[1]);
-                    CHECK_EQ(weight_dist0, Approx(Ax[1]));
+                    CHECK_EQ(weight_dist0, Approx(Ax[1]).epsilon(0.0001));
                 }
 
-                THEN("the outer detector pixels are the same")
+                THEN("the outer detector pixels are inverse symmetric")
                 {
                     CAPTURE(Ax[0]);
                     CAPTURE(Ax[2]);
-                    CHECK_EQ(weight_dist1, Approx(Ax[0]).epsilon(0.01));
-                    CHECK_EQ(weight_dist1, Approx(Ax[2]).epsilon(0.01));
+                    CHECK_EQ(weight_dist1, Approx(Ax[0]).epsilon(0.001));
+                    CHECK_EQ(-weight_dist1, Approx(Ax[2]).epsilon(0.001));
                 }
             }
         }
