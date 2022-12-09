@@ -106,41 +106,52 @@ namespace elsa
         // Ax is the detector
         // x is the volume
         // given x, compute Ax
-
         const DetectorDescriptor& detectorDesc =
             downcast<DetectorDescriptor>(Ax.getDataDescriptor());
-        const auto numGeoms = detectorDesc.getNumberOfGeometryPoses();
+
+        auto upperDetector = detectorDesc.getNumberOfCoefficientsPerDimension();
+        auto lowerDetector = IndexVector_t::Constant(upperDetector.size(), 0);
+
+        auto& volume = x.getDataDescriptor();
+        const auto dimVolume = volume.getNumberOfDimensions();
+        const auto dimDetector = detectorDesc.getNumberOfDimensions();
+
+        const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
+        RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
+        detectorOriginShift[dimDetector - 1] = 0; // dont shift in pose dimension
 
         // loop over geometries
 #pragma omp parallel for
-        for (index_t geomIndex = 0; geomIndex < numGeoms; geomIndex++) {
+        for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
+             geomIndex++) {
             // loop over voxels
             for (index_t domainIndex = 0; domainIndex < x.getSize(); ++domainIndex) {
-                auto coord = x.getDataDescriptor().getCoordinateFromIndex(domainIndex);
-                auto dim = x.getDataDescriptor().getNumberOfDimensions();
-                // Cast to real_t and shift to center of pixel
-                RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
-
+                auto coord = volume.getCoordinateFromIndex(domainIndex);
                 auto voxelWeight = x[domainIndex];
 
-                auto [detectorCoord, scaling] =
+                // Cast to real_t and shift to center of voxel according to origin
+                RealVector_t volumeCoord = coord.template cast<real_t>() + volumeOriginShift;
+
+                // Project onto detector and compute the magnification
+                auto [detectorCoordShifted, scaling] =
                     detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
-                // find all detector pixels that are hit
-                auto radiusOnDetector = static_cast<index_t>(std::ceil(lut_.radius() * scaling));
-                radiusOnDetector = 0;
+                // correct origin shift
+                auto detectorCoord = detectorCoordShifted - detectorOriginShift;
 
-                // TODO hardcoded for 2D and offset not completely correct
-                // assumes that detectorCoord is already at the center of a detector pixel
-                // find detector pixels for this center
-                for (index_t i = -radiusOnDetector; i <= radiusOnDetector * 2; i++) {
-                    RealVector_t offset(2);
-                    offset << i, 0;
-                    index_t detector_index = detectorDesc.getIndexFromCoordinate(
-                        (detectorCoord + offset).template cast<index_t>());
-                    if (detector_index >= 0 && detector_index < Ax.getSize()) {
-                        Ax[detector_index] += weight(offset.norm()) * voxelWeight;
-                    }
+                // find all detector pixels that are hit
+                auto radiusOnDetector = static_cast<index_t>(std::round(lut_.radius() * scaling));
+                IndexVector_t detectorIndex = detectorCoord.template cast<index_t>();
+                IndexVector_t distvec =
+                    IndexVector_t::Constant(detectorIndex.size(), radiusOnDetector);
+                distvec[dimDetector - 1] = 0; // this is the pose index
+                auto neighbours =
+                    neighbours_in_slice(detectorIndex, distvec, lowerDetector, upperDetector);
+                for (auto neighbour : neighbours) {
+                    const auto distance =
+                        (detectorCoord - neighbour.template cast<real_t>()).norm();
+                    index_t detector_index = detectorDesc.getIndexFromCoordinate(neighbour);
+                    Ax[detector_index] += weight(distance / scaling) * voxelWeight;
                 }
             }
         }
@@ -154,36 +165,50 @@ namespace elsa
         // y is the detector
         // Aty is the volume
         // given y, compute Aty
-
         const DetectorDescriptor& detectorDesc =
             downcast<DetectorDescriptor>(y.getDataDescriptor());
-        const auto numGeoms = detectorDesc.getNumberOfGeometryPoses();
+
+        auto upperDetector = detectorDesc.getNumberOfCoefficientsPerDimension();
+        auto lowerDetector = IndexVector_t::Constant(upperDetector.size(), 0);
+
+        auto& volume = Aty.getDataDescriptor();
+        const auto dimVolume = volume.getNumberOfDimensions();
+        const auto dimDetector = detectorDesc.getNumberOfDimensions();
+
+        const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
+        RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
+        detectorOriginShift[dimDetector - 1] = 0; // dont shift in pose dimension
 
         // loop over geometries
-        for (index_t geomIndex = 0; geomIndex < numGeoms; geomIndex++) {
+        for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
+             geomIndex++) {
             // loop over voxels
             for (index_t domainIndex = 0; domainIndex < Aty.getSize(); ++domainIndex) {
-                auto coord = Aty.getDataDescriptor().getCoordinateFromIndex(domainIndex);
-                auto dim = Aty.getDataDescriptor().getNumberOfDimensions();
+                auto coord = volume.getCoordinateFromIndex(domainIndex);
+
                 // Cast to real_t and shift to center of pixel
                 RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
 
-                auto [detectorCoord, scaling] =
+                // Project onto detector and compute the magnification
+                auto [detectorCoordShifted, scaling] =
                     detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
-                // find all detector pixels that are hit
-                auto radiusOnDetector = static_cast<index_t>(std::ceil(lut_.radius() * scaling));
-                radiusOnDetector = 0;
+                // correct origin shift
+                auto detectorCoord = detectorCoordShifted - detectorOriginShift;
 
-                // find detector pixels for this center
-                for (index_t i = -radiusOnDetector; i <= radiusOnDetector * 2; i++) {
-                    RealVector_t offset(2);
-                    offset << i, 0;
-                    index_t detector_index = detectorDesc.getIndexFromCoordinate(
-                        (detectorCoord + offset).template cast<index_t>());
-                    if (detector_index >= 0 && detector_index < y.getSize()) {
-                        Aty[domainIndex] += weight(offset.norm()) * y[detector_index];
-                    }
+                // find all detector pixels that are hit
+                auto radiusOnDetector = static_cast<index_t>(std::round(lut_.radius() * scaling));
+                IndexVector_t detectorIndex = detectorCoord.template cast<index_t>();
+                IndexVector_t distvec =
+                    IndexVector_t::Constant(detectorIndex.size(), radiusOnDetector);
+                distvec[dimDetector - 1] = 0; // this is the pose index
+                auto neighbours =
+                    neighbours_in_slice(detectorIndex, distvec, lowerDetector, upperDetector);
+                for (auto neighbour : neighbours) {
+                    const auto distance =
+                        (detectorCoord - neighbour.template cast<real_t>()).norm();
+                    index_t detector_index = detectorDesc.getIndexFromCoordinate(neighbour);
+                    Aty[domainIndex] += weight(distance / scaling) * y[detector_index];
                 }
             }
         }
