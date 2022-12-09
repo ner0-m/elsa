@@ -189,6 +189,7 @@ namespace elsa
         detectorOriginShift[dimDetector - 1] = 0; // dont shift in pose dimension
 
         // loop over geometries
+#pragma omp parallel for
         for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
              geomIndex++) {
             // loop over voxels
@@ -219,6 +220,7 @@ namespace elsa
                     // let first axis always be the differential axis TODO
                     const auto signum = util::sgn(distanceVec[0]);
                     index_t detector_index = detectorDesc.getIndexFromCoordinate(neighbour);
+#pragma omp atomic
                     Aty[domainIndex] += weight(distance / scaling) * y[detector_index];
                 }
             }
@@ -356,6 +358,7 @@ namespace elsa
         detectorOriginShift[dimDetector - 1] = 0; // dont shift in pose dimension
 
         // loop over geometries
+#pragma omp parallel for
         for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
              geomIndex++) {
             // loop over voxels
@@ -386,6 +389,7 @@ namespace elsa
                     // let first axis always be the differential axis TODO
                     const auto signum = util::sgn(distanceVec[0]);
                     index_t detector_index = detectorDesc.getIndexFromCoordinate(neighbour);
+#pragma omp atomic
                     Aty[domainIndex] += weight(distance / scaling) * signum * y[detector_index];
                 }
             }
