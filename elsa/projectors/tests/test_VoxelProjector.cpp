@@ -16,14 +16,14 @@ TEST_SUITE_BEGIN("projectors");
 Eigen::IOFormat vecfmt(10, 0, ", ", ", ", "", "", "[", "]");
 Eigen::IOFormat matfmt(10, 0, ", ", "\n", "\t\t[", "]");
 
-TYPE_TO_STRING(BlobProjector<float>);
+TYPE_TO_STRING(VoxelBlobProjector<float>);
 
 // Redefine GIVEN such that it's nicely usable inside an loop
 #undef GIVEN
 #define GIVEN(...) DOCTEST_SUBCASE((std::string("   Given: ") + std::string(__VA_ARGS__)).c_str())
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing rays going through the center of the volume",
-                   data_t, float, double)
+TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 3D with one detector pixel", data_t,
+                   float, double)
 {
     const IndexVector_t sizeDomain({{5, 5, 5}});
     const IndexVector_t sizeRange({{1, 1, 1}});
@@ -61,15 +61,15 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing rays going through the center of
                 THEN("The detector value is the weight for distance 0")
                 {
                     CAPTURE(Ax[0]);
-                    CHECK_EQ(weight, Approx(Ax[0]));
+                    CHECK_EQ(weight, Approx(Ax[0]).epsilon(0.005));
                 }
             }
         }
     }
 }
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing rays going through the center of the volume",
-                   data_t, float, double)
+TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with one detector Pixel", data_t,
+                   float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{1, 1}});
@@ -115,7 +115,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing rays going through the center of
     }
 }
 
-TEST_CASE_TEMPLATE("BlobProjector: Testing 2 rays going through the center of the volume", data_t,
+TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with two detector pixels", data_t,
                    float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
@@ -164,8 +164,8 @@ TEST_CASE_TEMPLATE("BlobProjector: Testing 2 rays going through the center of th
     }
 }
 
-TEST_CASE_TEMPLATE("BlobProjector: Testing 3 rays going through the center of the volume", data_t,
-                   float, double)
+TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with three detector pixels",
+                   data_t, float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{3, 1}});
@@ -186,7 +186,7 @@ TEST_CASE_TEMPLATE("BlobProjector: Testing 3 rays going through the center of th
             geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
                               VolumeData2D{Size2D{sizeDomain}}, SinogramData2D{Size2D{sizeRange}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = BlobProjector<data_t>(domain, range);
+            auto op = VoxelBlobProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -221,7 +221,7 @@ TEST_CASE_TEMPLATE("BlobProjector: Testing 3 rays going through the center of th
     }
 }
 
-TEST_CASE("BlobProjector: Test stepping of single rays")
+TEST_CASE("VoxelBlobProjector: Test single detector pixel")
 {
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{1, 1}});
@@ -242,7 +242,7 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -355,7 +355,7 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -380,7 +380,7 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
             }
         }
 
-        WHEN("Setting only the voxels directly above on the ray to 1")
+        WHEN("Setting only the voxels directly above the ray to 1")
         {
             // set all voxels on the ray to 1
             x(0, 1) = 1;
@@ -399,7 +399,7 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
             }
         }
 
-        WHEN("Setting only the voxels directly above on the ray to 1")
+        WHEN("Setting only the voxels directly below the ray to 1")
         {
             // set all voxels on the ray to 1
             x(1, 0) = 1;
@@ -418,7 +418,7 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
             }
         }
 
-        WHEN("Setting only the voxels two above on the ray")
+        WHEN("Setting only the voxels two steps above the ray")
         {
             // set all voxels on the ray to 1
             x(0, 2) = 1;
@@ -438,7 +438,7 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
             }
         }
 
-        WHEN("Setting only the voxels directly above on the ray to 1")
+        WHEN("Setting only the voxels two steps below the ray")
         {
             // set all voxels on the ray to 1
             x(2, 0) = 1;
@@ -466,12 +466,12 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the BlobProjector to the volume")
+        WHEN("Applying the VoxelBlobProjector to the volume")
         {
             x = 0;
             // set all voxels on the ray to 1
@@ -580,12 +580,12 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the BlobProjector to the volume")
+        WHEN("Applying the VoxelBlobProjector to the volume")
         {
             // set all voxels on the ray to 1
             x(0, 4) = 1;
@@ -695,12 +695,12 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the BlobProjector to the volume")
+        WHEN("Applying the VoxelBlobProjector to the volume")
         {
             x = 0;
             // set all voxels on the ray to 1
@@ -809,12 +809,12 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the BlobProjector to the volume")
+        WHEN("Applying the VoxelBlobProjector to the volume")
         {
             // set all voxels on the ray to 1
             x(0, 0) = 1;
@@ -842,12 +842,12 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the BlobProjector to the volume")
+        WHEN("Applying the VoxelBlobProjector to the volume")
         {
             x = 0;
             // set all voxels on the ray to 1
@@ -876,12 +876,12 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the BlobProjector to the volume")
+        WHEN("Applying the VoxelBlobProjector to the volume")
         {
             // set all voxels on the ray to 1
             x(0, 4) = 1;
@@ -903,7 +903,7 @@ TEST_CASE("BlobProjector: Test stepping of single rays")
     }
 }
 
-TEST_CASE("LutProjector: Test single rays backward projection")
+TEST_CASE("VoxelBlobProjector: Test backward projection")
 {
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{1, 1}});
@@ -923,7 +923,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -947,7 +947,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(2, 4), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto weight = op.weight(1);
                 CAPTURE(weight);
@@ -965,7 +965,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(1, 4), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto weight = op.weight(2);
                 CAPTURE(weight);
@@ -992,7 +992,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1016,7 +1016,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(2, 4), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto weight = op.weight(1);
                 CAPTURE(weight);
@@ -1034,7 +1034,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(1, 4), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto weight = op.weight(2);
                 CAPTURE(weight);
@@ -1061,7 +1061,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1085,7 +1085,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(4, 2), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto weight = op.weight(1);
                 CAPTURE(weight);
@@ -1103,7 +1103,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(4, 1), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto weight = op.weight(2);
                 CAPTURE(weight);
@@ -1130,7 +1130,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1154,7 +1154,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(4, 2), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto weight = op.weight(1);
                 CAPTURE(weight);
@@ -1172,7 +1172,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(4, 1), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto weight = op.weight(2);
                 CAPTURE(weight);
@@ -1199,7 +1199,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobProjector(domain, range);
+        auto op = VoxelBlobProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1223,7 +1223,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(4, 4), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto distance = 0.707106769084930;
                 const auto weight = op.weight(distance);
@@ -1241,7 +1241,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
                 CHECK_EQ(x(4, 3), Approx(weight));
             }
 
-            THEN("The main direction of the ray is equal to the weight")
+            THEN("The neighbour pixel to the main direction of the ray is equal to the weight")
             {
                 const auto distance = 2 * 0.707106769084930;
                 const auto weight = op.weight(distance);
@@ -1259,7 +1259,7 @@ TEST_CASE("LutProjector: Test single rays backward projection")
     }
 }
 
-TEST_CASE_TEMPLATE("BlobProjector: Test weights", data_t, float, double)
+TEST_CASE_TEMPLATE("VoxelBlobProjector: Test weights", data_t, float, double)
 {
     const auto a = 2;
     const auto alpha = 10.83;
@@ -1300,7 +1300,7 @@ TEST_CASE_TEMPLATE("BlobProjector: Test weights", data_t, float, double)
     geom.emplace_back(stc, ctr, Degree{0}, std::move(volData), std::move(sinoData));
 
     auto range = PlanarDetectorDescriptor(sizeRange, geom);
-    auto op = BlobProjector(domain, range);
+    auto op = VoxelBlobProjector(domain, range);
 
     for (int i = 0; i < 50; ++i) {
         const auto distance = i / 25.;
