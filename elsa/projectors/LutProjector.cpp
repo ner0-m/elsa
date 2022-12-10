@@ -302,7 +302,7 @@ namespace elsa
              geomIndex++) {
             // loop over voxels
             for (index_t domainIndex = 0; domainIndex < x.getSize(); ++domainIndex) {
-                auto coord = volume.getCoordinateFromIndex(domainIndex);
+                const auto& coord = volume.getCoordinateFromIndex(domainIndex);
                 auto voxelWeight = x[domainIndex];
 
                 // Cast to real_t and shift to center of voxel according to origin

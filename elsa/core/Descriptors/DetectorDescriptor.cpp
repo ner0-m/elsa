@@ -138,8 +138,8 @@ namespace elsa
         auto dim = getNumberOfDimensions();
 
         // get the pose of trajectory
-        auto geometry = _geometry[asUnsigned(poseIndex)];
-        auto projMatrix = geometry.getProjectionMatrix();
+        const auto& geometry = _geometry[asUnsigned(poseIndex)];
+        const auto& projMatrix = geometry.getProjectionMatrix();
 
         // compute direction from source
         auto sourceVoxelDir = (voxelCoord - geometry.getCameraCenter());
@@ -157,7 +157,7 @@ namespace elsa
         // compute scaling assuming rays orthogonal to detector
         auto scaling = geometry.getSourceDetectorDistance() / distance;
 
-        return {voxelCenterOnDetectorHomogenous, scaling};
+        return {std::move(voxelCenterOnDetectorHomogenous), scaling};
     }
 
 } // namespace elsa
