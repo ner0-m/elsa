@@ -13,10 +13,8 @@ namespace elsa
 
         initStepDirection(r.direction());
 
-        RealRay_t rt(r.origin(), r.direction());
-
         // determinge length of entire intersection with AABB
-        real_t intersectionLength = calculateAABBIntersections(rt, aabb);
+        real_t intersectionLength = calculateAABBIntersections(r, aabb);
 
         if (!isInBoundingBox())
             return;
@@ -32,12 +30,12 @@ namespace elsa
 
         // last pixel/voxel handled separately, reduce box dimensionality for easy detection
         int mainDir;
-        rt.direction().cwiseAbs().maxCoeff(&mainDir);
+        r.direction().cwiseAbs().maxCoeff(&mainDir);
         real_t prevBorder = std::floor(_exitPoint(mainDir));
-        if (prevBorder == _exitPoint(mainDir) && rt.direction()[mainDir] > 0) {
+        if (prevBorder == _exitPoint(mainDir) && r.direction()[mainDir] > 0) {
             prevBorder--;
         }
-        if (rt.direction()[mainDir] < 0) {
+        if (r.direction()[mainDir] < 0) {
             _aabbMin[mainDir] = prevBorder + 1;
         } else {
             _aabbMax[mainDir] = prevBorder;
