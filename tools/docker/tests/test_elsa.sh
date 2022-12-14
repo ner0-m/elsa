@@ -126,7 +126,7 @@ if eval ${cxx} --version | grep -q clang ; then
 fi
 
 if [ "$build_cuda" == "y" ]; then
-    CMAKE_FLAGS="${CMAKE_FLAGS} -DELSA_BUILD_CUDA_PROJECTORS=ON"
+    CMAKE_FLAGS="${CMAKE_FLAGS} -DWANT_CUDA=ON"
 fi
 
 if [ "$build_quickvec" == "y" ]; then
@@ -134,7 +134,7 @@ if [ "$build_quickvec" == "y" ]; then
 fi
 
 # If we run asan or coverage these flags are appended
-CMAKE_ASAN_FLAGS="-DELSA_BUILD_PYTHON_BINDINGS=OFF -DELSA_BUILD_CUDA_PROJECTORS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER=\"Address;Undefined\""
+CMAKE_ASAN_FLAGS="-DELSA_BUILD_PYTHON_BINDINGS=OFF -DWANT_CUDA=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER=\"Address;Undefined\""
 
 # For coverage,
 CMAKE_COVERAGE_FLAGS="-DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON -DELSA_BUILD_PYTHON_BINDINGS=OFF"

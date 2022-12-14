@@ -513,7 +513,7 @@ asan-ubsan:
   script:
     - mkdir -p build
     - cd build
-    - cmake -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
+    - cmake -GNinja -DWANT_CUDA=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
     - ninja tests
   tags:
     - linux
@@ -538,7 +538,7 @@ test-coverage:
     - update-alternatives --install /usr/bin/llvm-profdata llvm-profdata /usr/bin/llvm-profdata-12 10
     - mkdir -p build
     - cd build
-    - CXX=clang++ cmake .. -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DThrust_DIR=$Thrust_DIR -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
+    - CXX=clang++ cmake .. -GNinja -DWANT_CUDA=OFF -DThrust_DIR=$Thrust_DIR -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
     - ninja build-tests
     - ninja ccov-all
   artifacts:

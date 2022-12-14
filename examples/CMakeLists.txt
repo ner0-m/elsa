@@ -37,7 +37,7 @@ CPMAddPackage(NAME argparse GITHUB_REPOSITORY p-ranav/argparse GIT_TAG v2.2)
 add_example(example_argparse example_argparse.cpp)
 target_link_libraries(example_argparse PRIVATE argparse::argparse)
 
-if(ELSA_BUILD_CUDA_PROJECTORS)
+if(WITH_CUDA)
     include(CheckLanguage)
     check_language(CUDA)
     if(CMAKE_CUDA_COMPILER)

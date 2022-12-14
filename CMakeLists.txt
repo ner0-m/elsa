@@ -7,8 +7,6 @@ project(
     LANGUAGES CXX
 )
 
-# ------------ elsa options ------------
-# ------------
 # detect if elsa is being as a submodule, enable/disable some options based on this
 if(NOT DEFINED ELSA_MASTER_PROJECT)
     if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -18,6 +16,13 @@ if(NOT DEFINED ELSA_MASTER_PROJECT)
     endif()
 endif()
 
+# add our cmake modules under cmake/
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+
+# ------------ elsa configuration options ------------
+# ------------
+
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
 
@@ -25,7 +30,6 @@ option(ELSA_INSTALL "Enable generating the install targets for make install" ${E
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_BENCHMARKS "Enable building of benchmarks" OFF)
 
-option(ELSA_BUILD_CUDA_PROJECTORS "Enable building CUDA projectors" OFF)
 option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (requires libclang-dev)" ON)
 option(ELSA_BINDINGS_IN_SINGLE_MODULE "Combine the bindings for all elsa modules in a single python module" OFF)
 
@@ -50,11 +54,17 @@ option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
 
 option(BUILD_SHARED_LIBS "Build elsa as shared (dynamic) libraries" OFF)
 
+# backward compatibility
+# new name is just WANT_CUDA, and has default if_available
+option(ELSA_BUILD_CUDA_PROJECTORS "Enable building CUDA projectors" ON)
+if(NOT DEFINED WANT_CUDA OR ELSA_BUILD_CUDA_PROJECTORS)
+    set(WANT_CUDA if_available)
+endif()
+
+include(options)
+
 # ------------ general setup -----------
 # ------------
-
-# add our cmake modules under cmake/
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # set default built type to "Release" (if no other specified)
 set(DEFAULT_BUILD_TYPE "Release")
@@ -132,7 +142,7 @@ endif()
 # ------------
 
 # Enable CUDA support if requested
-if(ELSA_BUILD_CUDA_PROJECTORS)
+if(WANT_CUDA)
     message(STATUS "CUDA support requested...")
     include(CheckLanguage)
     check_language(CUDA)
@@ -158,16 +168,16 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
         add_definitions(-DELSA_HAS_CUDA_PROJECTORS)
         set(ELSA_CUDA_UNIFIED_MEMORY ON)
         set(ELSA_CUDA_ENABLED ON)
+        have_config_option(cuda CUDA true)
 
     else()
-        message(FATAL_ERROR "CUDA support requested but no CUDA was found. "
-                            "Disable CUDA with: -DELSA_BUILD_CUDA_PROJECTORS=OFF"
-        )
+        have_config_option(cuda CUDA false)
     endif()
 else()
     # Be sure everything is off
-    set(ELSA_BUILD_CUDA_PROJECTORS OFF)
+    have_config_option(cuda CUDA false)
 endif()
+
 
 if(NOT
    (SYSTEM_EIGEN
@@ -439,11 +449,13 @@ add_custom_target(
 )
 
 # build information overview
+message("
+elsa configuration: |
+--------------------+")
+
 string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_TYPE_CXX_FLAGS)
 message(
-    "
-elsa configuration: |
-            project | ${PROJECT_NAME}
+"            project | ${PROJECT_NAME}
            compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
          build type | ${CMAKE_BUILD_TYPE}
            cxxflags | ${CMAKE_CXX_FLAGS}
@@ -451,6 +463,13 @@ elsa configuration: |
           build dir | ${CMAKE_BINARY_DIR}
      install prefix | ${CMAKE_INSTALL_PREFIX}
                     |
+--------------------+")
+
+print_config_options()
+
+
+message(
+"                    |
    thrust backends: |
                 C++ | ${THRUST_CPP_FOUND}
           Intel TBB | ${THRUST_TBB_FOUND}

@@ -20,6 +20,6 @@ elsa_add_pymodule(projectors)
 elsa_add_pymodule(proximal_operators)
 elsa_add_pymodule(solvers)
 
-if(ELSA_BUILD_CUDA_PROJECTORS)
+if(WITH_CUDA)
     elsa_add_pymodule(projectors_cuda)
 endif()
