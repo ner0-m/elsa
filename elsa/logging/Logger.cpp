@@ -19,6 +19,12 @@ namespace elsa
             logger->set_level(convertLevelToSpdlog(level));
     }
 
+    Logger::LogLevel Logger::getLevel()
+    {
+        // this should return the correct global level as we only set a global/forall level
+        return getInstance()._level;
+    }
+
     std::shared_ptr<spdlog::sinks::dist_sink_st> Logger::initSinks()
     {
         auto sink = std::make_shared<spdlog::sinks::dist_sink_st>();

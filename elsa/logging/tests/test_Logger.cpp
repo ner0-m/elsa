@@ -62,12 +62,36 @@ TEST_CASE("Logger: Use test")
             }
         }
 
+        WHEN("getting the log level")
+        {
+            Logger::setLevel(Logger::LogLevel::ERR);
+
+            Logger::LogLevel lvl = Logger::getLevel();
+
+            Logger::setLevel(Logger::LogLevel::INFO);
+
+            THEN("the returned loglevel is the exact level from when the function is called")
+            {
+                REQUIRE(lvl == Logger::LogLevel::ERR);
+            }
+
+            Logger::setLevel(lvl);
+
+            THEN("Testlogger was correctly reset to its previous level")
+            {
+                REQUIRE(testLogger->level() == spdlog::level::err);
+            }
+        }
+
         WHEN("adding file logging")
         {
             std::string filename = "log.txt";
             Logger::enableFileLogging(filename);
 
-            THEN("We still should only have one sink") { REQUIRE(testLogger->sinks().size() == 1); }
+            THEN("We still should only have one sink")
+            {
+                REQUIRE(testLogger->sinks().size() == 1);
+            }
 
             THEN("a new logger has file logging enabled")
             {
