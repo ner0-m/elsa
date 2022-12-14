@@ -21,39 +21,9 @@ namespace elsa::phantoms
                   > 0;
 
         if (rotated) {
-            // convert to radians
-            auto phiRad = eulers[INDEX_PHI] * pi<double> / 180.0;
-            auto thetaRad = eulers[INDEX_THETA] * pi<double> / 180.0;
-            auto psiRad = eulers[INDEX_PSI] * pi<double> / 180.0;
-
-            auto cosPhi = std::cos(phiRad);
-            auto sinPhi = std::sin(phiRad);
-            auto cosTheta = std::cos(thetaRad);
-            auto sinTheta = std::sin(thetaRad);
-            auto cosPsi = std::cos(psiRad);
-            auto sinPsi = std::sin(psiRad);
-
-            rot(0, 0) = static_cast<real_t>(cosPhi * cosPsi - cosTheta * sinPhi * sinPsi);
-            rot(0, 1) = static_cast<real_t>(cosPsi * sinPhi + cosPhi * cosTheta * sinPsi);
-            rot(0, 2) = static_cast<real_t>(sinTheta * sinPsi);
-
-            rot(1, 0) = static_cast<real_t>(-cosPhi * sinPsi - cosTheta * cosPsi * sinPhi);
-            rot(1, 1) = static_cast<real_t>(cosPhi * cosTheta * cosPsi - sinPhi * sinPsi);
-            rot(1, 2) = static_cast<real_t>(cosPsi * sinTheta);
-
-            rot(2, 0) = static_cast<real_t>(sinPhi * sinTheta);
-            rot(2, 1) = static_cast<real_t>(-cosPhi * sinTheta);
-            rot(2, 2) = static_cast<real_t>(cosTheta);
-
+            fillRotationMatrix(eulers, rot);
             rot.transposeInPlace();
         }
-    };
-
-    template <typename data_t>
-    index_t Ellipsoid<data_t>::getRoundMaxWidth() const
-    {
-        data_t max = _halfAxis.colwise().maxCoeff()[0] * 2;
-        return long(std::ceil(max));
     };
 
     template <typename data_t>
@@ -75,18 +45,7 @@ namespace elsa::phantoms
     };
 
     template <typename data_t>
-    void rasterize(Ellipsoid<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc)
-    {
-        if (el.isRotated()) {
-            rasterizeRotation(el, dd, dc);
-        } else {
-            rasterizeNoRotation(el, dd, dc);
-        }
-    };
-
-    template <typename data_t>
-    void rasterizeNoRotation(const Ellipsoid<data_t>& el, VolumeDescriptor& dd,
-                             DataContainer<data_t>& dc)
+    void rasterizeNoRotation(Ellipsoid<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc)
     {
 
         Vec3i idx(3);
@@ -159,81 +118,55 @@ namespace elsa::phantoms
     };
 
     template <typename data_t>
-    std::pair<index_t, index_t> findBoundingBox(Ellipsoid<data_t> const& el)
+    data_t Ellipsoid<data_t>::getRoundMaxWidth() const
     {
-        auto maxCoeff = el.getRoundMaxWidth();
-        auto halfCoeff = maxCoeff / 2;
-
-        index_t min = -halfCoeff;
-        index_t max = halfCoeff;
-
-        return std::pair{min, max};
-    }
+        data_t max = _halfAxis.colwise().maxCoeff()[0] * 2;
+        return std::ceil(max);
+    };
 
     /**
-     * Returns [min,max]
-     * To find the smallest value to start and find the greatest value to stop.
-     * 1. a part of the ellipsoid is out of the phantom
-     * 2. the ellipsoid has a gap between his surface and the border of the phantom
+     * Bounding Box in object space
      */
     template <typename data_t>
-    std::pair<data_t, data_t> insidePhantom(VolumeDescriptor const& dd, Vec3i const& center,
-                                            index_t minBoundingBox, index_t maxBoundingBox)
+    std::array<data_t, 6>
+        boundingBox(const data_t maxHalfAxis, const Vec3i& _center,
+                    const IndexVector_t& ncpd /*numberOfCoefficientsPerDimension zero based*/)
     {
 
-        /**
-         * Relative to dimension of datacontainer
-         */
-        Vec3i idx_shifted_min(3);
-        Vec3i idx_shifted_max(3);
+        data_t minX, minY, minZ, maxX, maxY, maxZ;
 
-        idx_shifted_min << minBoundingBox + center[INDEX_X], minBoundingBox + center[INDEX_Y],
-            minBoundingBox + center[INDEX_Z];
-        idx_shifted_max << maxBoundingBox + center[INDEX_X], maxBoundingBox + center[INDEX_Y],
-            maxBoundingBox + center[INDEX_Z];
+        minX = std::max(-maxHalfAxis, data_t(-_center[INDEX_X]));
+        minY = std::max(-maxHalfAxis, data_t(-_center[INDEX_Y]));
+        minZ = std::max(-maxHalfAxis, data_t(-_center[INDEX_Z]));
 
-        index_t minX = std::max(idx_shifted_min[INDEX_X], static_cast<index_t>(0));
-        index_t minY = std::max(idx_shifted_min[INDEX_Y], static_cast<index_t>(0));
-        index_t minZ = std::max(idx_shifted_min[INDEX_Z], static_cast<index_t>(0));
+        maxX = std::min(data_t(ncpd[INDEX_X] - 1 - _center[INDEX_X]), maxHalfAxis);
+        maxY = std::min(data_t(ncpd[INDEX_Y] - 1 - _center[INDEX_Y]), maxHalfAxis);
+        maxZ = std::min(data_t(ncpd[INDEX_Z] - 1 - _center[INDEX_Z]), maxHalfAxis);
 
-        index_t maxX =
-            std::min(idx_shifted_max[INDEX_X], dd.getNumberOfCoefficientsPerDimension()[INDEX_X]);
-        index_t maxY =
-            std::min(idx_shifted_max[INDEX_Y], dd.getNumberOfCoefficientsPerDimension()[INDEX_Y]);
-        index_t maxZ =
-            std::min(idx_shifted_max[INDEX_Z], dd.getNumberOfCoefficientsPerDimension()[INDEX_Z]);
-
-        /**
-         * translate relative to bounding box
-         */
-        auto min =
-            std::min({minX - center[INDEX_X], minY - center[INDEX_Y], minZ - center[INDEX_Z]});
-        auto max =
-            std::max({maxX - center[INDEX_X], maxY - center[INDEX_Y], maxZ - center[INDEX_Z]});
-        return std::pair<data_t, data_t>{data_t(min), data_t(max)};
-    }
+        return {minX, minY, minZ, maxX, maxY, maxZ};
+    };
 
     template <typename data_t>
-    void rasterizeRotation(const Ellipsoid<data_t>& el, VolumeDescriptor& dd,
-                           DataContainer<data_t>& dc)
+    void rasterizeWithClipping(Ellipsoid<data_t>& el, VolumeDescriptor& dd,
+                               DataContainer<data_t>& dc, MinMaxFunction<data_t> clipping)
     {
-
         const Vec3i _center = el.getCenter();
         data_t _amplit = el.getAmplitude();
 
-        auto [minNoCheck, maxNoCheck] = findBoundingBox<data_t>(el);
-
         auto strides = dd.getProductOfCoefficientsPerDimension();
 
-        auto [min, max] = insidePhantom<data_t>(dd, _center, minNoCheck, maxNoCheck);
+        auto [minX, minY, minZ, maxX, maxY, maxZ] = clipping(boundingBox<data_t>(
+            el.getRoundMaxWidth(), _center, dd.getNumberOfCoefficientsPerDimension()));
 
-        index_t minL = index_t(min);
+        index_t minXSchifted = index_t(minX) + _center[INDEX_X];
+        index_t minYSchifted = index_t(minY) + _center[INDEX_Y];
+        index_t minZSchifted = index_t(minZ) + _center[INDEX_Z];
 
         Vec3X<data_t> idx(3);
         Vec3i idx_shifted(3);
 
-        idx << min, min, min;
-        idx_shifted << minL + _center[INDEX_X], minL + _center[INDEX_Y], minL + _center[INDEX_Z];
+        idx << minX, minY, minZ;
+        idx_shifted << minXSchifted, minYSchifted, minZSchifted;
 
         Vec3X<data_t> rotated(3);
 
@@ -241,11 +174,11 @@ namespace elsa::phantoms
         index_t yOffset = 0;
         index_t zOffset = 0;
 
-        for (; idx[INDEX_Z] <= max; idx[INDEX_Z]++, idx_shifted[INDEX_Z]++) {
+        for (; idx[INDEX_Z] <= maxZ; idx[INDEX_Z]++, idx_shifted[INDEX_Z]++) {
             zOffset = idx_shifted[INDEX_Z] * strides[INDEX_Z];
-            for (; idx[INDEX_Y] <= max; idx[INDEX_Y]++, idx_shifted[INDEX_Y]++) {
+            for (; idx[INDEX_Y] <= maxY; idx[INDEX_Y]++, idx_shifted[INDEX_Y]++) {
                 yOffset = idx_shifted[INDEX_Y] * strides[INDEX_Y];
-                for (; idx[INDEX_X] <= max; idx[INDEX_X]++, idx_shifted[INDEX_X]++) {
+                for (; idx[INDEX_X] <= maxX; idx[INDEX_X]++, idx_shifted[INDEX_X]++) {
                     xOffset = idx_shifted[INDEX_X] * strides[INDEX_X];
                     rotated = el.getInvRotationMatrix() * idx;
                     if (el.isInEllipsoid(rotated)) {
@@ -253,12 +186,24 @@ namespace elsa::phantoms
                     }
                 }
                 // reset X
-                idx[INDEX_X] = min;
-                idx_shifted[INDEX_X] = minL + _center[INDEX_X];
+                idx[INDEX_X] = minX;
+                idx_shifted[INDEX_X] = minXSchifted;
             }
             // reset Y
-            idx[INDEX_Y] = min;
-            idx_shifted[INDEX_Y] = minL + _center[INDEX_Y];
+            idx[INDEX_Y] = minY;
+            idx_shifted[INDEX_Y] = minYSchifted;
+        }
+    };
+
+    template <typename data_t>
+    void rasterize(Ellipsoid<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc)
+    {
+
+        auto noClipping = [](std::array<data_t, 6> minMax) { return minMax; };
+        if (el.isRotated()) {
+            rasterizeWithClipping<data_t>(el, dd, dc, noClipping);
+        } else {
+            rasterizeNoRotation(el, dd, dc);
         }
     };
 
@@ -271,5 +216,12 @@ namespace elsa::phantoms
                                    DataContainer<float>& dc);
     template void rasterize<double>(Ellipsoid<double>& el, VolumeDescriptor& dd,
                                     DataContainer<double>& dc);
+
+    template void rasterizeWithClipping<float>(Ellipsoid<float>& el, VolumeDescriptor& dd,
+                                               DataContainer<float>& dc,
+                                               MinMaxFunction<float> clipping);
+    template void rasterizeWithClipping<double>(Ellipsoid<double>& el, VolumeDescriptor& dd,
+                                                DataContainer<double>& dc,
+                                                MinMaxFunction<double> clipping);
 
 } // namespace elsa::phantoms
