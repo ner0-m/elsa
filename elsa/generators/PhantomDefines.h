@@ -36,9 +36,14 @@ namespace elsa::phantoms
               typename = std::enable_if_t<std::is_floating_point<data_t>::value>>
     using Vec3X = Eigen::Matrix<data_t, 3, 1>;
 
+    template <typename data_t>
+    void fillRotationMatrix(Vec3X<data_t> eulers, Eigen::Matrix<data_t, 3, 3>& rot);
+
     /**
      * @brief orientation of the cylinder along one of the axis
      */
-    enum class Orientation { X_AXIS, Y_AXIS, Z_AXIS };
+    enum class Orientation { X_AXIS = 0, Y_AXIS = 1, Z_AXIS = 2 };
+
+    std::string getString(Orientation o);
 
 } // namespace elsa::phantoms

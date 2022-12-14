@@ -23,6 +23,7 @@ set(MODULE_SOURCES
     EllipCylinder.cpp
     Sphere.cpp
     Box.cpp
+    PhantomDefines.cpp
     Phantoms.cpp
     BaseCircleTrajectoryGenerator.cpp
     CircleTrajectoryGenerator.cpp
