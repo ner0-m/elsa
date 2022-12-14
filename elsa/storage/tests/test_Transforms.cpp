@@ -23,6 +23,23 @@
 #include <thrust/equal.h>
 #include <thrust/iterator/transform_iterator.h>
 
+
+namespace doctest {
+    template <typename T>
+    struct StringMaker<elsa::ContiguousStorage<T>>
+    {
+        static String convert(const elsa::ContiguousStorage<T>& vec)
+        {
+            std::ostringstream oss;
+            oss << "[ ";
+            std::copy(vec.begin(), vec.end(), std::ostream_iterator<T>(oss, " "));
+            oss << "]";
+            return oss.str().c_str();
+        }
+    };
+} // namespace doctest
+
+
 TEST_SUITE_BEGIN("reductions");
 
 TEST_CASE_TEMPLATE("Assign transformation", T, float, double)
@@ -106,23 +123,25 @@ TEST_CASE_TEMPLATE("Absolute value transformation", T, float, double)
 
     GIVEN("Some container")
     {
-        constexpr size_t size = 24;
+        constexpr ssize_t size = 24;
         elsa::ContiguousStorage<T> src(size);
         elsa::ContiguousStorage<T> dst(size);
 
-        for (size_t i = 0; i < size; ++i) {
+        for (ssize_t i = 0; i < size; ++i) {
             src[i] = i;
         }
 
+        // store dst = abs(val)
         elsa::cwiseAbs(src.begin(), src.end(), dst.begin());
 
         CHECK_UNARY(thrust::equal(dst.begin(), dst.end(), src.begin()));
 
-        for (size_t i = 0; i < size; ++i) {
+        for (ssize_t i = 0; i < size; ++i) {
             src[i] = -i;
         }
 
         auto first = thrust::make_transform_iterator(src.begin(), elsa::abs);
+        // check src == abs(dst)
         CHECK_UNARY(thrust::equal(dst.begin(), dst.end(), first));
     }
 }
