@@ -1,5 +1,6 @@
 #pragma once
 #include "PhantomDefines.h"
+#include <functional>
 
 namespace elsa::phantoms
 {
@@ -20,7 +21,7 @@ namespace elsa::phantoms
         data_t aSqrbSqrcSqr;
 
         // setup euler rotation matrix
-        Eigen::Matrix<data_t, 3, 3> rot;
+        Eigen::Matrix<data_t, 3, 3> rot = Eigen::Matrix<data_t, 3, 3>::Identity();
         bool rotated = false;
 
     public:
@@ -49,21 +50,27 @@ namespace elsa::phantoms
          * @brief get inverse rotation matrix
          */
         const Eigen::Matrix<data_t, 3, 3> getInvRotationMatrix() const { return rot; };
-
-        bool isInEllipsoid(const Vec3i& idx) const;
-        bool isInEllipsoid(const Vec3X<data_t>& idx) const;
-
         /**
          * @brief returns the ceil max floating point width as a double of the longest half axis
          */
-        index_t getRoundMaxWidth() const;
+        data_t getRoundMaxWidth() const;
+
+        bool isInEllipsoid(const Vec3i& idx) const;
+        bool isInEllipsoid(const Vec3X<data_t>& idx) const;
     };
+
+    template <typename data_t>
+    using MinMaxFunction = std::function<std::array<data_t, 6>(std::array<data_t, 6>)>;
 
     /**
      * @brief Rasterizes the given ellipsoid in the given data container.
      */
     template <typename data_t>
     void rasterize(Ellipsoid<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc);
+
+    template <typename data_t>
+    void rasterizeWithClipping(Ellipsoid<data_t>& el, VolumeDescriptor& dd,
+                               DataContainer<data_t>& dc, MinMaxFunction<data_t> clipping);
 
 } // namespace elsa::phantoms
 
