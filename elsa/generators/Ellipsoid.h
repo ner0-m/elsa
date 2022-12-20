@@ -66,11 +66,13 @@ namespace elsa::phantoms
      * @brief Rasterizes the given ellipsoid in the given data container.
      */
     template <typename data_t>
-    void rasterize(Ellipsoid<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc);
+    void rasterize(Ellipsoid<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending<data_t> b);
 
     template <typename data_t>
     void rasterizeWithClipping(Ellipsoid<data_t>& el, VolumeDescriptor& dd,
-                               DataContainer<data_t>& dc, MinMaxFunction<data_t> clipping);
+                               DataContainer<data_t>& dc, MinMaxFunction<data_t> clipping,
+                               Blending<data_t> b);
 
 } // namespace elsa::phantoms
 

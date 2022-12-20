@@ -15,7 +15,8 @@ namespace elsa::phantoms
     };
 
     template <typename data_t>
-    void rasterize(Sphere<data_t>& sphere, VolumeDescriptor& dd, DataContainer<data_t>& dc)
+    void rasterize(Sphere<data_t>& sphere, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending<data_t> b)
     {
         // Rasterize sphere as ellipsoid with no rotation an equal half axis
         Vec3X<data_t> halfAxis(3);
@@ -24,7 +25,7 @@ namespace elsa::phantoms
         noRotation << 0, 0, 0;
 
         Ellipsoid el{sphere.getAmplitude(), sphere.getCenter(), halfAxis, noRotation};
-        rasterize(el, dd, dc);
+        rasterize(el, dd, dc, b);
     };
 
     // ------------------------------------------
@@ -33,8 +34,8 @@ namespace elsa::phantoms
     template class Sphere<double>;
 
     template void rasterize<float>(Sphere<float>& el, VolumeDescriptor& dd,
-                                   DataContainer<float>& dc);
+                                   DataContainer<float>& dc, Blending<float> b);
     template void rasterize<double>(Sphere<double>& el, VolumeDescriptor& dd,
-                                    DataContainer<double>& dc);
+                                    DataContainer<double>& dc, Blending<double> b);
 
 } // namespace elsa::phantoms

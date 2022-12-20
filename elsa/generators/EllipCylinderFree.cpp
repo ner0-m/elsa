@@ -69,7 +69,8 @@ namespace elsa::phantoms
     };
 
     template <typename data_t>
-    void rasterize(EllipCylinderFree<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc)
+    void rasterize(EllipCylinderFree<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending<data_t> b)
     {
         auto strides = dd.getProductOfCoefficientsPerDimension();
         // global offests for a fast memory reuse in the for loops
@@ -97,7 +98,8 @@ namespace elsa::phantoms
                 for (index_t x = index_t(minX); x <= index_t(maxX); x++, idx[INDEX_X]++) {
                     xOffset = x * strides[INDEX_X];
                     if (el.isInEllipCylinderFree(idx, halfLength)) {
-                        dc[zOffset + yOffset + xOffset] += _amplit;
+                        dc[zOffset + yOffset + xOffset] =
+                            b(dc[zOffset + yOffset + xOffset], _amplit);
                     }
                 }
 
@@ -113,8 +115,8 @@ namespace elsa::phantoms
     template class EllipCylinderFree<double>;
 
     template void rasterize<float>(EllipCylinderFree<float>& el, VolumeDescriptor& dd,
-                                   DataContainer<float>& dc);
+                                   DataContainer<float>& dc, Blending<float> b);
     template void rasterize<double>(EllipCylinderFree<double>& el, VolumeDescriptor& dd,
-                                    DataContainer<double>& dc);
+                                    DataContainer<double>& dc, Blending<double> b);
 
 } // namespace elsa::phantoms

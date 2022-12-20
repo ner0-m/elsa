@@ -53,7 +53,8 @@ namespace elsa::phantoms
      * EllipCylinder
      */
     template <typename data_t>
-    void rasterize(Cylinder<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc);
+    void rasterize(Cylinder<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending<data_t> b);
 
 } // namespace elsa::phantoms
 

@@ -46,4 +46,13 @@ namespace elsa::phantoms
 
     std::string getString(Orientation o);
 
+    template <typename data_t>
+    using Blending = std::function<data_t(data_t, data_t)>;
+
+    template <typename data_t>
+    Blending<data_t> Additive = [](data_t val, data_t amplitude) { return val + amplitude; };
+
+    template <typename data_t>
+    Blending<data_t> noBlending = [](data_t val, data_t amplitude) { return amplitude; };
+
 } // namespace elsa::phantoms
