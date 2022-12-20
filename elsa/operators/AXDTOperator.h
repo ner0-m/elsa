@@ -9,13 +9,13 @@
 namespace elsa
 {
     /**
-     * \brief The XTT operator is a column block linear operators.
+     * @brief The AXDT operator is a column block linear operator.
      *
-     * \author Matthias Wieczorek (wieczore@cs.tum.edu), original implementation
-     * \author Nikola Dinev (nikola.dinev@tum.de), port to elsa
-     * \author Shen Hu (shen.hu@tum.de), rewrite, integrate, port to elsa
+     * @author Matthias Wieczorek (wieczore@cs.tum.edu), original implementation
+     * @author Nikola Dinev (nikola.dinev@tum.de), port to elsa
+     * @author Shen Hu (shen.hu@tum.de), rewrite, integrate, port to elsa
      *
-     * \tparam real_t real type
+     * @tparam real_t real type
      *
      * For details check \cite Vogel:2015hn
      *
@@ -24,6 +24,9 @@ namespace elsa
     class AXDTOperator : public BlockLinearOperator<data_t>
     {
     public:
+        /// Symmetry influence the coefficients of the underlying spherical harmonics
+        /// even -> odd degrees will have zero coefficients; odd -> vice versa; regular -> all
+        /// non-zero
         enum Symmetry { even, odd, regular };
 
     private:
@@ -34,14 +37,22 @@ namespace elsa
         using DirVecList = std::vector<DirVec>;
         using WeightVec = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
 
+        /// Wrapper class for all spherical harmonics/spherical function related information
         struct SphericalFunctionInformation {
+            /// Vector of sampling directions
             DirVecList dirs;
+            /// Weights of corresponding directions, must have the same dimension as dirs
             WeightVec weights;
 
+            /// Symmetry of the reconstructed spherical harmonics coefficients
             Symmetry symmetry;
+            /// Maximal degree of the reconstructed spherical harmonics coefficients
             index_t maxDegree;
+            /// Number of the reconstructed spherical harmonics coefficients
+            /// Computed based on symmetry and maxDegree
             index_t basisCnt;
 
+            /// Constructor for this wrapper class
             SphericalFunctionInformation(const DirVecList& sphericalFuncDirs,
                                          const WeightVec& sphericalFuncWeights,
                                          const Symmetry& sphericalHarmonicsSymmetry,
@@ -62,12 +73,16 @@ namespace elsa
             }
         };
 
+        /// Helper class to transform weights parametrized by spherical functions with samplings
+        /// directions into weights parametrized by spherical harmonics
         struct SphericalFieldsTransform {
             using MatrixXd_t = Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>;
 
+            /// Constructor for the helper class
             explicit SphericalFieldsTransform(const SphericalFunctionInformation& sf_info);
 
             // const MatrixXd_t& getInverseTransformationMatrix() const;
+            /// get the transform matrix for a single volume block
             MatrixXd_t getForwardTransformationMatrix() const;
 
             SphericalFunctionInformation sf_info;
@@ -75,6 +90,24 @@ namespace elsa
         };
 
     public:
+        /**
+         * @brief Construct an AXDTOperator
+         *
+         * @param[in] domainDescriptor descriptor of the domain of the operator (the reconstructed
+         * volume)
+         * @param[in] rangeDescriptor descriptor of the range of the operator (the XGI Detector
+         * descriptor)
+         * @param[in] projector the projector representing the line integral
+         * @param[in] sphericalFuncDirs vector of the sampling directions
+         * @param[in] sphericalFuncWeights weightings of the corresponding directions
+         * @param[in] sphericalHarmonicsSymmetry symmetry of the reconstructed spherical harmonics
+         * coefficients
+         * @param[in] sphericalHarmonicsMaxDegree maximal degree of the reconstructed spherical
+         * harmonics coefficients degree
+         *
+         * @throw InvalidArgumentError if sizes of sphericalFuncDirs and sphericalFuncWeights do not
+         * match
+         */
         AXDTOperator(const VolumeDescriptor& domainDescriptor,
                      const XGIDetectorDescriptor& rangeDescriptor,
                      const LinearOperator<data_t>& projector, const DirVecList& sphericalFuncDirs,
@@ -99,9 +132,6 @@ namespace elsa
                                                 const SphericalFunctionInformation& sf_info,
                                                 const LinearOperator<data_t>& projector);
 
-        /// domainDescriptor gives the sphericalHarmonics descriptor
-        /// sphericalFunctionDescriptor gives the sampling pattern used to compute the spherical
-        /// harmonics transform rangeDescriptor gives the DciProjDescriptor
         static std::unique_ptr<DataContainer<data_t>>
             computeSphericalHarmonicsWeights(const XGIDetectorDescriptor& rangeDescriptor,
                                              const SphericalFunctionInformation& sf_info);

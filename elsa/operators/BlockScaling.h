@@ -6,10 +6,10 @@
 namespace elsa
 {
     /**
-     * \brief Block scaling operator.
-     * \author Shen Hu (shen.hu@tum.de), port to elsa
+     * @brief Block scaling operator.
+     * @author Shen Hu (shen.hu@tum.de), port to elsa
      *
-     * \tparam real_t real type
+     * @tparam real_t real type
      */
     template <typename data_t = real_t>
     class BlockScaling : public LinearOperator<data_t>

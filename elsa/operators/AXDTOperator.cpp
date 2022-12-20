@@ -101,7 +101,7 @@ namespace elsa
         SphericalFieldsTransform sft(sf_info);
 
         index_t voxelCount = weightVolDesc.getNumberOfCoefficients();
-        index_t samplingDirs = static_cast<index_t>(sf_info.dirs.size());
+        auto samplingDirs = static_cast<index_t>(sf_info.dirs.size());
         index_t sphCoeffsCount = sf_info.basisCnt;
 
         // transpose of mode-4 unfolding of x
