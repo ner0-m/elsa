@@ -1,6 +1,6 @@
 #include "doctest/doctest.h"
 
-#include "LutProjector.h"
+#include "VoxelProjector.h"
 #include "PlanarDetectorDescriptor.h"
 
 #include "PrettyPrint/Eigen.h"
@@ -16,13 +16,13 @@ TEST_SUITE_BEGIN("projectors");
 Eigen::IOFormat vecfmt(10, 0, ", ", ", ", "", "", "[", "]");
 Eigen::IOFormat matfmt(10, 0, ", ", "\n", "\t\t[", "]");
 
-TYPE_TO_STRING(VoxelBlobProjector<float>);
+TYPE_TO_STRING(BlobVoxelProjector<float>);
 
 // Redefine GIVEN such that it's nicely usable inside an loop
 #undef GIVEN
 #define GIVEN(...) DOCTEST_SUBCASE((std::string("   Given: ") + std::string(__VA_ARGS__)).c_str())
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 3D with one detector pixel", data_t,
+TEST_CASE_TEMPLATE("BlobVoxelProjector: Testing simple volume 3D with one detector pixel", data_t,
                    float, double)
 {
     const IndexVector_t sizeDomain({{5, 5, 5}});
@@ -46,7 +46,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 3D with one detect
                               SinogramData3D{Size3D{sizeRange}},
                               RotationAngles3D{Gamma{static_cast<real_t>(i)}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = VoxelBlobProjector<data_t>(domain, range);
+            auto op = BlobVoxelProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -68,7 +68,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 3D with one detect
     }
 }
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with one detector Pixel", data_t,
+TEST_CASE_TEMPLATE("BlobVoxelProjector: Testing simple volume 2D with one detector Pixel", data_t,
                    float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
@@ -90,7 +90,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with one detect
             geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
                               VolumeData2D{Size2D{sizeDomain}}, SinogramData2D{Size2D{sizeRange}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = VoxelBlobProjector<data_t>(domain, range);
+            auto op = BlobVoxelProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -115,7 +115,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with one detect
     }
 }
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with two detector pixels", data_t,
+TEST_CASE_TEMPLATE("BlobVoxelProjector: Testing simple volume 2D with two detector pixels", data_t,
                    float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
@@ -137,7 +137,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with two detect
             geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
                               VolumeData2D{Size2D{sizeDomain}}, SinogramData2D{Size2D{sizeRange}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = VoxelBlobProjector<data_t>(domain, range);
+            auto op = BlobVoxelProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -164,7 +164,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with two detect
     }
 }
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with three detector pixels",
+TEST_CASE_TEMPLATE("BlobVoxelProjector: Testing simple volume 2D with three detector pixels",
                    data_t, float, double)
 {
     const IndexVector_t sizeDomain({{5, 5}});
@@ -186,7 +186,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with three dete
             geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
                               VolumeData2D{Size2D{sizeDomain}}, SinogramData2D{Size2D{sizeRange}});
             auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = VoxelBlobProjector<data_t>(domain, range);
+            auto op = BlobVoxelProjector<data_t>(domain, range);
 
             auto Ax = DataContainer<data_t>(range);
             Ax = 0;
@@ -221,7 +221,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Testing simple volume 2D with three dete
     }
 }
 
-TEST_CASE("VoxelBlobProjector: Test single detector pixel")
+TEST_CASE("BlobVoxelProjector: Test single detector pixel")
 {
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{1, 1}});
@@ -242,7 +242,7 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -355,7 +355,7 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -466,12 +466,12 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the VoxelBlobProjector to the volume")
+        WHEN("Applying the BlobVoxelProjector to the volume")
         {
             x = 0;
             // set all voxels on the ray to 1
@@ -580,12 +580,12 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the VoxelBlobProjector to the volume")
+        WHEN("Applying the BlobVoxelProjector to the volume")
         {
             // set all voxels on the ray to 1
             x(0, 4) = 1;
@@ -695,12 +695,12 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the VoxelBlobProjector to the volume")
+        WHEN("Applying the BlobVoxelProjector to the volume")
         {
             x = 0;
             // set all voxels on the ray to 1
@@ -809,12 +809,12 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the VoxelBlobProjector to the volume")
+        WHEN("Applying the BlobVoxelProjector to the volume")
         {
             // set all voxels on the ray to 1
             x(0, 0) = 1;
@@ -842,12 +842,12 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the VoxelBlobProjector to the volume")
+        WHEN("Applying the BlobVoxelProjector to the volume")
         {
             x = 0;
             // set all voxels on the ray to 1
@@ -876,12 +876,12 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
 
-        WHEN("Applying the VoxelBlobProjector to the volume")
+        WHEN("Applying the BlobVoxelProjector to the volume")
         {
             // set all voxels on the ray to 1
             x(0, 4) = 1;
@@ -903,7 +903,7 @@ TEST_CASE("VoxelBlobProjector: Test single detector pixel")
     }
 }
 
-TEST_CASE("VoxelBlobProjector: Test backward projection")
+TEST_CASE("BlobVoxelProjector: Test backward projection")
 {
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{1, 1}});
@@ -923,7 +923,7 @@ TEST_CASE("VoxelBlobProjector: Test backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -992,7 +992,7 @@ TEST_CASE("VoxelBlobProjector: Test backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1061,7 +1061,7 @@ TEST_CASE("VoxelBlobProjector: Test backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1130,7 +1130,7 @@ TEST_CASE("VoxelBlobProjector: Test backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1199,7 +1199,7 @@ TEST_CASE("VoxelBlobProjector: Test backward projection")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = VoxelBlobProjector(domain, range);
+        auto op = BlobVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1259,7 +1259,7 @@ TEST_CASE("VoxelBlobProjector: Test backward projection")
     }
 }
 
-TEST_CASE_TEMPLATE("VoxelBlobProjector: Test weights", data_t, float, double)
+TEST_CASE_TEMPLATE("BlobVoxelProjector: Test weights", data_t, float, double)
 {
     const auto a = 2;
     const auto alpha = 10.83;
@@ -1300,7 +1300,7 @@ TEST_CASE_TEMPLATE("VoxelBlobProjector: Test weights", data_t, float, double)
     geom.emplace_back(stc, ctr, Degree{0}, std::move(volData), std::move(sinoData));
 
     auto range = PlanarDetectorDescriptor(sizeRange, geom);
-    auto op = VoxelBlobProjector(domain, range);
+    auto op = BlobVoxelProjector(domain, range);
 
     for (int i = 0; i < 50; ++i) {
         const auto distance = i / 25.;
