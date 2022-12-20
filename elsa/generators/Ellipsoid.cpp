@@ -126,9 +126,9 @@ namespace elsa::phantoms
     };
 
     template <typename data_t>
-    data_t Ellipsoid<data_t>::getRoundMaxWidth() const
+    data_t Ellipsoid<data_t>::getRoundMaxHalfWidth() const
     {
-        data_t max = _halfAxis.colwise().maxCoeff()[0] * 2;
+        data_t max = _halfAxis.colwise().maxCoeff()[0];
         return std::ceil(max);
     };
 
@@ -165,7 +165,7 @@ namespace elsa::phantoms
         auto strides = dd.getProductOfCoefficientsPerDimension();
 
         auto [minX, minY, minZ, maxX, maxY, maxZ] = clipping(boundingBox<data_t>(
-            el.getRoundMaxWidth(), _center, dd.getNumberOfCoefficientsPerDimension()));
+            el.getRoundMaxHalfWidth(), _center, dd.getNumberOfCoefficientsPerDimension()));
 
         index_t minXSchifted = index_t(minX) + _center[INDEX_X];
         index_t minYSchifted = index_t(minY) + _center[INDEX_Y];
@@ -206,13 +206,14 @@ namespace elsa::phantoms
     };
 
     template <typename data_t>
+    auto noClipping = [](std::array<data_t, 6> minMax) { return minMax; };
+
+    template <typename data_t>
     void rasterize(Ellipsoid<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc,
                    Blending<data_t> b)
     {
-
-        auto noClipping = [](std::array<data_t, 6> minMax) { return minMax; };
         if (el.isRotated()) {
-            rasterizeWithClipping<data_t>(el, dd, dc, noClipping, b);
+            rasterizeWithClipping<data_t>(el, dd, dc, noClipping<data_t>, b);
         } else {
             rasterizeNoRotation(el, dd, dc, b);
         }

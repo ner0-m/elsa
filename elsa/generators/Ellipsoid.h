@@ -51,9 +51,10 @@ namespace elsa::phantoms
          */
         const Eigen::Matrix<data_t, 3, 3> getInvRotationMatrix() const { return rot; };
         /**
-         * @brief returns the ceil max floating point width as a double of the longest half axis
+         * @brief returns the ceil max floating point half width as a floating point of the longest
+         * half axis
          */
-        data_t getRoundMaxWidth() const;
+        data_t getRoundMaxHalfWidth() const;
 
         bool isInEllipsoid(const Vec3i& idx) const;
         bool isInEllipsoid(const Vec3X<data_t>& idx) const;
