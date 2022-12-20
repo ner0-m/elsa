@@ -7,9 +7,8 @@ set(MODULE_HEADERS
     BlockLinearOperator.h
     Dictionary.h
     ShearletTransform.h
-    SphericalHarmonicsTransform.h
-    SphericalFieldsTransform.h
-    # AXDTOperator.h
+    AXDTOperator.h
+    BlockScaling.h
 )
 
 # list all the code files of the module
@@ -21,9 +20,8 @@ set(MODULE_SOURCES
     BlockLinearOperator.cpp
     Dictionary.cpp
     ShearletTransform.cpp
-    SphericalHarmonicsTransform.cpp
-    SphericalFieldsTransform.cpp
-    # AXDTOperator.cpp
+    AXDTOperator.cpp
+    BlockScaling.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
