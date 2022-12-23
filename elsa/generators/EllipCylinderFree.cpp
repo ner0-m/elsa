@@ -68,8 +68,9 @@ namespace elsa::phantoms
         return {data_t(minX), data_t(minY), data_t(minZ), data_t(maxX), data_t(maxY), data_t(maxZ)};
     };
 
-    template <typename data_t>
-    void rasterize(EllipCylinderFree<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc)
+    template <typename data_t, class Blending>
+    void rasterize(EllipCylinderFree<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending b)
     {
         auto strides = dd.getProductOfCoefficientsPerDimension();
         // global offests for a fast memory reuse in the for loops
@@ -97,7 +98,8 @@ namespace elsa::phantoms
                 for (index_t x = index_t(minX); x <= index_t(maxX); x++, idx[INDEX_X]++) {
                     xOffset = x * strides[INDEX_X];
                     if (el.isInEllipCylinderFree(idx, halfLength)) {
-                        dc[zOffset + yOffset + xOffset] += _amplit;
+                        dc[zOffset + yOffset + xOffset] =
+                            b(dc[zOffset + yOffset + xOffset], _amplit);
                     }
                 }
 
@@ -112,9 +114,11 @@ namespace elsa::phantoms
     template class EllipCylinderFree<float>;
     template class EllipCylinderFree<double>;
 
-    template void rasterize<float>(EllipCylinderFree<float>& el, VolumeDescriptor& dd,
-                                   DataContainer<float>& dc);
-    template void rasterize<double>(EllipCylinderFree<double>& el, VolumeDescriptor& dd,
-                                    DataContainer<double>& dc);
+    template void rasterize<float, decltype(additiveBlending<float>)>(
+        EllipCylinderFree<float>& el, VolumeDescriptor& dd, DataContainer<float>& dc,
+        decltype(additiveBlending<float>) b);
+    template void rasterize<double, decltype(additiveBlending<float>)>(
+        EllipCylinderFree<double>& el, VolumeDescriptor& dd, DataContainer<double>& dc,
+        decltype(additiveBlending<float>) b);
 
 } // namespace elsa::phantoms

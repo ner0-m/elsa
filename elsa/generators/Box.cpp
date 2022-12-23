@@ -7,8 +7,8 @@ namespace elsa::phantoms
     Box<data_t>::Box(data_t amplit, elsa::phantoms::Vec3i center, Vec3X<data_t> edgeLength)
         : _amplit{amplit}, _center{center}, _edgeLength{edgeLength} {};
 
-    template <typename data_t>
-    void rasterize(Box<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc)
+    template <typename data_t, class Blending>
+    void rasterize(Box<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc, Blending b)
     {
 
         auto strides = dd.getProductOfCoefficientsPerDimension();
@@ -43,34 +43,41 @@ namespace elsa::phantoms
                     xOffset = (idx[INDEX_X] + _center[INDEX_X]) * strides[INDEX_X];
                     xOffsetNeg = (-idx[INDEX_X] + _center[INDEX_X]) * strides[INDEX_X];
 
-                    dc[xOffset + yOffset + zOffset] += _amplit;
+                    dc[xOffset + yOffset + zOffset] = b(dc[xOffset + yOffset + zOffset], _amplit);
 
                     // mirror the voxel at most 8 times
 
                     if (idx[INDEX_X] != 0) {
-                        dc[xOffsetNeg + yOffset + zOffset] += _amplit;
+                        dc[xOffsetNeg + yOffset + zOffset] =
+                            b(dc[xOffsetNeg + yOffset + zOffset], _amplit);
                     }
                     if (idx[INDEX_Y] != 0) {
-                        dc[xOffset + yOffsetNeg + zOffset] += _amplit;
+                        dc[xOffset + yOffsetNeg + zOffset] =
+                            b(dc[xOffset + yOffsetNeg + zOffset], _amplit);
                     }
                     if (idx[INDEX_Z] != 0) {
-                        dc[xOffset + yOffset + zOffsetNeg] += _amplit;
+                        dc[xOffset + yOffset + zOffsetNeg] =
+                            b(dc[xOffset + yOffset + zOffsetNeg], _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Y] != 0) {
-                        dc[xOffsetNeg + yOffsetNeg + zOffset] += _amplit;
+                        dc[xOffsetNeg + yOffsetNeg + zOffset] =
+                            b(dc[xOffsetNeg + yOffsetNeg + zOffset], _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffsetNeg + yOffset + zOffsetNeg] += _amplit;
+                        dc[xOffsetNeg + yOffset + zOffsetNeg] =
+                            b(dc[xOffsetNeg + yOffset + zOffsetNeg], _amplit);
                     }
 
                     if (idx[INDEX_Y] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffset + yOffsetNeg + zOffsetNeg] += _amplit;
+                        dc[xOffset + yOffsetNeg + zOffsetNeg] =
+                            b(dc[xOffset + yOffsetNeg + zOffsetNeg], _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Y] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffsetNeg + yOffsetNeg + zOffsetNeg] += _amplit;
+                        dc[xOffsetNeg + yOffsetNeg + zOffsetNeg] =
+                            b(dc[xOffsetNeg + yOffsetNeg + zOffsetNeg], _amplit);
                     }
                 };
                 idx[INDEX_X] = 0;
@@ -84,8 +91,13 @@ namespace elsa::phantoms
     template class Box<float>;
     template class Box<double>;
 
-    template void rasterize<float>(Box<float>& el, VolumeDescriptor& dd, DataContainer<float>& dc);
-    template void rasterize<double>(Box<double>& el, VolumeDescriptor& dd,
-                                    DataContainer<double>& dc);
+    template void
+        rasterize<float, decltype(additiveBlending<float>)>(Box<float>& el, VolumeDescriptor& dd,
+                                                            DataContainer<float>& dc,
+                                                            decltype(additiveBlending<float>) b);
+    template void
+        rasterize<double, decltype(additiveBlending<double>)>(Box<double>& el, VolumeDescriptor& dd,
+                                                              DataContainer<double>& dc,
+                                                              decltype(additiveBlending<double>) b);
 
 } // namespace elsa::phantoms

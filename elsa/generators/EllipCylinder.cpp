@@ -58,8 +58,9 @@ namespace elsa::phantoms
         return {min, max};
     }
 
-    template <typename data_t>
-    void rasterize(EllipCylinder<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc)
+    template <typename data_t, class Blending>
+    void rasterize(EllipCylinder<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending b)
     {
         // check ellipse in origin, mirror 4 points, draw line in the orthogonal directions with
         // length
@@ -113,18 +114,21 @@ namespace elsa::phantoms
                 for (index_t line = minC; line <= maxC; line++) {
                     cOffset = line * strides[TEMP_C];
 
-                    dc[aOffset + bOffset + cOffset] += _amplit;
+                    dc[aOffset + bOffset + cOffset] = b(dc[aOffset + bOffset + cOffset], _amplit);
 
                     if (idx[TEMP_A] != 0) {
-                        dc[aOffsetNeg + bOffset + cOffset] += _amplit;
+                        dc[aOffsetNeg + bOffset + cOffset] =
+                            b(dc[aOffsetNeg + bOffset + cOffset], _amplit);
                     }
 
                     if (idx[TEMP_B] != 0) {
-                        dc[aOffset + bOffsetNeg + cOffset] += _amplit;
+                        dc[aOffset + bOffsetNeg + cOffset] =
+                            b(dc[aOffset + bOffsetNeg + cOffset], _amplit);
                     }
 
                     if (idx[TEMP_A] != 0 && idx[TEMP_B] != 0) {
-                        dc[aOffsetNeg + bOffsetNeg + cOffset] += _amplit;
+                        dc[aOffsetNeg + bOffsetNeg + cOffset] =
+                            b(dc[aOffsetNeg + bOffsetNeg + cOffset], _amplit);
                     }
                 };
                 idx[TEMP_C] = 0;
@@ -138,9 +142,11 @@ namespace elsa::phantoms
     template class EllipCylinder<float>;
     template class EllipCylinder<double>;
 
-    template void rasterize<float>(EllipCylinder<float>& el, VolumeDescriptor& dd,
-                                   DataContainer<float>& dc);
-    template void rasterize<double>(EllipCylinder<double>& el, VolumeDescriptor& dd,
-                                    DataContainer<double>& dc);
+    template void rasterize<float, decltype(additiveBlending<float>)>(
+        EllipCylinder<float>& el, VolumeDescriptor& dd, DataContainer<float>& dc,
+        decltype(additiveBlending<float>) b);
+    template void rasterize<double, decltype(additiveBlending<double>)>(
+        EllipCylinder<double>& el, VolumeDescriptor& dd, DataContainer<double>& dc,
+        decltype(additiveBlending<double>) b);
 
 } // namespace elsa::phantoms

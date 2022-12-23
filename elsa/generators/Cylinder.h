@@ -52,8 +52,9 @@ namespace elsa::phantoms
      * @brief Rasterizes the given Cylinder in the given data container. Wrapper around
      * EllipCylinder
      */
-    template <typename data_t>
-    void rasterize(Cylinder<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc);
+    template <typename data_t, class Blending>
+    void rasterize(Cylinder<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending b);
 
 } // namespace elsa::phantoms
 

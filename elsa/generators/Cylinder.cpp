@@ -11,14 +11,15 @@ namespace elsa::phantoms
     {
     }
 
-    template <typename data_t>
-    void rasterize(Cylinder<data_t>& cl, VolumeDescriptor& dd, DataContainer<data_t>& dc)
+    template <typename data_t, class Blending>
+    void rasterize(Cylinder<data_t>& cl, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending b)
     {
         Vec2X<data_t> halfAxis;
         halfAxis << cl.getRadius(), cl.getRadius();
         EllipCylinder elCyl{cl.getOrientation(), cl.getAmplitude(), cl.getCenter(), halfAxis,
                             cl.getLength()};
-        rasterize(elCyl, dd, dc);
+        rasterize(elCyl, dd, dc, b);
     };
 
     // ------------------------------------------
@@ -26,9 +27,11 @@ namespace elsa::phantoms
     template class Cylinder<float>;
     template class Cylinder<double>;
 
-    template void rasterize<float>(Cylinder<float>& el, VolumeDescriptor& dd,
-                                   DataContainer<float>& dc);
-    template void rasterize<double>(Cylinder<double>& el, VolumeDescriptor& dd,
-                                    DataContainer<double>& dc);
+    template void rasterize<float, decltype(additiveBlending<float>)>(
+        Cylinder<float>& el, VolumeDescriptor& dd, DataContainer<float>& dc,
+        decltype(additiveBlending<float>) b);
+    template void rasterize<double, decltype(additiveBlending<double>)>(
+        Cylinder<double>& el, VolumeDescriptor& dd, DataContainer<double>& dc,
+        decltype(additiveBlending<double>) b);
 
 } // namespace elsa::phantoms

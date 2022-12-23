@@ -52,8 +52,9 @@ namespace elsa::phantoms
     /**
      * @brief Rasterizes the given CylinderFree in the given data container.
      */
-    template <typename data_t>
-    void rasterize(CylinderFree<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc);
+    template <typename data_t, class Blending>
+    void rasterize(CylinderFree<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc,
+                   Blending b);
 
 } // namespace elsa::phantoms
 

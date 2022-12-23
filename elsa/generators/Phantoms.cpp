@@ -140,7 +140,8 @@ namespace elsa::phantoms
                     halfAxis,
                     {e[7], e[8], e[9]}};
                 Logger::get("phantom::modifiedSheppLogan")->info("rasterize {}", ellipsoid);
-                rasterize(ellipsoid, dd, dc);
+                rasterize<data_t, decltype(additiveBlending<data_t>)>(ellipsoid, dd, dc,
+                                                                      additiveBlending<data_t>);
             }
         }
 
