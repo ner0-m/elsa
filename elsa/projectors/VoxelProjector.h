@@ -125,18 +125,22 @@ namespace elsa
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(Ax.getDataDescriptor());
 
+            // detector parameters
             index_t upperDetectorI = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
-
-            auto& volume = x.getDataDescriptor();
             const auto dimDetector = detectorDesc.getNumberOfDimensions();
+
+            // volume parameters
+            auto& volume = x.getDataDescriptor();
             auto volumeSize = x.getSize();
 
+            // blob parameters
             auto voxelRadius = this->self().radius();
 
             const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
             RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
             detectorOriginShift[dimDetector - 1] = 0;
 
+            // helper to find index into sinogram
             IndexVector_t detectorIndexGeomStart(2);
             detectorIndexGeomStart << 0, 0;
 #pragma omp parallel for
@@ -153,14 +157,14 @@ namespace elsa
                     auto voxelWeight = x[domainIndex];
 
                     // Cast to real_t and shift to center of voxel according to origin
-                    RealVector_t volumeCoord = coord.template cast<real_t>() + volumeOriginShift;
+                    RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
 
                     // Project onto detector and compute the magnification
                     auto [detectorCoordShifted, scaling] =
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
                     // correct origin shift
-                    auto detectorCoordVec = detectorCoordShifted - detectorOriginShift;
+                    auto detectorCoordVec = detectorCoordShifted.array() - 0.5;
                     data_t detectorCoord = detectorCoordVec[0];
 
                     // find all detector pixels that are hit
@@ -172,8 +176,6 @@ namespace elsa
 
                     for (index_t neighbour = lower; neighbour <= upper; neighbour++) {
                         const data_t distance = (detectorCoord - neighbour);
-
-                        const auto signum = math::sgn(distance);
                         Ax[detectorZeroIndex + neighbour] +=
                             this->self().weight(distance / scaling) * voxelWeight;
                     }
