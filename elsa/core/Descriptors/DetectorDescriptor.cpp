@@ -1,4 +1,5 @@
 #include "DetectorDescriptor.h"
+#include "Logger.h"
 
 namespace elsa
 {
@@ -140,19 +141,19 @@ namespace elsa
         // get the pose of trajectory
         const auto& geometry = _geometry[asUnsigned(poseIndex)];
         const auto& projMatrix = geometry.getProjectionMatrix();
-
-        // compute direction from source
-        auto sourceVoxelDir = (voxelCoord - geometry.getCameraCenter());
-
-        // compute distance of voxel from camera
-        auto distance = sourceVoxelDir.norm();
+        const auto& extMatrix = geometry.getExtrinsicMatrix();
 
         // homogeneous coordinates [p;1], with p in detector space
         RealVector_t homogeneousVoxelCoord(voxelCoord.size() + 1);
-        homogeneousVoxelCoord << sourceVoxelDir / distance, 0;
+        homogeneousVoxelCoord << voxelCoord, 1;
 
         RealVector_t voxelCenterOnDetectorHomogenous = (projMatrix * homogeneousVoxelCoord);
+        voxelCenterOnDetectorHomogenous.block(0, 0, dim - 1, 1) /=
+            voxelCenterOnDetectorHomogenous[dim - 1];
         voxelCenterOnDetectorHomogenous[dim - 1] = asUnsigned(poseIndex);
+
+        RealVector_t voxelInCameraSpace = (extMatrix * homogeneousVoxelCoord);
+        auto distance = voxelInCameraSpace.head(dim).norm();
 
         // compute scaling assuming rays orthogonal to detector
         auto scaling = geometry.getSourceDetectorDistance() / distance;

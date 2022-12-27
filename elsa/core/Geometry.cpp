@@ -14,14 +14,15 @@ namespace elsa
                        VolumeData2D&& volData, SinogramData2D&& sinoData,
                        PrincipalPointOffset offset, RotationOffset2D centerOfRotOffset)
         : _objectDimension{2},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector},
           _P{RealMatrix_t::Identity(2, 2 + 1)},
           _Pinv{RealMatrix_t::Identity(2 + 1, 2)},
+          _ext{RealMatrix_t::Identity(2, 2 + 1)},
           _K{RealMatrix_t::Identity(2, 2)},
           _R{RealMatrix_t::Identity(2, 2)},
           _t{RealVector_t::Zero(2)},
           _S{RealMatrix_t::Identity(2 + 1, 2 + 1)},
-          _C{RealVector_t::Zero(2)},
-          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector}
+          _C{RealVector_t::Zero(2)}
     {
         auto [volSpacing, volOrigin] = std::move(volData);
         auto [sinoSpacing, sinoOrigin] = std::move(sinoData);
@@ -54,14 +55,15 @@ namespace elsa
                        VolumeData3D&& volData, SinogramData3D&& sinoData, RotationAngles3D angles,
                        PrincipalPointOffset2D offset, RotationOffset3D centerOfRotOffset)
         : _objectDimension{3},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector},
           _P{RealMatrix_t::Identity(3, 3 + 1)},
           _Pinv{RealMatrix_t::Identity(3 + 1, 3)},
+          _ext{RealMatrix_t::Identity(3, 3 + 1)},
           _K{RealMatrix_t::Identity(3, 3)},
           _R{RealMatrix_t::Identity(3, 3)},
           _t{RealVector_t::Zero(3)},
           _S{RealMatrix_t::Identity(3 + 1, 3 + 1)},
-          _C{RealVector_t::Zero(3)},
-          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector}
+          _C{RealVector_t::Zero(3)}
     {
         auto [volSpacing, volOrigin] = std::move(volData);
         auto [sinoSpacing, sinoOrigin] = std::move(sinoData);
@@ -111,14 +113,15 @@ namespace elsa
                        const RealMatrix_t& R, real_t px, real_t py, real_t centerOfRotationOffsetX,
                        real_t centerOfRotationOffsetY, real_t centerOfRotationOffsetZ)
         : _objectDimension{3},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector},
           _P{RealMatrix_t::Identity(3, 3 + 1)},
           _Pinv{RealMatrix_t::Identity(3 + 1, 3)},
+          _ext{RealMatrix_t::Identity(3, 3 + 1)},
           _K{RealMatrix_t::Identity(3, 3)},
           _R{R},
           _t{RealVector_t::Zero(3)},
           _S{RealMatrix_t::Identity(3 + 1, 3 + 1)},
-          _C{RealVector_t::Zero(3)},
-          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector}
+          _C{RealVector_t::Zero(3)}
     {
         // sanity check
         if (R.rows() != _objectDimension || R.cols() != _objectDimension)
@@ -182,6 +185,11 @@ namespace elsa
                 && _C == other._C);
     }
 
+    const RealMatrix_t& Geometry::getExtrinsicMatrix() const
+    {
+        return _ext;
+    }
+
     void Geometry::buildMatrices()
     {
         RealMatrix_t tmpRt(_objectDimension + 1, _objectDimension + 1);
@@ -193,8 +201,11 @@ namespace elsa
         RealMatrix_t tmpId(_objectDimension, _objectDimension + 1);
         tmpId.setIdentity();
 
+        // setup extrinsic matrixs
+        _ext = tmpRt * _S;
+
         // setup projection matrix _P
-        _P = _K * tmpId * tmpRt * _S;
+        _P = _K * tmpId * _ext;
 
         // compute the camera center
         _C = -(_P.block(0, 0, _objectDimension, _objectDimension)

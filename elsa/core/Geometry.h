@@ -144,6 +144,13 @@ namespace elsa
          */
         real_t getSourceDetectorDistance() const;
 
+        /**
+         * @brief Return the extrinsics
+         *
+         * @returns extrinsics matrix
+         */
+        const RealMatrix_t& getExtrinsicMatrix() const;
+
         /// comparison operator
         bool operator==(const Geometry& other) const;
 
@@ -158,6 +165,8 @@ namespace elsa
         RealMatrix_t _P;
         /// the inverse of the projection matrix
         RealMatrix_t _Pinv;
+        /// the extrinsic matrix (= [_R|_t] * _S)
+        RealMatrix_t _ext;
 
         /// the intrinsic parameters _K
         RealMatrix_t _K;
