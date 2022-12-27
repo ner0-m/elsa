@@ -3,7 +3,8 @@
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "CartesianIndices.h"
-#include "Ellipsoid.h"
+#include "ForbildPhantom.h"
+#include "ForbildData.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -144,12 +145,140 @@ namespace elsa::phantoms
         return dc;
     }
 
+    template <typename data_t>
+    DataContainer<data_t> forbild(IndexVector_t sizes, ForbildPhantom<data_t>& fp)
+    {
+        // sanity checks
+        if (sizes.size() != 3 || sizes[0] != sizes[1] || sizes[0] != sizes[2]) {
+            throw InvalidArgumentError("phantom::forbild: 3d size has to be cubed");
+        }
+
+        VolumeDescriptor dd(sizes);
+        DataContainer<data_t> dc(dd);
+        dc = 0;
+
+        for (int order = 0; order < fp.getMaxOrderIndex(); order++) {
+            if (fp.getEllipsoids().count(order)) {
+                // Ellipsoids
+                auto e = fp.getEllipsoids().at(order);
+                Logger::get("phantoms::forbild")->info("rasterize {}", e);
+                rasterize<Blending::OVERWRITE>(e, dd, dc);
+            } else if (fp.getEllipsoidsClippedX().count(order)) {
+                // Ellipsoids clipped at x axis
+                auto [el, clipping] = fp.getEllipsoidsClippedX().at(order);
+                Logger::get("phantoms::forbild")->info("rasterize {} with clipping", el);
+                rasterizeWithClipping<Blending::OVERWRITE>(el, dd, dc, clipping);
+            } else if (fp.getSpheres().count(order)) {
+                // Spheres
+                auto s = fp.getSpheres().at(order);
+                Logger::get("phantoms::forbild")->info("rasterize {}", s);
+                rasterize<Blending::OVERWRITE>(s, dd, dc);
+            } else if (fp.getEllipCylinders().count(order)) {
+                // EllipCylinders
+                auto e = fp.getEllipCylinders().at(order);
+                Logger::get("phantoms::forbild")->info("rasterize {}", e);
+                rasterize<Blending::OVERWRITE>(e, dd, dc);
+            } else if (fp.getEllipCylindersFree().count(order)) {
+                // EllipCylinders free
+                auto e = fp.getEllipCylindersFree().at(order);
+                Logger::get("phantoms::forbild")->info("rasterize {}", e);
+                rasterize<Blending::OVERWRITE>(e, dd, dc);
+            } else if (fp.getCylinders().count(order)) {
+                // Cylinders
+                auto c = fp.getCylinders().at(order);
+                Logger::get("phantoms::forbild")->info("rasterize {}", c);
+                rasterize<Blending::OVERWRITE>(c, dd, dc);
+            } else if (fp.getCylindersFree().count(order)) {
+                // Cylinders free
+                auto cf = fp.getCylindersFree().at(order);
+                Logger::get("phantoms::forbild")->info("rasterize {}", cf);
+                rasterize<Blending::OVERWRITE>(cf, dd, dc);
+            } else if (fp.getBoxes().count(order)) {
+                // Boxes
+                auto b = fp.getBoxes().at(order);
+                Logger::get("phantoms::forbild")->info("rasterize {}", b);
+                rasterize<Blending::OVERWRITE>(b, dd, dc);
+            } else {
+                Logger::get("phantoms::forbild")->warn("No object found for order index {}", order);
+            }
+        }
+
+        return dc;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> forbildHead(IndexVector_t sizes)
+    {
+
+        Logger::get("phantom::forbildHead")
+            ->info("creating forbild of size {}^{}", sizes[0], sizes.size());
+        // field view from http://ftp.imp.uni-erlangen.de/phantoms/head/head.html
+        ForbildPhantom<data_t> fp{sizes[0] - 1, data_t(25.6f), forbilddata::maxOrderIndex_head};
+        fp.addEllipsoids(forbilddata::ellipsoids_head<data_t>);
+        fp.addEllipsoidsClippedX(forbilddata::ellipsoidsClippingX_head<data_t>);
+        fp.addSpheres(forbilddata::spheres_head<data_t>);
+        fp.addEllipCylinders(forbilddata::ellipCyls_head<data_t>);
+        fp.addEllipCylindersFree(forbilddata::ellipCylsFree_head<data_t>);
+        fp.addCylinders(forbilddata::cyls_head<data_t>);
+        fp.addCylindersFree(forbilddata::cylsFree_head<data_t>);
+        fp.addBoxes(forbilddata::boxes_head<data_t>);
+        return std::move(forbild<data_t>(sizes, fp));
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> forbildThorax(IndexVector_t sizes)
+    {
+
+        Logger::get("phantom::forbildThorax")
+            ->info("creating forbild of size {}^{}", sizes[0], sizes.size());
+        // field view from http://ftp.imp.uni-erlangen.de/phantoms/thorax/thorax.htm
+        ForbildPhantom<data_t> fp{sizes[0] - 1, data_t(50.f), forbilddata::maxOrderIndex_thorax};
+        fp.addEllipsoids(forbilddata::ellipsoids_thorax<data_t>);
+        fp.addSpheres(forbilddata::spheres_thorax<data_t>);
+        fp.addEllipCylinders(forbilddata::ellipCyls_thorax<data_t>);
+        fp.addEllipCylindersFree(forbilddata::ellipCylsFree_thorax<data_t>);
+        fp.addCylinders(forbilddata::cyls_thorax<data_t>);
+        fp.addCylindersFree(forbilddata::cylsFree_thorax<data_t>);
+        fp.addBoxes(forbilddata::boxes_thorax<data_t>);
+
+        return std::move(forbild<data_t>(sizes, fp));
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> forbildAbdomen(IndexVector_t sizes)
+    {
+
+        Logger::get("phantom::forbildAbdomen")
+            ->info("creating forbild of size {}^{}", sizes[0], sizes.size());
+        // field view from http://ftp.imp.uni-erlangen.de/phantoms/abdomen/abdomen.html
+        ForbildPhantom<data_t> fp{sizes[0] - 1, data_t(40.f), forbilddata::maxOrderIndex_abdomen};
+        fp.addEllipsoids(forbilddata::ellipsoids_abdomen<data_t>);
+        fp.addSpheres(forbilddata::spheres_abdomen<data_t>);
+        fp.addEllipCylinders(forbilddata::ellipCyls_abdomen<data_t>);
+        fp.addEllipCylindersFree(forbilddata::ellipCylsFree_abdomen<data_t>);
+        fp.addCylinders(forbilddata::cyls_abdomen<data_t>);
+        fp.addCylindersFree(forbilddata::cylsFree_abdomen<data_t>);
+        fp.addBoxes(forbilddata::boxes_abdomen<data_t>);
+        return std::move(forbild<data_t>(sizes, fp));
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template DataContainer<float> circular<float>(IndexVector_t volumesize, float radius);
     template DataContainer<double> circular<double>(IndexVector_t volumesize, double radius);
+
     template DataContainer<float> modifiedSheppLogan<float>(IndexVector_t sizes);
     template DataContainer<double> modifiedSheppLogan<double>(IndexVector_t sizes);
+
+    template DataContainer<float> forbildHead<float>(IndexVector_t sizes);
+    template DataContainer<double> forbildHead<double>(IndexVector_t sizes);
+
+    template DataContainer<float> forbildAbdomen<float>(IndexVector_t sizes);
+    template DataContainer<double> forbildAbdomen<double>(IndexVector_t sizes);
+
+    template DataContainer<float> forbildThorax<float>(IndexVector_t sizes);
+    template DataContainer<double> forbildThorax<double>(IndexVector_t sizes);
+
     template DataContainer<float> rectangle<float>(IndexVector_t volumesize, IndexVector_t lower,
                                                    IndexVector_t upper);
     template DataContainer<double> rectangle<double>(IndexVector_t volumesize, IndexVector_t lower,
@@ -165,7 +294,8 @@ namespace elsa::phantoms
             // sanity check
             if (dc.getDataDescriptor().getNumberOfDimensions() != 3)
                 throw InvalidArgumentError(
-                    "EllipseGenerator::drawFilledEllipsoid3d: can only work on 3d DataContainers");
+                    "EllipseGenerator::drawFilledEllipsoid3d: can only work on 3d "
+                    "DataContainers");
 
             // enables small optimizations
             bool hasRotation = (std::abs(phi) + std::abs(theta) + std::abs(psi)) > 0;
@@ -319,9 +449,13 @@ namespace elsa::phantoms
             }
             return dc;
         };
-        template void drawFilledEllipsoid3d(DataContainer<double>& dc, double amplitude,
-                                            Vec3 center, Vec3 sizes, double phi, double theta,
-                                            double psi);
+        template void drawFilledEllipsoid3d<double>(DataContainer<double>& dc, double amplitude,
+                                                    Vec3 center, Vec3 sizes, double phi,
+                                                    double theta, double psi);
+
+        template void drawFilledEllipsoid3d<float>(DataContainer<float>& dc, float amplitude,
+                                                   Vec3 center, Vec3 sizes, float phi, float theta,
+                                                   float psi);
         template DataContainer<double> modifiedSheppLogan(IndexVector_t sizes);
 
     } // namespace old

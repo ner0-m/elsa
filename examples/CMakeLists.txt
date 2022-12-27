@@ -20,6 +20,9 @@ add_example(example2d example2d.cpp)
 # build the programm to output slices of shepp logan
 add_example(example3d_shepp_logan example3d_shepp_logan.cpp)
 
+# build the programm to output slices of shepp logan
+add_example(example3d_forbild example3d_forbild.cpp)
+
 # build the 2d limited angle trajectory example program
 add_example(limited_angle_example2d limited_angle_example2d.cpp)
 

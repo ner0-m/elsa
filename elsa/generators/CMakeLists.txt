@@ -10,6 +10,8 @@ set(MODULE_HEADERS
     Box.h
     PhantomDefines.h
     Phantoms.h
+    ForbildPhantom.h
+    ForbildData.h
     BaseCircleTrajectoryGenerator.h
     CircleTrajectoryGenerator.h
     CurvedCircleTrajectoryGenerator.h
@@ -31,6 +33,7 @@ set(MODULE_SOURCES
     Box.cpp
     PhantomDefines.cpp
     Phantoms.cpp
+    ForbildPhantom.cpp
     BaseCircleTrajectoryGenerator.cpp
     CircleTrajectoryGenerator.cpp
     CurvedCircleTrajectoryGenerator.cpp
