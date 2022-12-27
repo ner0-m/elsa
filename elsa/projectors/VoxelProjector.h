@@ -127,7 +127,6 @@ namespace elsa
 
             // detector parameters
             index_t upperDetectorI = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
-            const auto dimDetector = detectorDesc.getNumberOfDimensions();
 
             // volume parameters
             auto& volume = x.getDataDescriptor();
@@ -136,20 +135,13 @@ namespace elsa
             // blob parameters
             auto voxelRadius = this->self().radius();
 
-            const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
-            RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
-            detectorOriginShift[dimDetector - 1] = 0;
-
-            // helper to find index into sinogram
-            IndexVector_t detectorIndexGeomStart(2);
-            detectorIndexGeomStart << 0, 0;
 #pragma omp parallel for
             for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                  geomIndex++) {
 
-                detectorIndexGeomStart[1] = geomIndex;
+                // helper to find index into sinogram
                 auto detectorZeroIndex =
-                    detectorDesc.getIndexFromCoordinate(detectorIndexGeomStart);
+                    detectorDesc.getIndexFromCoordinate(IndexVector_t{{0, geomIndex}});
 
                 // loop over voxels
                 for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
@@ -164,8 +156,7 @@ namespace elsa
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
                     // correct origin shift
-                    auto detectorCoordVec = detectorCoordShifted.array() - 0.5;
-                    data_t detectorCoord = detectorCoordVec[0];
+                    data_t detectorCoord = detectorCoordShifted[0] - 0.5;
 
                     // find all detector pixels that are hit
                     auto radiusOnDetector = static_cast<index_t>(std::round(voxelRadius * scaling));
@@ -198,15 +189,10 @@ namespace elsa
             const index_t detectorRowLength = upperDetector[0] + 1;
 
             const auto& volume = x.getDataDescriptor();
-            const auto dimDetector = detectorDesc.getNumberOfDimensions();
             const auto volumeSize = x.getSize();
 
             const auto voxelRadius = this->self().radius();
-
-            const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
-            RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
-            detectorOriginShift[dimDetector - 1] = 0;
-            //#pragma omp parallel for
+#pragma omp parallel for
             for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                  geomIndex++) {
 
@@ -216,14 +202,14 @@ namespace elsa
                     auto voxelWeight = x[domainIndex];
 
                     // Cast to real_t and shift to center of voxel according to origin
-                    RealVector_t volumeCoord = coord.template cast<real_t>() + volumeOriginShift;
+                    RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
 
                     // Project onto detector and compute the magnification
                     auto [detectorCoordShifted, scaling] =
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
                     // correct origin shift
-                    auto detectorCoordWithGeom = detectorCoordShifted - detectorOriginShift;
+                    RealVector_t detectorCoordWithGeom = detectorCoordShifted.array() - 0.5;
 
                     // find all detector pixels that are hit
                     auto radiusOnDetector = IndexVector_t::Constant(
@@ -286,17 +272,10 @@ namespace elsa
             index_t upperDetectorI = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
 
             auto& volume = Aty.getDataDescriptor();
-            const auto dimDetector = detectorDesc.getNumberOfDimensions();
             auto volumeSize = Aty.getSize();
 
             auto voxelRadius = this->self().radius();
 
-            const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
-            RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
-            detectorOriginShift[dimDetector - 1] = 0;
-
-            IndexVector_t detectorIndexGeomStart(2);
-            detectorIndexGeomStart << 0, 0;
 #pragma omp parallel for
             // loop over voxels
             for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
@@ -305,19 +284,19 @@ namespace elsa
                 for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                      geomIndex++) {
 
-                    detectorIndexGeomStart[1] = geomIndex;
+                    // helper to find index into sinogram
                     auto detectorZeroIndex =
-                        detectorDesc.getIndexFromCoordinate(detectorIndexGeomStart);
+                        detectorDesc.getIndexFromCoordinate(IndexVector_t{{0, geomIndex}});
 
                     // Cast to real_t and shift to center of voxel according to origin
-                    RealVector_t volumeCoord = coord.template cast<real_t>() + volumeOriginShift;
+                    RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
 
                     // Project onto detector and compute the magnification
                     auto [detectorCoordShifted, scaling] =
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
                     // correct origin shift
-                    auto detectorCoordVec = detectorCoordShifted - detectorOriginShift;
+                    RealVector_t detectorCoordVec = detectorCoordShifted.array() - 0.5;
                     data_t detectorCoord = detectorCoordVec[0];
 
                     // find all detector pixels that are hit
@@ -351,17 +330,10 @@ namespace elsa
             const index_t detectorRowLength = upperDetector[0] + 1;
 
             auto& volume = Aty.getDataDescriptor();
-            const auto dimDetector = detectorDesc.getNumberOfDimensions();
             auto volumeSize = Aty.getSize();
 
             auto voxelRadius = this->self().radius();
-
-            const RealVector_t volumeOriginShift = volume.getSpacingPerDimension() * 0.5;
-            RealVector_t detectorOriginShift = volume.getSpacingPerDimension() * 0.5;
-            detectorOriginShift[dimDetector - 1] = 0; // dont shift in pose dimension
-
-#pragma omp parallel for
-                                                      // loop over voxels
+#pragma omp parallel for // loop over voxels
             for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
                 // loop over geometries
                 auto coord = volume.getCoordinateFromIndex(domainIndex);
@@ -376,7 +348,7 @@ namespace elsa
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
                     // correct origin shift
-                    auto detectorCoordWithGeom = detectorCoordShifted - detectorOriginShift;
+                    RealVector_t detectorCoordWithGeom = detectorCoordShifted.array() - 0.5;
 
                     // find all detector pixels that are hit
                     auto radiusOnDetector = IndexVector_t::Constant(
@@ -400,7 +372,7 @@ namespace elsa
                         for (index_t i = lowerIndex[0]; i <= upperIndex[0]; i++) {
                             const auto distanceVec = (detectorCoord - currentCoord);
                             const auto distance = distanceVec.norm();
-                            // let first axis always be the differential axis TODO
+                            // first axis always is always the differential axis TODO
 #pragma omp atomic
                             Aty[domainIndex] +=
                                 this->self().weight(distance / scaling, distanceVec[0] / scaling)
@@ -455,7 +427,7 @@ namespace elsa
         data_t weight(data_t distance, data_t primDistance) const
         {
             (void) primDistance;
-            return lut_(distance);
+            return weight(distance);
         }
 
         /// implement the polymorphic clone operation
@@ -494,8 +466,8 @@ namespace elsa
         }
         data_t weight(data_t distance, data_t primDistance) const
         {
-            return lut_(distance) / (distance + 1e-10) * primDistance;
-        } // 1e-10 is added to prevent division by zero TODO
+            return lut3D_(distance) * primDistance;
+        }
 
         /// implement the polymorphic clone operation
         PhaseContrastBlobVoxelProjector<data_t>* _cloneImpl() const;
@@ -505,6 +477,7 @@ namespace elsa
 
     private:
         ProjectedBlobDerivativeLut<data_t, 100> lut_;
+        ProjectedBlobGradientHelperLut<data_t, 100> lut3D_;
 
         using Base = VoxelProjector<data_t, PhaseContrastBlobVoxelProjector<data_t>>;
 
