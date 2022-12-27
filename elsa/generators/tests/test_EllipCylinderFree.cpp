@@ -59,10 +59,10 @@ TEST_CASE("EllipCylinderFree tests")
                 idx << 5, 5, 5;
                 REQUIRE_EQ(dc(idx), amplit);
 
-                idx << 5, 6, 6;
+                idx << 5, 6, 4;
                 REQUIRE_EQ(dc(idx), amplit);
 
-                idx << 5, 4, 4;
+                idx << 5, 4, 6;
                 REQUIRE_EQ(dc(idx), amplit);
             }
         }

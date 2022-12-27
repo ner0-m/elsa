@@ -19,17 +19,20 @@ namespace elsa::phantoms
         auto sinPsi = std::sin(psiRad);
 
         // setup ZXZ Euler rotation matrix
-        rot(0, 0) = static_cast<real_t>(cosPhi * cosPsi - cosTheta * sinPhi * sinPsi);
-        rot(0, 1) = static_cast<real_t>(cosPsi * sinPhi + cosPhi * cosTheta * sinPsi);
-        rot(0, 2) = static_cast<real_t>(sinTheta * sinPsi);
+        // first column
+        rot(0, 0) = cosPhi * cosPsi - cosTheta * sinPhi * sinPsi;
+        rot(1, 0) = cosPsi * sinPhi + cosPhi * cosTheta * sinPsi;
+        rot(2, 0) = sinTheta * sinPsi;
 
-        rot(1, 0) = static_cast<real_t>(-cosPhi * sinPsi - cosTheta * cosPsi * sinPhi);
-        rot(1, 1) = static_cast<real_t>(cosPhi * cosTheta * cosPsi - sinPhi * sinPsi);
-        rot(1, 2) = static_cast<real_t>(cosPsi * sinTheta);
+        // second column
+        rot(0, 1) = -cosPhi * sinPsi - cosTheta * cosPsi * sinPhi;
+        rot(1, 1) = cosPhi * cosTheta * cosPsi - sinPhi * sinPsi;
+        rot(2, 1) = cosPsi * sinTheta;
 
-        rot(2, 0) = static_cast<real_t>(sinPhi * sinTheta);
-        rot(2, 1) = static_cast<real_t>(-cosPhi * sinTheta);
-        rot(2, 2) = static_cast<real_t>(cosTheta);
+        // third column
+        rot(0, 2) = sinPhi * sinTheta;
+        rot(1, 2) = -cosPhi * sinTheta;
+        rot(2, 2) = cosTheta;
     }
 
     std::string getString(Orientation o)
