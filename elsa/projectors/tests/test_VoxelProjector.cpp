@@ -28,40 +28,43 @@ TEST_CASE_TEMPLATE("BlobVoxelProjector: Testing simple volume 3D with one detect
     const IndexVector_t sizeDomain({{5, 5, 5}});
     const IndexVector_t sizeRange({{1, 1, 1}});
 
-    auto domain = VolumeDescriptor(sizeDomain);
-    auto x = DataContainer<data_t>(domain);
-    x = 0;
-
     auto stc = SourceToCenterOfRotation{100};
     auto ctr = CenterOfRotationToDetector{5};
 
-    // set center voxel to 1
-    x(2, 2, 2) = 1;
-
-    for (int i = 0; i < 360; i += 4) {
-        GIVEN("Ray of angle " + std::to_string(i))
-        {
-            std::vector<Geometry> geom;
-            geom.emplace_back(stc, ctr, VolumeData3D{Size3D{sizeDomain}},
-                              SinogramData3D{Size3D{sizeRange}},
-                              RotationAngles3D{Gamma{static_cast<real_t>(i)}});
-            auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = BlobVoxelProjector<data_t>(domain, range);
-
-            auto Ax = DataContainer<data_t>(range);
-            Ax = 0;
-
-            WHEN("projecting forward and only the center voxel is set to 1")
+    for (int i = 1; i < 4; i++) {
+        data_t scaling = i / 2.0f;
+        const RealVector_t spacing{{scaling, scaling, scaling}};
+        GIVEN("Spacing of " + std::to_string(scaling))
+        for (int i = 0; i < 360; i += 4) {
+            GIVEN("Ray of angle " + std::to_string(i))
             {
-                op.apply(x, Ax);
+                auto domain = VolumeDescriptor(sizeDomain, spacing);
+                auto x = DataContainer<data_t>(domain);
+                x = 0;
+                // set center voxel to 1
+                x(2, 2, 2) = 1;
+                std::vector<Geometry> geom;
+                geom.emplace_back(stc, ctr, VolumeData3D{Size3D{sizeDomain}, Spacing3D{spacing}},
+                                  SinogramData3D{Size3D{sizeRange}},
+                                  RotationAngles3D{Gamma{static_cast<real_t>(i)}});
+                auto range = PlanarDetectorDescriptor(sizeRange, geom);
+                auto op = BlobVoxelProjector<data_t>(domain, range);
 
-                const auto weight = op.weight(0);
-                CAPTURE(weight);
+                auto Ax = DataContainer<data_t>(range);
+                Ax = 0;
 
-                THEN("The detector value is the weight for distance 0")
+                WHEN("projecting forward and only the center voxel is set to 1")
                 {
-                    CAPTURE(Ax[0]);
-                    CHECK_EQ(weight, Approx(Ax[0]).epsilon(0.005));
+                    op.apply(x, Ax);
+
+                    const auto weight = op.weight(0);
+                    CAPTURE(weight);
+
+                    THEN("The detector value is the weight for distance 0")
+                    {
+                        CAPTURE(Ax[0]);
+                        CHECK_EQ(weight, Approx(Ax[0]).epsilon(0.005));
+                    }
                 }
             }
         }
@@ -74,41 +77,44 @@ TEST_CASE_TEMPLATE("BlobVoxelProjector: Testing simple volume 2D with one detect
     const IndexVector_t sizeDomain({{5, 5}});
     const IndexVector_t sizeRange({{1, 1}});
 
-    auto domain = VolumeDescriptor(sizeDomain);
-    auto x = DataContainer<data_t>(domain);
-    x = 0;
-
     auto stc = SourceToCenterOfRotation{100};
     auto ctr = CenterOfRotationToDetector{5};
-    auto volData = VolumeData2D{Size2D{sizeDomain}};
-    auto sinoData = SinogramData2D{Size2D{sizeRange}};
 
-    for (int i = 0; i < 360; i += 4) {
-        GIVEN("Ray of angle " + std::to_string(i))
-        {
-            std::vector<Geometry> geom;
-            geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
-                              VolumeData2D{Size2D{sizeDomain}}, SinogramData2D{Size2D{sizeRange}});
-            auto range = PlanarDetectorDescriptor(sizeRange, geom);
-            auto op = BlobVoxelProjector<data_t>(domain, range);
-
-            auto Ax = DataContainer<data_t>(range);
-            Ax = 0;
-
-            WHEN("projecting forward and only the center voxel is set to 1")
+    for (int i = 1; i < 4; i++) {
+        data_t scaling = i / 2.0f;
+        const RealVector_t spacing{{scaling, scaling}};
+        GIVEN("Spacing of " + std::to_string(scaling))
+        for (int i = 0; i < 360; i += 4) {
+            GIVEN("Ray of angle " + std::to_string(i))
             {
-                // set center voxel to 1
-                x(2, 2) = 1;
+                auto domain = VolumeDescriptor(sizeDomain, spacing);
+                auto x = DataContainer<data_t>(domain);
+                x = 0;
+                std::vector<Geometry> geom;
+                geom.emplace_back(stc, ctr, Degree{static_cast<real_t>(i)},
+                                  VolumeData2D{Size2D{sizeDomain}, Spacing2D{spacing}},
+                                  SinogramData2D{Size2D{sizeRange}});
+                auto range = PlanarDetectorDescriptor(sizeRange, geom);
+                auto op = BlobVoxelProjector<data_t>(domain, range);
 
-                op.apply(x, Ax);
+                auto Ax = DataContainer<data_t>(range);
+                Ax = 0;
 
-                const auto weight = op.weight(0);
-                CAPTURE(weight);
-
-                THEN("The detector value is the weight for distance 0")
+                WHEN("projecting forward and only the center voxel is set to 1")
                 {
-                    CAPTURE(Ax[0]);
-                    CHECK_EQ(weight, Approx(Ax[0]));
+                    // set center voxel to 1
+                    x(2, 2) = 1;
+
+                    op.apply(x, Ax);
+
+                    const auto weight = op.weight(0);
+                    CAPTURE(weight);
+
+                    THEN("The detector value is the weight for distance 0")
+                    {
+                        CAPTURE(Ax[0]);
+                        CHECK_EQ(weight, Approx(Ax[0]));
+                    }
                 }
             }
         }
