@@ -5,6 +5,7 @@ set(MODULE_HEADERS
     EllipCylinder.h
     EllipCylinderFree.h
     CylinderFree.h
+    Cylinder.h
     Sphere.h
     Box.h
     PhantomDefines.h
@@ -25,6 +26,7 @@ set(MODULE_SOURCES
     EllipCylinder.cpp
     EllipCylinderFree.cpp
     CylinderFree.cpp
+    Cylinder.cpp
     Sphere.cpp
     Box.cpp
     PhantomDefines.cpp
