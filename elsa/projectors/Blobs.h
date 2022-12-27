@@ -155,6 +155,63 @@ namespace elsa
             return 0.0;
         }
 
+        /// @brief For 3D objects we need to compute the directional gradient given by
+        /// \f$ \frac{-g(\left\lVert \vec x\right\rVert)}{\left\lVert \vec x\right\rVert} \vec x^T
+        /// \f$
+        /// where g is the derivative computed below
+        ///
+        /// As we divide by the argument we have a potential divide by zero. This can be solved by
+        /// moving the division inside g as it cancels out
+        ///
+        /// Compute line integral of blob derivative through a straight line
+        /// The exact formulations are quite easily derived using the fact, that the line
+        /// integral for the derivative of a single blob is given by:
+        ///
+        /// \f$
+        /// - \frac{\sqrt{2 \pi \alpha}}{I_m(\alpha)} \frac{s}{a} \left(\sqrt{1 -
+        /// \left(\frac{s}{a}\right)^2}\right)^{m - 0.5} I_{m - 0.5}\left(\alpha \sqrt{1 -
+        /// \left(\frac{s}{a}\right)^2}\right)
+        /// \f$
+        ///
+        /// By substitution with the above formulas (blob_projected) one can derive the below
+        /// formulations. In theory using the recurrent relations, this could be extended to
+        /// further orders, but is deemed unnecessary for now.
+        ///
+        /// @param distance distance of blob center to straight line, in literature often referred
+        /// to as `r`
+        /// @param radius radius of blob, often referred to as `a`
+        /// @param alpha smoothness factor of blob, expected to be larger than 0
+        /// @param order order of Bessel function, often referred to as `m`
+        ///
+        /// Ref:
+        /// Investigation of discrete imaging models and iterative image reconstruction
+        /// in differential X-ray phase-contrast tomography - Qiaofeng Xu (Appendix B)
+        template <typename data_t>
+        constexpr data_t blob_gradient_projected_helper(data_t s, SelfType_t<data_t> a,
+                                                        SelfType_t<data_t> alpha, int m)
+        {
+            // expect alpha > 0
+            using namespace elsa::math;
+
+            const data_t sda = s / a;
+            const data_t sdas = std::pow(sda, 2);
+            const data_t w = 1.0 - sdas;
+
+            if (w > 1.0e-10) {
+                const auto arg = alpha * std::sqrt(w);
+                if (m == 1) {
+                    return (-2.0 / a) * std::sinh(arg) / bessi1(alpha);
+
+                } else if (m == 2) {
+                    return (-2.0 / alpha / a) * (std::cosh(arg) * arg - std::sinh(arg))
+                           / bessi2(alpha);
+                } else {
+                    throw Error("m out of range in blob_projected()");
+                }
+            }
+            return 0.0;
+        }
+
         template <typename data_t>
         constexpr data_t blob_derivative_projected(data_t s)
         {
@@ -200,6 +257,11 @@ namespace elsa
         constexpr data_t derivative(data_t s)
         {
             return blobs::blob_derivative_projected(s, radius_, alpha_, order_);
+        }
+
+        constexpr data_t gradient_helper(data_t s)
+        {
+            return blobs::blob_gradient_projected_helper(s, radius_, alpha_, order_);
         }
 
         constexpr data_t radius() const { return radius_; }

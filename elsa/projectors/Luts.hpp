@@ -48,6 +48,24 @@ namespace elsa
         }
 
         template <typename data_t, index_t N>
+        constexpr std::array<data_t, N> blob_gradient_helper_lut(ProjectedBlob<data_t> blob)
+        {
+            Logger::get("blob_gradient_lut")->debug("Calculating lut");
+
+            std::array<data_t, N> lut;
+
+            auto t = static_cast<data_t>(0);
+            const auto step = blob.radius() / N;
+
+            for (std::size_t i = 0; i < N; ++i) {
+                lut[i] = blob.gradient_helper(t);
+                t += step;
+            }
+
+            return lut;
+        }
+
+        template <typename data_t, index_t N>
         constexpr std::array<data_t, N> bspline_lut(ProjectedBSpline<data_t> bspline)
         {
             Logger::get("bspline_lut")->debug("Calculating lut");
@@ -164,6 +182,32 @@ namespace elsa
         constexpr ProjectedBlobDerivativeLut(data_t radius, SelfType_t<data_t> alpha,
                                              SelfType_t<data_t> order)
             : blob_(radius, alpha, order), lut_(detail::blob_derivative_lut<data_t, N>(blob_))
+        {
+        }
+
+        constexpr data_t radius() const { return blob_.radius(); }
+
+        constexpr data_t alpha() const { return blob_.alpha(); }
+
+        constexpr data_t order() const { return blob_.order(); }
+
+        constexpr data_t operator()(data_t distance) const
+        {
+            return lut_((distance / blob_.radius()) * N);
+        }
+
+    private:
+        ProjectedBlob<data_t> blob_;
+        Lut<data_t, N> lut_;
+    };
+
+    template <typename data_t, index_t N>
+    class ProjectedBlobGradientHelperLut
+    {
+    public:
+        constexpr ProjectedBlobGradientHelperLut(data_t radius, SelfType_t<data_t> alpha,
+                                                 SelfType_t<data_t> order)
+            : blob_(radius, alpha, order), lut_(detail::blob_gradient_helper_lut<data_t, N>(blob_))
         {
         }
 
