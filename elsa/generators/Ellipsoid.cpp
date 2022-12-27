@@ -80,45 +80,38 @@ namespace elsa::phantoms
                     xOffset = (idx[INDEX_X] + _center[INDEX_X]) * strides[INDEX_X];
                     xOffsetNeg = (-idx[INDEX_X] + _center[INDEX_X]) * strides[INDEX_X];
 
-                    dc[xOffset + yOffset + zOffset] = b(dc[xOffset + yOffset + zOffset], _amplit);
+                    b(dc[xOffset + yOffset + zOffset], _amplit);
 
                     // Voxel in ellipsoids can be mirrored 8 times if they are not on a mirror
                     // plane. Depending on the voxels location they are mirrored or not.
                     // This exclude prevents double increment of the same voxel on the mirror plane.
 
                     if (idx[INDEX_X] != 0) {
-                        dc[xOffsetNeg + yOffset + zOffset] =
-                            b(dc[xOffsetNeg + yOffset + zOffset], _amplit);
+                        b(dc[xOffsetNeg + yOffset + zOffset], _amplit);
                     }
                     if (idx[INDEX_Y] != 0) {
-                        dc[xOffset + yOffsetNeg + zOffset] =
-                            b(dc[xOffset + yOffsetNeg + zOffset], _amplit);
+                        b(dc[xOffset + yOffsetNeg + zOffset], _amplit);
                     }
                     if (idx[INDEX_Z] != 0) {
-                        dc[xOffset + yOffset + zOffsetNeg] =
-                            b(dc[xOffset + yOffset + zOffsetNeg], _amplit);
+                        b(dc[xOffset + yOffset + zOffsetNeg], _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Y] != 0) {
-                        dc[xOffsetNeg + yOffsetNeg + zOffset] =
-                            b(dc[xOffsetNeg + yOffsetNeg + zOffset], _amplit);
+                        b(dc[xOffsetNeg + yOffsetNeg + zOffset], _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffsetNeg + yOffset + zOffsetNeg] =
-                            b(dc[xOffsetNeg + yOffset + zOffsetNeg], _amplit);
+                        b(dc[xOffsetNeg + yOffset + zOffsetNeg], _amplit);
                     }
 
                     if (idx[INDEX_Y] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffset + yOffsetNeg + zOffsetNeg] =
-                            b(dc[xOffset + yOffsetNeg + zOffsetNeg], _amplit);
+                        b(dc[xOffset + yOffsetNeg + zOffsetNeg], _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Y] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffsetNeg + yOffsetNeg + zOffsetNeg] =
-                            b(dc[xOffsetNeg + yOffsetNeg + zOffsetNeg], _amplit);
+                        b(dc[xOffsetNeg + yOffsetNeg + zOffsetNeg], _amplit);
                     }
-                };
+                }
                 idx[INDEX_X] = 0;
             }
             idx[INDEX_Y] = 0;
@@ -191,8 +184,7 @@ namespace elsa::phantoms
                     xOffset = idx_shifted[INDEX_X] * strides[INDEX_X];
                     rotated = el.getInvRotationMatrix() * idx;
                     if (el.isInEllipsoid(rotated)) {
-                        dc[xOffset + yOffset + zOffset] =
-                            b(dc[xOffset + yOffset + zOffset], _amplit);
+                        b(dc[xOffset + yOffset + zOffset], _amplit);
                     }
                 }
                 // reset X

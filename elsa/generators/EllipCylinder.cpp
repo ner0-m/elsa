@@ -113,22 +113,18 @@ namespace elsa::phantoms
 
                 for (index_t line = minC; line <= maxC; line++) {
                     cOffset = line * strides[TEMP_C];
-
-                    dc[aOffset + bOffset + cOffset] = b(dc[aOffset + bOffset + cOffset], _amplit);
+                    b(dc[aOffset + bOffset + cOffset], _amplit);
 
                     if (idx[TEMP_A] != 0) {
-                        dc[aOffsetNeg + bOffset + cOffset] =
-                            b(dc[aOffsetNeg + bOffset + cOffset], _amplit);
+                        b(dc[aOffsetNeg + bOffset + cOffset], _amplit);
                     }
 
                     if (idx[TEMP_B] != 0) {
-                        dc[aOffset + bOffsetNeg + cOffset] =
-                            b(dc[aOffset + bOffsetNeg + cOffset], _amplit);
+                        b(dc[aOffset + bOffsetNeg + cOffset], _amplit);
                     }
 
                     if (idx[TEMP_A] != 0 && idx[TEMP_B] != 0) {
-                        dc[aOffsetNeg + bOffsetNeg + cOffset] =
-                            b(dc[aOffsetNeg + bOffsetNeg + cOffset], _amplit);
+                        b(dc[aOffsetNeg + bOffsetNeg + cOffset], _amplit);
                     }
                 };
                 idx[TEMP_C] = 0;

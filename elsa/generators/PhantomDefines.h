@@ -47,9 +47,9 @@ namespace elsa::phantoms
     std::string getString(Orientation o);
 
     template <class data_t>
-    data_t additiveBlending(data_t old, data_t amplit)
+    void additiveBlending(data_t& old, data_t amplit)
     {
-        return old + amplit;
+        old += amplit;
     }
 
 } // namespace elsa::phantoms

@@ -98,8 +98,7 @@ namespace elsa::phantoms
                 for (index_t x = index_t(minX); x <= index_t(maxX); x++, idx[INDEX_X]++) {
                     xOffset = x * strides[INDEX_X];
                     if (el.isInEllipCylinderFree(idx, halfLength)) {
-                        dc[zOffset + yOffset + xOffset] =
-                            b(dc[zOffset + yOffset + xOffset], _amplit);
+                        b(dc[zOffset + yOffset + xOffset], _amplit);
                     }
                 }
 
@@ -117,8 +116,8 @@ namespace elsa::phantoms
     template void rasterize<float, decltype(additiveBlending<float>)>(
         EllipCylinderFree<float>& el, VolumeDescriptor& dd, DataContainer<float>& dc,
         decltype(additiveBlending<float>) b);
-    template void rasterize<double, decltype(additiveBlending<float>)>(
+    template void rasterize<double, decltype(additiveBlending<double>)>(
         EllipCylinderFree<double>& el, VolumeDescriptor& dd, DataContainer<double>& dc,
-        decltype(additiveBlending<float>) b);
+        decltype(additiveBlending<double>) b);
 
 } // namespace elsa::phantoms
