@@ -46,4 +46,19 @@ namespace elsa::phantoms
 
     std::string getString(Orientation o);
 
+    enum class Blending { OVERWRITE = 0, ADDITION = 1 };
+
+    template <Blending b, typename data_t>
+    inline constexpr void blend(DataContainer<data_t>& dc, index_t index, data_t amplit)
+    {
+        // TODO maybe use `data_t& d` instead of `DataContainer<data_t>$ dc`
+        if constexpr (b == Blending::ADDITION) {
+            dc[index] += amplit;
+        } else if constexpr (b == Blending::OVERWRITE) {
+            dc[index] = amplit;
+        } else {
+            throw Error("Wrong Blending");
+        }
+    }
+
 } // namespace elsa::phantoms

@@ -7,6 +7,7 @@
 
 #include "doctest/doctest.h"
 
+#include "PhantomDefines.h"
 #include "EllipCylinderFree.h"
 
 using namespace elsa;
@@ -40,7 +41,7 @@ TEST_CASE("EllipCylinderFree tests")
         {
             phantoms::EllipCylinderFree<double> ec{amplit, center, halfAxis, length, eulers};
 
-            phantoms::rasterize<double>(ec, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(ec, dd, dc);
 
             IndexVector_t idx(3);
 

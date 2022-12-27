@@ -7,6 +7,7 @@
 
 #include "doctest/doctest.h"
 
+#include "PhantomDefines.h"
 #include "Cylinder.h"
 
 using namespace elsa;
@@ -36,7 +37,7 @@ TEST_CASE("cylinder tests")
             phantoms::Cylinder<double> cyl{elsa::phantoms::Orientation::Z_AXIS, amplit, center,
                                            radius, length};
 
-            phantoms::rasterize<double>(cyl, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(cyl, dd, dc);
 
             IndexVector_t idx(3);
 
@@ -86,7 +87,7 @@ TEST_CASE("cylinder tests")
             phantoms::Cylinder<double> cyl{elsa::phantoms::Orientation::Y_AXIS, amplit, center,
                                            radius, length};
 
-            phantoms::rasterize<double>(cyl, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(cyl, dd, dc);
 
             IndexVector_t idx(3);
 
@@ -135,7 +136,7 @@ TEST_CASE("cylinder tests")
             phantoms::Cylinder<double> cyl{elsa::phantoms::Orientation::X_AXIS, amplit, center,
                                            radius, length};
 
-            phantoms::rasterize<double>(cyl, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(cyl, dd, dc);
 
             IndexVector_t idx(3);
 

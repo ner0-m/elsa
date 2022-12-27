@@ -50,4 +50,14 @@ namespace elsa::phantoms
     template void fillRotationMatrix<double>(Vec3X<double>, Eigen::Matrix<double, 3, 3>&);
     template void fillRotationMatrix<float>(Vec3X<float>, Eigen::Matrix<float, 3, 3>&);
 
+    // explicit template instantiation
+    template void blend<Blending::ADDITION, double>(DataContainer<double>& dc, index_t index,
+                                                    double amplit);
+    template void blend<Blending::ADDITION, float>(DataContainer<float>& dc, index_t index,
+                                                   float amplit);
+    template void blend<Blending::OVERWRITE, double>(DataContainer<double>& dc, index_t index,
+                                                     double amplit);
+    template void blend<Blending::OVERWRITE, float>(DataContainer<float>& dc, index_t index,
+                                                    float amplit);
+
 } // namespace elsa::phantoms

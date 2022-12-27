@@ -7,6 +7,7 @@
 
 #include "doctest/doctest.h"
 
+#include "PhantomDefines.h"
 #include "Sphere.h"
 
 using namespace elsa;
@@ -32,7 +33,7 @@ TEST_CASE("Sphere tests")
         WHEN("Rasterize sphere")
         {
             phantoms::Sphere<double> s{1.0, center, radius};
-            phantoms::rasterize<double>(s, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(s, dd, dc);
 
             IndexVector_t idx(3);
 

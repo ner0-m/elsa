@@ -7,7 +7,7 @@ namespace elsa::phantoms
     Box<data_t>::Box(data_t amplit, elsa::phantoms::Vec3i center, Vec3X<data_t> edgeLength)
         : _amplit{amplit}, _center{center}, _edgeLength{edgeLength} {};
 
-    template <typename data_t>
+    template <Blending b, typename data_t>
     void rasterize(Box<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc)
     {
 
@@ -43,34 +43,34 @@ namespace elsa::phantoms
                     xOffset = (idx[INDEX_X] + _center[INDEX_X]) * strides[INDEX_X];
                     xOffsetNeg = (-idx[INDEX_X] + _center[INDEX_X]) * strides[INDEX_X];
 
-                    dc[xOffset + yOffset + zOffset] += _amplit;
+                    blend<b>(dc, xOffset + yOffset + zOffset, _amplit);
 
                     // mirror the voxel at most 8 times
 
                     if (idx[INDEX_X] != 0) {
-                        dc[xOffsetNeg + yOffset + zOffset] += _amplit;
+                        blend<b>(dc, xOffsetNeg + yOffset + zOffset, _amplit);
                     }
                     if (idx[INDEX_Y] != 0) {
-                        dc[xOffset + yOffsetNeg + zOffset] += _amplit;
+                        blend<b>(dc, xOffset + yOffsetNeg + zOffset, _amplit);
                     }
                     if (idx[INDEX_Z] != 0) {
-                        dc[xOffset + yOffset + zOffsetNeg] += _amplit;
+                        blend<b>(dc, xOffset + yOffset + zOffsetNeg, _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Y] != 0) {
-                        dc[xOffsetNeg + yOffsetNeg + zOffset] += _amplit;
+                        blend<b>(dc, xOffsetNeg + yOffsetNeg + zOffset, _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffsetNeg + yOffset + zOffsetNeg] += _amplit;
+                        blend<b>(dc, xOffsetNeg + yOffset + zOffsetNeg, _amplit);
                     }
 
                     if (idx[INDEX_Y] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffset + yOffsetNeg + zOffsetNeg] += _amplit;
+                        blend<b>(dc, xOffset + yOffsetNeg + zOffsetNeg, _amplit);
                     }
 
                     if (idx[INDEX_X] != 0 && idx[INDEX_Y] != 0 && idx[INDEX_Z] != 0) {
-                        dc[xOffsetNeg + yOffsetNeg + zOffsetNeg] += _amplit;
+                        blend<b>(dc, xOffsetNeg + yOffsetNeg + zOffsetNeg, _amplit);
                     }
                 };
                 idx[INDEX_X] = 0;
@@ -84,8 +84,14 @@ namespace elsa::phantoms
     template class Box<float>;
     template class Box<double>;
 
-    template void rasterize<float>(Box<float>& el, VolumeDescriptor& dd, DataContainer<float>& dc);
-    template void rasterize<double>(Box<double>& el, VolumeDescriptor& dd,
-                                    DataContainer<double>& dc);
+    template void rasterize<Blending::ADDITION, float>(Box<float>& el, VolumeDescriptor& dd,
+                                                       DataContainer<float>& dc);
+    template void rasterize<Blending::ADDITION, double>(Box<double>& el, VolumeDescriptor& dd,
+                                                        DataContainer<double>& dc);
+
+    template void rasterize<Blending::OVERWRITE, float>(Box<float>& el, VolumeDescriptor& dd,
+                                                        DataContainer<float>& dc);
+    template void rasterize<Blending::OVERWRITE, double>(Box<double>& el, VolumeDescriptor& dd,
+                                                         DataContainer<double>& dc);
 
 } // namespace elsa::phantoms

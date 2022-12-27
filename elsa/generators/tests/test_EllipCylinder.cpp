@@ -7,6 +7,7 @@
 
 #include "doctest/doctest.h"
 
+#include "PhantomDefines.h"
 #include "EllipCylinder.h"
 
 using namespace elsa;
@@ -39,7 +40,7 @@ TEST_CASE("EllipCylinder tests")
             phantoms::EllipCylinder<double> ec{elsa::phantoms::Orientation::Z_AXIS, amplit, center,
                                                halfAxis, length};
 
-            phantoms::rasterize<double>(ec, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(ec, dd, dc);
 
             IndexVector_t idx(3);
 
@@ -91,7 +92,7 @@ TEST_CASE("EllipCylinder tests")
             phantoms::EllipCylinder<double> ec{elsa::phantoms::Orientation::Y_AXIS, amplit, center,
                                                halfAxis, length};
 
-            phantoms::rasterize<double>(ec, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(ec, dd, dc);
 
             IndexVector_t idx(3);
 
@@ -148,7 +149,7 @@ TEST_CASE("EllipCylinder tests")
             phantoms::EllipCylinder<double> ec{elsa::phantoms::Orientation::X_AXIS, amplit, center,
                                                halfAxis, length};
 
-            phantoms::rasterize<double>(ec, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(ec, dd, dc);
 
             IndexVector_t idx(3);
 
@@ -204,7 +205,7 @@ TEST_CASE("EllipCylinder tests")
             phantoms::EllipCylinder<double> ec{elsa::phantoms::Orientation::Z_AXIS, amplit, center,
                                                halfAxis, length};
 
-            phantoms::rasterize<double>(ec, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(ec, dd, dc);
 
             IndexVector_t idx(3);
 

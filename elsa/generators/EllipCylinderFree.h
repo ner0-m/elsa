@@ -76,7 +76,7 @@ namespace elsa::phantoms
     /**
      * @brief Rasterizes the given EllipCylinderFree in the given data container.
      */
-    template <typename data_t>
+    template <Blending b, typename data_t>
     void rasterize(EllipCylinderFree<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc);
 
 } // namespace elsa::phantoms

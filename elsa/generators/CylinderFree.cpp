@@ -11,14 +11,14 @@ namespace elsa::phantoms
     {
     }
 
-    template <typename data_t>
+    template <Blending b, typename data_t>
     void rasterize(CylinderFree<data_t>& cl, VolumeDescriptor& dd, DataContainer<data_t>& dc)
     {
         Vec2X<data_t> halfAxis;
         halfAxis << cl.getRadius(), cl.getRadius();
         EllipCylinderFree elCylFree{cl.getAmplitude(), cl.getCenter(), halfAxis, cl.getLength(),
                                     cl.getEulerAngels()};
-        rasterize(elCylFree, dd, dc);
+        rasterize<b, data_t>(elCylFree, dd, dc);
     };
 
     // ------------------------------------------
@@ -26,9 +26,18 @@ namespace elsa::phantoms
     template class CylinderFree<float>;
     template class CylinderFree<double>;
 
-    template void rasterize<float>(CylinderFree<float>& el, VolumeDescriptor& dd,
-                                   DataContainer<float>& dc);
-    template void rasterize<double>(CylinderFree<double>& el, VolumeDescriptor& dd,
-                                    DataContainer<double>& dc);
+    template void rasterize<Blending::ADDITION, float>(CylinderFree<float>& el,
+                                                       VolumeDescriptor& dd,
+                                                       DataContainer<float>& dc);
+    template void rasterize<Blending::ADDITION, double>(CylinderFree<double>& el,
+                                                        VolumeDescriptor& dd,
+                                                        DataContainer<double>& dc);
+
+    template void rasterize<Blending::OVERWRITE, float>(CylinderFree<float>& el,
+                                                        VolumeDescriptor& dd,
+                                                        DataContainer<float>& dc);
+    template void rasterize<Blending::OVERWRITE, double>(CylinderFree<double>& el,
+                                                         VolumeDescriptor& dd,
+                                                         DataContainer<double>& dc);
 
 } // namespace elsa::phantoms

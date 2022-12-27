@@ -7,6 +7,7 @@
 
 #include "doctest/doctest.h"
 
+#include "PhantomDefines.h"
 #include "Ellipsoid.h"
 
 using namespace elsa;
@@ -38,7 +39,7 @@ TEST_CASE("Ellipsoid tests")
         WHEN("Rasterize ellipsoid")
         {
             phantoms::Ellipsoid<double> s{amplit, center, halfAxis, eulers};
-            phantoms::rasterize<double>(s, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(s, dd, dc);
 
             IndexVector_t idx(3);
 
@@ -91,7 +92,7 @@ TEST_CASE("Ellipsoid tests")
         WHEN("Rasterize ellipsoid")
         {
             phantoms::Ellipsoid<double> s{amplit, center, halfAxis, eulers};
-            phantoms::rasterize<double>(s, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(s, dd, dc);
 
             IndexVector_t idx(3);
 
@@ -151,7 +152,7 @@ TEST_CASE("Ellipsoid tests")
         {
             phantoms::Ellipsoid<double> s{amplit, center, halfAxis, eulers};
 
-            phantoms::rasterizeWithClipping<double>(s, dd, dc, clipZ);
+            phantoms::rasterizeWithClipping<phantoms::Blending::ADDITION, double>(s, dd, dc, clipZ);
 
             for (index_t i = 0; i <= center[phantoms::INDEX_Z]; i++) {
                 // Rasterization "in front of" the ellipsoid center along the Z-Axis
