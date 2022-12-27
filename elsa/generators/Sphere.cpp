@@ -6,13 +6,7 @@ namespace elsa::phantoms
 
     template <typename data_t>
     Sphere<data_t>::Sphere(data_t amplit, Vec3i center, data_t radius)
-        : _amplit{amplit}, _center{center}, _radius{radius}
-    {
-
-        Logger::get("Sphere")->info("Sphere with amplitude {}, Center ({},{},{}) radius {}",
-                                    _amplit, _center[INDEX_X], _center[INDEX_Y], _center[INDEX_Z],
-                                    _radius);
-    };
+        : _amplit{amplit}, _center{center}, _radius{radius} {};
 
     template <Blending b, typename data_t>
     void rasterize(Sphere<data_t>& sphere, VolumeDescriptor& dd, DataContainer<data_t>& dc)

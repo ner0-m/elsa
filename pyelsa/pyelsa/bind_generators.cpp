@@ -56,6 +56,22 @@ void add_definitions_pyelsa_generators(py::module& m)
                  (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
                      &elsa::phantoms::modifiedSheppLogan<double>),
                  py::arg("sizes"), py::return_value_policy::move);
+
+    phantoms.def("forbild_head",
+                 (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                     &elsa::phantoms::forbild_head<double>),
+                 py::arg("sizes"), py::return_value_policy::move);
+
+    phantoms.def("forbild_thorax",
+                 (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                     &elsa::phantoms::forbild_thorax<double>),
+                 py::arg("sizes"), py::return_value_policy::move);
+
+    phantoms.def("forbild_abdomen",
+                 (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                     &elsa::phantoms::forbild_abdomen<double>),
+                 py::arg("sizes"), py::return_value_policy::move);
+
     phantoms.def("rectangle",
                  (elsa::DataContainer<double>(*)(
                      Eigen::Matrix<long, -1, 1, 0, -1, 1>, Eigen::Matrix<long, -1, 1, 0, -1, 1>,

@@ -21,6 +21,15 @@ namespace elsa::phantoms
     template <typename data_t = real_t>
     DataContainer<data_t> modifiedSheppLogan(IndexVector_t sizes);
 
+    template <typename data_t>
+    DataContainer<data_t> forbild_head(IndexVector_t sizes);
+
+    template <typename data_t>
+    DataContainer<data_t> forbild_abdomen(IndexVector_t sizes);
+
+    template <typename data_t>
+    DataContainer<data_t> forbild_thorax(IndexVector_t sizes);
+
     /**
      * @brief Create a phantom with a simple n-dimensional rectangle  going from lower to upper.
      * It is assumed that lower < upper.
@@ -43,6 +52,8 @@ namespace elsa::phantoms
     template <typename data_t = real_t>
     DataContainer<data_t> circular(IndexVector_t volumesize, data_t radius);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
     /**
      * @brief  https://de.mathworks.com/matlabcentral/fileexchange/9416-3d-shepp-logan-phantom
      *         This head phantom is the same as the Shepp-Logan except
@@ -77,6 +88,7 @@ namespace elsa::phantoms
              {{   .1,  .0230, .046, .020,  .06,  -.605,   0,      0,   0,   0    }}
         // clang-format on
     }};
+#pragma GCC diagnostic pop
 
     // explicit template instantiation
     template const std::array<std::array<double, 10>, 10> modifiedSheppLoganParameters<double>;
