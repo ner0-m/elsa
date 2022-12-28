@@ -52,7 +52,7 @@ namespace elsa
         return computeRayFromDetectorCoord(detectorCoord, poseIndex);
     }
 
-    std::vector<Geometry> DetectorDescriptor::getGeometry() const
+    const std::vector<Geometry>& DetectorDescriptor::getGeometry() const
     {
         return _geometry;
     }
