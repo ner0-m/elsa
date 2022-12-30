@@ -129,10 +129,9 @@ namespace elsa
         /// lut array; stored on GPU
         thrust::device_vector<data_t> _lutArray;
 
-        void projectForward(const thrust::universal_vector<data_t>& volume,
-                            thrust::universal_vector<data_t>& sino) const;
-        void projectBackward(thrust::universal_vector<data_t>& volume,
-                             const thrust::universal_vector<data_t>& sino) const;
+        void projectForward(const DataContainer<data_t>& volume, DataContainer<data_t>& sino) const;
+        void projectBackward(DataContainer<data_t>& volume,
+                             const DataContainer<data_t>& sino) const;
 
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;

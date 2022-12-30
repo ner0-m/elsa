@@ -41,8 +41,7 @@ namespace elsa
          * threads should ideally be a multiple of the warp size (32 for all current GPUs).
          */
         static void forward(const dim3 volumeDims, const dim3 sinogramDims, const int threads,
-                            data_t* __restrict__ volume, const uint64_t volumePitch,
-                            data_t* __restrict__ sinogram, const uint64_t sinogramPitch,
+                            data_t* __restrict__ volume, data_t* __restrict__ sinogram,
                             const int8_t* __restrict__ proj, const uint32_t projPitch,
                             const int8_t* __restrict__ ext, const uint32_t extPitch,
                             const data_t* __restrict__ lut, const data_t radius, const real_t sdd);
@@ -67,8 +66,7 @@ namespace elsa
          * threads should ideally be a multiple of the warp size (32 for all current GPUs).
          */
         static void backward(const dim3 volumeDims, const dim3 sinogramDims, const int threads,
-                             data_t* __restrict__ volume, const uint64_t volumePitch,
-                             data_t* __restrict__ sinogram, const uint64_t sinogramPitch,
+                             data_t* __restrict__ volume, data_t* __restrict__ sinogram,
                              const int8_t* __restrict__ proj, const uint32_t projPitch,
                              const int8_t* __restrict__ ext, const uint32_t extPitch,
                              const data_t* __restrict__ lut, const data_t radius, const real_t sdd);

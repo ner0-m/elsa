@@ -75,8 +75,8 @@ __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, dim>::MAX_THRE
         auto lower = max((size_t) 0, detectorIndex - radiusOnDetector);
         auto upper = min((size_t) sinogramDims.x - 1, detectorIndex + radiusOnDetector);
         for (size_t neighbour = lower; neighbour <= upper; neighbour++) {
-            const data_t distance = abs(dCoord[0] - neighbour);
-            auto weight = lut_lerp<data_t, 100>(lut, distance / scaling / radius * 100);
+            const data_t distance = dCoord[0] - neighbour;
+            auto weight = lut_lerp<data_t, 100>(lut, abs(distance / scaling / radius) * 100);
             if constexpr (adjoint) {
                 atomicAdd(volume + volumeIndex, weight * *(detectorZeroIndex + neighbour));
             } else {
@@ -91,10 +91,9 @@ namespace elsa
     template <typename data_t, uint32_t dim>
     void ProjectVoxelsCUDA<data_t, dim>::forward(
         const dim3 volumeDims, const dim3 sinogramDims, const int threads,
-        data_t* __restrict__ volume, const uint64_t volumePitch, data_t* __restrict__ sinogram,
-        const uint64_t sinogramPitch, const int8_t* __restrict__ proj, const uint32_t projPitch,
-        const int8_t* __restrict__ ext, const uint32_t extPitch, const data_t* __restrict__ lut,
-        const data_t radius, const real_t sdd)
+        data_t* __restrict__ volume, data_t* __restrict__ sinogram, const int8_t* __restrict__ proj,
+        const uint32_t projPitch, const int8_t* __restrict__ ext, const uint32_t extPitch,
+        const data_t* __restrict__ lut, const data_t radius, const real_t sdd)
     {
         uint32_t xBlocks = volumeDims.x / threads;
         uint32_t xRemaining = volumeDims.x % threads;
@@ -156,10 +155,9 @@ namespace elsa
     template <typename data_t, uint32_t dim>
     void ProjectVoxelsCUDA<data_t, dim>::backward(
         const dim3 volumeDims, const dim3 sinogramDims, const int threads,
-        data_t* __restrict__ volume, const uint64_t volumePitch, data_t* __restrict__ sinogram,
-        const uint64_t sinogramPitch, const int8_t* __restrict__ proj, const uint32_t projPitch,
-        const int8_t* __restrict__ ext, const uint32_t extPitch, const data_t* __restrict__ lut,
-        const data_t radius, const real_t sdd)
+        data_t* __restrict__ volume, data_t* __restrict__ sinogram, const int8_t* __restrict__ proj,
+        const uint32_t projPitch, const int8_t* __restrict__ ext, const uint32_t extPitch,
+        const data_t* __restrict__ lut, const data_t radius, const real_t sdd)
     {
         uint32_t xBlocks = volumeDims.x / threads;
         uint32_t xRemaining = volumeDims.x % threads;
@@ -186,7 +184,7 @@ namespace elsa
                 grid = dim3{xBlocks, yBlocks, volumeDims.z};
             }
             traverseVolume<data_t, true, dim><<<grid, threadsPerBlock, 0, mainStream>>>(
-                volume, volumePitch, sinogram, sinogramDims, 0, 0, proj, projPitch, ext, extPitch,
+                volume, volumeDims, sinogram, sinogramDims, 0, 0, proj, projPitch, ext, extPitch,
                 lut, radius, sdd);
         }
 
@@ -203,8 +201,8 @@ namespace elsa
                 // use last index for z
                 grid = dim3{1, 1, volumeDims.z};
             }
-            traverseVolume<data_t, false, dim><<<grid, threadsPerBlock, 0, remainderStream>>>(
-                volume, volumePitch, sinogram, sinogramDims, xOffset, yOffset, proj, projPitch, ext,
+            traverseVolume<data_t, true, dim><<<grid, threadsPerBlock, 0, remainderStream>>>(
+                volume, volumeDims, sinogram, sinogramDims, xOffset, yOffset, proj, projPitch, ext,
                 extPitch, lut, radius, sdd);
         }
 
