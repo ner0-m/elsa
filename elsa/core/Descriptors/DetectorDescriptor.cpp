@@ -153,7 +153,7 @@ namespace elsa
         voxelCenterOnDetectorHomogenous[dim - 1] = asUnsigned(poseIndex);
 
         RealVector_t voxelInCameraSpace = (extMatrix * homogeneousVoxelCoord);
-        auto distance = voxelInCameraSpace.head(dim).norm();
+        auto distance = voxelInCameraSpace.norm();
 
         // compute scaling assuming rays orthogonal to detector
         auto scaling = geometry.getSourceDetectorDistance() / distance;

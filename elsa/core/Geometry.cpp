@@ -202,10 +202,11 @@ namespace elsa
         tmpId.setIdentity();
 
         // setup extrinsic matrixs
-        _ext = tmpRt * _S;
+        auto _extFull = tmpRt * _S;
+        _ext = _extFull.block(0, 0, _objectDimension, _objectDimension + 1);
 
         // setup projection matrix _P
-        _P = _K * tmpId * _ext;
+        _P = _K * tmpId * _extFull;
 
         // compute the camera center
         _C = -(_P.block(0, 0, _objectDimension, _objectDimension)
