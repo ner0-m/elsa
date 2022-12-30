@@ -308,7 +308,6 @@ namespace elsa
 
                     for (index_t neighbour = lower; neighbour <= upper; neighbour++) {
                         const auto distance = (detectorCoord - neighbour);
-#pragma omp atomic
                         Aty[domainIndex] += this->self().weight(distance / scaling)
                                             * y[detectorZeroIndex + neighbour];
                     }
@@ -373,7 +372,6 @@ namespace elsa
                             const auto distanceVec = (detectorCoord - currentCoord);
                             const auto distance = distanceVec.norm();
                             // first axis always is always the differential axis TODO
-#pragma omp atomic
                             Aty[domainIndex] +=
                                 this->self().weight(distance / scaling, distanceVec[0] / scaling)
                                 * y[currentIndex];
