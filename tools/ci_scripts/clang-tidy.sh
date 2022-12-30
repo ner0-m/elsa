@@ -1,17 +1,16 @@
 #!/bin/bash
-
 # set exit on error
-# set -e
-
+set -e
 exit_flag=false
 
 target_branch="master"
 
 # Retrieve list of cpp-files that were changed in source branch with respect to master (target branch)
-filelist=($(git diff origin/${target_branch} --name-only | grep ".cpp"))
+# Prevent script from aborting if nothing is found by adding "|| :" after grep
+filelist=($(git diff origin/${target_branch} --name-only | grep ".cpp" || :))
 
 clang_tidy_version=14
-clang_tidy_tool_candiates=clang-tidy-$clang_tidy_version
+clang_tidy_tool_candiates=("clang-tidy-${clang_tidy_version}" "clang-tidy")
 
 if [[ "${#filelist[@]}" -eq "0" ]]; then
     echo "==> No cpp files found"
@@ -23,7 +22,6 @@ else
     echo "==> Let's start our clang-tidy check"
 fi
 
-clang_tidy_tool=false
 # Check all possible candidates
 for candidate in ${clang_tidy_tool_candiates[@]}; do
     find_str=" ${clang_tidy_version}."
@@ -32,6 +30,11 @@ for candidate in ${clang_tidy_tool_candiates[@]}; do
         break
     fi
 done
+
+if [ ! -v clang_tidy_tool ];then
+    echo "The desired \"clang-tidy-${clang_tidy_version}\" was not found. Aborting"
+    exit 1
+fi
 
 # for compilation database
 mkdir -p build
@@ -68,7 +71,8 @@ for f in ${filelist[*]}; do
     if checkCPP $f && [[ -n $(grep $f build/compile_commands.json) ]]; then
         echo "Checking matching file ${f}"
         touch output.txt
-        $clang_tidy_tool -p=build ${f} --extra-arg=--cuda-host-only > output.txt
+        # Prevent script from aborting if "clang_tidy_tool" returns an non zero exit code by appending "|| :" in the end
+        $clang_tidy_tool -p=build ${f} --extra-arg=--cuda-host-only > output.txt ||:
 
         # decide if error or warning fail
         if [[ -n $(grep "warning: " output.txt) ]] || [[ -n $(grep "error: " output.txt) ]]; then

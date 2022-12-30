@@ -157,7 +157,7 @@ clang-format:
 
 clang-tidy:
   stage: static-test
-  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
+  image: $CI_REGISTRY/ip/elsa/clang:14
   variables:
     Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
