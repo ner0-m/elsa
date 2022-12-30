@@ -114,7 +114,7 @@ namespace elsa
         // Set it to zero, just to be sure
         Ax = 0;
 
-        projectForward(x, Ax);
+        projectVoxels<false>(x, Ax);
     }
 
     template <typename data_t>
@@ -128,7 +128,7 @@ namespace elsa
         // Set it to zero, just to be sure
         Aty = 0;
 
-        projectBackward(Aty, y);
+        projectVoxels<true>(Aty, y);
     }
 
     template <typename data_t>
@@ -142,8 +142,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    void VoxelProjectorCUDA<data_t>::projectForward(const DataContainer<data_t>& volumeContainer,
-                                                    DataContainer<data_t>& sinoContainer) const
+    template <bool adjoint>
+    void VoxelProjectorCUDA<data_t>::projectVoxels(const DataContainer<data_t>& volumeContainer,
+                                                   const DataContainer<data_t>& sinoContainer) const
     {
         auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
         auto domainDimsui = domainDims.template cast<unsigned int>();
@@ -168,80 +169,37 @@ namespace elsa
 
         // advice lut is readonly
         cudaMemAdvise(dlut, _lutArray.size(), cudaMemAdviseSetReadMostly, device);
-        // Advice, that sinogram is read only
-        cudaMemAdvise(dsino, sino.size(), cudaMemAdviseUnsetReadMostly, device);
-        // Advice, that volume is not read only
-        cudaMemAdvise(dvolume, volume.size(), cudaMemAdviseSetReadMostly, device);
 
-        if (_domainDescriptor->getNumberOfDimensions() == 3) {
-            dim3 sinogramDims(rangeDimsui[0], rangeDimsui[1], rangeDimsui[2]);
-            dim3 volumeDims(domainDimsui[0], domainDimsui[1], domainDimsui[2]);
-            ProjectVoxelsCUDA<data_t, 3>::forward(
-                volumeDims, sinogramDims, THREADS_PER_DIM, const_cast<data_t*>(dvolume), dsino,
-                (int8_t*) _projMatrices.ptr, static_cast<uint32_t>(_projMatrices.pitch),
-                (int8_t*) _extMatrices.ptr, static_cast<uint32_t>(_extMatrices.pitch),
-                const_cast<data_t*>(dlut), _lut.radius(), sourceDetectorDistance);
+        if (adjoint) {
+            // Advice, that sinogram is read only
+            cudaMemAdvise(dsino, sino.size(), cudaMemAdviseSetReadMostly, device);
+            // Advice, that volume is not read only
+            cudaMemAdvise(dvolume, volume.size(), cudaMemAdviseUnsetReadMostly, device);
         } else {
-            dim3 sinogramDims(rangeDimsui[0], 1, rangeDimsui[1]);
-            dim3 volumeDims(domainDimsui[0], domainDimsui[1], 1);
-            ProjectVoxelsCUDA<data_t, 2>::forward(
-                volumeDims, sinogramDims, THREADS_PER_DIM, const_cast<data_t*>(dvolume), dsino,
-                (int8_t*) _projMatrices.ptr, static_cast<uint32_t>(_projMatrices.pitch),
-                (int8_t*) _extMatrices.ptr, static_cast<uint32_t>(_extMatrices.pitch),
-                const_cast<data_t*>(dlut), _lut.radius(), sourceDetectorDistance);
+            // Advice, that sinogram is not read only
+            cudaMemAdvise(dsino, sino.size(), cudaMemAdviseUnsetReadMostly, device);
+            // Advice, that volume is read only
+            cudaMemAdvise(dvolume, volume.size(), cudaMemAdviseSetReadMostly, device);
         }
-        // synchonize because we are using multiple streams
-        cudaDeviceSynchronize();
-    }
-
-    template <typename data_t>
-    void VoxelProjectorCUDA<data_t>::projectBackward(
-        DataContainer<data_t>& volumeContainer, const DataContainer<data_t>& sinoContainer) const
-    {
-        auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
-        auto domainDimsui = domainDims.template cast<unsigned int>();
-        IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
-        auto rangeDimsui = rangeDims.template cast<unsigned int>();
-        auto& volume = volumeContainer.storage();
-        auto& sino = sinoContainer.storage();
-        auto* dvolume = thrust::raw_pointer_cast(volume.data());
-        auto* dsino = thrust::raw_pointer_cast(sino.data());
-        auto* dlut = thrust::raw_pointer_cast(_lutArray.data());
-
-        const DetectorDescriptor& detectorDesc =
-            downcast<DetectorDescriptor>(sinoContainer.getDataDescriptor());
-        const Geometry& geometry = detectorDesc.getGeometry()[0];
-        real_t sourceDetectorDistance = geometry.getSourceDetectorDistance();
-
-        // Prefetch unified memory
-        int device = -1;
-        cudaGetDevice(&device);
-        cudaMemPrefetchAsync(dvolume, volume.size() * sizeof(data_t), device);
-        cudaMemPrefetchAsync(dsino, sino.size() * sizeof(data_t), device);
-
-        // advice lut is readonly
-        cudaMemAdvise(dlut, _lutArray.size(), cudaMemAdviseSetReadMostly, device);
-        // Advice, that sinogram is read only
-        cudaMemAdvise(dsino, sino.size(), cudaMemAdviseSetReadMostly, device);
-        // Advice, that volume is not read only
-        cudaMemAdvise(dvolume, volume.size(), cudaMemAdviseUnsetReadMostly, device);
 
         if (_domainDescriptor->getNumberOfDimensions() == 3) {
             dim3 sinogramDims(rangeDimsui[0], rangeDimsui[1], rangeDimsui[2]);
             dim3 volumeDims(domainDimsui[0], domainDimsui[1], domainDimsui[2]);
-            ProjectVoxelsCUDA<data_t, 3>::backward(
-                volumeDims, sinogramDims, THREADS_PER_DIM, dvolume, const_cast<data_t*>(dsino),
-                (int8_t*) _projMatrices.ptr, static_cast<uint32_t>(_projMatrices.pitch),
-                (int8_t*) _extMatrices.ptr, static_cast<uint32_t>(_extMatrices.pitch),
-                const_cast<data_t*>(dlut), _lut.radius(), sourceDetectorDistance);
+            ProjectVoxelsCUDA<data_t, 3, adjoint>::project(
+                volumeDims, sinogramDims, THREADS_PER_BLOCK, const_cast<data_t*>(dvolume),
+                const_cast<data_t*>(dsino), (int8_t*) _projMatrices.ptr,
+                static_cast<uint32_t>(_projMatrices.pitch), (int8_t*) _extMatrices.ptr,
+                static_cast<uint32_t>(_extMatrices.pitch), const_cast<data_t*>(dlut), _lut.radius(),
+                sourceDetectorDistance);
         } else {
             dim3 sinogramDims(rangeDimsui[0], 1, rangeDimsui[1]);
             dim3 volumeDims(domainDimsui[0], domainDimsui[1], 1);
-            ProjectVoxelsCUDA<data_t, 2>::backward(
-                volumeDims, sinogramDims, THREADS_PER_DIM, dvolume, const_cast<data_t*>(dsino),
-                (int8_t*) _projMatrices.ptr, static_cast<uint32_t>(_projMatrices.pitch),
-                (int8_t*) _extMatrices.ptr, static_cast<uint32_t>(_extMatrices.pitch),
-                const_cast<data_t*>(dlut), _lut.radius(), sourceDetectorDistance);
+            ProjectVoxelsCUDA<data_t, 2, adjoint>::project(
+                volumeDims, sinogramDims, THREADS_PER_BLOCK, const_cast<data_t*>(dvolume),
+                const_cast<data_t*>(dsino), (int8_t*) _projMatrices.ptr,
+                static_cast<uint32_t>(_projMatrices.pitch), (int8_t*) _extMatrices.ptr,
+                static_cast<uint32_t>(_extMatrices.pitch), const_cast<data_t*>(dlut), _lut.radius(),
+                sourceDetectorDistance);
         }
         // synchonize because we are using multiple streams
         cudaDeviceSynchronize();

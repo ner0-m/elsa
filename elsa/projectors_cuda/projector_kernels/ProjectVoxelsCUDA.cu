@@ -33,7 +33,7 @@ __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, dim>::MAX_THRE
     // homogenous pixel coordinates
     real_t vCoord[dim + 1];
     vCoord[0] = volumeOffsetX + threadIdx.x + blockIdx.x * blockDim.x;
-    vCoord[1] = volumeOffsetY + threadIdx.y + blockIdx.y * blockDim.y;
+    vCoord[1] = volumeOffsetY + blockIdx.y; // threadIdx.y + blockIdx.y * blockDim.y;
     vCoord[dim] = 1.0f;
     if constexpr (dim == 3)
         vCoord[2] = blockIdx.z;
@@ -88,8 +88,8 @@ __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, dim>::MAX_THRE
 
 namespace elsa
 {
-    template <typename data_t, uint32_t dim>
-    void ProjectVoxelsCUDA<data_t, dim>::forward(
+    template <typename data_t, uint32_t dim, bool adjoint>
+    void ProjectVoxelsCUDA<data_t, dim, adjoint>::project(
         const dim3 volumeDims, const dim3 sinogramDims, const int threads,
         data_t* __restrict__ volume, data_t* __restrict__ sinogram, const int8_t* __restrict__ proj,
         const uint32_t projPitch, const int8_t* __restrict__ ext, const uint32_t extPitch,
@@ -98,128 +98,55 @@ namespace elsa
         uint32_t xBlocks = volumeDims.x / threads;
         uint32_t xRemaining = volumeDims.x % threads;
         uint32_t xOffset = xBlocks * threads;
-        uint32_t yBlocks = volumeDims.y / threads;
-        uint32_t yRemaining = volumeDims.y % threads;
-        uint32_t yOffset = yBlocks * threads;
 
         cudaStream_t mainStream;
         if (cudaStreamCreate(&mainStream) != cudaSuccess)
             throw std::logic_error("ProjectVoxelsCUDA: Couldn't create main stream");
-        cudaStream_t remainderStream;
-        if (cudaStreamCreate(&remainderStream) != cudaSuccess)
-            throw std::logic_error("ProjectVoxelsCUDA: Couldn't create remainder stream");
 
-        if (xBlocks > 0 && yBlocks > 0) {
-            const dim3 threadsPerBlock(threads, threads);
+        if (xBlocks > 0) {
             dim3 grid;
             if constexpr (dim == 2) {
                 // use last index for geometry
-                grid = dim3{xBlocks, yBlocks, sinogramDims.z};
+                grid = dim3{xBlocks, volumeDims.y, sinogramDims.z};
             } else {
                 // use last index for z
-                grid = dim3{xBlocks, yBlocks, volumeDims.z};
+                grid = dim3{xBlocks, volumeDims.y, volumeDims.z};
             }
-            traverseVolume<data_t, false, dim><<<grid, threadsPerBlock, 0, mainStream>>>(
+            traverseVolume<data_t, adjoint, dim><<<grid, threads, 0, mainStream>>>(
                 volume, volumeDims, sinogram, sinogramDims, 0, 0, proj, projPitch, ext, extPitch,
                 lut, radius, sdd);
         }
 
-        if (xRemaining > 0 || yRemaining > 0) {
+        if (xRemaining > 0) {
             xRemaining = std::max(1u, xRemaining);
-            yRemaining = std::max(1u, yRemaining);
 
-            const dim3 threadsPerBlock(xRemaining, yRemaining);
             dim3 grid;
             if constexpr (dim == 2) {
                 // use last index for geometry
-                grid = dim3{1, 1, sinogramDims.z};
+                grid = dim3{1, volumeDims.y, sinogramDims.z};
             } else {
                 // use last index for z
-                grid = dim3{1, 1, volumeDims.z};
+                grid = dim3{1, volumeDims.y, volumeDims.z};
             }
-            traverseVolume<data_t, false, dim><<<grid, threadsPerBlock, 0, remainderStream>>>(
-                volume, volumeDims, sinogram, sinogramDims, xOffset, yOffset, proj, projPitch, ext,
+            traverseVolume<data_t, adjoint, dim><<<grid, xRemaining, 0, mainStream>>>(
+                volume, volumeDims, sinogram, sinogramDims, xOffset, 0, proj, projPitch, ext,
                 extPitch, lut, radius, sdd);
         }
 
         if (cudaStreamDestroy(mainStream) != cudaSuccess)
             throw std::logic_error("ProjectVoxelsCUDA: Couldn't destroy main GPU stream; This may "
                                    "cause problems later.");
-        if (cudaStreamDestroy(remainderStream) != cudaSuccess)
-            throw std::logic_error(
-                "ProjectVoxelsCUDA: Couldn't destroy remainder GPU stream; This may "
-                "cause problems later.");
-        cudaDeviceSynchronize();
-    }
-
-    template <typename data_t, uint32_t dim>
-    void ProjectVoxelsCUDA<data_t, dim>::backward(
-        const dim3 volumeDims, const dim3 sinogramDims, const int threads,
-        data_t* __restrict__ volume, data_t* __restrict__ sinogram, const int8_t* __restrict__ proj,
-        const uint32_t projPitch, const int8_t* __restrict__ ext, const uint32_t extPitch,
-        const data_t* __restrict__ lut, const data_t radius, const real_t sdd)
-    {
-        uint32_t xBlocks = volumeDims.x / threads;
-        uint32_t xRemaining = volumeDims.x % threads;
-        uint32_t xOffset = xBlocks * threads;
-        uint32_t yBlocks = volumeDims.y / threads;
-        uint32_t yRemaining = volumeDims.y % threads;
-        uint32_t yOffset = yBlocks * threads;
-
-        cudaStream_t mainStream;
-        if (cudaStreamCreate(&mainStream) != cudaSuccess)
-            throw std::logic_error("ProjectVoxelsCUDA: Couldn't create main stream");
-        cudaStream_t remainderStream;
-        if (cudaStreamCreate(&remainderStream) != cudaSuccess)
-            throw std::logic_error("ProjectVoxelsCUDA: Couldn't create remainder stream");
-
-        if (xBlocks > 0 && yBlocks > 0) {
-            const dim3 threadsPerBlock(threads, threads);
-            dim3 grid;
-            if constexpr (dim == 2) {
-                // use last index for geometry
-                grid = dim3{xBlocks, yBlocks, sinogramDims.z};
-            } else {
-                // use last index for z
-                grid = dim3{xBlocks, yBlocks, volumeDims.z};
-            }
-            traverseVolume<data_t, true, dim><<<grid, threadsPerBlock, 0, mainStream>>>(
-                volume, volumeDims, sinogram, sinogramDims, 0, 0, proj, projPitch, ext, extPitch,
-                lut, radius, sdd);
-        }
-
-        if (xRemaining > 0 || yRemaining > 0) {
-            xRemaining = std::max(1u, xRemaining);
-            yRemaining = std::max(1u, yRemaining);
-
-            const dim3 threadsPerBlock(xRemaining, yRemaining);
-            dim3 grid;
-            if constexpr (dim == 2) {
-                // use last index for geometry
-                grid = dim3{1, 1, sinogramDims.z};
-            } else {
-                // use last index for z
-                grid = dim3{1, 1, volumeDims.z};
-            }
-            traverseVolume<data_t, true, dim><<<grid, threadsPerBlock, 0, remainderStream>>>(
-                volume, volumeDims, sinogram, sinogramDims, xOffset, yOffset, proj, projPitch, ext,
-                extPitch, lut, radius, sdd);
-        }
-
-        if (cudaStreamDestroy(mainStream) != cudaSuccess)
-            throw std::logic_error("ProjectVoxelsCUDA: Couldn't destroy main GPU stream; This may "
-                                   "cause problems later.");
-        if (cudaStreamDestroy(remainderStream) != cudaSuccess)
-            throw std::logic_error(
-                "ProjectVoxelsCUDA: Couldn't destroy remainder GPU stream; This may "
-                "cause problems later.");
         cudaDeviceSynchronize();
     }
 
     // ------------------------------------------
     // explicit template instantiation
-    template struct ProjectVoxelsCUDA<float, 2>;
-    template struct ProjectVoxelsCUDA<float, 3>;
-    template struct ProjectVoxelsCUDA<double, 2>;
-    template struct ProjectVoxelsCUDA<double, 3>;
+    template struct ProjectVoxelsCUDA<float, 2, true>;
+    template struct ProjectVoxelsCUDA<float, 3, true>;
+    template struct ProjectVoxelsCUDA<double, 2, true>;
+    template struct ProjectVoxelsCUDA<double, 3, true>;
+    template struct ProjectVoxelsCUDA<float, 2, false>;
+    template struct ProjectVoxelsCUDA<float, 3, false>;
+    template struct ProjectVoxelsCUDA<double, 2, false>;
+    template struct ProjectVoxelsCUDA<double, 3, false>;
 } // namespace elsa

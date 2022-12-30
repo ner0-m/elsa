@@ -110,7 +110,8 @@ namespace elsa
 
     private:
         /// threads per dimension used in the kernel execution configuration
-        static const unsigned int THREADS_PER_DIM = ProjectVoxelsCUDA<data_t>::MAX_THREADS_PER_DIM;
+        static const unsigned int THREADS_PER_BLOCK =
+            ProjectVoxelsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
 
         /// Reference to DetectorDescriptor stored in LinearOperator
         DetectorDescriptor& _detectorDescriptor;
@@ -129,9 +130,9 @@ namespace elsa
         /// lut array; stored on GPU
         thrust::device_vector<data_t> _lutArray;
 
-        void projectForward(const DataContainer<data_t>& volume, DataContainer<data_t>& sino) const;
-        void projectBackward(DataContainer<data_t>& volume,
-                             const DataContainer<data_t>& sino) const;
+        template <bool adjoint>
+        void projectVoxels(const DataContainer<data_t>& volume,
+                           const DataContainer<data_t>& sino) const;
 
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;
