@@ -6,6 +6,7 @@ set(MODULE_HEADERS
     APGD.h
     CGNE.h
     CGLS.h
+    CGNonlinear.h
     FGM.h
     OGM.h
     ADMML2.h
@@ -29,6 +30,7 @@ set(MODULE_SOURCES
     APGD.cpp
     CGNE.cpp
     CGLS.cpp
+    CGNonlinear.cpp
     FGM.cpp
     OGM.cpp
     ADMML2.cpp
