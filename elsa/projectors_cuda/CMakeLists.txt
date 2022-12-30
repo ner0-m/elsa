@@ -39,11 +39,11 @@ target_compile_options(
                                        -Xptxas=-warn-spills,-warn-lmem-usage>
 )
 
-# if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
-#    target_compile_options(
-#            ${ELSA_MODULE_TARGET_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>
-#    )
-#endif ()
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(
+            ${ELSA_MODULE_TARGET_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>
+    )
+endif ()
 
 # set define to check cuda projectors in projects
 target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)
