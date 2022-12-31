@@ -17,7 +17,7 @@ template <typename data_t, bool adjoint, uint32_t dim>
 __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, dim>::MAX_THREADS_PER_BLOCK)
     traverseVolume(data_t* const __restrict__ volume, const dim3 volumeDims,
                    data_t* const __restrict__ sinogram, const dim3 sinogramDims,
-                   const uint32_t volumeOffsetX, const uint32_t volumeOffsetY,
+                   const uint32_t volumeOffsetX, uint32_t geomIdx,
                    const int8_t* const __restrict__ proj, const uint32_t projPitch,
                    const int8_t* const __restrict__ ext, const uint32_t extPitch,
                    const data_t* __restrict__ lut, const data_t radius,
@@ -25,15 +25,18 @@ __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, dim>::MAX_THRE
 {
     using real_t = elsa::real_t;
 
-    data_t* const detectorZeroIndex = sinogram + blockIdx.z * sinogramDims.x * sinogramDims.y;
+    if constexpr (dim == 2)
+        geomIdx = blockIdx.z;
 
-    const int8_t* const projPtr = proj + blockIdx.z * projPitch * (dim + 1);
-    const int8_t* const extPtr = ext + blockIdx.z * extPitch * (dim + 1);
+    data_t* detectorZeroIndex = sinogram + geomIdx * sinogramDims.x * sinogramDims.y;
+
+    const int8_t* const projPtr = proj + geomIdx * projPitch * (dim + 1);
+    const int8_t* const extPtr = ext + geomIdx * extPitch * (dim + 1);
 
     // homogenous pixel coordinates
     real_t vCoord[dim + 1];
     vCoord[0] = volumeOffsetX + threadIdx.x + blockIdx.x * blockDim.x;
-    vCoord[1] = volumeOffsetY + blockIdx.y; // threadIdx.y + blockIdx.y * blockDim.y;
+    vCoord[1] = blockIdx.y;
     vCoord[dim] = 1.0f;
     if constexpr (dim == 3)
         vCoord[2] = blockIdx.z;
@@ -65,23 +68,61 @@ __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, dim>::MAX_THRE
     real_t cCoord[dim];
     gehomv<real_t, dim>(extPtr, vCoord, cCoord, extPitch);
     real_t cDistance = norm<real_t, dim>(cCoord);
-    real_t scaling = sourceDetectorDistance / cDistance;
+    real_t scaling = abs(sourceDetectorDistance / cDistance);
+    auto radiusOnDetector = static_cast<size_t>(round(radius * scaling));
 
     // find all detector pixels that are hit
     if constexpr (dim == 2) {
-        auto radiusOnDetector = static_cast<size_t>(round(radius * scaling));
-        size_t detectorIndex = static_cast<size_t>(round(dCoord[0]));
+        auto detectorIndex = static_cast<size_t>(round(dCoord[0]));
 
         auto lower = max((size_t) 0, detectorIndex - radiusOnDetector);
         auto upper = min((size_t) sinogramDims.x - 1, detectorIndex + radiusOnDetector);
         for (size_t neighbour = lower; neighbour <= upper; neighbour++) {
-            const data_t distance = dCoord[0] - neighbour;
-            auto weight = lut_lerp<data_t, 100>(lut, abs(distance / scaling / radius) * 100);
+            const data_t distance = abs(dCoord[0] - neighbour);
+            auto weight = lut_lerp<data_t, 100>(lut, distance / scaling / radius * 100);
             if constexpr (adjoint) {
                 atomicAdd(volume + volumeIndex, weight * *(detectorZeroIndex + neighbour));
             } else {
                 atomicAdd(detectorZeroIndex + neighbour, weight * volume[volumeIndex]);
             }
+        }
+    } else {
+        unsigned int lowerIndex[2];
+        lowerIndex[0] = max((size_t) 0, static_cast<size_t>(round(dCoord[0])) - radiusOnDetector);
+        lowerIndex[1] = max((size_t) 0, static_cast<size_t>(round(dCoord[1])) - radiusOnDetector);
+
+        unsigned int upperIndex[2];
+        upperIndex[0] = min((size_t) sinogramDims.x - 1,
+                            static_cast<size_t>(round(dCoord[0])) + radiusOnDetector);
+        upperIndex[1] = min((size_t) sinogramDims.y - 1,
+                            static_cast<size_t>(round(dCoord[1])) + radiusOnDetector);
+
+        auto iStride = upperIndex[0] - lowerIndex[0] + 1;
+        auto jStride = sinogramDims.x + 1 - iStride;
+
+        data_t* currentIndex = detectorZeroIndex + lowerIndex[0] + lowerIndex[1] * sinogramDims.x;
+
+        real_t currentCoord[2];
+        currentCoord[0] = lowerIndex[0];
+        currentCoord[1] = lowerIndex[1];
+
+        for (size_t j = lowerIndex[1]; j <= upperIndex[1]; j++) {
+            for (size_t i = lowerIndex[0]; i <= upperIndex[0]; i++) {
+                const real_t distance =
+                    hypot(currentCoord[0] - dCoord[0], currentCoord[1] - dCoord[1]);
+
+                auto weight = lut_lerp<data_t, 100>(lut, distance / scaling / radius * 100);
+                if constexpr (adjoint) {
+                    atomicAdd(volume + volumeIndex, weight * *currentIndex);
+                } else {
+                    atomicAdd(currentIndex, weight * volume[volumeIndex]);
+                }
+                currentIndex += 1;
+                currentCoord[0] += 1;
+            }
+            currentIndex += jStride;
+            currentCoord[0] -= iStride;
+            currentCoord[1] += 1;
         }
     }
 }
@@ -108,35 +149,45 @@ namespace elsa
             if constexpr (dim == 2) {
                 // use last index for geometry
                 grid = dim3{xBlocks, volumeDims.y, sinogramDims.z};
+                traverseVolume<data_t, adjoint, dim><<<grid, threads, 0, mainStream>>>(
+                    volume, volumeDims, sinogram, sinogramDims, 0, 0, proj, projPitch, ext,
+                    extPitch, lut, radius, sdd);
             } else {
                 // use last index for z
                 grid = dim3{xBlocks, volumeDims.y, volumeDims.z};
+                for (int geomIdx = 0; geomIdx < sinogramDims.z; geomIdx++) {
+                    traverseVolume<data_t, adjoint, dim><<<grid, threads, 0, mainStream>>>(
+                        volume, volumeDims, sinogram, sinogramDims, 0, geomIdx, proj, projPitch,
+                        ext, extPitch, lut, radius, sdd);
+                }
             }
-            traverseVolume<data_t, adjoint, dim><<<grid, threads, 0, mainStream>>>(
-                volume, volumeDims, sinogram, sinogramDims, 0, 0, proj, projPitch, ext, extPitch,
-                lut, radius, sdd);
         }
 
         if (xRemaining > 0) {
-            xRemaining = std::max(1u, xRemaining);
 
             dim3 grid;
             if constexpr (dim == 2) {
                 // use last index for geometry
                 grid = dim3{1, volumeDims.y, sinogramDims.z};
+                traverseVolume<data_t, adjoint, dim><<<grid, xRemaining, 0, mainStream>>>(
+                    volume, volumeDims, sinogram, sinogramDims, xOffset, 0, proj, projPitch, ext,
+                    extPitch, lut, radius, sdd);
             } else {
                 // use last index for z
                 grid = dim3{1, volumeDims.y, volumeDims.z};
+                for (int geomIdx = 0; geomIdx < sinogramDims.z; geomIdx++) {
+                    traverseVolume<data_t, adjoint, dim><<<grid, xRemaining, 0, mainStream>>>(
+                        volume, volumeDims, sinogram, sinogramDims, xOffset, geomIdx, proj,
+                        projPitch, ext, extPitch, lut, radius, sdd);
+                }
             }
-            traverseVolume<data_t, adjoint, dim><<<grid, xRemaining, 0, mainStream>>>(
-                volume, volumeDims, sinogram, sinogramDims, xOffset, 0, proj, projPitch, ext,
-                extPitch, lut, radius, sdd);
-        }
 
-        if (cudaStreamDestroy(mainStream) != cudaSuccess)
-            throw std::logic_error("ProjectVoxelsCUDA: Couldn't destroy main GPU stream; This may "
-                                   "cause problems later.");
-        cudaDeviceSynchronize();
+            if (cudaStreamDestroy(mainStream) != cudaSuccess)
+                throw std::logic_error(
+                    "ProjectVoxelsCUDA: Couldn't destroy main GPU stream; This may "
+                    "cause problems later.");
+            cudaDeviceSynchronize();
+        }
     }
 
     // ------------------------------------------
