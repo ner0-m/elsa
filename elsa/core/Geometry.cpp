@@ -14,8 +14,10 @@ namespace elsa
                        VolumeData2D&& volData, SinogramData2D&& sinoData,
                        PrincipalPointOffset offset, RotationOffset2D centerOfRotOffset)
         : _objectDimension{2},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector},
           _P{RealMatrix_t::Identity(2, 2 + 1)},
           _Pinv{RealMatrix_t::Identity(2 + 1, 2)},
+          _ext{RealMatrix_t::Identity(2, 2 + 1)},
           _K{RealMatrix_t::Identity(2, 2)},
           _R{RealMatrix_t::Identity(2, 2)},
           _t{RealVector_t::Zero(2)},
@@ -53,8 +55,10 @@ namespace elsa
                        VolumeData3D&& volData, SinogramData3D&& sinoData, RotationAngles3D angles,
                        PrincipalPointOffset2D offset, RotationOffset3D centerOfRotOffset)
         : _objectDimension{3},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector},
           _P{RealMatrix_t::Identity(3, 3 + 1)},
           _Pinv{RealMatrix_t::Identity(3 + 1, 3)},
+          _ext{RealMatrix_t::Identity(3, 3 + 1)},
           _K{RealMatrix_t::Identity(3, 3)},
           _R{RealMatrix_t::Identity(3, 3)},
           _t{RealVector_t::Zero(3)},
@@ -109,8 +113,10 @@ namespace elsa
                        const RealMatrix_t& R, real_t px, real_t py, real_t centerOfRotationOffsetX,
                        real_t centerOfRotationOffsetY, real_t centerOfRotationOffsetZ)
         : _objectDimension{3},
+          _sdDistance{sourceToCenterOfRotation + centerOfRotationToDetector},
           _P{RealMatrix_t::Identity(3, 3 + 1)},
           _Pinv{RealMatrix_t::Identity(3 + 1, 3)},
+          _ext{RealMatrix_t::Identity(3, 3 + 1)},
           _K{RealMatrix_t::Identity(3, 3)},
           _R{R},
           _t{RealVector_t::Zero(3)},
@@ -147,19 +153,73 @@ namespace elsa
         buildMatrices();
     }
 
-    const RealMatrix_t& Geometry::getProjectionMatrix() const { return _P; }
+    Geometry::Geometry(geometry::VolumeData3D&& volData, geometry::SinogramData3D&& sinoData,
+                       const RealMatrix_t& R, const RealMatrix_t& t, const RealMatrix_t& K)
+        : _objectDimension{3},
+          _P{RealMatrix_t::Identity(3, 3 + 1)},
+          _Pinv{RealMatrix_t::Identity(3 + 1, 3)},
+          _ext{RealMatrix_t::Identity(3, 3 + 1)},
+          _K{K},
+          _R{R},
+          _t{t},
+          _S{RealMatrix_t::Identity(3 + 1, 3 + 1)},
+          _C{RealVector_t::Zero(3)}
+    {
+        auto [volSpacing, volOrigin] = std::move(volData);
 
-    const RealMatrix_t& Geometry::getInverseProjectionMatrix() const { return _Pinv; }
+        // reconstruct source detector Distance from intrinsics
+        _sdDistance = sinoData.getSpacing()[0] * K(0, 0);
 
-    const RealVector_t& Geometry::getCameraCenter() const { return _C; }
+        _S << volSpacing[0], 0, 0, 0, 0, volSpacing[1], 0, 0, 0, 0, volSpacing[2], 0, 0, 0, 0, 1;
 
-    const RealMatrix_t& Geometry::getRotationMatrix() const { return _R; }
+        buildMatrices();
+    }
+
+    const RealMatrix_t& Geometry::getProjectionMatrix() const
+    {
+        return _P;
+    }
+
+    const RealMatrix_t& Geometry::getInverseProjectionMatrix() const
+    {
+        return _Pinv;
+    }
+
+    const RealVector_t& Geometry::getCameraCenter() const
+    {
+        return _C;
+    }
+
+    const RealMatrix_t& Geometry::getRotationMatrix() const
+    {
+        return _R;
+    }
+
+    real_t Geometry::getSourceDetectorDistance() const
+    {
+        return _sdDistance;
+    }
+
+    const RealMatrix_t& Geometry::getExtrinsicMatrix() const
+    {
+        return _ext;
+    }
+
+    const RealMatrix_t& Geometry::getIntrinsicMatrix() const
+    {
+        return _K;
+    }
+
+    const RealVector_t& Geometry::getTranslationVector() const
+    {
+        return _t;
+    }
 
     bool Geometry::operator==(const Geometry& other) const
     {
         return (_objectDimension == other._objectDimension && _P == other._P && _Pinv == other._Pinv
                 && _K == other._K && _R == other._R && _t == other._t && _S == other._S
-                && _C == other._C);
+                && _C == other._C && _sdDistance == other._sdDistance && _ext == other._ext);
     }
 
     void Geometry::buildMatrices()
@@ -173,8 +233,12 @@ namespace elsa
         RealMatrix_t tmpId(_objectDimension, _objectDimension + 1);
         tmpId.setIdentity();
 
+        // setup extrinsic matrix
+        auto _extFull = tmpRt * _S;
+        _ext = _extFull.block(0, 0, _objectDimension, _objectDimension + 1);
+
         // setup projection matrix _P
-        _P = _K * tmpId * tmpRt * _S;
+        _P = _K * tmpId * _extFull;
 
         // compute the camera center
         _C = -(_P.block(0, 0, _objectDimension, _objectDimension)
