@@ -51,7 +51,7 @@ namespace elsa
         return computeRayFromDetectorCoord(detectorCoord, poseIndex);
     }
 
-    std::vector<Geometry> DetectorDescriptor::getGeometry() const
+    const std::vector<Geometry>& DetectorDescriptor::getGeometry() const
     {
         return _geometry;
     }
@@ -125,6 +125,39 @@ namespace elsa
                       .normalized();                      // normalize vector
 
         return RealRay_t(ro, rd);
+    }
+
+    std::pair<RealVector_t, real_t>
+        DetectorDescriptor::projectAndScaleVoxelOnDetector(const RealVector_t& voxelCoord,
+                                                           const index_t poseIndex) const
+    {
+        assert(asUnsigned(poseIndex) < _geometry.size()
+               && "PlanarDetectorDescriptor::computeRayToDetector: Assumption poseIndex smaller "
+                  "than number of poses, wrong");
+
+        auto dim = getNumberOfDimensions();
+
+        // get the pose of trajectory
+        const auto& geometry = _geometry[asUnsigned(poseIndex)];
+        const auto& projMatrix = geometry.getProjectionMatrix();
+        const auto& extMatrix = geometry.getExtrinsicMatrix();
+
+        // homogeneous coordinates [p;1], with p in detector space
+        RealVector_t homogeneousVoxelCoord(voxelCoord.size() + 1);
+        homogeneousVoxelCoord << voxelCoord, 1;
+
+        RealVector_t voxelCenterOnDetectorHomogenous = (projMatrix * homogeneousVoxelCoord);
+        voxelCenterOnDetectorHomogenous.block(0, 0, dim - 1, 1) /=
+            voxelCenterOnDetectorHomogenous[dim - 1];
+        voxelCenterOnDetectorHomogenous[dim - 1] = static_cast<float>(poseIndex);
+
+        RealVector_t voxelInCameraSpace = (extMatrix * homogeneousVoxelCoord);
+        auto distance = voxelInCameraSpace.norm();
+
+        // compute scaling assuming rays orthogonal to detector
+        auto scaling = geometry.getSourceDetectorDistance() / distance;
+
+        return {std::move(voxelCenterOnDetectorHomogenous), scaling};
     }
 
 } // namespace elsa
