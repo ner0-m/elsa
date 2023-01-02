@@ -72,6 +72,7 @@
 #include "SiddonsMethod.h"
 #include "SiddonsMethodBranchless.h"
 #include "SubsetSampler.h"
+#include "VoxelProjector.h"
 
 // CUDA projectors
 #ifdef ELSA_CUDA_PROJECTORS
