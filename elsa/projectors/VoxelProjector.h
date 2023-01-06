@@ -73,6 +73,11 @@ namespace elsa
         using forward_tag = typename base_type::forward_tag;
         using backward_tag = typename base_type::backward_tag;
 
+        using RealVector3D_t = Eigen::Matrix<real_t, 3, 1>;
+        using RealVector2D_t = Eigen::Matrix<real_t, 2, 1>;
+        using IndexVector3D_t = Eigen::Matrix<index_t, 3, 1>;
+        using IndexVector2D_t = Eigen::Matrix<index_t, 2, 1>;
+
         VoxelProjector(const VolumeDescriptor& domainDescriptor,
                        const DetectorDescriptor& rangeDescriptor)
             : base_type(domainDescriptor, rangeDescriptor)
@@ -129,30 +134,50 @@ namespace elsa
 
             // blob parameters
             auto voxelRadius = this->self().radius();
+            const IndexVector2D_t productOfCoefficientsPerDimension =
+                volume.getProductOfCoefficientsPerDimension();
+            IndexVector2D_t coordinate;
+            const auto& _geometry{detectorDesc.getGeometry()};
 
-#pragma omp parallel for
+#pragma omp parallel for private(coordinate)
             for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                  geomIndex++) {
 
                 // helper to find index into sinogram
-                auto detectorZeroIndex =
-                    detectorDesc.getIndexFromCoordinate(IndexVector_t{{0, geomIndex}});
+                auto detectorZeroIndex = (upperDetectorI + 1) * geomIndex;
+
+                const auto& geometry = _geometry[asUnsigned(geomIndex)];
+                const Eigen::Matrix<real_t, 2, 3>& projMatrix = geometry.getProjectionMatrix();
+                const Eigen::Matrix<real_t, 2, 3>& extMatrix = geometry.getExtrinsicMatrix();
 
                 // loop over voxels
                 for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
-                    const IndexVector_t& coord = volume.getCoordinateFromIndex(domainIndex);
+                    index_t leftOver = domainIndex;
+                    coordinate[1] = leftOver / productOfCoefficientsPerDimension[1];
+                    leftOver %= productOfCoefficientsPerDimension[1];
+                    coordinate[0] = leftOver;
+
                     auto voxelWeight = x[domainIndex];
 
                     // Cast to real_t and shift to center of voxel according to origin
-                    RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
+                    RealVector2D_t volumeCoord = coordinate.template cast<real_t>().array() + 0.5;
+
+                    RealVector3D_t homogeneousVoxelCoord;
+                    // Cast to real_t and shift to center of voxel according to origin
+                    homogeneousVoxelCoord << volumeCoord, 1;
 
                     // Project onto detector and compute the magnification
-                    auto [detectorCoordShifted, scaling] =
-                        detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
+                    RealVector2D_t voxelCenterOnDetectorHomogenous =
+                        (projMatrix * homogeneousVoxelCoord);
+                    data_t detectorCoord =
+                        voxelCenterOnDetectorHomogenous[0] / voxelCenterOnDetectorHomogenous[1]
+                        - 0.5;
 
-                    // correct origin shift
-                    data_t detectorCoord = detectorCoordShifted[0] - 0.5;
+                    RealVector2D_t voxelInCameraSpace = (extMatrix * homogeneousVoxelCoord);
+                    auto distance = voxelInCameraSpace.norm();
 
+                    // compute scaling assuming rays orthogonal to detector
+                    auto scaling = geometry.getSourceDetectorDistance() / distance;
                     // find all detector pixels that are hit
                     auto radiusOnDetector = voxelRadius * scaling;
 
@@ -180,7 +205,7 @@ namespace elsa
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(Ax.getDataDescriptor());
 
-            const IndexVector_t& upperDetectorI =
+            const IndexVector3D_t& upperDetectorI =
                 detectorDesc.getNumberOfCoefficientsPerDimension();
 
             const auto upperDetectorX = upperDetectorI[0] - 1;
@@ -192,24 +217,25 @@ namespace elsa
             const auto volumeSize = x.getSize();
 
             const auto voxelRadius = this->self().radius();
-            //#pragma omp parallel for
+#pragma omp parallel for
             for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                  geomIndex++) {
 
                 // loop over voxels
                 for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
-                    const IndexVector_t& coord = volume.getCoordinateFromIndex(domainIndex);
+                    const IndexVector3D_t& coord = volume.getCoordinateFromIndex(domainIndex);
                     auto voxelWeight = x[domainIndex];
 
                     // Cast to real_t and shift to center of voxel according to origin
-                    RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
+                    RealVector3D_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
 
                     // Project onto detector and compute the magnification
-                    auto [detectorCoordShifted, scaling] =
+                    std::pair<RealVector3D_t, real_t> projection =
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
+                    auto scaling = projection.second;
 
                     // correct origin shift
-                    RealVector_t detectorCoord = detectorCoordShifted.head(2).array() - 0.5;
+                    RealVector2D_t detectorCoord = projection.first.head(2).array() - 0.5;
 
                     // find all detector pixels that are hit
                     auto radiusOnDetector = voxelRadius * scaling;
@@ -229,7 +255,7 @@ namespace elsa
                                  static_cast<index_t>(floor(detectorCoord[1] + radiusOnDetector)));
 
                     // initialize variables for performance
-                    RealVector_t currentCoord{
+                    RealVector2D_t currentCoord{
                         {static_cast<real_t>(lowerX), static_cast<real_t>(lowerY)}};
                     index_t currentIndex =
                         lowerX + lowerY * detectorXStride + geomIndex * detectorYStride;
@@ -238,7 +264,7 @@ namespace elsa
 
                     for (index_t j = lowerY; j <= upperY; j++) {
                         for (index_t i = lowerX; i <= upperX; i++) {
-                            const auto distanceVec = (detectorCoord - currentCoord);
+                            const RealVector2D_t distanceVec = (detectorCoord - currentCoord);
                             const auto distance = distanceVec.norm();
                             // let first axis always be the differential axis TODO
                             Ax[currentIndex] +=
@@ -276,35 +302,53 @@ namespace elsa
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(y.getDataDescriptor());
 
-            index_t upperDetectorII = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
+            index_t upperDetectorI = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
 
             auto& volume = Aty.getDataDescriptor();
             auto volumeSize = Aty.getSize();
 
             auto voxelRadius = this->self().radius();
+            IndexVector2D_t productOfCoefficientsPerDimension =
+                volume.getProductOfCoefficientsPerDimension();
+            IndexVector2D_t coordinate;
 
-#pragma omp parallel for
+            const auto& _geometry{detectorDesc.getGeometry()};
+#pragma omp parallel for private(coordinate)
             // loop over voxels
             for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
-                auto coord = volume.getCoordinateFromIndex(domainIndex);
+                index_t leftOver = domainIndex;
+                coordinate[1] = leftOver / productOfCoefficientsPerDimension[1];
+                leftOver %= productOfCoefficientsPerDimension[1];
+                coordinate[0] = leftOver;
                 // loop over geometries
                 for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                      geomIndex++) {
-
                     // helper to find index into sinogram
-                    auto detectorZeroIndex =
-                        detectorDesc.getIndexFromCoordinate(IndexVector_t{{0, geomIndex}});
+                    auto detectorZeroIndex = (upperDetectorI + 1) * geomIndex;
+
+                    const auto& geometry = _geometry[asUnsigned(geomIndex)];
+                    const Eigen::Matrix<real_t, 2, 3>& projMatrix = geometry.getProjectionMatrix();
+                    const Eigen::Matrix<real_t, 2, 3>& extMatrix = geometry.getExtrinsicMatrix();
 
                     // Cast to real_t and shift to center of voxel according to origin
-                    RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
+                    RealVector2D_t volumeCoord = coordinate.template cast<real_t>().array() + 0.5;
+
+                    RealVector3D_t homogeneousVoxelCoord;
+                    // Cast to real_t and shift to center of voxel according to origin
+                    homogeneousVoxelCoord << volumeCoord, 1;
 
                     // Project onto detector and compute the magnification
-                    auto [detectorCoordShifted, scaling] =
-                        detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
+                    RealVector2D_t voxelCenterOnDetectorHomogenous =
+                        (projMatrix * homogeneousVoxelCoord);
+                    data_t detectorCoord =
+                        voxelCenterOnDetectorHomogenous[0] / voxelCenterOnDetectorHomogenous[1]
+                        - 0.5;
 
-                    // correct origin shift
-                    RealVector_t detectorCoordVec = detectorCoordShifted.array() - 0.5;
-                    data_t detectorCoord = detectorCoordVec[0];
+                    RealVector2D_t voxelInCameraSpace = (extMatrix * homogeneousVoxelCoord);
+                    auto distance = voxelInCameraSpace.norm();
+
+                    // compute scaling assuming rays orthogonal to detector
+                    auto scaling = geometry.getSourceDetectorDistance() / distance;
 
                     // find all detector pixels that are hit
                     auto radiusOnDetector = voxelRadius * scaling;
@@ -312,7 +356,7 @@ namespace elsa
                     auto lower = std::max(
                         (index_t) 0, static_cast<index_t>(ceil(detectorCoord - radiusOnDetector)));
                     auto upper =
-                        std::min((index_t) upperDetectorII,
+                        std::min((index_t) upperDetectorI,
                                  static_cast<index_t>(floor(detectorCoord + radiusOnDetector)));
 
                     for (index_t neighbour = lower; neighbour <= upper; neighbour++) {
@@ -332,11 +376,11 @@ namespace elsa
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(y.getDataDescriptor());
 
-            const IndexVector_t& upperDetectorI =
+            const IndexVector3D_t& upperDetectorI =
                 detectorDesc.getNumberOfCoefficientsPerDimension();
 
-            const auto upperDetectorIX = upperDetectorI[0] - 1;
-            const auto upperDetectorIY = upperDetectorI[1] - 1;
+            const auto upperDetectorX = upperDetectorI[0] - 1;
+            const auto upperDetectorY = upperDetectorI[1] - 1;
             const auto detectorXStride = upperDetectorI[0];
             const auto detectorYStride = upperDetectorI[0] * upperDetectorI[1];
 
@@ -352,14 +396,15 @@ namespace elsa
                      geomIndex++) {
 
                     // Cast to real_t and shift to center of pixel
-                    RealVector_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
+                    RealVector3D_t volumeCoord = coord.template cast<real_t>().array() + 0.5;
 
                     // Project onto detector and compute the magnification
-                    auto [detectorCoordShifted, scaling] =
+                    std::pair<RealVector3D_t, real_t> projection =
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
+                    auto scaling = projection.second;
 
                     // correct origin shift
-                    RealVector_t detectorCoord = detectorCoordShifted.head(2).array() - 0.5;
+                    RealVector2D_t detectorCoord = projection.first.head(2).array() - 0.5;
 
                     // find all detector pixels that are hit
                     auto radiusOnDetector = voxelRadius * scaling;
@@ -369,17 +414,17 @@ namespace elsa
                         std::max((index_t) 0,
                                  static_cast<index_t>(ceil(detectorCoord[0] - radiusOnDetector)));
                     index_t upperX =
-                        std::min(upperDetectorIX,
+                        std::min(upperDetectorX,
                                  static_cast<index_t>(floor(detectorCoord[0] + radiusOnDetector)));
                     index_t lowerY =
                         std::max((index_t) 0,
                                  static_cast<index_t>(ceil(detectorCoord[1] - radiusOnDetector)));
                     index_t upperY =
-                        std::min(upperDetectorIY,
+                        std::min(upperDetectorY,
                                  static_cast<index_t>(floor(detectorCoord[1] + radiusOnDetector)));
 
                     // initialize variables for performance
-                    RealVector_t currentCoord{
+                    RealVector2D_t currentCoord{
                         {static_cast<real_t>(lowerX), static_cast<real_t>(lowerY)}};
                     index_t currentIndex =
                         lowerX + lowerY * detectorXStride + geomIndex * detectorYStride;
@@ -388,7 +433,7 @@ namespace elsa
 
                     for (index_t j = lowerY; j <= upperY; j++) {
                         for (index_t i = lowerX; i <= upperX; i++) {
-                            const RealVector_t distanceVec = (detectorCoord - currentCoord);
+                            const RealVector2D_t distanceVec = (detectorCoord - currentCoord);
                             const auto distance = distanceVec.norm();
                             // first axis always is always the differential axis TODO
                             Aty[domainIndex] +=
