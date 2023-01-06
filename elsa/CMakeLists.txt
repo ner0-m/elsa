@@ -41,6 +41,10 @@ macro(ADD_ELSA_MODULE elsa_module_name module_headers module_sources)
                                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     )
 
+    if(THRUST_CUDA_FOUND)
+        target_include_directories(${ELSA_MODULE_TARGET_NAME} PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+    endif()
+
     add_sanitizers(${ELSA_MODULE_TARGET_NAME})
 
     if(ELSA_MASTER_PROJECT)

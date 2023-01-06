@@ -104,6 +104,8 @@ namespace elsa
             return t * fb + (1 - t) * fa;
         }
 
+        constexpr auto data() const { return data_; }
+
     private:
         std::array<data_t, N + 1> data_;
     };
@@ -116,8 +118,7 @@ namespace elsa
     class ProjectedBlobLut
     {
     public:
-        constexpr ProjectedBlobLut(data_t radius, SelfType_t<data_t> alpha,
-                                   SelfType_t<data_t> order)
+        constexpr ProjectedBlobLut(data_t radius, SelfType_t<data_t> alpha, int order)
             : blob_(radius, alpha, order),
               lut_(detail::generate_lut<data_t, N>(blob_, [this](data_t s) { return blob_(s); }))
         {
@@ -134,6 +135,8 @@ namespace elsa
             return lut_((distance / blob_.radius()) * N);
         }
 
+        constexpr auto data() const { return lut_.data(); }
+
     private:
         ProjectedBlob<data_t> blob_;
         Lut<data_t, N> lut_;
@@ -143,8 +146,7 @@ namespace elsa
     class ProjectedBlobDerivativeLut
     {
     public:
-        constexpr ProjectedBlobDerivativeLut(data_t radius, SelfType_t<data_t> alpha,
-                                             SelfType_t<data_t> order)
+        constexpr ProjectedBlobDerivativeLut(data_t radius, SelfType_t<data_t> alpha, int order)
             : blob_(radius, alpha, order),
               lut_(detail::generate_lut<data_t, N>(
                   blob_, [this](data_t s) { return blob_.derivative(s); }))
@@ -162,6 +164,8 @@ namespace elsa
             return lut_((distance / blob_.radius()) * N);
         }
 
+        constexpr auto data() const { return lut_.data(); }
+
     private:
         ProjectedBlob<data_t> blob_;
         Lut<data_t, N> lut_;
@@ -171,8 +175,7 @@ namespace elsa
     class ProjectedBlobGradientHelperLut
     {
     public:
-        constexpr ProjectedBlobGradientHelperLut(data_t radius, SelfType_t<data_t> alpha,
-                                                 SelfType_t<data_t> order)
+        constexpr ProjectedBlobGradientHelperLut(data_t radius, SelfType_t<data_t> alpha, int order)
             : blob_(radius, alpha, order),
               lut_(detail::generate_lut<data_t, N>(
                   blob_, [this](data_t s) { return blob_.gradient_helper(s); }))
@@ -189,6 +192,8 @@ namespace elsa
         {
             return lut_((distance / blob_.radius()) * N);
         }
+
+        constexpr auto data() const { return lut_.data(); }
 
     private:
         ProjectedBlob<data_t> blob_;

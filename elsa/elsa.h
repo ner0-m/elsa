@@ -78,6 +78,7 @@
 #ifdef ELSA_CUDA_PROJECTORS
 #include "SiddonsMethodCUDA.h"
 #include "JosephsMethodCUDA.h"
+#include "VoxelProjectorCUDA.h"
 #endif
 
 // Solver headers

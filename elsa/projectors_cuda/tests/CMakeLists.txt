@@ -15,3 +15,4 @@ add_custom_target(build-tests-projectors_cuda)
 
 ELSA_DOCTEST(SiddonsMethodCUDA)
 ELSA_DOCTEST(JosephsMethodCUDA)
+ELSA_DOCTEST(VoxelProjectorCUDA)

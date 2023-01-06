@@ -5,12 +5,13 @@ find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 
 # list all the headers of the module
 set(MODULE_HEADERS projector_kernels/TraverseSiddonsCUDA.cuh projector_kernels/TraverseJosephsCUDA.cuh
-                   SiddonsMethodCUDA.h JosephsMethodCUDA.h
+                   projector_kernels/ProjectVoxelsCUDA.cuh SiddonsMethodCUDA.h JosephsMethodCUDA.h VoxelProjectorCUDA.h
 )
 
 # list all the code files of the module
-set(MODULE_SOURCES projector_kernels/TraverseSiddonsCUDA.cu projector_kernels/TraverseJosephsCUDA.cu
-                   SiddonsMethodCUDA.cpp JosephsMethodCUDA.cpp
+set(MODULE_SOURCES
+    projector_kernels/TraverseSiddonsCUDA.cu projector_kernels/TraverseJosephsCUDA.cu
+    projector_kernels/ProjectVoxelsCUDA.cu SiddonsMethodCUDA.cpp JosephsMethodCUDA.cpp VoxelProjectorCUDA.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_projectors ${CUDART_LIBRARY})
@@ -36,7 +37,15 @@ target_compile_options(
                                        -Xptxas=-warn-spills,-warn-lmem-usage>
 )
 
+# if we compile in debug mode, create debug symbols for cuda code as well
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(${ELSA_MODULE_TARGET_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>)
+endif()
+
 # set define to check cuda projectors in projects
 target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTORS)
+
+# We are using thrust here, so this should be a CUDA file, but do not bother renaming
+set_source_files_properties(VoxelProjectorCUDA.cpp PROPERTIES LANGUAGE CUDA)
 
 write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors)
