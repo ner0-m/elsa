@@ -6,14 +6,6 @@
 
 namespace elsa
 {
-    template <class T>
-    struct SelfType {
-        using type = T;
-    };
-
-    template <class T>
-    using SelfType_t = typename SelfType<T>::type;
-
     namespace blobs
     {
         // The devinition given by Lewitt (1992):

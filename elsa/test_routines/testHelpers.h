@@ -14,15 +14,6 @@
 
 namespace elsa
 {
-    /// With C++20 this can be replaced by std::type_identity
-    template <class T>
-    struct SelfType {
-        using type = T;
-    };
-
-    template <class T>
-    using SelfType_t = typename SelfType<T>::type;
-
     /**
      * @brief Epsilon (in percentage) value for our test suit
      */
