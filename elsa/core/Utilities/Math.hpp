@@ -15,13 +15,11 @@ namespace elsa
         /// Compute binomial coefficient
         constexpr inline index_t binom(index_t n, index_t k) noexcept
         {
-            return (k > n)
-                       ? 0
-                       : (k == 0 || k == n) ? 1
-                                            : (k == 1 || k == n - 1)
-                                                  ? n
-                                                  : (k + k < n) ? (binom(n - 1, k - 1) * n) / k
-                                                                : (binom(n - 1, k) * n) / (n - k);
+            return (k > n)                  ? 0
+                   : (k == 0 || k == n)     ? 1
+                   : (k == 1 || k == n - 1) ? n
+                   : (k + k < n)            ? (binom(n - 1, k - 1) * n) / k
+                                            : (binom(n - 1, k) * n) / (n - k);
         }
 
         /// Compute Heaviside-function
@@ -43,6 +41,12 @@ namespace elsa
             } else {
                 return 1;
             }
+        }
+
+        template <typename T>
+        constexpr inline int sgn(T val)
+        {
+            return (T(0) < val) - (val < T(0));
         }
     } // namespace math
 

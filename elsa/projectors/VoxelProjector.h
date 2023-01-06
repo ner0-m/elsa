@@ -20,15 +20,6 @@
 
 namespace elsa
 {
-    namespace math
-    {
-        template <typename T>
-        constexpr inline int sgn(T val)
-        {
-            return (T(0) < val) - (val < T(0));
-        }
-    } // namespace math
-
     template <typename data_t, typename Derived>
     class VoxelProjector;
 
