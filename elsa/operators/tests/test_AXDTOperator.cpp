@@ -226,7 +226,7 @@ TEST_CASE_TEMPLATE("AXDTOperator: Testing apply & applyAdjoint", data_t, float, 
         Identity<data_t> proj(volDesc); // pretend to be a legit projector... (restricted
                                         // domain/range dimension sizes)
 
-        AXDTOperator axdtOp{
+        AXDTOperator<data_t> axdtOp{
             volDesc, xgiDesc, proj, samplingPattern, weights, AXDTOperator<data_t>::Symmetry::even,
             4};
 
