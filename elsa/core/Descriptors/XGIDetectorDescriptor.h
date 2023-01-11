@@ -32,13 +32,13 @@ namespace elsa
                                               const index_t poseIndex) const override;
 
     protected:
-        virtual XGIDetectorDescriptor* cloneImpl() const override;
+        XGIDetectorDescriptor* cloneImpl() const override;
         bool isEqual(const DataDescriptor& other) const override;
 
     private:
         const DirVec
-            _sensDir; ///< sensitivity direction (inplane orthogonal vector to the grating bars)
-        bool _isParallelBeam; ///< indicating if the geometry is assumed to represent an
-                              ///< approximation to a parallel beam geometry
+            _sensDir; ///< sensitivity direction (in-plane orthogonal vector to the grating bars)
+        const bool _isParallelBeam; ///< indicating if the geometry is assumed to represent an
+                                    ///< approximation to a parallel beam geometry
     };
 } // namespace elsa

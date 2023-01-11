@@ -219,23 +219,5 @@ namespace elsa
 
             return result;
         }
-
-        template <typename data_t>
-        Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>
-            rotation_matrix(data_t theta, data_t psi, data_t phi)
-        {
-            const auto c0 = static_cast<data_t>(std::cos(theta));
-            const auto c1 = static_cast<data_t>(std::cos(psi));
-            const auto c2 = static_cast<data_t>(std::cos(phi));
-            const auto s0 = static_cast<data_t>(std::sin(theta));
-            const auto s1 = static_cast<data_t>(std::sin(psi));
-            const auto s2 = static_cast<data_t>(std::sin(phi));
-
-            Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic> R(3, 3);
-            R << -s1 * s2 + c0 * c1 * c2, -s0 * c1, s1 * c2 + c0 * c1 * s2, s0 * c2, c0, s0 * s2,
-                -c1 * s2 - c0 * s1 * c2, s0 * s1, c1 * c2 - c0 * s1 * s2;
-
-            return R;
-        }
     } // namespace axdt
 } // namespace elsa
