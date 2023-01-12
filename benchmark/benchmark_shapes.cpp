@@ -80,7 +80,7 @@ int main()
 
     int inc = 100;
     std::vector<elsa::index_t> sizes(1200 / inc);
-    std::generate(sizes.begin(), sizes.end(), [n = inc, &inc]() mutable { return inc * n++; });
+    std::generate(sizes.begin(), sizes.end(), [n = 1, &inc]() mutable { return inc * n++; });
     ofstream f;
     f.open("shapes.json");
     f << "[";
