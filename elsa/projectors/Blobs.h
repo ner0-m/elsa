@@ -179,8 +179,8 @@ namespace elsa
         /// Investigation of discrete imaging models and iterative image reconstruction
         /// in differential X-ray phase-contrast tomography - Qiaofeng Xu (Appendix B)
         template <typename data_t>
-        constexpr data_t blob_gradient_projected_helper(data_t s, SelfType_t<data_t> a,
-                                                        SelfType_t<data_t> alpha, int m)
+        constexpr data_t blob_normalized_derivative_projected(data_t s, SelfType_t<data_t> a,
+                                                              SelfType_t<data_t> alpha, int m)
         {
             // expect alpha > 0
             using namespace elsa::math;
@@ -253,7 +253,7 @@ namespace elsa
 
         constexpr data_t gradient_helper(data_t s)
         {
-            return blobs::blob_gradient_projected_helper(s, radius_, alpha_, order_);
+            return blobs::blob_normalized_derivative_projected(s, radius_, alpha_, order_);
         }
 
         constexpr data_t radius() const { return radius_; }

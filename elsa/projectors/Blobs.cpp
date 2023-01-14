@@ -50,10 +50,10 @@ namespace elsa
         template double blob_derivative_projected<double>(double, SelfType_t<double>,
                                                           SelfType_t<double>, int);
 
-        template float blob_gradient_projected_helper<float>(float, SelfType_t<float>,
-                                                             SelfType_t<float>, int);
-        template double blob_gradient_projected_helper<double>(double, SelfType_t<double>,
-                                                               SelfType_t<double>, int);
+        template float blob_normalized_derivative_projected<float>(float, SelfType_t<float>,
+                                                                   SelfType_t<float>, int);
+        template double blob_normalized_derivative_projected<double>(double, SelfType_t<double>,
+                                                                     SelfType_t<double>, int);
 
     } // namespace blobs
 
