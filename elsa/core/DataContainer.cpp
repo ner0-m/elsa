@@ -851,6 +851,22 @@ namespace elsa
         return copy;
     }
 
+    template <typename data_t>
+    DataContainer<data_t> minimum(const DataContainer<data_t>& dc, SelfType_t<data_t> scalar)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        elsa::minimum(dc.begin(), dc.end(), scalar, copy.begin());
+        return copy;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> maximum(const DataContainer<data_t>& dc, SelfType_t<data_t> scalar)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        elsa::maximum(dc.begin(), dc.end(), scalar, copy.begin());
+        return copy;
+    }
+
     template <class data_t>
     DataContainer<data_t> materialize(const DataContainer<data_t>& x)
     {
@@ -1045,6 +1061,23 @@ namespace elsa
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_TYPES(materialize)
 
 #undef ELSA_INSTANTIATE_UNARY_TRANSFORMATION
+
+#define ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(fn, type) \
+    template DataContainer<type> fn<type>(const DataContainer<type>&, SelfType_t<type>);
+
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(minimum, index_t)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(minimum, float)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(minimum, double)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(minimum, complex<float>)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(minimum, complex<double>)
+
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(maximum, index_t)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(maximum, float)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(maximum, double)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(maximum, complex<float>)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX(maximum, complex<double>)
+
+#undef ELSA_INSTANTIATE_UNARY_TRANSFORMATION_MINMAX
 
 #define ELSA_INSTANTIATE_BINARY_TRANSFORMATION_SINGLE(fn, type)                             \
     template DataContainer<value_type_of_t<std::common_type_t<type, type>>> fn<type, type>( \
