@@ -16,6 +16,11 @@ CG
 
 .. doxygenclass:: elsa::CG
 
+CGLS
+====
+
+.. doxygenclass:: elsa::CGLS
+
 Proximal Gradient Descent
 =========================
 

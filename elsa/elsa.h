@@ -87,6 +87,7 @@
 #include "CG.h"
 #include "PGD.h"
 #include "APGD.h"
+#include "CGLS.h"
 #include "FGM.h"
 #include "OGM.h"
 #include "ADMM.h"

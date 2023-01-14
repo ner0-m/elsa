@@ -5,6 +5,7 @@ set(MODULE_HEADERS
     CG.h
     PGD.h
     APGD.h
+    CGLS.h
     FGM.h
     OGM.h
     ADMM.h
@@ -22,6 +23,7 @@ set(MODULE_SOURCES
     CG.cpp
     PGD.cpp
     APGD.cpp
+    CGLS.cpp
     FGM.cpp
     OGM.cpp
     SQS.cpp

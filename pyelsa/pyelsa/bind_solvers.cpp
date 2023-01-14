@@ -10,6 +10,7 @@
 #include "Landweber.h"
 #include "SIRT.h"
 #include "OGM.h"
+#include "CGLS.h"
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
 #include "Solver.h"
@@ -117,6 +118,29 @@ void add_conjugate_gradient(py::module& m)
     detail::add_conjugate_gradient<double>(m, "CGd");
 
     m.attr("CG") = m.attr("CGf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_cgls(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::CGLS<data_t>, Solver> cg(m, name);
+        cg.def(py::init<const LOp&, const elsa::DataContainer<data_t>&, data_t>(), py::arg("A"),
+               py::arg("b"), py::arg("eps") = 0.0);
+    }
+} // namespace detail
+
+void add_cgls(py::module& m)
+{
+    detail::add_cgls<float>(m, "CGLSf");
+    detail::add_cgls<double>(m, "CGLSd");
+
+    m.attr("CGLS") = m.attr("CGLSf");
 }
 
 namespace detail
@@ -283,6 +307,7 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_solver(m);
     add_gradient_descent(m);
     add_conjugate_gradient(m);
+    add_cgls(m);
     add_ista(m);
     add_fista(m);
 
