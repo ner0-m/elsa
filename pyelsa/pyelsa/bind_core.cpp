@@ -178,6 +178,68 @@ void add_linear_operator(py::module& m)
     detail::add_linear_operator<thrust::complex<double>>(m, "LinearOperatorcd");
 }
 
+namespace detail
+{
+    template <class Fn>
+    void add_fn(py::module& m, std::string name, Fn fn)
+    {
+        m.def(name.c_str(), fn);
+    }
+} // namespace detail
+
+void add_datacontainer_free_functions(py::module& m)
+{
+    detail::add_fn(m, "clip", elsa::clip<float>);
+    detail::add_fn(m, "clip", elsa::clip<double>);
+
+#define ELSA_ADD_FREE_FUNCTION_ALL_TYPES(name)                  \
+    detail::add_fn(m, #name, elsa::name<elsa::index_t>);        \
+    detail::add_fn(m, #name, elsa::name<float>);                \
+    detail::add_fn(m, #name, elsa::name<double>);               \
+    detail::add_fn(m, #name, elsa::name<elsa::complex<float>>); \
+    detail::add_fn(m, #name, elsa::name<elsa::complex<double>>);
+
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(minimum)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(maximum)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(real)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(imag)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(cwiseAbs)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(square)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(exp)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(log)
+
+    // Why doesn't this work, I don't know...but whatever, I DOOOO NOT CAAAARE
+    /* m.def("sqrt", elsa::sqrt<elsa::index_t>); */
+    /* m.def("sqrt", elsa::sqrt<float>); */
+    /* m.def("sqrt", elsa::sqrt<double>); */
+    /* m.def("sqrt", elsa::sqrt<elsa::complex<float>>); */
+    /* m.def("sqrt", elsa::sqrt<elsa::complex<double>>); */
+
+#undef ELSA_ADD_FREE_FUNCTION
+
+#define ELSA_ADD_FREE_FUNCTIONS(name)                                      \
+    m.def(#name, elsa::name<elsa::index_t, elsa::index_t>);                \
+    m.def(#name, elsa::name<elsa::index_t, float>);                        \
+    m.def(#name, elsa::name<elsa::index_t, double>);                       \
+    m.def(#name, elsa::name<elsa::index_t, elsa::complex<float>>);         \
+    m.def(#name, elsa::name<elsa::index_t, elsa::complex<double>>);        \
+    m.def(#name, elsa::name<float, float>);                                \
+    m.def(#name, elsa::name<float, double>);                               \
+    m.def(#name, elsa::name<float, elsa::complex<float>>);                 \
+    m.def(#name, elsa::name<float, elsa::complex<double>>);                \
+    m.def(#name, elsa::name<double, double>);                              \
+    m.def(#name, elsa::name<double, elsa::complex<float>>);                \
+    m.def(#name, elsa::name<double, elsa::complex<double>>);               \
+    m.def(#name, elsa::name<elsa::complex<float>, elsa::complex<float>>);  \
+    m.def(#name, elsa::name<elsa::complex<float>, elsa::complex<double>>); \
+    m.def(#name, elsa::name<elsa::complex<double>, elsa::complex<double>>);
+
+    ELSA_ADD_FREE_FUNCTIONS(cwiseMin)
+    ELSA_ADD_FREE_FUNCTIONS(cwiseMax)
+
+#undef ELSA_ADD_FREE_FUNCTIONS
+}
+
 void add_data_container(py::module& m)
 {
     detail::add_data_container<float>(m, "DataContainerf");
@@ -187,6 +249,8 @@ void add_data_container(py::module& m)
     detail::add_data_container<thrust::complex<float>>(m, "DataContainercf");
     detail::add_data_container<thrust::complex<double>>(m, "DataContainercd");
     detail::add_data_container<long>(m, "DataContainerl");
+
+    add_datacontainer_free_functions(m);
 }
 
 void add_definitions_pyelsa_core(py::module& m)
