@@ -10,8 +10,8 @@
 namespace elsa
 {
     /**
-     * @brief Class implementing the Preconditioned Nonlinear Conjugate Gradients with Secant and
-     * Polak-Ribière
+     * @brief Class implementing the Preconditioned Nonlinear Conjugate Gradients with
+     * Newton-Raphson and Polak-Ribière
      *
      * @author Eddie Groh - initial code
      *
@@ -52,13 +52,13 @@ namespace elsa
          * CGNonlinear
          *
          * @param[in] iterations number of iterations to execute
-         * @param[in] x0 optional initial solution, initial solution set to zero if not present
+         * @param[in] xStart optional initial solution, initial solution set to zero if not present
          *
          * @returns the approximated solution
          */
         DataContainer<data_t>
             solve(index_t iterations,
-                  std::optional<DataContainer<data_t>> x0 = std::nullopt) override;
+                  std::optional<DataContainer<data_t>> xStart = std::nullopt) override;
 
     private:
         /// the differentiable optimization problem

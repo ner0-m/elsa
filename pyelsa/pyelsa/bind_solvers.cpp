@@ -18,6 +18,7 @@
 #include "SIRT.h"
 #include "OGM.h"
 #include "CGLS.h"
+#include "CGNonlinear.h"
 #include "CGNE.h"
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
@@ -149,6 +150,29 @@ void add_cgne(py::module& m)
 
     m.attr("CGNE") = m.attr("CGNEf");
 }
+
+namespace detail
+{
+    template <class data_t>
+    void add_nonlinear_conjugate_gradient(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+
+        py::class_<elsa::CG<data_t>, Solver> cg(m, name);
+        cg.def(py::init<const Problem&>(), py::arg("problem"));
+        cg.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+    }
+} // namespace detail
+
+void add_nonlinear_conjugate_gradient(py::module& m)
+{
+    detail::add_nonlinear_conjugate_gradient<float>(m, "CGNonlinearf");
+    detail::add_nonlinear_conjugate_gradient<double>(m, "CGNonlieard");
+
+    m.attr("CGNonlinear") = m.attr("CGNonlinearf");
+}
+
 namespace detail
 {
     template <class data_t>
@@ -395,6 +419,7 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_gradient_descent(m);
     add_cgls(m);
     add_cgne(m);
+    add_nonlinear_conjugate_gradient(m);
     add_ista(m);
     add_fista(m);
 
