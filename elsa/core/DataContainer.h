@@ -343,6 +343,20 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> ifftShift2D(const DataContainer<data_t>& dc);
 
+    /// Unary plus operator
+    template <typename data_t>
+    inline DataContainer<data_t> operator+(const DataContainer<data_t>& x)
+    {
+        return x;
+    }
+
+    /// Unary negation operator
+    template <typename data_t>
+    inline DataContainer<data_t> operator-(const DataContainer<data_t>& x)
+    {
+        return static_cast<data_t>(-1) * x;
+    }
+
     /// Multiplying two DataContainers
     template <typename data_t>
     inline DataContainer<data_t> operator*(const DataContainer<data_t>& lhs,

@@ -556,6 +556,14 @@ TEST_CASE_TEMPLATE_DEFINE(
             DataContainer resultDivScalar = dc / scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 REQUIRE_UNARY(checkApproxEq(resultDivScalar[i], dc[i] / scalar));
+
+            DataContainer unaryPlus = +dc;
+            for (index_t i = 0; i < dc.getSize(); ++i)
+                REQUIRE_UNARY(checkApproxEq(unaryPlus[i], dc[i]));
+
+            DataContainer unaryNeg = -dc;
+            for (index_t i = 0; i < dc.getSize(); ++i)
+                REQUIRE_UNARY(checkApproxEq(unaryNeg[i], -dc[i]));
         }
     }
 }
