@@ -57,7 +57,8 @@ class PyelsaTest(unittest.TestCase):
         )
 
         # test view of DataContainer as numpy.array
-        dc = elsa.DataContainer(elsa.VolumeDescriptor([2, 3]), [1, 4, 2, 5, 3, 6])
+        dc = elsa.DataContainer(
+            elsa.VolumeDescriptor([2, 3]), [1, 4, 2, 5, 3, 6])
         arr_view = np.array(dc, copy=False)
         self.assert_same_shape(
             arr_view,
@@ -103,6 +104,54 @@ class PyelsaTest(unittest.TestCase):
             "Indexing not invariant under np.array -> DataContainer -> np.array conversion",
         )
 
+    def test_datacontainer(self):
+        size = 100
+        v = np.random.randn(size)
+        w = np.random.randn(size)
+
+        desc = elsa.VolumeDescriptor([size])
+
+        x = elsa.DataContainer(desc, v)
+        y = elsa.DataContainer(desc, w)
+
+        np.testing.assert_allclose(+x, +v, rtol=1e-5)
+        np.testing.assert_allclose(-x, -v, rtol=1e-5)
+
+        np.testing.assert_allclose(x + y, v + w, rtol=1e-4)
+        np.testing.assert_allclose(x - y, v - w, rtol=1e-4)
+        np.testing.assert_allclose(x * y, v * w, rtol=1e-4)
+        np.testing.assert_allclose(x / y, v / w, rtol=1e-4)
+
+        np.testing.assert_allclose(x + 5, v + 5, rtol=1e-4)
+        np.testing.assert_allclose(x - 5, v - 5, rtol=1e-4)
+        np.testing.assert_allclose(x * 5, v * 5, rtol=1e-4)
+        np.testing.assert_allclose(x / 5, v / 5, rtol=1e-4)
+
+        np.testing.assert_allclose(5 + y, 5 + w, rtol=1e-4)
+        np.testing.assert_allclose(5 - y, 5 - w, rtol=1e-4)
+        np.testing.assert_allclose(5 * y, 5 * w, rtol=1e-4)
+        np.testing.assert_allclose(5 / y, 5 / w, rtol=1e-4)
+
+        x += y
+        v += w
+        np.testing.assert_allclose(x, v, rtol=1e-4)
+        x -= y
+        v -= w
+        np.testing.assert_allclose(x, v, rtol=1e-4)
+        x *= y
+        v *= w
+        np.testing.assert_allclose(x, v, rtol=1e-4)
+        x /= y
+        v /= w
+        np.testing.assert_allclose(x, v, rtol=1e-4)
+
+        for i in range(0, size):
+            self.assertAlmostEqual(x[i], v[i], 5)
+            self.assertAlmostEqual(y[i], w[i], 5)
+
+        x[0] = 12345
+        self.assertAlmostEqual(x[0], 12345)
+
     def test_intermodule_object_exchange(self):
         """Test whether instances of a class produced by one module (e.g. pyelsa_functionals)
         are recognised as instances of the same class in another module that is only aware of the
@@ -136,7 +185,8 @@ class PyelsaTest(unittest.TestCase):
             [A, elsa.Scaling(desc, math.sqrt(regWeight))],
             elsa.BlockLinearOperatorfBlockType.ROW,
         )
-        blockVec = elsa.DataContainer(elsa.RandomBlocksDescriptor([desc, desc]))
+        blockVec = elsa.DataContainer(
+            elsa.RandomBlocksDescriptor([desc, desc]))
         blockVec.getBlock(0).set(b)
         blockVec.getBlock(1).set(0)
         blockWls = elsa.L2NormPow2(elsa.LinearResidual(blockOp, blockVec))

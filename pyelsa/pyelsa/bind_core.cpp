@@ -2,6 +2,7 @@
 #include <pybind11/complex.h>
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
+#include <pybind11/operators.h>
 
 #include "Cloneable.h"
 #include "DataContainer.h"
@@ -83,33 +84,48 @@ namespace detail
         const auto ref_internal = py::return_value_policy::reference_internal;
         const auto move = py::return_value_policy::move;
 
-        dc.def("__ne__", py::overload_cast<ConstDcRef>(&Dc::operator!=, py::const_),
-               py::arg("other"));
-        dc.def("__eq__", py::overload_cast<ConstDcRef>(&Dc::operator==, py::const_),
-               py::arg("other"));
+        // Element Access
+        dc.def("__setitem__", [](Dc& self, elsa::index_t idx, data_t val) { self[idx] = val; });
+        dc.def("__getitem__", [](Dc& self, elsa::index_t idx) { return self[idx]; });
+
+        // Equality comparison
+        dc.def(py::self == py::self);
+        dc.def(py::self != py::self);
 
         // Inplace vector operations
-        dc.def("__imul__", py::overload_cast<ConstDcRef>(&Dc::operator*=), py::arg("dc"),
-               ref_internal);
-        dc.def("__iadd__", py::overload_cast<ConstDcRef>(&Dc::operator+=), py::arg("dc"),
-               ref_internal);
-        dc.def("__isub__", py::overload_cast<ConstDcRef>(&Dc::operator-=), py::arg("dc"),
-               ref_internal);
-        dc.def("__idiv__", py::overload_cast<ConstDcRef>(&Dc::operator/=), py::arg("dc"),
-               ref_internal);
         dc.def("set", py::overload_cast<ConstDcRef>(&Dc::operator=), py::arg("other"),
                ref_internal);
+        dc.def(py::self += py::self);
+        dc.def(py::self -= py::self);
+        dc.def(py::self *= py::self);
+        dc.def(py::self /= py::self);
 
         // Inplace scalar operations
-        dc.def("__imul__", py::overload_cast<data_t>(&Dc::operator*=), py::arg("scalar"),
-               ref_internal);
-        dc.def("__iadd__", py::overload_cast<data_t>(&Dc::operator+=), py::arg("scalar"),
-               ref_internal);
-        dc.def("__isub__", py::overload_cast<data_t>(&Dc::operator-=), py::arg("scalar"),
-               ref_internal);
-        dc.def("__idiv__", py::overload_cast<data_t>(&Dc::operator/=), py::arg("scalar"),
-               ref_internal);
         dc.def("set", py::overload_cast<data_t>(&Dc::operator=), py::arg("scalar"), ref_internal);
+        dc.def(py::self += data_t());
+        dc.def(py::self -= data_t());
+        dc.def(py::self *= data_t());
+        dc.def(py::self /= data_t());
+
+        // Unary operations
+        dc.def(+py::self);
+        dc.def(-py::self);
+
+        // Binary operations
+        dc.def(py::self + py::self);
+        dc.def(py::self - py::self);
+        dc.def(py::self * py::self);
+        dc.def(py::self / py::self);
+
+        dc.def(py::self + data_t());
+        dc.def(py::self - data_t());
+        dc.def(py::self * data_t());
+        dc.def(py::self / data_t());
+
+        dc.def(data_t() + py::self);
+        dc.def(data_t() - py::self);
+        dc.def(data_t() * py::self);
+        dc.def(data_t() / py::self);
 
         // Block operations
         dc.def("viewAs", py::overload_cast<const elsa::DataDescriptor&>(&Dc::viewAs),
@@ -122,10 +138,6 @@ namespace detail
         dc.def("slice", py::overload_cast<long>(&Dc::slice, py::const_), py::arg("i"), move);
 
         dc.def("getDataDescriptor", py::overload_cast<>(&Dc::getDataDescriptor, py::const_),
-               ref_internal);
-        dc.def("__getitem__", py::overload_cast<long>(&Dc::operator[], py::const_),
-               py::arg("index"), ref_internal);
-        dc.def("__getitem__", py::overload_cast<long>(&Dc::operator[]), py::arg("index"),
                ref_internal);
 
         dc.def("at", py::overload_cast<const IndexVec&>(&Dc::at, py::const_),
