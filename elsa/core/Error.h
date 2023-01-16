@@ -164,4 +164,13 @@ namespace elsa
         BadCastError(const std::string& msg);
     };
 
+    /**
+     * The function is not implemented
+     */
+    class NotImplementedError : public Error
+    {
+    public:
+        NotImplementedError(const std::string& msg);
+    };
+
 } // namespace elsa
