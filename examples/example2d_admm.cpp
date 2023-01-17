@@ -56,7 +56,7 @@ void example2d_admm()
 
     SplittingProblem<real_t> splittingProblem(wlsProblem.getDataTerm(), regTerm, constraint);
 
-    ADMM<CG, SoftThresholding> admm(splittingProblem);
+    ADMM<CG, ProximalL1> admm(splittingProblem);
 
     Logger::get("Info")->info("Solving reconstruction using {} iterations of ADMM", noIterations);
     auto admmReconstruction = admm.solve(noIterations);

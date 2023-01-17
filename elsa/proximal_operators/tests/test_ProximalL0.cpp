@@ -1,14 +1,6 @@
-/**
- * @file test_HardThresholding.cpp
- *
- * @brief Tests for the HardThresholding class
- *
- * @author Andi Braimllari
- */
-
 #include "Error.h"
-#include "HardThresholding.h"
-#include "ProximityOperator.h"
+#include "ProximalL0.h"
+#include "ProximalOperator.h"
 #include "VolumeDescriptor.h"
 
 #include "doctest/doctest.h"
@@ -20,25 +12,25 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("proximal_operators");
 
-TEST_CASE_TEMPLATE("SoftThresholding: Testing regularity", data_t, float, double)
+TEST_CASE_TEMPLATE("ProximalL0: Testing regularity", data_t, float, double)
 {
-    static_assert(std::is_default_constructible_v<HardThresholding<data_t>>);
-    static_assert(std::is_copy_assignable_v<HardThresholding<data_t>>);
-    static_assert(std::is_copy_constructible_v<HardThresholding<data_t>>);
-    static_assert(std::is_nothrow_move_assignable_v<HardThresholding<data_t>>);
-    static_assert(std::is_nothrow_move_constructible_v<HardThresholding<data_t>>);
+    static_assert(std::is_default_constructible_v<ProximalL0<data_t>>);
+    static_assert(std::is_copy_assignable_v<ProximalL0<data_t>>);
+    static_assert(std::is_copy_constructible_v<ProximalL0<data_t>>);
+    static_assert(std::is_nothrow_move_assignable_v<ProximalL0<data_t>>);
+    static_assert(std::is_nothrow_move_constructible_v<ProximalL0<data_t>>);
 }
 
-TEST_CASE_TEMPLATE("SoftThresholding: Testing in 1D", data_t, float, double)
+TEST_CASE_TEMPLATE("ProximalL0: Testing in 1D", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
         IndexVector_t numCoeff({{8}});
         VolumeDescriptor volDescr(numCoeff);
 
-        WHEN("Using HardThresholding operator in 1D")
+        WHEN("Using ProximalL0 operator in 1D")
         {
-            HardThresholding<data_t> hardThrsOp;
+            ProximalL0<data_t> hardThrsOp;
 
             THEN("Values under threshold=4 are 0")
             {
@@ -50,9 +42,9 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing in 1D", data_t, float, double)
                 REQUIRE_UNARY(isApprox(expected, res));
             }
 
-            THEN("Is works when accessed as ProximityOperator")
+            THEN("Is works when accessed as ProximalOperator")
             {
-                ProximityOperator<data_t> prox(hardThrsOp);
+                ProximalOperator<data_t> prox(hardThrsOp);
 
                 DataContainer<data_t> x(volDescr, Vector_t<data_t>({{-2, 3, 4, -7, 7, 8, 8, 3}}));
                 DataContainer<data_t> expected(volDescr,
@@ -65,16 +57,16 @@ TEST_CASE_TEMPLATE("SoftThresholding: Testing in 1D", data_t, float, double)
     }
 }
 
-TEST_CASE_TEMPLATE("HardThresholding: Testing in 3D", data_t, float, double)
+TEST_CASE_TEMPLATE("ProximalL0: Testing in 3D", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
         IndexVector_t numCoeff({{3, 2, 3}});
         VolumeDescriptor volumeDescriptor(numCoeff);
 
-        WHEN("Using HardThresholding operator in 3D")
+        WHEN("Using ProximalL0 operator in 3D")
         {
-            HardThresholding<data_t> hardThrsOp;
+            ProximalL0<data_t> hardThrsOp;
 
             THEN("Values under threshold=5 are 0 and values above remain the same")
             {
@@ -93,16 +85,16 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing in 3D", data_t, float, double)
     }
 }
 
-TEST_CASE_TEMPLATE("HardThresholding: Testing general behaviour", data_t, float, double)
+TEST_CASE_TEMPLATE("ProximalL0: Testing general behaviour", data_t, float, double)
 {
     GIVEN("a DataDescriptor")
     {
         IndexVector_t numCoeff({{8}});
         VolumeDescriptor desc(numCoeff);
 
-        WHEN("Using HardThresholding operator")
+        WHEN("Using ProximalL0 operator")
         {
-            HardThresholding<data_t> hardThrOp;
+            ProximalL0<data_t> hardThrOp;
 
             THEN("The zero vector is returned when the zero vector is given")
             {
@@ -114,7 +106,7 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing general behaviour", data_t, float,
                 REQUIRE_UNARY(isApprox(expected, res));
             }
 
-            THEN("HardThresholding operator throws exception for t <= 0")
+            THEN("ProximalL0 operator throws exception for t <= 0")
             {
                 DataContainer<data_t> x(desc, Vector_t<data_t>{{{0, 0, 0, 0, 0, 0, 0, 0}}});
 
@@ -127,7 +119,7 @@ TEST_CASE_TEMPLATE("HardThresholding: Testing general behaviour", data_t, float,
                                   InvalidArgumentError);
             }
 
-            THEN("HardThresholding operator throws exception for differently sized v and prox")
+            THEN("ProximalL0 operator throws exception for differently sized v and prox")
             {
                 DataContainer<data_t> x(desc, Vector_t<data_t>{{{0, 0, 0, 0, 0, 0, 0, 0}}});
 

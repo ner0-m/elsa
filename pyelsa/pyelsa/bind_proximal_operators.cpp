@@ -1,110 +1,51 @@
 #include <pybind11/pybind11.h>
 
-#include "HardThresholding.h"
-#include "ProximityOperator.h"
-#include "SoftThresholding.h"
+#include "DataContainer.h"
+#include "ProximalOperator.h"
+#include "ProximalL1.h"
+#include "ProximalL0.h"
 
+#include "StrongTypes.h"
 #include "hints/proximal_operators_hints.cpp"
 
 namespace py = pybind11;
 
+namespace detail
+{
+    /* template <class data_t> */
+    /* void add_proximal_op(py::module& m, py::class_<elsa::ProximalL1<data_t>> c) */
+    template <class data_t, template <class> class Prox>
+    void add_proximal_op(py::module& m, py::class_<Prox<data_t>> c)
+    {
+        using Self = Prox<data_t>;
+        using Threshold = elsa::geometry::Threshold<data_t>;
+        using DataContainer = elsa::DataContainer<data_t>;
+
+        c.def(py::init<>());
+        c.def("apply",
+              py::overload_cast<const DataContainer&, Threshold>(&Self::apply, py::const_));
+        c.def("apply", py::overload_cast<const DataContainer&, Threshold, DataContainer&>(
+                           &Self::apply, py::const_));
+    }
+} // namespace detail
+
 void add_definitions_pyelsa_proximal_operators(py::module& m)
 {
-    py::class_<elsa::Cloneable<elsa::ProximityOperator<float>>> CloneableProximityOperatorf(
-        m, "CloneableProximityOperatorf");
-    CloneableProximityOperatorf
-        .def("__ne__",
-             (bool(elsa::Cloneable<elsa::ProximityOperator<float>>::*)(
-                 const elsa::ProximityOperator<float>&)
-                  const)(&elsa::Cloneable<elsa::ProximityOperator<float>>::operator!=),
-             py::arg("other"))
-        .def("__eq__",
-             (bool(elsa::Cloneable<elsa::ProximityOperator<float>>::*)(
-                 const elsa::ProximityOperator<float>&)
-                  const)(&elsa::Cloneable<elsa::ProximityOperator<float>>::operator==),
-             py::arg("other"))
-        .def("clone", (std::unique_ptr<elsa::ProximityOperator<float>,
-                                       std::default_delete<elsa::ProximityOperator<float>>>(
-                          elsa::Cloneable<elsa::ProximityOperator<float>>::*)()
-                           const)(&elsa::Cloneable<elsa::ProximityOperator<float>>::clone));
+    py::class_<elsa::ProximalL1<float>> proxL1f(m, "ProximalL1f");
+    detail::add_proximal_op(m, proxL1f);
 
-    py::class_<elsa::ProximityOperator<float>, elsa::Cloneable<elsa::ProximityOperator<float>>>
-        ProximityOperatorf(m, "ProximityOperatorf");
-    ProximityOperatorf
-        .def("apply",
-             (elsa::DataContainer<float>(elsa::ProximityOperator<float>::*)(
-                 const elsa::DataContainer<float>&, elsa::geometry::Threshold<float>)
-                  const)(&elsa::ProximityOperator<float>::apply),
-             py::arg("v"), py::arg("t"), py::return_value_policy::move)
-        .def("getRangeDescriptor",
-             (const elsa::DataDescriptor& (elsa::ProximityOperator<float>::*) ()
-                  const)(&elsa::ProximityOperator<float>::getRangeDescriptor),
-             py::return_value_policy::reference_internal)
-        .def("apply",
-             (void(elsa::ProximityOperator<float>::*)(
-                 const elsa::DataContainer<float>&, elsa::geometry::Threshold<float>,
-                 elsa::DataContainer<float>&) const)(&elsa::ProximityOperator<float>::apply),
-             py::arg("v"), py::arg("t"), py::arg("prox"));
+    py::class_<elsa::ProximalL1<double>> proxL1d(m, "ProximalL1d");
+    detail::add_proximal_op(m, proxL1d);
+    m.attr("ProximalL1") = m.attr("ProximalL1f");
 
-    m.attr("ProximityOperator") = m.attr("ProximityOperatorf");
+    py::class_<elsa::ProximalL0<float>> proxL0f(m, "ProximalL0f");
+    detail::add_proximal_op(m, proxL0f);
 
-    py::class_<elsa::Cloneable<elsa::ProximityOperator<double>>> CloneableProximityOperatord(
-        m, "CloneableProximityOperatord");
-    CloneableProximityOperatord
-        .def("__ne__",
-             (bool(elsa::Cloneable<elsa::ProximityOperator<double>>::*)(
-                 const elsa::ProximityOperator<double>&)
-                  const)(&elsa::Cloneable<elsa::ProximityOperator<double>>::operator!=),
-             py::arg("other"))
-        .def("__eq__",
-             (bool(elsa::Cloneable<elsa::ProximityOperator<double>>::*)(
-                 const elsa::ProximityOperator<double>&)
-                  const)(&elsa::Cloneable<elsa::ProximityOperator<double>>::operator==),
-             py::arg("other"))
-        .def("clone", (std::unique_ptr<elsa::ProximityOperator<double>,
-                                       std::default_delete<elsa::ProximityOperator<double>>>(
-                          elsa::Cloneable<elsa::ProximityOperator<double>>::*)()
-                           const)(&elsa::Cloneable<elsa::ProximityOperator<double>>::clone));
+    py::class_<elsa::ProximalL0<double>> proxL0d(m, "ProximalL0d");
+    detail::add_proximal_op(m, proxL0d);
+    m.attr("ProximalL0") = m.attr("ProximalL0f");
 
-    py::class_<elsa::ProximityOperator<double>, elsa::Cloneable<elsa::ProximityOperator<double>>>
-        ProximityOperatord(m, "ProximityOperatord");
-    ProximityOperatord
-        .def("apply",
-             (elsa::DataContainer<double>(elsa::ProximityOperator<double>::*)(
-                 const elsa::DataContainer<double>&, elsa::geometry::Threshold<double>)
-                  const)(&elsa::ProximityOperator<double>::apply),
-             py::arg("v"), py::arg("t"), py::return_value_policy::move)
-        .def("getRangeDescriptor",
-             (const elsa::DataDescriptor& (elsa::ProximityOperator<double>::*) ()
-                  const)(&elsa::ProximityOperator<double>::getRangeDescriptor),
-             py::return_value_policy::reference_internal)
-        .def("apply",
-             (void(elsa::ProximityOperator<double>::*)(
-                 const elsa::DataContainer<double>&, elsa::geometry::Threshold<double>,
-                 elsa::DataContainer<double>&) const)(&elsa::ProximityOperator<double>::apply),
-             py::arg("v"), py::arg("t"), py::arg("prox"));
-
-    py::class_<elsa::SoftThresholding<float>, elsa::ProximityOperator<float>> SoftThresholdingf(
-        m, "SoftThresholdingf");
-    SoftThresholdingf.def(py::init<const elsa::DataDescriptor&>(), py::arg("descriptor"));
-
-    m.attr("SoftThresholding") = m.attr("SoftThresholdingf");
-
-    py::class_<elsa::SoftThresholding<double>, elsa::ProximityOperator<double>> SoftThresholdingd(
-        m, "SoftThresholdingd");
-    SoftThresholdingd.def(py::init<const elsa::DataDescriptor&>(), py::arg("descriptor"));
-
-    py::class_<elsa::HardThresholding<float>, elsa::ProximityOperator<float>> HardThresholdingf(
-        m, "HardThresholdingf");
-    HardThresholdingf.def(py::init<const elsa::DataDescriptor&>(), py::arg("descriptor"));
-
-    m.attr("HardThresholding") = m.attr("HardThresholdingf");
-
-    py::class_<elsa::HardThresholding<double>, elsa::ProximityOperator<double>> HardThresholdingd(
-        m, "HardThresholdingd");
-    HardThresholdingd.def(py::init<const elsa::DataDescriptor&>(), py::arg("descriptor"));
-
-    elsa::ProximityOperatorsHints::addCustomFunctions(m);
+    elsa::ProximalOperatorsHints::addCustomFunctions(m);
 }
 
 PYBIND11_MODULE(pyelsa_proximal_operators, m)

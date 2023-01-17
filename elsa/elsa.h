@@ -50,10 +50,10 @@
 #include "BlockLinearOperator.h"
 #include "ShearletTransform.h"
 
-// Proximity Operator headers
-#include "ProximityOperator.h"
-#include "SoftThresholding.h"
-#include "HardThresholding.h"
+// Proximal Operator headers
+#include "ProximalOperator.h"
+#include "ProximalL1.h"
+#include "ProximalL0.h"
 
 // Problem headers
 #include "Problem.h"

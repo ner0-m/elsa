@@ -1,4 +1,4 @@
-#include "HardThresholding.h"
+#include "ProximalL0.h"
 #include "DataContainer.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
@@ -6,8 +6,8 @@
 namespace elsa
 {
     template <typename data_t>
-    DataContainer<data_t> HardThresholding<data_t>::apply(const DataContainer<data_t>& v,
-                                                          geometry::Threshold<data_t> t) const
+    DataContainer<data_t> ProximalL0<data_t>::apply(const DataContainer<data_t>& v,
+                                                    geometry::Threshold<data_t> t) const
     {
         DataContainer<data_t> out{v.getDataDescriptor()};
         apply(v, t, out);
@@ -15,12 +15,11 @@ namespace elsa
     }
 
     template <typename data_t>
-    void HardThresholding<data_t>::apply(const DataContainer<data_t>& v,
-                                         geometry::Threshold<data_t> t,
-                                         DataContainer<data_t>& prox) const
+    void ProximalL0<data_t>::apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+                                   DataContainer<data_t>& prox) const
     {
         if (v.getSize() != prox.getSize()) {
-            throw LogicError("HardThresholding: sizes of v and prox must match");
+            throw LogicError("ProximalL0: sizes of v and prox must match");
         }
 
         auto vIter = v.begin();
@@ -35,8 +34,20 @@ namespace elsa
         }
     }
 
+    template <typename data_t>
+    bool operator==(const ProximalL0<data_t>&, const ProximalL0<data_t>&)
+    {
+        return true;
+    }
+
+    template <typename data_t>
+    bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&)
+    {
+        return false;
+    }
+
     // ------------------------------------------
     // explicit template instantiation
-    template class HardThresholding<float>;
-    template class HardThresholding<double>;
+    template class ProximalL0<float>;
+    template class ProximalL0<double>;
 } // namespace elsa

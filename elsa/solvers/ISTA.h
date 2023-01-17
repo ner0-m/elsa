@@ -6,6 +6,7 @@
 #include "Solver.h"
 #include "StrongTypes.h"
 #include "LASSOProblem.h"
+#include "ProximalOperator.h"
 
 namespace elsa
 {
@@ -16,9 +17,10 @@ namespace elsa
      *
      *  - @f$ x_{k+1} = shrinkageOperator(x_k - \mu * A^T (Ax_k - b)) @f$
      *
-     * in which shrinkageOperator is the SoftThresholding operator defined as @f$
-     * shrinkageOperator(z_{k}) = sign(z_{k})·(|z_{k}| - \mu*\lambda)_+ @f$. Each iteration of ISTA
-     * involves a gradient descent update followed by a shrinkage/soft-threshold step:
+     * in which shrinkageOperator is the proximal operator of the L1-norm, which is the often
+     * refered to as soft thresholding, defined as @f$ shrinkageOperator(z_{k}) =
+     * sign(z_{k})·(|z_{k}| - \mu*\lambda)_+ @f$. Each iteration of ISTA involves a gradient descent
+     * update followed by a shrinkage/soft-threshold step:
      *
      * ISTA has a worst-case complexity result of @f$ O(1/k) @f$.
      *
@@ -120,5 +122,7 @@ namespace elsa
 
         /// variable affecting the stopping condition
         data_t _epsilon;
+
+        /* ProximalOperator<data_t> prox_; */
     };
 } // namespace elsa

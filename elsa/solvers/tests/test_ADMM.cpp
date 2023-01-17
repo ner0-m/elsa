@@ -10,8 +10,8 @@
 
 #include "ADMM.h"
 #include "CG.h"
-#include "SoftThresholding.h"
-#include "HardThresholding.h"
+#include "ProximalL1.h"
+#include "ProximalL0.h"
 #include "Identity.h"
 #include "FISTA.h"
 #include "Logger.h"
@@ -53,7 +53,7 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", data_t, float, double)
 
             SplittingProblem<data_t> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, SoftThresholding, data_t> admm(splittingProblem);
+            ADMM<CG, ProximalL1, data_t> admm(splittingProblem);
 
             LASSOProblem<data_t> lassoProb(wlsProb, regTerm);
             FISTA<data_t> fista(lassoProb);
@@ -71,7 +71,7 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", data_t, float, double)
 
             SplittingProblem<data_t> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, HardThresholding, data_t> admm(splittingProblem);
+            ADMM<CG, ProximalL0, data_t> admm(splittingProblem);
 
             THEN("the solution doesn't throw, is not nan and is approximate to the b vector")
             {

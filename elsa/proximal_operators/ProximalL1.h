@@ -19,13 +19,13 @@ namespace elsa
      * http://sfb649.wiwi.hu-berlin.de/fedc_homepage/xplore/tutorials/xlghtmlnode93.html
      */
     template <typename data_t = real_t>
-    class SoftThresholding
+    class ProximalL1
     {
     public:
-        SoftThresholding() = default;
+        ProximalL1() = default;
 
         /// default destructor
-        ~SoftThresholding() = default;
+        ~ProximalL1() = default;
 
         /**
          * @brief apply the proximal operator of the l1 norm to an element in the operator's domain
@@ -40,11 +40,10 @@ namespace elsa
         DataContainer<data_t> apply(const DataContainer<data_t>& v,
                                     geometry::Threshold<data_t> t) const;
 
-        friend bool operator==(const SoftThresholding<data_t>& lhs,
-                               const SoftThresholding<data_t>& rhs);
-        friend bool operator!=(const SoftThresholding<data_t>& lhs,
-                               const SoftThresholding<data_t>& rhs);
-
-    protected:
+        friend bool operator==(const ProximalL1<data_t>& lhs, const ProximalL1<data_t>& rhs);
+        friend bool operator!=(const ProximalL1<data_t>& lhs, const ProximalL1<data_t>& rhs);
     };
+
+    template <class data_t>
+    using SoftThresholding = ProximalL1<data_t>;
 } // namespace elsa

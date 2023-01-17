@@ -1,5 +1,5 @@
 #include "ISTA.h"
-#include "SoftThresholding.h"
+#include "ProximalL1.h"
 #include "TypeCasts.hpp"
 #include "Logger.h"
 
@@ -40,7 +40,7 @@ namespace elsa
         spdlog::stopwatch aggregate_time;
         Logger::get("ISTA")->info("Start preparations...");
 
-        SoftThresholding<data_t> shrinkageOp;
+        ProximalL1<data_t> shrinkageOp;
 
         data_t lambda = _problem.getRegularizationTerms()[0].getWeight();
 

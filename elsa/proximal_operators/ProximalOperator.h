@@ -9,7 +9,7 @@
 namespace elsa
 {
     /// Customization point for ProximalOperators. For an object to be type erased by the
-    /// ProximityOperator interface, you either need to provide a member function `apply` for the
+    /// ProximalOperator interface, you either need to provide a member function `apply` for the
     /// type, with the given parameters. Or you can overload this function.
     template <class T, class data_t>
     void applyProximal(const T& proximal, const DataContainer<data_t>& v,
@@ -75,14 +75,21 @@ namespace elsa
         };
 
     public:
-        /// delete default constructor for base-class
-        ProximalOperator() = delete;
+        /// defaulted default constructor for base-class (will point to nothing)
+        ProximalOperator() = default;
 
         /// Type erasure constructor, taking everything that kan bind to the above provided
         /// interface
         template <typename T>
         ProximalOperator(T proxOp) : ptr_(std::make_unique<ProxModel<T>>(std::move(proxOp)))
         {
+        }
+
+        template <typename T>
+        ProximalOperator& operator=(T proxOp)
+        {
+            ptr_ = std::make_unique<ProxModel<T>>(std::move(proxOp));
+            return *this;
         }
 
         /// Copy constructor
@@ -129,6 +136,6 @@ namespace elsa
                    DataContainer<data_t>& prox) const;
 
     private:
-        std::unique_ptr<ProxConcept> ptr_;
+        std::unique_ptr<ProxConcept> ptr_ = {};
     };
 } // namespace elsa

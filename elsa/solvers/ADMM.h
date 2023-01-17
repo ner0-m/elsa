@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #include "Solver.h"
-#include "ProximityOperator.h"
+#include "ProximalOperator.h"
 #include "SplittingProblem.h"
 #include "L0PseudoNorm.h"
 #include "L1Norm.h"
@@ -21,7 +21,7 @@ namespace elsa
      *
      * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      * @tparam XSolver Solver type handling the x update
-     * @tparam ZSolver ProximityOperator type handling the z update
+     * @tparam ZSolver ProximalOperator type handling the z update
      *
      * ADMM solves minimization splitting problems of the form
      * @f$ x \mapsto f(x) + g(z) @f$ such that @f$ Ax + Bz = c @f$.
@@ -52,8 +52,8 @@ namespace elsa
             static_assert(std::is_base_of_v<Solver<data_t>, XSolver<data_t>>,
                           "ADMM: XSolver must extend Solver");
 
-            static_assert(std::is_constructible_v<ProximityOperator<data_t>, ZSolver<data_t>>,
-                          "ADMM: ZSolver must adhere to the ProximityOperator interface");
+            static_assert(std::is_constructible_v<ProximalOperator<data_t>, ZSolver<data_t>>,
+                          "ADMM: ZSolver must adhere to the ProximalOperator interface");
         }
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations)

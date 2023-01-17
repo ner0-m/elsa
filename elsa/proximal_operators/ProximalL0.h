@@ -19,13 +19,13 @@ namespace elsa
      * http://sfb649.wiwi.hu-berlin.de/fedc_homepage/xplore/tutorials/xlghtmlnode93.html
      */
     template <typename data_t = real_t>
-    class HardThresholding
+    class ProximalL0
     {
     public:
-        HardThresholding() = default;
+        ProximalL0() = default;
 
         /// default destructor
-        ~HardThresholding() = default;
+        ~ProximalL0() = default;
 
         /**
          * @brief apply the proximal operator of the l0 pseudo-norm to an element in the operator's
@@ -47,5 +47,11 @@ namespace elsa
          */
         void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
                    DataContainer<data_t>& prox) const;
+
+        friend bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&);
+        friend bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&);
     };
+
+    template <class data_t>
+    using HardThresholding = ProximalL0<data_t>;
 } // namespace elsa

@@ -14,5 +14,5 @@ add_custom_target(
 )
 
 # the actual tests
-ELSA_DOCTEST(SoftThresholding)
-ELSA_DOCTEST(HardThresholding)
+ELSA_DOCTEST(ProximalL1)
+ELSA_DOCTEST(ProximalL0)

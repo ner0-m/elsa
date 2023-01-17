@@ -18,7 +18,8 @@ namespace elsa
      *  - @f$ t_{k+1} = \frac{1 + \sqrt{1 + 4 * t_{k}^2}}{2} @f$
      *  - @f$ y_{k+1} = x_{k} + (\frac{t_{k} - 1}{t_{k+1}}) * (x_{k} - x_{k - 1}) @f$
      *
-     * in which shrinkageOperator is the SoftThresholding operator defined as @f$
+     * in which shrinkageOperator is the proximal operator of the L1-norm, which is
+     * often referred to as soft thresholding, defined as @f$
      * shrinkageOperator(z_k) = sign(z_k)·(|z_k| - \mu*\lambda)_+ @f$.
      *
      * FISTA has a worst-case complexity result of @f$ O(1/k^2) @f$.

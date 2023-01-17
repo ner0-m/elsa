@@ -8,20 +8,20 @@ namespace elsa
 {
     namespace py = pybind11;
 #ifndef ELSA_BINDINGS_IN_SINGLE_MODULE
-    class ProximityOperatorsHints : ModuleHints
+    class ProximalOperatorsHints : ModuleHints
     {
 
-        struct LoggerProximityOperators : Logger {
+        struct LoggerProximalOperators : Logger {
         };
 
     public:
         static void addCustomFunctions(py::module& m)
         {
             // expose Logger class
-            py::class_<LoggerProximityOperators>(m, "logger_pyelsa_proximal_operators")
-                .def_static("setLevel", &LoggerProximityOperators::setLevel)
-                .def_static("enableFileLogging", &LoggerProximityOperators::enableFileLogging)
-                .def_static("flush", &LoggerProximityOperators::flush);
+            py::class_<LoggerProximalOperators>(m, "logger_pyelsa_proximal_operators")
+                .def_static("setLevel", &LoggerProximalOperators::setLevel)
+                .def_static("enableFileLogging", &LoggerProximalOperators::enableFileLogging)
+                .def_static("flush", &LoggerProximalOperators::flush);
         }
     };
 #endif
