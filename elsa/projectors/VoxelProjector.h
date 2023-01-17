@@ -29,6 +29,12 @@ namespace elsa
     template <typename data_t = real_t>
     class PhaseContrastBlobVoxelProjector;
 
+    template <typename data_t = real_t>
+    class BSplineVoxelProjector;
+
+    template <typename data_t = real_t>
+    class PhaseContrastBSplineVoxelProjector;
+
     template <typename data_t>
     struct XrayProjectorInnerTypes<BlobVoxelProjector<data_t>> {
         using value_type = data_t;
@@ -38,6 +44,20 @@ namespace elsa
 
     template <typename data_t>
     struct XrayProjectorInnerTypes<PhaseContrastBlobVoxelProjector<data_t>> {
+        using value_type = data_t;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
+    };
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<BSplineVoxelProjector<data_t>> {
+        using value_type = data_t;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
+    };
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<PhaseContrastBSplineVoxelProjector<data_t>> {
         using value_type = data_t;
         using forward_tag = any_projection_tag;
         using backward_tag = any_projection_tag;
@@ -459,6 +479,79 @@ namespace elsa
         ProjectedBlobGradientHelperLut<data_t, 100> lut3D_;
 
         using Base = VoxelProjector<data_t, PhaseContrastBlobVoxelProjector<data_t>>;
+
+        friend class XrayProjector<self_type>;
+    };
+
+    template <typename data_t>
+    class BSplineVoxelProjector : public VoxelProjector<data_t, BSplineVoxelProjector<data_t>>
+    {
+    public:
+        using self_type = BSplineVoxelProjector<data_t>;
+
+        BSplineVoxelProjector(data_t degree, const VolumeDescriptor& domainDescriptor,
+                              const DetectorDescriptor& rangeDescriptor);
+
+        BSplineVoxelProjector(const VolumeDescriptor& domainDescriptor,
+                              const DetectorDescriptor& rangeDescriptor);
+
+        data_t radius() const { return lut_.radius(); }
+
+        data_t weight(data_t distance) const { return lut_(std::abs(distance)); }
+        data_t weight(data_t distance, data_t primDistance) const
+        {
+            return lut_(std::abs(distance));
+        }
+
+        /// implement the polymorphic clone operation
+        BSplineVoxelProjector<data_t>* _cloneImpl() const;
+
+        /// implement the polymorphic comparison operation
+        bool _isEqual(const LinearOperator<data_t>& other) const;
+
+    private:
+        ProjectedBSplineLut<data_t, 100> lut_;
+
+        using Base = VoxelProjector<data_t, BSplineVoxelProjector<data_t>>;
+
+        friend class XrayProjector<self_type>;
+    };
+
+    template <typename data_t>
+    class PhaseContrastBSplineVoxelProjector
+        : public VoxelProjector<data_t, PhaseContrastBSplineVoxelProjector<data_t>>
+    {
+    public:
+        using self_type = PhaseContrastBSplineVoxelProjector<data_t>;
+
+        PhaseContrastBSplineVoxelProjector(data_t degree, const VolumeDescriptor& domainDescriptor,
+                                           const DetectorDescriptor& rangeDescriptor);
+
+        PhaseContrastBSplineVoxelProjector(const VolumeDescriptor& domainDescriptor,
+                                           const DetectorDescriptor& rangeDescriptor);
+
+        data_t radius() const { return lut_.radius(); }
+
+        data_t weight(data_t distance) const
+        {
+            return lut_(std::abs(distance)) * math::sgn(distance);
+        }
+        data_t weight(data_t distance, data_t primDistance) const
+        {
+            auto abs_distance = std::abs(distance);
+            return lut_(abs_distance) / (abs_distance + 1e-10) * primDistance;
+        }
+
+        /// implement the polymorphic clone operation
+        PhaseContrastBSplineVoxelProjector<data_t>* _cloneImpl() const;
+
+        /// implement the polymorphic comparison operation
+        bool _isEqual(const LinearOperator<data_t>& other) const;
+
+    private:
+        ProjectedBSplineDerivativeLut<data_t, 100> lut_;
+
+        using Base = VoxelProjector<data_t, PhaseContrastBSplineVoxelProjector<data_t>>;
 
         friend class XrayProjector<self_type>;
     };

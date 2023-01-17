@@ -13,7 +13,7 @@ namespace elsa
     namespace detail
     {
         template <typename data_t, index_t N>
-        constexpr std::array<data_t, N + 1> generate_lut(ProjectedBlob<data_t> blob,
+        constexpr std::array<data_t, N + 1> generate_lut(data_t radius,
                                                          std::function<data_t(data_t)> gen)
         {
             Logger::get("generate_lut")->debug("Calculating lut");
@@ -21,28 +21,10 @@ namespace elsa
             std::array<data_t, N + 1> lut;
 
             auto t = static_cast<data_t>(0);
-            const auto step = blob.radius() / N;
+            const auto step = radius / N;
 
             for (std::size_t i = 0; i <= N; ++i) {
                 lut[i] = gen(t);
-                t += step;
-            }
-
-            return lut;
-        }
-
-        template <typename data_t, index_t N>
-        constexpr std::array<data_t, N + 1> bspline_lut(ProjectedBSpline<data_t> bspline)
-        {
-            Logger::get("bspline_lut")->debug("Calculating lut");
-
-            std::array<data_t, N + 1> lut;
-
-            auto t = static_cast<data_t>(0);
-            const auto step = 2.f / N;
-
-            for (std::size_t i = 0; i <= N; ++i) {
-                lut[i] = bspline(t);
                 t += step;
             }
 
@@ -121,7 +103,8 @@ namespace elsa
     public:
         constexpr ProjectedBlobLut(data_t radius, SelfType_t<data_t> alpha, int order)
             : blob_(radius, alpha, order),
-              lut_(detail::generate_lut<data_t, N>(blob_, [this](data_t s) { return blob_(s); }))
+              lut_(detail::generate_lut<data_t, N>(blob_.radius(),
+                                                   [this](data_t s) { return blob_(s); }))
         {
         }
 
@@ -150,7 +133,7 @@ namespace elsa
         constexpr ProjectedBlobDerivativeLut(data_t radius, SelfType_t<data_t> alpha, int order)
             : blob_(radius, alpha, order),
               lut_(detail::generate_lut<data_t, N>(
-                  blob_, [this](data_t s) { return blob_.derivative(s); }))
+                  blob_.radius(), [this](data_t s) { return blob_.derivative(s); }))
         {
         }
 
@@ -179,7 +162,7 @@ namespace elsa
         constexpr ProjectedBlobGradientHelperLut(data_t radius, SelfType_t<data_t> alpha, int order)
             : blob_(radius, alpha, order),
               lut_(detail::generate_lut<data_t, N>(
-                  blob_, [this](data_t s) { return blob_.gradient_helper(s); }))
+                  blob_.radius(), [this](data_t s) { return blob_.gradient_helper(s); }))
         {
         }
 
@@ -205,16 +188,44 @@ namespace elsa
     class ProjectedBSplineLut
     {
     public:
-        constexpr ProjectedBSplineLut(index_t dim, index_t order)
-            : bspline_(dim, order), lut_(detail::bspline_lut<data_t, N>(bspline_))
+        constexpr ProjectedBSplineLut(int dim, int degree)
+            : bspline_(dim, degree),
+              lut_(detail::generate_lut<data_t, N>(2, [this](data_t s) { return bspline_(s); }))
         {
         }
 
         constexpr data_t order() const { return bspline_.order(); }
 
+        constexpr data_t radius() const { return 2; }
+
         constexpr data_t operator()(data_t distance) const
         {
-            return lut_((std::abs(distance) / 2.) * N);
+            return lut_((std::abs(distance) / radius()) * N);
+        }
+
+    private:
+        ProjectedBSpline<data_t> bspline_;
+        Lut<data_t, N> lut_;
+    };
+
+    template <typename data_t, index_t N>
+    class ProjectedBSplineDerivativeLut
+    {
+    public:
+        constexpr ProjectedBSplineDerivativeLut(int dim, int degree)
+            : bspline_(dim, degree),
+              lut_(detail::generate_lut<data_t, N>(
+                  radius(), [this](data_t s) { return bspline_.derivative(s); }))
+        {
+        }
+
+        constexpr data_t order() const { return bspline_.order(); }
+
+        constexpr data_t radius() const { return 2; }
+
+        constexpr data_t operator()(data_t distance) const
+        {
+            return lut_((std::abs(distance) / radius()) * N);
         }
 
     private:
