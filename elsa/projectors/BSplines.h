@@ -36,6 +36,16 @@ namespace elsa
             return res;
         }
 
+        /// @brief Evaluate the 1-dimensional B-Spline Derivative of degree m
+        ///
+        /// @param x coordinate to evaluate 1-dimensional B-Spline at
+        /// @param m order of B-Spline
+        template <typename data_t>
+        constexpr data_t bsplineDerivative1d_evaluate(data_t x, index_t m) noexcept
+        {
+            return bspline1d_evaluate(x + 0.5, m - 1) - bspline1d_evaluate(x - 0.5, m - 1);
+        }
+
         /// @brief Evaluate n-dimensional B-Spline of degree m. As B-Splines are separable, this is
         /// just the product of 1-dimensional B-Splines.
         ///
@@ -68,6 +78,24 @@ namespace elsa
             }
             return res;
         }
+
+        /// @brief Evaluate the derivative of an n-dimensional B-Spline at a given coordinate for
+        /// the first dimension, and at the center (i.e. `0`) at all the other dimensions. This is
+        /// particular useful as an approximation during the calculation of the line integral
+        ///
+        /// @param x 1-dimensional coordinate to evaluate B-Spline at
+        /// @param m order of B-Spline
+        /// @param dim dimension of B-Spline
+        template <typename data_t>
+        constexpr data_t nd_bspline_derivative_centered(data_t x, int m, int dim) noexcept
+        {
+            data_t res = bsplineDerivative1d_evaluate(x, m);
+            for (int i = 1; i < dim; ++i) {
+                const auto inc = bspline1d_evaluate(0., m);
+                res *= inc;
+            }
+            return res;
+        }
     } // namespace bspline
 
     /// @brief Represent a B-Spline basis function of a given dimension and order
@@ -78,6 +106,8 @@ namespace elsa
         BSpline(index_t dim, index_t order);
 
         data_t operator()(Vector_t<data_t> x);
+
+        data_t derivative(data_t s);
 
         index_t order() const;
 
@@ -101,6 +131,10 @@ namespace elsa
         ProjectedBSpline(index_t dim, index_t order);
 
         data_t operator()(data_t s);
+
+        constexpr data_t derivative(data_t s);
+
+        constexpr data_t normalized_gradient(data_t s);
 
         index_t order() const;
 

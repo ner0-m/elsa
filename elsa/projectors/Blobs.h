@@ -259,7 +259,7 @@ namespace elsa
             return blobs::blob_derivative_projected(s, radius_, alpha_, order_);
         }
 
-        constexpr data_t gradient_helper(data_t s)
+        constexpr data_t normalized_gradient(data_t s)
         {
             return blobs::blob_normalized_derivative_projected(s, radius_, alpha_, order_);
         }

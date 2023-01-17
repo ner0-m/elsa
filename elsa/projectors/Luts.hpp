@@ -156,13 +156,14 @@ namespace elsa
     };
 
     template <typename data_t, index_t N>
-    class ProjectedBlobGradientHelperLut
+    class ProjectedBlobNormalizedGradientLut
     {
     public:
-        constexpr ProjectedBlobGradientHelperLut(data_t radius, SelfType_t<data_t> alpha, int order)
+        constexpr ProjectedBlobNormalizedGradientLut(data_t radius, SelfType_t<data_t> alpha,
+                                                     int order)
             : blob_(radius, alpha, order),
               lut_(detail::generate_lut<data_t, N>(
-                  blob_.radius(), [this](data_t s) { return blob_.gradient_helper(s); }))
+                  blob_.radius(), [this](data_t s) { return blob_.normalized_gradient(s); }))
         {
         }
 
@@ -203,6 +204,8 @@ namespace elsa
             return lut_((std::abs(distance) / radius()) * N);
         }
 
+        constexpr auto data() const { return lut_.data(); }
+
     private:
         ProjectedBSpline<data_t> bspline_;
         Lut<data_t, N> lut_;
@@ -227,6 +230,35 @@ namespace elsa
         {
             return lut_((std::abs(distance) / radius()) * N);
         }
+
+        constexpr auto data() const { return lut_.data(); }
+
+    private:
+        ProjectedBSpline<data_t> bspline_;
+        Lut<data_t, N> lut_;
+    };
+
+    template <typename data_t, index_t N>
+    class ProjectedBSplineNormalizedGradientLut
+    {
+    public:
+        constexpr ProjectedBSplineNormalizedGradientLut(int dim, int degree)
+            : bspline_(dim, degree),
+              lut_(detail::generate_lut<data_t, N>(
+                  radius(), [this](data_t s) { return bspline_.normalized_gradient(s); }))
+        {
+        }
+
+        constexpr data_t radius() const { return 2; }
+
+        constexpr data_t order() const { return bspline_.order(); }
+
+        constexpr data_t operator()(data_t distance) const
+        {
+            return lut_((distance / radius()) * N);
+        }
+
+        constexpr auto data() const { return lut_.data(); }
 
     private:
         ProjectedBSpline<data_t> bspline_;
