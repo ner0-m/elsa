@@ -8,6 +8,16 @@
 
 namespace elsa
 {
+    /// Customization point for ProximalOperators. For an object to be type erased by the
+    /// ProximityOperator interface, you either need to provide a member function `apply` for the
+    /// type, with the given parameters. Or you can overload this function.
+    template <class T, class data_t>
+    void apply_proximal(const T& proximal, const DataContainer<data_t>& v,
+                        geometry::Threshold<data_t> tau, DataContainer<data_t>& out)
+    {
+        proximal.apply(v, tau, out);
+    }
+
     /**
      * @brief Base class representing a proximity operator prox.
      *
@@ -26,31 +36,66 @@ namespace elsa
      * https://stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf
      */
     template <typename data_t = real_t>
-    class ProximityOperator : public Cloneable<ProximityOperator<data_t>>
+    class ProximityOperator
     {
+    private:
+        /// Concept for proximal operators, they should be cloneable, and have an apply method
+        struct ProxConcept {
+            virtual ~ProxConcept() = default;
+            virtual std::unique_ptr<ProxConcept> clone() const = 0;
+            virtual void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+                               DataContainer<data_t>& out) const = 0;
+        };
+
+        /// Bridge wrapper for concrete types
+        template <class T>
+        struct ProxModel : public ProxConcept {
+            ProxModel(T self) : self_(std::move(self)) {}
+
+            /// Just clone the type (assumes regularity, i.e. copy constructible)
+            std::unique_ptr<ProxConcept> clone() const override
+            {
+                return std::make_unique<ProxModel<T>>(self_);
+            }
+
+            /// Apply proximal by calling `apply_proximal`, this enables flexible extension, without
+            /// classes as well. The default implementation of `apply_proximal`,
+            /// just calls the member function
+            void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+                       DataContainer<data_t>& out) const override
+            {
+                apply_proximal(self_, v, t, out);
+            }
+
+        private:
+            T self_;
+        };
+
     public:
-        /// delete no-args constructor to prevent creation of an object without a DataDescriptor
+        /// delete default constructor for base-class
         ProximityOperator() = delete;
 
-        /**
-         * @brief Override to construct an actual proximity operator for one of the derived classes
-         * from the given DataDescriptor descriptor
-         *
-         * @param[in] descriptor DataDescriptor describing the operator values
-         */
-        ProximityOperator(const DataDescriptor& descriptor);
+        /// Type erasure constructor, taking everything that kan bind to the above provided
+        /// interface
+        template <typename T>
+        ProximityOperator(T proxOp) : ptr_(std::make_unique<ProxModel<T>>(std::move(proxOp)))
+        {
+        }
 
-        /// delete copy construction
-        ProximityOperator(const ProximityOperator<data_t>&) = delete;
+        /// Copy constructor
+        ProximityOperator(const ProximityOperator& other);
 
-        /// delete implicitly declared copy assignment to prevent copy assignment
-        auto operator=(const ProximityOperator&) -> ProximityOperator& = delete;
+        /// Default move constructor
+        ProximityOperator(ProximityOperator&& other) noexcept = default;
+
+        /// Copy assignment
+        ProximityOperator& operator=(const ProximityOperator& other);
+
+        /// Default move assignment
+        ProximityOperator& operator=(ProximityOperator&& other) noexcept = default;
 
         /// default destructor
-        ~ProximityOperator() override = default;
-
-        /// return the DataDescriptor
-        auto getRangeDescriptor() const -> const DataDescriptor&;
+        ~ProximityOperator() = default;
 
         /**
          * @brief apply the proximity operator to an element in the operator's domain
@@ -80,14 +125,7 @@ namespace elsa
         void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
                    DataContainer<data_t>& prox) const;
 
-    protected:
-        std::unique_ptr<DataDescriptor> _rangeDescriptor;
-
-        /// the apply method that has to be overridden in derived classes
-        virtual void applyImpl(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
-                               DataContainer<data_t>& prox) const = 0;
-
-        /// overridden comparison method based on the DataDescriptor
-        auto isEqual(const ProximityOperator<data_t>& other) const -> bool override;
+    private:
+        std::unique_ptr<ProxConcept> ptr_;
     };
 } // namespace elsa

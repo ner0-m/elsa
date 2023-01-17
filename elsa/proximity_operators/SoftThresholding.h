@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ProximityOperator.h"
+#include "DataContainer.h"
+#include "StrongTypes.h"
 
 namespace elsa
 {
@@ -18,20 +19,14 @@ namespace elsa
      * http://sfb649.wiwi.hu-berlin.de/fedc_homepage/xplore/tutorials/xlghtmlnode93.html
      */
     template <typename data_t = real_t>
-    class SoftThresholding : public ProximityOperator<data_t>
+    class SoftThresholding
     {
     public:
-        /**
-         * @brief Construct a SoftThresholding operator from the given DataDescriptor
-         *
-         * @param[in] descriptor DataDescriptor describing the operator values
-         */
-        SoftThresholding(const DataDescriptor& descriptor);
+        SoftThresholding() = default;
 
         /// default destructor
-        ~SoftThresholding() override = default;
+        ~SoftThresholding() = default;
 
-    protected:
         /**
          * @brief apply the proximity operator of the l1 norm to an element in the operator's domain
          *
@@ -39,13 +34,17 @@ namespace elsa
          * @param[in] t input Threshold
          * @param[out] prox output DataContainer
          */
-        void applyImpl(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
-                       DataContainer<data_t>& prox) const override;
+        void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+                   DataContainer<data_t>& prox) const;
 
-        /// implement the polymorphic clone operation
-        auto cloneImpl() const -> SoftThresholding<data_t>* override;
+        DataContainer<data_t> apply(const DataContainer<data_t>& v,
+                                    geometry::Threshold<data_t> t) const;
 
-        /// implement the polymorphic comparison operation
-        auto isEqual(const ProximityOperator<data_t>& other) const -> bool override;
+        friend bool operator==(const SoftThresholding<data_t>& lhs,
+                               const SoftThresholding<data_t>& rhs);
+        friend bool operator!=(const SoftThresholding<data_t>& lhs,
+                               const SoftThresholding<data_t>& rhs);
+
+    protected:
     };
 } // namespace elsa

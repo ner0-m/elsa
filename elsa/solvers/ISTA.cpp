@@ -40,7 +40,7 @@ namespace elsa
         spdlog::stopwatch aggregate_time;
         Logger::get("ISTA")->info("Start preparations...");
 
-        SoftThresholding<data_t> shrinkageOp{_problem.getDataTerm().getDomainDescriptor()};
+        SoftThresholding<data_t> shrinkageOp;
 
         data_t lambda = _problem.getRegularizationTerms()[0].getWeight();
 

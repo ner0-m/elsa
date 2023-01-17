@@ -4,15 +4,16 @@
 namespace elsa
 {
     template <typename data_t>
-    ProximityOperator<data_t>::ProximityOperator(const DataDescriptor& descriptor)
-        : _rangeDescriptor{descriptor.clone()}
+    ProximityOperator<data_t>::ProximityOperator(const ProximityOperator& other)
+        : ptr_(other.ptr_->clone())
     {
     }
 
     template <typename data_t>
-    auto ProximityOperator<data_t>::getRangeDescriptor() const -> const DataDescriptor&
+    ProximityOperator<data_t>& ProximityOperator<data_t>::operator=(const ProximityOperator& other)
     {
-        return *_rangeDescriptor;
+        ptr_ = other.ptr_->clone();
+        return *this;
     }
 
     template <typename data_t>
@@ -20,9 +21,8 @@ namespace elsa
                                           geometry::Threshold<data_t> t) const
         -> DataContainer<data_t>
     {
-        Timer timeguard("ProximityOperator", "apply");
-        DataContainer<data_t> prox(*_rangeDescriptor);
-        applyImpl(v, t, prox);
+        DataContainer<data_t> prox(v.getDataDescriptor());
+        apply(v, t, prox);
         return prox;
     }
 
@@ -32,13 +32,7 @@ namespace elsa
                                           DataContainer<data_t>& prox) const
     {
         Timer timeguard("ProximityOperator", "apply");
-        applyImpl(v, t, prox);
-    }
-
-    template <typename data_t>
-    auto ProximityOperator<data_t>::isEqual(const ProximityOperator<data_t>& other) const -> bool
-    {
-        return static_cast<bool>(*_rangeDescriptor == *other._rangeDescriptor);
+        ptr_->apply(v, t, prox);
     }
 
     // ------------------------------------------

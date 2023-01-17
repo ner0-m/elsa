@@ -1,54 +1,50 @@
+#include <cmath>
+
 #include "SoftThresholding.h"
+#include "DataContainer.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
+#include "Math.hpp"
 
 namespace elsa
 {
+
     template <typename data_t>
-    SoftThresholding<data_t>::SoftThresholding(const DataDescriptor& descriptor)
-        : ProximityOperator<data_t>(descriptor)
+    DataContainer<data_t> SoftThresholding<data_t>::apply(const DataContainer<data_t>& v,
+                                                          geometry::Threshold<data_t> t) const
     {
+        DataContainer<data_t> out{v.getDataDescriptor()};
+        apply(v, t, out);
+        return out;
     }
 
     template <typename data_t>
-    void SoftThresholding<data_t>::applyImpl(const DataContainer<data_t>& v,
-                                             geometry::Threshold<data_t> t,
-                                             DataContainer<data_t>& prox) const
+    void SoftThresholding<data_t>::apply(const DataContainer<data_t>& v,
+                                         geometry::Threshold<data_t> t,
+                                         DataContainer<data_t>& prox) const
     {
         if (v.getSize() != prox.getSize()) {
             throw LogicError("SoftThresholding: sizes of v and prox must match");
         }
 
-        auto vIter = v.begin();
-        auto proxIter = prox.begin();
+        auto first = v.begin();
+        auto out = prox.begin();
 
-        for (; vIter != v.end() && proxIter != prox.end(); vIter++, proxIter++) {
-            if (*vIter > t) {
-                *proxIter = *vIter - t;
-            } else if (*vIter < -t) {
-                *proxIter = *vIter + t;
-            } else {
-                *proxIter = 0;
-            }
+        for (; first != v.end() && out != prox.end(); first++, out++) {
+            *out = std::max(std::abs(*first) - t, data_t{0}) * sign<data_t, data_t>(*first);
         }
     }
 
     template <typename data_t>
-    auto SoftThresholding<data_t>::cloneImpl() const -> SoftThresholding<data_t>*
+    bool operator==(const SoftThresholding<data_t>&, const SoftThresholding<data_t>&)
     {
-        return new SoftThresholding<data_t>(this->getRangeDescriptor());
+        return true;
     }
 
     template <typename data_t>
-    auto SoftThresholding<data_t>::isEqual(const ProximityOperator<data_t>& other) const -> bool
+    bool operator!=(const SoftThresholding<data_t>&, const SoftThresholding<data_t>&)
     {
-        if (!ProximityOperator<data_t>::isEqual(other)) {
-            return false;
-        }
-
-        auto otherDerived = downcast_safe<SoftThresholding<data_t>>(&other);
-
-        return static_cast<bool>(otherDerived);
+        return false;
     }
 
     // ------------------------------------------

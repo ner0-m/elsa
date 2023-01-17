@@ -1,19 +1,23 @@
 #include "HardThresholding.h"
+#include "DataContainer.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
 
 namespace elsa
 {
     template <typename data_t>
-    HardThresholding<data_t>::HardThresholding(const DataDescriptor& descriptor)
-        : ProximityOperator<data_t>(descriptor)
+    DataContainer<data_t> HardThresholding<data_t>::apply(const DataContainer<data_t>& v,
+                                                          geometry::Threshold<data_t> t) const
     {
+        DataContainer<data_t> out{v.getDataDescriptor()};
+        apply(v, t, out);
+        return out;
     }
 
     template <typename data_t>
-    void HardThresholding<data_t>::applyImpl(const DataContainer<data_t>& v,
-                                             geometry::Threshold<data_t> t,
-                                             DataContainer<data_t>& prox) const
+    void HardThresholding<data_t>::apply(const DataContainer<data_t>& v,
+                                         geometry::Threshold<data_t> t,
+                                         DataContainer<data_t>& prox) const
     {
         if (v.getSize() != prox.getSize()) {
             throw LogicError("HardThresholding: sizes of v and prox must match");
@@ -29,24 +33,6 @@ namespace elsa
                 *proxIter = 0;
             }
         }
-    }
-
-    template <typename data_t>
-    auto HardThresholding<data_t>::cloneImpl() const -> HardThresholding<data_t>*
-    {
-        return new HardThresholding<data_t>(this->getRangeDescriptor());
-    }
-
-    template <typename data_t>
-    auto HardThresholding<data_t>::isEqual(const ProximityOperator<data_t>& other) const -> bool
-    {
-        if (!ProximityOperator<data_t>::isEqual(other)) {
-            return false;
-        }
-
-        auto otherDerived = downcast_safe<HardThresholding<data_t>>(&other);
-
-        return static_cast<bool>(otherDerived);
     }
 
     // ------------------------------------------

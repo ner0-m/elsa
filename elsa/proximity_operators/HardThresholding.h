@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ProximityOperator.h"
+#include "DataContainer.h"
+#include "StrongTypes.h"
 
 namespace elsa
 {
@@ -18,20 +19,24 @@ namespace elsa
      * http://sfb649.wiwi.hu-berlin.de/fedc_homepage/xplore/tutorials/xlghtmlnode93.html
      */
     template <typename data_t = real_t>
-    class HardThresholding : public ProximityOperator<data_t>
+    class HardThresholding
     {
     public:
-        /**
-         * @brief Construct a HardThresholding operator from the given DataDescriptor
-         *
-         * @param[in] descriptor DataDescriptor describing the operator values
-         */
-        HardThresholding(const DataDescriptor& descriptor);
+        HardThresholding() = default;
 
         /// default destructor
-        ~HardThresholding() override = default;
+        ~HardThresholding() = default;
 
-    protected:
+        /**
+         * @brief apply the proximity operator of the l0 pseudo-norm to an element in the operator's
+         * domain
+         *
+         * @param[in] v input DataContainer
+         * @param[in] t input Threshold
+         */
+        DataContainer<data_t> apply(const DataContainer<data_t>& v,
+                                    geometry::Threshold<data_t> t) const;
+
         /**
          * @brief apply the proximity operator of the l0 pseudo-norm to an element in the operator's
          * domain
@@ -40,13 +45,7 @@ namespace elsa
          * @param[in] t input Threshold
          * @param[out] prox output DataContainer
          */
-        void applyImpl(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
-                       DataContainer<data_t>& prox) const override;
-
-        /// implement the polymorphic clone operation
-        auto cloneImpl() const -> HardThresholding<data_t>* override;
-
-        /// implement the polymorphic comparison operation
-        auto isEqual(const ProximityOperator<data_t>& other) const -> bool override;
+        void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+                   DataContainer<data_t>& prox) const;
     };
 } // namespace elsa

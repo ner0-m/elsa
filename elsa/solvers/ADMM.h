@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <type_traits>
 
 #include "Solver.h"
 #include "ProximityOperator.h"
@@ -48,11 +49,11 @@ namespace elsa
             : Solver<data_t>(),
               _problem(static_cast<SplittingProblem<data_t>*>(splittingProblem.clone().release()))
         {
-            static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
+            static_assert(std::is_base_of_v<Solver<data_t>, XSolver<data_t>>,
                           "ADMM: XSolver must extend Solver");
 
-            static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ADMM: ZSolver must extend ProximityOperator");
+            static_assert(std::is_constructible_v<ProximityOperator<data_t>, ZSolver<data_t>>,
+                          "ADMM: ZSolver must adhere to the ProximityOperator interface");
         }
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations)
@@ -63,8 +64,8 @@ namespace elsa
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
                           "ADMM: XSolver must extend Solver");
 
-            static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ADMM: ZSolver must extend ProximityOperator");
+            static_assert(std::is_constructible_v<ProximalOperator<data_t>, ZSolver<data_t>>,
+                          "ADMM: ZSolver must adhere to the ProximalOperator interface");
         }
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations,
@@ -78,8 +79,8 @@ namespace elsa
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
                           "ADMM: XSolver must extend Solver");
 
-            static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ADMM: ZSolver must extend ProximityOperator");
+            static_assert(std::is_constructible_v<ProximalOperator<data_t>, ZSolver<data_t>>,
+                          "ADMM: ZSolver must adhere to the ProximalOperator interface");
         }
 
         /// default destructor
@@ -156,7 +157,7 @@ namespace elsa
                 // RegularizationTerm zRegTerm(_rho / 2, L2NormPow2<data_t>(zLinearResidual));
                 // Problem<data_t> zUpdateProblem(regularizationTerm, zRegTerm, z);
 
-                ZSolver<data_t> zProxOp(A.getRangeDescriptor());
+                ZSolver<data_t> zProxOp;
                 z = zProxOp.apply(x + u, geometry::Threshold{regWeight / _rho});
 
                 rk -= z;
