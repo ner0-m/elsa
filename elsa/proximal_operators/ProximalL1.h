@@ -6,7 +6,7 @@
 namespace elsa
 {
     /**
-     * @brief Class representing the proximity operator of the l1 norm
+     * @brief Class representing the proximal operator of the l1 norm
      *
      * @author Andi Braimllari - initial code
      *
@@ -28,7 +28,7 @@ namespace elsa
         ~SoftThresholding() = default;
 
         /**
-         * @brief apply the proximity operator of the l1 norm to an element in the operator's domain
+         * @brief apply the proximal operator of the l1 norm to an element in the operator's domain
          *
          * @param[in] v input DataContainer
          * @param[in] t input Threshold

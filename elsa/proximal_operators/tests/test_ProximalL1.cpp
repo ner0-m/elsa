@@ -18,7 +18,7 @@
 using namespace elsa;
 using namespace doctest;
 
-TEST_SUITE_BEGIN("proximity_operators");
+TEST_SUITE_BEGIN("proximal_operators");
 
 TEST_CASE_TEMPLATE("SoftThresholding: Testing regularity", data_t, float, double)
 {

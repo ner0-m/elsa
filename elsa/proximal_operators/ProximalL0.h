@@ -6,7 +6,7 @@
 namespace elsa
 {
     /**
-     * @brief Class representing the proximity operator of the l0 pseudo-norm
+     * @brief Class representing the proximal operator of the l0 pseudo-norm
      *
      * @author Andi Braimllari - initial code
      *
@@ -28,7 +28,7 @@ namespace elsa
         ~HardThresholding() = default;
 
         /**
-         * @brief apply the proximity operator of the l0 pseudo-norm to an element in the operator's
+         * @brief apply the proximal operator of the l0 pseudo-norm to an element in the operator's
          * domain
          *
          * @param[in] v input DataContainer
@@ -38,7 +38,7 @@ namespace elsa
                                     geometry::Threshold<data_t> t) const;
 
         /**
-         * @brief apply the proximity operator of the l0 pseudo-norm to an element in the operator's
+         * @brief apply the proximal operator of the l0 pseudo-norm to an element in the operator's
          * domain
          *
          * @param[in] v input DataContainer

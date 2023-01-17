@@ -18,7 +18,7 @@ namespace elsa
         static void addCustomFunctions(py::module& m)
         {
             // expose Logger class
-            py::class_<LoggerProximityOperators>(m, "logger_pyelsa_proximity_operators")
+            py::class_<LoggerProximityOperators>(m, "logger_pyelsa_proximal_operators")
                 .def_static("setLevel", &LoggerProximityOperators::setLevel)
                 .def_static("enableFileLogging", &LoggerProximityOperators::enableFileLogging)
                 .def_static("flush", &LoggerProximityOperators::flush);

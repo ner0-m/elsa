@@ -1,8 +1,8 @@
 # list all the headers of the module
-set(MODULE_HEADERS ProximityOperator.h SoftThresholding.h HardThresholding.h)
+set(MODULE_HEADERS ProximalOperator.h SoftThresholding.h HardThresholding.h)
 
 # list all the code files of the module
-set(MODULE_SOURCES ProximityOperator.cpp SoftThresholding.cpp HardThresholding.cpp)
+set(MODULE_SOURCES ProximalOperator.cpp SoftThresholding.cpp HardThresholding.cpp)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)
@@ -14,7 +14,7 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 ADD_ELSA_MODULE(
-    proximity_operators "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
+    proximal_operators "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 

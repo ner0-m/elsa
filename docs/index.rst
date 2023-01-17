@@ -29,7 +29,7 @@
    modules/solvers/solvers
    modules/projectors
    modules/projectors_cuda
-   modules/proximity_operators
+   modules/proximal_operators
    modules/generators
    modules/ml/ml
 

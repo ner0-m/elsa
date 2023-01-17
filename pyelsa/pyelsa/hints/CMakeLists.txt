@@ -11,7 +11,7 @@ set(MODULE_SOURCES
     problems_hints.cpp
     projectors_cuda_hints.cpp
     projectors_hints.cpp
-    proximity_operators_hints.cpp
+    proximal_operators_hints.cpp
     solvers_hints.cpp
 )
 

@@ -12,31 +12,34 @@ namespace elsa
     /// ProximityOperator interface, you either need to provide a member function `apply` for the
     /// type, with the given parameters. Or you can overload this function.
     template <class T, class data_t>
-    void apply_proximal(const T& proximal, const DataContainer<data_t>& v,
-                        geometry::Threshold<data_t> tau, DataContainer<data_t>& out)
+    void applyProximal(const T& proximal, const DataContainer<data_t>& v,
+                       geometry::Threshold<data_t> tau, DataContainer<data_t>& out)
     {
         proximal.apply(v, tau, out);
     }
 
     /**
-     * @brief Base class representing a proximity operator prox.
+     * @brief Base class representing a proximal operator prox.
      *
-     * @author Andi Braimllari - initial code
-     *
-     * @tparam data_t data type for the values of the operator, defaulting to real_t
-     *
-     * This class represents a proximity operator prox, expressed through its apply methods,
-     * which implement the proximity operator of f with penalty r i.e.
+     * This class represents a proximal operator prox, expressed through its apply methods,
+     * which implement the proximal operator of f with penalty r i.e.
      * @f$ prox_{f,\rho}(v) = argmin_{x}(f(x) + (\rho/2)·\| x - v \|^2_2). @f$
      *
-     * Concrete implementations of proximity operators will derive from this class and override the
-     * applyImpl method.
+     * The class implements type erasure. Classes, that bind to this wrapper should overload
+     * either the `applyProximal`, or implement the `apply`  member function, with the signature
+     * given in this class. Base types also are assumed to be Semi-Regular.
      *
      * References:
      * https://stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf
+     *
+     * @tparam data_t data type for the values of the operator, defaulting to real_t
+     *
+     * @author
+     * - Andi Braimllari - initial code
+     * - David Frank - Type Erasure
      */
     template <typename data_t = real_t>
-    class ProximityOperator
+    class ProximalOperator
     {
     private:
         /// Concept for proximal operators, they should be cloneable, and have an apply method
@@ -64,7 +67,7 @@ namespace elsa
             void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
                        DataContainer<data_t>& out) const override
             {
-                apply_proximal(self_, v, t, out);
+                applyProximal(self_, v, t, out);
             }
 
         private:
@@ -73,37 +76,37 @@ namespace elsa
 
     public:
         /// delete default constructor for base-class
-        ProximityOperator() = delete;
+        ProximalOperator() = delete;
 
         /// Type erasure constructor, taking everything that kan bind to the above provided
         /// interface
         template <typename T>
-        ProximityOperator(T proxOp) : ptr_(std::make_unique<ProxModel<T>>(std::move(proxOp)))
+        ProximalOperator(T proxOp) : ptr_(std::make_unique<ProxModel<T>>(std::move(proxOp)))
         {
         }
 
         /// Copy constructor
-        ProximityOperator(const ProximityOperator& other);
+        ProximalOperator(const ProximalOperator& other);
 
         /// Default move constructor
-        ProximityOperator(ProximityOperator&& other) noexcept = default;
+        ProximalOperator(ProximalOperator&& other) noexcept = default;
 
         /// Copy assignment
-        ProximityOperator& operator=(const ProximityOperator& other);
+        ProximalOperator& operator=(const ProximalOperator& other);
 
         /// Default move assignment
-        ProximityOperator& operator=(ProximityOperator&& other) noexcept = default;
+        ProximalOperator& operator=(ProximalOperator&& other) noexcept = default;
 
         /// default destructor
-        ~ProximityOperator() = default;
+        ~ProximalOperator() = default;
 
         /**
-         * @brief apply the proximity operator to an element in the operator's domain
+         * @brief apply the proximal operator to an element in the operator's domain
          *
          * @param[in] v input DataContainer
          * @param[in] t input Threshold
          *
-         * @returns prox DataContainer containing the application of the proximity operator to
+         * @returns prox DataContainer containing the application of the proximal operator to
          * data v, i.e. in the range of the operator
          *
          * Please note: this method uses apply(v, t, prox(v)) to perform the actual operation.
@@ -112,7 +115,7 @@ namespace elsa
             -> DataContainer<data_t>;
 
         /**
-         * @brief apply the proximity operator to an element in the operator's domain
+         * @brief apply the proximal operator to an element in the operator's domain
          *
          * @param[in] v input DataContainer
          * @param[in] t input Threshold

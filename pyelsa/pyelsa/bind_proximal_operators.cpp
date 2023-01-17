@@ -4,11 +4,11 @@
 #include "ProximityOperator.h"
 #include "SoftThresholding.h"
 
-#include "hints/proximity_operators_hints.cpp"
+#include "hints/proximal_operators_hints.cpp"
 
 namespace py = pybind11;
 
-void add_definitions_pyelsa_proximity_operators(py::module& m)
+void add_definitions_pyelsa_proximal_operators(py::module& m)
 {
     py::class_<elsa::Cloneable<elsa::ProximityOperator<float>>> CloneableProximityOperatorf(
         m, "CloneableProximityOperatorf");
@@ -107,7 +107,7 @@ void add_definitions_pyelsa_proximity_operators(py::module& m)
     elsa::ProximityOperatorsHints::addCustomFunctions(m);
 }
 
-PYBIND11_MODULE(pyelsa_proximity_operators, m)
+PYBIND11_MODULE(pyelsa_proximal_operators, m)
 {
-    add_definitions_pyelsa_proximity_operators(m);
+    add_definitions_pyelsa_proximal_operators(m);
 }
