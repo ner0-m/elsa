@@ -139,4 +139,12 @@ namespace elsa
             }
         }
     } // namespace shearlet
+
+    /// @brief Compute the sign of the given value. Will return -1, for negative values, 1 for
+    /// positive ones and 0 otherwise
+    template <typename T, typename Ret = int>
+    Ret sign(T val)
+    {
+        return static_cast<Ret>((T{0} < val) - (val < T{0}));
+    }
 } // namespace elsa
