@@ -67,7 +67,7 @@ namespace elsa
      * for the @f$\ell_1@f$-Regularization is the soft thresolding operator (ProximalL1). This
      * can also be extended with constrains, such as non-negativity constraints.
      *
-     * @see An accerlerated version of proximal gradient descent is FISTA.
+     * @see An accerlerated version of proximal gradient descent is APGD.
      * See also LASSOProblem
      *
      * @author

@@ -4,12 +4,12 @@
 #include "ProximalL1.h"
 #include "TypeCasts.hpp"
 #include "Logger.h"
+#include "PowerIterations.h"
 
 #include "spdlog/stopwatch.h"
 
 namespace elsa
 {
-
     template <typename data_t>
     PGD<data_t>::PGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
                      ProximalOperator<data_t> prox, geometry::Threshold<data_t> mu, data_t epsilon)
@@ -20,7 +20,7 @@ namespace elsa
     template <typename data_t>
     PGD<data_t>::PGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
                      ProximalOperator<data_t> prox, data_t epsilon)
-        : A_(A.clone()), b_(b), prox_(prox), epsilon_(epsilon)
+        : A_(A.clone()), b_(b), prox_(prox), lambda_(1), epsilon_(epsilon)
     {
     }
 
@@ -33,6 +33,7 @@ namespace elsa
                  .clone()),
           b_(downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual()).getDataVector()),
           prox_(ProximalL1<data_t>()),
+          lambda_(problem.getRegularizationTerms()[0].getWeight()),
           mu_{data_t(mu)},
           epsilon_{epsilon}
     {
@@ -58,6 +59,8 @@ namespace elsa
                  .clone()),
           b_(downcast<LinearResidual<data_t>>(lassoProb.getDataTerm().getResidual())
                  .getDataVector()),
+          prox_(ProximalL1<data_t>()),
+          lambda_(lassoProb.getRegularizationTerms()[0].getWeight()),
           epsilon_{epsilon}
     {
     }
@@ -68,12 +71,6 @@ namespace elsa
     {
         spdlog::stopwatch aggregate_time;
         Logger::get("PGD")->info("Start preparations...");
-
-        // Safe as long as only LinearResidual exits
-        /* const auto& linResid = */
-        /*     downcast<LinearResidual<data_t>>((_problem.getDataTerm()).getResidual()); */
-        /* const LinearOperator<data_t>& A = linResid.getOperator(); */
-        /* const DataContainer<data_t>& b = linResid.getDataVector(); */
 
         auto x = DataContainer<data_t>(A_->getDomainDescriptor());
         if (x0.has_value()) {
@@ -86,11 +83,11 @@ namespace elsa
         DataContainer<data_t> gradient = A_->applyAdjoint(A_->apply(x)) - Atb;
 
         if (!mu_.isInitialized()) {
-
-            // TODO: Do power iterations for A^T * A
-            /* mu_ = 1 / _problem.getLipschitzConstant(x); */
-            mu_ = 1;
+            // Hessian of least squares functional is A^T * A
+            mu_ = powerIterations(adjoint(*A_) * (*A_));
         }
+
+        Logger::get("PGD")->info("mu: {}", *mu_);
 
         Logger::get("PGD")->info("Preparations done, tooke {}s", aggregate_time);
         Logger::get("PGD")->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "gradient", "time",
@@ -131,14 +128,17 @@ namespace elsa
     template <typename data_t>
     auto PGD<data_t>::isEqual(const Solver<data_t>& other) const -> bool
     {
-        auto otherISTA = downcast_safe<PGD>(&other);
-        if (!otherISTA)
+        auto otherPGD = downcast_safe<PGD>(&other);
+        if (!otherPGD)
             return false;
 
-        if (mu_ != otherISTA->mu_)
+        if (mu_.isInitialized() != otherPGD->mu_.isInitialized())
             return false;
 
-        if (epsilon_ != otherISTA->epsilon_)
+        if (mu_ != otherPGD->mu_)
+            return false;
+
+        if (epsilon_ != otherPGD->epsilon_)
             return false;
 
         return true;

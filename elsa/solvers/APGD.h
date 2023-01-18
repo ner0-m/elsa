@@ -11,23 +11,24 @@
 namespace elsa
 {
     /**
-     * @brief Class representing a Fast Iterative Shrinkage-Thresholding Algorithm solver
+     * @brief Accelerated Proximal Gradient Descent (APGD)
      *
-     * This class represents a APGD solver i.e.
+     * APGD minimizes function of the the same for as PGD. See the documentation there.
      *
-     *  - @f$ x_{k} = shrinkageOperator(y_k - \mu * A^T (Ay_k - b)) @f$
+     * This class represents a APGD solver with the following steps:
+     *
+     *  - @f$ x_{k} = prox_h(y_k - \mu * A^T (Ay_k - b)) @f$
      *  - @f$ t_{k+1} = \frac{1 + \sqrt{1 + 4 * t_{k}^2}}{2} @f$
      *  - @f$ y_{k+1} = x_{k} + (\frac{t_{k} - 1}{t_{k+1}}) * (x_{k} - x_{k - 1}) @f$
-     *
-     * in which shrinkageOperator is the proximal operator of the L1-norm, which is
-     * often referred to as soft thresholding, defined as @f$
-     * shrinkageOperator(z_k) = sign(z_k)·(|z_k| - \mu*\lambda)_+ @f$.
      *
      * APGD has a worst-case complexity result of @f$ O(1/k^2) @f$.
      *
      * References:
      * http://www.cs.cmu.edu/afs/cs/Web/People/airg/readings/2012_02_21_a_fast_iterative_shrinkage-thresholding.pdf
      * https://arxiv.org/pdf/2008.02683.pdf
+     *
+     * @see For a more detailed discussion of the type of problem for this solver,
+     * see PGD.
      *
      * @author
      * Andi Braimllari - initial code
