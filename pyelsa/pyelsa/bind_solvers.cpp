@@ -276,6 +276,43 @@ void add_omp(py::module& m)
     m.attr("OrthogonalMatchingPursuit") = m.attr("OrthogonalMatchingPursuitf");
 }
 
+namespace detail
+{
+    template <class data_t, template <class> class solver_t = elsa::Solver>
+    void add_generalized_minimum_residual(py::module& m, const char* name)
+    {
+        using gmres = solver_t<data_t>;
+        using Solver = elsa::Solver<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using dc = elsa::DataContainer<data_t>;
+
+        py::class_<gmres, Solver> GMRES(m, name);
+        GMRES
+            .def(py::init<const LOp&, const LOp&, const dc&>(), py::arg("projector"),
+                 py::arg("backprojector"), py::arg("sinogram"))
+            .def(py::init<const LOp&, const LOp&, const dc&, data_t>(), py::arg("projector"),
+                 py::arg("backprojector"), py::arg("sinogram"), py::arg("epsilon"))
+            .def(py::init<const LOp&, const dc&, data_t>(), py::arg("projector"),
+                 py::arg("sinogram"), py::arg("epsilon"))
+            .def(py::init<const LOp&, const dc&>(), py::arg("projector"), py::arg("sinogram"));
+    }
+} // namespace detail
+
+void add_generalized_minimum_residual(py::module& m)
+{
+    detail::add_generalized_minimum_residual<float, elsa::AB_GMRES>(m, "ABGMRESf");
+    detail::add_generalized_minimum_residual<double, elsa::AB_GMRES>(m, "ABGMRESd");
+
+    detail::add_generalized_minimum_residual<float, elsa::BA_GMRES>(m, "BAGMRESf");
+    detail::add_generalized_minimum_residual<double, elsa::BA_GMRES>(m, "BAGMRESd");
+
+    m.attr("ABGMRES") = m.attr("ABGMRESf");
+    m.attr("BAGMRES") = m.attr("BAGMRESf");
+
+    // adding a GMRES function that uses ABGMRES by default:
+    m.attr("GMRES") = m.attr("ABGMRESf");
+}
+
 void add_definitions_pyelsa_solvers(py::module& m)
 {
     add_solver(m);
@@ -288,6 +325,8 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_ogm(m);
     add_sqs(m);
     add_omp(m);
+
+    add_generalized_minimum_residual(m);
 
     py::class_<elsa::Landweber<float>, elsa::Solver<float>> Landweberf(m, "Landweberf");
     Landweberf.def(
@@ -334,70 +373,6 @@ void add_definitions_pyelsa_solvers(py::module& m)
     sirtd.def(py::init<const elsa::WLSProblem<double>&>(), py::arg("problem"));
     sirtd.def(py::init<const elsa::WLSProblem<double>&, double>(), py::arg("problem"),
               py::arg("stepSize"));
-
-    py::class_<elsa::AB_GMRES<float>, elsa::Solver<float>> ABGMRESf(m, "ABGMRESf");
-    ABGMRESf
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::LinearOperator<float>&,
-                      const elsa::DataContainer<float>&>(),
-             py::arg("projector"), py::arg("backprojector"), py::arg("sinogram"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::LinearOperator<float>&,
-                      const elsa::DataContainer<float>&, float>(),
-             py::arg("projector"), py::arg("backprojector"), py::arg("sinogram"),
-             py::arg("epsilon"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&,
-                      float>(),
-             py::arg("projector"), py::arg("sinogram"), py::arg("epsilon"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&>(),
-             py::arg("projector"), py::arg("sinogram"));
-
-    m.attr("ABGMRES") = m.attr("ABGMRESf");
-
-    py::class_<elsa::AB_GMRES<double>, elsa::Solver<double>> ABGMRESd(m, "ABGMRESd");
-    ABGMRESd
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::LinearOperator<double>&,
-                      const elsa::DataContainer<double>&>(),
-             py::arg("projector"), py::arg("backprojector"), py::arg("sinogram"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::LinearOperator<double>&,
-                      const elsa::DataContainer<double>&, double>(),
-             py::arg("projector"), py::arg("backprojector"), py::arg("sinogram"),
-             py::arg("epsilon"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&,
-                      double>(),
-             py::arg("projector"), py::arg("sinogram"), py::arg("epsilon"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&>(),
-             py::arg("projector"), py::arg("sinogram"));
-
-    py::class_<elsa::BA_GMRES<float>, elsa::Solver<float>> BAGMRESf(m, "BAGMRESf");
-    BAGMRESf
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::LinearOperator<float>&,
-                      const elsa::DataContainer<float>&>(),
-             py::arg("projector"), py::arg("backprojector"), py::arg("sinogram"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::LinearOperator<float>&,
-                      const elsa::DataContainer<float>&, float>(),
-             py::arg("projector"), py::arg("backprojector"), py::arg("sinogram"),
-             py::arg("epsilon"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&,
-                      float>(),
-             py::arg("projector"), py::arg("sinogram"), py::arg("epsilon"))
-        .def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&>(),
-             py::arg("projector"), py::arg("sinogram"));
-
-    m.attr("BAGMRES") = m.attr("BAGMRESf");
-
-    py::class_<elsa::BA_GMRES<double>, elsa::Solver<double>> BAGMRESd(m, "BAGMRESd");
-    BAGMRESd
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::LinearOperator<double>&,
-                      const elsa::DataContainer<double>&>(),
-             py::arg("projector"), py::arg("backprojector"), py::arg("sinogram"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::LinearOperator<double>&,
-                      const elsa::DataContainer<double>&, double>(),
-             py::arg("projector"), py::arg("backprojector"), py::arg("sinogram"),
-             py::arg("epsilon"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&,
-                      double>(),
-             py::arg("projector"), py::arg("sinogram"), py::arg("epsilon"))
-        .def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&>(),
-             py::arg("projector"), py::arg("sinogram"));
 
     elsa::SolversHints::addCustomFunctions(m);
 }

@@ -43,9 +43,4 @@ ADD_ELSA_MODULE(
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 
-# We need to compile the DataContainer with the NVCC compiler, if unified memory is used
-if(ELSA_CUDA_ENABLED)
-    set_source_files_properties(AB_GMRES.cpp PROPERTIES LANGUAGE CUDA)
-endif()
-
 write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_problems elsa_proximal_operators)
