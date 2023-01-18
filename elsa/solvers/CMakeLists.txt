@@ -4,7 +4,7 @@ set(MODULE_HEADERS
     GradientDescent.h
     CG.h
     PGD.h
-    FISTA.h
+    APGD.h
     FGM.h
     OGM.h
     ADMM.h
@@ -21,7 +21,7 @@ set(MODULE_SOURCES
     GradientDescent.cpp
     CG.cpp
     PGD.cpp
-    FISTA.cpp
+    APGD.cpp
     FGM.cpp
     OGM.cpp
     SQS.cpp

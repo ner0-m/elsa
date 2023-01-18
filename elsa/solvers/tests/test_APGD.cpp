@@ -1,15 +1,7 @@
-/**
- * @file test_FISTA.cpp
- *
- * @brief Tests for the FISTA class
- *
- * @author Andi Braimllari
- */
-
 #include "doctest/doctest.h"
 
 #include "Error.h"
-#include "FISTA.h"
+#include "APGD.h"
 #include "Identity.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
@@ -21,7 +13,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("solvers");
 
-TEST_CASE("FISTA: Solving a LASSOProblem")
+TEST_CASE("APGD: Solving a LASSOProblem")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -45,11 +37,11 @@ TEST_CASE("FISTA: Solving a LASSOProblem")
 
         LASSOProblem lassoProb(wlsProb, regTerm);
 
-        WHEN("setting up a FISTA solver")
+        WHEN("setting up a APGD solver")
         {
-            FISTA solver(lassoProb, geometry::Threshold(0.005f));
+            APGD solver(lassoProb, geometry::Threshold(0.005f));
 
-            THEN("cloned FISTA solver equals original FISTA solver")
+            THEN("cloned APGD solver equals original APGD solver")
             {
                 auto fistaClone = solver.clone();
 
@@ -66,7 +58,7 @@ TEST_CASE("FISTA: Solving a LASSOProblem")
     }
 }
 
-TEST_CASE("FISTA: Solving various problems")
+TEST_CASE("APGD: Solving various problems")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -81,7 +73,7 @@ TEST_CASE("FISTA: Solving various problems")
         bVec.setRandom();
         DataContainer dcB(volDescr, bVec);
 
-        WHEN("setting up an FISTA solver for a WLSProblem")
+        WHEN("setting up an APGD solver for a WLSProblem")
         {
             Identity idOp(volDescr);
 
@@ -89,11 +81,11 @@ TEST_CASE("FISTA: Solving various problems")
 
             THEN("an exception is thrown as no regularization term is provided")
             {
-                REQUIRE_THROWS_AS(FISTA{wlsProb}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(APGD{wlsProb}, InvalidArgumentError);
             }
         }
 
-        WHEN("setting up an FISTA solver for a QuadricProblem without A and without b")
+        WHEN("setting up an APGD solver for a QuadricProblem without A and without b")
         {
             Identity idOp(volDescr);
 
@@ -102,7 +94,7 @@ TEST_CASE("FISTA: Solving various problems")
             THEN("the vector b is initialized with zeroes and the operator A becomes an "
                  "identity operator but an exception is thrown due to missing regularization term")
             {
-                REQUIRE_THROWS_AS(FISTA{quadricProbWithoutAb}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(APGD{quadricProbWithoutAb}, InvalidArgumentError);
             }
         }
     }

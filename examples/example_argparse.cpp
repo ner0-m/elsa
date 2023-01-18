@@ -97,9 +97,9 @@ std::unique_ptr<elsa::Solver<elsa::real_t>>
         elsa::LASSOProblem problem(projector, sinogram);
         elsa::PGD solver(problem);
         return solver.clone();
-    } else if (solver_kind == "FISTA") {
+    } else if (solver_kind == "APGD") {
         elsa::LASSOProblem problem(projector, sinogram);
-        elsa::FISTA solver(problem);
+        elsa::APGD solver(problem);
         return solver.clone();
     } else {
         throw elsa::Error("Unknown Solver {}", solver_kind);
@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
         .default_value(std::string("Joseph"));
 
     args.add_argument("--solver")
-        .help("Choose different solver (\"CG\", \"ISTA\", \"FISTA\")")
+        .help("Choose different solver (\"CG\", \"PGD\", \"APGD\")")
         .default_value(std::string("CG"));
 
     args.add_argument("--phantom")

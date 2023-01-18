@@ -13,7 +13,7 @@ namespace elsa
     template <typename data_t>
     PGD<data_t>::PGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
                      ProximalOperator<data_t> prox, geometry::Threshold<data_t> mu, data_t epsilon)
-        : A_(A.clone()), b_(b), prox_(prox), mu_(data_t{mu}), epsilon_(epsilon)
+        : A_(A.clone()), b_(b), prox_(prox), lambda_(1), mu_(data_t{mu}), epsilon_(epsilon)
     {
     }
 

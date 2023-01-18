@@ -86,7 +86,7 @@
 #include "GradientDescent.h"
 #include "CG.h"
 #include "PGD.h"
-#include "FISTA.h"
+#include "APGD.h"
 #include "FGM.h"
 #include "OGM.h"
 #include "ADMM.h"

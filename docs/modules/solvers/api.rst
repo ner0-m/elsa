@@ -21,10 +21,10 @@ Proximal Gradient Descent
 
 .. doxygenclass:: elsa::PGD
 
-Fast Iterative Shrinkage-Thresholding Algorithm
-===============================================
+Accelerated Proximal Gradient Descent
+=====================================
 
-.. doxygenclass:: elsa::FISTA
+.. doxygenclass:: elsa::APGD
 
 
 Alternating Direction Method of Multipliers

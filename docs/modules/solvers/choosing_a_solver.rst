@@ -59,7 +59,7 @@ The stated convergence speeds should be taken with a grain of salt as they are e
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
 | Proximal Gradient Descent (PGD)                          | Requires a regularization term                        | Medium      |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
-| Fast Iterative Shrinkage-Thresholding Algorithm (FISTA)  | Requires a regularization term                        | Medium      |
+| Accelerated Proximal Gradient Descent (APGD)             | Requires a regularization term                        | Medium      |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
 | Alternating Direction Method of Multipliers (ADMM)       | <WIP>                                                 | <WIP>       |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+

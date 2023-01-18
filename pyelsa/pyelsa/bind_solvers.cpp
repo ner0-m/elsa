@@ -5,7 +5,7 @@
 #include "CG.h"
 #include "FGM.h"
 #include "PGD.h"
-#include "FISTA.h"
+#include "APGD.h"
 #include "GradientDescent.h"
 #include "Landweber.h"
 #include "SIRT.h"
@@ -154,7 +154,7 @@ namespace detail
         using Problem = elsa::Problem<data_t>;
         using Threshold = elsa::geometry::Threshold<data_t>;
 
-        py::class_<elsa::FISTA<data_t>, Solver> fista(m, name);
+        py::class_<elsa::APGD<data_t>, Solver> fista(m, name);
         fista.def(py::init<const Problem&, Threshold>(), py::arg("problem"), py::arg("mu"));
         fista.def(py::init<const Problem&, Threshold, data_t>(), py::arg("problem"), py::arg("mu"),
                   py::arg("epsilon"));
@@ -165,10 +165,10 @@ namespace detail
 
 void add_fista(py::module& m)
 {
-    detail::add_fista<float>(m, "FISTAf");
-    detail::add_fista<double>(m, "FISTAd");
+    detail::add_fista<float>(m, "APGDf");
+    detail::add_fista<double>(m, "APGDd");
 
-    m.attr("FISTA") = m.attr("FISTAf");
+    m.attr("APGD") = m.attr("APGDf");
 }
 
 namespace detail

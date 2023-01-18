@@ -65,10 +65,10 @@ void example2d()
     // // write the reconstruction out
     // EDF::write(istaReconstruction, "2dreconstruction_ista.edf");
     //
-    // // solve the reconstruction problem with FISTA
-    // FISTA fistaSolver(lassoProb);
+    // // solve the reconstruction problem with APGD
+    // APGD fistaSolver(lassoProb);
     //
-    // Logger::get("Info")->info("Solving reconstruction using {} iterations of FISTA",
+    // Logger::get("Info")->info("Solving reconstruction using {} iterations of APGD",
     // noIterations); auto fistaReconstruction = fistaSolver.solve(noIterations);
     //
     // // write the reconstruction out

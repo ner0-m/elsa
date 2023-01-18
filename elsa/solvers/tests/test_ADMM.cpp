@@ -1,11 +1,3 @@
-/**
- * @file test_ADMM.cpp
- *
- * @brief Tests for the ADMM class
- *
- * @author Andi Braimllari
- */
-
 #include "doctest/doctest.h"
 
 #include "ADMM.h"
@@ -13,7 +5,7 @@
 #include "ProximalL1.h"
 #include "ProximalL0.h"
 #include "Identity.h"
-#include "FISTA.h"
+#include "APGD.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include <testHelpers.h>
@@ -46,7 +38,7 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", data_t, float, double)
 
         Constraint<data_t> constraint(idOp, negativeIdOp, dCC);
 
-        WHEN("setting up ADMM and FISTA to solve a LASSOProblem")
+        WHEN("setting up ADMM and APGD to solve a LASSOProblem")
         {
             L1Norm<data_t> regFunc(volDescr);
             RegularizationTerm<data_t> regTerm(0.000001f, regFunc);
@@ -56,7 +48,7 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", data_t, float, double)
             ADMM<CG, ProximalL1, data_t> admm(splittingProblem);
 
             LASSOProblem<data_t> lassoProb(wlsProb, regTerm);
-            FISTA<data_t> fista(lassoProb);
+            APGD<data_t> fista(lassoProb);
 
             THEN("the solutions match")
             {
