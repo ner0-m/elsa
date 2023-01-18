@@ -93,9 +93,9 @@ std::unique_ptr<elsa::Solver<elsa::real_t>>
         elsa::TikhonovProblem problem(projector, sinogram, 0.05);
         elsa::CG solver(problem);
         return solver.clone();
-    } else if (solver_kind == "ISTA") {
+    } else if (solver_kind == "PGD") {
         elsa::LASSOProblem problem(projector, sinogram);
-        elsa::ISTA solver(problem);
+        elsa::PGD solver(problem);
         return solver.clone();
     } else if (solver_kind == "FISTA") {
         elsa::LASSOProblem problem(projector, sinogram);

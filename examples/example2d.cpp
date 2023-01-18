@@ -56,10 +56,10 @@ void example2d()
 
     // LASSOProblem lassoProb(projector, sinogram);
     //
-    // // solve the reconstruction problem with ISTA
-    // ISTA istaSolver(lassoProb);
+    // // solve the reconstruction problem with PGD
+    // PGD istaSolver(lassoProb);
     //
-    // Logger::get("Info")->info("Solving reconstruction using {} iterations of ISTA",
+    // Logger::get("Info")->info("Solving reconstruction using {} iterations of PGD",
     // noIterations); auto istaReconstruction = istaSolver.solve(noIterations);
     //
     // // write the reconstruction out

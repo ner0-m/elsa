@@ -57,7 +57,7 @@ The stated convergence speeds should be taken with a grain of salt as they are e
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
 | Conjugate Gradient Descent (CG)                          | Problem must be convertible to a quadric problem      | Fast        |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
-| Iterative Shrinkage-Thresholding Algorithm (ISTA)        | Requires a regularization term                        | Medium      |
+| Proximal Gradient Descent (PGD)                          | Requires a regularization term                        | Medium      |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
 | Fast Iterative Shrinkage-Thresholding Algorithm (FISTA)  | Requires a regularization term                        | Medium      |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+

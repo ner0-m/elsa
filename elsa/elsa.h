@@ -85,7 +85,7 @@
 #include "Solver.h"
 #include "GradientDescent.h"
 #include "CG.h"
-#include "ISTA.h"
+#include "PGD.h"
 #include "FISTA.h"
 #include "FGM.h"
 #include "OGM.h"

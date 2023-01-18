@@ -1,15 +1,7 @@
-/**
- * @file test_ISTA.cpp
- *
- * @brief Tests for the ISTA class
- *
- * @author Andi Braimllari
- */
-
 #include "doctest/doctest.h"
 
 #include "Error.h"
-#include "ISTA.h"
+#include "PGD.h"
 #include "Identity.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
@@ -21,7 +13,7 @@ using namespace doctest;
 
 TEST_SUITE_BEGIN("solvers");
 
-TEST_CASE("ISTA: Solving a LASSOProblem")
+TEST_CASE("PGD: Solving a LASSOProblem")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -45,11 +37,11 @@ TEST_CASE("ISTA: Solving a LASSOProblem")
 
         LASSOProblem lassoProb(wlsProb, regTerm);
 
-        WHEN("setting up an ISTA solver")
+        WHEN("setting up an PGD solver")
         {
-            ISTA solver(lassoProb);
+            PGD solver(lassoProb);
 
-            THEN("cloned ISTA solver equals original ISTA solver")
+            THEN("cloned PGD solver equals original PGD solver")
             {
                 auto istaClone = solver.clone();
 
@@ -66,7 +58,7 @@ TEST_CASE("ISTA: Solving a LASSOProblem")
     }
 }
 
-TEST_CASE("ISTA: Solving various problems")
+TEST_CASE("PGD: Solving various problems")
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -81,7 +73,7 @@ TEST_CASE("ISTA: Solving various problems")
         bVec.setRandom();
         DataContainer dcB(volDescr, bVec);
 
-        WHEN("setting up an ISTA solver for a WLSProblem")
+        WHEN("setting up an PGD solver for a WLSProblem")
         {
             Identity idOp(volDescr);
 
@@ -89,11 +81,11 @@ TEST_CASE("ISTA: Solving various problems")
 
             THEN("an exception is thrown as no regularization term is provided")
             {
-                REQUIRE_THROWS_AS(ISTA{wlsProb}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(PGD{wlsProb}, InvalidArgumentError);
             }
         }
 
-        WHEN("setting up an ISTA solver for a QuadricProblem without A and without b")
+        WHEN("setting up an PGD solver for a QuadricProblem without A and without b")
         {
             Identity idOp(volDescr);
 
@@ -102,7 +94,7 @@ TEST_CASE("ISTA: Solving various problems")
             THEN("the vector b is initialized with zeroes and the operator A becomes an "
                  "identity operator but an exception is thrown due to missing regularization term")
             {
-                REQUIRE_THROWS_AS(ISTA{quadricProbWithoutAb}, InvalidArgumentError);
+                REQUIRE_THROWS_AS(PGD{quadricProbWithoutAb}, InvalidArgumentError);
             }
         }
     }

@@ -16,10 +16,10 @@ CG
 
 .. doxygenclass:: elsa::CG
 
-Iterative Shrinkage-Thresholding Algorithm
-==========================================
+Proximal Gradient Descent
+=========================
 
-.. doxygenclass:: elsa::ISTA
+.. doxygenclass:: elsa::PGD
 
 Fast Iterative Shrinkage-Thresholding Algorithm
 ===============================================
@@ -44,7 +44,6 @@ Orthogonal Matching Pursuit
 
 
 .. _elsa-solvers-api-first-order-methods:
-
 
 Landweber iteration
 ===================

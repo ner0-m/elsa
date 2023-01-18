@@ -3,7 +3,7 @@ set(MODULE_HEADERS
     Solver.h
     GradientDescent.h
     CG.h
-    ISTA.h
+    PGD.h
     FISTA.h
     FGM.h
     OGM.h
@@ -20,7 +20,7 @@ set(MODULE_SOURCES
     Solver.cpp
     GradientDescent.cpp
     CG.cpp
-    ISTA.cpp
+    PGD.cpp
     FISTA.cpp
     FGM.cpp
     OGM.cpp

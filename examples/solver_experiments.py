@@ -201,7 +201,7 @@ def compare_sqs_strategies(max_iterations: int, show_plots: bool, problem_size: 
 def evaluate_solvers(max_iterations: int, show_plots: bool, problem_size: int, plots_dir: Optional[Path] = None):
     solvers = [
         SolverTest(elsa.GradientDescent, 'Gradient Descent'),  # with 1 / lipschitz as step size
-        SolverTest(elsa.ISTA, 'ISTA', needs_lasso=True),
+        SolverTest(elsa.PGD, 'PGD', needs_lasso=True),
         SolverTest(elsa.FISTA, 'FISTA', needs_lasso=True),
         SolverTest(elsa.FGM, 'FGM'),
         SolverTest(elsa.OGM, 'OGM'),

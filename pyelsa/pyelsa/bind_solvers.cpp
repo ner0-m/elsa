@@ -4,11 +4,11 @@
 
 #include "CG.h"
 #include "FGM.h"
+#include "PGD.h"
 #include "FISTA.h"
 #include "GradientDescent.h"
 #include "Landweber.h"
 #include "SIRT.h"
-#include "ISTA.h"
 #include "OGM.h"
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
@@ -128,7 +128,7 @@ namespace detail
         using Problem = elsa::Problem<data_t>;
         using Threshold = elsa::geometry::Threshold<data_t>;
 
-        py::class_<elsa::ISTA<data_t>, Solver> ista(m, name);
+        py::class_<elsa::PGD<data_t>, Solver> ista(m, name);
         ista.def(py::init<const Problem&, Threshold>(), py::arg("problem"), py::arg("mu"));
         ista.def(py::init<const Problem&, Threshold, data_t>(), py::arg("problem"), py::arg("mu"),
                  py::arg("epsilon"));
@@ -139,10 +139,10 @@ namespace detail
 
 void add_ista(py::module& m)
 {
-    detail::add_ista<float>(m, "ISTAf");
-    detail::add_ista<double>(m, "ISTAd");
+    detail::add_ista<float>(m, "PGDf");
+    detail::add_ista<double>(m, "PGDd");
 
-    m.attr("ISTA") = m.attr("ISTAf");
+    m.attr("PGD") = m.attr("PGDf");
 }
 
 namespace detail
