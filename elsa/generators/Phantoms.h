@@ -30,6 +30,9 @@ namespace elsa::phantoms
     template <typename data_t>
     DataContainer<data_t> forbildThorax(IndexVector_t sizes);
 
+    template <typename data_t = real_t>
+    DataContainer<data_t> smoothBlob(IndexVector_t sizes, double radius_manipulation = 1.0);
+
     /**
      * @brief Create a phantom with a simple n-dimensional rectangle  going from lower to upper.
      * It is assumed that lower < upper.

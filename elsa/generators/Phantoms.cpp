@@ -5,6 +5,8 @@
 #include "CartesianIndices.h"
 #include "ForbildPhantom.h"
 #include "ForbildData.h"
+#include "Ellipsoid.h"
+#include "../projectors/Blobs.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -146,6 +148,38 @@ namespace elsa::phantoms
     }
 
     template <typename data_t>
+    DataContainer<data_t> smoothBlob(IndexVector_t sizes, double radius_manipulation)
+    {
+        // sanity check
+        if (sizes.size() < 2 || sizes.size() > 3)
+            throw InvalidArgumentError("phantom::smoothBlob: only 2d or 3d supported");
+        if (sizes.size() == 2 && sizes[0] != sizes[1])
+            throw InvalidArgumentError("phantom::smoothBlob: 2d size has to be square");
+        if (sizes.size() == 3 && (sizes[0] != sizes[1] || sizes[0] != sizes[2]))
+            throw InvalidArgumentError("phantom::smoothBlob: 3d size has to be cubed");
+
+        Logger::get("phantom::smoothBlob")
+            ->info("creating smooth Blob phantom of size {}^{}", sizes[0], sizes.size());
+
+        VolumeDescriptor dd(sizes);
+        DataContainer<data_t> dc(dd);
+        dc = 0;
+
+        auto radius = sizes[0] / 2;
+
+#pragma omp parallel for
+        for (index_t i = 0; i < dc.getSize(); i++) {
+            const RealVector_t coord =
+                dd.getCoordinateFromIndex(i).template cast<real_t>().array() + 0.5;
+            data_t distance_from_center = (coord - dd.getLocationOfOrigin()).norm();
+            dc[i] =
+                blobs::blob_evaluate(distance_from_center, radius * radius_manipulation, 10.83f, 2);
+        }
+
+        return dc;
+    }
+
+    template <typename data_t>
     DataContainer<data_t> forbild(IndexVector_t sizes, ForbildPhantom<data_t>& fp)
     {
         // sanity checks
@@ -278,6 +312,11 @@ namespace elsa::phantoms
 
     template DataContainer<float> forbildThorax<float>(IndexVector_t sizes);
     template DataContainer<double> forbildThorax<double>(IndexVector_t sizes);
+
+    template DataContainer<float> smoothBlob<float>(IndexVector_t sizes,
+                                                    double radius_manipulation);
+    template DataContainer<double> smoothBlob<double>(IndexVector_t sizes,
+                                                      double radius_manipulation);
 
     template DataContainer<float> rectangle<float>(IndexVector_t volumesize, IndexVector_t lower,
                                                    IndexVector_t upper);
