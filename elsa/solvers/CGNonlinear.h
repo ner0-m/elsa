@@ -10,17 +10,26 @@
 namespace elsa
 {
     /**
-     * @brief Class implementing the Preconditioned Nonlinear Conjugate Gradients with
+     * @brief Class implementing Nonlinear Conjugate Gradients with
      * Newton-Raphson and Polak-Ribière
      *
      * @author Eddie Groh - initial code
      *
-     * TODO Explanation
+     * This Nonlinear CG can minimize any continuous function f for which the the first and second
+     * derivative can be computed or approximated. By this usage of the Gradient and Hessian
+     * respectively, it will converge to a local minimum near the starting point.
      *
-     * Convergence is considered reached when TODO
+     * Because CG can only generate n conjugate vectors, if the problem has dimension n, it improves
+     * convergence to reset the search direction every n iterations, especially for small n.
+     * Restarting means that the search direction is "forgotten" and CG is started again in the
+     * direction of the steepest descent
+     *
+     * Convergence is considered reached when \f$ \| f'(x) \| \leq \epsilon \| f'(x_0)} \| \f$
+     * satisfied for some small \f$ \epsilon > 0\f$. Here \f$ x \f$ denotes the solution
+     * obtained in the last step, and \f$ x_0 \f$ denotes the initial guess.
      *
      * References:
-     * TODO
+     * https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
      */
     template <typename data_t = real_t>
     class CGNonlinear : public Solver<data_t>

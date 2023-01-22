@@ -23,8 +23,9 @@ namespace elsa
 
         // Amount of inner iterations for Newton-Raphson
         index_t jIterationMax = 10;
-        // Nonlinear CG is restarted once every n iterations, to improve convergence for small n
-        index_t nIterationMax = 10;
+        // Restart Nonlinear CG every n iterations, with n being the number of dimensions
+        index_t nIterationMax =
+            _problem->getDataTerm().getDomainDescriptor().getNumberOfDimensions();
 
         // use xStart as start point if provided, use 0 otherwise
         DataContainer<data_t> xVector{_problem->getDataTerm().getDomainDescriptor()};
