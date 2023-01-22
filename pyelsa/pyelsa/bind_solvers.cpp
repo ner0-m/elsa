@@ -159,7 +159,7 @@ namespace detail
         using Solver = elsa::Solver<data_t>;
         using Problem = elsa::Problem<data_t>;
 
-        py::class_<elsa::CG<data_t>, Solver> cg(m, name);
+        py::class_<elsa::CGNonlinear<data_t>, Solver> cg(m, name);
         cg.def(py::init<const Problem&>(), py::arg("problem"));
         cg.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
     }
