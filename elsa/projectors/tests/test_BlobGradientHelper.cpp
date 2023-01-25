@@ -39,7 +39,7 @@ TEST_CASE_TEMPLATE("Blobs: Test evaluation of projected blob gradient helper", d
 
                     CAPTURE(x);
 
-                    CHECK_EQ(Approx(blob.gradient_helper(x)), expected[i] / x);
+                    CHECK_EQ(Approx(blob.normalized_gradient(x)), expected[i] / x);
                 }
             }
         }

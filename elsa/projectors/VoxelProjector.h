@@ -476,7 +476,7 @@ namespace elsa
 
     private:
         ProjectedBlobDerivativeLut<data_t, 100> lut_;
-        ProjectedBlobGradientHelperLut<data_t, 100> lut3D_;
+        ProjectedBlobNormalizedGradientLut<data_t, 100> lut3D_;
 
         using Base = VoxelProjector<data_t, PhaseContrastBlobVoxelProjector<data_t>>;
 

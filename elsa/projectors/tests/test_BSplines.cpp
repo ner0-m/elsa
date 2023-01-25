@@ -184,6 +184,50 @@ TEST_CASE_TEMPLATE("BSpline: Test evaluation of bspline derivative lut", data_t,
     }
 }
 
+TEST_CASE_TEMPLATE("BSpline: Test evaluation of bspline derivative", data_t, float, double)
+{
+    ;
+    const auto order = 3;
+    const auto dim = 2;
+
+    CAPTURE(order);
+    CAPTURE(dim);
+
+    auto expected = getExpected<data_t>(order, dim);
+    auto expectedDerivative = getExpected<data_t>(order, dim, true);
+
+    ProjectedBSpline<data_t> bspline(dim, order);
+    for (int i = 0; i < size; ++i) {
+        const auto x = i / 50.0;
+
+        CAPTURE(x);
+
+        CHECK_EQ(doctest::Approx(bspline.derivative(x)), expectedDerivative[i]);
+        CHECK_EQ(doctest::Approx(bspline(x)), expected[i]);
+    }
+}
+
+TEST_CASE_TEMPLATE("BSpline: Test evaluation of bspline derivative lut", data_t, float, double)
+{
+    ;
+    const auto order = 3;
+    const auto dim = 2;
+
+    CAPTURE(order);
+    CAPTURE(dim);
+
+    auto expectedDerivative = getExpected<data_t>(order, dim, true);
+
+    ProjectedBSplineDerivativeLut<data_t, 100> bspline_lut(dim, order);
+    for (int i = 0; i < size; ++i) {
+        const auto x = i / 50.0;
+
+        CAPTURE(x);
+
+        CHECK_EQ(doctest::Approx(bspline_lut(x)), expectedDerivative[i]);
+    }
+}
+
 template <typename data_t>
 constexpr std::array<double, size> getExpected(int order, int dim, bool derivative)
 {
