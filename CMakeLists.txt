@@ -337,7 +337,13 @@ if(ELSA_TESTING)
 
         include(CodeCoverage)
         add_code_coverage_all_targets(
-            EXCLUDE elsa/test_routines/* */tests/* ${PROJECT_BINARY_DIR}/_deps/* ${CPM_SOURCE_CACHE}/* /usr/*
+            EXCLUDE
+            "elsa/test_routines/.*"
+            ".*/tests/.*"
+            "${PROJECT_BINARY_DIR}/_deps/.*"
+            "${CPM_SOURCE_CACHE}/.*"
+            "/usr/.*"
+            "/opt/.*"
         )
 
     else(ELSA_COVERAGE)
