@@ -12,9 +12,14 @@ namespace elsa
         std::optional<RealVector_t> centerOfRotOffset, std::optional<IndexVector_t> detectorSize,
         std::optional<RealVector_t> detectorSpacing)
     {
+        auto thetas = [&]() {
+            auto tmp = RealVector_t::LinSpaced(numberOfPoses, 0, static_cast<real_t>(arcDegrees));
+            return std::vector<real_t>{tmp.begin(), tmp.end()};
+        }();
+
         auto [coeffs, spacing, geometryList] = BaseCircleTrajectoryGenerator::createTrajectoryData(
-            numberOfPoses, volumeDescriptor, arcDegrees, sourceToCenter, centerToDetector,
-            principalPointOffset, centerOfRotOffset, detectorSize, detectorSpacing);
+            thetas, volumeDescriptor, sourceToCenter, centerToDetector, principalPointOffset,
+            centerOfRotOffset, detectorSize, detectorSpacing);
 
         return std::make_unique<CurvedDetectorDescriptor>(std::move(coeffs), std::move(spacing),
                                                           std::move(geometryList), angle,

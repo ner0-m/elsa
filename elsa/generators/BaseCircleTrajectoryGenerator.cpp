@@ -1,7 +1,9 @@
 #include "BaseCircleTrajectoryGenerator.h"
 #include "Logger.h"
+#include "TypeCasts.hpp"
 #include "VolumeDescriptor.h"
 
+#include <algorithm>
 #include <optional>
 #include <stdexcept>
 
@@ -9,7 +11,7 @@ namespace elsa
 {
     std::tuple<IndexVector_t, RealVector_t, std::vector<Geometry>>
         BaseCircleTrajectoryGenerator::createTrajectoryData(
-            index_t numberOfPoses, const DataDescriptor& volumeDescriptor, index_t arcDegrees,
+            const std::vector<real_t>& thetas, const DataDescriptor& volumeDescriptor,
             real_t sourceToCenter, real_t centerToDetector,
             std::optional<RealVector_t> principalPointOffset,
             std::optional<RealVector_t> centerOfRotOffset,
@@ -24,9 +26,11 @@ namespace elsa
         if (dim < 2 || dim > 3)
             throw InvalidArgumentError("CircleTrajectoryGenerator: can only handle 2d/3d");
 
+        const auto numberOfPoses = asSigned(thetas.size());
+        const auto arc = *std::max_element(thetas.begin(), thetas.end());
         Logger::get("CircleTrajectoryGenerator")
             ->info("creating {}D trajectory with {} poses in an {} degree arc", dim, numberOfPoses,
-                   arcDegrees);
+                   arc);
 
         // Calculate size and spacing for each geometry pose using a IIFE
         const auto [coeffs, spacing] = calculateSizeAndSpacingPerGeometry(
@@ -35,10 +39,9 @@ namespace elsa
         // Create vector and reserve the necessary size, minor optimization such that no new
         // allocations are necessary in the loop
         std::vector<Geometry> geometryList;
-        geometryList.reserve(static_cast<std::size_t>(numberOfPoses));
+        geometryList.reserve(asUnsigned(numberOfPoses));
 
-        for (auto degree :
-             RealVector_t::LinSpaced(numberOfPoses, 0, static_cast<real_t>(arcDegrees))) {
+        for (auto degree : thetas) {
             const auto angle = Degree{degree}.to_radian();
             if (dim == 2) {
                 // Use emplace_back, then no copy is created

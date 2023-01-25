@@ -44,8 +44,9 @@ namespace elsa
          */
     protected:
         static std::tuple<IndexVector_t, RealVector_t, std::vector<Geometry>>
-            createTrajectoryData(index_t numberOfPoses, const DataDescriptor& volumeDescriptor,
-                                 index_t arcDegrees, real_t sourceToCenter, real_t centerToDetector,
+            createTrajectoryData(const std::vector<real_t>& thetas,
+                                 const DataDescriptor& volumeDescriptor, real_t sourceToCenter,
+                                 real_t centerToDetector,
                                  std::optional<RealVector_t> principalPointOffset = std::nullopt,
                                  std::optional<RealVector_t> centerOfRotOffset = std::nullopt,
                                  std::optional<IndexVector_t> detectorSize = std::nullopt,

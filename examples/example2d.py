@@ -1,5 +1,6 @@
 import numpy as np
 import pyelsa as elsa
+import matplotlib.pyplot as plt
 
 
 def example2d(s: int):
@@ -9,8 +10,8 @@ def example2d(s: int):
     numAngles = 180
     arc = 180
     distance = size[0]
-    sinoDescriptor = elsa.CircleTrajectoryGenerator.createTrajectory(
-        numAngles, phantom.getDataDescriptor(), arc, distance * 100.0, distance
+    sinoDescriptor = elsa.CircleTrajectoryGenerator.trajectoryFromAngles(
+        np.arange(0, 180, 1), phantom.getDataDescriptor(), distance * 100.0, distance
     )
 
     projector = elsa.SiddonsMethod(phantom.getDataDescriptor(), sinoDescriptor)
@@ -19,6 +20,8 @@ def example2d(s: int):
     problem = elsa.WLSProblem(projector, sinogram)
     solver = elsa.CG(problem)
     reconstruction = solver.solve(20)
+    plt.imshow(reconstruction)
+    plt.show()
 
 
 if __name__ == "__main__":
