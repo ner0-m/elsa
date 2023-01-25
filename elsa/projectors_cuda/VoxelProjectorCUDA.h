@@ -24,7 +24,13 @@ namespace elsa
     class BlobVoxelProjectorCUDA;
 
     template <typename data_t = real_t>
+    class BSplineVoxelProjectorCUDA;
+
+    template <typename data_t = real_t>
     class PhaseContrastBlobVoxelProjectorCUDA;
+
+    template <typename data_t = real_t>
+    class PhaseContrastBSplineVoxelProjectorCUDA;
 
     template <typename data_t>
     struct XrayProjectorInnerTypes<BlobVoxelProjectorCUDA<data_t>> {
@@ -34,7 +40,21 @@ namespace elsa
     };
 
     template <typename data_t>
+    struct XrayProjectorInnerTypes<BSplineVoxelProjectorCUDA<data_t>> {
+        using value_type = data_t;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
+    };
+
+    template <typename data_t>
     struct XrayProjectorInnerTypes<PhaseContrastBlobVoxelProjectorCUDA<data_t>> {
+        using value_type = data_t;
+        using forward_tag = any_projection_tag;
+        using backward_tag = any_projection_tag;
+    };
+
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<PhaseContrastBSplineVoxelProjectorCUDA<data_t>> {
         using value_type = data_t;
         using forward_tag = any_projection_tag;
         using backward_tag = any_projection_tag;
@@ -370,7 +390,10 @@ namespace elsa
 
         data_t radius() const { return _lut.radius(); }
 
-        data_t weight(data_t distance) const { return _lut(std::abs(distance)); }
+        data_t weight(data_t distance) const
+        {
+            return _lut(std::abs(distance)) * math::sgn(distance);
+        }
 
         auto& getLutArray(int dim) const
         {
@@ -391,13 +414,143 @@ namespace elsa
 
     private:
         ProjectedBlobDerivativeLut<data_t, 100> _lut;
-        ProjectedBlobGradientHelperLut<data_t, 100> _lut3D;
+        ProjectedBlobNormalizedGradientLut<data_t, 100> _lut3D;
 
         /// lut array; stored on GPU
         thrust::device_vector<data_t> _lutArray;
         thrust::device_vector<data_t> _lut3DArray;
 
         using Base = VoxelProjectorCUDA<data_t, PhaseContrastBlobVoxelProjectorCUDA<data_t>>;
+
+        friend class XrayProjector<self_type>;
+    };
+
+    template <typename data_t>
+    class BSplineVoxelProjectorCUDA
+        : public VoxelProjectorCUDA<data_t, BSplineVoxelProjectorCUDA<data_t>>
+    {
+    public:
+        using self_type = BSplineVoxelProjectorCUDA<data_t>;
+
+        /**
+         * @brief Constructor for BSpline Voxel Projection.
+         *
+         * @param[in] order bspline order
+         * @param[in] domainDescriptor describing the domain of the operator (the volume)
+         * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         *
+         * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
+         * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
+         */
+        BSplineVoxelProjectorCUDA(int order, const VolumeDescriptor& domainDescriptor,
+                                  const DetectorDescriptor& rangeDescriptor);
+
+        /**
+         * @brief Constructor for BSpline Voxel Projection using default order.
+         *
+         * @param[in] domainDescriptor describing the domain of the operator (the volume)
+         * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         *
+         * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
+         * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
+         */
+        BSplineVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
+                                  const DetectorDescriptor& rangeDescriptor);
+
+        data_t radius() const { return _lut.radius(); }
+
+        data_t weight(data_t distance) const { return _lut(std::abs(distance)); }
+
+        auto& getLutArray(int dim) const
+        {
+            (void) dim;
+            return _lutArray;
+        }
+
+        /// implement the polymorphic clone operation
+        BSplineVoxelProjectorCUDA<data_t>* _cloneImpl() const;
+
+        /// implement the polymorphic comparison operation
+        bool _isEqual(const LinearOperator<data_t>& other) const;
+
+        /// define the projector type to be classic (not differential)
+        const VoxelHelperCUDA::PROJECTOR_TYPE projector_type = VoxelHelperCUDA::CLASSIC;
+
+    private:
+        thrust::device_vector<data_t> _lutArray;
+        ProjectedBSplineLut<data_t, 100> _lut;
+
+        using Base = VoxelProjectorCUDA<data_t, BSplineVoxelProjectorCUDA<data_t>>;
+
+        friend class XrayProjector<self_type>;
+    };
+
+    template <typename data_t>
+    class PhaseContrastBSplineVoxelProjectorCUDA
+        : public VoxelProjectorCUDA<data_t, PhaseContrastBSplineVoxelProjectorCUDA<data_t>>
+    {
+    public:
+        using self_type = PhaseContrastBSplineVoxelProjectorCUDA<data_t>;
+
+        /**
+         * @brief Constructor for Phase Contrast BSpline Voxel Projection.
+         *
+         * @param[in] order bspline order
+         * @param[in] domainDescriptor describing the domain of the operator (the volume)
+         * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         *
+         * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
+         * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
+         */
+        PhaseContrastBSplineVoxelProjectorCUDA(data_t order,
+                                               const VolumeDescriptor& domainDescriptor,
+                                               const DetectorDescriptor& rangeDescriptor);
+
+        /**
+         * @brief Constructor for Phase Contrast BSpline Voxel Projection using default order
+         *
+         * @param[in] domainDescriptor describing the domain of the operator (the volume)
+         * @param[in] rangeDescriptor describing the range of the operator (the sinogram)
+         *
+         * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
+         * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
+         */
+        PhaseContrastBSplineVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
+                                               const DetectorDescriptor& rangeDescriptor);
+
+        data_t radius() const { return _lut.radius(); }
+
+        data_t weight(data_t distance) const
+        {
+            return _lut(std::abs(distance)) * math::sgn(distance);
+        }
+
+        auto& getLutArray(int dim) const
+        {
+            if (dim == 2)
+                return _lutArray;
+            else
+                return _lut3DArray;
+        }
+
+        /// implement the polymorphic clone operation
+        PhaseContrastBSplineVoxelProjectorCUDA<data_t>* _cloneImpl() const;
+
+        /// implement the polymorphic comparison operation
+        bool _isEqual(const LinearOperator<data_t>& other) const;
+
+        /// define the projector type to be differential
+        const VoxelHelperCUDA::PROJECTOR_TYPE projector_type = VoxelHelperCUDA::DIFFERENTIAL;
+
+    private:
+        ProjectedBSplineDerivativeLut<data_t, 100> _lut;
+        ProjectedBSplineNormalizedGradientLut<data_t, 100> _lut3D;
+
+        /// lut array; stored on GPU
+        thrust::device_vector<data_t> _lutArray;
+        thrust::device_vector<data_t> _lut3DArray;
+
+        using Base = VoxelProjectorCUDA<data_t, PhaseContrastBSplineVoxelProjectorCUDA<data_t>>;
 
         friend class XrayProjector<self_type>;
     };
