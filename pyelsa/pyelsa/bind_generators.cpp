@@ -41,6 +41,11 @@ void add_definitions_pyelsa_generators(py::module& m)
                  (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
                      &elsa::phantoms::modifiedSheppLogan<float>),
                  py::arg("sizes"), py::return_value_policy::move);
+    phantoms.def("smoothBlob",
+                 (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>, double))(
+                     &elsa::phantoms::smoothBlob<float>),
+                 py::arg("sizes"), py::arg("radius_manipulation") = 1.0,
+                 py::return_value_policy::move);
     phantoms.def("rectangle",
                  (elsa::DataContainer<float>(*)(
                      Eigen::Matrix<long, -1, 1, 0, -1, 1>, Eigen::Matrix<long, -1, 1, 0, -1, 1>,

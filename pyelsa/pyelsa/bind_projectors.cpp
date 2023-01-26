@@ -7,6 +7,7 @@
 #include "BinaryMethod.h"
 #include "JosephsMethod.h"
 #include "SiddonsMethod.h"
+#include "VoxelProjector.h"
 #include "SiddonsMethodBranchless.h"
 #include "SubsetSampler.h"
 
@@ -84,6 +85,61 @@ void add_definitions_pyelsa_projectors(py::module& m)
         m, "SiddonsMethodd");
     SiddonsMethodd.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
                        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    py::class_<elsa::BlobVoxelProjector<float>, elsa::LinearOperator<float>> BlobVoxelProjectorf(
+        m, "BlobVoxelProjectorf");
+    BlobVoxelProjectorf.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    m.attr("BlobVoxelProjector") = m.attr("BlobVoxelProjectorf");
+
+    py::class_<elsa::BlobVoxelProjector<double>, elsa::LinearOperator<double>> BlobVoxelProjectord(
+        m, "BlobVoxelProjectord");
+    BlobVoxelProjectord.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    py::class_<elsa::BSplineVoxelProjector<float>, elsa::LinearOperator<float>>
+        BSplineVoxelProjectorf(m, "BSplineVoxelProjectorf");
+    BSplineVoxelProjectorf.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    m.attr("BSplineVoxelProjector") = m.attr("BSplineVoxelProjectorf");
+
+    py::class_<elsa::BSplineVoxelProjector<double>, elsa::LinearOperator<double>>
+        BSplineVoxelProjectord(m, "BSplineVoxelProjectord");
+    BSplineVoxelProjectord.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+    py::class_<elsa::PhaseContrastBlobVoxelProjector<float>, elsa::LinearOperator<float>>
+        PhaseContrastBlobVoxelProjectorf(m, "PhaseContrastBlobVoxelProjectorf");
+    PhaseContrastBlobVoxelProjectorf.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    m.attr("PhaseContrastBlobVoxelProjector") = m.attr("PhaseContrastBlobVoxelProjectorf");
+
+    py::class_<elsa::PhaseContrastBlobVoxelProjector<double>, elsa::LinearOperator<double>>
+        PhaseContrastBlobVoxelProjectord(m, "PhaseContrastBlobVoxelProjectord");
+    PhaseContrastBlobVoxelProjectord.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    py::class_<elsa::PhaseContrastBSplineVoxelProjector<float>, elsa::LinearOperator<float>>
+        PhaseContrastBSplineVoxelProjectorf(m, "PhaseContrastBSplineVoxelProjectorf");
+    PhaseContrastBSplineVoxelProjectorf.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    m.attr("PhaseContrastBSplineVoxelProjector") = m.attr("PhaseContrastBSplineVoxelProjectorf");
+
+    py::class_<elsa::PhaseContrastBSplineVoxelProjector<double>, elsa::LinearOperator<double>>
+        PhaseContrastBSplineVoxelProjectord(m, "PhaseContrastBSplineVoxelProjectord");
+    PhaseContrastBSplineVoxelProjectord.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
 
     py::class_<elsa::SiddonsMethodBranchless<float>, elsa::LinearOperator<float>>
         SiddonsMethodBranchlessf(m, "SiddonsMethodBranchlessf");
