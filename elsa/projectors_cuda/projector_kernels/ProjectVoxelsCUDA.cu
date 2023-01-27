@@ -152,8 +152,8 @@ __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, 3>::MAX_THREAD
 
     for (index_t j = lowerIndex[1]; j <= upperIndex[1]; j++) {
         for (index_t i = lowerIndex[0]; i <= upperIndex[0]; i++) {
-            auto primDistance = currentCoord[0] - dCoord[0];
-            const data_t distance = hypot(primDistance, currentCoord[1] - dCoord[1]);
+            auto primDistance = dCoord[0] - currentCoord[0];
+            const data_t distance = hypot(primDistance, dCoord[1] - currentCoord[1]);
             data_t weight;
 
             // classic just compute the weight

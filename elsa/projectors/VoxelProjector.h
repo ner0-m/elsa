@@ -121,7 +121,7 @@ namespace elsa
                 downcast<DetectorDescriptor>(Ax.getDataDescriptor());
 
             // detector parameters
-            index_t upperDetector = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
+            index_t upperDetectorI = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
 
             // volume parameters
             auto& volume = x.getDataDescriptor();
@@ -154,11 +154,13 @@ namespace elsa
                     data_t detectorCoord = detectorCoordShifted[0] - 0.5;
 
                     // find all detector pixels that are hit
-                    auto radiusOnDetector = static_cast<index_t>(std::round(voxelRadius * scaling));
-                    auto detectorIndex = static_cast<index_t>(std::round(detectorCoord));
+                    auto radiusOnDetector = voxelRadius * scaling;
 
-                    auto lower = std::max((index_t) 0, detectorIndex - radiusOnDetector);
-                    auto upper = std::min(upperDetector, detectorIndex + radiusOnDetector);
+                    auto lower = std::max(
+                        (index_t) 0, static_cast<index_t>(ceil(detectorCoord - radiusOnDetector)));
+                    auto upper =
+                        std::min((index_t) upperDetectorI,
+                                 static_cast<index_t>(floor(detectorCoord + radiusOnDetector)));
 
                     for (index_t neighbour = lower; neighbour <= upper; neighbour++) {
                         const data_t distance = (detectorCoord - neighbour);
@@ -178,16 +180,19 @@ namespace elsa
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(Ax.getDataDescriptor());
 
-            const IndexVector_t lowerDetector = IndexVector_t::Constant(3, 0);
-            const IndexVector_t upperDetector =
-                detectorDesc.getNumberOfCoefficientsPerDimension().array() - 1;
-            const index_t detectorRowLength = upperDetector[0] + 1;
+            const IndexVector_t& upperDetectorI =
+                detectorDesc.getNumberOfCoefficientsPerDimension();
+
+            const auto upperDetectorX = upperDetectorI[0] - 1;
+            const auto upperDetectorY = upperDetectorI[1] - 1;
+            const auto detectorXStride = upperDetectorI[0];
+            const auto detectorYStride = upperDetectorI[0] * upperDetectorI[1];
 
             const auto& volume = x.getDataDescriptor();
             const auto volumeSize = x.getSize();
 
             const auto voxelRadius = this->self().radius();
-#pragma omp parallel for
+            //#pragma omp parallel for
             for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                  geomIndex++) {
 
@@ -204,31 +209,35 @@ namespace elsa
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
                     // correct origin shift
-                    RealVector_t detectorCoordWithGeom = detectorCoordShifted.array() - 0.5;
+                    RealVector_t detectorCoord = detectorCoordShifted.head(2).array() - 0.5;
 
                     // find all detector pixels that are hit
-                    auto radiusOnDetector = IndexVector_t::Constant(
-                        3, static_cast<index_t>(std::round(voxelRadius * scaling)));
-                    auto detectorIndexVector = detectorCoordWithGeom.template cast<index_t>();
-                    auto detectorCoord = detectorCoordWithGeom.head(2);
-
-                    // compute bounding box of hit detector Pixels
-                    IndexVector_t lowerIndex = detectorIndexVector - radiusOnDetector;
-                    IndexVector_t upperIndex = detectorIndexVector + radiusOnDetector;
+                    auto radiusOnDetector = voxelRadius * scaling;
 
                     // constrain to detector size
-                    lowerIndex = lowerIndex.cwiseMax(lowerDetector);
-                    upperIndex = upperIndex.cwiseMin(upperDetector);
+                    index_t lowerX =
+                        std::max((index_t) 0,
+                                 static_cast<index_t>(ceil(detectorCoord[0] - radiusOnDetector)));
+                    index_t upperX =
+                        std::min(upperDetectorX,
+                                 static_cast<index_t>(floor(detectorCoord[0] + radiusOnDetector)));
+                    index_t lowerY =
+                        std::max((index_t) 0,
+                                 static_cast<index_t>(ceil(detectorCoord[1] - radiusOnDetector)));
+                    index_t upperY =
+                        std::min(upperDetectorY,
+                                 static_cast<index_t>(floor(detectorCoord[1] + radiusOnDetector)));
 
                     // initialize variables for performance
-                    RealVector_t currentCoord = lowerIndex.head(2).template cast<real_t>();
-                    lowerIndex[2] = geomIndex;
-                    index_t currentIndex = detectorDesc.getIndexFromCoordinate(lowerIndex);
-                    index_t iStride = upperIndex[0] - lowerIndex[0] + 1;
-                    index_t jStride = detectorRowLength - iStride;
+                    RealVector_t currentCoord{
+                        {static_cast<real_t>(lowerX), static_cast<real_t>(lowerY)}};
+                    index_t currentIndex =
+                        lowerX + lowerY * detectorXStride + geomIndex * detectorYStride;
+                    index_t iStride = upperX - lowerX + 1;
+                    index_t jStride = detectorXStride - iStride;
 
-                    for (index_t j = lowerIndex[1]; j <= upperIndex[1]; j++) {
-                        for (index_t i = lowerIndex[0]; i <= upperIndex[0]; i++) {
+                    for (index_t j = lowerY; j <= upperY; j++) {
+                        for (index_t i = lowerX; i <= upperX; i++) {
                             const auto distanceVec = (detectorCoord - currentCoord);
                             const auto distance = distanceVec.norm();
                             // let first axis always be the differential axis TODO
@@ -267,7 +276,7 @@ namespace elsa
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(y.getDataDescriptor());
 
-            index_t upperDetectorI = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
+            index_t upperDetectorII = detectorDesc.getNumberOfCoefficientsPerDimension()[0] - 1;
 
             auto& volume = Aty.getDataDescriptor();
             auto volumeSize = Aty.getSize();
@@ -298,11 +307,13 @@ namespace elsa
                     data_t detectorCoord = detectorCoordVec[0];
 
                     // find all detector pixels that are hit
-                    auto radiusOnDetector = static_cast<index_t>(std::round(voxelRadius * scaling));
-                    auto detectorIndex = static_cast<index_t>(std::round(detectorCoord));
+                    auto radiusOnDetector = voxelRadius * scaling;
 
-                    auto lower = std::max((index_t) 0, detectorIndex - radiusOnDetector);
-                    auto upper = std::min(upperDetectorI, detectorIndex + radiusOnDetector);
+                    auto lower = std::max(
+                        (index_t) 0, static_cast<index_t>(ceil(detectorCoord - radiusOnDetector)));
+                    auto upper =
+                        std::min((index_t) upperDetectorII,
+                                 static_cast<index_t>(floor(detectorCoord + radiusOnDetector)));
 
                     for (index_t neighbour = lower; neighbour <= upper; neighbour++) {
                         const auto distance = (detectorCoord - neighbour);
@@ -321,10 +332,13 @@ namespace elsa
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(y.getDataDescriptor());
 
-            const IndexVector_t lowerDetector = IndexVector_t::Constant(3, 0);
-            const IndexVector_t upperDetector =
-                detectorDesc.getNumberOfCoefficientsPerDimension().array() - 1;
-            const index_t detectorRowLength = upperDetector[0] + 1;
+            const IndexVector_t& upperDetectorI =
+                detectorDesc.getNumberOfCoefficientsPerDimension();
+
+            const auto upperDetectorIX = upperDetectorI[0] - 1;
+            const auto upperDetectorIY = upperDetectorI[1] - 1;
+            const auto detectorXStride = upperDetectorI[0];
+            const auto detectorYStride = upperDetectorI[0] * upperDetectorI[1];
 
             auto& volume = Aty.getDataDescriptor();
             auto volumeSize = Aty.getSize();
@@ -345,32 +359,36 @@ namespace elsa
                         detectorDesc.projectAndScaleVoxelOnDetector(volumeCoord, geomIndex);
 
                     // correct origin shift
-                    RealVector_t detectorCoordWithGeom = detectorCoordShifted.array() - 0.5;
+                    RealVector_t detectorCoord = detectorCoordShifted.head(2).array() - 0.5;
 
                     // find all detector pixels that are hit
-                    auto radiusOnDetector = IndexVector_t::Constant(
-                        3, static_cast<index_t>(std::round(voxelRadius * scaling)));
-                    auto detectorIndexVector = detectorCoordWithGeom.template cast<index_t>();
-                    auto detectorCoord = detectorCoordWithGeom.head(2);
-
-                    // compute bounding box of hit detector Pixels
-                    IndexVector_t lowerIndex = detectorIndexVector - radiusOnDetector;
-                    IndexVector_t upperIndex = detectorIndexVector + radiusOnDetector;
+                    auto radiusOnDetector = voxelRadius * scaling;
 
                     // constrain to detector size
-                    lowerIndex = lowerIndex.cwiseMax(lowerDetector);
-                    upperIndex = upperIndex.cwiseMin(upperDetector);
+                    index_t lowerX =
+                        std::max((index_t) 0,
+                                 static_cast<index_t>(ceil(detectorCoord[0] - radiusOnDetector)));
+                    index_t upperX =
+                        std::min(upperDetectorIX,
+                                 static_cast<index_t>(floor(detectorCoord[0] + radiusOnDetector)));
+                    index_t lowerY =
+                        std::max((index_t) 0,
+                                 static_cast<index_t>(ceil(detectorCoord[1] - radiusOnDetector)));
+                    index_t upperY =
+                        std::min(upperDetectorIY,
+                                 static_cast<index_t>(floor(detectorCoord[1] + radiusOnDetector)));
 
                     // initialize variables for performance
-                    RealVector_t currentCoord = lowerIndex.head(2).template cast<real_t>();
-                    lowerIndex[2] = geomIndex;
-                    index_t currentIndex = detectorDesc.getIndexFromCoordinate(lowerIndex);
-                    index_t iStride = upperIndex[0] - lowerIndex[0] + 1;
-                    index_t jStride = detectorRowLength - iStride;
+                    RealVector_t currentCoord{
+                        {static_cast<real_t>(lowerX), static_cast<real_t>(lowerY)}};
+                    index_t currentIndex =
+                        lowerX + lowerY * detectorXStride + geomIndex * detectorYStride;
+                    index_t iStride = upperX - lowerX + 1;
+                    index_t jStride = detectorXStride - iStride;
 
-                    for (index_t j = lowerIndex[1]; j <= upperIndex[1]; j++) {
-                        for (index_t i = lowerIndex[0]; i <= upperIndex[0]; i++) {
-                            const auto distanceVec = (detectorCoord - currentCoord);
+                    for (index_t j = lowerY; j <= upperY; j++) {
+                        for (index_t i = lowerX; i <= upperX; i++) {
+                            const RealVector_t distanceVec = (detectorCoord - currentCoord);
                             const auto distance = distanceVec.norm();
                             // first axis always is always the differential axis TODO
                             Aty[domainIndex] +=
