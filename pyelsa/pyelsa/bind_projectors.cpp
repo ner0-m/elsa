@@ -6,6 +6,7 @@
 #include "BSplines.h"
 #include "BinaryMethod.h"
 #include "JosephsMethod.h"
+#include "JosephsMethodBranchless.h"
 #include "SiddonsMethod.h"
 #include "VoxelProjector.h"
 #include "SiddonsMethodBranchless.h"
@@ -174,6 +175,20 @@ void add_definitions_pyelsa_projectors(py::module& m)
         .def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
                       elsa::JosephsMethod<double>::Interpolation>(),
              py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("interpolation"));
+
+    py::class_<elsa::JosephsMethodBranchless<float>, elsa::LinearOperator<float>>
+        JosephsMethodBranchlessf(m, "JosephsMethodBranchlessf");
+    JosephsMethodBranchlessf.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    m.attr("JosephsMethodBranchless") = m.attr("JosephsMethodBranchlessf");
+
+    py::class_<elsa::JosephsMethodBranchless<double>, elsa::LinearOperator<double>>
+        JosephsMethodBranchlessd(m, "JosephsMethodBranchlessd");
+    JosephsMethodBranchlessd.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
 
     py::class_<elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, float>>>
         CloneableSubsetSamplerPlanarDetectorDescriptorfloat(
