@@ -1,5 +1,4 @@
 /// Elsa example program: basic 2d X-ray CT simulation and reconstruction
-
 #include "elsa.h"
 
 #include <iostream>
@@ -56,7 +55,7 @@ void example2d_admm()
 
     SplittingProblem<real_t> splittingProblem(wlsProblem.getDataTerm(), regTerm, constraint);
 
-    ADMM<CG, ProximalL1> admm(splittingProblem);
+    ADMM<CGLS, ProximalL1> admm(splittingProblem);
 
     Logger::get("Info")->info("Solving reconstruction using {} iterations of ADMM", noIterations);
     auto admmReconstruction = admm.solve(noIterations);

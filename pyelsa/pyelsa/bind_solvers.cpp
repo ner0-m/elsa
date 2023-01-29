@@ -2,7 +2,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
 
-#include "CG.h"
 #include "FGM.h"
 #include "PGD.h"
 #include "APGD.h"
@@ -91,33 +90,6 @@ void add_gradient_descent(py::module& m)
     detail::add_gradient_descent<double>(m, "GradientDescentd");
 
     m.attr("GradientDescent") = m.attr("GradientDescentf");
-}
-
-namespace detail
-{
-    template <class data_t>
-    void add_conjugate_gradient(py::module& m, const char* name)
-    {
-        using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
-        using LOp = elsa::LinearOperator<data_t>;
-
-        py::class_<elsa::CG<data_t>, Solver> cg(m, name);
-        cg.def(py::init<const Problem&, const LOp&>(), py::arg("problem"),
-               py::arg("preconditionerInverse"));
-        cg.def(py::init<const Problem&, const LOp&, data_t>(), py::arg("problem"),
-               py::arg("preconditionerInverse"), py::arg("epsilon"));
-        cg.def(py::init<const Problem&>(), py::arg("problem"));
-        cg.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
-    }
-} // namespace detail
-
-void add_conjugate_gradient(py::module& m)
-{
-    detail::add_conjugate_gradient<float>(m, "CGf");
-    detail::add_conjugate_gradient<double>(m, "CGd");
-
-    m.attr("CG") = m.attr("CGf");
 }
 
 namespace detail
@@ -306,7 +278,6 @@ void add_definitions_pyelsa_solvers(py::module& m)
 {
     add_solver(m);
     add_gradient_descent(m);
-    add_conjugate_gradient(m);
     add_cgls(m);
     add_ista(m);
     add_fista(m);

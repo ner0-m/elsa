@@ -45,11 +45,8 @@ projector = elsa.SiddonsMethod(volume_descriptor, sino_descriptor)
 # simulate the sinogram
 sinogram = projector.apply(phantom)
 
-# setup reconstruction problem
-problem = elsa.WLSProblem(projector, sinogram)
-
 # solve the problem
-solver = elsa.CG(problem)
+solver = elsa.CGLS(projector, sinogram)
 n_iterations = 20
 reconstruction = solver.solve(n_iterations)
 
@@ -104,11 +101,8 @@ projector = elsa.JosephsMethodCUDA(volume_descriptor, sino_descriptor)
 # simulate the sinogram
 sinogram = projector.apply(phantom)
 
-# setup reconstruction problem
-problem = elsa.WLSProblem(projector, sinogram)
-
 # solve the problem
-solver = elsa.CG(problem)
+solver = elsa.CGLS(projector, sinogram)
 n_iterations = 20
 reconstruction = np.array(solver.solve(n_iterations))
 ```

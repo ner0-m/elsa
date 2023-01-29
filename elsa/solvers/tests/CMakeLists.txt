@@ -15,7 +15,6 @@ add_custom_target(
 
 # the actual tests
 ELSA_DOCTEST(GradientDescent PUBLIC_DEPENDENCIES elsa_generators elsa_projectors)
-ELSA_DOCTEST(CG PUBLIC_DEPENDENCIES elsa_generators elsa_projectors)
 ELSA_DOCTEST(PGD)
 ELSA_DOCTEST(APGD)
 ELSA_DOCTEST(CGLS)

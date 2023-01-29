@@ -29,7 +29,6 @@ namespace elsa
     /// References:
     /// - https://web.stanford.edu/group/SOL/software/cgls/
     ///
-    /// @see CG
     /// @author David Frank
     template <typename data_t = real_t>
     class CGLS : public Solver<data_t>

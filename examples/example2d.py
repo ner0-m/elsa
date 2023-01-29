@@ -17,8 +17,7 @@ def example2d(s: int):
     projector = elsa.SiddonsMethod(phantom.getDataDescriptor(), sinoDescriptor)
     sinogram = projector.apply(phantom)
 
-    problem = elsa.WLSProblem(projector, sinogram)
-    solver = elsa.CG(problem)
+    solver = elsa.CGLS(projector, sinogram)
     reconstruction = solver.solve(20)
     plt.imshow(reconstruction)
     plt.show()

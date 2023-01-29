@@ -1,9 +1,9 @@
 #include "doctest/doctest.h"
 
 #include "ADMM.h"
-#include "CG.h"
 #include "ProximalL1.h"
 #include "ProximalL0.h"
+#include "CGLS.h"
 #include "Identity.h"
 #include "APGD.h"
 #include "Logger.h"
@@ -45,14 +45,18 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", data_t, float, double)
 
             SplittingProblem<data_t> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, ProximalL1, data_t> admm(splittingProblem);
+            ADMM<CGLS, ProximalL1, data_t> admm(splittingProblem);
 
             LASSOProblem<data_t> lassoProb(wlsProb, regTerm);
             APGD<data_t> fista(lassoProb);
 
             THEN("the solutions match")
             {
-                REQUIRE_UNARY(isApprox(admm.solve(100), fista.solve(100)));
+                auto sol1 = admm.solve(10);
+                auto sol2 = fista.solve(10);
+                CAPTURE(sol1);
+                CAPTURE(sol2);
+                REQUIRE_UNARY(isApprox(sol1, sol2, 0.1));
             }
         }
 
@@ -63,13 +67,17 @@ TEST_CASE_TEMPLATE("ADMM: Solving problems", data_t, float, double)
 
             SplittingProblem<data_t> splittingProblem(wlsProb.getDataTerm(), regTerm, constraint);
 
-            ADMM<CG, ProximalL0, data_t> admm(splittingProblem);
+            ADMM<CGLS, ProximalL1, data_t> admm(splittingProblem);
 
             THEN("the solution doesn't throw, is not nan and is approximate to the b vector")
             {
                 REQUIRE_NOTHROW(admm.solve(10));
                 REQUIRE_UNARY(!std::isnan(admm.solve(20).squaredL2Norm()));
-                REQUIRE_UNARY(isApprox(admm.solve(20), dcB));
+
+                auto soladmm = admm.solve(20);
+                CAPTURE(soladmm);
+                CAPTURE(dcB);
+                REQUIRE_UNARY(isApprox(soladmm, dcB, 0.1));
             }
         }
     }

@@ -95,7 +95,7 @@ Without getting to into the math behind it (checkout the
 `paper <https://doi.org/10.1117/12.2534833>`_ , if you want to dive into it), this sets up an
 optimization problem. We want to find an solution to this problem In this case, we'll find it it
 using the `Conjugate gradient method <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_,
-or CG for short. It's an iterative algorithm to solve. As this is still a quite simple example, we
+or CGLS for short. It's an iterative algorithm to solve. As this is still a quite simple example, we
 don't need to let it run for too many iterations.
 
 Now, you have the reconstruction! In the best case, this should already look quite similar to the

@@ -11,11 +11,6 @@ Solver
 
 .. doxygenclass:: elsa::Solver
 
-CG
-==
-
-.. doxygenclass:: elsa::CG
-
 CGLS
 ====
 

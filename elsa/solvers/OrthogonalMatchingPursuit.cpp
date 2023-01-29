@@ -1,7 +1,7 @@
 #include "OrthogonalMatchingPursuit.h"
 #include "TypeCasts.hpp"
 #include "WLSProblem.h"
-#include "CG.h"
+#include "CGLS.h"
 
 #include <iostream>
 
@@ -39,9 +39,7 @@ namespace elsa
             support[support.size() - 1] = k;
             Dictionary<data_t> purgedDict = dict.getSupportedDictionary(support);
 
-            WLSProblem<data_t> wls(purgedDict, _problem.getSignal());
-
-            CG<data_t> cgSolver(wls);
+            CGLS<data_t> cgSolver(purgedDict, _problem.getSignal());
             const auto wlsSolution = cgSolver.solve(10);
 
             // wlsSolution has only non-zero coefficients, copy those to the full solution with zero

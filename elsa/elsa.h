@@ -84,7 +84,6 @@
 // Solver headers
 #include "Solver.h"
 #include "GradientDescent.h"
-#include "CG.h"
 #include "PGD.h"
 #include "APGD.h"
 #include "CGLS.h"

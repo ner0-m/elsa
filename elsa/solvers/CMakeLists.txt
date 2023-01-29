@@ -2,7 +2,6 @@
 set(MODULE_HEADERS
     Solver.h
     GradientDescent.h
-    CG.h
     PGD.h
     APGD.h
     CGLS.h
@@ -20,7 +19,6 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     Solver.cpp
     GradientDescent.cpp
-    CG.cpp
     PGD.cpp
     APGD.cpp
     CGLS.cpp

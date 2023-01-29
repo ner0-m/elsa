@@ -55,7 +55,7 @@ The stated convergence speeds should be taken with a grain of salt as they are e
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
 | Separable Quadratic Surrogate Ordered Subsets (SQS OS)   | None                                                  | Fast        |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
-| Conjugate Gradient Descent (CG)                          | Problem must be convertible to a quadric problem      | Fast        |
+| Conjugate Gradient Descent (CGLS)                        | Problem must be convertible to a quadric problem      | Fast        |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+
 | Proximal Gradient Descent (PGD)                          | Requires a regularization term                        | Medium      |
 +----------------------------------------------------------+-------------------------------------------------------+-------------+

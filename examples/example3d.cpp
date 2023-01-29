@@ -36,11 +36,8 @@ void example3d()
     // write the sinogram out
     EDF::write(sinogram, "3dsinogram.edf");
 
-    // setup reconstruction problem
-    WLSProblem problem(projector, sinogram);
-
     // solve the reconstruction problem
-    CG solver(problem);
+    CGLS solver(projector, sinogram);
 
     index_t noIterations{20};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",

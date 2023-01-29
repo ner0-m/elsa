@@ -249,11 +249,8 @@ class PyelsaTest(unittest.TestCase):
         # simulate sinogram
         sino = projector.apply(phantom)
 
-        # setup reconstruction problem
-        problem = elsa.WLSProblem(projector, sino)
-
         # solve the reconstruction problem
-        solver = elsa.CG(problem)
+        solver = elsa.CGLS(projector, sino)
         recon = solver.solve(iterCount)
 
         # compute mse and check that it is within bounds

@@ -39,11 +39,8 @@ void example2d()
     Logger::get("Info")->info("Write sinogram");
     io::write(sinogram, "2dsinogram.pgm");
 
-    // setup reconstruction problem
-    WLSProblem wlsProblem(projector, sinogram);
-
     // solve the reconstruction problem
-    CG cgSolver(wlsProblem);
+    CGLS cgSolver(projector, sinogram);
 
     index_t noIterations{10};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",

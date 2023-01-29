@@ -189,7 +189,7 @@ def compare_sqs_strategies(max_iterations: int, show_plots: bool, problem_size: 
                    sampling_strategy='ROTATIONAL_CLUSTERING'),
         SolverTest(elsa.SQS, 'SQS with 7 subsets, rotational clustering', uses_subsets=True, n_subsets=7,
                    sampling_strategy='ROTATIONAL_CLUSTERING'),
-        SolverTest(elsa.CG, 'CG')
+        SolverTest(elsa.CGLS, 'CGLS')
     ]
 
     compare_solvers(solvers, do_3d=True, max_iterations=max_iterations, show_plot=show_plots, problem_size=problem_size,
@@ -207,7 +207,7 @@ def evaluate_solvers(max_iterations: int, show_plots: bool, problem_size: int, p
         SolverTest(elsa.OGM, 'OGM'),
         SolverTest(elsa.SQS, 'SQS'),
         SolverTest(elsa.SQS, 'SQS with 5 ordered subsets', uses_subsets=True),
-        SolverTest(elsa.CG, 'CG')
+        SolverTest(elsa.CGLS, 'CGLS')
     ]
 
     compare_solvers(solvers, max_iterations=max_iterations, show_plot=show_plots, problem_size=problem_size,

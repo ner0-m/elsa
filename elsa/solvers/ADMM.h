@@ -3,6 +3,11 @@
 #include <memory>
 #include <type_traits>
 
+#include "BlockDescriptor.h"
+#include "BlockLinearOperator.h"
+#include "DataContainer.h"
+#include "IdenticalBlocksDescriptor.h"
+#include "LinearOperator.h"
 #include "Solver.h"
 #include "ProximalOperator.h"
 #include "SplittingProblem.h"
@@ -140,11 +145,21 @@ namespace elsa
                                       "rkL2Norm", "skL2Norm");
 
             for (index_t iter = 0; iter < iterations; ++iter) {
-                LinearResidual<data_t> xLinearResidual(A, c - B.apply(z) - u);
-                RegularizationTerm xRegTerm(_rho / 2, L2NormPow2<data_t>(xLinearResidual));
-                Problem<data_t> xUpdateProblem(dataTerm, xRegTerm);
+                // Setup a block problem, where K = [A; A], and w = [b; c - Bz - u]
+                IdenticalBlocksDescriptor blockDesc(2, A.getRangeDescriptor());
 
-                XSolver<data_t> xSolver(xUpdateProblem);
+                std::vector<std::unique_ptr<LinearOperator<data_t>>> opList(2);
+                opList[0] = std::move(A.clone());
+                opList[1] = std::move(A.clone());
+
+                BlockLinearOperator K(A.getDomainDescriptor(), blockDesc, opList,
+                                      BlockLinearOperator<data_t>::BlockType::ROW);
+
+                DataContainer<data_t> w(blockDesc);
+                w.getBlock(0) = dataTermResidual.getDataVector();
+                w.getBlock(1) = c - B.apply(z) - u;
+
+                XSolver<data_t> xSolver(K, w, _rho / 2);
                 x = xSolver.solve(_defaultXSolverIterations, x);
 
                 DataContainer<data_t> rk = x;

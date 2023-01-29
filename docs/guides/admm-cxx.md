@@ -134,12 +134,12 @@ SplittingProblem splittingProblem(wlsProblem.getDataTerm(), regTerm, constraint)
 Finally, we build the `ADMM` solver.
 We can specify the solvers as template parameters. Note that as of currently, we
 support subclasses of `Solver` and `ProximityOperator` for the first and second template respectively. We chose to
-specify the [conjugate gradient](https://en.wikipedia.org/wiki/Conjugate_gradient_method) solver as `CG` along with
+specify the [conjugate gradient](https://en.wikipedia.org/wiki/Conjugate_gradient_method) solver as `CGLS` along with
 the [shrinkage/soft-thresholding](http://www.cs.cmu.edu/afs/cs/Web/People/airg/readings/2012_02_21_a_fast_iterative_shrinkage-thresholding.pdf#page=3)
 operator as `ProximalL1`
 
 ```c++
-ADMM<CG, ProximalL1> admm(splittingProblem);
+ADMM<CGLS, ProximalL1> admm(splittingProblem);
 ```
 
 We can now reconstruct the phantom! We do this simply by
