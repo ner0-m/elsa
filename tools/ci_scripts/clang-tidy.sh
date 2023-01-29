@@ -80,12 +80,12 @@ for f in ${filelist[*]}; do
             echo "You must pass the clang tidy checks before submitting a pull request"
             echo ""
             grep --color -E '^|warning: |error: ' output.txt
+            exit_flag=true
+            filesWithErrors=( "${filesWithErrors[@]}" $f )
             if [[ -n $(grep "error: " output.txt) ]]; then
-                exit_flag=true
-                filesWithErrors=( "${filesWithErrors[@]}" $f )
                 echo -e "\033[1;31m\xE2\x9C\x98 failed file $f\033[0m $1";
             else
-                echo -e "\033[1;33m\xE2\x9C\x93 passed file $f with warnings\033[0m $1";
+                echo -e "\033[1;31m\xE2\x9C\x98 failed file $f because of warnings\033[0m $1";
             fi
         else
             echo -e "\033[1;32m\xE2\x9C\x93 passed file $f\033[0m $1";
