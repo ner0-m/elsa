@@ -7,13 +7,13 @@ target_branch="master"
 
 # Retrieve list of cpp-files that were changed in source branch with respect to master (target branch)
 # Prevent script from aborting if nothing is found by adding "|| :" after grep
-filelist=($(git diff origin/${target_branch} --name-only | grep ".cpp" || :))
+filelist=($(git diff origin/${target_branch} --name-only | grep -E "\.(h|hpp|cpp)" || :))
 
 clang_tidy_version=14
 clang_tidy_tool_candiates=("clang-tidy-${clang_tidy_version}" "clang-tidy")
 
 if [[ "${#filelist[@]}" -eq "0" ]]; then
-    echo "==> No cpp files found"
+    echo "==> No .h, .hpp or .cpp files which are different to master found"
     echo "==> clang-tidy has nothing to do, stop early"
     exit 0
 else
