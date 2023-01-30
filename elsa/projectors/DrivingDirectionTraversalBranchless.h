@@ -97,8 +97,6 @@ namespace elsa
         RealArray_t<dim> _currentPos;
         /// the step sizes for the next step along the ray
         RealArray_t<dim> _nextStep;
-        /// flag if traverser still in bounding box
-        bool _isInAABB{false};
         /// length of ray segment currently being handled
         real_t _intersectionLength{0};
         /// index of direction for which no interpolation needs to be performed
@@ -107,8 +105,5 @@ namespace elsa
         index_t _stepCount{0};
         /// the total number of steps to be taken
         index_t _numSteps;
-
-        /// check if the current index is still in the bounding box
-        bool isCurrentPositionInAABB() const;
     };
 } // namespace elsa

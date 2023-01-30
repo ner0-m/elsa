@@ -59,7 +59,6 @@ namespace elsa
     {
         _currentPos += _nextStep;
         _stepCount++;
-        _isInAABB = isCurrentPositionInAABB();
     }
 
     template <int dim>
@@ -81,12 +80,6 @@ namespace elsa
     }
 
     template <int dim>
-    inline bool DrivingDirectionTraversalBranchless<dim>::isCurrentPositionInAABB() const
-    {
-        return (_stepCount < _numSteps);
-    }
-
-    template <int dim>
     index_t DrivingDirectionTraversalBranchless<dim>::getDrivingDirection() const
     {
         return _drivingDirection;
@@ -95,7 +88,7 @@ namespace elsa
     template <int dim>
     bool DrivingDirectionTraversalBranchless<dim>::isInBoundingBox() const
     {
-        return _isInAABB;
+        return (_stepCount < _numSteps);
     }
 
     template <int dim>
