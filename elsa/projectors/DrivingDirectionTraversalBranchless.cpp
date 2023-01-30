@@ -8,8 +8,6 @@ namespace elsa
         const BoundingBox& aabb, const RealRay_t& r)
     {
         static_assert(dim == 2 || dim == 3);
-        _aabbMin = aabb.min();
-        _aabbMax = aabb.max();
 
         // --> calculate intersection parameter and if the volume is hit
         auto opt = intersectRay(aabb, r);
@@ -21,14 +19,18 @@ namespace elsa
             // --> get points at which they intersect
             _currentPos = r.pointAt(opt->_tmin);
 
+            RealArray_t<dim> aabbMin = aabb.min();
+            RealArray_t<dim> aabbMax = aabb.max();
+
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
-            _currentPos = (_currentPos < _aabbMin).select(_aabbMin, _currentPos);
-            _currentPos = (_currentPos > _aabbMax).select(_aabbMax, _currentPos);
+            _currentPos = (_currentPos < aabbMin).select(aabbMin, _currentPos);
+            _currentPos = (_currentPos > aabbMax).select(aabbMax, _currentPos);
 
             RealArray_t<dim> exitPoint = r.pointAt(opt->_tmax);
-            exitPoint = (exitPoint < _aabbMin).select(_aabbMin, exitPoint);
-            exitPoint = (exitPoint > _aabbMax).select(_aabbMax, exitPoint);
+
+            exitPoint = (exitPoint < aabbMin).select(aabbMin, exitPoint);
+            exitPoint = (exitPoint > aabbMax).select(aabbMax, exitPoint);
 
             // the step is 1 in driving direction so that we step in increments of 1 along the grid
             // the other directions are set so that we step along the course of the ray

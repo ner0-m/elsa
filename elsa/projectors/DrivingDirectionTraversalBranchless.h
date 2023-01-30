@@ -89,10 +89,6 @@ namespace elsa
         IndexArray_t<dim> getCurrentVoxelCeil() const;
 
     private:
-        /// result of aabb.min(), the lower corner of the aabb
-        RealArray_t<dim> _aabbMin;
-        /// result of aabb.max(), the upper corner of the aabb
-        RealArray_t<dim> _aabbMax;
         /// the current position of the traverser in the aabb
         RealArray_t<dim> _currentPos;
         /// the step sizes for the next step along the ray
