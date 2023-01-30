@@ -14,7 +14,7 @@ namespace elsa
         // --> calculate intersection parameter and if the volume is hit
         auto opt = intersectRay(aabb, r);
 
-        r.direction().cwiseAbs().maxCoeff(&_ignoreDirection);
+        r.direction().cwiseAbs().maxCoeff(&_drivingDirection);
 
         if (opt) {
 
@@ -32,20 +32,20 @@ namespace elsa
 
             // the step is 1 in driving direction so that we step in increments of 1 along the grid
             // the other directions are set so that we step along the course of the ray
-            _nextStep = r.direction() / abs(r.direction()[_ignoreDirection]);
+            _nextStep = r.direction() / abs(r.direction()[_drivingDirection]);
 
             // if the entryPoint is before .5 in driving direction, move _currentPos forward along
             // the ray to .5, otherwise move backward along the ray to .5
-            real_t dist = _currentPos(_ignoreDirection) - floor(_currentPos(_ignoreDirection));
-            _currentPos += _nextStep * (0.5f - dist) * _nextStep.sign()(_ignoreDirection);
+            real_t dist = _currentPos(_drivingDirection) - floor(_currentPos(_drivingDirection));
+            _currentPos += _nextStep * (0.5f - dist) * _nextStep.sign()(_drivingDirection);
 
-            // this is to make sure that along _ignoreDirection, _currentPos is exactly .5 after
+            // this is to make sure that along _drivingDirection, _currentPos is exactly .5 after
             // the decimal point
-            _currentPos(_ignoreDirection) = floor(_currentPos(_ignoreDirection)) + 0.5f;
+            _currentPos(_drivingDirection) = floor(_currentPos(_drivingDirection)) + 0.5f;
 
             // number of steps is the distance between exit and entry along the driving direction
             _numSteps = static_cast<index_t>(
-                ceil(abs(exitPoint(_ignoreDirection) - _currentPos(_ignoreDirection))));
+                ceil(abs(exitPoint(_drivingDirection) - _currentPos(_drivingDirection))));
 
             _intersectionLength = _nextStep.matrix().norm();
         } else {
@@ -87,9 +87,9 @@ namespace elsa
     }
 
     template <int dim>
-    int DrivingDirectionTraversalBranchless<dim>::getIgnoreDirection() const
+    int DrivingDirectionTraversalBranchless<dim>::getDrivingDirection() const
     {
-        return _ignoreDirection;
+        return _drivingDirection;
     }
 
     template <int dim>

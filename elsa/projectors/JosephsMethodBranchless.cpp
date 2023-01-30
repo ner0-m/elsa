@@ -124,7 +124,7 @@ namespace elsa
 
                 linear<adjoint, dim>(result, vector, traverse.getCurrentPos(),
                                      traverse.getCurrentVoxelFloor(),
-                                     traverse.getCurrentVoxelCeil(), traverse.getIgnoreDirection(),
+                                     traverse.getCurrentVoxelCeil(), traverse.getDrivingDirection(),
                                      to, ir, intersection, aabbMin, aabbMax);
                 // update Traverse
                 traverse.updateTraverse();

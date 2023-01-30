@@ -37,17 +37,15 @@ namespace elsa
         bool isInBoundingBox() const;
 
         /**
-         * @brief Get direction to be ignored during interpolation
+         * @brief Get the driving direction
          *
-         * The sampling points are chosen so that one of the directions can be ignored during
-         * interpolation, effectively reducing the number of operations needed for the calculation
-         * of the interpolated value by half. For interior points, the direction to be ignored is
-         * always the main direction. For the entry and exit points it's the entry resp. exit
-         * direction.
+         * The sampling points are chosen so that the direction which grows the quickest can be
+         * ignored during interpolation, effectively reducing the number of operations needed for
+         * the calculation of the interpolated value by half.
          *
-         * @return int index of the direction to be ignored
+         * @return int index of the driving direction
          */
-        int getIgnoreDirection() const;
+        int getDrivingDirection() const;
 
         /**
          * @brief Get the intersection length for the current step
@@ -104,7 +102,7 @@ namespace elsa
         /// length of ray segment currently being handled
         real_t _intersectionLength{0};
         /// index of direction for which no interpolation needs to be performed
-        int _ignoreDirection{-1};
+        int _drivingDirection{-1};
         /// counter for the number of steps already taken
         index_t _stepCount{0};
         /// the total number of steps to be taken
