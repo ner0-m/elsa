@@ -43,9 +43,9 @@ namespace elsa
          * ignored during interpolation, effectively reducing the number of operations needed for
          * the calculation of the interpolated value by half.
          *
-         * @return int index of the driving direction
+         * @return index_t index of the driving direction
          */
-        int getDrivingDirection() const;
+        index_t getDrivingDirection() const;
 
         /**
          * @brief Get the intersection length for the current step
@@ -102,7 +102,7 @@ namespace elsa
         /// length of ray segment currently being handled
         real_t _intersectionLength{0};
         /// index of direction for which no interpolation needs to be performed
-        int _drivingDirection{-1};
+        index_t _drivingDirection;
         /// counter for the number of steps already taken
         index_t _stepCount{0};
         /// the total number of steps to be taken

@@ -87,7 +87,7 @@ namespace elsa
     }
 
     template <int dim>
-    int DrivingDirectionTraversalBranchless<dim>::getDrivingDirection() const
+    index_t DrivingDirectionTraversalBranchless<dim>::getDrivingDirection() const
     {
         return _drivingDirection;
     }
