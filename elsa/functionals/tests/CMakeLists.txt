@@ -15,6 +15,7 @@ add_custom_target(build-tests-functionals)
 
 # the actual tests
 ELSA_DOCTEST(LinearResidual)
+ELSA_DOCTEST(Functional)
 ELSA_DOCTEST(L0PseudoNorm)
 ELSA_DOCTEST(L1Norm)
 ELSA_DOCTEST(L2NormPow2)

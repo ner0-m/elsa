@@ -20,6 +20,13 @@ Functional
 
 .. doxygenclass:: elsa::Functional
 
+Composition of Functionals
+==========================
+
+.. doxygenclass:: elsa::FunctionalSum
+
+.. doxygenclass:: elsa::FunctionalScalarMul
+
 Huber
 =====
 
