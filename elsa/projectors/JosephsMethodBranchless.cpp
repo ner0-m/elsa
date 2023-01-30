@@ -86,6 +86,9 @@ namespace elsa
 
         const auto sizeOfRange = range.getNumberOfCoefficients();
 
+        const IndexArray_t<dim> aabbMin = aabb.min().template cast<index_t>();
+        const IndexArray_t<dim> aabbMax = aabb.max().template cast<index_t>();
+
         // iterate over all rays
 #pragma omp parallel for
         for (index_t ir = 0; ir < sizeOfRange; ir++) {
@@ -119,8 +122,10 @@ namespace elsa
                 auto tmpTo = to;
                 auto tmpFrom = from;
 
-                linear<adjoint, dim>(aabb, vector, result, traverse.getFractionals(), currentVoxel,
-                                     intersection, from, to, traverse.getIgnoreDirection());
+                linear<adjoint, dim>(result, vector, traverse.getCurrentPos(),
+                                     traverse.getCurrentVoxelFloor(),
+                                     traverse.getCurrentVoxelCeil(), traverse.getIgnoreDirection(),
+                                     to, ir, intersection, aabbMin, aabbMax);
                 // update Traverse
                 traverse.updateTraverse();
             }
@@ -130,65 +135,107 @@ namespace elsa
     template <typename data_t>
     template <bool adjoint, int dim>
     void JosephsMethodBranchless<data_t>::linear(
-        const BoundingBox& aabb, const DataContainer<data_t>& vector, DataContainer<data_t>& result,
-        const RealArray_t<dim>& fractionals, const IndexArray_t<dim>& currentVoxel,
-        float intersection, index_t from, index_t to, int mainDirection) const
+        DataContainer<data_t>& result, const DataContainer<data_t>& vector,
+        RealArray_t<dim> currentPos, IndexArray_t<dim> voxelFloor, IndexArray_t<dim> voxelCeil,
+        index_t drivingDirection, index_t to, index_t ir, real_t intersection,
+        const IndexArray_t<dim> aabbMin, const IndexArray_t<dim> aabbMax) const
     {
-        data_t weight = intersection;
-        IndexArray_t<dim> interpol = currentVoxel;
-
-        // handle diagonal if 3D
-        if constexpr (dim == 3) {
-            for (int i = 0; i < dim; i++) {
-                if (i != mainDirection) {
-                    weight *= std::abs(fractionals(i));
-                    interpol(i) += (fractionals(i) < 0.0) ? -1 : 1;
-                    // mirror values at border if outside the volume
-                    auto interpolVal = static_cast<real_t>(interpol(i));
-                    if (interpolVal < aabb.min()(i) || interpolVal > aabb.max()(i))
-                        interpol(i) = static_cast<index_t>(aabb.min()(i));
-                    else if (interpolVal == aabb.max()(i))
-                        interpol(i) = static_cast<index_t>(aabb.max()(i)) - 1;
-                }
-            }
+        RealArray_t<dim> complement_weight = currentPos - voxelFloor.template cast<real_t>() - 0.5f;
+        RealArray_t<dim> weight = RealArray_t<dim>{1} - complement_weight;
+        weight(drivingDirection) = 1;
+        complement_weight(drivingDirection) = 1;
+        IndexArray_t<dim> indices;
+        if constexpr (dim == 2) {
             if constexpr (adjoint) {
+                indices << voxelFloor[0], voxelCeil[1];
+                bool is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent ouf of bounds access
+                indices << (is_in_aabb ? indices[0] : 0), (is_in_aabb ? indices[1] : 0);
+                to = is_in_aabb * (to >= 0)
+                     * (to < (aabbMax[0] - aabbMin[0]) * (aabbMax[1] - aabbMin[1])) * to;
 #pragma omp atomic
-                result(interpol) += weight * vector[from];
+                result(indices) +=
+                    is_in_aabb * vector[ir] * intersection * weight[0] * complement_weight[1];
+
+                indices << voxelCeil[0], voxelFloor[1];
+                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent out of bounds access
+                indices << (is_in_aabb ? indices[0] : 0), (is_in_aabb ? indices[1] : 0);
+                to = is_in_aabb * (to >= 0)
+                     * (to < (aabbMax[0] - aabbMin[0]) * (aabbMax[1] - aabbMin[1])) * to;
+#pragma omp atomic
+                result(indices) +=
+                    is_in_aabb * vector[ir] * intersection * complement_weight[0] * weight[1];
             } else {
-                result[to] += weight * vector(interpol);
+                indices << voxelFloor[0], voxelCeil[1];
+                bool is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent ouf of bounds access
+                indices << (is_in_aabb ? indices[0] : 0), (is_in_aabb ? indices[1] : 0);
+                result[to] +=
+                    is_in_aabb * vector(indices) * intersection * weight[0] * complement_weight[1];
+
+                indices << voxelCeil[0], voxelFloor[1];
+                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent out of bounds access
+                indices << (is_in_aabb ? indices[0] : 0), (is_in_aabb ? indices[1] : 0);
+                result[to] +=
+                    is_in_aabb * vector(indices) * intersection * complement_weight[0] * weight[1];
             }
-        }
-
-        // handle current voxel
-        weight = intersection * (1 - fractionals.array().abs()).prod()
-                 / (1 - std::abs(fractionals(mainDirection)));
-        if constexpr (adjoint) {
-#pragma omp atomic
-            result[to] += weight * vector[from];
         } else {
-            result[to] += weight * vector[from];
-        }
+            if constexpr (adjoint) {
+                bool is_in_aabb = (voxelFloor >= aabbMin && voxelFloor < aabbMax).all();
+                // prevent out of bounds access
+                indices << (is_in_aabb ? voxelFloor : IndexArray_t<dim>(0));
+                result(indices) +=
+                    is_in_aabb * vector[ir] * intersection * weight[0] * weight[1] * weight[2];
 
-        // handle neighbors not along the main direction
-        for (int i = 0; i < dim; i++) {
-            if (i != mainDirection) {
-                data_t weightn = weight * std::abs(fractionals(i)) / (1 - std::abs(fractionals(i)));
-                interpol = currentVoxel;
-                interpol(i) += (fractionals(i) < 0.0) ? -1 : 1;
+                indices << voxelFloor[0], voxelCeil[1], voxelCeil[2];
+                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent out ouf bounds access
+                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                result(indices) += is_in_aabb * vector[ir] * intersection * weight[0]
+                                   * complement_weight[1] * complement_weight[2];
 
-                // mirror values at border if outside the volume
-                auto interpolVal = static_cast<real_t>(interpol(i));
-                if (interpolVal < aabb.min()(i) || interpolVal > aabb.max()(i))
-                    interpol(i) = static_cast<index_t>(aabb.min()(i));
-                else if (interpolVal == aabb.max()(i))
-                    interpol(i) = static_cast<index_t>(aabb.max()(i)) - 1;
+                indices << voxelCeil[0], voxelFloor[1], voxelCeil[2];
+                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent out of bounds access
+                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                result(indices) += is_in_aabb * vector[ir] * intersection * complement_weight[0]
+                                   * weight[1] * complement_weight[2];
 
-                if constexpr (adjoint) {
-#pragma omp atomic
-                    result(interpol) += weightn * vector[from];
-                } else {
-                    result[to] += weightn * vector(interpol);
-                }
+                indices << voxelCeil[0], voxelCeil[1], voxelFloor[2];
+                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent out of bounds access
+                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                result(indices) += is_in_aabb * vector[ir] * intersection * complement_weight[0]
+                                   * complement_weight[1] * weight[2];
+            } else {
+                bool is_in_aabb = (voxelFloor >= aabbMin && voxelFloor < aabbMax).all();
+                // prevent out of bounds access
+                indices << (is_in_aabb ? voxelFloor : IndexArray_t<dim>(0));
+                result[to] +=
+                    is_in_aabb * vector(indices) * intersection * weight[0] * weight[1] * weight[2];
+
+                indices << voxelFloor[0], voxelCeil[1], voxelCeil[2];
+                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent out ouf bounds access
+                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                result[to] += is_in_aabb * vector(indices) * intersection * weight[0]
+                              * complement_weight[1] * complement_weight[2];
+
+                indices << voxelCeil[0], voxelFloor[1], voxelCeil[2];
+                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent out of bounds access
+                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                result[to] += is_in_aabb * vector(indices) * intersection * complement_weight[0]
+                              * weight[1] * complement_weight[2];
+
+                indices << voxelCeil[0], voxelCeil[1], voxelFloor[2];
+                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
+                // prevent out of bounds access
+                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                result[to] += is_in_aabb * vector(indices) * intersection * complement_weight[0]
+                              * complement_weight[1] * weight[2];
             }
         }
     }

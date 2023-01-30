@@ -15,20 +15,6 @@ namespace elsa
     template <int dim>
     class DrivingDirectionTraversalBranchless
     {
-    private:
-        /**
-         * @brief Possible stages of the traversal
-         *
-         * FIRST: currently handling the first sampling
-         * INTERIOR: currently handling an interior point
-         * LAST: currently handling the last sampling point
-         *
-         * If the ray only intersects a single pixel, the sole sampling point
-         * is considered last.
-         *
-         */
-        enum STAGE { FIRST, INTERIOR, LAST };
-
     public:
         /**
          * @brief Constructor for traversal, accepting bounding box and ray
@@ -49,18 +35,6 @@ namespace elsa
          * @returns true if still in bounding box, false otherwise
          */
         bool isInBoundingBox() const;
-
-        /**
-         * @brief Returns the fractional part of the current position wrt. the center of the
-         * pixel/voxel
-         *
-         * For example: if the current position is (15.4, 21.7, 23.0), then the current voxel is
-         * (15,21,23) and the fractional parts are (15.4, 21.7, 23.0) - (15.5, 21.5, 23.5) = (-0.1,
-         * 0.2, -0.5)
-         *
-         * @return RealVector_t fractionals
-         */
-        const RealArray_t<dim>& getFractionals() const;
 
         /**
          * @brief Get direction to be ignored during interpolation
@@ -89,47 +63,54 @@ namespace elsa
          */
         IndexArray_t<dim> getCurrentVoxel() const;
 
+        /**
+         * @brief get the current position in 'continuous' space
+         * The position along the driving direction is always at .5, the other directions are set so
+         * that currentPos sits on the ray.
+         *
+         * @return RealArray_t current position along the ray
+         */
+        RealArray_t<dim> getCurrentPos() const;
+
+        /**
+         * @brief get the floor of the current position as a voxel
+         * Along the driving direction, the index is exactly the index corresponding to the current
+         * position
+         * Along the other directions, the indices are rounded down
+         * @return IndexArray_t of the floor of the current position
+         */
+        IndexArray_t<dim> getCurrentVoxelFloor() const;
+
+        /**
+         * @brief get the ceil of the current position as a voxel
+         * Along the driving direction, the index is exactly the index corresponding to the current
+         * position
+         * Along the other directions, the indices are rounded up
+         * @return IndexArray_t of the ceil of the current position
+         */
+        IndexArray_t<dim> getCurrentVoxelCeil() const;
+
     private:
         /// result of aabb.min(), the lower corner of the aabb
         RealArray_t<dim> _aabbMin;
         /// result of aabb.max(), the upper corner of the aabb
         RealArray_t<dim> _aabbMax;
-        /// the entry point parameters of the ray in the aabb
-        RealArray_t<dim> _entryPoint;
-        /// the exit point parameters of the ray in the aabb
-        RealArray_t<dim> _exitPoint;
         /// the current position of the traverser in the aabb
         RealArray_t<dim> _currentPos;
-        /// the step direction of the traverser
-        RealArray_t<dim> _stepDirection;
         /// the step sizes for the next step along the ray
         RealArray_t<dim> _nextStep;
-        /// the fractional parts of the current position coordinates (actually frac(_currentPos) -
-        /// 0.5)
-        RealArray_t<dim> _fractionals;
         /// flag if traverser still in bounding box
         bool _isInAABB{false};
         /// length of ray segment currently being handled
         real_t _intersectionLength{0};
         /// index of direction for which no interpolation needs to be performed
         int _ignoreDirection{-1};
-        /// index of direction in which the ray exits the volume
-        int _exitDirection{-1};
-        /// stage at which the traversal currently is
-        STAGE _stage{FIRST};
+        /// counter for the number of steps already taken
+        index_t _stepCount{0};
+        /// the total number of steps to be taken
+        index_t _numSteps;
 
-        /// initialize fractionals from a coordinate vector
-        void initFractionals(const RealArray_t<dim>& currentPosition);
-        /// setup the step directions (which is basically the sign of the ray direction rd)
-        void initStepDirection(const RealVector_t& rd);
-        /// compute the entry and exit points of ray r with the volume (aabb), returns the length of
-        /// the intersection
-        real_t calculateAABBIntersections(const RealRay_t& ray, const BoundingBox& aabb);
-        /// select the closest voxel to the entry point (considering the current position)
-        void selectClosestVoxel(const RealArray_t<dim>& currentPosition);
         /// check if the current index is still in the bounding box
-        bool isCurrentPositionInAABB(index_t index) const;
-        /// advances the traversal algorithm to the first sampling point
-        void moveToFirstSamplingPoint(const RealVector_t& rd, real_t intersectionLength);
+        bool isCurrentPositionInAABB() const;
     };
 } // namespace elsa

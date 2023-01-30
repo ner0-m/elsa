@@ -116,10 +116,11 @@ namespace elsa
          * @param[in] mainDirection specifies the main direction of the ray
          */
         template <bool adjoint, int dim>
-        void linear(const BoundingBox& aabb, const DataContainer<data_t>& vector,
-                    DataContainer<data_t>& result, const RealArray_t<dim>& fractionals,
-                    const IndexArray_t<dim>& currentVoxel, float intersection, index_t from,
-                    index_t to, int mainDirection) const;
+        void linear(DataContainer<data_t>& result, const DataContainer<data_t>& vector,
+                    RealArray_t<dim> currentPos, IndexArray_t<dim> voxelFloor,
+                    IndexArray_t<dim> voxelCeil, index_t drivingDirection, index_t to, index_t ir,
+                    real_t intersection, IndexArray_t<dim> aabbMin,
+                    IndexArray_t<dim> aabbMax) const;
 
         /// lift from base class
         // using LinearOperator<data_t>::_domainDescriptor;
