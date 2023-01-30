@@ -82,3 +82,10 @@ TransmissionLogLikelihood
 =========================
 
 .. doxygenclass:: elsa::TransmissionLogLikelihood
+
+ConstantFunctional
+==================
+
+.. doxygenclass:: elsa::ConstantFunctional
+
+.. doxygenclass:: elsa::ZeroFunctional
