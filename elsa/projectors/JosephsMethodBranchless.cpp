@@ -145,39 +145,36 @@ namespace elsa
         weight(drivingDirection) = 1;
         complement_weight(drivingDirection) = 1;
         IndexArray_t<dim> indices;
+        // sets indices to array of zeroes if they are not within bounds, else leaves them
+        // unchanged
+        auto ensure_indices_within_bounds = [](IndexArray_t<dim>& indices, bool is_in_aabb) {
+            indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+        };
         if constexpr (dim == 2) {
             if constexpr (adjoint) {
                 indices << voxelFloor[0], voxelCeil[1];
                 bool is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent ouf of bounds access
-                indices << (is_in_aabb ? indices[0] : 0), (is_in_aabb ? indices[1] : 0);
-                to = is_in_aabb * (to >= 0)
-                     * (to < (aabbMax[0] - aabbMin[0]) * (aabbMax[1] - aabbMin[1])) * to;
+                ensure_indices_within_bounds(indices, is_in_aabb);
 #pragma omp atomic
                 result(indices) +=
                     is_in_aabb * vector[ir] * intersection * weight[0] * complement_weight[1];
 
                 indices << voxelCeil[0], voxelFloor[1];
                 is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent out of bounds access
-                indices << (is_in_aabb ? indices[0] : 0), (is_in_aabb ? indices[1] : 0);
-                to = is_in_aabb * (to >= 0)
-                     * (to < (aabbMax[0] - aabbMin[0]) * (aabbMax[1] - aabbMin[1])) * to;
+                ensure_indices_within_bounds(indices, is_in_aabb);
 #pragma omp atomic
                 result(indices) +=
                     is_in_aabb * vector[ir] * intersection * complement_weight[0] * weight[1];
             } else {
                 indices << voxelFloor[0], voxelCeil[1];
                 bool is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent ouf of bounds access
-                indices << (is_in_aabb ? indices[0] : 0), (is_in_aabb ? indices[1] : 0);
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result[to] +=
                     is_in_aabb * vector(indices) * intersection * weight[0] * complement_weight[1];
 
                 indices << voxelCeil[0], voxelFloor[1];
                 is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent out of bounds access
-                indices << (is_in_aabb ? indices[0] : 0), (is_in_aabb ? indices[1] : 0);
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result[to] +=
                     is_in_aabb * vector(indices) * intersection * complement_weight[0] * weight[1];
             }
@@ -191,49 +188,42 @@ namespace elsa
 
                 indices << voxelFloor[0], voxelCeil[1], voxelCeil[2];
                 is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent out ouf bounds access
-                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result(indices) += is_in_aabb * vector[ir] * intersection * weight[0]
                                    * complement_weight[1] * complement_weight[2];
 
                 indices << voxelCeil[0], voxelFloor[1], voxelCeil[2];
                 is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent out of bounds access
-                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result(indices) += is_in_aabb * vector[ir] * intersection * complement_weight[0]
                                    * weight[1] * complement_weight[2];
 
                 indices << voxelCeil[0], voxelCeil[1], voxelFloor[2];
                 is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent out of bounds access
-                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result(indices) += is_in_aabb * vector[ir] * intersection * complement_weight[0]
                                    * complement_weight[1] * weight[2];
             } else {
                 bool is_in_aabb = (voxelFloor >= aabbMin && voxelFloor < aabbMax).all();
-                // prevent out of bounds access
-                indices << (is_in_aabb ? voxelFloor : IndexArray_t<dim>(0));
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result[to] +=
                     is_in_aabb * vector(indices) * intersection * weight[0] * weight[1] * weight[2];
 
                 indices << voxelFloor[0], voxelCeil[1], voxelCeil[2];
                 is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent out ouf bounds access
-                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result[to] += is_in_aabb * vector(indices) * intersection * weight[0]
                               * complement_weight[1] * complement_weight[2];
 
                 indices << voxelCeil[0], voxelFloor[1], voxelCeil[2];
                 is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent out of bounds access
-                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result[to] += is_in_aabb * vector(indices) * intersection * complement_weight[0]
                               * weight[1] * complement_weight[2];
 
                 indices << voxelCeil[0], voxelCeil[1], voxelFloor[2];
                 is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                // prevent out of bounds access
-                indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
+                ensure_indices_within_bounds(indices, is_in_aabb);
                 result[to] += is_in_aabb * vector(indices) * intersection * complement_weight[0]
                               * complement_weight[1] * weight[2];
             }
