@@ -89,3 +89,10 @@ ConstantFunctional
 .. doxygenclass:: elsa::ConstantFunctional
 
 .. doxygenclass:: elsa::ZeroFunctional
+
+Indicator Functionals
+=====================
+
+.. doxygenclass:: elsa::IndicatorBox
+
+.. doxygenclass:: elsa::IndicatorNonNegativity

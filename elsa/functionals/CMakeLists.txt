@@ -16,6 +16,7 @@ set(MODULE_HEADERS
     Constraint.h
     WeightedL1Norm.h
     ConstantFunctional.h
+    IndicatorFunctionals.h
 )
 
 # list all the code files of the module
@@ -36,6 +37,7 @@ set(MODULE_SOURCES
     Constraint.cpp
     WeightedL1Norm.cpp
     ConstantFunctional.cpp
+    IndicatorFunctionals.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators)
