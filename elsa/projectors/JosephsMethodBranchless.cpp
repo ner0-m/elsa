@@ -28,6 +28,69 @@ namespace elsa
         }
     }
 
+    template <int dim>
+    bool isInAABB(const IndexArray_t<dim>& indices, const IndexArray_t<dim>& aabbMin,
+                  const IndexArray_t<dim>& aabbMax)
+    {
+        return (indices >= aabbMin && indices < aabbMax).all();
+    }
+
+    template <int dim>
+    std::pair<RealArray_t<dim>, RealArray_t<dim>>
+        getLinearInterpolationWeights(const RealArray_t<dim>& currentPos,
+                                      const IndexArray_t<dim>& voxelFloor,
+                                      const index_t drivingDirection)
+    {
+        // subtract 0.5 because the weight calculation assumes indices that refer to the center of
+        // the voxels, while elsa works with the lower corners of the indices.
+        RealArray_t<dim> complement_weight = currentPos - voxelFloor.template cast<real_t>() - 0.5f;
+        RealArray_t<dim> weight = RealArray_t<dim>{1} - complement_weight;
+        // set weights along drivingDirection to 1 so that the interpolation does not have to handle
+        // the drivingDirection as a special case
+        weight(drivingDirection) = 1;
+        complement_weight(drivingDirection) = 1;
+        return std::make_pair(weight, complement_weight);
+    }
+
+    template <typename data_t, int dim, class Fn>
+    void doInterpolation(const IndexArray_t<dim>& voxelFloor, const IndexArray_t<dim>& voxelCeil,
+                         const RealArray_t<dim>& weight, const RealArray_t<dim>& complement_weight,
+                         const IndexArray_t<dim>& aabbMin, const IndexArray_t<dim>& aabbMax, Fn fn)
+    {
+        auto clip = [](auto coord, auto lower, auto upper) { return coord.min(upper).max(lower); };
+        IndexArray_t<dim> tempIndices;
+        if constexpr (dim == 2) {
+            auto interpol = [&](auto v1, auto v2, auto w1, auto w2) {
+                tempIndices << v1, v2;
+
+                bool is_in_aab = isInAABB(tempIndices, aabbMin, aabbMax);
+                tempIndices = clip(tempIndices, aabbMin, (aabbMax - 1));
+                auto weight = is_in_aab * w1 * w2;
+                fn(tempIndices, weight);
+            };
+
+            interpol(voxelFloor[0], voxelCeil[1], weight[0], complement_weight[1]);
+            interpol(voxelCeil[0], voxelFloor[1], complement_weight[0], weight[1]);
+        } else {
+            auto interpol = [&](auto v1, auto v2, auto v3, auto w1, auto w2, auto w3) {
+                tempIndices << v1, v2, v3;
+
+                bool is_in_aab = isInAABB(tempIndices, aabbMin, aabbMax);
+                tempIndices = clip(tempIndices, aabbMin, (aabbMax - 1));
+                auto weight = is_in_aab * w1 * w2 * w3;
+                fn(tempIndices, weight);
+            };
+
+            interpol(voxelFloor[0], voxelFloor[1], voxelFloor[2], weight[0], weight[1], weight[2]);
+            interpol(voxelFloor[0], voxelCeil[1], voxelCeil[2], weight[0], complement_weight[1],
+                     complement_weight[2]);
+            interpol(voxelCeil[0], voxelFloor[1], voxelCeil[2], complement_weight[0], weight[1],
+                     complement_weight[2]);
+            interpol(voxelCeil[0], voxelCeil[1], voxelFloor[2], complement_weight[0],
+                     complement_weight[1], weight[2]);
+        }
+    }
+
     template <typename data_t>
     void JosephsMethodBranchless<data_t>::forward(const BoundingBox& aabb,
                                                   const DataContainer<data_t>& x,
@@ -97,135 +160,33 @@ namespace elsa
             // --> setup traversal algorithm
 
             DrivingDirectionTraversalBranchless<dim> traverse(aabb, ray);
+            const index_t drivingDirection = traverse.getDrivingDirection();
+            const data_t intersection = traverse.getIntersectionLength();
 
             if constexpr (!adjoint)
                 result[ir] = 0;
 
             // Make steps through the volume
             while (traverse.isInBoundingBox()) {
+                const IndexArray_t<dim> voxelFloor = traverse.getCurrentVoxelFloor();
+                const IndexArray_t<dim> voxelCeil = traverse.getCurrentVoxelCeil();
+                const auto [weight, complement_weight] = getLinearInterpolationWeights(
+                    traverse.getCurrentPos(), voxelFloor, drivingDirection);
 
-                IndexArray_t<dim> currentVoxel = traverse.getCurrentVoxel();
-                float intersection = traverse.getIntersectionLength();
-
-                // to avoid code duplicates for apply and applyAdjoint
-                auto [to, from] = [&]() {
-                    const auto curVoxIndex = domain.getIndexFromCoordinate(currentVoxel);
-                    return adjoint ? std::pair{curVoxIndex, ir} : std::pair{ir, curVoxIndex};
-                }();
-
-                // #dfrank: This suppresses a clang-tidy warning:
-                // "error: reference to local binding 'to' declared in enclosing
-                // context [clang-diagnostic-error]", which seems to be based on
-                // clang-8, and a bug in the standard, as structured bindings are not
-                // "real" variables, but only references. I'm not sure why a warning is
-                // generated though
-                auto tmpTo = to;
-                auto tmpFrom = from;
-
-                linear<adjoint, dim>(result, vector, traverse.getCurrentPos(),
-                                     traverse.getCurrentVoxelFloor(),
-                                     traverse.getCurrentVoxelCeil(), traverse.getDrivingDirection(),
-                                     to, ir, intersection, aabbMin, aabbMax);
+                if constexpr (adjoint) {
+                    doInterpolation<data_t>(voxelFloor, voxelCeil, weight, complement_weight,
+                                            aabbMin, aabbMax, [&](const auto& coord, auto wght) {
+#pragma omp atomic
+                                                result(coord) += vector[ir] * intersection * wght;
+                                            });
+                } else {
+                    doInterpolation<data_t>(voxelFloor, voxelCeil, weight, complement_weight,
+                                            aabbMin, aabbMax, [&](const auto& coord, auto wght) {
+                                                result[ir] += vector(coord) * intersection * wght;
+                                            });
+                }
                 // update Traverse
                 traverse.updateTraverse();
-            }
-        }
-    }
-
-    template <typename data_t>
-    template <bool adjoint, int dim>
-    void JosephsMethodBranchless<data_t>::linear(
-        DataContainer<data_t>& result, const DataContainer<data_t>& vector,
-        RealArray_t<dim> currentPos, IndexArray_t<dim> voxelFloor, IndexArray_t<dim> voxelCeil,
-        index_t drivingDirection, index_t to, index_t ir, real_t intersection,
-        const IndexArray_t<dim> aabbMin, const IndexArray_t<dim> aabbMax) const
-    {
-        RealArray_t<dim> complement_weight = currentPos - voxelFloor.template cast<real_t>() - 0.5f;
-        RealArray_t<dim> weight = RealArray_t<dim>{1} - complement_weight;
-        weight(drivingDirection) = 1;
-        complement_weight(drivingDirection) = 1;
-        IndexArray_t<dim> indices;
-        // sets indices to array of zeroes if they are not within bounds, else leaves them
-        // unchanged
-        auto ensure_indices_within_bounds = [](IndexArray_t<dim>& indices, bool is_in_aabb) {
-            indices << (is_in_aabb ? indices : IndexArray_t<dim>(0));
-        };
-        if constexpr (dim == 2) {
-            if constexpr (adjoint) {
-                indices << voxelFloor[0], voxelCeil[1];
-                bool is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-#pragma omp atomic
-                result(indices) +=
-                    is_in_aabb * vector[ir] * intersection * weight[0] * complement_weight[1];
-
-                indices << voxelCeil[0], voxelFloor[1];
-                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-#pragma omp atomic
-                result(indices) +=
-                    is_in_aabb * vector[ir] * intersection * complement_weight[0] * weight[1];
-            } else {
-                indices << voxelFloor[0], voxelCeil[1];
-                bool is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result[to] +=
-                    is_in_aabb * vector(indices) * intersection * weight[0] * complement_weight[1];
-
-                indices << voxelCeil[0], voxelFloor[1];
-                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result[to] +=
-                    is_in_aabb * vector(indices) * intersection * complement_weight[0] * weight[1];
-            }
-        } else {
-            if constexpr (adjoint) {
-                bool is_in_aabb = (voxelFloor >= aabbMin && voxelFloor < aabbMax).all();
-                // prevent out of bounds access
-                indices << (is_in_aabb ? voxelFloor : IndexArray_t<dim>(0));
-                result(indices) +=
-                    is_in_aabb * vector[ir] * intersection * weight[0] * weight[1] * weight[2];
-
-                indices << voxelFloor[0], voxelCeil[1], voxelCeil[2];
-                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result(indices) += is_in_aabb * vector[ir] * intersection * weight[0]
-                                   * complement_weight[1] * complement_weight[2];
-
-                indices << voxelCeil[0], voxelFloor[1], voxelCeil[2];
-                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result(indices) += is_in_aabb * vector[ir] * intersection * complement_weight[0]
-                                   * weight[1] * complement_weight[2];
-
-                indices << voxelCeil[0], voxelCeil[1], voxelFloor[2];
-                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result(indices) += is_in_aabb * vector[ir] * intersection * complement_weight[0]
-                                   * complement_weight[1] * weight[2];
-            } else {
-                bool is_in_aabb = (voxelFloor >= aabbMin && voxelFloor < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result[to] +=
-                    is_in_aabb * vector(indices) * intersection * weight[0] * weight[1] * weight[2];
-
-                indices << voxelFloor[0], voxelCeil[1], voxelCeil[2];
-                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result[to] += is_in_aabb * vector(indices) * intersection * weight[0]
-                              * complement_weight[1] * complement_weight[2];
-
-                indices << voxelCeil[0], voxelFloor[1], voxelCeil[2];
-                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result[to] += is_in_aabb * vector(indices) * intersection * complement_weight[0]
-                              * weight[1] * complement_weight[2];
-
-                indices << voxelCeil[0], voxelCeil[1], voxelFloor[2];
-                is_in_aabb = (indices >= aabbMin && indices < aabbMax).all();
-                ensure_indices_within_bounds(indices, is_in_aabb);
-                result[to] += is_in_aabb * vector(indices) * intersection * complement_weight[0]
-                              * complement_weight[1] * weight[2];
             }
         }
     }
