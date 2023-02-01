@@ -1,3 +1,5 @@
+#include "TikhonovProblem.h"
+#include "WLSProblem.h"
 #include "doctest/doctest.h"
 
 #include "CGLS.h"
@@ -20,6 +22,68 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
     srand((unsigned int) 666);
+
+    GIVEN("a WLSProblem")
+    {
+        IndexVector_t numCoeff(1);
+        numCoeff << 10;
+        VolumeDescriptor dd{numCoeff};
+
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
+        bVec.setRandom();
+        DataContainer<data_t> b{dd, bVec};
+
+        Identity<data_t> id{dd};
+        WLSProblem<data_t> wlsprob(id, b);
+
+        CGLS<data_t> cgls(wlsprob, 0);
+        auto result = cgls.solve(1);
+
+        CAPTURE(bVec.transpose());
+        CAPTURE(result);
+        for (int i = 0; i < result.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK(checkApproxEq(result[i], bVec[i]));
+        }
+
+        THEN("A clone is equal to the original")
+        {
+            auto clone = cgls.clone();
+
+            CHECK_EQ(*clone, cgls);
+        }
+    }
+
+    GIVEN("a TikhonovProblem")
+    {
+        IndexVector_t numCoeff(1);
+        numCoeff << 10;
+        VolumeDescriptor dd{numCoeff};
+
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
+        bVec.setRandom();
+        DataContainer<data_t> b{dd, bVec};
+
+        Identity<data_t> id{dd};
+        TikhonovProblem<data_t> tikhonov(id, b, 0.);
+
+        CGLS<data_t> cgls(tikhonov);
+        auto result = cgls.solve(1);
+
+        CAPTURE(bVec.transpose());
+        CAPTURE(result);
+        for (int i = 0; i < result.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK(checkApproxEq(result[i], bVec[i]));
+        }
+
+        THEN("A clone is equal to the original")
+        {
+            auto clone = cgls.clone();
+
+            CHECK_EQ(*clone, cgls);
+        }
+    }
 
     GIVEN("a linear problem")
     {
@@ -66,6 +130,13 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
         for (int i = 0; i < result.getSize(); ++i) {
             CAPTURE(i);
             CHECK(checkApproxEq(result[i], bVec[i]));
+        }
+
+        THEN("A clone is equal to the original")
+        {
+            auto clone = cgls.clone();
+
+            CHECK_EQ(*clone, cgls);
         }
     }
 
@@ -91,6 +162,13 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
             CAPTURE(i);
             CHECK_EQ(5. * result[i], doctest::Approx(bVec[i]));
         }
+
+        THEN("A clone is equal to the original")
+        {
+            auto clone = cgls.clone();
+
+            CHECK_EQ(*clone, cgls);
+        }
     }
 
     GIVEN("a linear problem")
@@ -114,6 +192,13 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
         for (int i = 0; i < result.getSize(); ++i) {
             CAPTURE(i);
             CHECK_EQ(0.5 * result[i], doctest::Approx(bVec[i]));
+        }
+
+        THEN("A clone is equal to the original")
+        {
+            auto clone = cgls.clone();
+
+            CHECK_EQ(*clone, cgls);
         }
     }
 }
