@@ -1,5 +1,6 @@
 #include "LandweberIteration.h"
 #include "DataContainer.h"
+#include "Functional.h"
 #include "LinearOperator.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
@@ -125,11 +126,9 @@ namespace elsa
     template <typename data_t>
     bool LandweberIteration<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        auto otherSolver = downcast_safe<LandweberIteration<data_t>>(&other);
-        if (!otherSolver)
-            return false;
-
-        return stepSize_ == otherSolver->stepSize_ && tam_ == otherSolver->tam_;
+        auto landweber = downcast_safe<LandweberIteration<data_t>>(&other);
+        return landweber && *A_ == *landweber->A_ && b_ == landweber->b_
+               && stepSize_ == landweber->stepSize_;
     }
 
     template <class data_t>
