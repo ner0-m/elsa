@@ -111,19 +111,6 @@ namespace elsa
     }
 
     template <typename data_t>
-    std::unique_ptr<LinearOperator<data_t>>
-        LandweberIteration<data_t>::setupOperators(const WLSProblem<data_t>& wls) const
-    {
-
-        const auto& dataterm = wls.getDataTerm();
-        const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
-
-        const auto& A = residual.getOperator();
-
-        return setupOperators(A);
-    }
-
-    template <typename data_t>
     bool LandweberIteration<data_t>::isEqual(const Solver<data_t>& other) const
     {
         auto landweber = downcast_safe<LandweberIteration<data_t>>(&other);

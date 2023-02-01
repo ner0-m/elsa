@@ -119,9 +119,6 @@ namespace elsa
         void setProjection(const std::function<void(DataContainer<data_t>&)> projection);
 
     protected:
-        /// Setup the \f$T * A^T * M\f& operator given a wls problem
-        std::unique_ptr<LinearOperator<data_t>> setupOperators(const WLSProblem<data_t>& wls) const;
-
         /// Setup the \f$T * A^T * M\f& operator, implemented by the base classes to allow for
         /// different types of solvers
         virtual std::unique_ptr<LinearOperator<data_t>>
