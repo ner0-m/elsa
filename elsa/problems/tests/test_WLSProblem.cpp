@@ -10,6 +10,7 @@
  * @author Nikola Dinev - added tests for conversion constructor
  */
 
+#include "DataContainer.h"
 #include "doctest/doctest.h"
 
 #include "WLSProblem.h"
@@ -129,10 +130,15 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestT
 
         Scaling<TestType> W{desc, static_cast<TestType>(3.0)};
 
-        LinearResidual<TestType> residual{desc};
-        L2NormPow2<TestType> func{residual};
-        WeightedL2NormPow2<TestType> weightedFunc{residual, W};
+        Identity<TestType> id(desc);
+        DataContainer<TestType> b(desc);
+
+        LinearResidual<TestType> residual{id, b};
+
+        L2NormPow2<TestType> func{id, b};
         Problem<TestType> prob{func};
+
+        WeightedL2NormPow2<TestType> weightedFunc{residual, W};
         Problem<TestType> weightedProb{weightedFunc};
 
         WHEN("converting to a wls problem")
@@ -195,7 +201,10 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestT
 
         Scaling<TestType> W2{desc, DataContainer(desc, anisotropicW)};
 
-        LinearResidual<TestType> residual{desc};
+        Identity<TestType> id(desc);
+        DataContainer<TestType> b(desc);
+
+        LinearResidual<TestType> residual{id, b};
         WeightedL2NormPow2<TestType> weightedFunc1{residual, W1};
         WeightedL2NormPow2<TestType> weightedFunc2{residual, W2};
 
@@ -283,9 +292,6 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestT
 
         std::vector<std::unique_ptr<Functional<TestType>>> dataTerms;
 
-        dataTerms.push_back(std::make_unique<L2NormPow2<TestType>>(desc));
-        dataTerms.push_back(std::make_unique<L2NormPow2<TestType>>(LinearResidual{b}));
-        dataTerms.push_back(std::make_unique<L2NormPow2<TestType>>(LinearResidual{A}));
         dataTerms.push_back(std::make_unique<L2NormPow2<TestType>>(LinearResidual{A, b}));
         dataTerms.push_back(
             std::make_unique<WeightedL2NormPow2<TestType>>(LinearResidual{A, b}, isoW));
@@ -306,12 +312,6 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestT
 
         std::vector<std::unique_ptr<RegularizationTerm<TestType>>> regTerms;
         auto weight = static_cast<TestType>(0.5);
-        regTerms.push_back(
-            std::make_unique<RegularizationTerm<TestType>>(weight, L2NormPow2<TestType>{desc}));
-        regTerms.push_back(std::make_unique<RegularizationTerm<TestType>>(
-            weight, L2NormPow2<TestType>{LinearResidual{bReg}}));
-        regTerms.push_back(std::make_unique<RegularizationTerm<TestType>>(
-            weight, L2NormPow2<TestType>{LinearResidual{AReg}}));
         regTerms.push_back(std::make_unique<RegularizationTerm<TestType>>(
             weight, L2NormPow2<TestType>{LinearResidual{AReg, bReg}}));
         regTerms.push_back(std::make_unique<RegularizationTerm<TestType>>(
@@ -319,10 +319,7 @@ TEST_CASE_TEMPLATE("WLSProblems: Testing different optimization problems", TestT
         regTerms.push_back(std::make_unique<RegularizationTerm<TestType>>(
             weight, WeightedL2NormPow2{LinearResidual{AReg, bReg}, nonIsoWReg}));
 
-        std::array descriptions = {"has no operator and no vector",
-                                   "has no operator, but has a vector",
-                                   "has an operator, but no vector",
-                                   "has an operator and a vector",
+        std::array descriptions = {"has an operator and a vector",
                                    "has an operator and a vector, and is weighted (isotropic)",
                                    "has an operator and a vector, and is weighted (nonisotropic)"};
 

@@ -33,16 +33,7 @@ namespace elsa
         const auto& dataterm = wls.getDataTerm();
         const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
 
-        if (!residual.hasOperator()) {
-            throw InvalidArgumentError(
-                "LandweberIteration: WLSProblem passed to requieres an operator");
-        }
-
-        if (!residual.hasDataVector()) {
-            throw InvalidArgumentError(
-                "LandweberIteration: WLSProblem passed to requieres a data vector");
-        }
-
+        // No checks requieres as it would be an invalid WLSProblem
         A_ = residual.getOperator().clone();
         b_ = residual.getDataVector();
     }
@@ -54,16 +45,7 @@ namespace elsa
         const auto& dataterm = wls.getDataTerm();
         const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
 
-        if (!residual.hasOperator()) {
-            throw InvalidArgumentError(
-                "LandweberIteration: WLSProblem passed to requieres an operator");
-        }
-
-        if (!residual.hasDataVector()) {
-            throw InvalidArgumentError(
-                "LandweberIteration: WLSProblem passed to requieres a data vector");
-        }
-
+        // No checks requieres as it would be an invalid WLSProblem
         A_ = residual.getOperator().clone();
         b_ = residual.getDataVector();
     }

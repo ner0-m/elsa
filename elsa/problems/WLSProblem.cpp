@@ -55,6 +55,13 @@ namespace elsa
         if (!dataTermResidual)
             throw LogicError("WLSProblem: conversion failed - data term is non-linear");
 
+        if (!dataTermResidual->hasOperator()) {
+            throw LogicError("WLSProblem: conversion failed - no operator in data term");
+        }
+
+        if (!dataTermResidual->hasDataVector()) {
+            throw LogicError("WLSProblem: conversion failed - no measurment data in data term");
+        }
         // data term is of convertible type
 
         // no conversion needed if no regTerms
