@@ -142,8 +142,8 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
         WHEN("move constructing")
         {
             DataContainer oldOtherDc(otherDc);
-
-            DataContainer dc(std::move(otherDc));
+            DataContainer copyOtherDc(otherDc);
+            DataContainer dc(std::move(copyOtherDc));
 
             THEN("it moved correctly")
             {
@@ -161,9 +161,9 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing construction", TestType,
         WHEN("move assigning")
         {
             DataContainer oldOtherDc(otherDc);
-
+            DataContainer copyOtherDc(otherDc);
             DataContainer<data_t> dc(desc);
-            dc = std::move(otherDc);
+            dc = std::move(copyOtherDc);
 
             THEN("it moved correctly")
             {

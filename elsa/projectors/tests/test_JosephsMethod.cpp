@@ -44,7 +44,9 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
 
         WHEN("We have a single ray with 0 degrees")
         {
-            geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{0}, std::move(volDataCopy), std::move(sinoDataCopy));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
 
@@ -71,7 +73,10 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
 
         WHEN("We have a single ray with 180 degrees")
         {
-            geom.emplace_back(stc, ctr, Degree{180}, std::move(volData), std::move(sinoData));
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Degree{180}, std::move(volDataCopy),
+                              std::move(sinoDataCopy));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
 
@@ -98,7 +103,10 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
 
         WHEN("We have a single ray with 90 degrees")
         {
-            geom.emplace_back(stc, ctr, Degree{90}, std::move(volData), std::move(sinoData));
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Degree{90}, std::move(volDataCopy),
+                              std::move(sinoDataCopy));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
 
@@ -125,7 +133,10 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
 
         WHEN("We have a single ray with 270 degrees")
         {
-            geom.emplace_back(stc, ctr, Degree{270}, std::move(volData), std::move(sinoData));
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Degree{270}, std::move(volDataCopy),
+                              std::move(sinoDataCopy));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
 
@@ -152,7 +163,10 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
 
         WHEN("We have a single ray with 45 degrees")
         {
-            geom.emplace_back(stc, ctr, Degree{45}, std::move(volData), std::move(sinoData));
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Degree{45}, std::move(volDataCopy),
+                              std::move(sinoDataCopy));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
 
@@ -177,7 +191,10 @@ TEST_CASE("JosephsMethod: Testing with only one ray")
 
         WHEN("We have a single ray with 225 degrees")
         {
-            geom.emplace_back(stc, ctr, Degree{225}, std::move(volData), std::move(sinoData));
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Degree{225}, std::move(volDataCopy),
+                              std::move(sinoDataCopy));
 
             auto detectorDesc = PlanarDetectorDescriptor(sizeRange, {geom});
 
@@ -461,7 +478,9 @@ TEST_CASE("JosephsMethod: Rays not intersecting the bounding box are present")
 
         WHEN("Tracing along a y-axis-aligned ray with a negative x-coordinate of origin")
         {
-            geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{0}, std::move(volDataCopy), std::move(sinoDataCopy),
                               PrincipalPointOffset{}, RotationOffset2D{volSize, 0});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -491,7 +510,9 @@ TEST_CASE("JosephsMethod: Rays not intersecting the bounding box are present")
         WHEN("Tracing along a y-axis-aligned ray with a x-coordinate of origin beyond the bounding "
              "box")
         {
-            geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData),
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{0}, std::move(volDataCopy), std::move(sinoDataCopy),
                               PrincipalPointOffset{}, RotationOffset2D{-volSize, 0});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -520,8 +541,11 @@ TEST_CASE("JosephsMethod: Rays not intersecting the bounding box are present")
 
         WHEN("Tracing along a x-axis-aligned ray with a negative y-coordinate of origin")
         {
-            geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volData), std::move(sinoData),
-                              PrincipalPointOffset{}, RotationOffset2D{0, volSize});
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{pi_t / 2}, std::move(volDataCopy),
+                              std::move(sinoDataCopy), PrincipalPointOffset{},
+                              RotationOffset2D{0, volSize});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
@@ -681,9 +705,10 @@ TEST_CASE("JosephsMethod: Axis-aligned rays are present")
             {
                 INFO("An axis-aligned ray with an angle of ", angles[i],
                      " radians passes through the center of a pixel");
-
-                geom.emplace_back(stc, ctr, Radian{angles[i]}, std::move(volData),
-                                  std::move(sinoData));
+                VolumeData2D volDataCopy{volData};
+                SinogramData2D sinoDataCopy{sinoData};
+                geom.emplace_back(stc, ctr, Radian{angles[i]}, std::move(volDataCopy),
+                                  std::move(sinoDataCopy));
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer sino(sinoDescriptor);
@@ -729,9 +754,11 @@ TEST_CASE("JosephsMethod: Axis-aligned rays are present")
             {
                 INFO("An axis-aligned ray with an angle of ", angles[i],
                      " radians does not pass through the center of a pixel");
-
+                VolumeData2D volDataCopy{volData};
+                SinogramData2D sinoDataCopy{sinoData};
                 geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{angles[i]},
-                                  std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
+                                  std::move(volDataCopy), std::move(sinoDataCopy),
+                                  PrincipalPointOffset{0},
                                   RotationOffset2D{-offsetx[i], -offsety[i]});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -768,9 +795,11 @@ TEST_CASE("JosephsMethod: Axis-aligned rays are present")
 
         WHEN("A y-axis-aligned ray runs along the right volume boundary")
         {
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
-                              std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
-                              RotationOffset2D{volSize * 0.5, 0});
+                              std::move(volDataCopy), std::move(sinoDataCopy),
+                              PrincipalPointOffset{0}, RotationOffset2D{volSize * 0.5, 0});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
@@ -803,9 +832,11 @@ TEST_CASE("JosephsMethod: Axis-aligned rays are present")
 
         WHEN("A y-axis-aligned ray runs along the left volume boundary")
         {
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
             geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, Radian{0},
-                              std::move(volData), std::move(sinoData), PrincipalPointOffset{0},
-                              RotationOffset2D{-volSize / 2.0, 0});
+                              std::move(volDataCopy), std::move(sinoDataCopy),
+                              PrincipalPointOffset{0}, RotationOffset2D{-volSize / 2.0, 0});
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
@@ -937,8 +968,9 @@ TEST_CASE("JosephsMethod: Axis-aligned rays are present")
             WHEN("An axis-aligned ray passes through the center of a pixel")
             {
                 INFO("A ", al[i], "-axis-aligned ray passes through the center of a pixel");
-
-                geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+                VolumeData3D volDataCopy{volData};
+                SinogramData3D sinoDataCopy{sinoData};
+                geom.emplace_back(stc, ctr, std::move(volDataCopy), std::move(sinoDataCopy),
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -999,9 +1031,10 @@ TEST_CASE("JosephsMethod: Axis-aligned rays are present")
             WHEN("An axis-aligned ray does not pass through the center of a voxel")
             {
                 INFO("A ", al[i], "-axis-aligned ray does not pass through the center of a voxel");
-
-                geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, std::move(volData),
-                                  std::move(sinoData),
+                VolumeData3D volDataCopy{volData};
+                SinogramData3D sinoDataCopy{sinoData};
+                geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr,
+                                  std::move(volDataCopy), std::move(sinoDataCopy),
                                   RotationAngles3D{Gamma{gamma[i]}, Beta{beta[i]}},
                                   PrincipalPointOffset2D{0, 0},
                                   RotationOffset3D{-offsetx[i], -offsety[i], -offsetz[i]});
@@ -1103,9 +1136,11 @@ TEST_CASE("JosephsMethod: Axis-aligned rays are present")
                 INFO("A z-axis-aligned ray runs along the ", al[i], " of the volume");
                 // x-ray source must be very far from the volume center to make testing of the fast
                 // backprojection simpler
-                geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr, std::move(volData),
-                                  std::move(sinoData), RotationAngles3D{Gamma{0}},
-                                  PrincipalPointOffset2D{0, 0},
+                VolumeData3D volDataCopy{volData};
+                SinogramData3D sinoDataCopy{sinoData};
+                geom.emplace_back(SourceToCenterOfRotation{volSize * 2000}, ctr,
+                                  std::move(volDataCopy), std::move(sinoDataCopy),
+                                  RotationAngles3D{Gamma{0}}, PrincipalPointOffset2D{0, 0},
                                   RotationOffset3D{-offsetx[i], -offsety[i], 0});
 
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -1308,7 +1343,10 @@ TEST_CASE("JosephsMethod: Projection under an angle")
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction Weighting for all interpolated values should be the same
-            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData));
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volDataCopy),
+                              std::move(sinoDataCopy));
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
@@ -1367,8 +1405,11 @@ TEST_CASE("JosephsMethod: Projection under an angle")
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction First pixel should be weighted
             // differently
-            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
-                              PrincipalPointOffset{0}, RotationOffset2D{std::sqrt(3.f), 0});
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volDataCopy),
+                              std::move(sinoDataCopy), PrincipalPointOffset{0},
+                              RotationOffset2D{std::sqrt(3.f), 0});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
@@ -1426,8 +1467,11 @@ TEST_CASE("JosephsMethod: Projection under an angle")
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction Last pixel should be weighted
             // differently
-            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
-                              PrincipalPointOffset{0}, RotationOffset2D{-std::sqrt(3.f), 0});
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volDataCopy),
+                              std::move(sinoDataCopy), PrincipalPointOffset{0},
+                              RotationOffset2D{-std::sqrt(3.f), 0});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
@@ -1478,8 +1522,10 @@ TEST_CASE("JosephsMethod: Projection under an angle")
         WHEN("Projecting under an angle of 30 degrees and ray only intersects a single pixel")
         {
             // This is a special case that is handled separately in both forward and backprojection
-            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volData), std::move(sinoData),
-                              PrincipalPointOffset{0},
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{-pi_t / 6}, std::move(volDataCopy),
+                              std::move(sinoDataCopy), PrincipalPointOffset{0},
                               RotationOffset2D{-2 - std::sqrt(3.f) / 2, 0});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -1520,8 +1566,10 @@ TEST_CASE("JosephsMethod: Projection under an angle")
         {
             // In this case the ray enters and exits the volume through the borders along the main
             // direction Weighting for all interpolated values should be the same
-            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
-                              std::move(sinoData));
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volDataCopy),
+                              std::move(sinoDataCopy));
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
@@ -1581,8 +1629,10 @@ TEST_CASE("JosephsMethod: Projection under an angle")
             // In this case the ray exits through a border along the main ray direction, but enters
             // through a border not along the main direction First pixel should be weighted
             // differently
-            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
-                              std::move(sinoData), PrincipalPointOffset{0},
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volDataCopy),
+                              std::move(sinoDataCopy), PrincipalPointOffset{0},
                               RotationOffset2D{0, std::sqrt(3.f)});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -1638,8 +1688,10 @@ TEST_CASE("JosephsMethod: Projection under an angle")
             // In this case the ray enters through a border along the main ray direction, but exits
             // through a border not along the main direction Last pixel should be weighted
             // differently
-            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volData),
-                              std::move(sinoData), PrincipalPointOffset{0},
+            VolumeData2D volDataCopy{volData};
+            SinogramData2D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, Radian{-2 * pi_t / 3}, std::move(volDataCopy),
+                              std::move(sinoDataCopy), PrincipalPointOffset{0},
                               RotationOffset2D{0, -std::sqrt(3.f)});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -1805,7 +1857,9 @@ TEST_CASE("JosephsMethod: Projection under an angle")
         WHEN("A ray with an angle of 30 degrees goes through the center of the volume")
         {
             // In this case the ray enters and exits the volume along the main direction
-            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+            VolumeData3D volDataCopy{volData};
+            SinogramData3D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, std::move(volDataCopy), std::move(sinoDataCopy),
                               RotationAngles3D{Gamma{pi_t / 6}});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -1852,7 +1906,9 @@ TEST_CASE("JosephsMethod: Projection under an angle")
         WHEN("A ray with an angle of 30 degrees enters through the right border")
         {
             // In this case the ray enters through a border orthogonal to a non-main direction
-            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+            VolumeData3D volDataCopy{volData};
+            SinogramData3D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, std::move(volDataCopy), std::move(sinoDataCopy),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{1, 0, 0});
 
@@ -1901,7 +1957,9 @@ TEST_CASE("JosephsMethod: Projection under an angle")
         WHEN("A ray with an angle of 30 degrees exits through the left border")
         {
             // In this case the ray exit through a border orthogonal to a non-main direction
-            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+            VolumeData3D volDataCopy{volData};
+            SinogramData3D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, std::move(volDataCopy), std::move(sinoDataCopy),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{-1, 0, 0});
 
@@ -1950,7 +2008,9 @@ TEST_CASE("JosephsMethod: Projection under an angle")
         WHEN("A ray with an angle of 30 degrees only intersects a single voxel")
         {
             // special case - no interior voxels, entry and exit voxels are the same
-            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+            VolumeData3D volDataCopy{volData};
+            SinogramData3D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, std::move(volDataCopy), std::move(sinoDataCopy),
                               RotationAngles3D{Gamma{pi_t / 6}}, PrincipalPointOffset2D{0, 0},
                               RotationOffset3D{-2, 0, 0});
 
@@ -2009,7 +2069,9 @@ TEST_CASE("JosephsMethod: Projection under an angle")
 
         WHEN("An axis-aligned ray enters (and leaves) through the shorter volume dimension")
         {
-            geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
+            VolumeData3D volDataCopy{volData};
+            SinogramData3D sinoDataCopy{sinoData};
+            geom.emplace_back(stc, ctr, std::move(volDataCopy), std::move(sinoDataCopy),
                               RotationAngles3D{Gamma{pi_t / 6}});
 
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
