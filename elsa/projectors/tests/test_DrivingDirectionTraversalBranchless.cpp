@@ -63,6 +63,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentPos()(0), 0.5f);
+                REQUIRE_EQ(traverse.getCurrentPos()(1), 0.5f);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -79,6 +85,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentPos()(0), 1.0f);
+                REQUIRE_EQ(traverse.getCurrentPos()(1), 0.5f);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -95,6 +107,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentPos()(0), 1.5f);
+                REQUIRE_EQ(traverse.getCurrentPos()(1), 0.5f);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -111,6 +129,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentPos()(0), 2.0f);
+                REQUIRE_EQ(traverse.getCurrentPos()(1), 0.5f);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -127,6 +151,10 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -146,6 +174,10 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -162,6 +194,10 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 1);
             }
         }
 
@@ -178,10 +214,14 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 1);
             }
         }
 
-        WHEN("A ray with origin = (2.0, -0.5) and direction (0, 1), hits the boundary between 2 "
+        WHEN("A ray with origin = (-0.5, 2) and direction (1, 0), hits the boundary between 2 "
              "voxels")
         {
             ro << -0.5, 2.0;
@@ -194,6 +234,10 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 2);
             }
         }
 
@@ -210,6 +254,10 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 2);
             }
         }
 
@@ -227,8 +275,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -243,8 +295,20 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 1);
+                //                const auto voxelAndNeighbors =
+                //                traverse.getCurrentVoxelAndNeighbors(); const auto
+                //                expected_version1 = Eigen::Array<index_t, 2, 2>{{2, 2}, {0, 1}};
+                //                const auto expected_version2 = Eigen::Array<index_t, 2, 2>{{2, 2},
+                //                {1, 0}};
+                //                REQUIRE_UNARY(voxelAndNeighbors.cwiseEqual(expected_version1).all()
+                //                              ||
+                //                              voxelAndNeighbors.cwiseEqual(expected_version2).all());
             }
         }
 
@@ -259,8 +323,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 1);
             }
         }
 
@@ -275,8 +343,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 2);
             }
         }
 
@@ -291,8 +363,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
-                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 2);
             }
         }
 
@@ -311,7 +387,11 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
             }
         }
 
@@ -327,7 +407,11 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
             }
         }
 
@@ -343,7 +427,11 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
             }
         }
 
@@ -359,7 +447,11 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
             }
         }
 
@@ -375,7 +467,31 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+        }
+
+        WHEN("A traversal algorithms is initialised with the aabb and a ray with origin = (3.5, "
+             "1.2) and direction (-1, 0)")
+        {
+            ro << 3.5, 1.2f;
+            rd << -1.0, 0.0;
+            RealRay_t r(ro, rd);
+
+            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            CHECK_UNARY(traverse.isInBoundingBox());
+            THEN("The ray intersects the aabb at the middle right pixel")
+            {
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 1);
             }
         }
 
@@ -394,6 +510,10 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), -1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -407,8 +527,12 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the top left pixel")
             {
-                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), -1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -424,6 +548,10 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), -1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
             }
         }
 
@@ -438,7 +566,11 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             THEN("The ray intersects the aabb at the top left pixel")
             {
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), -1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
             }
         }
     }
@@ -482,6 +614,10 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse a 2D volume and only ch
                 REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 10);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 4);
             }
         }
 
@@ -504,13 +640,68 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse a 2D volume and only ch
                 REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 10);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 10);
+            }
+        }
+
+        WHEN("The volume is traversed with a ray with origin = (10.5, 0.5) and a direction = "
+             "(-1, 0)")
+        {
+            ro << 10.5, 0.5;
+            rd << -1.0, 0;
+
+            RealRay_t r(ro, rd);
+            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            CHECK_UNARY(traverse.isInBoundingBox());
+
+            while (traverse.isInBoundingBox())
+                traverse.updateTraverse();
+
+            THEN("The endpoint should be (-1, 0)")
+            {
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), -1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), -1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), -1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 0);
+            }
+        }
+
+        WHEN("The volume is traversed with a ray with origin = (0, 0) and a direction = "
+             "(0.7036, 0.7106)")
+        {
+            ro << 0, 0;
+            rd << 1.0, 1.01f;
+            rd.normalize();
+
+            RealRay_t r(ro, rd);
+            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            CHECK_UNARY(traverse.isInBoundingBox());
+
+            while (traverse.isInBoundingBox())
+                traverse.updateTraverse();
+
+            THEN("The endpoint should be (10,10)")
+            {
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 9);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 10);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 10);
             }
         }
     }
 }
 
 TEST_CASE(
-    "DrivingDirectionTraversalBranchless: Check that the first step into the 2D Volume is correct")
+    "DrivingDirectionTraversalBranchless: Check that the all steps in the 2D Volume are correct")
 {
     const size_t dim = 2;
     index_t x = 5;
@@ -542,15 +733,77 @@ TEST_CASE(
                 auto voxel = traverse.getCurrentVoxel();
                 CHECK_EQ(voxel(0), 0);
                 CHECK_EQ(voxel(1), 0);
+                auto voxelFloor = traverse.getCurrentVoxelFloor();
+                CHECK_EQ(voxelFloor(0), -1);
+                CHECK_EQ(voxelFloor(1), 0);
+                auto voxelCeil = traverse.getCurrentVoxelCeil();
+                CHECK_EQ(voxelCeil(0), 0);
+                CHECK_EQ(voxelCeil(1), 0);
             }
 
             traverse.updateTraverse();
 
-            THEN("The first step is in y direction")
+            THEN("The first step is in x and y direction")
             {
                 REQUIRE_UNARY(traverse.isInBoundingBox());
-                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
                 REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 1);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The second step is in y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 2);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The third step is in x and y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The fourth step is in x and y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 4);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The fifth and last step is in y direction")
+            {
+                REQUIRE_FALSE(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 5);
             }
         }
 
@@ -569,16 +822,245 @@ TEST_CASE(
                 auto voxel = traverse.getCurrentVoxel();
                 CHECK_EQ(voxel(0), 0);
                 CHECK_EQ(voxel(1), 0);
+                auto voxelFloor = traverse.getCurrentVoxelFloor();
+                CHECK_EQ(voxelFloor(0), 0);
+                CHECK_EQ(voxelFloor(1), -1);
+                auto voxelCeil = traverse.getCurrentVoxelCeil();
+                CHECK_EQ(voxelCeil(0), 0);
+                CHECK_EQ(voxelCeil(1), 0);
             }
 
             traverse.updateTraverse();
 
-            THEN("The first step is in y direction")
+            THEN("The first step is in x and y direction")
             {
                 REQUIRE_UNARY(traverse.isInBoundingBox());
                 REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
-                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 1);
             }
+
+            traverse.updateTraverse();
+
+            THEN("The second step is in x direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 2);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The third step is in x and y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 2);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The fourth step is in x and y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The fifth and last step is in x direction")
+            {
+                REQUIRE_FALSE(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 4);
+            }
+        }
+
+        WHEN("The volume is traversed with a ray with origin = (0, 0) and a direction = "
+             "(0.7106, 0.7036)")
+        {
+            ro << 0, 0;
+            rd << 1.01f, 1.0;
+            rd.normalize();
+
+            RealRay_t r(ro, rd);
+            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            CHECK_UNARY(traverse.isInBoundingBox());
+
+            traverse.updateTraverse();
+
+            THEN("The first step should be in x and y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 1);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The second step should be in x and y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 2);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The third step should be in x and y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The fourth step should be in x and y direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 4);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The fifth step should be in x and y direction")
+            {
+                REQUIRE_UNARY_FALSE(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 5);
+            }
+        }
+        WHEN("The volume is traversed with a ray with origin = (5.5, 2.6) and a direction = "
+             "(-1.0, 0)")
+        {
+            ro << 5.5f, 2.6f;
+            rd << -1, 0;
+
+            RealRay_t r(ro, rd);
+            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            CHECK_UNARY(traverse.isInBoundingBox());
+
+            THEN("The entry point should be this")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 5);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The first step should be in x direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 4);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The second step should be in x direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 3);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The third step should be in x direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The fourth step should be in x direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 1);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            THEN("The fifth step should be in x direction")
+            {
+                REQUIRE_UNARY(traverse.isInBoundingBox());
+                REQUIRE_EQ(traverse.getCurrentVoxel()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxel()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelFloor()(1), 2);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(0), 0);
+                REQUIRE_EQ(traverse.getCurrentVoxelCeil()(1), 3);
+            }
+
+            traverse.updateTraverse();
+
+            REQUIRE_FALSE(traverse.isInBoundingBox());
         }
     }
 }
@@ -736,6 +1218,32 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
                 traverse.updateTraverse();
                 iter++;
             }
+        }
+    }
+
+    GIVEN("a ray in negative direction going through the border of voxel row 0 and 1")
+    {
+        ro << 128.5f, 1;
+
+        rd << -1, 0;
+
+        RealRay_t r(ro, rd);
+
+        THEN("Then all points the traversal visits are also hit by the intersection algorithm")
+        {
+            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            CHECK_UNARY(traverse.isInBoundingBox());
+
+            size_t iter = 0;
+            while (traverse.isInBoundingBox()) {
+                RealVector_t voxel = traverse.getCurrentVoxel().template cast<real_t>();
+                INFO("Current Voxel: (" << voxel(0) << ", " << voxel(1) << ") in iter: " << iter);
+
+                REQUIRE_UNARY(intersect(voxel, r));
+                traverse.updateTraverse();
+                iter++;
+            }
+            traverse.isInBoundingBox();
         }
     }
 

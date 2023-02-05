@@ -757,7 +757,8 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
             }
         }
 
-        backProj[0] << 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
+        backProj[0] << 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0,
+            0, 0.5;
 
         WHEN("A y-axis-aligned ray runs along the right volume boundary")
         {
@@ -770,15 +771,14 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
 
             JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
-            THEN("The result of projecting through a pixel is exactly the pixel's value (we mirror "
-                 "values at the border for the purpose of interpolation)")
+            THEN("The result of projecting through a pixel is exactly half the pixel's value")
             {
                 for (index_t j = 0; j < volSize; j++) {
                     volume = 0;
                     volume(volSize - 1, j) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE_EQ(sino[0], Approx(1));
+                    REQUIRE_EQ(sino[0], Approx(0.5));
                 }
 
                 AND_THEN(
@@ -792,7 +792,8 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
             }
         }
 
-        backProj[0] << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0;
+        backProj[0] << 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.5, 0,
+            0, 0, 0;
 
         WHEN("A y-axis-aligned ray runs along the left volume boundary")
         {
@@ -804,15 +805,14 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
 
             JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
-            THEN("The result of projecting through a pixel is exactly the pixel's value (we mirror "
-                 "values at the border for the purpose of interpolation)")
+            THEN("The result of projecting through a pixel is exactly half the pixel's value")
             {
                 for (index_t j = 0; j < volSize; j++) {
                     volume = 0;
                     volume(0, j) = 1;
 
                     op.apply(volume, sino);
-                    REQUIRE_EQ(sino[0], Approx(1));
+                    REQUIRE_EQ(sino[0], Approx(0.5));
                 }
 
                 AND_THEN(
@@ -1052,11 +1052,11 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
         al[4] = "top right edge";
         al[5] = "bottom left edge";
 
-        backProj[0] << 0, 0, 0, 1, 0, 0, 0, 0, 0,
+        backProj[0] << 0, 0, 0, 0.5, 0, 0, 0, 0, 0,
 
-            0, 0, 0, 1, 0, 0, 0, 0, 0,
+            0, 0, 0, 0.5, 0, 0, 0, 0, 0,
 
-            0, 0, 0, 1, 0, 0, 0, 0, 0;
+            0, 0, 0, 0.5, 0, 0, 0, 0, 0;
 
         backProj[1] << 0, 0, 0, 0, 0, 1, 0, 0, 0,
 
@@ -1104,8 +1104,7 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
 
                 JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
-                THEN("The result of projecting through a voxel is exactly the voxel's value (we "
-                     "mirror values at the border for the purpose of interpolation)")
+                THEN("The result of projecting through a pixel is exactly half the pixel's value")
                 {
                     for (index_t j = 0; j < volSize; j++) {
                         volume = 0;
@@ -1133,7 +1132,7 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
                         }
 
                         op.apply(volume, sino);
-                        REQUIRE_EQ(sino[0], Approx(1));
+                        REQUIRE_EQ(sino[0], Approx(0.5));
                     }
 
                     AND_THEN("The backprojection yields the exact adjoint")
