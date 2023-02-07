@@ -39,31 +39,6 @@ void add_finite_difference_difftype(py::module& m)
     detail::add_finite_diff_difftype<thrust::complex<double>>(m, "FiniteDifferencesfDiffTypecd");
 }
 
-void add_block_type(py::module& m)
-{
-    py::enum_<elsa::BlockLinearOperator<float>::BlockType>(m, "BlockLinearOperatorfBlockType")
-        .value("COL", elsa::BlockLinearOperator<float>::BlockType::COL)
-        .value("ROW", elsa::BlockLinearOperator<float>::BlockType::ROW)
-        .export_values();
-
-    py::enum_<elsa::BlockLinearOperator<double>::BlockType>(m, "BlockLinearOperatordBlockType")
-        .value("COL", elsa::BlockLinearOperator<double>::BlockType::COL)
-        .value("ROW", elsa::BlockLinearOperator<double>::BlockType::ROW)
-        .export_values();
-
-    py::enum_<elsa::BlockLinearOperator<thrust::complex<float>>::BlockType>(
-        m, "BlockLinearOperatorcfBlockType")
-        .value("COL", elsa::BlockLinearOperator<thrust::complex<float>>::BlockType::COL)
-        .value("ROW", elsa::BlockLinearOperator<thrust::complex<float>>::BlockType::ROW)
-        .export_values();
-
-    py::enum_<elsa::BlockLinearOperator<thrust::complex<double>>::BlockType>(
-        m, "BlockLinearOperatorcdBlockType")
-        .value("COL", elsa::BlockLinearOperator<thrust::complex<double>>::BlockType::COL)
-        .value("ROW", elsa::BlockLinearOperator<thrust::complex<double>>::BlockType::ROW)
-        .export_values();
-}
-
 namespace detail
 {
     template <class data_t>
@@ -182,6 +157,11 @@ namespace detail
                py::arg("index"), py::return_value_policy::reference_internal);
         op.def("numberOfOps", py::overload_cast<>(&Op::numberOfOps, py::const_));
 
+        py::enum_<typename elsa::BlockLinearOperator<data_t>::BlockType> opEnum(op, "BlockType");
+        opEnum.value("COL", elsa::BlockLinearOperator<data_t>::BlockType::COL);
+        opEnum.value("ROW", elsa::BlockLinearOperator<data_t>::BlockType::ROW);
+        opEnum.export_values();
+
         elsa::BlockLinearOperatorHints<data_t>::addCustomMethods(op);
     }
 } // namespace detail
@@ -274,7 +254,6 @@ void add_shearlet_operator(py::module& m)
 void add_definitions_pyelsa_operators(py::module& m)
 {
     add_finite_difference_difftype(m);
-    add_block_type(m);
     add_identity(m);
     add_scaling(m);
     add_finite_difference(m);
