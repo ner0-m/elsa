@@ -23,7 +23,9 @@
 #include "SQS.h"
 #include "AB_GMRES.h"
 #include "BA_GMRES.h"
+#include "LinearizedADMM.h"
 #include "Solver.h"
+#include "ProximalOperator.h"
 
 #include "bind_common.h"
 #include "hints/solvers_hints.cpp"
@@ -341,6 +343,19 @@ namespace detail
                  py::arg("Op"), py::arg("b"), py::arg("A"), py::arg("proxg"),
                  py::arg("tau") = py::none());
     }
+
+    template <class data_t>
+    void add_ladmm(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using ProxOp = elsa::ProximalOperator<data_t>;
+
+        py::class_<elsa::LinearizedADMM<data_t>, Solver> ladmm(m, name);
+        ladmm.def(py::init<const LOp&, ProxOp, ProxOp, data_t, data_t, bool>(), py::arg("K"),
+                  py::arg("proxf"), py::arg("proxg"), py::arg("sigma"), py::arg("tau"),
+                  py::arg("computeKNorm") = true);
+    }
 } // namespace detail
 
 void add_admml2(py::module& m)
@@ -349,7 +364,15 @@ void add_admml2(py::module& m)
     detail::add_admml2<double>(m, "ADMML2d");
 
     m.attr("ADMML2") = m.attr("ADMML2f");
-} // namespace detail
+}
+
+void add_ladmm(py::module& m)
+{
+    detail::add_ladmm<float>(m, "LinearizedADMMf");
+    detail::add_ladmm<double>(m, "LinearizedADMMd");
+
+    m.attr("LinearizedADMM") = m.attr("LinearizedADMMf");
+}
 
 void add_generalized_minimum_residual(py::module& m)
 {
@@ -379,6 +402,7 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_ogm(m);
     add_sqs(m);
     add_omp(m);
+    add_ladmm(m);
     add_admml2(m);
 
     add_generalized_minimum_residual(m);

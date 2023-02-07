@@ -32,6 +32,11 @@ Alternating Direction Method of Multipliers
 
 .. doxygenclass:: elsa::ADMML2
 
+Linearized ADMM
++++++++++++++++
+
+.. doxygenclass:: elsa::LinearizedADMM
+
 SQS Ordered Subsets
 ===================
 
