@@ -17,3 +17,4 @@ add_custom_target(
 ELSA_DOCTEST(ProximalL1)
 ELSA_DOCTEST(ProximalL0)
 ELSA_DOCTEST(ProximalBoxConstraint)
+ELSA_DOCTEST(CombinedProximal)

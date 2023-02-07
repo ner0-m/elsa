@@ -4,6 +4,7 @@
 #include "ProximalOperator.h"
 #include "ProximalL1.h"
 #include "ProximalL0.h"
+#include "CombinedProximal.h"
 
 #include "StrongTypes.h"
 #include "hints/proximal_operators_hints.cpp"
@@ -12,8 +13,6 @@ namespace py = pybind11;
 
 namespace detail
 {
-    /* template <class data_t> */
-    /* void add_proximal_op(py::module& m, py::class_<elsa::ProximalL1<data_t>> c) */
     template <class data_t, template <class> class Prox>
     void add_proximal_op(py::module& m, py::class_<Prox<data_t>> c)
     {
@@ -44,6 +43,13 @@ void add_definitions_pyelsa_proximal_operators(py::module& m)
     py::class_<elsa::ProximalL0<double>> proxL0d(m, "ProximalL0d");
     detail::add_proximal_op(m, proxL0d);
     m.attr("ProximalL0") = m.attr("ProximalL0f");
+
+    py::class_<elsa::CombinedProximal<float>> proxCombinedf(m, "CombinedProximalf");
+    detail::add_proximal_op(m, proxCombinedf);
+
+    py::class_<elsa::CombinedProximal<double>> proxCombinedd(m, "CombinedProximald");
+    detail::add_proximal_op(m, proxCombinedd);
+    m.attr("CombinedProximal") = m.attr("CombinedProximalf");
 
     elsa::ProximalOperatorsHints::addCustomFunctions(m);
 }

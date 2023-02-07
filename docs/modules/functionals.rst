@@ -96,3 +96,8 @@ Indicator Functionals
 .. doxygenclass:: elsa::IndicatorBox
 
 .. doxygenclass:: elsa::IndicatorNonNegativity
+
+SeparableSum
+============
+
+.. doxygenclass:: elsa::SeparableSum
