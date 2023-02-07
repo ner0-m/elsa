@@ -53,8 +53,10 @@
 
 // Proximal Operator headers
 #include "ProximalOperator.h"
+#include "ProximalIdentity.h"
 #include "ProximalL1.h"
 #include "ProximalL0.h"
+#include "ProximalL2Squared.h"
 #include "CombinedProximal.h"
 
 // Problem headers
