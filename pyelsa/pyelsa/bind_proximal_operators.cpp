@@ -5,6 +5,7 @@
 #include "ProximalL1.h"
 #include "ProximalL0.h"
 #include "ProximalBoxConstraint.h"
+#include "CombinedProximal.h"
 
 #include "StrongTypes.h"
 #include "hints/proximal_operators_hints.cpp"
@@ -87,6 +88,26 @@ void add_definitions_pyelsa_proximal_operators(py::module& m)
     proxboxd.def(py::init<double>(), py::arg("lower"));
     proxboxd.def(py::init<double, double>(), py::arg("lower"), py::arg("upper"));
     m.attr("ProximalBoxConstraint") = m.attr("ProximalBoxConstraintf");
+
+    using ProxOpf = elsa::ProximalOperator<float>;
+    using ProxOpd = elsa::ProximalOperator<double>;
+
+    py::class_<elsa::CombinedProximal<float>> proxCombinedf(m, "CombinedProximalf");
+    proxCombinedf.def(py::init<>());
+    proxCombinedf.def(py::init<ProxOpf>());
+    proxCombinedf.def(py::init<ProxOpf, ProxOpf>());
+    proxCombinedf.def(py::init<ProxOpf, ProxOpf, ProxOpf>());
+    proxCombinedf.def(py::init<ProxOpf, ProxOpf, ProxOpf, ProxOpf>());
+    detail::add_proximal_op(m, proxCombinedf);
+
+    py::class_<elsa::CombinedProximal<double>> proxCombinedd(m, "CombinedProximald");
+    proxCombinedd.def(py::init<>());
+    proxCombinedd.def(py::init<ProxOpd>());
+    proxCombinedd.def(py::init<ProxOpd, ProxOpd>());
+    proxCombinedd.def(py::init<ProxOpd, ProxOpd, ProxOpd>());
+    proxCombinedd.def(py::init<ProxOpd, ProxOpd, ProxOpd, ProxOpd>());
+    detail::add_proximal_op(m, proxCombinedd);
+    m.attr("CombinedProximal") = m.attr("CombinedProximalf");
 
     m.def("proxapply", &proxapply<float>, py::return_value_policy::move);
     m.def("proxapply", &proxapply<double>, py::return_value_policy::move);

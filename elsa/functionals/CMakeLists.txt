@@ -19,6 +19,7 @@ set(MODULE_HEADERS
     WeightedL1Norm.h
     ConstantFunctional.h
     IndicatorFunctionals.h
+    SeparableSum.h
 )
 
 # list all the code files of the module
@@ -42,6 +43,7 @@ set(MODULE_SOURCES
     WeightedL1Norm.cpp
     ConstantFunctional.cpp
     IndicatorFunctionals.cpp
+    SeparableSum.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators)

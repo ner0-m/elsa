@@ -19,6 +19,7 @@
 #include "LinearResidual.h"
 #include "PseudoHuber.h"
 #include "Quadric.h"
+#include "SeparableSum.h"
 #include "TransmissionLogLikelihood.h"
 #include "WeightedL1Norm.h"
 #include "WeightedLeastSquares.h"
@@ -504,6 +505,55 @@ void add_constraint(py::module& m)
     m.attr("Constraint") = m.attr("Constraintf");
 }
 
+namespace detail
+{
+    template <class data_t>
+    void add_separable_sum_clonable(py::module& m, const char* name)
+    {
+        using T = elsa::SeparableSum<data_t>;
+        using Clone = elsa::Cloneable<T>;
+
+        py::class_<Clone> cloneable(m, name);
+        cloneable
+            .def("__ne__", py::overload_cast<const T&>(&Clone::operator!=, py::const_),
+                 py::arg("other"))
+            .def("__eq__", py::overload_cast<const T&>(&Clone::operator==, py::const_),
+                 py::arg("other"))
+            .def("clone", py::overload_cast<>(&Clone::clone, py::const_));
+    }
+
+    template <class data_t>
+    void add_separable_sum(py::module& m, const char* name)
+    {
+        using T = elsa::SeparableSum<data_t>;
+        using Functional = elsa::Functional<data_t>;
+
+        using LOp = elsa::LinearOperator<data_t>;
+
+        auto ref_internal = py::return_value_policy::reference_internal;
+
+        py::class_<T, Functional> sepsum(m, name);
+        sepsum.def(py::init<const Functional&>());
+        sepsum.def(py::init<const Functional&, const Functional&>());
+        sepsum.def(py::init<const Functional&, const Functional&, const Functional&>());
+        sepsum.def(
+            py::init<const Functional&, const Functional&, const Functional&, const Functional&>());
+    }
+} // namespace detail
+
+void add_separable_sum(py::module& m)
+{
+    detail::add_separable_sum_clonable<float>(m, "CloneableSeparableSumf");
+    detail::add_separable_sum_clonable<double>(m, "CloneableSeparableSumd");
+
+    m.attr("CloneableSeparableSum") = m.attr("CloneableSeparableSumf");
+
+    detail::add_separable_sum<float>(m, "SeparableSumf");
+    detail::add_separable_sum<double>(m, "SeparableSumd");
+
+    m.attr("SeparableSum") = m.attr("SeparableSumf");
+}
+
 void add_definitions_pyelsa_functionals(py::module& m)
 {
     add_linear_residual(m);
@@ -526,6 +576,7 @@ void add_definitions_pyelsa_functionals(py::module& m)
     add_transmission(m);
 
     add_constraint(m);
+    add_separable_sum(m);
 
     elsa::FunctionalsHints::addCustomFunctions(m);
 }

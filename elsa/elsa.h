@@ -25,6 +25,7 @@
 #include "Quadric.h"
 #include "EmissionLogLikelihood.h"
 #include "TransmissionLogLikelihood.h"
+#include "SeparableSum.h"
 
 // Generators headers
 #include "Phantoms.h"
@@ -55,6 +56,7 @@
 #include "ProximalOperator.h"
 #include "ProximalL1.h"
 #include "ProximalL0.h"
+#include "CombinedProximal.h"
 
 // Projector headers
 #include "Geometry.h"

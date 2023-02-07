@@ -127,3 +127,7 @@ Indicator Functionals
 
 .. doxygenclass:: elsa::IndicatorNonNegativity
 
+SeparableSum
+------------
+
+.. doxygenclass:: elsa::SeparableSum
