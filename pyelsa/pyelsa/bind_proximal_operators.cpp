@@ -2,9 +2,11 @@
 
 #include "DataContainer.h"
 #include "ProximalOperator.h"
+#include "ProximalIdentity.h"
 #include "ProximalL1.h"
 #include "ProximalL0.h"
 #include "ProximalBoxConstraint.h"
+#include "ProximalL2Squared.h"
 #include "CombinedProximal.h"
 
 #include "StrongTypes.h"
@@ -58,37 +60,48 @@ void add_proxl1(py::module& m)
     m.attr("ProximalL1") = m.attr("ProximalL1f");
 }
 
-void add_definitions_pyelsa_proximal_operators(py::module& m)
+void add_prox_identity(py::module& m)
 {
-    py::class_<elsa::ProximalOperator<float>> proxf(m, "ProximalOperatorf");
+    py::class_<elsa::ProximalIdentity<float>> proxf(m, "ProximalIdentityf");
     detail::add_proximal_op(m, proxf);
 
-    py::class_<elsa::ProximalOperator<double>> proxd(m, "ProximalOperatord");
+    py::class_<elsa::ProximalIdentity<double>> proxd(m, "ProximalIdentityd");
     detail::add_proximal_op(m, proxd);
-    m.attr("ProximalOperator") = m.attr("ProximalOperatorf");
 
+    m.attr("ProximalIdentity") = m.attr("ProximalIdentityf");
+}
+
+void add_prox_l0(py::module& m)
+{
     py::class_<elsa::ProximalL0<float>> proxL0f(m, "ProximalL0f");
     detail::add_proximal_op(m, proxL0f);
 
     py::class_<elsa::ProximalL0<double>> proxL0d(m, "ProximalL0d");
     detail::add_proximal_op(m, proxL0d);
+
     m.attr("ProximalL0") = m.attr("ProximalL0f");
+}
 
-    add_proxl1(m);
+void add_prox_l2squared(py::module& m)
+{
+    py::class_<elsa::ProximalL2Squared<float>> proxf(m, "ProximalL2Squaredf");
+    detail::add_proximal_op(m, proxf);
+    proxf.def(py::init<const elsa::DataContainer<float>&>(), py::arg("b"));
+    proxf.def(py::init<float>(), py::arg("sigma"));
+    proxf.def(py::init<const elsa::DataContainer<float>&, float>(), py::arg("b"), py::arg("sigma"));
 
-    py::class_<elsa::ProximalBoxConstraint<float>> proxboxf(m, "ProximalBoxConstraintf");
-    detail::add_proximal_op(m, proxboxf);
-    proxboxf.def(py::init<>());
-    proxboxf.def(py::init<float>(), py::arg("lower"));
-    proxboxf.def(py::init<float, float>(), py::arg("lower"), py::arg("upper"));
+    py::class_<elsa::ProximalL2Squared<double>> proxd(m, "ProximalL2Squaredd");
+    proxd.def(py::init<const elsa::DataContainer<double>&>(), py::arg("b"));
+    proxd.def(py::init<double>(), py::arg("sigma"));
+    proxd.def(py::init<const elsa::DataContainer<double>&, double>(), py::arg("b"),
+              py::arg("sigma"));
+    detail::add_proximal_op(m, proxd);
 
-    py::class_<elsa::ProximalBoxConstraint<double>> proxboxd(m, "ProximalBoxConstraintd");
-    detail::add_proximal_op(m, proxboxd);
-    proxboxd.def(py::init<>());
-    proxboxd.def(py::init<double>(), py::arg("lower"));
-    proxboxd.def(py::init<double, double>(), py::arg("lower"), py::arg("upper"));
-    m.attr("ProximalBoxConstraint") = m.attr("ProximalBoxConstraintf");
+    m.attr("ProximalL2Squared") = m.attr("ProximalL2Squaredf");
+}
 
+void add_prox_combinedprox(py::module& m)
+{
     using ProxOpf = elsa::ProximalOperator<float>;
     using ProxOpd = elsa::ProximalOperator<double>;
 
@@ -108,6 +121,35 @@ void add_definitions_pyelsa_proximal_operators(py::module& m)
     proxCombinedd.def(py::init<ProxOpd, ProxOpd, ProxOpd, ProxOpd>());
     detail::add_proximal_op(m, proxCombinedd);
     m.attr("CombinedProximal") = m.attr("CombinedProximalf");
+}
+
+void add_definitions_pyelsa_proximal_operators(py::module& m)
+{
+    py::class_<elsa::ProximalOperator<float>> proxf(m, "ProximalOperatorf");
+    detail::add_proximal_op(m, proxf);
+
+    py::class_<elsa::ProximalOperator<double>> proxd(m, "ProximalOperatord");
+    detail::add_proximal_op(m, proxd);
+    m.attr("ProximalOperator") = m.attr("ProximalOperatorf");
+
+    add_proxl1(m);
+    add_prox_l0(m);
+    add_prox_l2squared(m);
+    add_prox_identity(m);
+    add_prox_combinedprox(m);
+
+    py::class_<elsa::ProximalBoxConstraint<float>> proxboxf(m, "ProximalBoxConstraintf");
+    detail::add_proximal_op(m, proxboxf);
+    proxboxf.def(py::init<>());
+    proxboxf.def(py::init<float>(), py::arg("lower"));
+    proxboxf.def(py::init<float, float>(), py::arg("lower"), py::arg("upper"));
+
+    py::class_<elsa::ProximalBoxConstraint<double>> proxboxd(m, "ProximalBoxConstraintd");
+    detail::add_proximal_op(m, proxboxd);
+    proxboxd.def(py::init<>());
+    proxboxd.def(py::init<double>(), py::arg("lower"));
+    proxboxd.def(py::init<double, double>(), py::arg("lower"), py::arg("upper"));
+    m.attr("ProximalBoxConstraint") = m.attr("ProximalBoxConstraintf");
 
     m.def("proxapply", &proxapply<float>, py::return_value_policy::move);
     m.def("proxapply", &proxapply<double>, py::return_value_policy::move);
