@@ -13,6 +13,7 @@ set(MODULE_HEADERS
     LandweberIteration.h
     Landweber.h
     SIRT.h
+    LinearizedADMM.h
 )
 
 # list all the code files of the module
@@ -29,6 +30,7 @@ set(MODULE_SOURCES
     LandweberIteration.cpp
     Landweber.cpp
     SIRT.cpp
+    LinearizedADMM.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximal_operators)

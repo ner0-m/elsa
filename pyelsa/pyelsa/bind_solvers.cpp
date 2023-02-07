@@ -12,7 +12,9 @@
 #include "CGLS.h"
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
+#include "LinearizedADMM.h"
 #include "Solver.h"
+#include "ProximalOperator.h"
 
 #include "hints/solvers_hints.cpp"
 
@@ -274,6 +276,31 @@ void add_omp(py::module& m)
     m.attr("OrthogonalMatchingPursuit") = m.attr("OrthogonalMatchingPursuitf");
 }
 
+namespace detail
+{
+    template <class data_t>
+    void add_ladmm(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using ProxOp = elsa::ProximalOperator<data_t>;
+
+        py::class_<elsa::LinearizedADMM<data_t>, Solver> ladmm(m, name);
+        ladmm.def(py::init<const LOp&, ProxOp, ProxOp, data_t, data_t, bool>(), py::arg("K"),
+                  py::arg("proxf"), py::arg("proxg"), py::arg("sigma"), py::arg("tau"),
+                  py::arg("computeKNorm") = true);
+    }
+} // namespace detail
+
+void add_ladmm(py::module& m)
+{
+    detail::add_ladmm<float>(m, "LinearizedADMMf");
+    detail::add_ladmm<double>(m, "LinearizedADMMd");
+
+    m.attr("LinearizedADMM") = m.attr("LinearizedADMMf");
+}
+
 void add_definitions_pyelsa_solvers(py::module& m)
 {
     add_solver(m);
@@ -286,6 +313,8 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_ogm(m);
     add_sqs(m);
     add_omp(m);
+
+    add_ladmm(m);
 
     py::class_<elsa::Landweber<float>, elsa::Solver<float>> Landweberf(m, "Landweberf");
     Landweberf.def(
