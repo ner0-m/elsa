@@ -993,8 +993,7 @@ void add_definitions_pyelsa_core(py::module& m)
         .def(py::init<const Eigen::Matrix<long, -1, 1, 0, -1, 1>&,
                       const Eigen::Matrix<float, -1, 1, 0, -1, 1>&,
                       const std::vector<elsa::Geometry, std::allocator<elsa::Geometry>>&,
-                      const Eigen::Matrix<elsa::real_t, 3, 1>&,
-                      bool>(),
+                      const Eigen::Matrix<elsa::real_t, 3, 1>&, bool>(),
              py::arg("numOfCoeffsPerDim"), py::arg("spacingPerDim"), py::arg("geometryList"),
              py::arg("sensDir"), py::arg("isParallelBeam") = true)
         .def(py::init<const elsa::XGIDetectorDescriptor&>());

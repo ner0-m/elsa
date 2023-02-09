@@ -287,13 +287,13 @@ namespace detail
             .value("Regular", Op::Symmetry::regular)
             .export_values();
 
-        op.def(py::init<const elsa::VolumeDescriptor&, const elsa::XGIDetectorDescriptor&,
-                        const elsa::LinearOperator<data_t>&, const DirVecList&,
-                        const elsa::Vector_t<data_t>&, const typename Op::Symmetry&, elsa::index_t>(),
-               py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
-               py::arg("projector"), py::arg("sphericalFuncDirs"),
-               py::arg("sphericalFuncWeights"), py::arg("sphericalHarmonicsSymmetry"),
-               py::arg("sphericalHarmonicsMaxDegree"));
+        op.def(
+            py::init<const elsa::VolumeDescriptor&, const elsa::XGIDetectorDescriptor&,
+                     const elsa::LinearOperator<data_t>&, const DirVecList&,
+                     const elsa::Vector_t<data_t>&, const typename Op::Symmetry&, elsa::index_t>(),
+            py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("projector"),
+            py::arg("sphericalFuncDirs"), py::arg("sphericalFuncWeights"),
+            py::arg("sphericalHarmonicsSymmetry"), py::arg("sphericalHarmonicsMaxDegree"));
     }
 } // namespace detail
 
