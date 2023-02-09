@@ -1,9 +1,15 @@
 #pragma once
 
 #include <memory>
+#include <type_traits>
 
+#include "BlockDescriptor.h"
+#include "BlockLinearOperator.h"
+#include "DataContainer.h"
+#include "IdenticalBlocksDescriptor.h"
+#include "LinearOperator.h"
 #include "Solver.h"
-#include "ProximityOperator.h"
+#include "ProximalOperator.h"
 #include "SplittingProblem.h"
 #include "L0PseudoNorm.h"
 #include "L1Norm.h"
@@ -20,7 +26,7 @@ namespace elsa
      *
      * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      * @tparam XSolver Solver type handling the x update
-     * @tparam ZSolver ProximityOperator type handling the z update
+     * @tparam ZSolver ProximalOperator type handling the z update
      *
      * ADMM solves minimization splitting problems of the form
      * @f$ x \mapsto f(x) + g(z) @f$ such that @f$ Ax + Bz = c @f$.
@@ -48,11 +54,11 @@ namespace elsa
             : Solver<data_t>(),
               _problem(static_cast<SplittingProblem<data_t>*>(splittingProblem.clone().release()))
         {
-            static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
+            static_assert(std::is_base_of_v<Solver<data_t>, XSolver<data_t>>,
                           "ADMM: XSolver must extend Solver");
 
-            static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ADMM: ZSolver must extend ProximityOperator");
+            static_assert(std::is_constructible_v<ProximalOperator<data_t>, ZSolver<data_t>>,
+                          "ADMM: ZSolver must adhere to the ProximalOperator interface");
         }
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations)
@@ -63,8 +69,8 @@ namespace elsa
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
                           "ADMM: XSolver must extend Solver");
 
-            static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ADMM: ZSolver must extend ProximityOperator");
+            static_assert(std::is_constructible_v<ProximalOperator<data_t>, ZSolver<data_t>>,
+                          "ADMM: ZSolver must adhere to the ProximalOperator interface");
         }
 
         ADMM(const SplittingProblem<data_t>& splittingProblem, index_t defaultXSolverIterations,
@@ -78,8 +84,8 @@ namespace elsa
             static_assert(std::is_base_of<Solver<data_t>, XSolver<data_t>>::value,
                           "ADMM: XSolver must extend Solver");
 
-            static_assert(std::is_base_of<ProximityOperator<data_t>, ZSolver<data_t>>::value,
-                          "ADMM: ZSolver must extend ProximityOperator");
+            static_assert(std::is_constructible_v<ProximalOperator<data_t>, ZSolver<data_t>>,
+                          "ADMM: ZSolver must adhere to the ProximalOperator interface");
         }
 
         /// default destructor
@@ -139,11 +145,21 @@ namespace elsa
                                       "rkL2Norm", "skL2Norm");
 
             for (index_t iter = 0; iter < iterations; ++iter) {
-                LinearResidual<data_t> xLinearResidual(A, c - B.apply(z) - u);
-                RegularizationTerm xRegTerm(_rho / 2, L2NormPow2<data_t>(xLinearResidual));
-                Problem<data_t> xUpdateProblem(dataTerm, xRegTerm);
+                // Setup a block problem, where K = [A; A], and w = [b; c - Bz - u]
+                IdenticalBlocksDescriptor blockDesc(2, A.getRangeDescriptor());
 
-                XSolver<data_t> xSolver(xUpdateProblem);
+                std::vector<std::unique_ptr<LinearOperator<data_t>>> opList(2);
+                opList[0] = std::move(A.clone());
+                opList[1] = std::move(A.clone());
+
+                BlockLinearOperator K(A.getDomainDescriptor(), blockDesc, opList,
+                                      BlockLinearOperator<data_t>::BlockType::ROW);
+
+                DataContainer<data_t> w(blockDesc);
+                w.getBlock(0) = dataTermResidual.getDataVector();
+                w.getBlock(1) = c - B.apply(z) - u;
+
+                XSolver<data_t> xSolver(K, w, _rho / 2);
                 x = xSolver.solve(_defaultXSolverIterations, x);
 
                 DataContainer<data_t> rk = x;
@@ -156,7 +172,7 @@ namespace elsa
                 // RegularizationTerm zRegTerm(_rho / 2, L2NormPow2<data_t>(zLinearResidual));
                 // Problem<data_t> zUpdateProblem(regularizationTerm, zRegTerm, z);
 
-                ZSolver<data_t> zProxOp(A.getRangeDescriptor());
+                ZSolver<data_t> zProxOp;
                 z = zProxOp.apply(x + u, geometry::Threshold{regWeight / _rho});
 
                 rk -= z;

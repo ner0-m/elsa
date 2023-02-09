@@ -2,12 +2,14 @@
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
 
-#include "CG.h"
 #include "FGM.h"
-#include "FISTA.h"
+#include "PGD.h"
+#include "APGD.h"
 #include "GradientDescent.h"
-#include "ISTA.h"
+#include "Landweber.h"
+#include "SIRT.h"
 #include "OGM.h"
+#include "CGLS.h"
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
 #include "Solver.h"
@@ -20,255 +22,316 @@ template <class data_t>
 void add_definitions_solver(
     py::class_<elsa::Solver<data_t>, elsa::Cloneable<elsa::Solver<data_t>>> solver)
 {
-    solver.def("solve",
-               (elsa::DataContainer<data_t>(elsa::Solver<data_t>::*)(
-                   long, std::optional<elsa::DataContainer<data_t>>))(&elsa::Solver<data_t>::solve),
-               py::arg("iters"), py::arg("x0") = py::none(), py::return_value_policy::move);
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_solver_cloneable(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Cloneable = elsa::Cloneable<Solver>;
+
+        py::class_<Cloneable> cloneable(m, name);
+        cloneable
+            .def("__ne__", py::overload_cast<const Solver&>(&Cloneable::operator!=, py::const_),
+                 py::arg("other"))
+            .def("__eq__", py::overload_cast<const Solver&>(&Cloneable::operator==, py::const_),
+                 py::arg("other"))
+            .def("clone", py::overload_cast<>(&Cloneable::clone, py::const_));
+    }
+
+    template <class data_t>
+    void add_solver(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Cloneable = elsa::Cloneable<Solver>;
+
+        py::class_<Solver, Cloneable> solver(m, name);
+        solver.def("solve",
+                   py::overload_cast<long, std::optional<elsa::DataContainer<data_t>>>(
+                       &elsa::Solver<data_t>::solve),
+                   py::arg("iters"), py::arg("x0") = py::none(), py::return_value_policy::move);
+    }
+} // namespace detail
+
+void add_solver(py::module& m)
+{
+    detail::add_solver_cloneable<float>(m, "CloneableSolverf");
+    detail::add_solver_cloneable<double>(m, "CloneableSolverd");
+    detail::add_solver_cloneable<thrust::complex<float>>(m, "CloneableSolvercf");
+    detail::add_solver_cloneable<thrust::complex<double>>(m, "CloneableSolvercd");
+
+    detail::add_solver<float>(m, "Solverf");
+    detail::add_solver<double>(m, "Solverd");
+    detail::add_solver<thrust::complex<float>>(m, "Solvercf");
+    detail::add_solver<thrust::complex<double>>(m, "Solvercd");
+
+    m.attr("Solver") = m.attr("Solverf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_gradient_descent(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+
+        py::class_<elsa::GradientDescent<data_t>, Solver> solver(m, name);
+        solver.def(py::init<const Problem&>(), py::arg("problem"));
+        solver.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("stepSize"));
+    }
+} // namespace detail
+
+void add_gradient_descent(py::module& m)
+{
+    detail::add_gradient_descent<float>(m, "GradientDescentf");
+    detail::add_gradient_descent<double>(m, "GradientDescentd");
+
+    m.attr("GradientDescent") = m.attr("GradientDescentf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_cgls(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::CGLS<data_t>, Solver> cg(m, name);
+        cg.def(py::init<const LOp&, const elsa::DataContainer<data_t>&, data_t>(), py::arg("A"),
+               py::arg("b"), py::arg("eps") = 0.0);
+    }
+} // namespace detail
+
+void add_cgls(py::module& m)
+{
+    detail::add_cgls<float>(m, "CGLSf");
+    detail::add_cgls<double>(m, "CGLSd");
+
+    m.attr("CGLS") = m.attr("CGLSf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_ista(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using Threshold = elsa::geometry::Threshold<data_t>;
+
+        py::class_<elsa::PGD<data_t>, Solver> ista(m, name);
+        ista.def(py::init<const Problem&, Threshold>(), py::arg("problem"), py::arg("mu"));
+        ista.def(py::init<const Problem&, Threshold, data_t>(), py::arg("problem"), py::arg("mu"),
+                 py::arg("epsilon"));
+        ista.def(py::init<const Problem&>(), py::arg("problem"));
+        ista.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+    }
+} // namespace detail
+
+void add_ista(py::module& m)
+{
+    detail::add_ista<float>(m, "PGDf");
+    detail::add_ista<double>(m, "PGDd");
+
+    m.attr("PGD") = m.attr("PGDf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_fista(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using Threshold = elsa::geometry::Threshold<data_t>;
+
+        py::class_<elsa::APGD<data_t>, Solver> fista(m, name);
+        fista.def(py::init<const Problem&, Threshold>(), py::arg("problem"), py::arg("mu"));
+        fista.def(py::init<const Problem&, Threshold, data_t>(), py::arg("problem"), py::arg("mu"),
+                  py::arg("epsilon"));
+        fista.def(py::init<const Problem&>(), py::arg("problem"));
+        fista.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+    }
+} // namespace detail
+
+void add_fista(py::module& m)
+{
+    detail::add_fista<float>(m, "APGDf");
+    detail::add_fista<double>(m, "APGDd");
+
+    m.attr("APGD") = m.attr("APGDf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_fgm(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::FGM<data_t>, Solver> fgm(m, name);
+        fgm.def(py::init<const Problem&, const LOp&>(), py::arg("problem"),
+                py::arg("preconditionerInverse"));
+        fgm.def(py::init<const Problem&, const LOp&, data_t>(), py::arg("problem"),
+                py::arg("preconditionerInverse"), py::arg("epsilon"));
+        fgm.def(py::init<const Problem&>(), py::arg("problem"));
+        fgm.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+    }
+} // namespace detail
+
+void add_fgm(py::module& m)
+{
+    detail::add_fgm<float>(m, "FGMf");
+    detail::add_fgm<double>(m, "FMGd");
+
+    m.attr("FGM") = m.attr("FGMf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_ogm(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::OGM<data_t>, Solver> ogm(m, name);
+        ogm.def(py::init<const Problem&, const LOp&>(), py::arg("problem"),
+                py::arg("preconditionerInverse"));
+        ogm.def(py::init<const Problem&, const LOp&, data_t>(), py::arg("problem"),
+                py::arg("preconditionerInverse"), py::arg("epsilon"));
+        ogm.def(py::init<const Problem&>(), py::arg("problem"));
+        ogm.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+    }
+} // namespace detail
+
+void add_ogm(py::module& m)
+{
+    detail::add_ogm<float>(m, "OGMf");
+    detail::add_ogm<double>(m, "OGMd");
+
+    m.attr("OGM") = m.attr("OGMf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_sqs(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::SQS<data_t>, Solver> sqs(m, name);
+        sqs.def(py::init<const Problem&, bool>(), py::arg("problem"),
+                py::arg("momentumAcceleration") = static_cast<bool>(true));
+        sqs.def(py::init<const Problem&, bool, data_t>(), py::arg("problem"),
+                py::arg("momentumAcceleration"), py::arg("epsilon"));
+        sqs.def(py::init<const Problem&, const LOp&, bool>(), py::arg("problem"),
+                py::arg("preconditioner"),
+                py::arg("momentumAcceleration") = static_cast<bool>(true));
+        sqs.def(py::init<const Problem&, LOp&, bool, data_t>(), py::arg("problem"),
+                py::arg("preconditioner"), py::arg("momentumAcceleration"), py::arg("epsilon"));
+    }
+} // namespace detail
+
+void add_sqs(py::module& m)
+{
+    detail::add_sqs<float>(m, "SQSf");
+    detail::add_sqs<double>(m, "SQSd");
+
+    m.attr("SQS") = m.attr("SQSf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_omp(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Problem = elsa::Problem<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::OrthogonalMatchingPursuit<data_t>, Solver> omp(m, name);
+        omp.def(py::init<const elsa::RepresentationProblem<data_t>&, data_t>(), py::arg("problem"),
+                py::arg("epsilon"));
+    }
+} // namespace detail
+
+void add_omp(py::module& m)
+{
+    detail::add_omp<float>(m, "OrthogonalMatchingPursuitf");
+    detail::add_omp<double>(m, "OrthogonalMatchingPursuitd");
+
+    m.attr("OrthogonalMatchingPursuit") = m.attr("OrthogonalMatchingPursuitf");
 }
 
 void add_definitions_pyelsa_solvers(py::module& m)
 {
-    py::class_<elsa::Cloneable<elsa::Solver<float>>> CloneableSolverf(m, "CloneableSolverf");
-    CloneableSolverf
-        .def("__ne__",
-             (bool(elsa::Cloneable<elsa::Solver<float>>::*)(const elsa::Solver<float>&)
-                  const)(&elsa::Cloneable<elsa::Solver<float>>::operator!=),
-             py::arg("other"))
-        .def("__eq__",
-             (bool(elsa::Cloneable<elsa::Solver<float>>::*)(const elsa::Solver<float>&)
-                  const)(&elsa::Cloneable<elsa::Solver<float>>::operator==),
-             py::arg("other"))
-        .def("clone",
-             (std::unique_ptr<elsa::Solver<float>, std::default_delete<elsa::Solver<float>>>(
-                 elsa::Cloneable<elsa::Solver<float>>::*)()
-                  const)(&elsa::Cloneable<elsa::Solver<float>>::clone));
+    add_solver(m);
+    add_gradient_descent(m);
+    add_cgls(m);
+    add_ista(m);
+    add_fista(m);
 
-    py::class_<elsa::Solver<float>, elsa::Cloneable<elsa::Solver<float>>> Solverf(m, "Solverf");
-    add_definitions_solver<float>(Solverf);
+    add_fgm(m);
+    add_ogm(m);
+    add_sqs(m);
+    add_omp(m);
 
-    m.attr("Solver") = m.attr("Solverf");
+    py::class_<elsa::Landweber<float>, elsa::Solver<float>> Landweberf(m, "Landweberf");
+    Landweberf.def(
+        py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&>(),
+        py::arg("A"), py::arg("b"));
+    Landweberf.def(
+        py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&, float>(),
+        py::arg("A"), py::arg("b"), py::arg("stepSize"));
+    Landweberf.def(py::init<const elsa::WLSProblem<float>&>(), py::arg("problem"));
+    Landweberf.def(py::init<const elsa::WLSProblem<float>&, float>(), py::arg("problem"),
+                   py::arg("stepSize"));
 
-    py::class_<elsa::Cloneable<elsa::Solver<double>>> CloneableSolverd(m, "CloneableSolverd");
-    CloneableSolverd
-        .def("__ne__",
-             (bool(elsa::Cloneable<elsa::Solver<double>>::*)(const elsa::Solver<double>&)
-                  const)(&elsa::Cloneable<elsa::Solver<double>>::operator!=),
-             py::arg("other"))
-        .def("__eq__",
-             (bool(elsa::Cloneable<elsa::Solver<double>>::*)(const elsa::Solver<double>&)
-                  const)(&elsa::Cloneable<elsa::Solver<double>>::operator==),
-             py::arg("other"))
-        .def("clone",
-             (std::unique_ptr<elsa::Solver<double>, std::default_delete<elsa::Solver<double>>>(
-                 elsa::Cloneable<elsa::Solver<double>>::*)()
-                  const)(&elsa::Cloneable<elsa::Solver<double>>::clone));
+    m.attr("Landweber") = m.attr("Landweberf");
 
-    py::class_<elsa::Solver<double>, elsa::Cloneable<elsa::Solver<double>>> Solverd(m, "Solverd");
-    add_definitions_solver<double>(Solverd);
+    py::class_<elsa::Landweber<double>, elsa::Solver<double>> Landweberd(m, "Landweberd");
+    Landweberd.def(
+        py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&>(),
+        py::arg("A"), py::arg("b"));
+    Landweberd.def(
+        py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&, double>(),
+        py::arg("A"), py::arg("b"), py::arg("stepSize"));
+    Landweberd.def(py::init<const elsa::WLSProblem<double>&>(), py::arg("problem"));
+    Landweberd.def(py::init<const elsa::WLSProblem<double>&, double>(), py::arg("problem"),
+                   py::arg("stepSize"));
 
-    py::class_<elsa::Cloneable<elsa::Solver<thrust::complex<float>>>> CloneableSolvercf(
-        m, "CloneableSolvercf");
-    CloneableSolvercf
-        .def("__ne__",
-             (bool(elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::*)(
-                 const elsa::Solver<thrust::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::operator!=),
-             py::arg("other"))
-        .def("__eq__",
-             (bool(elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::*)(
-                 const elsa::Solver<thrust::complex<float>>&)
-                  const)(&elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::operator==),
-             py::arg("other"))
-        .def("clone", (std::unique_ptr<elsa::Solver<thrust::complex<float>>,
-                                       std::default_delete<elsa::Solver<thrust::complex<float>>>>(
-                          elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::*)()
-                           const)(&elsa::Cloneable<elsa::Solver<thrust::complex<float>>>::clone));
+    py::class_<elsa::SIRT<float>, elsa::Solver<float>> sirtf(m, "SIRTf");
+    sirtf.def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&>(),
+              py::arg("A"), py::arg("b"));
+    sirtf.def(
+        py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&, float>(),
+        py::arg("A"), py::arg("b"), py::arg("stepSize"));
+    sirtf.def(py::init<const elsa::WLSProblem<float>&>(), py::arg("problem"));
+    sirtf.def(py::init<const elsa::WLSProblem<float>&, float>(), py::arg("problem"),
+              py::arg("stepSize"));
 
-    py::class_<elsa::Solver<thrust::complex<float>>,
-               elsa::Cloneable<elsa::Solver<thrust::complex<float>>>>
-        Solvercf(m, "Solvercf");
-    add_definitions_solver<thrust::complex<float>>(Solvercf);
+    m.attr("SIRT") = m.attr("SIRTf");
 
-    py::class_<elsa::Cloneable<elsa::Solver<thrust::complex<double>>>> CloneableSolvercd(
-        m, "CloneableSolvercd");
-    CloneableSolvercd
-        .def("__ne__",
-             (bool(elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::*)(
-                 const elsa::Solver<thrust::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::operator!=),
-             py::arg("other"))
-        .def("__eq__",
-             (bool(elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::*)(
-                 const elsa::Solver<thrust::complex<double>>&)
-                  const)(&elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::operator==),
-             py::arg("other"))
-        .def("clone", (std::unique_ptr<elsa::Solver<thrust::complex<double>>,
-                                       std::default_delete<elsa::Solver<thrust::complex<double>>>>(
-                          elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::*)()
-                           const)(&elsa::Cloneable<elsa::Solver<thrust::complex<double>>>::clone));
-
-    py::class_<elsa::Solver<thrust::complex<double>>,
-               elsa::Cloneable<elsa::Solver<thrust::complex<double>>>>
-        Solvercd(m, "Solvercd");
-    add_definitions_solver<thrust::complex<double>>(Solvercd);
-
-    py::class_<elsa::GradientDescent<float>, elsa::Solver<float>> GradientDescentf(
-        m, "GradientDescentf");
-    GradientDescentf.def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<float>&, float>(), py::arg("problem"),
-             py::arg("stepSize"));
-
-    m.attr("GradientDescent") = m.attr("GradientDescentf");
-
-    py::class_<elsa::GradientDescent<double>, elsa::Solver<double>> GradientDescentd(
-        m, "GradientDescentd");
-    GradientDescentd.def(py::init<const elsa::Problem<double>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<double>&, double>(), py::arg("problem"),
-             py::arg("stepSize"));
-
-    py::class_<elsa::CG<float>, elsa::Solver<float>> CGf(m, "CGf");
-    CGf.def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&>(),
-            py::arg("problem"), py::arg("preconditionerInverse"))
-        .def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&, float>(),
-             py::arg("problem"), py::arg("preconditionerInverse"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<float>&, float>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    m.attr("CG") = m.attr("CGf");
-
-    py::class_<elsa::CG<double>, elsa::Solver<double>> CGd(m, "CGd");
-    CGd.def(py::init<const elsa::Problem<double>&, const elsa::LinearOperator<double>&>(),
-            py::arg("problem"), py::arg("preconditionerInverse"))
-        .def(py::init<const elsa::Problem<double>&, const elsa::LinearOperator<double>&, double>(),
-             py::arg("problem"), py::arg("preconditionerInverse"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<double>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<double>&, double>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    py::class_<elsa::ISTA<float>, elsa::Solver<float>> ISTAf(m, "ISTAf");
-    ISTAf
-        .def(py::init<const elsa::Problem<float>&, elsa::geometry::Threshold<float>>(),
-             py::arg("problem"), py::arg("mu"))
-        .def(py::init<const elsa::Problem<float>&, elsa::geometry::Threshold<float>, float>(),
-             py::arg("problem"), py::arg("mu"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<float>&, float>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    m.attr("ISTA") = m.attr("ISTAf");
-
-    py::class_<elsa::ISTA<double>, elsa::Solver<double>> ISTAd(m, "ISTAd");
-    ISTAd
-        .def(py::init<const elsa::Problem<double>&, elsa::geometry::Threshold<double>>(),
-             py::arg("problem"), py::arg("mu"))
-        .def(py::init<const elsa::Problem<double>&, elsa::geometry::Threshold<double>, double>(),
-             py::arg("problem"), py::arg("mu"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<double>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<double>&, double>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    py::class_<elsa::FISTA<float>, elsa::Solver<float>> FISTAf(m, "FISTAf");
-    FISTAf
-        .def(py::init<const elsa::Problem<float>&, elsa::geometry::Threshold<float>>(),
-             py::arg("problem"), py::arg("mu"))
-        .def(py::init<const elsa::Problem<float>&, elsa::geometry::Threshold<float>, float>(),
-             py::arg("problem"), py::arg("mu"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<float>&, float>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    m.attr("FISTA") = m.attr("FISTAf");
-
-    py::class_<elsa::FISTA<double>, elsa::Solver<double>> FISTAd(m, "FISTAd");
-    FISTAd
-        .def(py::init<const elsa::Problem<double>&, elsa::geometry::Threshold<double>>(),
-             py::arg("problem"), py::arg("mu"))
-        .def(py::init<const elsa::Problem<double>&, elsa::geometry::Threshold<double>, double>(),
-             py::arg("problem"), py::arg("mu"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<double>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<double>&, double>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    py::class_<elsa::FGM<float>, elsa::Solver<float>> FGMf(m, "FGMf");
-    FGMf.def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&>(),
-             py::arg("problem"), py::arg("preconditionerInverse"))
-        .def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&, float>(),
-             py::arg("problem"), py::arg("preconditionerInverse"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<float>&, float>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    m.attr("FGM") = m.attr("FGMf");
-
-    py::class_<elsa::FGM<double>, elsa::Solver<double>> FGMd(m, "FGMd");
-    FGMd.def(py::init<const elsa::Problem<double>&, const elsa::LinearOperator<double>&>(),
-             py::arg("problem"), py::arg("preconditionerInverse"))
-        .def(py::init<const elsa::Problem<double>&, const elsa::LinearOperator<double>&, double>(),
-             py::arg("problem"), py::arg("preconditionerInverse"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<double>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<double>&, double>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    py::class_<elsa::OGM<float>, elsa::Solver<float>> OGMf(m, "OGMf");
-    OGMf.def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&>(),
-             py::arg("problem"), py::arg("preconditionerInverse"))
-        .def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&, float>(),
-             py::arg("problem"), py::arg("preconditionerInverse"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<float>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<float>&, float>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    m.attr("OGM") = m.attr("OGMf");
-
-    py::class_<elsa::OGM<double>, elsa::Solver<double>> OGMd(m, "OGMd");
-    OGMd.def(py::init<const elsa::Problem<double>&, const elsa::LinearOperator<double>&>(),
-             py::arg("problem"), py::arg("preconditionerInverse"))
-        .def(py::init<const elsa::Problem<double>&, const elsa::LinearOperator<double>&, double>(),
-             py::arg("problem"), py::arg("preconditionerInverse"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<double>&>(), py::arg("problem"))
-        .def(py::init<const elsa::Problem<double>&, double>(), py::arg("problem"),
-             py::arg("epsilon"));
-
-    py::class_<elsa::SQS<float>, elsa::Solver<float>> SQSf(m, "SQSf");
-    SQSf.def(py::init<const elsa::Problem<float>&, bool>(), py::arg("problem"),
-             py::arg("momentumAcceleration") = static_cast<bool>(true))
-        .def(py::init<const elsa::Problem<float>&, bool, float>(), py::arg("problem"),
-             py::arg("momentumAcceleration"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&, bool>(),
-             py::arg("problem"), py::arg("preconditioner"),
-             py::arg("momentumAcceleration") = static_cast<bool>(true))
-        .def(py::init<const elsa::Problem<float>&, const elsa::LinearOperator<float>&, bool,
-                      float>(),
-             py::arg("problem"), py::arg("preconditioner"), py::arg("momentumAcceleration"),
-             py::arg("epsilon"));
-
-    m.attr("SQS") = m.attr("SQSf");
-
-    py::class_<elsa::SQS<double>, elsa::Solver<double>> SQSd(m, "SQSd");
-    SQSd.def(py::init<const elsa::Problem<double>&, bool>(), py::arg("problem"),
-             py::arg("momentumAcceleration") = static_cast<bool>(true))
-        .def(py::init<const elsa::Problem<double>&, bool, double>(), py::arg("problem"),
-             py::arg("momentumAcceleration"), py::arg("epsilon"))
-        .def(py::init<const elsa::Problem<double>&, const elsa::LinearOperator<double>&, bool>(),
-             py::arg("problem"), py::arg("preconditioner"),
-             py::arg("momentumAcceleration") = static_cast<bool>(true))
-        .def(py::init<const elsa::Problem<double>&, const elsa::LinearOperator<double>&, bool,
-                      double>(),
-             py::arg("problem"), py::arg("preconditioner"), py::arg("momentumAcceleration"),
-             py::arg("epsilon"));
-
-    py::class_<elsa::OrthogonalMatchingPursuit<float>, elsa::Solver<float>>
-        OrthogonalMatchingPursuitf(m, "OrthogonalMatchingPursuitf");
-    OrthogonalMatchingPursuitf.def(py::init<const elsa::RepresentationProblem<float>&, float>(),
-                                   py::arg("problem"), py::arg("epsilon"));
-
-    m.attr("OrthogonalMatchingPursuit") = m.attr("OrthogonalMatchingPursuitf");
-
-    py::class_<elsa::OrthogonalMatchingPursuit<double>, elsa::Solver<double>>
-        OrthogonalMatchingPursuitd(m, "OrthogonalMatchingPursuitd");
-    OrthogonalMatchingPursuitd.def(py::init<const elsa::RepresentationProblem<double>&, double>(),
-                                   py::arg("problem"), py::arg("epsilon"));
+    py::class_<elsa::SIRT<double>, elsa::Solver<double>> sirtd(m, "SIRTd");
+    sirtd.def(py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&>(),
+              py::arg("A"), py::arg("b"));
+    sirtd.def(
+        py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&, double>(),
+        py::arg("A"), py::arg("b"), py::arg("stepSize"));
+    sirtd.def(py::init<const elsa::WLSProblem<double>&>(), py::arg("problem"));
+    sirtd.def(py::init<const elsa::WLSProblem<double>&, double>(), py::arg("problem"),
+              py::arg("stepSize"));
 
     elsa::SolversHints::addCustomFunctions(m);
 }

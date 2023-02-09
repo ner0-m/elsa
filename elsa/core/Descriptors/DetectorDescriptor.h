@@ -63,11 +63,22 @@ namespace elsa
         virtual RealRay_t computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
                                                       const index_t poseIndex) const = 0;
 
+        /**
+         * @brief Computes the projection of the center of a voxel to the detector and its scaling
+         *
+         * @param[in] voxelCoord coordinate of the voxel to be projected in volume coordinates
+         * @param[in] poseIndex index into geometryList array, which pose to use for projection
+         * @return std::pair<RealVector_t, real_t> detector coordinate and scaling on detector
+         */
+        virtual std::pair<RealVector_t, real_t>
+            projectAndScaleVoxelOnDetector(const RealVector_t& voxelCoord,
+                                           const index_t poseIndex) const;
+
         /// Get the number of poses used in the geometry
         index_t getNumberOfGeometryPoses() const;
 
         /// Get the list of geometry poses
-        std::vector<Geometry> getGeometry() const;
+        const std::vector<Geometry>& getGeometry() const;
 
         /// Get the i-th geometry in the trajectory.
         std::optional<Geometry> getGeometryAt(const index_t index) const;

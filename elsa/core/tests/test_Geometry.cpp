@@ -67,6 +67,11 @@ TEST_CASE("Geometry: Testing 2D geometries")
                 REQUIRE_EQ((c[0] - o[0]), Approx(0));
                 REQUIRE_EQ((c[1] - o[1] + s2c), Approx(0));
             }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
+            }
         }
 
         WHEN("testing geometry without rotation but with principal point offset")
@@ -108,6 +113,11 @@ TEST_CASE("Geometry: Testing 2D geometries")
                 REQUIRE_EQ((c[0] - o[0]), Approx(0));
                 REQUIRE_EQ((c[1] - o[1] + s2c), Approx(0));
             }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
+            }
         }
 
         WHEN("testing geometry with 90 degree rotation and no offsets")
@@ -146,6 +156,11 @@ TEST_CASE("Geometry: Testing 2D geometries")
 
                 REQUIRE_EQ((c[0] - o[0] + s2c), Approx(0));
                 REQUIRE_EQ((c[1] - o[1]), Approx(0).epsilon(0.01));
+            }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
             }
         }
 
@@ -197,6 +212,11 @@ TEST_CASE("Geometry: Testing 2D geometries")
                 REQUIRE_EQ((c[0] - newX), Approx(0).epsilon(0.01));
                 REQUIRE_EQ((c[1] - newY), Approx(0).epsilon(0.01));
             }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
+            }
         }
     }
 }
@@ -229,6 +249,15 @@ TEST_CASE("Geometry: Testing 3D geometries")
                 REQUIRE_EQ(gCopy, g);
             }
 
+            THEN("a copy constructed with the camera and rotation/translation matrices is the same")
+            {
+                Geometry gNew{VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                              g.getRotationMatrix(), g.getTranslationVector(),
+                              g.getIntrinsicMatrix()};
+
+                REQUIRE_EQ(gNew, g);
+            }
+
             THEN("then P and Pinv are inverse")
             {
                 RealMatrix_t id(3, 3);
@@ -254,6 +283,11 @@ TEST_CASE("Geometry: Testing 3D geometries")
                 REQUIRE_EQ((c[0] - o[0]), Approx(0));
                 REQUIRE_EQ((c[1] - o[1]), Approx(0));
                 REQUIRE_EQ((c[2] - o[2] + s2c), Approx(0));
+            }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
             }
         }
 
@@ -273,6 +307,15 @@ TEST_CASE("Geometry: Testing 3D geometries")
                 REQUIRE_EQ(gCopy, g);
             }
 
+            THEN("a copy constructed with the camera and rotation/translation matrices is the same")
+            {
+                Geometry gNew{VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                              g.getRotationMatrix(), g.getTranslationVector(),
+                              g.getIntrinsicMatrix()};
+
+                REQUIRE_EQ(gNew, g);
+            }
+
             THEN("then P and Pinv are inverse")
             {
                 RealMatrix_t id(3, 3);
@@ -299,6 +342,11 @@ TEST_CASE("Geometry: Testing 3D geometries")
                 REQUIRE_EQ((c[1] - o[1]), Approx(0));
                 REQUIRE_EQ((c[2] - o[2] + s2c), Approx(0));
             }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
+            }
         }
 
         WHEN("testing geometry with 90 degree rotation and no offsets")
@@ -313,6 +361,15 @@ TEST_CASE("Geometry: Testing 3D geometries")
             {
                 Geometry gCopy(g);
                 REQUIRE_EQ(gCopy, g);
+            }
+
+            THEN("a copy constructed with the camera and rotation/translation matrices is the same")
+            {
+                Geometry gNew{VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                              g.getRotationMatrix(), g.getTranslationVector(),
+                              g.getIntrinsicMatrix()};
+
+                REQUIRE_EQ(gNew, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -343,6 +400,11 @@ TEST_CASE("Geometry: Testing 3D geometries")
                 REQUIRE_EQ((c[1] - o[1]), Approx(0).epsilon(0.01));
                 REQUIRE_EQ((c[2] - o[2]), Approx(0).epsilon(0.01));
             }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
+            }
         }
 
         WHEN("testing geometry with 45/22.5 degree rotation and offset center of rotation")
@@ -361,6 +423,15 @@ TEST_CASE("Geometry: Testing 3D geometries")
             {
                 Geometry gCopy(g);
                 REQUIRE_EQ(gCopy, g);
+            }
+
+            THEN("a copy constructed with the camera and rotation/translation matrices is the same")
+            {
+                Geometry gNew{VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                              g.getRotationMatrix(), g.getTranslationVector(),
+                              g.getIntrinsicMatrix()};
+
+                REQUIRE_EQ(gNew, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -398,6 +469,11 @@ TEST_CASE("Geometry: Testing 3D geometries")
 
                 REQUIRE_EQ((rotSrc - c).sum(), Approx(0).epsilon(0.01));
             }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
+            }
         }
 
         WHEN("testing geometry with 45/22.5/12.25 degree rotation as a rotation matrix")
@@ -422,6 +498,15 @@ TEST_CASE("Geometry: Testing 3D geometries")
             {
                 Geometry gCopy(g);
                 REQUIRE_EQ(gCopy, g);
+            }
+
+            THEN("a copy constructed with the camera and rotation/translation matrices is the same")
+            {
+                Geometry gNew{VolumeData3D{Size3D{volCoeff}}, SinogramData3D{Size3D{detCoeff}},
+                              g.getRotationMatrix(), g.getTranslationVector(),
+                              g.getIntrinsicMatrix()};
+
+                REQUIRE_EQ(gNew, g);
             }
 
             THEN("then P and Pinv are inverse")
@@ -452,6 +537,11 @@ TEST_CASE("Geometry: Testing 3D geometries")
                 RealVector_t rotSrc = g.getRotationMatrix().transpose() * src + o;
 
                 REQUIRE_EQ((rotSrc - c).sum(), Approx(0).epsilon(0.01));
+            }
+
+            THEN("the source detector distance is correct")
+            {
+                REQUIRE_EQ(g.getSourceDetectorDistance() - s2c - c2d, Approx(0));
             }
         }
     }

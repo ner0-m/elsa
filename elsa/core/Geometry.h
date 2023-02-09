@@ -110,6 +110,18 @@ namespace elsa
                  real_t centerOfRotationOffsetZ = static_cast<real_t>(0.0));
 
         /**
+         * @brief Constructor for 3D projective geometry using existing matrices
+         *
+         * @param[in] volData descriptor for the 3d volume
+         * @param[in] sinoData descriptor for the sinogram
+         * @param[in] R the rotation matrix
+         * @param[in] t the translation
+         * @param[in] K the intrinsic parameter
+         */
+        Geometry(geometry::VolumeData3D&& volData, geometry::SinogramData3D&& sinoData,
+                 const RealMatrix_t& R, const RealMatrix_t& t, const RealMatrix_t& K);
+
+        /**
          * @brief Return the projection matrix
          *
          * @returns projection matrix
@@ -137,6 +149,34 @@ namespace elsa
          */
         const RealMatrix_t& getRotationMatrix() const;
 
+        /**
+         * @brief Return the distance between source and detector
+         *
+         * @returns the distance
+         */
+        real_t getSourceDetectorDistance() const;
+
+        /**
+         * @brief Return the extrinsics matrix
+         *
+         * @returns the extrinsics matrix
+         */
+        const RealMatrix_t& getExtrinsicMatrix() const;
+
+        /**
+         * @brief Return the intrinsic matrix
+         *
+         * @returns the intrinsic matrix
+         */
+        const RealMatrix_t& getIntrinsicMatrix() const;
+
+        /**
+         * @brief Return the translation vector from volume space into camera space
+         *
+         * @returns the translation vector
+         */
+        const RealVector_t& getTranslationVector() const;
+
         /// comparison operator
         bool operator==(const Geometry& other) const;
 
@@ -144,10 +184,15 @@ namespace elsa
         /// the dimension of the object space / volume (either 2 or 3)
         index_t _objectDimension;
 
+        /// the distance between source and detector
+        real_t _sdDistance;
+
         /// the projection matrix (= [_K|0] * [_R|_t] * _S)
         RealMatrix_t _P;
         /// the inverse of the projection matrix
         RealMatrix_t _Pinv;
+        /// the extrinsic matrix (= [_R|_t] * _S)
+        RealMatrix_t _ext;
 
         /// the intrinsic parameters _K
         RealMatrix_t _K;

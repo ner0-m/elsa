@@ -133,14 +133,11 @@ namespace elsa::phantoms
 
                 Ellipsoid<data_t> ellipsoid{
                     e[0],
-                    {scaleShift(dd, e[4]),
-                     dc.getDataDescriptor().getNumberOfCoefficientsPerDimension()[1] - 1
-                         - scaleShift(dd, e[5]),
-                     scaleShift(dd, e[6])},
+                    {scaleShift(dd, e[4]), scaleShift(dd, e[5]), scaleShift(dd, e[6])},
                     halfAxis,
                     {e[7], e[8], e[9]}};
                 Logger::get("phantom::modifiedSheppLogan")->info("rasterize {}", ellipsoid);
-                rasterize(ellipsoid, dd, dc);
+                rasterize<Blending::ADDITION>(ellipsoid, dd, dc);
             }
         }
 

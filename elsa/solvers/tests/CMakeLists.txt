@@ -15,11 +15,13 @@ add_custom_target(
 
 # the actual tests
 ELSA_DOCTEST(GradientDescent PUBLIC_DEPENDENCIES elsa_generators elsa_projectors)
-ELSA_DOCTEST(CG PUBLIC_DEPENDENCIES elsa_generators elsa_projectors)
-ELSA_DOCTEST(ISTA)
-ELSA_DOCTEST(FISTA)
+ELSA_DOCTEST(PGD)
+ELSA_DOCTEST(APGD)
+ELSA_DOCTEST(CGLS)
 ELSA_DOCTEST(FGM PUBLIC_DEPENDENCIES elsa_generators elsa_projectors)
 ELSA_DOCTEST(OGM PUBLIC_DEPENDENCIES elsa_generators elsa_projectors)
 ELSA_DOCTEST(ADMM)
 ELSA_DOCTEST(SQS PUBLIC_DEPENDENCIES elsa_generators elsa_projectors)
 ELSA_DOCTEST(OrthogonalMatchingPursuit)
+ELSA_DOCTEST(Landweber)
+ELSA_DOCTEST(SIRT)

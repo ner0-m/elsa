@@ -49,7 +49,7 @@ if (( ${#files[@]} )); then
     if ! "$clang_format_tool" --dry-run -Werror -style=file "${files[@]}"; then
         echo -e "[${RED}FAIL${NC}]: Oops, something isn't correct with the formatting, please check the errors above"
         echo -e "[${BLUE}INFO${NC}]: From the root directory you can also run:"
-        echo "find elsa/ examples/ | egrep \".+\.(h|hpp|cpp|cu|cuh)$\" | xargs $clang_format_tool -i -style=file"
+        echo "$clang_format_tool -i -style=file ${files[@]}"
 
         if [[ "$master_ahead" -gt "0" ]]; then
             echo -e "[${BLUE}INFO${NC}]: Files considered:"

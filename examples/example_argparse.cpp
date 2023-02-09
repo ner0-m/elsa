@@ -89,17 +89,16 @@ std::unique_ptr<elsa::Solver<elsa::real_t>>
     get_solver(std::string solver_kind, const elsa::LinearOperator<elsa::real_t>& projector,
                const elsa::DataContainer<elsa::real_t>& sinogram)
 {
-    if (solver_kind == "CG") {
-        elsa::TikhonovProblem problem(projector, sinogram, 0.05);
-        elsa::CG solver(problem);
+    if (solver_kind == "CG" || solver_kind == "CGLS") {
+        elsa::CGLS solver(projector, sinogram, 0.05);
         return solver.clone();
-    } else if (solver_kind == "ISTA") {
+    } else if (solver_kind == "PGD") {
         elsa::LASSOProblem problem(projector, sinogram);
-        elsa::ISTA solver(problem);
+        elsa::PGD solver(problem);
         return solver.clone();
-    } else if (solver_kind == "FISTA") {
+    } else if (solver_kind == "APGD") {
         elsa::LASSOProblem problem(projector, sinogram);
-        elsa::FISTA solver(problem);
+        elsa::APGD solver(problem);
         return solver.clone();
     } else {
         throw elsa::Error("Unknown Solver {}", solver_kind);
@@ -285,8 +284,8 @@ int main(int argc, char* argv[])
         .default_value(std::string("Joseph"));
 
     args.add_argument("--solver")
-        .help("Choose different solver (\"CG\", \"ISTA\", \"FISTA\")")
-        .default_value(std::string("CG"));
+        .help("Choose different solver (\"CGLS\", \"PGD\", \"APGD\")")
+        .default_value(std::string("CGLS"));
 
     args.add_argument("--phantom")
         .help("Choose different solver (\"SheppLogan\", \"Rectangle\", \"Circle\")")

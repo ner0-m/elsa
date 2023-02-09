@@ -7,6 +7,7 @@ set(MODULE_HEADERS
     TraverseAABBJosephsMethod.h
     SliceTraversal.h
     LutProjector.h
+    VoxelProjector.h
     BinaryMethod.h
     SiddonsMethod.h
     SiddonsMethodBranchless.h
@@ -26,6 +27,7 @@ set(MODULE_SOURCES
     TraverseAABBJosephsMethod.cpp
     SliceTraversal.cpp
     LutProjector.cpp
+    VoxelProjector.cpp
     BinaryMethod.cpp
     SiddonsMethod.cpp
     SiddonsMethodBranchless.cpp

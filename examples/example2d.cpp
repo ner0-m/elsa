@@ -39,11 +39,8 @@ void example2d()
     Logger::get("Info")->info("Write sinogram");
     io::write(sinogram, "2dsinogram.pgm");
 
-    // setup reconstruction problem
-    WLSProblem wlsProblem(projector, sinogram);
-
     // solve the reconstruction problem
-    CG cgSolver(wlsProblem);
+    CGLS cgSolver(projector, sinogram);
 
     index_t noIterations{10};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
@@ -56,19 +53,19 @@ void example2d()
 
     // LASSOProblem lassoProb(projector, sinogram);
     //
-    // // solve the reconstruction problem with ISTA
-    // ISTA istaSolver(lassoProb);
+    // // solve the reconstruction problem with PGD
+    // PGD istaSolver(lassoProb);
     //
-    // Logger::get("Info")->info("Solving reconstruction using {} iterations of ISTA",
+    // Logger::get("Info")->info("Solving reconstruction using {} iterations of PGD",
     // noIterations); auto istaReconstruction = istaSolver.solve(noIterations);
     //
     // // write the reconstruction out
     // EDF::write(istaReconstruction, "2dreconstruction_ista.edf");
     //
-    // // solve the reconstruction problem with FISTA
-    // FISTA fistaSolver(lassoProb);
+    // // solve the reconstruction problem with APGD
+    // APGD fistaSolver(lassoProb);
     //
-    // Logger::get("Info")->info("Solving reconstruction using {} iterations of FISTA",
+    // Logger::get("Info")->info("Solving reconstruction using {} iterations of APGD",
     // noIterations); auto fistaReconstruction = fistaSolver.solve(noIterations);
     //
     // // write the reconstruction out

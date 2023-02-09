@@ -38,11 +38,8 @@ void limited_angle_example2d()
     // write the sinogram out
     EDF::write(sinogram, "2dsinogram.edf");
 
-    // setup reconstruction problem
-    WLSProblem wlsProblem(projector, sinogram);
-
     // solve the reconstruction problem
-    CG cgSolver(wlsProblem);
+    CGLS cgSolver(projector, sinogram);
 
     index_t noIterations{20};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",

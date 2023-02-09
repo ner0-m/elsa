@@ -14,9 +14,9 @@ namespace elsa
                                        const XGIDetectorDescriptor& rangeDescriptor,
                                        const LinearOperator<data_t>& projector,
                                        const DirVecList& sphericalFuncDirs,
-                                       const WeightVec& sphericalFuncWeights,
+                                       const Vector_t<data_t>& sphericalFuncWeights,
                                        const Symmetry& sphericalHarmonicsSymmetry,
-                                       const index_t& sphericalHarmonicsMaxDegree)
+                                       index_t sphericalHarmonicsMaxDegree)
         : B(IdenticalBlocksDescriptor{SphericalFunctionInformation<data_t>(
                                           sphericalFuncDirs, sphericalFuncWeights,
                                           sphericalHarmonicsSymmetry, sphericalHarmonicsMaxDegree)

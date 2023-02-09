@@ -11,20 +11,20 @@ Solver
 
 .. doxygenclass:: elsa::Solver
 
-CG
-==
+CGLS
+====
 
-.. doxygenclass:: elsa::CG
+.. doxygenclass:: elsa::CGLS
 
-Iterative Shrinkage-Thresholding Algorithm
-==========================================
+Proximal Gradient Descent
+=========================
 
-.. doxygenclass:: elsa::ISTA
+.. doxygenclass:: elsa::PGD
 
-Fast Iterative Shrinkage-Thresholding Algorithm
-===============================================
+Accelerated Proximal Gradient Descent
+=====================================
 
-.. doxygenclass:: elsa::FISTA
+.. doxygenclass:: elsa::APGD
 
 
 Alternating Direction Method of Multipliers
@@ -41,20 +41,35 @@ Orthogonal Matching Pursuit
 ===========================
 
 .. doxygenclass:: elsa::OrthogonalMatchingPursuit
- 
+
 
 .. _elsa-solvers-api-first-order-methods:
-    
+
+Landweber iteration
+===================
+
+.. doxygenclass:: elsa::LandweberIteration
+
+Landweber
+#########
+
+.. doxygenclass:: elsa::Landweber
+
+SIRT
+####
+
+.. doxygenclass:: elsa::SIRT
+
 First-order optimization algorithms
 ===================================
 
 .. include:: first_order_methods.rst
 
 .. _elsa-solvers-api-gradientdescent:
-    
+
 GradientDescent
 ###############
-    
+
 .. doxygenclass:: elsa::GradientDescent
 
 .. _elsa-solvers-api-fgm:
@@ -65,7 +80,7 @@ Nesterov's Fast Gradient Method
 .. doxygenclass:: elsa::FGM
 
 .. _elsa-solvers-api-ogm:
-    
+
 Optimized Gradient Method
 #########################
 

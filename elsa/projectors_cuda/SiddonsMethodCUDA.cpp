@@ -2,17 +2,19 @@
 #include "LogGuard.h"
 #include "Timer.h"
 #include "TypeCasts.hpp"
-
 #include "Logger.h"
+
+#include <thrust/copy.h>
+#include <thrust/host_vector.h>
+
 namespace elsa
 {
     template <typename data_t>
     SiddonsMethodCUDA<data_t>::SiddonsMethodCUDA(const VolumeDescriptor& domainDescriptor,
                                                  const DetectorDescriptor& rangeDescriptor)
-        : base_type(domainDescriptor, rangeDescriptor),
-          _detectorDescriptor(static_cast<DetectorDescriptor&>(*_rangeDescriptor)),
-          _volumeDescriptor(static_cast<VolumeDescriptor&>(*_domainDescriptor))
+        : base_type(domainDescriptor, rangeDescriptor)
     {
+        const auto& detectorDescriptor = static_cast<const DetectorDescriptor&>(*_rangeDescriptor);
         auto dim = static_cast<std::size_t>(_domainDescriptor->getNumberOfDimensions());
         if (dim != static_cast<std::size_t>(_rangeDescriptor->getNumberOfDimensions())) {
             throw LogicError(
@@ -23,72 +25,44 @@ namespace elsa
             throw LogicError("SiddonsMethodCUDA: only supporting 2d/3d operations");
         }
 
-        if (_detectorDescriptor.getNumberOfGeometryPoses() == 0) {
+        if (detectorDescriptor.getNumberOfGeometryPoses() == 0) {
             throw LogicError("SiddonsMethodCUDA: geometry list was empty");
         }
 
-        const index_t numGeometry = _detectorDescriptor.getNumberOfGeometryPoses();
+        const auto numGeometry = asUnsigned(detectorDescriptor.getNumberOfGeometryPoses());
 
         // allocate device memory and copy ray origins and the inverse of the significant part of
         // projection matrices to device
-        cudaExtent extent = make_cudaExtent(dim * sizeof(real_t), dim, asUnsigned(numGeometry));
+        _invProjMatrices.resize(dim * dim * numGeometry);
+        auto matricesIter = _invProjMatrices.begin();
 
-        if (cudaMallocPitch(&_rayOrigins.ptr, &_rayOrigins.pitch, dim * sizeof(real_t),
-                            asUnsigned(numGeometry))
-            != cudaSuccess)
-            throw std::bad_alloc();
-        _rayOrigins.xsize = dim;
-        _rayOrigins.ysize = asUnsigned(numGeometry);
+        // Allocate memory for ray origins
+        _rayOrigins.resize(dim * numGeometry);
+        auto originsIter = _rayOrigins.begin();
 
-        if (cudaMalloc3D(&_projInvMatrices, extent) != cudaSuccess)
-            throw std::bad_alloc();
+        const auto& poses = detectorDescriptor.getGeometry();
+        for (std::size_t i = 0; i < poses.size(); ++i) {
+            const auto& geometry = poses[i];
 
-        auto* projPtr = (int8_t*) _projInvMatrices.ptr;
-        auto projPitch = _projInvMatrices.pitch;
-        auto* rayBasePtr = (int8_t*) _rayOrigins.ptr;
-        auto rayPitch = _rayOrigins.pitch;
+            RealMatrix_t P = geometry.getInverseProjectionMatrix().block(0, 0, dim, dim);
 
-        for (unsigned i = 0; i < numGeometry; i++) {
-            auto geometry = _detectorDescriptor.getGeometryAt(i);
-
-            if (!geometry)
-                throw LogicError("JosephsMethodCUDA: Access not existing geometry pose");
-
-            RealMatrix_t P = geometry->getInverseProjectionMatrix().block(0, 0, dim, dim);
-            int8_t* slice = projPtr + i * projPitch * dim;
             // CUDA also uses a column-major representation, directly transfer matrix
             // transfer inverse of projection matrix
-            if (cudaMemcpy2DAsync(slice, projPitch, P.data(), dim * sizeof(real_t),
-                                  dim * sizeof(real_t), dim, cudaMemcpyDefault)
-                != cudaSuccess)
-                throw LogicError(
-                    "SiddonsMethodCUDA: Could not transfer inverse projection matrices to GPU.");
+            matricesIter = thrust::copy(P.data(), P.data() + P.size(), matricesIter);
 
-            int8_t* rayPtr = rayBasePtr + i * rayPitch;
             // get camera center using direct inverse
-            RealVector_t ro =
-                -P * geometry->getProjectionMatrix().block(0, static_cast<index_t>(dim), dim, 1);
-            // transfer ray origin
-            if (cudaMemcpyAsync(rayPtr, ro.data(), dim * sizeof(real_t), cudaMemcpyDefault)
-                != cudaSuccess)
-                throw LogicError("SiddonsMethodCUDA: Could not transfer ray origins to GPU.");
-        }
-    }
+            RealVector_t ro = geometry.getCameraCenter();
 
-    template <typename data_t>
-    SiddonsMethodCUDA<data_t>::~SiddonsMethodCUDA()
-    {
-        // Free CUDA resources
-        if (cudaFree(_rayOrigins.ptr) != cudaSuccess
-            || cudaFree(_projInvMatrices.ptr) != cudaSuccess)
-            Logger::get("SiddonsMethodCUDA")
-                ->error("Couldn't free GPU memory; This may cause problems later.");
+            // transfer ray origin
+            originsIter = thrust::copy(ro.begin(), ro.end(), originsIter);
+        }
     }
 
     template <typename data_t>
     SiddonsMethodCUDA<data_t>* SiddonsMethodCUDA<data_t>::_cloneImpl() const
     {
-        return new SiddonsMethodCUDA<data_t>(_volumeDescriptor, _detectorDescriptor);
+        return new SiddonsMethodCUDA<data_t>(static_cast<VolumeDescriptor&>(*_domainDescriptor),
+                                             static_cast<DetectorDescriptor&>(*_rangeDescriptor));
     }
 
     template <typename data_t>
@@ -97,7 +71,10 @@ namespace elsa
     {
         Timer timeGuard("SiddonsMethodCUDA", "apply");
 
-        traverseVolume<false>(aabb, (void*) &(x[0]), (void*) &(Ax[0]));
+        // Set it to zero, just to be sure
+        Ax = 0;
+
+        traverseForward(aabb, x.storage(), Ax.storage());
     }
 
     template <typename data_t>
@@ -107,7 +84,10 @@ namespace elsa
     {
         Timer timeguard("SiddonsMethodCUDA", "applyAdjoint");
 
-        traverseVolume<true>(aabb, (void*) &(Aty[0]), (void*) &(y[0]));
+        // Set it to zero, just to be sure
+        Aty = 0;
+
+        traverseBackward(aabb, Aty.storage(), y.storage());
     }
 
     template <typename data_t>
@@ -117,23 +97,31 @@ namespace elsa
             return false;
 
         auto otherSM = downcast_safe<SiddonsMethodCUDA>(&other);
-        if (!otherSM)
-            return false;
-
-        return true;
+        return static_cast<bool>(otherSM);
     }
 
     template <typename data_t>
-    template <bool adjoint>
-    void SiddonsMethodCUDA<data_t>::traverseVolume(const BoundingBox& aabb, void* volumePtr,
-                                                   void* sinoPtr) const
+    void SiddonsMethodCUDA<data_t>::traverseForward(const BoundingBox& aabb,
+                                                    const thrust::universal_vector<data_t>& volume,
+                                                    thrust::universal_vector<data_t>& sino) const
     {
         auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
         auto domainDimsui = domainDims.template cast<unsigned int>();
         IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
         auto rangeDimsui = rangeDims.template cast<unsigned int>();
-        cudaPitchedPtr dvolumePtr;
-        cudaPitchedPtr dsinoPtr;
+
+        // Cast to raw device pointesr
+        const auto* dvolume = thrust::raw_pointer_cast(volume.data());
+        auto* dsino = thrust::raw_pointer_cast(sino.data());
+
+        // Prefetch unified memory
+        int device = -1;
+        cudaGetDevice(&device);
+        cudaMemPrefetchAsync(dvolume, volume.size() * sizeof(data_t), device);
+        cudaMemPrefetchAsync(dsino, sino.size() * sizeof(data_t), device);
+
+        // Advice, that volume is read only
+        cudaMemAdvise(dvolume, volume.size(), cudaMemAdviseSetReadMostly, device);
 
         if (_domainDescriptor->getNumberOfDimensions() == 3) {
             typename TraverseSiddonsCUDA<data_t, 3>::BoundingBox boundingBox;
@@ -141,167 +129,81 @@ namespace elsa
             boundingBox._max[1] = aabb.max().template cast<uint32_t>()[1];
             boundingBox._max[2] = aabb.max().template cast<uint32_t>()[2];
 
-            // transfer volume and sinogram
-            cudaExtent volExt =
-                make_cudaExtent(domainDimsui[0] * sizeof(data_t), domainDimsui[1], domainDimsui[2]);
-            if (cudaMalloc3D(&dvolumePtr, volExt) != cudaSuccess)
-                throw std::bad_alloc();
-
-            cudaExtent sinoExt =
-                make_cudaExtent(rangeDimsui[0] * sizeof(data_t), rangeDimsui[1], rangeDimsui[2]);
-            if (cudaMalloc3D(&dsinoPtr, sinoExt) != cudaSuccess)
-                throw std::bad_alloc();
-
-            if (adjoint) {
-                copy3DDataContainerGPU<ContainerCpyKind::cpyContainerToRawGPU>(sinoPtr, dsinoPtr,
-                                                                               sinoExt);
-                if (cudaMemset3DAsync(dvolumePtr, 0, volExt) != cudaSuccess)
-                    throw LogicError("SiddonsMethodCUDA::traverseVolume: Could not "
-                                     "zero-initialize volume on GPU.");
-            } else {
-                copy3DDataContainerGPU<ContainerCpyKind::cpyContainerToRawGPU>(volumePtr,
-                                                                               dvolumePtr, volExt);
-            }
-
             dim3 sinogramDims(rangeDimsui[2], rangeDimsui[1], rangeDimsui[0]);
-            // synchronize because we are using multiple streams
-            cudaDeviceSynchronize();
-            if (adjoint) {
-                TraverseSiddonsCUDA<data_t, 3>::traverseAdjoint(
-                    sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
-                    static_cast<uint32_t>(_projInvMatrices.pitch), boundingBox);
-            } else {
-                TraverseSiddonsCUDA<data_t, 3>::traverseForward(
-                    sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
-                    static_cast<uint32_t>(_projInvMatrices.pitch), boundingBox);
-            }
-            // synchonize because we are using multiple streams
-            cudaDeviceSynchronize();
 
-            // retrieve results from GPU
-            if (adjoint)
-                copy3DDataContainerGPU<ContainerCpyKind::cpyRawGPUToContainer, false>(
-                    volumePtr, dvolumePtr, volExt);
-            else
-                copy3DDataContainerGPU<ContainerCpyKind::cpyRawGPUToContainer, false>(
-                    sinoPtr, dsinoPtr, sinoExt);
-
+            TraverseSiddonsCUDA<data_t, 3>::traverseForward(
+                sinogramDims, THREADS_PER_BLOCK, const_cast<data_t*>(dvolume), domainDimsui[0],
+                dsino, rangeDimsui[0], thrust::raw_pointer_cast(_rayOrigins.data()),
+                thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
         } else {
             typename TraverseSiddonsCUDA<data_t, 2>::BoundingBox boundingBox;
             boundingBox._max[0] = aabb.max().template cast<uint32_t>()[0];
             boundingBox._max[1] = aabb.max().template cast<uint32_t>()[1];
 
-            // transfer volume and sinogram
-
-            if (cudaMallocPitch(&dvolumePtr.ptr, &dvolumePtr.pitch,
-                                domainDimsui[0] * sizeof(data_t), domainDimsui[1])
-                != cudaSuccess)
-                throw std::bad_alloc();
-
-            if (cudaMallocPitch(&dsinoPtr.ptr, &dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t),
-                                rangeDimsui[1])
-                != cudaSuccess)
-                throw std::bad_alloc();
-
-            if (adjoint) {
-                if (cudaMemcpy2DAsync(
-                        dsinoPtr.ptr, dsinoPtr.pitch, sinoPtr, rangeDimsui[0] * sizeof(data_t),
-                        rangeDimsui[0] * sizeof(data_t), rangeDimsui[1], cudaMemcpyDefault)
-                    != cudaSuccess)
-                    throw LogicError(
-                        "SiddonsMethodCUDA::traverseVolume: Couldn't transfer sinogram to GPU.");
-
-                if (cudaMemset2DAsync(dvolumePtr.ptr, dvolumePtr.pitch, 0,
-                                      domainDimsui[0] * sizeof(data_t), domainDimsui[1])
-                    != cudaSuccess)
-                    throw LogicError("SiddonsMethodCUDA::traverseVolume: Could not "
-                                     "zero-initialize volume on GPU.");
-            } else {
-                if (cudaMemcpy2DAsync(dvolumePtr.ptr, dvolumePtr.pitch, volumePtr,
-                                      domainDimsui[0] * sizeof(data_t),
-                                      domainDimsui[0] * sizeof(data_t), domainDimsui[1],
-                                      cudaMemcpyDefault)
-                    != cudaSuccess)
-                    throw LogicError(
-                        "SiddonsMethodCUDA::traverseVolume: Couldn't transfer volume to GPU.");
-            }
-
             // perform projection
             dim3 sinogramDims(rangeDimsui[1], 1, rangeDimsui[0]);
-            // synchronize because we are using multiple streams
-            cudaDeviceSynchronize();
-            if (adjoint) {
-                TraverseSiddonsCUDA<data_t, 2>::traverseAdjoint(
-                    sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
-                    static_cast<uint32_t>(_projInvMatrices.pitch), boundingBox);
-            } else {
-                TraverseSiddonsCUDA<data_t, 2>::traverseForward(
-                    sinogramDims, THREADS_PER_BLOCK, (int8_t*) dvolumePtr.ptr, dvolumePtr.pitch,
-                    (int8_t*) dsinoPtr.ptr, dsinoPtr.pitch, (int8_t*) _rayOrigins.ptr,
-                    static_cast<uint32_t>(_rayOrigins.pitch), (int8_t*) _projInvMatrices.ptr,
-                    static_cast<uint32_t>(_projInvMatrices.pitch), boundingBox);
-            }
-            // synchonize because we are using multiple streams
-            cudaDeviceSynchronize();
 
-            // retrieve results from GPU
-            if (adjoint) {
-                if (cudaMemcpy2D(volumePtr, domainDimsui[0] * sizeof(data_t), dvolumePtr.ptr,
-                                 dvolumePtr.pitch, domainDimsui[0] * sizeof(data_t),
-                                 domainDimsui[1], cudaMemcpyDefault)
-                    != cudaSuccess)
-                    throw LogicError(
-                        "SiddonsMethodCUDA::traverseVolume: Couldn't retrieve results from GPU.");
-            } else {
-                if (cudaMemcpy2D(sinoPtr, rangeDimsui[0] * sizeof(data_t), dsinoPtr.ptr,
-                                 dsinoPtr.pitch, rangeDimsui[0] * sizeof(data_t), rangeDimsui[1],
-                                 cudaMemcpyDefault)
-                    != cudaSuccess)
-                    throw LogicError(
-                        "SiddonsMethodCUDA::traverseVolume: Couldn't retrieve results from GPU");
-            }
+            TraverseSiddonsCUDA<data_t, 2>::traverseForward(
+                sinogramDims, THREADS_PER_BLOCK, const_cast<data_t*>(dvolume), domainDimsui[0],
+                dsino, rangeDimsui[0], thrust::raw_pointer_cast(_rayOrigins.data()),
+                thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
         }
-
-        // free allocated memory
-        if (cudaFree(dvolumePtr.ptr) != cudaSuccess || cudaFree(dsinoPtr.ptr) != cudaSuccess)
-            Logger::get("SiddonsMethodCUDA")
-                ->error("Couldn't free GPU memory; This may cause problems later.");
+        // synchronize because we are using multiple streams
+        cudaDeviceSynchronize();
     }
 
     template <typename data_t>
-    template <typename SiddonsMethodCUDA<data_t>::ContainerCpyKind direction, bool async>
-    void SiddonsMethodCUDA<data_t>::copy3DDataContainerGPU(void* hostData,
-                                                           const cudaPitchedPtr& gpuData,
-                                                           const cudaExtent& extent) const
+    void SiddonsMethodCUDA<data_t>::traverseBackward(
+        const BoundingBox& aabb, thrust::universal_vector<data_t>& volume,
+        const thrust::universal_vector<data_t>& sino) const
     {
-        cudaMemcpy3DParms cpyParams = {};
-        cpyParams.extent = extent;
-        cpyParams.kind = cudaMemcpyDefault;
+        auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
+        auto domainDimsui = domainDims.template cast<unsigned int>();
+        IndexVector_t rangeDims = _rangeDescriptor->getNumberOfCoefficientsPerDimension();
+        auto rangeDimsui = rangeDims.template cast<unsigned int>();
 
-        cudaPitchedPtr tmp =
-            make_cudaPitchedPtr(hostData, extent.width, extent.width, extent.height);
+        // Cast to raw device pointesr
+        auto* dvolume = thrust::raw_pointer_cast(volume.data());
+        const auto* dsino = thrust::raw_pointer_cast(sino.data());
 
-        if (direction == ContainerCpyKind::cpyContainerToRawGPU) {
-            cpyParams.dstPtr = gpuData;
-            cpyParams.srcPtr = tmp;
-        } else if (direction == ContainerCpyKind::cpyRawGPUToContainer) {
-            cpyParams.srcPtr = gpuData;
-            cpyParams.dstPtr = tmp;
-        }
+        // Prefetch unified memory
+        int device = -1;
+        cudaGetDevice(&device);
+        cudaMemPrefetchAsync(dvolume, volume.size() * sizeof(data_t), device);
+        cudaMemPrefetchAsync(dsino, sino.size() * sizeof(data_t), device);
 
-        if (async) {
-            if (cudaMemcpy3DAsync(&cpyParams) != cudaSuccess)
-                throw LogicError("Failed copying data between device and host");
+        // Advice, that sinogram is read only
+        cudaMemAdvise(dsino, sino.size(), cudaMemAdviseSetReadMostly, device);
+
+        if (_domainDescriptor->getNumberOfDimensions() == 3) {
+            typename TraverseSiddonsCUDA<data_t, 3>::BoundingBox boundingBox;
+            boundingBox._max[0] = aabb.max().template cast<uint32_t>()[0];
+            boundingBox._max[1] = aabb.max().template cast<uint32_t>()[1];
+            boundingBox._max[2] = aabb.max().template cast<uint32_t>()[2];
+
+            dim3 sinogramDims(rangeDimsui[2], rangeDimsui[1], rangeDimsui[0]);
+
+            TraverseSiddonsCUDA<data_t, 3>::traverseAdjoint(
+                sinogramDims, THREADS_PER_BLOCK, dvolume, domainDimsui[0],
+                const_cast<data_t*>(dsino), rangeDimsui[0],
+                thrust::raw_pointer_cast(_rayOrigins.data()),
+                thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
         } else {
-            if (cudaMemcpy3D(&cpyParams) != cudaSuccess)
-                throw LogicError("Failed copying data between device acudaMemcpyKindnd host");
+            typename TraverseSiddonsCUDA<data_t, 2>::BoundingBox boundingBox;
+            boundingBox._max[0] = aabb.max().template cast<uint32_t>()[0];
+            boundingBox._max[1] = aabb.max().template cast<uint32_t>()[1];
+
+            // perform projection
+            dim3 sinogramDims(rangeDimsui[1], 1, rangeDimsui[0]);
+
+            TraverseSiddonsCUDA<data_t, 2>::traverseAdjoint(
+                sinogramDims, THREADS_PER_BLOCK, dvolume, domainDimsui[0],
+                const_cast<data_t*>(dsino), rangeDimsui[0],
+                thrust::raw_pointer_cast(_rayOrigins.data()),
+                thrust::raw_pointer_cast(_invProjMatrices.data()), boundingBox);
         }
+        // synchronize because we are using multiple streams
+        cudaDeviceSynchronize();
     }
 
     // ------------------------------------------

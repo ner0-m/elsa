@@ -31,7 +31,25 @@ namespace elsa::phantoms
     /**
      * @brief Rasterizes the given sphere in the given data container.
      */
-    template <typename data_t>
+    template <Blending b, typename data_t>
     void rasterize(Sphere<data_t>& el, VolumeDescriptor& dd, DataContainer<data_t>& dc);
 
 } // namespace elsa::phantoms
+
+/**
+ * @brief Sphere formatter to use the Logger.h functions
+ */
+template <typename data_t>
+struct fmt::formatter<elsa::phantoms::Sphere<data_t>> : fmt::formatter<std::string> {
+    auto format(elsa::phantoms::Sphere<data_t> ell, format_context& ctx) -> decltype(ctx.out())
+    {
+        auto _center = ell.getCenter();
+        auto _amplit = ell.getAmplitude();
+        auto _radius = ell.getRadius();
+
+        return format_to(ctx.out(), "Sphere with amplitude {}, center ({},{},{}) and radius {}",
+                         _amplit, _center[elsa::phantoms::INDEX_X],
+                         _center[elsa::phantoms::INDEX_Y], _center[elsa::phantoms::INDEX_Z],
+                         _radius);
+    }
+};

@@ -343,6 +343,20 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> ifftShift2D(const DataContainer<data_t>& dc);
 
+    /// Unary plus operator
+    template <typename data_t>
+    inline DataContainer<data_t> operator+(const DataContainer<data_t>& x)
+    {
+        return x;
+    }
+
+    /// Unary negation operator
+    template <typename data_t>
+    inline DataContainer<data_t> operator-(const DataContainer<data_t>& x)
+    {
+        return static_cast<data_t>(-1) * x;
+    }
+
     /// Multiplying two DataContainers
     template <typename data_t>
     inline DataContainer<data_t> operator*(const DataContainer<data_t>& lhs,
@@ -447,17 +461,33 @@ namespace elsa
     DataContainer<value_type_of_t<std::common_type_t<xdata_t, ydata_t>>>
         cwiseMin(const DataContainer<xdata_t>& lhs, const DataContainer<ydata_t>& rhs);
 
+    /// @brief Compute a coefficient wise square for each element of the `DataContainer`
     template <typename data_t>
     DataContainer<data_t> square(const DataContainer<data_t>& dc);
 
+    /// @brief Compute a coefficient wise square root for each element of the `DataContainer`
     template <typename data_t>
     DataContainer<data_t> sqrt(const DataContainer<data_t>& dc);
 
+    /// @brief Compute a coefficient wise exponential for each element of the `DataContainer`
     template <typename data_t>
     DataContainer<data_t> exp(const DataContainer<data_t>& dc);
 
+    /// @brief Compute a coefficient wise log for each element of the `DataContainer`
     template <typename data_t>
     DataContainer<data_t> log(const DataContainer<data_t>& dc);
+
+    /// @brief Compute a coefficient wise minimum with a scalar.
+    /// For each element in `x_i` the given `DataContainer`, compute
+    /// `min(x_i, scalar)`
+    template <typename data_t>
+    DataContainer<data_t> minimum(const DataContainer<data_t>& dc, SelfType_t<data_t> scalar);
+
+    /// @brief Compute a coefficient wise maximum with a scalar.
+    /// For each element in `x_i` the given `DataContainer`, compute
+    /// `max(x_i, scalar)`
+    template <typename data_t>
+    DataContainer<data_t> maximum(const DataContainer<data_t>& dc, SelfType_t<data_t> scalar);
 
     /// Return an owning DataContainer, if given an non-owning one, the data is copied to a new
     /// owning buffer.

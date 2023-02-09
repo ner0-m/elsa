@@ -20,8 +20,8 @@ namespace elsa
 
         XGIDetectorDescriptor(const IndexVector_t& numOfCoeffsPerDim,
                               const RealVector_t& spacingPerDim,
-                              const std::vector<Geometry>& geometryList,
-                              const DirVec& sensDir = DirVec(1, 0, 0), bool isParallelBeam = true);
+                              const std::vector<Geometry>& geometryList, const DirVec& sensDir,
+                              bool isParallelBeam = true);
 
         bool isParallelBeam() const;
         const DirVec& getSensDir() const;

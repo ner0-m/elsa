@@ -7,6 +7,7 @@
 
 #include "doctest/doctest.h"
 
+#include "PhantomDefines.h"
 #include "Box.h"
 #include <iostream>
 
@@ -34,7 +35,7 @@ TEST_CASE("Box tests")
         WHEN("Rasterize box")
         {
             phantoms::Box<double> s{1.0, center, edgeLength};
-            phantoms::rasterize<double>(s, dd, dc);
+            phantoms::rasterize<phantoms::Blending::ADDITION>(s, dd, dc);
 
             IndexVector_t idx(3);
 

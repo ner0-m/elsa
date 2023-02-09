@@ -50,10 +50,10 @@
 #include "BlockLinearOperator.h"
 #include "ShearletTransform.h"
 
-// Proximity Operator headers
-#include "ProximityOperator.h"
-#include "SoftThresholding.h"
-#include "HardThresholding.h"
+// Proximal Operator headers
+#include "ProximalOperator.h"
+#include "ProximalL1.h"
+#include "ProximalL0.h"
 
 // Problem headers
 #include "Problem.h"
@@ -72,20 +72,24 @@
 #include "SiddonsMethod.h"
 #include "SiddonsMethodBranchless.h"
 #include "SubsetSampler.h"
+#include "VoxelProjector.h"
 
 // CUDA projectors
 #ifdef ELSA_CUDA_PROJECTORS
 #include "SiddonsMethodCUDA.h"
 #include "JosephsMethodCUDA.h"
+#include "VoxelProjectorCUDA.h"
 #endif
 
 // Solver headers
 #include "Solver.h"
 #include "GradientDescent.h"
-#include "CG.h"
-#include "ISTA.h"
-#include "FISTA.h"
+#include "PGD.h"
+#include "APGD.h"
+#include "CGLS.h"
 #include "FGM.h"
 #include "OGM.h"
 #include "ADMM.h"
 #include "SQS.h"
+#include "SIRT.h"
+#include "Landweber.h"

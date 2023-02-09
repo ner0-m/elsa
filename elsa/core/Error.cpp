@@ -22,7 +22,10 @@ namespace elsa
         }
     }
 
-    std::string Error::str() const { return this->msg; }
+    std::string Error::str() const
+    {
+        return this->msg;
+    }
 
     const char* Error::what() const noexcept
     {
@@ -60,11 +63,20 @@ namespace elsa
         }
     }
 
-    std::string Error::typeName() const { return detail::symbolDemangle(typeid(*this).name()); }
+    std::string Error::typeName() const
+    {
+        return detail::symbolDemangle(typeid(*this).name());
+    }
 
-    Backtrace* Error::getBacktrace() const { return this->backtrace.get(); }
+    Backtrace* Error::getBacktrace() const
+    {
+        return this->backtrace.get();
+    }
 
-    const std::string& Error::getMsg() const { return this->msg; }
+    const std::string& Error::getMsg() const
+    {
+        return this->msg;
+    }
 
     std::ostream& operator<<(std::ostream& os, const Error& e)
     {
@@ -142,5 +154,7 @@ namespace elsa
     InvalidArgumentError::InvalidArgumentError(const std::string& msg) : Error{msg} {}
 
     BadCastError::BadCastError(const std::string& msg) : Error{msg} {}
+
+    NotImplementedError::NotImplementedError(const std::string& msg) : Error{msg} {}
 
 } // namespace elsa

@@ -44,7 +44,6 @@ namespace elsa
 
         using DirVec = Eigen::Matrix<data_t, 3, 1>;
         using DirVecList = std::vector<DirVec>;
-        using WeightVec = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
 
         /**
          * @brief Construct an AXDTOperator
@@ -67,9 +66,9 @@ namespace elsa
         AXDTOperator(const VolumeDescriptor& domainDescriptor,
                      const XGIDetectorDescriptor& rangeDescriptor,
                      const LinearOperator<data_t>& projector, const DirVecList& sphericalFuncDirs,
-                     const WeightVec& sphericalFuncWeights,
+                     const Vector_t<data_t>& sphericalFuncWeights,
                      const Symmetry& sphericalHarmonicsSymmetry,
-                     const index_t& sphericalHarmonicsMaxDegree);
+                     index_t sphericalHarmonicsMaxDegree);
 
         ~AXDTOperator() override = default;
 
@@ -110,12 +109,11 @@ namespace elsa
             using Symmetry = typename AXDTOperator<data_t>::Symmetry;
             using DirVec = typename AXDTOperator<data_t>::DirVec;
             using DirVecList = typename AXDTOperator<data_t>::DirVecList;
-            using WeightVec = typename AXDTOperator<data_t>::WeightVec;
 
             /// Vector of sampling directions
             DirVecList dirs;
             /// Weights of corresponding directions, must have the same dimension as dirs
-            WeightVec weights;
+            Vector_t<data_t> weights;
 
             /// Symmetry of the reconstructed spherical harmonics coefficients
             Symmetry symmetry;
@@ -127,7 +125,7 @@ namespace elsa
 
             /// Constructor for this wrapper class
             SphericalFunctionInformation(const DirVecList& sphericalFuncDirs,
-                                         const WeightVec& sphericalFuncWeights,
+                                         const Vector_t<data_t>& sphericalFuncWeights,
                                          const Symmetry& sphericalHarmonicsSymmetry,
                                          const index_t& sphericalHarmonicsMaxDegree)
                 : dirs(sphericalFuncDirs),

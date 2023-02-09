@@ -38,8 +38,7 @@ void example2d()
 
     // setup reconstruction problem
     /// [simplerecon solver]
-    WLSProblem wlsProblem(projector, sinogram);
-    CG solver(wlsProblem);
+    CGLS solver(projector, sinogram);
 
     index_t iterations{20};
     auto reconstruction = solver.solve(iterations);

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "TypeCasts.hpp"
 #include "elsaDefines.h"
 #include "Error.h"

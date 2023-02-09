@@ -88,6 +88,14 @@ namespace elsa
     template <typename T>
     constexpr bool isComplex = std::is_same<RemoveCvRef_t<T>, complex<float>>::value
                                || std::is_same<RemoveCvRef_t<T>, complex<double>>::value;
+
+    /// With C++20 this can be replaced by std::type_identity
+    template <class T>
+    struct SelfType {
+        using type = T;
+    };
+    template <class T>
+    using SelfType_t = typename SelfType<T>::type;
 } // namespace elsa
 
 /*

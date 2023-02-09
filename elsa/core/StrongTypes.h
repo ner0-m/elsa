@@ -620,7 +620,7 @@ namespace elsa
         using SinogramData3D = SinogramData<3>; ///< 3D sinogram data alias for 3D geometry
 
         /**
-         * @brief Strong type for a single value of type data_t used in proximity operators.
+         * @brief Strong type for a single value of type data_t used in proximal operators.
          * Comparison, addition, subtraction are overridden by utilizing the private member
          * _threshold.
          * N.B. The threshold value is expected to be strictly greater than 0, otherwise an

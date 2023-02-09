@@ -42,6 +42,12 @@ namespace elsa
                 return 1;
             }
         }
+
+        template <typename T>
+        constexpr inline int sgn(T val)
+        {
+            return (T(0) < val) - (val < T(0));
+        }
     } // namespace math
 
     /// proposed in Y. Meyer, Oscillating Patterns in Image Processing and Nonlinear Evolution
@@ -220,4 +226,13 @@ namespace elsa
             return result;
         }
     } // namespace axdt
+
+    /// @brief Compute the sign of the given value. Will return -1, for negative values, 1 for
+    /// positive ones and 0 otherwise
+    template <typename T, typename Ret = int>
+    Ret sign(T val)
+    {
+        return static_cast<Ret>((T{0} < val) - (val < T{0}));
+    }
+
 } // namespace elsa

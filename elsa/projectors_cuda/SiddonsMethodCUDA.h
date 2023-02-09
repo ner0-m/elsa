@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <thrust/device_vector.h>
+#include <thrust/universal_vector.h>
 
 #include "elsaDefines.h"
 #include "LinearOperator.h"
@@ -70,7 +72,7 @@ namespace elsa
                           const DetectorDescriptor& rangeDescriptor);
 
         /// destructor
-        ~SiddonsMethodCUDA() override;
+        ~SiddonsMethodCUDA() override = default;
 
     protected:
         /// default copy constructor, hidden from non-derived classes to prevent potential slicing
@@ -91,47 +93,23 @@ namespace elsa
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        /// Reference to DetectorDescriptor stored in LinearOperator
-        DetectorDescriptor& _detectorDescriptor;
-
-        /// Reference to VolumeDescriptor stored in LinearOperator
-        VolumeDescriptor& _volumeDescriptor;
-
         /// threads per block used in the kernel execution configuration
         static const unsigned int THREADS_PER_BLOCK =
             TraverseSiddonsCUDA<data_t>::MAX_THREADS_PER_BLOCK;
 
         /// inverse of of projection matrices; stored column-wise on GPU
-        cudaPitchedPtr _projInvMatrices;
+        // cudaPitchedPtr _projInvMatrices;
+        thrust::device_vector<real_t> _invProjMatrices;
 
-        /// ray origins for each acquisition angle
-        cudaPitchedPtr _rayOrigins;
+        /// ray origins for each acquisition angle, TODO: enable kernel to have this as data_t
+        thrust::device_vector<real_t> _rayOrigins;
 
-        /// sets up and starts the kernel traversal routine (for both apply/applyAdjoint)
-        template <bool adjoint>
-        void traverseVolume(const BoundingBox& aabb, void* volumePtr, void* sinoPtr) const;
+        void traverseForward(const BoundingBox& aabb,
+                             const thrust::universal_vector<data_t>& volume,
+                             thrust::universal_vector<data_t>& sino) const;
 
-        enum class ContainerCpyKind { cpyContainerToRawGPU, cpyRawGPUToContainer };
-        /**
-         * @brief Copies contents of a 3D data container between GPU and host memory
-         *
-         * @tparam direction specifies the direction of the copy operation
-         * @tparam async whether the copy should be performed asynchronously wrt. the host
-         *
-         * @param hostData pointer to host data
-         * @param gpuData pointer to gpu data
-         * @param[in] extent specifies the amount of data to be copied
-         *
-         * Note that hostData is expected to be a pointer to a linear memory region with no padding
-         * between dimensions - e.g. the data in DataContainer is stored as a vector with no extra
-         * padding, and the pointer to the start of the memory region can be retrieved as follows:
-         *
-         * DataContainer x;
-         * void* hostData = (void*)&x[0];
-         */
-        template <ContainerCpyKind direction, bool async = true>
-        void copy3DDataContainerGPU(void* hostData, const cudaPitchedPtr& gpuData,
-                                    const cudaExtent& extent) const;
+        void traverseBackward(const BoundingBox& aabb, thrust::universal_vector<data_t>& volume,
+                              const thrust::universal_vector<data_t>& sino) const;
 
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;

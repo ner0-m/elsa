@@ -11,9 +11,13 @@
 #include "doctest/doctest.h"
 #include "DataContainer.h"
 #include "IdenticalBlocksDescriptor.h"
+#include "elsaDefines.h"
 #include "testHelpers.h"
 #include "VolumeDescriptor.h"
 
+#include "functions/Abs.hpp"
+
+#include <thrust/complex.h>
 #include <type_traits>
 
 using namespace elsa;
@@ -225,6 +229,8 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
 
     INFO("Testing type: " << TypeName_v<const data_t>);
 
+    srand((unsigned int) 666);
+
     GIVEN("a DataContainer")
     {
         IndexVector_t numCoeff(2);
@@ -269,12 +275,14 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
     GIVEN("a DataContainer")
     {
         IndexVector_t numCoeff(2);
-        numCoeff << 47, 11;
+        numCoeff << 4, 9;
         VolumeDescriptor desc(numCoeff);
 
         WHEN("putting in some random data")
         {
             auto [dc, randVec] = generateRandomContainer<data_t>(desc);
+
+            auto mean = randVec.sum() / randVec.size();
 
             THEN("the element-wise unary operations work as expected")
             {
@@ -300,6 +308,41 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                 DataContainer dcLog = log(dcSquare);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(dcLog[i], randVec.array().square().log()[i]));
+
+                DataContainer dcMinimum = minimum(dc, mean);
+                for (index_t i = 0; i < dc.getSize(); ++i) {
+                    CAPTURE(i);
+                    if constexpr (std::is_arithmetic_v<data_t>) {
+                        if (randVec[i] < mean) {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        }
+                    } else {
+                        if (elsa::abs(randVec[i]) < elsa::abs(mean)) {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        }
+                    }
+                }
+
+                DataContainer dcMaximum = maximum(dc, mean);
+                for (index_t i = 0; i < dc.getSize(); ++i) {
+                    if constexpr (std::is_arithmetic_v<data_t>) {
+                        if (randVec[i] > mean) {
+                            REQUIRE_UNARY(checkApproxEq(dcMaximum[i], mean));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMaximum[i], randVec[i]));
+                        }
+                    } else {
+                        if (elsa::abs(randVec[i]) < elsa::abs(mean)) {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        }
+                    }
+                }
 
                 DataContainer dcReal = real(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
@@ -513,6 +556,14 @@ TEST_CASE_TEMPLATE_DEFINE(
             DataContainer resultDivScalar = dc / scalar;
             for (index_t i = 0; i < dc.getSize(); ++i)
                 REQUIRE_UNARY(checkApproxEq(resultDivScalar[i], dc[i] / scalar));
+
+            DataContainer unaryPlus = +dc;
+            for (index_t i = 0; i < dc.getSize(); ++i)
+                REQUIRE_UNARY(checkApproxEq(unaryPlus[i], dc[i]));
+
+            DataContainer unaryNeg = -dc;
+            for (index_t i = 0; i < dc.getSize(); ++i)
+                REQUIRE_UNARY(checkApproxEq(unaryNeg[i], -dc[i]));
         }
     }
 }

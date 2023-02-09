@@ -2,6 +2,10 @@
 set(MODULE_HEADERS
     EllipseGenerator.h
     Ellipsoid.h
+    EllipCylinder.h
+    EllipCylinderFree.h
+    CylinderFree.h
+    Cylinder.h
     Sphere.h
     Box.h
     PhantomDefines.h
@@ -19,8 +23,13 @@ set(MODULE_HEADERS
 set(MODULE_SOURCES
     EllipseGenerator.cpp
     Ellipsoid.cpp
+    EllipCylinder.cpp
+    EllipCylinderFree.cpp
+    CylinderFree.cpp
+    Cylinder.cpp
     Sphere.cpp
     Box.cpp
+    PhantomDefines.cpp
     Phantoms.cpp
     BaseCircleTrajectoryGenerator.cpp
     CircleTrajectoryGenerator.cpp

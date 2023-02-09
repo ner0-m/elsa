@@ -38,6 +38,9 @@ namespace elsa
         /// set the log level for all loggers
         static void setLevel(LogLevel level);
 
+        /// get the log level for all loggers from current instance
+        static LogLevel getLevel();
+
         /// enable file logging
         static void enableFileLogging(std::string filename);
 

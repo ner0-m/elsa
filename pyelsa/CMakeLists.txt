@@ -17,7 +17,7 @@ elsa_add_pymodule(io)
 elsa_add_pymodule(operators)
 elsa_add_pymodule(problems)
 elsa_add_pymodule(projectors)
-elsa_add_pymodule(proximity_operators)
+elsa_add_pymodule(proximal_operators)
 elsa_add_pymodule(solvers)
 
 if(ELSA_BUILD_CUDA_PROJECTORS)
