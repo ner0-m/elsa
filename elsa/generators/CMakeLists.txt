@@ -43,7 +43,7 @@ set(MODULE_SOURCES
     TrajectoryGenerator.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_projectors)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 ADD_ELSA_MODULE(
@@ -51,4 +51,4 @@ ADD_ELSA_MODULE(
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors)

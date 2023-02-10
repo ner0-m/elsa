@@ -6,7 +6,7 @@
 #include "ForbildPhantom.h"
 #include "ForbildData.h"
 #include "Ellipsoid.h"
-#include "../projectors/Blobs.h"
+#include "Blobs.h"
 
 #include <cmath>
 #include <stdexcept>
