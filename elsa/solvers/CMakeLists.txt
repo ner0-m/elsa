@@ -6,8 +6,8 @@ set(MODULE_HEADERS
     APGD.h
     CGNE.h
     CGLS.h
-    CGNonlinear.h
-    FGM.h
+        CGNL.h
+        FGM.h
     OGM.h
     ADMML2.h
     SQS.h
@@ -29,9 +29,9 @@ set(MODULE_SOURCES
     PGD.cpp
     APGD.cpp
     CGNE.cpp
-    CGLS.cpp
-    CGNonlinear.cpp
-    FGM.cpp
+        CGLS.cpp
+        CGNL.cpp
+        FGM.cpp
     OGM.cpp
     ADMML2.cpp
     SQS.cpp

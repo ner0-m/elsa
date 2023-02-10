@@ -1,14 +1,14 @@
 /**
- * @file test_CG.cpp
+ * @file test_CGNL.cpp
  *
  * @brief Tests for the CG class
  * @author Nikola Dinev - initial code
- * @author Eddie Groh - refactor and modifications for CGNonlinear
+ * @author Eddie Groh - refactor and modifications for CGNL
  */
 
 #include "doctest/doctest.h"
 
-#include "CGNonlinear.h"
+#include "CGNL.h"
 #include "Scaling.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
@@ -26,10 +26,10 @@ TEST_SUITE_BEGIN("solvers");
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TYPE_TO_STRING(CGNonlinear<float>);
-TYPE_TO_STRING(CGNonlinear<double>);
+TYPE_TO_STRING(CGNL<float>);
+TYPE_TO_STRING(CGNL<double>);
 
-TEST_CASE_TEMPLATE("CGNonlinear: Solving a simple linear problem", TestType, CGNonlinear<float>)
+TEST_CASE_TEMPLATE("CGNL: Solving a simple linear problem", TestType, CGNL<float>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
@@ -53,7 +53,7 @@ TEST_CASE_TEMPLATE("CGNonlinear: Solving a simple linear problem", TestType, CGN
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
-        WHEN("setting up a CGNonlinear solver")
+        WHEN("setting up a CGNL solver")
         {
             TestType solver{prob, epsilon};
 
@@ -81,8 +81,7 @@ TEST_CASE_TEMPLATE("CGNonlinear: Solving a simple linear problem", TestType, CGN
     }
 }
 
-TEST_CASE_TEMPLATE("CGNonlinear: Solving a Tikhonov problem", TestType, CGNonlinear<float>,
-                   CGNonlinear<double>)
+TEST_CASE_TEMPLATE("CGNL: Solving a Tikhonov problem", TestType, CGNL<float>, CGNL<double>)
 {
     using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
@@ -109,7 +108,7 @@ TEST_CASE_TEMPLATE("CGNonlinear: Solving a Tikhonov problem", TestType, CGNonlin
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
-        WHEN("setting up a CGNonlinear solver")
+        WHEN("setting up a CGNL solver")
         {
             TestType solver{prob, epsilon};
 
@@ -136,8 +135,7 @@ TEST_CASE_TEMPLATE("CGNonlinear: Solving a Tikhonov problem", TestType, CGNonlin
     }
 }
 
-TEST_CASE_TEMPLATE("CGNonlinear: Solving a simple phantom reconstruction", TestType,
-                   CGNonlinear<float>)
+TEST_CASE_TEMPLATE("CGNL: Solving a simple phantom reconstruction", TestType, CGNL<float>)
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -162,7 +160,7 @@ TEST_CASE_TEMPLATE("CGNonlinear: Solving a simple phantom reconstruction", TestT
         WLSProblem problem(projector, sinogram);
         real_t epsilon = std::numeric_limits<real_t>::epsilon();
 
-        WHEN("setting up a CG solver")
+        WHEN("setting up a CGNL solver")
         {
             TestType solver{problem, epsilon};
 

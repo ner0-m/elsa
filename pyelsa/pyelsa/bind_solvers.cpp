@@ -18,7 +18,7 @@
 #include "SIRT.h"
 #include "OGM.h"
 #include "CGLS.h"
-#include "CGNonlinear.h"
+#include "CGNL.h"
 #include "CGNE.h"
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
@@ -159,20 +159,32 @@ namespace detail
         using Solver = elsa::Solver<data_t>;
         using Problem = elsa::Problem<data_t>;
 
-        py::class_<elsa::CGNonlinear<data_t>, Solver> cg(m, name);
+        py::class_<elsa::CGNL<data_t>, Solver> cg(m, name);
         cg.def(py::init<const Problem&>(), py::arg("problem"));
         cg.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+        cg.def(py::init<const Problem&, data_t, elsa::index_t>(), py::arg("problem"),
+               py::arg("epsilon"), py::arg("line_search_iterations"));
+        cg.def(py::init<const Problem&, data_t, elsa::index_t,
+                        const typename elsa::CGNL<data_t>::LineSearchFunction&,
+                        const typename elsa::CGNL<data_t>::BetaFunction&>(),
+               py::arg("problem"), py::arg("epsilon"), py::arg("line_search_iterations"),
+               py::arg("line_search_function"), py::arg("beta_function"));
+
+        cg.def_readonly_static("lineSearchNewtonRaphson",
+                               &elsa::CGNL<data_t>::lineSearchNewtonRaphson);
+        cg.def_readonly_static("lineSearchConstantStepSize",
+                               &elsa::CGNL<data_t>::lineSearchConstantStepSize);
+        cg.def_readonly_static("betaPolakRibiere", &elsa::CGNL<data_t>::betaPolakRibiere);
     }
 } // namespace detail
 
 void add_nonlinear_conjugate_gradient(py::module& m)
 {
-    detail::add_nonlinear_conjugate_gradient<float>(m, "CGNonlinearf");
-    detail::add_nonlinear_conjugate_gradient<double>(m, "CGNonlieard");
+    detail::add_nonlinear_conjugate_gradient<float>(m, "NLCGf");
+    detail::add_nonlinear_conjugate_gradient<double>(m, "NLCGd");
 
-    m.attr("CGNonlinear") = m.attr("CGNonlinearf");
+    m.attr("CGNL") = m.attr("NLCGf");
 }
-
 namespace detail
 {
     template <class data_t>
