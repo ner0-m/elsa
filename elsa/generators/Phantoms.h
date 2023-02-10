@@ -30,6 +30,15 @@ namespace elsa::phantoms
     template <typename data_t>
     DataContainer<data_t> forbildThorax(IndexVector_t sizes);
 
+    /**
+     * @brief Create a smooth phantom that is a centered blob function in 2d or 3d.
+     *
+     * @param[in] sizes a 2d/3d vector indicating the requested size (has to be square!)
+     * @param[in] radius_manipulation a scalar to modify the relative radius of the blob.
+     *            Defaults to 1
+     *
+     * @returns DataContainer of specified size containing the phantom.
+     */
     template <typename data_t = real_t>
     DataContainer<data_t> smoothBlob(IndexVector_t sizes, double radius_manipulation = 1.0);
 
