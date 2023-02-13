@@ -511,6 +511,8 @@ asan-ubsan:
   stage: sanitizer
   image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
   dependencies: []
+  variables:
+    Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
     - mkdir -p build
     - cd build
