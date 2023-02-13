@@ -326,7 +326,7 @@ int main(int argc, char* argv[])
 
     const elsa::index_t iters = args.get<int>("--iters");
 
-    const auto projector_kind = args.get<std::string>("--projector");
+    auto projector_kind = args.get<std::string>("--projector");
 
     const auto forward_projector = [&]() {
         if (args.is_used("--forward")) {
