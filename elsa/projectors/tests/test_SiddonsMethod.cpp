@@ -1,3 +1,4 @@
+#include "StrongTypes.h"
 #include "doctest/doctest.h"
 
 #include "SiddonsMethod.h"
@@ -411,7 +412,7 @@ TEST_CASE("SiddoneMethod: Output DataContainer is not zero initialized")
     }
 }
 
-TEST_CASE("SidddonMethod: Rays not intersecting the bounding box are present")
+TEST_CASE("SiddonMethod: Rays not intersecting the bounding box are present")
 {
     // Turn logger of
     Logger::setLevel(Logger::LogLevel::OFF);

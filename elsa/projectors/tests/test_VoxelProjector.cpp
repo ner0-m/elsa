@@ -5,7 +5,7 @@
 
 #include "PrettyPrint/Eigen.h"
 #include "PrettyPrint/Stl.h"
-#include "spdlog/fmt/bundled/core.h"
+#include <spdlog/fmt/fmt.h>
 
 using namespace elsa;
 using namespace elsa::geometry;
@@ -1859,9 +1859,6 @@ TEST_CASE("BlobVoxelProjector: Test backward projection")
 
 TEST_CASE_TEMPLATE("BlobVoxelProjector: Test weights", data_t, float, double)
 {
-    const auto a = 2;
-    const auto alpha = 10.83;
-    const auto m = 2;
 
     std::array<double, 51> expected{
         1.3671064952680276,     1.3635202864368146,    1.3528128836429958,

@@ -117,9 +117,6 @@ namespace elsa
         const auto& dataterm = wls.getDataTerm();
         const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
 
-        const auto& domain = residual.getDomainDescriptor();
-        const auto& range = residual.getRangeDescriptor();
-
         const auto& A = residual.getOperator();
 
         return setupOperators(A);

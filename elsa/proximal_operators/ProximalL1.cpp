@@ -34,18 +34,6 @@ namespace elsa
         }
     }
 
-    template <typename data_t>
-    bool operator==(const ProximalL1<data_t>&, const ProximalL1<data_t>&)
-    {
-        return true;
-    }
-
-    template <typename data_t>
-    bool operator!=(const ProximalL1<data_t>&, const ProximalL1<data_t>&)
-    {
-        return false;
-    }
-
     // ------------------------------------------
     // explicit template instantiation
     template class ProximalL1<float>;

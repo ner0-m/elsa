@@ -48,9 +48,12 @@ namespace elsa
         void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
                    DataContainer<data_t>& prox) const;
 
-        friend bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&);
-        friend bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&);
     };
+
+    template <typename data_t>
+    bool operator==(const ProximalL0<data_t>&, const ProximalL0<data_t>&) { return true; }
+    template <typename data_t>
+    bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&) { return false; }
 
     template <class data_t>
     using HardThresholding = ProximalL0<data_t>;
