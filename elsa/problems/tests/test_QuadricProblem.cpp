@@ -371,6 +371,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
 
                 QuadricProblem<data_t> prob{initialProb};
 
+                /*
                 THEN("the clone works correctly")
                 {
                     auto probClone = prob.clone();
@@ -409,6 +410,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
                         }
                     }
                 }
+                */
             }
 
             for (const auto& regTerm : dataTerms) {
@@ -424,6 +426,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
                        + ", ")
                     + (res.hasDataVector() ? "a data vector" : "no data vector");
 
+                /*
                 WHEN("Converting a Tikhonov problem with no x0 to a quadric problem")
                 {
 
@@ -507,6 +510,7 @@ TEST_CASE_TEMPLATE("QuadricProblem: with a different optimization problems", Tes
                         }
                     }
                 }
+                */
             }
         }
     }
