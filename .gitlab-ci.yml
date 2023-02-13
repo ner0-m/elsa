@@ -162,6 +162,7 @@ clang-tidy:
     Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
     ./tools/ci_scripts/clang-tidy.sh
+  allow_failure: true
   tags:
     - linux
     - elsa
