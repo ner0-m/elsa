@@ -23,11 +23,10 @@
 #include <thrust/equal.h>
 #include <thrust/iterator/transform_iterator.h>
 
-
-namespace doctest {
+namespace doctest
+{
     template <typename T>
-    struct StringMaker<elsa::ContiguousStorage<T>>
-    {
+    struct StringMaker<elsa::ContiguousStorage<T>> {
         static String convert(const elsa::ContiguousStorage<T>& vec)
         {
             std::ostringstream oss;
@@ -38,7 +37,6 @@ namespace doctest {
         }
     };
 } // namespace doctest
-
 
 TEST_SUITE_BEGIN("reductions");
 
