@@ -18,8 +18,6 @@ base_branch=master
 clang_format_version=14
 clang_format_tool_candiates=(clang-format-$clang_format_version clang-format)
 
-# update origin
-git fetch $base_remote
 master_ahead=$(git log HEAD..$base_remote/$base_branch --oneline | wc -l)
 
 if [[ "$master_ahead" -gt "0" ]]; then

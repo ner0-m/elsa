@@ -27,7 +27,7 @@ if (( ${#files[@]} )); then
     if ! "$cmake_lint_tool" --check "${files[@]}"; then
         echo -e "[${RED}FAIL${NC}]: Ups, something isn't correct with the formatting, please check above errors"
         echo -e "[${BLUE}INFO${NC}]: From the root directory you can also run:"
-        echo "find CMakeLists.txt elsa benchmarks examples tools cmake -name '*.cmake' -o -name 'CMakeLists.txt' | xargs $cmake_lint_tool -i"
+        echo "find CMakeLists.txt elsa benchmark examples tools cmake -name '*.cmake' -o -name 'CMakeLists.txt' | xargs $cmake_lint_tool -i"
         exit 1
     else
         echo -e "[${GREEN}OK${NC}]: Excellent. Formatting check passed"
