@@ -1,13 +1,9 @@
-# commandline option enhancements
-# cmake only supports binary ON OFF option(),
-# but we want 3 states: on, off, if_available - to allow autodetection and explicit (de)activation.
+# commandline option enhancements cmake only supports binary ON OFF option(), but we want 3 states: on, off,
+# if_available - to allow autodetection and explicit (de)activation.
 #
 # definition must be a variable named WANT_THING which one has to default if not set.
 
-
-# records whether the option NAME is enabled
-# sets WITH_${VARNAME} to HAVE
-# errors if WANT_${VARNAME} conflicts with HAVE
+# records whether the option NAME is enabled sets WITH_${VARNAME} to HAVE errors if WANT_${VARNAME} conflicts with HAVE
 function(have_config_option NAME VARNAME HAVE)
     set(WANT "${WANT_${VARNAME}}")
     set(WITH_${VARNAME} "${HAVE}" PARENT_SCOPE)
