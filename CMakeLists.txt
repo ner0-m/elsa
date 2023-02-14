@@ -53,9 +53,14 @@ option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
 
 option(BUILD_SHARED_LIBS "Build elsa as shared (dynamic) libraries" OFF)
 
-# backward compatibility new name is just WANT_CUDA, and has default if_available
-option(ELSA_BUILD_CUDA_PROJECTORS "Enable building CUDA projectors" ON)
-if(NOT DEFINED WANT_CUDA OR ELSA_BUILD_CUDA_PROJECTORS)
+# optional features can be controlled with a variable named WANT_DEPENDENCYNAME. it can be controlled with three values:
+#
+# * ON: support is enabled and required
+# * if_available: support is enabled, but skipped if not found
+# * OFF: support is disabled
+
+# default definitions for optional features
+if(NOT DEFINED WANT_CUDA)
     set(WANT_CUDA if_available)
 endif()
 
