@@ -27,6 +27,8 @@ namespace elsa
         /// default destructor
         ~ProximalL1() = default;
 
+        explicit ProximalL1(data_t sigma) : sigma_(sigma) {}
+
         /**
          * @brief apply the proximal operator of the l1 norm to an element in the operator's domain
          *
@@ -39,6 +41,9 @@ namespace elsa
 
         DataContainer<data_t> apply(const DataContainer<data_t>& v,
                                     geometry::Threshold<data_t> t) const;
+
+    private:
+        data_t sigma_ = {1.f};
     };
     template <typename T>
     bool operator==(const ProximalL1<T>& lhs, const ProximalL1<T>& rhs)

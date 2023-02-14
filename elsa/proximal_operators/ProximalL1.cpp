@@ -27,10 +27,13 @@ namespace elsa
         }
 
         auto first = v.begin();
+        prox = v;
+
         auto out = prox.begin();
 
         for (; first != v.end() && out != prox.end(); first++, out++) {
-            *out = std::max(std::abs(*first) - t, data_t{0}) * sign<data_t, data_t>(*first);
+            *out = std::max(std::abs(*first) - (data_t{t} * sigma_), data_t{0})
+                   * sign<data_t, data_t>(*first);
         }
     }
 

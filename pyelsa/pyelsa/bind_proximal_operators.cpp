@@ -9,6 +9,7 @@
 #include "CombinedProximal.h"
 
 #include "StrongTypes.h"
+#include "elsaDefines.h"
 #include "hints/proximal_operators_hints.cpp"
 
 namespace py = pybind11;
@@ -61,9 +62,11 @@ void add_prox_l0(py::module& m)
 void add_prox_l1(py::module& m)
 {
     py::class_<elsa::ProximalL1<float>> proxf(m, "ProximalL1f");
+    proxf.def(py::init<float>(), py::arg("sigma") = float{1});
     detail::add_proximal_op(proxf);
 
     py::class_<elsa::ProximalL1<double>> proxd(m, "ProximalL1d");
+    proxf.def(py::init<double>(), py::arg("sigma") = double{1});
     detail::add_proximal_op(proxd);
 
     py::implicitly_convertible<elsa::ProximalL1<float>, elsa::ProximalOperator<float>>();
@@ -76,10 +79,12 @@ void add_prox_l2squared(py::module& m)
 {
     py::class_<elsa::ProximalL2Squared<float>> proxf(m, "ProximalL2Squaredf");
     detail::add_proximal_op(proxf);
-    proxf.def(py::init<const elsa::DataContainer<float>&>(), py::arg("b"));
+    proxf.def(py::init<const elsa::DataContainer<float>&, elsa::SelfType_t<float>>(), py::arg("b"),
+              py::arg("sigma") = float{1});
 
     py::class_<elsa::ProximalL2Squared<double>> proxd(m, "ProximalL2Squaredd");
-    proxd.def(py::init<const elsa::DataContainer<double>&>(), py::arg("b"));
+    proxd.def(py::init<const elsa::DataContainer<double>&, elsa::SelfType_t<double>>(),
+              py::arg("b"), py::arg("sigma") = double{1});
     detail::add_proximal_op(proxd);
 
     py::implicitly_convertible<elsa::ProximalL2Squared<float>, elsa::ProximalOperator<float>>();

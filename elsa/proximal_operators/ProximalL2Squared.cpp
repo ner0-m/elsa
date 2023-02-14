@@ -1,9 +1,12 @@
 #include "ProximalL2Squared.h"
+#include "elsaDefines.h"
 
 namespace elsa
 {
     template <class data_t>
-    ProximalL2Squared<data_t>::ProximalL2Squared(const DataContainer<data_t>& b) : b_(b)
+    ProximalL2Squared<data_t>::ProximalL2Squared(const DataContainer<data_t>& b,
+                                                 SelfType_t<data_t> sigma)
+        : b_(b), sigma_(sigma)
     {
     }
 
@@ -21,7 +24,7 @@ namespace elsa
                                           geometry::Threshold<data_t> t,
                                           DataContainer<data_t>& prox) const
     {
-        const auto f1 = data_t{1} + data_t{2} * data_t{t};
+        const auto f1 = data_t{1} + data_t{2} * (data_t{t} * sigma_);
         prox = v;
 
         if (b_.has_value()) {

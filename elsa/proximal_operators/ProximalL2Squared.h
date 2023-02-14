@@ -4,6 +4,7 @@
 
 #include "DataContainer.h"
 #include "StrongTypes.h"
+#include "elsaDefines.h"
 
 namespace elsa
 {
@@ -17,7 +18,7 @@ namespace elsa
     public:
         ProximalL2Squared() = default;
 
-        ProximalL2Squared(const DataContainer<data_t>& b);
+        explicit ProximalL2Squared(const DataContainer<data_t>& b, SelfType_t<data_t> sigma);
 
         DataContainer<data_t> apply(const DataContainer<data_t>& v,
                                     geometry::Threshold<data_t> t) const;
@@ -27,5 +28,7 @@ namespace elsa
 
     private:
         std::optional<DataContainer<data_t>> b_ = {};
+
+        data_t sigma_ = {1.f};
     };
 } // namespace elsa
