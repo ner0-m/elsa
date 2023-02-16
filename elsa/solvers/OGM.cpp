@@ -1,17 +1,19 @@
 #include "OGM.h"
+#include "Functional.h"
 #include "TypeCasts.hpp"
 #include "Logger.h"
+#include "PowerIterations.h"
 
 namespace elsa
 {
     template <typename data_t>
-    OGM<data_t>::OGM(const Problem<data_t>& problem, data_t epsilon)
+    OGM<data_t>::OGM(const Functional<data_t>& problem, data_t epsilon)
         : Solver<data_t>(), _problem(problem.clone()), _epsilon{epsilon}
     {
     }
 
     template <typename data_t>
-    OGM<data_t>::OGM(const Problem<data_t>& problem,
+    OGM<data_t>::OGM(const Functional<data_t>& problem,
                      const LinearOperator<data_t>& preconditionerInverse, data_t epsilon)
         : Solver<data_t>(),
           _problem(problem.clone()),
@@ -20,9 +22,9 @@ namespace elsa
     {
         // check that preconditioner is compatible with problem
         if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
-                != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()
+                != _problem->getDomainDescriptor().getNumberOfCoefficients()
             || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
-                   != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()) {
+                   != _problem->getDomainDescriptor().getNumberOfCoefficients()) {
             throw InvalidArgumentError("OGM: incorrect size of preconditioner");
         }
     }
@@ -32,7 +34,7 @@ namespace elsa
                                              std::optional<DataContainer<data_t>> x0)
     {
         auto prevTheta = static_cast<data_t>(1.0);
-        auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());
+        auto x = DataContainer<data_t>(_problem->getDomainDescriptor());
 
         if (x0.has_value()) {
             x = *x0;
@@ -45,7 +47,7 @@ namespace elsa
         // OGM is very picky when it comes to the accuracy of the used lipschitz constant therefore
         // we use 20 power iterations instead of 5 here to be more precise.
         // In some cases OGM might still not converge then an even more precise constant is needed
-        auto lipschitz = _problem->getLipschitzConstant(x, 20);
+        auto lipschitz = powerIterations(_problem->getHessian(x), 20);
         auto deltaZero = _problem->getGradient(x).squaredL2Norm();
         Logger::get("OGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
 

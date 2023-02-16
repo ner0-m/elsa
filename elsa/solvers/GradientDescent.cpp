@@ -1,13 +1,15 @@
 #include "GradientDescent.h"
+#include "Functional.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
+#include "PowerIterations.h"
 #include <iostream>
 
 namespace elsa
 {
 
     template <typename data_t>
-    GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem, data_t stepSize)
+    GradientDescent<data_t>::GradientDescent(const Functional<data_t>& problem, data_t stepSize)
         : Solver<data_t>(), _problem(problem.clone()), _stepSize{stepSize}
     {
         // sanity check
@@ -16,7 +18,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    GradientDescent<data_t>::GradientDescent(const Problem<data_t>& problem)
+    GradientDescent<data_t>::GradientDescent(const Functional<data_t>& problem)
         : Solver<data_t>(), _problem(problem.clone())
     {
     }
@@ -25,7 +27,7 @@ namespace elsa
     DataContainer<data_t> GradientDescent<data_t>::solve(index_t iterations,
                                                          std::optional<DataContainer<data_t>> x0)
     {
-        auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());
+        auto x = DataContainer<data_t>(_problem->getDomainDescriptor());
         if (x0.has_value()) {
             x = *x0;
         } else {
@@ -34,7 +36,7 @@ namespace elsa
 
         // If stepSize is not initialized yet, we do it know with x0
         if (!_stepSize.isInitialized()) {
-            _stepSize = static_cast<data_t>(1.0) / _problem->getLipschitzConstant(x);
+            auto _stepSize = powerIterations(_problem->getHessian(x), 5);
         }
 
         for (index_t i = 0; i < iterations; ++i) {

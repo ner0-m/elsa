@@ -24,34 +24,6 @@ namespace elsa
     }
 
     template <typename data_t>
-    LandweberIteration<data_t>::LandweberIteration(const WLSProblem<data_t>& wls, data_t stepSize)
-        : Solver<data_t>(), b_(wls.getDataTerm().getDomainDescriptor()), stepSize_{stepSize}
-    {
-        // sanity check
-        if (stepSize <= 0)
-            throw InvalidArgumentError("LandweberIteration: step size has to be positive");
-
-        const auto& dataterm = wls.getDataTerm();
-        const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
-
-        // No checks requieres as it would be an invalid WLSProblem
-        A_ = residual.getOperator().clone();
-        b_ = residual.getDataVector();
-    }
-
-    template <typename data_t>
-    LandweberIteration<data_t>::LandweberIteration(const WLSProblem<data_t>& wls)
-        : Solver<data_t>(), b_(wls.getDataTerm().getDomainDescriptor())
-    {
-        const auto& dataterm = wls.getDataTerm();
-        const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
-
-        // No checks requieres as it would be an invalid WLSProblem
-        A_ = residual.getOperator().clone();
-        b_ = residual.getDataVector();
-    }
-
-    template <typename data_t>
     DataContainer<data_t> LandweberIteration<data_t>::solve(index_t iterations,
                                                             std::optional<DataContainer<data_t>> x0)
     {

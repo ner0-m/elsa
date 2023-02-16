@@ -44,21 +44,6 @@ namespace elsa
          */
         SIRT(const LinearOperator<data_t>& A, const DataContainer<data_t>& b);
 
-        /**
-         * @brief Constructor for SIRT, accepting a problem and a fixed step size
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         * @param[in] stepSize the fixed step size to be used while solving
-         */
-        SIRT(const WLSProblem<data_t>& wls, data_t stepSize);
-
-        /**
-         * @brief Constructor for SIRT, accepting a problem.
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         */
-        explicit SIRT(const WLSProblem<data_t>& wls);
-
         /// make copy constructor deletion explicit
         SIRT(const SIRT<data_t>&) = delete;
 

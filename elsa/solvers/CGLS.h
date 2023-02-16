@@ -5,8 +5,6 @@
 #include "DataContainer.h"
 #include "LinearOperator.h"
 #include "Solver.h"
-#include "WLSProblem.h"
-#include "TikhonovProblem.h"
 #include "elsaDefines.h"
 
 namespace elsa
@@ -46,18 +44,6 @@ namespace elsa
         /// @param tol stopping tolerance
         CGLS(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
              SelfType_t<data_t> eps = 0, SelfType_t<data_t> tol = 1e-4);
-
-        /// @brief Construct CGLS from a least squares problem
-        ///
-        /// @param wls The least squares problem to construct the CGLS from
-        /// @param tol stopping tolerance
-        explicit CGLS(const WLSProblem<data_t>& wls, SelfType_t<data_t> tol = 1e-4);
-
-        /// @brief Construct CGLS from a tikhonov problem
-        ///
-        /// @param tikhonov The Tikhonov problem to construct the CGLS from
-        /// @param tol stopping tolerance
-        explicit CGLS(const TikhonovProblem<data_t>& tikhonov, SelfType_t<data_t> tol = 1e-4);
 
         /// make copy constructor deletion explicit
         CGLS(const CGLS<data_t>&) = delete;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "LinearOperator.h"
-#include "WLSProblem.h"
+#include "Scaling.h"
 
 namespace elsa
 {

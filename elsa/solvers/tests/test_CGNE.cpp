@@ -1,6 +1,6 @@
 #include "doctest/doctest.h"
 
-#include "CGLS.h"
+#include "CGNE.h"
 #include "Logger.h"
 #include "Scaling.h"
 #include "VolumeDescriptor.h"
@@ -16,7 +16,7 @@ TEST_SUITE_BEGIN("solvers");
 template <template <typename> typename T, typename data_t>
 constexpr data_t return_data_t(const T<data_t>&);
 
-TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, double)
+TEST_CASE_TEMPLATE("CGNE: Solving a simple linear problem", data_t, float, double)
 {
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
@@ -34,9 +34,9 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
 
         Identity<data_t> id{dd};
 
-        CGLS<data_t> cgls(id, b, 0);
+        CGNE<data_t> cgne(id, b);
 
-        auto result = cgls.solve(1);
+        auto result = cgne.solve(1);
 
         CAPTURE(bVec.transpose());
         CAPTURE(result);
@@ -58,9 +58,9 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
 
         Identity<data_t> id{dd};
 
-        CGLS<data_t> cgls(id, b, 0);
+        CGNE<data_t> cgne(id, b);
 
-        auto result = cgls.solve(1);
+        auto result = cgne.solve(1);
 
         CAPTURE(b);
         CAPTURE(result);
@@ -71,9 +71,9 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
 
         THEN("A clone is equal to the original")
         {
-            auto clone = cgls.clone();
+            auto clone = cgne.clone();
 
-            CHECK_EQ(*clone, cgls);
+            CHECK_EQ(*clone, cgne);
         }
     }
 
@@ -89,9 +89,9 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
 
         Scaling<data_t> scaling{dd, 5};
 
-        CGLS<data_t> cgls(scaling, b);
+        CGNE<data_t> cgne(scaling, b);
 
-        auto result = cgls.solve(1);
+        auto result = cgne.solve(1);
 
         CAPTURE(bVec.transpose());
         CAPTURE(result);
@@ -102,9 +102,9 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
 
         THEN("A clone is equal to the original")
         {
-            auto clone = cgls.clone();
+            auto clone = cgne.clone();
 
-            CHECK_EQ(*clone, cgls);
+            CHECK_EQ(*clone, cgne);
         }
     }
 
@@ -120,9 +120,9 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
 
         Scaling<data_t> scaling{dd, 0.5};
 
-        CGLS<data_t> cgls(scaling, b);
+        CGNE<data_t> cgne(scaling, b);
 
-        auto result = cgls.solve(1);
+        auto result = cgne.solve(1);
 
         CAPTURE(b);
         CAPTURE(result);
@@ -133,11 +133,12 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
 
         THEN("A clone is equal to the original")
         {
-            auto clone = cgls.clone();
+            auto clone = cgne.clone();
 
-            CHECK_EQ(*clone, cgls);
+            CHECK_EQ(*clone, cgne);
         }
     }
 }
 
 TEST_SUITE_END();
+

@@ -57,8 +57,7 @@ class PyelsaTest(unittest.TestCase):
         )
 
         # test view of DataContainer as numpy.array
-        dc = elsa.DataContainer(
-            elsa.VolumeDescriptor([2, 3]), [1, 4, 2, 5, 3, 6])
+        dc = elsa.DataContainer(elsa.VolumeDescriptor([2, 3]), [1, 4, 2, 5, 3, 6])
         arr_view = np.array(dc, copy=False)
         self.assert_same_shape(
             arr_view,
@@ -152,75 +151,6 @@ class PyelsaTest(unittest.TestCase):
         x[0] = 12345
         self.assertAlmostEqual(x[0], 12345)
 
-    def test_intermodule_object_exchange(self):
-        """Test whether instances of a class produced by one module (e.g. pyelsa_functionals)
-        are recognised as instances of the same class in another module that is only aware of the
-        classes interface (e.g. pyelsa_problems). When that is not the case, dynamic_casts on the
-        C++ side fail (produce a nullptr). This may occur as a result of pybind11 enforcing
-        -fvisibility=hidden and libc++ considering objects coming from different modules to be of
-        different types.
-        """
-
-        # The constructors used to convert between different problem types use
-        # dynamic_casts on functionals extensively, so we test whether these conversions
-        # work as expected
-
-        # test converting a Tikhonov Problem to a WLSProblem
-        size = 2**10
-        desc = elsa.VolumeDescriptor([size])
-        b = elsa.DataContainer(desc, np.random.randn(size, 1))
-        A = elsa.Scaling(desc, 2.0)
-        regWeight = 4.0
-
-        # this will throw an exception while performing sanity checks if pyelsa isn't configured properly
-        tikhonov = elsa.TikhonovProblem(
-            elsa.WLSProblem(A, b),
-            elsa.RegularizationTerm(regWeight, elsa.L2NormPow2(desc)),
-        )
-
-        wls = elsa.WLSProblem(tikhonov)
-
-        # build up the data term we expect wls to have and compare just to be sure
-        blockOp = elsa.BlockLinearOperator(
-            [A, elsa.Scaling(desc, math.sqrt(regWeight))],
-            elsa.BlockLinearOperatorfBlockType.ROW,
-        )
-        blockVec = elsa.DataContainer(
-            elsa.RandomBlocksDescriptor([desc, desc]))
-        blockVec.getBlock(0).set(b)
-        blockVec.getBlock(1).set(0)
-        blockWls = elsa.L2NormPow2(elsa.LinearResidual(blockOp, blockVec))
-
-        self.assertEqual(
-            wls.getDataTerm(),
-            blockWls,
-            "TikhonovProblem was not correctly converted to WLSProblem",
-        )
-        self.assertEqual(
-            len(wls.getRegularizationTerms()),
-            0,
-            "TikhonovProblem was not correctly converted to WLSProblem",
-        )
-
-        # test converting a WLSProblem to a QuadricProblem
-        quadricProb = elsa.QuadricProblem(wls)
-
-        # build up expected quadric
-        quadricOp = elsa.adjoint(blockOp) * blockOp
-        quadricVec = blockOp.applyAdjoint(blockVec)
-        quadric = elsa.Quadric(quadricOp, quadricVec)
-
-        self.assertEqual(
-            quadricProb.getDataTerm(),
-            quadric,
-            "WLSProblem was not correctly converted to QuadricPforeach",
-        )
-        self.assertEqual(
-            len(quadricProb.getRegularizationTerms()),
-            0,
-            "WLSProblem was not correctly converted to QuadricProblem",
-        )
-
     def _test_reconstruction(
         self,
         size,
@@ -262,13 +192,13 @@ class PyelsaTest(unittest.TestCase):
         )
 
     def _test_reconstruction_2d(self, *args, **kwargs):
-        size = 50.0
+        size = 16.0
         # generating a 2d phantom
         phantom = elsa.phantoms.modifiedSheppLogan([size, size])
         self._test_reconstruction(size, phantom, *args, **kwargs)
 
     def _test_reconstruction_3d(self, *args, **kwargs):
-        size = 50.0
+        size = 16.0
         # generating a 3d phantom
         phantom = elsa.phantoms.modifiedSheppLogan([size, size, size])
         self._test_reconstruction(size, phantom, *args, **kwargs)

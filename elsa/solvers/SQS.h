@@ -2,18 +2,16 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
+#include "L2NormPow2.h"
+#include "LinearOperator.h"
 #include "Solver.h"
-#include "Problem.h"
 
 namespace elsa
 {
     /**
      * @brief Class representing an SQS Solver.
-     *
-     * @author Michael Loipführer - initial code
-     *
-     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * This class implements an SQS solver with multiple options for momentum acceleration and
      * ordered subsets.
@@ -21,8 +19,14 @@ namespace elsa
      * No particular stopping rule is currently implemented (only a fixed number of iterations,
      * default to 100).
      *
+     * Currently, this is limited to least square problems.
+     *
      * References:
      * https://doi.org/10.1109/TMI.2014.2350962
+     *
+     * @author Michael Loipführer - initial code
+     *
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      */
     template <typename data_t = real_t>
     class SQS : public Solver<data_t>
@@ -31,29 +35,20 @@ namespace elsa
         /// Scalar alias
         using Scalar = typename Solver<data_t>::Scalar;
 
-        /**
-         * @brief Constructor for SQS, accepting an optimization problem and, optionally, a value
-         * for epsilon. If the problem passed to the constructor is a SubsetProblem SQS will operate
-         * in ordered subset mode.
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         * @param[in] momentumAcceleration whether to enable Nesterov's momentum acceleration
-         * @param[in] epsilon affects the stopping condition
-         */
-        SQS(const Problem<data_t>& problem, bool momentumAcceleration = true,
+        SQS(const L2NormPow2<data_t>& problem,
+            std::vector<std::unique_ptr<L2NormPow2<data_t>>>&& subsets,
+            bool momentumAcceleration = true,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
-        /**
-         * @brief Constructor for SQS, accepting an optimization problem, the inverse of the
-         * preconditioner and, optionally, a value for epsilon. If the problem passed to the
-         * constructor is a SubsetProblem SQS will operate in ordered subset mode.
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         * @param[in] preconditioner a preconditioner for the problem at hand
-         * @param[in] momentumAcceleration whether or not to enable momentum acceleration
-         * @param[in] epsilon affects the stopping condition
-         */
-        SQS(const Problem<data_t>& problem, const LinearOperator<data_t>& preconditioner,
+        SQS(const L2NormPow2<data_t>& problem,
+            std::vector<std::unique_ptr<L2NormPow2<data_t>>>&& subsets,
+            const LinearOperator<data_t>& preconditioner, bool momentumAcceleration = true,
+            data_t epsilon = std::numeric_limits<data_t>::epsilon());
+
+        SQS(const L2NormPow2<data_t>& problem, bool momentumAcceleration = true,
+            data_t epsilon = std::numeric_limits<data_t>::epsilon());
+
+        SQS(const L2NormPow2<data_t>& problem, const LinearOperator<data_t>& preconditioner,
             bool momentumAcceleration = true,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
@@ -79,19 +74,21 @@ namespace elsa
     private:
         /// The optimization to solve
         /// TODO: This might be a nice variant?
-        std::unique_ptr<Problem<data_t>> _problem;
+        std::unique_ptr<L2NormPow2<data_t>> fullProblem_;
+
+        std::vector<std::unique_ptr<L2NormPow2<data_t>>> subsets_{};
 
         /// variable affecting the stopping condition
-        data_t _epsilon;
+        data_t epsilon_;
 
         /// the preconditioner (if supplied)
-        std::unique_ptr<LinearOperator<data_t>> _preconditioner{};
+        std::unique_ptr<LinearOperator<data_t>> preconditioner_{};
 
         /// whether to enable momentum acceleration
-        bool _momentumAcceleration;
+        bool momentumAcceleration_;
 
         /// whether to operate in subset based mode
-        bool _subsetMode{false};
+        bool subsetMode_;
 
         /// implement the polymorphic clone operation
         SQS<data_t>* cloneImpl() const override;

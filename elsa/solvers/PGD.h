@@ -8,7 +8,6 @@
 #include "MaybeUninitialized.hpp"
 #include "Solver.h"
 #include "StrongTypes.h"
-#include "LASSOProblem.h"
 #include "ProximalOperator.h"
 
 namespace elsa
@@ -68,7 +67,6 @@ namespace elsa
      * can also be extended with constrains, such as non-negativity constraints.
      *
      * @see An accerlerated version of proximal gradient descent is APGD.
-     * See also LASSOProblem
      *
      * @author
      * - Andi Braimllari - initial code
@@ -89,47 +87,6 @@ namespace elsa
 
         PGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
             ProximalOperator<data_t> prox, data_t epsilon = std::numeric_limits<data_t>::epsilon());
-
-        /**
-         * @brief Constructor for PGD, accepting a LASSO problem, a fixed step size and optionally,
-         * a value for epsilon
-         *
-         * @param[in] problem the LASSO problem that is supposed to be solved
-         * @param[in] mu the fixed step size to be used while solving
-         * @param[in] epsilon affects the stopping condition
-         */
-        PGD(const LASSOProblem<data_t>& problem, geometry::Threshold<data_t> mu,
-            data_t epsilon = std::numeric_limits<data_t>::epsilon());
-
-        /**
-         * @brief Constructor for PGD, accepting a problem, a fixed step size and optionally, a
-         * value for epsilon
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         * @param[in] mu the fixed step size to be used while solving
-         * @param[in] epsilon affects the stopping condition
-         *
-         * Conversion to a LASSOProblem will be attempted. Throws if conversion fails. See
-         * LASSOProblem for further details.
-         */
-        PGD(const Problem<data_t>& problem, geometry::Threshold<data_t> mu,
-            data_t epsilon = std::numeric_limits<data_t>::epsilon());
-
-        /**
-         * @brief Constructor for PGD, accepting a problem and optionally, a value for
-         * epsilon
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         * @param[in] epsilon affects the stopping condition
-         *
-         * The step size will be computed as @f$ 1 \over L @f$ with @f$ L @f$ being the Lipschitz
-         * constant of the WLSProblem.
-         *
-         * Conversion to a LASSOProblem will be attempted. Throws if conversion fails. See
-         * LASSOProblem for further details.
-         */
-        PGD(const Problem<data_t>& problem,
-            data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
         PGD(const PGD<data_t>&) = delete;
@@ -158,10 +115,6 @@ namespace elsa
         auto isEqual(const Solver<data_t>& other) const -> bool override;
 
     private:
-        /// private constructor called by a public constructor without the step size so that
-        /// getLipschitzConstant is called by a LASSOProblem and not by a non-converted Problem
-        PGD(const LASSOProblem<data_t>& lassoProb, data_t epsilon);
-
         /// The LASSO optimization problem
         std::unique_ptr<LinearOperator<data_t>> A_;
 

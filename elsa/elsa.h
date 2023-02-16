@@ -12,7 +12,6 @@
 
 // Functional headers
 #include "Functional.h"
-#include "Residual.h"
 #include "LinearResidual.h"
 #include "Huber.h"
 #include "L0PseudoNorm.h"
@@ -55,16 +54,6 @@
 #include "ProximalL1.h"
 #include "ProximalL0.h"
 
-// Problem headers
-#include "Problem.h"
-#include "RegularizationTerm.h"
-#include "QuadricProblem.h"
-#include "WLSProblem.h"
-#include "TikhonovProblem.h"
-#include "LASSOProblem.h"
-#include "SubsetProblem.h"
-#include "WLSSubsetProblem.h"
-
 // Projector headers
 #include "Geometry.h"
 #include "BinaryMethod.h"
@@ -88,7 +77,7 @@
 #include "CGLS.h"
 #include "FGM.h"
 #include "OGM.h"
-#include "ADMM.h"
+// #include "ADMM.h"
 #include "SQS.h"
 #include "SIRT.h"
 #include "Landweber.h"

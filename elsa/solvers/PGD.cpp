@@ -25,47 +25,6 @@ namespace elsa
     }
 
     template <typename data_t>
-    PGD<data_t>::PGD(const LASSOProblem<data_t>& problem, geometry::Threshold<data_t> mu,
-                     data_t epsilon)
-        : Solver<data_t>(),
-          A_(downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual())
-                 .getOperator()
-                 .clone()),
-          b_(downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual()).getDataVector()),
-          prox_(ProximalL1<data_t>()),
-          lambda_(problem.getRegularizationTerms()[0].getWeight()),
-          mu_{data_t(mu)},
-          epsilon_{epsilon}
-    {
-    }
-
-    template <typename data_t>
-    PGD<data_t>::PGD(const Problem<data_t>& problem, geometry::Threshold<data_t> mu, data_t epsilon)
-        : PGD(LASSOProblem<data_t>(problem), mu, epsilon)
-    {
-    }
-
-    template <typename data_t>
-    PGD<data_t>::PGD(const Problem<data_t>& problem, data_t epsilon)
-        : PGD<data_t>(LASSOProblem<data_t>(problem), epsilon)
-    {
-    }
-
-    template <typename data_t>
-    PGD<data_t>::PGD(const LASSOProblem<data_t>& lassoProb, data_t epsilon)
-        : Solver<data_t>(),
-          A_(downcast<LinearResidual<data_t>>(lassoProb.getDataTerm().getResidual())
-                 .getOperator()
-                 .clone()),
-          b_(downcast<LinearResidual<data_t>>(lassoProb.getDataTerm().getResidual())
-                 .getDataVector()),
-          prox_(ProximalL1<data_t>()),
-          lambda_(lassoProb.getRegularizationTerms()[0].getWeight()),
-          epsilon_{epsilon}
-    {
-    }
-
-    template <typename data_t>
     auto PGD<data_t>::solve(index_t iterations, std::optional<DataContainer<data_t>> x0)
         -> DataContainer<data_t>
     {

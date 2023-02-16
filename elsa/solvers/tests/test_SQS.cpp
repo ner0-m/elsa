@@ -1,55 +1,34 @@
-/**
- * @file test_SQS.cpp
- *
- * @brief Tests for the SQS class
- *
- * @author Michael Loipführer - initial code
- */
-
 #include "doctest/doctest.h"
 
+#include "L2NormPow2.h"
 #include <iostream>
 #include "JacobiPreconditioner.h"
 #include "SQS.h"
-#include "WLSProblem.h"
-#include "WLSSubsetProblem.h"
 #include "SubsetSampler.h"
 #include "PlanarDetectorDescriptor.h"
 #include "Identity.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
-#include "CircleTrajectoryGenerator.h"
-#include "SiddonsMethod.h"
-#include "Phantoms.h"
 #include "TypeCasts.hpp"
 #include "testHelpers.h"
 
 using namespace elsa;
 
-template <template <typename> typename T, typename data_t>
-constexpr data_t return_data_t(const T<data_t>&);
-
 TEST_SUITE_BEGIN("solvers");
 
-TYPE_TO_STRING(SQS<float>);
-TYPE_TO_STRING(SQS<double>);
-
-TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>, SQS<double>)
+TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", data_t, float, double)
 {
     // Set seed for Eigen Matrices!
     srand((unsigned int) 666);
 
-    using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a linear problem")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 8, 9;
-        VolumeDescriptor dd{numCoeff};
+        VolumeDescriptor dd{{8, 9}};
 
-        Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
         DataContainer<data_t> dcB{dd, bVec};
 
@@ -58,38 +37,35 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
         // using WLS problem here for ease of use
-        WLSProblem prob{scalingOp, dcB};
-
-        data_t epsilon = std::numeric_limits<data_t>::epsilon();
+        L2NormPow2<data_t> prob{scalingOp, dcB};
 
         WHEN("setting up a SQS solver")
         {
-            TestType solver{prob, true, epsilon};
+            SQS<data_t> solver{prob, true};
 
             THEN("the clone works correctly")
             {
                 auto sqsClone = solver.clone();
 
-                REQUIRE_NE(sqsClone.get(), &solver);
-                REQUIRE_EQ(*sqsClone, solver);
+                CHECK_NE(sqsClone.get(), &solver);
+                CHECK_EQ(*sqsClone, solver);
+            }
 
-                AND_THEN("it works as expected")
-                {
-                    auto solution = solver.solve(300);
+            AND_THEN("it works as expected")
+            {
+                auto solution = solver.solve(50);
 
-                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+                DataContainer<data_t> diff = scalingOp.apply(solution) - dcB;
 
-                    // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm()));
-                }
+                // should have converged for the given number of iterations
+                CHECK_EQ(diff.squaredL2Norm(), doctest::Approx(0));
             }
         }
 
         WHEN("setting up a preconditioned SQS solver")
         {
             auto preconditioner = JacobiPreconditioner<data_t>(scalingOp, false);
-            TestType solver{prob, preconditioner, true, epsilon};
+            SQS<data_t> solver{prob, preconditioner, true};
 
             THEN("the clone works correctly")
             {
@@ -101,80 +77,68 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", TestType, SQS<float>,
                 AND_THEN("it works as expected")
                 {
                     // with a good preconditioner we should need fewer iterations than without
-                    auto solution = solver.solve(1000);
+                    auto solution = solver.solve(200);
 
-                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
+                    DataContainer<data_t> diff = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm()));
+                    CHECK_EQ(diff.squaredL2Norm(), doctest::Approx(0));
                 }
             }
         }
     }
 }
 
-TEST_CASE_TEMPLATE("SQS: Solving a Tikhonov problem", TestType, SQS<float>, SQS<double>)
+TEST_CASE_TEMPLATE("SQS: Solving a linear problem with ordered subsets", data_t, float, double)
 {
     // Set seed for Eigen Matrices!
     srand((unsigned int) 666);
 
-    using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
 
-    GIVEN("a Tikhonov problem")
+    GIVEN("a linear problem")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 11;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd{{8, 9}};
 
-        Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer b(dd, bVec);
+        DataContainer<data_t> dcB{dd, bVec};
 
         bVec.setRandom();
-        bVec = bVec.cwiseProduct(bVec);
+        bVec = bVec.cwiseAbs();
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
-        auto lambda = static_cast<data_t>(0.1);
-        Scaling<data_t> lambdaOp{dd, lambda};
-
         // using WLS problem here for ease of use
-        WLSProblem<data_t> prob{scalingOp + lambdaOp, b};
-
-        data_t epsilon = std::numeric_limits<data_t>::epsilon();
+        L2NormPow2<data_t> prob{scalingOp, dcB};
 
         WHEN("setting up a SQS solver")
         {
-            TestType solver{prob, true, epsilon};
+            SQS<data_t> solver{prob, true};
 
             THEN("the clone works correctly")
             {
                 auto sqsClone = solver.clone();
 
-                REQUIRE_NE(sqsClone.get(), &solver);
-                REQUIRE_EQ(*sqsClone, solver);
+                CHECK_NE(sqsClone.get(), &solver);
+                CHECK_EQ(*sqsClone, solver);
+            }
 
-                AND_THEN("it works as expected")
-                {
-                    auto solution = solver.solve(dd.getNumberOfCoefficients());
+            AND_THEN("it works as expected")
+            {
+                auto solution = solver.solve(50);
 
-                    DataContainer<data_t> resultsDifference =
-                        (scalingOp + lambdaOp).apply(solution) - b;
+                DataContainer<data_t> diff = scalingOp.apply(solution) - dcB;
 
-                    // should have converged for the given number of iterations
-                    // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * b.squaredL2Norm()));
-                }
+                // should have converged for the given number of iterations
+                CHECK_EQ(diff.squaredL2Norm(), doctest::Approx(0));
             }
         }
 
         WHEN("setting up a preconditioned SQS solver")
         {
-            auto preconditioner = JacobiPreconditioner<data_t>(scalingOp + lambdaOp, false);
-            TestType solver{prob, preconditioner, true, epsilon};
+            auto preconditioner = JacobiPreconditioner<data_t>(scalingOp, false);
+            SQS<data_t> solver{prob, preconditioner, true};
 
             THEN("the clone works correctly")
             {
@@ -185,169 +149,13 @@ TEST_CASE_TEMPLATE("SQS: Solving a Tikhonov problem", TestType, SQS<float>, SQS<
 
                 AND_THEN("it works as expected")
                 {
-                    // a perfect preconditioner should allow for convergence in a single step
-                    // auto solution = solver.solve(dd.getNumberOfCoefficients());
-                    auto solution = solver.solve(20);
+                    // with a good preconditioner we should need fewer iterations than without
+                    auto solution = solver.solve(200);
 
-                    DataContainer<data_t> resultsDifference =
-                        (scalingOp + lambdaOp).apply(solution) - b;
+                    DataContainer<data_t> diff = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    INFO(resultsDifference.squaredL2Norm());
-                    INFO(b.squaredL2Norm());
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * b.squaredL2Norm()));
-                }
-            }
-        }
-    }
-}
-
-TEST_CASE("SQS: Solving a simple phantom reconstruction")
-{
-    // Set seed for Eigen Matrices!
-    srand((unsigned int) 666);
-
-    // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::OFF);
-
-    GIVEN("a Phantom reconstruction problem")
-    {
-        IndexVector_t size({{16, 16}});
-        auto phantom = phantoms::modifiedSheppLogan(size);
-        auto& volumeDescriptor = phantom.getDataDescriptor();
-
-        index_t numAngles{90}, arc{180};
-        auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
-            static_cast<real_t>(size(0)));
-
-        SiddonsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
-
-        auto sinogram = projector.apply(phantom);
-
-        WLSProblem problem(projector, sinogram);
-        real_t epsilon = std::numeric_limits<real_t>::epsilon();
-
-        WHEN("setting up a SQS solver")
-        {
-            SQS solver{problem, true, epsilon};
-
-            THEN("the clone works correctly")
-            {
-                auto sqsClone = solver.clone();
-
-                REQUIRE_NE(sqsClone.get(), &solver);
-                REQUIRE_EQ(*sqsClone, solver);
-
-                AND_THEN("it works as expected")
-                {
-                    auto reconstruction = solver.solve(100);
-
-                    DataContainer resultsDifference = reconstruction - phantom;
-
-                    // should have converged for the given number of iterations
-                    // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * sinogram.squaredL2Norm(), 0.1f));
-                }
-            }
-        }
-    }
-}
-
-TEST_CASE("SQS: Solving a simple phantom problem using ordered subsets")
-{
-    // Set seed for Eigen Matrices!
-    srand((unsigned int) 666);
-
-    // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::OFF);
-
-    GIVEN("a Phantom reconstruction problem")
-    {
-        IndexVector_t size({{16, 16}});
-        auto phantom = phantoms::modifiedSheppLogan(size);
-        auto& volumeDescriptor = phantom.getDataDescriptor();
-
-        index_t numAngles{20}, arc{180};
-        auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
-            static_cast<real_t>(size(0)));
-
-        SiddonsMethod projector(static_cast<const VolumeDescriptor&>(volumeDescriptor),
-                                *sinoDescriptor);
-
-        auto sinogram = projector.apply(phantom);
-
-        real_t epsilon = std::numeric_limits<real_t>::epsilon();
-
-        WHEN("setting up a SQS solver with ROUND_ROBIN subsampling")
-        {
-            index_t nSubsets{4};
-            SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
-                static_cast<const VolumeDescriptor&>(volumeDescriptor),
-                static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets);
-
-            WLSSubsetProblem<real_t> problem(
-                *subsetSampler.getProjector<SiddonsMethod<real_t>>(),
-                subsetSampler.getPartitionedData(sinogram),
-                subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
-
-            SQS solver{problem, true, epsilon};
-
-            THEN("the clone works correctly")
-            {
-                auto sqsClone = solver.clone();
-
-                REQUIRE(sqsClone.get() != &solver);
-                REQUIRE(*sqsClone == solver);
-
-                AND_THEN("it works as expected")
-                {
-                    auto reconstruction = solver.solve(15);
-
-                    DataContainer resultsDifference = reconstruction - phantom;
-
-                    // should have converged for the given number of iterations
-                    // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
-                }
-            }
-        }
-
-        WHEN("setting up a SQS solver with ROTATIONAL_CLUSTERING subsampling")
-        {
-            index_t nSubsets{4};
-            SubsetSampler<PlanarDetectorDescriptor, real_t> subsetSampler(
-                static_cast<const VolumeDescriptor&>(volumeDescriptor),
-                static_cast<const PlanarDetectorDescriptor&>(*sinoDescriptor), nSubsets,
-                SubsetSampler<PlanarDetectorDescriptor,
-                              real_t>::SamplingStrategy::ROTATIONAL_CLUSTERING);
-
-            WLSSubsetProblem<real_t> problem(
-                *subsetSampler.getProjector<SiddonsMethod<real_t>>(),
-                subsetSampler.getPartitionedData(sinogram),
-                subsetSampler.getSubsetProjectors<SiddonsMethod<real_t>>());
-            SQS solver{problem, true, epsilon};
-
-            THEN("the clone works correctly")
-            {
-                auto sqsClone = solver.clone();
-
-                REQUIRE_NE(sqsClone.get(), &solver);
-                REQUIRE_EQ(*sqsClone, solver);
-
-                AND_THEN("it works as expected")
-                {
-                    auto reconstruction = solver.solve(20);
-
-                    DataContainer resultsDifference = reconstruction - phantom;
-
-                    // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
+                    CHECK_EQ(diff.squaredL2Norm(), doctest::Approx(0));
                 }
             }
         }

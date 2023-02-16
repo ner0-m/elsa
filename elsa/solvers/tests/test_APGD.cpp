@@ -5,98 +5,77 @@
 #include "Identity.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
-#include "QuadricProblem.h"
 #include "testHelpers.h"
+#include "ProximalBoxConstraint.h"
+#include "ProximalL1.h"
 
 using namespace elsa;
 using namespace doctest;
 
 TEST_SUITE_BEGIN("solvers");
 
-TEST_CASE("APGD: Solving a LASSOProblem")
+TEST_CASE_TEMPLATE("APDG: Solving a least squares problem", data_t, float, double)
 {
+    // Set seed for Eigen Matrices!
+    srand((unsigned int) 666);
+
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
 
-    GIVEN("a LASSOProblem")
+    VolumeDescriptor volDescr({4, 7});
+
+    Vector_t<data_t> bVec(volDescr.getNumberOfCoefficients());
+    bVec.setRandom();
+    DataContainer<data_t> b(volDescr, bVec);
+
+    Identity<data_t> A(volDescr);
+
+    APGD<data_t> solver(A, b, ProximalBoxConstraint<data_t>{});
+
+    auto reco = solver.solve(1);
+
+    CHECK_EQ(reco.squaredL2Norm(), doctest::Approx(b.squaredL2Norm()));
+
+    THEN("Clone is equal to original one")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 25, 31;
-        VolumeDescriptor volDescr(numCoeff);
+        auto clone = solver.clone();
 
-        RealVector_t bVec(volDescr.getNumberOfCoefficients());
-        bVec.setRandom();
-        DataContainer dcB(volDescr, bVec);
-
-        Identity idOp(volDescr);
-
-        WLSProblem wlsProb(idOp, dcB);
-
-        L1Norm regFunc(volDescr);
-        RegularizationTerm regTerm(0.000001f, regFunc);
-
-        LASSOProblem lassoProb(wlsProb, regTerm);
-
-        WHEN("setting up a APGD solver")
-        {
-            APGD solver(lassoProb, geometry::Threshold(0.005f));
-
-            THEN("cloned APGD solver equals original APGD solver")
-            {
-                auto fistaClone = solver.clone();
-
-                REQUIRE_NE(fistaClone.get(), &solver);
-                REQUIRE_EQ(*fistaClone, solver);
-            }
-
-            THEN("the solution is correct")
-            {
-                auto solution = solver.solve(500);
-                REQUIRE_UNARY(checkApproxEq(solution.squaredL2Norm(), bVec.squaredNorm()));
-            }
-        }
+        CHECK_EQ(*clone, solver);
+        CHECK_NE(clone.get(), &solver);
     }
 }
 
-TEST_CASE("APGD: Solving various problems")
+TEST_CASE_TEMPLATE("APDG: Solving a least squares problem with non negativity constraint", data_t,
+                   float, double)
 {
+    // Set seed for Eigen Matrices!
+    srand((unsigned int) 666);
+
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
 
-    GIVEN("a DataContainer")
+    VolumeDescriptor volDescr({4, 7});
+
+    // Ensure data is actually non negative
+    Vector_t<data_t> bVec(volDescr.getNumberOfCoefficients());
+    bVec = bVec.setRandom().cwiseAbs();
+    DataContainer<data_t> b(volDescr, bVec);
+
+    Identity<data_t> A(volDescr);
+
+    auto prox = ProximalBoxConstraint<data_t>{0};
+    APGD<data_t> solver(A, b, prox);
+
+    auto reco = solver.solve(2);
+
+    CHECK_EQ(reco.squaredL2Norm(), doctest::Approx(b.squaredL2Norm()));
+
+    THEN("Clone is equal to original one")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 14, 9;
-        VolumeDescriptor volDescr(numCoeff);
+        auto clone = solver.clone();
 
-        RealVector_t bVec(volDescr.getNumberOfCoefficients());
-        bVec.setRandom();
-        DataContainer dcB(volDescr, bVec);
-
-        WHEN("setting up an APGD solver for a WLSProblem")
-        {
-            Identity idOp(volDescr);
-
-            WLSProblem wlsProb(idOp, dcB);
-
-            THEN("an exception is thrown as no regularization term is provided")
-            {
-                REQUIRE_THROWS_AS(APGD{wlsProb}, InvalidArgumentError);
-            }
-        }
-
-        WHEN("setting up an APGD solver for a QuadricProblem without A and without b")
-        {
-            Identity idOp(volDescr);
-
-            QuadricProblem<real_t> quadricProbWithoutAb(Quadric<real_t>{volDescr});
-
-            THEN("the vector b is initialized with zeroes and the operator A becomes an "
-                 "identity operator but an exception is thrown due to missing regularization term")
-            {
-                REQUIRE_THROWS_AS(APGD{quadricProbWithoutAb}, InvalidArgumentError);
-            }
-        }
+        CHECK_EQ(*clone, solver);
+        CHECK_NE(clone.get(), &solver);
     }
 }
 
