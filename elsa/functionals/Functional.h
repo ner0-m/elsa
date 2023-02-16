@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Cloneable.h"
+#include "DataContainer.h"
 #include "DataDescriptor.h"
 #include "Error.h"
-#include "Residual.h"
 #include "LinearOperator.h"
 #include "TypeCasts.hpp"
 #include "elsaDefines.h"
@@ -13,19 +13,21 @@ namespace elsa
     /**
      * @brief Abstract base class representing a functional, i.e. a mapping from vectors to scalars.
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Maximilian Hornung - modularization
-     * @author Tobias Lasser - rewrite
-     *
-     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
-     * real_t
-     *
      * A functional is a mapping a vector to a scalar value (e.g. mapping the output of a Residual
      * to a scalar). Typical examples of functionals are norms or semi-norms, such as the L2 or L1
      * norms.
      *
      * Using LinearOperators, Residuals (e.g. LinearResidual) and a Functional (e.g. L2NormPow2)
      * enables the formulation of typical terms in an OptimizationProblem.
+     *
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * real_t
+     *
+     * @author
+     * * Matthias Wieczorek - initial code
+     * * Maximilian Hornung - modularization
+     * * Tobias Lasser - rewrite
+     *
      */
     template <typename data_t = real_t>
     class Functional : public Cloneable<Functional<data_t>>
@@ -39,21 +41,11 @@ namespace elsa
          */
         explicit Functional(const DataDescriptor& domainDescriptor);
 
-        /**
-         * @brief Constructor for the functional, using a Residual as input to map to a scalar
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivatives)
-         */
-        explicit Functional(const Residual<data_t>& residual);
-
         /// default destructor
         ~Functional() override = default;
 
         /// return the domain descriptor
         const DataDescriptor& getDomainDescriptor() const;
-
-        /// return the residual (will be trivial if Functional was constructed without one)
-        const Residual<data_t>& getResidual() const;
 
         /**
          * @brief evaluate the functional at x and return the result
@@ -85,11 +77,6 @@ namespace elsa
          *
          * @param[in] x input DataContainer (in the domain of the functional)
          * @param[out] result output DataContainer (in the domain of the functional)
-         *
-         * Please note: after evaluating the residual at x, this methods calls the method
-         * getGradientInPlaceImpl that has to be overridden in derived classes to compute the
-         * functional's gradient, and after that the chain rule for the residual is applied (if
-         * necessary).
          */
         void getGradient(const DataContainer<data_t>& x, DataContainer<data_t>& result);
 
@@ -113,9 +100,6 @@ namespace elsa
         /// the data descriptor of the domain of the functional
         std::unique_ptr<DataDescriptor> _domainDescriptor;
 
-        /// the residual
-        std::unique_ptr<Residual<data_t>> _residual;
-
         /// implement the polymorphic comparison operation
         bool isEqual(const Functional<data_t>& other) const override;
 
@@ -132,16 +116,17 @@ namespace elsa
         virtual data_t evaluateImpl(const DataContainer<data_t>& Rx) = 0;
 
         /**
-         * @brief the getGradientInPlaceImpl method that has to be overridden in derived classes
+         * @brief the getGradientImplt method that has to be overridden in derived classes
          *
-         * @param[in,out] Rx the residual evaluated at x (in), and the gradient of the functional
-         * (out)
+         * @param[in] Rx the value to evaluate the gradient of the functional
+         * @param[in,out] out the evaluated gradient of the functional
          *
          * Please note: the evaluation of the residual is already performed in getGradient, as well
          * as the application of the chain rule. This method here only has to compute the gradient
          * of the functional itself, in an in-place manner (to avoid unnecessary DataContainers).
          */
-        virtual void getGradientInPlaceImpl(DataContainer<data_t>& Rx) = 0;
+        virtual void getGradientImpl(const DataContainer<data_t>& Rx,
+                                     DataContainer<data_t>& out) = 0;
 
         /**
          * @brief the getHessianImpl method that has to be overridden in derived classes
@@ -174,7 +159,7 @@ namespace elsa
      * \f]
      *
      * The gradient and hessian is only valid if the functional is (twice)
-     * differentiable. The `operator+` is overloaded for, to conviniently create
+     * differentiable. The `operator+` is overloaded for, to conveniently create
      * this class. It should not be necessary to create it explicitly.
      */
     template <class data_t>
@@ -187,7 +172,7 @@ namespace elsa
         /// Make deletion of copy constructor explicit
         FunctionalSum(const FunctionalSum<data_t>&) = delete;
 
-        /// Make deleteion of copy assignment explicit
+        /// Make deletion of copy assignment explicit
         FunctionalSum& operator=(const FunctionalSum<data_t>&) = delete;
 
     private:
@@ -195,7 +180,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// evaluate the gradient as: \f$\nabla g(x) + \nabla h(x)\f$
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// construct the hessian as: \f$\nabla^2 g(x) + \nabla^2 h(x)\f$
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -231,7 +216,7 @@ namespace elsa
      *
      * The gradient and hessian is only valid if the functional is differentiable.
      * The `operator*` is overloaded for scalar values with functionals, to
-     * conviniently create this class. It should not be necessary to create it
+     * conveniently create this class. It should not be necessary to create it
      * explicitly.
      */
     template <class data_t>
@@ -254,7 +239,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// Evaluate gradient as: \f$\lambda * \nabla g(x)\f$
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// Construct hessian as: \f$\lambda * \nabla^2 g(x)\f$
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;

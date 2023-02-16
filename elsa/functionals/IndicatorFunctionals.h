@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "DataDescriptor.h"
 #include "Functional.h"
 #include <limits>
@@ -33,7 +34,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// The gradient functions throws, the indicator function has no gradient
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>&) override;
 
         /// The gradient functions throws, the indicator function has no hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -51,9 +52,9 @@ namespace elsa
         data_t upper_ = std::numeric_limits<data_t>::infinity();
     };
 
-    /// @brief Indicator function for the set of non-negativ numbers.
+    /// @brief Indicator function for the set of non-negative numbers.
     ///
-    /// The nonnegativity indicator for the set of non-negativ numbers is defiend as:
+    /// The nonnegativity indicator for the set of non-negative numbers is defined as:
     /// \f[
     /// f(x) =
     /// \begin{cases}
@@ -73,7 +74,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// The gradient functions throws, the indicator function has no gradient
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>&) override;
 
         /// The gradient functions throws, the indicator function has no hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;

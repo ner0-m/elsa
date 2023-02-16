@@ -25,7 +25,10 @@ public:
 
     data_t evaluateImpl(const DataContainer<data_t>& Rx) override { return 1; }
 
-    void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override { Rx = 1; }
+    void getGradientImpl(const DataContainer<data_t>&, DataContainer<data_t>& out) override
+    {
+        out = 1;
+    }
 
     LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override
     {
@@ -51,7 +54,10 @@ public:
 
     data_t evaluateImpl(const DataContainer<data_t>& Rx) override { return 2; }
 
-    void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override { Rx = 2; }
+    void getGradientImpl(const DataContainer<data_t>&, DataContainer<data_t>& out) override
+    {
+        out = 2;
+    }
 
     LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override
     {
@@ -77,7 +83,10 @@ public:
 
     data_t evaluateImpl(const DataContainer<data_t>& Rx) override { return 3; }
 
-    void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override { Rx = 3; }
+    void getGradientImpl(const DataContainer<data_t>&, DataContainer<data_t>& out) override
+    {
+        out = 3;
+    }
 
     LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override
     {

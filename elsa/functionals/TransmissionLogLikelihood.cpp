@@ -1,4 +1,6 @@
 #include "TransmissionLogLikelihood.h"
+#include "DataContainer.h"
+#include "LinearOperator.h"
 #include "Scaling.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
@@ -12,10 +14,7 @@ namespace elsa
     TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(
         const DataDescriptor& domainDescriptor, const DataContainer<data_t>& y,
         const DataContainer<data_t>& b, const DataContainer<data_t>& r)
-        : Functional<data_t>(domainDescriptor),
-          _y{std::make_unique<DataContainer<data_t>>(y)},
-          _b{std::make_unique<DataContainer<data_t>>(b)},
-          _r{std::make_unique<DataContainer<data_t>>(r)}
+        : Functional<data_t>(domainDescriptor), y_{y}, b_{b}, r_{r}
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != b.getDataDescriptor()
@@ -28,9 +27,7 @@ namespace elsa
     TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(
         const DataDescriptor& domainDescriptor, const DataContainer<data_t>& y,
         const DataContainer<data_t>& b)
-        : Functional<data_t>(domainDescriptor),
-          _y{std::make_unique<DataContainer<data_t>>(y)},
-          _b{std::make_unique<DataContainer<data_t>>(b)}
+        : Functional<data_t>(domainDescriptor), y_{y}, b_{b}
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != b.getDataDescriptor())
@@ -39,92 +36,140 @@ namespace elsa
     }
 
     template <typename data_t>
-    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const Residual<data_t>& residual,
+    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const LinearOperator<data_t>& A,
                                                                  const DataContainer<data_t>& y,
                                                                  const DataContainer<data_t>& b,
                                                                  const DataContainer<data_t>& r)
-        : Functional<data_t>(residual),
-          _y{std::make_unique<DataContainer<data_t>>(y)},
-          _b{std::make_unique<DataContainer<data_t>>(b)},
-          _r{std::make_unique<DataContainer<data_t>>(r)}
+        : Functional<data_t>(A.getDomainDescriptor()), A_(A.clone()), y_{y}, b_{b}, r_{r}
     {
         // sanity check
-        if (residual.getRangeDescriptor() != y.getDataDescriptor()
-            || residual.getRangeDescriptor() != b.getDataDescriptor()
-            || residual.getRangeDescriptor() != r.getDataDescriptor())
+        if (A.getRangeDescriptor() != y.getDataDescriptor()
+            || A.getRangeDescriptor() != b.getDataDescriptor()
+            || A.getRangeDescriptor() != r.getDataDescriptor())
             throw InvalidArgumentError(
-                "TransmissionLogLikelihood: residual and y/b/r not matching in size.");
+                "TransmissionLogLikelihood: operator and y/b/r not matching in size.");
     }
 
     template <typename data_t>
-    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const Residual<data_t>& residual,
+    TransmissionLogLikelihood<data_t>::TransmissionLogLikelihood(const LinearOperator<data_t>& A,
                                                                  const DataContainer<data_t>& y,
                                                                  const DataContainer<data_t>& b)
-        : Functional<data_t>(residual),
-          _y{std::make_unique<DataContainer<data_t>>(y)},
-          _b{std::make_unique<DataContainer<data_t>>(b)}
+        : Functional<data_t>(A.getDomainDescriptor()), A_(A.clone()), y_{y}, b_{b}
     {
         // sanity check
-        if (residual.getRangeDescriptor() != y.getDataDescriptor()
-            || residual.getRangeDescriptor() != b.getDataDescriptor())
+        if (A.getRangeDescriptor() != y.getDataDescriptor()
+            || A.getRangeDescriptor() != b.getDataDescriptor())
             throw InvalidArgumentError(
-                "TransmissionLogLikelihood: residual and y/b not matching in size.");
+                "TransmissionLogLikelihood: operator and y/b not matching in size.");
     }
 
     template <typename data_t>
-    data_t TransmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
+    data_t TransmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& x)
     {
+        if (A_ && x.getDataDescriptor() != A_->getDomainDescriptor()) {
+            throw InvalidArgumentError(
+                "TransmissionLogLikelihood: given x is not the correct size");
+        }
+
+        if (!A_ && x.getDataDescriptor() != y_.getDataDescriptor()) {
+            throw InvalidArgumentError(
+                "TransmissionLogLikelihood: given x is not the correct size");
+        }
+
         auto result = static_cast<data_t>(0.0);
 
-        for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t temp = (*_b)[i] * std::exp(-Rx[i]);
-            if (_r)
-                temp += (*_r)[i];
+        auto Rx = [&]() {
+            if (A_) {
+                return A_->apply(x);
+            } else {
+                return x;
+            }
+        }();
 
-            result += temp - (*_y)[i] * std::log(temp);
+        for (index_t i = 0; i < Rx.getSize(); ++i) {
+            data_t temp = b_[i] * std::exp(-Rx[i]);
+            if (r_.has_value())
+                temp += (*r_)[i];
+
+            result += temp - y_[i] * std::log(temp);
         }
 
         return result;
     }
 
     template <typename data_t>
-    void TransmissionLogLikelihood<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void TransmissionLogLikelihood<data_t>::getGradientImpl(const DataContainer<data_t>& x,
+                                                            DataContainer<data_t>& out)
     {
-        for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t temp = (*_b)[i] * std::exp(-Rx[i]);
-            Rx[i] = -temp;
+        // Actual computation of the functional
+        auto translog = [&](auto in, auto i) {
+            data_t temp = b_[i] * std::exp(-in);
+            in = -temp;
 
-            if (_r)
-                Rx[i] += (*_y)[i] * temp / (temp + (*_r)[i]);
+            if (r_.has_value())
+                in += y_[i] * temp / (temp + (*r_)[i]);
             else
-                Rx[i] += (*_y)[i];
+                in += y_[i];
+
+            return in;
+        };
+
+        if (A_) {
+            auto Rx = A_->apply(x);
+            for (index_t i = 0; i < Rx.getSize(); ++i) {
+                Rx[i] = translog(Rx[i], i);
+            }
+            A_->applyAdjoint(Rx, out);
+        } else {
+            for (index_t i = 0; i < x.getSize(); ++i) {
+                out[i] = translog(x[i], i);
+            }
         }
     }
 
     template <typename data_t>
     LinearOperator<data_t>
-        TransmissionLogLikelihood<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
+        TransmissionLogLikelihood<data_t>::getHessianImpl(const DataContainer<data_t>& x)
     {
-        DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
-        for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t temp = (*_b)[i] * std::exp(-Rx[i]);
-            scaleFactors[i] = temp;
-            if (_r) {
-                data_t tempR = temp + (*_r)[i];
-                scaleFactors[i] += (*_r)[i] * (*_y)[i] * temp / (tempR * tempR);
+        auto scale = [&](auto in) {
+            DataContainer<data_t> s(in.getDataDescriptor());
+            for (index_t i = 0; i < in.getSize(); ++i) {
+                s[i] = b_[i] * std::exp(-in[i]);
+                if (r_.has_value()) {
+                    data_t tempR = s[i] + (*r_)[i];
+                    s[i] += (*r_)[i] * y_[i] * s[i] / (tempR * tempR);
+                }
             }
-        }
 
-        return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
+            return leaf(Scaling<data_t>(s.getDataDescriptor(), s));
+        };
+
+        if (A_) {
+            auto Rx = A_->apply(x);
+            auto s = scale(Rx);
+
+            // Jacobian is the operator, plus chain rule
+            return adjoint(*A_) * s * (*A_);
+        } else {
+            // Jacobian is the identity, no need for chain rule
+            return scale(x);
+        }
     }
 
     template <typename data_t>
     TransmissionLogLikelihood<data_t>* TransmissionLogLikelihood<data_t>::cloneImpl() const
     {
-        if (_r)
-            return new TransmissionLogLikelihood<data_t>(this->getResidual(), *_y, *_b, *_r);
-        else
-            return new TransmissionLogLikelihood<data_t>(this->getResidual(), *_y, *_b);
+        if (A_ && r_.has_value()) {
+            return new TransmissionLogLikelihood<data_t>(*A_, y_, b_, *r_);
+        }
+        if (A_ && !r_.has_value()) {
+            return new TransmissionLogLikelihood<data_t>(*A_, y_, b_);
+        }
+        if (!A_ && r_.has_value()) {
+            return new TransmissionLogLikelihood<data_t>(this->getDomainDescriptor(), y_, b_, *r_);
+        } else { // (!A_ && !r_.has_value())
+            return new TransmissionLogLikelihood<data_t>(this->getDomainDescriptor(), y_, b_);
+        }
     }
 
     template <typename data_t>
@@ -137,10 +182,10 @@ namespace elsa
         if (!otherTLL)
             return false;
 
-        if (*_y != *otherTLL->_y || *_b != *otherTLL->_b)
+        if (y_ != otherTLL->y_ || b_ != otherTLL->b_)
             return false;
 
-        if (_r && *_r != *otherTLL->_r)
+        if (r_.has_value() && otherTLL->r_.has_value() && *r_ != *otherTLL->r_)
             return false;
 
         return true;

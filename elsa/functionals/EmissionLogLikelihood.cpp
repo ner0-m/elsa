@@ -1,4 +1,7 @@
 #include "EmissionLogLikelihood.h"
+#include "DataContainer.h"
+#include "DataDescriptor.h"
+#include "LinearOperator.h"
 #include "Scaling.h"
 #include "TypeCasts.hpp"
 
@@ -11,9 +14,7 @@ namespace elsa
     EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const DataDescriptor& domainDescriptor,
                                                          const DataContainer<data_t>& y,
                                                          const DataContainer<data_t>& r)
-        : Functional<data_t>(domainDescriptor),
-          _y{std::make_unique<DataContainer<data_t>>(y)},
-          _r{std::make_unique<DataContainer<data_t>>(r)}
+        : Functional<data_t>(domainDescriptor), y_{y}, r_{r}
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != r.getDataDescriptor())
@@ -24,7 +25,7 @@ namespace elsa
     template <typename data_t>
     EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const DataDescriptor& domainDescriptor,
                                                          const DataContainer<data_t>& y)
-        : Functional<data_t>(domainDescriptor), _y{std::make_unique<DataContainer<data_t>>(y)}
+        : Functional<data_t>(domainDescriptor), y_{y}
     {
         // sanity check
         if (domainDescriptor != y.getDataDescriptor())
@@ -33,82 +34,126 @@ namespace elsa
     }
 
     template <typename data_t>
-    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const Residual<data_t>& residual,
+    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const LinearOperator<data_t>& A,
                                                          const DataContainer<data_t>& y,
                                                          const DataContainer<data_t>& r)
-        : Functional<data_t>(residual),
-          _y{std::make_unique<DataContainer<data_t>>(y)},
-          _r{std::make_unique<DataContainer<data_t>>(r)}
+        : Functional<data_t>(A.getDomainDescriptor()), A_(A.clone()), y_{y}, r_{r}
     {
         // sanity check
-        if (residual.getRangeDescriptor() != y.getDataDescriptor()
-            || residual.getRangeDescriptor() != r.getDataDescriptor())
+        if (A.getRangeDescriptor() != y.getDataDescriptor()
+            || A.getRangeDescriptor() != r.getDataDescriptor())
             throw InvalidArgumentError(
                 "EmissionLogLikelihood: residual and y/r not matching in size.");
     }
 
     template <typename data_t>
-    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const Residual<data_t>& residual,
+    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const LinearOperator<data_t>& A,
                                                          const DataContainer<data_t>& y)
-        : Functional<data_t>(residual), _y{std::make_unique<DataContainer<data_t>>(y)}
+        : Functional<data_t>(A.getDomainDescriptor()), A_(A.clone()), y_{y}
     {
         // sanity check
-        if (residual.getRangeDescriptor() != y.getDataDescriptor())
+        if (A.getRangeDescriptor() != y.getDataDescriptor())
             throw InvalidArgumentError(
                 "EmissionLogLikelihood: residual and y not matching in size.");
     }
 
     template <typename data_t>
-    data_t EmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
+    data_t EmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& x)
     {
+        if (A_ && x.getDataDescriptor() != A_->getDomainDescriptor()) {
+            throw InvalidArgumentError("EmissionLogLikelihood: given x is not the correct size");
+        }
+
+        if (!A_ && x.getDataDescriptor() != y_.getDataDescriptor()) {
+            throw InvalidArgumentError("EmissionLogLikelihood: given x is not the correct size");
+        }
+
         auto result = static_cast<data_t>(0.0);
+
+        auto Rx = [&]() {
+            if (A_) {
+                return A_->apply(x);
+            } else {
+                return x;
+            }
+        }();
 
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = Rx[i];
-            if (_r)
-                temp += (*_r)[i];
+            if (r_)
+                temp += (*r_)[i];
 
-            result += temp - (*_y)[i] * std::log(temp);
+            result += temp - y_[i] * std::log(temp);
         }
 
         return result;
     }
 
     template <typename data_t>
-    void EmissionLogLikelihood<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void EmissionLogLikelihood<data_t>::getGradientImpl(const DataContainer<data_t>& x,
+                                                        DataContainer<data_t>& out)
     {
-        for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t temp = Rx[i];
-            if (_r)
-                temp += (*_r)[i];
+        auto emissionlog = [&](auto in, auto i) {
+            data_t temp = in;
+            if (r_)
+                temp += (*r_)[i];
 
-            Rx[i] = 1 - (*_y)[i] / temp;
+            return 1 - y_[i] / temp;
+        };
+
+        if (A_) {
+            auto Rx = A_->apply(x);
+            for (index_t i = 0; i < Rx.getSize(); ++i) {
+                Rx[i] = emissionlog(Rx[i], i);
+            }
+            A_->applyAdjoint(Rx, out);
+        } else {
+            for (index_t i = 0; i < x.getSize(); ++i) {
+                out[i] = emissionlog(x[i], i);
+            }
         }
     }
 
     template <typename data_t>
     LinearOperator<data_t>
-        EmissionLogLikelihood<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
+        EmissionLogLikelihood<data_t>::getHessianImpl(const DataContainer<data_t>& x)
     {
-        DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
-        for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t temp = Rx[i];
-            if (_r)
-                temp += (*_r)[i];
+        auto scale = [&](auto in) {
+            DataContainer<data_t> s(in.getDataDescriptor());
+            for (index_t i = 0; i < in.getSize(); ++i) {
+                data_t temp = in[i];
+                if (r_)
+                    temp += (*r_)[i];
 
-            scaleFactors[i] = (*_y)[i] / (temp * temp);
+                s[i] = y_[i] / (temp * temp);
+            }
+
+            return leaf(Scaling<data_t>(s.getDataDescriptor(), s));
+        };
+
+        if (A_) {
+            auto Rx = A_->apply(x);
+
+            // Jacobian is the operator, plus chain rule
+            return adjoint(*A_) * scale(Rx) * (*A_);
+        } else {
+            // Jacobian is the identity, no need for chain rule
+            return scale(x);
         }
-
-        return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
     }
 
     template <typename data_t>
     EmissionLogLikelihood<data_t>* EmissionLogLikelihood<data_t>::cloneImpl() const
     {
-        if (_r)
-            return new EmissionLogLikelihood<data_t>(this->getResidual(), *_y, *_r);
-        else
-            return new EmissionLogLikelihood<data_t>(this->getResidual(), *_y);
+        if (A_ && r_.has_value()) {
+            return new EmissionLogLikelihood<data_t>(*A_, y_, *r_);
+        } else if (A_ && !r_.has_value()) {
+            return new EmissionLogLikelihood<data_t>(*A_, y_);
+        } else if (!A_ && r_.has_value()) {
+            return new EmissionLogLikelihood<data_t>(this->getDomainDescriptor(), y_, *r_);
+        } else { // (!A_ && !r_.has_value())
+            return new EmissionLogLikelihood<data_t>(this->getDomainDescriptor(), y_);
+        }
     }
 
     template <typename data_t>
@@ -121,13 +166,11 @@ namespace elsa
         if (!otherELL)
             return false;
 
-        if (*_y != *otherELL->_y)
+        if (r_ && otherELL->r_ && *r_ != *otherELL->r_) {
             return false;
+        }
 
-        if (_r && *_r != *otherELL->_r)
-            return false;
-
-        return true;
+        return y_ == otherELL->y_;
     }
 
     // ------------------------------------------

@@ -29,9 +29,10 @@ namespace elsa
     }
 
     template <typename data_t>
-    void ConstantFunctional<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void ConstantFunctional<data_t>::getGradientImpl(const DataContainer<data_t>&,
+                                                     DataContainer<data_t>& out)
     {
-        Rx = 0;
+        out = 0;
     }
 
     template <typename data_t>
@@ -73,9 +74,10 @@ namespace elsa
     }
 
     template <typename data_t>
-    void ZeroFunctional<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void ZeroFunctional<data_t>::getGradientImpl(const DataContainer<data_t>&,
+                                                 DataContainer<data_t>& out)
     {
-        Rx = 0;
+        out = 0;
     }
 
     template <typename data_t>

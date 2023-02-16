@@ -1,4 +1,6 @@
 #include "WeightedL1Norm.h"
+#include "DataContainer.h"
+#include "Error.h"
 #include "LinearOperator.h"
 
 namespace elsa
@@ -15,44 +17,30 @@ namespace elsa
     }
 
     template <typename data_t>
-    WeightedL1Norm<data_t>::WeightedL1Norm(const Residual<data_t>& residual,
-                                           const DataContainer<data_t>& weightingOp)
-        : Functional<data_t>(residual), _weightingOp{weightingOp}
-    {
-        // sanity check
-        if (residual.getRangeDescriptor().getNumberOfCoefficients()
-            != weightingOp.getDataDescriptor().getNumberOfCoefficients()) {
-            throw InvalidArgumentError(
-                "WeightedL1Norm: sizes of residual and weighting operator do not match");
-        }
-        // sanity check
-        if (weightingOp.minElement() < 0) {
-            throw InvalidArgumentError(
-                "WeightedL1Norm: all weights in the w vector should be >= 0");
-        }
-    }
-
-    template <typename data_t>
     const DataContainer<data_t>& WeightedL1Norm<data_t>::getWeightingOperator() const
     {
         return _weightingOp;
     }
 
     template <typename data_t>
-    data_t WeightedL1Norm<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
+    data_t WeightedL1Norm<data_t>::evaluateImpl(const DataContainer<data_t>& x)
     {
-        return _weightingOp.dot(cwiseAbs(Rx));
+        if (x.getDataDescriptor() != _weightingOp.getDataDescriptor()) {
+            throw InvalidArgumentError("WeightedL1Norm: x is not of correct size");
+        }
+
+        return _weightingOp.dot(cwiseAbs(x));
     }
 
     template <typename data_t>
-    void WeightedL1Norm<data_t>::getGradientInPlaceImpl([[maybe_unused]] DataContainer<data_t>& Rx)
+    void WeightedL1Norm<data_t>::getGradientImpl(const DataContainer<data_t>&,
+                                                 DataContainer<data_t>&)
     {
         throw LogicError("WeightedL1Norm: not differentiable, so no gradient! (busted!)");
     }
 
     template <typename data_t>
-    LinearOperator<data_t>
-        WeightedL1Norm<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> WeightedL1Norm<data_t>::getHessianImpl(const DataContainer<data_t>&)
     {
         throw LogicError("WeightedL1Norm: not differentiable, so no Hessian! (busted!)");
     }
@@ -60,7 +48,7 @@ namespace elsa
     template <typename data_t>
     WeightedL1Norm<data_t>* WeightedL1Norm<data_t>::cloneImpl() const
     {
-        return new WeightedL1Norm(this->getResidual(), _weightingOp);
+        return new WeightedL1Norm(_weightingOp);
     }
 
     template <typename data_t>
@@ -73,10 +61,7 @@ namespace elsa
         if (!otherWL1)
             return false;
 
-        if (_weightingOp != otherWL1->_weightingOp)
-            return false;
-
-        return true;
+        return _weightingOp == otherWL1->_weightingOp;
     }
 
     // ------------------------------------------

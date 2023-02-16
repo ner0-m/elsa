@@ -1,24 +1,27 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Functional.h"
 
 namespace elsa
 {
     /**
-     * @brief Class representing the Huber norm.
+     * @brief Class representing the Huber loss.
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Maximilian Hornung - modularization
-     * @author Tobias Lasser - modernization
-     *
-     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
-     * real_t
-     *
-     * The Huber norm evaluates to \f$ \sum_{i=1}^n \begin{cases} \frac{1}{2} x_i^2 & \text{for }
+     * The Huber loss evaluates to \f$ \sum_{i=1}^n \begin{cases} \frac{1}{2} x_i^2 & \text{for }
      * |x_i| \leq \delta \\ \delta\left(|x_i| - \frac{1}{2}\delta\right) & \text{else} \end{cases}
      * \f$ for \f$ x=(x_i)_{i=1}^n \f$ and a cut-off parameter \f$ \delta \f$.
      *
      * Reference: https://doi.org/10.1214%2Faoms%2F1177703732
+     *
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * real_t
+     *
+     * @author
+     * * Matthias Wieczorek - initial code
+     * * Maximilian Hornung - modularization
+     * * Tobias Lasser - modernization
+     *
      */
     template <typename data_t = real_t>
     class Huber : public Functional<data_t>
@@ -34,14 +37,6 @@ namespace elsa
         explicit Huber(const DataDescriptor& domainDescriptor,
                        real_t delta = static_cast<real_t>(1e-6));
 
-        /**
-         * @brief Constructor for the Huber functional, using a residual as input to map to a scalar
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivative)
-         * @param[in] delta parameter for linear/square cutoff (defaults to 1e-6)
-         */
-        explicit Huber(const Residual<data_t>& residual, real_t delta = static_cast<real_t>(1e-6));
-
         /// make copy constructor deletion explicit
         Huber(const Huber<data_t>&) = delete;
 
@@ -49,11 +44,11 @@ namespace elsa
         ~Huber() override = default;
 
     protected:
-        /// the evaluation of the Huber norm
+        /// the evaluation of the Huber loss
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -66,7 +61,7 @@ namespace elsa
 
     private:
         /// the cut-off delta
-        data_t _delta;
+        data_t delta_;
     };
 
 } // namespace elsa

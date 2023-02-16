@@ -1,4 +1,5 @@
 #include "PseudoHuber.h"
+#include "DataContainer.h"
 #include "Scaling.h"
 #include "TypeCasts.hpp"
 
@@ -9,16 +10,7 @@ namespace elsa
 {
     template <typename data_t>
     PseudoHuber<data_t>::PseudoHuber(const DataDescriptor& domainDescriptor, real_t delta)
-        : Functional<data_t>(domainDescriptor), _delta{delta}
-    {
-        // sanity check delta
-        if (delta <= static_cast<real_t>(0.0))
-            throw InvalidArgumentError("PseudoHuber: delta has to be positive.");
-    }
-
-    template <typename data_t>
-    PseudoHuber<data_t>::PseudoHuber(const Residual<data_t>& residual, real_t delta)
-        : Functional<data_t>(residual), _delta{delta}
+        : Functional<data_t>(domainDescriptor), delta_{delta}
     {
         // sanity check delta
         if (delta <= static_cast<real_t>(0.0))
@@ -33,8 +25,8 @@ namespace elsa
         auto result = static_cast<data_t>(0.0);
 
         for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t temp = Rx[i] / _delta;
-            result += _delta * _delta
+            data_t temp = Rx[i] / delta_;
+            result += delta_ * delta_
                       * (sqrt(static_cast<data_t>(1.0) + temp * temp) - static_cast<data_t>(1.0));
         }
 
@@ -42,11 +34,12 @@ namespace elsa
     }
 
     template <typename data_t>
-    void PseudoHuber<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void PseudoHuber<data_t>::getGradientImpl(const DataContainer<data_t>& Rx,
+                                              DataContainer<data_t>& out)
     {
         for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t temp = Rx[i] / _delta;
-            Rx[i] = Rx[i] / sqrt(static_cast<data_t>(1.0) + temp * temp);
+            data_t temp = Rx[i] / delta_;
+            out[i] = Rx[i] / sqrt(static_cast<data_t>(1.0) + temp * temp);
         }
     }
 
@@ -55,7 +48,7 @@ namespace elsa
     {
         DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
         for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t temp = Rx[i] / _delta;
+            data_t temp = Rx[i] / delta_;
             data_t tempSq = temp * temp;
             data_t sqrtOnePTempSq = sqrt(static_cast<data_t>(1.0) + tempSq);
             scaleFactors[i] =
@@ -68,7 +61,7 @@ namespace elsa
     template <typename data_t>
     PseudoHuber<data_t>* PseudoHuber<data_t>::cloneImpl() const
     {
-        return new PseudoHuber(this->getResidual(), _delta);
+        return new PseudoHuber(this->getDomainDescriptor(), delta_);
     }
 
     template <typename data_t>
@@ -81,10 +74,7 @@ namespace elsa
         if (!otherPHuber)
             return false;
 
-        if (_delta != otherPHuber->_delta)
-            return false;
-
-        return true;
+        return delta_ == otherPHuber->delta_;
     }
 
     // ------------------------------------------

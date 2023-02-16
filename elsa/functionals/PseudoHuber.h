@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Functional.h"
 
 namespace elsa
@@ -33,16 +34,6 @@ namespace elsa
         explicit PseudoHuber(const DataDescriptor& domainDescriptor,
                              real_t delta = static_cast<real_t>(1));
 
-        /**
-         * @brief Constructor for the Pseudohuber functional, using a residual as input to map to a
-         * scalar
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivative)
-         * @param[in] delta parameter for linear slope (defaults to 1)
-         */
-        explicit PseudoHuber(const Residual<data_t>& residual,
-                             real_t delta = static_cast<real_t>(1));
-
         /// make copy constructor deletion explicit
         PseudoHuber(const PseudoHuber<data_t>&) = delete;
 
@@ -54,7 +45,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -67,7 +58,7 @@ namespace elsa
 
     private:
         /// the slope delta
-        data_t _delta;
+        data_t delta_;
     };
 
 } // namespace elsa

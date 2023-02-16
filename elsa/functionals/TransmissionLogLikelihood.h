@@ -1,8 +1,11 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Functional.h"
+#include "LinearOperator.h"
 
 #include <memory>
+#include <optional>
 
 namespace elsa
 {
@@ -29,6 +32,16 @@ namespace elsa
     {
     public:
         /**
+         * @brief Constructor for transmission log-likelihood, using only y and b (no residual)
+         *
+         * @param[in] domainDescriptor describing the domain of the functional
+         * @param[in] y the measurement data vector
+         * @param[in] b the blank scan data vector
+         */
+        TransmissionLogLikelihood(const DataDescriptor& domainDescriptor,
+                                  const DataContainer<data_t>& y, const DataContainer<data_t>& b);
+
+        /**
          * @brief Constructor for transmission log-likelihood, using y, b, and r (no residual)
          *
          * @param[in] domainDescriptor describing the domain of the functional
@@ -41,37 +54,27 @@ namespace elsa
                                   const DataContainer<data_t>& r);
 
         /**
-         * @brief Constructor for transmission log-likelihood, using only y and b (no residual)
+         * @brief Constructor for transmission log-likelihood, using y and b, and a residual as
+         * input
          *
-         * @param[in] domainDescriptor describing the domain of the functional
+         * @param[in] A linear operator to apply to x
          * @param[in] y the measurement data vector
          * @param[in] b the blank scan data vector
          */
-        TransmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                                  const DataContainer<data_t>& y, const DataContainer<data_t>& b);
+        TransmissionLogLikelihood(const LinearOperator<data_t>& A, const DataContainer<data_t>& y,
+                                  const DataContainer<data_t>& b);
 
         /**
          * @brief Constructor for transmission log-likelihood, using y, b, and r, and a residual as
          * input
          *
-         * @param[in] residual to be used when evaluating the functional (or its derivative)
+         * @param[in] A linear operator to apply to x
          * @param[in] y the measurement data vector
          * @param[in] b the blank scan data vector
          * @param[in] r the background event data vector
          */
-        TransmissionLogLikelihood(const Residual<data_t>& residual, const DataContainer<data_t>& y,
+        TransmissionLogLikelihood(const LinearOperator<data_t>& A, const DataContainer<data_t>& y,
                                   const DataContainer<data_t>& b, const DataContainer<data_t>& r);
-
-        /**
-         * @brief Constructor for transmission log-likelihood, using y and b, and a residual as
-         * input
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivative)
-         * @param[in] y the measurement data vector
-         * @param[in] b the blank scan data vector
-         */
-        TransmissionLogLikelihood(const Residual<data_t>& residual, const DataContainer<data_t>& y,
-                                  const DataContainer<data_t>& b);
 
         /// make copy constructor deletion explicit
         TransmissionLogLikelihood(const TransmissionLogLikelihood<data_t>&) = delete;
@@ -84,7 +87,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -96,13 +99,16 @@ namespace elsa
         bool isEqual(const Functional<data_t>& other) const override;
 
     private:
+        /// optional linear operator to apply to x
+        std::unique_ptr<LinearOperator<data_t>> A_{};
+
         /// the measurement data vector y
-        std::unique_ptr<const DataContainer<data_t>> _y{};
+        DataContainer<data_t> y_;
 
         /// the blank scan data vector b
-        std::unique_ptr<const DataContainer<data_t>> _b{};
+        DataContainer<data_t> b_;
 
         /// the background event data vector r
-        std::unique_ptr<const DataContainer<data_t>> _r{};
+        std::optional<DataContainer<data_t>> r_{};
     };
 } // namespace elsa

@@ -1,5 +1,7 @@
 #include "WeightedL2NormPow2.h"
+#include "DataContainer.h"
 #include "LinearOperator.h"
+#include "Scaling.h"
 #include "TypeCasts.hpp"
 
 #include <stdexcept>
@@ -7,60 +9,41 @@
 namespace elsa
 {
     template <typename data_t>
-    WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Scaling<data_t>& weightingOp)
-        : Functional<data_t>(weightingOp.getDomainDescriptor()),
-          _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
+    WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const DataContainer<data_t>& weights)
+        : Functional<data_t>(weights.getDataDescriptor()), weights_{weights}
     {
     }
 
     template <typename data_t>
-    WeightedL2NormPow2<data_t>::WeightedL2NormPow2(const Residual<data_t>& residual,
-                                                   const Scaling<data_t>& weightingOp)
-        : Functional<data_t>(residual),
-          _weightingOp{static_cast<Scaling<data_t>*>(weightingOp.clone().release())}
+    Scaling<data_t> WeightedL2NormPow2<data_t>::getWeightingOperator() const
     {
-        // sanity check
-        if (residual.getRangeDescriptor().getNumberOfCoefficients()
-            != weightingOp.getDomainDescriptor().getNumberOfCoefficients())
-            throw InvalidArgumentError(
-                "WeightedL2NormPow2: sizes of residual and weighting operator do not match");
-    }
-
-    template <typename data_t>
-    const Scaling<data_t>& WeightedL2NormPow2<data_t>::getWeightingOperator() const
-    {
-        return *_weightingOp;
+        return Scaling<data_t>(weights_.getDataDescriptor(), weights_);
     }
 
     template <typename data_t>
     data_t WeightedL2NormPow2<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
-        auto temp = _weightingOp->apply(Rx);
-
+        auto temp = weights_ * Rx;
         return static_cast<data_t>(0.5) * Rx.dot(temp);
     }
 
     template <typename data_t>
-    void WeightedL2NormPow2<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void WeightedL2NormPow2<data_t>::getGradientImpl(const DataContainer<data_t>& Rx,
+                                                     DataContainer<data_t>& out)
     {
-        auto temp = _weightingOp->apply(Rx);
-        Rx = temp;
+        out = weights_ * Rx;
     }
 
     template <typename data_t>
-    LinearOperator<data_t>
-        WeightedL2NormPow2<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> WeightedL2NormPow2<data_t>::getHessianImpl(const DataContainer<data_t>&)
     {
-        return leaf(*_weightingOp);
+        return leaf(getWeightingOperator());
     }
 
     template <typename data_t>
     WeightedL2NormPow2<data_t>* WeightedL2NormPow2<data_t>::cloneImpl() const
     {
-        // this ugly cast has to go away at some point..
-        // Still not nice, but still safe as _weightingOp is allways of type Scaling
-        const auto& scaling = downcast<Scaling<data_t>>(*_weightingOp);
-        return new WeightedL2NormPow2(this->getResidual(), scaling);
+        return new WeightedL2NormPow2(weights_);
     }
 
     template <typename data_t>
@@ -73,10 +56,7 @@ namespace elsa
         if (!otherWL2)
             return false;
 
-        if (*_weightingOp != *otherWL2->_weightingOp)
-            return false;
-
-        return true;
+        return weights_ == otherWL2->weights_;
     }
 
     // ------------------------------------------

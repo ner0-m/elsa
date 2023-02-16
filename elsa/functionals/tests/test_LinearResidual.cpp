@@ -77,12 +77,12 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing trivial linear residual", TestType, 
                 REQUIRE_THROWS_AS(linRes.getDataVector(), Error);
             }
 
-            THEN("a clone behaves as expected")
+            THEN("a copy behaves as expected")
             {
-                auto linResClone = linRes.clone();
+                auto linResClone = linRes;
 
-                REQUIRE_NE(linResClone.get(), &linRes);
-                REQUIRE_EQ(*linResClone, linRes);
+                REQUIRE_NE(&linResClone, &linRes);
+                REQUIRE_EQ(linResClone, linRes);
             }
 
             THEN("the Jacobian and evaluate work as expected")
@@ -129,12 +129,12 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with just an data vector", TestType,
                 REQUIRE_THROWS_AS(linRes.getOperator(), Error);
             }
 
-            THEN("a clone behaves as expected")
+            THEN("a copy behaves as expected")
             {
-                auto linResClone = linRes.clone();
+                auto linResClone = linRes;
 
-                REQUIRE_NE(linResClone.get(), &linRes);
-                REQUIRE_EQ(*linResClone, linRes);
+                REQUIRE_NE(&linResClone, &linRes);
+                REQUIRE_EQ(linResClone, linRes);
             }
 
             THEN("the Jacobian and evaluate work as expected")
@@ -183,12 +183,12 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with just an operator", TestType, fl
                 REQUIRE_THROWS_AS(linRes.getDataVector(), Error);
             }
 
-            THEN("a clone behaves as expected")
+            THEN("a copy behaves as expected")
             {
-                auto linResClone = linRes.clone();
+                auto linResClone = linRes;
 
-                REQUIRE_NE(linResClone.get(), &linRes);
-                REQUIRE_EQ(*linResClone, linRes);
+                REQUIRE_NE(&linResClone, &linRes);
+                REQUIRE_EQ(linResClone, linRes);
             }
 
             THEN("the Jacobian and evaluate work as expected")
@@ -239,12 +239,12 @@ TEST_CASE_TEMPLATE("LinearResidual: Testing with operator and data", TestType, f
                 REQUIRE_UNARY(isApprox(linRes.getDataVector(), dc));
             }
 
-            THEN("a clone behaves as expected")
+            THEN("a copy behaves as expected")
             {
-                auto linResClone = linRes.clone();
+                auto linResClone = linRes;
 
-                REQUIRE_NE(linResClone.get(), &linRes);
-                REQUIRE_EQ(*linResClone, linRes);
+                REQUIRE_NE(&linResClone, &linRes);
+                REQUIRE_EQ(linResClone, linRes);
             }
 
             THEN("the Jacobian and evaluate work as expected")

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataDescriptor.h"
 #include "Functional.h"
 #include "DataContainer.h"
 #include "LinearOperator.h"
@@ -32,12 +33,19 @@ namespace elsa
         explicit L2NormPow2(const DataDescriptor& domainDescriptor);
 
         /**
-         * @brief Constructor for the l2 norm (squared) functional, using a residual as input to map
-         * to a scalar
+         * @brief Constructor the l2 norm (squared) functional with a LinearResidual
          *
-         * @param[in] residual to be used when evaluating the functional (or its derivatives)
+         * @param[in] domainDescriptor describing the domain of the functional
+         * @param[in] b data to use in the linear residual
          */
-        explicit L2NormPow2(const Residual<data_t>& residual);
+        L2NormPow2(const DataDescriptor& domainDescriptor, const DataContainer<data_t>& b);
+
+        /**
+         * @brief Constructor the l2 norm (squared) functional with a LinearResidual
+         *
+         * @param[in] A LinearOperator to use in the residual
+         */
+        explicit L2NormPow2(const LinearOperator<data_t>& A);
 
         /**
          * @brief Constructor the l2 norm (squared) functional with a LinearResidual
@@ -53,12 +61,20 @@ namespace elsa
         /// default destructor
         ~L2NormPow2() override = default;
 
+        bool hasOperator() const;
+
+        bool hasDataVector() const;
+
+        const LinearOperator<data_t>& getOperator() const;
+
+        const DataContainer<data_t>& getDataVector() const;
+
     protected:
         /// the evaluation of the l2 norm (squared)
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -68,6 +84,11 @@ namespace elsa
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Functional<data_t>& other) const override;
+
+    private:
+        std::unique_ptr<LinearOperator<data_t>> A_{};
+
+        std::optional<DataContainer<data_t>> b_{};
     };
 
 } // namespace elsa

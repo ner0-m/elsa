@@ -1,4 +1,5 @@
 #include "Huber.h"
+#include "DataContainer.h"
 #include "Scaling.h"
 #include "TypeCasts.hpp"
 
@@ -9,7 +10,7 @@ namespace elsa
 {
     template <typename data_t>
     Huber<data_t>::Huber(const DataDescriptor& domainDescriptor, real_t delta)
-        : Functional<data_t>(domainDescriptor), _delta{delta}
+        : Functional<data_t>(domainDescriptor), delta_{delta}
     {
         // sanity check delta
         if (delta <= static_cast<real_t>(0.0))
@@ -17,63 +18,56 @@ namespace elsa
     }
 
     template <typename data_t>
-    Huber<data_t>::Huber(const elsa::Residual<data_t>& residual, real_t delta)
-        : Functional<data_t>(residual), _delta{delta}
-    {
-        // sanity check delta
-        if (delta <= static_cast<real_t>(0.0))
-            throw InvalidArgumentError("Huber: delta has to be positive.");
-    }
-
-    template <typename data_t>
-    data_t Huber<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
+    data_t Huber<data_t>::evaluateImpl(const DataContainer<data_t>& x)
     {
         // note: this is currently not a reduction in DataContainer, but implemented here "manually"
+        auto result = data_t{0.0};
 
-        auto result = static_cast<data_t>(0.0);
-
-        for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t value = Rx[i];
-            if (std::abs(value) <= _delta)
+        for (index_t i = 0; i < x.getSize(); ++i) {
+            data_t value = x[i];
+            if (std::abs(value) <= delta_)
                 result += static_cast<data_t>(0.5) * value * value;
             else
-                result += _delta * (std::abs(value) - static_cast<real_t>(0.5) * _delta);
+                result += delta_ * (std::abs(value) - static_cast<real_t>(0.5) * delta_);
         }
 
         return result;
     }
 
     template <typename data_t>
-    void Huber<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void Huber<data_t>::getGradientImpl(const DataContainer<data_t>& x, DataContainer<data_t>& out)
     {
-        for (index_t i = 0; i < Rx.getSize(); ++i) {
-            data_t value = Rx[i];
-            if (value > _delta)
-                Rx[i] = _delta;
-            else if (value < -_delta)
-                Rx[i] = -_delta;
-            // else Rx[i] = Rx[i], i.e. nothing to do for the quadratic case
+        for (index_t i = 0; i < x.getSize(); ++i) {
+            data_t value = x[i];
+            if (value > delta_) {
+                out[i] = delta_;
+            } else if (value < -delta_) {
+                out[i] = -delta_;
+            } else {
+                out[i] = x[i];
+            }
         }
     }
 
     template <typename data_t>
-    LinearOperator<data_t> Huber<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> Huber<data_t>::getHessianImpl(const DataContainer<data_t>& x)
     {
-        DataContainer<data_t> scaleFactors(Rx.getDataDescriptor());
-        for (index_t i = 0; i < Rx.getSize(); ++i) {
-            if (std::abs(Rx[i]) <= _delta)
-                scaleFactors[i] = static_cast<data_t>(1);
-            else
-                scaleFactors[i] = static_cast<data_t>(0);
+        DataContainer<data_t> s(x.getDataDescriptor());
+        for (index_t i = 0; i < x.getSize(); ++i) {
+            if (std::abs(x[i]) <= delta_) {
+                s[i] = data_t{1};
+            } else {
+                s[i] = data_t{0};
+            }
         }
 
-        return leaf(Scaling<data_t>(Rx.getDataDescriptor(), scaleFactors));
+        return leaf(Scaling<data_t>(x.getDataDescriptor(), s));
     }
 
     template <typename data_t>
     Huber<data_t>* Huber<data_t>::cloneImpl() const
     {
-        return new Huber(this->getResidual(), _delta);
+        return new Huber(this->getDomainDescriptor(), delta_);
     }
 
     template <typename data_t>
@@ -86,7 +80,7 @@ namespace elsa
         if (!otherHuber)
             return false;
 
-        if (_delta != otherHuber->_delta)
+        if (delta_ != otherHuber->delta_)
             return false;
 
         return true;

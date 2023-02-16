@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "DataDescriptor.h"
 #include "Functional.h"
 
@@ -29,7 +30,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// The gradient operator is the ZeroOperator, hence set Rx to 0
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// There does not exist a hessian, this will throw if called
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -64,7 +65,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// The gradient operator is the ZeroOperator, hence set Rx to 0
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// There does not exist a hessian, this will throw if called
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;

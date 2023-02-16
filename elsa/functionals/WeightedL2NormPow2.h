@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Functional.h"
 #include "Scaling.h"
 
@@ -8,15 +9,16 @@ namespace elsa
     /**
      * @brief Class representing a weighted, squared l2 norm functional.
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Maximilian Hornung - modularization
-     * @author Tobias Lasser - modernization
-     *
-     * @tparam data_t data type for the domain of the functional, defaulting to real_t
-     *
      * The weighted, squared l2 norm functional evaluates to \f$ 0.5 * \| x \|_{W,2} = 0.5 * \langle
      * x, Wx \rangle \f$ using the standard scalar product, and where W is a diagonal scaling
      * operator.
+     *
+     * @tparam data_t data type for the domain of the functional, defaulting to real_t
+     *
+     * @author
+     * * Matthias Wieczorek - initial code
+     * * Maximilian Hornung - modularization
+     * * Tobias Lasser - modernization
      */
     template <typename data_t = real_t>
     class WeightedL2NormPow2 : public Functional<data_t>
@@ -28,16 +30,7 @@ namespace elsa
          *
          * @param[in] weightingOp diagonal scaling operator used for weights
          */
-        explicit WeightedL2NormPow2(const Scaling<data_t>& weightingOp);
-
-        /**
-         * @brief Constructor for the weighted, squared l2 norm, using a residual as input to map to
-         * a scalar
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivatives)
-         * @param[in] weightingOp diagonal scaling operator used for weights
-         */
-        WeightedL2NormPow2(const Residual<data_t>& residual, const Scaling<data_t>& weightingOp);
+        explicit WeightedL2NormPow2(const DataContainer<data_t>& weights);
 
         /// make copy constructor deletion explicit
         WeightedL2NormPow2(const WeightedL2NormPow2<data_t>&) = delete;
@@ -46,14 +39,14 @@ namespace elsa
         ~WeightedL2NormPow2() override = default;
 
         /// returns the weighting operator
-        const Scaling<data_t>& getWeightingOperator() const;
+        Scaling<data_t> getWeightingOperator() const;
 
     protected:
         /// the evaluation of the weighted, squared l2 norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -66,7 +59,7 @@ namespace elsa
 
     private:
         /// the weighting operator
-        std::unique_ptr<Scaling<data_t>> _weightingOp;
+        DataContainer<data_t> weights_;
     };
 
 } // namespace elsa

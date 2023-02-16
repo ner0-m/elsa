@@ -33,7 +33,7 @@ namespace elsa
     }
 
     template <class data_t>
-    void IndicatorBox<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void IndicatorBox<data_t>::getGradientImpl(const DataContainer<data_t>&, DataContainer<data_t>&)
     {
         throw NotImplementedError("IndicatorBox: Not differentiable");
     }
@@ -82,7 +82,8 @@ namespace elsa
     }
 
     template <class data_t>
-    void IndicatorNonNegativity<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void IndicatorNonNegativity<data_t>::getGradientImpl(const DataContainer<data_t>&,
+                                                         DataContainer<data_t>&)
     {
         throw NotImplementedError("IndicatorNonNegativity: Not differentiable");
     }

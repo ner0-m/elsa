@@ -1,6 +1,5 @@
 # list all the headers of the module
 set(MODULE_HEADERS
-    Residual.h
     LinearResidual.h
     Functional.h
     L0PseudoNorm.h
@@ -21,7 +20,6 @@ set(MODULE_HEADERS
 
 # list all the code files of the module
 set(MODULE_SOURCES
-    Residual.cpp
     LinearResidual.cpp
     Functional.cpp
     L0PseudoNorm.cpp

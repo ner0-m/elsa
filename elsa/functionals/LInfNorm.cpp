@@ -1,4 +1,5 @@
 #include "LInfNorm.h"
+#include "DataContainer.h"
 #include "TypeCasts.hpp"
 
 #include <stdexcept>
@@ -12,25 +13,19 @@ namespace elsa
     }
 
     template <typename data_t>
-    LInfNorm<data_t>::LInfNorm(const Residual<data_t>& residual) : Functional<data_t>(residual)
-    {
-    }
-
-    template <typename data_t>
     data_t LInfNorm<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         return Rx.lInfNorm();
     }
 
     template <typename data_t>
-    void LInfNorm<data_t>::getGradientInPlaceImpl([[maybe_unused]] DataContainer<data_t>& Rx)
+    void LInfNorm<data_t>::getGradientImpl(const DataContainer<data_t>&, DataContainer<data_t>&)
     {
         throw LogicError("LInfNorm: not differentiable, so no gradient! (busted!)");
     }
 
     template <typename data_t>
-    LinearOperator<data_t>
-        LInfNorm<data_t>::getHessianImpl([[maybe_unused]] const DataContainer<data_t>& Rx)
+    LinearOperator<data_t> LInfNorm<data_t>::getHessianImpl(const DataContainer<data_t>&)
     {
         throw LogicError("LInfNorm: not differentiable, so no Hessian! (busted!)");
     }
@@ -38,7 +33,7 @@ namespace elsa
     template <typename data_t>
     LInfNorm<data_t>* LInfNorm<data_t>::cloneImpl() const
     {
-        return new LInfNorm(this->getResidual());
+        return new LInfNorm(this->getDomainDescriptor());
     }
 
     template <typename data_t>
