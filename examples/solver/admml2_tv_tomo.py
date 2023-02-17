@@ -7,19 +7,21 @@ def example2d(s: int):
     size = np.array([s] * 2)
     phantom = elsa.phantoms.modifiedSheppLogan(size)
 
-    numAngles = 180
-    arc = 180
-    distance = size[0]
     sinoDescriptor = elsa.CircleTrajectoryGenerator.trajectoryFromAngles(
-        np.arange(0, 180, 1), phantom.getDataDescriptor(), distance * 100.0, distance
+        np.arange(0, 360, 1), phantom.getDataDescriptor(), size[0] * 100.0, size[0]
     )
 
-    projector = elsa.SiddonsMethod(phantom.getDataDescriptor(), sinoDescriptor)
-    sinogram = projector.apply(phantom)
+    A = elsa.SiddonsMethodCUDA(phantom.getDataDescriptor(), sinoDescriptor)
+    b = A.apply(phantom)
 
-    solver = elsa.CGLS(projector, sinogram)
-    reconstruction = solver.solve(20)
-    plt.imshow(reconstruction)
+    grad = elsa.FiniteDifferences(phantom.getDataDescriptor())
+    proxg = elsa.ProximalL1(10)
+    tau = 0.05
+    admm = elsa.ADMML2(A, b, grad, proxg, tau)
+
+    niters = 30
+    reco = admm.solve(niters)
+    plt.imshow(reco)
     plt.show()
 
 

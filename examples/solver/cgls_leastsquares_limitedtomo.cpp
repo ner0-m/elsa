@@ -1,4 +1,25 @@
-/// Elsa example program: basic 2d X-ray CT simulation and reconstruction
+/*
+ * This examples solves the following problem:
+ * \[
+ * \min_x 0.5 * || A x - b ||_2^2
+ * \]
+ * using a conjugate gradient for least squares (CGLS).
+ *
+ * The least squares problem is the "easiest" problem to solve many different
+ * inverse problems. Many different solvers can solve it, but especially in the
+ * presence of noise it quickly breaks down.
+ *
+ * The application is attenuation X-ray computed tomography (CT). This
+ * translates to the above equation that the system matrix \f$A\f$ is an
+ * discrete approximation of the Radon Transform. In this specific example,
+ * a limited angle tomography is reconstructed. I.e. a circular trajectory,
+ * which does not cover the complete circle, and/or has certain missing pieces
+ * of the circle. This can be quite a challenging, but interesting use case for
+ * X-ray CT.
+ *
+ * The phantom is a simple modified Shepp-Logan phantom, which is commonly
+ * found for synthetic reconstructions.
+ */
 
 #include "elsa.h"
 
@@ -13,9 +34,6 @@ void limited_angle_example2d()
     size << 128, 128;
     auto phantom = phantoms::modifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
-
-    // write the phantom out
-    EDF::write(phantom, "2dphantom.edf");
 
     // generate circular trajectory
     index_t numAngles{360}, arc{360};
@@ -35,19 +53,16 @@ void limited_angle_example2d()
     // simulate the sinogram
     auto sinogram = projector.apply(phantom);
 
-    // write the sinogram out
-    EDF::write(sinogram, "2dsinogram.edf");
-
     // solve the reconstruction problem
     CGLS cgSolver(projector, sinogram);
 
-    index_t noIterations{20};
+    index_t niters{20};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
-                              noIterations);
-    auto cgReconstruction = cgSolver.solve(noIterations);
+                              niters);
+    auto reco = cgSolver.solve(niters);
 
     // write the reconstruction out
-    EDF::write(cgReconstruction, "2dreconstruction_cg.edf");
+    EDF::write(reco, "reco_cgls_ls_limitedtomo.edf");
 }
 
 int main()

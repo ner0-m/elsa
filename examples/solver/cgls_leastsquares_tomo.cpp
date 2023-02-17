@@ -1,8 +1,24 @@
-/// Elsa example program: basic 2d X-ray CT simulation and reconstruction
-
+/*
+ * This examples solves the following problem:
+ * \[
+ * \min_x 0.5 * || A x - b ||_2^2
+ * \]
+ * using a conjugate gradient for least squares (CGLS).
+ *
+ * The least squares problem is the "easiest" problem to solve many different
+ * inverse problems. Many different solvers can solve it, but especially in the
+ * presence of noise it quickly breaks down.
+ *
+ * The application is attenuation X-ray computed tomography (CT). This
+ * translates to the above equation that the system matrix \f$A\f$ is an
+ * discrete approximation of the Radon Transform. In this example 512
+ * projections are acquired over the complete circle. This is an easy setup, as
+ * there are many projections from the complete circle.
+ *
+ * The phantom is a simple modified Shepp-Logan phantom, which is commonly
+ * found for synthetic reconstructions.
+ */
 #include "elsa.h"
-
-#include <iostream>
 
 using namespace elsa;
 
@@ -13,9 +29,6 @@ void example2d()
     auto phantom = phantoms::modifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
-    // write the phantom out
-    io::write(phantom, "2dphantom.pgm");
-
     // generate circular trajectory
     index_t numAngles{512}, arc{360};
     const auto distance = static_cast<real_t>(size(0));
@@ -24,7 +37,6 @@ void example2d()
 
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as Phantoms returns a
     // VolumeDescriptor
-    Logger::get("Info")->info("Create BlobProjector");
     SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
                             *sinoDescriptor);
 
@@ -32,21 +44,16 @@ void example2d()
     Logger::get("Info")->info("Calculate sinogram");
     auto sinogram = projector.apply(phantom);
 
-    // write the sinogram out
-    Logger::get("Info")->info("Write sinogram");
-    io::write(sinogram, "2dsinogram.pgm");
-
     // solve the reconstruction problem
-    CGLS cgSolver(projector, sinogram);
+    CGLS solver(projector, sinogram);
 
     index_t noIterations{10};
     Logger::get("Info")->info("Solving reconstruction using {} iterations of conjugate gradient",
                               noIterations);
-    auto cgReconstruction = cgSolver.solve(noIterations);
-    std::cout << cgReconstruction.l2Norm() << "\n";
+    auto recon = solver.solve(noIterations);
 
     // write the reconstruction out
-    io::write(cgReconstruction, "2dreconstruction_cg.pgm");
+    io::write(recon, "reco_cgls_leastsquares_tomo.pgm");
 }
 
 int main()

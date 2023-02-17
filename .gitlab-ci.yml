@@ -209,7 +209,7 @@ build-pybind:
     - pip install --verbose .
     - pip install -U pytest
     - pytest
-    - python examples/example2d.py
+    - python examples/solver/example2d.py --size 16 --no-show
   tags:
     - linux
     - elsa
@@ -223,7 +223,7 @@ build-pybind-cuda:
     - pip install --verbose .
     - pip install -U pytest
     - pytest
-    - python examples/example2d.py --size 16 # just run it very small should be quick!
+    - python examples/solver/example2d.py --size 16 --no-show
   tags:
     - linux
     - elsa
