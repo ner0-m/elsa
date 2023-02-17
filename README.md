@@ -5,9 +5,15 @@ elsa - an elegant framework for tomographic reconstruction
 Using concepts such as data containers, operators, and functionals, inverse problems can be modelled and then solved.
 **elsa** supports any imaging modality in general, but currently only implements forward models for X-ray Computed Tomography.
 Seamless GPU computing based on CUDA is supported, along with Python bindings for ease of use.
+The source code can be found [here](https://gitlab.lrz.de/IP/elsa).
+
+The framework is mostly developed by the Computational Imaging and Inverse Problems
+(CIIP) group at the Technical University of Munich. For more info about our research
+checkout our [website](https://ciip.in.tum.de/).
 
 Continuous Integration status (master)
 ---------------
+
 ![Pipeline status (master)](https://gitlab.lrz.de/IP/elsa/badges/master/pipeline.svg)
 ![Coverage status (master)](https://gitlab.lrz.de/IP/elsa/badges/master/coverage.svg)
 
