@@ -329,6 +329,28 @@ namespace detail
                  py::arg("sinogram"), py::arg("epsilon"))
             .def(py::init<const LOp&, const dc&>(), py::arg("projector"), py::arg("sinogram"));
     }
+
+    template <class data_t>
+    void add_admml2(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using DC = elsa::DataContainer<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using Prox = elsa::ProximalOperator<data_t>;
+
+        py::class_<elsa::ADMML2<data_t>, Solver> admm(m, name);
+        admm.def(py::init<const LOp&, const DC&, const LOp&, const Prox&, std::optional<data_t>>(),
+                 py::arg("Op"), py::arg("b"), py::arg("A"), py::arg("proxg"),
+                 py::arg("tau") = py::none());
+    }
+} // namespace detail
+
+void add_admml2(py::module& m)
+{
+    detail::add_admml2<float>(m, "ADMML2f");
+    detail::add_admml2<double>(m, "ADMML2d");
+
+    m.attr("ADMML2") = m.attr("ADMML2f");
 } // namespace detail
 
 void add_generalized_minimum_residual(py::module& m)

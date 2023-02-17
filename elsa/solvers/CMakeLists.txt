@@ -8,7 +8,7 @@ set(MODULE_HEADERS
     CGLS.h
     FGM.h
     OGM.h
-    ADMM.h
+    ADMML2.h
     SQS.h
     OrthogonalMatchingPursuit.h
     LandweberIteration.h
@@ -29,6 +29,7 @@ set(MODULE_SOURCES
     CGLS.cpp
     FGM.cpp
     OGM.cpp
+    ADMML2.cpp
     SQS.cpp
     OrthogonalMatchingPursuit.cpp
     LandweberIteration.cpp

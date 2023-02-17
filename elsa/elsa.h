@@ -78,7 +78,7 @@
 #include "CGLS.h"
 #include "FGM.h"
 #include "OGM.h"
-// #include "ADMM.h"
+#include "ADMML2.h"
 #include "SQS.h"
 #include "SIRT.h"
 #include "Landweber.h"
