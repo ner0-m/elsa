@@ -11,6 +11,8 @@
 #include "SphereTrajectoryGenerator.h"
 #include "TrajectoryGenerator.h"
 
+#include "bind_common.h"
+
 #include "hints/generators_hints.cpp"
 
 namespace py = pybind11;

@@ -10,6 +10,8 @@
 #include "VoxelProjector.h"
 #include "SubsetSampler.h"
 
+#include "bind_common.h"
+
 #include "hints/projectors_hints.cpp"
 
 namespace py = pybind11;

@@ -25,6 +25,8 @@
 
 #include <string_view>
 
+#include "bind_common.h"
+
 namespace py = pybind11;
 
 namespace detail

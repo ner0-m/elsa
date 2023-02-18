@@ -8,6 +8,8 @@
 #include "StrongTypes.h"
 #include "hints/proximal_operators_hints.cpp"
 
+#include "bind_common.h"
+
 namespace py = pybind11;
 
 namespace detail

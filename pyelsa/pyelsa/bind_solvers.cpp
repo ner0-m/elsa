@@ -22,6 +22,7 @@
 #include "BA_GMRES.h"
 #include "Solver.h"
 
+#include "bind_common.h"
 #include "hints/solvers_hints.cpp"
 
 namespace py = pybind11;

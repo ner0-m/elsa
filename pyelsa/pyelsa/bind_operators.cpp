@@ -11,6 +11,8 @@
 #include "Scaling.h"
 #include "ShearletTransform.h"
 
+#include "bind_common.h"
+
 #include "hints/operators_hints.cpp"
 
 namespace py = pybind11;

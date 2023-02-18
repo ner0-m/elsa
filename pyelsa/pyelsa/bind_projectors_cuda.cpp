@@ -4,6 +4,8 @@
 #include "SiddonsMethodCUDA.h"
 #include "VoxelProjectorCUDA.h"
 
+#include "bind_common.h"
+
 #include "hints/projectors_cuda_hints.cpp"
 
 namespace py = pybind11;

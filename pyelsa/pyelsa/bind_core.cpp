@@ -20,6 +20,7 @@
 #include "StrongTypes.h"
 #include "Utilities/FormatConfig.h"
 
+#include "bind_common.h"
 #include "hints/core_hints.cpp"
 
 namespace py = pybind11;
@@ -83,6 +84,9 @@ namespace detail
 
         const auto ref_internal = py::return_value_policy::reference_internal;
         const auto move = py::return_value_policy::move;
+
+        dc.def("__setitem__", [](Dc& self, const Dc& other) { self = other; });
+        dc.def("__setitem__", [](Dc& self, data_t scalar) { self = scalar; });
 
         // Element Access
         dc.def("__setitem__", [](Dc& self, elsa::index_t idx, data_t val) { self[idx] = val; });
