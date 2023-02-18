@@ -43,21 +43,23 @@ namespace elsa
         auto deltaZero = _problem->getGradient(x).squaredL2Norm();
         auto lipschitz = _problem->getLipschitzConstant(x);
         Logger::get("FGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
+        Logger::get("FGM")->info("| {:^4} | {:^13} | {:^13} |", "", "objective", "gradient");
 
         for (index_t i = 0; i < iterations; ++i) {
-            Logger::get("FGM")->info("iteration {} of {}", i + 1, iterations);
-
             auto gradient = _problem->getGradient(x);
 
             if (_preconditionerInverse)
                 gradient = _preconditionerInverse->apply(gradient);
 
             DataContainer<data_t> y = x - gradient / lipschitz;
-            const auto theta = (static_cast<data_t>(1.0)
-                                + std::sqrt(static_cast<data_t>(1.0)
-                                            + static_cast<data_t>(4.0) * prevTheta * prevTheta))
-                               / static_cast<data_t>(2.0);
-            x = y + (prevTheta - static_cast<data_t>(1.0)) / theta * (y - prevY);
+            const auto theta =
+                (data_t{1.0} + std::sqrt(data_t{1.0} + data_t{4.0} * prevTheta * prevTheta))
+                / data_t{2.0};
+            x = y + (prevTheta - data_t{1.0}) / theta * (y - prevY);
+
+            Logger::get("FGM")->info("| {:>4} | {:>13} | {:>13} |", i, _problem->evaluate(x),
+                                     gradient.squaredL2Norm());
+
             prevTheta = theta;
             prevY = y;
 
