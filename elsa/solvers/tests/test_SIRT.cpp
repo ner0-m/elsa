@@ -34,7 +34,7 @@ TEST_CASE_TEMPLATE("SIRT: Solving a simple linear problem", data_t, float, doubl
     GIVEN("A WLSProblem")
     {
         WLSProblem<data_t> prob{A, b};
-        SIRT<data_t> solver(prob);
+        SIRT<data_t> solver(prob, 1);
 
         auto x = solver.solve(1);
 
@@ -91,7 +91,7 @@ TEST_CASE_TEMPLATE("SIRT: Solving a simple linear problem", data_t, float, doubl
 
     GIVEN("An operator and data")
     {
-        SIRT<data_t> solver(A, b);
+        SIRT<data_t> solver(A, b, 1);
 
         auto x = solver.solve(1);
 

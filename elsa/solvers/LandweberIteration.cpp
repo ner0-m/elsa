@@ -4,6 +4,7 @@
 #include "LinearOperator.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
+#include "PowerIterations.h"
 #include <iostream>
 
 namespace elsa
@@ -70,13 +71,18 @@ namespace elsa
         }
 
         if (!stepSize_.isInitialized()) {
-            stepSize_ = 1;
+            // Choose step length to be just below \f$\frac{2}{\sigma^2}\f$, where \f$\sigma\f$
+            // is the largest eigenvalue of \f$T * A^T * M * A\f$. This is computed using the power
+            // iterations.
+            auto Anorm = powerIterations(*tam_ * *A_);
+            stepSize_ = 0.9 * (2. / Anorm);
         }
 
-        Logger::get("LandweberIterations")->info(" {:^7} | {:^12} |", "Iters", "Residual");
+        Logger::get("LandweberIterations")->info("Using Steplength: {}", *stepSize_);
+        Logger::get("LandweberIterations")
+            ->info(" {:^7} | {:^12} | {:^12} |", "Iters", "Recon", "Residual");
 
         auto residual = DataContainer<data_t>(A_->getRangeDescriptor());
-        auto tmpx = DataContainer<data_t>(A_->getDomainDescriptor());
         for (index_t i = 0; i < iterations; ++i) {
             // Compute Ax - b memory efficient
             A_->apply(x, residual);
@@ -86,7 +92,8 @@ namespace elsa
             projection_(x);
 
             Logger::get("LandweberIterations")
-                ->info(" {:>3}/{:>3} | {:>12.5f} |", i + 1, iterations, residual.l2Norm());
+                ->info(" {:>3}/{:>3} | {:>12.5f} | {:>12.5f} |", i + 1, iterations, x.l2Norm(),
+                       residual.l2Norm());
         }
 
         return x;

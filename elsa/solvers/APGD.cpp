@@ -88,7 +88,9 @@ namespace elsa
         data_t tPrev = 1;
 
         if (!mu_.isInitialized()) {
-            mu_ = powerIterations(adjoint(*A_) * (*A_));
+            // FISTA converges if \f$\mu \in (0, \frac{2}{L})\f$, where \f$L\f$
+            // is the Lipschitz constant. A value just below the upper limit is chosen by default
+            mu_ = data_t{0.45} / powerIterations(adjoint(*A_) * (*A_));
         }
 
         DataContainer<data_t> Atb = A_->applyAdjoint(b_);

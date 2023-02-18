@@ -34,7 +34,7 @@ TEST_CASE_TEMPLATE("Landweber: Solving a simple linear problem", data_t, float, 
     GIVEN("A WLSProblem")
     {
         WLSProblem<data_t> prob{A, b};
-        Landweber<data_t> solver(prob);
+        Landweber<data_t> solver(prob, 1);
 
         auto x = solver.solve(1);
 
@@ -81,7 +81,7 @@ TEST_CASE_TEMPLATE("Landweber: Solving a simple linear problem", data_t, float, 
 
     GIVEN("An operator and data")
     {
-        Landweber<data_t> solver(A, b);
+        Landweber<data_t> solver(A, b, 1);
 
         auto x = solver.solve(1);
 

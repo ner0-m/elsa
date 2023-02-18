@@ -83,8 +83,9 @@ namespace elsa
         DataContainer<data_t> gradient = A_->applyAdjoint(A_->apply(x)) - Atb;
 
         if (!mu_.isInitialized()) {
-            // Hessian of least squares functional is A^T * A
-            mu_ = powerIterations(adjoint(*A_) * (*A_));
+            // ISTA converges if \f$\mu \in (0, \frac{2}{L})\f$, where \f$L\f$
+            // is the Lipschitz constant. A value just below the upper limit is chosen by default
+            mu_ = data_t{0.45} / powerIterations(adjoint(*A_) * (*A_));
         }
 
         Logger::get("PGD")->info("mu: {}", *mu_);
