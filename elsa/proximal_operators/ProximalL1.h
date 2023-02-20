@@ -25,6 +25,8 @@ namespace elsa
     public:
         ProximalL1() = default;
 
+        explicit ProximalL1(data_t sigma);
+
         /// default destructor
         ~ProximalL1() = default;
 
@@ -39,6 +41,9 @@ namespace elsa
                    DataContainer<data_t>& prox) const;
 
         DataContainer<data_t> apply(const DataContainer<data_t>& v, SelfType_t<data_t> t) const;
+
+    private:
+        data_t sigma_{1};
     };
     template <typename T>
     bool operator==(const ProximalL1<T>& lhs, const ProximalL1<T>& rhs)

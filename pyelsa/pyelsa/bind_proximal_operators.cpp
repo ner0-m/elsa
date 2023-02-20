@@ -45,6 +45,18 @@ namespace detail
     }
 } // namespace detail
 
+void add_proxl1(py::module& m)
+{
+    py::class_<elsa::ProximalL1<float>> proxL1f(m, "ProximalL1f");
+    detail::add_proximal_op(m, proxL1f);
+    proxL1f.def(py::init<float>());
+
+    py::class_<elsa::ProximalL1<double>> proxL1d(m, "ProximalL1d");
+    detail::add_proximal_op(m, proxL1d);
+    proxL1d.def(py::init<double>());
+    m.attr("ProximalL1") = m.attr("ProximalL1f");
+}
+
 void add_definitions_pyelsa_proximal_operators(py::module& m)
 {
     py::class_<elsa::ProximalOperator<float>> proxf(m, "ProximalOperatorf");
@@ -54,19 +66,14 @@ void add_definitions_pyelsa_proximal_operators(py::module& m)
     detail::add_proximal_op(m, proxd);
     m.attr("ProximalOperator") = m.attr("ProximalOperatorf");
 
-    py::class_<elsa::ProximalL1<float>> proxL1f(m, "ProximalL1f");
-    detail::add_proximal_op(m, proxL1f);
-
-    py::class_<elsa::ProximalL1<double>> proxL1d(m, "ProximalL1d");
-    detail::add_proximal_op(m, proxL1d);
-    m.attr("ProximalL1") = m.attr("ProximalL1f");
-
     py::class_<elsa::ProximalL0<float>> proxL0f(m, "ProximalL0f");
     detail::add_proximal_op(m, proxL0f);
 
     py::class_<elsa::ProximalL0<double>> proxL0d(m, "ProximalL0d");
     detail::add_proximal_op(m, proxL0d);
     m.attr("ProximalL0") = m.attr("ProximalL0f");
+
+    add_proxl1(m);
 
     py::class_<elsa::ProximalBoxConstraint<float>> proxboxf(m, "ProximalBoxConstraintf");
     detail::add_proximal_op(m, proxboxf);
