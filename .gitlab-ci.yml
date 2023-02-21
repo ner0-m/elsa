@@ -509,14 +509,12 @@ install-cuda-11.7:
 asan-ubsan:
   <<: *run_on_merge_requests
   stage: sanitizer
-  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
+  image: $CI_REGISTRY/ip/elsa/clang:14
   dependencies: []
-  variables:
-    Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
     - mkdir -p build
     - cd build
-    - cmake -GNinja -DWANT_CUDA=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
+    - CXX_FLAGS="-O1" cmake -GNinja -DWANT_CUDA=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
     - ninja tests
   tags:
     - linux

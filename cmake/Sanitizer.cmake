@@ -80,6 +80,10 @@ function(sanitizer_check_compiler_flags FLAG_CANDIDATES NAME PREFIX)
 
     get_property(ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
     foreach(LANG ${ENABLED_LANGUAGES})
+        if(${LANG} STREQUAL "NONE")
+            continue()
+        endif()
+
         # Sanitizer flags are not dependent on language, but the used compiler. So instead of searching flags foreach
         # language, search flags foreach compiler used.
         set(COMPILER ${CMAKE_${LANG}_COMPILER_ID})
@@ -108,6 +112,8 @@ function(sanitizer_check_compiler_flags FLAG_CANDIDATES NAME PREFIX)
 
                     set(${PREFIX}_${COMPILER}_FLAGS "${FLAG}" CACHE STRING "${NAME} flags for ${COMPILER} compiler.")
                     mark_as_advanced(${PREFIX}_${COMPILER}_FLAGS)
+
+                    message(STATUS "Activating ${PREFIX} flag = [${FLAG}]")
                     break()
                 endif()
             endforeach()
@@ -250,10 +256,6 @@ function(add_sanitizers)
         OR ELSA_SANITIZE_THREAD)
     )
         return()
-    endif()
-
-    if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-        message(WARNING "Sanitizers should preferably run in Debug mode.")
     endif()
 
     foreach(TARGET ${ARGV})
