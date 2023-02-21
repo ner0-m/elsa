@@ -11,6 +11,7 @@
 #include "Complex.h"
 
 #include "Functions.hpp"
+#include "elsaDefines.h"
 #include "functions/Conj.hpp"
 #include "functions/Imag.hpp"
 #include "functions/Real.hpp"
@@ -24,6 +25,7 @@
 #include "reductions/Extrema.h"
 
 #include "transforms/Absolute.h"
+#include "transforms/Add.h"
 #include "transforms/Assign.h"
 #include "transforms/Clip.h"
 #include "transforms/Cast.h"
@@ -37,6 +39,7 @@
 #include "transforms/Square.h"
 #include "transforms/Sqrt.h"
 #include "transforms/Log.h"
+#include "transforms/Lincomb.h"
 #include "transforms/Exp.h"
 #include "transforms/Imag.h"
 #include "transforms/Real.h"
@@ -1004,6 +1007,34 @@ namespace elsa
         return copy;
     }
 
+    template <class data_t>
+    DataContainer<data_t> lincomb(SelfType_t<data_t> a, const DataContainer<data_t>& x,
+                                  SelfType_t<data_t> b, const DataContainer<data_t>& y)
+    {
+        if (x.getDataDescriptor() != y.getDataDescriptor()) {
+            throw InvalidArgumentError("lincomb: x and y are of different size");
+        }
+
+        auto out = DataContainer<data_t>(x.getDataDescriptor());
+        lincomb(a, x, b, y, out);
+        return out;
+    }
+
+    template <class data_t>
+    void lincomb(SelfType_t<data_t> a, const DataContainer<data_t>& x, SelfType_t<data_t> b,
+                 const DataContainer<data_t>& y, DataContainer<data_t>& out)
+    {
+        if (x.getDataDescriptor() != y.getDataDescriptor()) {
+            throw InvalidArgumentError("lincomb: x and y are of different size");
+        }
+
+        if (x.getDataDescriptor() != out.getDataDescriptor()) {
+            throw InvalidArgumentError("lincomb: input and output vectors are of different size");
+        }
+
+        lincomb(a, x.begin(), x.end(), b, y.begin(), out.begin());
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
@@ -1026,6 +1057,17 @@ namespace elsa
     template DataContainer<complex<double>>
         concatenate<complex<double>>(const DataContainer<complex<double>>&,
                                      const DataContainer<complex<double>>&);
+
+    template void lincomb<float>(SelfType_t<float>, const DataContainer<float>&, SelfType_t<float>,
+                                 const DataContainer<float>&, DataContainer<float>&);
+    template void lincomb<double>(SelfType_t<double>, const DataContainer<double>&,
+                                  SelfType_t<double>, const DataContainer<double>&,
+                                  DataContainer<double>&);
+    template DataContainer<float> lincomb<float>(SelfType_t<float>, const DataContainer<float>&,
+                                                 SelfType_t<float>, const DataContainer<float>&);
+    template DataContainer<double> lincomb<double>(SelfType_t<double>, const DataContainer<double>&,
+                                                   SelfType_t<double>,
+                                                   const DataContainer<double>&);
 
 #define ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET(fn, type) \
     template DataContainer<value_type_of_t<type>> fn<type>(const DataContainer<type>&);

@@ -508,4 +508,27 @@ namespace elsa
     template <typename data_t>
     DataContainer<value_type_of_t<data_t>> imag(const DataContainer<data_t>& dc);
 
+    /// Compute the linear combination of \f$a * x + b * y\f$.
+    ///
+    /// This function can be used as a memory efficient version for the computation
+    /// of the above expression, as for such an expression (without expression template)
+    /// multiple copies need to be created and allocated.
+    ///
+    /// The function throws, if x and y do not have the same data descriptor
+    template <class data_t>
+    DataContainer<data_t> lincomb(SelfType_t<data_t> a, const DataContainer<data_t>& x,
+                                  SelfType_t<data_t> b, const DataContainer<data_t>& y);
+
+    /// Compute the linear combination of \f$a * x + b * y\f$, and write it to
+    /// the output variable.
+    ///
+    /// This function can be used as a memory efficient version for the computation
+    /// of the above expression, as for such an expression (without expression template)
+    /// multiple copies need to be created and allocated.
+    ///
+    /// The function throws, if x, y and out do not have the same data descriptor
+    template <class data_t>
+    void lincomb(SelfType_t<data_t> alpha, const DataContainer<data_t>& x, SelfType_t<data_t> b,
+                 const DataContainer<data_t>& y, DataContainer<data_t>& out);
+
 } // namespace elsa

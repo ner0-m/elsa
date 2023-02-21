@@ -568,6 +568,95 @@ TEST_CASE_TEMPLATE_DEFINE(
     }
 }
 
+TEST_CASE_TEMPLATE("DataContainer: Testing lincomb", data_t, float, double)
+{
+    VolumeDescriptor desc({7, 29});
+
+    auto [dc1, randVec] = generateRandomContainer<data_t>(desc);
+    auto [dc2, randVec2] = generateRandomContainer<data_t>(desc);
+
+    THEN("lincomb of two vectors with scalars of 1 is just the sum")
+    {
+        DataContainer res = lincomb(1, dc1, 1, dc2);
+        CAPTURE(res);
+        for (index_t i = 0; i < res.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(res[i], doctest::Approx(dc1[i] + dc2[i]));
+        }
+    }
+
+    THEN("lincomb of two vectors with scalar 1 and -1 is just subtraction")
+    {
+        DataContainer res = lincomb(1, dc1, -1, dc2);
+        CAPTURE(res);
+        for (index_t i = 0; i < res.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(res[i], doctest::Approx(dc1[i] - dc2[i]));
+        }
+    }
+
+    WHEN("aliasing: both inputs are the same")
+    {
+        DataContainer res = lincomb(1.5, dc1, 1.5f, dc1);
+        CAPTURE(res);
+        for (index_t i = 0; i < res.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(res[i], doctest::Approx(3 * dc1[i]));
+        }
+    }
+
+    WHEN("Testing with out parameter")
+    {
+        auto res = DataContainer<data_t>(dc1.getDataDescriptor());
+        lincomb(1.5, dc1, -1.5f, dc2, res);
+        CAPTURE(res);
+        for (index_t i = 0; i < res.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(res[i], doctest::Approx(1.5 * dc1[i] - 1.5 * dc2[i]));
+        }
+    }
+
+    WHEN("aliasing: first input parameter is the same as out")
+    {
+        // Copy to keep original values alive
+        auto copy = dc1;
+
+        lincomb(1.5, dc1, -1.5f, dc2, dc1);
+        for (index_t i = 0; i < dc1.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(dc1[i], doctest::Approx(1.5 * copy[i] - 1.5 * dc2[i]));
+        }
+    }
+
+    WHEN("aliasing: second input parameter is the same as out")
+    {
+        // Copy to keep original values alive
+        auto copy = dc2;
+
+        lincomb(1.5, dc1, -1.5f, dc2, dc2);
+        for (index_t i = 0; i < dc1.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(dc2[i], doctest::Approx(1.5 * dc1[i] - 1.5 * copy[i]));
+        }
+    }
+
+    WHEN("Input is not the same size")
+    {
+        VolumeDescriptor smallDesc({2, 10});
+        VolumeDescriptor largeDesc({8, 29});
+
+        auto smalldc = DataContainer<data_t>(smallDesc);
+        auto largedc = DataContainer<data_t>(largeDesc);
+
+        CHECK_THROWS(lincomb(12, smalldc, 34, dc1));
+        CHECK_THROWS(lincomb(12, dc1, 34, smalldc));
+        CHECK_THROWS(lincomb(12, largedc, 34, dc1));
+        CHECK_THROWS(lincomb(12, dc1, 34, largedc));
+        CHECK_THROWS(lincomb(12, dc1, 34, dc2, smalldc));
+        CHECK_THROWS(lincomb(12, dc1, 34, dc2, largedc));
+    }
+}
+
 TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing creation of Maps through DataContainer", TestType,
                           datacontainer_maps)
 {
@@ -903,7 +992,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec1);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), size);
             }
@@ -922,7 +1012,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec2);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), size);
             }
@@ -941,7 +1032,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec3);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), size);
             }
@@ -960,7 +1052,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec4);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), size);
             }
@@ -994,7 +1087,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), desc.getNumberOfCoefficients());
             }
