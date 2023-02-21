@@ -43,11 +43,7 @@ namespace elsa
         using Scalar = typename Solver<data_t>::Scalar;
 
         APGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-             ProximalOperator<data_t> prox, geometry::Threshold<data_t> mu,
-             data_t epsilon = std::numeric_limits<data_t>::epsilon());
-
-        APGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-             ProximalOperator<data_t> prox,
+             ProximalOperator<data_t> prox, std::optional<data_t> mu = std::nullopt,
              data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
@@ -83,10 +79,8 @@ namespace elsa
 
         ProximalOperator<data_t> prox_;
 
-        data_t lambda_{1};
-
         /// the step size
-        MaybeUninitialized<data_t> mu_;
+        data_t mu_;
 
         /// variable affecting the stopping condition
         data_t epsilon_;

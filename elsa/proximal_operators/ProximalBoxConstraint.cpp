@@ -17,7 +17,7 @@ namespace elsa
 
     template <class data_t>
     DataContainer<data_t> ProximalBoxConstraint<data_t>::apply(const DataContainer<data_t>& v,
-                                                               geometry::Threshold<data_t> t) const
+                                                               SelfType_t<data_t> t) const
     {
         DataContainer<data_t> out{v.getDataDescriptor()};
         apply(v, t, out);
@@ -25,8 +25,7 @@ namespace elsa
     }
 
     template <class data_t>
-    void ProximalBoxConstraint<data_t>::apply(const DataContainer<data_t>& v,
-                                              geometry::Threshold<data_t>,
+    void ProximalBoxConstraint<data_t>::apply(const DataContainer<data_t>& v, SelfType_t<data_t>,
                                               DataContainer<data_t>& prox) const
     {
         if (lower_.has_value() && upper_.has_value()) {

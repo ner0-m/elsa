@@ -1,3 +1,4 @@
+#include <optional>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
@@ -7,8 +8,10 @@
 #include "Dictionary.h"
 #include "FGM.h"
 #include "L2NormPow2.h"
+#include "LinearOperator.h"
 #include "PGD.h"
 #include "APGD.h"
+#include "ADMML2.h"
 #include "GradientDescent.h"
 #include "Landweber.h"
 #include "ProximalOperator.h"
@@ -150,17 +153,14 @@ namespace detail
     void add_ista(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Threshold = elsa::geometry::Threshold<data_t>;
         using LOp = elsa::LinearOperator<data_t>;
         using DC = elsa::DataContainer<data_t>;
         using Prox = elsa::ProximalOperator<data_t>;
 
         py::class_<elsa::PGD<data_t>, Solver> pgd(m, name);
-        pgd.def(py::init<const LOp&, const DC&, Prox, Threshold, data_t>(), py::arg("A"),
-                py::arg("b"), py::arg("prox"), py::arg("mu"), py::arg("eps"));
-
-        pgd.def(py::init<const LOp&, const DC&, Prox, data_t>(), py::arg("A"), py::arg("b"),
-                py::arg("prox"), py::arg("eps"));
+        pgd.def(py::init<const LOp&, const DC&, Prox, std::optional<data_t>, data_t>(),
+                py::arg("A"), py::arg("b"), py::arg("prox"), py::arg("mu") = py::none(),
+                py::arg("eps") = 1e-6);
     }
 } // namespace detail
 
@@ -179,17 +179,14 @@ namespace detail
     void add_fista(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Threshold = elsa::geometry::Threshold<data_t>;
         using LOp = elsa::LinearOperator<data_t>;
         using Prox = elsa::ProximalOperator<data_t>;
         using DC = elsa::DataContainer<data_t>;
 
         py::class_<elsa::APGD<data_t>, Solver> apgd(m, name);
-        apgd.def(py::init<const LOp&, const DC&, Prox, Threshold, data_t>(), py::arg("A"),
-                 py::arg("b"), py::arg("prox"), py::arg("mu"), py::arg("eps"));
-
-        apgd.def(py::init<const LOp&, const DC&, Prox, data_t>(), py::arg("A"), py::arg("b"),
-                 py::arg("prox"), py::arg("eps"));
+        apgd.def(py::init<const LOp&, const DC&, Prox, std::optional<data_t>, data_t>(),
+                 py::arg("A"), py::arg("b"), py::arg("prox"), py::arg("mu") = py::none(),
+                 py::arg("eps") = 1e-6);
     }
 } // namespace detail
 
@@ -382,6 +379,7 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_ogm(m);
     add_sqs(m);
     add_omp(m);
+    add_admml2(m);
 
     add_generalized_minimum_residual(m);
 

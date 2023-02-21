@@ -62,12 +62,11 @@ namespace elsa
         ProximalBoxConstraint(data_t lower, data_t upper);
 
         /// Apply proximal operator to the given vector
-        DataContainer<data_t> apply(const DataContainer<data_t>& v,
-                                    geometry::Threshold<data_t> t) const;
+        DataContainer<data_t> apply(const DataContainer<data_t>& v, SelfType_t<data_t> t) const;
 
         /// Apply proximal operator to the given vector, by projection the
         /// vector v onto the given set
-        void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+        void apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                    DataContainer<data_t>& prox) const;
 
         friend bool operator==(const ProximalBoxConstraint<data_t>&,

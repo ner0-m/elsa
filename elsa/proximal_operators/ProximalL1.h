@@ -2,6 +2,7 @@
 
 #include "DataContainer.h"
 #include "StrongTypes.h"
+#include "elsaDefines.h"
 
 namespace elsa
 {
@@ -34,11 +35,10 @@ namespace elsa
          * @param[in] t input Threshold
          * @param[out] prox output DataContainer
          */
-        void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+        void apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                    DataContainer<data_t>& prox) const;
 
-        DataContainer<data_t> apply(const DataContainer<data_t>& v,
-                                    geometry::Threshold<data_t> t) const;
+        DataContainer<data_t> apply(const DataContainer<data_t>& v, SelfType_t<data_t> t) const;
     };
     template <typename T>
     bool operator==(const ProximalL1<T>& lhs, const ProximalL1<T>& rhs)

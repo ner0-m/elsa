@@ -5,7 +5,7 @@
 
 function(elsa_add_pymodule name)
     pybind11_add_module(pyelsa_${name} MODULE pyelsa/bind_${name}.cpp)
-    target_link_libraries(pyelsa_${name} PUBLIC elsa::${name})
+    target_link_libraries(pyelsa_${name} PUBLIC elsa::all)
     install(TARGETS pyelsa_${name} DESTINATION .)
 endfunction()
 

@@ -28,7 +28,7 @@ namespace elsa
      * and have an analytical solution.
      *
      * This class currently implements the special case of @f$ g(x) = \frac{1}{2}
-     * ||A x - b||_2^2@f$. However, @f$h@f$ can be choosen freely.
+     * ||A x - b||_2^2@f$. However, @f$h@f$ can be chosen freely.
      *
      * Given @f$g@f$ defined as above and a convex set @f$\mathcal{C}@f$, one can
      * define an constrained optimization problem:
@@ -62,7 +62,7 @@ namespace elsa
      * @f[
      * \min_{x} \frac{1}{2} || A x - b ||_2^2 + ||x||_1
      * @f]
-     * often refered to as @f$\ell_1@f$-Regularization. In this case, the proximal operator
+     * often referred to as @f$\ell_1@f$-Regularization. In this case, the proximal operator
      * for the @f$\ell_1@f$-Regularization is the soft thresolding operator (ProximalL1). This
      * can also be extended with constrains, such as non-negativity constraints.
      *
@@ -81,12 +81,10 @@ namespace elsa
         /// Scalar alias
         using Scalar = typename Solver<data_t>::Scalar;
 
+        /// Construct PGD
         PGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-            ProximalOperator<data_t> prox, geometry::Threshold<data_t> mu,
+            ProximalOperator<data_t> prox, std::optional<data_t> mu = std::nullopt,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
-
-        PGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-            ProximalOperator<data_t> prox, data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
         PGD(const PGD<data_t>&) = delete;
@@ -122,11 +120,8 @@ namespace elsa
 
         ProximalOperator<data_t> prox_;
 
-        /// variable affecting the stopping condition
-        data_t lambda_;
-
         /// the step size
-        MaybeUninitialized<data_t> mu_;
+        data_t mu_;
 
         /// variable affecting the stopping condition
         data_t epsilon_;

@@ -13,17 +13,21 @@ namespace elsa
 {
     template <typename data_t>
     APGD<data_t>::APGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-                       ProximalOperator<data_t> prox, geometry::Threshold<data_t> mu,
-                       data_t epsilon)
-        : A_(A.clone()), b_(b), prox_(prox), mu_(data_t{mu}), epsilon_(epsilon)
+                       ProximalOperator<data_t> prox, std::optional<data_t> mu, data_t epsilon)
+        : A_(A.clone()), b_(b), prox_(prox), mu_(0), epsilon_(epsilon)
     {
-    }
+        if (!mu.has_value()) {
+            Logger::get("APGD")->info("Computing Lipschitz constant to compute step size");
+            spdlog::stopwatch time;
 
-    template <typename data_t>
-    APGD<data_t>::APGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-                       ProximalOperator<data_t> prox, data_t epsilon)
-        : A_(A.clone()), b_(b), prox_(prox), epsilon_(epsilon)
-    {
+            // FISTA converges if \f$\mu \in (0, \frac{2}{L})\f$, where \f$L\f$
+            // is the Lipschitz constant. A value just below the upper limit is chosen by default
+            mu_ = data_t{0.45} / powerIterations(adjoint(*A_) * (*A_));
+            Logger::get("APGD")->info("Step length is chosen to be: {:8.5}, (it took {}s)", mu_,
+                                      time);
+        } else {
+            mu_ = *mu;
+        }
     }
 
     template <typename data_t>
@@ -31,7 +35,6 @@ namespace elsa
         -> DataContainer<data_t>
     {
         spdlog::stopwatch aggregate_time;
-        Logger::get("APGD")->info("Start preparations...");
 
         auto x = DataContainer<data_t>(A_->getDomainDescriptor());
         if (x0.has_value()) {
@@ -46,16 +49,8 @@ namespace elsa
         data_t t;
         data_t tPrev = 1;
 
-        if (!mu_.isInitialized()) {
-            // FISTA converges if \f$\mu \in (0, \frac{2}{L})\f$, where \f$L\f$
-            // is the Lipschitz constant. A value just below the upper limit is chosen by default
-            mu_ = data_t{0.45} / powerIterations(adjoint(*A_) * (*A_));
-        }
-
         DataContainer<data_t> Atb = A_->applyAdjoint(b_);
         DataContainer<data_t> gradient = A_->applyAdjoint(A_->apply(yPrev)) - Atb;
-
-        Logger::get("APGD")->info("Preparations done, tooke {}s", aggregate_time);
 
         Logger::get("APGD")->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "gradient", "time",
                                   "elapsed");
@@ -65,7 +60,7 @@ namespace elsa
             spdlog::stopwatch iter_time;
 
             gradient = A_->applyAdjoint(A_->apply(yPrev)) - Atb;
-            x = prox_.apply(yPrev - *mu_ * gradient, geometry::Threshold{*mu_ * lambda_});
+            x = prox_.apply(yPrev - mu_ * gradient, mu_);
 
             t = (1 + std::sqrt(1 + 4 * tPrev * tPrev)) / 2;
             y = x + ((tPrev - 1) / t) * (x - xPrev);
@@ -92,11 +87,7 @@ namespace elsa
     template <typename data_t>
     auto APGD<data_t>::cloneImpl() const -> APGD<data_t>*
     {
-        if (mu_.isInitialized()) {
-            return new APGD(*A_, b_, prox_, geometry::Threshold<data_t>{*mu_}, epsilon_);
-        } else {
-            return new APGD(*A_, b_, prox_, epsilon_);
-        }
+        return new APGD<data_t>(*A_, b_, prox_, mu_, epsilon_);
     }
 
     template <typename data_t>
@@ -106,10 +97,7 @@ namespace elsa
         if (!otherAPGD)
             return false;
 
-        if (mu_.isInitialized() != otherAPGD->mu_.isInitialized())
-            return false;
-
-        if (*mu_ != *otherAPGD->mu_)
+        if (mu_ != otherAPGD->mu_)
             return false;
 
         if (epsilon_ != otherAPGD->epsilon_)

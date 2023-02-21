@@ -12,10 +12,17 @@ namespace elsa
     /// ProximalOperator interface, you either need to provide a member function `apply` for the
     /// type, with the given parameters. Or you can overload this function.
     template <class T, class data_t>
-    void applyProximal(const T& proximal, const DataContainer<data_t>& v,
-                       geometry::Threshold<data_t> tau, DataContainer<data_t>& out)
+    void applyProximal(const T& proximal, const DataContainer<data_t>& v, SelfType_t<data_t> tau,
+                       DataContainer<data_t>& out)
     {
         proximal.apply(v, tau, out);
+    }
+
+    template <class T, class data_t>
+    DataContainer<data_t> applyProximal(const T& proximal, const DataContainer<data_t>& v,
+                                        SelfType_t<data_t> tau)
+    {
+        return proximal.apply(v, tau);
     }
 
     /**
@@ -46,7 +53,9 @@ namespace elsa
         struct ProxConcept {
             virtual ~ProxConcept() = default;
             virtual std::unique_ptr<ProxConcept> clone() const = 0;
-            virtual void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+            virtual DataContainer<data_t> apply(const DataContainer<data_t>& v,
+                                                SelfType_t<data_t> t) const = 0;
+            virtual void apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                                DataContainer<data_t>& out) const = 0;
         };
 
@@ -64,10 +73,16 @@ namespace elsa
             /// Apply proximal by calling `apply_proximal`, this enables flexible extension, without
             /// classes as well. The default implementation of `apply_proximal`,
             /// just calls the member function
-            void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+            void apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                        DataContainer<data_t>& out) const override
             {
                 applyProximal(self_, v, t, out);
+            }
+
+            DataContainer<data_t> apply(const DataContainer<data_t>& v,
+                                        SelfType_t<data_t> t) const override
+            {
+                return applyProximal(self_, v, t);
             }
 
         private:
@@ -118,7 +133,7 @@ namespace elsa
          *
          * Please note: this method uses apply(v, t, prox(v)) to perform the actual operation.
          */
-        auto apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t) const
+        auto apply(const DataContainer<data_t>& v, SelfType_t<data_t> t) const
             -> DataContainer<data_t>;
 
         /**
@@ -132,7 +147,7 @@ namespace elsa
          * classes. (Why is this method not virtual itself? Because you cannot have a non-virtual
          * function overloading a virtual one [apply with one vs. two arguments]).
          */
-        void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+        void apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                    DataContainer<data_t>& prox) const;
 
     private:

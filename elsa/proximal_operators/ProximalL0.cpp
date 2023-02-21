@@ -2,12 +2,13 @@
 #include "DataContainer.h"
 #include "Error.h"
 #include "TypeCasts.hpp"
+#include "elsaDefines.h"
 
 namespace elsa
 {
     template <typename data_t>
     DataContainer<data_t> ProximalL0<data_t>::apply(const DataContainer<data_t>& v,
-                                                    geometry::Threshold<data_t> t) const
+                                                    SelfType_t<data_t> t) const
     {
         DataContainer<data_t> out{v.getDataDescriptor()};
         apply(v, t, out);
@@ -15,7 +16,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void ProximalL0<data_t>::apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+    void ProximalL0<data_t>::apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                                    DataContainer<data_t>& prox) const
     {
         if (v.getSize() != prox.getSize()) {

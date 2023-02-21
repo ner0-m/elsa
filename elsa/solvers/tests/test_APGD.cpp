@@ -32,7 +32,7 @@ TEST_CASE_TEMPLATE("APDG: Solving a least squares problem", data_t, float, doubl
 
     APGD<data_t> solver(A, b, ProximalBoxConstraint<data_t>{});
 
-    auto reco = solver.solve(1);
+    auto reco = solver.solve(30);
 
     CHECK_EQ(reco.squaredL2Norm(), doctest::Approx(b.squaredL2Norm()));
 
@@ -66,7 +66,7 @@ TEST_CASE_TEMPLATE("APDG: Solving a least squares problem with non negativity co
     auto prox = ProximalBoxConstraint<data_t>{0};
     APGD<data_t> solver(A, b, prox);
 
-    auto reco = solver.solve(2);
+    auto reco = solver.solve(30);
 
     CHECK_EQ(reco.squaredL2Norm(), doctest::Approx(b.squaredL2Norm()));
 

@@ -27,7 +27,7 @@ TEST_CASE_TEMPLATE("IndicatorBox: Default constructing box constraint", data_t, 
 
         THEN("it is unchanged from the proximal operator")
         {
-            auto v = prox.apply(x, geometry::Threshold<data_t>(1));
+            auto v = prox.apply(x, data_t(1));
 
             CHECK_UNARY(isApprox(x, v));
         }
@@ -41,7 +41,7 @@ TEST_CASE_TEMPLATE("IndicatorBox: Default constructing box constraint", data_t, 
 
         THEN("it is unchanged from the proximal operator")
         {
-            auto v = prox.apply(x, geometry::Threshold<data_t>(1));
+            auto v = prox.apply(x, data_t(1));
 
             CHECK_UNARY(isApprox(x, v));
         }
@@ -63,7 +63,7 @@ TEST_CASE_TEMPLATE("IndicatorBox: Constructing non-negativity constraint", data_
 
         THEN("it is unchanged from the proximal operator")
         {
-            auto v = prox.apply(x, geometry::Threshold<data_t>(1));
+            auto v = prox.apply(x, data_t(1));
 
             for (int i = 0; i < 5; ++i) {
                 CHECK_EQ(v[i], doctest::Approx(0));
@@ -91,7 +91,7 @@ TEST_CASE_TEMPLATE("IndicatorBox: Constructing box constraint", data_t, float, d
 
         THEN("it is unchanged from the proximal operator")
         {
-            auto v = prox.apply(x, geometry::Threshold<data_t>(1));
+            auto v = prox.apply(x, data_t(1));
             CAPTURE(x);
             CAPTURE(v);
 

@@ -1,5 +1,6 @@
 #include "ProximalOperator.h"
 #include "Timer.h"
+#include "elsaDefines.h"
 
 namespace elsa
 {
@@ -17,18 +18,14 @@ namespace elsa
     }
 
     template <typename data_t>
-    auto ProximalOperator<data_t>::apply(const DataContainer<data_t>& v,
-                                         geometry::Threshold<data_t> t) const
+    auto ProximalOperator<data_t>::apply(const DataContainer<data_t>& v, SelfType_t<data_t> t) const
         -> DataContainer<data_t>
     {
-        DataContainer<data_t> prox(v.getDataDescriptor());
-        apply(v, t, prox);
-        return prox;
+        return ptr_->apply(v, t);
     }
 
     template <typename data_t>
-    void ProximalOperator<data_t>::apply(const DataContainer<data_t>& v,
-                                         geometry::Threshold<data_t> t,
+    void ProximalOperator<data_t>::apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                                          DataContainer<data_t>& prox) const
     {
         Timer timeguard("ProximalOperator", "apply");
