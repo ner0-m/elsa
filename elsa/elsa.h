@@ -74,6 +74,7 @@
 #include "GradientDescent.h"
 #include "PGD.h"
 #include "APGD.h"
+#include "CGNE.h"
 #include "CGLS.h"
 #include "FGM.h"
 #include "OGM.h"

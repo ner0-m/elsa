@@ -15,6 +15,7 @@
 #include "SIRT.h"
 #include "OGM.h"
 #include "CGLS.h"
+#include "CGNE.h"
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
 #include "AB_GMRES.h"
@@ -121,6 +122,27 @@ void add_cgls(py::module& m)
     m.attr("CGLS") = m.attr("CGLSf");
 }
 
+namespace detail
+{
+    template <class data_t>
+    void add_cgne(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::CGNE<data_t>, Solver> cg(m, name);
+        cg.def(py::init<const LOp&, const elsa::DataContainer<data_t>&>(), py::arg("A"),
+               py::arg("b"));
+    }
+} // namespace detail
+
+void add_cgne(py::module& m)
+{
+    detail::add_cgne<float>(m, "CGNEf");
+    detail::add_cgne<double>(m, "CGNEd");
+
+    m.attr("CGNE") = m.attr("CGNEf");
+}
 namespace detail
 {
     template <class data_t>
@@ -329,6 +351,7 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_solver(m);
     add_gradient_descent(m);
     add_cgls(m);
+    add_cgne(m);
     add_ista(m);
     add_fista(m);
 
