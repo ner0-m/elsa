@@ -43,40 +43,53 @@ namespace elsa
             x = 0;
         }
 
-        DataContainer<data_t> xPrev = x;
-        DataContainer<data_t> y = x;
-        DataContainer<data_t> yPrev = x;
-        data_t t;
+        auto xPrev = x;
+        auto y = x;
         data_t tPrev = 1;
 
-        DataContainer<data_t> Atb = A_->applyAdjoint(b_);
-        DataContainer<data_t> gradient = A_->applyAdjoint(A_->apply(yPrev)) - Atb;
+        auto Atb = A_->applyAdjoint(b_);
+        auto Ay = DataContainer<data_t>(A_->getRangeDescriptor());
+        auto grad = DataContainer<data_t>(A_->getDomainDescriptor());
 
-        Logger::get("APGD")->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "gradient", "time",
-                                  "elapsed");
+        // Compute gradient as A^T(A(x) - A^T(b)) memory efficient
+        auto gradient = [&](const DataContainer<data_t>& x) {
+            A_->apply(x, Ay);
+            A_->applyAdjoint(Ay, grad);
+            grad -= Atb;
+        };
 
-        auto deltaZero = gradient.squaredL2Norm();
+        Logger::get("APGD")->info("|*{:^6}*|*{:*^12}*|*{:*^8}*|*{:^8}*|", "iter", "gradient",
+                                  "time", "elapsed");
+
+        // Compute gradient here
+        gradient(y);
+
         for (index_t iter = 0; iter < iterations; ++iter) {
             spdlog::stopwatch iter_time;
 
-            gradient = A_->applyAdjoint(A_->apply(yPrev)) - Atb;
-            x = prox_.apply(yPrev - mu_ * gradient, mu_);
+            // x_{k+1} = prox_{mu * g}(y - mu * grad)
+            x = prox_.apply(y - mu_ * grad, mu_);
 
-            t = (1 + std::sqrt(1 + 4 * tPrev * tPrev)) / 2;
+            // t_{k+1} = \frac{\sqrt{1 + 4t_k^2} + 1}{2}
+            data_t t = (1 + std::sqrt(1 + 4 * tPrev * tPrev)) / 2;
+
+            // y_{k+1} = x_k + \frac{t_{k-1} - 1}{t_k}(x_k - x_{k-1})
             y = x + ((tPrev - 1) / t) * (x - xPrev);
 
             xPrev = x;
-            yPrev = y;
             tPrev = t;
 
-            Logger::get("APGD")->info("{:>5} |{:>15} | {:>6.3} |{:>6.3}s |", iter,
-                                      gradient.squaredL2Norm(), iter_time, aggregate_time);
-
-            if (gradient.squaredL2Norm() <= epsilon_ * epsilon_ * deltaZero) {
+            if (grad.squaredL2Norm() <= epsilon_) {
                 Logger::get("APGD")->info("SUCCESS: Reached convergence at {}/{} iteration",
                                           iter + 1, iterations);
                 return x;
             }
+
+            // Update gradient as a last steas a last step
+            gradient(y);
+
+            Logger::get("APGD")->info("| {:>6} | {:>12} | {:>8.3} | {:>8.3}s |", iter,
+                                      grad.squaredL2Norm(), iter_time, aggregate_time);
         }
 
         Logger::get("APGD")->warn("Failed to reach convergence at {} iterations", iterations);

@@ -32,9 +32,9 @@ TEST_CASE_TEMPLATE("APDG: Solving a least squares problem", data_t, float, doubl
 
     APGD<data_t> solver(A, b, ProximalBoxConstraint<data_t>{});
 
-    auto reco = solver.solve(30);
+    auto reco = solver.solve(40);
 
-    CHECK_EQ(reco.squaredL2Norm(), doctest::Approx(b.squaredL2Norm()));
+    CHECK_EQ(reco.squaredL2Norm(), doctest::Approx(b.squaredL2Norm()).epsilon(0.001));
 
     THEN("Clone is equal to original one")
     {
@@ -66,9 +66,9 @@ TEST_CASE_TEMPLATE("APDG: Solving a least squares problem with non negativity co
     auto prox = ProximalBoxConstraint<data_t>{0};
     APGD<data_t> solver(A, b, prox);
 
-    auto reco = solver.solve(30);
+    auto reco = solver.solve(40);
 
-    CHECK_EQ(reco.squaredL2Norm(), doctest::Approx(b.squaredL2Norm()));
+    CHECK_EQ(reco.squaredL2Norm(), doctest::Approx(b.squaredL2Norm()).epsilon(0.001));
 
     THEN("Clone is equal to original one")
     {

@@ -42,28 +42,36 @@ namespace elsa
             x = 0;
         }
 
-        DataContainer<data_t> Atb = A_->applyAdjoint(b_);
-        DataContainer<data_t> gradient = A_->applyAdjoint(A_->apply(x)) - Atb;
+        auto Atb = A_->applyAdjoint(b_);
+        auto Ay = DataContainer<data_t>(A_->getRangeDescriptor());
+        auto grad = DataContainer<data_t>(A_->getDomainDescriptor());
+
+        // Compute gradient as A^T(A(x) - A^T(b)) memory efficient
+        auto gradient = [&](const DataContainer<data_t>& x) {
+            A_->apply(x, Ay);
+            A_->applyAdjoint(Ay, grad);
+            grad -= Atb;
+        };
 
         Logger::get("PGD")->info("Preparations done, tooke {}s", aggregate_time);
-        Logger::get("PGD")->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "gradient", "time",
+        Logger::get("PGD")->info("|*{:^6}*|*{:*^12}*|*{:*^8}*|*{:^8}*|", "iter", "gradient", "time",
                                  "elapsed");
 
-        auto deltaZero = gradient.squaredL2Norm();
         for (index_t iter = 0; iter < iterations; ++iter) {
             spdlog::stopwatch iter_time;
 
-            gradient = A_->applyAdjoint(A_->apply(x)) - Atb;
+            gradient(x);
 
-            x = prox_.apply(x - mu_ * gradient, mu_);
+            x = prox_.apply(x - mu_ * grad, mu_);
 
-            Logger::get("PGD")->info("{:>5} |{:>15} | {:>6.3} |{:>6.3}s |", iter,
-                                     gradient.squaredL2Norm(), iter_time, aggregate_time);
-            if (gradient.squaredL2Norm() <= epsilon_ * epsilon_ * deltaZero) {
+            if (grad.squaredL2Norm() <= epsilon_) {
                 Logger::get("PGD")->info("SUCCESS: Reached convergence at {}/{} iteration",
                                          iter + 1, iterations);
                 return x;
             }
+
+            Logger::get("PGD")->info("| {:>6} | {:>12} | {:>8.3} | {:>8.3}s |", iter,
+                                     grad.squaredL2Norm(), iter_time, aggregate_time);
         }
 
         Logger::get("PGD")->warn("Failed to reach convergence at {} iterations", iterations);
