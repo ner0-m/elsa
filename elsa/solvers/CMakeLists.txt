@@ -17,6 +17,7 @@ set(MODULE_HEADERS
     AB_GMRES.h
     BA_GMRES.h
     PowerIterations.h
+    RegularizedInversion.h
 )
 
 # list all the code files of the module
@@ -38,6 +39,7 @@ set(MODULE_SOURCES
     AB_GMRES.cpp
     BA_GMRES.cpp
     PowerIterations.cpp
+    RegularizedInversion.cpp
 )
 
 list(

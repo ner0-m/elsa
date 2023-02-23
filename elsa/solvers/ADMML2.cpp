@@ -1,70 +1,22 @@
 #include "ADMML2.h"
 
 #include "DataContainer.h"
-#include "BlockDescriptor.h"
-#include "BlockLinearOperator.h"
-#include "DataDescriptor.h"
-#include "Identity.h"
 #include "LinearOperator.h"
-#include "RandomBlocksDescriptor.h"
 #include "Solver.h"
 #include "ProximalOperator.h"
-#include "LinearResidual.h"
 #include "TypeCasts.hpp"
 #include "elsaDefines.h"
-#include "CGNE.h"
-#include "PowerIterations.h"
 #include "Logger.h"
-#include "Scaling.h"
+#include "RegularizedInversion.h"
+#include "PowerIterations.h"
 
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace elsa
 {
-    template <class data_t>
-    DataContainer<data_t>
-        reguarlizedInversion(const LinearOperator<data_t>& op, const DataContainer<data_t>& b,
-                             const std::vector<std::unique_ptr<LinearOperator<data_t>>>& regOps,
-                             const std::vector<DataContainer<data_t>>& regData,
-                             const DataContainer<data_t>& x0, SelfType_t<data_t> tau,
-                             index_t niters)
-    {
-        index_t size = 1 + asSigned(regOps.size());
-
-        // Setup a block problem, where K = [Op; regOps..], and w = [b; c - Bz - u]
-        std::vector<std::unique_ptr<DataDescriptor>> descs;
-        descs.emplace_back(b.getDataDescriptor().clone());
-        for (size_t i = 0; i < regData.size(); ++i) {
-            descs.emplace_back(regData[i].getDataDescriptor().clone());
-        }
-        RandomBlocksDescriptor blockDesc(descs);
-
-        std::vector<std::unique_ptr<LinearOperator<data_t>>> opList;
-        opList.reserve(size);
-
-        opList.emplace_back(op.clone());
-
-        for (size_t i = 0; i < regOps.size(); ++i) {
-            auto& regOp = *regOps[i];
-            opList.emplace_back((tau * regOp).clone());
-        }
-
-        BlockLinearOperator K(op.getDomainDescriptor(), blockDesc, opList,
-                              BlockLinearOperator<data_t>::BlockType::ROW);
-
-        DataContainer<data_t> w(blockDesc);
-        w.getBlock(0) = b;
-
-        for (index_t i = 1; i < size; ++i) {
-            w.getBlock(i) = regData[i - 1];
-        }
-
-        CGNE<data_t> cg(K, w);
-        return cg.solve(niters, x0);
-    }
-
     template <class data_t>
     ADMML2<data_t>::ADMML2(const LinearOperator<data_t>& op, const DataContainer<data_t>& b,
                            const LinearOperator<data_t>& A, const ProximalOperator<data_t>& proxg,
@@ -116,15 +68,17 @@ namespace elsa
                                     "iter", "f", "Ax", "tmp", "z", "u");
         for (index_t iter = 0; iter < iterations; ++iter) {
 
-            std::vector<std::unique_ptr<LinearOperator<data_t>>> regOps;
-            regOps.emplace_back(A_->clone());
-            std::vector<DataContainer<data_t>> regData;
-            regData.emplace_back(z - u);
+            // std::vector<std::unique_ptr<LinearOperator<data_t>>> regOps;
+            // regOps.emplace_back(A_->clone());
+            // std::vector<DataContainer<data_t>> regData;
+            // regData.emplace_back(z - u);
 
             Logger::setLevel(Logger::LogLevel::ERR);
 
             // x_{k+1} = \min_x 0.5 ||Op x - b||_2^2 + \frac{1}{2\tau}||Ax - z_k + u_k||_2^2
-            x = reguarlizedInversion(*op_, b_, regOps, regData, x, sqrttau, ninneriters_);
+            // x = reguarlizedInversion(*op_, b_, regOps, regData, sqrttau, ninneriters_, x);
+            x = reguarlizedInversion<data_t>(*op_, b_, *A_, z - u, sqrttau, ninneriters_, x);
+            // x = reguarlizedInversion<data_t>(x);
 
             Logger::setLevel(loglevel);
 
