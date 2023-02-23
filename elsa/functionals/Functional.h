@@ -17,7 +17,7 @@ namespace elsa
      * to a scalar). Typical examples of functionals are norms or semi-norms, such as the L2 or L1
      * norms.
      *
-     * Using LinearOperators, Residuals (e.g. LinearResidual) and a Functional (e.g. L2NormPow2)
+     * Using LinearOperators, Residuals (e.g. LinearResidual) and a Functional (e.g. LeastSquares)
      * enables the formulation of typical terms in an OptimizationProblem.
      *
      * @tparam data_t data type for the domain of the residual of the functional, defaulting to

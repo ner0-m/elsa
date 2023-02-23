@@ -1,6 +1,6 @@
 #include "doctest/doctest.h"
 
-#include "L2NormPow2.h"
+#include "LeastSquares.h"
 #include <iostream>
 #include "JacobiPreconditioner.h"
 #include "SQS.h"
@@ -37,7 +37,7 @@ TEST_CASE_TEMPLATE("SQS: Solving a simple linear problem", data_t, float, double
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
         // using WLS problem here for ease of use
-        L2NormPow2<data_t> prob{scalingOp, dcB};
+        LeastSquares<data_t> prob{scalingOp, dcB};
 
         WHEN("setting up a SQS solver")
         {
@@ -110,7 +110,7 @@ TEST_CASE_TEMPLATE("SQS: Solving a linear problem with ordered subsets", data_t,
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
         // using WLS problem here for ease of use
-        L2NormPow2<data_t> prob{scalingOp, dcB};
+        LeastSquares<data_t> prob{scalingOp, dcB};
 
         WHEN("setting up a SQS solver")
         {

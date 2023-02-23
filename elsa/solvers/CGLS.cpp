@@ -1,7 +1,6 @@
 #include "CGLS.h"
 #include "DataContainer.h"
 #include "Error.h"
-#include "L2NormPow2.h"
 #include "LinearOperator.h"
 #include "LinearResidual.h"
 #include "TypeCasts.hpp"

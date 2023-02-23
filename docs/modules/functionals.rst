@@ -52,10 +52,15 @@ WeightedL1Norm
 
 .. doxygenclass:: elsa::WeightedL1Norm
 
-L2NormPow2
-==========
+LeastSquares
+============
 
-.. doxygenclass:: elsa::L2NormPow2
+.. doxygenclass:: elsa::LeastSquares
+
+L2Squared
+============
+
+.. doxygenclass:: elsa::L2Squared
 
 LInfNorm
 ========

@@ -4,7 +4,8 @@ set(MODULE_HEADERS
     Functional.h
     L0PseudoNorm.h
     L1Norm.h
-    L2NormPow2.h
+    L2Squared.h
+    LeastSquares.h
     WeightedL2NormPow2.h
     LInfNorm.h
     Huber.h
@@ -24,7 +25,8 @@ set(MODULE_SOURCES
     Functional.cpp
     L0PseudoNorm.cpp
     L1Norm.cpp
-    L2NormPow2.cpp
+    L2Squared.cpp
+    LeastSquares.cpp
     WeightedL2NormPow2.cpp
     LInfNorm.cpp
     Huber.cpp

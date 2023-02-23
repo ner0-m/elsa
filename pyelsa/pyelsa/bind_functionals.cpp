@@ -9,7 +9,8 @@
 #include "Huber.h"
 #include "L0PseudoNorm.h"
 #include "L1Norm.h"
-#include "L2NormPow2.h"
+#include "L2Squared.h"
+#include "LeastSquares.h"
 #include "LInfNorm.h"
 #include "LinearOperator.h"
 #include "LinearResidual.h"
@@ -17,7 +18,7 @@
 #include "Quadric.h"
 #include "TransmissionLogLikelihood.h"
 #include "WeightedL1Norm.h"
-#include "WeightedL2NormPow2.h"
+#include "WeightedL2Squared.h"
 
 #include "hints/functionals_hints.cpp"
 
@@ -156,30 +157,44 @@ void add_norm(py::module& m, std::string str)
 namespace detail
 {
     template <class data_t>
-    void add_l2norm(py::module& m, const char* name)
+    void add_least_squares(py::module& m, const char* name)
     {
-        using L2Norm = elsa::L2NormPow2<data_t>;
+        using L2Norm = elsa::LeastSquares<data_t>;
         using LOp = elsa::LinearOperator<data_t>;
         using DataContainer = elsa::DataContainer<data_t>;
         using Functional = elsa::Functional<data_t>;
 
         py::class_<L2Norm, Functional> norm(m, name);
-        norm.def(py::init<const elsa::DataDescriptor&>(), py::arg("domainDescriptor"));
-        norm.def(py::init<const elsa::DataDescriptor&, const DataContainer&>(),
-                 py::arg("domainDescriptor"), py::arg("b"));
-        norm.def(py::init<const LOp&>(), py::arg("A"));
         norm.def(py::init<const LOp&, const DataContainer&>(), py::arg("A"), py::arg("b"));
+    }
+
+    template <class data_t>
+    void add_l2squared(py::module& m, const char* name)
+    {
+        using L2Norm = elsa::L2Squared<data_t>;
+        using DataContainer = elsa::DataContainer<data_t>;
+        using DataDesc = elsa::DataDescriptor;
+        using Functional = elsa::Functional<data_t>;
+
+        py::class_<L2Norm, Functional> norm(m, name);
+        norm.def(py::init<const DataDesc&>(), py::arg("desc"));
+        norm.def(py::init<const DataContainer&>(), py::arg("b"));
     }
 } // namespace detail
 
 void add_l2norm(py::module& m)
 {
-    detail::add_l2norm<float>(m, "L2NormPow2f");
-    detail::add_l2norm<double>(m, "L2NormPow2d");
-    detail::add_l2norm<thrust::complex<float>>(m, "L2NormPow2cf");
-    detail::add_l2norm<thrust::complex<double>>(m, "L2NormPow2cd");
+    detail::add_least_squares<float>(m, "LeastSquaresf");
+    detail::add_least_squares<double>(m, "LeastSquaresd");
+    detail::add_least_squares<thrust::complex<float>>(m, "LeastSquarescf");
+    detail::add_least_squares<thrust::complex<double>>(m, "LeastSquarescd");
 
-    m.attr("L2NormPow2") = m.attr("L2NormPow2f");
+    detail::add_l2squared<float>(m, "LeastSquaresf");
+    detail::add_l2squared<double>(m, "LeastSquaresd");
+    detail::add_l2squared<thrust::complex<float>>(m, "LeastSquarescf");
+    detail::add_l2squared<thrust::complex<double>>(m, "LeastSquarescd");
+
+    m.attr("LeastSquares") = m.attr("LeastSquaresf");
 }
 
 namespace detail
@@ -187,7 +202,7 @@ namespace detail
     template <class data_t>
     void add_weighted_l2norm(py::module& m, const char* name)
     {
-        using WL2Norm = elsa::WeightedL2NormPow2<data_t>;
+        using WL2Norm = elsa::WeightedL2Squared<data_t>;
         using DC = elsa::DataContainer<data_t>;
         using Functional = elsa::Functional<data_t>;
 
@@ -201,12 +216,12 @@ namespace detail
 
 void add_weighted_l2norm(py::module& m)
 {
-    detail::add_weighted_l2norm<float>(m, "WeightedL2NormPow2f");
-    detail::add_weighted_l2norm<double>(m, "WeightedL2NormPow2d");
-    detail::add_weighted_l2norm<thrust::complex<float>>(m, "WeightedL2NormPow2cf");
-    detail::add_weighted_l2norm<thrust::complex<double>>(m, "WeightedL2NormPow2cd");
+    detail::add_weighted_l2norm<float>(m, "WeightedL2Squaredf");
+    detail::add_weighted_l2norm<double>(m, "WeightedL2Squaredd");
+    detail::add_weighted_l2norm<thrust::complex<float>>(m, "WeightedL2Squaredcf");
+    detail::add_weighted_l2norm<thrust::complex<double>>(m, "WeightedL2Squaredcd");
 
-    m.attr("WeightedL2NormPow2") = m.attr("WeightedL2NormPow2f");
+    m.attr("WeightedL2Squared") = m.attr("WeightedL2Squaredf");
 }
 
 namespace detail

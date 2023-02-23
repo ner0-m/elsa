@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-#include "L2NormPow2.h"
+#include "LeastSquares.h"
 #include "LinearOperator.h"
 #include "Solver.h"
 
@@ -35,20 +35,20 @@ namespace elsa
         /// Scalar alias
         using Scalar = typename Solver<data_t>::Scalar;
 
-        SQS(const L2NormPow2<data_t>& problem,
-            std::vector<std::unique_ptr<L2NormPow2<data_t>>>&& subsets,
+        SQS(const LeastSquares<data_t>& problem,
+            std::vector<std::unique_ptr<LeastSquares<data_t>>>&& subsets,
             bool momentumAcceleration = true,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
-        SQS(const L2NormPow2<data_t>& problem,
-            std::vector<std::unique_ptr<L2NormPow2<data_t>>>&& subsets,
+        SQS(const LeastSquares<data_t>& problem,
+            std::vector<std::unique_ptr<LeastSquares<data_t>>>&& subsets,
             const LinearOperator<data_t>& preconditioner, bool momentumAcceleration = true,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
-        SQS(const L2NormPow2<data_t>& problem, bool momentumAcceleration = true,
+        SQS(const LeastSquares<data_t>& problem, bool momentumAcceleration = true,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
-        SQS(const L2NormPow2<data_t>& problem, const LinearOperator<data_t>& preconditioner,
+        SQS(const LeastSquares<data_t>& problem, const LinearOperator<data_t>& preconditioner,
             bool momentumAcceleration = true,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
@@ -74,9 +74,9 @@ namespace elsa
     private:
         /// The optimization to solve
         /// TODO: This might be a nice variant?
-        std::unique_ptr<L2NormPow2<data_t>> fullProblem_;
+        std::unique_ptr<LeastSquares<data_t>> fullProblem_;
 
-        std::vector<std::unique_ptr<L2NormPow2<data_t>>> subsets_{};
+        std::vector<std::unique_ptr<LeastSquares<data_t>>> subsets_{};
 
         /// variable affecting the stopping condition
         data_t epsilon_;

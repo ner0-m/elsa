@@ -6,7 +6,7 @@
  * @author Michael Loipführer - initial code
  */
 
-#include "L2NormPow2.h"
+#include "LeastSquares.h"
 #include "doctest/doctest.h"
 
 #include <iostream>
@@ -42,7 +42,7 @@ TEST_CASE_TEMPLATE("FGM: Solving a simple linear problem", data_t, float, double
         DataContainer<data_t> b{dd, bVec};
 
         Identity<data_t> A{dd};
-        auto prob = L2NormPow2<data_t>(A, b);
+        auto prob = LeastSquares<data_t>(A, b);
 
         WHEN("setting up a FGM solver")
         {

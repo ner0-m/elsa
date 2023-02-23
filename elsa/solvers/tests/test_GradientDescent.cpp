@@ -11,7 +11,8 @@
 #include "GradientDescent.h"
 #include "Identity.h"
 #include "LinearResidual.h"
-#include "L2NormPow2.h"
+#include "LeastSquares.h"
+#include "L2Squared.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "testHelpers.h"
@@ -48,7 +49,7 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", data_t, f
 
         Identity<data_t> idOp(dd);
 
-        L2NormPow2<data_t> prob(idOp, dcB);
+        LeastSquares<data_t> prob(idOp, dcB);
 
         WHEN("setting up a Gradient Descent solver with fixed step size")
         {
@@ -115,10 +116,10 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a Tikhonov problem", data_t, float,
         DataContainer dcB(dd, bVec);
 
         Identity<data_t> op(dd);
-        L2NormPow2<data_t> fn(op, dcB);
+        LeastSquares<data_t> fn(op, dcB);
 
         // the regularization term
-        L2NormPow2<data_t> l2(dd);
+        L2Squared<data_t> l2(dd);
         auto prob = fn + data_t{0.0001} * l2;
 
         WHEN("setting up a Gradient Descent solver with fixed step size")

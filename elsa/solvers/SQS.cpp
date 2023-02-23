@@ -7,11 +7,11 @@
 namespace elsa
 {
     template <typename data_t>
-    SQS<data_t>::SQS(const L2NormPow2<data_t>& problem,
-                     std::vector<std::unique_ptr<L2NormPow2<data_t>>>&& subsets,
+    SQS<data_t>::SQS(const LeastSquares<data_t>& problem,
+                     std::vector<std::unique_ptr<LeastSquares<data_t>>>&& subsets,
                      bool momentumAcceleration, data_t epsilon)
         : Solver<data_t>(),
-          fullProblem_(downcast<L2NormPow2<data_t>>(problem.clone())),
+          fullProblem_(downcast<LeastSquares<data_t>>(problem.clone())),
           subsets_(std::move(subsets)),
           epsilon_{epsilon},
           momentumAcceleration_{momentumAcceleration},
@@ -22,12 +22,12 @@ namespace elsa
     }
 
     template <typename data_t>
-    SQS<data_t>::SQS(const L2NormPow2<data_t>& problem,
-                     std::vector<std::unique_ptr<L2NormPow2<data_t>>>&& subsets,
+    SQS<data_t>::SQS(const LeastSquares<data_t>& problem,
+                     std::vector<std::unique_ptr<LeastSquares<data_t>>>&& subsets,
                      const LinearOperator<data_t>& preconditioner, bool momentumAcceleration,
                      data_t epsilon)
         : Solver<data_t>(),
-          fullProblem_(downcast<L2NormPow2<data_t>>(problem.clone())),
+          fullProblem_(downcast<LeastSquares<data_t>>(problem.clone())),
           subsets_(std::move(subsets)),
           preconditioner_{preconditioner.clone()},
           epsilon_{epsilon},
@@ -46,9 +46,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    SQS<data_t>::SQS(const L2NormPow2<data_t>& problem, bool momentumAcceleration, data_t epsilon)
+    SQS<data_t>::SQS(const LeastSquares<data_t>& problem, bool momentumAcceleration, data_t epsilon)
         : Solver<data_t>(),
-          fullProblem_(downcast<L2NormPow2<data_t>>(problem.clone())),
+          fullProblem_(downcast<LeastSquares<data_t>>(problem.clone())),
           epsilon_{epsilon},
           momentumAcceleration_{momentumAcceleration},
           subsetMode_(false)
@@ -58,11 +58,11 @@ namespace elsa
     }
 
     template <typename data_t>
-    SQS<data_t>::SQS(const L2NormPow2<data_t>& problem,
+    SQS<data_t>::SQS(const LeastSquares<data_t>& problem,
                      const LinearOperator<data_t>& preconditioner, bool momentumAcceleration,
                      data_t epsilon)
         : Solver<data_t>(),
-          fullProblem_(downcast<L2NormPow2<data_t>>(problem.clone())),
+          fullProblem_(downcast<LeastSquares<data_t>>(problem.clone())),
           preconditioner_{preconditioner.clone()},
           epsilon_{epsilon},
           momentumAcceleration_{momentumAcceleration},
@@ -173,10 +173,10 @@ namespace elsa
     template <typename data_t>
     SQS<data_t>* SQS<data_t>::cloneImpl() const
     {
-        std::vector<std::unique_ptr<L2NormPow2<data_t>>> newsubsets;
+        std::vector<std::unique_ptr<LeastSquares<data_t>>> newsubsets;
         newsubsets.reserve(subsets_.size());
         for (const auto& ptr : subsets_) {
-            newsubsets.emplace_back(downcast<L2NormPow2<data_t>>(ptr->clone()));
+            newsubsets.emplace_back(downcast<LeastSquares<data_t>>(ptr->clone()));
         }
 
         if (preconditioner_)

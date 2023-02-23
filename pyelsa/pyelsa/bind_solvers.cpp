@@ -7,7 +7,7 @@
 #include "DataDescriptor.h"
 #include "Dictionary.h"
 #include "FGM.h"
-#include "L2NormPow2.h"
+#include "LeastSquares.h"
 #include "LinearOperator.h"
 #include "PGD.h"
 #include "APGD.h"
@@ -253,7 +253,7 @@ namespace detail
     void add_sqs(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using L2Pow2 = elsa::L2NormPow2<data_t>;
+        using L2Pow2 = elsa::LeastSquares<data_t>;
         using Subsets = std::vector<std::unique_ptr<L2Pow2>>;
         using LOp = elsa::LinearOperator<data_t>;
 

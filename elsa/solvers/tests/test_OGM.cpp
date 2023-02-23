@@ -13,7 +13,7 @@
 #include "Scaling.h"
 #include "Identity.h"
 #include "LinearResidual.h"
-#include "L2NormPow2.h"
+#include "LeastSquares.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "TypeCasts.hpp"
@@ -45,7 +45,7 @@ TEST_CASE_TEMPLATE("OGM: Solving a simple linear problem", data_t, float, double
         // using WLS problem here for ease of use
         // since OGM is very picky with the precision of the lipschitz constant of a problem we need
         // to pass it explicitly
-        L2NormPow2<data_t> prob{op, b};
+        LeastSquares<data_t> prob{op, b};
 
         WHEN("setting up an OGM solver")
         {

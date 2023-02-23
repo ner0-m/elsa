@@ -46,10 +46,10 @@ void example2d()
     auto sinogram = projector.apply(phantom);
 
     // Setup problem
-    auto dataterm = L2NormPow2(projector, sinogram);
+    auto dataterm = LeastSquares(projector, sinogram);
 
     auto lambda = 0.1f;
-    auto l2reg = lambda * L2NormPow2(volumeDescriptor);
+    auto l2reg = lambda * L2Squared(volumeDescriptor);
 
     auto problem = dataterm + l2reg;
 
