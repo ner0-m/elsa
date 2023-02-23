@@ -6,7 +6,8 @@ set(MODULE_HEADERS
     L1Norm.h
     L2Squared.h
     LeastSquares.h
-    WeightedL2NormPow2.h
+    WeightedLeastSquares.h
+    WeightedL2Squared.h
     LInfNorm.h
     Huber.h
     PseudoHuber.h
@@ -27,7 +28,8 @@ set(MODULE_SOURCES
     L1Norm.cpp
     L2Squared.cpp
     LeastSquares.cpp
-    WeightedL2NormPow2.cpp
+    WeightedLeastSquares.cpp
+    WeightedL2Squared.cpp
     LInfNorm.cpp
     Huber.cpp
     PseudoHuber.cpp

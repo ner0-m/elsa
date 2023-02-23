@@ -18,6 +18,7 @@
 #include "Quadric.h"
 #include "TransmissionLogLikelihood.h"
 #include "WeightedL1Norm.h"
+#include "WeightedLeastSquares.h"
 #include "WeightedL2Squared.h"
 
 #include "hints/functionals_hints.cpp"
@@ -212,6 +213,19 @@ namespace detail
                  py::return_value_policy::move);
         norm.def(py::init<const DC&>(), py::arg("weights"));
     }
+
+    template <class data_t>
+    void add_weighted_leastsquares(py::module& m, const char* name)
+    {
+        using WL2Norm = elsa::WeightedLeastSquares<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using DataContainer = elsa::DataContainer<data_t>;
+        using Functional = elsa::Functional<data_t>;
+
+        py::class_<WL2Norm, Functional> norm(m, name);
+        norm.def(py::init<const LOp&, const DataContainer&, const DataContainer&>(), py::arg("A"),
+                 py::arg("b"), py::arg("weights"));
+    }
 } // namespace detail
 
 void add_weighted_l2norm(py::module& m)
@@ -336,9 +350,6 @@ namespace detail
         using LOp = elsa::LinearOperator<data_t>;
 
         py::class_<Fn, Functional> fn(m, name);
-        fn.def(py::init<const DD&, const DC&>(), py::arg("domainDescriptor"), py::arg("y"));
-        fn.def(py::init<const DD&, const DC&, const DC&>(), py::arg("domainDescriptor"),
-               py::arg("y"), py::arg("r"));
         fn.def(py::init<const LOp&, const DC&>(), py::arg("A"), py::arg("y"));
         fn.def(py::init<const LOp&, const DC&, const DC&>(), py::arg("A"), py::arg("y"),
                py::arg("r"));
@@ -366,10 +377,6 @@ namespace detail
         using LOp = elsa::LinearOperator<data_t>;
 
         py::class_<Fn, Functional> fn(m, name);
-        fn.def(py::init<const DD&, const DC&, const DC&>(), py::arg("domainDescriptor"),
-               py::arg("y"), py::arg("b"));
-        fn.def(py::init<const DD&, const DC&, const DC&, const DC&>(), py::arg("domainDescriptor"),
-               py::arg("y"), py::arg("b"), py::arg("r"));
         fn.def(py::init<const LOp&, const DC&, const DC&>(), py::arg("A"), py::arg("y"),
                py::arg("b"));
         fn.def(py::init<const LOp&, const DC&, const DC&, const DC&>(), py::arg("A"), py::arg("y"),

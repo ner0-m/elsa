@@ -21,7 +21,7 @@ namespace elsa
      * * Tobias Lasser - modernization
      */
     template <typename data_t = real_t>
-    class WeightedL2NormPow2 : public Functional<data_t>
+    class WeightedL2Squared : public Functional<data_t>
     {
     public:
         /**
@@ -30,13 +30,13 @@ namespace elsa
          *
          * @param[in] weightingOp diagonal scaling operator used for weights
          */
-        explicit WeightedL2NormPow2(const DataContainer<data_t>& weights);
+        explicit WeightedL2Squared(const DataContainer<data_t>& weights);
 
         /// make copy constructor deletion explicit
-        WeightedL2NormPow2(const WeightedL2NormPow2<data_t>&) = delete;
+        WeightedL2Squared(const WeightedL2Squared<data_t>&) = delete;
 
         /// default destructor
-        ~WeightedL2NormPow2() override = default;
+        ~WeightedL2Squared() override = default;
 
         /// returns the weighting operator
         Scaling<data_t> getWeightingOperator() const;
@@ -52,7 +52,7 @@ namespace elsa
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
 
         /// implement the polymorphic clone operation
-        WeightedL2NormPow2<data_t>* cloneImpl() const override;
+        WeightedL2Squared<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Functional<data_t>& other) const override;

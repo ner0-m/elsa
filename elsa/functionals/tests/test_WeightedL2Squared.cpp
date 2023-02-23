@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 
 #include "testHelpers.h"
-#include "WeightedL2NormPow2.h"
+#include "WeightedL2Squared.h"
 #include "Identity.h"
 #include "VolumeDescriptor.h"
 #include "TypeCasts.hpp"
@@ -14,7 +14,7 @@ TYPE_TO_STRING(complex<double>);
 
 TEST_SUITE_BEGIN("functionals");
 
-TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, float, double,
+TEST_CASE_TEMPLATE("WeightedL2Squared: Testing without residual", TestType, float, double,
                    complex<float>, complex<double>)
 {
     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
@@ -34,7 +34,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, flo
 
         WHEN("instantiating")
         {
-            WeightedL2NormPow2<TestType> func(scaleFactors);
+            WeightedL2Squared<TestType> func(scaleFactors);
 
             THEN("the functional is as expected")
             {
@@ -79,7 +79,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, flo
     }
 }
 
-// TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing with residual", TestType, float, double,
+// TEST_CASE_TEMPLATE("WeightedL2Squared: Testing with residual", TestType, float, double,
 //                    complex<float>, complex<double>)
 // {
 //     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
@@ -109,7 +109,7 @@ TEST_CASE_TEMPLATE("WeightedL2NormPow2: Testing without residual", TestType, flo
 //
 //         WHEN("instantiating")
 //         {
-//             WeightedL2NormPow2 func(linRes, scalingOp);
+//             WeightedL2Squared func(linRes, scalingOp);
 //
 //             THEN("the functional is as expected")
 //             {
