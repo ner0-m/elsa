@@ -59,8 +59,8 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", data_t, f
             {
                 auto gdClone = solver.clone();
 
-                REQUIRE_NE(gdClone.get(), &solver);
-                REQUIRE_EQ(*gdClone, solver);
+                CHECK_NE(gdClone.get(), &solver);
+                CHECK_EQ(*gdClone, solver);
 
                 AND_THEN("it works as expected")
                 {
@@ -82,8 +82,8 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", data_t, f
             {
                 auto gdClone = solver.clone();
 
-                REQUIRE_NE(gdClone.get(), &solver);
-                REQUIRE_EQ(*gdClone, solver);
+                CHECK_NE(gdClone.get(), &solver);
+                CHECK_EQ(*gdClone, solver);
 
                 AND_THEN("it works as expected")
                 {

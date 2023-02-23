@@ -36,7 +36,9 @@ namespace elsa
 
         // If stepSize is not initialized yet, we do it know with x0
         if (!_stepSize.isInitialized()) {
-            auto _stepSize = powerIterations(_problem->getHessian(x), 5);
+            _stepSize = powerIterations(_problem->getHessian(x));
+            Logger::get("GradientDescent")
+                ->info("Step length is chosen to be: {:8.5})", *_stepSize);
         }
 
         for (index_t i = 0; i < iterations; ++i) {
