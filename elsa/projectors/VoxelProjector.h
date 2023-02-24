@@ -601,8 +601,7 @@ namespace elsa
         }
         data_t weight(data_t distance, data_t primDistance) const
         {
-            auto abs_distance = std::abs(distance);
-            return lut_(abs_distance) / (abs_distance + 1e-10) * primDistance;
+            return lut3D_(distance) * primDistance;
         }
 
         /// implement the polymorphic clone operation
@@ -613,6 +612,7 @@ namespace elsa
 
     private:
         ProjectedBSplineDerivativeLut<data_t, 100> lut_;
+        ProjectedBSplineNormalizedGradientLut<data_t, 100> lut3D_;
 
         using Base = VoxelProjector<data_t, PhaseContrastBSplineVoxelProjector<data_t>>;
 

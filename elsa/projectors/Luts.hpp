@@ -191,13 +191,14 @@ namespace elsa
     public:
         constexpr ProjectedBSplineLut(int dim, int degree)
             : bspline_(dim, degree),
-              lut_(detail::generate_lut<data_t, N>(2, [this](data_t s) { return bspline_(s); }))
+              lut_(detail::generate_lut<data_t, N>(radius(),
+                                                   [this](data_t s) { return bspline_(s); }))
         {
         }
 
         constexpr data_t order() const { return bspline_.order(); }
 
-        constexpr data_t radius() const { return 2; }
+        constexpr data_t radius() const { return bspline_.radius(); }
 
         constexpr data_t operator()(data_t distance) const
         {
@@ -224,7 +225,7 @@ namespace elsa
 
         constexpr data_t order() const { return bspline_.order(); }
 
-        constexpr data_t radius() const { return 2; }
+        constexpr data_t radius() const { return bspline_.radius(); }
 
         constexpr data_t operator()(data_t distance) const
         {
@@ -249,7 +250,7 @@ namespace elsa
         {
         }
 
-        constexpr data_t radius() const { return 2; }
+        constexpr data_t radius() const { return bspline_.radius(); }
 
         constexpr data_t order() const { return bspline_.order(); }
 

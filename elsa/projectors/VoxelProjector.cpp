@@ -163,7 +163,8 @@ namespace elsa
         const DetectorDescriptor& rangeDescriptor)
         : VoxelProjector<data_t, PhaseContrastBSplineVoxelProjector<data_t>>(domainDescriptor,
                                                                              rangeDescriptor),
-          lut_(domainDescriptor.getNumberOfDimensions(), order)
+          lut_(domainDescriptor.getNumberOfDimensions(), order),
+          lut3D_(domainDescriptor.getNumberOfDimensions(), order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();

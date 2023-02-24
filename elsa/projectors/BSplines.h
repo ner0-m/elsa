@@ -111,6 +111,8 @@ namespace elsa
 
         index_t order() const;
 
+        data_t radius() const;
+
         index_t dim() const;
 
     private:
@@ -137,6 +139,8 @@ namespace elsa
         constexpr data_t normalized_gradient(data_t s);
 
         index_t order() const;
+
+        data_t radius() const;
 
         index_t dim() const;
 

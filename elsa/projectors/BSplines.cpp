@@ -27,6 +27,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    data_t BSpline<data_t>::radius() const
+    {
+        return (order_ + 1) * 0.5;
+    }
+
+    template <typename data_t>
     index_t BSpline<data_t>::dim() const
     {
         return dim_;
@@ -64,6 +70,12 @@ namespace elsa
     index_t ProjectedBSpline<data_t>::order() const
     {
         return order_;
+    }
+
+    template <typename data_t>
+    data_t ProjectedBSpline<data_t>::radius() const
+    {
+        return (order_ + 1) * 0.5;
     }
 
     template <typename data_t>
