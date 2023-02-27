@@ -256,7 +256,7 @@ TEST_CASE("Simple Square Symmetric Matrix Reconstruction")
 TEST_CASE("Non-Square, Non-Symmetric Matrix Reconstruction")
 {
 
-   Logger::setLevel(Logger::LogLevel::INFO);
+   Logger::setLevel(Logger::LogLevel::OFF);
 
    GIVEN("A 3x4 Matrix Operator A, a 3x1 Vector Datacontainer b and no x0")
    {

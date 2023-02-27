@@ -1,4 +1,5 @@
 #include "BA_GMRES.h"
+#include "GMRES_common.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
 #include "spdlog/stopwatch.h"
@@ -50,11 +51,45 @@ namespace elsa
     DataContainer<data_t> BA_GMRES<data_t>::solve(index_t iterations,
                                                   std::optional<DataContainer<data_t>> x0)
     {
-        using Mat = Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>;
-        using Vec = Eigen::Vector<data_t, Eigen::Dynamic>;
+        auto calculate_r0 = [](std::unique_ptr<LinearOperator<data_t>>& A,
+                               std::unique_ptr<LinearOperator<data_t>>& B, DataContainer<data_t>& b,
+                               DataContainer<data_t>& x) -> DataContainer<data_t> {
+            auto Bb = B->apply(b);
+            auto Ax = A->apply(x);
+            auto BAx = B->apply(Ax);
 
-        spdlog::stopwatch aggregate_time;
-        Logger::get("BA_GMRES")->info("Start preparations...");
+            auto r0 = Bb - BAx;
+            return r0;
+        };
+
+        auto calculate_q = [](std::unique_ptr<LinearOperator<data_t>>& A,
+                              std::unique_ptr<LinearOperator<data_t>>& B,
+                              DataContainer<data_t>& w_k) -> DataContainer<data_t> {
+            auto Aw_k = A->apply(w_k);
+            auto q = B->apply(Aw_k);
+            return q;
+        };
+
+        auto calculate_x = [](std::unique_ptr<LinearOperator<data_t>>& B, DataContainer<data_t>& x,
+                              DataContainer<data_t>& wy) -> DataContainer<data_t> {
+            auto x_k = x + wy;
+            return x_k;
+        };
+
+        // explicitly casting lambda so it can be resolved by the compiler for detail::gmres
+        std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
+                                            std::unique_ptr<LinearOperator<data_t>>&,
+                                            DataContainer<data_t>&, DataContainer<data_t>&)>
+            calc_r0 = calculate_r0;
+
+        std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
+                                            std::unique_ptr<LinearOperator<data_t>>&,
+                                            DataContainer<data_t>&)>
+            calc_q = calculate_q;
+
+        std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
+                                            DataContainer<data_t>&, DataContainer<data_t>&)>
+            calc_x = calculate_x;
 
         auto x = DataContainer<data_t>(_A->getDomainDescriptor());
         if (x0.has_value()) {
@@ -63,89 +98,8 @@ namespace elsa
             x = 0;
         }
 
-        // setup DataContainer for Return Value which should be like x
-        auto x_k = DataContainer<data_t>(_A->getDomainDescriptor());
-
-        Mat h = Mat::Constant(iterations + 1, iterations, 0);
-        Mat w = Mat::Constant(x.getSize(), iterations, 0);
-        Vec e = Vec::Constant(iterations + 1, 0);
-
-        // Init Calculations
-        auto Bb = _B->apply(_b);
-        auto Ax = _A->apply(x);
-        auto BAx = _B->apply(Ax);
-        auto r0 = Bb - BAx;
-        auto beta = r0.l2Norm();
-
-        // Initializing e Vector
-        e(0) = beta;
-
-        // Filling Matrix w with the vector r0/beta at the specified column
-        auto w_i0 = r0 / beta;
-        w.col(0) = Eigen::Map<Vec>(thrust::raw_pointer_cast(w_i0.storage().data()), w_i0.getSize());
-
-        Logger::get("BA_GMRES")->info("Preparations done, took {}s", aggregate_time);
-        Logger::get("BA_GMRES")->info("epsilon: {}", _epsilon);
-        Logger::get("BA_GMRES")->info("||r0||: {}", beta);
-
-        Logger::get("BA_GMRES")
-            ->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "r", "time", "elapsed");
-
-        for (index_t k = 0; k < iterations; k++) {
-            spdlog::stopwatch iter_time;
-
-            auto w_k = DataContainer<data_t>(_A->getDomainDescriptor(), w.col(k));
-            auto Aw_k = _A->apply(w_k);
-
-            // Entering eigen space for the many following Matrix/Vector operations, as this seems
-            // more efficient that a constant casting into elsa datacontainers
-            auto temp = _B->apply(Aw_k);
-            auto q_k =
-                Eigen::Map<Vec>(thrust::raw_pointer_cast(temp.storage().data()), temp.getSize());
-
-            for (index_t i = 0; i < iterations; i++) {
-                auto w_i = w.col(i);
-                auto h_ik = q_k.dot(w_i);
-
-                h(i, k) = h_ik;
-                q_k -= h_ik * w_i;
-            }
-
-            h(k + 1, k) = q_k.norm();
-
-            // Source:
-            // https://stackoverflow.com/questions/37962271/whats-wrong-with-my-BA_GMRES-implementation
-            // This rule exists as we fill k+1 column of w and w matrix only has k columns
-            // another way to implement this would be by having a matrix w with k + 1 columns and
-            // instead always just getting the slice w0..wk for wy calculation
-            if (k != iterations - 1) {
-                w.col(k + 1) = q_k / h(k + 1, k);
-            }
-
-            Eigen::ColPivHouseholderQR<Mat> qr(h);
-            Vec y = qr.solve(e);
-            auto wy = DataContainer<data_t>(_A->getDomainDescriptor(), w * y);
-
-            x_k = x + wy;
-
-            // disable r for faster results ?
-            auto r = _b - _A->apply(x_k);
-
-            Logger::get("BA_GMRES")
-                ->info("{:>5}|{:>15}|{:>6.3}|{:>6.3}s|", k, r.l2Norm(), iter_time, aggregate_time);
-
-            //  Break Condition via relative residual, there could be more interesting approaches
-            //  used here like NCP Criterion or discrepancy principle
-            if (r.l2Norm() <= _epsilon) {
-                Logger::get("BA_GMRES")->info("||rx|| {}", r.l2Norm());
-                Logger::get("BA_GMRES")
-                    ->info("SUCCESS: Reached convergence at {}/{} iteration", k + 1, iterations);
-                return x_k;
-            }
-        }
-
-        Logger::get("BA_GMRES")->warn("Failed to reach convergence at {} iterations", iterations);
-        return x_k;
+        return ::detail::gmres("BA_GMRES", _A, _B, _b, _epsilon, x, iterations, calc_r0, calc_q,
+                               calc_x);
     }
 
     template <typename data_t>
