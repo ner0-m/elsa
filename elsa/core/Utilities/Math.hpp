@@ -154,7 +154,7 @@ namespace elsa
                 }
                 return ratio;
             } else {
-                return 1.0 / ratio_of_factorials<data_t>(y, x);
+                return static_cast<data_t>(1.0) / ratio_of_factorials<data_t>(y, x);
             }
         }
 
@@ -163,7 +163,7 @@ namespace elsa
         {
             data_t df = 1.0;
             while (x > 1) {
-                df *= x;
+                df *= static_cast<data_t>(x);
                 x -= 2;
             }
             return df;
@@ -185,13 +185,13 @@ namespace elsa
 
             for (int i = 1; i <= l; ++i) {
                 for (int j = 0; j <= i - 2; ++j) {
-                    result(i, j) =
-                        ((2 * i - 1) * x * result(i - 1, j) - (i + j - 1) * result(i - 2, j))
-                        / (i - j);
+                    result(i, j) = ((2 * static_cast<data_t>(i) - 1) * x * result(i - 1, j)
+                                    - static_cast<data_t>(i + j - 1) * result(i - 2, j))
+                                   / static_cast<data_t>(i - j);
                 }
-                result(i, i - 1) = x * (2 * i - 1) * result(i - 1, i - 1);
-                result(i, i) =
-                    pow(-1, i) * double_factorial<data_t>(2 * i - 1) * pow(1 - x * x, i / 2.0);
+                result(i, i - 1) = x * static_cast<data_t>(2 * i - 1) * result(i - 1, i - 1);
+                result(i, i) = static_cast<data_t>(pow(-1, i) * double_factorial<data_t>(2 * i - 1)
+                                                   * pow(1 - x * x, i / 2.0));
             }
 
             return result;
@@ -207,18 +207,20 @@ namespace elsa
                 assoc_legendre_pol(l, static_cast<data_t>(std::cos(theta)));
 
             for (int i = 0; i <= l; ++i) {
-                data_t c = sqrt((2 * i + 1) / (4.0 * pi_t));
+                auto c = static_cast<data_t>(sqrt((2 * i + 1) / (4.0 * pi_t)));
                 for (int j = -i; j <= i; ++j) {
                     if (j < 0) {
-                        result(i * i + j + i) = sqrt(2) * pow(-1, j) * c
-                                                * sqrt(ratio_of_factorials<data_t>(i + j, i - j))
-                                                * legendre_pol(i, -j) * sin(-j * phi);
+                        result(i * i + j + i) = static_cast<data_t>(
+                            sqrt(2) * pow(-1, j) * c
+                            * sqrt(ratio_of_factorials<data_t>(i + j, i - j)) * legendre_pol(i, -j)
+                            * sin(static_cast<data_t>(-j) * phi));
                     } else if (j == 0) {
                         result(i * i + j + i) = c * legendre_pol(i, j);
                     } else {
-                        result(i * i + j + i) = sqrt(2) * pow(-1, j) * c
-                                                * sqrt(ratio_of_factorials<data_t>(i - j, i + j))
-                                                * legendre_pol(i, j) * cos(j * phi);
+                        result(i * i + j + i) = static_cast<data_t>(
+                            sqrt(2) * pow(-1, j) * c
+                            * sqrt(ratio_of_factorials<data_t>(i - j, i + j)) * legendre_pol(i, j)
+                            * cos(static_cast<data_t>(j) * phi));
                     }
                 }
             }

@@ -2,8 +2,7 @@
 #include "IdenticalBlocksDescriptor.h"
 #include "Scaling.h"
 #include "Math.hpp"
-
-#include <iostream>
+#include "Logger.h"
 
 using namespace elsa::axdt;
 
@@ -17,24 +16,26 @@ namespace elsa
                                        const Vector_t<data_t>& sphericalFuncWeights,
                                        const Symmetry& sphericalHarmonicsSymmetry,
                                        index_t sphericalHarmonicsMaxDegree)
-        : B(IdenticalBlocksDescriptor{SphericalFunctionInformation<data_t>(
-                                          sphericalFuncDirs, sphericalFuncWeights,
-                                          sphericalHarmonicsSymmetry, sphericalHarmonicsMaxDegree)
-                                          .basisCnt,
+        : LinearOperator<data_t>{
+            IdenticalBlocksDescriptor{SphericalFunctionInformation<data_t>::calculate_basis_cnt(
+                                          sphericalHarmonicsSymmetry, sphericalHarmonicsMaxDegree),
                                       domainDescriptor},
-            rangeDescriptor,
-            computeOperatorList(rangeDescriptor,
-                                SphericalFunctionInformation<data_t>(
-                                    sphericalFuncDirs, sphericalFuncWeights,
-                                    sphericalHarmonicsSymmetry, sphericalHarmonicsMaxDegree),
-                                projector),
-            B::BlockType::COL)
+            rangeDescriptor}
     {
+        auto sf_info = SphericalFunctionInformation<data_t>(sphericalFuncDirs, sphericalFuncWeights,
+                                                            sphericalHarmonicsSymmetry,
+                                                            sphericalHarmonicsMaxDegree);
+        bl_op = std::make_unique<BlockLinearOperator<data_t>>(
+            IdenticalBlocksDescriptor{sf_info.basisCnt, domainDescriptor}, rangeDescriptor,
+            computeOperatorList(rangeDescriptor, sf_info, projector),
+            BlockLinearOperator<data_t>::BlockType::COL);
     }
 
     template <typename data_t>
-    AXDTOperator<data_t>::AXDTOperator(const AXDTOperator& other) : B(other)
+    AXDTOperator<data_t>::AXDTOperator(const AXDTOperator& other)
+        : LinearOperator<data_t>(*other._domainDescriptor, *other._rangeDescriptor)
     {
+        bl_op = other.bl_op->clone();
     }
 
     template <typename data_t>
@@ -46,7 +47,27 @@ namespace elsa
     template <typename data_t>
     bool AXDTOperator<data_t>::isEqual(const LinearOperator<data_t>& other) const
     {
-        return BlockLinearOperator<data_t>::isEqual(other);
+        if (!LinearOperator<data_t>::isEqual(other))
+            return false;
+
+        // static_cast as type checked in base comparison
+        auto otherOp = static_cast<const AXDTOperator<data_t>*>(&other);
+
+        return *bl_op == *(otherOp->bl_op);
+    }
+
+    template <typename data_t>
+    void AXDTOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
+                                         DataContainer<data_t>& Ax) const
+    {
+        bl_op->apply(x, Ax);
+    }
+
+    template <typename data_t>
+    void AXDTOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
+                                                DataContainer<data_t>& Aty) const
+    {
+        bl_op->applyAdjoint(y, Aty);
     }
 
     template <typename data_t>
@@ -63,10 +84,17 @@ namespace elsa
 
         // create composite operators of projector and scalings
         for (index_t i = 0; i < numBlocks; ++i) {
+            Logger::get("AXDTOperator")->info("constructing... {}/{}", i + 1, numBlocks);
             // create a matching scaling operator
             std::unique_ptr<Scaling<data_t>> s;
+
+            // weights has shape (J, BasisCnt), but J = (#detectorPixels x #measurements) for
+            // cone beams and J = (#measurements) for parallel beams in order to speed up the
+            // calculation for parallel beams. At this point we can unify this interface as
+            // J = (#detectorPixels x #measurements) by expanding the coalesced weights for
+            // parallel beams
             if (rangeDescriptor.isParallelBeam()) {
-                DataContainer<data_t> tmp(rangeDescriptor);
+                DataContainer<data_t> tmp{rangeDescriptor};
                 index_t totalCnt = rangeDescriptor.getNumberOfCoefficients();
                 index_t blkCnt = rangeDescriptor.getNumberOfCoefficientsPerDimension()
                                      [rangeDescriptor.getNumberOfDimensions() - 1];
@@ -87,14 +115,9 @@ namespace elsa
             }
 
             ops.emplace_back(std::make_unique<LinearOperator<data_t>>(*s * projector));
-
-            //            std::cout << ".. >> initialized composite operator " << i + 1 << "/" <<
-            //            numBlocks
-            //                      << std::endl;
         }
 
-        // EDF::write<data_t>(*weights,"_weights.edf");
-
+        //        EDF::write<data_t>(*weights,"_weights.edf");
         return ops;
     }
 
@@ -123,24 +146,22 @@ namespace elsa
         SphericalFieldsTransform<data_t> sft(sf_info);
 
         index_t voxelCount = weightVolDesc.getNumberOfCoefficients();
-        auto samplingDirs = static_cast<index_t>(sf_info.dirs.size());
+        auto samplingDirsCnt = static_cast<index_t>(sf_info.dirs.size());
         index_t sphCoeffsCount = sf_info.basisCnt;
 
-        // transpose of mode-4 unfolding of x
-        Eigen::Map<const typename SphericalFieldsTransform<data_t>::MatrixXd_t> x4(
-            &((spfWeights->storage())[0]), voxelCount, samplingDirs);
+        Eigen::Map<const typename SphericalFieldsTransform<data_t>::MatrixXd_t> x(
+            &((spfWeights->storage())[0]), voxelCount, samplingDirsCnt);
 
-        // transpose of mode-4 unfolding of Ax
-        Eigen::Map<typename SphericalFieldsTransform<data_t>::MatrixXd_t> Ax4(
+        Eigen::Map<typename SphericalFieldsTransform<data_t>::MatrixXd_t> Ax(
             &((sphWeights->storage())[0]), voxelCount, sphCoeffsCount);
 
-        typename SphericalFieldsTransform<data_t>::MatrixXd_t WVt =
-            sft.getForwardTransformationMatrix().transpose();
+        typename SphericalFieldsTransform<data_t>::MatrixXd_t transformToSPH =
+            sft.getForwardTransformationMatrix();
 
         // perform multiplication in chunks
         index_t step = voxelCount / weightVolDesc.getNumberOfCoefficientsPerDimension()(0);
         for (index_t i = 0; i < voxelCount; i += step) {
-            Ax4.middleRows(i, step) = x4.middleRows(i, step) * WVt;
+            Ax.middleRows(i, step) = x.middleRows(i, step) * transformToSPH;
         }
 
         return sphWeights;
@@ -151,7 +172,7 @@ namespace elsa
         const XGIDetectorDescriptor& rangeDescriptor,
         const SphericalFunctionInformation<data_t>& sf_info)
     {
-        // obtain number of reconstructed directions, number and size of measured images
+        // obtain number of reconstructed directions, size and number of detector images
         const index_t dn = sf_info.weights.size();
         const index_t px = rangeDescriptor.getNumberOfCoefficientsPerDimension()[0];
         const index_t py = rangeDescriptor.getNumberOfCoefficientsPerDimension()[1];
@@ -164,7 +185,7 @@ namespace elsa
 
         // for every sampling angle, reconstruction volumes and factor caches
         for (index_t i = 0; i < dn; ++i) {
-            // obtain dci direction
+            // obtain sampling direction
             DirVec e = sf_info.dirs[static_cast<size_t>(i)];
 
             if (abs(e.norm() - 1) > 1.0e-5)
@@ -192,8 +213,7 @@ namespace elsa
                 // traverse image
                 for (index_t y = 0; y < py; ++y) {
                     for (index_t x = 0; x < px; ++x) {
-                        // dci direction: set above, normalized by design
-
+                        // sampling direction: set above, normalized by design
                         // beam direction: get ray as provided by projection matrix, catch nans
                         // (yes, that can happen :()
                         pt << x, y, n;
@@ -233,7 +253,7 @@ namespace elsa
         const index_t dn = sf_info.weights.size();
         const index_t pn = rangeDescriptor.getNumberOfCoefficientsPerDimension()[2];
 
-        // setup complete block descriptor
+        // set up the coalesced block descriptor
         IndexVector_t tmp_idx(1);
         tmp_idx << pn;
         auto weightsDesc =
@@ -243,7 +263,7 @@ namespace elsa
 
         // for every sampling angle, reconstruction volumes and factor caches
         for (index_t i = 0; i < dn; ++i) {
-            // obtain dci direction
+            // obtain sampling direction
             DirVec e = sf_info.dirs[static_cast<size_t>(i)];
             if (abs(e.norm() - 1) > 1.0e-5)
                 throw std::invalid_argument("direction vector at index " + std::to_string(i)
@@ -263,7 +283,7 @@ namespace elsa
                 // allocate factor, to be computed from s, t, and e
                 data_t factor = 0;
 
-                // dci direction: set above, normalized by design
+                // sampling direction: set above, normalized by design
 
                 // beam direction: last column of rotation matrix (scaling is forced to be
                 // isotropic, z-direction/viewing axis)
@@ -300,10 +320,10 @@ namespace elsa
 
         data_t normFac = sqrt(static_cast<data_t>(4.0) * pi_t) / sqrt(sf_info.weights.sum());
 
-        for (size_t i = 0; i < samplingTuplesCount; ++i) {
+        for (index_t i = 0; static_cast<size_t>(i) < samplingTuplesCount; ++i) {
             index_t j = 0;
 
-            auto dir = sf_info.dirs[i];
+            auto dir = sf_info.dirs[static_cast<size_t>(i)];
 
             // theta: atan2 returns the elevation, so to get theta = the inclination, we need:
             // inclination = pi/2-elevation azimuth = phi the boost implementation provides
@@ -312,8 +332,9 @@ namespace elsa
             // sphericalFunctionDesc as the measure used on the sphere, we need to adjust the
             // normalization such that the L_2 norm under the used measure is 1 as we want
             // orthonormal spherical harmonics
-            auto sh_dir = SH_basis_real(
-                maxDegree, (pi_t / static_cast<data_t>(2.0)) + atan2(dir[2], hypot(dir[0], dir[1])),
+            auto sh_dir = SH_basis_real<data_t>(
+                maxDegree,
+                (pi<data_t> / static_cast<data_t>(2.0) + atan2(dir[2], hypot(dir[0], dir[1]))),
                 atan2(dir[1], dir[0]));
 
             for (int l = 0; l <= maxDegree; ++l) {
@@ -323,8 +344,7 @@ namespace elsa
                         continue;
                     }
 
-                    sphericalHarmonicsBasis(static_cast<index_t>(i), j) =
-                        normFac * sh_dir(l * l + l + m);
+                    sphericalHarmonicsBasis(i, j) = normFac * sh_dir(l * l + l + m);
                     j++;
                 }
             }
@@ -336,10 +356,8 @@ namespace elsa
         SphericalFieldsTransform<data_t>::SphericalFieldsTransform::getForwardTransformationMatrix()
             const
     {
-        Eigen::DiagonalMatrix<data_t, Eigen::Dynamic> weights(sf_info.weights.size());
-        weights = Eigen::DiagonalMatrix<data_t, Eigen::Dynamic>(sf_info.weights);
-
-        return sphericalHarmonicsBasis.transpose() * weights;
+        auto weights = Eigen::DiagonalMatrix<data_t, Eigen::Dynamic>(sf_info.weights);
+        return weights * sphericalHarmonicsBasis;
     }
 
     template class AXDTOperator<float>;

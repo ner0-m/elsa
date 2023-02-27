@@ -130,10 +130,10 @@ TEST_CASE_TEMPLATE("AXDTOperator: Testing SphericalFieldsTransform", data_t, flo
             Eigen::Map<typename SphericalFieldsTransform<data_t>::MatrixXd_t> Ax(
                 &((sphWeights->storage())[0]), volCnt, sphCoeffsCnt);
 
-            typename SphericalFieldsTransform<data_t>::MatrixXd_t WVt =
-                sft.getForwardTransformationMatrix().transpose();
+            typename SphericalFieldsTransform<data_t>::MatrixXd_t transformToSPH =
+                sft.getForwardTransformationMatrix();
 
-            Ax = x * WVt;
+            Ax = x * transformToSPH;
             THEN("results should be close to ground truth")
             {
                 for (index_t z = 0; z < static_cast<index_t>(sphCoeffsCnt); ++z) {
