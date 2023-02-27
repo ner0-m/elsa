@@ -279,7 +279,7 @@ namespace detail
         using Op = elsa::AXDTOperator<data_t>;
         using DirVecList = typename Op::DirVecList;
 
-        py::class_<Op, elsa::BlockLinearOperator<data_t>> op(m, name);
+        py::class_<Op, elsa::LinearOperator<data_t>> op(m, name);
 
         py::enum_<typename Op::Symmetry>(op, "Symmetry")
             .value("Even", Op::Symmetry::even)
