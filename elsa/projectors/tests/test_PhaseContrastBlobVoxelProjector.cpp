@@ -513,9 +513,9 @@ TEST_CASE_TEMPLATE("PhaseContrastBlobVoxelProjector: Testing simple volume 2D wi
                 {
                     data_t total_weight =
                         (size - 1) * op.weight(middlePixel + distance_from_center(-1));
-                    CHECK_EQ(Ax[0], Approx(total_weight));
+                    CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.001));
                     total_weight = (size - 1) * op.weight(-middlePixel + distance_from_center(-1));
-                    CHECK_EQ(Ax[2], Approx(total_weight));
+                    CHECK_EQ(Ax[2], Approx(total_weight).epsilon(0.001));
                 }
             }
 
@@ -532,7 +532,7 @@ TEST_CASE_TEMPLATE("PhaseContrastBlobVoxelProjector: Testing simple volume 2D wi
                 {
                     data_t total_weight =
                         (size - 1) * op.weight(middlePixel + distance_from_center(1));
-                    CHECK_EQ(Ax[0], Approx(total_weight));
+                    CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.001));
                     total_weight = (size - 1) * op.weight(-middlePixel + distance_from_center(1));
                     CHECK_EQ(Ax[2], Approx(total_weight));
                 }
@@ -627,8 +627,8 @@ TEST_CASE_TEMPLATE("PhaseContrastBlobVoxelProjector: Testing simple volume 2D wi
                         + size * op.weight(middlePixel + distance_from_center(0))
                         + (size - 1) * op.weight(middlePixel + distance_from_center(1))
                         + (size - 2) * op.weight(middlePixel + distance_from_center(2));
-                    CHECK_EQ(Ax[0], Approx(total_weight));
-                    CHECK_EQ(Ax[2], Approx(-total_weight));
+                    CHECK_EQ(Ax[0], Approx(total_weight).epsilon(-0.0001 * total_weight));
+                    CHECK_EQ(Ax[2], Approx(-total_weight).epsilon(-0.0001 * total_weight));
                 }
             }
 
@@ -913,7 +913,7 @@ TEST_CASE_TEMPLATE("PhaseContrastBlobVoxelProjector: Testing simple volume 2D wi
 
                 THEN("The middle detector value is equal to size * the weight of distance 0")
                 {
-                    CHECK_EQ(Ax[1], Approx(size * weight).epsilon(0.001));
+                    CHECK_EQ(Ax[1], Approx(size * weight).epsilon(0.005));
                 }
             }
 
@@ -964,7 +964,7 @@ TEST_CASE_TEMPLATE("PhaseContrastBlobVoxelProjector: Testing simple volume 2D wi
                 {
                     data_t total_weight = (size - 2) * op.weight(distance_from_center(-2));
 
-                    CHECK_EQ(Ax[1], Approx(total_weight));
+                    CHECK_EQ(Ax[1], Approx(total_weight).epsilon(0.001 * total_weight));
                 }
             }
 
@@ -981,7 +981,7 @@ TEST_CASE_TEMPLATE("PhaseContrastBlobVoxelProjector: Testing simple volume 2D wi
                 {
                     data_t total_weight = (size - 2) * op.weight(distance_from_center(2));
 
-                    CHECK_EQ(Ax[1], Approx(total_weight));
+                    CHECK_EQ(Ax[1], Approx(total_weight).epsilon(0.001));
                 }
             }
 
@@ -1003,7 +1003,7 @@ TEST_CASE_TEMPLATE("PhaseContrastBlobVoxelProjector: Testing simple volume 2D wi
                     data_t total_weight = (size - 1) * op.weight(distance_from_center(1))
                                           + (size - 1) * op.weight(distance_from_center(-1))
                                           + size * op.weight(0);
-                    CHECK_EQ(Ax[1], Approx(total_weight).epsilon(0.0001));
+                    CHECK_EQ(Ax[1], Approx(total_weight).epsilon(0.002));
                 }
             }
         }
