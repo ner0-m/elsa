@@ -134,9 +134,9 @@ namespace elsa
 
         data_t operator()(data_t s);
 
-        constexpr data_t derivative(data_t s);
+        data_t derivative(data_t s);
 
-        constexpr data_t normalized_gradient(data_t s);
+        data_t normalized_gradient(data_t s);
 
         index_t order() const;
 

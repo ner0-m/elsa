@@ -52,13 +52,13 @@ namespace elsa
     }
 
     template <typename data_t>
-    constexpr data_t ProjectedBSpline<data_t>::derivative(data_t x)
+    data_t ProjectedBSpline<data_t>::derivative(data_t x)
     {
         return bspline::nd_bspline_derivative_centered(x, order_, dim_ - 1);
     }
 
     template <typename data_t>
-    constexpr data_t ProjectedBSpline<data_t>::normalized_gradient(data_t x)
+    data_t ProjectedBSpline<data_t>::normalized_gradient(data_t x)
     {
         // compute f'(x)/x
         if (x == 0)
