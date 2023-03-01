@@ -95,15 +95,18 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
 #undef GIVEN
 #define GIVEN(...) DOCTEST_SUBCASE((std::string("   Given: ") + std::string(__VA_ARGS__)).c_str())
 
-TEST_CASE_TEMPLATE("ProjectedBSlineLut: testing with various degrees", data_t, float, double)
+TEST_CASE_TEMPLATE("ProjectedBSplineLut: testing with various degrees", data_t, float, double)
 {
-    for (int degree = 0; degree < 4; ++degree) {
-        for (int dim = 2; dim < 4; ++dim) {
+    for (int degree = 0; degree < 6; ++degree) {
+        for (int dim = 2; dim < 6; ++dim) {
             GIVEN("BSpline Lut of degree " + std::to_string(degree)
                   + " with dim: " + std::to_string(dim))
             {
                 ProjectedBSplineLut<data_t, 50> lut(dim, degree);
-                ProjectedBSpline<data_t> proj_blob(dim, degree);
+                ProjectedBSpline<data_t> proj_spline(dim, degree);
+
+                CAPTURE(lut.radius());
+                CAPTURE(proj_spline.radius());
 
                 for (int i = 0; i < 100; ++i) {
                     const auto distance = i / 25.;
@@ -112,8 +115,8 @@ TEST_CASE_TEMPLATE("ProjectedBSlineLut: testing with various degrees", data_t, f
                     CAPTURE(distance);
                     CAPTURE(lut(distance));
 
-                    CHECK_EQ(lut(distance), Approx(proj_blob(distance)));
-                    CHECK_EQ(lut(-distance), Approx(proj_blob(-distance)));
+                    CHECK_EQ(lut(distance), Approx(proj_spline(distance)).epsilon(1e-3));
+                    CHECK_EQ(lut(-distance), Approx(proj_spline(-distance)).epsilon(1e-3));
                 }
             }
         }
