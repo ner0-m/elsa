@@ -5,6 +5,7 @@ set(MODULE_HEADERS
     L0PseudoNorm.h
     L1Norm.h
     L2Squared.h
+    L2Reg.h
     LeastSquares.h
     WeightedLeastSquares.h
     WeightedL2Squared.h
@@ -27,6 +28,7 @@ set(MODULE_SOURCES
     L0PseudoNorm.cpp
     L1Norm.cpp
     L2Squared.cpp
+    L2Reg.cpp
     LeastSquares.cpp
     WeightedLeastSquares.cpp
     WeightedL2Squared.cpp

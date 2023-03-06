@@ -17,6 +17,7 @@
  * The phantom is a simple modified Shepp-Logan phantom, which is commonly
  * found for synthetic reconstructions.
  */
+#include "Identity.h"
 #include "elsa.h"
 
 using namespace elsa;
@@ -47,8 +48,8 @@ void example2d()
     auto dataterm = LeastSquares(projector, sinogram);
 
     auto grad = FiniteDifferences(volumeDescriptor);
-    auto lambda = 50.f;
-    auto tvl2reg = lambda * L2Squared(grad);
+    auto lambda = 100.f;
+    auto tvl2reg = lambda * L2Reg(grad);
 
     auto problem = dataterm + tvl2reg;
 

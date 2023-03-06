@@ -1,3 +1,4 @@
+#include <complex.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/complex.h>
 
@@ -10,6 +11,7 @@
 #include "L0PseudoNorm.h"
 #include "L1Norm.h"
 #include "L2Squared.h"
+#include "L2Reg.h"
 #include "LeastSquares.h"
 #include "LInfNorm.h"
 #include "LinearOperator.h"
@@ -181,21 +183,39 @@ namespace detail
         norm.def(py::init<const DataDesc&>(), py::arg("desc"));
         norm.def(py::init<const DataContainer&>(), py::arg("b"));
     }
+
+    template <class data_t>
+    void add_l2reg(py::module& m, const char* name)
+    {
+        using L2Norm = elsa::L2Reg<data_t>;
+        using DataDesc = elsa::DataDescriptor;
+        using Functional = elsa::Functional<data_t>;
+
+        py::class_<L2Norm, Functional> norm(m, name);
+        norm.def(py::init<const DataDesc&>(), py::arg("desc"));
+        norm.def(py::init<const elsa::LinearOperator<data_t>&>(), py::arg("A"));
+    }
 } // namespace detail
 
 void add_l2norm(py::module& m)
 {
     detail::add_least_squares<float>(m, "LeastSquaresf");
     detail::add_least_squares<double>(m, "LeastSquaresd");
-    detail::add_least_squares<thrust::complex<float>>(m, "LeastSquarescf");
-    detail::add_least_squares<thrust::complex<double>>(m, "LeastSquarescd");
-
-    detail::add_l2squared<float>(m, "LeastSquaresf");
-    detail::add_l2squared<double>(m, "LeastSquaresd");
-    detail::add_l2squared<thrust::complex<float>>(m, "LeastSquarescf");
-    detail::add_l2squared<thrust::complex<double>>(m, "LeastSquarescd");
 
     m.attr("LeastSquares") = m.attr("LeastSquaresf");
+
+    detail::add_l2squared<float>(m, "L2Squaredf");
+    detail::add_l2squared<double>(m, "L2Squaredd");
+    detail::add_l2squared<thrust::complex<float>>(m, "L2Squaredcf");
+    detail::add_l2squared<thrust::complex<double>>(m, "L2Squaredcd");
+
+    m.attr("L2Squared") = m.attr("L2Squaredf");
+
+    detail::add_l2reg<float>(m, "L2Regf");
+    detail::add_l2reg<double>(m, "L2Regd");
+    detail::add_l2reg<thrust::complex<float>>(m, "L2Regcf");
+    detail::add_l2reg<thrust::complex<double>>(m, "L2Regcd");
+    m.attr("L2Reg") = m.attr("L2Regf");
 }
 
 namespace detail

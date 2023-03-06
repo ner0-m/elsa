@@ -17,6 +17,7 @@
 #include "L0PseudoNorm.h"
 #include "L1Norm.h"
 #include "L2Squared.h"
+#include "L2Reg.h"
 #include "WeightedL2Squared.h"
 #include "LeastSquares.h"
 #include "LInfNorm.h"
