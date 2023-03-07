@@ -189,9 +189,9 @@ namespace elsa
     public:
         using self_type = BlobProjector<data_t>;
 
-        BlobProjector(data_t radius, data_t alpha, index_t order,
-                      const VolumeDescriptor& domainDescriptor,
-                      const DetectorDescriptor& rangeDescriptor);
+        BlobProjector(const VolumeDescriptor& domainDescriptor,
+                      const DetectorDescriptor& rangeDescriptor, data_t radius, data_t alpha,
+                      index_t order);
 
         BlobProjector(const VolumeDescriptor& domainDescriptor,
                       const DetectorDescriptor& rangeDescriptor);
@@ -220,8 +220,8 @@ namespace elsa
     public:
         using self_type = BlobProjector<data_t>;
 
-        BSplineProjector(index_t degree, const VolumeDescriptor& domainDescriptor,
-                         const DetectorDescriptor& rangeDescriptor);
+        BSplineProjector(const VolumeDescriptor& domainDescriptor,
+                         const DetectorDescriptor& rangeDescriptor, index_t order);
 
         BSplineProjector(const VolumeDescriptor& domainDescriptor,
                          const DetectorDescriptor& rangeDescriptor);

@@ -6,9 +6,9 @@
 namespace elsa
 {
     template <typename data_t>
-    BlobProjector<data_t>::BlobProjector(data_t radius, data_t alpha, index_t order,
-                                         const VolumeDescriptor& domainDescriptor,
-                                         const DetectorDescriptor& rangeDescriptor)
+    BlobProjector<data_t>::BlobProjector(const VolumeDescriptor& domainDescriptor,
+                                         const DetectorDescriptor& rangeDescriptor, data_t radius,
+                                         data_t alpha, index_t order)
         : LutProjector<data_t, BlobProjector<data_t>>(domainDescriptor, rangeDescriptor),
           lut_(radius, alpha, order)
     {
@@ -30,7 +30,7 @@ namespace elsa
     template <typename data_t>
     BlobProjector<data_t>::BlobProjector(const VolumeDescriptor& domainDescriptor,
                                          const DetectorDescriptor& rangeDescriptor)
-        : BlobProjector(2.f, 10.83f, 2.f, domainDescriptor, rangeDescriptor)
+        : BlobProjector(domainDescriptor, rangeDescriptor, 2.f, 10.83f, 2.f)
     {
     }
 
@@ -52,9 +52,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    BSplineProjector<data_t>::BSplineProjector(index_t order,
-                                               const VolumeDescriptor& domainDescriptor,
-                                               const DetectorDescriptor& rangeDescriptor)
+    BSplineProjector<data_t>::BSplineProjector(const VolumeDescriptor& domainDescriptor,
+                                               const DetectorDescriptor& rangeDescriptor,
+                                               index_t order)
         : LutProjector<data_t, BSplineProjector<data_t>>(domainDescriptor, rangeDescriptor),
           lut_(domainDescriptor.getNumberOfDimensions(), order)
     {
@@ -77,7 +77,7 @@ namespace elsa
     template <typename data_t>
     BSplineProjector<data_t>::BSplineProjector(const VolumeDescriptor& domainDescriptor,
                                                const DetectorDescriptor& rangeDescriptor)
-        : BSplineProjector(2, domainDescriptor, rangeDescriptor)
+        : BSplineProjector(domainDescriptor, rangeDescriptor, 2)
     {
     }
 

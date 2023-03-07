@@ -308,9 +308,9 @@ namespace elsa
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
-        BlobVoxelProjectorCUDA(data_t radius, data_t alpha, int order,
-                               const VolumeDescriptor& domainDescriptor,
-                               const DetectorDescriptor& rangeDescriptor);
+        BlobVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
+                               const DetectorDescriptor& rangeDescriptor, data_t radius,
+                               data_t alpha, index_t order);
 
         /**
          * @brief Constructor for Blob Voxel Projection using default blob parameters.
@@ -371,9 +371,9 @@ namespace elsa
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
-        PhaseContrastBlobVoxelProjectorCUDA(data_t radius, data_t alpha, int order,
-                                            const VolumeDescriptor& domainDescriptor,
-                                            const DetectorDescriptor& rangeDescriptor);
+        PhaseContrastBlobVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
+                                            const DetectorDescriptor& rangeDescriptor,
+                                            data_t radius, data_t alpha, index_t order);
 
         /**
          * @brief Constructor for Phase Contrast Blob Voxel Projection using default blob
@@ -442,8 +442,8 @@ namespace elsa
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
-        BSplineVoxelProjectorCUDA(int order, const VolumeDescriptor& domainDescriptor,
-                                  const DetectorDescriptor& rangeDescriptor);
+        BSplineVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
+                                  const DetectorDescriptor& rangeDescriptor, index_t order);
 
         /**
          * @brief Constructor for BSpline Voxel Projection using default order.
@@ -502,9 +502,9 @@ namespace elsa
          * The domain is expected to be 2 or 3 dimensional (volSizeX, volSizeY, [volSizeZ]),
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
-        PhaseContrastBSplineVoxelProjectorCUDA(data_t order,
-                                               const VolumeDescriptor& domainDescriptor,
-                                               const DetectorDescriptor& rangeDescriptor);
+        PhaseContrastBSplineVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
+                                               const DetectorDescriptor& rangeDescriptor,
+                                               index_t order);
 
         /**
          * @brief Constructor for Phase Contrast BSpline Voxel Projection using default order

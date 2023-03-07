@@ -13,8 +13,8 @@ namespace elsa
 {
     template <typename data_t>
     BlobVoxelProjectorCUDA<data_t>::BlobVoxelProjectorCUDA(
-        data_t radius, data_t alpha, int order, const VolumeDescriptor& domainDescriptor,
-        const DetectorDescriptor& rangeDescriptor)
+        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
+        data_t radius, data_t alpha, index_t order)
         : VoxelProjectorCUDA<data_t, BlobVoxelProjectorCUDA<data_t>>(domainDescriptor,
                                                                      rangeDescriptor),
           _lut(radius, alpha, order)
@@ -28,16 +28,16 @@ namespace elsa
     template <typename data_t>
     BlobVoxelProjectorCUDA<data_t>::BlobVoxelProjectorCUDA(
         const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : BlobVoxelProjectorCUDA(2.f, 10.83f, 2, domainDescriptor, rangeDescriptor)
+        : BlobVoxelProjectorCUDA(domainDescriptor, rangeDescriptor, 2.f, 10.83f, 2)
     {
     }
 
     template <typename data_t>
     BlobVoxelProjectorCUDA<data_t>* BlobVoxelProjectorCUDA<data_t>::_cloneImpl() const
     {
-        return new BlobVoxelProjectorCUDA<data_t>(this->_lut.radius(), this->_lut.alpha(),
-                                                  this->_lut.order(), this->_volumeDescriptor,
-                                                  this->_detectorDescriptor);
+        return new BlobVoxelProjectorCUDA<data_t>(this->_volumeDescriptor,
+                                                  this->_detectorDescriptor, this->_lut.radius(),
+                                                  this->_lut.alpha(), this->_lut.order());
     }
 
     template <typename data_t>
@@ -52,8 +52,8 @@ namespace elsa
 
     template <typename data_t>
     PhaseContrastBlobVoxelProjectorCUDA<data_t>::PhaseContrastBlobVoxelProjectorCUDA(
-        data_t radius, data_t alpha, int order, const VolumeDescriptor& domainDescriptor,
-        const DetectorDescriptor& rangeDescriptor)
+        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
+        data_t radius, data_t alpha, index_t order)
         : VoxelProjectorCUDA<data_t, PhaseContrastBlobVoxelProjectorCUDA<data_t>>(domainDescriptor,
                                                                                   rangeDescriptor),
           _lut(radius, alpha, order),
@@ -72,7 +72,7 @@ namespace elsa
     template <typename data_t>
     PhaseContrastBlobVoxelProjectorCUDA<data_t>::PhaseContrastBlobVoxelProjectorCUDA(
         const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : PhaseContrastBlobVoxelProjectorCUDA(2, 10.83, 2, domainDescriptor, rangeDescriptor)
+        : PhaseContrastBlobVoxelProjectorCUDA(domainDescriptor, rangeDescriptor, 2, 10.83, 2)
     {
     }
 
@@ -81,8 +81,8 @@ namespace elsa
         PhaseContrastBlobVoxelProjectorCUDA<data_t>::_cloneImpl() const
     {
         return new PhaseContrastBlobVoxelProjectorCUDA<data_t>(
-            this->_lut.radius(), this->_lut.alpha(), this->_lut.order(), this->_volumeDescriptor,
-            this->_detectorDescriptor);
+            this->_volumeDescriptor, this->_detectorDescriptor, this->_lut.radius(),
+            this->_lut.alpha(), this->_lut.order());
     }
 
     template <typename data_t>
@@ -98,8 +98,8 @@ namespace elsa
 
     template <typename data_t>
     BSplineVoxelProjectorCUDA<data_t>::BSplineVoxelProjectorCUDA(
-        int order, const VolumeDescriptor& domainDescriptor,
-        const DetectorDescriptor& rangeDescriptor)
+        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
+        index_t order)
         : VoxelProjectorCUDA<data_t, BSplineVoxelProjectorCUDA<data_t>>(domainDescriptor,
                                                                         rangeDescriptor),
           _lut(domainDescriptor.getNumberOfDimensions(), order)
@@ -113,15 +113,15 @@ namespace elsa
     template <typename data_t>
     BSplineVoxelProjectorCUDA<data_t>::BSplineVoxelProjectorCUDA(
         const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : BSplineVoxelProjectorCUDA(3, domainDescriptor, rangeDescriptor)
+        : BSplineVoxelProjectorCUDA(domainDescriptor, rangeDescriptor, 3)
     {
     }
 
     template <typename data_t>
     BSplineVoxelProjectorCUDA<data_t>* BSplineVoxelProjectorCUDA<data_t>::_cloneImpl() const
     {
-        return new BSplineVoxelProjectorCUDA<data_t>(this->_lut.order(), this->_volumeDescriptor,
-                                                     this->_detectorDescriptor);
+        return new BSplineVoxelProjectorCUDA<data_t>(this->_volumeDescriptor,
+                                                     this->_detectorDescriptor, this->_lut.order());
     }
 
     template <typename data_t>
@@ -136,8 +136,8 @@ namespace elsa
 
     template <typename data_t>
     PhaseContrastBSplineVoxelProjectorCUDA<data_t>::PhaseContrastBSplineVoxelProjectorCUDA(
-        data_t order, const VolumeDescriptor& domainDescriptor,
-        const DetectorDescriptor& rangeDescriptor)
+        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
+        index_t order)
         : VoxelProjectorCUDA<data_t, PhaseContrastBSplineVoxelProjectorCUDA<data_t>>(
             domainDescriptor, rangeDescriptor),
           _lut(domainDescriptor.getNumberOfDimensions(), order),
@@ -156,7 +156,7 @@ namespace elsa
     template <typename data_t>
     PhaseContrastBSplineVoxelProjectorCUDA<data_t>::PhaseContrastBSplineVoxelProjectorCUDA(
         const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : PhaseContrastBSplineVoxelProjectorCUDA(3, domainDescriptor, rangeDescriptor)
+        : PhaseContrastBSplineVoxelProjectorCUDA(domainDescriptor, rangeDescriptor, 3)
     {
     }
 
@@ -165,7 +165,7 @@ namespace elsa
         PhaseContrastBSplineVoxelProjectorCUDA<data_t>::_cloneImpl() const
     {
         return new PhaseContrastBSplineVoxelProjectorCUDA<data_t>(
-            this->_lut.order(), this->_volumeDescriptor, this->_detectorDescriptor);
+            this->_volumeDescriptor, this->_detectorDescriptor, this->_lut.order());
     }
 
     template <typename data_t>

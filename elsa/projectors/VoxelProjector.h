@@ -476,9 +476,9 @@ namespace elsa
     public:
         using self_type = BlobVoxelProjector<data_t>;
 
-        BlobVoxelProjector(data_t radius, data_t alpha, data_t order,
-                           const VolumeDescriptor& domainDescriptor,
-                           const DetectorDescriptor& rangeDescriptor);
+        BlobVoxelProjector(const VolumeDescriptor& domainDescriptor,
+                           const DetectorDescriptor& rangeDescriptor, data_t radius, data_t alpha,
+                           index_t order);
 
         BlobVoxelProjector(const VolumeDescriptor& domainDescriptor,
                            const DetectorDescriptor& rangeDescriptor);
@@ -513,9 +513,9 @@ namespace elsa
     public:
         using self_type = PhaseContrastBlobVoxelProjector<data_t>;
 
-        PhaseContrastBlobVoxelProjector(data_t radius, data_t alpha, data_t order,
-                                        const VolumeDescriptor& domainDescriptor,
-                                        const DetectorDescriptor& rangeDescriptor);
+        PhaseContrastBlobVoxelProjector(const VolumeDescriptor& domainDescriptor,
+                                        const DetectorDescriptor& rangeDescriptor, data_t radius,
+                                        data_t alpha, index_t order);
 
         PhaseContrastBlobVoxelProjector(const VolumeDescriptor& domainDescriptor,
                                         const DetectorDescriptor& rangeDescriptor);
@@ -552,8 +552,8 @@ namespace elsa
     public:
         using self_type = BSplineVoxelProjector<data_t>;
 
-        BSplineVoxelProjector(data_t degree, const VolumeDescriptor& domainDescriptor,
-                              const DetectorDescriptor& rangeDescriptor);
+        BSplineVoxelProjector(const VolumeDescriptor& domainDescriptor,
+                              const DetectorDescriptor& rangeDescriptor, index_t order);
 
         BSplineVoxelProjector(const VolumeDescriptor& domainDescriptor,
                               const DetectorDescriptor& rangeDescriptor);
@@ -587,8 +587,9 @@ namespace elsa
     public:
         using self_type = PhaseContrastBSplineVoxelProjector<data_t>;
 
-        PhaseContrastBSplineVoxelProjector(data_t degree, const VolumeDescriptor& domainDescriptor,
-                                           const DetectorDescriptor& rangeDescriptor);
+        PhaseContrastBSplineVoxelProjector(const VolumeDescriptor& domainDescriptor,
+                                           const DetectorDescriptor& rangeDescriptor,
+                                           index_t order);
 
         PhaseContrastBSplineVoxelProjector(const VolumeDescriptor& domainDescriptor,
                                            const DetectorDescriptor& rangeDescriptor);
