@@ -346,8 +346,7 @@ TEST_CASE("JosephsMethodBranchless: Output DataContainer is not zero initialized
         PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
         DataContainer sino(sinoDescriptor);
 
-        JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                   JosephsMethodBranchless<>::Interpolation::LINEAR);
+        JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
         WHEN("Sinogram container is not zero initialized and we project through an empty volume")
         {
@@ -402,8 +401,7 @@ TEST_CASE("JosephsMethodBranchless: Output DataContainer is not zero initialized
                           RotationAngles3D{Gamma{0}});
         PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
 
-        JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                   JosephsMethodBranchless<>::Interpolation::LINEAR);
+        JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
         DataContainer sino(sinoDescriptor);
 
@@ -470,8 +468,7 @@ TEST_CASE("JosephsMethodBranchless: Rays not intersecting the bounding box are p
             DataContainer sino(sinoDescriptor);
             sino = 1;
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Result of forward projection is zero")
             {
@@ -500,8 +497,7 @@ TEST_CASE("JosephsMethodBranchless: Rays not intersecting the bounding box are p
             DataContainer sino(sinoDescriptor);
             sino = 1;
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Result of forward projection is zero")
             {
@@ -529,8 +525,7 @@ TEST_CASE("JosephsMethodBranchless: Rays not intersecting the bounding box are p
             DataContainer sino(sinoDescriptor);
             sino = 1;
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Result of forward projection is zero")
             {
@@ -559,8 +554,7 @@ TEST_CASE("JosephsMethodBranchless: Rays not intersecting the bounding box are p
             DataContainer sino(sinoDescriptor);
             sino = 1;
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Result of forward projection is zero")
             {
@@ -623,8 +617,7 @@ TEST_CASE("JosephsMethodBranchless: Rays not intersecting the bounding box are p
                 DataContainer sino(sinoDescriptor);
                 sino = 1;
 
-                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                           JosephsMethodBranchless<>::Interpolation::LINEAR);
+                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
                 THEN("Result of forward projection is zero")
                 {
@@ -690,8 +683,7 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer sino(sinoDescriptor);
 
-                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                           JosephsMethodBranchless<>::Interpolation::LINEAR);
+                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
                 THEN("The result of projecting through a pixel is exactly the pixel value")
                 {
                     for (index_t j = 0; j < volSize; j++) {
@@ -739,8 +731,7 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer sino(sinoDescriptor);
 
-                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                           JosephsMethodBranchless<>::Interpolation::LINEAR);
+                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
                 THEN("The result of projecting through a pixel is the interpolated value between "
                      "the two pixels closest to the ray")
                 {
@@ -946,8 +937,7 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer sino(sinoDescriptor);
 
-                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                           JosephsMethodBranchless<>::Interpolation::LINEAR);
+                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
                 THEN("The result of projecting through a voxel is exactly the voxel value")
                 {
@@ -1011,8 +1001,7 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
                 PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
                 DataContainer sino(sinoDescriptor);
 
-                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                           JosephsMethodBranchless<>::Interpolation::LINEAR);
+                JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
                 THEN("The result of projecting through a voxel is the interpolated value between "
                      "the four voxels nearest to the ray")
@@ -1191,8 +1180,7 @@ TEST_CASE("JosephsMethodBranchless: Axis-aligned rays are present")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Values are accumulated correctly along each ray's path")
             {
@@ -1315,8 +1303,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             real_t weight = static_cast<real_t>(2 / std::sqrt(3.f));
             THEN("Ray intersects the correct pixels")
@@ -1375,8 +1362,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1434,8 +1420,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1487,8 +1472,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1528,8 +1512,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             real_t weight = 2 / std::sqrt(3.f);
             THEN("Ray intersects the correct pixels")
@@ -1590,8 +1573,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1647,8 +1629,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1701,8 +1682,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("Ray intersects the correct pixels")
             {
@@ -1813,8 +1793,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("The ray intersects the correct voxels")
             {
@@ -1861,8 +1840,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("The ray intersects the correct voxels")
             {
@@ -1910,8 +1888,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("The ray intersects the correct voxels")
             {
@@ -1959,8 +1936,7 @@ TEST_CASE("JosephsMethodBranchless: Projection under an angle")
             PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
             DataContainer sino(sinoDescriptor);
 
-            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor,
-                                       JosephsMethodBranchless<>::Interpolation::LINEAR);
+            JosephsMethodBranchless op(volumeDescriptor, sinoDescriptor);
 
             THEN("The ray intersects the correct voxels")
             {

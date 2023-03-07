@@ -53,9 +53,6 @@ namespace elsa
     class JosephsMethodBranchless : public XrayProjector<JosephsMethodBranchless<data_t>>
     {
     public:
-        /// Available interpolation modes
-        enum class Interpolation { NN, LINEAR };
-
         using self_type = JosephsMethodBranchless<data_t>;
         using base_type = XrayProjector<self_type>;
         using value_type = typename base_type::value_type;
@@ -73,8 +70,7 @@ namespace elsa
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
         JosephsMethodBranchless(const VolumeDescriptor& domainDescriptor,
-                                const DetectorDescriptor& rangeDescriptor,
-                                Interpolation interpolation = Interpolation::LINEAR);
+                                const DetectorDescriptor& rangeDescriptor);
 
         /// default destructor
         ~JosephsMethodBranchless() = default;
@@ -97,9 +93,6 @@ namespace elsa
 
         /// implement the polymorphic comparison operation
         bool _isEqual(const LinearOperator<data_t>& other) const;
-
-        /// the interpolation mode
-        Interpolation _interpolation;
 
         /// the traversal routine (for both apply/applyAdjoint)
         template <bool adjoint>

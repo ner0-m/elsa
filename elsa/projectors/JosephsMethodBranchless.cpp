@@ -10,9 +10,8 @@ namespace elsa
 {
     template <typename data_t>
     JosephsMethodBranchless<data_t>::JosephsMethodBranchless(
-        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
-        Interpolation interpolation)
-        : base_type(domainDescriptor, rangeDescriptor), _interpolation{interpolation}
+        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
+        : base_type(domainDescriptor, rangeDescriptor)
     {
         auto dim = domainDescriptor.getNumberOfDimensions();
         if (dim != 2 && dim != 3) {
@@ -44,14 +43,18 @@ namespace elsa
                                                    DataContainer<data_t>& Aty) const
     {
         Timer timeguard("JosephsMethodBranchless", "applyAdjoint");
-        traverseVolume<true>(aabb, y, Aty);
+        if (aabb.dim() == 2) {
+            traverseVolume<true, 2>(aabb, y, Aty);
+        } else if (aabb.dim() == 3) {
+            traverseVolume<true, 3>(aabb, y, Aty);
+        }
     }
 
     template <typename data_t>
     JosephsMethodBranchless<data_t>* JosephsMethodBranchless<data_t>::_cloneImpl() const
     {
         return new self_type(downcast<VolumeDescriptor>(*this->_domainDescriptor),
-                             downcast<DetectorDescriptor>(*this->_rangeDescriptor), _interpolation);
+                             downcast<DetectorDescriptor>(*this->_rangeDescriptor));
     }
 
     template <typename data_t>
@@ -113,22 +116,9 @@ namespace elsa
                 auto tmpTo = to;
                 auto tmpFrom = from;
 
-                switch (_interpolation) {
-                    case Interpolation::LINEAR:
-                        linear<adjoint>(aabb, vector, result, traverse.getFractionals(), rangeDim,
-                                        currentVoxel, intersection, from, to,
-                                        traverse.getIgnoreDirection());
-                        break;
-                    case Interpolation::NN:
-                        if constexpr (adjoint) {
-#pragma omp atomic
-                            // NOLINTNEXTLINE
-                            result[tmpTo] += intersection * vector[tmpFrom];
-                        } else {
-                            result[tmpTo] += intersection * vector[tmpFrom];
-                        }
-                        break;
-                }
+                linear<adjoint>(aabb, vector, result, traverse.getFractionals(), rangeDim,
+                                currentVoxel, intersection, from, to,
+                                traverse.getIgnoreDirection());
 
                 // update Traverse
                 traverse.updateTraverse();
