@@ -41,6 +41,9 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# Content for master page, such that sidebar is nicely populated
+master_doc = "contents"
+
 # -- Options for KaTex -------------------------------------------------------
 katex_inline = [r'$', r'$']
 
