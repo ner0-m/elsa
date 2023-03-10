@@ -31,25 +31,6 @@ namespace elsa
     {
     public:
         /**
-         * @brief Constructor for emission log-likelihood, using y and r (no residual)
-         *
-         * @param[in] domainDescriptor describing the domain of the functional
-         * @param[in] y the measurement data vector
-         * @param[in] r the background event data vector
-         */
-        EmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                              const DataContainer<data_t>& y, const DataContainer<data_t>& r);
-
-        /**
-         * @brief Constructor for emission log-likelihood, using only y (no residual)
-         *
-         * @param[in] domainDescriptor describing the domain of the functional
-         * @param[in] y the measurement data vector
-         */
-        EmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                              const DataContainer<data_t>& y);
-
-        /**
          * @brief Constructor for emission log-likelihood, using only y, and a residual as input
          *
          * @param[in] residual to be used when evaluating the functional (or its derivative)

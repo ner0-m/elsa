@@ -16,10 +16,10 @@ TYPE_TO_STRING(complex<double>);
 
 TEST_SUITE_BEGIN("functionals");
 
-TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residual", TestType, float,
+TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residual", data_t, float,
                    double)
 {
-    using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
+    using Vector = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
 
     GIVEN("just data (no residual)")
     {
@@ -27,9 +27,11 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residua
         numCoeff << 3, 7, 13;
         VolumeDescriptor dd(numCoeff);
 
+        Identity<data_t> id(dd);
+
         Vector y(dd.getNumberOfCoefficients());
         y.setRandom();
-        DataContainer<TestType> dcY(dd, y);
+        DataContainer<data_t> dcY(dd, y);
 
         Vector b(dd.getNumberOfCoefficients());
         b.setRandom();
@@ -40,11 +42,11 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residua
             if (b[i] == 0)
                 b[i] += 1;
         }
-        DataContainer<TestType> dcB(dd, b);
+        DataContainer<data_t> dcB(dd, b);
 
         WHEN("instantiating without r")
         {
-            TransmissionLogLikelihood func(dd, dcY, dcB);
+            TransmissionLogLikelihood func(id, dcY, dcB);
 
             THEN("the functional is as expected")
             {
@@ -63,10 +65,10 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residua
             {
                 Vector dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
-                DataContainer<TestType> x(dd, dataVec);
+                DataContainer<data_t> x(dd, dataVec);
 
                 // compute the "true" values
-                TestType trueValue = 0;
+                data_t trueValue = 0;
                 Vector trueGrad(dd.getNumberOfCoefficients());
                 Vector trueScale(dd.getNumberOfCoefficients());
                 for (index_t i = 0; i < dataVec.size(); ++i) {
@@ -77,11 +79,11 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residua
                 }
 
                 REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
-                DataContainer<TestType> dcTrueGrad(dd, trueGrad);
+                DataContainer<data_t> dcTrueGrad(dd, trueGrad);
                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
 
-                DataContainer<TestType> dcTrueScale(dd, trueScale);
-                REQUIRE_EQ(func.getHessian(x), leaf(Scaling(dd, dcTrueScale)));
+                DataContainer<data_t> dcTrueScale(dd, trueScale);
+                REQUIRE_EQ(func.getHessian(x), adjoint(id) * leaf(Scaling(dd, dcTrueScale)) * id);
             }
         }
 
@@ -93,9 +95,9 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residua
             for (index_t i = 0; i < r.size(); ++i)
                 if (r[i] < 0)
                     r[i] *= -1;
-            DataContainer<TestType> dcR(dd, r);
+            DataContainer<data_t> dcR(dd, r);
 
-            TransmissionLogLikelihood func(dd, dcY, dcB, dcR);
+            TransmissionLogLikelihood func(id, dcY, dcB, dcR);
 
             THEN("a clone behaves as expected")
             {
@@ -109,10 +111,10 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residua
             {
                 Vector dataVec(dd.getNumberOfCoefficients());
                 dataVec.setRandom();
-                DataContainer<TestType> x(dd, dataVec);
+                DataContainer<data_t> x(dd, dataVec);
 
                 // compute the true values
-                TestType trueValue = 0;
+                data_t trueValue = 0;
                 Vector trueGrad(dd.getNumberOfCoefficients());
                 Vector trueScale(dd.getNumberOfCoefficients());
                 for (index_t i = 0; i < dataVec.size(); ++i) {
@@ -124,145 +126,14 @@ TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with only data no residua
                 }
 
                 REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
-                DataContainer<TestType> dcTrueGrad(dd, trueGrad);
+                DataContainer<data_t> dcTrueGrad(dd, trueGrad);
                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
 
-                DataContainer<TestType> dcTrueScale(dd, trueScale);
-                REQUIRE_EQ(func.getHessian(x), leaf(Scaling(dd, dcTrueScale)));
+                DataContainer<data_t> dcTrueScale(dd, trueScale);
+                REQUIRE_EQ(func.getHessian(x), adjoint(id) * leaf(Scaling(dd, dcTrueScale)) * id);
             }
         }
     }
 }
-
-// TEST_CASE_TEMPLATE("TransmissionLogLikelihood: Testing with residual", TestType, float, double)
-// {
-//     using Vector = Eigen::Matrix<TestType, Eigen::Dynamic, 1>;
-//
-//     GIVEN("a residual with data")
-//     {
-//         IndexVector_t numCoeff(2);
-//         numCoeff << 13, 17;
-//         VolumeDescriptor dd(numCoeff);
-//
-//         Vector resData(dd.getNumberOfCoefficients());
-//         resData.setRandom();
-//         DataContainer<TestType> dcResData(dd, resData);
-//         Identity<TestType> idOp(dd);
-//         LinearResidual<TestType> linRes(idOp, dcResData);
-//
-//         Vector y(dd.getNumberOfCoefficients());
-//         y.setRandom();
-//         DataContainer<TestType> dcY(dd, y);
-//
-//         Vector b(dd.getNumberOfCoefficients());
-//         b.setRandom();
-//         // ensure b has positive values (due to log)
-//         for (index_t i = 0; i < dd.getNumberOfCoefficients(); ++i) {
-//             if (b[i] < 0)
-//                 b[i] *= -1;
-//             if (b[i] == 0)
-//                 b[i] += 1;
-//         }
-//         DataContainer<TestType> dcB(dd, b);
-//
-//         WHEN("instantiating without r")
-//         {
-//             TransmissionLogLikelihood func(linRes, dcY, dcB);
-//
-//             THEN("the functional is as expected")
-//             {
-//                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
-//
-//                 auto* lRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-//                 REQUIRE_UNARY(lRes);
-//                 REQUIRE_EQ(*lRes, linRes);
-//             }
-//
-//             THEN("a clone behaves as expected")
-//             {
-//                 auto tmllClone = func.clone();
-//
-//                 REQUIRE_NE(tmllClone.get(), &func);
-//                 REQUIRE_EQ(*tmllClone, func);
-//             }
-//
-//             THEN("the evaluate, gradient and Hessian work as expected")
-//             {
-//                 Vector dataVec(dd.getNumberOfCoefficients());
-//                 dataVec.setRandom();
-//                 DataContainer<TestType> x(dd, dataVec);
-//
-//                 // compute the "true" values
-//                 TestType trueValue = 0;
-//                 Vector trueGrad(dd.getNumberOfCoefficients());
-//                 Vector trueScale(dd.getNumberOfCoefficients());
-//                 for (index_t i = 0; i < dataVec.size(); ++i) {
-//                     auto temp = b[i] * std::exp(-dataVec[i] + resData[i]);
-//                     trueValue += temp - y[i] * std::log(temp);
-//                     trueGrad[i] = y[i] - temp;
-//                     trueScale[i] = temp;
-//                 }
-//
-//                 REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
-//                 DataContainer<TestType> dcTrueGrad(dd, trueGrad);
-//                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
-//
-//                 auto hessian = func.getHessian(x);
-//                 auto hx = hessian.apply(x);
-//                 for (index_t i = 0; i < hx.getSize(); ++i)
-//                     REQUIRE_EQ(hx[i], dataVec[i] * trueScale[i]);
-//             }
-//         }
-//
-//         WHEN("instantiating with r")
-//         {
-//             Vector r(dd.getNumberOfCoefficients());
-//             r.setRandom();
-//             // ensure non-negative values
-//             for (index_t i = 0; i < r.size(); ++i)
-//                 if (r[i] < 0)
-//                     r[i] *= -1;
-//             DataContainer<TestType> dcR(dd, r);
-//
-//             TransmissionLogLikelihood func(linRes, dcY, dcB, dcR);
-//
-//             THEN("a clone behaves as expected")
-//             {
-//                 auto tmllClone = func.clone();
-//
-//                 REQUIRE_NE(tmllClone.get(), &func);
-//                 REQUIRE_EQ(*tmllClone, func);
-//             }
-//
-//             THEN("the evaluate, gradient and Hessian work as expected")
-//             {
-//                 Vector dataVec(dd.getNumberOfCoefficients());
-//                 dataVec.setRandom();
-//                 DataContainer<TestType> x(dd, dataVec);
-//
-//                 // compute the true values
-//                 TestType trueValue = 0;
-//                 Vector trueGrad(dd.getNumberOfCoefficients());
-//                 Vector trueScale(dd.getNumberOfCoefficients());
-//                 for (index_t i = 0; i < dataVec.size(); ++i) {
-//                     auto temp = b[i] * std::exp(-dataVec[i] + resData[i]);
-//                     auto tempR = temp + r[i];
-//                     trueValue += tempR - y[i] * std::log(tempR);
-//                     trueGrad[i] = (y[i] * temp) / tempR - temp;
-//                     trueScale[i] = temp + (r[i] * y[i] * temp) / (tempR * tempR);
-//                 }
-//
-//                 REQUIRE_UNARY(checkApproxEq(func.evaluate(x), trueValue));
-//                 DataContainer<TestType> dcTrueGrad(dd, trueGrad);
-//                 REQUIRE_UNARY(isApprox(func.getGradient(x), dcTrueGrad));
-//
-//                 auto hessian = func.getHessian(x);
-//                 auto hx = hessian.apply(x);
-//                 for (index_t i = 0; i < hx.getSize(); ++i)
-//                     REQUIRE_UNARY(checkApproxEq(hx[i], dataVec[i] * trueScale[i]));
-//             }
-//         }
-//     }
-// }
 
 TEST_SUITE_END();

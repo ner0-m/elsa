@@ -32,28 +32,6 @@ namespace elsa
     {
     public:
         /**
-         * @brief Constructor for transmission log-likelihood, using only y and b (no residual)
-         *
-         * @param[in] domainDescriptor describing the domain of the functional
-         * @param[in] y the measurement data vector
-         * @param[in] b the blank scan data vector
-         */
-        TransmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                                  const DataContainer<data_t>& y, const DataContainer<data_t>& b);
-
-        /**
-         * @brief Constructor for transmission log-likelihood, using y, b, and r (no residual)
-         *
-         * @param[in] domainDescriptor describing the domain of the functional
-         * @param[in] y the measurement data vector
-         * @param[in] b the blank scan data vector
-         * @param[in] r the background event data vector
-         */
-        TransmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                                  const DataContainer<data_t>& y, const DataContainer<data_t>& b,
-                                  const DataContainer<data_t>& r);
-
-        /**
          * @brief Constructor for transmission log-likelihood, using y and b, and a residual as
          * input
          *

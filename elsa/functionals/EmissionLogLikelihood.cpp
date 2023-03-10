@@ -11,29 +11,6 @@
 namespace elsa
 {
     template <typename data_t>
-    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                                                         const DataContainer<data_t>& y,
-                                                         const DataContainer<data_t>& r)
-        : Functional<data_t>(domainDescriptor), y_{y}, r_{r}
-    {
-        // sanity check
-        if (domainDescriptor != y.getDataDescriptor() || domainDescriptor != r.getDataDescriptor())
-            throw InvalidArgumentError(
-                "EmissionLogLikelihood: descriptor and y/r not matching in size.");
-    }
-
-    template <typename data_t>
-    EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const DataDescriptor& domainDescriptor,
-                                                         const DataContainer<data_t>& y)
-        : Functional<data_t>(domainDescriptor), y_{y}
-    {
-        // sanity check
-        if (domainDescriptor != y.getDataDescriptor())
-            throw InvalidArgumentError(
-                "EmissionLogLikelihood: descriptor and y not matching in size.");
-    }
-
-    template <typename data_t>
     EmissionLogLikelihood<data_t>::EmissionLogLikelihood(const LinearOperator<data_t>& A,
                                                          const DataContainer<data_t>& y,
                                                          const DataContainer<data_t>& r)
@@ -60,24 +37,13 @@ namespace elsa
     template <typename data_t>
     data_t EmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& x)
     {
-        if (A_ && x.getDataDescriptor() != A_->getDomainDescriptor()) {
-            throw InvalidArgumentError("EmissionLogLikelihood: given x is not the correct size");
-        }
-
-        if (!A_ && x.getDataDescriptor() != y_.getDataDescriptor()) {
+        if (x.getDataDescriptor() != A_->getDomainDescriptor()) {
             throw InvalidArgumentError("EmissionLogLikelihood: given x is not the correct size");
         }
 
         auto result = static_cast<data_t>(0.0);
 
-        auto Rx = [&]() {
-            if (A_) {
-                return A_->apply(x);
-            } else {
-                return x;
-            }
-        }();
-
+        auto Rx = A_->apply(x);
         for (index_t i = 0; i < Rx.getSize(); ++i) {
             data_t temp = Rx[i];
             if (r_)
@@ -101,17 +67,11 @@ namespace elsa
             return 1 - y_[i] / temp;
         };
 
-        if (A_) {
-            auto Rx = A_->apply(x);
-            for (index_t i = 0; i < Rx.getSize(); ++i) {
-                Rx[i] = emissionlog(Rx[i], i);
-            }
-            A_->applyAdjoint(Rx, out);
-        } else {
-            for (index_t i = 0; i < x.getSize(); ++i) {
-                out[i] = emissionlog(x[i], i);
-            }
+        auto Rx = A_->apply(x);
+        for (index_t i = 0; i < Rx.getSize(); ++i) {
+            Rx[i] = emissionlog(Rx[i], i);
         }
+        A_->applyAdjoint(Rx, out);
     }
 
     template <typename data_t>
@@ -131,29 +91,19 @@ namespace elsa
             return leaf(Scaling<data_t>(s.getDataDescriptor(), s));
         };
 
-        if (A_) {
-            auto Rx = A_->apply(x);
+        auto Rx = A_->apply(x);
 
-            // Jacobian is the operator, plus chain rule
-            return adjoint(*A_) * scale(Rx) * (*A_);
-        } else {
-            // Jacobian is the identity, no need for chain rule
-            return scale(x);
-        }
+        // Jacobian is the operator, plus chain rule
+        return adjoint(*A_) * scale(Rx) * (*A_);
     }
 
     template <typename data_t>
     EmissionLogLikelihood<data_t>* EmissionLogLikelihood<data_t>::cloneImpl() const
     {
-        if (A_ && r_.has_value()) {
+        if (r_.has_value()) {
             return new EmissionLogLikelihood<data_t>(*A_, y_, *r_);
-        } else if (A_ && !r_.has_value()) {
-            return new EmissionLogLikelihood<data_t>(*A_, y_);
-        } else if (!A_ && r_.has_value()) {
-            return new EmissionLogLikelihood<data_t>(this->getDomainDescriptor(), y_, *r_);
-        } else { // (!A_ && !r_.has_value())
-            return new EmissionLogLikelihood<data_t>(this->getDomainDescriptor(), y_);
         }
+        return new EmissionLogLikelihood<data_t>(*A_, y_);
     }
 
     template <typename data_t>
