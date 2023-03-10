@@ -52,6 +52,12 @@ namespace elsa
         return std::make_pair(weight, complement_weight);
     }
 
+    template <int dim>
+    index_t coord2Idx(IndexArray_t<dim> coord, IndexArray_t<dim> strides)
+    {
+        return (coord * strides).sum();
+    }
+
     template <typename data_t, int dim, class Fn>
     void doInterpolation(const IndexArray_t<dim>& voxelFloor, const IndexArray_t<dim>& voxelCeil,
                          const RealArray_t<dim>& weight, const RealArray_t<dim>& complement_weight,
@@ -147,6 +153,7 @@ namespace elsa
         const auto& range = downcast<DetectorDescriptor>(adjoint ? vector.getDataDescriptor()
                                                                  : result.getDataDescriptor());
 
+        const IndexArray_t<dim> strides = domain.getProductOfCoefficientsPerDimension();
         const auto sizeOfRange = range.getNumberOfCoefficients();
 
         const IndexArray_t<dim> aabbMin = aabb.min().template cast<index_t>();
@@ -177,12 +184,14 @@ namespace elsa
                     doInterpolation<data_t>(voxelFloor, voxelCeil, weight, complement_weight,
                                             aabbMin, aabbMax, [&](const auto& coord, auto wght) {
 #pragma omp atomic
-                                                result(coord) += vector[ir] * intersection * wght;
+                                                result[coord2Idx(coord, strides)] +=
+                                                    vector[ir] * intersection * wght;
                                             });
                 } else {
                     doInterpolation<data_t>(voxelFloor, voxelCeil, weight, complement_weight,
                                             aabbMin, aabbMax, [&](const auto& coord, auto wght) {
-                                                result[ir] += vector(coord) * intersection * wght;
+                                                result[ir] += vector[coord2Idx(coord, strides)]
+                                                              * intersection * wght;
                                             });
                 }
                 // update Traverse
