@@ -99,10 +99,6 @@ namespace elsa
         void traverseVolume(const BoundingBox& aabb, const DataContainer<data_t>& vector,
                             DataContainer<data_t>& result) const;
 
-        /// lift from base class
-        // using LinearOperator<data_t>::_domainDescriptor;
-        // using LinearOperator<data_t>::_rangeDescriptor;
-
         friend class XrayProjector<self_type>;
     };
 } // namespace elsa
