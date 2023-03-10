@@ -63,8 +63,7 @@ namespace elsa
             auto beta = k / kold;
 
             // c = r + beta * c
-            c = r;
-            c += beta * c;
+            lincomb(1, r, beta, c, c);
 
             // store k for next iteration
             kold = k;

@@ -45,6 +45,7 @@ namespace elsa
 
         auto xPrev = x;
         auto y = x;
+        auto z = x;
         data_t tPrev = 1;
 
         auto Atb = A_->applyAdjoint(b_);
@@ -67,14 +68,17 @@ namespace elsa
         for (index_t iter = 0; iter < iterations; ++iter) {
             spdlog::stopwatch iter_time;
 
+            // z = y - mu_ * grad
+            lincomb(1, y, -mu_, grad, z);
+
             // x_{k+1} = prox_{mu * g}(y - mu * grad)
-            x = prox_.apply(y - mu_ * grad, mu_);
+            x = prox_.apply(z, mu_);
 
             // t_{k+1} = \frac{\sqrt{1 + 4t_k^2} + 1}{2}
             data_t t = (1 + std::sqrt(1 + 4 * tPrev * tPrev)) / 2;
 
             // y_{k+1} = x_k + \frac{t_{k-1} - 1}{t_k}(x_k - x_{k-1})
-            y = x + ((tPrev - 1) / t) * (x - xPrev);
+            lincomb(1, x, (tPrev - 1) / t, x - xPrev, y); // 1 temporary
 
             xPrev = x;
             tPrev = t;
@@ -85,7 +89,7 @@ namespace elsa
                 return x;
             }
 
-            // Update gradient as a last steas a last step
+            // Update gradient as a last step
             gradient(y);
 
             Logger::get("APGD")->info("| {:>6} | {:>12} | {:>8.3} | {:>8.3}s |", iter,

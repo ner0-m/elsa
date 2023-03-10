@@ -1,4 +1,5 @@
 #include "PGD.h"
+#include "DataContainer.h"
 #include "LinearOperator.h"
 #include "LinearResidual.h"
 #include "ProximalL1.h"
@@ -57,12 +58,18 @@ namespace elsa
         Logger::get("PGD")->info("|*{:^6}*|*{:*^12}*|*{:*^8}*|*{:^8}*|", "iter", "gradient", "time",
                                  "elapsed");
 
+        auto y = DataContainer<data_t>(x.getDataDescriptor());
+
         for (index_t iter = 0; iter < iterations; ++iter) {
             spdlog::stopwatch iter_time;
 
             gradient(x);
 
-            x = prox_.apply(x - mu_ * grad, mu_);
+            // y = x - mu_ * grad
+            lincomb(1, x, -mu_, grad, y);
+
+            // apply proximal
+            x = prox_.apply(y, mu_);
 
             if (grad.squaredL2Norm() <= epsilon_) {
                 Logger::get("PGD")->info("SUCCESS: Reached convergence at {}/{} iteration",

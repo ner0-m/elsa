@@ -78,7 +78,8 @@ namespace elsa
             k = r.squaredL2Norm();
             auto beta = k / kold;
 
-            c = r + beta * c;
+            // c = r + beta * c;
+            lincomb(1, r, beta, c, c);
             kold = k;
 
             Logger::get("CGLS")->info("{:>5} | {:>15.10} |", iter, s.l2Norm());

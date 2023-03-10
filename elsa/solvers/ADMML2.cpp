@@ -61,41 +61,36 @@ namespace elsa
         DataContainer<data_t> u(A_->getRangeDescriptor());
         u = 0;
 
+        DataContainer<data_t> Ax(A_->getRangeDescriptor());
+        DataContainer<data_t> tmp(A_->getRangeDescriptor());
+
         auto sqrttau = data_t{1} / std::sqrt(tau_);
 
         auto loglevel = Logger::getLevel();
-        Logger::get("ADMML2")->info("| {:^4} | {:^12} | {:^12} | {:^12} | {:^12} | {:^12} |",
-                                    "iter", "f", "Ax", "tmp", "z", "u");
+        Logger::get("ADMML2")->info("| {:^4} | {:^12} | {:^12} | {:^12} |", "iter", "f", "z", "u");
         for (index_t iter = 0; iter < iterations; ++iter) {
-
-            // std::vector<std::unique_ptr<LinearOperator<data_t>>> regOps;
-            // regOps.emplace_back(A_->clone());
-            // std::vector<DataContainer<data_t>> regData;
-            // regData.emplace_back(z - u);
-
             Logger::setLevel(Logger::LogLevel::ERR);
 
             // x_{k+1} = \min_x 0.5 ||Op x - b||_2^2 + \frac{1}{2\tau}||Ax - z_k + u_k||_2^2
-            // x = reguarlizedInversion(*op_, b_, regOps, regData, sqrttau, ninneriters_, x);
             x = reguarlizedInversion<data_t>(*op_, b_, *A_, z - u, sqrttau, ninneriters_, x);
-            // x = reguarlizedInversion<data_t>(x);
 
             Logger::setLevel(loglevel);
 
-            auto Ax = A_->apply(x);
+            A_->apply(x, Ax);
+
+            // Ax_{k+1} + u_k
+            lincomb(1, Ax, 1, u, tmp);
 
             // z_{k+1} = prox_{\tau * g}(Ax_{k+1} + u_k)
-            auto tmp = Ax + u;
             z = proxg_.apply(tmp, tau_);
 
             // u_{k+1} = u_k + Ax_{k+1} - z_{k+1}
             u += Ax;
             u -= z;
 
-            Logger::get("ADMML2")->info(
-                "| {:>4} | {:12.7} | {:12.7} | {:12.7} | {:12.7} | {:12.7} |", iter,
-                0.5 * (op_->apply(x) - b_).l2Norm(), Ax.l2Norm(), tmp.l2Norm(), z.l2Norm(),
-                u.l2Norm());
+            Logger::get("ADMML2")->info("| {:>4} | {:12.7} | {:12.7} | {:12.7} |", iter,
+                                        0.5 * (op_->apply(x) - b_).l2Norm(), z.l2Norm(),
+                                        u.l2Norm());
         }
 
         return x;
