@@ -1,6 +1,5 @@
 #include "BA_GMRES.h"
 #include "GMRES_common.h"
-#include "Logger.h"
 #include "TypeCasts.hpp"
 #include "spdlog/stopwatch.h"
 
@@ -51,44 +50,44 @@ namespace elsa
     DataContainer<data_t> BA_GMRES<data_t>::solve(index_t iterations,
                                                   std::optional<DataContainer<data_t>> x0)
     {
-        auto calculate_r0 = [](std::unique_ptr<LinearOperator<data_t>>& A,
-                               std::unique_ptr<LinearOperator<data_t>>& B, DataContainer<data_t>& b,
-                               DataContainer<data_t>& x) -> DataContainer<data_t> {
-            auto Bb = B->apply(b);
-            auto Ax = A->apply(x);
-            auto BAx = B->apply(Ax);
+        auto calculate_r0 = [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
+                               const DataContainer<data_t>& b,
+                               const DataContainer<data_t>& x) -> DataContainer<data_t> {
+            auto Bb = B.apply(b);
+            auto Ax = A.apply(x);
+            auto BAx = B.apply(Ax);
 
             auto r0 = Bb - BAx;
             return r0;
         };
 
-        auto calculate_q = [](std::unique_ptr<LinearOperator<data_t>>& A,
-                              std::unique_ptr<LinearOperator<data_t>>& B,
-                              DataContainer<data_t>& w_k) -> DataContainer<data_t> {
-            auto Aw_k = A->apply(w_k);
-            auto q = B->apply(Aw_k);
+        auto calculate_q = [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
+                              const DataContainer<data_t>& w_k) -> DataContainer<data_t> {
+            auto Aw_k = A.apply(w_k);
+            auto q = B.apply(Aw_k);
             return q;
         };
 
-        auto calculate_x = [](std::unique_ptr<LinearOperator<data_t>>& B, DataContainer<data_t>& x,
-                              DataContainer<data_t>& wy) -> DataContainer<data_t> {
+        auto calculate_x = [](const LinearOperator<data_t>& B, const DataContainer<data_t>& x,
+                              const DataContainer<data_t>& wy) -> DataContainer<data_t> {
             auto x_k = x + wy;
             return x_k;
         };
 
         // explicitly casting lambda so it can be resolved by the compiler for detail::gmres
-        std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
-                                            std::unique_ptr<LinearOperator<data_t>>&,
-                                            DataContainer<data_t>&, DataContainer<data_t>&)>
+        std::function<DataContainer<data_t>(
+            const LinearOperator<data_t>&, const LinearOperator<data_t>&,
+            const DataContainer<data_t>&, const DataContainer<data_t>&)>
             calc_r0 = calculate_r0;
 
-        std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
-                                            std::unique_ptr<LinearOperator<data_t>>&,
-                                            DataContainer<data_t>&)>
+        std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
+                                            const LinearOperator<data_t>&,
+                                            const DataContainer<data_t>&)>
             calc_q = calculate_q;
 
-        std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
-                                            DataContainer<data_t>&, DataContainer<data_t>&)>
+        std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
+                                            const DataContainer<data_t>&,
+                                            const DataContainer<data_t>&)>
             calc_x = calculate_x;
 
         auto x = DataContainer<data_t>(_A->getDomainDescriptor());
@@ -98,8 +97,8 @@ namespace elsa
             x = 0;
         }
 
-        return ::detail::gmres("BA_GMRES", _A, _B, _b, _epsilon, x, iterations, calc_r0, calc_q,
-                               calc_x);
+        return detail::gmres("BA_GMRES", _A, _B, _b, _epsilon, x, iterations, calc_r0, calc_q,
+                             calc_x);
     }
 
     template <typename data_t>

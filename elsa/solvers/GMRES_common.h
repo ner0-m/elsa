@@ -5,43 +5,41 @@
 #include <memory>
 #include <Eigen/Core>
 
-namespace detail
+namespace elsa::detail
 {
-    using namespace elsa;
-
     template <typename data_t>
-    DataContainer<data_t>
-        gmres(std::string name, std::unique_ptr<LinearOperator<data_t>>& _A,
-              std::unique_ptr<LinearOperator<data_t>>& _B, DataContainer<data_t>& _b,
-              data_t _epsilon, DataContainer<data_t> x, index_t iterations,
-              std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
-                                                  std::unique_ptr<LinearOperator<data_t>>&,
-                                                  DataContainer<data_t>&, DataContainer<data_t>&)>
-                  calculate_r0,
-              std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
-                                                  std::unique_ptr<LinearOperator<data_t>>&,
-                                                  DataContainer<data_t>&)>
-                  calculate_q,
-              std::function<DataContainer<data_t>(std::unique_ptr<LinearOperator<data_t>>&,
-                                                  DataContainer<data_t>&, DataContainer<data_t>&)>
-                  calculate_x)
+    DataContainer<data_t> gmres(std::string name, std::unique_ptr<LinearOperator<data_t>>& A,
+                                std::unique_ptr<LinearOperator<data_t>>& B,
+                                DataContainer<data_t>& b, data_t _epsilon, DataContainer<data_t> x,
+                                index_t iterations,
+                                std::function<DataContainer<data_t>(
+                                    const LinearOperator<data_t>&, const LinearOperator<data_t>&,
+                                    const DataContainer<data_t>&, const DataContainer<data_t>&)>
+                                    calculate_r0,
+                                std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
+                                                                    const LinearOperator<data_t>&,
+                                                                    const DataContainer<data_t>&)>
+                                    calculate_q,
+                                std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
+                                                                    const DataContainer<data_t>&,
+                                                                    const DataContainer<data_t>&)>
+                                    calculate_x)
     {
         // GMRES Implementation
         using Mat = Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>;
-        using Vec = Eigen::Vector<data_t, Eigen::Dynamic>;
 
         spdlog::stopwatch aggregate_time;
         Logger::get(name)->info("Start preparations...");
 
         // setup DataContainer for Return Value which should be like x
-        auto x_k = DataContainer<data_t>(_A->getDomainDescriptor());
+        auto x_k = DataContainer<data_t>(A->getDomainDescriptor());
 
         // Custom function for AB/BA-GMRES
-        auto r0 = calculate_r0(_A, _B, _b, x);
+        auto r0 = calculate_r0(*A, *B, b, x);
 
         Mat h = Mat::Constant(iterations + 1, iterations, 0);
         Mat w = Mat::Constant(r0.getSize(), iterations, 0);
-        Vec e = Vec::Constant(iterations + 1, 0);
+        Vector_t<data_t> e = Vector_t<data_t>::Constant(iterations + 1, 1, 0);
 
         // Initializing e Vector
         auto beta = r0.l2Norm();
@@ -49,7 +47,8 @@ namespace detail
 
         // Filling Matrix w with the vector r0/beta at the specified column
         auto w_i0 = r0 / beta;
-        w.col(0) = Eigen::Map<Vec>(thrust::raw_pointer_cast(w_i0.storage().data()), w_i0.getSize());
+        w.col(0) = Eigen::Map<Vector_t<data_t>>(thrust::raw_pointer_cast(w_i0.storage().data()),
+                                                w_i0.getSize());
 
         Logger::get(name)->info("Preparations done, took {}s", aggregate_time);
 
@@ -64,10 +63,10 @@ namespace detail
             auto w_k = DataContainer<data_t>(r0.getDataDescriptor(), w.col(k));
 
             // Custom function for AB/BA-GMRES
-            auto temp = calculate_q(_A, _B, w_k);
+            auto temp = calculate_q(*A, *B, w_k);
 
-            auto q_k =
-                Eigen::Map<Vec>(thrust::raw_pointer_cast(temp.storage().data()), temp.getSize());
+            auto q_k = Eigen::Map<Vector_t<data_t>>(thrust::raw_pointer_cast(temp.storage().data()),
+                                                    temp.getSize());
 
             for (index_t i = 0; i < iterations; i++) {
                 auto w_i = w.col(i);
@@ -89,14 +88,14 @@ namespace detail
             }
 
             Eigen::ColPivHouseholderQR<Mat> qr(h);
-            Vec y = qr.solve(e);
+            Vector_t<data_t> y = qr.solve(e);
             auto wy = DataContainer<data_t>(r0.getDataDescriptor(), w * y);
 
             // Custom function for AB/BA-GMRES
-            x_k = calculate_x(_B, x, wy);
+            x_k = calculate_x(*B, x, wy);
 
             // disable r for faster results ?
-            auto r = _b - _A->apply(x_k);
+            auto r = b - A->apply(x_k);
 
             Logger::get(name)->info("{:>5}|{:>15}|{:>6.3}|{:>6.3}s|", k, r.l2Norm(), iter_time,
                                     aggregate_time);
@@ -114,4 +113,4 @@ namespace detail
         Logger::get(name)->warn("Failed to reach convergence at {} iterations", iterations);
         return x_k;
     };
-}; // namespace detail
+}; // namespace elsa::detail
