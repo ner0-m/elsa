@@ -6,7 +6,6 @@
 #include "BSplines.h"
 #include "BinaryMethod.h"
 #include "JosephsMethod.h"
-#include "JosephsMethodBranchless.h"
 #include "SiddonsMethod.h"
 #include "VoxelProjector.h"
 #include "SiddonsMethodBranchless.h"
@@ -18,14 +17,6 @@ namespace py = pybind11;
 
 void add_definitions_pyelsa_projectors(py::module& m)
 {
-    py::enum_<elsa::JosephsMethod<float>::Interpolation>(m, "JosephsMethodfInterpolation")
-        .value("LINEAR", elsa::JosephsMethod<float>::Interpolation::LINEAR)
-        .value("NN", elsa::JosephsMethod<float>::Interpolation::NN);
-
-    py::enum_<elsa::JosephsMethod<double>::Interpolation>(m, "JosephsMethoddInterpolation")
-        .value("LINEAR", elsa::JosephsMethod<double>::Interpolation::LINEAR)
-        .value("NN", elsa::JosephsMethod<double>::Interpolation::NN);
-
     py::enum_<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, float>::SamplingStrategy>(
         m, "SubsetSamplerPlanarDetectorDescriptorfloatSamplingStrategy")
         .value("ROTATIONAL_CLUSTERING",
@@ -158,37 +149,15 @@ void add_definitions_pyelsa_projectors(py::module& m)
 
     py::class_<elsa::JosephsMethod<float>, elsa::LinearOperator<float>> JosephsMethodf(
         m, "JosephsMethodf");
-    JosephsMethodf
-        .def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-             py::arg("domainDescriptor"), py::arg("rangeDescriptor"))
-        .def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
-                      elsa::JosephsMethod<float>::Interpolation>(),
-             py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("interpolation"));
+    JosephsMethodf.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+                       py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
 
     m.attr("JosephsMethod") = m.attr("JosephsMethodf");
 
     py::class_<elsa::JosephsMethod<double>, elsa::LinearOperator<double>> JosephsMethodd(
         m, "JosephsMethodd");
-    JosephsMethodd
-        .def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-             py::arg("domainDescriptor"), py::arg("rangeDescriptor"))
-        .def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
-                      elsa::JosephsMethod<double>::Interpolation>(),
-             py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("interpolation"));
-
-    py::class_<elsa::JosephsMethodBranchless<float>, elsa::LinearOperator<float>>
-        JosephsMethodBranchlessf(m, "JosephsMethodBranchlessf");
-    JosephsMethodBranchlessf.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
-
-    m.attr("JosephsMethodBranchless") = m.attr("JosephsMethodBranchlessf");
-
-    py::class_<elsa::JosephsMethodBranchless<double>, elsa::LinearOperator<double>>
-        JosephsMethodBranchlessd(m, "JosephsMethodBranchlessd");
-    JosephsMethodBranchlessd.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+    JosephsMethodd.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+                       py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
 
     py::class_<elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, float>>>
         CloneableSubsetSamplerPlanarDetectorDescriptorfloat(

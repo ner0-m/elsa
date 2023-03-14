@@ -13,7 +13,7 @@ namespace elsa
      *  @brief Special traversal wrapper for Joseph's method.
      */
     template <int dim>
-    class DrivingDirectionTraversalBranchless
+    class DrivingDirectionTraversal
     {
     public:
         /**
@@ -22,7 +22,7 @@ namespace elsa
          * @param[in] aabb axis-aligned boundary box describing the volume
          * @param[in] r the ray to be traversed
          */
-        explicit DrivingDirectionTraversalBranchless(const BoundingBox& aabb, const RealRay_t& r);
+        explicit DrivingDirectionTraversal(const BoundingBox& aabb, const RealRay_t& r);
 
         /**
          * @brief Update the traverser status by taking the next traversal step

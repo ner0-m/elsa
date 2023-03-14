@@ -1,11 +1,11 @@
-#include "DrivingDirectionTraversalBranchless.h"
+#include "DrivingDirectionTraversal.h"
 
 namespace elsa
 {
 
     template <int dim>
-    DrivingDirectionTraversalBranchless<dim>::DrivingDirectionTraversalBranchless(
-        const BoundingBox& aabb, const RealRay_t& r)
+    DrivingDirectionTraversal<dim>::DrivingDirectionTraversal(const BoundingBox& aabb,
+                                                              const RealRay_t& r)
     {
         static_assert(dim == 2 || dim == 3);
 
@@ -57,54 +57,54 @@ namespace elsa
     }
 
     template <int dim>
-    void DrivingDirectionTraversalBranchless<dim>::updateTraverse()
+    void DrivingDirectionTraversal<dim>::updateTraverse()
     {
         _currentPos += _nextStep;
         _stepCount++;
     }
 
     template <int dim>
-    IndexArray_t<dim> DrivingDirectionTraversalBranchless<dim>::getCurrentVoxel() const
+    IndexArray_t<dim> DrivingDirectionTraversal<dim>::getCurrentVoxel() const
     {
         return (_currentPos).floor().template cast<index_t>();
     }
 
     template <int dim>
-    IndexArray_t<dim> DrivingDirectionTraversalBranchless<dim>::getCurrentVoxelFloor() const
+    IndexArray_t<dim> DrivingDirectionTraversal<dim>::getCurrentVoxelFloor() const
     {
         return (_currentPos - 0.5f).floor().template cast<index_t>();
     }
 
     template <int dim>
-    IndexArray_t<dim> DrivingDirectionTraversalBranchless<dim>::getCurrentVoxelCeil() const
+    IndexArray_t<dim> DrivingDirectionTraversal<dim>::getCurrentVoxelCeil() const
     {
         return (_currentPos - 0.5f).ceil().template cast<index_t>();
     }
 
     template <int dim>
-    index_t DrivingDirectionTraversalBranchless<dim>::getDrivingDirection() const
+    index_t DrivingDirectionTraversal<dim>::getDrivingDirection() const
     {
         return _drivingDirection;
     }
 
     template <int dim>
-    bool DrivingDirectionTraversalBranchless<dim>::isInBoundingBox() const
+    bool DrivingDirectionTraversal<dim>::isInBoundingBox() const
     {
         return (_stepCount < _numSteps);
     }
 
     template <int dim>
-    real_t DrivingDirectionTraversalBranchless<dim>::getIntersectionLength() const
+    real_t DrivingDirectionTraversal<dim>::getIntersectionLength() const
     {
         return _intersectionLength;
     }
 
     template <int dim>
-    RealArray_t<dim> DrivingDirectionTraversalBranchless<dim>::getCurrentPos() const
+    RealArray_t<dim> DrivingDirectionTraversal<dim>::getCurrentPos() const
     {
         return _currentPos;
     }
 
-    template class DrivingDirectionTraversalBranchless<2>;
-    template class DrivingDirectionTraversalBranchless<3>;
+    template class DrivingDirectionTraversal<2>;
+    template class DrivingDirectionTraversal<3>;
 } // namespace elsa

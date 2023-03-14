@@ -1,7 +1,7 @@
 
 #include "doctest/doctest.h"
 
-#include "DrivingDirectionTraversalBranchless.h"
+#include "DrivingDirectionTraversal.h"
 #include "Intersection.h"
 
 using namespace elsa;
@@ -27,7 +27,7 @@ bool intersect(const RealVector_t& voxel, const RealRay_t& r)
     return intersectRay(bb, r).operator bool();
 }
 
-TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal object")
+TEST_CASE("DrivingDirectionTraversal: Construction of a 2D traversal object")
 {
     // setup
     const size_t dim = 2;
@@ -57,7 +57,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -79,7 +79,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -101,7 +101,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -123,7 +123,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -145,7 +145,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -168,7 +168,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -188,7 +188,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -208,7 +208,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -228,7 +228,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -248,7 +248,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -271,7 +271,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -291,7 +291,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -319,7 +319,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -339,7 +339,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -359,7 +359,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -382,7 +382,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -402,7 +402,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -422,7 +422,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -442,7 +442,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -462,7 +462,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -482,7 +482,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the middle right pixel")
             {
@@ -504,7 +504,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -523,7 +523,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << -1.0, 0.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the top left pixel")
             {
@@ -542,7 +542,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, 1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the bottom left pixel")
             {
@@ -561,7 +561,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
             rd << 0.0, -1.0;
             RealRay_t r(ro, rd);
 
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
             THEN("The ray intersects the aabb at the top left pixel")
             {
@@ -576,7 +576,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Construction of a 2D traversal o
     }
 }
 
-TEST_CASE("DrivingDirectionTraversalBranchless: Traverse a 2D volume and only check that the "
+TEST_CASE("DrivingDirectionTraversal: Traverse a 2D volume and only check that the "
           "endpoint is correct")
 {
     // setup
@@ -603,7 +603,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse a 2D volume and only ch
             rd << 1.0, 0;
 
             RealRay_t r(ro, rd);
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             while (traverse.isInBoundingBox())
@@ -629,7 +629,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse a 2D volume and only ch
             rd.normalize();
 
             RealRay_t r(ro, rd);
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             while (traverse.isInBoundingBox())
@@ -654,7 +654,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse a 2D volume and only ch
             rd << -1.0, 0;
 
             RealRay_t r(ro, rd);
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             while (traverse.isInBoundingBox())
@@ -680,7 +680,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse a 2D volume and only ch
             rd.normalize();
 
             RealRay_t r(ro, rd);
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             while (traverse.isInBoundingBox())
@@ -700,8 +700,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse a 2D volume and only ch
     }
 }
 
-TEST_CASE(
-    "DrivingDirectionTraversalBranchless: Check that the all steps in the 2D Volume are correct")
+TEST_CASE("DrivingDirectionTraversal: Check that the all steps in the 2D Volume are correct")
 {
     const size_t dim = 2;
     index_t x = 5;
@@ -725,7 +724,7 @@ TEST_CASE(
             rd.normalize();
 
             RealRay_t r(ro, rd);
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The traversal is initially at (0, 0)")
@@ -814,7 +813,7 @@ TEST_CASE(
             rd.normalize();
 
             RealRay_t r(ro, rd);
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The traversal is initially at (0, 0)")
@@ -904,7 +903,7 @@ TEST_CASE(
             rd.normalize();
 
             RealRay_t r(ro, rd);
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             traverse.updateTraverse();
@@ -979,7 +978,7 @@ TEST_CASE(
             rd << -1, 0;
 
             RealRay_t r(ro, rd);
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             THEN("The entry point should be this")
@@ -1065,7 +1064,7 @@ TEST_CASE(
     }
 }
 
-TEST_CASE("DrivingDirectionTraversalBranchless: Traverse_Volume_2D_EachPointIsTested")
+TEST_CASE("DrivingDirectionTraversal: Traverse_Volume_2D_EachPointIsTested")
 {
     // setup
     const size_t dim = 2;
@@ -1084,7 +1083,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse_Volume_2D_EachPointIsTe
     rd.normalize();
     RealRay_t r(ro, rd);
 
-    DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+    DrivingDirectionTraversal<dim> traverse(aabb, r);
     CHECK_UNARY(traverse.isInBoundingBox());
 
     size_t iter = 0;
@@ -1098,7 +1097,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traverse_Volume_2D_EachPointIsTe
     }
 }
 
-TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume should be equal to a "
+TEST_CASE("DrivingDirectionTraversal: Traversal through 2D volume should be equal to a "
           "ray voxel intersection "
           "for every voxel along the way")
 {
@@ -1128,7 +1127,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -1154,7 +1153,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -1180,7 +1179,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -1206,7 +1205,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -1231,7 +1230,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -1258,7 +1257,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -1284,7 +1283,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -1310,7 +1309,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             CHECK_UNARY(traverse.isInBoundingBox());
 
             size_t iter = 0;
@@ -1339,7 +1338,7 @@ TEST_CASE("DrivingDirectionTraversalBranchless: Traversal through 2D volume shou
 
         THEN("Then all points the traversal visits are also hit by the intersection algorithm")
         {
-            DrivingDirectionTraversalBranchless<dim> traverse(aabb, r);
+            DrivingDirectionTraversal<dim> traverse(aabb, r);
             traverse.isInBoundingBox();
 
             size_t iter = 0;
