@@ -68,6 +68,18 @@ namespace elsa
     void BinaryMethod<data_t>::traverseVolume(const DataContainer<data_t>& vector,
                                               DataContainer<data_t>& result) const
     {
+        if (_domainDescriptor->getNumberOfDimensions() == 2) {
+            return doTraverseVolume<adjoint, 2>(vector, result);
+        } else if (_domainDescriptor->getNumberOfDimensions() == 3) {
+            return doTraverseVolume<adjoint, 3>(vector, result);
+        }
+    }
+
+    template <typename data_t>
+    template <bool adjoint, int dim>
+    void BinaryMethod<data_t>::doTraverseVolume(const DataContainer<data_t>& vector,
+                                                DataContainer<data_t>& result) const
+    {
         const index_t maxIterations = adjoint ? vector.getSize() : result.getSize();
 
         if constexpr (adjoint) {
@@ -83,7 +95,8 @@ namespace elsa
             auto ray = _detectorDescriptor.computeRayFromDetectorCoord(rangeIndex);
 
             // --> setup traversal algorithm
-            TraverseAABB traverse(_boundingBox, ray);
+            TraverseAABB<dim> traverse(_boundingBox, ray,
+                                       _domainDescriptor->getNumberOfCoefficientsPerDimension());
 
             if constexpr (!adjoint)
                 result[rangeIndex] = 0;

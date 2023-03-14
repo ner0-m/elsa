@@ -8,7 +8,6 @@
 #include "JosephsMethod.h"
 #include "SiddonsMethod.h"
 #include "VoxelProjector.h"
-#include "SiddonsMethodBranchless.h"
 #include "SubsetSampler.h"
 
 #include "hints/projectors_hints.cpp"
@@ -130,20 +129,6 @@ void add_definitions_pyelsa_projectors(py::module& m)
     py::class_<elsa::PhaseContrastBSplineVoxelProjector<double>, elsa::LinearOperator<double>>
         PhaseContrastBSplineVoxelProjectord(m, "PhaseContrastBSplineVoxelProjectord");
     PhaseContrastBSplineVoxelProjectord.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
-
-    py::class_<elsa::SiddonsMethodBranchless<float>, elsa::LinearOperator<float>>
-        SiddonsMethodBranchlessf(m, "SiddonsMethodBranchlessf");
-    SiddonsMethodBranchlessf.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
-
-    m.attr("SiddonsMethodBranchless") = m.attr("SiddonsMethodBranchlessf");
-
-    py::class_<elsa::SiddonsMethodBranchless<double>, elsa::LinearOperator<double>>
-        SiddonsMethodBranchlessd(m, "SiddonsMethodBranchlessd");
-    SiddonsMethodBranchlessd.def(
         py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
         py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
 

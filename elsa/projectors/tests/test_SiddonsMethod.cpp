@@ -1,4 +1,3 @@
-#include "StrongTypes.h"
 #include "doctest/doctest.h"
 
 #include "SiddonsMethod.h"
@@ -317,9 +316,7 @@ TEST_CASE("SiddoneMethod: Output DataContainer is not zero initialized")
         auto sinoData = SinogramData2D{Size2D{sinoDims}};
 
         std::vector<Geometry> geom;
-        VolumeData2D volDataCopy{volData};
-        SinogramData2D sinoDataCopy{sinoData};
-        geom.emplace_back(stc, ctr, Radian{0}, std::move(volDataCopy), std::move(sinoDataCopy));
+        geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
 
         PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
         DataContainer sino(sinoDescriptor);
@@ -372,9 +369,7 @@ TEST_CASE("SiddoneMethod: Output DataContainer is not zero initialized")
         auto sinoData = SinogramData3D{Size3D{sinoDims}};
 
         std::vector<Geometry> geom;
-        VolumeData3D volDataCopy{volData};
-        SinogramData3D sinoDataCopy{sinoData};
-        geom.emplace_back(stc, ctr, std::move(volDataCopy), std::move(sinoDataCopy),
+        geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                           RotationAngles3D{Gamma{0}});
 
         PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -658,32 +653,20 @@ TEST_CASE("SiddonMethod: Axis-aligned rays are present")
 
         std::vector<Geometry> geom;
 
-        // TODO: fix the test for other angles.
-        // const std::vector<real_t> angles{0.0, pi_t / 2, pi_t, 3 * pi_t / 2};
-        const std::vector<real_t> angles{0.0};
+        const index_t numCases = 4;
+        const real_t angles[numCases] = {0.0, pi_t / 2, pi_t, 3 * pi_t / 2};
         RealVector_t backProj[2];
-        // clang-format off
-        // for angle=0,180
         backProj[0].resize(volSize * volSize);
-        backProj[0] << 0, 0, 1, 0, 0,
-                       0, 0, 1, 0, 0,
-                       0, 0, 1, 0, 0,
-                       0, 0, 1, 0, 0,
-                       0, 0, 1, 0, 0;
-        // for angle=90,270
         backProj[1].resize(volSize * volSize);
-        backProj[1] << 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0,
-                       1, 1, 1, 1, 1,
-                       0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0;
-        // clang-format on
+        backProj[1] << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
-        for (size_t i = 0; i < angles.size(); i++) {
+        backProj[0] << 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0;
+
+        for (index_t i = 0; i < numCases; i++) {
             WHEN("An axis-aligned ray with an angle of different angles passes through the center "
                  "of a pixel")
             {
-                INFO("An axis-aligned ray with an angle of ", angles[i],
+                INFO("An axis-aligned ray with an angle of", angles[i],
                      " radians passes through the center of a pixel");
                 VolumeData2D volDataCopy{volData};
                 SinogramData2D sinoDataCopy{sinoData};
@@ -704,6 +687,7 @@ TEST_CASE("SiddonMethod: Axis-aligned rays are present")
                             volume(j, volSize / 2) = 1;
 
                         op.apply(volume, sino);
+                        REQUIRE_EQ(sino[0], Approx(1));
                     }
 
                     AND_THEN("The backprojection sets the values of all hit pixels to the detector "
@@ -859,8 +843,7 @@ TEST_CASE("SiddonMethod: Axis-aligned rays are present")
 
             0, 0, 0, 0, 1, 0, 0, 0, 0;
 
-        // TODO: fix test for other angles
-        for (index_t i = 0; i < 1; i++) {
+        for (index_t i = 0; i < numCases; i++) {
             WHEN("An axis-aligned ray passes through the center of a pixel")
             {
                 INFO("A ", al[i], "-axis-aligned ray passes through the center of a pixel");
@@ -941,8 +924,7 @@ TEST_CASE("SiddonMethod: Axis-aligned rays are present")
         al[4] = "top border";
         al[5] = "top right edge";
 
-        // TODO: fix tests for i < numCases / 2
-        for (index_t i = 0; i < 1; i++) {
+        for (index_t i = 0; i < numCases / 2; i++) {
             WHEN("A z-axis-aligned ray runs along the corners and edges of the volume")
             {
                 INFO("A z-axis-aligned ray runs along the ", al[i], " of the volume");

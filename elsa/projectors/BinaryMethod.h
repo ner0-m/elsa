@@ -91,6 +91,12 @@ namespace elsa
         void traverseVolume(const DataContainer<data_t>& vector,
                             DataContainer<data_t>& result) const;
 
+        /// the traversal routine (for both apply/applyAdjoint) for a particular number of
+        /// dimensions
+        template <bool adjoint, int dim>
+        void doTraverseVolume(const DataContainer<data_t>& vector,
+                              DataContainer<data_t>& result) const;
+
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;
         using LinearOperator<data_t>::_rangeDescriptor;

@@ -18,10 +18,6 @@ add_executable(bench_backward benchmark_backward.cpp)
 target_link_libraries(bench_backward PRIVATE nanobench elsa::all)
 add_dependencies(benchmark bench_backward)
 
-add_executable(bench_branchless benchmark_branchless.cpp)
-target_link_libraries(bench_branchless PRIVATE nanobench elsa::all)
-add_dependencies(benchmark bench_branchless)
-
 add_executable(bench_norms benchmark_norms.cpp)
 target_link_libraries(bench_norms PRIVATE nanobench elsa::all)
 add_dependencies(benchmark bench_norms)
