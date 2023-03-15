@@ -32,8 +32,6 @@ add_example(example2d_admm example2d_admm.cpp)
 # build the shearlet example program
 add_example(shearlet_example example2d_shearlet.cpp)
 
-CPMAddPackage(NAME argparse GITHUB_REPOSITORY p-ranav/argparse GIT_TAG v2.2)
-
 add_example(example_argparse example_argparse.cpp)
 target_link_libraries(example_argparse PRIVATE argparse::argparse)
 

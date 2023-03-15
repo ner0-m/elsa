@@ -49,7 +49,7 @@ option(SYSTEM_EIGEN "Build elsa using the system eigen installation" OFF)
 option(SYSTEM_SPDLOG "Build elsa using the system spdlog installation" OFF)
 option(SYSTEM_DOCTEST "Build elsa using the system doctest installation" OFF)
 option(SYSTEM_THRUST "Build elsa using the system thrust installation" OFF)
-option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
+option(SYSTEM_ARGPARSE "Build elsa using the system argparse installation" OFF)
 
 option(BUILD_SHARED_LIBS "Build elsa as shared (dynamic) libraries" OFF)
 
@@ -185,8 +185,8 @@ if(NOT
    (SYSTEM_EIGEN
     AND SYSTEM_SPDLOG
     AND SYSTEM_DOCTEST
-    AND SYSTEM_CATCH
-    AND SYSTEM_THRUST)
+    AND SYSTEM_THRUST
+    AND SYSTEM_ARGPARSE)
 )
     # Include CPM dependency manager for bundling dependencies
     include(CPM)
@@ -241,6 +241,13 @@ if(ELSA_MASTER_PROJECT)
                 )
             endif()
         endif()
+    endif()
+
+    if(SYSTEM_ARGPARSE)
+        message(STATUS "Using system-wide argparse library...")
+        find_package(argparse REQUIRED)
+    else()
+        CPMAddPackage(NAME argparse GITHUB_REPOSITORY p-ranav/argparse GIT_TAG v2.2)
     endif()
 
     if(ELSA_CUDA_ENABLED OR SYSTEM_THRUST)
