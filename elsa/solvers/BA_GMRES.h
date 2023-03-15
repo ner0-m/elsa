@@ -30,10 +30,10 @@ namespace elsa
      *
      * \f$ A \f$ can be imagined as a discretization of the forward projector, while \f$ B \f$
      * represents an matched or unmatched back projector or preconditioner/backprojector, the
-     * algorithm can reach semi-convergence when \f$ A^T \neq B \f$ as long as fitting models for
+     * algorithm can reach semi-convergence when \f$ A^T \neq B \f$ as long as valid models for
      * the projector / backprojector pair are chosen
      *
-     * Convergence is considered reached when TODO: add convergence conditions
+     * Convergence is considered reached when \f$ ||r|| <= epsilon \f$
      *
      * References:
      * http://epubs.siam.org/doi/10.1137/0907058
@@ -76,14 +76,21 @@ namespace elsa
         /// default destructor
         ~BA_GMRES() override = default;
 
+        /** @brief Solves the given Linear System using BA-GMRES as default, i.e. apply
+         * i iterations with r restarts of BA-GMRES
+         * @param[in] iterations number of iterations to execute
+         * @param[in] restarts number of restarts to execute after iterations
+         * @param[in] x0 optional approximate starting positions (used for preconditioning)
+         * @return an approximated solution
+         **/
         DataContainer<data_t>
             solveAndRestart(index_t iterations, index_t restarts,
                             std::optional<DataContainer<data_t>> x0 = std::nullopt);
 
-        /** @brief Solves the given Linear System using AB-BA_GMRES as default, i.e. apply
-         *iterations number of iterations of BA_GMRES
+        /** @brief Solves the given Linear System using BA-GMRES as default, i.e. apply
+         * i iterations of BA-GMRES
          * @param[in] iterations number of iterations to execute
-         * @param[in] x0
+         * @param[in] x0 optional approximate starting positions (used for preconditioning)
          * @return an approximated solution
          **/
         DataContainer<data_t>

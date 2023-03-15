@@ -50,42 +50,29 @@ namespace elsa
     DataContainer<data_t> AB_GMRES<data_t>::solve(index_t iterations,
                                                   std::optional<DataContainer<data_t>> x0)
     {
-        auto calculate_r0 = [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
-                               const DataContainer<data_t>& b,
-                               const DataContainer<data_t>& x) -> DataContainer<data_t> {
+        detail::CalcRFn<data_t> calc_r0 =
+            [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
+               const DataContainer<data_t>& b,
+               const DataContainer<data_t>& x) -> DataContainer<data_t> {
             auto Ax = A.apply(x);
             auto r0 = b - Ax;
             return r0;
         };
 
-        auto calculate_q = [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
-                              const DataContainer<data_t>& w_k) -> DataContainer<data_t> {
+        detail::CalcQFn<data_t> calc_q =
+            [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
+               const DataContainer<data_t>& w_k) -> DataContainer<data_t> {
             auto Bw_k = B.apply(w_k);
             auto q = A.apply(Bw_k);
             return q;
         };
 
-        auto calculate_x = [](const LinearOperator<data_t>& B, const DataContainer<data_t>& x,
-                              const DataContainer<data_t>& wy) -> DataContainer<data_t> {
+        detail::CalcXFn<data_t> calc_x =
+            [](const LinearOperator<data_t>& B, const DataContainer<data_t>& x,
+               const DataContainer<data_t>& wy) -> DataContainer<data_t> {
             auto x_k = x + B.apply(wy);
             return x_k;
         };
-
-        // explicitly casting lambda so it can be resolved by the compiler for detail::gmres
-        std::function<DataContainer<data_t>(
-            const LinearOperator<data_t>&, const LinearOperator<data_t>&,
-            const DataContainer<data_t>&, const DataContainer<data_t>&)>
-            calc_r0 = calculate_r0;
-
-        std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
-                                            const LinearOperator<data_t>&,
-                                            const DataContainer<data_t>&)>
-            calc_q = calculate_q;
-
-        std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
-                                            const DataContainer<data_t>&,
-                                            const DataContainer<data_t>&)>
-            calc_x = calculate_x;
 
         auto x = DataContainer<data_t>(_A->getDomainDescriptor());
         if (x0.has_value()) {

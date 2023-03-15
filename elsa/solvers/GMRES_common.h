@@ -8,22 +8,25 @@
 namespace elsa::detail
 {
     template <typename data_t>
+    using CalcRFn = std::function<DataContainer<data_t>(
+        const LinearOperator<data_t>&, const LinearOperator<data_t>&, const DataContainer<data_t>&,
+        const DataContainer<data_t>&)>;
+
+    template <typename data_t>
+    using CalcQFn = std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
+                                                        const LinearOperator<data_t>&,
+                                                        const DataContainer<data_t>&)>;
+
+    template <typename data_t>
+    using CalcXFn = std::function<DataContainer<data_t>(
+        const LinearOperator<data_t>&, const DataContainer<data_t>&, const DataContainer<data_t>&)>;
+
+    template <typename data_t>
     DataContainer<data_t> gmres(std::string name, std::unique_ptr<LinearOperator<data_t>>& A,
                                 std::unique_ptr<LinearOperator<data_t>>& B,
                                 DataContainer<data_t>& b, data_t _epsilon, DataContainer<data_t> x,
-                                index_t iterations,
-                                std::function<DataContainer<data_t>(
-                                    const LinearOperator<data_t>&, const LinearOperator<data_t>&,
-                                    const DataContainer<data_t>&, const DataContainer<data_t>&)>
-                                    calculate_r0,
-                                std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
-                                                                    const LinearOperator<data_t>&,
-                                                                    const DataContainer<data_t>&)>
-                                    calculate_q,
-                                std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
-                                                                    const DataContainer<data_t>&,
-                                                                    const DataContainer<data_t>&)>
-                                    calculate_x)
+                                index_t iterations, CalcRFn<data_t> calculate_r0,
+                                CalcQFn<data_t> calculate_q, CalcXFn<data_t> calculate_x)
     {
         // GMRES Implementation
         using Mat = Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic>;
@@ -42,18 +45,17 @@ namespace elsa::detail
         Vector_t<data_t> e = Vector_t<data_t>::Constant(iterations + 1, 1, 0);
 
         // Initializing e Vector
-        auto beta = r0.l2Norm();
-        e(0) = beta;
+        e(0) = r0.l2Norm();
 
         // Filling Matrix w with the vector r0/beta at the specified column
-        auto w_i0 = r0 / beta;
+        auto w_i0 = r0 / e(0);
         w.col(0) = Eigen::Map<Vector_t<data_t>>(thrust::raw_pointer_cast(w_i0.storage().data()),
                                                 w_i0.getSize());
 
         Logger::get(name)->info("Preparations done, took {}s", aggregate_time);
 
         Logger::get(name)->info("epsilon: {}", _epsilon);
-        Logger::get(name)->info("||r0||: {}", beta);
+        Logger::get(name)->info("||r0||: {}", e(0));
 
         Logger::get(name)->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "r", "time", "elapsed");
 
@@ -65,6 +67,7 @@ namespace elsa::detail
             // Custom function for AB/BA-GMRES
             auto temp = calculate_q(*A, *B, w_k);
 
+            // casting the DataContainer result to an EigenVector for easier calculations
             auto q_k = Eigen::Map<Vector_t<data_t>>(thrust::raw_pointer_cast(temp.storage().data()),
                                                     temp.getSize());
 
@@ -87,6 +90,8 @@ namespace elsa::detail
                 w.col(k + 1) = q_k / h(k + 1, k);
             }
 
+            // for other options see:
+            // https://eigen.tuxfamily.org/dox/group__DenseDecompositionBenchmark.html
             Eigen::ColPivHouseholderQR<Mat> qr(h);
             Vector_t<data_t> y = qr.solve(e);
             auto wy = DataContainer<data_t>(r0.getDataDescriptor(), w * y);

@@ -50,9 +50,17 @@ namespace elsa
     DataContainer<data_t> BA_GMRES<data_t>::solve(index_t iterations,
                                                   std::optional<DataContainer<data_t>> x0)
     {
-        auto calculate_r0 = [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
-                               const DataContainer<data_t>& b,
-                               const DataContainer<data_t>& x) -> DataContainer<data_t> {
+        auto x = DataContainer<data_t>(_A->getDomainDescriptor());
+        if (x0.has_value()) {
+            x = *x0;
+        } else {
+            x = 0;
+        }
+
+        detail::CalcRFn<data_t> calc_r0 =
+            [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
+               const DataContainer<data_t>& b,
+               const DataContainer<data_t>& x) -> DataContainer<data_t> {
             auto Bb = B.apply(b);
             auto Ax = A.apply(x);
             auto BAx = B.apply(Ax);
@@ -61,41 +69,20 @@ namespace elsa
             return r0;
         };
 
-        auto calculate_q = [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
-                              const DataContainer<data_t>& w_k) -> DataContainer<data_t> {
+        detail::CalcQFn<data_t> calc_q =
+            [](const LinearOperator<data_t>& A, const LinearOperator<data_t>& B,
+               const DataContainer<data_t>& w_k) -> DataContainer<data_t> {
             auto Aw_k = A.apply(w_k);
             auto q = B.apply(Aw_k);
             return q;
         };
 
-        auto calculate_x = [](const LinearOperator<data_t>& B, const DataContainer<data_t>& x,
-                              const DataContainer<data_t>& wy) -> DataContainer<data_t> {
+        detail::CalcXFn<data_t> calc_x =
+            [](const LinearOperator<data_t>& B, const DataContainer<data_t>& x,
+               const DataContainer<data_t>& wy) -> DataContainer<data_t> {
             auto x_k = x + wy;
             return x_k;
         };
-
-        // explicitly casting lambda so it can be resolved by the compiler for detail::gmres
-        std::function<DataContainer<data_t>(
-            const LinearOperator<data_t>&, const LinearOperator<data_t>&,
-            const DataContainer<data_t>&, const DataContainer<data_t>&)>
-            calc_r0 = calculate_r0;
-
-        std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
-                                            const LinearOperator<data_t>&,
-                                            const DataContainer<data_t>&)>
-            calc_q = calculate_q;
-
-        std::function<DataContainer<data_t>(const LinearOperator<data_t>&,
-                                            const DataContainer<data_t>&,
-                                            const DataContainer<data_t>&)>
-            calc_x = calculate_x;
-
-        auto x = DataContainer<data_t>(_A->getDomainDescriptor());
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
 
         return detail::gmres("BA_GMRES", _A, _B, _b, _epsilon, x, iterations, calc_r0, calc_q,
                              calc_x);
