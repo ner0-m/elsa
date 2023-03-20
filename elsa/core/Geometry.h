@@ -154,7 +154,7 @@ namespace elsa
          *
          * @returns the distance
          */
-        real_t getSourceDetectorDistance() const;
+        const real_t getSourceDetectorDistance() const;
 
         /**
          * @brief Return the extrinsics matrix
