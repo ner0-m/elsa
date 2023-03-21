@@ -7,6 +7,7 @@ set(MODULE_HEADERS
     BlockLinearOperator.h
     Dictionary.h
     ShearletTransform.h
+    Convolution.h
 )
 
 # list all the code files of the module
@@ -18,6 +19,7 @@ set(MODULE_SOURCES
     BlockLinearOperator.cpp
     Dictionary.cpp
     ShearletTransform.cpp
+    Convolution.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
