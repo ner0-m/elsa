@@ -141,4 +141,3 @@ TEST_CASE_TEMPLATE("CGNE: Solving a simple linear problem", data_t, float, doubl
 }
 
 TEST_SUITE_END();
-
