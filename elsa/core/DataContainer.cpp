@@ -476,6 +476,17 @@ namespace elsa
     }
 
     template <typename data_t>
+    GetFloatingPointType_t<data_t> DataContainer<data_t>::l21MixedNorm() const
+    {
+        auto num_blocks = getDataDescriptor().getNumberOfDimensions() - 1;
+        GetFloatingPointType_t<data_t> res(0);
+        for (index_t i = 0; i < num_blocks; ++i) {
+            res += elsa::fn::square(getBlock(i).l1Norm());
+        }
+        return sqrt(res);
+    }
+
+    template <typename data_t>
     data_t DataContainer<data_t>::sum() const
     {
         return elsa::sum(begin(), end());

@@ -213,6 +213,10 @@ namespace elsa
         /// return the linf norm of this signal (maximum of absolute values)
         GetFloatingPointType_t<data_t> lInfNorm() const;
 
+        /// return the mixed L21 norm of this signal (\sum \sqrt{ (x^{1})^{2} + (x^{2})^{2} +
+        /// \dots})
+        GetFloatingPointType_t<data_t> l21MixedNorm() const;
+
         /// return the sum of all elements of this signal
         data_t sum() const;
 

@@ -20,6 +20,8 @@ set(MODULE_HEADERS
     ConstantFunctional.h
     IndicatorFunctionals.h
     SeparableSum.h
+    AnisotropicTV.h
+    IsotropicTV.h
 )
 
 # list all the code files of the module
@@ -44,6 +46,8 @@ set(MODULE_SOURCES
     ConstantFunctional.cpp
     IndicatorFunctionals.cpp
     SeparableSum.cpp
+    AnisotropicTV.cpp
+    IsotropicTV.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators)

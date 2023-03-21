@@ -2,6 +2,8 @@
 #include "Timer.h"
 #include "VolumeDescriptor.h"
 #include "TypeCasts.hpp"
+#include "IdenticalBlocksDescriptor.h"
+#include "elsaDefines.h"
 
 namespace elsa
 {
@@ -16,24 +18,15 @@ namespace elsa
     template <typename data_t>
     FiniteDifferences<data_t>::FiniteDifferences(const DataDescriptor& domainDescriptor,
                                                  const BooleanVector_t& activeDims, DiffType type)
-        : LinearOperator<data_t>(domainDescriptor,
-                                 domainDescriptor), // setting range in body of constructor
+        : LinearOperator<data_t>(
+            domainDescriptor,
+            IdenticalBlocksDescriptor{activeDims.cast<index_t>().sum(), domainDescriptor}),
           _type{type},
           _activeDims{activeDims},
           _coordDiff{activeDims.size()},
           _coordDelta{activeDims.size()},
           _dimCounter{activeDims.size()}
     {
-        // build the range descriptor of appropriate size
-        IndexVector_t coefficients(domainDescriptor.getNumberOfDimensions() + 1);
-        coefficients << domainDescriptor.getNumberOfCoefficientsPerDimension(),
-            activeDims.cast<index_t>().sum();
-
-        RealVector_t spacing(domainDescriptor.getNumberOfDimensions() + 1);
-        spacing << domainDescriptor.getSpacingPerDimension(), 1;
-
-        this->_rangeDescriptor = std::make_unique<VolumeDescriptor>(coefficients, spacing);
-
         precomputeHelpers();
     }
 

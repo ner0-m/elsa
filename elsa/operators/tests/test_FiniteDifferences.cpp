@@ -11,6 +11,7 @@
 #include "FiniteDifferences.h"
 #include "VolumeDescriptor.h"
 #include "testHelpers.h"
+#include "IdenticalBlocksDescriptor.h"
 
 using namespace elsa;
 using namespace doctest;
@@ -25,9 +26,7 @@ TEST_CASE_TEMPLATE("FiniteDifference: Testing construction", data_t, float, doub
         numCoeff << 143, 48;
         VolumeDescriptor dd(numCoeff);
 
-        IndexVector_t rangeCoeffs(3);
-        rangeCoeffs << 143, 48, 2;
-        VolumeDescriptor ddRange(rangeCoeffs);
+        IdenticalBlocksDescriptor ddRange(2, dd);
 
         WHEN("instantiating a FiniteDifferences operator")
         {
