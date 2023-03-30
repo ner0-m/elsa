@@ -4,6 +4,7 @@
 
 namespace elsa
 {
+
     template <typename data_t>
     BlobVoxelProjector<data_t>::BlobVoxelProjector(const VolumeDescriptor& domainDescriptor,
                                                    const DetectorDescriptor& rangeDescriptor,

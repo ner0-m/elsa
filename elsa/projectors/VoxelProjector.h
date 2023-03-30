@@ -97,18 +97,150 @@ namespace elsa
         ~VoxelProjector() override = default;
 
     private:
+        template <index_t dim>
+        class DetectorIterator
+        {
+            using StaticIndexVector_t = Eigen::Matrix<index_t, dim, 1>;
+            using StaticRealVector_t = Eigen::Matrix<real_t, dim, 1>;
+
+        public:
+            DetectorIterator(const DetectorDescriptor& detectorDesc, data_t radius)
+                : _radius(radius)
+            {
+                if constexpr (dim == 1) {
+                    detector_max =
+                        detectorDesc.getNumberOfCoefficientsPerDimension().head(dim).array() - 1;
+                } else {
+                    throw new InvalidArgumentError("dim must be 2 or 3");
+                }
+            }
+
+            void reset(StaticRealVector_t center, real_t scaling, size_t geomIndex)
+            {
+                auto radiusOnDetector = scaling * _radius;
+                _min_corner = (center.array() - radiusOnDetector).ceil().template cast<index_t>();
+                _min_corner = _min_corner.cwiseMax(StaticIndexVector_t::Zero());
+                _max_corner = (center.array() + radiusOnDetector).floor().template cast<index_t>();
+                _max_corner = _max_corner.cwiseMin(detector_max);
+                detectorZeroIndex = (detector_max[0] + 1) * geomIndex;
+                current = _min_corner;
+                if constexpr (dim == 1) {
+                    currentIndex = detectorZeroIndex + _min_corner[0];
+                    _maxIndex = detectorZeroIndex + _max_corner[0];
+                } else {
+                    currentIndex = detectorZeroIndex + _min_corner[0]
+                                   + _min_corner[1] * (detector_max[0] + 1)
+                                   + geomIndex * (detector_max[0] + 1) * (detector_max[1] + 1);
+
+                    // index_t iStride = upperX - lowerX + 1;
+                    // index_t jStride = detectorXStride - iStride;
+                }
+                /*
+                                for (index_t j = lowerY; j <= upperY; j++) {
+                                    for (index_t i = lowerX; i <= upperX; i++) {
+                                        const RealVector2D_t distanceVec = (detectorCoord -
+                   currentCoord); const auto distance = distanceVec.norm();
+                                        // let first axis always be the differential axis TODO
+                                        Ax[currentIndex] +=
+                                            this->self().weight(distance / scaling, distanceVec[0] /
+                   scaling)
+                                            * voxelWeight;
+                                        currentIndex += 1;
+                                        currentCoord[0] += 1;
+                                    }
+                                    currentIndex += jStride;
+                                    currentCoord[0] -= iStride;
+                                    currentCoord[1] += 1;
+                                }*/
+            }
+
+            bool hasNext() { return currentIndex <= _maxIndex; }
+
+            bool next()
+            {
+                current[0] += 1;
+                currentIndex += 1;
+            }
+
+            StaticIndexVector_t current;
+            index_t currentIndex;
+
+        private:
+            const data_t _radius;
+            index_t _maxIndex;
+            index_t detectorZeroIndex;
+            StaticIndexVector_t detector_max;
+            StaticIndexVector_t _min_corner;
+            StaticIndexVector_t _max_corner;
+        };
+
         /// apply the binary method (i.e. forward projection)
         void forward(const BoundingBox aabb, const DataContainer<data_t>& x,
                      DataContainer<data_t>& Ax) const
         {
             (void) aabb;
             if (this->_rangeDescriptor->getNumberOfDimensions() == 2)
-                forward2D(x, Ax);
+                forwardMulti<2>(x, Ax);
             else if (this->_rangeDescriptor->getNumberOfDimensions() == 3)
                 forward3D(x, Ax);
             else
                 throw InvalidArgumentError(
                     "VoxelProjector: can only handle 1 or 2 dimensional Detectors");
+        }
+
+        template <int dim>
+        void forwardMulti(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
+        {
+            using StaticRealVectorDetector_t = Eigen::Matrix<real_t, dim - 1, 1>;
+            using StaticRealVector_t = Eigen::Matrix<real_t, dim, 1>;
+            using StaticRealVectorHom_t = Eigen::Matrix<real_t, dim + 1, 1>;
+            using StaticIndexVector_t = Eigen::Matrix<index_t, dim, 1>;
+
+            const DetectorDescriptor& detectorDesc =
+                downcast<DetectorDescriptor>(Ax.getDataDescriptor());
+
+            auto traversal = DetectorIterator<dim - 1>(detectorDesc, this->self().radius());
+
+            auto& volume = x.getDataDescriptor();
+            auto volumeSize = x.getSize();
+            StaticIndexVector_t coordinate;
+
+            // loop over geometries/poses in parallel
+#pragma omp parallel for private(coordinate)
+            for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
+                 geomIndex++) {
+
+                // loop over voxels
+                for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
+                    // compute coordinate from index
+                    coordinate = volume.template idx2Coord<dim>(domainIndex);
+                    auto voxelWeight = x[domainIndex];
+
+                    // Cast to real_t and shift to center of voxel according to origin
+                    StaticRealVectorHom_t homogeneousVoxelCoord;
+                    homogeneousVoxelCoord << coordinate.template cast<real_t>().array() + 0.5, 1;
+
+                    // Project voxel center onto detector
+                    StaticRealVectorDetector_t detectorCoord = detectorDesc.projectOnDetector<dim>(
+                        homogeneousVoxelCoord, asUnsigned(geomIndex));
+                    detectorCoord = detectorCoord.array() - 0.5;
+
+                    auto scaling = detectorDesc.getVoxelScaling<dim>(homogeneousVoxelCoord,
+                                                                     asUnsigned(geomIndex));
+
+                    traversal.reset(detectorCoord, scaling, asUnsigned(geomIndex));
+
+                    while (traversal.hasNext()) {
+                        const data_t distance =
+                            detectorCoord[0]
+                            - traversal
+                                  .current[0]; // traversal.current.template cast<real_t>()).norm();
+                        Ax[traversal.currentIndex] +=
+                            this->self().weight(distance / scaling) * voxelWeight;
+                        traversal.next();
+                    }
+                }
+            }
         }
 
         void forward2D(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
