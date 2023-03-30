@@ -1746,6 +1746,217 @@ TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", da
     }
 }
 
+TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", data_t, float, double,
+                   complex<float>, complex<double>)
+{
+    GIVEN("a one-element 2D data container")
+    {
+        DataContainer<data_t> dc(VolumeDescriptor{{1, 1}});
+        dc[0] = 8;
+        WHEN("running the FFT shift operation to the container")
+        {
+            DataContainer<data_t> fftShiftedDC = fftShift(dc);
+            THEN("the data descriptors match")
+            {
+                REQUIRE_EQ(dc.getDataDescriptor(), fftShiftedDC.getDataDescriptor());
+            }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(fftShiftedDC == dc);
+            }
+        }
+
+        WHEN("running the IFFT shift operation to the container")
+        {
+            DataContainer<data_t> ifftShiftedDC = ifftShift(dc);
+            THEN("the data descriptors match")
+            {
+                REQUIRE_EQ(dc.getDataDescriptor(), ifftShiftedDC.getDataDescriptor());
+            }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(ifftShiftedDC == dc);
+            }
+        }
+    }
+
+    GIVEN("a 3x3 2D data container")
+    {
+        DataContainer<data_t> dc(VolumeDescriptor{{3, 3}});
+        dc(0, 0) = 0;
+        dc(0, 1) = 1;
+        dc(0, 2) = 2;
+        dc(1, 0) = 3;
+        dc(1, 1) = 4;
+        dc(1, 2) = -4;
+        dc(2, 0) = -3;
+        dc(2, 1) = -2;
+        dc(2, 2) = -1;
+
+        DataContainer<data_t> expectedFFTShiftDC(VolumeDescriptor{{3, 3}});
+        expectedFFTShiftDC(0, 0) = -1;
+        expectedFFTShiftDC(0, 1) = -3;
+        expectedFFTShiftDC(0, 2) = -2;
+        expectedFFTShiftDC(1, 0) = 2;
+        expectedFFTShiftDC(1, 1) = 0;
+        expectedFFTShiftDC(1, 2) = 1;
+        expectedFFTShiftDC(2, 0) = -4;
+        expectedFFTShiftDC(2, 1) = 3;
+        expectedFFTShiftDC(2, 2) = 4;
+
+        WHEN("running the FFT shift operation to the container")
+        {
+            DataContainer<data_t> fftShiftedDC = fftShift(dc);
+            THEN("the data descriptors match")
+            {
+                REQUIRE_EQ(fftShiftedDC.getDataDescriptor(),
+                           expectedFFTShiftDC.getDataDescriptor());
+            }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(fftShiftedDC == expectedFFTShiftDC);
+            }
+        }
+
+        DataContainer<data_t> expectedIFFTShiftDC(VolumeDescriptor{{3, 3}});
+        expectedIFFTShiftDC(0, 0) = 4;
+        expectedIFFTShiftDC(0, 1) = -4;
+        expectedIFFTShiftDC(0, 2) = 3;
+        expectedIFFTShiftDC(1, 0) = -2;
+        expectedIFFTShiftDC(1, 1) = -1;
+        expectedIFFTShiftDC(1, 2) = -3;
+        expectedIFFTShiftDC(2, 0) = 1;
+        expectedIFFTShiftDC(2, 1) = 2;
+        expectedIFFTShiftDC(2, 2) = 0;
+
+        WHEN("running the IFFT shift operation to the container")
+        {
+            DataContainer<data_t> ifftShiftedDC = ifftShift(dc);
+            THEN("the data descriptors match")
+            {
+                REQUIRE_EQ(ifftShiftedDC.getDataDescriptor(),
+                           expectedIFFTShiftDC.getDataDescriptor());
+            }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(ifftShiftedDC == expectedIFFTShiftDC);
+            }
+        }
+    }
+
+    GIVEN("a 5x5 2D data container")
+    {
+        DataContainer<data_t> dc(VolumeDescriptor{{5, 5}});
+        dc(0, 0) = 28;
+        dc(0, 1) = 1;
+        dc(0, 2) = 5;
+        dc(0, 3) = -18;
+        dc(0, 4) = 8;
+        dc(1, 0) = 5;
+        dc(1, 1) = 6;
+        dc(1, 2) = 50;
+        dc(1, 3) = -8;
+        dc(1, 4) = 9;
+        dc(2, 0) = 8;
+        dc(2, 1) = 9;
+        dc(2, 2) = 10;
+        dc(2, 3) = 11;
+        dc(2, 4) = 12;
+        dc(3, 0) = -12;
+        dc(3, 1) = -41;
+        dc(3, 2) = -10;
+        dc(3, 3) = -9;
+        dc(3, 4) = -8;
+        dc(4, 0) = -70;
+        dc(4, 1) = -6;
+        dc(4, 2) = 22;
+        dc(4, 3) = -10;
+        dc(4, 4) = -3;
+
+        DataContainer<data_t> expectedFFTShiftDC(VolumeDescriptor{{5, 5}});
+        expectedFFTShiftDC(0, 0) = -9;
+        expectedFFTShiftDC(0, 1) = -8;
+        expectedFFTShiftDC(0, 2) = -12;
+        expectedFFTShiftDC(0, 3) = -41;
+        expectedFFTShiftDC(0, 4) = -10;
+        expectedFFTShiftDC(1, 0) = -10;
+        expectedFFTShiftDC(1, 1) = -3;
+        expectedFFTShiftDC(1, 2) = -70;
+        expectedFFTShiftDC(1, 3) = -6;
+        expectedFFTShiftDC(1, 4) = 22;
+        expectedFFTShiftDC(2, 0) = -18;
+        expectedFFTShiftDC(2, 1) = 8;
+        expectedFFTShiftDC(2, 2) = 28;
+        expectedFFTShiftDC(2, 3) = 1;
+        expectedFFTShiftDC(2, 4) = 5;
+        expectedFFTShiftDC(3, 0) = -8;
+        expectedFFTShiftDC(3, 1) = 9;
+        expectedFFTShiftDC(3, 2) = 5;
+        expectedFFTShiftDC(3, 3) = 6;
+        expectedFFTShiftDC(3, 4) = 50;
+        expectedFFTShiftDC(4, 0) = 11;
+        expectedFFTShiftDC(4, 1) = 12;
+        expectedFFTShiftDC(4, 2) = 8;
+        expectedFFTShiftDC(4, 3) = 9;
+        expectedFFTShiftDC(4, 4) = 10;
+
+        WHEN("running the FFT shift operation to the container")
+        {
+            DataContainer<data_t> fftShiftedDC = fftShift(dc);
+            THEN("the data descriptors match")
+            {
+                REQUIRE_EQ(fftShiftedDC.getDataDescriptor(),
+                           expectedFFTShiftDC.getDataDescriptor());
+            }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(fftShiftedDC == expectedFFTShiftDC);
+            }
+        }
+
+        DataContainer<data_t> expectedIFFTShiftDC(VolumeDescriptor{{5, 5}});
+        expectedIFFTShiftDC(0, 0) = 10;
+        expectedIFFTShiftDC(0, 1) = 11;
+        expectedIFFTShiftDC(0, 2) = 12;
+        expectedIFFTShiftDC(0, 3) = 8;
+        expectedIFFTShiftDC(0, 4) = 9;
+        expectedIFFTShiftDC(1, 0) = -10;
+        expectedIFFTShiftDC(1, 1) = -9;
+        expectedIFFTShiftDC(1, 2) = -8;
+        expectedIFFTShiftDC(1, 3) = -12;
+        expectedIFFTShiftDC(1, 4) = -41;
+        expectedIFFTShiftDC(2, 0) = 22;
+        expectedIFFTShiftDC(2, 1) = -10;
+        expectedIFFTShiftDC(2, 2) = -3;
+        expectedIFFTShiftDC(2, 3) = -70;
+        expectedIFFTShiftDC(2, 4) = -6;
+        expectedIFFTShiftDC(3, 0) = 5;
+        expectedIFFTShiftDC(3, 1) = -18;
+        expectedIFFTShiftDC(3, 2) = 8;
+        expectedIFFTShiftDC(3, 3) = 28;
+        expectedIFFTShiftDC(3, 4) = 1;
+        expectedIFFTShiftDC(4, 0) = 50;
+        expectedIFFTShiftDC(4, 1) = -8;
+        expectedIFFTShiftDC(4, 2) = 9;
+        expectedIFFTShiftDC(4, 3) = 5;
+        expectedIFFTShiftDC(4, 4) = 6;
+
+        WHEN("running the IFFT shift operation to the container")
+        {
+            DataContainer<data_t> ifftShiftedDC = ifftShift(dc);
+            THEN("the data descriptors match")
+            {
+                REQUIRE_EQ(ifftShiftedDC.getDataDescriptor(),
+                           expectedIFFTShiftDC.getDataDescriptor());
+            }
+            THEN("the data containers match")
+            {
+                REQUIRE_UNARY(ifftShiftedDC == expectedIFFTShiftDC);
+            }
+        }
+    }
+}
+
 // "instantiate" the test templates for CPU types
 TEST_CASE_TEMPLATE_APPLY(datacontainer_construction, CPUTypeTuple);
 TEST_CASE_TEMPLATE_APPLY(datacontainer_reduction, CPUTypeTuple);

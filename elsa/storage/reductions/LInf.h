@@ -12,7 +12,7 @@ DISABLE_WARNING_POP
 
 namespace elsa
 {
-    /// @brief Compute the sum of the vector (\f$\sup_i |x_i|\f$.)
+    /// @brief Compute the max of the vector (\f$\sup_i |x_i|\f$.)
     ///
     /// @ingroup reductions
     template <class InputIter>

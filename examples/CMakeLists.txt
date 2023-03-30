@@ -13,7 +13,8 @@ add_custom_target(build-examples)
 
 # build a simple 2D reconstruction
 add_example(simple_recon2d simple_recon2d.cpp)
-
+add_example(fbp2d fbp2d.cpp)
+add_example(filters filters.cpp)
 add_subdirectory(misc)
 add_subdirectory(phantoms)
 add_subdirectory(solver)

@@ -14,6 +14,7 @@ set(MODULE_HEADERS
     Blobs.h
     BSplines.h
     Luts.hpp
+    XrayProjector.h
 )
 
 # list all the code files of the module

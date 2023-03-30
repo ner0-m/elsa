@@ -11,7 +11,7 @@ namespace elsa
      * @author Jonas Jelten - initial code
      *
      * @tparam data_t data type for the domain and range of the transformation,
-     *                defaulting to real_t
+     *                defaulting to complex<real_t>
      *
      * Implements the n-dimensional signal fourier transformation.
      * Can support multiple backends, by default uses Eigen::FFT with FFTW.

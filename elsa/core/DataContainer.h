@@ -337,6 +337,46 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> fftShift2D(const DataContainer<data_t>& dc);
 
+    template <typename data_t>
+    DataContainer<data_t> fftShift(const DataContainer<data_t>& dc)
+    {
+        const DataDescriptor& desc = dc.getDataDescriptor();
+        IndexVector_t numOfCoeffsPerDim = desc.getNumberOfCoefficientsPerDimension();
+
+        IndexVector_t midPoint = numOfCoeffsPerDim / 2;
+
+        DataContainer<data_t> copy{desc};
+        for (index_t i = 0; i < desc.getNumberOfCoefficients(); ++i) {
+            IndexVector_t idx = desc.getCoordinateFromIndex(i);
+            IndexVector_t shifted{idx};
+            for (index_t j = 0; j < desc.getNumberOfDimensions(); ++j) {
+                shifted[j] = (idx[j] + midPoint[j]) % numOfCoeffsPerDim[j];
+            }
+            copy(shifted) = dc(idx);
+        }
+        return copy;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> ifftShift(const DataContainer<data_t>& dc)
+    {
+        const DataDescriptor& desc = dc.getDataDescriptor();
+        IndexVector_t numOfCoeffsPerDim = desc.getNumberOfCoefficientsPerDimension();
+
+        IndexVector_t midPoint = -numOfCoeffsPerDim / 2;
+
+        DataContainer<data_t> copy{desc};
+        for (index_t i = 0; i < desc.getNumberOfCoefficients(); ++i) {
+            IndexVector_t idx = desc.getCoordinateFromIndex(i);
+            IndexVector_t shifted{idx};
+            for (index_t j = 0; j < desc.getNumberOfDimensions(); ++j) {
+                shifted[j] = ((idx[j] + midPoint[j]) + numOfCoeffsPerDim[j]) % numOfCoeffsPerDim[j];
+            }
+            copy(shifted) = dc(idx);
+        }
+        return copy;
+    }
+
     /// Perform the IFFT shift operation to the provided signal. Refer to
     /// https://numpy.org/doc/stable/reference/generated/numpy.fft.ifftshift.html for further
     /// details.

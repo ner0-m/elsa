@@ -8,6 +8,7 @@ set(MODULE_HEADERS
     Dictionary.h
     ShearletTransform.h
     JacobiPreconditioner.h
+    Filter.h
 )
 
 # list all the code files of the module
