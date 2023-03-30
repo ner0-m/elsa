@@ -83,6 +83,42 @@ namespace elsa
         /// Get the i-th geometry in the trajectory.
         std::optional<Geometry> getGeometryAt(const index_t index) const;
 
+        template <index_t dim>
+        Eigen::Matrix<real_t, dim - 1, 1>
+            projectOnDetector(const Eigen::Matrix<real_t, dim + 1, 1>& homogeneousVoxelCoord,
+                              const index_t poseIndex) const
+        {
+            using StaticMatrix_t = Eigen::Matrix<real_t, dim, dim + 1>;
+            using StaticRealVector_t = Eigen::Matrix<real_t, dim, 1>;
+
+            // get the pose of trajectory
+            const auto& geometry = _geometry[asUnsigned(poseIndex)];
+            const StaticMatrix_t& projMatrix = geometry.getProjectionMatrix();
+
+            StaticRealVector_t voxelCenterOnDetectorHomogenous =
+                (projMatrix * homogeneousVoxelCoord);
+            voxelCenterOnDetectorHomogenous.block(0, 0, dim - 1, 1) /=
+                voxelCenterOnDetectorHomogenous[dim - 1];
+
+            return voxelCenterOnDetectorHomogenous.head(dim - 1);
+        }
+
+        template <index_t dim>
+        real_t getVoxelScaling(const Eigen::Matrix<real_t, dim + 1, 1>& homogeneousVoxelCoord,
+                               const index_t poseIndex) const
+        {
+            using StaticMatrix_t = Eigen::Matrix<real_t, dim, dim + 1>;
+            using StaticRealVector_t = Eigen::Matrix<real_t, dim, 1>;
+
+            // get the pose of trajectory
+            const auto& geometry = _geometry[asUnsigned(poseIndex)];
+            const StaticMatrix_t& extMatrix = geometry.getExtrinsicMatrix();
+
+            StaticRealVector_t voxelCenterOnDetectorHomogenous =
+                (extMatrix * homogeneousVoxelCoord);
+            return geometry.getSourceDetectorDistance() / voxelCenterOnDetectorHomogenous.norm();
+        }
+
     protected:
         /// implement the polymorphic comparison operation
         bool isEqual(const DataDescriptor& other) const override;
