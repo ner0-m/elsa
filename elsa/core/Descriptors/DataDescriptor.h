@@ -97,6 +97,27 @@ namespace elsa
          */
         IndexVector_t getCoordinateFromIndex(index_t index) const;
 
+        template <index_t dim>
+        index_t coord2Idx(Eigen::Matrix<real_t, dim, 1> coord) const
+        {
+            return _productOfCoefficientsPerDimension.cwiseProduct(coord).sum();
+        }
+
+        template <index_t dim>
+        Eigen::Matrix<index_t, dim, 1> idx2Coord(index_t idx) const
+        {
+            Eigen::Matrix<index_t, dim, 1> coordinate;
+
+            index_t leftOver = idx;
+            for (index_t i = dim - 1; i >= 1; --i) {
+                coordinate[i] = leftOver / _productOfCoefficientsPerDimension[i];
+                leftOver %= _productOfCoefficientsPerDimension[i];
+            }
+            coordinate[0] = leftOver;
+
+            return coordinate;
+        }
+
     protected:
         /// Number of dimensions
         index_t _numberOfDimensions;
