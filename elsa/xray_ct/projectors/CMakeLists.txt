@@ -33,7 +33,7 @@ set(MODULE_SOURCES
     BSplines.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_xray_common)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 # use OpenMP is available
@@ -47,4 +47,9 @@ ADD_ELSA_MODULE(
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging)
+target_include_directories(
+    elsa_${ELSA_MODULE_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/xray_ct/${ELSA_MODULE_NAME}>
+                                    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_xray_common)

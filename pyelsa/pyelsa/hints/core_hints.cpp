@@ -1,15 +1,15 @@
 #include "hints_base.h"
 
+#include "CurvedDetectorDescriptor.h"
 #include "DataContainer.h"
-#include "Descriptors/CurvedDetectorDescriptor.h"
-#include "Descriptors/DetectorDescriptor.h"
-#include "Descriptors/PlanarDetectorDescriptor.h"
-#include "Descriptors/VolumeDescriptor.h"
-#include "Descriptors/RandomBlocksDescriptor.h"
-#include "LinearOperator.h"
 #include "DescriptorUtils.h"
+#include "DetectorDescriptor.h"
 #include "Error.h"
 #include "Geometry.h"
+#include "LinearOperator.h"
+#include "PlanarDetectorDescriptor.h"
+#include "RandomBlocksDescriptor.h"
+#include "VolumeDescriptor.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>

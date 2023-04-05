@@ -14,7 +14,15 @@ set(MODULE_SOURCES
     projector_kernels/ProjectVoxelsCUDA.cu SiddonsMethodCUDA.cpp JosephsMethodCUDA.cpp VoxelProjectorCUDA.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_projectors ${CUDART_LIBRARY})
+list(
+    APPEND
+    MODULE_PUBLIC_DEPS
+    elsa_core
+    elsa_logging
+    elsa_xray_common
+    elsa_projectors
+    ${CUDART_LIBRARY}
+)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 ADD_ELSA_MODULE(
@@ -24,9 +32,18 @@ ADD_ELSA_MODULE(
 
 # add the projector_kernels folder to the include directories
 target_include_directories(
-    ${ELSA_MODULE_TARGET_NAME}
-    PUBLIC $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/projector_kernels>
-           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/projector_kernels> ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+    # ${ELSA_MODULE_TARGET_NAME}
+    elsa_projectors_cuda
+    PUBLIC $<INSTALL_INTERFACE:include/elsa/xray_ct/projectors_cuda>
+           $<INSTALL_INTERFACE:include/elsa/${ELSA_MODULE_NAME}/projector_kernels>
+           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/projector_kernels>
+           ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+)
+
+target_include_directories(
+    elsa_${ELSA_MODULE_NAME} PUBLIC $<INSTALL_INTERFACE:include/elsa/xray_ct/${ELSA_MODULE_NAME}>
+                                    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 # set CUDA compiler flags to the optimal for projectors fmad can reduce accuracy (some tests would actually fail if
@@ -49,4 +66,4 @@ target_compile_definitions(${ELSA_MODULE_TARGET_NAME} PUBLIC ELSA_CUDA_PROJECTOR
 set_source_files_properties(VoxelProjectorCUDA.cpp PROPERTIES LANGUAGE CUDA)
 set_source_files_properties(SiddonsMethodCUDA.cpp PROPERTIES LANGUAGE CUDA)
 
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_projectors)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_xray_common elsa_projectors)

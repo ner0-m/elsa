@@ -15,9 +15,6 @@ set(MODULE_HEADERS
     Descriptors/DataDescriptor.h
     Descriptors/DescriptorUtils.h
     Descriptors/VolumeDescriptor.h
-    Descriptors/DetectorDescriptor.h
-    Descriptors/CurvedDetectorDescriptor.h
-    Descriptors/PlanarDetectorDescriptor.h
     Descriptors/BlockDescriptor.h
     Descriptors/IdenticalBlocksDescriptor.h
     Descriptors/PartitionDescriptor.h
@@ -27,7 +24,6 @@ set(MODULE_HEADERS
     Error.h
     LinearOperator.h
     ExpressionPredicates.h
-    Geometry.h
     StrongTypes.h
 )
 
@@ -40,17 +36,13 @@ set(MODULE_SOURCES
     Utilities/Assertions.cpp
     Descriptors/DataDescriptor.cpp
     Descriptors/VolumeDescriptor.cpp
-    Descriptors/CurvedDetectorDescriptor.cpp
-    Descriptors/PlanarDetectorDescriptor.cpp
     Descriptors/RandomBlocksDescriptor.cpp
     Descriptors/DescriptorUtils.cpp
     Descriptors/IdenticalBlocksDescriptor.cpp
-    Descriptors/DetectorDescriptor.cpp
     Descriptors/PartitionDescriptor.cpp
     DataContainer.cpp
     Error.cpp
     LinearOperator.cpp
-    Geometry.cpp
     StrongTypes.cpp
 )
 
