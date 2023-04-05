@@ -20,6 +20,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool Functional<data_t>::isDifferentiable() const
+    {
+        return false;
+    }
+
+    template <typename data_t>
     data_t Functional<data_t>::evaluate(const DataContainer<data_t>& x)
     {
         // TODO: This should compare descriptors shouldn't it?

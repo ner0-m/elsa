@@ -48,6 +48,13 @@ namespace elsa
         const DataDescriptor& getDomainDescriptor() const;
 
         /**
+         * @brief Indicate if a functional is differentiable. The default implementation returns
+         * `false`. Functionals which are at least once differentiable should override this
+         * functions.
+         */
+        virtual bool isDifferentiable() const;
+
+        /**
          * @brief evaluate the functional at x and return the result
          *
          * @param[in] x input DataContainer (in the domain of the functional)
