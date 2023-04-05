@@ -40,6 +40,8 @@ namespace elsa
         /// default destructor
         ~PseudoHuber() override = default;
 
+        bool isDifferentiable() const override;
+
     protected:
         /// the evaluation of the Huber norm
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;

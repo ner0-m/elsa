@@ -15,6 +15,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool WeightedL2Squared<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     Scaling<data_t> WeightedL2Squared<data_t>::getWeightingOperator() const
     {
         return Scaling<data_t>(weights_.getDataDescriptor(), weights_);

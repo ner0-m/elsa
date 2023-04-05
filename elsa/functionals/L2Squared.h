@@ -46,6 +46,8 @@ namespace elsa
 
         const DataContainer<data_t>& getDataVector() const;
 
+        bool isDifferentiable() const override;
+
     protected:
         /// the evaluation of the l2 norm (squared)
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;

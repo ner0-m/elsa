@@ -51,6 +51,8 @@ namespace elsa
         /// make copy constructor deletion explicit
         EmissionLogLikelihood(const EmissionLogLikelihood<data_t>&) = delete;
 
+        bool isDifferentiable() const override;
+
         /// default destructor
         ~EmissionLogLikelihood() override = default;
 

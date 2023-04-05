@@ -15,6 +15,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool LeastSquares<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     const LinearOperator<data_t>& LeastSquares<data_t>::getOperator() const
     {
         return *A_;

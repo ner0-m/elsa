@@ -32,6 +32,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool Quadric<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     const LinearResidual<data_t>& Quadric<data_t>::getGradientExpression() const
     {
         return linResidual_;

@@ -22,6 +22,8 @@ namespace elsa
         /// default destructor
         ~ConstantFunctional() override = default;
 
+        bool isDifferentiable() const override;
+
         /// Return the constant of the functional
         data_t getConstant() const;
 
@@ -56,6 +58,8 @@ namespace elsa
 
         /// make copy constructor deletion explicit
         ZeroFunctional(const ConstantFunctional<data_t>&) = delete;
+
+        bool isDifferentiable() const override;
 
         /// default destructor
         ~ZeroFunctional() override = default;

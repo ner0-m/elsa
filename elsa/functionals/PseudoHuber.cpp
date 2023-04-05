@@ -18,6 +18,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool PseudoHuber<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     data_t PseudoHuber<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         // note: this is currently not a reduction in DataContainer, but implemented here "manually"

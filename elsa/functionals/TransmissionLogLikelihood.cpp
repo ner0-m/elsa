@@ -38,6 +38,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool TransmissionLogLikelihood<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     data_t TransmissionLogLikelihood<data_t>::evaluateImpl(const DataContainer<data_t>& x)
     {
         if (x.getDataDescriptor() != A_->getDomainDescriptor()) {

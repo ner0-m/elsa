@@ -38,6 +38,8 @@ namespace elsa
         /// default destructor
         ~WeightedL2Squared() override = default;
 
+        bool isDifferentiable() const override;
+
         /// returns the weighting operator
         Scaling<data_t> getWeightingOperator() const;
 

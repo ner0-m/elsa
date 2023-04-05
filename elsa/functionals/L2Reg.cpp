@@ -21,6 +21,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool L2Reg<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     bool L2Reg<data_t>::hasOperator() const
     {
         return static_cast<bool>(A_);

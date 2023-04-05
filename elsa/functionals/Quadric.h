@@ -72,6 +72,8 @@ namespace elsa
         /// functional
         const LinearResidual<data_t>& getGradientExpression() const;
 
+        bool isDifferentiable() const override;
+
     protected:
         /// the evaluation of the Quadric functional
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;

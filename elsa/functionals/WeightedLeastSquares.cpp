@@ -20,6 +20,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool WeightedLeastSquares<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     const LinearOperator<data_t>& WeightedLeastSquares<data_t>::getOperator() const
     {
         return *A_;

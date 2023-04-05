@@ -39,6 +39,8 @@ namespace elsa
         /// default destructor
         ~WeightedLeastSquares() override = default;
 
+        bool isDifferentiable() const override;
+
         const LinearOperator<data_t>& getOperator() const;
 
         const DataContainer<data_t>& getDataVector() const;

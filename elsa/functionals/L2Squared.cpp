@@ -21,6 +21,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool L2Squared<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     bool L2Squared<data_t>::hasDataVector() const
     {
         return b_.has_value();

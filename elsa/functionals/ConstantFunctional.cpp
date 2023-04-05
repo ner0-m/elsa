@@ -17,6 +17,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    bool ConstantFunctional<data_t>::isDifferentiable() const
+    {
+        return true;
+    }
+
+    template <typename data_t>
     data_t ConstantFunctional<data_t>::getConstant() const
     {
         return constant_;
@@ -60,11 +66,17 @@ namespace elsa
     }
 
     // ------------------------------------------
-    // explicit template instantiation
+    // Zero Functional
     template <typename data_t>
     ZeroFunctional<data_t>::ZeroFunctional(const DataDescriptor& descriptor)
         : Functional<data_t>(descriptor)
     {
+    }
+
+    template <typename data_t>
+    bool ZeroFunctional<data_t>::isDifferentiable() const
+    {
+        return true;
     }
 
     template <typename data_t>
