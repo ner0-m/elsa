@@ -1,4 +1,5 @@
 #include "FGM.h"
+#include "Error.h"
 #include "Functional.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
@@ -10,6 +11,9 @@ namespace elsa
     FGM<data_t>::FGM(const Functional<data_t>& problem, data_t epsilon)
         : Solver<data_t>(), _problem(problem.clone()), _epsilon{epsilon}
     {
+        if (!problem.isDifferentiable()) {
+            throw InvalidArgumentError("FGM: Given problem is not differentiable!");
+        }
     }
 
     template <typename data_t>
@@ -20,6 +24,10 @@ namespace elsa
           _epsilon{epsilon},
           _preconditionerInverse{preconditionerInverse.clone()}
     {
+        if (!problem.isDifferentiable()) {
+            throw InvalidArgumentError("FGM: Given problem is not differentiable!");
+        }
+
         // check that preconditioner is compatible with problem
         if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
                 != _problem->getDomainDescriptor().getNumberOfCoefficients()
