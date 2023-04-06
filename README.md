@@ -217,6 +217,7 @@ The **contributors** to elsa are:
 * Andi Braimllari
 * Michael Loipfuehrer
 * Jonas Buerger
+* Noah Dormann
 
 
 History
