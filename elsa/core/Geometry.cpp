@@ -195,7 +195,7 @@ namespace elsa
         return _R;
     }
 
-    const real_t Geometry::getSourceDetectorDistance() const
+    real_t Geometry::getSourceDetectorDistance() const
     {
         return _sdDistance;
     }

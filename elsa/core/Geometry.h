@@ -9,6 +9,37 @@
 
 namespace elsa
 {
+    namespace detail
+    {
+
+        template <typename Derived>
+        Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime + 1, 1>
+            vec2Hom(const Eigen::MatrixBase<Derived>& inputMatrix)
+        {
+            using MatrixType =
+                Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime + 1, 1>;
+
+            MatrixType outputMatrix;
+            outputMatrix << inputMatrix, 1;
+
+            return outputMatrix;
+        }
+
+        template <typename Derived>
+        Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime - 1, 1>
+            hom2Vec(Eigen::MatrixBase<Derived>& hom)
+        {
+            using MatrixType =
+                Eigen::Matrix<typename Derived::Scalar, Derived::RowsAtCompileTime - 1, 1>;
+
+            MatrixType cartesianVec;
+            cartesianVec = hom.head(Derived::RowsAtCompileTime - 1).array()
+                           / hom(Derived::RowsAtCompileTime - 1);
+
+            return cartesianVec;
+        }
+    } // namespace detail
+
     /**
      * @brief Class representing 2d/3d projective camera geometry for use in CT projectors.
      *
@@ -154,7 +185,7 @@ namespace elsa
          *
          * @returns the distance
          */
-        const real_t getSourceDetectorDistance() const;
+        real_t getSourceDetectorDistance() const;
 
         /**
          * @brief Return the extrinsics matrix

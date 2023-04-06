@@ -8,6 +8,44 @@
 namespace elsa
 {
 
+    namespace detail
+    {
+        template <typename Derived>
+        index_t coord2Idx(const Eigen::MatrixBase<Derived>& coord,
+                          const Eigen::MatrixBase<Derived>& strideProduct)
+        {
+            return strideProduct.cwiseProduct(coord).sum();
+        }
+
+        template <typename Derived>
+        Eigen::Matrix<index_t, Derived::RowsAtCompileTime, 1>
+            idx2Coord(index_t idx, const Eigen::MatrixBase<Derived>& strideProduct)
+        {
+            Eigen::Matrix<index_t, Derived::RowsAtCompileTime, 1> coordinate;
+
+            index_t leftOver = idx;
+
+            if constexpr (Derived::RowsAtCompileTime == Eigen::Dynamic) {
+                auto size = strideProduct.size();
+                coordinate.resize(size);
+
+                for (index_t i = size - 1; i >= 1; --i) {
+                    coordinate[i] = leftOver / strideProduct[i];
+                    leftOver %= strideProduct[i];
+                }
+            } else {
+                for (index_t i = Derived::RowsAtCompileTime - 1; i >= 1; --i) {
+                    coordinate[i] = leftOver / strideProduct[i];
+                    leftOver %= strideProduct[i];
+                }
+            }
+
+            coordinate[0] = leftOver;
+
+            return coordinate;
+        }
+    } // namespace detail
+
     /**
      * @brief Base class for representing metadata for linearized n-dimensional signal stored in
      * memory
@@ -22,6 +60,7 @@ namespace elsa
      * important parameters (i.e. dimensionality, size and spacing) of the metadata.
      *
      */
+
     class DataDescriptor : public Cloneable<DataDescriptor>
     {
     public:
@@ -96,27 +135,6 @@ namespace elsa
          * dimensions.
          */
         IndexVector_t getCoordinateFromIndex(index_t index) const;
-
-        template <index_t dim>
-        index_t coord2Idx(Eigen::Matrix<real_t, dim, 1> coord) const
-        {
-            return _productOfCoefficientsPerDimension.cwiseProduct(coord).sum();
-        }
-
-        template <index_t dim>
-        Eigen::Matrix<index_t, dim, 1> idx2Coord(index_t idx) const
-        {
-            Eigen::Matrix<index_t, dim, 1> coordinate;
-
-            index_t leftOver = idx;
-            for (index_t i = dim - 1; i >= 1; --i) {
-                coordinate[i] = leftOver / _productOfCoefficientsPerDimension[i];
-                leftOver %= _productOfCoefficientsPerDimension[i];
-            }
-            coordinate[0] = leftOver;
-
-            return coordinate;
-        }
 
     protected:
         /// Number of dimensions
