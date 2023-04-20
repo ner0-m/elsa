@@ -30,7 +30,7 @@ set(MODULE_HEADERS
 )
 
 # list all the code files of the module
-set(MODULE_SOURCES Dummy.cpp)
+set(MODULE_SOURCES memory_resource/ContiguousMemory.cpp)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa::Thrust elsa_config)
 list(APPEND MODULE_PRIVATE_DEPS)
