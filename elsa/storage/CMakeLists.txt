@@ -1,6 +1,5 @@
 # list all the headers of the module
 set(MODULE_HEADERS
-
     # TODO: Add headers from functions/
     ContiguousStorage.h
     TypeTraits.hpp
