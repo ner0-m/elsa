@@ -1,4 +1,5 @@
 #include "ContiguousMemory.h"
+#include "UniversalResource.h"
 
 #include <mutex>
 
