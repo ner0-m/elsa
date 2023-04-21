@@ -1,3 +1,4 @@
+#pragma once
 #include <cstring>
 #include <atomic>
 
@@ -13,7 +14,7 @@ namespace elsa::mr
         virtual ~MemoryResource() = default;
 
         virtual void* allocate(size_t size, size_t alignment) = 0;
-        virtual void* deallocate(size_t size, size_t alignment) = 0;
+        virtual void deallocate(void* ptr, size_t size, size_t alignment) = 0;
 
         void addRef();
         void releaseRef();
