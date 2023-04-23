@@ -558,6 +558,8 @@ namespace elsa::rm
         /* incoming resource will be used */
         self_type& operator=(const self_type& s)
         {
+            if (&s == this)
+                return *this;
             if (s._self.resource == _self.resource)
                 assign(s);
             else {
@@ -568,6 +570,8 @@ namespace elsa::rm
         }
         self_type& operator=(self_type&& s) noexcept
         {
+            if (&s == this)
+                return *this;
             std::swap(_self, s._self);
             s._self.destruct_until(0);
             return *this;

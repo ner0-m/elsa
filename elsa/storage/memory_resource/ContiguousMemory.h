@@ -30,9 +30,11 @@ namespace elsa::mr
 
     protected:
         MemResInterface();
+        virtual ~MemResInterface() = default;
+
+    public:
         MemResInterface(MemResInterface&&) = delete;
         MemResInterface(const MemResInterface&) = delete;
-        virtual ~MemResInterface() = default;
 
     public:
         virtual void* allocate(size_t size, size_t alignment) = 0;
