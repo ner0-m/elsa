@@ -71,7 +71,11 @@ namespace elsa::mr
 
     void* elsa::mr::UniversalResource::allocate(size_t size, size_t alignment)
     {
-        return std::aligned_alloc(size, alignment);
+        void* ptr = std::aligned_alloc(size, alignment);
+        if (!ptr) [[unlikely]] {
+            throw std::bad_alloc();
+        }
+        return ptr;
     }
 
     void UniversalResource::deallocate(void* ptr, size_t size, size_t alignment)
