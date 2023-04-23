@@ -13,16 +13,36 @@ DISABLE_WARNING_SIGN_CONVERSION
 DISABLE_WARNING_POP
 
 /*
- *  if iterator is pointer, it must be continuous, hence optimizations can be made
  *  implement MemoryResource reference counting!
  *  What of thrust uses this container. Are variables passed to thrust? Could issues arise?
+ *  In MemoryResouce mem-copy, decide if it makes sense to move in userspace or do call
  */
 
 namespace elsa
 {
+    namespace type_tags
+    {
+        /*
+         *   MemHandle: use memory-transfer functions to process copy/move
+         *   UnInit: skip default initialization and destruction
+         */
+        template <bool MemHandle, bool UnInit>
+        struct tag_template {
+            static constexpr bool mem = MemHandle;
+            static constexpr bool init = !UnInit;
+        };
+
+        struct complex : tag_template<false, false> {
+        };
+        struct trivial : tag_template<true, false> {
+        };
+        struct uninitialized : tag_template<true, true> {
+        };
+    } // namespace type_tags
+
     /*
-     *   Used Both as Pointer Wrapper and Iterator (hence the iterator_category)
-     *       -> Necessary for integration with thrust helper types
+     *  Used Both as Pointer Wrapper and Iterator (hence the iterator_category)
+     *      -> Necessary for integration with thrust helper types
      */
     template <class Type>
     class ContiguousPointer
@@ -51,7 +71,7 @@ namespace elsa
 
     public:
         /*
-         *   for compatability with thrust
+         *  for compatability with thrust
          */
         using raw_pointer = pointer;
         raw_pointer get() const { return _where; }
@@ -116,21 +136,29 @@ namespace elsa
     };
 
     /*
-     *   If RawType = true, no entry will be default-initialized/destructed and a memory copy may
-     *      be performed (even for initialization) (hence not touched at construction/resize)
+     *  ContiguousStorage_ behaves like stl-container except for in the exception case.
+     *    - Exceptions by type-specific functions: the object will remain in a valid state after the
+     *      exception, might however be in a modified state (i.e. partially inserted...)
+     *    - Exceptions by the allocator will result in this container unmodified or
+     *      the operation fully performed.
      *
-     *  Behaves like stl-container except for in the exception case.
-     *      The object will remain in a valid state after the exception, might however be in a
-     *      modified state (i.e. partially inserted...) if an exception is thrown by type-sepcific
-     *      functions.
-     *          Exceptions by the allocator will result in this container unmodified or
-     *          the operation fully performed.
+     *  Each ContiguousStorage_ is associated with a rm::MemoryResource.
+     *  rm::MemoryResource implements an allocator-interface to allow polymorphic allocators.
+     *  All allocations and memory-operations are performed on the currently used resource.
+     *  Changes to the current resource associated with this container:
+     *    - copy-construct (optionally inherit the incoming resource)
+     *    - move-construct (inherit the incoming resource)
+     *    - other-constructors (parameter-resource or rm::defaultInstance)
+     *    - swap_resource calls
+     *    - copy-assignment or move-assignment operator (will inherit the incoming resource)
+     *    - assign()/assign_default() calls (optional parameter-resource else unchanged)
+     *    - swap() will swap resource with other container
      */
-    template <class Type, bool RawType = false>
+    template <class Type, class TypeTag = type_tags::complex>
     class ContiguousStorage_
     {
     public:
-        using self_type = ContiguousStorage_<Type, RawType>;
+        using self_type = ContiguousStorage_<Type, TypeTag>;
 
         using pointer = ContiguousPointer<Type>;
         using const_pointer = ContiguousPointer<const Type>;
@@ -145,6 +173,65 @@ namespace elsa
         using size_type = typename pointer::size_type;
         using difference_type = typename pointer::difference_type;
         using raw_pointer = typename pointer::raw_pointer;
+
+    private:
+        template <class ItType>
+        using _is_random = std::is_same<typename std::iterator_traits<ItType>::iterator_category,
+                                        std::random_access_iterator_tag>;
+
+        /* check if ItType defines a base function (of any signature) */
+        template <class ItType>
+        struct _has_base {
+            template <class Tp>
+            static std::uint32_t test(decltype(&Tp::base)* b);
+            template <class Tp>
+            static std::uint8_t test(...);
+            static constexpr bool has = sizeof(test<ItType>(0)) == sizeof(std::uint32_t);
+        };
+
+        /* check if ItType defines a get function (of any signature) */
+        template <class ItType>
+        struct _has_get {
+            template <class Tp>
+            static std::uint32_t test(decltype(&Tp::get)* b);
+            template <class Tp>
+            static std::uint8_t test(...);
+            static constexpr bool has = sizeof(test<ItType>(0)) == sizeof(std::uint32_t);
+        };
+
+        /* get return type of ItType::base() (reference removed) or void */
+        template <bool, class>
+        struct _base_return_type;
+        template <class ItType>
+        struct _base_return_type<true, ItType> {
+            using type =
+                std::remove_reference_t<std::invoke_result_t<decltype(&ItType::base), ItType>>;
+        };
+        template <class ItType>
+        struct _base_return_type<false, ItType> {
+            using type = void;
+        };
+
+        /* get return type of ItType::get() (reference removed) or void */
+        template <bool, class>
+        struct _get_return_type;
+        template <class ItType>
+        struct _get_return_type<true, ItType> {
+            using type =
+                std::remove_reference_t<std::invoke_result_t<decltype(&ItType::get), ItType>>;
+        };
+        template <class ItType>
+        struct _get_return_type<false, ItType> {
+            using type = void;
+        };
+
+        /* return type or void of ItType::base()/ItType::get() */
+        template <class ItType>
+        using _base_type = _base_return_type<_has_base<ItType>::has, ItType>;
+        template <class ItType>
+        using _get_type = _get_return_type<_has_get<ItType>::has, ItType>;
+        template <class ItType>
+        using _viable_pointer = std::is_pointer<std::remove_reference_t<ItType>>;
 
     private:
         struct _container {
@@ -180,29 +267,26 @@ namespace elsa
                 std::swap(capacity, c.capacity);
                 return *this;
             }
-            ~_container() { release(); }
-
-        public:
-            raw_pointer end_ptr() { return pointer + size; }
-            const raw_pointer end_ptr() const { return pointer + size; }
-            void release()
+            ~_container()
             {
                 if (pointer == 0)
                     return;
                 destruct_until(0);
                 resource->deallocate(pointer, capacity * sizeof(value_type), alignof(value_type));
-                pointer = 0;
             }
+
+        public:
+            raw_pointer end_ptr() { return pointer + size; }
+            const raw_pointer end_ptr() const { return pointer + size; }
             void destruct_until(size_type count) noexcept
             {
-                if constexpr (RawType)
+                if constexpr (!TypeTag::init)
                     size = count;
                 else {
                     while (size > count)
                         pointer[--size].~value_type();
                 }
             }
-            void reduce(size_type count) { reserve(count, count, resource); }
             _container swap(mr::MemoryResource* mr, raw_pointer p, size_type sz, size_type cp)
             {
                 _container old{resource, pointer, size, capacity};
@@ -214,8 +298,14 @@ namespace elsa
             }
 
             /*
+             *  The container will at most have capacity 'count' after the call
+             *      -> must be larger than the current size
+             */
+            void reduce(size_type count) { reserve(count, count, resource); }
+
+            /*
              *  count: how many to at least require
-             *  move: if realloc, how many to move-construct over
+             *  move: if realloc, how many to move-construct over (must be less than size)
              *  mr: if not zero, force-relloc to the new memory resource
              *      (even if its the same resource)
              * returns null-container or old container on relocation in case of a
@@ -228,7 +318,7 @@ namespace elsa
                 mr::MemoryResource* new_mr = mr == 0 ? resource : mr;
 
                 /* check if this is a noninitial reserving for a growing size in which
-                 *   case the capacity should not just grow by request but by some form
+                 *   case the capacity should not just satisfy the request but by some form
                  *   of equation to prevent to many reallocations */
                 size_type new_cap = std::max<size_type>(count, move);
                 if (pointer != 0 && new_cap > capacity) {
@@ -246,18 +336,25 @@ namespace elsa
                 /* check if a relocation could suffice (not considered a container-change) */
                 if (pointer != 0 && new_mr == resource
                     && resource->tryResize(pointer, capacity * sizeof(value_type),
-                                           alignof(value_type), new_cap * sizeof(value_type))) {
+                                           alignof(value_type), new_cap * sizeof(value_type),
+                                           alignof(value_type))) {
                     capacity = new_cap;
                     return _container();
                 }
 
-                /* allocate the new buffer and move the data over */
                 raw_pointer new_ptr = static_cast<raw_pointer>(
                     new_mr->allocate(new_cap * sizeof(value_type), alignof(value_type)));
                 _container old = swap(new_mr, new_ptr, 0, new_cap);
-                for (size_type i = 0; i < move; ++i) {
-                    new (pointer + i) value_type(std::move(old.pointer[i]));
-                    ++size;
+
+                /* either move-initialize the data or perform the memory move */
+                if constexpr (!TypeTag::mem) {
+                    for (size_type i = 0; i < move; ++i) {
+                        new (pointer + i) value_type(std::move(old.pointer[i]));
+                        ++size;
+                    }
+                } else if (move > 0) {
+                    new_mr->copyMemory(new_ptr, old.pointer, move * sizeof(value_type));
+                    size = move;
                 }
                 return old;
             }
@@ -268,84 +365,128 @@ namespace elsa
              */
             void move_tail(size_type where, difference_type diff)
             {
-                /* check if content is moved up (i.e. the size increased) */
-                if (diff > 0) {
-                    /* first move the upper 'new' part in order to ensure the entire buffer is
-                     *   constructed and an exception would therefore not leave an invalid state */
-                    size_type end = size, next = size - diff;
-                    while (next < end) {
-                        new (pointer + size) value_type(std::move(pointer + next));
-                        ++size;
-                        ++next;
-                    }
-
-                    /* move the remaining part up into the already, but moved out slots */
-                    end = where + diff;
-                    while (--next >= end)
-                        pointer[next] = std::move(pointer[next - diff]);
+                /* check if this move can be delegated to the mr */
+                if constexpr (TypeTag::mem) {
+                    resource->moveMemory(pointer + (where + diff), pointer + where, size - where);
+                    size = std::max<size_type>(size, (size - where) + diff);
                     return;
                 }
 
-                /* move the entire content down */
-                while (where < size) {
-                    pointer[where + diff] = std::move(pointer[where]);
-                    ++where;
+                /* check if the entire content needs to be moved down (i.e. size decrease) */
+                if (diff <= 0) {
+                    /* reminder: diff is negative */
+                    while (where < size) {
+                        pointer[where + diff] = std::move(pointer[where]);
+                        ++where;
+                    }
+                    destruct_until(size + diff);
+                    return;
                 }
+
+                /* first move the upper 'new' part in order to ensure the entire buffer is
+                 *   constructed and an exception would therefore not leave an invalid state */
+                size_type end = size, next = size - diff;
+                while (next < end) {
+                    new (pointer + size) value_type(std::move(pointer + next));
+                    ++size;
+                    ++next;
+                }
+
+                /* move the remaining part up into the already, but moved out slots */
+                end = where + diff;
+                while (--next >= end)
+                    pointer[next] = std::move(pointer[next - diff]);
             }
 
             /*
-             *  copy a range into a given range (potentially resize)
-             *      reserves necessary capacity
+             *  copy a range into a given range
+             *      can resize container (reserves necessary capacity)
              */
             template <class ItType>
-            void insert(size_type off, ItType ibegin, ItType iend, size_type count)
+            void insert_range(size_type off, ItType ibegin, ItType iend, size_type count)
             {
-                /* copy-assign the currently existing and to-be-overwritten part */
-                reserve(off + count, off);
-                size_type transition = std::min<size_type>(size, off + count);
-                while (off < transition) {
-                    pointer[off] = *ibegin;
-                    ++off;
-                    ++ibegin;
+                size_type end = off + count;
+
+                /* check if the iterator has a 'base' function to get the raw pointer */
+                if constexpr (std::is_pointer<_base_type<ItType>>::value
+                              && _is_random<ItType>::value)
+                    insert_range(off, ibegin.base(), iend.base(), count);
+
+                /* check if the iterator has a 'get' function to get the raw pointer */
+                else if constexpr (std::is_pointer<_get_type<ItType>>::value
+                                   && _is_random<ItType>::value)
+                    insert_range(off, ibegin.get(), iend.get(), count);
+
+                /* check if the iterator is a pointer and can be delegated to mr */
+                else if constexpr (_viable_pointer<ItType>::value && TypeTag::mem) {
+                    resource->copyMemory(pointer + off, ibegin, count);
+                    size = std::max<size_type>(size, end);
                 }
 
-                /* copy-construct the remaining part */
-                while (ibegin != iend) {
-                    new (pointer + size) value_type(*ibegin);
-                    ++size;
-                    ++ibegin;
+                /* insert the range by using the iterators */
+                else {
+                    reserve(end, off);
+
+                    size_type transition = std::min<size_type>(size, end);
+
+                    /* copy-assign the currently existing and to-be-overwritten part */
+                    while (off < transition) {
+                        pointer[off] = *ibegin;
+                        ++off;
+                        ++ibegin;
+                    }
+
+                    /* copy-construct the remaining part */
+                    while (ibegin != iend) {
+                        new (pointer + size) value_type(*ibegin);
+                        ++size;
+                        ++ibegin;
+                    }
                 }
             }
 
             /*
-             *  write same value (or default-construct/reset) into a given range (potentially
-             *      resize) reserves necessary capacity
+             *  write same value (or default-construct/reset) into a given range
+             *      can resize container (reserves necessary capacity)
              */
-            void set_range(size_type off, const_pointer value, size_type count)
+            void set_range(size_type off, raw_pointer value, size_type count)
             {
-                reserve(off + count, off);
-
                 size_type end = off + count;
+                reserve(end, off);
+
                 size_type transition = std::min<size_type>(size, end);
 
+                /* set/update the range with the default constructor/value */
                 if (value == 0) {
-                    /* move-assign the still constructed values */
-                    while (off < transition)
-                        pointer[off++] = std::move(value_type());
+                    /* check if the setting can be entirely skipped or delegated to the mr */
+                    if constexpr (!TypeTag::init)
+                        size = std::max<size_type>(size, end);
+                    else if constexpr (TypeTag::mem) {
+                        value_type tmp;
+                        resource->setMemory(pointer + off, &tmp, sizeof(value_type), count);
+                        size = std::max<size_type>(size, end);
 
-                    /* default-construct the new values */
-                    while (size < end) {
-                        new (pointer + size) value_type();
-                        ++size;
+                    } else {
+                        while (off < transition)
+                            pointer[off++] = std::move(value_type());
+
+                        while (size < end) {
+                            new (pointer + size) value_type();
+                            ++size;
+                        }
                     }
                 }
 
+                /* set/update the range with the given value */
+                else if constexpr (TypeTag::mem) {
+                    resource->setMemory(pointer + off, value, sizeof(value_type), count);
+                    size = std::max<size_type>(size, end);
+                }
+
                 else {
-                    /* copy-assign the still constructed values */
                     while (off < transition)
                         pointer[off++] = *value;
 
-                    /* copy-construct the new values */
                     while (size < end) {
                         new (pointer + size) value_type(*value);
                         ++size;
@@ -356,11 +497,6 @@ namespace elsa
 
     private:
         _container _self;
-
-    private:
-        template <class ItType>
-        using _is_random = std::is_same<typename std::iterator_traits<ItType>::iterator_category,
-                                        std::random_access_iterator_tag>;
 
     public:
         /* resource of null will take mr::defaultInstance */
@@ -390,14 +526,14 @@ namespace elsa
             if ((_self.resource = mr) == 0)
                 _self.resource = mr::defaultInstance();
 
-            _self.insert(0, ibegin, iend, std::distance(ibegin, iend));
+            _self.insert_range(0, ibegin, iend, std::distance(ibegin, iend));
         }
         ContiguousStorage_(std::initializer_list<value_type> l, mr::MemoryResource* mr = 0)
         {
             if ((_self.resource = mr) == 0)
                 _self.resource = mr::defaultInstance();
 
-            _self.insert(0, l.begin(), l.end(), l.size());
+            _self.insert_range(0, l.begin(), l.end(), l.size());
         }
 
         /* resource of null will take s::resouce */
@@ -406,11 +542,11 @@ namespace elsa
             if ((_self.resource = mr) == 0)
                 _self.resource = s._self.resource;
 
-            _self.insert(0, s._self.pointer, s._self.end_ptr(), s._self.size);
+            _self.insert_range(0, s._self.pointer, s._self.end_ptr(), s._self.size);
         }
         ContiguousStorage_(self_type&& s) noexcept { std::swap(_self, s._self); }
 
-        ~ContiguousStorage_() { _self.reduce(0); }
+        ~ContiguousStorage_() = default;
 
     public:
         mr::MemoryResource* resource() const { return _self.resource; }
@@ -418,10 +554,7 @@ namespace elsa
         {
             if (mr == _self.resource)
                 return;
-            if (_self.capacity != 0)
-                _self.reserve(0, _self.size, mr);
-            else
-                _self.resource = mr;
+            _self.reserve(0, _self.size, mr);
         }
 
         /* incoming resource will be used */
@@ -431,13 +564,14 @@ namespace elsa
                 assign(s);
             else {
                 _self.reserve(s._self.size, 0, s._self.resource);
-                _self.insert(0, s._self.pointer, s._self.end_ptr(), s._self.size);
+                _self.insert_range(0, s._self.pointer, s._self.end_ptr(), s._self.size);
             }
             return *this;
         }
         self_type& operator=(self_type&& s) noexcept
         {
             std::swap(_self, s._self);
+            s._self.destruct_until(0);
             return *this;
         }
         self_type& operator=(std::initializer_list<value_type> l)
@@ -447,27 +581,40 @@ namespace elsa
         }
 
         /* current resource will be used */
-        void assign_default(size_type count)
+        void assign_default(size_type count, mr::MemoryResource* mr = 0)
         {
-            _self.reserve(count, 0);
+            if (mr != 0)
+                _self.reserve(count, 0, mr);
+
             _self.set_range(0, 0, count);
             _self.destruct_until(count);
         }
-        void assign(size_type count, const_reference init)
+        void assign(size_type count, const_reference init, mr::MemoryResource* mr = 0)
         {
-            _self.reserve(count, 0);
+            if (mr != 0)
+                _self.reserve(count, 0, mr);
+
             _self.set_range(0, &init, count);
             _self.destruct_until(count);
         }
         template <class ItType>
-        void assign(ItType ibegin, ItType iend)
+        void assign(ItType ibegin, ItType iend, mr::MemoryResource* mr = 0)
         {
             size_type count = std::distance(ibegin, iend);
-            _self.insert(0, ibegin, iend, count);
+            if (mr != 0)
+                _self.reserve(count, 0, mr);
+
+            _self.insert_range(0, ibegin, iend, count);
             _self.destruct_until(count);
         }
-        void assign(std::initializer_list<value_type> l) { assign(l.begin(), l.end()); }
-        void assign(const self_type& s) { assign(s._self.pointer, s._self.end_ptr()); }
+        void assign(std::initializer_list<value_type> l, mr::MemoryResource* mr = 0)
+        {
+            assign(l.begin(), l.end(), mr);
+        }
+        void assign(const self_type& s, mr::MemoryResource* mr = 0)
+        {
+            assign(s._self.pointer, s._self.end_ptr(), mr);
+        }
 
         reference at(size_type i)
         {
@@ -521,7 +668,7 @@ namespace elsa
                 _self.move_tail(_self.pointer + off, count);
             _self.set_range(off, 0, count);
             if (old.pointer != 0)
-                _self.insert(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
+                _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             return _self.pointer + off;
         }
         iterator insert(const_iterator i, const_reference value) { return emplace(i, value); }
@@ -538,7 +685,7 @@ namespace elsa
                 _self.move_tail(_self.pointer + off, count);
             _self.set_range(off, &value, count);
             if (old.pointer != 0)
-                _self.insert(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
+                _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             return _self.pointer + off;
         }
         template <class ItType>
@@ -550,9 +697,9 @@ namespace elsa
 
             if (old.pointer == 0)
                 _self.move_tail(_self.pointer + off, off);
-            _self.insert(off, ibegin, iend, total);
+            _self.insert_range(off, ibegin, iend, total);
             if (old.pointer != 0)
-                _self.insert(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
+                _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
 
             return _self.pointer + off;
         }
@@ -571,7 +718,7 @@ namespace elsa
                 _self.pointer[off] = std::move(value_type(std::forward<Args>(args)...));
             } else {
                 new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
-                _self.insert(++_self.size, old.pointer + off, old.end_ptr(), old.size - off);
+                _self.insert_range(++_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             }
             return _self.pointer + off;
         }
@@ -586,7 +733,6 @@ namespace elsa
             difference_type offset = ibegin - _self.pointer;
             difference_type count = iend - ibegin;
             _self.move_tail(iend - _self.pointer, -count);
-            _self.destruct_until(_self.size - count);
             return _self.pointer + offset;
         }
         template <class... Args>
@@ -619,7 +765,7 @@ namespace elsa
     };
 
     template <class T>
-    // using ContiguousStorage = ContiguousStorage_<T>;
+    // using ContiguousStorage = ContiguousStorage_<T, type_tags::uninitialized>;
     using ContiguousStorage = thrust::universal_vector<T>;
 
 } // namespace elsa
