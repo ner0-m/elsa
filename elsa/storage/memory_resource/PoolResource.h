@@ -6,22 +6,23 @@
 namespace elsa::mr
 {
     struct PoolResourceConfig {
-        size_t minBlockSizeLog;
         size_t maxBlockSizeLog;
+        size_t maxBlockSize;
 
         static PoolResourceConfig defaultConfig()
         {
-            return PoolResourceConfig{.minBlockSizeLog = 6, .maxBlockSizeLog = 20};
+            return PoolResourceConfig{.maxBlockSizeLog = 20, .maxBlockSize = 1 << 20};
         }
     };
 
     namespace pool_resource
     {
         // must be set to a power of 2, with sufficient unused bits for the bitfield
-        size_t BLOCK_GRANULARITY = 32;
-        size_t MIN_BLOCK_SIZE = BLOCK_GRANULARITY;
-        size_t BITFIELD_MASK = BLOCK_GRANULARITY - 1;
-        size_t SIZE_MASK = ~BITFIELD_MASK;
+        const size_t BLOCK_GRANULARITY = 32;
+        const size_t MIN_BLOCK_SIZE = BLOCK_GRANULARITY;
+        const size_t MIN_BLOCK_SIZE_LOG = 5;
+        const size_t BITFIELD_MASK = BLOCK_GRANULARITY - 1;
+        const size_t SIZE_MASK = ~BITFIELD_MASK;
 
         struct Block {
             union {
@@ -52,7 +53,7 @@ namespace elsa::mr
     class PoolResource : public MemoryResource
     {
     private:
-        MemoryResource* _upstream;
+        MRRef _upstream;
         PoolResourceConfig _config;
         std::unordered_map<void*, pool_resource::Block*> _addressToBlock;
         std::vector<pool_resource::Block*> _freeLists;
@@ -62,15 +63,21 @@ namespace elsa::mr
         void unlinkFreeBlock(pool_resource::Block* block);
         size_t freeListIndexForFreeChunk(size_t size);
         size_t computeRealSize(size_t size);
-
-    protected:
-        ~PoolResource();
+        void expandPool();
 
     public:
-        PoolResource(MemoryResource* upstream,
+        PoolResource(MRRef upstream,
                      PoolResourceConfig config = PoolResourceConfig::defaultConfig());
+
+        ~PoolResource() = default;
 
         void* allocate(size_t size, size_t alignment) override;
         void deallocate(void* ptr, size_t size, size_t alignment) override;
+        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize,
+                       size_t newAlignment) override;
+
+        void copyMemory(void* ptr, const void* src, size_t size) noexcept override;
+        void setMemory(void* ptr, const void* src, size_t stride, size_t count) noexcept override;
+        void moveMemory(void* ptr, const void* src, size_t size) noexcept override;
     };
 } // namespace elsa::mr

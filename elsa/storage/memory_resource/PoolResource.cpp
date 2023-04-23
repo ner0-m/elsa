@@ -5,28 +5,35 @@
 namespace elsa::mr
 {
     template <typename T>
+    static T bit_width(T t)
+    {
+        // TODO: use std::bit_width when C++20 becomes available, or find a useful bit hack for this
+        T c = 0;
+        while (t) {
+            t >>= 1;
+            ++c;
+        }
+        return c;
+    }
+
+    template <typename T>
     static T log2Floor(T t)
     {
-        return std::bit_width(t) - 1;
+        return bit_width(t) - 1;
     }
 
     // does not work for t == 0
     template <typename T>
     static T log2Ceil(T t)
     {
-        return std::bit_width(t - 1);
+        return bit_width(t - 1);
     }
 
+    // not zero indexed! lowestSetBit(0) == 0!
     template <typename T>
     static T lowestSetBit(T t)
     {
-        return std::bit_width(t & ~(t - 1));
-    }
-
-    // alignment must be a power of 2
-    static bool checkAlignment(void* ptr, size_t alignment)
-    {
-        return ptr == alignDown(ptr, alignment);
+        return bit_width(t & ~(t - 1));
     }
 
     // alignment must be a power of 2
@@ -42,25 +49,33 @@ namespace elsa::mr
                          alignment);
     }
 
-    PoolResource::~PoolResource()
+    // alignment must be a power of 2
+    static bool checkAlignment(void* ptr, size_t alignment)
     {
-        _upstream->releaseRef();
+        return ptr == alignDown(ptr, alignment);
     }
 
-    PoolResource::PoolResource(MemoryResource* upstream, PoolResourceConfig config)
-        : _upstream{upstream}, _config{config}
+    PoolResource::PoolResource(MRRef upstream, PoolResourceConfig config)
+        : _upstream{upstream},
+          _config{config},
+          _freeListNonEmpty{0},
+          _freeLists{_config.maxBlockSizeLog - pool_resource::MIN_BLOCK_SIZE_LOG}
     {
-        upstream->addRef();
     }
 
     void* PoolResource::allocate(size_t size, size_t alignment)
     {
-        if (size == 0)
-            return nullptr;
-        size_t logSize = log2Ceil(size);
-        if (logSize > _config.maxBlockSizeLog) {
+        if (size == 0) {
+            ++size;
+        }
+
+        if (size > _config.maxBlockSize) {
             // allocation too big to be handled by the pool
             return _upstream->allocate(size, alignment);
+        }
+
+        if ((alignment == 0) || (alignment & (alignment - 1))) {
+            throw std::bad_alloc();
         }
 
         // find best-fitting non-empty bin
@@ -80,12 +95,13 @@ namespace elsa::mr
         }
 
         size_t logBlockSize = log2Ceil(blockSize);
-        size_t minFreeListIndex = logBlockSize - _config.minBlockSizeLog;
+        size_t minFreeListIndex = logBlockSize - pool_resource::MIN_BLOCK_SIZE_LOG;
         uint64_t matchingFreeListMask = ~((1 << static_cast<uint64_t>(minFreeListIndex)) - 1);
         uint64_t freeListIndex = lowestSetBit(_freeListNonEmpty & matchingFreeListMask) - 1;
         if (freeListIndex == std::numeric_limits<uint64_t>::max()) [[unlikely]] {
-            // TODO: allocate new pool space
-            throw std::bad_alloc();
+            expandPool();
+            freeListIndex = lowestSetBit(_freeListNonEmpty & matchingFreeListMask) - 1;
+            ENSURE(freeListIndex != std::numeric_limits<uint64_t>::max());
         }
         pool_resource::Block* block = _freeLists[freeListIndex];
         ENSURE(block && checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY));
@@ -128,8 +144,10 @@ namespace elsa::mr
 
     void PoolResource::deallocate(void* ptr, size_t size, size_t alignment)
     {
-        size_t logSize = log2Ceil(size);
-        if (logSize > _config.maxBlockSizeLog) {
+        if (!ptr) {
+            return;
+        }
+        if (size > _config.maxBlockSize) {
             // allocation too big to be handled by the pool, must have come from upstream
             _upstream->deallocate(ptr, size, alignment);
             return;
@@ -162,9 +180,9 @@ namespace elsa::mr
             delete next;
         }
 
-        void* nextAdress =
+        nextAdress =
             reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(block->_address) + block->size());
-        auto nextIt = _addressToBlock.find(nextAdress);
+        nextIt = _addressToBlock.find(nextAdress);
         if (nextIt != _addressToBlock.end()) {
             pool_resource::Block* next = nextIt->second;
             next->_isPrevFree = 1;
@@ -172,6 +190,27 @@ namespace elsa::mr
         }
 
         insertFreeBlock(block);
+    }
+
+    bool PoolResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize,
+                                 size_t newAlignment)
+    {
+        return false;
+    }
+
+    void PoolResource::copyMemory(void* ptr, const void* src, size_t size) noexcept
+    {
+        _upstream->copyMemory(ptr, src, size);
+    }
+
+    void PoolResource::setMemory(void* ptr, const void* src, size_t stride, size_t count) noexcept
+    {
+        _upstream->setMemory(ptr, src, stride, count);
+    }
+
+    void PoolResource::moveMemory(void* ptr, const void* src, size_t size) noexcept
+    {
+        _upstream->moveMemory(ptr, src, size);
     }
 
     void PoolResource::insertFreeBlock(pool_resource::Block* block)
@@ -202,7 +241,7 @@ namespace elsa::mr
         // smaller one would fit. However, this categorization saves us from having to iterate
         // through free lists, looking for the best fit
         uint64_t freeListLog = log2Floor(size);
-        size_t freeListIndex = freeListLog - _config.minBlockSizeLog;
+        size_t freeListIndex = freeListLog - pool_resource::MIN_BLOCK_SIZE_LOG;
         // all blocks larger than the size for the largest free list are stored there as well
         freeListIndex = std::min(freeListIndex, _freeLists.size() - 1);
         return freeListIndex;
@@ -210,40 +249,58 @@ namespace elsa::mr
 
     size_t PoolResource::computeRealSize(size_t size)
     {
-        return (size + pool_resource::BLOCK_GRANULARITY - 1) & ~pool_resource::BLOCK_GRANULARITY;
+        return (size + pool_resource::BLOCK_GRANULARITY - 1)
+               & ~(pool_resource::BLOCK_GRANULARITY - 1);
     }
+
+    void PoolResource::expandPool()
+    {
+        void* newChunkAddress =
+            _upstream->allocate(_config.maxBlockSize, pool_resource::BLOCK_GRANULARITY);
+        pool_resource::Block* newChunk = new pool_resource::Block();
+        newChunk->_address = newChunkAddress;
+        newChunk->setSize(_config.maxBlockSize);
+        newChunk->_isFree = 1;
+        newChunk->_isPrevFree = 0;
+        newChunk->_prevAddress = nullptr;
+        insertFreeBlock(newChunk);
+    }
+
+    namespace pool_resource
+    {
+        bool Block::isFree()
+        {
+            return _isFree;
+        }
+
+        void Block::unlinkFree()
+        {
+            *_pprevFree = _nextFree;
+            if (_nextFree) {
+                _nextFree->_pprevFree = _pprevFree;
+            }
+        }
+
+        void Block::insertAfterFree(Block** pprev)
+        {
+            _pprevFree = pprev;
+            _nextFree = *pprev;
+            *pprev = this;
+            if (_nextFree) {
+                _nextFree->_pprevFree = &_nextFree;
+            }
+        }
+
+        size_t Block::size()
+        {
+            return _size & SIZE_MASK;
+        }
+
+        void Block::setSize(size_t size)
+        {
+            ENSURE((size & BITFIELD_MASK) == 0);
+            _size = (_size & BITFIELD_MASK) | size;
+        }
+
+    } // namespace pool_resource
 } // namespace elsa::mr
-
-bool elsa::mr::pool_resource::Block::isFree()
-{
-    return isFree;
-}
-
-void elsa::mr::pool_resource::Block::unlinkFree()
-{
-    *_pprevFree = _nextFree;
-    if (_nextFree) {
-        _nextFree->_pprevFree = _pprevFree;
-    }
-}
-
-void elsa::mr::pool_resource::Block::insertAfterFree(Block** pprev)
-{
-    _pprevFree = pprev;
-    _nextFree = *pprev;
-    *pprev = this;
-    if (_nextFree) {
-        _nextFree->_pprevFree = &_nextFree;
-    }
-}
-
-size_t elsa::mr::pool_resource::Block::size()
-{
-    return _size & SIZE_MASK;
-}
-
-void elsa::mr::pool_resource::Block::setSize(size_t size)
-{
-    ENSURE((size & BITFIELD_MASK) == 0);
-    _size = _size & BITFIELD_MASK | size;
-}

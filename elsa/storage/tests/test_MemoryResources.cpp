@@ -2,19 +2,26 @@
 
 #include "memory_resource/ContiguousMemory.h"
 #include "memory_resource/UniversalResource.h"
-#include "memory_resource/PoolResource.h"
+
+#include <cstring>
 
 TEST_SUITE_BEGIN("memoryresources");
 
-TEST_CASE_TEMPLATE("Pool resource", T, float, double)
+TEST_CASE_TEMPLATE("Universal resource", T, float, double)
 {
-    GIVEN("An zero sized container")
+    GIVEN("Check overlap")
     {
         using namespace elsa::mr;
-        UniversalResource* upstream = new UniversalResource();
-        PoolResource* pool = new PoolResource(upstream);
-        pool->releaseRef();
-        CHECK_EQ(4, 5);
+        UniversalResource* univ = new UniversalResource();
+        unsigned char* ptrs[100];
+        for (int i = 0; i < 100; i++) {
+            ptrs[i] = reinterpret_cast<unsigned char*>(univ->allocate(256, 4));
+            std::memset(ptrs[i], i, 256);
+        }
+        for (int i = 0; i < 100; i++) {
+            CHECK_EQ(*ptrs[i], static_cast<unsigned char>(i));
+            univ->deallocate(ptrs[i], 256, 4);
+        }
     }
 }
 
