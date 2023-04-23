@@ -1,5 +1,5 @@
 #pragma once
-#include <ContiguousMemory.h>
+#include "ContiguousMemory.h"
 #include <unordered_map>
 #include <vector>
 
@@ -54,18 +54,21 @@ namespace elsa::mr
     private:
         MemoryResource* _upstream;
         PoolResourceConfig _config;
-        std::unordered_map<void*, pool_resource::Block> _addressToBlock;
+        std::unordered_map<void*, pool_resource::Block*> _addressToBlock;
         std::vector<pool_resource::Block*> _freeLists;
         uint64_t _freeListNonEmpty;
 
-        void insertFreeBlock(pool_resource::Block block);
+        void insertFreeBlock(pool_resource::Block* block);
+        void unlinkFreeBlock(pool_resource::Block* block);
+        size_t freeListIndexForFreeChunk(size_t size);
         size_t computeRealSize(size_t size);
 
     protected:
         ~PoolResource();
 
     public:
-        PoolResource(MemoryResource* upstream, PoolResourceConfig config);
+        PoolResource(MemoryResource* upstream,
+                     PoolResourceConfig config = PoolResourceConfig::defaultConfig());
 
         void* allocate(size_t size, size_t alignment) override;
         void deallocate(void* ptr, size_t size, size_t alignment) override;

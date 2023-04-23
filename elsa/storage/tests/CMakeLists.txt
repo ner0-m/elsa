@@ -15,8 +15,10 @@ add_custom_target(build-tests-storage)
 # the actual tests
 ELSA_DOCTEST(Reductions)
 ELSA_DOCTEST(Transforms)
+ELSA_DOCTEST(MemoryResources)
 
 if(ELSA_CUDA_ENABLED)
     set_source_files_properties(test_Reductions.cpp PROPERTIES LANGUAGE CUDA)
     set_source_files_properties(test_Transforms.cpp PROPERTIES LANGUAGE CUDA)
+    set_source_files_properties(test_MemoryResources.cpp PROPERTIES LANGUAGE CUDA)
 endif()
