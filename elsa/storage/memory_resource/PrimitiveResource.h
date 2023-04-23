@@ -1,9 +1,10 @@
 #pragma once
+
 #include "ContiguousMemory.h"
 
 namespace elsa::mr
 {
-    class UniversalResource : public MemResInterface
+    class PrimitiveResource : public MemResInterface
     {
     public:
         static MemoryResource make();
