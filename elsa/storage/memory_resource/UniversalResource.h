@@ -5,6 +5,7 @@ namespace elsa::mr
 {
     class UniversalResource : public MemoryResource
     {
+    public:
         void* allocate(size_t size, size_t alignment) override;
         void deallocate(void* ptr, size_t size, size_t alignment) override;
         bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize,
