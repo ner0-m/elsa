@@ -13,7 +13,7 @@ namespace elsa::mr
 
     MemoryResource::MemoryResource(const MemoryResource& r)
     {
-        if ((_resource = r._resource) != 0)
+        if ((_resource = r._resource) != nullptr)
             ++_resource->_refCount;
     }
     MemoryResource::MemoryResource(MemoryResource&& r) noexcept
@@ -34,14 +34,16 @@ namespace elsa::mr
 
     void MemoryResource::_release()
     {
-        if (_resource != 0 && --_resource->_refCount == 0)
+        if (_resource != nullptr && --_resource->_refCount == 0)
             delete _resource;
     }
 
     MemoryResource& MemoryResource::operator=(const MemoryResource& r)
     {
+        if (&r == this)
+            return *this;
         _release();
-        if ((_resource = r._resource) != 0)
+        if ((_resource = r._resource) != nullptr)
             ++_resource->_refCount;
         return *this;
     }
@@ -76,7 +78,7 @@ namespace elsa::mr
     }
     bool MemoryResource::valid() const
     {
-        return _resource != 0;
+        return _resource != nullptr;
     }
     void MemoryResource::release()
     {

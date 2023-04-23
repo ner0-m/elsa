@@ -60,26 +60,13 @@ namespace elsa::mr
     void PrimitiveResource::setMemory(void* ptr, const void* src, size_t stride,
                                       size_t count) noexcept
     {
-        if (stride == 1)
-            detail::typedFill<uint8_t>(ptr, src, count);
-        else if (stride == 2)
-            detail::typedFill<uint16_t>(ptr, src, count);
-        else if (stride == 4)
-            detail::typedFill<uint32_t>(ptr, src, count);
-        else if (stride == 8)
-            detail::typedFill<uint64_t>(ptr, src, count);
-        else if (stride == 0)
-            return;
-        else {
-            uint8_t* dest = static_cast<uint8_t*>(ptr);
-            const uint8_t* from = static_cast<const uint8_t*>(src);
-            size_t total = stride * count, off = 0;
-
-            for (size_t i = 0; i < total; ++i) {
-                dest[i] = from[off];
-                if (++off >= stride)
-                    off = 0;
-            }
-        }
+        if ((stride % 8) == 0)
+            detail::typedFill<uint64_t>(ptr, src, count * (stride / 8));
+        else if ((stride % 4) == 0)
+            detail::typedFill<uint32_t>(ptr, src, count * (stride / 4));
+        else if ((stride % 2) == 0)
+            detail::typedFill<uint16_t>(ptr, src, count * (stride / 2));
+        else
+            detail::typedFill<uint8_t>(ptr, src, count * stride);
     }
 } // namespace elsa::mr

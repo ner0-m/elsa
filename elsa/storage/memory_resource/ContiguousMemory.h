@@ -9,6 +9,10 @@
  *  In MemoryResouce mem-copy, decide if it makes sense to move in userspace or do call
  *
  *  Insert usage of ContiguousStorage
+ *
+ *  Update specification to not require copy/move/set-mem to be noexcept?
+ *      (its like a throwing move/copy constructor?)
+ *  implement test cases
  */
 
 namespace elsa::mr
