@@ -1,109 +1,114 @@
 #include "ContiguousMemory.h"
-#include "UniversalResource.h"
+
+#include "PrimitiveResource.h"
 
 #include <mutex>
 
 namespace elsa::mr
 {
-    MemoryResource::MemoryResource()
+    MemResInterface::MemResInterface()
     {
         _refCount = 1;
     }
 
-    MRRef::MRRef()
-    {
-        _resource = 0;
-    }
-    MRRef::MRRef(const MRRef& r)
+    MemoryResource::MemoryResource(const MemoryResource& r)
     {
         if ((_resource = r._resource) != 0)
             ++_resource->_refCount;
     }
-    MRRef::MRRef(MRRef&& r) noexcept
+    MemoryResource::MemoryResource(MemoryResource&& r) noexcept
     {
         std::swap(_resource, r._resource);
     }
-    MRRef::~MRRef()
+    MemoryResource::~MemoryResource()
     {
         _release();
     }
 
-    MRRef MRRef::MakeRef(MemoryResource* own)
+    MemoryResource MemoryResource::MakeRef(MemResInterface* own)
     {
-        MRRef _out;
+        MemoryResource _out;
         _out._resource = own;
         return _out;
     }
 
-    void MRRef::_release()
+    void MemoryResource::_release()
     {
         if (_resource != 0 && --_resource->_refCount == 0)
             delete _resource;
     }
 
-    MRRef& MRRef::operator=(const MRRef& r)
+    MemoryResource& MemoryResource::operator=(const MemoryResource& r)
     {
         _release();
         if ((_resource = r._resource) != 0)
             ++_resource->_refCount;
         return *this;
     }
-    MRRef& MRRef::operator=(MRRef&& r) noexcept
+    MemoryResource& MemoryResource::operator=(MemoryResource&& r) noexcept
     {
         std::swap(_resource, r._resource);
         return *this;
     }
-    MemoryResource* MRRef::operator->()
+    MemResInterface* MemoryResource::operator->()
     {
         return _resource;
     }
-    const MemoryResource* MRRef::operator->() const
+    const MemResInterface* MemoryResource::operator->() const
     {
         return _resource;
     }
-    MemoryResource& MRRef::operator*()
+    MemResInterface& MemoryResource::operator*()
     {
         return *_resource;
     }
-    const MemoryResource& MRRef::operator*() const
+    const MemResInterface& MemoryResource::operator*() const
     {
         return *_resource;
     }
-    bool MRRef::operator==(const MRRef& r) const
+    bool MemoryResource::operator==(const MemoryResource& r) const
     {
         return _resource == r._resource;
     }
-    bool MRRef::operator!=(const MRRef& r) const
+    bool MemoryResource::operator!=(const MemoryResource& r) const
     {
         return _resource == r._resource;
     }
-    bool MRRef::valid() const
+    bool MemoryResource::valid() const
     {
         return _resource != 0;
     }
-    void MRRef::release()
+    void MemoryResource::release()
     {
         _release();
+    }
+    MemResInterface* MemoryResource::get()
+    {
+        return _resource;
+    }
+    const MemResInterface* MemoryResource::get() const
+    {
+        return _resource;
     }
 
     /*
      *   Memory-Resource Singleton
      */
     static std::mutex mrSingletonLock;
-    static MRRef mrSingleton;
+    static MemoryResource mrSingleton;
 
-    void setDefaultInstance(const MRRef& r)
+    void setDefaultInstance(const MemoryResource& r)
     {
         if (!r.valid())
             return;
         std::lock_guard<std::mutex> _lock(mrSingletonLock);
         mrSingleton = r;
     }
-    MRRef defaultInstance()
+    MemoryResource defaultInstance()
     {
         std::lock_guard<std::mutex> _lock(mrSingletonLock);
         if (!mrSingleton.valid())
-            throw std::runtime_error("Not yet implemented");
+            mrSingleton = MemoryResource::MakeRef(new PrimitiveResource());
         return mrSingleton;
     }
 } // namespace elsa::mr

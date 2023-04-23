@@ -73,63 +73,14 @@ namespace elsa::mr
         //TODO
     }
 
-    void UniversalResource::setMemory(void* ptr, const void* src, size_t stride,
-                                      size_t count) noexcept
-    {
-        // TODO
-    }
     void UniversalResource::moveMemory(void* ptr, const void* src, size_t size) noexcept
     {
         // TODO
     }
-} // namespace elsa::mr
-#else
-#include <stdlib.h>
-#include <cstring>
-
-namespace elsa::mr
-{
-    // no cuda => regular heap allocation
-
-    void* elsa::mr::UniversalResource::allocate(size_t size, size_t alignment)
-    {
-        void* ptr = std::aligned_alloc(alignment, size);
-        if (!ptr) [[unlikely]] {
-            throw std::bad_alloc();
-        }
-        return ptr;
-    }
-
-    void UniversalResource::deallocate(void* ptr, size_t size, size_t alignment)
-    {
-        static_cast<void>(size);
-        static_cast<void>(alignment);
-        std::free(ptr);
-    }
-
-    bool UniversalResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize,
-                                      size_t newAlignment)
-    {
-        return false;
-    }
-
-    void UniversalResource::copyMemory(void* ptr, const void* src, size_t size) noexcept
-    {
-        std::memcpy(ptr, src, size);
-    }
-
     void UniversalResource::setMemory(void* ptr, const void* src, size_t stride,
                                       size_t count) noexcept
     {
-        // TODO: optimize this
-        for (size_t i = 0; i < count; i++) {
-            std::memcpy(ptr, src, stride);
-            ptr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + stride);
-        }
-    }
-    void UniversalResource::moveMemory(void* ptr, const void* src, size_t size) noexcept
-    {
-        std::memmove(ptr, src, size);
+        // TODO
     }
 } // namespace elsa::mr
 #endif

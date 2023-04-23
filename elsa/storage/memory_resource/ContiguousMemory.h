@@ -1,4 +1,5 @@
 #pragma once
+
 #include <cstring>
 #include <atomic>
 
@@ -7,30 +8,33 @@
  *  What of thrust uses this container. Are variables passed to thrust? Could issues arise?
  *  In MemoryResouce mem-copy, decide if it makes sense to move in userspace or do call
  *
- *  Implement default instance
  *  Insert usage of ContiguousStorage
- *  Rename MemoryResource to MemResInterface and MRRef to MemoryResource
  */
 
 namespace elsa::mr
 {
-    class MRRef;
+    class MemoryResource;
 
     /*
      *  Describes one memory resource interface.
-     *  Should be bound once to an MRRef at construction and from
-     *  there on only be passed through the MRRef wrapper.
+     *  Allows for polymorphic allocators.
+     *  Should be bound once to a MemoryResource wrapper at construction and from
+     *  there on only be passed through the MemoryResource wrapper.
      */
-    class MemoryResource
+    class MemResInterface
     {
-        friend class MRRef;
+        friend class MemoryResource;
 
     private:
         std::atomic<size_t> _refCount;
 
     protected:
-        MemoryResource();
-        virtual ~MemoryResource() = default;
+        MemResInterface();
+        virtual ~MemResInterface() = default;
+
+    public:
+        MemResInterface(MemResInterface&&) = delete;
+        MemResInterface(const MemResInterface&) = delete;
 
     public:
         virtual void* allocate(size_t size, size_t alignment) = 0;
@@ -39,53 +43,55 @@ namespace elsa::mr
         virtual void deallocate(void* ptr, size_t size, size_t alignment) = 0;
 
         virtual void copyMemory(void* ptr, const void* src, size_t size) noexcept = 0;
+        virtual void moveMemory(void* ptr, const void* src, size_t size) noexcept = 0;
         virtual void setMemory(void* ptr, const void* src, size_t stride,
                                size_t count) noexcept = 0;
-        virtual void moveMemory(void* ptr, const void* src, size_t size) noexcept = 0;
     };
 
     /*
-     *  Manages a reference to a Memory-Resource.
-     *  The refernce count of a Memory-Resource is thread-safe.
-     *  The MRRef object itself is not thread-safe.
+     *  Manages a reference to a Memory-Resource interface.
+     *  The refernce count of a Memory-Resource interface is thread-safe.
+     *  The MemoryResource object itself is not thread-safe.
      */
-    class MRRef
+    class MemoryResource
     {
     private:
-        MemoryResource* _resource = 0;
+        MemResInterface* _resource = nullptr;
 
     public:
-        MRRef();
-        MRRef(const MRRef& r);
-        MRRef(MRRef&& r) noexcept;
-        ~MRRef();
+        MemoryResource() = default;
+        MemoryResource(const MemoryResource& r);
+        MemoryResource(MemoryResource&& r) noexcept;
+        ~MemoryResource();
 
     public:
-        static MRRef MakeRef(MemoryResource* own);
+        static MemoryResource MakeRef(MemResInterface* own);
 
     private:
         void _release();
 
     public:
-        MRRef& operator=(const MRRef& r);
-        MRRef& operator=(MRRef&& r) noexcept;
-        MemoryResource* operator->();
-        const MemoryResource* operator->() const;
-        MemoryResource& operator*();
-        const MemoryResource& operator*() const;
-        bool operator==(const MRRef& r) const;
-        bool operator!=(const MRRef& r) const;
+        MemoryResource& operator=(const MemoryResource& r);
+        MemoryResource& operator=(MemoryResource&& r) noexcept;
+        MemResInterface* operator->();
+        const MemResInterface* operator->() const;
+        MemResInterface& operator*();
+        const MemResInterface& operator*() const;
+        bool operator==(const MemoryResource& r) const;
+        bool operator!=(const MemoryResource& r) const;
         bool valid() const;
         void release();
+        MemResInterface* get();
+        const MemResInterface* get() const;
     };
 
     /*
-     *   DefaultInstance will at all times return a reference to the
-     *   memory-resource from the last call to setDefaultInstance.
+     *  DefaultInstance will at all times return a reference to the
+     *  memory-resource from the last call to setDefaultInstance.
      *
-     *   If setDefaultInstance has never been called, an instance
-     *       of (TODO: insert here) will be instantiated.
+     *  If setDefaultInstance has never been called, an instance
+     *      of PrimitiveResource will be instantiated.
      */
-    void setDefaultInstance(const MRRef& r);
-    MRRef defaultInstance();
+    void setDefaultInstance(const MemoryResource& r);
+    MemoryResource defaultInstance();
 } // namespace elsa::mr
