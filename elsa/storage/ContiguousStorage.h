@@ -15,6 +15,7 @@ DISABLE_WARNING_POP
 /*
  *  if iterator is pointer, it must be continuous, hence optimizations can be made
  *  implement MemoryResource reference counting!
+ *  What of thrust uses this container. Are variables passed to thrust? Could issues arise?
  */
 
 namespace elsa
@@ -111,6 +112,7 @@ namespace elsa
         bool operator<=(const self_type& p) const { return _where <= p._where; }
         bool operator>=(const self_type& p) const { return !(*this < p); }
         bool operator>(const self_type& p) const { return !(*this <= p); }
+        raw_pointer base() const { return _where; }
     };
 
     /*
@@ -118,8 +120,11 @@ namespace elsa
      *      be performed (even for initialization) (hence not touched at construction/resize)
      *
      *  Behaves like stl-container except for in the exception case.
-     *  The object will remain in a valid state after the exception, might however be in a modified
-     *      state (i.e. partially inserted...)
+     *      The object will remain in a valid state after the exception, might however be in a
+     *      modified state (i.e. partially inserted...) if an exception is thrown by type-sepcific
+     *      functions.
+     *          Exceptions by the allocator will result in this container unmodified or
+     *          the operation fully performed.
      */
     template <class Type, bool RawType = false>
     class ContiguousStorage_
@@ -151,6 +156,13 @@ namespace elsa
 
         public:
             _container() {}
+            _container(mr::MemoryResource* r, raw_pointer p, size_type s, size_type c)
+            {
+                resource = r;
+                pointer = p;
+                size = s;
+                capacity = c;
+            }
             _container(const _container&) = delete;
             _container(_container&& c) noexcept
             {
@@ -168,14 +180,11 @@ namespace elsa
                 std::swap(capacity, c.capacity);
                 return *this;
             }
-            ~_container()
-            {
-                if (pointer != 0) {
-                    destruct_until(0);
-                    resource->deallocate(pointer, capacity * sizeof(value_type),
-                                         alignof(value_type));
-                }
-            }
+            ~_container() { release(); }
+
+        public:
+            raw_pointer end_ptr() { return pointer + size; }
+            const raw_pointer end_ptr() const { return pointer + size; }
             void release()
             {
                 if (pointer == 0)
@@ -193,23 +202,155 @@ namespace elsa
                         pointer[--size].~value_type();
                 }
             }
-
-            /*
-             *   count: how many to at least require
-             *   copy: if realloc, how many to copy-construct over
-             *   mr: if not zero, force-relloc to the new memory resource
-             *   returns null-container or old container on relocation
-             *   in case of a relocation, this container will have a size of 'copy'
-             */
-            _container reserve(size_type count, size_type copy, mr::MemoryResource* mr = 0)
-            { /* incomplete */
-                return _container();
+            void reduce(size_type count) { reserve(count, count, resource); }
+            _container swap(mr::MemoryResource* mr, raw_pointer p, size_type sz, size_type cp)
+            {
+                _container old{resource, pointer, size, capacity};
+                resource = mr;
+                pointer = p;
+                size = sz;
+                capacity = cp;
+                return old;
             }
 
-            void reduce(size_type count)
+            /*
+             *  count: how many to at least require
+             *  move: if realloc, how many to move-construct over
+             *  mr: if not zero, force-relloc to the new memory resource
+             *      (even if its the same resource)
+             * returns null-container or old container on relocation in case of a
+             * relocation, this container will have a size of 'copy'
+             */
+            _container reserve(size_type count, size_type move, mr::MemoryResource* mr = 0)
             {
-                /* must be equal to count (if zero, free ptr) */
-                /* if count< than size, destruct all entries before reducing the size */
+                if (count <= capacity && mr == 0)
+                    return _container();
+                mr::MemoryResource* new_mr = mr == 0 ? resource : mr;
+
+                /* check if this is a noninitial reserving for a growing size in which
+                 *   case the capacity should not just grow by request but by some form
+                 *   of equation to prevent to many reallocations */
+                size_type new_cap = std::max<size_type>(count, move);
+                if (pointer != 0 && new_cap > capacity) {
+                    size_type min_cap = new_cap;
+                    new_cap = capacity;
+
+                    while (new_cap < min_cap)
+                        new_cap += (new_cap / 2);
+                }
+
+                /* check if an empty container has been requested */
+                if (new_cap == 0)
+                    return swap(new_mr, 0, 0, 0);
+
+                /* check if a relocation could suffice (not considered a container-change) */
+                if (pointer != 0 && new_mr == resource
+                    && resource->tryResize(pointer, capacity * sizeof(value_type),
+                                           alignof(value_type), new_cap * sizeof(value_type))) {
+                    capacity = new_cap;
+                    return _container();
+                }
+
+                /* allocate the new buffer and move the data over */
+                raw_pointer new_ptr = static_cast<raw_pointer>(
+                    new_mr->allocate(new_cap * sizeof(value_type), alignof(value_type)));
+                _container old = swap(new_mr, new_ptr, 0, new_cap);
+                for (size_type i = 0; i < move; ++i) {
+                    new (pointer + i) value_type(std::move(old.pointer[i]));
+                    ++size;
+                }
+                return old;
+            }
+
+            /*
+             *  move [where; end] by diff within the container
+             *      expects container to be large enough for the movement
+             */
+            void move_tail(size_type where, difference_type diff)
+            {
+                /* check if content is moved up (i.e. the size increased) */
+                if (diff > 0) {
+                    /* first move the upper 'new' part in order to ensure the entire buffer is
+                     *   constructed and an exception would therefore not leave an invalid state */
+                    size_type end = size, next = size - diff;
+                    while (next < end) {
+                        new (pointer + size) value_type(std::move(pointer + next));
+                        ++size;
+                        ++next;
+                    }
+
+                    /* move the remaining part up into the already, but moved out slots */
+                    end = where + diff;
+                    while (--next >= end)
+                        pointer[next] = std::move(pointer[next - diff]);
+                    return;
+                }
+
+                /* move the entire content down */
+                while (where < size) {
+                    pointer[where + diff] = std::move(pointer[where]);
+                    ++where;
+                }
+            }
+
+            /*
+             *  copy a range into a given range (potentially resize)
+             *      reserves necessary capacity
+             */
+            template <class ItType>
+            void insert(size_type off, ItType ibegin, ItType iend, size_type count)
+            {
+                /* copy-assign the currently existing and to-be-overwritten part */
+                reserve(off + count, off);
+                size_type transition = std::min<size_type>(size, off + count);
+                while (off < transition) {
+                    pointer[off] = *ibegin;
+                    ++off;
+                    ++ibegin;
+                }
+
+                /* copy-construct the remaining part */
+                while (ibegin != iend) {
+                    new (pointer + size) value_type(*ibegin);
+                    ++size;
+                    ++ibegin;
+                }
+            }
+
+            /*
+             *  write same value (or default-construct/reset) into a given range (potentially
+             *      resize) reserves necessary capacity
+             */
+            void set_range(size_type off, const_pointer value, size_type count)
+            {
+                reserve(off + count, off);
+
+                size_type end = off + count;
+                size_type transition = std::min<size_type>(size, end);
+
+                if (value == 0) {
+                    /* move-assign the still constructed values */
+                    while (off < transition)
+                        pointer[off++] = std::move(value_type());
+
+                    /* default-construct the new values */
+                    while (size < end) {
+                        new (pointer + size) value_type();
+                        ++size;
+                    }
+                }
+
+                else {
+                    /* copy-assign the still constructed values */
+                    while (off < transition)
+                        pointer[off++] = *value;
+
+                    /* copy-construct the new values */
+                    while (size < end) {
+                        new (pointer + size) value_type(*value);
+                        ++size;
+                    }
+                }
             }
         };
 
@@ -220,100 +361,6 @@ namespace elsa
         template <class ItType>
         using _is_random = std::is_same<typename std::iterator_traits<ItType>::iterator_category,
                                         std::random_access_iterator_tag>;
-        /*
-         *   move [where; end] by diff within the container
-         *      destructs remainder on negative moves
-         *      expects container to be large enough for the movement
-         */
-        void _self_move_tail(size_type where, difference_type diff)
-        {
-            /* check if content is moved up (i.e. the size increased) */
-            if (diff > 0) {
-                /* first move the upper 'new' part in order to ensure the entire buffer is
-                 *   constructed and an exception would therefore not leave an invalid state */
-                size_type end = _self.size, next = _self.size - diff;
-                while (next < end) {
-                    new (_self.pointer + _self.size) value_type(std::move(_self.pointer + next));
-                    ++_self.size;
-                    ++next;
-                }
-
-                /* move the remaining part up into the already, but moved out slots */
-                end = where + diff;
-                while (--next >= end)
-                    _self.pointer[next] = std::move(_self.pointer[next - diff]);
-                return;
-            }
-
-            /* move the entire content down and afterwards destruct the tail
-             *   (mind: diff is negative!) */
-            while (where < _self.size) {
-                _self.pointer[where + diff] = std::move(_self.pointer[where]);
-                ++where;
-            }
-            _self.destruct_until(where + diff);
-        }
-
-        /*
-         *   copy a range into a given range (potentially resize)
-         *      reserves necessary capacity
-         */
-        template <class ItType>
-        void _copy_update_construct(size_type off, ItType ibegin, ItType iend, size_type count)
-        {
-            /* copy-assign the currently existing and to-be-overwritten part */
-            _self.reserve(off + count, off);
-            size_type transition = std::min<size_type>(_self.size, off + count);
-            while (off < transition) {
-                _self.pointer[off] = *ibegin;
-                ++off;
-                ++ibegin;
-            }
-
-            /* copy-construct the remaining part */
-            while (ibegin != iend) {
-                new (_self.pointer + _self.size) value_type(*ibegin);
-                ++_self.size;
-                ++ibegin;
-            }
-        }
-
-        /*
-         *   write same value (or default-construct/reset) into a given range (potentially resize)
-         *      reserves necessary capacity
-         */
-        template <bool DefConstruct>
-        void _set_update_construct(size_type off, const_pointer val, size_type count)
-        {
-            _self.reserve(off + count, off);
-
-            size_type end = off + count;
-            size_type transition = std::min<size_type>(_self.size, end);
-
-            if constexpr (DefConstruct) {
-                /* move-assign the still constructed values */
-                while (off < transition)
-                    _self.pointer[off++] = std::move(value_type());
-
-                /* default-construct the new values */
-                while (_self.size < end) {
-                    new (_self.pointer + _self.size) value_type();
-                    ++_self.size;
-                }
-            }
-
-            else {
-                /* copy-assign the still constructed values */
-                while (off < transition)
-                    _self.pointer[off++] = *val;
-
-                /* copy-construct the new values */
-                while (_self.size < end) {
-                    new (_self.pointer + _self.size) value_type(*val);
-                    ++_self.size;
-                }
-            }
-        }
 
     public:
         /* resource of null will take mr::defaultInstance */
@@ -327,7 +374,7 @@ namespace elsa
             if ((_self.resource = mr) == 0)
                 _self.resource = mr::defaultInstance();
 
-            _set_update_construct<true>(0, 0, count);
+            _self.set_range(0, 0, count);
         }
         explicit ContiguousStorage_(size_type count, const_reference init,
                                     mr::MemoryResource* mr = 0)
@@ -335,7 +382,7 @@ namespace elsa
             if ((_self.resource = mr) == 0)
                 _self.resource = mr::defaultInstance();
 
-            _set_update_construct<false>(0, &init, count);
+            _self.set_range(0, &init, count);
         }
         template <class ItType>
         ContiguousStorage_(ItType ibegin, ItType iend, mr::MemoryResource* mr = 0)
@@ -343,14 +390,14 @@ namespace elsa
             if ((_self.resource = mr) == 0)
                 _self.resource = mr::defaultInstance();
 
-            _copy_update_construct(0, ibegin, iend, std::distance(ibegin, iend));
+            _self.insert(0, ibegin, iend, std::distance(ibegin, iend));
         }
         ContiguousStorage_(std::initializer_list<value_type> l, mr::MemoryResource* mr = 0)
         {
             if ((_self.resource = mr) == 0)
                 _self.resource = mr::defaultInstance();
 
-            _copy_update_construct(0, l.begin(), l.end(), l.size());
+            _self.insert(0, l.begin(), l.end(), l.size());
         }
 
         /* resource of null will take s::resouce */
@@ -359,8 +406,7 @@ namespace elsa
             if ((_self.resource = mr) == 0)
                 _self.resource = s._self.resource;
 
-            _copy_update_construct(0, s._self.pointer, s._self.pointer + s._self.size,
-                                   s._self.size);
+            _self.insert(0, s._self.pointer, s._self.end_ptr(), s._self.size);
         }
         ContiguousStorage_(self_type&& s) noexcept { std::swap(_self, s._self); }
 
@@ -385,15 +431,13 @@ namespace elsa
                 assign(s);
             else {
                 _self.reserve(s._self.size, 0, s._self.resource);
-                _copy_update_construct(0, s._self.pointer, s._self.pointer + s._self.size,
-                                       s._self.size);
+                _self.insert(0, s._self.pointer, s._self.end_ptr(), s._self.size);
             }
             return *this;
         }
-        self_type& operator=(self_type&& s)
+        self_type& operator=(self_type&& s) noexcept
         {
             std::swap(_self, s._self);
-            s._self.reduce(0);
             return *this;
         }
         self_type& operator=(std::initializer_list<value_type> l)
@@ -406,24 +450,24 @@ namespace elsa
         void assign_default(size_type count)
         {
             _self.reserve(count, 0);
-            _set_update_construct<true>(0, 0, count);
+            _self.set_range(0, 0, count);
             _self.destruct_until(count);
         }
         void assign(size_type count, const_reference init)
         {
             _self.reserve(count, 0);
-            _set_update_construct<false>(0, &init, count);
+            _self.set_range(0, &init, count);
             _self.destruct_until(count);
         }
         template <class ItType>
         void assign(ItType ibegin, ItType iend)
         {
             size_type count = std::distance(ibegin, iend);
-            _copy_update_construct(0, ibegin, iend, count);
+            _self.insert(0, ibegin, iend, count);
             _self.destruct_until(count);
         }
         void assign(std::initializer_list<value_type> l) { assign(l.begin(), l.end()); }
-        void assign(const self_type& s) { assign(s._self.pointer, s._self.pointer + s._self.size); }
+        void assign(const self_type& s) { assign(s._self.pointer, s._self.end_ptr()); }
 
         reference at(size_type i)
         {
@@ -441,17 +485,17 @@ namespace elsa
         const_reference operator[](size_type i) const { return _self.pointer[i]; }
         reference front() { return *_self.pointer; }
         const_reference front() const { return *_self.pointer; }
-        reference back() { return *(_self.pointer + _self.size - 1); }
-        const_reference back() const { return *(_self.pointer + _self.size - 1); }
+        reference back() { return *(_self.end_ptr() - 1); }
+        const_reference back() const { return *(_self.end_ptr() - 1); }
         pointer data() { return _self.pointer; }
         const_pointer data() const { return _self.pointer; }
 
         iterator begin() { return _self.pointer; }
         const_iterator begin() const { return _self.pointer; }
         const_iterator cbegin() const { return _self.pointer; }
-        iterator end() { return (_self.pointer + _self.size); }
-        const_iterator end() const { return (_self.pointer + _self.size); }
-        const_iterator cend() const { return (_self.pointer + _self.size); }
+        iterator end() { return (_self.end_ptr()); }
+        const_iterator end() const { return (_self.end_ptr()); }
+        const_iterator cend() const { return (_self.end_ptr()); }
 
         reverse_iterator rbegin() { return reverse_iterator(end()); }
         const_reverse_iterator rbegin() const { return const_reverse_iterator(cend()); }
@@ -474,11 +518,10 @@ namespace elsa
             _container old = _self.reserve(_self.size + count, off);
 
             if (old.pointer == 0)
-                _self_move_tail(_self.pointer + off, count);
-            _set_update_construct<true>(off, 0, count);
+                _self.move_tail(_self.pointer + off, count);
+            _self.set_range(off, 0, count);
             if (old.pointer != 0)
-                _copy_update_construct(_self.size, old.pointer + off, old.pointer + old.size,
-                                       old.size - off);
+                _self.insert(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             return _self.pointer + off;
         }
         iterator insert(const_iterator i, const_reference value) { return emplace(i, value); }
@@ -492,11 +535,10 @@ namespace elsa
             _container old = _self.reserve(_self.size + count, off);
 
             if (old.pointer == 0)
-                _self_move_tail(_self.pointer + off, count);
-            _set_update_construct<false>(off, &value, count);
+                _self.move_tail(_self.pointer + off, count);
+            _self.set_range(off, &value, count);
             if (old.pointer != 0)
-                _copy_update_construct(_self.size, old.pointer + off, old.pointer + old.size,
-                                       old.size - off);
+                _self.insert(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             return _self.pointer + off;
         }
         template <class ItType>
@@ -507,11 +549,10 @@ namespace elsa
             _container old = _self.reserve(_self.size + total, off);
 
             if (old.pointer == 0)
-                _self_move_tail(_self.pointer + off, off);
-            _copy_update_construct(off, ibegin, iend, total);
+                _self.move_tail(_self.pointer + off, off);
+            _self.insert(off, ibegin, iend, total);
             if (old.pointer != 0)
-                _copy_update_construct(_self.size, old.pointer + off, old.pointer + old.size,
-                                       old.size - off);
+                _self.insert(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
 
             return _self.pointer + off;
         }
@@ -526,52 +567,55 @@ namespace elsa
             _container old = _self.reserve(_self.size + 1, off);
 
             if (old.pointer == 0) {
-                _self_move_tail(_self.pointer + off, 1);
+                _self.move_tail(_self.pointer + off, 1);
                 _self.pointer[off] = std::move(value_type(std::forward<Args>(args)...));
             } else {
-                new (_self.pointer + _self.size) value_type(std::forward<Args>(args)...);
-                _copy_update_construct(++_self.size, old.pointer + off, old.pointer + old.size,
-                                       old.size - off);
+                new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
+                _self.insert(++_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             }
             return _self.pointer + off;
         }
-        iterator erase(iterator i)
-        { /* incomplete */
-            return i;
-        }
-        iterator erase(const_iterator i)
-        { /* incomplete */
-            return i;
-        }
+        iterator erase(iterator i) { return erase(i, std::next(i)); }
+        iterator erase(const_iterator i) { return erase(i, std::next(i)); }
         iterator erase(iterator ibegin, iterator iend)
-        { /* incomplete */
-            return ibegin;
+        {
+            return erase(const_iterator(ibegin.get()), const_iterator(iend.get()));
         }
         iterator erase(const_iterator ibegin, const_iterator iend)
-        { /* incomplete */
-            return ibegin;
+        {
+            difference_type offset = ibegin - _self.pointer;
+            difference_type count = iend - ibegin;
+            _self.move_tail(iend - _self.pointer, -count);
+            _self.destruct_until(_self.size - count);
+            return _self.pointer + offset;
         }
         template <class... Args>
         reference emplace_back(Args&&... args)
         {
             _self.reserve(_self.size + 1);
-            new (_self.pointer + _self.size) value_type(std::forward<Args>(args)...);
+            new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
             return _self.pointer[_self.size++];
         }
         void push_back(const_reference value) { emplace_back(value); }
         void push_back(value_type&& value) { emplace_back(std::move(value)); }
-        void pop_back()
-        { /* incomplete */
-        }
+        void pop_back() { _self.destruct_until(_self.size - 1); }
         void resize(size_type count)
-        { /* incomplete */
+        {
+            if (count <= _self.size) {
+                _self.destruct_until(count);
+                return;
+            }
+            _self.set_range(_self.size, 0, count - _self.size);
         }
         void resize(size_type count, const_reference value)
-        { /* incomplete */
+        {
+            if (count <= _self.size) {
+                _self.destruct_until(count);
+                return;
+            }
+            _self.set_range(_self.size, &value, count - _self.size);
         }
-        void swap(self_type& o) noexcept
-        { /* incomplete */
-        }
+        void swap(self_type& o) noexcept { std::swap(_self, o._self); }
     };
 
     template <class T>
