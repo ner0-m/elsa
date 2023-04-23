@@ -12,12 +12,6 @@ DISABLE_WARNING_SIGN_CONVERSION
 #include <thrust/universal_vector.h>
 DISABLE_WARNING_POP
 
-/*
- *  implement MemoryResource reference counting!
- *  What of thrust uses this container. Are variables passed to thrust? Could issues arise?
- *  In MemoryResouce mem-copy, decide if it makes sense to move in userspace or do call
- */
-
 namespace elsa
 {
     namespace type_tags
@@ -51,11 +45,9 @@ namespace elsa
         using self_type = ContiguousPointer<Type>;
 
         using pointer = Type*;
-        using const_pointer = const Type*;
 
         using value_type = std::remove_cv_t<Type>;
         using reference = Type&;
-        using const_reference = const Type&;
         using size_type = size_t;
         using difference_type = ptrdiff_t;
         using iterator_category = std::random_access_iterator_tag;
@@ -90,7 +82,7 @@ namespace elsa
         bool operator==(const self_type& p) const { return _where == p._where; }
         bool operator!=(const self_type& p) const { return !(*this == p); }
         reference operator*() const { return *_where; }
-        reference operator->() const { return *_where; }
+        pointer operator->() const { return _where; }
         self_type& operator++()
         {
             ++_where;
@@ -236,14 +228,14 @@ namespace elsa
     private:
         struct _container {
         public:
-            mr::MemoryResource* resource = 0;
+            mr::MRRef resource;
             raw_pointer pointer = 0;
             size_type size = 0;
             size_type capacity = 0;
 
         public:
             _container() {}
-            _container(mr::MemoryResource* r, raw_pointer p, size_type s, size_type c)
+            _container(const mr::MRRef& r, raw_pointer p, size_type s, size_type c)
             {
                 resource = r;
                 pointer = p;
@@ -287,7 +279,7 @@ namespace elsa
                         pointer[--size].~value_type();
                 }
             }
-            _container swap(mr::MemoryResource* mr, raw_pointer p, size_type sz, size_type cp)
+            _container swap(const mr::MRRef& mr, raw_pointer p, size_type sz, size_type cp)
             {
                 _container old{resource, pointer, size, capacity};
                 resource = mr;
@@ -311,11 +303,11 @@ namespace elsa
              * returns null-container or old container on relocation in case of a
              * relocation, this container will have a size of 'copy'
              */
-            _container reserve(size_type count, size_type move, mr::MemoryResource* mr = 0)
+            _container reserve(size_type count, size_type move, const mr::MRRef& mr = mr::MRRef())
             {
-                if (count <= capacity && mr == 0)
+                if (count <= capacity && !mr.valid())
                     return _container();
-                mr::MemoryResource* new_mr = mr == 0 ? resource : mr;
+                mr::MRRef new_mr = mr.valid() ? mr : resource;
 
                 /* check if this is a noninitial reserving for a growing size in which
                  *   case the capacity should not just satisfy the request but by some form
@@ -499,47 +491,47 @@ namespace elsa
         _container _self;
 
     public:
-        /* resource of null will take mr::defaultInstance */
-        ContiguousStorage_(mr::MemoryResource* mr = 0)
+        /* invalid resource will take mr::defaultInstance */
+        ContiguousStorage_(const mr::MRRef& mr = mr::MRRef())
         {
-            if ((_self.resource = mr) == 0)
+            if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
         }
-        explicit ContiguousStorage_(size_type count, mr::MemoryResource* mr = 0)
+        explicit ContiguousStorage_(size_type count, const mr::MRRef& mr = mr::MRRef())
         {
-            if ((_self.resource = mr) == 0)
+            if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
 
             _self.set_range(0, 0, count);
         }
         explicit ContiguousStorage_(size_type count, const_reference init,
-                                    mr::MemoryResource* mr = 0)
+                                    const mr::MRRef& mr = mr::MRRef())
         {
-            if ((_self.resource = mr) == 0)
+            if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
 
             _self.set_range(0, &init, count);
         }
         template <class ItType>
-        ContiguousStorage_(ItType ibegin, ItType iend, mr::MemoryResource* mr = 0)
+        ContiguousStorage_(ItType ibegin, ItType iend, const mr::MRRef& mr = mr::MRRef())
         {
-            if ((_self.resource = mr) == 0)
+            if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
 
             _self.insert_range(0, ibegin, iend, std::distance(ibegin, iend));
         }
-        ContiguousStorage_(std::initializer_list<value_type> l, mr::MemoryResource* mr = 0)
+        ContiguousStorage_(std::initializer_list<value_type> l, const mr::MRRef& mr = mr::MRRef())
         {
-            if ((_self.resource = mr) == 0)
+            if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
 
             _self.insert_range(0, l.begin(), l.end(), l.size());
         }
 
-        /* resource of null will take s::resouce */
-        ContiguousStorage_(const self_type& s, mr::MemoryResource* mr = 0)
+        /* invalid resource will take s::resouce */
+        ContiguousStorage_(const self_type& s, const mr::MRRef& mr = mr::MRRef())
         {
-            if ((_self.resource = mr) == 0)
+            if (!(_self.resource = mr).valid())
                 _self.resource = s._self.resource;
 
             _self.insert_range(0, s._self.pointer, s._self.end_ptr(), s._self.size);
@@ -549,12 +541,14 @@ namespace elsa
         ~ContiguousStorage_() = default;
 
     public:
-        mr::MemoryResource* resource() const { return _self.resource; }
-        void swap_resource(mr::MemoryResource* mr)
+        /* invalid resource will take mr::defaultInstance */
+        mr::MRRef resource() const { return _self.resource; }
+        void swap_resource(const mr::MRRef& mr)
         {
-            if (mr == _self.resource)
+            mr::MRRef actual = mr.valid() ? mr : mr::defaultInstance();
+            if (actual == _self.resource)
                 return;
-            _self.reserve(0, _self.size, mr);
+            _self.reserve(0, _self.size, actual);
         }
 
         /* incoming resource will be used */
@@ -581,37 +575,37 @@ namespace elsa
         }
 
         /* current resource will be used */
-        void assign_default(size_type count, mr::MemoryResource* mr = 0)
+        void assign_default(size_type count, const mr::MRRef& mr = mr::MRRef())
         {
-            if (mr != 0)
+            if (mr.valid())
                 _self.reserve(count, 0, mr);
 
             _self.set_range(0, 0, count);
             _self.destruct_until(count);
         }
-        void assign(size_type count, const_reference init, mr::MemoryResource* mr = 0)
+        void assign(size_type count, const_reference init, const mr::MRRef& mr = mr::MRRef())
         {
-            if (mr != 0)
+            if (mr.valid())
                 _self.reserve(count, 0, mr);
 
             _self.set_range(0, &init, count);
             _self.destruct_until(count);
         }
         template <class ItType>
-        void assign(ItType ibegin, ItType iend, mr::MemoryResource* mr = 0)
+        void assign(ItType ibegin, ItType iend, const mr::MRRef& mr = mr::MRRef())
         {
             size_type count = std::distance(ibegin, iend);
-            if (mr != 0)
+            if (mr.valid())
                 _self.reserve(count, 0, mr);
 
             _self.insert_range(0, ibegin, iend, count);
             _self.destruct_until(count);
         }
-        void assign(std::initializer_list<value_type> l, mr::MemoryResource* mr = 0)
+        void assign(std::initializer_list<value_type> l, const mr::MRRef& mr = mr::MRRef())
         {
             assign(l.begin(), l.end(), mr);
         }
-        void assign(const self_type& s, mr::MemoryResource* mr = 0)
+        void assign(const self_type& s, const mr::MRRef& mr = mr::MRRef())
         {
             assign(s._self.pointer, s._self.end_ptr(), mr);
         }
@@ -765,7 +759,7 @@ namespace elsa
     };
 
     template <class T>
-    // using ContiguousStorage = ContiguousStorage_<T, type_tags::uninitialized>;
-    using ContiguousStorage = thrust::universal_vector<T>;
+    using ContiguousStorage = ContiguousStorage_<T, type_tags::uninitialized>;
+    // using ContiguousStorage = thrust::universal_vector<T>;
 
 } // namespace elsa
