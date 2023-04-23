@@ -17,8 +17,8 @@ namespace elsa
     namespace type_tags
     {
         /*
-         *   MemHandle: use memory-transfer functions to process copy/move
-         *   UnInit: skip default initialization and destruction
+         *  MemHandle: use memory-transfer functions to process copy/move
+         *  UnInit: skip default initialization and destruction
          */
         template <bool MemHandle, bool UnInit>
         struct tag_template {
@@ -759,7 +759,6 @@ namespace elsa
     };
 
     template <class T>
-    using ContiguousStorage = ContiguousStorage_<T, type_tags::uninitialized>;
-    // using ContiguousStorage = thrust::universal_vector<T>;
-
+    // using ContiguousStorage = ContiguousStorage_<T, type_tags::uninitialized>;
+    using ContiguousStorage = thrust::universal_vector<T>;
 } // namespace elsa

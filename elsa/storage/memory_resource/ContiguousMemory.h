@@ -6,6 +6,10 @@
  *  TODO:
  *  What of thrust uses this container. Are variables passed to thrust? Could issues arise?
  *  In MemoryResouce mem-copy, decide if it makes sense to move in userspace or do call
+ *
+ *  Implement default instance
+ *  Insert usage of ContiguousStorage
+ *  Rename MemoryResource to MemResInterface and MRRef to MemoryResource
  */
 
 namespace elsa::mr
