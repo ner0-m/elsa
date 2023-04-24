@@ -1,6 +1,8 @@
 #pragma once
 #include "ContiguousMemory.h"
 
+// TODO: find a way to determine the presence of cuda
+#if 0
 namespace elsa::mr
 {
     class UniversalResource : public MemResInterface
@@ -18,3 +20,4 @@ namespace elsa::mr
         void setMemory(void* ptr, const void* src, size_t stride, size_t count) noexcept override;
     };
 } // namespace elsa::mr
+#endif
