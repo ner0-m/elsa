@@ -1,5 +1,6 @@
 #include "PrimitiveResource.h"
 
+#include "BitUtil.h"
 #include <memory>
 #include <cstdlib>
 #include <cstring>
@@ -11,24 +12,12 @@ namespace elsa::mr
         return MemoryResource::MakeRef(new PrimitiveResource());
     }
 
-    // alignment must be a power of 2
-    static size_t alignDown(size_t value, size_t alignment)
-    {
-        return value & ~(alignment - 1);
-    }
-
-    // alignment must be a power of 2
-    static size_t alignUp(size_t value, size_t alignment)
-    {
-        return alignDown(value + alignment - 1, alignment);
-    }
-
     void* PrimitiveResource::allocate(size_t size, size_t alignment)
     {
         if (size == 0) {
             ++size;
         }
-        if ((alignment == 0) || (alignment & (alignment - 1))) {
+        if (!isPowerOfTwo(alignment)) {
             throw std::bad_alloc();
         }
 
