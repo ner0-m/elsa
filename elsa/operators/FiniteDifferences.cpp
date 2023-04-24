@@ -128,7 +128,7 @@ namespace elsa
 #pragma omp for nowait
             for (index_t id = 0; id < sizeOfDomain; ++id) {
                 index_t icCount = (id % modulus) / divisor; //_domainDescriptor.index(id, ic);
-                index_t ir = id + _dimCounter[currDim] * _coordDelta[currDim];
+                index_t ir = id + _dimCounter[currDim] * sizeOfDomain;
 
                 // store result depending on mode
                 switch (type) {
