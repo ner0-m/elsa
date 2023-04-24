@@ -55,7 +55,7 @@ namespace elsa::mr
         return ptr == alignDown(ptr, alignment);
     }
 
-    PoolResource::PoolResource(MRRef upstream, PoolResourceConfig config)
+    PoolResource::PoolResource(MemoryResource upstream, PoolResourceConfig config)
         : _upstream{upstream},
           _config{config},
           _freeListNonEmpty{0},

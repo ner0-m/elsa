@@ -1,7 +1,7 @@
 #include "doctest/doctest.h"
 
 #include "memory_resource/ContiguousMemory.h"
-#include "memory_resource/UniversalResource.h"
+#include "memory_resource/PrimitiveResource.h"
 #include "memory_resource/PoolResource.h"
 #include "Assertions.h"
 
@@ -12,24 +12,24 @@
 using namespace elsa::mr;
 
 template <typename T>
-static MRRef provideResource()
+static MemoryResource provideResource()
 {
     ENSURE(false);
     return defaultInstance();
 }
 
 template <>
-MRRef provideResource<UniversalResource>()
+MemoryResource provideResource<PrimitiveResource>()
 {
-    return MRRef::MakeRef(new UniversalResource());
+    return MemoryResource::MakeRef(new PrimitiveResource());
 }
 
 template <>
-MRRef provideResource<PoolResource>()
+MemoryResource provideResource<PoolResource>()
 {
-    UniversalResource* upstream = new UniversalResource();
-    MRRef upstreamRef = MRRef::MakeRef(upstream);
-    return MRRef::MakeRef(new PoolResource(upstreamRef));
+    PrimitiveResource* upstream = new PrimitiveResource();
+    MemoryResource upstreamRef = MemoryResource::MakeRef(upstream);
+    return MemoryResource::MakeRef(new PoolResource(upstreamRef));
 }
 
 static size_t sizeForIndex(size_t i)
@@ -43,11 +43,11 @@ static size_t sizeForIndex(size_t i)
 
 TEST_SUITE_BEGIN("memoryresources");
 
-TEST_CASE_TEMPLATE("Memory resource", T, UniversalResource, PoolResource)
+TEST_CASE_TEMPLATE("Memory resource", T, PrimitiveResource, PoolResource)
 {
     GIVEN("Check overlap")
     {
-        MRRef resource = provideResource<T>();
+        MemoryResource resource = provideResource<T>();
         unsigned char* ptrs[100];
         for (int i = 0; i < 100; i++) {
             ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(256, 4));
@@ -61,7 +61,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, UniversalResource, PoolResource)
 
     GIVEN("Check alignment")
     {
-        MRRef resource = provideResource<T>();
+        MemoryResource resource = provideResource<T>();
 
         void* ptrs[12];
         for (size_t i = 0, alignment = 1; i < 12; i++, alignment <<= 1) {
@@ -81,7 +81,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, UniversalResource, PoolResource)
         std::uniform_int_distribution<size_t> dist;
         rng.seed(0xdeadbeef);
 
-        MRRef resource = provideResource<T>();
+        MemoryResource resource = provideResource<T>();
         unsigned char* ptrs[100];
         for (size_t i = 0; i < 100; i++) {
             size_t size = sizeForIndex(i);
@@ -103,7 +103,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, UniversalResource, PoolResource)
 
     GIVEN("Large allocation")
     {
-        MRRef resource = provideResource<T>();
+        MemoryResource resource = provideResource<T>();
         // allocation may fail by std::bad_alloc, just as long as it does not fail in some
         // unspecified way
         try {
@@ -113,13 +113,13 @@ TEST_CASE_TEMPLATE("Memory resource", T, UniversalResource, PoolResource)
             ptr[0] = 'A';
             ptr[1 << 29] = 'B';
             resource->deallocate(ptr, 1 << 30, 32);
-        } catch (std::bad_alloc e) {
+        } catch (std::bad_alloc& e) {
         }
     }
 
     GIVEN("Empty allocation")
     {
-        MRRef resource = provideResource<T>();
+        MemoryResource resource = provideResource<T>();
         unsigned char* ptr = reinterpret_cast<unsigned char*>(resource->allocate(0, 32));
         // it must not be a nullptr (similar to new)
         CHECK_NE(ptr, nullptr);
@@ -128,7 +128,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, UniversalResource, PoolResource)
 
     GIVEN("Empty allocation")
     {
-        MRRef resource = provideResource<T>();
+        MemoryResource resource = provideResource<T>();
         unsigned char* ptr = reinterpret_cast<unsigned char*>(resource->allocate(0, 32));
         // it must not be a nullptr (similar to new)
         CHECK_NE(ptr, nullptr);
@@ -137,7 +137,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, UniversalResource, PoolResource)
 
     GIVEN("Invalid alignment")
     {
-        MRRef resource = provideResource<T>();
+        MemoryResource resource = provideResource<T>();
         CHECK_THROWS_AS(resource->allocate(32, 0), std::bad_alloc);
         CHECK_THROWS_AS(resource->allocate(32, 54), std::bad_alloc);
         CHECK_THROWS_AS(resource->allocate(32, 1023), std::bad_alloc);

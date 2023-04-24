@@ -50,10 +50,10 @@ namespace elsa::mr
         };
     } // namespace pool_resource
 
-    class PoolResource : public MemoryResource
+    class PoolResource : public MemResInterface
     {
     private:
-        MRRef _upstream;
+        MemoryResource _upstream;
         PoolResourceConfig _config;
         std::unordered_map<void*, pool_resource::Block*> _addressToBlock;
         std::vector<pool_resource::Block*> _freeLists;
@@ -66,7 +66,7 @@ namespace elsa::mr
         void expandPool();
 
     public:
-        PoolResource(MRRef upstream,
+        PoolResource(MemoryResource upstream,
                      PoolResourceConfig config = PoolResourceConfig::defaultConfig());
 
         ~PoolResource() = default;
