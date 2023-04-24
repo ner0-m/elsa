@@ -1,59 +1,9 @@
 #include "PoolResource.h"
-#include <bit>
+#include "BitUtil.h"
 #include "Assertions.h"
 
 namespace elsa::mr
 {
-    template <typename T>
-    static T bit_width(T t)
-    {
-        // TODO: use std::bit_width when C++20 becomes available, or find a useful bit hack for this
-        T c = 0;
-        while (t) {
-            t >>= 1;
-            ++c;
-        }
-        return c;
-    }
-
-    template <typename T>
-    static T log2Floor(T t)
-    {
-        return bit_width(t) - 1;
-    }
-
-    // does not work for t == 0
-    template <typename T>
-    static T log2Ceil(T t)
-    {
-        return bit_width(t - 1);
-    }
-
-    // not zero indexed! lowestSetBit(0) == 0!
-    template <typename T>
-    static T lowestSetBit(T t)
-    {
-        return bit_width(t & ~(t - 1));
-    }
-
-    // alignment must be a power of 2
-    static void* alignDown(void* ptr, size_t alignment)
-    {
-        return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) & ~(alignment - 1));
-    }
-
-    // alignment must be a power of 2
-    static void* alignUp(void* ptr, size_t alignment)
-    {
-        return alignDown(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + alignment - 1),
-                         alignment);
-    }
-
-    // alignment must be a power of 2
-    static bool checkAlignment(void* ptr, size_t alignment)
-    {
-        return ptr == alignDown(ptr, alignment);
-    }
 
     PoolResource::PoolResource(MemoryResource upstream, PoolResourceConfig config)
         : _upstream{upstream},
@@ -74,7 +24,7 @@ namespace elsa::mr
             return _upstream->allocate(size, alignment);
         }
 
-        if ((alignment == 0) || (alignment & (alignment - 1))) {
+        if (!isPowerOfTwo(alignment)) {
             throw std::bad_alloc();
         }
 
