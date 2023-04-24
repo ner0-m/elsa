@@ -1746,6 +1746,37 @@ TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", da
     }
 }
 
+TEST_CASE_TEMPLATE("DataContainer: minimum/maximum", data_t, float, double)
+{
+    GIVEN("Some container")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 3, 3;
+        VolumeDescriptor dd(numCoeff);
+        Vector_t<data_t> data(dd.getNumberOfCoefficients());
+        data << 1, -1, 2, -2, 3, -3, -4, 5, 10;
+        DataContainer<data_t> dc(dd, data);
+
+        WHEN("Using minimum")
+        {
+            Vector_t<data_t> res(dd.getNumberOfCoefficients());
+            res << 1, -1, 2, -2, 2, -3, -4, 2, 2;
+            DataContainer<data_t> dcRes(dd, res);
+
+            REQUIRE(isCwiseApprox(dcRes, minimum(dc, 2)));
+        }
+
+        WHEN("Using maximum")
+        {
+            Vector_t<data_t> res(dd.getNumberOfCoefficients());
+            res << 1, 1, 2, 1, 3, 1, 1, 5, 10;
+            DataContainer<data_t> dcRes(dd, res);
+
+            REQUIRE(isCwiseApprox(dcRes, maximum(dc, 1)));
+        }
+    }
+}
+
 // "instantiate" the test templates for CPU types
 TEST_CASE_TEMPLATE_APPLY(datacontainer_construction, CPUTypeTuple);
 TEST_CASE_TEMPLATE_APPLY(datacontainer_reduction, CPUTypeTuple);
