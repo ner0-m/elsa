@@ -314,15 +314,15 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                     CAPTURE(i);
                     if constexpr (std::is_arithmetic_v<data_t>) {
                         if (randVec[i] < mean) {
-                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
-                        } else {
                             REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
                         }
                     } else {
                         if (elsa::abs(randVec[i]) < elsa::abs(mean)) {
-                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
-                        } else {
                             REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
                         }
                     }
                 }
@@ -331,15 +331,15 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                 for (index_t i = 0; i < dc.getSize(); ++i) {
                     if constexpr (std::is_arithmetic_v<data_t>) {
                         if (randVec[i] > mean) {
-                            REQUIRE_UNARY(checkApproxEq(dcMaximum[i], mean));
-                        } else {
                             REQUIRE_UNARY(checkApproxEq(dcMaximum[i], randVec[i]));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMaximum[i], mean));
                         }
                     } else {
                         if (elsa::abs(randVec[i]) < elsa::abs(mean)) {
-                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
-                        } else {
                             REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
                         }
                     }
                 }

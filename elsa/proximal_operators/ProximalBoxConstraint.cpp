@@ -1,3 +1,4 @@
+#include <iostream>
 #include "ProximalBoxConstraint.h"
 #include "DataContainer.h"
 
@@ -31,9 +32,9 @@ namespace elsa
         if (lower_.has_value() && upper_.has_value()) {
             prox = ::elsa::clip(v, *lower_, *upper_);
         } else if (lower_.has_value() && !upper_.has_value()) {
-            prox = ::elsa::minimum(v, *lower_);
+            prox = ::elsa::maximum(v, *lower_);
         } else if (!lower_.has_value() && upper_.has_value()) {
-            prox = ::elsa::maximum(v, *upper_);
+            prox = ::elsa::minimum(v, *upper_);
         } else {
             prox = v;
         }
