@@ -10,8 +10,9 @@ namespace elsa::rm
     namespace type_tags
     {
         /*
-         *  MemHandle: use memory-transfer functions to process copy/move
-         *  UnInit: skip default initialization and destruction
+         *  MemHandle:  use memory-transfer functions to process
+         *              copy/move and skip destruction
+         *  UnInit:     skip default initialization and destruction
          */
         template <bool MemHandle, bool UnInit>
         struct tag_template {
@@ -84,8 +85,8 @@ namespace elsa::rm
          *  corresponding resource and managed with the given type-tags.
          *  - The first 'size' number of values are at all times considered constructed.
          *  - Size will always be less or equal to capacity.
-         *  - A capacity of zero implies no allocation.
-         *  - A pointer of zero is the null-container
+         *  - A capacity of zero implies no allocation and therefore a null-pointer (vice versa).
+         *  - A pointer of zero is the null-container.
          */
         template <class Type, class TypeTag>
         struct ContContainer {
@@ -144,7 +145,7 @@ namespace elsa::rm
             raw_pointer end_ptr() const { return pointer + size; }
             void destruct_until(size_type count) noexcept
             {
-                if constexpr (!TypeTag::init)
+                if constexpr (!TypeTag::init || TypeTag::mem)
                     size = count;
                 else {
                     while (size > count)
@@ -186,7 +187,7 @@ namespace elsa::rm
                  *   case the capacity should not just satisfy the request but by some form
                  *   of equation to prevent to many reallocations */
                 size_type new_cap = std::max<size_type>(count, move);
-                if (pointer != 0 && new_cap > capacity) {
+                if (pointer != 0 && new_cap > capacity && capacity > 1) {
                     size_type min_cap = new_cap;
                     new_cap = capacity;
 
@@ -443,11 +444,20 @@ namespace elsa::rm
     } // namespace detail
 
     /*
-     *  ContiguousStorage behaves like stl-container except for in the exception case.
-     *    - Exceptions by type-specific functions: the object will remain in a valid state after the
-     *      exception, might however be in a modified state (i.e. partially inserted...)
-     *    - Exceptions by the allocator will result in this container unmodified or
-     *      the operation fully performed.
+     *  ContiguousStorage behaves like an stl-container (std::vector) with the difference of
+     *      configuring its type behavior and allocations.
+     *    - Exceptions thrown by the type in the
+     *          default-constructor
+     *          move-constructor
+     *          copy-constructor
+     *          move-assignment operator
+     *          copy-assignment operator
+     *      or any iterators passed into this objects will leave the container
+     *      in a valid state (i.e. proper cleanup is ensured) but a modified state.
+     *    - For all other exceptions, atomic transactional behavior is guaranteed by the container.
+     *    - Note: In case of memory movement operations being enabled, the memory resource copy/move
+     *      operations are considered the type's move/copy constructors/assignment operators.
+     *      Hence the same exception rules apply here.
      *
      *  Each ContiguousStorage is associated with a rm::MemoryResource (polymorphic allocators).
      *  All allocations and memory-operations are performed on the currently used resource.

@@ -2,6 +2,8 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <cinttypes>
+#include <limits>
 
 template <typename T>
 static T bit_width(T t)

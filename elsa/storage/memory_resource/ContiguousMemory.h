@@ -10,8 +10,6 @@
  *
  *  Insert usage of ContiguousStorage
  *
- *  Update specification to not require copy/move/set-mem to be noexcept?
- *      (its like a throwing move/copy constructor?)
  *  implement test cases
  */
 
@@ -46,10 +44,9 @@ namespace elsa::mr
                                size_t newAlignment) = 0;
         virtual void deallocate(void* ptr, size_t size, size_t alignment) = 0;
 
-        virtual void copyMemory(void* ptr, const void* src, size_t size) noexcept = 0;
-        virtual void moveMemory(void* ptr, const void* src, size_t size) noexcept = 0;
-        virtual void setMemory(void* ptr, const void* src, size_t stride,
-                               size_t count) noexcept = 0;
+        virtual void copyMemory(void* ptr, const void* src, size_t size) = 0;
+        virtual void moveMemory(void* ptr, const void* src, size_t size) = 0;
+        virtual void setMemory(void* ptr, const void* src, size_t stride, size_t count) = 0;
     };
 
     /*

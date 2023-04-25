@@ -68,17 +68,16 @@ namespace elsa::mr
         return false;
     }
 
-    void UniversalResource::copyMemory(void* ptr, const void* src, size_t size) noexcept
+    void UniversalResource::copyMemory(void* ptr, const void* src, size_t size)
     {
         //TODO
     }
 
-    void UniversalResource::moveMemory(void* ptr, const void* src, size_t size) noexcept
+    void UniversalResource::moveMemory(void* ptr, const void* src, size_t size)
     {
         // TODO
     }
-    void UniversalResource::setMemory(void* ptr, const void* src, size_t stride,
-                                      size_t count) noexcept
+    void UniversalResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
     {
         // TODO
     }
