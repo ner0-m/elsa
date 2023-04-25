@@ -9,8 +9,39 @@
 #include <random>
 #include <functional>
 #include <cstring>
+#include <mutex>
+#include <list>
 
 using namespace elsa::mr;
+
+bool failNextAlloc = false;
+
+void* operator new(size_t size)
+{
+    if (failNextAlloc) {
+        failNextAlloc = false;
+        throw std::bad_alloc{};
+    }
+
+    if (size == 0)
+        ++size; // don't malloc(0)
+
+    if (void* ptr = std::malloc(size))
+        return ptr;
+
+    throw std::bad_alloc{};
+}
+
+void operator delete(void* ptr)
+{
+    free(ptr);
+}
+
+void operator delete(void* ptr, size_t size)
+{
+    static_cast<void>(size);
+    free(ptr);
+}
 
 template <typename T>
 static MemoryResource provideResource()
@@ -24,7 +55,7 @@ MemoryResource provideResource<PoolResource>()
 {
     HostStandardResource* upstream = new HostStandardResource();
     MemoryResource upstreamRef = MemoryResource::MakeRef(upstream);
-    return MemoryResource::MakeRef(new PoolResource(upstreamRef));
+    return PoolResource::make(upstreamRef);
 }
 
 template <>
@@ -42,6 +73,45 @@ static size_t sizeForIndex(size_t i)
     return std::max(size, static_cast<size_t>(1));
 }
 
+// call this to check whether the basic allocator functionality still works,
+// i.e. that the metadata is still intact
+// (e.g. after peforming some special operation)
+static void testNonoverlappingAllocations(MemoryResource resource)
+{
+    const size_t NUM_ALLOCATIONS = 128;
+    std::vector<std::pair<void*, size_t>> allocations;
+
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<size_t> dist;
+    rng.seed(0xdeadbeef);
+
+    for (size_t i = 0; i < NUM_ALLOCATIONS; i++) {
+        // first pick the bin at random
+        size_t size = (2 << (dist(rng) % 17));
+        // then pick a random size within that bin
+        size |= (size - 1) & dist(rng);
+        void* ptr = resource->allocate(size, 4);
+        allocations.push_back({ptr, size});
+    }
+
+    std::sort(allocations.begin(), allocations.end(), [](auto& a, auto& b) {
+        return reinterpret_cast<uintptr_t>(a.first) < reinterpret_cast<uintptr_t>(b.first);
+    });
+
+    // check if any allocations overlap
+    for (size_t i = 1; i < NUM_ALLOCATIONS; i++) {
+        auto [ptr1, size] = allocations[i - 1];
+        auto [ptr2, _] = allocations[i];
+        CHECK_LE(reinterpret_cast<uintptr_t>(ptr1) + size, reinterpret_cast<uintptr_t>(ptr2));
+    }
+
+    for (size_t i = 0; i < NUM_ALLOCATIONS; i++) {
+        auto [ptr, size] = allocations[i];
+        resource->deallocate(ptr, size, 4);
+    }
+}
+
 TEST_SUITE_BEGIN("memoryresources");
 
 TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
@@ -56,6 +126,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
         }
         for (int i = 0; i < 100; i++) {
             CHECK_EQ(*ptrs[i], static_cast<unsigned char>(i));
+            CHECK_EQ(*(ptrs[i] + 255), static_cast<unsigned char>(i));
             resource->deallocate(ptrs[i], 256, 4);
         }
     }
@@ -142,6 +213,265 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
         CHECK_THROWS_AS(resource->allocate(32, 0), std::bad_alloc);
         CHECK_THROWS_AS(resource->allocate(32, 54), std::bad_alloc);
         CHECK_THROWS_AS(resource->allocate(32, 1023), std::bad_alloc);
+    }
+}
+
+TEST_CASE("Pool resource")
+{
+    class DummyResource : public MemResInterface
+    {
+    private:
+        void* _bumpPtr;
+        size_t _allocatedSize;
+
+    protected:
+        DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)}, _allocatedSize{0} {}
+        ~DummyResource() = default;
+
+    public:
+        static MemoryResource make() { return MemoryResource::MakeRef(new DummyResource()); }
+
+        void* allocate(size_t size, size_t alignment) override
+        {
+            static_cast<void>(alignment);
+            // this can certainly not be deref'd, as it is too large for a 48-bit sign-extended
+            // address
+            _allocatedSize += size;
+            void* ret = _bumpPtr;
+            _bumpPtr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(_bumpPtr) + size);
+            return ret;
+        }
+        void deallocate(void* ptr, size_t size, size_t alignment) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(alignment);
+            _allocatedSize -= size;
+        }
+        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(size);
+            static_cast<void>(alignment);
+            static_cast<void>(newSize);
+            return false;
+        }
+        void copyMemory(void* ptr, const void* src, size_t size) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(src);
+            static_cast<void>(size);
+        }
+        void setMemory(void* ptr, const void* src, size_t stride, size_t count) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(src);
+            static_cast<void>(stride);
+            static_cast<void>(count);
+        }
+        void moveMemory(void* ptr, const void* src, size_t size) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(src);
+            static_cast<void>(size);
+        }
+
+        size_t allocatedSize() { return _allocatedSize; }
+    };
+
+    GIVEN("Allocation untouched by resource")
+    {
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
+        unsigned char* ptrs[100];
+        for (int i = 0; i < 100; i++) {
+            ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(256, 4));
+        }
+        for (int i = 0; i < 100; i++) {
+            resource->deallocate(ptrs[i], 256, 4);
+        }
+        // nothing to check. if this test fails, it SEGFAULTs
+    }
+
+    GIVEN("Memory leak")
+    {
+        PoolResourceConfig config = PoolResourceConfig::defaultConfig();
+        // release memory to upstream immediately
+        config.setMaxCachedChunks(0);
+
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy, config);
+        unsigned char* ptrs[109];
+        for (int i = 0; i < 109; i++) {
+            ptrs[i] =
+                reinterpret_cast<unsigned char*>(resource->allocate((1 << (i % 19)) + 123, 4));
+        }
+        for (int i = 0, j = 0; i < 109; i++, j = (j + 311) % 109) {
+            // deallocate in different order
+            resource->deallocate(ptrs[j], (1 << (j % 19)) + 123, 4);
+        }
+        // check that there is no memory leak
+        size_t allocatedSize = dynamic_cast<DummyResource*>(dummy.get())->allocatedSize();
+        CHECK_EQ(allocatedSize, 0);
+    }
+
+    GIVEN("Resize growth")
+    {
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
+        void* ptr = resource->allocate(1234, 0x10);
+        CHECK(resource->tryResize(ptr, 1234, 0x10, 5678));
+        testNonoverlappingAllocations(resource);
+        resource->deallocate(ptr, 1234, 0x10);
+    }
+
+    GIVEN("Resize same size")
+    {
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
+        void* ptr = resource->allocate(1234, 0x10);
+        CHECK(resource->tryResize(ptr, 1234, 0x10, 1234));
+        // different size, but the effective size of the block is the same
+        CHECK(resource->tryResize(ptr, 1234, 0x10, 1233));
+        testNonoverlappingAllocations(resource);
+
+        resource->deallocate(ptr, 1234, 0x10);
+    }
+
+    GIVEN("Resize shrink")
+    {
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
+        void* ptr = resource->allocate(1234, 0x10);
+        // shrinking should always work for the pool allocator
+        CHECK(resource->tryResize(ptr, 1234, 0x10, 50));
+        testNonoverlappingAllocations(resource);
+
+        resource->deallocate(ptr, 1234, 0x10);
+    }
+
+    GIVEN("Resize failure")
+    {
+        // This test relies on internal allocator details, so that ptr2 is always allocated directly
+        // after the first
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
+        void* ptr = resource->allocate(1234, 0x10);
+        void* ptr2 = resource->allocate(1234, 0x10);
+        CHECK_FALSE(resource->tryResize(ptr, 1234, 0x10, 5678));
+        testNonoverlappingAllocations(resource);
+        resource->deallocate(ptr, 1234, 0x10);
+        resource->deallocate(ptr2, 1234, 0x10);
+    }
+
+    GIVEN("Heap allocation fail during PoolResource::allocate")
+    {
+        PoolResourceConfig config = PoolResourceConfig::defaultConfig();
+        // release memory to upstream immediately
+        config.setMaxCachedChunks(0);
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy, config);
+
+        void* ptrs[100];
+        for (int i = 0; i < 50; i++) {
+            ptrs[i] = resource->allocate(1234, 0x10);
+        }
+
+        failNextAlloc = true;
+
+        int exceptions = 0;
+        for (int i = 50; i < 100; i++) {
+            try {
+                ptrs[i] = resource->allocate(1234, 0x10);
+            } catch (std::bad_alloc& e) {
+                ++exceptions;
+                ptrs[i] = nullptr;
+            }
+        }
+        CHECK_EQ(exceptions, 1);
+
+        testNonoverlappingAllocations(resource);
+
+        for (int i = 0; i < 100; i++) {
+            resource->deallocate(ptrs[i], 1234, 0x10);
+        }
+
+        size_t allocatedSize = dynamic_cast<DummyResource*>(dummy.get())->allocatedSize();
+        CHECK_EQ(allocatedSize, 0);
+    }
+
+    GIVEN("PoolResource::deallocate without heap space")
+    {
+        PoolResourceConfig config = PoolResourceConfig::defaultConfig();
+        // release memory to upstream immediately
+        config.setMaxCachedChunks(0);
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy, config);
+
+        void* ptrs[100];
+        for (int i = 0; i < 100; i++) {
+            ptrs[i] = resource->allocate(1234, 0x10);
+        }
+
+        failNextAlloc = true;
+
+        for (int i = 0; i < 100; i++) {
+            resource->deallocate(ptrs[i], 1234, 0x10);
+        }
+
+        int* ptr = nullptr;
+        CHECK_THROWS(ptr = new int);
+        delete ptr;
+
+        // check that there is no memory leak
+        size_t allocatedSize = dynamic_cast<DummyResource*>(dummy.get())->allocatedSize();
+        CHECK_EQ(allocatedSize, 0);
+    }
+
+    GIVEN("PoolResource::tryResize without heap space")
+    {
+        PoolResourceConfig config = PoolResourceConfig::defaultConfig();
+        config.setMaxCachedChunks(0);
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy, config);
+
+        void* ptr = resource->allocate(0x1000, 0x10);
+
+        failNextAlloc = true;
+        CHECK_NOTHROW(resource->tryResize(ptr, 0x1000, 0x10, 0x10));
+        failNextAlloc = true;
+        CHECK_NOTHROW(resource->tryResize(ptr, 0x1000, 0x10, 0x10000));
+        failNextAlloc = false;
+        resource->deallocate(ptr, 0x1000, 0x10);
+
+        size_t allocatedSize = dynamic_cast<DummyResource*>(dummy.get())->allocatedSize();
+        CHECK_EQ(allocatedSize, 0);
+    }
+
+    GIVEN("Cache chunk")
+    {
+        PoolResourceConfig config = PoolResourceConfig::defaultConfig();
+        config.setChunkSize(0x100);
+        config.setMaxBlockSize(0x100);
+        config.setMaxCachedChunks(1);
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy, config);
+        DummyResource* dummyNonOwning = dynamic_cast<DummyResource*>(dummy.get());
+        {
+            void* ptr = resource->allocate(0x100, 0x1);
+            size_t allocatedSize = dummyNonOwning->allocatedSize();
+            resource->deallocate(ptr, 0x100, 0x1);
+            CHECK_EQ(allocatedSize, dummyNonOwning->allocatedSize());
+        }
+        {
+            void* ptr1 = resource->allocate(0x100, 0x1);
+            size_t sizeWithOneChunk = dummyNonOwning->allocatedSize();
+            void* ptr2 = resource->allocate(0x100, 0x1);
+            size_t sizeWithTwoChunks = dummyNonOwning->allocatedSize();
+            resource->deallocate(ptr1, 0x100, 0x1);
+            resource->deallocate(ptr2, 0x100, 0x1);
+            CHECK_LT(sizeWithOneChunk, sizeWithTwoChunks);
+            CHECK_EQ(sizeWithOneChunk, dummyNonOwning->allocatedSize());
+        }
     }
 }
 
