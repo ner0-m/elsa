@@ -62,8 +62,7 @@ namespace elsa::mr
         }
     }
 
-    bool UniversalResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize,
-                                      size_t newAlignment)
+    bool UniversalResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
     {
         return false;
     }
