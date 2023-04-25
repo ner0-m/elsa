@@ -1,6 +1,6 @@
 #include "PrimitiveResource.h"
-
 #include "BitUtil.h"
+
 #include <memory>
 #include <cstdlib>
 #include <cstring>
@@ -37,14 +37,12 @@ namespace elsa::mr
         std::free(ptr);
     }
 
-    bool PrimitiveResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize,
-                                      size_t newAlignment)
+    bool PrimitiveResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
     {
         static_cast<void>(ptr);
         static_cast<void>(size);
         static_cast<void>(alignment);
         static_cast<void>(newSize);
-        static_cast<void>(newAlignment);
         return false;
     }
 

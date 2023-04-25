@@ -1,4 +1,5 @@
 #include "PoolResource.h"
+
 #include "BitUtil.h"
 #include "Assertions.h"
 
@@ -142,8 +143,7 @@ namespace elsa::mr
         insertFreeBlock(block);
     }
 
-    bool PoolResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize,
-                                 size_t newAlignment)
+    bool PoolResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
     {
         return false;
     }

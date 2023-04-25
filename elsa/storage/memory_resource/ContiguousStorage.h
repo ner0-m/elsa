@@ -202,8 +202,7 @@ namespace elsa::rm
                 /* check if a relocation could suffice (not considered a container-change) */
                 if (pointer != 0 && new_mr == resource
                     && resource->tryResize(pointer, capacity * sizeof(value_type),
-                                           alignof(value_type), new_cap * sizeof(value_type),
-                                           alignof(value_type))) {
+                                           alignof(value_type), new_cap * sizeof(value_type))) {
                     capacity = new_cap;
                     return self_type();
                 }
