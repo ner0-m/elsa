@@ -48,11 +48,11 @@ namespace elsa::mr
         return false;
     }
 
-    void PrimitiveResource::copyMemory(void* ptr, const void* src, size_t size) noexcept
+    void PrimitiveResource::copyMemory(void* ptr, const void* src, size_t size)
     {
         std::memcpy(ptr, src, size);
     }
-    void PrimitiveResource::moveMemory(void* ptr, const void* src, size_t size) noexcept
+    void PrimitiveResource::moveMemory(void* ptr, const void* src, size_t size)
     {
         std::memmove(ptr, src, size);
     }
@@ -67,8 +67,7 @@ namespace elsa::mr
         }
     } // namespace detail
 
-    void PrimitiveResource::setMemory(void* ptr, const void* src, size_t stride,
-                                      size_t count) noexcept
+    void PrimitiveResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
     {
         if ((stride % 8) == 0)
             detail::typedFill<uint64_t>(ptr, src, count * (stride / 8));

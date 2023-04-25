@@ -148,17 +148,17 @@ namespace elsa::mr
         return false;
     }
 
-    void PoolResource::copyMemory(void* ptr, const void* src, size_t size) noexcept
+    void PoolResource::copyMemory(void* ptr, const void* src, size_t size)
     {
         _upstream->copyMemory(ptr, src, size);
     }
 
-    void PoolResource::setMemory(void* ptr, const void* src, size_t stride, size_t count) noexcept
+    void PoolResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
     {
         _upstream->setMemory(ptr, src, stride, count);
     }
 
-    void PoolResource::moveMemory(void* ptr, const void* src, size_t size) noexcept
+    void PoolResource::moveMemory(void* ptr, const void* src, size_t size)
     {
         _upstream->moveMemory(ptr, src, size);
     }
