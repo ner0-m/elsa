@@ -144,3 +144,5 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
         CHECK_THROWS_AS(resource->allocate(32, 1023), std::bad_alloc);
     }
 }
+
+TEST_SUITE_END();

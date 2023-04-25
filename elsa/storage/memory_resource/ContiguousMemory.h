@@ -92,7 +92,7 @@ namespace elsa::mr
      *  memory-resource from the last call to setDefaultInstance.
      *
      *  If setDefaultInstance has never been called, an instance
-     *      of PrimitiveResource will be instantiated.
+     *      of UniversalResource will be instantiated.
      */
     void setDefaultInstance(const MemoryResource& r);
     MemoryResource defaultInstance();

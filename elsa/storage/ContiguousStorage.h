@@ -13,6 +13,6 @@ DISABLE_WARNING_POP
 namespace elsa
 {
     template <class T>
-    // using ContiguousStorage = rm::ContiguousStorage<T, rm::type_tags::uninitialized>;
+    // using ContiguousStorage = mr::ContiguousStorage<T, rm::type_tags::uninitialized>;
     using ContiguousStorage = thrust::universal_vector<T>;
 } // namespace elsa
