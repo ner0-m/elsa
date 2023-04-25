@@ -1,8 +1,9 @@
 #include "doctest/doctest.h"
 
 #include "memory_resource/ContiguousMemory.h"
-#include "memory_resource/PrimitiveResource.h"
 #include "memory_resource/PoolResource.h"
+#include "memory_resource/UniversalResource.h"
+
 #include "Assertions.h"
 
 #include <random>
@@ -19,17 +20,17 @@ static MemoryResource provideResource()
 }
 
 template <>
-MemoryResource provideResource<PrimitiveResource>()
+MemoryResource provideResource<PoolResource>()
 {
-    return MemoryResource::MakeRef(new PrimitiveResource());
+    HostStandardResource* upstream = new HostStandardResource();
+    MemoryResource upstreamRef = MemoryResource::MakeRef(upstream);
+    return MemoryResource::MakeRef(new PoolResource(upstreamRef));
 }
 
 template <>
-MemoryResource provideResource<PoolResource>()
+MemoryResource provideResource<UniversalResource>()
 {
-    PrimitiveResource* upstream = new PrimitiveResource();
-    MemoryResource upstreamRef = MemoryResource::MakeRef(upstream);
-    return MemoryResource::MakeRef(new PoolResource(upstreamRef));
+    return MemoryResource::MakeRef(new UniversalResource());
 }
 
 static size_t sizeForIndex(size_t i)
@@ -43,7 +44,7 @@ static size_t sizeForIndex(size_t i)
 
 TEST_SUITE_BEGIN("memoryresources");
 
-TEST_CASE_TEMPLATE("Memory resource", T, PrimitiveResource, PoolResource)
+TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
 {
     GIVEN("Check overlap")
     {

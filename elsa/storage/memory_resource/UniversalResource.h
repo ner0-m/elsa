@@ -19,4 +19,11 @@ namespace elsa::mr
         void setMemory(void* ptr, const void* src, size_t stride, size_t count) override;
     };
 } // namespace elsa::mr
+#else
+#include "HostStandardResource.h"
+
+namespace elsa::mr
+{
+    using UniversalResource = HostStandardResource;
+}
 #endif

@@ -1,6 +1,6 @@
 #include "ContiguousMemory.h"
 
-#include "PrimitiveResource.h"
+#include "UniversalResource.h"
 
 #include <mutex>
 
@@ -110,7 +110,7 @@ namespace elsa::mr
     {
         std::lock_guard<std::mutex> _lock(mrSingletonLock);
         if (!mrSingleton.valid())
-            mrSingleton = MemoryResource::MakeRef(new PrimitiveResource());
+            mrSingleton = MemoryResource::MakeRef(new UniversalResource());
         return mrSingleton;
     }
 } // namespace elsa::mr

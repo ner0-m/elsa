@@ -1,4 +1,4 @@
-#include "PrimitiveResource.h"
+#include "HostStandardResource.h"
 #include "BitUtil.h"
 
 #include <memory>
@@ -7,12 +7,12 @@
 
 namespace elsa::mr
 {
-    MemoryResource PrimitiveResource::make()
+    MemoryResource HostStandardResource::make()
     {
-        return MemoryResource::MakeRef(new PrimitiveResource());
+        return MemoryResource::MakeRef(new HostStandardResource());
     }
 
-    void* PrimitiveResource::allocate(size_t size, size_t alignment)
+    void* HostStandardResource::allocate(size_t size, size_t alignment)
     {
         if (size == 0) {
             ++size;
@@ -30,14 +30,14 @@ namespace elsa::mr
         return ptr;
     }
 
-    void PrimitiveResource::deallocate(void* ptr, size_t size, size_t alignment)
+    void HostStandardResource::deallocate(void* ptr, size_t size, size_t alignment)
     {
         static_cast<void>(size);
         static_cast<void>(alignment);
         std::free(ptr);
     }
 
-    bool PrimitiveResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
+    bool HostStandardResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
     {
         static_cast<void>(ptr);
         static_cast<void>(size);
@@ -46,11 +46,11 @@ namespace elsa::mr
         return false;
     }
 
-    void PrimitiveResource::copyMemory(void* ptr, const void* src, size_t size)
+    void HostStandardResource::copyMemory(void* ptr, const void* src, size_t size)
     {
         std::memcpy(ptr, src, size);
     }
-    void PrimitiveResource::moveMemory(void* ptr, const void* src, size_t size)
+    void HostStandardResource::moveMemory(void* ptr, const void* src, size_t size)
     {
         std::memmove(ptr, src, size);
     }
@@ -65,7 +65,7 @@ namespace elsa::mr
         }
     } // namespace detail
 
-    void PrimitiveResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
+    void HostStandardResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
     {
         if ((stride % 8) == 0)
             detail::typedFill<uint64_t>(ptr, src, count * (stride / 8));

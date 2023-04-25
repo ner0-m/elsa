@@ -4,7 +4,7 @@
 
 namespace elsa::mr
 {
-    class PrimitiveResource : public MemResInterface
+    class HostStandardResource : public MemResInterface
     {
     public:
         static MemoryResource make();
