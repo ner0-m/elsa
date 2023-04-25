@@ -145,4 +145,116 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
     }
 }
 
+TEST_CASE("Pool resource")
+{
+    class DummyAllocator : public MemResInterface
+    {
+    private:
+        void* _bumpPtr;
+        size_t _allocatedSize;
+
+    public:
+        DummyAllocator() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)}, _allocatedSize{0} {}
+
+        void* allocate(size_t size, size_t alignment) override
+        {
+            static_cast<void>(alignment);
+            // this can certainly not be deref'd, as it is too large for a 48-bit sign-extended
+            // address
+            _allocatedSize += size;
+            void* ret = _bumpPtr;
+            _bumpPtr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(_bumpPtr) + (1 << 22));
+            return ret;
+        }
+        void deallocate(void* ptr, size_t size, size_t alignment) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(alignment);
+            _allocatedSize -= size;
+        }
+        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(size);
+            static_cast<void>(alignment);
+            static_cast<void>(newSize);
+            return false;
+        }
+        void copyMemory(void* ptr, const void* src, size_t size) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(src);
+            static_cast<void>(size);
+        }
+        void setMemory(void* ptr, const void* src, size_t stride, size_t count) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(src);
+            static_cast<void>(stride);
+            static_cast<void>(count);
+        }
+        void moveMemory(void* ptr, const void* src, size_t size) override
+        {
+            static_cast<void>(ptr);
+            static_cast<void>(src);
+            static_cast<void>(size);
+        }
+
+        size_t allocatedSize() { return _allocatedSize; }
+    };
+
+    GIVEN("Allocation untouched by resource")
+    {
+        MemoryResource dummy = MemoryResource::MakeRef(new DummyAllocator());
+        MemoryResource resource = MemoryResource::MakeRef(new PoolResource(dummy));
+        unsigned char* ptrs[100];
+        for (int i = 0; i < 100; i++) {
+            ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(256, 4));
+        }
+        for (int i = 0; i < 100; i++) {
+            resource->deallocate(ptrs[i], 256, 4);
+        }
+        // nothing to check. if this test fails, it SEGFAULTs
+    }
+
+    GIVEN("Memory leak")
+    {
+        MemoryResource dummy = MemoryResource::MakeRef(new DummyAllocator());
+        MemoryResource resource = MemoryResource::MakeRef(new PoolResource(dummy));
+        unsigned char* ptrs[109];
+        for (int i = 0; i < 109; i++) {
+            ptrs[i] =
+                reinterpret_cast<unsigned char*>(resource->allocate((1 << (i % 19)) + 123, 4));
+        }
+        for (int i = 0, j = 0; i < 109; i++, j = (j + 311) % 109) {
+            // deallocate in different order
+            resource->deallocate(ptrs[j], (1 << (j % 19)) + 123, 4);
+        }
+        size_t allocatedSize = dynamic_cast<DummyAllocator*>(dummy.get())->allocatedSize();
+        CHECK_EQ(allocatedSize, 0);
+    }
+
+    GIVEN("Resize success")
+    {
+        MemoryResource dummy = MemoryResource::MakeRef(new DummyAllocator());
+        MemoryResource resource = MemoryResource::MakeRef(new PoolResource(dummy));
+        void* ptr = resource->allocate(1234, 0x10);
+        CHECK(resource->tryResize(ptr, 1234, 0x10, 5678));
+        resource->deallocate(ptr, 1234, 0x10);
+    }
+
+    GIVEN("Resize failure")
+    {
+        // This test relies on internal allocator details, so that ptr2 is always allocated directly
+        // after the first
+        MemoryResource dummy = MemoryResource::MakeRef(new DummyAllocator());
+        MemoryResource resource = MemoryResource::MakeRef(new PoolResource(dummy));
+        void* ptr = resource->allocate(1234, 0x10);
+        void* ptr2 = resource->allocate(1234, 0x10);
+        CHECK_FALSE(resource->tryResize(ptr, 1234, 0x10, 5678));
+        resource->deallocate(ptr, 1234, 0x10);
+        resource->deallocate(ptr2, 1234, 0x10);
+    }
+}
+
 TEST_SUITE_END();

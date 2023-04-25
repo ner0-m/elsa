@@ -8,10 +8,13 @@ namespace elsa::mr
     struct PoolResourceConfig {
         size_t maxBlockSizeLog;
         size_t maxBlockSize;
+        // size of the large allocation chunks that are requested from the underlying allocator
+        size_t chunkSize;
 
         static PoolResourceConfig defaultConfig()
         {
-            return PoolResourceConfig{.maxBlockSizeLog = 20, .maxBlockSize = 1 << 20};
+            return PoolResourceConfig{
+                .maxBlockSizeLog = 20, .maxBlockSize = 1 << 20, .chunkSize = 1 << 22};
         }
     };
 
@@ -60,10 +63,12 @@ namespace elsa::mr
         uint64_t _freeListNonEmpty;
 
         void insertFreeBlock(pool_resource::Block* block);
+        void linkFreeBlock(pool_resource::Block* block);
         void unlinkFreeBlock(pool_resource::Block* block);
         size_t freeListIndexForFreeChunk(size_t size);
         size_t computeRealSize(size_t size);
         void expandPool();
+        void shrinkPool(void* chunk);
 
     public:
         PoolResource(MemoryResource upstream,
