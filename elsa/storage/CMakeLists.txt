@@ -1,6 +1,5 @@
 # list all the headers of the module
 set(MODULE_HEADERS
-
     # TODO: Add headers from functions/
     ContiguousStorage.h
     TypeTraits.hpp
@@ -31,10 +30,8 @@ set(MODULE_HEADERS
 )
 
 # list all the code files of the module
-set(MODULE_SOURCES memory_resource/ContiguousMemory.cpp
-    memory_resource/HostStandardResource.cpp
-    memory_resource/UniversalResource.cpp
-    memory_resource/PoolResource.cpp
+set(MODULE_SOURCES memory_resource/ContiguousMemory.cpp memory_resource/HostStandardResource.cpp
+                   memory_resource/UniversalResource.cpp memory_resource/PoolResource.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa::Thrust elsa_config)

@@ -5,26 +5,24 @@
 #include <iterator>
 #include <limits>
 
-namespace elsa::rm
+namespace elsa::mr
 {
     namespace type_tags
     {
-        /*
-         *  MemHandle:  use memory-transfer functions to process
-         *              copy/move and skip destruction
-         *  UnInit:     skip default initialization and destruction
-         */
-        template <bool MemHandle, bool UnInit>
-        struct tag_template {
-            static constexpr bool mem = MemHandle;
-            static constexpr bool init = !UnInit;
+        /* - usual type handling as expected */
+        struct complex {
         };
 
-        struct complex : tag_template<false, false> {
+        /* - use memory-transfer functions to process copy/move/set of larger ranges
+         * - single values or non-continuous iterators may still use assigning/construction
+         * - default-initialization will invoke the default constructor at least once
+         * - no destruction performed */
+        struct trivial {
         };
-        struct trivial : tag_template<true, false> {
-        };
-        struct uninitialized : tag_template<true, true> {
+
+        /* - additionally to trivial, no default construction is ever performed
+         * - other constructors may still be called */
+        struct uninitialized : public trivial {
         };
     } // namespace type_tags
 
@@ -80,6 +78,13 @@ namespace elsa::rm
             actual_pointer<std::conditional_t<has_get_member<Type>::has,
                                               typename has_get_member<Type>::type, void>>;
 
+        template <class Tag>
+        constexpr bool is_trivial = std::is_base_of<type_tags::trivial, Tag>::value;
+        template <class Tag>
+        constexpr bool is_uninitialized = std::is_base_of<type_tags::uninitialized, Tag>::value;
+        template <class Tag>
+        constexpr bool is_complex = std::is_base_of<type_tags::complex, Tag>::value;
+
         /*
          *  A container is a managing unit of 'capacity' number of types, allocated with the
          *  corresponding resource and managed with the given type-tags.
@@ -108,7 +113,12 @@ namespace elsa::rm
             size_type capacity = 0;
 
         public:
-            ContContainer() {}
+            ContContainer()
+            {
+                static_assert(
+                    is_trivial<TypeTag> || is_uninitialized<TypeTag> || is_complex<TypeTag>,
+                    "unknown type-tag encountered (only complex, trivial, uninitialized known)");
+            }
             ContContainer(const mr::MemoryResource& r, raw_pointer p, size_type s, size_type c)
             {
                 resource = r;
@@ -145,7 +155,7 @@ namespace elsa::rm
             raw_pointer end_ptr() const { return pointer + size; }
             void destruct_until(size_type count) noexcept
             {
-                if constexpr (!TypeTag::init || TypeTag::mem)
+                if constexpr (is_trivial<TypeTag>)
                     size = count;
                 else {
                     while (size > count)
@@ -212,7 +222,7 @@ namespace elsa::rm
                 self_type old = swap(new_mr, new_ptr, 0, new_cap);
 
                 /* either move-initialize the data or perform the memory move */
-                if constexpr (!TypeTag::mem) {
+                if constexpr (!is_trivial<TypeTag>) {
                     for (size_type i = 0; i < move; ++i) {
                         new (pointer + i) value_type(std::move(old.pointer[i]));
                         ++size;
@@ -228,7 +238,7 @@ namespace elsa::rm
             void move_tail(size_type where, difference_type diff)
             {
                 /* check if this move can be delegated to the mr */
-                if constexpr (TypeTag::mem) {
+                if constexpr (is_trivial<TypeTag>) {
                     resource->moveMemory(pointer + (where + diff), pointer + where,
                                          (size - where) * sizeof(value_type));
                     size = std::max<size_type>(size, (size - where) + diff);
@@ -278,7 +288,7 @@ namespace elsa::rm
                     insert_range(off, ibegin.get(), iend.get(), count);
 
                 /* check if the iterator is a pointer and can be delegated to mr */
-                else if constexpr (detail::actual_pointer<ItType>::value && TypeTag::mem) {
+                else if constexpr (detail::actual_pointer<ItType>::value && is_trivial<TypeTag>) {
                     resource->copyMemory(pointer + off, ibegin, count * sizeof(value_type));
                     size = std::max<size_type>(size, end);
                 }
@@ -312,9 +322,9 @@ namespace elsa::rm
                 /* set/update the range with the default constructor/value */
                 if (value == 0) {
                     /* check if the setting can be entirely skipped or delegated to the mr */
-                    if constexpr (!TypeTag::init)
+                    if constexpr (is_uninitialized<TypeTag>)
                         size = std::max<size_type>(size, end);
-                    else if constexpr (TypeTag::mem) {
+                    else if constexpr (is_trivial<TypeTag>) {
                         value_type tmp;
                         resource->setMemory(pointer + off, &tmp, sizeof(value_type), count);
                         size = std::max<size_type>(size, end);
@@ -331,7 +341,7 @@ namespace elsa::rm
                 }
 
                 /* set/update the range with the given value */
-                else if constexpr (TypeTag::mem) {
+                else if constexpr (is_trivial<TypeTag>) {
                     resource->setMemory(pointer + off, value, sizeof(value_type), count);
                     size = std::max<size_type>(size, end);
                 }
@@ -458,12 +468,12 @@ namespace elsa::rm
      *      operations are considered the type's move/copy constructors/assignment operators.
      *      Hence the same exception rules apply here.
      *
-     *  Each ContiguousStorage is associated with a rm::MemoryResource (polymorphic allocators).
+     *  Each ContiguousStorage is associated with a mr::MemoryResource (polymorphic allocators).
      *  All allocations and memory-operations are performed on the currently used resource.
      *  Changes to the current resource associated with this container:
      *    - copy-construct (optionally inherit the incoming resource)
      *    - move-construct (inherit the incoming resource)
-     *    - other-constructors (parameter-resource or rm::defaultInstance)
+     *    - other-constructors (parameter-resource or mr::defaultInstance)
      *    - swap_resource calls
      *    - copy-assignment or move-assignment operator (will inherit the incoming resource)
      *    - assign()/assign_default() calls (optional parameter-resource else unchanged)
@@ -772,4 +782,4 @@ namespace elsa::rm
         }
         void swap(self_type& o) noexcept { std::swap(_self, o._self); }
     };
-} // namespace elsa::rm
+} // namespace elsa::mr

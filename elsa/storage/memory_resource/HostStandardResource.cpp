@@ -4,6 +4,7 @@
 #include <memory>
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
 
 namespace elsa::mr
 {
