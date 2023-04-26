@@ -6,44 +6,33 @@
 
 #include <map>
 #include <set>
+#include <vector>
+#include <list>
 
 using namespace elsa::mr;
 
 struct TestStatsCounter {
+    bool intest = false;
+    MemoryResource resource;
+
     /* for complex type */
-    std::set<struct ComplexType*> constructed;
+    std::set<const struct ComplexType*> preTestConstructed;
+    std::set<const struct ComplexType*> constructed;
     size_t invalidDestruct = 0;
     size_t doubleConstruct = 0;
     size_t invalidAssign = 0;
-
-    /* trivial type */
-    size_t unexpectedDestruct = 0;
+    size_t invalidAccess = 0;
+    size_t destructCount = 0;
 
     /* uninitialized type */
-    size_t unexpectedDefConstruct = 0;
+    size_t defaultConstruct = 0;
 
     /* for allocator */
+    std::map<void*, std::pair<size_t, size_t>> preTestAllocated;
     std::map<void*, std::pair<size_t, size_t>> allocations;
     size_t invalidFree = 0;
     size_t memoryOperations = 0;
     size_t allocOperations = 0;
-
-public:
-    void reset(MemoryResource& res)
-    {
-        constructed.clear();
-        invalidDestruct = 0;
-        doubleConstruct = 0;
-        invalidAssign = 0;
-        unexpectedDestruct = 0;
-        unexpectedDefConstruct = 0;
-        invalidFree = 0;
-        memoryOperations = 0;
-        allocOperations = 0;
-        for (auto& alloc : allocations)
-            res->deallocate(alloc.first, alloc.second.first, alloc.second.second);
-        allocations.clear();
-    }
 };
 static TestStatsCounter testStats;
 
@@ -54,12 +43,11 @@ private:
 
 public:
     template <class T>
-    static T initValue()
+    static constexpr T initValue()
     {
         T t = 0;
-        uint8_t* p8 = reinterpret_cast<uint8_t*>(&t);
         for (size_t i = 0; i < sizeof(T); ++i)
-            p8[i] = InitByteValue;
+            t |= static_cast<T>(InitByteValue) << (i * 8);
         return t;
     }
 
@@ -67,6 +55,10 @@ private:
     void* allocate(size_t size, size_t alignment) override
     {
         void* p = HostStandardResource::allocate(size, alignment);
+        if (!testStats.intest) {
+            testStats.preTestAllocated.insert({p, {size, alignment}});
+            return p;
+        }
         testStats.allocations.insert({p, {size, alignment}});
         ++testStats.allocOperations;
 
@@ -78,6 +70,17 @@ private:
     }
     void deallocate(void* ptr, size_t size, size_t alignment) override
     {
+        if (!testStats.intest) {
+            auto it = testStats.preTestAllocated.find(ptr);
+            if (it != testStats.preTestAllocated.end()) {
+                size = it->second.first;
+                alignment = it->second.second;
+                testStats.preTestAllocated.erase(it);
+                HostStandardResource::deallocate(ptr, size, alignment);
+            }
+            return;
+        }
+
         auto it = testStats.allocations.find(ptr);
         if (it == testStats.allocations.end() || it->second.first != size
             || it->second.second != alignment)
@@ -107,6 +110,12 @@ public:
     static MemoryResource make() { return MemoryResource::MakeRef(new CheckedResource()); }
 };
 struct ComplexType {
+public:
+    using tag = type_tags::complex;
+    template <class T>
+    static constexpr bool is = std::is_same<T, ComplexType>::value;
+    static constexpr int initValue = 0;
+
 private:
     int _payload = 0;
 
@@ -115,17 +124,24 @@ private:
     {
         if (testStats.constructed.count(this) > 0)
             ++testStats.doubleConstruct;
-        else
+        else if (testStats.intest)
             testStats.constructed.insert(this);
+        else
+            testStats.preTestConstructed.insert(this);
     }
 
 public:
-    ComplexType() : _payload(0) { _checkConstruct(); }
+    ComplexType() { _checkConstruct(); }
     ComplexType(int i) : _payload(i) { _checkConstruct(); }
     ComplexType(const ComplexType& t) : _payload(t._payload) { _checkConstruct(); }
     ComplexType(ComplexType&& t) noexcept : _payload(t._payload) { _checkConstruct(); }
     ~ComplexType()
     {
+        if (!testStats.intest) {
+            testStats.preTestConstructed.erase(this);
+            return;
+        }
+
         auto it = testStats.constructed.find(this);
         if (it == testStats.constructed.end())
             ++testStats.invalidDestruct;
@@ -134,87 +150,105 @@ public:
     }
     ComplexType& operator=(const ComplexType& t)
     {
-        if (testStats.constructed.count(this) == 0) {
+        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
             ++testStats.invalidAssign;
-            testStats.constructed.insert(this);
-        }
-
         _payload = t._payload;
         return *this;
     }
     ComplexType& operator=(ComplexType&& t)
     {
-        if (testStats.constructed.count(this) == 0) {
+        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
             ++testStats.invalidAssign;
-            testStats.constructed.insert(this);
-        }
-
         _payload = t._payload;
         return *this;
     }
 
-    operator int() const { return _payload; }
+    operator int() const
+    {
+        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
+            ++testStats.invalidAccess;
+        return _payload;
+    }
 };
 struct TrivialType {
+public:
+    using tag = type_tags::trivial;
+    template <class T>
+    static constexpr bool is = std::is_same<T, TrivialType>::value;
+    static constexpr int initValue = 0;
+
 private:
     int _payload = 0;
 
 public:
-    TrivialType() : _payload(0) {}
+    TrivialType() = default;
     TrivialType(int i) : _payload(i) {}
-    ~TrivialType() { ++testStats.unexpectedDestruct; }
+    ~TrivialType() { ++testStats.destructCount; }
     TrivialType(const TrivialType&) = default;
     TrivialType(TrivialType&&) = default;
     TrivialType& operator=(const TrivialType&) = default;
     TrivialType& operator=(TrivialType&&) = default;
     operator int() const { return _payload; }
 };
-struct UninitializedType : public TrivialType {
+struct UninitType : public TrivialType {
 public:
-    UninitializedType() { ++testStats.unexpectedDefConstruct; }
-    UninitializedType(int i) : TrivialType(i) {}
-    UninitializedType(const UninitializedType&) = default;
-    UninitializedType(UninitializedType&&) = default;
-    UninitializedType& operator=(const UninitializedType&) = default;
-    UninitializedType& operator=(UninitializedType&&) = default;
+    using tag = type_tags::uninitialized;
+    template <class T>
+    static constexpr bool is = std::is_same<T, UninitType>::value;
+    static constexpr int initValue = CheckedResource::initValue<int>();
+
+public:
+    UninitType() { ++testStats.defaultConstruct; }
+    UninitType(int i) : TrivialType(i) {}
+    UninitType(const UninitType& t) = default;
+    UninitType(UninitType&&) = default;
+    UninitType& operator=(const UninitType&) = default;
+    UninitType& operator=(UninitType&&) = default;
 };
 
-template <class T>
-using TestTypeTag =
-    std::conditional_t<std::is_same<T, ComplexType>::value, type_tags::complex,
-                       std::conditional_t<std::is_same<T, TrivialType>::value, type_tags::trivial,
-                                          type_tags::uninitialized>>;
-template <class T>
-using TestStorage = ContiguousStorage<T, TestTypeTag<T>>;
-
-template <class T>
-static constexpr bool only_trivial =
-    std::is_base_of_v<type_tags::trivial, TestTypeTag<T>>
-    && !std::is_base_of_v<type_tags::uninitialized, TestTypeTag<T>>;
-template <class T>
-static constexpr bool only_uninitialized =
-    std::is_base_of_v<type_tags::uninitialized, TestTypeTag<T>>;
-
-TEST_SUITE_BEGIN("elsa::mr::ContiguousStorage");
-TYPE_TO_STRING(UninitializedType);
-TYPE_TO_STRING(TrivialType);
-TYPE_TO_STRING(ComplexType);
-
-static void VerifyTestStats(size_t destruct, MemoryResource& res)
+/* start measuring the stats / stop & verify */
+static void StartTestStats()
 {
+    testStats.constructed.clear();
+    testStats.allocations.clear();
+
+    testStats.invalidDestruct = 0;
+    testStats.doubleConstruct = 0;
+    testStats.invalidAssign = 0;
+    testStats.invalidAccess = 0;
+    testStats.destructCount = 0;
+    testStats.defaultConstruct = 0;
+    testStats.invalidFree = 0;
+    testStats.memoryOperations = 0;
+    testStats.allocOperations = 0;
+
+    testStats.intest = true;
+}
+static void VerifyTestStats(bool memOp)
+{
+    testStats.intest = false;
+
     CHECK_MESSAGE(testStats.constructed.empty(), "Not all objects were destructed");
     CHECK_MESSAGE(testStats.invalidDestruct == 0, "Uninitialized objects were destructed");
     CHECK_MESSAGE(testStats.doubleConstruct == 0, "Initialized objects were re-initialized");
     CHECK_MESSAGE(testStats.invalidAssign == 0, "Uninitialized objects were assigned");
-    CHECK_MESSAGE(testStats.unexpectedDestruct == destruct, "Trivial objects were destructed");
-    CHECK_MESSAGE(testStats.unexpectedDefConstruct == 0,
+    CHECK_MESSAGE(testStats.invalidAccess == 0, "Uninitialized objects were accessed");
+    CHECK_MESSAGE(testStats.destructCount == 0, "Unexpected destructs occurred");
+    if (memOp)
+        CHECK_MESSAGE(testStats.memoryOperations > 0, "Expected memory operation did not occur");
+    else
+        CHECK_MESSAGE(testStats.memoryOperations == 0, "Unexpected memory operation occurred");
+    CHECK_MESSAGE(testStats.defaultConstruct == 0,
                   "Uninitialized objects were default-constructed");
     CHECK_MESSAGE(testStats.allocations.empty(), "Memory leak detected");
     CHECK_MESSAGE(testStats.invalidFree == 0, "Invalid address was deallocated");
 
-    testStats.reset(res);
+    /* reset all missed allocations */
+    for (auto& alloc : testStats.allocations)
+        testStats.resource->deallocate(alloc.first, alloc.second.first, alloc.second.second);
 }
 
+/* count how many values in the container match the given requirements */
 template <class T>
 static size_t CheckAllEqual(const T& t, int val)
 {
@@ -225,48 +259,159 @@ static size_t CheckAllEqual(const T& t, int val)
     }
     return count;
 }
+template <class T, class It>
+static size_t CheckAllMatch(const T& t, It it)
+{
+    size_t count = 0;
+    auto tt = t.begin();
+    while (tt != t.end()) {
+        if (*tt == *it)
+            ++count;
+        ++tt;
+        ++it;
+    }
+    return count;
+}
 
-TEST_CASE_TEMPLATE("Constructors", T, UninitializedType, TrivialType, ComplexType)
+TEST_SUITE_BEGIN("memoryresources");
+TYPE_TO_STRING(ComplexType);
+TYPE_TO_STRING(TrivialType);
+TYPE_TO_STRING(UninitType);
+
+TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialType, UninitType)
 {
     MemoryResource mres = CheckedResource::make();
+    testStats.resource = mres;
+    using Storage = ContiguousStorage<T, typename T::tag>;
 
     SUBCASE("Default constructor")
     {
+        StartTestStats();
+
         {
-            TestStorage<T> storage(mres);
-
-            CHECK(storage.resource() == mres);
+            Storage storage(mres);
             CHECK(storage.size() == 0);
-            CHECK(storage.capacity() == 0);
-
-            CHECK(testStats.allocOperations == 0);
-            CHECK(testStats.memoryOperations == 0);
         }
-        VerifyTestStats(0, mres);
+
+        VerifyTestStats(false);
     }
 
+    int intCount0 = 50;
     SUBCASE("Constructor(size_t)")
     {
+        StartTestStats();
+
         {
-            TestStorage<T> storage(50, mres);
-
-            CHECK(storage.resource() == mres);
-            REQUIRE(storage.size() == 50);
-            CHECK(storage.capacity() == 50);
-            int expected = only_uninitialized<T> ? CheckedResource::initValue<int>() : 0;
-            CHECK(CheckAllEqual(storage, expected) == 50);
-
-            CHECK(testStats.allocOperations > 0);
-            if (only_trivial<T>)
-                CHECK(testStats.memoryOperations > 0);
-            else
-                CHECK(testStats.memoryOperations == 0);
+            Storage storage(intCount0, mres);
+            REQUIRE(storage.size() == intCount0);
+            CHECK(CheckAllEqual(storage, T::initValue) == intCount0);
         }
-        VerifyTestStats(only_trivial<T> ? 1 : 0, mres);
+
+        VerifyTestStats(TrivialType::is<T>);
     }
+
+    int intNum1 = 32, intCount1 = 17;
+    SUBCASE("Constructor(size_t, const value&)")
+    {
+        T temp(intNum1);
+
+        StartTestStats();
+
+        {
+            Storage storage(intCount1, temp, mres);
+            REQUIRE(storage.size() == intCount1);
+            CHECK(CheckAllEqual(storage, intNum1) == intCount1);
+        }
+
+        VerifyTestStats(!ComplexType::is<T>);
+    }
+
+    std::vector<int> intVec0 = {5, 9, 123, 130, -123, 2394, 591, 1203, 523, 123};
+    SUBCASE("Constructor(ItType, ItType) [consecutive]")
+    {
+        StartTestStats();
+
+        {
+            Storage storage(intVec0.begin(), intVec0.end(), mres);
+            REQUIRE(storage.size() == intVec0.size());
+            CHECK(CheckAllMatch(storage, intVec0.begin()) == intVec0.size());
+        }
+
+        VerifyTestStats(!ComplexType::is<T>);
+    }
+
+    std::list<int> intList = {6, 123, -123, 504, 12321, 889123, 345, -543, -8123, 10148};
+    SUBCASE("Constructor(ItType, ItType) [not-consecutive]")
+    {
+        StartTestStats();
+
+        {
+            Storage storage(intList.begin(), intList.end(), mres);
+            REQUIRE(storage.size() == intList.size());
+            CHECK(CheckAllMatch(storage, intList.begin()) == intList.size());
+        }
+
+        VerifyTestStats(false);
+    }
+
+    SUBCASE("Constructor(initializer_list) [implicit: consecutive]")
+    {
+        std::initializer_list<T> intInit = {1, -12, 0, -1123, 0532, 7123, -1239, -67345, 012, -4};
+
+        StartTestStats();
+
+        {
+            Storage storage(intInit, mres);
+            REQUIRE(storage.size() == intInit.size());
+            CHECK(CheckAllMatch(storage, intInit.begin()) == intInit.size());
+        }
+
+        VerifyTestStats(!ComplexType::is<T>);
+    }
+
+    SUBCASE("Constructor(const self_type&) [implicit: consecutive]")
+    {
+        Storage intSelf({-1, 0, 123, 5, -123, 9348, -239411, -123, 64223, -123}, mres);
+
+        StartTestStats();
+
+        {
+            Storage storage(intSelf, mres);
+            REQUIRE(storage.size() == intSelf.size());
+            CHECK(CheckAllMatch(storage, intSelf.begin()) == intSelf.size());
+        }
+
+        VerifyTestStats(!ComplexType::is<T>);
+    }
+
+    SUBCASE("Constructor(self_type&&) [implicit: consecutive]")
+    {
+        Storage intSelf(intList.begin(), intList.end(), mres);
+
+        StartTestStats();
+
+        {
+            Storage storage(std::move(intSelf));
+            CHECK(intSelf.size() == 0);
+            REQUIRE(storage.size() == intList.size());
+            CHECK(CheckAllMatch(storage, intList.begin()) == intList.size());
+
+            /* necessary as move-constructor 'steals' the values from the pre-constructed storage */
+            std::swap(testStats.preTestConstructed, testStats.constructed);
+            std::swap(testStats.preTestAllocated, testStats.allocations);
+        }
+
+        VerifyTestStats(false);
+    }
+
+    testStats.resource.release();
 }
 
 TEST_SUITE_END();
+
+/* test that ptr is != to zero on allocations and else zero */
+/* test first capacity and grow of it */
+/* test when resource is changed */
 
 /* add test for 'uninitialization' */
 /* add test for 'trivial' */

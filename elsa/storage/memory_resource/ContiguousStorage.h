@@ -2,8 +2,10 @@
 
 #include "ContiguousMemory.h"
 
+#include <algorithm>
 #include <iterator>
 #include <limits>
+#include <stdexcept>
 
 namespace elsa::mr
 {
@@ -15,7 +17,7 @@ namespace elsa::mr
 
         /* - use memory-transfer functions to process copy/move/set of larger ranges
          * - single values or non-continuous iterators may still use assigning/construction
-         * - default-initialization will invoke the default constructor at least once
+         * - default-initialization will invoke the default constructor once
          * - no destruction performed */
         struct trivial {
         };
@@ -108,7 +110,7 @@ namespace elsa::mr
 
         public:
             mr::MemoryResource resource;
-            raw_pointer pointer = 0;
+            raw_pointer pointer = nullptr;
             size_type size = 0;
             size_type capacity = 0;
 
@@ -145,7 +147,7 @@ namespace elsa::mr
             }
             ~ContContainer()
             {
-                if (pointer == 0)
+                if (pointer == nullptr)
                     return;
                 destruct_until(0);
                 resource->deallocate(pointer, capacity * sizeof(value_type), alignof(value_type));
@@ -197,7 +199,7 @@ namespace elsa::mr
                  *   case the capacity should not just satisfy the request but by some form
                  *   of equation to prevent to many reallocations */
                 size_type new_cap = std::max<size_type>(count, move);
-                if (pointer != 0 && new_cap > capacity && capacity > 1) {
+                if (new_cap > capacity && capacity > 1) {
                     size_type min_cap = new_cap;
                     new_cap = capacity;
 
@@ -207,10 +209,10 @@ namespace elsa::mr
 
                 /* check if an empty container has been requested */
                 if (new_cap == 0)
-                    return swap(new_mr, 0, 0, 0);
+                    return swap(new_mr, nullptr, 0, 0);
 
                 /* check if a relocation could suffice (not considered a container-change) */
-                if (pointer != 0 && new_mr == resource
+                if (pointer != nullptr && new_mr == resource
                     && resource->tryResize(pointer, capacity * sizeof(value_type),
                                            alignof(value_type), new_cap * sizeof(value_type))) {
                     capacity = new_cap;
@@ -320,13 +322,17 @@ namespace elsa::mr
                 size_type transition = std::min<size_type>(size, end);
 
                 /* set/update the range with the default constructor/value */
-                if (value == 0) {
+                if (value == nullptr) {
                     /* check if the setting can be entirely skipped or delegated to the mr */
                     if constexpr (is_uninitialized<TypeTag>)
                         size = std::max<size_type>(size, end);
                     else if constexpr (is_trivial<TypeTag>) {
-                        value_type tmp;
-                        resource->setMemory(pointer + off, &tmp, sizeof(value_type), count);
+                        /* construct the one temporary value (only constructor is required,
+                         *  destructor is not necessary nor expected from this type-tag) */
+                        uint8_t tmp[sizeof(value_type)] = {0};
+                        new (tmp) value_type();
+
+                        resource->setMemory(pointer + off, tmp, sizeof(value_type), count);
                         size = std::max<size_type>(size, end);
 
                     } else {
@@ -465,8 +471,18 @@ namespace elsa::mr
      *      in a valid state (i.e. proper cleanup is ensured) but a modified state.
      *    - For all other exceptions, atomic transactional behavior is guaranteed by the container.
      *    - Note: In case of memory movement operations being enabled, the memory resource copy/move
-     *      operations are considered the type's move/copy constructors/assignment operators.
+     *        operations are considered the type's move/copy constructors/assignment operators.
      *      Hence the same exception rules apply here.
+     *
+     *  In case of a trivial type_tag, the container will actively look for pointers as parameters
+     *    to switch over to memory operations compared to iterator operations.
+     *  It consideres the following iterators as pointers:
+     *    - it is a pointer
+     *    - it is a random access iterator, which has a 'base' member function, which returns a
+     * pointer
+     *    - it is a random access iterator, which has a 'get' member function, which returns a
+     * pointer In all other scenarios, simple loops over iterators will occur, compared to the
+     * potentially faster memory operations.
      *
      *  Each ContiguousStorage is associated with a mr::MemoryResource (polymorphic allocators).
      *  All allocations and memory-operations are performed on the currently used resource.
@@ -518,7 +534,7 @@ namespace elsa::mr
                 _self.resource = mr::defaultInstance();
 
             _self.reserve(count, 0);
-            _self.set_range(0, 0, count);
+            _self.set_range(0, nullptr, count);
         }
         explicit ContiguousStorage(size_type count, const_reference init,
                                    const mr::MemoryResource& mr = mr::MemoryResource())
@@ -605,7 +621,7 @@ namespace elsa::mr
         void assign_default(size_type count, const mr::MemoryResource& mr = mr::MemoryResource())
         {
             _self.reserve(count, 0, mr);
-            _self.set_range(0, 0, count);
+            _self.set_range(0, nullptr, count);
             _self.destruct_until(count);
         }
         void assign(size_type count, const_reference init,
@@ -681,10 +697,10 @@ namespace elsa::mr
             difference_type off = i - _self.pointer;
             container_type old = _self.reserve(_self.size + count, off);
 
-            if (old.pointer == 0)
+            if (old.pointer == nullptr)
                 _self.move_tail(_self.pointer + off, count);
-            _self.set_range(off, 0, count);
-            if (old.pointer != 0)
+            _self.set_range(off, nullptr, count);
+            if (old.pointer != nullptr)
                 _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             return _self.pointer + off;
         }
@@ -698,10 +714,10 @@ namespace elsa::mr
             difference_type off = i - _self.pointer;
             container_type old = _self.reserve(_self.size + count, off);
 
-            if (old.pointer == 0)
+            if (old.pointer == nullptr)
                 _self.move_tail(_self.pointer + off, count);
             _self.set_range(off, &value, count);
-            if (old.pointer != 0)
+            if (old.pointer != nullptr)
                 _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             return _self.pointer + off;
         }
@@ -712,10 +728,10 @@ namespace elsa::mr
             difference_type total = std::distance(ibegin, iend);
             container_type old = _self.reserve(_self.size + total, off);
 
-            if (old.pointer == 0)
+            if (old.pointer == nullptr)
                 _self.move_tail(_self.pointer + off, off);
             _self.insert_range(off, ibegin, iend, total);
-            if (old.pointer != 0)
+            if (old.pointer != nullptr)
                 _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
 
             return _self.pointer + off;
@@ -730,7 +746,7 @@ namespace elsa::mr
             difference_type off = i - _self.pointer;
             container_type old = _self.reserve(_self.size + 1, off);
 
-            if (old.pointer == 0) {
+            if (old.pointer == nullptr) {
                 _self.move_tail(_self.pointer + off, 1);
                 _self.pointer[off] = std::move(value_type(std::forward<Args>(args)...));
             } else {
@@ -769,7 +785,7 @@ namespace elsa::mr
                 return;
             }
             _self.reserve(count, _self.size);
-            _self.set_range(_self.size, 0, count - _self.size);
+            _self.set_range(_self.size, nullptr, count - _self.size);
         }
         void resize(size_type count, const_reference value)
         {
