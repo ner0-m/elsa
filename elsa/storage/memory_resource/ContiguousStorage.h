@@ -2,8 +2,10 @@
 
 #include "ContiguousMemory.h"
 
+#include <algorithm>
 #include <iterator>
 #include <limits>
+#include <stdexcept>
 
 namespace elsa::mr
 {

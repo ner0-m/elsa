@@ -12,11 +12,11 @@
 using namespace elsa::mr;
 
 struct TestStatsCounter {
-    std::set<const struct ComplexType*> preTestConstructed;
-    std::map<void*, std::pair<size_t, size_t>> preTestAllocated;
+    bool intest = false;
     MemoryResource resource;
 
     /* for complex type */
+    std::set<const struct ComplexType*> preTestConstructed;
     std::set<const struct ComplexType*> constructed;
     size_t invalidDestruct = 0;
     size_t doubleConstruct = 0;
@@ -28,6 +28,7 @@ struct TestStatsCounter {
     size_t defaultConstruct = 0;
 
     /* for allocator */
+    std::map<void*, std::pair<size_t, size_t>> preTestAllocated;
     std::map<void*, std::pair<size_t, size_t>> allocations;
     size_t invalidFree = 0;
     size_t memoryOperations = 0;
@@ -54,6 +55,10 @@ private:
     void* allocate(size_t size, size_t alignment) override
     {
         void* p = HostStandardResource::allocate(size, alignment);
+        if (!testStats.intest) {
+            testStats.preTestAllocated.insert({p, {size, alignment}});
+            return p;
+        }
         testStats.allocations.insert({p, {size, alignment}});
         ++testStats.allocOperations;
 
@@ -65,16 +70,18 @@ private:
     }
     void deallocate(void* ptr, size_t size, size_t alignment) override
     {
-        auto it = testStats.preTestAllocated.find(ptr);
-        if (it != testStats.preTestAllocated.end()) {
-            size = it->second.first;
-            alignment = it->second.second;
-            testStats.preTestAllocated.erase(it);
-            HostStandardResource::deallocate(ptr, size, alignment);
+        if (!testStats.intest) {
+            auto it = testStats.preTestAllocated.find(ptr);
+            if (it != testStats.preTestAllocated.end()) {
+                size = it->second.first;
+                alignment = it->second.second;
+                testStats.preTestAllocated.erase(it);
+                HostStandardResource::deallocate(ptr, size, alignment);
+            }
             return;
         }
 
-        it = testStats.allocations.find(ptr);
+        auto it = testStats.allocations.find(ptr);
         if (it == testStats.allocations.end() || it->second.first != size
             || it->second.second != alignment)
             ++testStats.invalidFree;
@@ -117,8 +124,10 @@ private:
     {
         if (testStats.constructed.count(this) > 0)
             ++testStats.doubleConstruct;
-        else
+        else if (testStats.intest)
             testStats.constructed.insert(this);
+        else
+            testStats.preTestConstructed.insert(this);
     }
 
 public:
@@ -128,6 +137,11 @@ public:
     ComplexType(ComplexType&& t) noexcept : _payload(t._payload) { _checkConstruct(); }
     ~ComplexType()
     {
+        if (!testStats.intest) {
+            testStats.preTestConstructed.erase(this);
+            return;
+        }
+
         auto it = testStats.constructed.find(this);
         if (it == testStats.constructed.end())
             ++testStats.invalidDestruct;
@@ -136,34 +150,23 @@ public:
     }
     ComplexType& operator=(const ComplexType& t)
     {
-        if (testStats.constructed.count(this) == 0
-            && testStats.preTestConstructed.count(this) == 0) {
+        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
             ++testStats.invalidAssign;
-            testStats.constructed.insert(this);
-        }
-
         _payload = t._payload;
         return *this;
     }
     ComplexType& operator=(ComplexType&& t)
     {
-        if (testStats.constructed.count(this) == 0
-            && testStats.preTestConstructed.count(this) == 0) {
+        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
             ++testStats.invalidAssign;
-            testStats.constructed.insert(this);
-        }
-
         _payload = t._payload;
         return *this;
     }
 
     operator int() const
     {
-        if (testStats.constructed.count(this) == 0
-            && testStats.preTestConstructed.count(this) == 0) {
+        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
             ++testStats.invalidAccess;
-            testStats.constructed.insert(this);
-        }
         return _payload;
     }
 };
@@ -206,13 +209,7 @@ public:
 /* start measuring the stats / stop & verify */
 static void StartTestStats()
 {
-    /* reset all missed allocations of the pre-set */
-    for (auto& alloc : testStats.preTestAllocated)
-        testStats.resource->deallocate(alloc.first, alloc.second.first, alloc.second.second);
-
-    testStats.preTestConstructed = std::move(testStats.constructed);
     testStats.constructed.clear();
-    testStats.preTestAllocated = std::move(testStats.allocations);
     testStats.allocations.clear();
 
     testStats.invalidDestruct = 0;
@@ -224,9 +221,13 @@ static void StartTestStats()
     testStats.invalidFree = 0;
     testStats.memoryOperations = 0;
     testStats.allocOperations = 0;
+
+    testStats.intest = true;
 }
 static void VerifyTestStats(bool memOp)
 {
+    testStats.intest = false;
+
     CHECK_MESSAGE(testStats.constructed.empty(), "Not all objects were destructed");
     CHECK_MESSAGE(testStats.invalidDestruct == 0, "Uninitialized objects were destructed");
     CHECK_MESSAGE(testStats.doubleConstruct == 0, "Initialized objects were re-initialized");
@@ -358,6 +359,7 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
         std::initializer_list<T> intInit = {1, -12, 0, -1123, 0532, 7123, -1239, -67345, 012, -4};
 
         StartTestStats();
+
         {
             Storage storage(intInit, mres);
             REQUIRE(storage.size() == intInit.size());
@@ -372,6 +374,7 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
         Storage intSelf({-1, 0, 123, 5, -123, 9348, -239411, -123, 64223, -123}, mres);
 
         StartTestStats();
+
         {
             Storage storage(intSelf, mres);
             REQUIRE(storage.size() == intSelf.size());
@@ -386,6 +389,7 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
         Storage intSelf(intList.begin(), intList.end(), mres);
 
         StartTestStats();
+
         {
             Storage storage(std::move(intSelf));
             CHECK(intSelf.size() == 0);
