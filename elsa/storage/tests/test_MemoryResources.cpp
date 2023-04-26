@@ -3,6 +3,7 @@
 #include "memory_resource/ContiguousMemory.h"
 #include "memory_resource/PoolResource.h"
 #include "memory_resource/UniversalResource.h"
+#include "memory_resource/SynchResource.h"
 
 #include "Assertions.h"
 
@@ -22,15 +23,20 @@ static MemoryResource provideResource()
 template <>
 MemoryResource provideResource<PoolResource>()
 {
-    HostStandardResource* upstream = new HostStandardResource();
-    MemoryResource upstreamRef = MemoryResource::MakeRef(upstream);
-    return PoolResource::make(upstreamRef);
+    MemoryResource upstream = HostStandardResource::make();
+    return PoolResource::make(upstream);
 }
 
 template <>
 MemoryResource provideResource<UniversalResource>()
 {
-    return MemoryResource::MakeRef(new UniversalResource());
+    return UniversalResource::make();
+}
+
+template <>
+MemoryResource provideResource<SynchResource<PoolResource>>()
+{
+    return SynchResource<PoolResource>::make(HostStandardResource::make());
 }
 
 static size_t sizeForIndex(size_t i)
@@ -83,7 +89,8 @@ static void testNonoverlappingAllocations(MemoryResource resource)
 
 TEST_SUITE_BEGIN("memoryresources");
 
-TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
+TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
+                   SynchResource<PoolResource>)
 {
     GIVEN("Check overlap")
     {
