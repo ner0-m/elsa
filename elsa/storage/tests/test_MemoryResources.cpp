@@ -3,6 +3,8 @@
 #include "memory_resource/ContiguousMemory.h"
 #include "memory_resource/PoolResource.h"
 #include "memory_resource/UniversalResource.h"
+#include "memory_resource/SynchResource.h"
+#include "memory_resource/BitUtil.h"
 
 #include "Assertions.h"
 
@@ -53,15 +55,20 @@ static MemoryResource provideResource()
 template <>
 MemoryResource provideResource<PoolResource>()
 {
-    HostStandardResource* upstream = new HostStandardResource();
-    MemoryResource upstreamRef = MemoryResource::MakeRef(upstream);
-    return PoolResource::make(upstreamRef);
+    MemoryResource upstream = HostStandardResource::make();
+    return PoolResource::make(upstream);
 }
 
 template <>
 MemoryResource provideResource<UniversalResource>()
 {
-    return MemoryResource::MakeRef(new UniversalResource());
+    return UniversalResource::make();
+}
+
+template <>
+MemoryResource provideResource<SynchResource<PoolResource>>()
+{
+    return SynchResource<PoolResource>::make(HostStandardResource::make());
 }
 
 static size_t sizeForIndex(size_t i)
@@ -92,7 +99,7 @@ static void testNonoverlappingAllocations(MemoryResource resource)
         // then pick a random size within that bin
         size |= (size - 1) & dist(rng);
         void* ptr = resource->allocate(size, 4);
-        allocations.push_back({ptr, size});
+        allocations.emplace_back(ptr, size);
     }
 
     std::sort(allocations.begin(), allocations.end(), [](auto& a, auto& b) {
@@ -114,7 +121,8 @@ static void testNonoverlappingAllocations(MemoryResource resource)
 
 TEST_SUITE_BEGIN("memoryresources");
 
-TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
+TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
+                   SynchResource<PoolResource>)
 {
     GIVEN("Check overlap")
     {
@@ -222,10 +230,10 @@ TEST_CASE("Pool resource")
     {
     private:
         void* _bumpPtr;
-        size_t _allocatedSize;
+        size_t _allocatedSize{0};
 
     protected:
-        DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)}, _allocatedSize{0} {}
+        DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)} {}
         ~DummyResource() = default;
 
     public:
@@ -238,7 +246,7 @@ TEST_CASE("Pool resource")
             // address
             _allocatedSize += size;
             void* ret = _bumpPtr;
-            _bumpPtr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(_bumpPtr) + size);
+            _bumpPtr = voidPtrOffset(_bumpPtr, size);
             return ret;
         }
         void deallocate(void* ptr, size_t size, size_t alignment) override
