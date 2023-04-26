@@ -6,12 +6,49 @@
 namespace elsa::mr
 {
 
-    PoolResource::PoolResource(MemoryResource upstream, PoolResourceConfig config)
-        : _upstream{upstream},
-          _config{config},
-          _freeListNonEmpty{0},
-          _freeLists{_config.maxBlockSizeLog - pool_resource::MIN_BLOCK_SIZE_LOG}
+    PoolResourceConfig::PoolResourceConfig(size_t maxBlockSizeLog, size_t maxBlockSize,
+                                           size_t chunkSize)
+        : maxBlockSizeLog{maxBlockSizeLog}, maxBlockSize{maxBlockSize}, chunkSize{chunkSize}
     {
+    }
+
+    PoolResourceConfig PoolResourceConfig::defaultConfig()
+    {
+        return PoolResourceConfig(20, 1 << 20, 1 << 22);
+    }
+
+    PoolResourceConfig& PoolResourceConfig::setMaxBlockSize(size_t size)
+    {
+        maxBlockSize = std::max(alignUp(size, pool_resource::BLOCK_GRANULARITY),
+                                pool_resource::MIN_BLOCK_SIZE);
+        maxBlockSizeLog = log2Floor(maxBlockSize);
+        return *this;
+    }
+
+    PoolResourceConfig& PoolResourceConfig::setChunkSize(size_t size)
+    {
+        chunkSize = std::max(alignUp(size, pool_resource::BLOCK_GRANULARITY),
+                             pool_resource::MIN_BLOCK_SIZE);
+    }
+
+    bool PoolResourceConfig::validate()
+    {
+        // chunk must at least by able to accomodate the largest possible block
+        return chunkSize > maxBlockSize;
+    };
+
+    PoolResource::PoolResource(MemoryResource upstream, PoolResourceConfig config)
+        : _upstream{upstream}, _freeListNonEmpty{0}, _config{config}
+    {
+        if (!config.validate()) {
+            _config = PoolResourceConfig::defaultConfig();
+        }
+        _freeLists.resize(_config.maxBlockSizeLog - pool_resource::MIN_BLOCK_SIZE_LOG, nullptr);
+    }
+
+    MemoryResource PoolResource::make(MemoryResource upstream, PoolResourceConfig config)
+    {
+        return MemoryResource::MakeRef(new PoolResource(upstream, config));
     }
 
     void* PoolResource::allocate(size_t size, size_t alignment)
@@ -79,21 +116,8 @@ namespace elsa::mr
         }
 
         block->_isFree = 0;
-        block->setSize(realSize);
-
-        // remainingSize must be a multiple of pool_resource::BLOCK_GRANULARITY
-        size_t tailSplitSize = remainingSize - realSize;
-        if (tailSplitSize != 0) {
-            // insert sub-block after the allocation into a free-list
-            pool_resource::Block* successor = new pool_resource::Block();
-            successor->setSize(tailSplitSize);
-            successor->_address =
-                reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(retAddress) + realSize);
-            successor->_isFree = 1;
-            successor->_isPrevFree = 0;
-            successor->_prevAddress = retAddress;
-            insertFreeBlock(successor);
-        }
+        // shrinkBlockAtTail does not care that the size stored in block is not remainingSize
+        shrinkBlockAtTail(block, retAddress, realSize, remainingSize);
         return retAddress;
     }
 
@@ -180,15 +204,16 @@ namespace elsa::mr
             if (nextIt != _addressToBlock.end() && nextIt->second->_isFree
                 && nextIt->second->_prevAddress != nullptr) {
                 pool_resource::Block* next = nextIt->second;
-                size_t cumulativeSize = block->size() + next->size();
+                size_t cumulativeSize = currentSize + next->size();
                 if (cumulativeSize >= realSize) {
                     unlinkFreeBlock(next);
                     _addressToBlock.erase(nextIt);
                     block->setSize(realSize);
                     if (cumulativeSize > realSize) {
-                        next->_address = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr)
-                                                                 + block->size());
+                        next->_address =
+                            reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + realSize);
                         next->setSize(cumulativeSize - realSize);
+                        insertFreeBlock(next);
                     } else {
                         delete next;
                     }
@@ -200,8 +225,8 @@ namespace elsa::mr
                 return false;
             }
         } else {
-            // TODO
-            return false;
+            shrinkBlockAtTail(block, ptr, realSize, currentSize);
+            return true;
         }
     }
 
@@ -281,6 +306,26 @@ namespace elsa::mr
     void PoolResource::shrinkPool(void* chunk)
     {
         _upstream->deallocate(chunk, _config.chunkSize, pool_resource::BLOCK_GRANULARITY);
+    }
+
+    void PoolResource::shrinkBlockAtTail(pool_resource::Block* block, void* blockAddress,
+                                         size_t newSize, size_t oldSize)
+    {
+        block->setSize(newSize);
+
+        // remainingSize must be a multiple of pool_resource::BLOCK_GRANULARITY
+        size_t tailSplitSize = oldSize - newSize;
+        if (tailSplitSize != 0) {
+            // insert sub-block after the allocation into a free-list
+            pool_resource::Block* successor = new pool_resource::Block();
+            successor->setSize(tailSplitSize);
+            successor->_address =
+                reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(blockAddress) + newSize);
+            successor->_isFree = 1;
+            successor->_isPrevFree = 0;
+            successor->_prevAddress = blockAddress;
+            insertFreeBlock(successor);
+        }
     }
 
     namespace pool_resource

@@ -5,17 +5,45 @@
 
 namespace elsa::mr
 {
-    struct PoolResourceConfig {
+    class PoolResource;
+
+    class PoolResourceConfig
+    {
+    private:
+        friend class PoolResource;
+
         size_t maxBlockSizeLog;
         size_t maxBlockSize;
         // size of the large allocation chunks that are requested from the underlying allocator
         size_t chunkSize;
 
-        static PoolResourceConfig defaultConfig()
-        {
-            return PoolResourceConfig{
-                .maxBlockSizeLog = 20, .maxBlockSize = 1 << 20, .chunkSize = 1 << 22};
-        }
+        PoolResourceConfig(size_t maxBlockSizeLog, size_t maxBlockSize, size_t chunkSize);
+
+    public:
+        /// @brief Default configuration for a pool resource with (hopefully) sensible defaults.
+        /// @return Default configuration for a pool resource.
+        static PoolResourceConfig defaultConfig();
+
+        /// @brief Set the maximal size for blocks that are managed by this resource. Larger
+        /// allocations are also accepted, but are serviced by the this pool's upstream allocator.
+        /// @param size Maximal size for blocks managed by this pool. Must be at most as big as the
+        /// chunk size. The pool resource may not use this exact value, as some minimal internal
+        /// alignment requirements are applied to it.
+        /// @return self
+        PoolResourceConfig& setMaxBlockSize(size_t size);
+
+        /// @brief Set the size of the chunks requested from the back-end resource. Allocations are
+        /// serviced from these chunks.
+        /// @param size Size of the chunks requested from the back-end resource. Must be at least
+        /// as big as the maximal block size. The pool resource may not use this exact value, as
+        /// some minimal internal alignment requirements are applied to it.
+        /// @return self
+        PoolResourceConfig& setChunkSize(size_t size);
+
+        /// @brief Check if the pool is misconfigured.
+        /// @return true if: the configuration is valid.
+        /// false if: maxBlockSize > chunkSize
+        bool validate();
     };
 
     namespace pool_resource
@@ -69,12 +97,26 @@ namespace elsa::mr
         size_t computeRealSize(size_t size);
         void expandPool();
         void shrinkPool(void* chunk);
+        void shrinkBlockAtTail(pool_resource::Block* block, void* blockAddress, size_t newSize,
+                               size_t oldSize);
 
-    public:
+    protected:
         PoolResource(MemoryResource upstream,
                      PoolResourceConfig config = PoolResourceConfig::defaultConfig());
 
         ~PoolResource() = default;
+
+    public:
+        /// @brief Create a MemoryResource that encapsulates a PoolResource with the given config.
+        /// @param upstream The back-end allocator that is called by the pool resource whenever it
+        /// runs out of memory to service allocations.
+        /// @param config The configuration for the created pool resource. It is the caller's
+        /// responsibility to make sure this configuration is valid with
+        /// PoolResourceConfig::validate(). If the configuration is not valid, the default
+        /// configuration is used instead.
+        /// @return A MemoryResource that encapsulates a PoolResource.
+        static MemoryResource make(MemoryResource upstream,
+                                   PoolResourceConfig config = PoolResourceConfig::defaultConfig());
 
         void* allocate(size_t size, size_t alignment) override;
         void deallocate(void* ptr, size_t size, size_t alignment) override;

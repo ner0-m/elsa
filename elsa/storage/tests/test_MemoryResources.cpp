@@ -24,7 +24,7 @@ MemoryResource provideResource<PoolResource>()
 {
     HostStandardResource* upstream = new HostStandardResource();
     MemoryResource upstreamRef = MemoryResource::MakeRef(upstream);
-    return MemoryResource::MakeRef(new PoolResource(upstreamRef));
+    return PoolResource::make(upstreamRef);
 }
 
 template <>
@@ -42,6 +42,45 @@ static size_t sizeForIndex(size_t i)
     return std::max(size, static_cast<size_t>(1));
 }
 
+// call this to check whether the basic allocator functionality still works,
+// i.e. that the metadata is still intact
+// (e.g. after peforming some special operation)
+static void testNonoverlappingAllocations(MemoryResource resource)
+{
+    const size_t NUM_ALLOCATIONS = 128;
+    std::vector<std::pair<void*, size_t>> allocations;
+
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<size_t> dist;
+    rng.seed(0xdeadbeef);
+
+    for (size_t i = 0; i < NUM_ALLOCATIONS; i++) {
+        // first pick the bin at random
+        size_t size = (2 << (dist(rng) % 17));
+        // then pick a random size within that bin
+        size |= (size - 1) & dist(rng);
+        void* ptr = resource->allocate(size, 4);
+        allocations.push_back({ptr, size});
+    }
+
+    std::sort(allocations.begin(), allocations.end(), [](auto& a, auto& b) {
+        return reinterpret_cast<uintptr_t>(a.first) < reinterpret_cast<uintptr_t>(b.first);
+    });
+
+    // check if any allocations overlap
+    for (size_t i = 1; i < NUM_ALLOCATIONS; i++) {
+        auto [ptr1, size] = allocations[i - 1];
+        auto [ptr2, _] = allocations[i];
+        CHECK_LE(reinterpret_cast<uintptr_t>(ptr1) + size, reinterpret_cast<uintptr_t>(ptr2));
+    }
+
+    for (size_t i = 0; i < NUM_ALLOCATIONS; i++) {
+        auto [ptr, size] = allocations[i];
+        resource->deallocate(ptr, size, 4);
+    }
+}
+
 TEST_SUITE_BEGIN("memoryresources");
 
 TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
@@ -56,6 +95,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
         }
         for (int i = 0; i < 100; i++) {
             CHECK_EQ(*ptrs[i], static_cast<unsigned char>(i));
+            CHECK_EQ(*(ptrs[i] + 255), static_cast<unsigned char>(i));
             resource->deallocate(ptrs[i], 256, 4);
         }
     }
@@ -147,14 +187,18 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource)
 
 TEST_CASE("Pool resource")
 {
-    class DummyAllocator : public MemResInterface
+    class DummyResource : public MemResInterface
     {
     private:
         void* _bumpPtr;
         size_t _allocatedSize;
 
+    protected:
+        DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)}, _allocatedSize{0} {}
+        ~DummyResource() = default;
+
     public:
-        DummyAllocator() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)}, _allocatedSize{0} {}
+        static MemoryResource make() { return MemoryResource::MakeRef(new DummyResource()); }
 
         void* allocate(size_t size, size_t alignment) override
         {
@@ -205,8 +249,8 @@ TEST_CASE("Pool resource")
 
     GIVEN("Allocation untouched by resource")
     {
-        MemoryResource dummy = MemoryResource::MakeRef(new DummyAllocator());
-        MemoryResource resource = MemoryResource::MakeRef(new PoolResource(dummy));
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
         unsigned char* ptrs[100];
         for (int i = 0; i < 100; i++) {
             ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(256, 4));
@@ -219,8 +263,8 @@ TEST_CASE("Pool resource")
 
     GIVEN("Memory leak")
     {
-        MemoryResource dummy = MemoryResource::MakeRef(new DummyAllocator());
-        MemoryResource resource = MemoryResource::MakeRef(new PoolResource(dummy));
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
         unsigned char* ptrs[109];
         for (int i = 0; i < 109; i++) {
             ptrs[i] =
@@ -230,16 +274,42 @@ TEST_CASE("Pool resource")
             // deallocate in different order
             resource->deallocate(ptrs[j], (1 << (j % 19)) + 123, 4);
         }
-        size_t allocatedSize = dynamic_cast<DummyAllocator*>(dummy.get())->allocatedSize();
+        size_t allocatedSize = dynamic_cast<DummyResource*>(dummy.get())->allocatedSize();
         CHECK_EQ(allocatedSize, 0);
     }
 
-    GIVEN("Resize success")
+    GIVEN("Resize growth")
     {
-        MemoryResource dummy = MemoryResource::MakeRef(new DummyAllocator());
-        MemoryResource resource = MemoryResource::MakeRef(new PoolResource(dummy));
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
         void* ptr = resource->allocate(1234, 0x10);
         CHECK(resource->tryResize(ptr, 1234, 0x10, 5678));
+        testNonoverlappingAllocations(resource);
+        resource->deallocate(ptr, 1234, 0x10);
+    }
+
+    GIVEN("Resize same size")
+    {
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
+        void* ptr = resource->allocate(1234, 0x10);
+        CHECK(resource->tryResize(ptr, 1234, 0x10, 1234));
+        // different size, but the effective size of the block is the same
+        CHECK(resource->tryResize(ptr, 1234, 0x10, 1233));
+        testNonoverlappingAllocations(resource);
+
+        resource->deallocate(ptr, 1234, 0x10);
+    }
+
+    GIVEN("Resize shrink")
+    {
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
+        void* ptr = resource->allocate(1234, 0x10);
+        // shrinking should always work for the pool allocator
+        CHECK(resource->tryResize(ptr, 1234, 0x10, 50));
+        testNonoverlappingAllocations(resource);
+
         resource->deallocate(ptr, 1234, 0x10);
     }
 
@@ -247,11 +317,12 @@ TEST_CASE("Pool resource")
     {
         // This test relies on internal allocator details, so that ptr2 is always allocated directly
         // after the first
-        MemoryResource dummy = MemoryResource::MakeRef(new DummyAllocator());
-        MemoryResource resource = MemoryResource::MakeRef(new PoolResource(dummy));
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = PoolResource::make(dummy);
         void* ptr = resource->allocate(1234, 0x10);
         void* ptr2 = resource->allocate(1234, 0x10);
         CHECK_FALSE(resource->tryResize(ptr, 1234, 0x10, 5678));
+        testNonoverlappingAllocations(resource);
         resource->deallocate(ptr, 1234, 0x10);
         resource->deallocate(ptr2, 1234, 0x10);
     }
