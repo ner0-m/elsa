@@ -2,6 +2,7 @@
 #include "ContiguousMemory.h"
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 namespace elsa::mr
 {
@@ -16,17 +17,19 @@ namespace elsa::mr
         size_t maxBlockSize;
         // size of the large allocation chunks that are requested from the underlying allocator
         size_t chunkSize;
+        size_t maxCachedChunks;
 
-        PoolResourceConfig(size_t maxBlockSizeLog, size_t maxBlockSize, size_t chunkSize);
+        PoolResourceConfig(size_t maxBlockSizeLog, size_t maxBlockSize, size_t chunkSize,
+                           size_t maxCachedChunks);
 
     public:
         /// @brief Default configuration for a pool resource with (hopefully) sensible defaults.
         /// @return Default configuration for a pool resource.
         static PoolResourceConfig defaultConfig();
 
-        /// @brief Set the maximal size for blocks that are managed by this resource. Larger
+        /// @brief Set the maximum size for blocks that are managed by this resource. Larger
         /// allocations are also accepted, but are serviced by the this pool's upstream allocator.
-        /// @param size Maximal size for blocks managed by this pool. Must be at most as big as the
+        /// @param size Maximum size for blocks managed by this pool. Must be at most as big as the
         /// chunk size. The pool resource may not use this exact value, as some minimal internal
         /// alignment requirements are applied to it.
         /// @return self
@@ -35,10 +38,17 @@ namespace elsa::mr
         /// @brief Set the size of the chunks requested from the back-end resource. Allocations are
         /// serviced from these chunks.
         /// @param size Size of the chunks requested from the back-end resource. Must be at least
-        /// as big as the maximal block size. The pool resource may not use this exact value, as
+        /// as big as the maximum block size. The pool resource may not use this exact value, as
         /// some minimal internal alignment requirements are applied to it.
         /// @return self
         PoolResourceConfig& setChunkSize(size_t size);
+
+        /// @brief  Set the maximum number of empty chunks that are cached. Further empty chunks are
+        /// returned to the upstream allocator.
+        /// @param count Manimum count of empty chunks to cache, before releasing memory to the
+        /// upstream allocator.
+        /// @return self
+        PoolResourceConfig& setMaxCachedChunks(size_t count);
 
         /// @brief Check if the pool is misconfigured.
         /// @return true if: the configuration is valid.
@@ -86,19 +96,29 @@ namespace elsa::mr
     private:
         MemoryResource _upstream;
         PoolResourceConfig _config;
-        std::unordered_map<void*, pool_resource::Block*> _addressToBlock;
+        std::unordered_map<void*, std::unique_ptr<pool_resource::Block>> _addressToBlock;
         std::vector<pool_resource::Block*> _freeLists;
         uint64_t _freeListNonEmpty{0};
 
-        void insertFreeBlock(pool_resource::Block* block);
+        size_t _cachedChunkCount;
+        std::unique_ptr<std::unique_ptr<pool_resource::Block>[]> _cachedChunks;
+
+        void insertFreeBlock(std::unique_ptr<pool_resource::Block>&& block);
         void linkFreeBlock(pool_resource::Block* block);
         void unlinkFreeBlock(pool_resource::Block* block);
         size_t freeListIndexForFreeChunk(size_t size);
         size_t computeRealSize(size_t size);
-        void expandPool();
-        void shrinkPool(void* chunk);
-        void shrinkBlockAtTail(pool_resource::Block* block, void* blockAddress, size_t newSize,
+        // Returns a registered (in the address map) block that is not in the free list.
+        // The metadata of the block is correctly initialized.
+        pool_resource::Block* expandPool();
+        void shrinkPool(std::unique_ptr<pool_resource::Block> block);
+        void shrinkBlockAtTail(pool_resource::Block& block, void* blockAddress, size_t newSize,
                                size_t oldSize);
+
+        // This function is noexcept, because it makes no allocations. The only potentially throwing
+        // functions it calls, are the find and erase methods on _addressToBlock. Neither of these
+        // should throw, if the inner type raises no exceptions.
+        void doDeallocate(void* ptr, size_t size, size_t alignment) noexcept;
 
     protected:
         PoolResource(MemoryResource upstream,

@@ -7,14 +7,17 @@ namespace elsa::mr
 {
 
     PoolResourceConfig::PoolResourceConfig(size_t maxBlockSizeLog, size_t maxBlockSize,
-                                           size_t chunkSize)
-        : maxBlockSizeLog{maxBlockSizeLog}, maxBlockSize{maxBlockSize}, chunkSize{chunkSize}
+                                           size_t chunkSize, size_t maxCachedChunks)
+        : maxBlockSizeLog{maxBlockSizeLog},
+          maxBlockSize{maxBlockSize},
+          chunkSize{chunkSize},
+          maxCachedChunks{maxCachedChunks}
     {
     }
 
     PoolResourceConfig PoolResourceConfig::defaultConfig()
     {
-        return PoolResourceConfig(20, 1 << 20, 1 << 22);
+        return PoolResourceConfig(20, 1 << 20, 1 << 22, 1);
     }
 
     PoolResourceConfig& PoolResourceConfig::setMaxBlockSize(size_t size)
@@ -31,19 +34,26 @@ namespace elsa::mr
                              pool_resource::MIN_BLOCK_SIZE);
     }
 
+    PoolResourceConfig& PoolResourceConfig::setMaxCachedChunks(size_t count)
+    {
+        maxCachedChunks = count;
+    }
+
     bool PoolResourceConfig::validate()
     {
         // chunk must at least by able to accomodate the largest possible block
-        return chunkSize > maxBlockSize;
+        return chunkSize >= maxBlockSize;
     };
 
     PoolResource::PoolResource(MemoryResource upstream, PoolResourceConfig config)
-        : _upstream{upstream}, _config{config}
+        : _upstream{upstream}, _freeListNonEmpty{0}, _config{config}, _cachedChunkCount{0}
     {
         if (!config.validate()) {
             _config = PoolResourceConfig::defaultConfig();
         }
         _freeLists.resize(_config.maxBlockSizeLog - pool_resource::MIN_BLOCK_SIZE_LOG, nullptr);
+        _cachedChunks =
+            std::make_unique<std::unique_ptr<pool_resource::Block>[]>(_config.maxCachedChunks);
     }
 
     MemoryResource PoolResource::make(MemoryResource upstream, PoolResourceConfig config)
@@ -86,15 +96,18 @@ namespace elsa::mr
         size_t minFreeListIndex = logBlockSize - pool_resource::MIN_BLOCK_SIZE_LOG;
         uint64_t matchingFreeListMask = ~((1 << static_cast<uint64_t>(minFreeListIndex)) - 1);
         uint64_t freeListIndex = lowestSetBit(_freeListNonEmpty & matchingFreeListMask) - 1;
-        if (freeListIndex == std::numeric_limits<uint64_t>::max()) [[unlikely]] {
-            expandPool();
-            freeListIndex = lowestSetBit(_freeListNonEmpty & matchingFreeListMask) - 1;
-            ENSURE(freeListIndex != std::numeric_limits<uint64_t>::max());
+        pool_resource::Block* block;
+        if (freeListIndex == std::numeric_limits<uint64_t>::max()) {
+            block = expandPool();
+            // this block *must* fit the allocation, otherwise the requested size must be so large
+            // that it is forwarded to _upstream
+        } else {
+            block = _freeLists[freeListIndex];
+            unlinkFreeBlock(block);
         }
-        pool_resource::Block* block = _freeLists[freeListIndex];
+        // by this point, block is a registered, but unlinked block
         ENSURE(block && checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
                && block->size() >= realSize);
-        unlinkFreeBlock(block);
 
         void* retAddress = alignUp(block->_address, alignment);
         size_t headSplitSize =
@@ -102,23 +115,41 @@ namespace elsa::mr
         size_t remainingSize = block->size() - headSplitSize;
 
         if (headSplitSize != 0) {
+            // insert new block after head
+            pool_resource::Block* newBlock;
+            try {
+                auto newBlockOwned = std::make_unique<pool_resource::Block>();
+                newBlock = newBlockOwned.get();
+                _addressToBlock.insert({retAddress, std::move(newBlockOwned)});
+            } catch (...) {
+                // make sure the failed allocation has no side effects (aside from potentially
+                // enlarging the pool)
+                linkFreeBlock(block);
+                throw std::bad_alloc();
+            }
+
             block->setSize(headSplitSize);
             // block is already in the map, but must be reinserted (into an appropriate free list)
             linkFreeBlock(block);
-            // insert new block after head
-            pool_resource::Block* newBlock = new pool_resource::Block();
+
             // size and free bit are set below
             newBlock->_isPrevFree = 1;
             newBlock->_address = retAddress;
             newBlock->_prevAddress = block->_address;
-            auto [newBlockIt, _] = _addressToBlock.insert({retAddress, newBlock});
             block = newBlock;
         }
 
         block->_isFree = 0;
-        // shrinkBlockAtTail does not care that the size stored in block is not remainingSize
-        shrinkBlockAtTail(block, retAddress, realSize, remainingSize);
-        return retAddress;
+        block->setSize(remainingSize);
+        try {
+            shrinkBlockAtTail(*block, retAddress, realSize, remainingSize);
+            return retAddress;
+        } catch (...) {
+            // this is safe to call, because it is noexcept and should free block, re-merging it
+            // with its predecessor
+            doDeallocate(block->_address, size, alignment);
+            throw std::bad_alloc();
+        }
     }
 
     void PoolResource::deallocate(void* ptr, size_t size, size_t alignment)
@@ -131,19 +162,23 @@ namespace elsa::mr
             _upstream->deallocate(ptr, size, alignment);
             return;
         }
+        doDeallocate(ptr, size, alignment);
+    }
+
+    void PoolResource::doDeallocate(void* ptr, size_t size, size_t alignment) noexcept
+    {
         auto blockIt = _addressToBlock.find(ptr);
         ENSURE(blockIt != _addressToBlock.end());
-        pool_resource::Block* block = blockIt->second;
+        pool_resource::Block* block = blockIt->second.get();
         block->_isFree = 1;
 
         auto prevIt = _addressToBlock.find(block->_prevAddress);
         if (prevIt != _addressToBlock.end() && prevIt->second->_isFree) {
             // coalesce with prev. block
-            pool_resource::Block* prev = prevIt->second;
+            pool_resource::Block* prev = prevIt->second.get();
             unlinkFreeBlock(prev);
             prev->setSize(prev->size() + block->size());
             _addressToBlock.erase(blockIt);
-            delete block;
             block = prev;
         }
 
@@ -151,29 +186,29 @@ namespace elsa::mr
         auto nextIt = _addressToBlock.find(nextAdress);
         if (nextIt != _addressToBlock.end() && nextIt->second->_isFree
             && nextIt->second->_prevAddress
-                   != nullptr) { // _prevAddress == nullptr indicates that the block is the start
-                                 // block of another chunk, which just happens to be next to this
-                                 // one. Never coalesce accross chunk boundaries
+                   != nullptr) { // _prevAddress == nullptr indicates that the block is the
+                                 // start block of another chunk, which just happens to be next
+                                 // to this one. Never coalesce accross chunk boundaries
             // coalesce with next block
-            pool_resource::Block* next = nextIt->second;
+            pool_resource::Block* next = nextIt->second.get();
             unlinkFreeBlock(next);
             block->setSize(block->size() + next->size());
             _addressToBlock.erase(nextIt);
-            delete next;
         }
 
         nextAdress = voidPtrOffset(block->_address, block->size());
         nextIt = _addressToBlock.find(nextAdress);
         if (nextIt != _addressToBlock.end() && nextIt->second->_prevAddress != nullptr) {
-            pool_resource::Block* next = nextIt->second;
+            std::unique_ptr<pool_resource::Block>& next = nextIt->second;
             next->_isPrevFree = 1;
             next->_prevAddress = block->_address;
         }
         if (block->size() < _config.chunkSize) {
-            insertFreeBlock(block);
+            linkFreeBlock(block);
         } else {
-            shrinkPool(block->_address);
-            delete block;
+            auto blockIt = _addressToBlock.find(block->_address);
+            shrinkPool(std::move(blockIt->second));
+            _addressToBlock.erase(blockIt);
         }
     }
 
@@ -181,37 +216,46 @@ namespace elsa::mr
     {
         static_cast<void>(size);
         static_cast<void>(alignment);
-        if (!ptr) {
-            return false;
-        }
-        if (size > _config.maxBlockSize) {
+        if (!ptr || size > _config.maxBlockSize) {
             return false;
         }
         auto blockIt = _addressToBlock.find(ptr);
         ENSURE(blockIt != _addressToBlock.end());
-        pool_resource::Block* block = blockIt->second;
+        std::unique_ptr<pool_resource::Block>& block = blockIt->second;
 
         size_t realSize = computeRealSize(newSize);
         size_t currentSize = block->size();
         if (realSize == currentSize) {
             return true;
         } else if (realSize > currentSize) {
-            void* nextAdress = voidPtrOffset(ptr, block->size());
+            void* nextAdress = voidPtrOffset(ptr, currentSize);
             auto nextIt = _addressToBlock.find(nextAdress);
             if (nextIt != _addressToBlock.end() && nextIt->second->_isFree
                 && nextIt->second->_prevAddress != nullptr) {
-                pool_resource::Block* next = nextIt->second;
+                std::unique_ptr<pool_resource::Block>& next = nextIt->second;
                 size_t cumulativeSize = currentSize + next->size();
                 if (cumulativeSize >= realSize) {
-                    unlinkFreeBlock(next);
-                    _addressToBlock.erase(nextIt);
+                    unlinkFreeBlock(next.get());
+                    std::unique_ptr<pool_resource::Block> next = std::move(nextIt->second);
+                    try {
+                        _addressToBlock.erase(nextIt);
+                    } catch (...) {
+                        // Erase should never be able to throw here, so if this is reached we are in
+                        // dire straits
+                        ENSURE(0, "Unreachable!");
+                    }
                     block->setSize(realSize);
                     if (cumulativeSize > realSize) {
                         next->_address = voidPtrOffset(ptr, realSize);
                         next->setSize(cumulativeSize - realSize);
-                        insertFreeBlock(next);
-                    } else {
-                        delete next;
+                        try {
+                            insertFreeBlock(std::move(next));
+                        } catch (...) {
+                            // In case we cannot insert the new free block into the map/free-list,
+                            // have block subsume it. This may cause some very undesirable internal
+                            // fragmentation, but it is better than leaking this memory.
+                            block->setSize(cumulativeSize);
+                        }
                     }
                     return true;
                 } else {
@@ -221,7 +265,11 @@ namespace elsa::mr
                 return false;
             }
         } else {
-            shrinkBlockAtTail(block, ptr, realSize, currentSize);
+            try {
+                shrinkBlockAtTail(*block, ptr, realSize, currentSize);
+            } catch (...) {
+                return false;
+            }
             return true;
         }
     }
@@ -241,10 +289,11 @@ namespace elsa::mr
         _upstream->moveMemory(ptr, src, size);
     }
 
-    void PoolResource::insertFreeBlock(pool_resource::Block* block)
+    void PoolResource::insertFreeBlock(std::unique_ptr<pool_resource::Block>&& block)
     {
-        linkFreeBlock(block);
-        _addressToBlock.insert({block->_address, block});
+        // if insert throws, this is side-effect free
+        auto [it, _] = _addressToBlock.insert({block->_address, std::move(block)});
+        linkFreeBlock(it->second.get());
     }
 
     void PoolResource::linkFreeBlock(pool_resource::Block* block)
@@ -270,9 +319,9 @@ namespace elsa::mr
     size_t PoolResource::freeListIndexForFreeChunk(size_t size)
     {
         // the largest power of 2 that fits into size determines the free list.
-        // as a result of this, allocations are sometimes served from a larger free list, even if a
-        // smaller one would fit. However, this categorization saves us from having to iterate
-        // through free lists, looking for the best fit
+        // as a result of this, allocations are sometimes served from a larger free list, even
+        // if a smaller one would fit. However, this categorization saves us from having to
+        // iterate through free lists, looking for the best fit
         uint64_t freeListLog = log2Floor(size);
         size_t freeListIndex = freeListLog - pool_resource::MIN_BLOCK_SIZE_LOG;
         // all blocks larger than the size for the largest free list are stored there as well
@@ -286,40 +335,64 @@ namespace elsa::mr
                & ~(pool_resource::BLOCK_GRANULARITY - 1);
     }
 
-    void PoolResource::expandPool()
+    pool_resource::Block* PoolResource::expandPool()
     {
-        void* newChunkAddress =
-            _upstream->allocate(_config.chunkSize, pool_resource::BLOCK_GRANULARITY);
-        pool_resource::Block* newChunk = new pool_resource::Block();
-        newChunk->_address = newChunkAddress;
-        newChunk->setSize(_config.chunkSize);
-        newChunk->_isFree = 1;
-        newChunk->_isPrevFree = 0;
-        newChunk->_prevAddress = nullptr;
-        insertFreeBlock(newChunk);
+        void* newChunkAddress;
+        std::unique_ptr<pool_resource::Block> newChunk;
+        if (_cachedChunkCount == 0) {
+            newChunkAddress =
+                _upstream->allocate(_config.chunkSize, pool_resource::BLOCK_GRANULARITY);
+            newChunk = std::make_unique<pool_resource::Block>();
+            newChunk->_address = newChunkAddress;
+            newChunk->setSize(_config.chunkSize);
+            newChunk->_isFree = 1;
+            newChunk->_isPrevFree = 0;
+            newChunk->_prevAddress = nullptr;
+        } else {
+            newChunk = std::move(_cachedChunks[--_cachedChunkCount]);
+            newChunkAddress = newChunk->_address;
+        }
+
+        try {
+            auto [it, _] = _addressToBlock.insert({newChunkAddress, std::move(newChunk)});
+            return it->second.get();
+        } catch (...) {
+            _upstream->deallocate(newChunkAddress, _config.chunkSize,
+                                  pool_resource::BLOCK_GRANULARITY);
+            throw;
+        }
     }
 
-    void PoolResource::shrinkPool(void* chunk)
+    void PoolResource::shrinkPool(std::unique_ptr<pool_resource::Block> chunk)
     {
-        _upstream->deallocate(chunk, _config.chunkSize, pool_resource::BLOCK_GRANULARITY);
+        if (_cachedChunkCount < _config.maxCachedChunks) {
+            _cachedChunks[_cachedChunkCount++] = std::move(chunk);
+        } else {
+            _upstream->deallocate(chunk->_address, _config.chunkSize,
+                                  pool_resource::BLOCK_GRANULARITY);
+        }
     }
 
-    void PoolResource::shrinkBlockAtTail(pool_resource::Block* block, void* blockAddress,
+    void PoolResource::shrinkBlockAtTail(pool_resource::Block& block, void* blockAddress,
                                          size_t newSize, size_t oldSize)
     {
-        block->setSize(newSize);
-
-        // remainingSize must be a multiple of pool_resource::BLOCK_GRANULARITY
+        // oldSize and newSize must be multiples of pool_resource::BLOCK_GRANULARITY
         size_t tailSplitSize = oldSize - newSize;
         if (tailSplitSize != 0) {
             // insert sub-block after the allocation into a free-list
-            pool_resource::Block* successor = new pool_resource::Block();
-            successor->setSize(tailSplitSize);
-            successor->_address = voidPtrOffset(blockAddress, newSize);
-            successor->_isFree = 1;
-            successor->_isPrevFree = 0;
-            successor->_prevAddress = blockAddress;
-            insertFreeBlock(successor);
+            try {
+                auto successor = std::make_unique<pool_resource::Block>();
+                successor->setSize(tailSplitSize);
+                successor->_address = voidPtrOffset(blockAddress, newSize);
+                successor->_isFree = 1;
+                successor->_isPrevFree = 0;
+                successor->_prevAddress = blockAddress;
+                insertFreeBlock(std::move(successor));
+            } catch (...) {
+                throw;
+            }
+
+            block.setSize(newSize);
         }
     }
 
