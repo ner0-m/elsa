@@ -88,7 +88,7 @@ namespace elsa::mr
         PoolResourceConfig _config;
         std::unordered_map<void*, pool_resource::Block*> _addressToBlock;
         std::vector<pool_resource::Block*> _freeLists;
-        uint64_t _freeListNonEmpty;
+        uint64_t _freeListNonEmpty{0};
 
         void insertFreeBlock(pool_resource::Block* block);
         void linkFreeBlock(pool_resource::Block* block);

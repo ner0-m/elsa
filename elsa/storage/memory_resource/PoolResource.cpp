@@ -38,7 +38,7 @@ namespace elsa::mr
     };
 
     PoolResource::PoolResource(MemoryResource upstream, PoolResourceConfig config)
-        : _upstream{upstream}, _freeListNonEmpty{0}, _config{config}
+        : _upstream{upstream}, _config{config}
     {
         if (!config.validate()) {
             _config = PoolResourceConfig::defaultConfig();
@@ -147,8 +147,7 @@ namespace elsa::mr
             block = prev;
         }
 
-        void* nextAdress =
-            reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(block->_address) + block->size());
+        void* nextAdress = voidPtrOffset(block->_address, block->size());
         auto nextIt = _addressToBlock.find(nextAdress);
         if (nextIt != _addressToBlock.end() && nextIt->second->_isFree
             && nextIt->second->_prevAddress
@@ -163,8 +162,7 @@ namespace elsa::mr
             delete next;
         }
 
-        nextAdress =
-            reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(block->_address) + block->size());
+        nextAdress = voidPtrOffset(block->_address, block->size());
         nextIt = _addressToBlock.find(nextAdress);
         if (nextIt != _addressToBlock.end() && nextIt->second->_prevAddress != nullptr) {
             pool_resource::Block* next = nextIt->second;
@@ -198,8 +196,7 @@ namespace elsa::mr
         if (realSize == currentSize) {
             return true;
         } else if (realSize > currentSize) {
-            void* nextAdress =
-                reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + block->size());
+            void* nextAdress = voidPtrOffset(ptr, block->size());
             auto nextIt = _addressToBlock.find(nextAdress);
             if (nextIt != _addressToBlock.end() && nextIt->second->_isFree
                 && nextIt->second->_prevAddress != nullptr) {
@@ -210,8 +207,7 @@ namespace elsa::mr
                     _addressToBlock.erase(nextIt);
                     block->setSize(realSize);
                     if (cumulativeSize > realSize) {
-                        next->_address =
-                            reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + realSize);
+                        next->_address = voidPtrOffset(ptr, realSize);
                         next->setSize(cumulativeSize - realSize);
                         insertFreeBlock(next);
                     } else {
@@ -319,8 +315,7 @@ namespace elsa::mr
             // insert sub-block after the allocation into a free-list
             pool_resource::Block* successor = new pool_resource::Block();
             successor->setSize(tailSplitSize);
-            successor->_address =
-                reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(blockAddress) + newSize);
+            successor->_address = voidPtrOffset(blockAddress, newSize);
             successor->_isFree = 1;
             successor->_isPrevFree = 0;
             successor->_prevAddress = blockAddress;

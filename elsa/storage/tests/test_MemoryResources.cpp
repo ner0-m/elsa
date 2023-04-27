@@ -4,6 +4,7 @@
 #include "memory_resource/PoolResource.h"
 #include "memory_resource/UniversalResource.h"
 #include "memory_resource/SynchResource.h"
+#include "memory_resource/BitUtil.h"
 
 #include "Assertions.h"
 
@@ -67,7 +68,7 @@ static void testNonoverlappingAllocations(MemoryResource resource)
         // then pick a random size within that bin
         size |= (size - 1) & dist(rng);
         void* ptr = resource->allocate(size, 4);
-        allocations.push_back({ptr, size});
+        allocations.emplace_back(ptr, size);
     }
 
     std::sort(allocations.begin(), allocations.end(), [](auto& a, auto& b) {
@@ -198,10 +199,10 @@ TEST_CASE("Pool resource")
     {
     private:
         void* _bumpPtr;
-        size_t _allocatedSize;
+        size_t _allocatedSize{0};
 
     protected:
-        DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)}, _allocatedSize{0} {}
+        DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)} {}
         ~DummyResource() = default;
 
     public:
@@ -214,7 +215,7 @@ TEST_CASE("Pool resource")
             // address
             _allocatedSize += size;
             void* ret = _bumpPtr;
-            _bumpPtr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(_bumpPtr) + (1 << 22));
+            _bumpPtr = voidPtrOffset(_bumpPtr, 1 << 22);
             return ret;
         }
         void deallocate(void* ptr, size_t size, size_t alignment) override

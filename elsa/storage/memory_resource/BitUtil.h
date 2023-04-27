@@ -5,6 +5,7 @@
 #include <cinttypes>
 #include <limits>
 
+// NOLINTBEGIN
 template <typename T>
 static T bit_width(T t)
 {
@@ -58,19 +59,26 @@ static T alignUp(T value, T alignment)
 }
 
 // alignment must be a power of 2
-static void* alignDown(void* ptr, size_t alignment)
+static inline void* alignDown(void* ptr, size_t alignment)
 {
     return reinterpret_cast<void*>(alignDown(reinterpret_cast<uintptr_t>(ptr), alignment));
 }
 
 // alignment must be a power of 2
-static void* alignUp(void* ptr, size_t alignment)
+static inline void* alignUp(void* ptr, size_t alignment)
 {
     return reinterpret_cast<void*>(alignUp(reinterpret_cast<uintptr_t>(ptr), alignment));
 }
 
 // alignment must be a power of 2
-static bool checkAlignment(void* ptr, size_t alignment)
+static inline bool checkAlignment(void* ptr, size_t alignment)
 {
     return ptr == alignDown(ptr, alignment);
 }
+
+static inline void* voidPtrOffset(void* ptr, size_t offset)
+{
+    return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
+}
+
+// NOLINTEND
