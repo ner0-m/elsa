@@ -11,14 +11,6 @@
 
 using namespace elsa;
 
-template <typename data_t>
-DataContainer<data_t> clamp(const DataContainer<data_t>& dc)
-{
-
-    DataContainer<data_t> copy{dc.getDataDescriptor()};
-    thrust::transform(dc.begin(), dc.end(), copy.begin(), [](data_t x) { return x > 0 ? x : 0; });
-    return copy;
-}
 
 void fbp2d()
 {
@@ -59,7 +51,6 @@ void fbp2d()
 
     auto reconstruction = FBP{projector, ramlak}.apply(sinogram);
     io::write(reconstruction, "fbp2d_RamLak.pgm");
-    io::write(clamp(reconstruction), "fbp2d_RamLak.pgm");
 
     reconstruction = FBP{projector, cosine}.apply(sinogram);
     io::write(reconstruction, "fbp2d_Cosine.pgm");

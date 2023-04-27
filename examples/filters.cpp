@@ -24,7 +24,7 @@ void printFilter(std::string_view name, const Filter<float>& filter)
 
 void filters()
 {
-    auto coeffs = IndexVector_t{{128, 128, 1}};
+    auto coeffs = IndexVector_t{{128, 128}};
     auto desc = VolumeDescriptor{coeffs};
 
     auto ramlak = makeRamLak(desc);
@@ -39,10 +39,10 @@ void filters()
     auto hann = makeHann(desc);
     io::write(elsa::cwiseAbs(fftShift(hann.getScaleFactors())), "filters_Hann.pgm");
 
-    // printFilter("rl", ramlak);
-    // printFilter("sl", sheppLogan);
-    // printFilter("cos", cosine);
-    // printFilter("hann", hann);
+    printFilter("rl", ramlak);
+    printFilter("sl", sheppLogan);
+    printFilter("cos", cosine);
+    printFilter("hann", hann);
 }
 
 int main()

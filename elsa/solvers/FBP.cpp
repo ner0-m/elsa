@@ -70,6 +70,7 @@ namespace elsa
         return filtered;
     }
 
+    // TODO: pad sinogram to power of two as in skimage?
     template <typename data_t>
     DataContainer<data_t> FBP<data_t>::apply(const DataContainer<data_t>& sinogram) const
     {

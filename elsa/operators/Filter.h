@@ -65,14 +65,16 @@ namespace elsa
     // TODO: Non-mononotonic filter function start to increase again for 2d filters (k_max  *=
     // sqrt(2)?)
 
+    // TODO: skimage computes spectrum of space representation to "lessen artifacts" -> investigate
     template <typename data_t = float>
     Filter<data_t> makeRamLak(const DataDescriptor& descriptor)
     {
         auto n = descriptor.getNumberOfCoefficientsPerDimension()[0] / 2;
+        auto kmax = kMax(descriptor);
         return makeFilter(descriptor, [&](IndexVector_t nu) {
             auto deltak = 2 * pi_t / n; // TODO: DC bin might have different factor in 3d
             auto k = 2 * pi_t * nu.norm();
-            return (nu.isZero() ? 0.25 * deltak : k);
+            return (nu.isZero() ? 0.25 * deltak : k) / kmax;
         });
     }
 
@@ -82,7 +84,8 @@ namespace elsa
         auto kmax = kMax(descriptor);
         return makeFilter(descriptor, [&](IndexVector_t nu) {
             auto k = 2 * pi_t * nu.norm();
-            return sin(pi_t / 2 * k / kmax); // TODO: Look up definition of sinc (factor 1/pi?)
+            return sin(pi_t / 2 * k / kmax) * 2
+                   / pi_t; // TODO: Look up definition of sinc (factor 1/pi?)
         });
     }
 
@@ -92,7 +95,7 @@ namespace elsa
         auto kmax = kMax(descriptor);
         return makeFilter(descriptor, [&](IndexVector_t nu) {
             auto k = 2 * pi_t * nu.norm();
-            return k * sin(pi_t * k / kmax);
+            return sin(pi_t * k / kmax) / pi_t;
         });
     }
 
@@ -102,7 +105,7 @@ namespace elsa
         auto kmax = kMax(descriptor);
         return makeFilter(descriptor, [&](IndexVector_t nu) {
             auto k = 2 * pi_t * nu.norm();
-            return k * sin(pi_t * k / kmax) * sin(pi_t * k / kmax);
+            return k / kmax * cos(pi_t / 2 * k / kmax) * cos(pi_t / 2 * k / kmax);
         });
     }
 
