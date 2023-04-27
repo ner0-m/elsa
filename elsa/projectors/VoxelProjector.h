@@ -125,25 +125,46 @@ namespace elsa
         }
 
         template <index_t dim, class Fn>
-        void visitDetector(Eigen::Matrix<index_t, dim - 1, 1> detector_dims, real_t scaling,
-                           real_t radius, Eigen::Matrix<real_t, dim - 1, 1> center,
-                           index_t geomIndex, Fn fn) const
+        void visitDetector(index_t domainIndex, index_t geomIndex, Geometry geometry, real_t radius,
+                           Eigen::Matrix<index_t, dim - 1, 1> detectorDims,
+                           Eigen::Matrix<index_t, dim, 1> volumeStrides, Fn apply) const
         {
-            using StaticIndexVector_t = Eigen::Matrix<index_t, dim - 1, 1>;
-            using StaticRealVector_t = Eigen::Matrix<real_t, dim - 1, 1>;
+            using StaticIndexVectorVolume_t = Eigen::Matrix<index_t, dim, 1>;
+            using StaticIndexVectorDetector_t = Eigen::Matrix<index_t, dim - 1, 1>;
+            using StaticRealVectorVolume_t = Eigen::Matrix<real_t, dim, 1>;
+            using StaticRealVectorDetector_t = Eigen::Matrix<real_t, dim - 1, 1>;
+            using StaticRealVectorHom_t = Eigen::Matrix<real_t, dim + 1, 1>;
+
+            // compute coordinate from index
+            StaticIndexVectorVolume_t coordinate = detail::idx2Coord(domainIndex, volumeStrides);
+
+            // Cast to real_t and shift to center of voxel according to origin
+            StaticRealVectorVolume_t coordinateShifted =
+                coordinate.template cast<real_t>().array() + 0.5;
+            StaticRealVectorHom_t homogenousVoxelCoord = coordinateShifted.homogeneous();
+
+            // Project voxel center onto detector
+            StaticRealVectorDetector_t center =
+                (geometry.getProjectionMatrix() * homogenousVoxelCoord).hnormalized();
+            center = center.array() - 0.5;
+
+            auto sourceVoxelDistance =
+                (geometry.getExtrinsicMatrix() * homogenousVoxelCoord).norm();
+
+            auto scaling = geometry.getSourceDetectorDistance() / sourceVoxelDistance;
 
             auto radiusOnDetector = scaling * radius;
-            StaticIndexVector_t detector_max = detector_dims.array() - 1;
+            StaticIndexVectorDetector_t detector_max = detectorDims.array() - 1;
             index_t detectorZeroIndex = (detector_max[0] + 1) * geomIndex;
 
-            StaticIndexVector_t min_corner =
+            StaticIndexVectorDetector_t min_corner =
                 (center.array() - radiusOnDetector).ceil().template cast<index_t>();
-            min_corner = min_corner.cwiseMax(StaticIndexVector_t::Zero());
-            StaticIndexVector_t max_corner =
+            min_corner = min_corner.cwiseMax(StaticIndexVectorDetector_t::Zero());
+            StaticIndexVectorDetector_t max_corner =
                 (center.array() + radiusOnDetector).floor().template cast<index_t>();
             max_corner = max_corner.cwiseMin(detector_max);
 
-            StaticRealVector_t current = min_corner.template cast<real_t>();
+            StaticRealVectorDetector_t current = min_corner.template cast<real_t>();
             index_t currentIndex{0}, iStride{0}, jStride{0};
             if constexpr (dim == 2) {
                 currentIndex = detectorZeroIndex + min_corner[0];
@@ -157,15 +178,12 @@ namespace elsa
             for (index_t i = min_corner[0]; i <= max_corner[0]; i++) {
                 if constexpr (dim == 2) {
                     // traverse detector pixel in voxel footprint
-                    const data_t distance = (center[0] - i);
-                    fn(detectorZeroIndex + i, this->self().weight(distance / scaling));
+                    const data_t distance = (center[0] - i) / scaling;
+                    apply(detectorZeroIndex + i, distance);
                 } else {
                     for (index_t j = min_corner[1]; j <= max_corner[1]; j++) {
-                        const RealVector2D_t distanceVec = center - current;
-                        const auto distance = distanceVec.norm();
-                        // let first axis always be the differential axis TODO
-                        fn(currentIndex,
-                           this->self().weight(distance / scaling, distanceVec[0] / scaling));
+                        const RealVector2D_t distanceVec = (center - current) / scaling;
+                        apply(currentIndex, distanceVec);
                         currentIndex += 1;
                         current[0] += 1;
                     }
@@ -179,51 +197,32 @@ namespace elsa
         template <int dim>
         void forwardVoxel(const DataContainer<data_t>& x, DataContainer<data_t>& Ax) const
         {
-            using StaticRealVectorDetector_t = Eigen::Matrix<real_t, dim - 1, 1>;
-            using StaticRealVector_t = Eigen::Matrix<real_t, dim, 1>;
-            using StaticRealVectorHom_t = Eigen::Matrix<real_t, dim + 1, 1>;
-            using StaticIndexVector_t = Eigen::Matrix<index_t, dim, 1>;
-
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(Ax.getDataDescriptor());
 
             auto& volume = x.getDataDescriptor();
-            auto volumeSize = x.getSize();
-            const auto& strideProduct = volume.getProductOfCoefficientsPerDimension();
-            StaticIndexVector_t coordinate;
+            const Eigen::Matrix<index_t, dim, 1>& volumeStrides =
+                volume.getProductOfCoefficientsPerDimension();
+            const Eigen::Matrix<index_t, dim - 1, 1>& detectorDims =
+                detectorDesc.getNumberOfCoefficientsPerDimension().head(dim - 1);
 
             // loop over geometries/poses in parallel
-#pragma omp parallel for private(coordinate)
+#pragma omp parallel for
             for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                  geomIndex++) {
-
                 auto& geometry = detectorDesc.getGeometry()[asUnsigned(geomIndex)];
                 // loop over voxels
-                for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
-                    // compute coordinate from index
-                    coordinate = detail::idx2Coord(domainIndex, strideProduct);
+                for (index_t domainIndex = 0; domainIndex < volume.getNumberOfCoefficients();
+                     ++domainIndex) {
                     auto voxelWeight = x[domainIndex];
 
-                    // Cast to real_t and shift to center of voxel according to origin
-                    StaticRealVector_t coordinateShifted =
-                        coordinate.template cast<real_t>().array() + 0.5;
-                    StaticRealVectorHom_t homogenousVoxelCoord = detail::vec2Hom(coordinateShifted);
-
-                    // Project voxel center onto detector
-                    StaticRealVector_t proj_evaluated =
-                        geometry.getProjectionMatrix() * homogenousVoxelCoord;
-                    StaticRealVectorDetector_t detectorCoord = detail::hom2Vec(proj_evaluated);
-                    detectorCoord = detectorCoord.array() - 0.5;
-
-                    auto sourceVoxelDistance =
-                        (geometry.getExtrinsicMatrix() * homogenousVoxelCoord).norm();
-
-                    auto scaling = geometry.getSourceDetectorDistance() / sourceVoxelDistance;
-
                     visitDetector<dim>(
-                        detectorDesc.getNumberOfCoefficientsPerDimension().head(dim - 1), scaling,
-                        this->self().radius(), detectorCoord, geomIndex,
-                        [&](const index_t index, auto wght) { Ax[index] += voxelWeight * wght; });
+                        domainIndex, geomIndex, geometry, this->self().radius(), detectorDims,
+                        volumeStrides,
+                        [&](const index_t index, Eigen::Matrix<real_t, dim - 1, 1> distance) {
+                            auto wght = this->self().weight(distance);
+                            Ax[index] += voxelWeight * wght;
+                        });
                 }
             }
         }
@@ -231,51 +230,30 @@ namespace elsa
         template <int dim>
         void backwardVoxel(const DataContainer<data_t>& y, DataContainer<data_t>& Aty) const
         {
-            using StaticRealVectorDetector_t = Eigen::Matrix<real_t, dim - 1, 1>;
-            using StaticRealVector_t = Eigen::Matrix<real_t, dim, 1>;
-            using StaticRealVectorHom_t = Eigen::Matrix<real_t, dim + 1, 1>;
-            using StaticIndexVector_t = Eigen::Matrix<index_t, dim, 1>;
-
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(y.getDataDescriptor());
 
             auto& volume = Aty.getDataDescriptor();
-            auto volumeSize = Aty.getSize();
-            const auto& strideProduct = volume.getProductOfCoefficientsPerDimension();
-            StaticIndexVector_t coordinate;
+            const Eigen::Matrix<index_t, dim, 1>& volumeStrides =
+                volume.getProductOfCoefficientsPerDimension();
+            const Eigen::Matrix<index_t, dim - 1, 1>& detectorDims =
+                detectorDesc.getNumberOfCoefficientsPerDimension().head(dim - 1);
 
-#pragma omp parallel for private(coordinate)
+#pragma omp parallel for
             // loop over voxels in parallel
-            for (index_t domainIndex = 0; domainIndex < volumeSize; ++domainIndex) {
-                // compute coordinate from index
-                coordinate = detail::idx2Coord(domainIndex, strideProduct);
-
+            for (index_t domainIndex = 0; domainIndex < volume.getNumberOfCoefficients();
+                 ++domainIndex) {
                 // loop over geometries/poses in parallel
                 for (index_t geomIndex = 0; geomIndex < detectorDesc.getNumberOfGeometryPoses();
                      geomIndex++) {
 
                     auto& geometry = detectorDesc.getGeometry()[asUnsigned(geomIndex)];
 
-                    // Cast to real_t and shift to center of voxel according to origin
-                    StaticRealVector_t coordinateShifted =
-                        coordinate.template cast<real_t>().array() + 0.5;
-                    StaticRealVectorHom_t homogenousVoxelCoord = detail::vec2Hom(coordinateShifted);
-
-                    // Project voxel center onto detector
-                    StaticRealVector_t proj_evaluated =
-                        geometry.getProjectionMatrix() * homogenousVoxelCoord;
-                    StaticRealVectorDetector_t detectorCoord = detail::hom2Vec(proj_evaluated);
-                    detectorCoord = detectorCoord.array() - 0.5;
-
-                    auto sourceVoxelDistance =
-                        (geometry.getExtrinsicMatrix() * homogenousVoxelCoord).norm();
-
-                    auto scaling = geometry.getSourceDetectorDistance() / sourceVoxelDistance;
-
                     visitDetector<dim>(
-                        detectorDesc.getNumberOfCoefficientsPerDimension().head(dim - 1), scaling,
-                        this->self().radius(), detectorCoord, geomIndex,
-                        [&](const index_t index, auto wght) {
+                        domainIndex, geomIndex, geometry, this->self().radius(), detectorDims,
+                        volumeStrides,
+                        [&](const index_t index, Eigen::Matrix<real_t, dim - 1, 1> distance) {
+                            auto wght = this->self().weight(distance);
                             Aty[domainIndex] += wght * y[index];
                         });
                 }
@@ -395,6 +373,7 @@ namespace elsa
         data_t weight(data_t distance) const { return lut_(std::abs(distance)); }
         data_t weight(data_t distance, data_t primDistance) const
         {
+            (void) primDistance;
             return lut_(std::abs(distance));
         }
 
