@@ -84,7 +84,7 @@ namespace elsa
         auto kmax = kMax(descriptor);
         return makeFilter(descriptor, [&](IndexVector_t nu) {
             auto k = 2 * pi_t * nu.norm();
-            return sin(pi_t / 2 * k / kmax) * 2
+            return std::sin(pi_t / 2 * k / kmax) * 2
                    / pi_t; // TODO: Look up definition of sinc (factor 1/pi?)
         });
     }
@@ -95,7 +95,7 @@ namespace elsa
         auto kmax = kMax(descriptor);
         return makeFilter(descriptor, [&](IndexVector_t nu) {
             auto k = 2 * pi_t * nu.norm();
-            return sin(pi_t * k / kmax) / pi_t;
+            return std::sin(pi_t * k / kmax) / pi_t;
         });
     }
 
@@ -105,7 +105,7 @@ namespace elsa
         auto kmax = kMax(descriptor);
         return makeFilter(descriptor, [&](IndexVector_t nu) {
             auto k = 2 * pi_t * nu.norm();
-            return k / kmax * cos(pi_t / 2 * k / kmax) * cos(pi_t / 2 * k / kmax);
+            return k / kmax * std::cos(pi_t / 2 * k / kmax) * std::cos(pi_t / 2 * k / kmax);
         });
     }
 
