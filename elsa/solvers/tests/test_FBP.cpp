@@ -26,7 +26,7 @@ TEST_CASE("SiddonsMethod Shepp-Logan Phantom Reconstruction")
         auto& volumeDescriptor = phantom.getDataDescriptor();
 
         // generate circular trajectory
-        index_t numAngles{50}, arc{180};
+        index_t numAngles{200}, arc{360};
         const auto distance = static_cast<real_t>(size(0));
         auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
             numAngles, phantom.getDataDescriptor(), arc, distance * 10000.0f, distance);
@@ -52,8 +52,8 @@ TEST_CASE("SiddonsMethod Shepp-Logan Phantom Reconstruction")
             {
                 auto reconstruction = fbp.apply(sinogram);
                 DataContainer resultsDifference = reconstruction - phantom;
-
-                REQUIRE_LE(resultsDifference.squaredL2Norm(), epsilon * phantom.squaredL2Norm());
+                REQUIRE_LE(resultsDifference.l2Norm(),
+                           epsilon * volumeDescriptor.getNumberOfCoefficients());
             }
         }
     }

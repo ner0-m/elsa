@@ -26,14 +26,13 @@ namespace elsa
          * Uses Eigen::FFT with FFTW.
          */
 
-    private:
-        /** working data container for the fft.
-            like in datacontainer, we operate on the vector in n dimensions. */
-        using fftvector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
-
-        // DataContainer<add_complex_t<data_t>> rowWiseFFT(const DataContainer<data_t>& sinogram);
-
     public:
+        /**
+         * @brief Construct a new FBP object
+         *
+         * @param P Projector from image to sinogram
+         * @param g Filter, normalized to range [0,1]
+         */
         explicit FBP(const LinearOperator<data_t>& P, const Filter<data_t>& g);
 
         /**

@@ -84,7 +84,13 @@ namespace elsa
         auto filtered = applyRowWise(Fb, filter_);
         auto b_prime = sliceWiseIFFT(filtered);
         auto backprojected = projector_->applyAdjoint(elsa::real(b_prime));
-        return backprojected;
+
+        auto numSlices =
+            descriptor
+                .getNumberOfCoefficientsPerDimension()[descriptor.getNumberOfDimensions() - 1];
+
+        return backprojected * pi_t / 2 / numSlices; // This normalization is necessary because the
+                                                     // projectors are not normalized
     }
 
     // ------------------------------------------

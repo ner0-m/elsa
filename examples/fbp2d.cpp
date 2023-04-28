@@ -5,17 +5,17 @@
 #include "Filter.h"
 #include "VolumeDescriptor.h"
 #include "elsa.h"
+#include "elsaDefines.h"
 
 #include <iostream>
 #include <ostream>
 
 using namespace elsa;
 
-
 void fbp2d()
 {
     // generate 2d phantom
-    IndexVector_t size({{128, 128}});
+    IndexVector_t size({{200, 200}});
     auto phantom = phantoms::modifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
@@ -23,7 +23,7 @@ void fbp2d()
     io::write(phantom, "fbp2d_phantom.pgm");
 
     // generate circular trajectory
-    index_t numAngles{200}, arc{360};
+    index_t numAngles{300}, arc{360};
     const auto distance = static_cast<real_t>(size(0));
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
         numAngles, phantom.getDataDescriptor(), arc, distance * 10000.0f, distance);
@@ -49,23 +49,11 @@ void fbp2d()
     auto cosine = makeCosine(sinogram.getDataDescriptor());
     auto hann = makeHann(sinogram.getDataDescriptor());
 
-    auto reconstruction = FBP{projector, ramlak}.apply(sinogram);
-    io::write(reconstruction, "fbp2d_RamLak.pgm");
-
-    reconstruction = FBP{projector, cosine}.apply(sinogram);
+    auto reconstruction = FBP{projector, cosine}.apply(sinogram);
     io::write(reconstruction, "fbp2d_Cosine.pgm");
 
-    reconstruction = FBP{projector, shepplogan}.apply(sinogram);
-    io::write(reconstruction, "fbp2d_SheppLogan.pgm");
-
-    reconstruction = FBP{projector, hann}.apply(sinogram);
-    io::write(reconstruction, "fbp2d_Hann.pgm");
-
     DataContainer diff = reconstruction - phantom;
-    std::cout << diff.lInfNorm() << std::endl
-              << phantom.lInfNorm() << std::endl
-              << reconstruction.lInfNorm() << std::endl
-              << reconstruction.minElement() << "|" << reconstruction.maxElement();
+    io::write(diff, "fbp2d_diff.pgm");
 }
 
 int main()
