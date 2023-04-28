@@ -29,14 +29,13 @@ TEST_CASE_TEMPLATE("makeFilter: Testing ramLak", data_t, float, double)
             }
             THEN("the coefficients are correct")
             {
-                auto deltaK = 2 * pi_t / 5;
                 auto filter = RL.getScaleFactors();
 
-                REQUIRE_EQ(filter[0], 0.25 * deltaK);
-                REQUIRE_EQ(filter[1], 2 * pi_t);
-                REQUIRE_EQ(filter[2], 4 * pi_t);
-                REQUIRE_EQ(filter[3], 4 * pi_t);
-                REQUIRE_EQ(filter[4], 2 * pi_t);
+                REQUIRE_EQ(filter[0], 1.0 / 16);
+                REQUIRE_EQ(filter[1], 0.5);
+                REQUIRE_EQ(filter[2], 1.0);
+                REQUIRE_EQ(filter[3], 1.0);
+                REQUIRE_EQ(filter[4], 0.5);
             }
         }
     }
