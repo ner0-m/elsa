@@ -474,7 +474,8 @@ namespace elsa::mr
 
     /*
      *  ContiguousVector behaves like an stl-vector (std::vector) with the difference of
-     *      configuring its type behavior and allocations.
+     *      configuring its type behavior and allocations. Otherwise it uses copy/move
+     *      semantics where possible/applicable.
      *    - Exceptions thrown by the type in the
      *          default-constructor
      *          move-constructor

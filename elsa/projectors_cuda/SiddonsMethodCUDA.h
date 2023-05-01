@@ -104,12 +104,11 @@ namespace elsa
         /// ray origins for each acquisition angle, TODO: enable kernel to have this as data_t
         thrust::device_vector<real_t> _rayOrigins;
 
-        void traverseForward(const BoundingBox& aabb,
-                             const thrust::universal_vector<data_t>& volume,
-                             thrust::universal_vector<data_t>& sino) const;
+        void traverseForward(const BoundingBox& aabb, const ContiguousStorage<data_t>& volume,
+                             ContiguousStorage<data_t>& sino) const;
 
-        void traverseBackward(const BoundingBox& aabb, thrust::universal_vector<data_t>& volume,
-                              const thrust::universal_vector<data_t>& sino) const;
+        void traverseBackward(const BoundingBox& aabb, ContiguousStorage<data_t>& volume,
+                              const ContiguousStorage<data_t>& sino) const;
 
         /// lift from base class
         using LinearOperator<data_t>::_domainDescriptor;
