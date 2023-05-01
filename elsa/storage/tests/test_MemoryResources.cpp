@@ -4,6 +4,7 @@
 #include "memory_resource/PoolResource.h"
 #include "memory_resource/UniversalResource.h"
 #include "memory_resource/SynchResource.h"
+#include "memory_resource/CacheResource.h"
 #include "memory_resource/BitUtil.h"
 
 #include "Assertions.h"
@@ -55,7 +56,7 @@ static MemoryResource provideResource()
 template <>
 MemoryResource provideResource<PoolResource>()
 {
-    MemoryResource upstream = HostStandardResource::make();
+    MemoryResource upstream = UniversalResource::make();
     return PoolResource::make(upstream);
 }
 
@@ -68,7 +69,15 @@ MemoryResource provideResource<UniversalResource>()
 template <>
 MemoryResource provideResource<SynchResource<PoolResource>>()
 {
-    return SynchResource<PoolResource>::make(HostStandardResource::make());
+    MemoryResource upstream = UniversalResource::make();
+    return SynchResource<PoolResource>::make(upstream);
+}
+
+template <>
+MemoryResource provideResource<CacheResource>()
+{
+    MemoryResource upstream = UniversalResource::make();
+    return PoolResource::make(upstream);
 }
 
 static size_t sizeForIndex(size_t i)
@@ -122,7 +131,7 @@ static void testNonoverlappingAllocations(MemoryResource resource)
 TEST_SUITE_BEGIN("memoryresources");
 
 TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
-                   SynchResource<PoolResource>)
+                   SynchResource<PoolResource>, CacheResource)
 {
     GIVEN("Check overlap")
     {
@@ -224,67 +233,68 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
     }
 }
 
+class DummyResource : public MemResInterface
+{
+private:
+    void* _bumpPtr;
+    size_t _allocatedSize{0};
+
+protected:
+    DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)} {}
+    ~DummyResource() = default;
+
+public:
+    static MemoryResource make() { return MemoryResource::MakeRef(new DummyResource()); }
+
+    void* allocate(size_t size, size_t alignment) override
+    {
+        static_cast<void>(alignment);
+        // this can certainly not be deref'd, as it is too large for a 48-bit sign-extended
+        // address
+        _allocatedSize += size;
+        void* ret = _bumpPtr;
+        _bumpPtr = voidPtrOffset(_bumpPtr, size);
+        return ret;
+    }
+    void deallocate(void* ptr, size_t size, size_t alignment) noexcept override
+    {
+        static_cast<void>(ptr);
+        static_cast<void>(alignment);
+        _allocatedSize -= size;
+    }
+    bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override
+    {
+        static_cast<void>(ptr);
+        static_cast<void>(size);
+        static_cast<void>(alignment);
+        static_cast<void>(newSize);
+        return false;
+    }
+    void copyMemory(void* ptr, const void* src, size_t size) override
+    {
+        static_cast<void>(ptr);
+        static_cast<void>(src);
+        static_cast<void>(size);
+    }
+    void setMemory(void* ptr, const void* src, size_t stride, size_t count) override
+    {
+        static_cast<void>(ptr);
+        static_cast<void>(src);
+        static_cast<void>(stride);
+        static_cast<void>(count);
+    }
+    void moveMemory(void* ptr, const void* src, size_t size) override
+    {
+        static_cast<void>(ptr);
+        static_cast<void>(src);
+        static_cast<void>(size);
+    }
+
+    size_t allocatedSize() { return _allocatedSize; }
+};
+
 TEST_CASE("Pool resource")
 {
-    class DummyResource : public MemResInterface
-    {
-    private:
-        void* _bumpPtr;
-        size_t _allocatedSize{0};
-
-    protected:
-        DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)} {}
-        ~DummyResource() = default;
-
-    public:
-        static MemoryResource make() { return MemoryResource::MakeRef(new DummyResource()); }
-
-        void* allocate(size_t size, size_t alignment) override
-        {
-            static_cast<void>(alignment);
-            // this can certainly not be deref'd, as it is too large for a 48-bit sign-extended
-            // address
-            _allocatedSize += size;
-            void* ret = _bumpPtr;
-            _bumpPtr = voidPtrOffset(_bumpPtr, size);
-            return ret;
-        }
-        void deallocate(void* ptr, size_t size, size_t alignment) noexcept override
-        {
-            static_cast<void>(ptr);
-            static_cast<void>(alignment);
-            _allocatedSize -= size;
-        }
-        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override
-        {
-            static_cast<void>(ptr);
-            static_cast<void>(size);
-            static_cast<void>(alignment);
-            static_cast<void>(newSize);
-            return false;
-        }
-        void copyMemory(void* ptr, const void* src, size_t size) override
-        {
-            static_cast<void>(ptr);
-            static_cast<void>(src);
-            static_cast<void>(size);
-        }
-        void setMemory(void* ptr, const void* src, size_t stride, size_t count) override
-        {
-            static_cast<void>(ptr);
-            static_cast<void>(src);
-            static_cast<void>(stride);
-            static_cast<void>(count);
-        }
-        void moveMemory(void* ptr, const void* src, size_t size) override
-        {
-            static_cast<void>(ptr);
-            static_cast<void>(src);
-            static_cast<void>(size);
-        }
-
-        size_t allocatedSize() { return _allocatedSize; }
-    };
 
     GIVEN("Allocation untouched by resource")
     {
@@ -480,6 +490,76 @@ TEST_CASE("Pool resource")
             CHECK_LT(sizeWithOneChunk, sizeWithTwoChunks);
             CHECK_EQ(sizeWithOneChunk, dummyNonOwning->allocatedSize());
         }
+    }
+}
+
+TEST_CASE("Cache resource")
+{
+    GIVEN("an alternating allocation and deallocation pattern")
+    {
+        MemoryResource dummy = DummyResource::make();
+        MemoryResource resource = CacheResource::make(dummy);
+        for (int i = 0; i < 10; i++) {
+            size_t size = 0x100 + 0x10 * i;
+            size_t alignment = 1 << i;
+            resource->deallocate(resource->allocate(size, alignment), size, alignment);
+        }
+        size_t allocatedSize = dynamic_cast<DummyResource*>(dummy.get())->allocatedSize();
+        void* ptrs[10];
+        for (int i = 0; i < 10; i++) {
+            size_t size = 0x100 + 0x10 * i;
+            size_t alignment = 1 << i;
+            ptrs[i] = resource->allocate(size, alignment);
+        }
+        // no additional allocations
+        CHECK_EQ(allocatedSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
+        for (int i = 0; i < 10; i++) {
+            size_t size = 0x100 + 0x10 * i;
+            size_t alignment = 1 << i;
+            resource->deallocate(ptrs[i], size, alignment);
+        }
+    }
+
+    GIVEN("a limited cache resource") {
+        MemoryResource dummy = DummyResource::make();
+        CacheResourceConfig config = CacheResourceConfig::defaultConfig();
+        config.setMaxCacheSize(std::numeric_limits<size_t>::max());
+        config.setMaxCachedCount(1);
+        MemoryResource resource = CacheResource::make(dummy, config);
+
+        void* ptrs[10000];
+
+        size_t allocationSize = 0x1000000;
+        for (int i = 0; i < 10000; i++) {
+            ptrs[i] = resource->allocate(allocationSize, 0x8);
+        }
+        for (int i = 0; i < 10000; i++) {
+            resource->deallocate(ptrs[i], allocationSize, 0x8);
+        }
+
+        // all but one entries released
+        CHECK_EQ(allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
+    }
+
+    GIVEN("an unlimited cache resource") {
+        MemoryResource dummy = DummyResource::make();
+        CacheResourceConfig config = CacheResourceConfig::defaultConfig();
+        config.setMaxCacheSize(std::numeric_limits<size_t>::max());
+        config.setMaxCachedCount(std::numeric_limits<size_t>::max());
+        MemoryResource resource = CacheResource::make(dummy, config);
+
+        void* ptrs[10000];
+
+        size_t allocationSize = 0x1000000;
+        for (int i = 0; i < 10000; i++) {
+            ptrs[i] = resource->allocate(allocationSize, 0x8);
+        }
+        for (int i = 0; i < 10000; i++) {
+            resource->deallocate(ptrs[i], allocationSize, 0x8);
+        }
+
+        // no memory released, all cached
+        CHECK_EQ(10000 * allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
     }
 }
 

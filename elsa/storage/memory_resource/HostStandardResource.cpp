@@ -1,5 +1,7 @@
 #include "HostStandardResource.h"
+
 #include "BitUtil.h"
+#include "elsaDefines.h"
 
 #include <memory>
 #include <cstdlib>
@@ -25,7 +27,7 @@ namespace elsa::mr
         // std::aligned_alloc requires size as a multiple of alignment
         size = alignUp(size, alignment);
         void* ptr = std::aligned_alloc(alignment, size);
-        if (!ptr) [[unlikely]] {
+        if (unlikely(!ptr)) {
             throw std::bad_alloc();
         }
         return ptr;
