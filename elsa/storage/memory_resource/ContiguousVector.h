@@ -7,6 +7,14 @@
 #include <limits>
 #include <stdexcept>
 
+/* define guards for __host__ and __device__ tags used by thrust */
+#ifndef __host__
+#define __host__
+#endif
+#ifndef __device__
+#define __device__
+#endif
+
 namespace elsa::mr
 {
     namespace type_tags
@@ -176,9 +184,15 @@ namespace elsa::mr
 
             /*
              *  The container will at most have capacity 'count' after the call
-             *      -> must be larger than the current size
+             *      -> count must be smaller or equal to 'size'
              */
-            void reduce(size_type count) { reserve(count, count, resource); }
+            void reduce(size_type count)
+            {
+                /* set the recouce-argument, which will force a new allocation
+                 *  even if the capacity would be large enough */
+                if (capacity > count)
+                    reserve(count, count, resource);
+            }
 
             /*
              *  count: how many to at least require
@@ -386,81 +400,100 @@ namespace elsa::mr
             pointer _where = 0;
 
         public:
-            ContPointer() {}
-            ContPointer(pointer w) : _where(w) {}
-            ContPointer(const self_type& p) : _where(p._where) {}
-            ContPointer(self_type&& p) noexcept : _where(p._where) {}
+            __host__ __device__ ContPointer() {}
+            __host__ __device__ ContPointer(pointer w) : _where(w) {}
+            __host__ __device__ ContPointer(const self_type& p) : _where(p._where) {}
+            __host__ __device__ ContPointer(self_type&& p) noexcept : _where(p._where) {}
 
         public:
             /*
              *  for compatability with thrust
              */
-            raw_pointer get() const { return _where; }
+            __host__ __device__ raw_pointer get() const { return _where; }
 
         public:
-            self_type& operator=(const self_type& p)
+            __host__ __device__ self_type& operator=(const self_type& p)
             {
                 _where = p._where;
                 return *this;
             }
-            self_type& operator=(self_type&& p) noexcept
+            __host__ __device__ self_type& operator=(self_type&& p) noexcept
             {
                 _where = p._where;
                 return *this;
             }
-            bool operator==(const self_type& p) const { return _where == p._where; }
-            bool operator!=(const self_type& p) const { return !(*this == p); }
-            reference operator*() const { return *_where; }
-            pointer operator->() const { return _where; }
-            self_type& operator++()
+            __host__ __device__ bool operator==(const self_type& p) const
+            {
+                return _where == p._where;
+            }
+            __host__ __device__ bool operator!=(const self_type& p) const { return !(*this == p); }
+            __host__ __device__ reference operator*() const { return *_where; }
+            __host__ __device__ pointer operator->() const { return _where; }
+            __host__ __device__ self_type& operator++()
             {
                 ++_where;
                 return *this;
             };
-            self_type operator++(int)
+            __host__ __device__ self_type operator++(int)
             {
                 self_type out(_where);
                 ++_where;
                 return out;
             }
-            self_type& operator--()
+            __host__ __device__ self_type& operator--()
             {
                 --_where;
                 return *this;
             };
-            self_type operator--(int)
+            __host__ __device__ self_type operator--(int)
             {
                 self_type out(_where);
                 --_where;
                 return out;
             }
 
-            self_type& operator+=(difference_type d)
+            __host__ __device__ self_type& operator+=(difference_type d)
             {
                 _where += d;
                 return *this;
             }
-            self_type& operator-=(difference_type d)
+            __host__ __device__ self_type& operator-=(difference_type d)
             {
                 _where -= d;
                 return *this;
             }
-            self_type operator+(difference_type d) const { return self_type(_where + d); }
-            self_type operator-(difference_type d) const { return self_type(_where - d); }
-            difference_type operator-(const self_type& p) const { return _where - p._where; }
-            reference operator[](size_type i) const { return _where[i]; }
-            bool operator<(const self_type& p) const { return _where < p._where; }
-            bool operator<=(const self_type& p) const { return _where <= p._where; }
-            bool operator>=(const self_type& p) const { return !(*this < p); }
-            bool operator>(const self_type& p) const { return !(*this <= p); }
-            raw_pointer base() const { return _where; }
+            __host__ __device__ self_type operator+(difference_type d) const
+            {
+                return self_type(_where + d);
+            }
+            __host__ __device__ self_type operator-(difference_type d) const
+            {
+                return self_type(_where - d);
+            }
+            __host__ __device__ difference_type operator-(const self_type& p) const
+            {
+                return _where - p._where;
+            }
+            __host__ __device__ reference operator[](size_type i) const { return _where[i]; }
+            __host__ __device__ bool operator<(const self_type& p) const
+            {
+                return _where < p._where;
+            }
+            __host__ __device__ bool operator<=(const self_type& p) const
+            {
+                return _where <= p._where;
+            }
+            __host__ __device__ bool operator>=(const self_type& p) const { return !(*this < p); }
+            __host__ __device__ bool operator>(const self_type& p) const { return !(*this <= p); }
+            __host__ __device__ raw_pointer base() const { return _where; }
         };
 
     } // namespace detail
 
     /*
      *  ContiguousVector behaves like an stl-vector (std::vector) with the difference of
-     *      configuring its type behavior and allocations.
+     *      configuring its type behavior and allocations. Otherwise it uses copy/move
+     *      semantics where possible/applicable.
      *    - Exceptions thrown by the type in the
      *          default-constructor
      *          move-constructor
@@ -521,7 +554,7 @@ namespace elsa::mr
         container_type _self;
 
     public:
-        /* invalid resource will take mr::defaultInstance */
+        /* if mr is invalid, mr::defaultInstance will be used */
         ContiguousVector(const mr::MemoryResource& mr = mr::MemoryResource())
         {
             if (!(_self.resource = mr).valid())
@@ -566,7 +599,7 @@ namespace elsa::mr
             _self.insert_range(0, l.begin(), l.end(), l.size());
         }
 
-        /* invalid resource will take s::resouce */
+        /* if mr is invalid, s::resource will be used */
         ContiguousVector(const self_type& s, const mr::MemoryResource& mr = mr::MemoryResource())
         {
             if (!(_self.resource = mr).valid())
@@ -580,7 +613,7 @@ namespace elsa::mr
         ~ContiguousVector() = default;
 
     public:
-        /* invalid resource will take mr::defaultInstance */
+        /* if mr is invalid, mr::defaultInstance will be used */
         mr::MemoryResource resource() const { return _self.resource; }
         void swap_resource(const mr::MemoryResource& mr)
         {
@@ -590,25 +623,23 @@ namespace elsa::mr
             _self.reserve(0, _self.size, actual);
         }
 
-        /* incoming resource will be used */
+        /* current resource will be kept */
         self_type& operator=(const self_type& s)
         {
             if (&s == this)
                 return *this;
-            if (s._self.resource == _self.resource)
-                assign(s);
-            else {
-                _self.reserve(s._self.size, 0, s._self.resource);
-                _self.insert_range(0, s._self.pointer, s._self.end_ptr(), s._self.size);
-            }
+            assign(s);
             return *this;
         }
-        self_type& operator=(self_type&& s) noexcept
+        self_type& operator=(self_type&& s)
         {
             if (&s == this)
                 return *this;
-            std::swap(_self, s._self);
-            s._self.destruct_until(0);
+            if (_self.resource == s._self.resource)
+                std::swap(_self, s._self);
+            else
+                assign(s);
+            s._self.reduce(0);
             return *this;
         }
         self_type& operator=(std::initializer_list<value_type> l)
@@ -617,7 +648,7 @@ namespace elsa::mr
             return *this;
         }
 
-        /* current resource will be used */
+        /* if mr is invalid, current resource will be used */
         void assign_default(size_type count, const mr::MemoryResource& mr = mr::MemoryResource())
         {
             _self.reserve(count, 0, mr);

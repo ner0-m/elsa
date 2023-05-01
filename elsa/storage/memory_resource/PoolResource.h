@@ -104,7 +104,7 @@ namespace elsa::mr
         std::vector<pool_resource::Block*> _freeLists;
         uint64_t _freeListNonEmpty{0};
 
-        size_t _cachedChunkCount;
+        size_t _cachedChunkCount{0};
         std::unique_ptr<std::unique_ptr<pool_resource::Block>[]> _cachedChunks;
 
         void insertFreeBlock(std::unique_ptr<pool_resource::Block>&& block);

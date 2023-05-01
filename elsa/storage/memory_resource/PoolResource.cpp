@@ -48,7 +48,7 @@ namespace elsa::mr
     };
 
     PoolResource::PoolResource(MemoryResource upstream, PoolResourceConfig config)
-        : _upstream{upstream}, _freeListNonEmpty{0}, _config{config}, _cachedChunkCount{0}
+        : _upstream{upstream}, _config{config}
     {
         if (!config.validate()) {
             _config = PoolResourceConfig::defaultConfig();

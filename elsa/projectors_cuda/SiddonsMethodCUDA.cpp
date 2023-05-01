@@ -102,8 +102,8 @@ namespace elsa
 
     template <typename data_t>
     void SiddonsMethodCUDA<data_t>::traverseForward(const BoundingBox& aabb,
-                                                    const thrust::universal_vector<data_t>& volume,
-                                                    thrust::universal_vector<data_t>& sino) const
+                                                    const ContiguousStorage<data_t>& volume,
+                                                    ContiguousStorage<data_t>& sino) const
     {
         auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
         auto domainDimsui = domainDims.template cast<unsigned int>();
@@ -153,9 +153,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    void SiddonsMethodCUDA<data_t>::traverseBackward(
-        const BoundingBox& aabb, thrust::universal_vector<data_t>& volume,
-        const thrust::universal_vector<data_t>& sino) const
+    void SiddonsMethodCUDA<data_t>::traverseBackward(const BoundingBox& aabb,
+                                                     ContiguousStorage<data_t>& volume,
+                                                     const ContiguousStorage<data_t>& sino) const
     {
         auto domainDims = _domainDescriptor->getNumberOfCoefficientsPerDimension();
         auto domainDimsui = domainDims.template cast<unsigned int>();
