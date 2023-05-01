@@ -44,7 +44,7 @@ namespace elsa::mr
     public:
         virtual void* allocate(size_t size, size_t alignment) = 0;
         virtual bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) = 0;
-        virtual void deallocate(void* ptr, size_t size, size_t alignment) = 0;
+        virtual void deallocate(void* ptr, size_t size, size_t alignment) noexcept = 0;
         virtual void copyMemory(void* ptr, const void* src, size_t size) = 0;
         virtual void moveMemory(void* ptr, const void* src, size_t size) = 0;
         virtual void setMemory(void* ptr, const void* src, size_t stride, size_t count) = 0;
@@ -92,8 +92,9 @@ namespace elsa::mr
      *  memory-resource from the last call to setDefaultInstance.
      *
      *  If setDefaultInstance has never been called, an instance
-     *      of UniversalResource will be instantiated.
+     *      of HostStandardResource will be instantiated.
      */
     void setDefaultInstance(const MemoryResource& r);
     MemoryResource defaultInstance();
+    bool defaultInstanceSet();
 } // namespace elsa::mr

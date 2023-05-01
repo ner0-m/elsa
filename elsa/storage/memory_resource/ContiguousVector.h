@@ -459,7 +459,7 @@ namespace elsa::mr
     } // namespace detail
 
     /*
-     *  ContiguousStorage behaves like an stl-container (std::vector) with the difference of
+     *  ContiguousVector behaves like an stl-vector (std::vector) with the difference of
      *      configuring its type behavior and allocations.
      *    - Exceptions thrown by the type in the
      *          default-constructor
@@ -484,7 +484,7 @@ namespace elsa::mr
      * pointer In all other scenarios, simple loops over iterators will occur, compared to the
      * potentially faster memory operations.
      *
-     *  Each ContiguousStorage is associated with a mr::MemoryResource (polymorphic allocators).
+     *  Each ContiguousVector is associated with a mr::MemoryResource (polymorphic allocators).
      *  All allocations and memory-operations are performed on the currently used resource.
      *  Changes to the current resource associated with this container:
      *    - copy-construct (optionally inherit the incoming resource)
@@ -496,10 +496,10 @@ namespace elsa::mr
      *    - swap() will swap resource with other container
      */
     template <class Type, class TypeTag = type_tags::complex>
-    class ContiguousStorage
+    class ContiguousVector
     {
     public:
-        using self_type = ContiguousStorage<Type, TypeTag>;
+        using self_type = ContiguousVector<Type, TypeTag>;
         using container_type = detail::ContContainer<Type, TypeTag>;
         using value_type = typename container_type::value_type;
         using size_type = typename container_type::size_type;
@@ -522,13 +522,13 @@ namespace elsa::mr
 
     public:
         /* invalid resource will take mr::defaultInstance */
-        ContiguousStorage(const mr::MemoryResource& mr = mr::MemoryResource())
+        ContiguousVector(const mr::MemoryResource& mr = mr::MemoryResource())
         {
             if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
         }
-        explicit ContiguousStorage(size_type count,
-                                   const mr::MemoryResource& mr = mr::MemoryResource())
+        explicit ContiguousVector(size_type count,
+                                  const mr::MemoryResource& mr = mr::MemoryResource())
         {
             if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
@@ -536,8 +536,8 @@ namespace elsa::mr
             _self.reserve(count, 0);
             _self.set_range(0, nullptr, count);
         }
-        explicit ContiguousStorage(size_type count, const_reference init,
-                                   const mr::MemoryResource& mr = mr::MemoryResource())
+        explicit ContiguousVector(size_type count, const_reference init,
+                                  const mr::MemoryResource& mr = mr::MemoryResource())
         {
             if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
@@ -546,8 +546,8 @@ namespace elsa::mr
             _self.set_range(0, &init, count);
         }
         template <class ItType>
-        ContiguousStorage(ItType ibegin, ItType iend,
-                          const mr::MemoryResource& mr = mr::MemoryResource())
+        ContiguousVector(ItType ibegin, ItType iend,
+                         const mr::MemoryResource& mr = mr::MemoryResource())
         {
             if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
@@ -556,8 +556,8 @@ namespace elsa::mr
             _self.reserve(count, 0);
             _self.insert_range(0, ibegin, iend, count);
         }
-        ContiguousStorage(std::initializer_list<value_type> l,
-                          const mr::MemoryResource& mr = mr::MemoryResource())
+        ContiguousVector(std::initializer_list<value_type> l,
+                         const mr::MemoryResource& mr = mr::MemoryResource())
         {
             if (!(_self.resource = mr).valid())
                 _self.resource = mr::defaultInstance();
@@ -567,7 +567,7 @@ namespace elsa::mr
         }
 
         /* invalid resource will take s::resouce */
-        ContiguousStorage(const self_type& s, const mr::MemoryResource& mr = mr::MemoryResource())
+        ContiguousVector(const self_type& s, const mr::MemoryResource& mr = mr::MemoryResource())
         {
             if (!(_self.resource = mr).valid())
                 _self.resource = s._self.resource;
@@ -575,9 +575,9 @@ namespace elsa::mr
             _self.reserve(s._self.size, 0);
             _self.insert_range(0, s._self.pointer, s._self.end_ptr(), s._self.size);
         }
-        ContiguousStorage(self_type&& s) noexcept { std::swap(_self, s._self); }
+        ContiguousVector(self_type&& s) noexcept { std::swap(_self, s._self); }
 
-        ~ContiguousStorage() = default;
+        ~ContiguousVector() = default;
 
     public:
         /* invalid resource will take mr::defaultInstance */
@@ -652,13 +652,13 @@ namespace elsa::mr
         reference at(size_type i)
         {
             if (i >= _self.size)
-                throw std::out_of_range("Index into ContiguousStorage is out of range");
+                throw std::out_of_range("Index into ContiguousVector is out of range");
             return _self.pointer[i];
         }
         const_reference at(size_type i) const
         {
             if (i >= _self.size)
-                throw std::out_of_range("Index into ContiguousStorage is out of range");
+                throw std::out_of_range("Index into ContiguousVector is out of range");
             return _self.pointer[i];
         }
         reference operator[](size_type i) { return _self.pointer[i]; }

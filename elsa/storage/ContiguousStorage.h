@@ -1,6 +1,8 @@
 #pragma once
 
-#include "memory_resource/ContiguousStorage.h"
+#include "memory_resource/ContiguousVector.h"
+#include "memory_resource/PoolResource.h"
+#include "memory_resource/UniversalResource.h"
 
 #include "DisableWarnings.h"
 
@@ -12,7 +14,21 @@ DISABLE_WARNING_POP
 
 namespace elsa
 {
+    namespace detail
+    {
+        class ConfigMemoryResource
+        {
+        public:
+            ConfigMemoryResource()
+            {
+                if (!mr::defaultInstanceSet())
+                    mr::setDefaultInstance(mr::UniversalResource::make());
+            }
+        };
+        static ConfigMemoryResource _singleton;
+    } // namespace detail
+
     template <class T>
-    // using ContiguousStorage = mr::ContiguousStorage<T, rm::type_tags::uninitialized>;
-    using ContiguousStorage = thrust::universal_vector<T>;
+    using ContiguousStorage = mr::ContiguousVector<T, mr::type_tags::complex>;
+    // using ContiguousStorage = thrust::universal_vector<T>;
 } // namespace elsa

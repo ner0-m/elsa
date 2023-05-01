@@ -1,6 +1,6 @@
 #include "ContiguousMemory.h"
 
-#include "UniversalResource.h"
+#include "HostStandardResource.h"
 
 #include <mutex>
 
@@ -36,6 +36,7 @@ namespace elsa::mr
     {
         if (_resource != nullptr && --_resource->_refCount == 0)
             delete _resource;
+        _resource = nullptr;
     }
 
     MemoryResource& MemoryResource::operator=(const MemoryResource& r)
@@ -110,7 +111,11 @@ namespace elsa::mr
     {
         std::lock_guard<std::mutex> _lock(mrSingletonLock);
         if (!mrSingleton.valid())
-            mrSingleton = MemoryResource::MakeRef(new UniversalResource());
+            mrSingleton = HostStandardResource::make();
         return mrSingleton;
+    }
+    bool defaultInstanceSet()
+    {
+        return mrSingleton.valid();
     }
 } // namespace elsa::mr

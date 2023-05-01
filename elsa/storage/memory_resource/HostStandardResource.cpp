@@ -31,7 +31,7 @@ namespace elsa::mr
         return ptr;
     }
 
-    void HostStandardResource::deallocate(void* ptr, size_t size, size_t alignment)
+    void HostStandardResource::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
         static_cast<void>(size);
         static_cast<void>(alignment);
@@ -59,22 +59,36 @@ namespace elsa::mr
     namespace detail
     {
         template <class Type>
-        void typedFill(void* ptr, const void* src, size_t count)
+        void typedFill(Type* ptr, const Type* src, size_t stride, size_t totalWrites)
         {
-            std::fill(static_cast<Type*>(ptr), static_cast<Type*>(ptr) + count,
-                      *static_cast<const Type*>(src));
+            const Type* s = src;
+            const Type* e = src + stride;
+
+            for (size_t i = 0; i < totalWrites; i++) {
+                *ptr = *s;
+                ++ptr;
+                if (++s == e)
+                    s = src;
+            }
+        }
+
+        template <class Type>
+        void pointerFill(void* ptr, const void* src, size_t stride, size_t count)
+        {
+            typedFill<Type>(static_cast<Type*>(ptr), static_cast<const Type*>(src), stride,
+                            stride * count);
         }
     } // namespace detail
 
     void HostStandardResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
     {
         if ((stride % 8) == 0)
-            detail::typedFill<uint64_t>(ptr, src, count * (stride / 8));
+            detail::pointerFill<uint64_t>(ptr, src, (stride / 8), count);
         else if ((stride % 4) == 0)
-            detail::typedFill<uint32_t>(ptr, src, count * (stride / 4));
+            detail::pointerFill<uint32_t>(ptr, src, (stride / 4), count);
         else if ((stride % 2) == 0)
-            detail::typedFill<uint16_t>(ptr, src, count * (stride / 2));
+            detail::pointerFill<uint16_t>(ptr, src, (stride / 2), count);
         else
-            detail::typedFill<uint8_t>(ptr, src, count * stride);
+            detail::pointerFill<uint8_t>(ptr, src, stride, count);
     }
 } // namespace elsa::mr
