@@ -409,65 +409,83 @@ namespace elsa::mr
             /*
              *  for compatability with thrust
              */
-            raw_pointer get() const { return _where; }
+            __host__ __device__ raw_pointer get() const { return _where; }
 
         public:
-            self_type& operator=(const self_type& p)
+            __host__ __device__ self_type& operator=(const self_type& p)
             {
                 _where = p._where;
                 return *this;
             }
-            self_type& operator=(self_type&& p) noexcept
+            __host__ __device__ self_type& operator=(self_type&& p) noexcept
             {
                 _where = p._where;
                 return *this;
             }
-            bool operator==(const self_type& p) const { return _where == p._where; }
-            bool operator!=(const self_type& p) const { return !(*this == p); }
-            reference operator*() const { return *_where; }
-            pointer operator->() const { return _where; }
-            self_type& operator++()
+            __host__ __device__ bool operator==(const self_type& p) const
+            {
+                return _where == p._where;
+            }
+            __host__ __device__ bool operator!=(const self_type& p) const { return !(*this == p); }
+            __host__ __device__ reference operator*() const { return *_where; }
+            __host__ __device__ pointer operator->() const { return _where; }
+            __host__ __device__ self_type& operator++()
             {
                 ++_where;
                 return *this;
             };
-            self_type operator++(int)
+            __host__ __device__ self_type operator++(int)
             {
                 self_type out(_where);
                 ++_where;
                 return out;
             }
-            self_type& operator--()
+            __host__ __device__ self_type& operator--()
             {
                 --_where;
                 return *this;
             };
-            self_type operator--(int)
+            __host__ __device__ self_type operator--(int)
             {
                 self_type out(_where);
                 --_where;
                 return out;
             }
 
-            self_type& operator+=(difference_type d)
+            __host__ __device__ self_type& operator+=(difference_type d)
             {
                 _where += d;
                 return *this;
             }
-            self_type& operator-=(difference_type d)
+            __host__ __device__ self_type& operator-=(difference_type d)
             {
                 _where -= d;
                 return *this;
             }
-            self_type operator+(difference_type d) const { return self_type(_where + d); }
-            self_type operator-(difference_type d) const { return self_type(_where - d); }
-            difference_type operator-(const self_type& p) const { return _where - p._where; }
-            reference operator[](size_type i) const { return _where[i]; }
-            bool operator<(const self_type& p) const { return _where < p._where; }
-            bool operator<=(const self_type& p) const { return _where <= p._where; }
-            bool operator>=(const self_type& p) const { return !(*this < p); }
-            bool operator>(const self_type& p) const { return !(*this <= p); }
-            raw_pointer base() const { return _where; }
+            __host__ __device__ self_type operator+(difference_type d) const
+            {
+                return self_type(_where + d);
+            }
+            __host__ __device__ self_type operator-(difference_type d) const
+            {
+                return self_type(_where - d);
+            }
+            __host__ __device__ difference_type operator-(const self_type& p) const
+            {
+                return _where - p._where;
+            }
+            __host__ __device__ reference operator[](size_type i) const { return _where[i]; }
+            __host__ __device__ bool operator<(const self_type& p) const
+            {
+                return _where < p._where;
+            }
+            __host__ __device__ bool operator<=(const self_type& p) const
+            {
+                return _where <= p._where;
+            }
+            __host__ __device__ bool operator>=(const self_type& p) const { return !(*this < p); }
+            __host__ __device__ bool operator>(const self_type& p) const { return !(*this <= p); }
+            __host__ __device__ raw_pointer base() const { return _where; }
         };
 
     } // namespace detail
