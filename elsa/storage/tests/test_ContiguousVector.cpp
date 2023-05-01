@@ -129,12 +129,25 @@ private:
         else
             testStats.preTestConstructed.insert(this);
     }
+    void _checkValid(const ComplexType& t, bool access) const
+    {
+        if (testStats.constructed.count(&t) == 0 && testStats.preTestConstructed.count(&t) == 0)
+            ++(access ? testStats.invalidAccess : testStats.invalidAssign);
+    }
 
 public:
     ComplexType() { _checkConstruct(); }
     ComplexType(int i) : _payload(i) { _checkConstruct(); }
-    ComplexType(const ComplexType& t) : _payload(t._payload) { _checkConstruct(); }
-    ComplexType(ComplexType&& t) noexcept : _payload(t._payload) { _checkConstruct(); }
+    ComplexType(const ComplexType& t) : _payload(t._payload)
+    {
+        _checkConstruct();
+        _checkValid(t, true);
+    }
+    ComplexType(ComplexType&& t) noexcept : _payload(t._payload)
+    {
+        _checkConstruct();
+        _checkValid(t, true);
+    }
     ~ComplexType()
     {
         if (!testStats.intest) {
@@ -150,23 +163,22 @@ public:
     }
     ComplexType& operator=(const ComplexType& t)
     {
-        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
-            ++testStats.invalidAssign;
+        _checkValid(t, true);
+        _checkValid(*this, false);
         _payload = t._payload;
         return *this;
     }
     ComplexType& operator=(ComplexType&& t)
     {
-        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
-            ++testStats.invalidAssign;
+        _checkValid(t, true);
+        _checkValid(*this, false);
         _payload = t._payload;
         return *this;
     }
 
     operator int() const
     {
-        if (testStats.constructed.count(this) == 0 && testStats.preTestConstructed.count(this) == 0)
-            ++testStats.invalidAccess;
+        _checkValid(*this, true);
         return _payload;
     }
 };
