@@ -34,7 +34,7 @@ void* operator new(size_t size)
     throw std::bad_alloc{};
 }
 
-void operator delete(void* ptr)
+void operator delete(void* ptr) noexcept
 {
     free(ptr);
 }
@@ -249,7 +249,7 @@ TEST_CASE("Pool resource")
             _bumpPtr = voidPtrOffset(_bumpPtr, size);
             return ret;
         }
-        void deallocate(void* ptr, size_t size, size_t alignment) override
+        void deallocate(void* ptr, size_t size, size_t alignment) noexcept override
         {
             static_cast<void>(ptr);
             static_cast<void>(alignment);

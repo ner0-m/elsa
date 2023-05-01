@@ -28,7 +28,7 @@ namespace elsa::mr
         void* allocate(size_t size, size_t alignment) override;
         /// @brief Passes the pointer along to the wrapped resource for deallocation. Blocking until
         /// the resource is not busy.
-        void deallocate(void* ptr, size_t size, size_t alignment) override;
+        void deallocate(void* ptr, size_t size, size_t alignment) noexcept override;
         /// @brief Tries to have the wrapped resource resize the allocation. Blocking until the
         /// resource is not busy.
         bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override;
@@ -47,7 +47,7 @@ namespace elsa::mr
     }
 
     template <typename T>
-    inline void SynchResource<T>::deallocate(void* ptr, size_t size, size_t alignment)
+    inline void SynchResource<T>::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
         std::unique_lock lock{_m};
         return T::deallocate(ptr, size, alignment);

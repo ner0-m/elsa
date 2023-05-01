@@ -1,6 +1,6 @@
 #include "doctest/doctest.h"
 
-#include "memory_resource/ContiguousStorage.h"
+#include "memory_resource/ContiguousVector.h"
 #include "memory_resource/HostStandardResource.h"
 #include "Assertions.h"
 
@@ -68,7 +68,7 @@ private:
             p8[i] = InitByteValue;
         return p;
     }
-    void deallocate(void* ptr, size_t size, size_t alignment) override
+    void deallocate(void* ptr, size_t size, size_t alignment) noexcept override
     {
         if (!testStats.intest) {
             auto it = testStats.preTestAllocated.find(ptr);
@@ -278,18 +278,18 @@ TYPE_TO_STRING(ComplexType);
 TYPE_TO_STRING(TrivialType);
 TYPE_TO_STRING(UninitType);
 
-TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialType, UninitType)
+TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType, UninitType)
 {
     MemoryResource mres = CheckedResource::make();
     testStats.resource = mres;
-    using Storage = ContiguousStorage<T, typename T::tag>;
+    using Vector = ContiguousVector<T, typename T::tag>;
 
     SUBCASE("Default constructor")
     {
         StartTestStats();
 
         {
-            Storage storage(mres);
+            Vector storage(mres);
             CHECK(storage.size() == 0);
         }
 
@@ -302,7 +302,7 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
         StartTestStats();
 
         {
-            Storage storage(intCount0, mres);
+            Vector storage(intCount0, mres);
             REQUIRE(storage.size() == intCount0);
             CHECK(CheckAllEqual(storage, T::initValue) == intCount0);
         }
@@ -318,7 +318,7 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
         StartTestStats();
 
         {
-            Storage storage(intCount1, temp, mres);
+            Vector storage(intCount1, temp, mres);
             REQUIRE(storage.size() == intCount1);
             CHECK(CheckAllEqual(storage, intNum1) == intCount1);
         }
@@ -332,7 +332,7 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
         StartTestStats();
 
         {
-            Storage storage(intVec0.begin(), intVec0.end(), mres);
+            Vector storage(intVec0.begin(), intVec0.end(), mres);
             REQUIRE(storage.size() == intVec0.size());
             CHECK(CheckAllMatch(storage, intVec0.begin()) == intVec0.size());
         }
@@ -346,7 +346,7 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
         StartTestStats();
 
         {
-            Storage storage(intList.begin(), intList.end(), mres);
+            Vector storage(intList.begin(), intList.end(), mres);
             REQUIRE(storage.size() == intList.size());
             CHECK(CheckAllMatch(storage, intList.begin()) == intList.size());
         }
@@ -361,7 +361,7 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
         StartTestStats();
 
         {
-            Storage storage(intInit, mres);
+            Vector storage(intInit, mres);
             REQUIRE(storage.size() == intInit.size());
             CHECK(CheckAllMatch(storage, intInit.begin()) == intInit.size());
         }
@@ -371,12 +371,12 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
 
     SUBCASE("Constructor(const self_type&) [implicit: consecutive]")
     {
-        Storage intSelf({-1, 0, 123, 5, -123, 9348, -239411, -123, 64223, -123}, mres);
+        Vector intSelf({-1, 0, 123, 5, -123, 9348, -239411, -123, 64223, -123}, mres);
 
         StartTestStats();
 
         {
-            Storage storage(intSelf, mres);
+            Vector storage(intSelf, mres);
             REQUIRE(storage.size() == intSelf.size());
             CHECK(CheckAllMatch(storage, intSelf.begin()) == intSelf.size());
         }
@@ -386,12 +386,13 @@ TEST_CASE_TEMPLATE("ContiguousStorage::Constructors", T, ComplexType, TrivialTyp
 
     SUBCASE("Constructor(self_type&&) [implicit: consecutive]")
     {
-        Storage intSelf(intList.begin(), intList.end(), mres);
+        Vector intSelf(intList.begin(), intList.end(), mres);
 
         StartTestStats();
 
         {
-            Storage storage(std::move(intSelf));
+            Vector storage(std::move(intSelf));
+            // NOLINTNEXTLINE(*-use-after-move)
             CHECK(intSelf.size() == 0);
             REQUIRE(storage.size() == intList.size());
             CHECK(CheckAllMatch(storage, intList.begin()) == intList.size());

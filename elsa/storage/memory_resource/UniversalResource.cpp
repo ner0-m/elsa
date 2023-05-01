@@ -48,7 +48,7 @@ namespace elsa::mr
         }
     }
 
-    void* UniversalResource::deallocate(void* ptr, size_t size, size_t alignment)
+    void* UniversalResource::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
         static_cast<void>(size);
         if (alignment > universal_resource::GUARANTEED_ALIGNMENT) {

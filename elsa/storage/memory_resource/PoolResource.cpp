@@ -32,11 +32,13 @@ namespace elsa::mr
     {
         chunkSize = std::max(alignUp(size, pool_resource::BLOCK_GRANULARITY),
                              pool_resource::MIN_BLOCK_SIZE);
+        return *this;
     }
 
     PoolResourceConfig& PoolResourceConfig::setMaxCachedChunks(size_t count)
     {
         maxCachedChunks = count;
+        return *this;
     }
 
     bool PoolResourceConfig::validate()
@@ -152,7 +154,7 @@ namespace elsa::mr
         }
     }
 
-    void PoolResource::deallocate(void* ptr, size_t size, size_t alignment)
+    void PoolResource::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
         if (!ptr) {
             return;
