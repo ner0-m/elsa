@@ -65,16 +65,21 @@ namespace elsa::mr
 
     void CacheResource::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
-        auto cacheIt = _cache.end();
         try {
             _cache.push_back({ptr, size, alignment});
-            cacheIt--;
-            _sizeToCacheElement.insert({{size, alignment}, --_cache.end()});
         } catch (std::bad_alloc& e) {
-            _cache.erase(cacheIt);
             _upstream->deallocate(ptr, size, alignment);
             return;
         }
+
+        try {
+            _sizeToCacheElement.insert({{size, alignment}, --_cache.end()});
+        } catch (std::bad_alloc& e) {
+            _cache.pop_back();
+            _upstream->deallocate(ptr, size, alignment);
+            return;
+        }
+
         _cachedSize += size;
         if (_cache.size() >= _config.maxCachedCount || _cachedSize >= _config.maxCacheSize) {
             cache_resource::CacheElement& poppedElement = _cache.front();
