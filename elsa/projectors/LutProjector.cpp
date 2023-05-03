@@ -10,7 +10,7 @@ namespace elsa
                                          const DetectorDescriptor& rangeDescriptor, data_t radius,
                                          data_t alpha, index_t order)
         : LutProjector<data_t, BlobProjector<data_t>>(domainDescriptor, rangeDescriptor),
-          lut_(radius, alpha, order)
+          blob_(radius, alpha, order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
@@ -56,7 +56,7 @@ namespace elsa
                                                const DetectorDescriptor& rangeDescriptor,
                                                index_t order)
         : LutProjector<data_t, BSplineProjector<data_t>>(domainDescriptor, rangeDescriptor),
-          lut_(domainDescriptor.getNumberOfDimensions(), order)
+          bspline_(domainDescriptor.getNumberOfDimensions(), order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
@@ -84,7 +84,7 @@ namespace elsa
     template <typename data_t>
     data_t BSplineProjector<data_t>::weight(data_t distance) const
     {
-        return lut_(distance);
+        return bspline_.get_lut()(distance);
     }
 
     template <typename data_t>

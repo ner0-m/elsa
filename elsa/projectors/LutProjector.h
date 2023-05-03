@@ -11,6 +11,7 @@
 #include "BoundingBox.h"
 #include "Logger.h"
 #include "Blobs.h"
+#include "BSplines.h"
 #include "CartesianIndices.h"
 
 #include "XrayProjector.h"
@@ -196,9 +197,9 @@ namespace elsa
         BlobProjector(const VolumeDescriptor& domainDescriptor,
                       const DetectorDescriptor& rangeDescriptor);
 
-        data_t weight(data_t distance) const { return lut_(distance); }
+        data_t weight(data_t distance) const { return blob_.get_lut()(distance); }
 
-        index_t support() const { return static_cast<index_t>(std::ceil(lut_.radius())); }
+        index_t support() const { return static_cast<index_t>(std::ceil(blob_.radius())); }
 
         /// implement the polymorphic clone operation
         BlobProjector<data_t>* _cloneImpl() const;
@@ -207,7 +208,7 @@ namespace elsa
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        ProjectedBlobLut<data_t, 100> lut_;
+        ProjectedBlob<data_t> blob_;
 
         using Base = LutProjector<data_t, BlobProjector<data_t>>;
 
@@ -237,7 +238,7 @@ namespace elsa
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        ProjectedBSplineLut<data_t, 100> lut_;
+        ProjectedBSpline<data_t> bspline_;
 
         using Base = LutProjector<data_t, BSplineProjector<data_t>>;
 

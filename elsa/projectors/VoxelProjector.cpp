@@ -10,7 +10,7 @@ namespace elsa
                                                    const DetectorDescriptor& rangeDescriptor,
                                                    data_t radius, data_t alpha, index_t order)
         : VoxelProjector<data_t, BlobVoxelProjector<data_t>>(domainDescriptor, rangeDescriptor),
-          lut_(radius, alpha, order)
+          blob_(radius, alpha, order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
@@ -40,7 +40,8 @@ namespace elsa
     {
         return new BlobVoxelProjector(downcast<VolumeDescriptor>(*this->_domainDescriptor),
                                       downcast<DetectorDescriptor>(*this->_rangeDescriptor),
-                                      this->lut_.radius(), this->lut_.alpha(), this->lut_.order());
+                                      this->blob_.radius(), this->blob_.alpha(),
+                                      this->blob_.order());
     }
 
     template <typename data_t>
@@ -59,8 +60,7 @@ namespace elsa
         data_t radius, data_t alpha, index_t order)
         : VoxelProjector<data_t, PhaseContrastBlobVoxelProjector<data_t>>(domainDescriptor,
                                                                           rangeDescriptor),
-          lut_(radius, alpha, order),
-          lut3D_(radius, alpha, order)
+          blob_(radius, alpha, order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
@@ -93,8 +93,8 @@ namespace elsa
     {
         return new PhaseContrastBlobVoxelProjector(
             downcast<VolumeDescriptor>(*this->_domainDescriptor),
-            downcast<DetectorDescriptor>(*this->_rangeDescriptor), this->lut_.radius(),
-            this->lut_.alpha(), this->lut_.order());
+            downcast<DetectorDescriptor>(*this->_rangeDescriptor), this->blob_.radius(),
+            this->blob_.alpha(), this->blob_.order());
     }
 
     template <typename data_t>
@@ -113,7 +113,7 @@ namespace elsa
                                                          const DetectorDescriptor& rangeDescriptor,
                                                          index_t order)
         : VoxelProjector<data_t, BSplineVoxelProjector<data_t>>(domainDescriptor, rangeDescriptor),
-          lut_(domainDescriptor.getNumberOfDimensions(), order)
+          bspline_(domainDescriptor.getNumberOfDimensions(), order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
@@ -145,7 +145,7 @@ namespace elsa
     {
         return new BSplineVoxelProjector(downcast<VolumeDescriptor>(*this->_domainDescriptor),
                                          downcast<DetectorDescriptor>(*this->_rangeDescriptor),
-                                         lut_.order());
+                                         bspline_.order());
     }
 
     template <typename data_t>
@@ -164,8 +164,7 @@ namespace elsa
         index_t order)
         : VoxelProjector<data_t, PhaseContrastBSplineVoxelProjector<data_t>>(domainDescriptor,
                                                                              rangeDescriptor),
-          lut_(domainDescriptor.getNumberOfDimensions(), order),
-          lut3D_(domainDescriptor.getNumberOfDimensions(), order)
+          bspline_(domainDescriptor.getNumberOfDimensions(), order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
@@ -198,7 +197,7 @@ namespace elsa
     {
         return new PhaseContrastBSplineVoxelProjector(
             downcast<VolumeDescriptor>(*this->_domainDescriptor),
-            downcast<DetectorDescriptor>(*this->_rangeDescriptor), lut_.order());
+            downcast<DetectorDescriptor>(*this->_rangeDescriptor), bspline_.order());
     }
 
     template <typename data_t>

@@ -10,7 +10,8 @@
 #include "BoundingBox.h"
 #include "VolumeDescriptor.h"
 #include "DetectorDescriptor.h"
-#include "Luts.hpp"
+#include "Blobs.h"
+#include "BSplines.h"
 #include "XrayProjector.h"
 
 #include "ProjectVoxelsCUDA.cuh"
@@ -324,9 +325,9 @@ namespace elsa
         BlobVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
                                const DetectorDescriptor& rangeDescriptor);
 
-        data_t radius() const { return _lut.radius(); }
+        data_t radius() const { return _blob.radius(); }
 
-        data_t weight(data_t distance) const { return _lut(std::abs(distance)); }
+        data_t weight(data_t distance) const { return _blob.get_lut()(std::abs(distance)); }
 
         auto& getLutArray(int dim) const
         {
@@ -345,7 +346,7 @@ namespace elsa
 
     private:
         thrust::device_vector<data_t> _lutArray;
-        ProjectedBlobLut<data_t, 100> _lut;
+        ProjectedBlob<data_t> _blob;
 
         using Base = VoxelProjectorCUDA<data_t, BlobVoxelProjectorCUDA<data_t>>;
 
@@ -388,11 +389,11 @@ namespace elsa
         PhaseContrastBlobVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
                                             const DetectorDescriptor& rangeDescriptor);
 
-        data_t radius() const { return _lut.radius(); }
+        data_t radius() const { return _blob.radius(); }
 
         data_t weight(data_t distance) const
         {
-            return _lut(std::abs(distance)) * math::sgn(distance);
+            return _blob.get_derivative_lut()(std::abs(distance)) * math::sgn(distance);
         }
 
         auto& getLutArray(int dim) const
@@ -413,8 +414,7 @@ namespace elsa
         const VoxelHelperCUDA::PROJECTOR_TYPE projector_type = VoxelHelperCUDA::DIFFERENTIAL;
 
     private:
-        ProjectedBlobDerivativeLut<data_t, 100> _lut;
-        ProjectedBlobNormalizedGradientLut<data_t, 100> _lut3D;
+        ProjectedBlob<data_t> _blob;
 
         /// lut array; stored on GPU
         thrust::device_vector<data_t> _lutArray;
@@ -457,9 +457,9 @@ namespace elsa
         BSplineVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
                                   const DetectorDescriptor& rangeDescriptor);
 
-        data_t radius() const { return _lut.radius(); }
+        data_t radius() const { return _bspline.radius(); }
 
-        data_t weight(data_t distance) const { return _lut(std::abs(distance)); }
+        data_t weight(data_t distance) const { return _bspline.get_lut()(distance); }
 
         auto& getLutArray(int dim) const
         {
@@ -478,7 +478,7 @@ namespace elsa
 
     private:
         thrust::device_vector<data_t> _lutArray;
-        ProjectedBSplineLut<data_t, 100> _lut;
+        ProjectedBSpline<data_t, 100> _bspline;
 
         using Base = VoxelProjectorCUDA<data_t, BSplineVoxelProjectorCUDA<data_t>>;
 
@@ -518,11 +518,11 @@ namespace elsa
         PhaseContrastBSplineVoxelProjectorCUDA(const VolumeDescriptor& domainDescriptor,
                                                const DetectorDescriptor& rangeDescriptor);
 
-        data_t radius() const { return _lut.radius(); }
+        data_t radius() const { return _bspline.radius(); }
 
         data_t weight(data_t distance) const
         {
-            return _lut(std::abs(distance)) * math::sgn(distance);
+            return _bspline.derivative(std::abs(distance)) * math::sgn(distance);
         }
 
         auto& getLutArray(int dim) const
@@ -543,8 +543,7 @@ namespace elsa
         const VoxelHelperCUDA::PROJECTOR_TYPE projector_type = VoxelHelperCUDA::DIFFERENTIAL;
 
     private:
-        ProjectedBSplineDerivativeLut<data_t, 100> _lut;
-        ProjectedBSplineNormalizedGradientLut<data_t, 100> _lut3D;
+        ProjectedBSpline<data_t> _bspline;
 
         /// lut array; stored on GPU
         thrust::device_vector<data_t> _lutArray;

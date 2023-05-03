@@ -17,10 +17,10 @@ namespace elsa
         data_t radius, data_t alpha, index_t order)
         : VoxelProjectorCUDA<data_t, BlobVoxelProjectorCUDA<data_t>>(domainDescriptor,
                                                                      rangeDescriptor),
-          _lut(radius, alpha, order)
+          _blob(radius, alpha, order)
     {
         // copy lut to device
-        auto lutData = _lut.data();
+        auto lutData = _blob.get_lut().data();
         _lutArray.resize(sizeof(lutData));
         thrust::copy(lutData.begin(), lutData.end(), _lutArray.begin());
     }
@@ -36,8 +36,8 @@ namespace elsa
     BlobVoxelProjectorCUDA<data_t>* BlobVoxelProjectorCUDA<data_t>::_cloneImpl() const
     {
         return new BlobVoxelProjectorCUDA<data_t>(this->_volumeDescriptor,
-                                                  this->_detectorDescriptor, this->_lut.radius(),
-                                                  this->_lut.alpha(), this->_lut.order());
+                                                  this->_detectorDescriptor, this->_blob.radius(),
+                                                  this->_blob.alpha(), this->_blob.order());
     }
 
     template <typename data_t>
@@ -56,15 +56,14 @@ namespace elsa
         data_t radius, data_t alpha, index_t order)
         : VoxelProjectorCUDA<data_t, PhaseContrastBlobVoxelProjectorCUDA<data_t>>(domainDescriptor,
                                                                                   rangeDescriptor),
-          _lut(radius, alpha, order),
-          _lut3D(radius, alpha, order)
+          _blob(radius, alpha, order)
     {
         // copy lut to device
-        auto lutData = _lut.data();
+        auto lutData = _blob.get_derivative_lut().data();
         _lutArray.resize(sizeof(lutData));
         thrust::copy(lutData.begin(), lutData.end(), _lutArray.begin());
         // copy lut3D to device
-        auto lut3DData = _lut3D.data();
+        auto lut3DData = _blob.get_normalized_gradient_lut().data();
         _lut3DArray.resize(sizeof(lut3DData));
         thrust::copy(lut3DData.begin(), lut3DData.end(), _lut3DArray.begin());
     }
@@ -81,8 +80,8 @@ namespace elsa
         PhaseContrastBlobVoxelProjectorCUDA<data_t>::_cloneImpl() const
     {
         return new PhaseContrastBlobVoxelProjectorCUDA<data_t>(
-            this->_volumeDescriptor, this->_detectorDescriptor, this->_lut.radius(),
-            this->_lut.alpha(), this->_lut.order());
+            this->_volumeDescriptor, this->_detectorDescriptor, this->_blob.radius(),
+            this->_blob.alpha(), this->_blob.order());
     }
 
     template <typename data_t>
@@ -102,10 +101,10 @@ namespace elsa
         index_t order)
         : VoxelProjectorCUDA<data_t, BSplineVoxelProjectorCUDA<data_t>>(domainDescriptor,
                                                                         rangeDescriptor),
-          _lut(domainDescriptor.getNumberOfDimensions(), order)
+          _bspline(domainDescriptor.getNumberOfDimensions(), order)
     {
         // copy lut to device
-        auto lutData = _lut.data();
+        auto lutData = _bspline.get_lut().data();
         _lutArray.resize(sizeof(lutData));
         thrust::copy(lutData.begin(), lutData.end(), _lutArray.begin());
     }
@@ -120,8 +119,8 @@ namespace elsa
     template <typename data_t>
     BSplineVoxelProjectorCUDA<data_t>* BSplineVoxelProjectorCUDA<data_t>::_cloneImpl() const
     {
-        return new BSplineVoxelProjectorCUDA<data_t>(this->_volumeDescriptor,
-                                                     this->_detectorDescriptor, this->_lut.order());
+        return new BSplineVoxelProjectorCUDA<data_t>(
+            this->_volumeDescriptor, this->_detectorDescriptor, this->_bspline.order());
     }
 
     template <typename data_t>
@@ -140,15 +139,14 @@ namespace elsa
         index_t order)
         : VoxelProjectorCUDA<data_t, PhaseContrastBSplineVoxelProjectorCUDA<data_t>>(
             domainDescriptor, rangeDescriptor),
-          _lut(domainDescriptor.getNumberOfDimensions(), order),
-          _lut3D(domainDescriptor.getNumberOfDimensions(), order)
+          _bspline(domainDescriptor.getNumberOfDimensions(), order)
     {
         // copy lut to device
-        auto lutData = _lut.data();
+        auto lutData = _bspline.get_derivative_lut().data();
         _lutArray.resize(sizeof(lutData));
         thrust::copy(lutData.begin(), lutData.end(), _lutArray.begin());
         // copy lut3D to device
-        auto lut3DData = _lut3D.data();
+        auto lut3DData = _bspline.get_normalized_gradient_lut().data();
         _lut3DArray.resize(sizeof(lut3DData));
         thrust::copy(lut3DData.begin(), lut3DData.end(), _lut3DArray.begin());
     }
@@ -165,7 +163,7 @@ namespace elsa
         PhaseContrastBSplineVoxelProjectorCUDA<data_t>::_cloneImpl() const
     {
         return new PhaseContrastBSplineVoxelProjectorCUDA<data_t>(
-            this->_volumeDescriptor, this->_detectorDescriptor, this->_lut.order());
+            this->_volumeDescriptor, this->_detectorDescriptor, this->_bspline.order());
     }
 
     template <typename data_t>

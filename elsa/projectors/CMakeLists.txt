@@ -7,6 +7,8 @@ set(MODULE_HEADERS
     SliceTraversal.h
     LutProjector.h
     VoxelProjector.h
+    PhaseContrastProjector.h
+    VoxelComputation.h
     BinaryMethod.h
     SiddonsMethod.h
     JosephsMethod.h
@@ -25,6 +27,7 @@ set(MODULE_SOURCES
     SliceTraversal.cpp
     LutProjector.cpp
     VoxelProjector.cpp
+    PhaseContrastProjector.cpp
     BinaryMethod.cpp
     SiddonsMethod.cpp
     JosephsMethod.cpp
