@@ -214,6 +214,10 @@ namespace elsa
             return blob_derivative_projected(s, 2.f, 10.83f, 2);
         }
 
+        const double DEFAULT_RADIUS = 2.0;
+        const double DEFAULT_ALPHA = 10.83;
+        const index_t DEFAULT_ORDER = 2;
+
     } // namespace blobs
 
     template <typename data_t>

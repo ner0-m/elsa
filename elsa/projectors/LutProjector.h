@@ -2,7 +2,6 @@
 
 #include "elsaDefines.h"
 #include "Timer.h"
-#include "Luts.hpp"
 #include "SliceTraversal.h"
 #include "LinearOperator.h"
 #include "VolumeDescriptor.h"
@@ -24,21 +23,21 @@ namespace elsa
     template <typename data_t, typename Derived>
     class LutProjector;
 
-    template <typename data_t = real_t>
+    template <typename data_t = real_t, size_t N = DEFAULT_LUT_SIZE>
     class BlobProjector;
 
-    template <typename data_t = real_t>
+    template <typename data_t = real_t, size_t N = DEFAULT_LUT_SIZE>
     class BSplineProjector;
 
-    template <typename data_t>
-    struct XrayProjectorInnerTypes<BlobProjector<data_t>> {
+    template <typename data_t, size_t N>
+    struct XrayProjectorInnerTypes<BlobProjector<data_t, N>> {
         using value_type = data_t;
         using forward_tag = ray_driven_tag;
         using backward_tag = ray_driven_tag;
     };
 
-    template <typename data_t>
-    struct XrayProjectorInnerTypes<BSplineProjector<data_t>> {
+    template <typename data_t, size_t N>
+    struct XrayProjectorInnerTypes<BSplineProjector<data_t, N>> {
         using value_type = data_t;
         using forward_tag = ray_driven_tag;
         using backward_tag = ray_driven_tag;
@@ -184,63 +183,59 @@ namespace elsa
         friend class XrayProjector<Derived>;
     };
 
-    template <typename data_t>
-    class BlobProjector : public LutProjector<data_t, BlobProjector<data_t>>
+    template <typename data_t, size_t N>
+    class BlobProjector : public LutProjector<data_t, BlobProjector<data_t, N>>
     {
     public:
-        using self_type = BlobProjector<data_t>;
+        using self_type = BlobProjector<data_t, N>;
 
         BlobProjector(const VolumeDescriptor& domainDescriptor,
-                      const DetectorDescriptor& rangeDescriptor, data_t radius, data_t alpha,
-                      index_t order);
-
-        BlobProjector(const VolumeDescriptor& domainDescriptor,
-                      const DetectorDescriptor& rangeDescriptor);
+                      const DetectorDescriptor& rangeDescriptor,
+                      data_t radius = blobs::DEFAULT_RADIUS, data_t alpha = blobs::DEFAULT_ALPHA,
+                      index_t order = blobs::DEFAULT_ORDER);
 
         data_t weight(data_t distance) const { return blob_.get_lut()(distance); }
 
         index_t support() const { return static_cast<index_t>(std::ceil(blob_.radius())); }
 
         /// implement the polymorphic clone operation
-        BlobProjector<data_t>* _cloneImpl() const;
+        BlobProjector<data_t, N>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        ProjectedBlob<data_t> blob_;
+        ProjectedBlob<data_t, N> blob_;
 
-        using Base = LutProjector<data_t, BlobProjector<data_t>>;
+        using Base = LutProjector<data_t, BlobProjector<data_t, N>>;
 
         friend class XrayProjector<self_type>;
     };
 
-    template <typename data_t>
-    class BSplineProjector : public LutProjector<data_t, BSplineProjector<data_t>>
+    template <typename data_t, size_t N>
+    class BSplineProjector : public LutProjector<data_t, BSplineProjector<data_t, N>>
     {
     public:
-        using self_type = BlobProjector<data_t>;
+        using self_type = BlobProjector<data_t, N>;
 
         BSplineProjector(const VolumeDescriptor& domainDescriptor,
-                         const DetectorDescriptor& rangeDescriptor, index_t order);
-
-        BSplineProjector(const VolumeDescriptor& domainDescriptor,
-                         const DetectorDescriptor& rangeDescriptor);
+                         const DetectorDescriptor& rangeDescriptor,
+                         index_t order = bspline::DEFAULT_ORDER);
 
         data_t weight(data_t distance) const;
 
         index_t support() const;
 
         /// implement the polymorphic clone operation
-        BSplineProjector<data_t>* _cloneImpl() const;
+        BSplineProjector<data_t, N>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        ProjectedBSpline<data_t> bspline_;
+        ProjectedBSpline<data_t, N> bspline_;
 
-        using Base = LutProjector<data_t, BSplineProjector<data_t>>;
+        using Base = LutProjector<data_t, BSplineProjector<data_t, N>>;
 
         friend class XrayProjector<self_type>;
     };

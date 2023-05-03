@@ -1,12 +1,11 @@
 #pragma once
 
 #include "Logger.h"
-#include "Timer.h"
 #include "TypeCasts.hpp"
 
 #include <array>
 
-#define DEFAULT_LUT_SIZE 101
+#define DEFAULT_LUT_SIZE 100
 
 namespace elsa
 {
@@ -20,12 +19,10 @@ namespace elsa
 
             std::array<data_t, N> lut;
 
-            auto t = static_cast<data_t>(0);
             const auto step = radius / (N - 1);
 
             for (std::size_t i = 0; i < N; ++i) {
-                lut[i] = gen(t);
-                t += step;
+                lut[i] = gen(step * i);
             }
 
             return lut;

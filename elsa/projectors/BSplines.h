@@ -97,6 +97,8 @@ namespace elsa
             }
             return res;
         }
+
+        const index_t DEFAULT_ORDER = 2;
     } // namespace bspline
 
     /// @brief Represent a B-Spline basis function of a given dimension and order
