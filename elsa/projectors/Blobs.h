@@ -3,6 +3,7 @@
 #include "Error.h"
 #include "elsaDefines.h"
 #include "Bessel.h"
+#include "Luts.hpp"
 
 namespace elsa
 {
@@ -144,7 +145,7 @@ namespace elsa
                     return (-2.0 * s / alpha / a) * (std::cosh(arg) * arg - std::sinh(arg))
                            / bessi2(alpha);
                 } else {
-                    throw Error("m out of range in blob_projected()");
+                    throw Error("m out of range in blob_derivative_projected()");
                 }
             }
             return 0.0;
@@ -201,7 +202,7 @@ namespace elsa
                     return (-2.0 / alpha / a) * (std::cosh(arg) * arg - std::sinh(arg))
                            / bessi2(alpha);
                 } else {
-                    throw Error("m out of range in blob_projected()");
+                    throw Error("m out of range in blob_normalized_derivative_projected()");
                 }
             }
             return 0.0;
@@ -235,31 +236,39 @@ namespace elsa
         constexpr index_t order() const { return order_; }
 
     private:
-        data_t radius_;
-        data_t alpha_;
-        index_t order_;
+        const data_t radius_;
+        const data_t alpha_;
+        const index_t order_;
     };
 
-    template <typename data_t>
+    template <typename data_t, size_t N = DEFAULT_LUT_SIZE>
     class ProjectedBlob
     {
     public:
         constexpr ProjectedBlob(data_t radius, SelfType_t<data_t> alpha, index_t order)
-            : radius_(radius), alpha_(alpha), order_(order)
+            : radius_(radius),
+              alpha_(alpha),
+              order_(order),
+              lut_([this](data_t s) { return this->operator()(s); }, radius_),
+              derivative_lut_([this](data_t s) { return order_ > 0 ? this->derivative(s) : 0; },
+                              radius_),
+              normalized_gradient_lut_(
+                  [this](data_t s) { return order_ > 0 ? this->normalized_gradient(s) : 0; },
+                  radius_)
         {
         }
 
-        constexpr data_t operator()(data_t s)
+        constexpr data_t operator()(data_t s) const
         {
             return blobs::blob_projected(s, radius_, alpha_, order_);
         }
 
-        constexpr data_t derivative(data_t s)
+        constexpr data_t derivative(data_t s) const
         {
             return blobs::blob_derivative_projected(s, radius_, alpha_, order_);
         }
 
-        constexpr data_t normalized_gradient(data_t s)
+        constexpr data_t normalized_gradient(data_t s) const
         {
             return blobs::blob_normalized_derivative_projected(s, radius_, alpha_, order_);
         }
@@ -270,10 +279,28 @@ namespace elsa
 
         constexpr index_t order() const { return order_; }
 
+        constexpr const Lut<data_t, N>& get_lut() const { return lut_; }
+
+        constexpr const Lut<data_t, N>& get_derivative_lut() const { return derivative_lut_; }
+
+        constexpr const Lut<data_t, N>& get_normalized_gradient_lut() const
+        {
+            return normalized_gradient_lut_;
+        }
+
     private:
-        data_t radius_;
-        data_t alpha_;
-        index_t order_;
+        const data_t radius_;
+        const data_t alpha_;
+        const index_t order_;
+
+        /// LUT for projected Blob
+        const Lut<data_t, N> lut_;
+
+        /// LUT for projected derivative
+        const Lut<data_t, N> derivative_lut_;
+
+        /// LUT for projected normalized gradient
+        const Lut<data_t, N> normalized_gradient_lut_;
     };
 
 } // namespace elsa

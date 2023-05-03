@@ -3,6 +3,7 @@
 #include "elsaDefines.h"
 #include "Assertions.h"
 #include "Math.hpp"
+#include "Luts.hpp"
 
 #include <cmath>
 
@@ -126,29 +127,73 @@ namespace elsa
     /// @brief Represent a projected B-Spline basis function of a given dimension and order.
     /// Projected B-Splines are again B-Spline of n-1 dimensions. Using the fact, that B-Splines
     /// are close to symmetrical, we can approximate the projection only based on distance.
-    template <typename data_t>
+    template <typename data_t, size_t N = DEFAULT_LUT_SIZE>
     class ProjectedBSpline
     {
     public:
-        ProjectedBSpline(index_t dim, index_t order);
+        constexpr ProjectedBSpline(index_t dim, index_t order)
+            : dim_(dim),
+              order_(order),
+              radius_((order + 1) * 0.5),
+              lut_([this](data_t s) { return this->operator()(s); }, radius_),
+              derivative_lut_([this](data_t s) { return order_ > 0 ? this->derivative(s) : 0; },
+                              radius_),
+              normalized_gradient_lut_(
+                  [this](data_t s) { return order_ > 0 ? this->normalized_gradient(s) : 0; },
+                  radius_)
+        {
+        }
 
-        data_t operator()(data_t s);
+        constexpr data_t operator()(data_t x) const
+        {
+            return bspline::nd_bspline_centered(x, order_, dim_ - 1);
+        }
 
-        data_t derivative(data_t s);
+        constexpr data_t derivative(data_t x) const
+        {
+            return bspline::nd_bspline_derivative_centered(x, order_, dim_ - 1);
+        }
 
-        data_t normalized_gradient(data_t s);
+        constexpr data_t normalized_gradient(data_t x) const
+        {
+            // compute f'(x)/x
+            if (x == 0)
+                x = 1e-10;
+            return bspline::nd_bspline_derivative_centered(x, order_, dim_ - 1) / x;
+        }
 
-        index_t order() const;
+        constexpr index_t dim() const { return dim_; }
 
-        data_t radius() const;
+        constexpr index_t order() const { return order_; }
 
-        index_t dim() const;
+        constexpr data_t radius() const { return radius_; }
+
+        constexpr const Lut<data_t, N>& get_lut() const { return lut_; }
+
+        constexpr const Lut<data_t, N>& get_derivative_lut() const { return derivative_lut_; }
+
+        constexpr const Lut<data_t, N>& get_normalized_gradient_lut() const
+        {
+            return normalized_gradient_lut_;
+        }
 
     private:
         /// Dimension of B-Spline
-        index_t dim_;
+        const index_t dim_;
 
         /// Order of B-Spline
-        index_t order_;
+        const index_t order_;
+
+        /// Radius of B-Spline
+        const data_t radius_;
+
+        /// LUT for projected B-Spline
+        const Lut<data_t, N> lut_;
+
+        /// LUT for projected derivative
+        const Lut<data_t, N> derivative_lut_;
+
+        /// LUT for projected normalized gradient
+        const Lut<data_t, N> normalized_gradient_lut_;
     };
 } // namespace elsa

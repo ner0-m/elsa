@@ -50,6 +50,23 @@ namespace elsa
         {
             return (T(0) < val) - (val < T(0));
         }
+
+        template <typename data_t>
+        data_t lerp(data_t a, SelfType_t<data_t> b, SelfType_t<data_t> t)
+        {
+            if ((a <= 0 && b >= 0) || (a >= 0 && b <= 0))
+                return t * b + (1 - t) * a;
+
+            if (t == 1)
+                return b;
+
+            const data_t x = a + t * (b - a);
+
+            if ((t > 1) == (b > a))
+                return b < x ? x : b;
+            else
+                return x < b ? x : b;
+        }
     } // namespace math
 
     /// proposed in Y. Meyer, Oscillating Patterns in Image Processing and Nonlinear Evolution

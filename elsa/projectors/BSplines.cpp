@@ -38,52 +38,6 @@ namespace elsa
         return dim_;
     }
 
-    template <typename data_t>
-
-    ProjectedBSpline<data_t>::ProjectedBSpline(index_t dim, index_t order)
-        : dim_(dim), order_(order)
-    {
-    }
-
-    template <typename data_t>
-    data_t ProjectedBSpline<data_t>::operator()(data_t x)
-    {
-        return bspline::nd_bspline_centered(x, order_, dim_ - 1);
-    }
-
-    template <typename data_t>
-    data_t ProjectedBSpline<data_t>::derivative(data_t x)
-    {
-        return bspline::nd_bspline_derivative_centered(x, order_, dim_ - 1);
-    }
-
-    template <typename data_t>
-    data_t ProjectedBSpline<data_t>::normalized_gradient(data_t x)
-    {
-        // compute f'(x)/x
-        if (x == 0)
-            x = 1e-10;
-        return bspline::nd_bspline_derivative_centered(x, order_, dim_ - 1) / x;
-    }
-
-    template <typename data_t>
-    index_t ProjectedBSpline<data_t>::order() const
-    {
-        return order_;
-    }
-
-    template <typename data_t>
-    data_t ProjectedBSpline<data_t>::radius() const
-    {
-        return (order_ + 1) * 0.5;
-    }
-
-    template <typename data_t>
-    index_t ProjectedBSpline<data_t>::dim() const
-    {
-        return dim_;
-    }
-
     // ------------------------------------------
     // explicit template instantiation
     template class BSpline<float>;

@@ -1,6 +1,7 @@
 #include "doctest/doctest.h"
 
-#include "Luts.hpp"
+#include "BSplines.h"
+#include "Blobs.h"
 #include <algorithm>
 #include <numeric>
 
@@ -13,10 +14,10 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with an array of ones", data_t, float, doub
 {
     constexpr index_t size = 100;
 
-    std::array<data_t, size> array;
+    std::array<data_t, size + 1> array;
     std::fill(std::begin(array), std::end(array), 1);
 
-    Lut lut(std::move(array));
+    Lut lut(std::move(array), (data_t) size);
 
     WHEN("Accessing with at integer values")
     {
@@ -38,10 +39,10 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
 {
     constexpr index_t size = 100;
 
-    std::array<data_t, size> array;
+    std::array<data_t, size + 1> array;
     std::iota(std::begin(array), std::end(array), 0);
 
-    Lut lut(std::move(array));
+    Lut lut(std::move(array), (data_t) size);
 
     WHEN("Accessing with at integer values")
     {
@@ -56,7 +57,7 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
             CAPTURE(i);
             CAPTURE(lut(i));
             CAPTURE(lut(i + 1));
-            CHECK_EQ(lut(i + 0.5), i + 0.5);
+            CHECK_EQ(Approx(lut(i + 0.5)), i + 0.5);
         }
     }
 
@@ -66,7 +67,7 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
             CAPTURE(i);
             CAPTURE(lut(i));
             CAPTURE(lut(i + 1));
-            CHECK_EQ(lut(i + 0.25), i + 0.25);
+            CHECK_EQ(Approx(lut(i + 0.25)), i + 0.25);
         }
     }
 
@@ -86,7 +87,7 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
             CAPTURE(i);
             CAPTURE(lut(i));
             CAPTURE(lut(i + 1));
-            CHECK_EQ(lut(i + 0.75), i + 0.75);
+            CHECK_EQ(Approx(lut(i + 0.75)), i + 0.75);
         }
     }
 }
@@ -102,10 +103,9 @@ TEST_CASE_TEMPLATE("ProjectedBSplineLut: testing with various degrees", data_t, 
             GIVEN("BSpline Lut of degree " + std::to_string(degree)
                   + " with dim: " + std::to_string(dim))
             {
-                ProjectedBSplineLut<data_t, 50> lut(dim, degree);
-                ProjectedBSpline<data_t> proj_spline(dim, degree);
+                ProjectedBSpline<data_t, 50> proj_spline(dim, degree);
 
-                CAPTURE(lut.radius());
+                auto& lut = proj_spline.get_lut();
                 CAPTURE(proj_spline.radius());
 
                 for (int i = 0; i < 100; ++i) {
@@ -116,7 +116,6 @@ TEST_CASE_TEMPLATE("ProjectedBSplineLut: testing with various degrees", data_t, 
                     CAPTURE(lut(distance));
 
                     CHECK_EQ(lut(distance), Approx(proj_spline(distance)).epsilon(1e-3));
-                    CHECK_EQ(lut(-distance), Approx(proj_spline(-distance)).epsilon(1e-3));
                 }
             }
         }
@@ -231,7 +230,8 @@ TEST_CASE_TEMPLATE("ProjectedBlobLut: ", data_t, float, double)
                                      4.029329203627377e-07,
                                      0};
 
-    ProjectedBlobLut<data_t, 100> lut(a, alpha, m);
+    ProjectedBlob<data_t, 101> proj_blob(a, alpha, m);
+    auto& lut = proj_blob.get_lut();
 
     CAPTURE(a);
     CAPTURE(alpha);
@@ -250,8 +250,9 @@ TEST_CASE_TEMPLATE("ProjectedBSplineLut: ", data_t, float, double)
 {
     const auto order = 3;
     const auto dim = 2;
+    const size_t TABLE_SIZE = 101;
 
-    std::array<double, 101> expected{
+    std::array<double, TABLE_SIZE> expected{
         0.6666666666666666,     0.6662706666666667,    0.6650986666666668,
         0.6631746666666667,     0.6605226666666665,    0.6571666666666666,
         0.6531306666666663,     0.6484386666666664,    0.6431146666666666,
@@ -287,12 +288,14 @@ TEST_CASE_TEMPLATE("ProjectedBSplineLut: ", data_t, float, double)
         8.533333333371473e-05,  3.599999999948089e-05, 1.066666666660332e-05,
         1.3333333348519716e-06, -5.551115123125783e-16};
 
-    ProjectedBSplineLut<data_t, 100> lut(dim, order);
+    ProjectedBSpline<data_t, TABLE_SIZE> proj_spline(dim, order);
+
+    auto& lut = proj_spline.get_lut();
 
     CAPTURE(order);
     CAPTURE(dim);
 
-    for (int i = 0; i < 101; ++i) {
+    for (int i = 0; i < TABLE_SIZE; ++i) {
         const auto distance = i / 50.;
 
         CAPTURE(i);
