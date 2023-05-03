@@ -1,6 +1,7 @@
 #pragma once
 
 #include "elsaDefines.h"
+#include "Math.hpp"
 #include "Geometry.h"
 #include "Blobs.h"
 
@@ -16,29 +17,25 @@ namespace elsa
         using IndexVector2D_t = Eigen::Matrix<index_t, 2, 1>;
         using IndexVector3D_t = Eigen::Matrix<index_t, 3, 1>;
 
-        template <typename data_t, index_t N>
-        class VoxelLut
+        template <index_t dim, size_t N, typename data_t>
+        data_t classic_weight_function(Lut<data_t, N> lut, Eigen::Matrix<real_t, dim, 1> distance)
         {
-        public:
-            constexpr VoxelLut() : blob_(2, 10.83, 2) {}
+            return lut(distance.norm());
+        }
 
-            constexpr data_t radius() const { return blob_.radius(); }
+        template <size_t N, typename data_t>
+        data_t differential_weight_function_2D(Lut<data_t, N> lut,
+                                               Eigen::Matrix<real_t, 1, 1> distance)
+        {
+            return lut(distance.norm()) * math::sgn(distance[0]);
+        }
 
-            constexpr data_t alpha() const { return blob_.alpha(); }
-
-            constexpr data_t order() const { return blob_.order(); }
-
-            template <index_t dim>
-            constexpr data_t weight(Eigen::Matrix<data_t, dim, 1> distance) const
-            {
-                return blob_.get_lut()((distance.norm() / blob_.radius()) * N);
-            }
-
-            constexpr auto data() const { return blob_.get_lut().data(); }
-
-        private:
-            ProjectedBlob<data_t> blob_;
-        };
+        template <size_t N, typename data_t>
+        data_t differential_weight_function_3D(Lut<data_t, N> lut,
+                                               Eigen::Matrix<real_t, 2, 1> distance)
+        {
+            return lut(distance.norm()) * distance[0];
+        }
 
         template <index_t dim, class Fn>
         void visitDetector(index_t domainIndex, index_t geomIndex, Geometry geometry, real_t radius,
@@ -109,9 +106,9 @@ namespace elsa
             }
         }
 
-        template <int dim, typename data_t, typename basis_function>
+        template <int dim, typename data_t, size_t N, typename basis_function_t>
         void forwardVoxel(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
-                          basis_function& lut)
+                          const Lut<data_t, N>& lut, basis_function_t& basis_function)
         {
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(Ax.getDataDescriptor());
@@ -133,18 +130,19 @@ namespace elsa
                     auto voxelWeight = x[domainIndex];
 
                     visitDetector<dim>(
-                        domainIndex, geomIndex, geometry, lut.radius(), detectorDims, volumeStrides,
+                        domainIndex, geomIndex, geometry, lut.support(), detectorDims,
+                        volumeStrides,
                         [&](const index_t index, Eigen::Matrix<real_t, dim - 1, 1> distance) {
-                            auto wght = lut.template weight<dim - 1>(distance);
+                            auto wght = basis_function(lut, distance);
                             Ax[index] += voxelWeight * wght;
                         });
                 }
             }
         }
 
-        template <int dim, typename data_t, typename basis_function>
+        template <int dim, typename data_t, size_t N, typename basis_function_t>
         void backwardVoxel(const DataContainer<data_t>& y, DataContainer<data_t>& Aty,
-                           basis_function& lut)
+                           const Lut<data_t, N>& lut, basis_function_t basis_function)
         {
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(y.getDataDescriptor());
@@ -166,9 +164,10 @@ namespace elsa
                     auto& geometry = detectorDesc.getGeometry()[asUnsigned(geomIndex)];
 
                     visitDetector<dim>(
-                        domainIndex, geomIndex, geometry, lut.radius(), detectorDims, volumeStrides,
+                        domainIndex, geomIndex, geometry, lut.support(), detectorDims,
+                        volumeStrides,
                         [&](const index_t index, Eigen::Matrix<real_t, dim - 1, 1> distance) {
-                            auto wght = lut.template weight<dim - 1>(distance);
+                            auto wght = basis_function(lut, distance);
                             Aty[domainIndex] += wght * y[index];
                         });
                 }

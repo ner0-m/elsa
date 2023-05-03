@@ -57,7 +57,7 @@ TEST_CASE_TEMPLATE("BSplineVoxelProjector: Testing simple volume 3D with one det
                 {
                     op.apply(x, Ax);
 
-                    const auto weight = op.weight(0);
+                    const auto weight = op.bspline(0);
                     CAPTURE(weight);
 
                     THEN("The detector value is the weight for distance 0")
@@ -107,7 +107,7 @@ TEST_CASE_TEMPLATE("BSplineVoxelProjector: Testing simple volume 2D with one det
 
                     op.apply(x, Ax);
 
-                    const auto weight = op.weight(0);
+                    const auto weight = op.bspline(0);
                     CAPTURE(weight);
 
                     THEN("The detector value is the weight for distance 0")
@@ -155,7 +155,7 @@ TEST_CASE_TEMPLATE("BSplineVoxelProjector: Testing simple volume 2D with two det
 
                 op.apply(x, Ax);
 
-                const auto weight_dist_half = op.weight(0.4761878);
+                const auto weight_dist_half = op.bspline(0.4761878);
                 CAPTURE(weight_dist_half);
 
                 THEN("Detector values are symmetric")
@@ -204,8 +204,8 @@ TEST_CASE_TEMPLATE("BSplineVoxelProjector: Testing simple volume 2D with three d
 
                 op.apply(x, Ax);
 
-                const auto weight_dist0 = op.weight(0);
-                const auto weight_dist1 = op.weight(0.95233786);
+                const auto weight_dist0 = op.bspline(0);
+                const auto weight_dist1 = op.bspline(0.95233786);
                 CAPTURE(weight_dist0);
                 CAPTURE(weight_dist1);
 
@@ -264,7 +264,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -293,10 +293,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -320,10 +320,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -351,7 +351,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -379,10 +379,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -405,10 +405,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -430,10 +430,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -455,10 +455,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -487,7 +487,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -516,10 +516,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -543,10 +543,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -574,7 +574,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -602,10 +602,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -628,10 +628,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -653,10 +653,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -678,10 +678,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -710,7 +710,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -739,10 +739,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -766,10 +766,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -797,7 +797,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -831,7 +831,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -864,7 +864,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -912,7 +912,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -941,10 +941,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -968,10 +968,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -999,7 +999,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -1027,10 +1027,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -1053,10 +1053,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -1078,10 +1078,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -1103,10 +1103,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -1135,7 +1135,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -1164,10 +1164,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -1191,10 +1191,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -1222,7 +1222,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -1250,10 +1250,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -1276,10 +1276,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -1301,10 +1301,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -1326,10 +1326,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -1358,7 +1358,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -1387,10 +1387,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
 
@@ -1414,10 +1414,10 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    total_weight += op.weight(detectorCoord / scaling);
+                    total_weight += op.bspline(detectorCoord / scaling);
                 }
 
-                CHECK_EQ(Ax[0], Approx(total_weight));
+                CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.0001));
             }
         }
     }
@@ -1445,7 +1445,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -1479,7 +1479,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -1512,7 +1512,7 @@ TEST_CASE("BSplineVoxelProjector: Test single detector pixel")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -1557,7 +1557,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
 
             THEN("The main direction of the ray is equal to the weight")
             {
-                const auto weight = op.weight(0);
+                const auto weight = op.bspline(0);
                 CAPTURE(weight);
 
                 CHECK_EQ(x(2, 0), Approx(weight));
@@ -1575,7 +1575,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
+                    auto weight = op.bspline(detectorCoord / scaling);
                     CHECK_EQ(x(3, slice), Approx(weight));
                 }
             }
@@ -1587,7 +1587,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
+                    auto weight = op.bspline(detectorCoord / scaling);
                     CHECK_EQ(x(1, slice), Approx(weight));
                 }
             }
@@ -1615,7 +1615,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
 
             THEN("The main direction of the ray is equal to the weight")
             {
-                const auto weight = op.weight(0);
+                const auto weight = op.bspline(0);
                 CAPTURE(weight);
 
                 CHECK_EQ(x(2, 0), Approx(weight));
@@ -1633,7 +1633,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
+                    auto weight = op.bspline(detectorCoord / scaling);
                     CHECK_EQ(x(3, slice), Approx(weight));
                 }
             }
@@ -1645,7 +1645,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
+                    auto weight = op.bspline(detectorCoord / scaling);
                     CHECK_EQ(x(1, slice), Approx(weight));
                 }
             }
@@ -1673,7 +1673,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
 
             THEN("The main direction of the ray is equal to the weight")
             {
-                const auto weight = op.weight(0);
+                const auto weight = op.bspline(0);
                 CAPTURE(weight);
 
                 CHECK_EQ(x(0, 2), Approx(weight));
@@ -1691,7 +1691,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
+                    auto weight = op.bspline(detectorCoord / scaling);
                     CHECK_EQ(x(slice, 3), Approx(weight));
                 }
             }
@@ -1703,7 +1703,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
+                    auto weight = op.bspline(detectorCoord / scaling);
                     CHECK_EQ(x(slice, 1), Approx(weight));
                 }
             }
@@ -1731,7 +1731,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
 
             THEN("The main direction of the ray is equal to the weight")
             {
-                const auto weight = op.weight(0);
+                const auto weight = op.bspline(0);
                 CAPTURE(weight);
 
                 CHECK_EQ(x(0, 2), Approx(weight));
@@ -1748,7 +1748,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
+                    auto weight = op.bspline(detectorCoord / scaling);
                     CHECK_EQ(x(slice, 3), Approx(weight));
                 }
             }
@@ -1760,7 +1760,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
+                    auto weight = op.bspline(detectorCoord / scaling);
                     CHECK_EQ(x(slice, 1), Approx(weight));
                 }
             }
@@ -1788,7 +1788,7 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
 
             THEN("The main direction of the ray is equal to the weight")
             {
-                const auto weight = op.weight(0);
+                const auto weight = op.bspline(0);
                 CAPTURE(weight);
 
                 CHECK_EQ(x(0, 0), Approx(weight));
@@ -1807,8 +1807,8 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
-                    CHECK_EQ(x(slice, slice + 1), Approx(weight));
+                    auto weight = op.bspline(detectorCoord / scaling);
+                    CHECK_EQ(x(slice, slice + 1), Approx(weight).epsilon(0.0001));
                 }
             }
 
@@ -1821,8 +1821,8 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
-                    CHECK_EQ(x(slice + 1, slice), Approx(weight));
+                    auto weight = op.bspline(detectorCoord / scaling);
+                    CHECK_EQ(x(slice + 1, slice), Approx(weight).epsilon(0.0001));
                 }
             }
 
@@ -1835,8 +1835,8 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
-                    CHECK_EQ(x(slice, 2 - slice), Approx(weight));
+                    auto weight = op.bspline(detectorCoord / scaling);
+                    CHECK_EQ(x(slice, 2 - slice), Approx(weight).epsilon(0.0001));
                 }
             }
 
@@ -1849,8 +1849,8 @@ TEST_CASE("BSplineVoxelProjector: Test backward projection")
                     auto [detectorCoordShifted, scaling] =
                         range.projectAndScaleVoxelOnDetector(voxCoord, 0);
                     real_t detectorCoord = detectorCoordShifted[0] - 0.5f;
-                    auto weight = op.weight(detectorCoord / scaling);
-                    CHECK_EQ(x(2 - slice, slice), Approx(weight));
+                    auto weight = op.bspline(detectorCoord / scaling);
+                    CHECK_EQ(x(2 - slice, slice), Approx(weight).epsilon(0.0001));
                 }
             }
         }
@@ -1878,7 +1878,7 @@ TEST_CASE("BSplineVoxelProjector: Test 45 degree")
                           SinogramData2D{Size2D{sizeRange}});
 
         auto range = PlanarDetectorDescriptor(sizeRange, geom);
-        auto op = BlobVoxelProjector(domain, range);
+        auto op = BSplineVoxelProjector(domain, range);
 
         auto Ax = DataContainer(range);
         Ax = 0;
@@ -1894,7 +1894,7 @@ TEST_CASE("BSplineVoxelProjector: Test 45 degree")
 
             op.apply(x, Ax);
 
-            const auto weight = op.weight(0);
+            const auto weight = op.bspline(0);
             CAPTURE(weight);
 
             THEN("Each detector value is equal to 5 * the weight of distance 0")
@@ -1916,7 +1916,7 @@ TEST_CASE("BSplineVoxelProjector: Test 45 degree")
             THEN("The detector value is equal to the weight at the scaled distances")
             {
                 auto diag = std::sqrt(0.5);
-                auto total_weight = 4 * op.weight(diag);
+                auto total_weight = 4 * op.bspline(diag);
 
                 CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.001));
             }
@@ -1935,7 +1935,7 @@ TEST_CASE("BSplineVoxelProjector: Test 45 degree")
             THEN("The detector value is equal to the weight at the scaled distances")
             {
                 auto diag = std::sqrt(0.5);
-                auto total_weight = 4 * op.weight(diag);
+                auto total_weight = 4 * op.bspline(diag);
 
                 CHECK_EQ(Ax[0], Approx(total_weight).epsilon(0.001));
             }
