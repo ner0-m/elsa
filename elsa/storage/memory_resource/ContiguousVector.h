@@ -488,6 +488,85 @@ namespace elsa::mr
             __host__ __device__ raw_pointer base() const { return _where; }
         };
 
+        template <class Type>
+        class ContIterator
+        {
+        public:
+            using self_type = ContIterator<Type>;
+            using value_type = std::remove_cv_t<Type>;
+            using iterator_category = std::random_access_iterator_tag;
+            using difference_type = ptrdiff_t;
+            using size_type = size_t;
+            using pointer = Type*;
+            using reference = Type&;
+
+        private:
+            pointer _where = 0;
+
+        public:
+            ContIterator() {}
+            ContIterator(pointer w) : _where(w) {}
+            ContIterator(const self_type& p) : _where(p._where) {}
+            ContIterator(self_type&& p) noexcept : _where(p._where) {}
+
+        public:
+            self_type& operator=(const self_type& p)
+            {
+                _where = p._where;
+                return *this;
+            }
+            self_type& operator=(self_type&& p) noexcept
+            {
+                _where = p._where;
+                return *this;
+            }
+            bool operator==(const self_type& p) const { return _where == p._where; }
+            bool operator!=(const self_type& p) const { return !(*this == p); }
+            reference operator*() const { return *_where; }
+            pointer operator->() const { return _where; }
+            self_type& operator++()
+            {
+                ++_where;
+                return *this;
+            };
+            self_type operator++(int)
+            {
+                self_type out(_where);
+                ++_where;
+                return out;
+            }
+            self_type& operator--()
+            {
+                --_where;
+                return *this;
+            };
+            self_type operator--(int)
+            {
+                self_type out(_where);
+                --_where;
+                return out;
+            }
+
+            self_type& operator+=(difference_type d)
+            {
+                _where += d;
+                return *this;
+            }
+            self_type& operator-=(difference_type d)
+            {
+                _where -= d;
+                return *this;
+            }
+            self_type operator+(difference_type d) const { return self_type(_where + d); }
+            self_type operator-(difference_type d) const { return self_type(_where - d); }
+            difference_type operator-(const self_type& p) const { return _where - p._where; }
+            reference operator[](size_type i) const { return _where[i]; }
+            bool operator<(const self_type& p) const { return _where < p._where; }
+            bool operator<=(const self_type& p) const { return _where <= p._where; }
+            bool operator>=(const self_type& p) const { return !(*this < p); }
+            bool operator>(const self_type& p) const { return !(*this <= p); }
+            pointer base() const { return _where; }
+        };
     } // namespace detail
 
     /*
@@ -545,8 +624,8 @@ namespace elsa::mr
 
         using pointer = detail::ContPointer<Type>;
         using const_pointer = detail::ContPointer<const Type>;
-        using iterator = pointer;
-        using const_iterator = const_pointer;
+        using iterator = detail::ContIterator<Type>;
+        using const_iterator = detail::ContIterator<const Type>;
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 

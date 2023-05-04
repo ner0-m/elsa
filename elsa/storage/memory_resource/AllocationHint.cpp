@@ -6,6 +6,7 @@
 
 #include "Overloaded.hpp"
 #include <variant>
+#include <limits>
 
 namespace elsa::mr::hint
 {
