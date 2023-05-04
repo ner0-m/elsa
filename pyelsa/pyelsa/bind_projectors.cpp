@@ -3,13 +3,15 @@
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 
-#include "BSplines.h"
 #include "BinaryMethod.h"
 #include "JosephsMethod.h"
 #include "SiddonsMethod.h"
 #include "VoxelProjector.h"
+#include "PhaseContrastProjector.h"
 #include "LutProjector.h"
 #include "SubsetSampler.h"
+#include "Blobs.h"
+#include "BSplines.h"
 
 #include "bind_common.h"
 
@@ -17,6 +19,75 @@
 
 namespace py = pybind11;
 using index_t = std::ptrdiff_t; ///< global type for indices
+
+template <template <typename> class ProjectorClass>
+void bind_blob_projector(py::module& m, const char* name)
+{
+    std::string float_name = std::string(name) + "f";
+    std::string double_name = std::string(name) + "d";
+
+    py::class_<ProjectorClass<float>, elsa::LinearOperator<float>> projector_float(
+        m, float_name.c_str());
+    projector_float.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
+                                 float, float, index_t>(),
+                        py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
+                        py::arg("radius") = elsa::blobs::DEFAULT_RADIUS,
+                        py::arg("alpha") = elsa::blobs::DEFAULT_ALPHA,
+                        py::arg("order") = elsa::blobs::DEFAULT_ORDER);
+
+    m.attr(name) = m.attr(float_name.c_str());
+
+    py::class_<ProjectorClass<double>, elsa::LinearOperator<double>> projector_double(
+        m, double_name.c_str());
+    projector_double.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
+                                  double, double, index_t>(),
+                         py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
+                         py::arg("radius") = elsa::blobs::DEFAULT_RADIUS,
+                         py::arg("alpha") = elsa::blobs::DEFAULT_ALPHA,
+                         py::arg("order") = elsa::blobs::DEFAULT_ORDER);
+}
+
+template <template <typename> class ProjectorClass>
+void bind_bspline_projector(py::module& m, const char* name)
+{
+    std::string float_name = std::string(name) + "f";
+    std::string double_name = std::string(name) + "d";
+
+    py::class_<ProjectorClass<float>, elsa::LinearOperator<float>> projector_float(
+        m, float_name.c_str());
+    projector_float.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
+        py::arg("order") = elsa::bspline::DEFAULT_ORDER);
+
+    m.attr(name) = m.attr(float_name.c_str());
+
+    py::class_<ProjectorClass<double>, elsa::LinearOperator<double>> projector_double(
+        m, double_name.c_str());
+    projector_double.def(
+        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
+        py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
+        py::arg("order") = elsa::bspline::DEFAULT_ORDER);
+}
+
+template <template <typename> class ProjectorClass>
+void bind_projector(py::module& m, const char* name)
+{
+    std::string float_name = std::string(name) + "f";
+    std::string double_name = std::string(name) + "d";
+
+    py::class_<ProjectorClass<float>, elsa::LinearOperator<float>> projector_float(
+        m, float_name.c_str());
+    projector_float.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+                        py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+
+    m.attr(name) = m.attr(float_name.c_str());
+
+    py::class_<ProjectorClass<double>, elsa::LinearOperator<double>> projector_double(
+        m, double_name.c_str());
+    projector_double.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
+                         py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+}
 
 void add_definitions_pyelsa_projectors(py::module& m)
 {
@@ -57,135 +128,19 @@ void add_definitions_pyelsa_projectors(py::module& m)
                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
                                    thrust::complex<double>>::SamplingStrategy::ROUND_ROBIN);
 
-    py::class_<elsa::BinaryMethod<float>, elsa::LinearOperator<float>> BinaryMethodf(
-        m, "BinaryMethodf");
-    BinaryMethodf.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-                      py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+    bind_projector<elsa::BinaryMethod>(m, "BinaryMethod");
+    bind_projector<elsa::SiddonsMethod>(m, "SiddonsMethod");
+    bind_projector<elsa::JosephsMethod>(m, "JosephsMethod");
 
-    m.attr("BinaryMethod") = m.attr("BinaryMethodf");
+    bind_blob_projector<elsa::BlobProjector>(m, "BlobProjector");
+    bind_blob_projector<elsa::BlobVoxelProjector>(m, "BlobVoxelProjector");
+    bind_blob_projector<elsa::PhaseContrastBlobVoxelProjector>(m,
+                                                               "PhaseContrastBlobVoxelProjector");
 
-    py::class_<elsa::BinaryMethod<double>, elsa::LinearOperator<double>> BinaryMethodd(
-        m, "BinaryMethodd");
-    BinaryMethodd.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-                      py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
-
-    py::class_<elsa::SiddonsMethod<float>, elsa::LinearOperator<float>> SiddonsMethodf(
-        m, "SiddonsMethodf");
-    SiddonsMethodf.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-                       py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
-
-    m.attr("SiddonsMethod") = m.attr("SiddonsMethodf");
-
-    py::class_<elsa::SiddonsMethod<double>, elsa::LinearOperator<double>> SiddonsMethodd(
-        m, "SiddonsMethodd");
-    SiddonsMethodd.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-                       py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
-
-    py::class_<elsa::BlobProjector<float>, elsa::LinearOperator<float>> BlobProjectorf(
-        m, "BlobProjectorf");
-    BlobProjectorf.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
-                                float, float, index_t>(),
-                       py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
-                       py::arg("radius") = 2.0f, py::arg("alpha") = 10.83f, py::arg("order") = 2);
-
-    m.attr("BlobProjector") = m.attr("BlobProjectorf");
-
-    py::class_<elsa::BlobProjector<double>, elsa::LinearOperator<double>> BlobProjectord(
-        m, "BlobProjectord");
-    BlobProjectord.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
-                                double, double, index_t>(),
-                       py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
-                       py::arg("radius") = 2.0, py::arg("alpha") = 10.83, py::arg("order") = 2);
-
-    py::class_<elsa::BlobVoxelProjector<float>, elsa::LinearOperator<float>> BlobVoxelProjectorf(
-        m, "BlobVoxelProjectorf");
-    BlobVoxelProjectorf.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
-                                     float, float, index_t>(),
-                            py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
-                            py::arg("radius") = 2.0f, py::arg("alpha") = 10.83f,
-                            py::arg("order") = 2);
-
-    m.attr("BlobVoxelProjector") = m.attr("BlobVoxelProjectorf");
-
-    py::class_<elsa::BlobVoxelProjector<double>, elsa::LinearOperator<double>> BlobVoxelProjectord(
-        m, "BlobVoxelProjectord");
-    BlobVoxelProjectord.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
-                                     double, double, index_t>(),
-                            py::arg("domainDescriptor"), py::arg("rangeDescriptor"),
-                            py::arg("radius") = 2.0, py::arg("alpha") = 10.83,
-                            py::arg("order") = 2);
-
-    py::class_<elsa::BSplineProjector<float>, elsa::LinearOperator<float>> BSplineProjectorf(
-        m, "BSplineProjectorf");
-    BSplineProjectorf.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("order") = 2);
-
-    m.attr("BSplineProjector") = m.attr("BSplineProjectorf");
-
-    py::class_<elsa::BSplineProjector<double>, elsa::LinearOperator<double>> BSplineProjectord(
-        m, "BSplineProjectord");
-    BSplineProjectord.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("order") = 2);
-
-    py::class_<elsa::BSplineVoxelProjector<float>, elsa::LinearOperator<float>>
-        BSplineVoxelProjectorf(m, "BSplineVoxelProjectorf");
-    BSplineVoxelProjectorf.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("order") = 2);
-
-    m.attr("BSplineVoxelProjector") = m.attr("BSplineVoxelProjectorf");
-
-    py::class_<elsa::BSplineVoxelProjector<double>, elsa::LinearOperator<double>>
-        BSplineVoxelProjectord(m, "BSplineVoxelProjectord");
-    BSplineVoxelProjectord.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("order") = 2);
-
-    py::class_<elsa::PhaseContrastBlobVoxelProjector<float>, elsa::LinearOperator<float>>
-        PhaseContrastBlobVoxelProjectorf(m, "PhaseContrastBlobVoxelProjectorf");
-    PhaseContrastBlobVoxelProjectorf.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, float, float,
-                 index_t>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("radius") = 2.0f,
-        py::arg("alpha") = 10.83f, py::arg("order") = 2);
-
-    m.attr("PhaseContrastBlobVoxelProjector") = m.attr("PhaseContrastBlobVoxelProjectorf");
-
-    py::class_<elsa::PhaseContrastBlobVoxelProjector<double>, elsa::LinearOperator<double>>
-        PhaseContrastBlobVoxelProjectord(m, "PhaseContrastBlobVoxelProjectord");
-    PhaseContrastBlobVoxelProjectord.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, double, double,
-                 index_t>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("radius") = 2.0,
-        py::arg("alpha") = 10.83, py::arg("order") = 2);
-
-    py::class_<elsa::PhaseContrastBSplineVoxelProjector<float>, elsa::LinearOperator<float>>
-        PhaseContrastBSplineVoxelProjectorf(m, "PhaseContrastBSplineVoxelProjectorf");
-    PhaseContrastBSplineVoxelProjectorf.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("order") = 2);
-
-    m.attr("PhaseContrastBSplineVoxelProjector") = m.attr("PhaseContrastBSplineVoxelProjectorf");
-
-    py::class_<elsa::PhaseContrastBSplineVoxelProjector<double>, elsa::LinearOperator<double>>
-        PhaseContrastBSplineVoxelProjectord(m, "PhaseContrastBSplineVoxelProjectord");
-    PhaseContrastBSplineVoxelProjectord.def(
-        py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
-        py::arg("domainDescriptor"), py::arg("rangeDescriptor"), py::arg("order") = 2);
-
-    py::class_<elsa::JosephsMethod<float>, elsa::LinearOperator<float>> JosephsMethodf(
-        m, "JosephsMethodf");
-    JosephsMethodf.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-                       py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
-
-    m.attr("JosephsMethod") = m.attr("JosephsMethodf");
-
-    py::class_<elsa::JosephsMethod<double>, elsa::LinearOperator<double>> JosephsMethodd(
-        m, "JosephsMethodd");
-    JosephsMethodd.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
-                       py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+    bind_bspline_projector<elsa::BSplineProjector>(m, "BSplineProjector");
+    bind_bspline_projector<elsa::BSplineVoxelProjector>(m, "BSplineVoxelProjector");
+    bind_bspline_projector<elsa::PhaseContrastBSplineVoxelProjector>(
+        m, "PhaseContrastBSplineVoxelProjector");
 
     py::class_<elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, float>>>
         CloneableSubsetSamplerPlanarDetectorDescriptorfloat(
