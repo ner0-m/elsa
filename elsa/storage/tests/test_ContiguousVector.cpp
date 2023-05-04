@@ -1,6 +1,7 @@
 #include "doctest/doctest.h"
 
 #include "memory_resource/ContiguousVector.h"
+#include "memory_resource/ContiguousWrapper.h"
 #include "memory_resource/HostStandardResource.h"
 #include "Assertions.h"
 
@@ -16,8 +17,8 @@ struct TestStatsCounter {
     MemoryResource resource;
 
     /* for complex type */
-    std::set<const struct ComplexType*> preTestConstructed;
-    std::set<const struct ComplexType*> constructed;
+    std::set<const void*> preTestConstructed;
+    std::set<const void*> constructed;
     size_t invalidDestruct = 0;
     size_t doubleConstruct = 0;
     size_t invalidAssign = 0;
@@ -35,6 +36,44 @@ struct TestStatsCounter {
 };
 static TestStatsCounter testStats;
 
+/* start measuring the stats / stop & verify */
+static void StartTestStats()
+{
+    testStats.constructed.clear();
+    testStats.allocations.clear();
+
+    testStats.invalidDestruct = 0;
+    testStats.doubleConstruct = 0;
+    testStats.invalidAssign = 0;
+    testStats.invalidAccess = 0;
+    testStats.destructCount = 0;
+    testStats.defaultConstruct = 0;
+    testStats.invalidFree = 0;
+    testStats.allocOperations = 0;
+
+    testStats.intest = true;
+}
+static void VerifyTestStats()
+{
+    testStats.intest = false;
+
+    CHECK_MESSAGE(testStats.constructed.empty(), "Not all objects were destructed");
+    CHECK_MESSAGE(testStats.invalidDestruct == 0, "Uninitialized objects were destructed");
+    CHECK_MESSAGE(testStats.doubleConstruct == 0, "Initialized objects were re-initialized");
+    CHECK_MESSAGE(testStats.invalidAssign == 0, "Uninitialized objects were assigned");
+    CHECK_MESSAGE(testStats.invalidAccess == 0, "Uninitialized objects were accessed");
+    CHECK_MESSAGE(testStats.destructCount == 0, "Unexpected destructs occurred");
+    CHECK_MESSAGE(testStats.defaultConstruct == 0,
+                  "Uninitialized objects were default-constructed");
+    CHECK_MESSAGE(testStats.allocations.empty(), "Memory leak detected");
+    CHECK_MESSAGE(testStats.invalidFree == 0, "Invalid address was deallocated");
+
+    /* reset all missed allocations */
+    for (auto& alloc : testStats.allocations)
+        testStats.resource->deallocate(alloc.first, alloc.second.first, alloc.second.second);
+}
+
+/* checked resource which keeps track of accesses/allocations */
 class CheckedResource : private HostStandardResource
 {
 private:
@@ -93,7 +132,49 @@ private:
 public:
     static MemoryResource make() { return MemoryResource::MakeRef(new CheckedResource()); }
 };
+
+/* count how many values in the container match the given requirements */
+template <class T>
+static size_t CheckAllEqual(const T& t, int val)
+{
+    size_t count = 0;
+    for (size_t i = 0; i < t.size(); ++i) {
+        if (t[i] == val)
+            ++count;
+    }
+    return count;
+}
+template <class T, class It>
+static size_t CheckAllMatch(const T& t, It it, size_t values)
+{
+    size_t count = 0;
+    auto tt = t.begin();
+    while (tt != t.end() && values-- > 0) {
+        if (*tt == *it)
+            ++count;
+        ++tt;
+        ++it;
+    }
+    return count;
+}
+
+/* rotate bits (to initialize all integer values deterministically with non-null values) */
+static unsigned int RotateIntBits(unsigned int i, uint32_t c)
+{
+    if (c == 0)
+        return i;
+    return (i >> c) | (i << (sizeof(unsigned int) * 8 - c));
+}
+
+/* types to check for proper behavior/verify correct operations
+ *  (ValCount = number of ints as payload) => for more than one integer, returns 0 on errors!
+ *
+ *  Multiple Uninitialized values does not make sense
+ */
+template <size_t ValCount>
 struct ComplexType {
+    static_assert(ValCount >= 1, "Payload must be at least 1 integer");
+
 public:
     using tag = type_tags::complex;
     template <class T>
@@ -101,7 +182,7 @@ public:
     static constexpr int initValue = 0;
 
 private:
-    int _payload = 0;
+    int _payload[ValCount] = {0};
 
 private:
     void _checkConstruct()
@@ -113,7 +194,7 @@ private:
         else
             testStats.preTestConstructed.insert(this);
     }
-    void _checkValid(const ComplexType& t, bool access) const
+    void _checkValid(const ComplexType<ValCount>& t, bool access) const
     {
         if (testStats.constructed.count(&t) == 0 && testStats.preTestConstructed.count(&t) == 0)
             ++(access ? testStats.invalidAccess : testStats.invalidAssign);
@@ -121,14 +202,23 @@ private:
 
 public:
     ComplexType() { _checkConstruct(); }
-    ComplexType(int i) : _payload(i) { _checkConstruct(); }
-    ComplexType(const ComplexType& t) : _payload(t._payload)
+    ComplexType(int v)
     {
+        for (size_t i = 0; i < ValCount; ++i)
+            _payload[i] = RotateIntBits(v, i);
+        _checkConstruct();
+    }
+    ComplexType(const ComplexType<ValCount>& t)
+    {
+        for (size_t i = 0; i < ValCount; ++i)
+            _payload[i] = t._payload[i];
         _checkConstruct();
         _checkValid(t, true);
     }
-    ComplexType(ComplexType&& t) noexcept : _payload(t._payload)
+    ComplexType(ComplexType<ValCount>&& t) noexcept
     {
+        for (size_t i = 0; i < ValCount; ++i)
+            _payload[i] = t._payload[i];
         _checkConstruct();
         _checkValid(t, true);
     }
@@ -145,28 +235,41 @@ public:
         else
             testStats.constructed.erase(it);
     }
-    ComplexType& operator=(const ComplexType& t)
+    ComplexType<ValCount>& operator=(const ComplexType<ValCount>& t)
     {
-        _checkValid(t, true);
         _checkValid(*this, false);
-        _payload = t._payload;
+        if (this == &t)
+            return *this;
+        _checkValid(t, true);
+        for (size_t i = 0; i < ValCount; ++i)
+            _payload[i] = t._payload[i];
         return *this;
     }
-    ComplexType& operator=(ComplexType&& t)
+    ComplexType<ValCount>& operator=(ComplexType<ValCount>&& t)
     {
-        _checkValid(t, true);
         _checkValid(*this, false);
-        _payload = t._payload;
+        if (this == &t)
+            return *this;
+        _checkValid(t, true);
+        for (size_t i = 0; i < ValCount; ++i)
+            _payload[i] = t._payload[i];
         return *this;
     }
 
     operator int() const
     {
         _checkValid(*this, true);
-        return _payload;
+        for (size_t i = 1; i < ValCount; ++i) {
+            if (_payload[i] != RotateIntBits(_payload[0], i))
+                return 0;
+        }
+        return _payload[0];
     }
 };
+template <size_t ValCount>
 struct TrivialType {
+    static_assert(ValCount >= 1, "Payload must be at least 1 integer");
+
 public:
     using tag = type_tags::trivial;
     template <class T>
@@ -174,19 +277,30 @@ public:
     static constexpr int initValue = 0;
 
 private:
-    int _payload = 0;
+    int _payload[ValCount] = {0};
 
 public:
     TrivialType() = default;
-    TrivialType(int i) : _payload(i) {}
+    TrivialType(int v)
+    {
+        for (size_t i = 0; i < ValCount; ++i)
+            _payload[i] = RotateIntBits(v, i);
+    }
     ~TrivialType() { ++testStats.destructCount; }
-    TrivialType(const TrivialType&) = default;
-    TrivialType(TrivialType&&) = default;
-    TrivialType& operator=(const TrivialType&) = default;
-    TrivialType& operator=(TrivialType&&) = default;
-    operator int() const { return _payload; }
+    TrivialType(const TrivialType<ValCount>&) = default;
+    TrivialType(TrivialType<ValCount>&&) = default;
+    TrivialType<ValCount>& operator=(const TrivialType<ValCount>&) = default;
+    TrivialType<ValCount>& operator=(TrivialType<ValCount>&&) = default;
+    operator int() const
+    {
+        for (size_t i = 1; i < ValCount; ++i) {
+            if (_payload[i] != RotateIntBits(_payload[0], i))
+                return 0;
+        }
+        return _payload[0];
+    }
 };
-struct UninitType : public TrivialType {
+struct UninitType : public TrivialType<1> {
 public:
     using tag = type_tags::uninitialized;
     template <class T>
@@ -195,85 +309,26 @@ public:
 
 public:
     UninitType() { ++testStats.defaultConstruct; }
-    UninitType(int i) : TrivialType(i) {}
+    UninitType(int v) : TrivialType<1>(v) {}
     UninitType(const UninitType& t) = default;
     UninitType(UninitType&&) = default;
     UninitType& operator=(const UninitType&) = default;
     UninitType& operator=(UninitType&&) = default;
 };
 
-/* start measuring the stats / stop & verify */
-static void StartTestStats()
-{
-    testStats.constructed.clear();
-    testStats.allocations.clear();
-
-    testStats.invalidDestruct = 0;
-    testStats.doubleConstruct = 0;
-    testStats.invalidAssign = 0;
-    testStats.invalidAccess = 0;
-    testStats.destructCount = 0;
-    testStats.defaultConstruct = 0;
-    testStats.invalidFree = 0;
-    testStats.allocOperations = 0;
-
-    testStats.intest = true;
-}
-static void VerifyTestStats()
-{
-    testStats.intest = false;
-
-    CHECK_MESSAGE(testStats.constructed.empty(), "Not all objects were destructed");
-    CHECK_MESSAGE(testStats.invalidDestruct == 0, "Uninitialized objects were destructed");
-    CHECK_MESSAGE(testStats.doubleConstruct == 0, "Initialized objects were re-initialized");
-    CHECK_MESSAGE(testStats.invalidAssign == 0, "Uninitialized objects were assigned");
-    CHECK_MESSAGE(testStats.invalidAccess == 0, "Uninitialized objects were accessed");
-    CHECK_MESSAGE(testStats.destructCount == 0, "Unexpected destructs occurred");
-    CHECK_MESSAGE(testStats.defaultConstruct == 0,
-                  "Uninitialized objects were default-constructed");
-    CHECK_MESSAGE(testStats.allocations.empty(), "Memory leak detected");
-    CHECK_MESSAGE(testStats.invalidFree == 0, "Invalid address was deallocated");
-
-    /* reset all missed allocations */
-    for (auto& alloc : testStats.allocations)
-        testStats.resource->deallocate(alloc.first, alloc.second.first, alloc.second.second);
-}
-
-/* count how many values in the container match the given requirements */
-template <class T>
-static size_t CheckAllEqual(const T& t, int val)
-{
-    size_t count = 0;
-    for (size_t i = 0; i < t.size(); ++i) {
-        if (t[i] == val)
-            ++count;
-    }
-    return count;
-}
-template <class T, class It>
-static size_t CheckAllMatch(const T& t, It it)
-{
-    size_t count = 0;
-    auto tt = t.begin();
-    while (tt != t.end()) {
-        if (*tt == *it)
-            ++count;
-        ++tt;
-        ++it;
-    }
-    return count;
-}
-
 TEST_SUITE_BEGIN("memoryresources");
-TYPE_TO_STRING(ComplexType);
-TYPE_TO_STRING(TrivialType);
+TYPE_TO_STRING(ComplexType<1>);
+TYPE_TO_STRING(TrivialType<1>);
 TYPE_TO_STRING(UninitType);
+TYPE_TO_STRING(ComplexType<6>);
+TYPE_TO_STRING(TrivialType<8>);
 
-TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType, UninitType)
+TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialType<1>, UninitType,
+                   ComplexType<6>, TrivialType<8>)
 {
     MemoryResource mres = CheckedResource::make();
     testStats.resource = mres;
-    using Vector = ContiguousVector<T, typename T::tag>;
+    using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
 
     SUBCASE("Default constructor")
     {
@@ -294,7 +349,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
 
         {
             Vector storage(intCount0, mres);
-            REQUIRE(storage.size() == intCount0);
+            CHECK(storage.size() == intCount0);
             CHECK(CheckAllEqual(storage, T::initValue) == intCount0);
         }
 
@@ -310,7 +365,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
 
         {
             Vector storage(intCount1, temp, mres);
-            REQUIRE(storage.size() == intCount1);
+            CHECK(storage.size() == intCount1);
             CHECK(CheckAllEqual(storage, intNum1) == intCount1);
         }
 
@@ -324,8 +379,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
 
         {
             Vector storage(intVec0.begin(), intVec0.end(), mres);
-            REQUIRE(storage.size() == intVec0.size());
-            CHECK(CheckAllMatch(storage, intVec0.begin()) == intVec0.size());
+            CHECK(storage.size() == intVec0.size());
+            CHECK(CheckAllMatch(storage, intVec0.begin(), intVec0.size()) == intVec0.size());
         }
 
         VerifyTestStats();
@@ -338,8 +393,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
 
         {
             Vector storage(intList.begin(), intList.end(), mres);
-            REQUIRE(storage.size() == intList.size());
-            CHECK(CheckAllMatch(storage, intList.begin()) == intList.size());
+            CHECK(storage.size() == intList.size());
+            CHECK(CheckAllMatch(storage, intList.begin(), intList.size()) == intList.size());
         }
 
         VerifyTestStats();
@@ -353,8 +408,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
 
         {
             Vector storage(intInit, mres);
-            REQUIRE(storage.size() == intInit.size());
-            CHECK(CheckAllMatch(storage, intInit.begin()) == intInit.size());
+            CHECK(storage.size() == intInit.size());
+            CHECK(CheckAllMatch(storage, intInit.begin(), intInit.size()) == intInit.size());
         }
 
         VerifyTestStats();
@@ -368,8 +423,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
 
         {
             Vector storage(intSelf, mres);
-            REQUIRE(storage.size() == intSelf.size());
-            CHECK(CheckAllMatch(storage, intSelf.begin()) == intSelf.size());
+            CHECK(storage.size() == intSelf.size());
+            CHECK(CheckAllMatch(storage, intSelf.begin(), intSelf.size()) == intSelf.size());
         }
 
         VerifyTestStats();
@@ -385,12 +440,88 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             Vector storage(std::move(intSelf));
             // NOLINTNEXTLINE(*-use-after-move)
             CHECK(intSelf.size() == 0);
-            REQUIRE(storage.size() == intList.size());
-            CHECK(CheckAllMatch(storage, intList.begin()) == intList.size());
+            CHECK(storage.size() == intList.size());
+            CHECK(CheckAllMatch(storage, intList.begin(), intList.size()) == intList.size());
 
             /* necessary as move-constructor 'steals' the values from the pre-constructed storage */
             std::swap(testStats.preTestConstructed, testStats.constructed);
             std::swap(testStats.preTestAllocated, testStats.allocations);
+        }
+
+        VerifyTestStats();
+    }
+
+    testStats.resource.release();
+}
+
+TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType<1>, UninitType,
+                   ComplexType<6>, TrivialType<8>)
+{
+    MemoryResource mres = CheckedResource::make();
+    testStats.resource = mres;
+    using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
+
+    std::vector<int> intVec0 = {-6454, -4728, -1351, 4778, -283, 356, 6839};
+    std::vector<int> intVec1 = {142, -165, 6561, 315, -3790, 313, 988872, 132109, -1970, 12319};
+    SUBCASE("operator=(const self_type&)")
+    {
+        Vector intSelf(intVec1.begin(), intVec1.end(), mres);
+
+        StartTestStats();
+
+        {
+            Vector storage(intVec0.begin(), intVec0.end(), mres);
+
+            storage = intSelf;
+
+            CHECK(storage.size() == intVec1.size());
+            CHECK(intSelf.size() == intVec1.size());
+            CHECK(CheckAllMatch(storage, intVec1.begin(), intVec1.size()) == intVec1.size());
+            CHECK(CheckAllMatch(intSelf, intVec1.begin(), intVec1.size()) == intVec1.size());
+        }
+
+        VerifyTestStats();
+    }
+
+    std::vector<int> intVec2 = {42128, -1117, 703, 2051, 3929, 8967, 5836, -4143, 313842, 230};
+    SUBCASE("operator=(self_type&&)")
+    {
+        Vector intSelf(intVec2.begin(), intVec2.end(), mres);
+
+        StartTestStats();
+
+        {
+            Vector storage(intVec0.begin(), intVec0.end(), mres);
+
+            storage = std::move(intSelf);
+
+            CHECK(storage.size() == intVec2.size());
+            // NOLINTNEXTLINE(*-use-after-move)
+            CHECK(intSelf.size() == 0);
+            CHECK(CheckAllMatch(storage, intVec2.begin(), intVec2.size()) == intVec2.size());
+
+            /* necessary as move-constructor 'steals' the values from the pre-constructed storage */
+            std::swap(testStats.preTestConstructed, testStats.constructed);
+            std::swap(testStats.preTestAllocated, testStats.allocations);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("operator=(initializer_list)")
+    {
+        std::initializer_list<T> intInit = {-12011, 7768,  5991, 4419,  -5819, -7972,
+                                            -1214,  -8911, 9401, -2669, -4947, -2232};
+
+        StartTestStats();
+
+        {
+            Vector storage(intVec0.begin(), intVec0.end(), mres);
+
+            storage = intInit;
+
+            CHECK(storage.size() == intInit.size());
+            CHECK(CheckAllMatch(storage, intInit.begin(), intInit.size()) == intInit.size());
         }
 
         VerifyTestStats();

@@ -3,6 +3,7 @@
 #include "memory_resource/ContiguousVector.h"
 #include "memory_resource/PoolResource.h"
 #include "memory_resource/UniversalResource.h"
+#include "memory_resource/ContiguousWrapper.h"
 
 #include "DisableWarnings.h"
 
@@ -29,6 +30,8 @@ namespace elsa
     } // namespace detail
 
     template <class T>
-    using ContiguousStorage = mr::ContiguousVector<T, mr::type_tags::complex>;
+    using ContiguousStorage =
+        mr::ContiguousVector<T, mr::type_tags::complex, mr::detail::ContPointer,
+                             mr::detail::ContIterator>;
     // using ContiguousStorage = thrust::universal_vector<T>;
 } // namespace elsa
