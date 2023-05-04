@@ -41,7 +41,7 @@ namespace elsa::mr
         RegionResource(const MemoryResource& upstream,
                        const RegionResourceConfig& config = RegionResourceConfig::defaultConfig());
 
-        ~RegionResource() = default;
+        ~RegionResource();
 
     public:
         static MemoryResource
