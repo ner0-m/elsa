@@ -73,7 +73,7 @@ namespace elsa::mr
         CacheResource(MemoryResource upstream,
                       const CacheResourceConfig& config = CacheResourceConfig::defaultConfig());
 
-        ~CacheResource() = default;
+        ~CacheResource();
 
     public:
         static MemoryResource

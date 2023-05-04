@@ -36,6 +36,11 @@ namespace elsa::mr
         _endPtr = voidPtrOffset(_basePtr, _config.regionSize);
     }
 
+    RegionResource::~RegionResource()
+    {
+        _upstream->deallocate(_basePtr, _config.regionSize, 8);
+    }
+
     MemoryResource RegionResource::make(const MemoryResource& upstream,
                                         const RegionResourceConfig& config)
     {

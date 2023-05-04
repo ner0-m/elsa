@@ -122,13 +122,13 @@ namespace elsa::mr
         // This function is noexcept, because it makes no allocations. The only potentially throwing
         // functions it calls, are the find and erase methods on _addressToBlock. Neither of these
         // should throw, if the inner type raises no exceptions.
-        void doDeallocate(void* ptr, size_t size, size_t alignment) noexcept;
+        void doDeallocate(void* ptr) noexcept;
 
     protected:
         PoolResource(MemoryResource upstream,
                      PoolResourceConfig config = PoolResourceConfig::defaultConfig());
 
-        ~PoolResource() = default;
+        ~PoolResource();
 
     public:
         /// @brief Create a MemoryResource that encapsulates a PoolResource with the given config.

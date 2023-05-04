@@ -58,6 +58,14 @@ namespace elsa::mr
             std::make_unique<std::unique_ptr<pool_resource::Block>[]>(_config.maxCachedChunks);
     }
 
+    PoolResource::~PoolResource()
+    {
+        for (size_t i = 0; i < _cachedChunkCount; i++) {
+            _upstream->deallocate(_cachedChunks[i]->_address, _config.chunkSize,
+                                  pool_resource::BLOCK_GRANULARITY);
+        }
+    }
+
     MemoryResource PoolResource::make(MemoryResource upstream, PoolResourceConfig config)
     {
         return MemoryResource::MakeRef(new PoolResource(upstream, config));
@@ -149,7 +157,7 @@ namespace elsa::mr
         } catch (...) {
             // this is safe to call, because it is noexcept and should free block, re-merging it
             // with its predecessor
-            doDeallocate(block->_address, size, alignment);
+            doDeallocate(block->_address);
             throw std::bad_alloc();
         }
     }
@@ -164,10 +172,10 @@ namespace elsa::mr
             _upstream->deallocate(ptr, size, alignment);
             return;
         }
-        doDeallocate(ptr, size, alignment);
+        doDeallocate(ptr);
     }
 
-    void PoolResource::doDeallocate(void* ptr, size_t size, size_t alignment) noexcept
+    void PoolResource::doDeallocate(void* ptr) noexcept
     {
         auto blockIt = _addressToBlock.find(ptr);
         ENSURE(blockIt != _addressToBlock.end());

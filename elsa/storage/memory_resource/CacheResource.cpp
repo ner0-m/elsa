@@ -44,6 +44,11 @@ namespace elsa::mr
         }
     }
 
+    CacheResource::~CacheResource()
+    {
+        releaseCache();
+    }
+
     MemoryResource CacheResource::make(MemoryResource upstream, const CacheResourceConfig& config)
     {
         return MemoryResource::MakeRef(new CacheResource(upstream, config));
