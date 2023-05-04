@@ -76,7 +76,7 @@ namespace elsa::mr
     }
     bool MemoryResource::operator!=(const MemoryResource& r) const
     {
-        return _resource == r._resource;
+        return _resource != r._resource;
     }
     bool MemoryResource::valid() const
     {
