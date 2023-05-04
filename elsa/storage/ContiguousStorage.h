@@ -21,8 +21,8 @@ namespace elsa
         public:
             ConfigMemoryResource()
             {
-                if (!mr::defaultInstanceSet())
-                    mr::setDefaultInstance(mr::UniversalResource::make());
+                if (!mr::baselineInstanceSet())
+                    mr::setBaselineInstance(mr::UniversalResource::make());
             }
         };
         static ConfigMemoryResource _singleton;

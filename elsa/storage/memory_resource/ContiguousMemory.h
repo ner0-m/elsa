@@ -87,14 +87,15 @@ namespace elsa::mr
         const MemResInterface* get() const;
     };
 
-    /*
-     *  DefaultInstance will at all times return a reference to the
-     *  memory-resource from the last call to setDefaultInstance.
-     *
-     *  If setDefaultInstance has never been called, an instance
-     *      of HostStandardResource will be instantiated.
-     */
-    void setDefaultInstance(const MemoryResource& r);
+    /// BaselineInstance will at all times return a reference to the
+    /// memory-resource from the last call to setBaselineInstance.
+    ///
+    /// If setBaselineInstance has never been called, an instance
+    ///     of HostStandardResource will be instantiated.
+    /// @param r Must be a synchronized memory resource!
+    void setBaselineInstance(const MemoryResource& r);
+    MemoryResource baselineInstance();
+    bool baselineInstanceSet();
+
     MemoryResource defaultInstance();
-    bool defaultInstanceSet();
 } // namespace elsa::mr

@@ -1,6 +1,7 @@
 #include "ContiguousMemory.h"
 
 #include "HostStandardResource.h"
+#include "AllocationHint.h"
 
 #include <mutex>
 
@@ -75,7 +76,7 @@ namespace elsa::mr
     }
     bool MemoryResource::operator!=(const MemoryResource& r) const
     {
-        return _resource == r._resource;
+        return _resource != r._resource;
     }
     bool MemoryResource::valid() const
     {
@@ -100,21 +101,30 @@ namespace elsa::mr
     static std::mutex mrSingletonLock;
     static MemoryResource mrSingleton;
 
-    void setDefaultInstance(const MemoryResource& r)
+    void setBaselineInstance(const MemoryResource& r)
     {
         if (!r.valid())
             return;
         std::lock_guard<std::mutex> _lock(mrSingletonLock);
         mrSingleton = r;
     }
-    MemoryResource defaultInstance()
+    MemoryResource baselineInstance()
     {
         std::lock_guard<std::mutex> _lock(mrSingletonLock);
         if (!mrSingleton.valid())
             mrSingleton = HostStandardResource::make();
         return mrSingleton;
     }
-    bool defaultInstanceSet()
+    MemoryResource defaultInstance()
+    {
+        std::optional<MemoryResource> resource = hint::selectMemoryResource();
+        if (resource) {
+            return std::move(*resource);
+        } else {
+            return baselineInstance();
+        }
+    }
+    bool baselineInstanceSet()
     {
         return mrSingleton.valid();
     }
