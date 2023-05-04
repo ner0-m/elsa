@@ -32,7 +32,7 @@ set(MODULE_HEADERS
 # list all the code files of the module
 set(MODULE_SOURCES
     memory_resource/ContiguousMemory.cpp memory_resource/HostStandardResource.cpp memory_resource/UniversalResource.cpp
-    memory_resource/PoolResource.cpp memory_resource/CacheResource.cpp
+    memory_resource/PoolResource.cpp memory_resource/CacheResource.cpp memory_resource/RegionResource.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa::Thrust elsa_config)
