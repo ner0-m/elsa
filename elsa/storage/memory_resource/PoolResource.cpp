@@ -135,13 +135,13 @@ namespace elsa::mr
             linkFreeBlock(block);
 
             // size and free bit are set below
-            newBlock->_isPrevFree = 1;
+            newBlock->markPrevFree();
             newBlock->_address = retAddress;
             newBlock->_prevAddress = block->_address;
             block = newBlock;
         }
 
-        block->_isFree = 0;
+        block->markAllocated();
         block->setSize(remainingSize);
         try {
             shrinkBlockAtTail(*block, retAddress, realSize, remainingSize);
@@ -172,10 +172,10 @@ namespace elsa::mr
         auto blockIt = _addressToBlock.find(ptr);
         ENSURE(blockIt != _addressToBlock.end());
         pool_resource::Block* block = blockIt->second.get();
-        block->_isFree = 1;
+        block->markFree();
 
         auto prevIt = _addressToBlock.find(block->_prevAddress);
-        if (prevIt != _addressToBlock.end() && prevIt->second->_isFree) {
+        if (prevIt != _addressToBlock.end() && prevIt->second->isFree()) {
             // coalesce with prev. block
             pool_resource::Block* prev = prevIt->second.get();
             unlinkFreeBlock(prev);
@@ -186,7 +186,7 @@ namespace elsa::mr
 
         void* nextAdress = voidPtrOffset(block->_address, block->size());
         auto nextIt = _addressToBlock.find(nextAdress);
-        if (nextIt != _addressToBlock.end() && nextIt->second->_isFree
+        if (nextIt != _addressToBlock.end() && nextIt->second->isFree()
             && nextIt->second->_prevAddress
                    != nullptr) { // _prevAddress == nullptr indicates that the block is the
                                  // start block of another chunk, which just happens to be next
@@ -202,7 +202,7 @@ namespace elsa::mr
         nextIt = _addressToBlock.find(nextAdress);
         if (nextIt != _addressToBlock.end() && nextIt->second->_prevAddress != nullptr) {
             std::unique_ptr<pool_resource::Block>& next = nextIt->second;
-            next->_isPrevFree = 1;
+            next->markPrevFree();
             next->_prevAddress = block->_address;
         }
         if (block->size() < _config.chunkSize) {
@@ -232,7 +232,7 @@ namespace elsa::mr
         } else if (realSize > currentSize) {
             void* nextAdress = voidPtrOffset(ptr, currentSize);
             auto nextIt = _addressToBlock.find(nextAdress);
-            if (nextIt != _addressToBlock.end() && nextIt->second->_isFree
+            if (nextIt != _addressToBlock.end() && nextIt->second->isFree()
                 && nextIt->second->_prevAddress != nullptr) {
                 std::unique_ptr<pool_resource::Block>& next = nextIt->second;
                 size_t cumulativeSize = currentSize + next->size();
@@ -346,9 +346,7 @@ namespace elsa::mr
                 _upstream->allocate(_config.chunkSize, pool_resource::BLOCK_GRANULARITY);
             newChunk = std::make_unique<pool_resource::Block>();
             newChunk->_address = newChunkAddress;
-            newChunk->setSize(_config.chunkSize);
-            newChunk->_isFree = 1;
-            newChunk->_isPrevFree = 0;
+            newChunk->_size = _config.chunkSize | pool_resource::FREE_BIT;
             newChunk->_prevAddress = nullptr;
         } else {
             newChunk = std::move(_cachedChunks[--_cachedChunkCount]);
@@ -384,10 +382,8 @@ namespace elsa::mr
             // insert sub-block after the allocation into a free-list
             try {
                 auto successor = std::make_unique<pool_resource::Block>();
-                successor->setSize(tailSplitSize);
+                successor->_size = tailSplitSize | pool_resource::FREE_BIT;
                 successor->_address = voidPtrOffset(blockAddress, newSize);
-                successor->_isFree = 1;
-                successor->_isPrevFree = 0;
                 successor->_prevAddress = blockAddress;
                 insertFreeBlock(std::move(successor));
             } catch (...) {
@@ -400,9 +396,34 @@ namespace elsa::mr
 
     namespace pool_resource
     {
+        void Block::markFree()
+        {
+            _size |= FREE_BIT;
+        }
+
+        void Block::markAllocated()
+        {
+            _size &= ~FREE_BIT;
+        }
+
+        void Block::markPrevFree()
+        {
+            _size |= PREV_FREE_BIT;
+        }
+
+        void Block::markPrevAllocated()
+        {
+            _size &= ~PREV_FREE_BIT;
+        }
+
         bool Block::isFree()
         {
-            return _isFree;
+            return _size & FREE_BIT;
+        }
+
+        bool Block::isPrevFree()
+        {
+            return _size & PREV_FREE_BIT;
         }
 
         void Block::unlinkFree()

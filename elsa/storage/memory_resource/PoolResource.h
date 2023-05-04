@@ -64,15 +64,12 @@ namespace elsa::mr
         const size_t MIN_BLOCK_SIZE_LOG = 5;
         const size_t BITFIELD_MASK = BLOCK_GRANULARITY - 1;
         const size_t SIZE_MASK = ~BITFIELD_MASK;
+        const size_t FREE_BIT = 1 << 0;
+        const size_t PREV_FREE_BIT = 1 << 1;
 
         struct Block {
-            union {
-                size_t _size;
-                struct {
-                    size_t _isFree : 1;
-                    size_t _isPrevFree : 1;
-                };
-            };
+            // size of the block, also storing the free and prevFree flags in its lowest two bits
+            size_t _size;
             void* _address;
             // address of the block that is prior to this one in contiguous memory
             void* _prevAddress;
@@ -81,7 +78,14 @@ namespace elsa::mr
             // address of the previous block in the free list's next pointer
             Block** _pprevFree;
 
+            void markFree();
+            void markAllocated();
+
+            void markPrevFree();
+            void markPrevAllocated();
+
             bool isFree();
+            bool isPrevFree();
 
             void unlinkFree();
             void insertAfterFree(Block** pprev);
