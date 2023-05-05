@@ -53,17 +53,15 @@ namespace elsa
 
             // Cast to real_t and shift to center of voxel according to origin
             RealVectorVolume_t coordinateShifted = coordinate.template cast<real_t>().array() + 0.5;
-            RealVectorHom_t homogenousVoxelCoord = coordinateShifted.homogeneous();
+            RealVectorHom_t homogeneousVoxelCoord = coordinateShifted.homogeneous();
 
             // Project voxel center onto detector
             RealVectorDetector_t center =
-                (geometry.getProjectionMatrix() * homogenousVoxelCoord).hnormalized();
+                (geometry.getProjectionMatrix() * homogeneousVoxelCoord).hnormalized();
             center = center.array() - 0.5;
 
-            auto sourceVoxelDistance =
-                (geometry.getExtrinsicMatrix() * homogenousVoxelCoord).norm();
-
-            auto scaling = geometry.getSourceDetectorDistance() / sourceVoxelDistance;
+            auto scaling = geometry.getSourceDetectorDistance()
+                           / (geometry.getExtrinsicMatrix() * homogeneousVoxelCoord).norm();
 
             auto radiusOnDetector = scaling * radius;
             IndexVectorDetector_t detector_max = detectorDims.array() - 1;
