@@ -2326,7 +2326,7 @@ TEST_CASE_TEMPLATE("BlobVoxelProjector: Test weights", data_t, float, double)
     auto range = PlanarDetectorDescriptor(sizeRange, geom);
     auto op = BlobVoxelProjector(domain, range);
 
-    for (int i = 0; i < ARRAY_SIZE; ++i) {
+    for (size_t i = 0; i < ARRAY_SIZE; ++i) {
         const auto distance = i / 25.;
 
         CAPTURE(i);

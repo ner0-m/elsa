@@ -459,7 +459,6 @@ TEST_CASE_TEMPLATE("PhaseContrastBlobVoxelProjector: Testing simple volume 2D wi
     for (index_t size = 8; size <= 256; size *= 2) {
         const IndexVector_t sizeDomain({{size, size}});
         const IndexVector_t sizeRange({{3, 1}});
-        index_t middlePixel = 1;
 
         auto domain = VolumeDescriptor(sizeDomain);
         auto x = DataContainer<data_t>(domain);
