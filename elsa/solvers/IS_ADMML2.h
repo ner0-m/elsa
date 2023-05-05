@@ -57,25 +57,20 @@ namespace elsa
     class IS_ADMML2 : public IterativeSolver<data_t>
     {
     public:
-        /// Scalar alias
-        using Scalar = typename IterativeSolver<data_t>::Scalar;
+        using IS = IterativeSolver<data_t>;
+        using Scalar = typename IS::Scalar;
+        using Callback = typename IS::Callback;
 
-        IS_ADMML2(const LinearOperator<data_t>& op, const DataContainer<data_t>& b,
-                  const LinearOperator<data_t>& A, const ProximalOperator<data_t>& proxg,
-                  std::optional<data_t> tau, index_t ninneriters = 5);
+        explicit IS_ADMML2(const LinearOperator<data_t>& op, const DataContainer<data_t>& b,
+                           const LinearOperator<data_t>& A, const ProximalOperator<data_t>& proxg,
+                           std::optional<data_t> tau, index_t ninneriters = 5);
 
         /// default destructor
         ~IS_ADMML2() override = default;
 
-        DataContainer<data_t> step(DataContainer<data_t>) override
-        {
-            throw NotImplementedError{"ADMML2 has no step function (yet)"};
-        }
+        void reset() override;
 
-        DataContainer<data_t>
-            run(index_t iterations, std::optional<DataContainer<data_t>> x0 = std::nullopt,
-                std::optional<std::function<void(const DataContainer<data_t>&, index_t, index_t)>>
-                    afterStep = std::nullopt) override;
+        DataContainer<data_t> step(DataContainer<data_t>) override;
 
     protected:
         /// implement the polymorphic clone operation
@@ -86,16 +81,16 @@ namespace elsa
 
     private:
         std::unique_ptr<LinearOperator<data_t>> op_;
-
-        DataContainer<data_t> b_;
-
-        std::unique_ptr<LinearOperator<data_t>> A_;
-
         ProximalOperator<data_t> proxg_;
 
         /// @f$ \tau @f$ from the problem definition
         data_t tau_{1};
+        data_t sqrttau{data_t{1} / std::sqrt(tau_)};
 
         index_t ninneriters_;
+
+        DataContainer<data_t> z;
+        DataContainer<data_t> u;
+        DataContainer<data_t> Ax;
     };
 } // namespace elsa

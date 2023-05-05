@@ -22,18 +22,21 @@ namespace elsa
                                  const LinearOperator<data_t>& A,
                                  const ProximalOperator<data_t>& proxg, std::optional<data_t> tau,
                                  index_t ninneriters)
-        : IterativeSolver<data_t>(),
+        : IterativeSolver<data_t>{A, b},
           op_(op.clone()),
-          b_(b),
-          A_(A.clone()),
           proxg_(proxg),
           tau_(0),
-          ninneriters_(ninneriters)
+          sqrttau(0),
+          ninneriters_(ninneriters),
+          z{IS::A->getRangeDescriptor()},
+          u{IS::A->getRangeDescriptor()},
+          Ax{IS::A->getRangeDescriptor()}
     {
         auto eigenval = data_t{1} / powerIterations(adjoint(A) * A);
 
         if (tau.has_value()) {
             tau_ = *tau;
+
             if (tau_ < 0 || tau_ > eigenval) {
                 Logger::get("ADMML2")->info("tau ({:8.5}), should be between 0 and {:8.5}", tau_,
                                             eigenval);
@@ -42,63 +45,39 @@ namespace elsa
             tau_ = 0.9 * eigenval;
             Logger::get("ADMML2")->info("tau is chosen {}", tau_, eigenval);
         }
+        sqrttau = data_t{1} / std::sqrt(tau_);
     }
 
     template <typename data_t>
-    DataContainer<data_t> IS_ADMML2<data_t>::run(
-        index_t iterations, std::optional<DataContainer<data_t>> x0,
-        std::optional<std::function<void(const DataContainer<data_t>&, index_t, index_t)>>
-            afterStep)
+    void IS_ADMML2<data_t>::reset()
     {
-
-        DataContainer<data_t> x(op_->getDomainDescriptor());
-
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
-
-        DataContainer<data_t> z(A_->getRangeDescriptor());
         z = 0;
-
-        DataContainer<data_t> u(A_->getRangeDescriptor());
         u = 0;
+        Ax = 0;
+    }
 
-        DataContainer<data_t> Ax(A_->getRangeDescriptor());
-        DataContainer<data_t> tmp(A_->getRangeDescriptor());
+    template <typename data_t>
+    DataContainer<data_t> IS_ADMML2<data_t>::step(DataContainer<data_t> state)
+    {
+        DataContainer<data_t> x{op_->getDomainDescriptor()};
+        DataContainer<data_t> tmp{IS::A->getRangeDescriptor()};
 
-        auto sqrttau = data_t{1} / std::sqrt(tau_);
+        x = state;
 
-        auto loglevel = Logger::getLevel();
-        Logger::get("ADMML2")->info("| {:^4} | {:^12} | {:^12} | {:^12} |", "iter", "f", "z", "u");
-        for (index_t iter = 0; iter < iterations; ++iter) {
-            Logger::setLevel(Logger::LogLevel::ERR);
+        // x_{k+1} = \min_x 0.5 ||Op x - b||_2^2 + \frac{1}{2\tau}||Ax - z_k + u_k||_2^2
+        x = reguarlizedInversion<data_t>(*op_, IS::b, *IS::A, z - u, sqrttau, ninneriters_, x);
+        IS::A->apply(x, Ax); // Have to use this to access base member of templated class... other
+                             // option would be this->
 
-            // x_{k+1} = \min_x 0.5 ||Op x - b||_2^2 + \frac{1}{2\tau}||Ax - z_k + u_k||_2^2
-            x = reguarlizedInversion<data_t>(*op_, b_, *A_, z - u, sqrttau, ninneriters_, x);
+        // Ax_{k+1} + u_k
+        lincomb(1, Ax, 1, u, tmp);
 
-            Logger::setLevel(loglevel);
+        // z_{k+1} = prox_{\tau * g}(Ax_{k+1} + u_k)
+        z = proxg_.apply(tmp, tau_);
 
-            A_->apply(x, Ax);
-
-            // Ax_{k+1} + u_k
-            lincomb(1, Ax, 1, u, tmp);
-
-            // z_{k+1} = prox_{\tau * g}(Ax_{k+1} + u_k)
-            z = proxg_.apply(tmp, tau_);
-
-            // u_{k+1} = u_k + Ax_{k+1} - z_{k+1}
-            u += Ax;
-            u -= z;
-
-            Logger::get("ADMML2")->info("| {:>4} | {:12.7} | {:12.7} | {:12.7} |", iter,
-                                        0.5 * (op_->apply(x) - b_).l2Norm(), z.l2Norm(),
-                                        u.l2Norm());
-            if (afterStep.has_value()) {
-                afterStep.value()(x, iter, iterations);
-            }
-        }
+        // u_{k+1} = u_k + Ax_{k+1} - z_{k+1}
+        u += Ax;
+        u -= z;
 
         return x;
     }
@@ -106,7 +85,7 @@ namespace elsa
     template <class data_t>
     IS_ADMML2<data_t>* IS_ADMML2<data_t>::cloneImpl() const
     {
-        return new IS_ADMML2(*op_, b_, *A_, proxg_, tau_, ninneriters_);
+        return new IS_ADMML2(*op_, IS::b, *IS::A, proxg_, tau_, ninneriters_);
     }
 
     template <class data_t>
@@ -119,7 +98,7 @@ namespace elsa
         if (*op_ != *otherADMM->op_)
             return false;
 
-        if (*A_ != *otherADMM->A_)
+        if (*IS::A != *otherADMM->A)
             return false;
 
         if (tau_ != otherADMM->tau_)

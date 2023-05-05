@@ -67,25 +67,21 @@ void makeGif(int s)
     auto proxg = ProximalL1<real_t>{};
     auto tau = real_t{0.1};
 
-    // solve the reconstruction problem
-    IS_ADMML2<real_t> admm{projector, sinogram, A, proxg, tau};
-
     index_t noIterations{10};
-    Logger::get("Info")->info("Solving reconstruction using {} iterations", noIterations);
-
     auto afterStep = [](DataContainer<float> state, index_t i, index_t) {
         io::write(state, fmt::format("raw/{}.pgm", i));
     };
 
+    // solve the reconstruction problem
+    IS_ADMML2<real_t> admm{projector, sinogram, A, proxg, tau};
+
+    Logger::get("Info")->info("Solving reconstruction using {} iterations", noIterations);
+
     auto containerSize = volumeDescriptor.getNumberOfCoefficients();
-
     auto randVec = generateRandomMatrix<float>(containerSize);
+    auto x0 = DataContainer{sinogram.getDataDescriptor(), randVec};
 
-    auto x0 = DataContainer<float>(volumeDescriptor, randVec);
-
-    admm.run(noIterations, x0, afterStep);
-
-    // write the reconstruction out
+    admm.solve(noIterations, x0, afterStep);
 }
 
 int main(int argc, char** argv)
