@@ -20,13 +20,13 @@
 namespace py = pybind11;
 using index_t = std::ptrdiff_t; ///< global type for indices
 
-template <template <typename> class ProjectorClass>
+template <typename ProjectorClassFloat, typename ProjectorClassDouble>
 void bind_blob_projector(py::module& m, const char* name)
 {
     std::string float_name = std::string(name) + "f";
     std::string double_name = std::string(name) + "d";
 
-    py::class_<ProjectorClass<float>, elsa::LinearOperator<float>> projector_float(
+    py::class_<ProjectorClassFloat, elsa::LinearOperator<float>> projector_float(
         m, float_name.c_str());
     projector_float.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
                                  float, float, index_t>(),
@@ -37,7 +37,7 @@ void bind_blob_projector(py::module& m, const char* name)
 
     m.attr(name) = m.attr(float_name.c_str());
 
-    py::class_<ProjectorClass<double>, elsa::LinearOperator<double>> projector_double(
+    py::class_<ProjectorClassDouble, elsa::LinearOperator<double>> projector_double(
         m, double_name.c_str());
     projector_double.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&,
                                   double, double, index_t>(),
@@ -47,13 +47,13 @@ void bind_blob_projector(py::module& m, const char* name)
                          py::arg("order") = elsa::blobs::DEFAULT_ORDER);
 }
 
-template <template <typename> class ProjectorClass>
+template <typename ProjectorClassFloat, typename ProjectorClassDouble>
 void bind_bspline_projector(py::module& m, const char* name)
 {
     std::string float_name = std::string(name) + "f";
     std::string double_name = std::string(name) + "d";
 
-    py::class_<ProjectorClass<float>, elsa::LinearOperator<float>> projector_float(
+    py::class_<ProjectorClassFloat, elsa::LinearOperator<float>> projector_float(
         m, float_name.c_str());
     projector_float.def(
         py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
@@ -62,7 +62,7 @@ void bind_bspline_projector(py::module& m, const char* name)
 
     m.attr(name) = m.attr(float_name.c_str());
 
-    py::class_<ProjectorClass<double>, elsa::LinearOperator<double>> projector_double(
+    py::class_<ProjectorClassDouble, elsa::LinearOperator<double>> projector_double(
         m, double_name.c_str());
     projector_double.def(
         py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&, index_t>(),
@@ -70,20 +70,20 @@ void bind_bspline_projector(py::module& m, const char* name)
         py::arg("order") = elsa::bspline::DEFAULT_ORDER);
 }
 
-template <template <typename> class ProjectorClass>
+template <typename ProjectorClassFloat, typename ProjectorClassDouble>
 void bind_projector(py::module& m, const char* name)
 {
     std::string float_name = std::string(name) + "f";
     std::string double_name = std::string(name) + "d";
 
-    py::class_<ProjectorClass<float>, elsa::LinearOperator<float>> projector_float(
+    py::class_<ProjectorClassFloat, elsa::LinearOperator<float>> projector_float(
         m, float_name.c_str());
     projector_float.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
                         py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
 
     m.attr(name) = m.attr(float_name.c_str());
 
-    py::class_<ProjectorClass<double>, elsa::LinearOperator<double>> projector_double(
+    py::class_<ProjectorClassDouble, elsa::LinearOperator<double>> projector_double(
         m, double_name.c_str());
     projector_double.def(py::init<const elsa::VolumeDescriptor&, const elsa::DetectorDescriptor&>(),
                          py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
@@ -128,18 +128,24 @@ void add_definitions_pyelsa_projectors(py::module& m)
                elsa::SubsetSampler<elsa::PlanarDetectorDescriptor,
                                    thrust::complex<double>>::SamplingStrategy::ROUND_ROBIN);
 
-    bind_projector<elsa::BinaryMethod>(m, "BinaryMethod");
-    bind_projector<elsa::SiddonsMethod>(m, "SiddonsMethod");
-    bind_projector<elsa::JosephsMethod>(m, "JosephsMethod");
+    bind_projector<elsa::BinaryMethod<float>, elsa::BinaryMethod<double>>(m, "BinaryMethod");
+    bind_projector<elsa::SiddonsMethod<float>, elsa::SiddonsMethod<double>>(m, "SiddonsMethod");
+    bind_projector<elsa::JosephsMethod<float>, elsa::JosephsMethod<double>>(m, "JosephsMethod");
 
-    bind_blob_projector<elsa::BlobProjector>(m, "BlobProjector");
-    bind_blob_projector<elsa::BlobVoxelProjector>(m, "BlobVoxelProjector");
-    bind_blob_projector<elsa::PhaseContrastBlobVoxelProjector>(m,
-                                                               "PhaseContrastBlobVoxelProjector");
+    bind_blob_projector<elsa::BlobProjector<float>, elsa::BlobProjector<double>>(m,
+                                                                                 "BlobProjector");
+    bind_blob_projector<elsa::BlobVoxelProjector<float>, elsa::BlobVoxelProjector<double>>(
+        m, "BlobVoxelProjector");
+    bind_blob_projector<elsa::PhaseContrastBlobVoxelProjector<float>,
+                        elsa::PhaseContrastBlobVoxelProjector<double>>(
+        m, "PhaseContrastBlobVoxelProjector");
 
-    bind_bspline_projector<elsa::BSplineProjector>(m, "BSplineProjector");
-    bind_bspline_projector<elsa::BSplineVoxelProjector>(m, "BSplineVoxelProjector");
-    bind_bspline_projector<elsa::PhaseContrastBSplineVoxelProjector>(
+    bind_bspline_projector<elsa::BSplineProjector<float>, elsa::BSplineProjector<double>>(
+        m, "BSplineProjector");
+    bind_bspline_projector<elsa::BSplineVoxelProjector<float>, elsa::BSplineVoxelProjector<double>>(
+        m, "BSplineVoxelProjector");
+    bind_bspline_projector<elsa::PhaseContrastBSplineVoxelProjector<float>,
+                           elsa::PhaseContrastBSplineVoxelProjector<double>>(
         m, "PhaseContrastBSplineVoxelProjector");
 
     py::class_<elsa::Cloneable<elsa::SubsetSampler<elsa::PlanarDetectorDescriptor, float>>>
