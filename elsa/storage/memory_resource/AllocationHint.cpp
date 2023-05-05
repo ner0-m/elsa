@@ -38,6 +38,7 @@ namespace elsa::mr::hint
             overloaded{
                 [](const MemoryResource& mr) { return mr; },
                 [](const AllocationBehavior& behavior) {
+                    MemoryResource result;
                     if (behavior.allocThenFullRelease()) {
                         if (behavior.bulk()) {
                             auto config = CacheResourceConfig::defaultConfig();
@@ -45,7 +46,7 @@ namespace elsa::mr::hint
                                 config.setMaxCacheSize(behavior.getSizeHint());
                                 config.setMaxCachedCount(std::numeric_limits<size_t>::max());
                             }
-                            return CacheResource::make(baselineInstance(), config);
+                            result = CacheResource::make(baselineInstance(), config);
                         } else {
                             auto config = RegionResourceConfig::defaultConfig();
                             if (behavior.getSizeHint() != 0) {
@@ -54,7 +55,7 @@ namespace elsa::mr::hint
                             } else {
                                 config.setAdaptive(true);
                             }
-                            return RegionResource::make(baselineInstance(), config);
+                            result = RegionResource::make(baselineInstance(), config);
                         }
                     } else if (behavior.repeating()) {
                         if (behavior.bulk() && behavior.getSizeHint() != 0) {
@@ -71,14 +72,14 @@ namespace elsa::mr::hint
                             auto regionConfig = RegionResourceConfig::defaultConfig();
                             regionConfig.setRegionSize(sizeHintWithLeeway);
                             regionConfig.setAdaptive(true);
-                            return CacheResource::make(
+                            result = CacheResource::make(
                                 RegionResource::make(baselineInstance(), regionConfig),
                                 cacheConfig);
                         } else {
                             auto config = CacheResourceConfig::defaultConfig();
                             config.setMaxCachedCount(std::numeric_limits<size_t>::max());
                             config.setMaxCacheSize(std::numeric_limits<size_t>::max());
-                            return CacheResource::make(baselineInstance(), config);
+                            result = CacheResource::make(baselineInstance(), config);
                         }
                     } else {
                         auto config = PoolResourceConfig::defaultConfig();
@@ -86,8 +87,11 @@ namespace elsa::mr::hint
                         config.setMaxBlockSize(behavior.getSizeHint());
                         config.setMaxCachedChunks(1);
                         // config must be valid. If not using defaultConfig seems appropriate.
-                        return PoolResource::make(baselineInstance(), config);
+                        result = PoolResource::make(baselineInstance(), config);
                     }
+                    HINT =
+                        std::make_unique<std::variant<MemoryResource, AllocationBehavior>>(result);
+                    return result;
                 }},
             *HINT);
     }
