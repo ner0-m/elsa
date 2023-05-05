@@ -17,6 +17,11 @@ namespace elsa::mr
         }
     } // namespace universal_resource
 
+    MemoryResource UniversalResource::make()
+    {
+        return MemoryResource::MakeRef(new UniversalResource());
+    }
+
     void* UniversalResource::allocate(size_t size, size_t alignment)
     {
         if (!alignment || (alignment & (alignment - 1))) [[unlikely]] {

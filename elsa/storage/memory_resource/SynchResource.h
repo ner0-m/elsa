@@ -17,7 +17,7 @@ namespace elsa::mr
         SynchResource(Ts... args);
 
     public:
-        /// @brief Creates a SynchedResource wrapping a back-end resource, which performs the actual
+        /// @brief Creates a SynchResource wrapping a back-end resource, which performs the actual
         /// allocations.
         /// @param ...args Parameters passed to the constructor of the wrapped resource.
         /// @return A MemoryResource encapsulationg the SynchedResource
