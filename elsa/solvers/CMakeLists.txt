@@ -20,6 +20,7 @@ set(MODULE_HEADERS
     RegularizedInversion.h
     IterativeSolver.h
     IS_ADMML2.h
+    IS_AB_GMRES.h
 )
 
 # list all the code files of the module
@@ -43,6 +44,7 @@ set(MODULE_SOURCES
     PowerIterations.cpp
     RegularizedInversion.cpp
     IS_ADMML2.cpp
+    IS_AB_GMRES.cpp
 )
 
 list(
