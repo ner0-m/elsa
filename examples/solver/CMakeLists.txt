@@ -33,3 +33,6 @@ add_example(fgm_gentikhonov_tomo fgm_gentikhonov_tomo.cpp)
 # Example for reconstruction using OGM solving the least squares problem with a Huber-TV regularization for X-ray
 # attenuation CT
 add_example(ogm_tikhonov_tomo ogm_tikhonov_tomo.cpp)
+
+# Reconstructing HTC 2022 challenge with FBP
+add_example(fbp_htc fbp_htc.cpp)
