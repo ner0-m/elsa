@@ -95,6 +95,32 @@ namespace elsa::mr
         template <class Tag>
         constexpr bool is_complex = std::is_base_of<type_tags::complex, Tag>::value;
 
+        template <class Type>
+        void fillTyped(void* ptr, const void* src, size_t stride, size_t totalWrites)
+        {
+            const Type* s = static_cast<const Type*>(src);
+            const Type* e = s + stride;
+            Type* p = static_cast<Type*>(ptr);
+
+            for (size_t i = 0; i < totalWrites; i++) {
+                *p = *s;
+                ++p;
+                if (++s == e)
+                    s = static_cast<const Type*>(src);
+            }
+        }
+        static void fillMemory(void* ptr, const void* src, size_t stride, size_t count)
+        {
+            if ((stride % 8) == 0)
+                fillTyped<uint64_t>(ptr, src, (stride / 8), (stride / 8) * count);
+            else if ((stride % 4) == 0)
+                fillTyped<uint32_t>(ptr, src, (stride / 4), (stride / 4) * count);
+            else if ((stride % 2) == 0)
+                fillTyped<uint16_t>(ptr, src, (stride / 2), (stride / 2) * count);
+            else
+                fillTyped<uint8_t>(ptr, src, stride, stride * count);
+        }
+
         /*
          *  A container is a managing unit of 'capacity' number of types, allocated with the
          *  corresponding resource and managed with the given type-tags.
@@ -244,7 +270,7 @@ namespace elsa::mr
                         ++size;
                     }
                 } else if (move > 0) {
-                    new_mr->copyMemory(new_ptr, old.pointer, move * sizeof(value_type));
+                    std::memcpy(new_ptr, old.pointer, move * sizeof(value_type));
                     size = move;
                 }
                 return old;
@@ -255,8 +281,8 @@ namespace elsa::mr
             {
                 /* check if this move can be delegated to the mr */
                 if constexpr (is_trivial<TypeTag>) {
-                    resource->moveMemory(pointer + (where + diff), pointer + where,
-                                         (size - where) * sizeof(value_type));
+                    std::memmove(pointer + (where + diff), pointer + where,
+                                 (size - where) * sizeof(value_type));
                     size = std::max<size_type>(size, (size - where) + diff);
                     return;
                 }
@@ -305,7 +331,7 @@ namespace elsa::mr
 
                 /* check if the iterator is a pointer and can be delegated to mr */
                 else if constexpr (detail::actual_pointer<ItType>::value && is_trivial<TypeTag>) {
-                    resource->copyMemory(pointer + off, ibegin, count * sizeof(value_type));
+                    std::memcpy(pointer + off, ibegin, count * sizeof(value_type));
                     size = std::max<size_type>(size, end);
                 }
 
@@ -346,7 +372,7 @@ namespace elsa::mr
                         uint8_t tmp[sizeof(value_type)] = {0};
                         new (tmp) value_type();
 
-                        resource->setMemory(pointer + off, tmp, sizeof(value_type), count);
+                        fillMemory(pointer + off, tmp, sizeof(value_type), count);
                         size = std::max<size_type>(size, end);
 
                     } else {
@@ -362,7 +388,7 @@ namespace elsa::mr
 
                 /* set/update the range with the given value */
                 else if constexpr (is_trivial<TypeTag>) {
-                    resource->setMemory(pointer + off, value, sizeof(value_type), count);
+                    fillMemory(pointer + off, value, sizeof(value_type), count);
                     size = std::max<size_type>(size, end);
                 }
 

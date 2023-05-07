@@ -89,19 +89,4 @@ namespace elsa::mr
             return _upstream->tryResize(ptr, size, alignment, newSize);
         }
     }
-
-    void RegionResource::copyMemory(void* ptr, const void* src, size_t size)
-    {
-        _upstream->copyMemory(ptr, src, size);
-    }
-
-    void RegionResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
-    {
-        _upstream->setMemory(ptr, src, stride, count);
-    }
-
-    void RegionResource::moveMemory(void* ptr, const void* src, size_t size)
-    {
-        _upstream->moveMemory(ptr, src, size);
-    }
 } // namespace elsa::mr

@@ -46,49 +46,4 @@ namespace elsa::mr
         static_cast<void>(newSize);
         return false;
     }
-
-    void HostStandardResource::copyMemory(void* ptr, const void* src, size_t size)
-    {
-        std::memcpy(ptr, src, size);
-    }
-    void HostStandardResource::moveMemory(void* ptr, const void* src, size_t size)
-    {
-        std::memmove(ptr, src, size);
-    }
-
-    namespace detail
-    {
-        template <class Type>
-        void typedFill(Type* ptr, const Type* src, size_t stride, size_t totalWrites)
-        {
-            const Type* s = src;
-            const Type* e = src + stride;
-
-            for (size_t i = 0; i < totalWrites; i++) {
-                *ptr = *s;
-                ++ptr;
-                if (++s == e)
-                    s = src;
-            }
-        }
-
-        template <class Type>
-        void pointerFill(void* ptr, const void* src, size_t stride, size_t count)
-        {
-            typedFill<Type>(static_cast<Type*>(ptr), static_cast<const Type*>(src), stride,
-                            stride * count);
-        }
-    } // namespace detail
-
-    void HostStandardResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
-    {
-        if ((stride % 8) == 0)
-            detail::pointerFill<uint64_t>(ptr, src, (stride / 8), count);
-        else if ((stride % 4) == 0)
-            detail::pointerFill<uint32_t>(ptr, src, (stride / 4), count);
-        else if ((stride % 2) == 0)
-            detail::pointerFill<uint16_t>(ptr, src, (stride / 2), count);
-        else
-            detail::pointerFill<uint8_t>(ptr, src, stride, count);
-    }
 } // namespace elsa::mr

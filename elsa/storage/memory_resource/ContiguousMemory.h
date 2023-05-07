@@ -23,8 +23,7 @@ namespace elsa::mr
      *  Should be bound once to a MemoryResource wrapper at construction and from
      *  there on only be passed through the MemoryResource wrapper.
      *
-     *  allocate, copyMemory, moveMemory, setMemory may throw exceptions.
-     *  deallocate and tryResize must not throw exceptions.
+     *  Deallocate and tryResize must not throw exceptions.
      */
     class MemResInterface
     {
@@ -45,9 +44,6 @@ namespace elsa::mr
         virtual void* allocate(size_t size, size_t alignment) = 0;
         virtual bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) = 0;
         virtual void deallocate(void* ptr, size_t size, size_t alignment) noexcept = 0;
-        virtual void copyMemory(void* ptr, const void* src, size_t size) = 0;
-        virtual void moveMemory(void* ptr, const void* src, size_t size) = 0;
-        virtual void setMemory(void* ptr, const void* src, size_t stride, size_t count) = 0;
     };
 
     /*
