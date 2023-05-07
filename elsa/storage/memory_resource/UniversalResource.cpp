@@ -17,6 +17,11 @@ namespace elsa::mr
         }
     } // namespace universal_resource
 
+    MemoryResource UniversalResource::make()
+    {
+        return MemoryResource::MakeRef(new UniversalResource());
+    }
+
     void* UniversalResource::allocate(size_t size, size_t alignment)
     {
         if (!alignment || (alignment & (alignment - 1))) [[unlikely]] {
@@ -65,20 +70,6 @@ namespace elsa::mr
     bool UniversalResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
     {
         return false;
-    }
-
-    void UniversalResource::copyMemory(void* ptr, const void* src, size_t size)
-    {
-        //TODO
-    }
-
-    void UniversalResource::moveMemory(void* ptr, const void* src, size_t size)
-    {
-        // TODO
-    }
-    void UniversalResource::setMemory(void* ptr, const void* src, size_t stride, size_t count)
-    {
-        // TODO
     }
 } // namespace elsa::mr
 #endif

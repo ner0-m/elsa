@@ -17,7 +17,7 @@ namespace elsa::mr
         SynchResource(Ts... args);
 
     public:
-        /// @brief Creates a SynchedResource wrapping a back-end resource, which performs the actual
+        /// @brief Creates a SynchResource wrapping a back-end resource, which performs the actual
         /// allocations.
         /// @param ...args Parameters passed to the constructor of the wrapped resource.
         /// @return A MemoryResource encapsulationg the SynchedResource
@@ -32,11 +32,6 @@ namespace elsa::mr
         /// @brief Tries to have the wrapped resource resize the allocation. Blocking until the
         /// resource is not busy.
         bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override;
-        // There is no benefit to locking the operations below, as the memory allocated by this
-        // resource could be used in arbitrary ways by other threads at any time.
-        using T::copyMemory;
-        using T::moveMemory;
-        using T::setMemory;
     };
 
     template <typename T>

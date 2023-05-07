@@ -31,7 +31,6 @@ struct TestStatsCounter {
     std::map<void*, std::pair<size_t, size_t>> preTestAllocated;
     std::map<void*, std::pair<size_t, size_t>> allocations;
     size_t invalidFree = 0;
-    size_t memoryOperations = 0;
     size_t allocOperations = 0;
 };
 static TestStatsCounter testStats;
@@ -89,21 +88,6 @@ private:
             testStats.allocations.erase(it);
             HostStandardResource::deallocate(ptr, size, alignment);
         }
-    }
-    void copyMemory(void* ptr, const void* src, size_t size) override
-    {
-        ++testStats.memoryOperations;
-        HostStandardResource::copyMemory(ptr, src, size);
-    }
-    void moveMemory(void* ptr, const void* src, size_t size) override
-    {
-        ++testStats.memoryOperations;
-        HostStandardResource::moveMemory(ptr, src, size);
-    }
-    void setMemory(void* ptr, const void* src, size_t stride, size_t count) override
-    {
-        ++testStats.memoryOperations;
-        HostStandardResource::setMemory(ptr, src, stride, count);
     }
 
 public:
@@ -231,12 +215,11 @@ static void StartTestStats()
     testStats.destructCount = 0;
     testStats.defaultConstruct = 0;
     testStats.invalidFree = 0;
-    testStats.memoryOperations = 0;
     testStats.allocOperations = 0;
 
     testStats.intest = true;
 }
-static void VerifyTestStats(bool memOp)
+static void VerifyTestStats()
 {
     testStats.intest = false;
 
@@ -246,10 +229,6 @@ static void VerifyTestStats(bool memOp)
     CHECK_MESSAGE(testStats.invalidAssign == 0, "Uninitialized objects were assigned");
     CHECK_MESSAGE(testStats.invalidAccess == 0, "Uninitialized objects were accessed");
     CHECK_MESSAGE(testStats.destructCount == 0, "Unexpected destructs occurred");
-    if (memOp)
-        CHECK_MESSAGE(testStats.memoryOperations > 0, "Expected memory operation did not occur");
-    else
-        CHECK_MESSAGE(testStats.memoryOperations == 0, "Unexpected memory operation occurred");
     CHECK_MESSAGE(testStats.defaultConstruct == 0,
                   "Uninitialized objects were default-constructed");
     CHECK_MESSAGE(testStats.allocations.empty(), "Memory leak detected");
@@ -305,7 +284,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             CHECK(storage.size() == 0);
         }
 
-        VerifyTestStats(false);
+        VerifyTestStats();
     }
 
     int intCount0 = 50;
@@ -319,7 +298,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             CHECK(CheckAllEqual(storage, T::initValue) == intCount0);
         }
 
-        VerifyTestStats(TrivialType::is<T>);
+        VerifyTestStats();
     }
 
     int intNum1 = 32, intCount1 = 17;
@@ -335,7 +314,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             CHECK(CheckAllEqual(storage, intNum1) == intCount1);
         }
 
-        VerifyTestStats(!ComplexType::is<T>);
+        VerifyTestStats();
     }
 
     std::vector<int> intVec0 = {5, 9, 123, 130, -123, 2394, 591, 1203, 523, 123};
@@ -349,7 +328,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             CHECK(CheckAllMatch(storage, intVec0.begin()) == intVec0.size());
         }
 
-        VerifyTestStats(!ComplexType::is<T>);
+        VerifyTestStats();
     }
 
     std::list<int> intList = {6, 123, -123, 504, 12321, 889123, 345, -543, -8123, 10148};
@@ -363,7 +342,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             CHECK(CheckAllMatch(storage, intList.begin()) == intList.size());
         }
 
-        VerifyTestStats(false);
+        VerifyTestStats();
     }
 
     SUBCASE("Constructor(initializer_list) [implicit: consecutive]")
@@ -378,7 +357,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             CHECK(CheckAllMatch(storage, intInit.begin()) == intInit.size());
         }
 
-        VerifyTestStats(!ComplexType::is<T>);
+        VerifyTestStats();
     }
 
     SUBCASE("Constructor(const self_type&) [implicit: consecutive]")
@@ -393,7 +372,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             CHECK(CheckAllMatch(storage, intSelf.begin()) == intSelf.size());
         }
 
-        VerifyTestStats(!ComplexType::is<T>);
+        VerifyTestStats();
     }
 
     SUBCASE("Constructor(self_type&&) [implicit: consecutive]")
@@ -414,7 +393,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
             std::swap(testStats.preTestAllocated, testStats.allocations);
         }
 
-        VerifyTestStats(false);
+        VerifyTestStats();
     }
 
     testStats.resource.release();

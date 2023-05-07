@@ -34,25 +34,6 @@ namespace elsa::mr
             static_cast<void>(newSize);
             return false;
         }
-        void copyMemory(void* ptr, const void* src, size_t size) override
-        {
-            static_cast<void>(ptr);
-            static_cast<void>(src);
-            static_cast<void>(size);
-        }
-        void setMemory(void* ptr, const void* src, size_t stride, size_t count) override
-        {
-            static_cast<void>(ptr);
-            static_cast<void>(src);
-            static_cast<void>(stride);
-            static_cast<void>(count);
-        }
-        void moveMemory(void* ptr, const void* src, size_t size) override
-        {
-            static_cast<void>(ptr);
-            static_cast<void>(src);
-            static_cast<void>(size);
-        }
     };
 } // namespace elsa::mr
 
