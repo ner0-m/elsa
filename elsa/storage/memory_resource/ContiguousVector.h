@@ -263,8 +263,8 @@ namespace elsa::mr
                         ++size;
                     }
                 } else if (move > 0) {
-                    std::memcpy(static_cast<void*>(new_ptr), old.pointer,
-                                move * sizeof(value_type));
+                    // NOLINTNEXTLINE(*-memory-manipulation)
+                    std::memcpy(new_ptr, old.pointer, move * sizeof(value_type));
                     size = move;
                 }
                 return old;
@@ -325,8 +325,8 @@ namespace elsa::mr
 
                 /* check if the iterator is a pointer and can be delegated to mr */
                 else if constexpr (detail::actual_pointer<ItType>::value && is_trivial<TypeTag>) {
-                    std::memcpy(static_cast<void*>(pointer + off), ibegin,
-                                count * sizeof(value_type));
+                    // NOLINTNEXTLINE(*-memory-manipulation)
+                    std::memcpy(pointer + off, ibegin, count * sizeof(value_type));
                     size = std::max<size_type>(size, end);
                 }
 

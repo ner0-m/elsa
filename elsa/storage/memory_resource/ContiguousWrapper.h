@@ -13,6 +13,10 @@
 
 namespace elsa::mr::detail
 {
+    /*
+     *  Wraps a pointer and offers 'get' function to retrieve it.
+     *  Pointer is expected to be accessible on hosts and devices.
+     */
     template <class Type>
     class ContPointer
     {
@@ -105,6 +109,10 @@ namespace elsa::mr::detail
         __host__ __device__ bool operator>(const self_type& p) const { return !(*this <= p); }
     };
 
+    /*
+     *  Wraps a pointer to a contiguous (random-access) range of values.
+     *  Pointer is expected to be accessible on hosts and devices.
+     */
     template <class Type>
     class ContIterator
     {
@@ -193,5 +201,4 @@ namespace elsa::mr::detail
         __host__ __device__ bool operator>(const self_type& p) const { return !(*this <= p); }
         __host__ __device__ pointer base() const { return _where; }
     };
-
-} // namespace elsa::mr
+} // namespace elsa::mr::detail
