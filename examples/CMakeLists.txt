@@ -14,6 +14,9 @@ add_custom_target(build-examples)
 # build a simple 2D reconstruction
 add_example(simple_recon2d simple_recon2d.cpp)
 
+# build the 2d phase contrast example program
+add_example(example2d_phase_contrast example2d_phase_contrast.cpp)
+
 add_subdirectory(misc)
 add_subdirectory(phantoms)
 add_subdirectory(solver)
