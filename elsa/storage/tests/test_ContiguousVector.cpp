@@ -1,6 +1,7 @@
 #include "doctest/doctest.h"
 
 #include "memory_resource/ContiguousVector.h"
+#include "memory_resource/ContiguousWrapper.h"
 #include "memory_resource/HostStandardResource.h"
 #include "Assertions.h"
 
@@ -273,7 +274,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType, TrivialType
 {
     MemoryResource mres = CheckedResource::make();
     testStats.resource = mres;
-    using Vector = ContiguousVector<T, typename T::tag>;
+    using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
 
     SUBCASE("Default constructor")
     {
