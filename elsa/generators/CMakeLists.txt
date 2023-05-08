@@ -19,6 +19,7 @@ set(MODULE_HEADERS
     NoiseGenerators.h
     SphereTrajectoryGenerator.h
     TrajectoryGenerator.h
+    analytical/Image.h
 )
 
 # list all the code files of the module
