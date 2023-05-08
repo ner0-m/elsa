@@ -4,6 +4,7 @@
 #include "elsaDefines.h"
 #include "Bessel.h"
 #include "Luts.hpp"
+#include "Math.hpp"
 
 namespace elsa
 {
@@ -253,23 +254,31 @@ namespace elsa
             : radius_(radius),
               alpha_(alpha),
               order_(order),
-              lut_([this](data_t s) { return this->operator()(s); }, radius_),
-              derivative_lut_([this](data_t s) { return order_ > 0 ? this->derivative(s) : 0; },
-                              radius_),
+              lut_([this](data_t s) { return this->operator()<true>(s); }, radius_),
+              derivative_lut_(
+                  [this](data_t s) { return order_ > 0 ? this->derivative<true>(s) : 0; }, radius_),
               normalized_gradient_lut_(
                   [this](data_t s) { return order_ > 0 ? this->normalized_gradient(s) : 0; },
                   radius_)
         {
         }
 
+        template <bool accurate = false>
         constexpr data_t operator()(data_t s) const
         {
-            return blobs::blob_projected(s, radius_, alpha_, order_);
+            if constexpr (accurate)
+                return blobs::blob_projected(s, radius_, alpha_, order_);
+            else
+                return lut_(std::abs(s));
         }
 
+        template <bool accurate = false>
         constexpr data_t derivative(data_t s) const
         {
-            return blobs::blob_derivative_projected(s, radius_, alpha_, order_);
+            if constexpr (accurate)
+                return blobs::blob_derivative_projected(s, radius_, alpha_, order_);
+            else
+                return derivative_lut_(std::abs(s)) * math::sgn(s);
         }
 
         constexpr data_t normalized_gradient(data_t s) const

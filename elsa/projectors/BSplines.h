@@ -137,23 +137,31 @@ namespace elsa
             : dim_(dim),
               order_(order),
               radius_((order + 1) * 0.5),
-              lut_([this](data_t s) { return this->operator()(s); }, radius_),
-              derivative_lut_([this](data_t s) { return order_ > 0 ? this->derivative(s) : 0; },
-                              radius_),
+              lut_([this](data_t s) { return this->operator()<true>(s); }, radius_),
+              derivative_lut_(
+                  [this](data_t s) { return order_ > 0 ? this->derivative<true>(s) : 0; }, radius_),
               normalized_gradient_lut_(
                   [this](data_t s) { return order_ > 0 ? this->normalized_gradient(s) : 0; },
                   radius_)
         {
         }
 
+        template <bool accurate = false>
         constexpr data_t operator()(data_t x) const
         {
-            return bspline::nd_bspline_centered(x, order_, dim_ - 1);
+            if constexpr (accurate)
+                return bspline::nd_bspline_centered(x, order_, dim_ - 1);
+            else
+                return lut_(std::abs(x));
         }
 
+        template <bool accurate = false>
         constexpr data_t derivative(data_t x) const
         {
-            return bspline::nd_bspline_derivative_centered(x, order_, dim_ - 1);
+            if constexpr (accurate)
+                return bspline::nd_bspline_derivative_centered(x, order_, dim_ - 1);
+            else
+                return derivative_lut_(std::abs(x)) * math::sgn(x);
         }
 
         constexpr data_t normalized_gradient(data_t x) const
