@@ -12,6 +12,9 @@ endfunction()
 add_custom_target(build-examples)
 
 # build a simple 2D reconstruction
+add_example(example2d example2d.cpp)
+
+# build a simple 2D reconstruction
 add_example(simple_recon2d simple_recon2d.cpp)
 
 # build the 2d phase contrast example program
