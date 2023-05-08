@@ -2331,7 +2331,7 @@ TEST_CASE_TEMPLATE("BlobVoxelProjector: Test weights", data_t, float, double)
 
         CAPTURE(i);
         CAPTURE(distance);
-        CHECK_EQ(Approx(op.blob(distance)), expected[i]);
+        CHECK_EQ(Approx(op.blob.template operator()<true>(distance)), expected[i]);
     }
 }
 

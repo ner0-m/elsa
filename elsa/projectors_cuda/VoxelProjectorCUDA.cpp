@@ -11,170 +11,145 @@
 
 namespace elsa
 {
-    template <typename data_t>
-    BlobVoxelProjectorCUDA<data_t>::BlobVoxelProjectorCUDA(
+
+    template <typename data_t, size_t N>
+    BlobVoxelProjectorCUDA<data_t, N>::BlobVoxelProjectorCUDA(
         const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
         data_t radius, data_t alpha, index_t order)
-        : VoxelProjectorCUDA<data_t, BlobVoxelProjectorCUDA<data_t>>(domainDescriptor,
-                                                                     rangeDescriptor),
-          _blob(radius, alpha, order)
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+          blob(radius, alpha, order),
+          _dim(domainDescriptor.getNumberOfDimensions())
     {
-        // copy lut to device
-        auto lutData = _blob.get_lut().data();
-        _lutArray.resize(sizeof(lutData));
-        thrust::copy(lutData.begin(), lutData.end(), _lutArray.begin());
+        transferGeometries<data_t>(rangeDescriptor.getGeometry(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    BlobVoxelProjectorCUDA<data_t>::BlobVoxelProjectorCUDA(
-        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : BlobVoxelProjectorCUDA(domainDescriptor, rangeDescriptor, 2.f, 10.83f, 2)
+    template <typename data_t, size_t N>
+    void BlobVoxelProjectorCUDA<data_t, N>::applyImpl(const elsa::DataContainer<data_t>& x,
+                                                      elsa::DataContainer<data_t>& Ax) const
     {
+        if (_dim == 2)
+            projectVoxelsCUDA<data_t, 2, false, VoxelHelperCUDA::CLASSIC, N>(
+                x, Ax, blob.get_lut(), _projMatrices, _extMatrices);
+        else
+            projectVoxelsCUDA<data_t, 3, false, VoxelHelperCUDA::CLASSIC, N>(
+                x, Ax, blob.get_lut(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    BlobVoxelProjectorCUDA<data_t>* BlobVoxelProjectorCUDA<data_t>::_cloneImpl() const
+    template <typename data_t, size_t N>
+    void BlobVoxelProjectorCUDA<data_t, N>::applyAdjointImpl(const elsa::DataContainer<data_t>& y,
+                                                             elsa::DataContainer<data_t>& Aty) const
     {
-        return new BlobVoxelProjectorCUDA<data_t>(this->_volumeDescriptor,
-                                                  this->_detectorDescriptor, this->_blob.radius(),
-                                                  this->_blob.alpha(), this->_blob.order());
+        if (_dim == 2)
+            projectVoxelsCUDA<data_t, 2, true, VoxelHelperCUDA::CLASSIC, N>(
+                Aty, y, blob.get_lut(), _projMatrices, _extMatrices);
+        else
+            projectVoxelsCUDA<data_t, 3, true, VoxelHelperCUDA::CLASSIC, N>(
+                Aty, y, blob.get_lut(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    bool BlobVoxelProjectorCUDA<data_t>::_isEqual(const LinearOperator<data_t>& other) const
-    {
-        if (!Base::isEqual(other))
-            return false;
-
-        auto otherOp = downcast_safe<BlobVoxelProjectorCUDA>(&other);
-        return static_cast<bool>(otherOp);
-    }
-
-    template <typename data_t>
-    PhaseContrastBlobVoxelProjectorCUDA<data_t>::PhaseContrastBlobVoxelProjectorCUDA(
+    template <typename data_t, size_t N>
+    PhaseContrastBlobVoxelProjectorCUDA<data_t, N>::PhaseContrastBlobVoxelProjectorCUDA(
         const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
         data_t radius, data_t alpha, index_t order)
-        : VoxelProjectorCUDA<data_t, PhaseContrastBlobVoxelProjectorCUDA<data_t>>(domainDescriptor,
-                                                                                  rangeDescriptor),
-          _blob(radius, alpha, order)
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+          blob(radius, alpha, order),
+          _dim(domainDescriptor.getNumberOfDimensions())
     {
-        // copy lut to device
-        auto lutData = _blob.get_derivative_lut().data();
-        _lutArray.resize(sizeof(lutData));
-        thrust::copy(lutData.begin(), lutData.end(), _lutArray.begin());
-        // copy lut3D to device
-        auto lut3DData = _blob.get_normalized_gradient_lut().data();
-        _lut3DArray.resize(sizeof(lut3DData));
-        thrust::copy(lut3DData.begin(), lut3DData.end(), _lut3DArray.begin());
+        transferGeometries<data_t>(rangeDescriptor.getGeometry(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    PhaseContrastBlobVoxelProjectorCUDA<data_t>::PhaseContrastBlobVoxelProjectorCUDA(
-        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : PhaseContrastBlobVoxelProjectorCUDA(domainDescriptor, rangeDescriptor, 2, 10.83, 2)
+    template <typename data_t, size_t N>
+    void PhaseContrastBlobVoxelProjectorCUDA<data_t, N>::applyImpl(
+        const elsa::DataContainer<data_t>& x, elsa::DataContainer<data_t>& Ax) const
     {
+        if (_dim == 2)
+            projectVoxelsCUDA<data_t, 2, false, VoxelHelperCUDA::DIFFERENTIAL, N>(
+                x, Ax, blob.get_derivative_lut(), _projMatrices, _extMatrices);
+        else
+            projectVoxelsCUDA<data_t, 3, false, VoxelHelperCUDA::DIFFERENTIAL, N>(
+                x, Ax, blob.get_normalized_gradient_lut(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    PhaseContrastBlobVoxelProjectorCUDA<data_t>*
-        PhaseContrastBlobVoxelProjectorCUDA<data_t>::_cloneImpl() const
+    template <typename data_t, size_t N>
+    void PhaseContrastBlobVoxelProjectorCUDA<data_t, N>::applyAdjointImpl(
+        const elsa::DataContainer<data_t>& y, elsa::DataContainer<data_t>& Aty) const
     {
-        return new PhaseContrastBlobVoxelProjectorCUDA<data_t>(
-            this->_volumeDescriptor, this->_detectorDescriptor, this->_blob.radius(),
-            this->_blob.alpha(), this->_blob.order());
+        if (_dim == 2)
+            projectVoxelsCUDA<data_t, 2, true, VoxelHelperCUDA::DIFFERENTIAL, N>(
+                Aty, y, blob.get_derivative_lut(), _projMatrices, _extMatrices);
+        else
+            projectVoxelsCUDA<data_t, 3, true, VoxelHelperCUDA::DIFFERENTIAL, N>(
+                Aty, y, blob.get_normalized_gradient_lut(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    bool PhaseContrastBlobVoxelProjectorCUDA<data_t>::_isEqual(
-        const LinearOperator<data_t>& other) const
-    {
-        if (!Base::isEqual(other))
-            return false;
-
-        auto otherOp = downcast_safe<PhaseContrastBlobVoxelProjectorCUDA>(&other);
-        return static_cast<bool>(otherOp);
-    }
-
-    template <typename data_t>
-    BSplineVoxelProjectorCUDA<data_t>::BSplineVoxelProjectorCUDA(
+    template <typename data_t, size_t N>
+    BSplineVoxelProjectorCUDA<data_t, N>::BSplineVoxelProjectorCUDA(
         const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
         index_t order)
-        : VoxelProjectorCUDA<data_t, BSplineVoxelProjectorCUDA<data_t>>(domainDescriptor,
-                                                                        rangeDescriptor),
-          _bspline(domainDescriptor.getNumberOfDimensions(), order)
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+          bspline(domainDescriptor.getNumberOfDimensions(), order),
+          _dim(domainDescriptor.getNumberOfDimensions())
     {
-        // copy lut to device
-        auto lutData = _bspline.get_lut().data();
-        _lutArray.resize(sizeof(lutData));
-        thrust::copy(lutData.begin(), lutData.end(), _lutArray.begin());
+        transferGeometries<data_t>(rangeDescriptor.getGeometry(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    BSplineVoxelProjectorCUDA<data_t>::BSplineVoxelProjectorCUDA(
-        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : BSplineVoxelProjectorCUDA(domainDescriptor, rangeDescriptor, 3)
+    template <typename data_t, size_t N>
+    void BSplineVoxelProjectorCUDA<data_t, N>::applyImpl(const elsa::DataContainer<data_t>& x,
+                                                         elsa::DataContainer<data_t>& Ax) const
     {
+        if (_dim == 2)
+            projectVoxelsCUDA<data_t, 2, false, VoxelHelperCUDA::CLASSIC, N>(
+                x, Ax, bspline.get_lut(), _projMatrices, _extMatrices);
+        else
+            projectVoxelsCUDA<data_t, 3, false, VoxelHelperCUDA::CLASSIC, N>(
+                x, Ax, bspline.get_lut(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    BSplineVoxelProjectorCUDA<data_t>* BSplineVoxelProjectorCUDA<data_t>::_cloneImpl() const
+    template <typename data_t, size_t N>
+    void BSplineVoxelProjectorCUDA<data_t, N>::applyAdjointImpl(
+        const elsa::DataContainer<data_t>& y, elsa::DataContainer<data_t>& Aty) const
     {
-        return new BSplineVoxelProjectorCUDA<data_t>(
-            this->_volumeDescriptor, this->_detectorDescriptor, this->_bspline.order());
+        if (_dim == 2)
+            projectVoxelsCUDA<data_t, 2, true, VoxelHelperCUDA::CLASSIC, N>(
+                Aty, y, bspline.get_lut(), _projMatrices, _extMatrices);
+        else
+            projectVoxelsCUDA<data_t, 3, true, VoxelHelperCUDA::CLASSIC, N>(
+                Aty, y, bspline.get_lut(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    bool BSplineVoxelProjectorCUDA<data_t>::_isEqual(const LinearOperator<data_t>& other) const
-    {
-        if (!Base::isEqual(other))
-            return false;
-
-        auto otherOp = downcast_safe<BSplineVoxelProjectorCUDA>(&other);
-        return static_cast<bool>(otherOp);
-    }
-
-    template <typename data_t>
-    PhaseContrastBSplineVoxelProjectorCUDA<data_t>::PhaseContrastBSplineVoxelProjectorCUDA(
+    template <typename data_t, size_t N>
+    PhaseContrastBSplineVoxelProjectorCUDA<data_t, N>::PhaseContrastBSplineVoxelProjectorCUDA(
         const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor,
         index_t order)
-        : VoxelProjectorCUDA<data_t, PhaseContrastBSplineVoxelProjectorCUDA<data_t>>(
-            domainDescriptor, rangeDescriptor),
-          _bspline(domainDescriptor.getNumberOfDimensions(), order)
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+          bspline(domainDescriptor.getNumberOfDimensions(), order),
+          _dim(domainDescriptor.getNumberOfDimensions())
     {
-        // copy lut to device
-        auto lutData = _bspline.get_derivative_lut().data();
-        _lutArray.resize(sizeof(lutData));
-        thrust::copy(lutData.begin(), lutData.end(), _lutArray.begin());
-        // copy lut3D to device
-        auto lut3DData = _bspline.get_normalized_gradient_lut().data();
-        _lut3DArray.resize(sizeof(lut3DData));
-        thrust::copy(lut3DData.begin(), lut3DData.end(), _lut3DArray.begin());
+        transferGeometries<data_t>(rangeDescriptor.getGeometry(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    PhaseContrastBSplineVoxelProjectorCUDA<data_t>::PhaseContrastBSplineVoxelProjectorCUDA(
-        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : PhaseContrastBSplineVoxelProjectorCUDA(domainDescriptor, rangeDescriptor, 3)
+    template <typename data_t, size_t N>
+    void PhaseContrastBSplineVoxelProjectorCUDA<data_t, N>::applyImpl(
+        const elsa::DataContainer<data_t>& x, elsa::DataContainer<data_t>& Ax) const
     {
+        if (_dim == 2)
+            projectVoxelsCUDA<data_t, 2, false, VoxelHelperCUDA::DIFFERENTIAL, N>(
+                x, Ax, bspline.get_derivative_lut(), _projMatrices, _extMatrices);
+        else
+            projectVoxelsCUDA<data_t, 3, false, VoxelHelperCUDA::DIFFERENTIAL, N>(
+                x, Ax, bspline.get_normalized_gradient_lut(), _projMatrices, _extMatrices);
     }
 
-    template <typename data_t>
-    PhaseContrastBSplineVoxelProjectorCUDA<data_t>*
-        PhaseContrastBSplineVoxelProjectorCUDA<data_t>::_cloneImpl() const
+    template <typename data_t, size_t N>
+    void PhaseContrastBSplineVoxelProjectorCUDA<data_t, N>::applyAdjointImpl(
+        const elsa::DataContainer<data_t>& y, elsa::DataContainer<data_t>& Aty) const
     {
-        return new PhaseContrastBSplineVoxelProjectorCUDA<data_t>(
-            this->_volumeDescriptor, this->_detectorDescriptor, this->_bspline.order());
-    }
-
-    template <typename data_t>
-    bool PhaseContrastBSplineVoxelProjectorCUDA<data_t>::_isEqual(
-        const LinearOperator<data_t>& other) const
-    {
-        if (!Base::isEqual(other))
-            return false;
-
-        auto otherOp = downcast_safe<PhaseContrastBSplineVoxelProjectorCUDA>(&other);
-        return static_cast<bool>(otherOp);
+        if (_dim == 2)
+            projectVoxelsCUDA<data_t, 2, true, VoxelHelperCUDA::DIFFERENTIAL, N>(
+                Aty, y, bspline.get_derivative_lut(), _projMatrices, _extMatrices);
+        else
+            projectVoxelsCUDA<data_t, 3, true, VoxelHelperCUDA::DIFFERENTIAL, N>(
+                Aty, y, bspline.get_normalized_gradient_lut(), _projMatrices, _extMatrices);
     }
 
     // ------------------------------------------

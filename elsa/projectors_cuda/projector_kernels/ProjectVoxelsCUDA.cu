@@ -71,9 +71,9 @@ __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, 2>::MAX_THREAD
         const data_t distance = dCoord[0] - neighbour;
 
         if constexpr (type == elsa::VoxelHelperCUDA::CLASSIC)
-            weight = lut_lerp<data_t, 100>(lut, distance / scaling, radius);
+            weight = lut_lerp<data_t>(lut, distance / scaling, radius);
         else if constexpr (type == elsa::VoxelHelperCUDA::DIFFERENTIAL)
-            weight = sgn(distance) * lut_lerp<data_t, 100>(lut, distance / scaling, radius);
+            weight = sgn(distance) * lut_lerp<data_t>(lut, distance / scaling, radius);
 
         if constexpr (adjoint) {
             atomicAdd(volume + volumeIndex, weight * *(detectorZeroIndex + neighbour));
@@ -158,12 +158,11 @@ __global__ void __launch_bounds__(elsa::ProjectVoxelsCUDA<data_t, 3>::MAX_THREAD
 
             // classic just compute the weight
             if constexpr (type == elsa::VoxelHelperCUDA::CLASSIC)
-                weight = lut_lerp<data_t, 100>(lut, distance / scaling, radius);
+                weight = lut_lerp<data_t>(lut, distance / scaling, radius);
             // differential the formula is projected_blob_derivative(||x||) / ||x|| * x_prim
             // prim is the first dimension here and the lut already takes care of the / ||x||
             else if constexpr (type == elsa::VoxelHelperCUDA::DIFFERENTIAL)
-                weight =
-                    primDistance / scaling * lut_lerp<data_t, 100>(lut, distance / scaling, radius);
+                weight = primDistance / scaling * lut_lerp<data_t>(lut, distance / scaling, radius);
 
             if constexpr (adjoint) {
                 atomicAdd(volume + volumeIndex, weight * *curDetectorIdx);

@@ -128,10 +128,11 @@ TEST_CASE_TEMPLATE("BSplines: 1d line integal", data_t, float)
         CAPTURE(bspline::bspline1d_evaluate(x, degree));
         CAPTURE(bspline::bspline1d_evaluate(0., degree));
 
-        CHECK_EQ(bspline::bspline1d_evaluate(x, degree), doctest::Approx(proj_bspline_2d(x)));
+        CHECK_EQ(bspline::bspline1d_evaluate(x, degree),
+                 doctest::Approx(proj_bspline_2d.template operator()<true>(x)));
 
         CHECK_EQ(bspline::bspline1d_evaluate(x, degree) * bspline::bspline1d_evaluate(0., degree),
-                 doctest::Approx(proj_bspline_3d(x)));
+                 doctest::Approx(proj_bspline_3d.template operator()<true>(x)));
     }
 }
 
@@ -179,8 +180,8 @@ TEST_CASE_TEMPLATE("BSpline: Test evaluation of bspline derivative", data_t, flo
 
         CAPTURE(x);
 
-        CHECK_EQ(doctest::Approx(bspline.derivative(x)), expectedDerivative[i]);
-        CHECK_EQ(doctest::Approx(bspline(x)), expected[i]);
+        CHECK_EQ(doctest::Approx(bspline.template derivative<true>(x)), expectedDerivative[i]);
+        CHECK_EQ(doctest::Approx(bspline.template operator()<true>(x)), expected[i]);
     }
 }
 
