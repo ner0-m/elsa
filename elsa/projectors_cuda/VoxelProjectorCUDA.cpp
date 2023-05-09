@@ -27,6 +27,9 @@ namespace elsa
     void BlobVoxelProjectorCUDA<data_t, N>::applyImpl(const elsa::DataContainer<data_t>& x,
                                                       elsa::DataContainer<data_t>& Ax) const
     {
+        // Zero out the result
+        Ax = 0;
+
         if (_dim == 2)
             projectVoxelsCUDA<data_t, 2, false, VoxelHelperCUDA::CLASSIC, N>(
                 x, Ax, blob.get_lut(), _projMatrices, _extMatrices);
@@ -39,6 +42,9 @@ namespace elsa
     void BlobVoxelProjectorCUDA<data_t, N>::applyAdjointImpl(const elsa::DataContainer<data_t>& y,
                                                              elsa::DataContainer<data_t>& Aty) const
     {
+        // Zero out the result
+        Aty = 0;
+
         if (_dim == 2)
             projectVoxelsCUDA<data_t, 2, true, VoxelHelperCUDA::CLASSIC, N>(
                 Aty, y, blob.get_lut(), _projMatrices, _extMatrices);
@@ -62,6 +68,9 @@ namespace elsa
     void PhaseContrastBlobVoxelProjectorCUDA<data_t, N>::applyImpl(
         const elsa::DataContainer<data_t>& x, elsa::DataContainer<data_t>& Ax) const
     {
+        // Zero out the result
+        Ax = 0;
+
         if (_dim == 2)
             projectVoxelsCUDA<data_t, 2, false, VoxelHelperCUDA::DIFFERENTIAL, N>(
                 x, Ax, blob.get_derivative_lut(), _projMatrices, _extMatrices);
@@ -74,6 +83,9 @@ namespace elsa
     void PhaseContrastBlobVoxelProjectorCUDA<data_t, N>::applyAdjointImpl(
         const elsa::DataContainer<data_t>& y, elsa::DataContainer<data_t>& Aty) const
     {
+        // Zero out the result
+        Aty = 0;
+
         if (_dim == 2)
             projectVoxelsCUDA<data_t, 2, true, VoxelHelperCUDA::DIFFERENTIAL, N>(
                 Aty, y, blob.get_derivative_lut(), _projMatrices, _extMatrices);
@@ -97,6 +109,9 @@ namespace elsa
     void BSplineVoxelProjectorCUDA<data_t, N>::applyImpl(const elsa::DataContainer<data_t>& x,
                                                          elsa::DataContainer<data_t>& Ax) const
     {
+        // Zero out the result
+        Ax = 0;
+
         if (_dim == 2)
             projectVoxelsCUDA<data_t, 2, false, VoxelHelperCUDA::CLASSIC, N>(
                 x, Ax, bspline.get_lut(), _projMatrices, _extMatrices);
@@ -109,6 +124,9 @@ namespace elsa
     void BSplineVoxelProjectorCUDA<data_t, N>::applyAdjointImpl(
         const elsa::DataContainer<data_t>& y, elsa::DataContainer<data_t>& Aty) const
     {
+        // Zero out the result
+        Aty = 0;
+
         if (_dim == 2)
             projectVoxelsCUDA<data_t, 2, true, VoxelHelperCUDA::CLASSIC, N>(
                 Aty, y, bspline.get_lut(), _projMatrices, _extMatrices);
@@ -132,6 +150,9 @@ namespace elsa
     void PhaseContrastBSplineVoxelProjectorCUDA<data_t, N>::applyImpl(
         const elsa::DataContainer<data_t>& x, elsa::DataContainer<data_t>& Ax) const
     {
+        // Zero out the result
+        Ax = 0;
+
         if (_dim == 2)
             projectVoxelsCUDA<data_t, 2, false, VoxelHelperCUDA::DIFFERENTIAL, N>(
                 x, Ax, bspline.get_derivative_lut(), _projMatrices, _extMatrices);
@@ -144,6 +165,9 @@ namespace elsa
     void PhaseContrastBSplineVoxelProjectorCUDA<data_t, N>::applyAdjointImpl(
         const elsa::DataContainer<data_t>& y, elsa::DataContainer<data_t>& Aty) const
     {
+        // Zero out the result
+        Aty = 0;
+
         if (_dim == 2)
             projectVoxelsCUDA<data_t, 2, true, VoxelHelperCUDA::DIFFERENTIAL, N>(
                 Aty, y, bspline.get_derivative_lut(), _projMatrices, _extMatrices);

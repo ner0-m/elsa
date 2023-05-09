@@ -108,6 +108,10 @@ namespace elsa
         void forwardVoxel(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
                           const Lut<data_t, N>& lut, basis_function_t& basis_function)
         {
+
+            // Just to be sure, zero out the result
+            Ax = 0;
+
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(Ax.getDataDescriptor());
 
@@ -142,6 +146,10 @@ namespace elsa
         void backwardVoxel(const DataContainer<data_t>& y, DataContainer<data_t>& Aty,
                            const Lut<data_t, N>& lut, basis_function_t basis_function)
         {
+
+            // Just to be sure, zero out the result
+            Aty = 0;
+
             const DetectorDescriptor& detectorDesc =
                 downcast<DetectorDescriptor>(y.getDataDescriptor());
 
