@@ -113,6 +113,11 @@ namespace elsa::mr
             else
                 fillTyped<uint8_t>(ptr, src, stride, stride * count);
         }
+        template <class Type>
+        void copyMemory(void* ptr, const void* src, size_t count)
+        {
+            std::memcpy(ptr, src, count * sizeof(Type));
+        }
 
         /*
          *  A container is a managing unit of 'capacity' number of types, allocated with the
@@ -263,8 +268,7 @@ namespace elsa::mr
                         ++size;
                     }
                 } else if (move > 0) {
-                    // NOLINTNEXTLINE(*-memory-manipulation)
-                    std::memcpy(new_ptr, old.pointer, move * sizeof(value_type));
+                    copyMemory<value_type>(new_ptr, old.pointer, move);
                     size = move;
                 }
                 return old;
@@ -323,10 +327,13 @@ namespace elsa::mr
                                    && detail::is_random_iterator<ItType>::value)
                     insert_range(off, ibegin.get(), iend.get(), count);
 
-                /* check if the iterator is a pointer and can be delegated to mr */
-                else if constexpr (detail::actual_pointer<ItType>::value && is_trivial<TypeTag>) {
-                    // NOLINTNEXTLINE(*-memory-manipulation)
-                    std::memcpy(pointer + off, ibegin, count * sizeof(value_type));
+                /* check if the iterator is a pointer of the right type
+                 *   and can be reduced to a memory operation */
+                else if constexpr (detail::actual_pointer<ItType>::value
+                                   && std::is_same<std::decay_t<decltype(*ibegin)>,
+                                                   std::decay_t<value_type>>::value
+                                   && is_trivial<TypeTag>) {
+                    copyMemory<value_type>(pointer + off, ibegin, count);
                     size = std::max<size_type>(size, end);
                 }
 
