@@ -245,7 +245,7 @@ if(ELSA_MASTER_PROJECT)
 
     if(ELSA_CUDA_ENABLED OR SYSTEM_THRUST)
         message(STATUS "Using system-wide thrust library (e.g. provided by CUDA environment)...")
-        find_package(Thrust 1.13 REQUIRED CONFIG HINTS "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/../lib/cmake/thrust")
+        find_package(Thrust 2.0 REQUIRED CONFIG HINTS "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/../lib/cmake/thrust")
     else()
         CPMAddPackage(
             NAME thrust
