@@ -3,6 +3,7 @@
 #include "elsa.h"
 #include "Phantoms.h"
 #include "analytical/Image.h"
+#include "projectors_cuda/JosephsMethodCUDA.h"
 
 using namespace elsa;
 using namespace elsa::phantoms;
@@ -24,7 +25,7 @@ int main(int, char*[])
 
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as Phantoms returns a
     // VolumeDescriptor
-    JosephsMethod projector(gollum, *sinoDescriptor);
+    JosephsMethodCUDA projector{gollum, *sinoDescriptor};
 
     auto A = FiniteDifferences<real_t>(gollum);
     auto proxg = ProximalL1<real_t>{};

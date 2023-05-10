@@ -6,8 +6,10 @@
 #include "TypeCasts.hpp"
 #include "elsaDefines.h"
 #include "DataContainer.h"
+#include <Eigen/src/Core/DiagonalMatrix.h>
 #include <Eigen/src/Core/Matrix.h>
 
+#include <Eigen/src/Geometry/Rotation2D.h>
 #include <iostream>
 #include <memory>
 #include <unordered_set>
@@ -77,7 +79,10 @@ namespace elsa::phantoms
     {
     public:
         // TODO: Allow multidimensional ellipsoid with matrix
-        Ellipse(Position<data_t> center, data_t a, data_t b) : center{center}, a{a}, b{b} {}
+        Ellipse(Position<data_t> center, data_t a, data_t b, data_t phi = 0)
+            : c{center}, A{1 / (a * a), 1 / (b * b)}, R{phi}
+        {
+        }
 
         DataContainer<data_t> makeSinogram(const DataDescriptor& sinogramDescriptor) override
         {
@@ -93,19 +98,23 @@ namespace elsa::phantoms
 
                     auto ray = detDesc.computeRayFromDetectorCoord(IndexVector_t{{pixel, pose}});
 
-                    auto ori = ray.origin();
-                    auto dir = ray.direction();
+                    auto o = c - ray.origin();
+                    auto d = ray.direction();
 
-                    auto off = center - ori;
+                    auto Ro = R * o;
+                    auto Rd = R * d;
 
-                    auto alpha = dir[0] * dir[0] / (a * a) + dir[1] * dir[1] / (b * b);
-                    auto beta = off[0] * dir[0] / a + off[1] * dir[1] / b;
-                    auto gamma = off[0] * off[0] / (a * a) + off[1] * off[1] / (b * b) - 1;
+                    auto alpha = Ro.dot(A * Ro) - 1;
+                    auto beta = Rd.dot(A * Ro);
+                    auto gamma = Rd.dot(A * Rd);
                     auto discriminant = beta * beta / (alpha * alpha) - gamma / alpha;
 
                     if (discriminant < 0) {
                         sinogram(IndexVector_t{{pixel, pose}}) = 0;
                     } else {
+                        auto t1 = beta / alpha + sqrt(discriminant);
+                        auto t2 = beta / alpha - sqrt(discriminant);
+
                         sinogram(IndexVector_t{{pixel, pose}}) = 2 * sqrt(discriminant);
                     }
                 }
@@ -123,8 +132,9 @@ namespace elsa::phantoms
         };
 
     private:
-        Position<data_t> center;
-        data_t a, b;
+        Position<data_t> c;
+        Eigen::DiagonalMatrix<data_t, 2> A;
+        Eigen::Rotation2D<data_t> R;
     };
 
 } // namespace elsa::phantoms
