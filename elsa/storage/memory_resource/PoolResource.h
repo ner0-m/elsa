@@ -6,12 +6,17 @@
 
 namespace elsa::mr
 {
-    class PoolResource;
+    namespace pool_resource
+    {
+        template <typename T>
+        class PoolResource;
+    }
 
     class PoolResourceConfig
     {
     private:
-        friend class PoolResource;
+        template <typename T>
+        friend class pool_resource::PoolResource;
 
         size_t maxBlockSizeLog;
         size_t maxBlockSize;
@@ -93,57 +98,83 @@ namespace elsa::mr
             size_t size();
             void setSize(size_t size);
         };
-    } // namespace pool_resource
 
-    class PoolResource : public MemResInterface
-    {
-    private:
-        MemoryResource _upstream;
-        PoolResourceConfig _config;
-        std::unordered_map<void*, std::unique_ptr<pool_resource::Block>> _addressToBlock;
-        std::vector<pool_resource::Block*> _freeLists;
-        uint64_t _freeListNonEmpty{0};
+        template <typename FreeListStrategy>
+        class PoolResource : public MemResInterface
+        {
+        private:
+            MemoryResource _upstream;
+            PoolResourceConfig _config;
+            std::unordered_map<void*, std::unique_ptr<pool_resource::Block>> _addressToBlock;
+            std::vector<pool_resource::Block*> _freeLists;
+            uint64_t _freeListNonEmpty{0};
 
-        size_t _cachedChunkCount{0};
-        std::unique_ptr<std::unique_ptr<pool_resource::Block>[]> _cachedChunks;
+            size_t _cachedChunkCount{0};
+            std::unique_ptr<std::unique_ptr<pool_resource::Block>[]> _cachedChunks;
 
-        void insertFreeBlock(std::unique_ptr<pool_resource::Block>&& block);
-        void linkFreeBlock(pool_resource::Block* block);
-        void unlinkFreeBlock(pool_resource::Block* block);
-        size_t freeListIndexForFreeChunk(size_t size);
-        size_t computeRealSize(size_t size);
-        // Returns a registered (in the address map) block that is not in the free list.
-        // The metadata of the block is correctly initialized.
-        pool_resource::Block* expandPool();
-        void shrinkPool(std::unique_ptr<pool_resource::Block> block);
-        void shrinkBlockAtTail(pool_resource::Block& block, void* blockAddress, size_t newSize,
-                               size_t oldSize);
+            void insertFreeBlock(std::unique_ptr<pool_resource::Block>&& block);
+            void linkFreeBlock(pool_resource::Block* block);
+            void unlinkFreeBlock(pool_resource::Block* block);
+            size_t freeListIndexForFreeChunk(size_t size);
+            size_t computeRealSize(size_t size);
+            // Returns a registered (in the address map) block that is not in the free list.
+            // The metadata of the block is correctly initialized.
+            pool_resource::Block* expandPool();
+            void shrinkPool(std::unique_ptr<pool_resource::Block> block);
+            void shrinkBlockAtTail(pool_resource::Block& block, void* blockAddress, size_t newSize,
+                                   size_t oldSize);
 
-        // This function is noexcept, because it makes no allocations. The only potentially throwing
-        // functions it calls, are the find and erase methods on _addressToBlock. Neither of these
-        // should throw, if the inner type raises no exceptions.
-        void doDeallocate(void* ptr) noexcept;
+            // This function is noexcept, because it makes no allocations. The only potentially
+            // throwing functions it calls, are the find and erase methods on _addressToBlock.
+            // Neither of these should throw, if the inner type raises no exceptions.
+            void doDeallocate(void* ptr) noexcept;
 
-    protected:
-        PoolResource(MemoryResource upstream,
+        protected:
+            PoolResource(MemoryResource upstream,
+                         PoolResourceConfig config = PoolResourceConfig::defaultConfig());
+
+            ~PoolResource();
+
+        public:
+            /// @brief Create a MemoryResource that encapsulates a PoolResource with the given
+            /// config.
+            /// @param upstream The back-end allocator that is called by the pool resource whenever
+            /// it runs out of memory to service allocations.
+            /// @param config The configuration for the created pool resource. It is the caller's
+            /// responsibility to make sure this configuration is valid with
+            /// PoolResourceConfig::validate(). If the configuration is not valid, the default
+            /// configuration is used instead.
+            /// @return A MemoryResource that encapsulates a PoolResource.
+            static MemoryResource
+                make(MemoryResource upstream,
                      PoolResourceConfig config = PoolResourceConfig::defaultConfig());
 
-        ~PoolResource();
+            void* allocate(size_t size, size_t alignment) override;
+            void deallocate(void* ptr, size_t size, size_t alignment) noexcept override;
+            bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override;
+        };
 
-    public:
-        /// @brief Create a MemoryResource that encapsulates a PoolResource with the given config.
-        /// @param upstream The back-end allocator that is called by the pool resource whenever it
-        /// runs out of memory to service allocations.
-        /// @param config The configuration for the created pool resource. It is the caller's
-        /// responsibility to make sure this configuration is valid with
-        /// PoolResourceConfig::validate(). If the configuration is not valid, the default
-        /// configuration is used instead.
-        /// @return A MemoryResource that encapsulates a PoolResource.
-        static MemoryResource make(MemoryResource upstream,
-                                   PoolResourceConfig config = PoolResourceConfig::defaultConfig());
+        struct ConstantTimeFit {
+            static pool_resource::Block*
+                selectBlock(uint64_t listOccupancy,
+                            const std::vector<pool_resource::Block*>& freeLists, size_t blockSize);
+        };
 
-        void* allocate(size_t size, size_t alignment) override;
-        void deallocate(void* ptr, size_t size, size_t alignment) noexcept override;
-        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override;
-    };
+        struct FirstFit {
+            static pool_resource::Block*
+                selectBlock(uint64_t listOccupancy,
+                            const std::vector<pool_resource::Block*>& freeLists, size_t blockSize);
+        };
+    } // namespace pool_resource
+
+    using PoolResource = pool_resource::PoolResource<pool_resource::ConstantTimeFit>;
+
+    /// @brief Pool resource able to serve allocations in average constant time (provided the
+    /// upstream allocator also gives this guarantee). May lead to more fragmentation than a first
+    /// fit strategy.
+    using ConstantFitPoolResource = pool_resource::PoolResource<pool_resource::ConstantTimeFit>;
+
+    /// @brief Pool resource that serves allocations via searching the corresponding seg. free list
+    /// in linear time.
+    using FirstFitResource = pool_resource::PoolResource<pool_resource::FirstFit>;
 } // namespace elsa::mr

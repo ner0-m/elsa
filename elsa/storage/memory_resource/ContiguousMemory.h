@@ -90,6 +90,13 @@ namespace elsa::mr
     ///     of HostStandardResource will be instantiated.
     /// @param r Must be a synchronized memory resource!
     void setBaselineInstance(const MemoryResource& r);
+    /// Return the memory-resource currently set as baseline instance.
+    /// The baseline-instance can be reassigned, see setBaselineInstance.
+    ///
+    /// IMPORTANT! This means that there is no guarantee, that two calls
+    /// to baseline instance return the same memory-resource. Always make
+    /// sure, pointers are deallocated in the memory-resource that allocated
+    /// them.
     MemoryResource baselineInstance();
     bool baselineInstanceSet();
 
