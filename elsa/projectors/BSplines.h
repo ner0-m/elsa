@@ -129,7 +129,7 @@ namespace elsa
     /// @brief Represent a projected B-Spline basis function of a given dimension and order.
     /// Projected B-Splines are again B-Spline of n-1 dimensions. Using the fact, that B-Splines
     /// are close to symmetrical, we can approximate the projection only based on distance.
-    template <typename data_t, size_t N = DEFAULT_LUT_SIZE>
+    template <typename data_t, size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
     class ProjectedBSpline
     {
     public:

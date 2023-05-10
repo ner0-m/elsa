@@ -5,7 +5,7 @@
 
 #include <array>
 
-#define DEFAULT_LUT_SIZE 100
+#define DEFAULT_PROJECTOR_LUT_SIZE 100
 
 namespace elsa
 {

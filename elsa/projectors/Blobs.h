@@ -246,7 +246,7 @@ namespace elsa
         const index_t order_;
     };
 
-    template <typename data_t, size_t N = DEFAULT_LUT_SIZE>
+    template <typename data_t, size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
     class ProjectedBlob
     {
     public:

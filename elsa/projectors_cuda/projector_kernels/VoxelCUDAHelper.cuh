@@ -48,7 +48,8 @@ namespace elsa
     }
 
     template <typename data_t, size_t dim, bool adjoint,
-              VoxelHelperCUDA::PROJECTOR_TYPE type = VoxelHelperCUDA::CLASSIC, size_t N>
+              VoxelHelperCUDA::PROJECTOR_TYPE type = VoxelHelperCUDA::CLASSIC,
+              size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
     void projectVoxelsCUDA(const DataContainer<data_t>& volumeContainer,
                            const DataContainer<data_t>& sinoContainer, const Lut<data_t, N>& lut,
                            const thrust::device_vector<data_t>& _projMatrices,

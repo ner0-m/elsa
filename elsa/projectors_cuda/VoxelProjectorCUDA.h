@@ -20,7 +20,7 @@
 namespace elsa
 {
 
-    template <typename data_t = float, size_t N = DEFAULT_LUT_SIZE>
+    template <typename data_t = float>
     class BlobVoxelProjectorCUDA : public LinearOperator<data_t>
     {
     public:
@@ -49,26 +49,13 @@ namespace elsa
                               elsa::DataContainer<data_t>& Aty) const override;
 
         /// implement the polymorphic clone operation
-        BlobVoxelProjectorCUDA<data_t>* cloneImpl() const
-        {
-            return new BlobVoxelProjectorCUDA<data_t>(
-                downcast<VolumeDescriptor>(*this->_domainDescriptor),
-                downcast<DetectorDescriptor>(*this->_rangeDescriptor), this->blob.radius(),
-                this->blob.alpha(), this->blob.order());
-        }
+        BlobVoxelProjectorCUDA<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const
-        {
-            if (!LinearOperator<data_t>::isEqual(other))
-                return false;
-
-            auto otherOp = downcast_safe<BlobVoxelProjectorCUDA>(&other);
-            return static_cast<bool>(otherOp);
-        }
+        bool isEqual(const LinearOperator<data_t>& other) const override;
 
     public:
-        ProjectedBlob<data_t, N> blob;
+        ProjectedBlob<data_t> blob;
 
     private:
         index_t _dim;
@@ -78,7 +65,7 @@ namespace elsa
         thrust::device_vector<data_t> _extMatrices;
     };
 
-    template <typename data_t = float, size_t N = DEFAULT_LUT_SIZE>
+    template <typename data_t = float>
     class BSplineVoxelProjectorCUDA : public LinearOperator<data_t>
     {
     public:
@@ -102,25 +89,13 @@ namespace elsa
                               elsa::DataContainer<data_t>& Aty) const;
 
         /// implement the polymorphic clone operation
-        BSplineVoxelProjectorCUDA<data_t>* cloneImpl() const
-        {
-            return new BSplineVoxelProjectorCUDA<data_t>(
-                downcast<VolumeDescriptor>(*this->_domainDescriptor),
-                downcast<DetectorDescriptor>(*this->_rangeDescriptor), this->bspline.order());
-        }
+        BSplineVoxelProjectorCUDA<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const
-        {
-            if (!LinearOperator<data_t>::isEqual(other))
-                return false;
-
-            auto otherOp = downcast_safe<BSplineVoxelProjectorCUDA>(&other);
-            return static_cast<bool>(otherOp);
-        }
+        bool isEqual(const LinearOperator<data_t>& other) const override;
 
     public:
-        ProjectedBSpline<data_t, N> bspline;
+        ProjectedBSpline<data_t> bspline;
 
     private:
         index_t _dim;
@@ -130,7 +105,7 @@ namespace elsa
         thrust::device_vector<data_t> _extMatrices;
     };
 
-    template <typename data_t = float, size_t N = DEFAULT_LUT_SIZE>
+    template <typename data_t = float>
     class PhaseContrastBlobVoxelProjectorCUDA : public LinearOperator<data_t>
     {
     public:
@@ -152,32 +127,19 @@ namespace elsa
                                             data_t alpha = blobs::DEFAULT_ALPHA,
                                             index_t order = blobs::DEFAULT_ORDER);
 
-        /// implement the polymorphic clone operation
-        PhaseContrastBlobVoxelProjectorCUDA<data_t>* cloneImpl() const
-        {
-            return new PhaseContrastBlobVoxelProjectorCUDA<data_t>(
-                downcast<VolumeDescriptor>(*this->_domainDescriptor),
-                downcast<DetectorDescriptor>(*this->_rangeDescriptor), this->blob.radius(),
-                this->blob.alpha(), this->blob.order());
-        }
-
         void applyImpl(const elsa::DataContainer<data_t>& x, elsa::DataContainer<data_t>& Ax) const;
 
         void applyAdjointImpl(const elsa::DataContainer<data_t>& y,
                               elsa::DataContainer<data_t>& Aty) const;
 
-        /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const
-        {
-            if (!LinearOperator<data_t>::isEqual(other))
-                return false;
+        /// implement the polymorphic clone operation
+        PhaseContrastBlobVoxelProjectorCUDA<data_t>* cloneImpl() const override;
 
-            auto otherOp = downcast_safe<PhaseContrastBlobVoxelProjectorCUDA>(&other);
-            return static_cast<bool>(otherOp);
-        }
+        /// implement the polymorphic comparison operation
+        bool isEqual(const LinearOperator<data_t>& other) const override;
 
     public:
-        ProjectedBlob<data_t, N> blob;
+        ProjectedBlob<data_t> blob;
 
     private:
         index_t _dim;
@@ -187,7 +149,7 @@ namespace elsa
         thrust::device_vector<data_t> _extMatrices;
     };
 
-    template <typename data_t = float, size_t N = DEFAULT_LUT_SIZE>
+    template <typename data_t = float>
     class PhaseContrastBSplineVoxelProjectorCUDA : public LinearOperator<data_t>
     {
     public:
@@ -205,31 +167,20 @@ namespace elsa
                                                const DetectorDescriptor& rangeDescriptor,
                                                index_t order = bspline::DEFAULT_ORDER);
 
-        /// implement the polymorphic clone operation
-        PhaseContrastBSplineVoxelProjectorCUDA<data_t>* cloneImpl() const
-        {
-            return new PhaseContrastBSplineVoxelProjectorCUDA<data_t>(
-                downcast<VolumeDescriptor>(*this->_domainDescriptor),
-                downcast<DetectorDescriptor>(*this->_rangeDescriptor), this->bspline.order());
-        }
-
-        void applyImpl(const elsa::DataContainer<data_t>& x, elsa::DataContainer<data_t>& Ax) const;
+        void applyImpl(const elsa::DataContainer<data_t>& x,
+                       elsa::DataContainer<data_t>& Ax) const override;
 
         void applyAdjointImpl(const elsa::DataContainer<data_t>& y,
-                              elsa::DataContainer<data_t>& Aty) const;
+                              elsa::DataContainer<data_t>& Aty) const override;
+
+        /// implement the polymorphic clone operation
+        PhaseContrastBSplineVoxelProjectorCUDA<data_t>* cloneImpl() const override;
 
         /// implement the polymorphic comparison operation
-        bool isEqual(const LinearOperator<data_t>& other) const
-        {
-            if (!LinearOperator<data_t>::isEqual(other))
-                return false;
-
-            auto otherOp = downcast_safe<PhaseContrastBSplineVoxelProjectorCUDA>(&other);
-            return static_cast<bool>(otherOp);
-        }
+        bool isEqual(const LinearOperator<data_t>& other) const override;
 
     public:
-        ProjectedBSpline<data_t, N> bspline;
+        ProjectedBSpline<data_t> bspline;
 
     private:
         index_t _dim;

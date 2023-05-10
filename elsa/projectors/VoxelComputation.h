@@ -17,20 +17,20 @@ namespace elsa
         using IndexVector2D_t = Eigen::Matrix<index_t, 2, 1>;
         using IndexVector3D_t = Eigen::Matrix<index_t, 3, 1>;
 
-        template <index_t dim, size_t N, typename data_t>
+        template <index_t dim, typename data_t, size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
         data_t classic_weight_function(Lut<data_t, N> lut, Eigen::Matrix<real_t, dim, 1> distance)
         {
             return lut(distance.norm());
         }
 
-        template <size_t N, typename data_t>
+        template <typename data_t, size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
         data_t differential_weight_function_2D(Lut<data_t, N> lut,
                                                Eigen::Matrix<real_t, 1, 1> distance)
         {
             return lut(distance.norm()) * math::sgn(distance[0]);
         }
 
-        template <size_t N, typename data_t>
+        template <typename data_t, size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
         data_t differential_weight_function_3D(Lut<data_t, N> lut,
                                                Eigen::Matrix<real_t, 2, 1> distance)
         {
@@ -104,7 +104,8 @@ namespace elsa
             }
         }
 
-        template <int dim, typename data_t, size_t N, typename basis_function_t>
+        template <int dim, typename data_t, typename basis_function_t,
+                  size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
         void forwardVoxel(const DataContainer<data_t>& x, DataContainer<data_t>& Ax,
                           const Lut<data_t, N>& lut, basis_function_t& basis_function)
         {
@@ -142,7 +143,8 @@ namespace elsa
             }
         }
 
-        template <int dim, typename data_t, size_t N, typename basis_function_t>
+        template <int dim, typename data_t, typename basis_function_t,
+                  size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
         void backwardVoxel(const DataContainer<data_t>& y, DataContainer<data_t>& Aty,
                            const Lut<data_t, N>& lut, basis_function_t basis_function)
         {

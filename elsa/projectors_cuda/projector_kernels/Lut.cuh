@@ -6,7 +6,7 @@
 /**
  * @brief General lut lookup and interpolation
  */
-template <typename data_t, uint32_t N = DEFAULT_LUT_SIZE>
+template <typename data_t, uint32_t N = DEFAULT_PROJECTOR_LUT_SIZE>
 __device__ __forceinline__ data_t lut_lerp(const data_t* const __restrict__ lut,
                                            const data_t distance, const data_t radius)
 {

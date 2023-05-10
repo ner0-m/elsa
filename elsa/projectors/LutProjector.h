@@ -23,21 +23,21 @@ namespace elsa
     template <typename data_t, typename Derived>
     class LutProjector;
 
-    template <typename data_t = real_t, size_t N = DEFAULT_LUT_SIZE>
+    template <typename data_t = real_t>
     class BlobProjector;
 
-    template <typename data_t = real_t, size_t N = DEFAULT_LUT_SIZE>
+    template <typename data_t = real_t>
     class BSplineProjector;
 
-    template <typename data_t, size_t N>
-    struct XrayProjectorInnerTypes<BlobProjector<data_t, N>> {
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<BlobProjector<data_t>> {
         using value_type = data_t;
         using forward_tag = ray_driven_tag;
         using backward_tag = ray_driven_tag;
     };
 
-    template <typename data_t, size_t N>
-    struct XrayProjectorInnerTypes<BSplineProjector<data_t, N>> {
+    template <typename data_t>
+    struct XrayProjectorInnerTypes<BSplineProjector<data_t>> {
         using value_type = data_t;
         using forward_tag = ray_driven_tag;
         using backward_tag = ray_driven_tag;
@@ -183,11 +183,11 @@ namespace elsa
         friend class XrayProjector<Derived>;
     };
 
-    template <typename data_t, size_t N>
-    class BlobProjector : public LutProjector<data_t, BlobProjector<data_t, N>>
+    template <typename data_t>
+    class BlobProjector : public LutProjector<data_t, BlobProjector<data_t>>
     {
     public:
-        using self_type = BlobProjector<data_t, N>;
+        using self_type = BlobProjector<data_t>;
 
         BlobProjector(const VolumeDescriptor& domainDescriptor,
                       const DetectorDescriptor& rangeDescriptor,
@@ -199,24 +199,24 @@ namespace elsa
         index_t support() const { return static_cast<index_t>(std::ceil(blob_.radius())); }
 
         /// implement the polymorphic clone operation
-        BlobProjector<data_t, N>* _cloneImpl() const;
+        BlobProjector<data_t>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        ProjectedBlob<data_t, N> blob_;
+        ProjectedBlob<data_t> blob_;
 
-        using Base = LutProjector<data_t, BlobProjector<data_t, N>>;
+        using Base = LutProjector<data_t, BlobProjector<data_t>>;
 
         friend class XrayProjector<self_type>;
     };
 
-    template <typename data_t, size_t N>
-    class BSplineProjector : public LutProjector<data_t, BSplineProjector<data_t, N>>
+    template <typename data_t>
+    class BSplineProjector : public LutProjector<data_t, BSplineProjector<data_t>>
     {
     public:
-        using self_type = BlobProjector<data_t, N>;
+        using self_type = BlobProjector<data_t>;
 
         BSplineProjector(const VolumeDescriptor& domainDescriptor,
                          const DetectorDescriptor& rangeDescriptor,
@@ -227,15 +227,15 @@ namespace elsa
         index_t support() const;
 
         /// implement the polymorphic clone operation
-        BSplineProjector<data_t, N>* _cloneImpl() const;
+        BSplineProjector<data_t>* _cloneImpl() const;
 
         /// implement the polymorphic comparison operation
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        ProjectedBSpline<data_t, N> bspline_;
+        ProjectedBSpline<data_t> bspline_;
 
-        using Base = LutProjector<data_t, BSplineProjector<data_t, N>>;
+        using Base = LutProjector<data_t, BSplineProjector<data_t>>;
 
         friend class XrayProjector<self_type>;
     };
