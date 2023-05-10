@@ -8,68 +8,74 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <optional>
 #include <string>
 #include "IS_ADMML2.h"
 #include "elsaDefines.h"
 
 using namespace elsa;
 
-DataContainer<double> importHTC(std::string filename, index_t rows, index_t cols)
+template <typename D>
+DataContainer<double> importHTC(std::string filename, D descriptor)
 {
 
-    DataContainer<double> sinogram{VolumeDescriptor{{cols, rows}}};
+    DataContainer<double> sinogram{descriptor};
     std::ifstream file{filename};
 
     file.read(reinterpret_cast<char*>(thrust::raw_pointer_cast(sinogram.storage().data())),
-              rows * cols * sizeof(double));
+              descriptor.getNumberOfCoefficients() * sizeof(double));
     return sinogram;
 }
 
 void makeGif()
 {
 
-    index_t numAngles{560}, numRows{721};
+    index_t numPixels{560}, numAngles{721};
 
-    auto sinogram = importHTC("htc2022_ta_full.mat.bin", 721, 560);
+    VolumeDescriptor phantomDescriptor{512, 512};
+
+    // generate circular trajectory
+    index_t arc{360};
+    const auto dSO = 410.66;
+    const auto dSD = 553.74;
+
+    auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
+        numAngles, phantomDescriptor, arc, dSD, dSD - dSO, std::nullopt, std::nullopt,
+        IndexVector_t{{numPixels}});
+
+    auto sinogram = importHTC("htc2022_ta_full.mat.bin", *sinoDescriptor);
     io::write(sinogram, "ta.pgm");
 
-    VolumeDescriptor volumeDescriptor{560, 721};
+    SiddonsMethod<double> projector(dynamic_cast<const VolumeDescriptor&>(phantomDescriptor),
+                                    *sinoDescriptor);
 
-    //     // generate circular trajectory
-    //     index_t arc{360};
-    //     const auto dSO = 410.66;
-    //     const auto dSD = 553.74;
+    // auto cosine = makeCosine<double>(sinogram.getDataDescriptor());
 
-    //     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(numAngles,
-    //     volumeDescriptor,
-    //                                                                       arc, dSD, dSD - dSO);
+    // auto reconstruction = FBP<double>{projector, cosine}.apply(sinogram);
+    // io::write(reconstruction, "fbp_htc.pgm");
 
-    //     // dynamic_cast to VolumeDescriptor is legal and will not throw, as Phantoms returns a
-    //     // VolumeDescriptor
-    //     JosephsMethod<double> projector(volumeDescriptor, *sinoDescriptor);
+    auto A = FiniteDifferences<double>(phantomDescriptor);
+    auto proxg = ProximalL1<double>{};
+    auto tau = double{0.1};
 
-    //     auto A = FiniteDifferences<double>(volumeDescriptor);
-    //     auto proxg = ProximalL1<double>{};
-    //     auto tau = double{0.1};
+    index_t noIterations{10};
+    auto afterStep = [](DataContainer<double> state, index_t i, index_t) {
+        io::write(state, fmt::format("raw/{}.pgm", i));
+    };
 
-    //     index_t noIterations{10};
-    //     auto afterStep = [](DataContainer<double> state, index_t i, index_t) {
-    //         io::write(state, fmt::format("raw/{}.pgm", i));
-    //     };
+    // solve the reconstruction problem
+    IS_ADMML2<double> admm{projector, sinogram, A, proxg, tau};
 
-    //     // solve the reconstruction problem
-    //     IS_ADMML2<double> admm{projector, sinogram, A, proxg, tau};
+    Logger::get("Info")->info("Solving reconstruction using {} iterations", noIterations);
 
-    //     Logger::get("Info")->info("Solving reconstruction using {} iterations", noIterations);
+    admm.solve(noIterations, std::nullopt, afterStep);
+}
 
-    //     admm.solve(noIterations, std::nullopt, afterStep);
-    // }
-
-    int main(int, char**)
-    {
-        try {
-            makeGif();
-        } catch (std::exception& e) {
-            std::cerr << "An exception occurred: " << e.what() << "\n";
-        }
+int main(int, char**)
+{
+    try {
+        makeGif();
+    } catch (std::exception& e) {
+        std::cerr << "An exception occurred: " << e.what() << "\n";
     }
+}
