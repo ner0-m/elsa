@@ -1,6 +1,6 @@
 #include "ContiguousMemory.h"
 
-#include "HostStandardResource.h"
+#include "UniversalResource.h"
 #include "AllocationHint.h"
 
 #include <mutex>
@@ -112,7 +112,7 @@ namespace elsa::mr
     {
         std::lock_guard<std::mutex> _lock(mrSingletonLock);
         if (!mrSingleton.valid())
-            mrSingleton = HostStandardResource::make();
+            mrSingleton = UniversalResource::make();
         return mrSingleton;
     }
     MemoryResource defaultInstance()
