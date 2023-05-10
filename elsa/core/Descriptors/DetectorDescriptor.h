@@ -11,8 +11,8 @@
 namespace elsa
 {
     /**
-     * @brief Class representing metadata for lineraized n-dimensional signal stored in memory. It
-     * is a base class for different type signals caputred by some kind of detectors (i.e. a planar
+     * @brief Class representing metadata for linearized n-dimensional signal stored in memory. It
+     * is a base class for different type signals captured by some kind of detectors (i.e. a planar
      * detector, curved or some other shaped detector). Is additionally stored information about the
      * different poses of a trajectory.
      */

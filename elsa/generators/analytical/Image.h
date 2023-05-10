@@ -1,7 +1,9 @@
 #include "Cloneable.h"
 #include "CurvedDetectorDescriptor.h"
 #include "DataDescriptor.h"
+#include "DetectorDescriptor.h"
 #include "PlanarDetectorDescriptor.h"
+#include "TypeCasts.hpp"
 #include "elsaDefines.h"
 #include "DataContainer.h"
 #include <Eigen/src/Core/Matrix.h>
@@ -74,12 +76,42 @@ namespace elsa::phantoms
     class Ellipse : public Image<data_t>
     {
     public:
+        // TODO: Allow multidimensional ellipsoid with matrix
         Ellipse(Position<data_t> center, data_t a, data_t b) : center{center}, a{a}, b{b} {}
 
         DataContainer<data_t> makeSinogram(const DataDescriptor& sinogramDescriptor) override
         {
-            std::cout << "Ellipse ()" << std::endl;
-            return DataContainer<data_t>{sinogramDescriptor};
+            assert(is<DetectorDescriptor>(sinogramDescriptor));
+            assert(sinogramDescriptor.getNumberOfDimensions() == 2);
+
+            DataContainer<data_t> sinogram{sinogramDescriptor};
+            auto& detDesc = downcast<DetectorDescriptor>(sinogramDescriptor);
+
+            for (index_t pose = 0; pose < detDesc.getNumberOfGeometryPoses(); pose++) {
+                for (index_t pixel = 0; pixel < detDesc.getNumberOfCoefficientsPerDimension()[0];
+                     pixel++) {
+
+                    auto ray = detDesc.computeRayFromDetectorCoord(IndexVector_t{{pixel, pose}});
+
+                    auto ori = ray.origin();
+                    auto dir = ray.direction();
+
+                    auto off = center - ori;
+
+                    auto alpha = dir[0] * dir[0] / (a * a) + dir[1] * dir[1] / (b * b);
+                    auto beta = off[0] * dir[0] / a + off[1] * dir[1] / b;
+                    auto gamma = off[0] * off[0] / (a * a) + off[1] * off[1] / (b * b) - 1;
+                    auto discriminant = beta * beta / (alpha * alpha) - gamma / alpha;
+
+                    if (discriminant < 0) {
+                        sinogram(IndexVector_t{{pixel, pose}}) = 0;
+                    } else {
+                        sinogram(IndexVector_t{{pixel, pose}}) = 2 * sqrt(discriminant);
+                    }
+                }
+            }
+
+            return sinogram;
         }
 
     protected:

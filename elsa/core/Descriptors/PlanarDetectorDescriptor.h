@@ -19,7 +19,7 @@ namespace elsa
         ~PlanarDetectorDescriptor() = default;
 
         /**
-         * @brief Construct a PlanatDetectorDescriptor with given number of coefficients and spacing
+         * @brief Construct a PlanarDetectorDescriptor with given number of coefficients and spacing
          * per dimension and a list of geometry poses in the trajectory
          */
         PlanarDetectorDescriptor(const IndexVector_t& numOfCoeffsPerDim,
