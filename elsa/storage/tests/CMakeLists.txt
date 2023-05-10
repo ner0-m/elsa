@@ -20,6 +20,7 @@ ELSA_DOCTEST(ContiguousVector)
 ELSA_DOCTEST(AllocationHint)
 
 if(ELSA_CUDA_ENABLED)
+    target_compile_definitions(elsa_storage PUBLIC ELSA_CUDA_ENABLED)
     set_source_files_properties(test_Reductions.cpp PROPERTIES LANGUAGE CUDA)
     set_source_files_properties(test_Transforms.cpp PROPERTIES LANGUAGE CUDA)
 endif()

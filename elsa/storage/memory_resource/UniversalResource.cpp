@@ -1,9 +1,12 @@
+#ifdef ELSA_CUDA_ENABLED
 #include "UniversalResource.h"
-#include <memory>
 
-// TODO: find a way to determine the presence of cuda
-#if 0
+#include <memory>
 #include <cuda_runtime.h>
+
+#include "elsaDefines.h"
+#include "BitUtil.h"
+
 namespace elsa::mr
 {
     namespace universal_resource
@@ -14,7 +17,7 @@ namespace elsa::mr
 
         struct ChunkHeader {
             uintptr_t offset;
-        }
+        };
     } // namespace universal_resource
 
     MemoryResource UniversalResource::make()
@@ -24,43 +27,47 @@ namespace elsa::mr
 
     void* UniversalResource::allocate(size_t size, size_t alignment)
     {
-        if (!alignment || (alignment & (alignment - 1))) [[unlikely]] {
+        if (unlikely(!alignment || (alignment & (alignment - 1)))) {
             // alignment is not a power of 2
             throw std::bad_alloc();
         }
+        if (size == 0)
+            size = 1;
         if (alignment > universal_resource::GUARANTEED_ALIGNMENT) {
             size_t sizeWithAlignment = size + alignment;
             size_t totalSize = sizeWithAlignment + sizeof(universal_resource::ChunkHeader);
-            if (sizeWithAlignment < size || totalSize < sizeWithAlignment) [[unlikely]] {
+            if (unlikely(sizeWithAlignment < size || totalSize < sizeWithAlignment)) {
                 throw std::bad_alloc();
             }
             uintptr_t ptr;
-            if (cudaMallocManaged(reinterpret_cast<void**>(&ptr), size)) [[unlikely]] {
+            if (unlikely(cudaMallocManaged(reinterpret_cast<void**>(&ptr), size))) {
                 throw std::bad_alloc();
             }
-            uintptr_t retPtr = (ptr + totalSize - 1) & alignment - 1;
+            uintptr_t retPtr = alignDown(ptr + totalSize - 1, alignment);
             universal_resource::ChunkHeader* hdr =
-                static_cast<universal_resource::ChunkHeader*>(retPtr - sizeof(chunkHdr));
+                reinterpret_cast<universal_resource::ChunkHeader*>(
+                    retPtr - sizeof(universal_resource::ChunkHeader));
             hdr->offset = retPtr - ptr;
 
-            return static_cast<void*>(retPtr);
+            return reinterpret_cast<void*>(retPtr);
         } else {
             void* ptr;
-            if (cudaMallocManaged(&ptr, size)) [[unlikely]] {
+            if (unlikely(cudaMallocManaged(&ptr, size))) {
                 throw std::bad_alloc();
             }
             return ptr;
         }
     }
 
-    void* UniversalResource::deallocate(void* ptr, size_t size, size_t alignment) noexcept
+    void UniversalResource::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
         static_cast<void>(size);
         if (alignment > universal_resource::GUARANTEED_ALIGNMENT) {
-            uintptr_t ptr = static_cast<uintptr_t>(ptr);
-            universal_resource::ChunkHeader* hdr = static_cast<universal_resource::ChunkHeader*>(
-                ptr - sizeof(universal_resource::ChunkHeader));
-            void* allocatedPtr = static_cast<void*>(ptr - hdr->offset);
+            uintptr_t ptrInt = reinterpret_cast<uintptr_t>(ptr);
+            universal_resource::ChunkHeader* hdr =
+                reinterpret_cast<universal_resource::ChunkHeader*>(
+                    ptrInt - sizeof(universal_resource::ChunkHeader));
+            void* allocatedPtr = reinterpret_cast<void*>(ptrInt - hdr->offset);
             cudaFree(allocatedPtr);
         } else {
             cudaFree(ptr);
@@ -71,5 +78,6 @@ namespace elsa::mr
     {
         return false;
     }
+
 } // namespace elsa::mr
 #endif
