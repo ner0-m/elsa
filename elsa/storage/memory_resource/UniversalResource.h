@@ -1,15 +1,14 @@
 #pragma once
 #include "ContiguousMemory.h"
 
-// TODO: find a way to determine the presence of cuda
-#if 0
+#ifdef ELSA_CUDA_ENABLED
 namespace elsa::mr
 {
     class UniversalResource : public MemResInterface
     {
     protected:
         UniversalResource() = default;
-        
+
     public:
         static MemoryResource make();
 
