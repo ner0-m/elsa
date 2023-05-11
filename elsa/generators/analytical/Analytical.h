@@ -19,9 +19,8 @@ namespace elsa::phantoms
     template <typename data_t>
     Position<data_t> getPosition(const VolumeDescriptor& imageDescriptor, data_t x0, data_t y0)
     {
-        return imageDescriptor.getLocationOfOrigin()
-               + Position<data_t>{x0, y0}.cwiseProduct(
-                   imageDescriptor.getNumberOfCoefficientsPerDimension().cast<data_t>());
+        const auto& coeffs = imageDescriptor.getNumberOfCoefficientsPerDimension();
+        return imageDescriptor.getLocationOfOrigin() + Position<data_t>{x0, y0} * coeffs[0] / 2;
     }
 
     template <typename data_t>
@@ -45,10 +44,8 @@ namespace elsa::phantoms
              modifiedSheppLoganParameters<data_t>) {
             sheppLogan +=
                 100
-                * Ellipse<data_t>{A, getPosition(imageDescriptor, x0, y0),
-                                  a * imageDescriptor.getNumberOfCoefficientsPerDimension()[0] / 2,
-                                  b * imageDescriptor.getNumberOfCoefficientsPerDimension()[1] / 2,
-                                  phi * 180 / pi<data_t>};
+                * Ellipse<data_t>{A, getPosition(imageDescriptor, x0, y0), a * coeffs[0] / 2,
+                                  b * coeffs[1] / 2, -phi / 180 * pi<data_t>};
         }
 
         return sheppLogan.makeSinogram(sinogramDescriptor);
