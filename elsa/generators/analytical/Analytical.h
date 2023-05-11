@@ -24,6 +24,18 @@ namespace elsa::phantoms
     }
 
     template <typename data_t>
+    std::tuple<Position<data_t>, data_t, data_t, data_t>
+        rescale(const VolumeDescriptor& imageDescriptor, data_t x0, data_t y0, data_t a, data_t b,
+                data_t phi)
+    {
+        auto px = imageDescriptor.getNumberOfCoefficientsPerDimension()[0];
+
+        return std::tuple{getPosition(imageDescriptor, x0, y0), a * px / 2.0, b * px / 2.0,
+                          -phi / 180.0
+                              * pi<data_t>}; // Invert angle due to parity mistake somewhere
+    }
+
+    template <typename data_t>
     DataContainer<data_t> analyticalSheppLogan(const VolumeDescriptor& imageDescriptor,
                                                const DetectorDescriptor& sinogramDescriptor)
     {
@@ -40,12 +52,12 @@ namespace elsa::phantoms
 
         Canvas<float> sheppLogan;
 
+        using std::get;
+
         for (auto [A, a, b, c, x0, y0, z0, phi, theta, psi] :
              modifiedSheppLoganParameters<data_t>) {
-            sheppLogan +=
-                100
-                * Ellipse<data_t>{A, getPosition(imageDescriptor, x0, y0), a * coeffs[0] / 2,
-                                  b * coeffs[1] / 2, -phi / 180 * pi<data_t>};
+            auto S = rescale(imageDescriptor, x0, y0, a, b, phi);
+            sheppLogan += 100 * Ellipse<data_t>{A, get<0>(S), get<1>(S), get<2>(S), get<3>(S)};
         }
 
         return sheppLogan.makeSinogram(sinogramDescriptor);
