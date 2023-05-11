@@ -18,16 +18,9 @@ int main(int, char*[])
     auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(numAngles, image, arc,
                                                                       distance * 100.0f, distance);
 
-    auto sheppLogan =
-        Ellipse<float>{100, image.getLocationOfOrigin(), 50, 50}
-        + Ellipse<float>{50, image.getLocationOfOrigin() + Position<float>{25, 50}, 50, 50}
-        + 0.5
-              * Ellipse<float>{50, image.getLocationOfOrigin() + Position<float>{50, 0}, 100, 50,
-                               pi_t / 4};
-    ;
-    auto sinogram = sheppLogan.makeSinogram(*sinoDescriptor);
+    auto sinogram = analyticalSheppLogan<float>(image, *sinoDescriptor);
 
-    io::write(sinogram, "ellipsen.pgm");
+    io::write(sinogram, "sinogram.pgm");
 
     JosephsMethodCUDA projector{image, *sinoDescriptor};
 
@@ -43,7 +36,7 @@ int main(int, char*[])
     auto reco = admm.solve(noIterations);
 
     // write the reconstruction out
-    io::write(reco, "analytical_reco.pgm");
+    io::write(reco, "reconstruction.pgm");
 
     return 0;
 }
