@@ -79,8 +79,8 @@ namespace elsa::phantoms
     {
     public:
         // TODO: Allow multidimensional ellipsoid with matrix
-        Ellipse(Position<data_t> center, data_t a, data_t b, data_t phi = 0)
-            : c{center}, A{1 / (a * a), 1 / (b * b)}, R{phi}
+        Ellipse(data_t density, Position<data_t> center, data_t a, data_t b, data_t phi = 0)
+            : w{density}, c{center}, A{1 / (a * a), 1 / (b * b)}, R{phi}
         {
         }
 
@@ -112,10 +112,7 @@ namespace elsa::phantoms
                     if (discriminant < 0) {
                         sinogram(IndexVector_t{{pixel, pose}}) = 0;
                     } else {
-                        auto t1 = beta / alpha + sqrt(discriminant);
-                        auto t2 = beta / alpha - sqrt(discriminant);
-
-                        sinogram(IndexVector_t{{pixel, pose}}) = 2 * sqrt(discriminant);
+                        sinogram(IndexVector_t{{pixel, pose}}) = 2 * sqrt(discriminant) * w;
                     }
                 }
             }
@@ -132,6 +129,7 @@ namespace elsa::phantoms
         };
 
     private:
+        data_t w;
         Position<data_t> c;
         Eigen::DiagonalMatrix<data_t, 2> A;
         Eigen::Rotation2D<data_t> R;

@@ -11,23 +11,25 @@ using namespace elsa::phantoms;
 int main(int, char*[])
 {
 
-    VolumeDescriptor gollum{{500, 500}};
+    VolumeDescriptor image{{500, 500}};
 
     index_t numAngles{512}, arc{360};
     const auto distance = 100.0;
-    auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(numAngles, gollum, arc,
+    auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(numAngles, image, arc,
                                                                       distance * 100.0f, distance);
 
-    auto sheppLogan = Ellipse<float>{{0, 0}, 50, 100};
+    auto sheppLogan =
+        Ellipse<float>{100, image.getLocationOfOrigin(), 50, 50}
+        + Ellipse<float>{50, image.getLocationOfOrigin() + Position<float>{25, 50}, 50, 50}
+        + Ellipse<float>{25, image.getLocationOfOrigin() + Position<float>{50, 0}, 100, 50};
+    ;
     auto sinogram = sheppLogan.makeSinogram(*sinoDescriptor);
 
     io::write(sinogram, "ellipsen.pgm");
 
-    // dynamic_cast to VolumeDescriptor is legal and will not throw, as Phantoms returns a
-    // VolumeDescriptor
-    JosephsMethodCUDA projector{gollum, *sinoDescriptor};
+    JosephsMethodCUDA projector{image, *sinoDescriptor};
 
-    auto A = FiniteDifferences<real_t>(gollum);
+    auto A = FiniteDifferences<real_t>{image};
     auto proxg = ProximalL1<real_t>{};
     auto tau = real_t{0.1};
 
