@@ -2,7 +2,7 @@
 #include "VolumeDescriptor.h"
 #include "elsa.h"
 #include "Phantoms.h"
-#include "analytical/Image.h"
+#include "analytical/Analytical.h"
 #include "projectors_cuda/JosephsMethodCUDA.h"
 
 using namespace elsa;
@@ -21,7 +21,9 @@ int main(int, char*[])
     auto sheppLogan =
         Ellipse<float>{100, image.getLocationOfOrigin(), 50, 50}
         + Ellipse<float>{50, image.getLocationOfOrigin() + Position<float>{25, 50}, 50, 50}
-        + Ellipse<float>{25, image.getLocationOfOrigin() + Position<float>{50, 0}, 100, 50};
+        + 0.5
+              * Ellipse<float>{50, image.getLocationOfOrigin() + Position<float>{50, 0}, 100, 50,
+                               pi_t / 4};
     ;
     auto sinogram = sheppLogan.makeSinogram(*sinoDescriptor);
 

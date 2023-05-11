@@ -19,7 +19,11 @@ set(MODULE_HEADERS
     NoiseGenerators.h
     SphereTrajectoryGenerator.h
     TrajectoryGenerator.h
+    analytical/Analytical.h
     analytical/Image.h
+    analytical/Sum.h
+    analytical/Scaling.h
+    analytical/Ellipse.h
 )
 
 # list all the code files of the module
