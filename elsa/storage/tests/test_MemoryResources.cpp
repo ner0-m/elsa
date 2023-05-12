@@ -40,7 +40,7 @@ void operator delete(void* ptr) noexcept
     free(ptr);
 }
 
-void operator delete(void* ptr, size_t size)
+void operator delete(void* ptr, size_t size) noexcept
 {
     static_cast<void>(size);
     free(ptr);
@@ -541,6 +541,23 @@ TEST_CASE("Cache resource")
 
         // no memory released, all cached
         CHECK_EQ(10000 * allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
+    }
+
+    GIVEN("different allocations") {
+        MemoryResource dummy = DummyResource::make();
+        CacheResourceConfig config = CacheResourceConfig::defaultConfig();
+        config.setMaxCacheSize(std::numeric_limits<size_t>::max());
+        config.setMaxCachedCount(1);
+        MemoryResource resource = CacheResource::make(dummy, config);
+
+        void* ptr1 = resource->allocate(0x10, 0x8);
+        void* ptr2 = resource->allocate(0x100, 0x8);
+
+        resource->deallocate(ptr1, 0x10, 0x8);
+        resource->deallocate(ptr2, 0x100, 0x8);
+
+        // check that the released chunk is the one that was deallocated first
+        CHECK_EQ(0x100, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
     }
 }
 
