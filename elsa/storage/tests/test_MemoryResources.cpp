@@ -476,7 +476,7 @@ TEST_CASE("Pool resource")
 
 TEST_CASE("Cache resource")
 {
-    GIVEN("Alternating allocate and deallocate")
+    GIVEN("an alternating allocation and deallocation pattern")
     {
         MemoryResource dummy = DummyResource::make();
         MemoryResource resource = CacheResource::make(dummy);
@@ -499,6 +499,48 @@ TEST_CASE("Cache resource")
             size_t alignment = 1 << i;
             resource->deallocate(ptrs[i], size, alignment);
         }
+    }
+
+    GIVEN("a limited cache resource") {
+        MemoryResource dummy = DummyResource::make();
+        CacheResourceConfig config = CacheResourceConfig::defaultConfig();
+        config.setMaxCacheSize(std::numeric_limits<size_t>::max());
+        config.setMaxCachedCount(1);
+        MemoryResource resource = CacheResource::make(dummy, config);
+
+        void* ptrs[10000];
+
+        size_t allocationSize = 0x1000000;
+        for (int i = 0; i < 10000; i++) {
+            ptrs[i] = resource->allocate(allocationSize, 0x8);
+        }
+        for (int i = 0; i < 10000; i++) {
+            resource->deallocate(ptrs[i], allocationSize, 0x8);
+        }
+
+        // all but one entries released
+        CHECK_EQ(allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
+    }
+
+    GIVEN("an unlimited cache resource") {
+        MemoryResource dummy = DummyResource::make();
+        CacheResourceConfig config = CacheResourceConfig::defaultConfig();
+        config.setMaxCacheSize(std::numeric_limits<size_t>::max());
+        config.setMaxCachedCount(std::numeric_limits<size_t>::max());
+        MemoryResource resource = CacheResource::make(dummy, config);
+
+        void* ptrs[10000];
+
+        size_t allocationSize = 0x1000000;
+        for (int i = 0; i < 10000; i++) {
+            ptrs[i] = resource->allocate(allocationSize, 0x8);
+        }
+        for (int i = 0; i < 10000; i++) {
+            resource->deallocate(ptrs[i], allocationSize, 0x8);
+        }
+
+        // no memory released, all cached
+        CHECK_EQ(10000 * allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
     }
 }
 

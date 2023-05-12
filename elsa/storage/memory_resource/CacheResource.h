@@ -50,7 +50,9 @@ namespace elsa::mr
 
         /// @brief Set the maximum number of cached chunks, before releasing chunks to the
         /// upstream allocator
-        /// @param count Maximum number of cached chunks
+        /// @param count Maximum number of cached chunks. For an unlimited number of chunks,
+        /// set this value to std::numeric_limits<usize>::max(). Be aware that, for any other
+        /// value, space for the cache entries may be pre-reserved.
         /// @return self
         CacheResourceConfig& setMaxCachedCount(size_t count);
     };

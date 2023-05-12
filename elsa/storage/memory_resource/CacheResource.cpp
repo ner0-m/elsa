@@ -35,8 +35,13 @@ namespace elsa::mr
     }
 
     CacheResource::CacheResource(MemoryResource upstream, const CacheResourceConfig& config)
-        : _upstream{upstream}, _config{config}, _sizeToCacheElement{config.maxCachedCount}
+        : _upstream{upstream}, _config{config}
     {
+        if (config.maxCachedCount != std::numeric_limits<size_t>::max()) {
+            // The + 1 is necessary, because elements are evicted after inserting,
+            // so the cache is briefly larger than the maxCachedCount.
+            _sizeToCacheElement.reserve(config.maxCachedCount + 1);
+        }
     }
 
     CacheResource::~CacheResource()
@@ -86,14 +91,16 @@ namespace elsa::mr
         }
 
         _cachedSize += size;
-        if (_cache.size() >= _config.maxCachedCount || _cachedSize >= _config.maxCacheSize) {
+        if (_cache.size() > _config.maxCachedCount || _cachedSize > _config.maxCacheSize) {
             cache_resource::CacheElement& poppedElement = _cache.front();
             auto poppedIt = _sizeToCacheElement.find({poppedElement.size, poppedElement.alignment});
-            // TODO: exception if poppedElement is not found, i.e. the invariants are violated
+            // If this throws, internal invariants are violated (the element is not in the map).
+            // This would be a serious bug, thus termination seems justified.
             while (&*poppedIt->second != &poppedElement)
                 poppedIt++;
             _sizeToCacheElement.erase(poppedIt);
             _cachedSize -= poppedElement.size;
+            _upstream->deallocate(poppedElement.ptr, poppedElement.size, poppedElement.alignment);
             _cache.pop_front();
         }
     }
