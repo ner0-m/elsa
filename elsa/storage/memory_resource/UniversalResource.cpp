@@ -5,6 +5,7 @@
 #include <cuda_runtime.h>
 
 #include "elsaDefines.h"
+#include "BitUtil.h"
 
 namespace elsa::mr
 {
@@ -30,6 +31,8 @@ namespace elsa::mr
             // alignment is not a power of 2
             throw std::bad_alloc();
         }
+        if (size == 0)
+            size = 1;
         if (alignment > universal_resource::GUARANTEED_ALIGNMENT) {
             size_t sizeWithAlignment = size + alignment;
             size_t totalSize = sizeWithAlignment + sizeof(universal_resource::ChunkHeader);
@@ -40,7 +43,7 @@ namespace elsa::mr
             if (unlikely(cudaMallocManaged(reinterpret_cast<void**>(&ptr), size))) {
                 throw std::bad_alloc();
             }
-            uintptr_t retPtr = (ptr + totalSize - 1) & alignment - 1;
+            uintptr_t retPtr = alignDown(ptr + totalSize - 1, alignment);
             universal_resource::ChunkHeader* hdr =
                 reinterpret_cast<universal_resource::ChunkHeader*>(
                     retPtr - sizeof(universal_resource::ChunkHeader));
