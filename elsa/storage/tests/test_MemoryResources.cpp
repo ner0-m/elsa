@@ -171,8 +171,8 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
         rng.seed(0xdeadbeef);
 
         MemoryResource resource = provideResource<T>();
-        unsigned char* ptrs[100];
-        for (size_t i = 0; i < 100; i++) {
+        std::vector<unsigned char*> ptrs(10000);
+        for (size_t i = 0; i < 10000; i++) {
             size_t size = sizeForIndex(i);
             ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(size, 8));
             *ptrs[i] = 0xff;
@@ -184,7 +184,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
             }
         }
 
-        for (size_t i = 0; i < 100; i++) {
+        for (size_t i = 0; i < 10000; i++) {
             size_t size = sizeForIndex(i);
             resource->deallocate(ptrs[i], size, 8);
         }
@@ -450,7 +450,7 @@ TEST_CASE("Pool resource")
     {
         PoolResourceConfig config = PoolResourceConfig::defaultConfig();
         config.setChunkSize(0x100);
-        config.setMaxBlockSize(0x100);
+        config.setMaxChunkSize(0x100);
         config.setMaxCachedChunks(1);
         MemoryResource dummy = DummyResource::make();
         MemoryResource resource = PoolResource::make(dummy, config);
@@ -501,14 +501,15 @@ TEST_CASE("Cache resource")
         }
     }
 
-    GIVEN("a limited cache resource") {
+    GIVEN("a limited cache resource")
+    {
         MemoryResource dummy = DummyResource::make();
         CacheResourceConfig config = CacheResourceConfig::defaultConfig();
         config.setMaxCacheSize(std::numeric_limits<size_t>::max());
         config.setMaxCachedCount(1);
         MemoryResource resource = CacheResource::make(dummy, config);
 
-        void* ptrs[10000];
+        std::vector<void*> ptrs(10000);
 
         size_t allocationSize = 0x1000000;
         for (int i = 0; i < 10000; i++) {
@@ -522,14 +523,15 @@ TEST_CASE("Cache resource")
         CHECK_EQ(allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
     }
 
-    GIVEN("an unlimited cache resource") {
+    GIVEN("an unlimited cache resource")
+    {
         MemoryResource dummy = DummyResource::make();
         CacheResourceConfig config = CacheResourceConfig::defaultConfig();
         config.setMaxCacheSize(std::numeric_limits<size_t>::max());
         config.setMaxCachedCount(std::numeric_limits<size_t>::max());
         MemoryResource resource = CacheResource::make(dummy, config);
 
-        void* ptrs[10000];
+        std::vector<void*> ptrs(10000);
 
         size_t allocationSize = 0x1000000;
         for (int i = 0; i < 10000; i++) {
@@ -540,10 +542,12 @@ TEST_CASE("Cache resource")
         }
 
         // no memory released, all cached
-        CHECK_EQ(10000 * allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
+        CHECK_EQ(10000 * allocationSize,
+                 dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
     }
 
-    GIVEN("different allocations") {
+    GIVEN("different allocations")
+    {
         MemoryResource dummy = DummyResource::make();
         CacheResourceConfig config = CacheResourceConfig::defaultConfig();
         config.setMaxCacheSize(std::numeric_limits<size_t>::max());

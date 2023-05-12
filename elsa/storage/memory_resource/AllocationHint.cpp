@@ -84,7 +84,7 @@ namespace elsa::mr::hint
                     } else {
                         auto config = PoolResourceConfig::defaultConfig();
                         config.setChunkSize(behavior.getSizeHint());
-                        config.setMaxBlockSize(behavior.getSizeHint());
+                        config.setMaxChunkSize(behavior.getSizeHint());
                         config.setMaxCachedChunks(1);
                         // config must be valid. If not using defaultConfig seems appropriate.
                         result = PoolResource::make(baselineInstance(), config);
