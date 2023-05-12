@@ -12,10 +12,14 @@ namespace elsa::mr
     {
     private:
         std::shared_ptr<spdlog::logger> _logger;
+        // does not include failed allocations
+        long int _timeSpentInResource{0};
 
     protected:
         template <typename... Ts>
         LoggingResource(Ts... args);
+
+        ~LoggingResource();
 
     public:
         /// @brief Creates a SynchedResource wrapping a back-end resource, which performs the actual
@@ -44,9 +48,13 @@ namespace elsa::mr
     {
 
         try {
+            auto start = std::chrono::system_clock::now();
             void* ptr = T::allocate(size, alignment);
-            _logger->info("({}) {}::allocate(size: 0x{:x}, alignment: 0x{:x}) = {}",
-                          reinterpret_cast<void*>(this), typeid(T).name(), size, alignment, ptr);
+            auto stop = std::chrono::system_clock::now();
+            auto nanoSeconds = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+            _timeSpentInResource += nanoSeconds;
+            _logger->info("({}) {}::allocate(size: 0x{:x}, alignment: 0x{:x}) = {} in {}ns",
+                          reinterpret_cast<void*>(this), typeid(T).name(), size, alignment, ptr, nanoSeconds);
             return ptr;
         } catch (const std::bad_alloc& e) {
             _logger->warn(
@@ -66,20 +74,28 @@ namespace elsa::mr
     template <typename T>
     inline void LoggingResource<T>::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
-        _logger->info("({}) {}::deallocate(ptr: {}, size: 0x{:x}, alignment: 0x{:x})",
-                      reinterpret_cast<void*>(this), typeid(T).name(), ptr, size, alignment);
-        return T::deallocate(ptr, size, alignment);
+        auto start = std::chrono::system_clock::now();
+        T::deallocate(ptr, size, alignment);
+        auto stop = std::chrono::system_clock::now();
+        auto nanoSeconds = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+        _timeSpentInResource += nanoSeconds;
+        _logger->info("({}) {}::deallocate(ptr: {}, size: 0x{:x}, alignment: 0x{:x}) in {}ns",
+                      reinterpret_cast<void*>(this), typeid(T).name(), ptr, size, alignment, nanoSeconds);
     }
 
     template <typename T>
     inline bool LoggingResource<T>::tryResize(void* ptr, size_t size, size_t alignment,
                                               size_t newSize)
     {
+        auto start = std::chrono::system_clock::now();
         bool resized = T::tryResize(ptr, size, alignment, newSize);
+        auto stop = std::chrono::system_clock::now();
+        auto nanoSeconds = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+        _timeSpentInResource += nanoSeconds;
         _logger->info(
-            "({}) {}::tryResize(ptr: {}, size: 0x{:x}, alignment: 0x{:x}, newSize: 0x{:x}) = {}",
+            "({}) {}::tryResize(ptr: {}, size: 0x{:x}, alignment: 0x{:x}, newSize: 0x{:x}) = {} in {}ns",
             reinterpret_cast<void*>(this), typeid(T).name(), ptr, size, alignment, newSize,
-            resized);
+            resized, nanoSeconds);
         return resized;
     }
 
@@ -89,6 +105,12 @@ namespace elsa::mr
         : T{args...}, _logger{Logger::get("elsa::mr::LoggingResource")}
     {
     }
+
+    template <typename T>
+    inline LoggingResource<T>::~LoggingResource() {
+        _logger->info("({}) {}: Total time spent: {}ns", reinterpret_cast<void*>(this), typeid(T).name(), _timeSpentInResource);
+    }
+
 
     template <typename T>
     template <typename... Ts>
