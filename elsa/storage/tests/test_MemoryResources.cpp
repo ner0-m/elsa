@@ -501,7 +501,8 @@ TEST_CASE("Cache resource")
         }
     }
 
-    GIVEN("a limited cache resource") {
+    GIVEN("a limited cache resource")
+    {
         MemoryResource dummy = DummyResource::make();
         CacheResourceConfig config = CacheResourceConfig::defaultConfig();
         config.setMaxCacheSize(std::numeric_limits<size_t>::max());
@@ -522,7 +523,8 @@ TEST_CASE("Cache resource")
         CHECK_EQ(allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
     }
 
-    GIVEN("an unlimited cache resource") {
+    GIVEN("an unlimited cache resource")
+    {
         MemoryResource dummy = DummyResource::make();
         CacheResourceConfig config = CacheResourceConfig::defaultConfig();
         config.setMaxCacheSize(std::numeric_limits<size_t>::max());
@@ -540,10 +542,12 @@ TEST_CASE("Cache resource")
         }
 
         // no memory released, all cached
-        CHECK_EQ(10000 * allocationSize, dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
+        CHECK_EQ(10000 * allocationSize,
+                 dynamic_cast<DummyResource*>(dummy.get())->allocatedSize());
     }
 
-    GIVEN("different allocations") {
+    GIVEN("different allocations")
+    {
         MemoryResource dummy = DummyResource::make();
         CacheResourceConfig config = CacheResourceConfig::defaultConfig();
         config.setMaxCacheSize(std::numeric_limits<size_t>::max());

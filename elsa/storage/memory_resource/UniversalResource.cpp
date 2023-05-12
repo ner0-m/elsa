@@ -76,6 +76,10 @@ namespace elsa::mr
 
     bool UniversalResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
     {
+        static_cast<void>(ptr);
+        static_cast<void>(size);
+        static_cast<void>(alignment);
+        static_cast<void>(newSize);
         return false;
     }
 

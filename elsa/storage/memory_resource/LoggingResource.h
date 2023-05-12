@@ -51,10 +51,12 @@ namespace elsa::mr
             auto start = std::chrono::system_clock::now();
             void* ptr = T::allocate(size, alignment);
             auto stop = std::chrono::system_clock::now();
-            auto nanoSeconds = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+            auto nanoSeconds =
+                std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
             _timeSpentInResource += nanoSeconds;
             _logger->info("({}) {}::allocate(size: 0x{:x}, alignment: 0x{:x}) = {} in {}ns",
-                          reinterpret_cast<void*>(this), typeid(T).name(), size, alignment, ptr, nanoSeconds);
+                          reinterpret_cast<void*>(this), typeid(T).name(), size, alignment, ptr,
+                          nanoSeconds);
             return ptr;
         } catch (const std::bad_alloc& e) {
             _logger->warn(
@@ -77,10 +79,12 @@ namespace elsa::mr
         auto start = std::chrono::system_clock::now();
         T::deallocate(ptr, size, alignment);
         auto stop = std::chrono::system_clock::now();
-        auto nanoSeconds = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+        auto nanoSeconds =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
         _timeSpentInResource += nanoSeconds;
         _logger->info("({}) {}::deallocate(ptr: {}, size: 0x{:x}, alignment: 0x{:x}) in {}ns",
-                      reinterpret_cast<void*>(this), typeid(T).name(), ptr, size, alignment, nanoSeconds);
+                      reinterpret_cast<void*>(this), typeid(T).name(), ptr, size, alignment,
+                      nanoSeconds);
     }
 
     template <typename T>
@@ -90,12 +94,13 @@ namespace elsa::mr
         auto start = std::chrono::system_clock::now();
         bool resized = T::tryResize(ptr, size, alignment, newSize);
         auto stop = std::chrono::system_clock::now();
-        auto nanoSeconds = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+        auto nanoSeconds =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
         _timeSpentInResource += nanoSeconds;
-        _logger->info(
-            "({}) {}::tryResize(ptr: {}, size: 0x{:x}, alignment: 0x{:x}, newSize: 0x{:x}) = {} in {}ns",
-            reinterpret_cast<void*>(this), typeid(T).name(), ptr, size, alignment, newSize,
-            resized, nanoSeconds);
+        _logger->info("({}) {}::tryResize(ptr: {}, size: 0x{:x}, alignment: 0x{:x}, newSize: "
+                      "0x{:x}) = {} in {}ns",
+                      reinterpret_cast<void*>(this), typeid(T).name(), ptr, size, alignment,
+                      newSize, resized, nanoSeconds);
         return resized;
     }
 
@@ -107,10 +112,11 @@ namespace elsa::mr
     }
 
     template <typename T>
-    inline LoggingResource<T>::~LoggingResource() {
-        _logger->info("({}) {}: Total time spent: {}ns", reinterpret_cast<void*>(this), typeid(T).name(), _timeSpentInResource);
+    inline LoggingResource<T>::~LoggingResource()
+    {
+        _logger->info("({}) {}: Total time spent: {}ns", reinterpret_cast<void*>(this),
+                      typeid(T).name(), _timeSpentInResource);
     }
-
 
     template <typename T>
     template <typename... Ts>

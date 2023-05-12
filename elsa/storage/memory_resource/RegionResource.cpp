@@ -11,7 +11,7 @@ namespace elsa::mr
 
     RegionResourceConfig RegionResourceConfig::defaultConfig()
     {
-        return RegionResourceConfig(31, true);
+        return RegionResourceConfig(static_cast<size_t>(1) << 31, true);
     }
 
     RegionResourceConfig& RegionResourceConfig::setAdaptive(bool adaptive)
