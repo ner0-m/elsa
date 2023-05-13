@@ -1,6 +1,9 @@
 # Example for reconstruction using ADMM solving an TV regularization for X-ray attenuation CT
 add_example(admml2_tv_tomo admml2_tv_tomo.cpp)
 
+# Example for reconstruction using ADMM solving an TV regularization for X-ray attenuation CT
+add_example(admml2_tv_tomo_alloc_bench admml2_tv_tomo_alloc_bench.cpp)
+
 # Example for reconstruction using CGLS solving the least squares problem for limited angle X-ray attenuation CT
 add_example(cgls_ls_limitedtomo cgls_leastsquares_limitedtomo.cpp)
 
