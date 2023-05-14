@@ -68,6 +68,7 @@ namespace elsa::mr
         } else {
             _sizeToCacheElement.erase(mapIt);
             void* ptr = mapIt->second->ptr;
+            _cachedSize -= mapIt->second->size;
             _cache.erase(mapIt->second);
             return ptr;
         }
@@ -75,6 +76,11 @@ namespace elsa::mr
 
     void CacheResource::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
+        if (size > _config.maxCacheSize) {
+            _upstream->deallocate(ptr, size, alignment);
+            return;
+        }
+
         try {
             _cache.push_back({ptr, size, alignment});
         } catch (std::bad_alloc& e) {
@@ -91,7 +97,7 @@ namespace elsa::mr
         }
 
         _cachedSize += size;
-        if (_cache.size() > _config.maxCachedCount || _cachedSize > _config.maxCacheSize) {
+        while (_cache.size() > _config.maxCachedCount || _cachedSize > _config.maxCacheSize) {
             cache_resource::CacheElement& poppedElement = _cache.front();
             auto poppedIt = _sizeToCacheElement.find({poppedElement.size, poppedElement.alignment});
             // If this throws, internal invariants are violated (the element is not in the map).
