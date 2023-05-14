@@ -59,23 +59,25 @@ void reconstruction(int s)
     io::write(reco, "reco_admml2_tv_tomo.pgm");
 }
 
-void speed_test(const char *resourceName, int size) {
-    Logger::get("Info")->info("\n************************************************************************************"
-                              "\n\nRunning with: {}\n\n"
-                              "************************************************************************************\n",
-                              resourceName);
+void speed_test(const char* resourceName, int size)
+{
+    Logger::get("Info")->info(
+        "\n************************************************************************************"
+        "\n\nRunning with: {}\n\n"
+        "************************************************************************************\n",
+        resourceName);
     auto start = std::chrono::system_clock::now();
     reconstruction(size);
     auto stop = std::chrono::system_clock::now();
-    auto milliSeconds =
-    std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+    auto milliSeconds = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
     Logger::get("Info")->info("*** Duration: {}ms ***", milliSeconds);
 }
 
 constexpr bool resourceLoggingEnable = false;
 
-template<typename R, typename... Ts>
-static inline mr::MemoryResource make(Ts... args) {
+template <typename R, typename... Ts>
+static inline mr::MemoryResource make(Ts... args)
+{
     if constexpr (resourceLoggingEnable) {
         return mr::LoggingResource<R>::make(args...);
     } else {
@@ -128,7 +130,7 @@ int main(int argc, char** argv)
 
     // the first CUDA allocation seems to always encur a huge penalty
     mr::MemoryResource baseline = mr::baselineInstance();
-    void *firstAlloc = nullptr;
+    void* firstAlloc = nullptr;
 
     try {
         firstAlloc = baseline->allocate(1, 1);
@@ -145,7 +147,8 @@ int main(int argc, char** argv)
             mr::PoolResourceConfig config = mr::PoolResourceConfig::defaultConfig();
             config.setMaxBlockSize(static_cast<size_t>(1) << 32);
             config.setChunkSize(static_cast<size_t>(1) << 33);
-            mr::hint::ScopedMR pool_large{make<mr::PoolResource>(mr::UniversalResource::make(), config)};
+            mr::hint::ScopedMR pool_large{
+                make<mr::PoolResource>(mr::UniversalResource::make(), config)};
             speed_test("PoolResource (large chunks)", size);
         }
         {
@@ -155,7 +158,8 @@ int main(int argc, char** argv)
         {
             mr::CacheResourceConfig cacheConfig = mr::CacheResourceConfig::defaultConfig();
             cacheConfig.setMaxCachedCount(64);
-            mr::hint::ScopedMR cache_unlimited{make<mr::CacheResource>(mr::UniversalResource::make(), cacheConfig)};
+            mr::hint::ScopedMR cache_unlimited{
+                make<mr::CacheResource>(mr::UniversalResource::make(), cacheConfig)};
             speed_test("CacheResource (64 entries)", size);
         }
         {
