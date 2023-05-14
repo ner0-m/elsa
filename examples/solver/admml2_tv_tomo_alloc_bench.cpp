@@ -64,11 +64,15 @@ void speed_test(const char *resourceName, int size) {
                               "\n\nRunning with: {}\n\n"
                               "************************************************************************************\n",
                               resourceName);
-
+    auto start = std::chrono::system_clock::now();
     reconstruction(size);
+    auto stop = std::chrono::system_clock::now();
+    auto milliSeconds =
+    std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+    Logger::get("Info")->info("*** Duration: {}ms ***", milliSeconds);
 }
 
-constexpr bool resourceLoggingEnable = true;
+constexpr bool resourceLoggingEnable = false;
 
 template<typename R, typename... Ts>
 static inline mr::MemoryResource make(Ts... args) {
@@ -122,37 +126,44 @@ int main(int argc, char** argv)
         }
     }();
 
+    // the first CUDA allocation seems to always encur a huge penalty
+    mr::MemoryResource baseline = mr::baselineInstance();
+    void *firstAlloc = nullptr;
+
     try {
+        firstAlloc = baseline->allocate(1, 1);
+
         {
-            mr::hint::ScopedMR univ{mr::LoggingResource<mr::UniversalResource>::make()};
+            mr::hint::ScopedMR univ{make<mr::UniversalResource>()};
             speed_test("Universal Resource", size);
         }
         {
-            mr::hint::ScopedMR pool{mr::LoggingResource<mr::PoolResource>::make(mr::UniversalResource::make())};
+            mr::hint::ScopedMR pool{make<mr::PoolResource>(mr::UniversalResource::make())};
             speed_test("PoolResource (default)", size);
         }
         {
             mr::PoolResourceConfig config = mr::PoolResourceConfig::defaultConfig();
             config.setMaxBlockSize(static_cast<size_t>(1) << 32);
             config.setChunkSize(static_cast<size_t>(1) << 33);
-            mr::hint::ScopedMR pool_large{mr::LoggingResource<mr::PoolResource>::make(mr::UniversalResource::make(), config)};
+            mr::hint::ScopedMR pool_large{make<mr::PoolResource>(mr::UniversalResource::make(), config)};
             speed_test("PoolResource (large chunks)", size);
         }
         {
-            mr::hint::ScopedMR cache{mr::LoggingResource<mr::CacheResource>::make(mr::UniversalResource::make())};
+            mr::hint::ScopedMR cache{make<mr::CacheResource>(mr::UniversalResource::make())};
             speed_test("CacheResource (default)", size);
         }
         {
             mr::CacheResourceConfig cacheConfig = mr::CacheResourceConfig::defaultConfig();
             cacheConfig.setMaxCachedCount(64);
-            mr::hint::ScopedMR cache_unlimited{mr::LoggingResource<mr::CacheResource>::make(mr::UniversalResource::make(), cacheConfig)};
+            mr::hint::ScopedMR cache_unlimited{make<mr::CacheResource>(mr::UniversalResource::make(), cacheConfig)};
             speed_test("CacheResource (64 entries)", size);
         }
         {
-            mr::hint::ScopedMR region{mr::LoggingResource<mr::RegionResource>::make(mr::UniversalResource::make())};
+            mr::hint::ScopedMR region{make<mr::RegionResource>(mr::UniversalResource::make())};
             speed_test("RegionResource", size);
         }
     } catch (std::exception& e) {
         std::cerr << "An exception occurred: " << e.what() << "\n";
     }
+    baseline->deallocate(firstAlloc, 1, 1);
 }
