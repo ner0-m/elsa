@@ -145,8 +145,8 @@ int main(int argc, char** argv)
         }
         {
             mr::PoolResourceConfig config = mr::PoolResourceConfig::defaultConfig();
-            config.setMaxBlockSize(static_cast<size_t>(1) << 32);
-            config.setChunkSize(static_cast<size_t>(1) << 33);
+            config.setMaxChunkSize(static_cast<size_t>(1) << 33);
+            config.setChunkSize(static_cast<size_t>(1) << 30);
             mr::hint::ScopedMR pool_large{
                 make<mr::PoolResource>(mr::UniversalResource::make(), config)};
             speed_test("PoolResource (large chunks)", size);
