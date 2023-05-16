@@ -56,6 +56,7 @@
 #include "ProximalOperator.h"
 #include "ProximalL1.h"
 #include "ProximalL0.h"
+#include "ProximalBoxConstraint.h"
 #include "CombinedProximal.h"
 
 // Projector headers
