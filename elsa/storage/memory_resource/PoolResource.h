@@ -18,32 +18,33 @@ namespace elsa::mr
         template <typename T>
         friend class pool_resource::PoolResource;
 
-        size_t maxBlockSizeLog;
-        size_t maxBlockSize;
+        size_t maxChunkSize;
         // size of the large allocation chunks that are requested from the underlying allocator
         size_t chunkSize;
         size_t maxCachedChunks;
 
-        PoolResourceConfig(size_t maxBlockSizeLog, size_t maxBlockSize, size_t chunkSize,
-                           size_t maxCachedChunks);
+        PoolResourceConfig(size_t maxChunkSize, size_t chunkSize, size_t maxCachedChunks);
 
     public:
         /// @brief Default configuration for a pool resource with (hopefully) sensible defaults.
         /// @return Default configuration for a pool resource.
         static PoolResourceConfig defaultConfig();
 
-        /// @brief Set the maximum size for blocks that are managed by this resource. Larger
-        /// allocations are also accepted, but are serviced by the this pool's upstream allocator.
-        /// @param size Maximum size for blocks managed by this pool. Must be at most as big as the
-        /// chunk size. The pool resource may not use this exact value, as some minimal internal
+        /// @brief Set the maximum size for chunks allocated by this resource.
+        /// Chunks are regions of memory, from which the blocks that are returned by allocate()
+        /// are suballocated. Hence, this value also limits the size of blocks that are managed
+        /// by this resource. Larger allocations are also accepted, but are serviced by the this
+        /// pool's upstream allocator.
+        /// @param size Maximum size for blocks managed by this pool.
+        /// The pool resource may not use this exact value, as some minimal internal
         /// alignment requirements are applied to it.
         /// @return self
-        PoolResourceConfig& setMaxBlockSize(size_t size);
+        PoolResourceConfig& setMaxChunkSize(size_t size);
 
         /// @brief Set the size of the chunks requested from the back-end resource. Allocations are
         /// serviced from these chunks.
-        /// @param size Size of the chunks requested from the back-end resource. Must be at least
-        /// as big as the maximum block size. The pool resource may not use this exact value, as
+        /// @param size Size of the chunks requested from the back-end resource. Must be at most
+        /// as big as the maximum chunk size. The pool resource may not use this exact value, as
         /// some minimal internal alignment requirements are applied to it.
         /// @return self
         PoolResourceConfig& setChunkSize(size_t size);
@@ -57,7 +58,7 @@ namespace elsa::mr
 
         /// @brief Check if the pool is misconfigured.
         /// @return true if: the configuration is valid.
-        /// false if: maxBlockSize > chunkSize
+        /// false if: chunkSize > maxChunkSize
         bool validate();
     };
 
@@ -125,9 +126,15 @@ namespace elsa::mr
             void unlinkFreeBlock(pool_resource::Block* block);
             size_t freeListIndexForFreeChunk(size_t size);
             size_t computeRealSize(size_t size);
+            // pair element 1: realSize, i.e. the size of the block to return
+            // pair element 2: blockSize, i.e. the required size for a block,
+            //                 so that the allocation can be carved out of it.
+            //                 blockSize >= realSize holds, to satisfy alignment guarantees.
+            std::pair<size_t, size_t> computeSizeWithAlginment(size_t requestedSize,
+                                                               size_t requestedAlignment);
             // Returns a registered (in the address map) block that is not in the free list.
             // The metadata of the block is correctly initialized.
-            pool_resource::Block* expandPool();
+            pool_resource::Block* expandPool(size_t requestedSize);
             void shrinkPool(std::unique_ptr<pool_resource::Block> block);
             void shrinkBlockAtTail(pool_resource::Block& block, void* blockAddress, size_t newSize,
                                    size_t oldSize);

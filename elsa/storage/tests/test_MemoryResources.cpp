@@ -450,7 +450,7 @@ TEST_CASE("Pool resource")
     {
         PoolResourceConfig config = PoolResourceConfig::defaultConfig();
         config.setChunkSize(0x100);
-        config.setMaxBlockSize(0x100);
+        config.setMaxChunkSize(0x100);
         config.setMaxCachedChunks(1);
         MemoryResource dummy = DummyResource::make();
         MemoryResource resource = PoolResource::make(dummy, config);

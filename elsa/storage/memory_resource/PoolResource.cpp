@@ -36,25 +36,21 @@
 namespace elsa::mr
 {
 
-    PoolResourceConfig::PoolResourceConfig(size_t maxBlockSizeLog, size_t maxBlockSize,
-                                           size_t chunkSize, size_t maxCachedChunks)
-        : maxBlockSizeLog{maxBlockSizeLog},
-          maxBlockSize{maxBlockSize},
-          chunkSize{chunkSize},
-          maxCachedChunks{maxCachedChunks}
+    PoolResourceConfig::PoolResourceConfig(size_t maxChunkSize, size_t chunkSize,
+                                           size_t maxCachedChunks)
+        : maxChunkSize{maxChunkSize}, chunkSize{chunkSize}, maxCachedChunks{maxCachedChunks}
     {
     }
 
     PoolResourceConfig PoolResourceConfig::defaultConfig()
     {
-        return PoolResourceConfig(20, 1 << 20, 1 << 22, 1);
+        return PoolResourceConfig(static_cast<size_t>(1) << 33, static_cast<size_t>(1) << 22, 1);
     }
 
-    PoolResourceConfig& PoolResourceConfig::setMaxBlockSize(size_t size)
+    PoolResourceConfig& PoolResourceConfig::setMaxChunkSize(size_t size)
     {
-        maxBlockSize = std::max(alignUp(size, pool_resource::BLOCK_GRANULARITY),
+        maxChunkSize = std::max(alignUp(size, pool_resource::BLOCK_GRANULARITY),
                                 pool_resource::MIN_BLOCK_SIZE);
-        maxBlockSizeLog = log2Floor(maxBlockSize);
         return *this;
     }
 
@@ -74,7 +70,7 @@ namespace elsa::mr
     bool PoolResourceConfig::validate()
     {
         // chunk must at least by able to accomodate the largest possible block
-        return chunkSize >= maxBlockSize;
+        return chunkSize <= maxChunkSize;
     };
 
     namespace pool_resource
@@ -87,7 +83,8 @@ namespace elsa::mr
             if (!config.validate()) {
                 _config = PoolResourceConfig::defaultConfig();
             }
-            _freeLists.resize(_config.maxBlockSizeLog - pool_resource::MIN_BLOCK_SIZE_LOG, nullptr);
+            _freeLists.resize(log2Floor(_config.maxChunkSize) - pool_resource::MIN_BLOCK_SIZE_LOG,
+                              nullptr);
             _cachedChunks =
                 std::make_unique<std::unique_ptr<pool_resource::Block>[]>(_config.maxCachedChunks);
         }
@@ -111,39 +108,16 @@ namespace elsa::mr
         template <typename FreeListStrategy>
         void* PoolResource<FreeListStrategy>::allocate(size_t size, size_t alignment)
         {
-            if (size == 0) {
-                ++size;
-            }
-
-            if (size > _config.maxBlockSize) {
+            auto [realSize, blockSize] = computeSizeWithAlginment(size, alignment);
+            if (blockSize > _config.maxChunkSize) {
                 // allocation too big to be handled by the pool
                 return _upstream->allocate(size, alignment);
-            }
-
-            if (!isPowerOfTwo(alignment)) {
-                throw std::bad_alloc();
-            }
-
-            // find best-fitting non-empty bin
-            size_t realSize = computeRealSize(size);
-
-            // this overflow check is probably unnecessary, since the log is already compared
-            // against the max block size
-            ENSURE(realSize >= size);
-            // minimal size of the free block to carve the allocation out of. must be enough for to
-            // contain an aligned allocation
-            size_t blockSize;
-            if (alignment <= pool_resource::BLOCK_GRANULARITY) {
-                blockSize = realSize;
-            } else {
-                blockSize = realSize + alignment;
-                ENSURE(blockSize >= realSize);
             }
 
             pool_resource::Block* block =
                 FreeListStrategy::selectBlock(_freeListNonEmpty, _freeLists, blockSize);
             if (!block) {
-                block = expandPool();
+                block = expandPool(blockSize);
                 // this block *must* fit the allocation, otherwise the requested size must be so
                 // large that it is forwarded to _upstream
             } else {
@@ -204,7 +178,13 @@ namespace elsa::mr
             if (!ptr) {
                 return;
             }
-            if (size > _config.maxBlockSize) {
+            // This throws, if alignment is not a power of two. Due to the noexcept tag,
+            // this leads to termination.
+            // This behavior seems appropriate, since this is essentially an invalid free.
+            // The provided pointer cannot possible be allocated with that alignment.
+            // If this behavior is undesired, let me know.
+            auto [_, blockSize] = computeSizeWithAlginment(size, alignment);
+            if (blockSize > _config.maxChunkSize) {
                 // allocation too big to be handled by the pool, must have come from upstream
                 _upstream->deallocate(ptr, size, alignment);
                 return;
@@ -268,7 +248,7 @@ namespace elsa::mr
         {
             static_cast<void>(size);
             static_cast<void>(alignment);
-            if (!ptr || size > _config.maxBlockSize) {
+            if (!ptr || size > _config.maxChunkSize) {
                 return false;
             }
             auto blockIt = _addressToBlock.find(ptr);
@@ -383,21 +363,67 @@ namespace elsa::mr
         }
 
         template <typename FreeListStrategy>
-        pool_resource::Block* PoolResource<FreeListStrategy>::expandPool()
+        std::pair<size_t, size_t>
+            PoolResource<FreeListStrategy>::computeSizeWithAlginment(size_t requestedSize,
+                                                                     size_t requestedAlignment)
+        {
+            if (requestedSize == 0) {
+                ++requestedSize;
+            }
+
+            if (!isPowerOfTwo(requestedAlignment)) {
+                throw std::bad_alloc();
+            }
+
+            // find best-fitting non-empty bin
+            size_t realSize = computeRealSize(requestedSize);
+
+            // this overflow check is probably unnecessary, since the log is already compared
+            // against the max block size
+            ENSURE(realSize >= requestedSize);
+            // minimal size of the free block to carve the allocation out of. must be enough for to
+            // contain an aligned allocation
+            size_t blockSize;
+            if (requestedAlignment <= pool_resource::BLOCK_GRANULARITY) {
+                blockSize = realSize;
+            } else {
+                blockSize = realSize + requestedAlignment;
+                ENSURE(blockSize >= realSize);
+            }
+            return {realSize, blockSize};
+        }
+
+        template <typename FreeListStrategy>
+        pool_resource::Block* PoolResource<FreeListStrategy>::expandPool(size_t requestedSize)
         {
             void* newChunkAddress;
-            std::unique_ptr<pool_resource::Block> newChunk;
-            if (_cachedChunkCount == 0) {
-                size_t chunkSize = _config.chunkSize;
+            std::unique_ptr<pool_resource::Block> newChunk = nullptr;
+            for (size_t i = 0; i < _cachedChunkCount; i++) {
+                if (_cachedChunks[i]->size() >= requestedSize) {
+                    --_cachedChunkCount;
+                    std::swap(_cachedChunks[i], _cachedChunks[_cachedChunkCount]);
+                    newChunk = std::move(_cachedChunks[_cachedChunkCount]);
+                    newChunkAddress = newChunk->_address;
+                    break;
+                }
+            }
+
+            if (!newChunk) {
+                // This should be enforced in allocate, by forwarding to _upstream
+                ENSURE(requestedSize <= _config.maxChunkSize);
+                // Rationale for the chunk size: if a chunk of this size is requested,
+                // another chunk of similar size will likely be requested soon. With this
+                // choice of chunkSize, 4 such allocations can be served without allocating
+                // from _upstream again
+                size_t chunkSize =
+                    std::min(std::max(requestedSize << 2, _config.chunkSize), _config.maxChunkSize);
+                // May throw std::bad_alloc
                 newChunkAddress = _upstream->allocate(chunkSize, pool_resource::BLOCK_GRANULARITY);
                 newChunk = std::make_unique<pool_resource::Block>();
                 newChunk->_address = newChunkAddress;
                 newChunk->_size =
-                    _config.chunkSize | pool_resource::FREE_BIT | pool_resource::CHUNK_START_BIT;
+                    chunkSize | pool_resource::FREE_BIT | pool_resource::CHUNK_START_BIT;
                 newChunk->_chunkSize = chunkSize;
-            } else {
-                newChunk = std::move(_cachedChunks[--_cachedChunkCount]);
-                newChunkAddress = newChunk->_address;
             }
 
             try {
