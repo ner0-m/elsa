@@ -71,13 +71,19 @@ namespace elsa::mr
         const size_t SIZE_MASK = ~BITFIELD_MASK;
         const size_t FREE_BIT = 1 << 0;
         const size_t PREV_FREE_BIT = 1 << 1;
+        const size_t CHUNK_START_BIT = 1 << 2;
 
         struct Block {
             // size of the block, also storing the free and prevFree flags in its lowest two bits
             size_t _size;
             void* _address;
-            // address of the block that is prior to this one in contiguous memory
-            void* _prevAddress;
+            union {
+                // if this block marks the start of a chunk, this field contains its size
+                size_t _chunkSize;
+                // if this block is not the beginning of a chunk, this the contains address
+                // of the block that is prior to this one in contiguous memory
+                void* _prevAddress;
+            };
             // next block in the free list
             Block* _nextFree;
             // address of the previous block in the free list's next pointer
@@ -85,12 +91,14 @@ namespace elsa::mr
 
             void markFree();
             void markAllocated();
+            void markChunkStart();
 
             void markPrevFree();
             void markPrevAllocated();
 
             bool isFree();
             bool isPrevFree();
+            bool isChunkStart();
 
             void unlinkFree();
             void insertAfterFree(Block** pprev);

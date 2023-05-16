@@ -220,14 +220,16 @@ namespace elsa::mr
             pool_resource::Block* block = blockIt->second.get();
             block->markFree();
 
-            auto prevIt = _addressToBlock.find(block->_prevAddress);
-            if (prevIt != _addressToBlock.end() && prevIt->second->isFree()) {
-                // coalesce with prev. block
-                pool_resource::Block* prev = prevIt->second.get();
-                unlinkFreeBlock(prev);
-                prev->setSize(prev->size() + block->size());
-                _addressToBlock.erase(blockIt);
-                block = prev;
+            if (!block->isChunkStart()) {
+                auto prevIt = _addressToBlock.find(block->_prevAddress);
+                if (prevIt != _addressToBlock.end() && prevIt->second->isFree()) {
+                    // coalesce with prev. block
+                    pool_resource::Block* prev = prevIt->second.get();
+                    unlinkFreeBlock(prev);
+                    prev->setSize(prev->size() + block->size());
+                    _addressToBlock.erase(blockIt);
+                    block = prev;
+                }
             }
 
             void* nextAdress = voidPtrOffset(block->_address, block->size());
@@ -246,17 +248,17 @@ namespace elsa::mr
 
             nextAdress = voidPtrOffset(block->_address, block->size());
             nextIt = _addressToBlock.find(nextAdress);
-            if (nextIt != _addressToBlock.end() && nextIt->second->_prevAddress != nullptr) {
+            if (nextIt != _addressToBlock.end() && !nextIt->second->isChunkStart()) {
                 std::unique_ptr<pool_resource::Block>& next = nextIt->second;
                 next->markPrevFree();
                 next->_prevAddress = block->_address;
             }
-            if (block->size() < _config.chunkSize) {
-                linkFreeBlock(block);
-            } else {
+            if (block->isChunkStart() && block->size() == block->_chunkSize) {
                 auto blockIt = _addressToBlock.find(block->_address);
                 shrinkPool(std::move(blockIt->second));
                 _addressToBlock.erase(blockIt);
+            } else {
+                linkFreeBlock(block);
             }
         }
 
@@ -386,12 +388,13 @@ namespace elsa::mr
             void* newChunkAddress;
             std::unique_ptr<pool_resource::Block> newChunk;
             if (_cachedChunkCount == 0) {
-                newChunkAddress =
-                    _upstream->allocate(_config.chunkSize, pool_resource::BLOCK_GRANULARITY);
+                size_t chunkSize = _config.chunkSize;
+                newChunkAddress = _upstream->allocate(chunkSize, pool_resource::BLOCK_GRANULARITY);
                 newChunk = std::make_unique<pool_resource::Block>();
                 newChunk->_address = newChunkAddress;
-                newChunk->_size = _config.chunkSize | pool_resource::FREE_BIT;
-                newChunk->_prevAddress = nullptr;
+                newChunk->_size =
+                    _config.chunkSize | pool_resource::FREE_BIT | pool_resource::CHUNK_START_BIT;
+                newChunk->_chunkSize = chunkSize;
             } else {
                 newChunk = std::move(_cachedChunks[--_cachedChunkCount]);
                 newChunkAddress = newChunk->_address;
@@ -451,6 +454,11 @@ namespace elsa::mr
             _size &= ~FREE_BIT;
         }
 
+        void Block::markChunkStart()
+        {
+            _size &= ~CHUNK_START_BIT;
+        }
+
         void Block::markPrevFree()
         {
             _size |= PREV_FREE_BIT;
@@ -469,6 +477,11 @@ namespace elsa::mr
         bool Block::isPrevFree()
         {
             return _size & PREV_FREE_BIT;
+        }
+
+        bool Block::isChunkStart()
+        {
+            return _size & CHUNK_START_BIT;
         }
 
         void Block::unlinkFree()
