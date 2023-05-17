@@ -455,18 +455,34 @@ namespace elsa::mr
             // oldSize and newSize must be multiples of pool_resource::BLOCK_GRANULARITY
             size_t tailSplitSize = oldSize - newSize;
             if (tailSplitSize != 0) {
+                void* subblockAddress = voidPtrOffset(blockAddress, newSize);
                 // insert sub-block after the allocation into a free-list
                 try {
-                    auto successor = std::make_unique<pool_resource::Block>();
-                    successor->_size = tailSplitSize | pool_resource::FREE_BIT;
-                    successor->_address = voidPtrOffset(blockAddress, newSize);
-                    successor->_prevAddress = blockAddress;
-                    insertFreeBlock(std::move(successor));
+                    auto subblock = std::make_unique<pool_resource::Block>();
+                    subblock->_size = tailSplitSize | pool_resource::FREE_BIT;
+                    subblock->_address = subblockAddress;
+                    subblock->_prevAddress = blockAddress;
+                    insertFreeBlock(std::move(subblock));
                 } catch (...) {
                     throw;
                 }
 
                 block.setSize(newSize);
+                // Current state:
+                //      .---_prevAddress----.
+                //      v                   |
+                // +---------+---------+-----------+
+                // | A       | A'      | B         |
+                // +---------+---------+-----------+
+                // Where A is the original block, A' is the subblock created in
+                // its tail, and B is the successor.
+                // So, the successor's (B) _prevAddress must be adjusted
+                // (if there is one and we are not at the end of the chunk)
+                void* successorAddress = voidPtrOffset(blockAddress, oldSize);
+                auto successorIt = _addressToBlock.find(successorAddress);
+                if (successorIt != _addressToBlock.end()) {
+                    successorIt->second->_prevAddress = subblockAddress;
+                }
             }
         }
 

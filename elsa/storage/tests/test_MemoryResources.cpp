@@ -171,8 +171,8 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
         rng.seed(0xdeadbeef);
 
         MemoryResource resource = provideResource<T>();
-        unsigned char* ptrs[100];
-        for (size_t i = 0; i < 100; i++) {
+        std::vector<unsigned char*> ptrs(10000);
+        for (size_t i = 0; i < 10000; i++) {
             size_t size = sizeForIndex(i);
             ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(size, 8));
             *ptrs[i] = 0xff;
@@ -184,7 +184,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
             }
         }
 
-        for (size_t i = 0; i < 100; i++) {
+        for (size_t i = 0; i < 10000; i++) {
             size_t size = sizeForIndex(i);
             resource->deallocate(ptrs[i], size, 8);
         }
@@ -509,7 +509,7 @@ TEST_CASE("Cache resource")
         config.setMaxCachedCount(1);
         MemoryResource resource = CacheResource::make(dummy, config);
 
-        void* ptrs[10000];
+        std::vector<void*> ptrs(10000);
 
         size_t allocationSize = 0x1000000;
         for (int i = 0; i < 10000; i++) {
@@ -531,7 +531,7 @@ TEST_CASE("Cache resource")
         config.setMaxCachedCount(std::numeric_limits<size_t>::max());
         MemoryResource resource = CacheResource::make(dummy, config);
 
-        void* ptrs[10000];
+        std::vector<void*> ptrs(10000);
 
         size_t allocationSize = 0x1000000;
         for (int i = 0; i < 10000; i++) {
