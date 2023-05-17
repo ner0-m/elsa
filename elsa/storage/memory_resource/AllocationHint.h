@@ -57,6 +57,13 @@ namespace elsa::mr::hint
         using AllocationHint = std::unique_ptr<std::variant<MemoryResource, AllocationBehavior>>;
     }
 
+    /// @brief Provides hints that help determine an appropriate memory resource. The hints are
+    /// limited to the scope in which they are created and anything called from there. Hints are
+    /// meant to be stack allocated. DO NOT HEAP ALLOCATE THEM OR STORE THEM IN MEMBERS!
+    /// Note: each hint is responsible for the creation of up to 1 memory resource, meaning the
+    /// resource is shared by subsequent calls to elsa::mr::defaultInstance().
+    /// @tparam H The type of the given hint. Two variants are accepted:
+    /// elsa::mr::hint::AllocationBehavior and elsa::mr::MemoryResource
     template <typename H>
     class ScopedAllocationHint
     {
@@ -73,8 +80,13 @@ namespace elsa::mr::hint
         void operator delete(void*, size_t) = delete;
     };
 
+    /// DO NOT HEAP ALLOCATE OR STORE IN A MEMBER!
     using ScopedMR = ScopedAllocationHint<MemoryResource>;
+    /// DO NOT HEAP ALLOCATE OR STORE IN A MEMBER!
     using ScopedMRHint = ScopedAllocationHint<AllocationBehavior>;
-
+    /// @brief Select a memory resource based on the current hint. The preferred way to obtain a
+    /// MemoryResource is to call elsa::mr::defaultInstance().
+    /// @return std::nullopt if there is no hint in the current scope. An appropriate resource
+    /// otherwise.
     std::optional<MemoryResource> selectMemoryResource();
 } // namespace elsa::mr::hint
