@@ -13,6 +13,7 @@ add_custom_target(build-examples)
 
 # build a simple 2D reconstruction
 add_example(simple_recon2d simple_recon2d.cpp)
+add_example(memory_resource_bench memory_resource_bench.cpp)
 
 add_subdirectory(misc)
 add_subdirectory(phantoms)
