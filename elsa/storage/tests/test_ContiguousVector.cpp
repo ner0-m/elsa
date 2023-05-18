@@ -800,7 +800,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::insert", T, ComplexType<1>, TrivialType<1>
         {
             Vector storage(vec.begin(), vec.end(), mres);
 
-            storage.insert(storage.begin() + index, temp);
+            storage.insert(storage.begin() + index, std::move(temp));
 
             CHECK(storage.size() == vec.size() + count);
             CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
@@ -1022,6 +1022,179 @@ TEST_CASE_TEMPLATE("ContiguousVector::erase", T, ComplexType<1>, TrivialType<1>,
             CHECK(storage.size() == vec.size() - count);
             CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
             CHECK(CheckAllMatch(storage.begin() + index, vec.begin() + (pre + count), post));
+        }
+
+        VerifyTestStats();
+    }
+
+    testStats.resource.release();
+}
+
+TEST_CASE_TEMPLATE("ContiguousVector::clear/push/pop/resize/swap", T, ComplexType<1>,
+                   TrivialType<1>, UninitType, ComplexType<6>, TrivialType<8>)
+{
+    MemoryResource mres = CheckedResource::make();
+    testStats.resource = mres;
+    using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
+
+    SUBCASE("clear()")
+    {
+        auto vec = Randoms::vec<T>();
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.clear();
+
+            CHECK(storage.size() == 0);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("emplace_back(Args&&...)")
+    {
+        auto vec = Randoms::vec<T>();
+        auto value = Randoms::value();
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.emplace_back(value);
+
+            CHECK(storage.size() == vec.size() + 1);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), vec.size()));
+            CHECK(*(storage.begin() + vec.size()) == value);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("push_back(const value&)")
+    {
+        auto vec = Randoms::vec<T>();
+        auto value = Randoms::value();
+        T temp(value);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.push_back(temp);
+
+            CHECK(storage.size() == vec.size() + 1);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), vec.size()));
+            CHECK(*(storage.begin() + vec.size()) == value);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("push_back(value&&)")
+    {
+        auto vec = Randoms::vec<T>();
+        auto value = Randoms::value();
+        T temp(value);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.push_back(std::move(temp));
+
+            CHECK(storage.size() == vec.size() + 1);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), vec.size()));
+            CHECK(*(storage.begin() + vec.size()) == value);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("pop_back()")
+    {
+        auto vec = Randoms::vec<T>();
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.pop_back();
+
+            CHECK(storage.size() == vec.size() - 1);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), vec.size() - 1));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("resize(count)")
+    {
+        auto vec = Randoms::vec<T>();
+        auto count = Randoms::count();
+        size_t pre = std::min(count, vec.size());
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.resize(count);
+
+            CHECK(storage.size() == count);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllEqual(storage.begin() + pre, T::initValue, count - pre));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("resize(count, const value&)")
+    {
+        auto vec = Randoms::vec<T>();
+        auto count = Randoms::count();
+        size_t pre = std::min(count, vec.size());
+        auto value = Randoms::value();
+        T temp(value);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.resize(count, temp);
+
+            CHECK(storage.size() == count);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllEqual(storage.begin() + pre, value, count - pre));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("swap(self_type&)")
+    {
+        auto vec0 = Randoms::vec<T>();
+        auto vec1 = Randoms::vec<T>();
+
+        StartTestStats();
+
+        {
+            Vector storage0(vec0.begin(), vec0.end(), mres);
+            Vector storage1(vec1.begin(), vec1.end(), mres);
+
+            storage0.swap(storage1);
+
+            CHECK(storage0.size() == vec1.size());
+            CHECK(storage1.size() == vec0.size());
+            CHECK(CheckAllMatch(storage0.begin(), vec1.begin(), vec1.size()));
+            CHECK(CheckAllMatch(storage1.begin(), vec0.begin(), vec0.size()));
         }
 
         VerifyTestStats();
