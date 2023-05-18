@@ -60,6 +60,8 @@ namespace elsa
                 (geometry.getProjectionMatrix() * homogeneousVoxelCoord).hnormalized();
             center = center.array() - 0.5;
 
+            // transform voxel into camera space (camera at 0,0) and use the norm of the vector to
+            // compute the source voxel distance
             auto scaling = geometry.getSourceDetectorDistance()
                            / (geometry.getExtrinsicMatrix() * homogeneousVoxelCoord).norm();
 

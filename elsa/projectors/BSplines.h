@@ -98,7 +98,7 @@ namespace elsa
             return res;
         }
 
-        const index_t DEFAULT_ORDER = 2;
+        static constexpr index_t DEFAULT_ORDER = 2;
     } // namespace bspline
 
     /// @brief Represent a B-Spline basis function of a given dimension and order
@@ -189,21 +189,21 @@ namespace elsa
 
     private:
         /// Dimension of B-Spline
-        const index_t dim_;
+        index_t dim_;
 
         /// Order of B-Spline
-        const index_t order_;
+        index_t order_;
 
         /// Radius of B-Spline
-        const data_t radius_;
+        data_t radius_;
 
         /// LUT for projected B-Spline
-        const Lut<data_t, N> lut_;
+        Lut<data_t, N> lut_;
 
         /// LUT for projected derivative
-        const Lut<data_t, N> derivative_lut_;
+        Lut<data_t, N> derivative_lut_;
 
         /// LUT for projected normalized gradient
-        const Lut<data_t, N> normalized_gradient_lut_;
+        Lut<data_t, N> normalized_gradient_lut_;
     };
 } // namespace elsa

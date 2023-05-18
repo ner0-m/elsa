@@ -215,9 +215,9 @@ namespace elsa
             return blob_derivative_projected(s, 2.f, 10.83f, 2);
         }
 
-        const double DEFAULT_RADIUS = 2.0;
-        const double DEFAULT_ALPHA = 10.83;
-        const index_t DEFAULT_ORDER = 2;
+        static constexpr double DEFAULT_RADIUS = 2.0;
+        static constexpr double DEFAULT_ALPHA = 10.83;
+        static constexpr index_t DEFAULT_ORDER = 2;
 
     } // namespace blobs
 
@@ -241,9 +241,9 @@ namespace elsa
         constexpr index_t order() const { return order_; }
 
     private:
-        const data_t radius_;
-        const data_t alpha_;
-        const index_t order_;
+        data_t radius_;
+        data_t alpha_;
+        index_t order_;
     };
 
     template <typename data_t, size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
@@ -302,18 +302,18 @@ namespace elsa
         }
 
     private:
-        const data_t radius_;
-        const data_t alpha_;
-        const index_t order_;
+        data_t radius_;
+        data_t alpha_;
+        index_t order_;
 
         /// LUT for projected Blob
-        const Lut<data_t, N> lut_;
+        Lut<data_t, N> lut_;
 
         /// LUT for projected derivative
-        const Lut<data_t, N> derivative_lut_;
+        Lut<data_t, N> derivative_lut_;
 
         /// LUT for projected normalized gradient
-        const Lut<data_t, N> normalized_gradient_lut_;
+        Lut<data_t, N> normalized_gradient_lut_;
     };
 
 } // namespace elsa
