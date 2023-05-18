@@ -339,7 +339,7 @@ public:
     static size_t count() { return Randoms().makeCount(); }
     static int value() { return Randoms().makeValue(); }
     template <class Type>
-    static std::list<Type> typeList()
+    static std::list<Type> list()
     {
         Randoms _r;
         std::list<Type> out;
@@ -350,7 +350,7 @@ public:
         return out;
     }
     template <class Type>
-    static std::vector<Type> typeVec()
+    static std::vector<Type> vec()
     {
         Randoms _r;
         std::vector<Type> out;
@@ -382,112 +382,128 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
 
         {
             Vector storage(mres);
+
             CHECK(storage.size() == 0);
         }
 
         VerifyTestStats();
     }
 
-    int intCount0 = 50;
     SUBCASE("Constructor(size_t)")
     {
+        auto count = Randoms::count();
+
         StartTestStats();
 
         {
-            Vector storage(intCount0, mres);
-            CHECK(storage.size() == intCount0);
-            CHECK(CheckAllEqual(storage, T::initValue, 0) == intCount0);
+            Vector storage(count, mres);
+
+            CHECK(storage.size() == count);
+            CHECK(CheckAllEqual(storage, T::initValue, 0) == count);
         }
 
         VerifyTestStats();
     }
 
-    int intNum1 = 32, intCount1 = 17;
     SUBCASE("Constructor(size_t, const value&)")
     {
-        T temp(intNum1);
+        auto value = Randoms::value();
+        auto count = Randoms::count();
+        T temp(value);
 
         StartTestStats();
 
         {
-            Vector storage(intCount1, temp, mres);
-            CHECK(storage.size() == intCount1);
-            CHECK(CheckAllEqual(storage, intNum1, 0) == intCount1);
+            Vector storage(count, temp, mres);
+
+            CHECK(storage.size() == count);
+            CHECK(CheckAllEqual(storage, value, 0) == count);
         }
 
         VerifyTestStats();
     }
 
-    std::vector<int> intVec0 = {5, 9, 123, 130, -123, 2394, 591, 1203, 523, 123};
     SUBCASE("Constructor(ItType, ItType) [consecutive]")
     {
+        auto vec = Randoms::vec<T>();
+
         StartTestStats();
 
         {
-            Vector storage(intVec0.begin(), intVec0.end(), mres);
-            CHECK(storage.size() == intVec0.size());
-            CHECK(CheckAllMatch(storage, intVec0.begin(), intVec0.size()) == intVec0.size());
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            CHECK(storage.size() == vec.size());
+            CHECK(CheckAllMatch(storage, vec.begin(), vec.size()) == vec.size());
         }
 
         VerifyTestStats();
     }
 
-    std::list<int> intList = {6, 123, -123, 504, 12321, 889123, 345, -543, -8123, 10148};
     SUBCASE("Constructor(ItType, ItType) [not-consecutive]")
     {
+        auto list = Randoms::list<T>();
+
         StartTestStats();
 
         {
-            Vector storage(intList.begin(), intList.end(), mres);
-            CHECK(storage.size() == intList.size());
-            CHECK(CheckAllMatch(storage, intList.begin(), intList.size()) == intList.size());
+            Vector storage(list.begin(), list.end(), mres);
+
+            CHECK(storage.size() == list.size());
+            CHECK(CheckAllMatch(storage, list.begin(), list.size()) == list.size());
         }
 
         VerifyTestStats();
     }
 
-    SUBCASE("Constructor(initializer_list) [implicit: consecutive]")
+    SUBCASE("Constructor(initializer_list)")
     {
-        std::initializer_list<T> intInit = {1, -12, 0, -1123, 0532, 7123, -1239, -67345, 012, -4};
+        std::initializer_list<T> init = {1, -12, 0, -1123, 0532, 7123, -1239, -67345, 012, -4};
 
         StartTestStats();
 
         {
-            Vector storage(intInit, mres);
-            CHECK(storage.size() == intInit.size());
-            CHECK(CheckAllMatch(storage, intInit.begin(), intInit.size()) == intInit.size());
+            Vector storage(init, mres);
+
+            CHECK(storage.size() == init.size());
+            CHECK(CheckAllMatch(storage, init.begin(), init.size()) == init.size());
         }
 
         VerifyTestStats();
     }
 
-    SUBCASE("Constructor(const self_type&) [implicit: consecutive]")
+    SUBCASE("Constructor(const self_type&)")
     {
-        Vector intSelf({-1, 0, 123, 5, -123, 9348, -239411, -123, 64223, -123}, mres);
+        auto vec = Randoms::vec<T>();
+        Vector self(vec.begin(), vec.end(), mres);
 
         StartTestStats();
 
         {
-            Vector storage(intSelf, mres);
-            CHECK(storage.size() == intSelf.size());
-            CHECK(CheckAllMatch(storage, intSelf.begin(), intSelf.size()) == intSelf.size());
+            Vector storage(self, mres);
+
+            CHECK(storage.size() == vec.size());
+            CHECK(self.size() == vec.size());
+            CHECK(CheckAllMatch(storage, vec.begin(), vec.size()) == vec.size());
+            CHECK(CheckAllMatch(self, vec.begin(), vec.size()) == vec.size());
         }
 
         VerifyTestStats();
     }
 
-    SUBCASE("Constructor(self_type&&) [implicit: consecutive]")
+    SUBCASE("Constructor(self_type&&)")
     {
-        Vector intSelf(intList.begin(), intList.end(), mres);
+        auto vec = Randoms::vec<int>();
+        Vector self(vec.begin(), vec.end(), mres);
 
         StartTestStats();
 
         {
-            Vector storage(std::move(intSelf));
+            Vector storage(std::move(self));
+
             // NOLINTNEXTLINE(*-use-after-move)
-            CHECK(intSelf.size() == 0);
-            CHECK(storage.size() == intList.size());
-            CHECK(CheckAllMatch(storage, intList.begin(), intList.size()) == intList.size());
+            CHECK(self.size() == 0);
+            CHECK(storage.size() == vec.size());
+            CHECK(CheckAllMatch(storage, vec.begin(), vec.size()) == vec.size());
 
             /* necessary as move-constructor 'steals' the values from the pre-constructed storage */
             std::swap(testStats.preTestConstructed, testStats.constructed);
@@ -507,44 +523,46 @@ TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType
     testStats.resource = mres;
     using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
 
-    std::vector<int> intVec0 = {-6454, -4728, -1351, 4778, -283, 356, 6839};
-    std::vector<int> intVec1 = {142, -165, 6561, 315, -3790, 313, 988872, 132109, -1970, 12319};
     SUBCASE("operator=(const self_type&)")
     {
-        Vector intSelf(intVec1.begin(), intVec1.end(), mres);
+        auto vec0 = Randoms::vec<T>();
+        auto vec1 = Randoms::vec<T>();
+
+        Vector self(vec1.begin(), vec1.end(), mres);
 
         StartTestStats();
 
         {
-            Vector storage(intVec0.begin(), intVec0.end(), mres);
+            Vector storage(vec0.begin(), vec0.end(), mres);
 
-            storage = intSelf;
+            storage = self;
 
-            CHECK(storage.size() == intVec1.size());
-            CHECK(intSelf.size() == intVec1.size());
-            CHECK(CheckAllMatch(storage, intVec1.begin(), intVec1.size()) == intVec1.size());
-            CHECK(CheckAllMatch(intSelf, intVec1.begin(), intVec1.size()) == intVec1.size());
+            CHECK(storage.size() == vec1.size());
+            CHECK(self.size() == vec1.size());
+            CHECK(CheckAllMatch(storage, vec1.begin(), vec1.size()) == vec1.size());
+            CHECK(CheckAllMatch(self, vec1.begin(), vec1.size()) == vec1.size());
         }
 
         VerifyTestStats();
     }
 
-    std::vector<int> intVec2 = {42128, -1117, 703, 2051, 3929, 8967, 5836, -4143, 313842, 230};
     SUBCASE("operator=(self_type&&)")
     {
-        Vector intSelf(intVec2.begin(), intVec2.end(), mres);
+        auto vec0 = Randoms::vec<int>();
+        auto vec1 = Randoms::vec<int>();
+        Vector self(vec1.begin(), vec1.end(), mres);
 
         StartTestStats();
 
         {
-            Vector storage(intVec0.begin(), intVec0.end(), mres);
+            Vector storage(vec0.begin(), vec0.end(), mres);
 
-            storage = std::move(intSelf);
+            storage = std::move(self);
 
-            CHECK(storage.size() == intVec2.size());
+            CHECK(storage.size() == vec1.size());
             // NOLINTNEXTLINE(*-use-after-move)
-            CHECK(intSelf.size() == 0);
-            CHECK(CheckAllMatch(storage, intVec2.begin(), intVec2.size()) == intVec2.size());
+            CHECK(self.size() == 0);
+            CHECK(CheckAllMatch(storage, vec1.begin(), vec1.size()) == vec1.size());
 
             /* necessary as move-constructor 'steals' the values from the pre-constructed storage */
             std::swap(testStats.preTestConstructed, testStats.constructed);
@@ -556,18 +574,19 @@ TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType
 
     SUBCASE("operator=(initializer_list)")
     {
-        std::initializer_list<T> intInit = {-12011, 7768,  5991, 4419,  -5819, -7972,
-                                            -1214,  -8911, 9401, -2669, -4947, -2232};
+        auto vec = Randoms::vec<T>();
+        std::initializer_list<T> init = {-12011, 7768,  5991, 4419,  -5819, -7972,
+                                         -1214,  -8911, 9401, -2669, -4947, -2232};
 
         StartTestStats();
 
         {
-            Vector storage(intVec0.begin(), intVec0.end(), mres);
+            Vector storage(vec.begin(), vec.end(), mres);
 
-            storage = intInit;
+            storage = init;
 
-            CHECK(storage.size() == intInit.size());
-            CHECK(CheckAllMatch(storage, intInit.begin(), intInit.size()) == intInit.size());
+            CHECK(storage.size() == init.size());
+            CHECK(CheckAllMatch(storage, init.begin(), init.size()) == init.size());
         }
 
         VerifyTestStats();
@@ -585,7 +604,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
 
     SUBCASE("assign_default(size_t)")
     {
-        auto vec = Randoms::typeVec<T>();
+        auto vec = Randoms::vec<T>();
         auto count = Randoms::count();
 
         StartTestStats();
@@ -609,10 +628,9 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
 
     SUBCASE("assign(size_t, const value&)")
     {
-        auto vec = Randoms::typeVec<T>();
+        auto vec = Randoms::vec<T>();
         auto value = Randoms::value();
         auto count = Randoms::count();
-
         T temp(value);
 
         StartTestStats();
@@ -631,8 +649,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
 
     SUBCASE("assign(ItType, ItType) [consecutive]")
     {
-        auto vec0 = Randoms::typeVec<T>();
-        auto vec1 = Randoms::typeVec<T>();
+        auto vec0 = Randoms::vec<T>();
+        auto vec1 = Randoms::vec<T>();
 
         StartTestStats();
 
@@ -650,8 +668,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
 
     SUBCASE("assign(ItType, ItType) [non-consecutive]")
     {
-        auto vec = Randoms::typeVec<T>();
-        auto list = Randoms::typeList<T>();
+        auto vec = Randoms::vec<T>();
+        auto list = Randoms::list<T>();
 
         StartTestStats();
 
@@ -667,9 +685,9 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
         VerifyTestStats();
     }
 
-    SUBCASE("assign(initializer_list) [implicit: consecutive]")
+    SUBCASE("assign(initializer_list)")
     {
-        auto vec = Randoms::typeVec<T>();
+        auto vec = Randoms::vec<T>();
         std::initializer_list<T> init = {142, -165,   6561,   315,   -3790,
                                          313, 988872, 132109, -1970, 12319};
 
@@ -689,8 +707,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
 
     SUBCASE("assign(const self_type&)")
     {
-        auto vec0 = Randoms::typeVec<T>();
-        auto vec1 = Randoms::typeVec<T>();
+        auto vec0 = Randoms::vec<T>();
+        auto vec1 = Randoms::vec<T>();
         Vector self(vec1.begin(), vec1.end(), mres);
 
         StartTestStats();
