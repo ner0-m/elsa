@@ -104,9 +104,9 @@ class PyelsaTest(unittest.TestCase):
         )
 
     def test_datacontainer(self):
-        size = 100
-        v = np.random.randn(size)
-        w = np.random.randn(size)
+        size = 1000
+        v = np.random.randn(size).astype(np.float32)
+        w = np.random.randn(size).astype(np.float32)
 
         desc = elsa.VolumeDescriptor([size])
 
