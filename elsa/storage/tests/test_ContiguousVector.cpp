@@ -9,6 +9,7 @@
 #include <set>
 #include <vector>
 #include <list>
+#include <random>
 
 using namespace elsa::mr;
 
@@ -135,10 +136,10 @@ public:
 
 /* count how many values in the container match the given requirements */
 template <class T>
-static size_t CheckAllEqual(const T& t, int val)
+static size_t CheckAllEqual(const T& t, int val, size_t off)
 {
     size_t count = 0;
-    for (size_t i = 0; i < t.size(); ++i) {
+    for (size_t i = off; i < t.size(); ++i) {
         if (t[i] == val)
             ++count;
     }
@@ -260,7 +261,7 @@ public:
     {
         _checkValid(*this, true);
         for (size_t i = 1; i < ValCount; ++i) {
-            if (_payload[i] != RotateIntBits(_payload[0], i))
+            if (_payload[i] != static_cast<int>(RotateIntBits(_payload[0], i)))
                 return 0;
         }
         return _payload[0];
@@ -294,7 +295,7 @@ public:
     operator int() const
     {
         for (size_t i = 1; i < ValCount; ++i) {
-            if (_payload[i] != RotateIntBits(_payload[0], i))
+            if (_payload[i] != static_cast<int>(RotateIntBits(_payload[0], i)))
                 return 0;
         }
         return _payload[0];
@@ -314,6 +315,51 @@ public:
     UninitType(UninitType&&) = default;
     UninitType& operator=(const UninitType&) = default;
     UninitType& operator=(UninitType&&) = default;
+};
+
+struct Randoms {
+private:
+    std::random_device _dev;
+    std::mt19937 _engine;
+    std::uniform_int_distribution<size_t> _count;
+    std::uniform_int_distribution<int> _value;
+
+private:
+    Randoms() : _engine(_dev())
+    {
+        _count = std::uniform_int_distribution<size_t>(4, 80);
+        _value = std::uniform_int_distribution<int>(-100000000, 100000000);
+    }
+
+private:
+    size_t makeCount() { return _count(_engine); }
+    int makeValue() { return _value(_engine); }
+
+public:
+    static size_t count() { return Randoms().makeCount(); }
+    static int value() { return Randoms().makeValue(); }
+    template <class Type>
+    static std::list<Type> typeList()
+    {
+        Randoms _r;
+        std::list<Type> out;
+        size_t tmp = _r.makeCount();
+
+        for (size_t i = 0; i < tmp; ++i)
+            out.push_back(_r.makeValue());
+        return out;
+    }
+    template <class Type>
+    static std::vector<Type> typeVec()
+    {
+        Randoms _r;
+        std::vector<Type> out;
+        size_t tmp = _r.makeCount();
+
+        for (size_t i = 0; i < tmp; ++i)
+            out.push_back(_r.makeValue());
+        return out;
+    }
 };
 
 TEST_SUITE_BEGIN("memoryresources");
@@ -350,7 +396,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
         {
             Vector storage(intCount0, mres);
             CHECK(storage.size() == intCount0);
-            CHECK(CheckAllEqual(storage, T::initValue) == intCount0);
+            CHECK(CheckAllEqual(storage, T::initValue, 0) == intCount0);
         }
 
         VerifyTestStats();
@@ -366,7 +412,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
         {
             Vector storage(intCount1, temp, mres);
             CHECK(storage.size() == intCount1);
-            CHECK(CheckAllEqual(storage, intNum1) == intCount1);
+            CHECK(CheckAllEqual(storage, intNum1, 0) == intCount1);
         }
 
         VerifyTestStats();
@@ -528,6 +574,140 @@ TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType
     }
 
     testStats.resource.release();
+}
+
+TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>, UninitType,
+                   ComplexType<6>, TrivialType<8>)
+{
+    MemoryResource mres = CheckedResource::make();
+    testStats.resource = mres;
+    using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
+
+    SUBCASE("assign_default(size_t)")
+    {
+        auto vec = Randoms::typeVec<T>();
+        auto count = Randoms::count();
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.assign_default(count);
+
+            CHECK(storage.size() == count);
+
+            /* if new size is smaller than vector, uninitialized will not re-initialize */
+            if (UninitType::is<T> && count < vec.size())
+                CHECK(CheckAllMatch(storage, vec.begin(), count) == count);
+            else
+                CHECK(CheckAllEqual(storage, T::initValue, 0) == count);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("assign(size_t, const value&)")
+    {
+        auto vec = Randoms::typeVec<T>();
+        auto value = Randoms::value();
+        auto count = Randoms::count();
+
+        T temp(value);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.assign(count, temp);
+
+            CHECK(storage.size() == count);
+            CHECK(CheckAllEqual(storage, value, 0) == count);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("assign(ItType, ItType) [consecutive]")
+    {
+        auto vec0 = Randoms::typeVec<T>();
+        auto vec1 = Randoms::typeVec<T>();
+
+        StartTestStats();
+
+        {
+            Vector storage(vec0.begin(), vec0.end(), mres);
+
+            storage.assign(vec1.begin(), vec1.end());
+
+            CHECK(storage.size() == vec1.size());
+            CHECK(CheckAllMatch(storage, vec1.begin(), vec1.size()) == vec1.size());
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("assign(ItType, ItType) [non-consecutive]")
+    {
+        auto vec = Randoms::typeVec<T>();
+        auto list = Randoms::typeList<T>();
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.assign(list.begin(), list.end());
+
+            CHECK(storage.size() == list.size());
+            CHECK(CheckAllMatch(storage, list.begin(), list.size()) == list.size());
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("assign(initializer_list) [implicit: consecutive]")
+    {
+        auto vec = Randoms::typeVec<T>();
+        std::initializer_list<T> init = {142, -165,   6561,   315,   -3790,
+                                         313, 988872, 132109, -1970, 12319};
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.assign(init);
+
+            CHECK(storage.size() == init.size());
+            CHECK(CheckAllMatch(storage, init.begin(), init.size()) == init.size());
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("assign(const self_type&)")
+    {
+        auto vec0 = Randoms::typeVec<T>();
+        auto vec1 = Randoms::typeVec<T>();
+        Vector self(vec1.begin(), vec1.end(), mres);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec0.begin(), vec0.end(), mres);
+
+            storage.assign(self);
+
+            CHECK(storage.size() == vec1.size());
+            CHECK(self.size() == vec1.size());
+            CHECK(CheckAllMatch(storage, vec1.begin(), vec1.size()) == vec1.size());
+            CHECK(CheckAllMatch(self, vec1.begin(), vec1.size()) == vec1.size());
+        }
+
+        VerifyTestStats();
+    }
 }
 
 TEST_SUITE_END();
