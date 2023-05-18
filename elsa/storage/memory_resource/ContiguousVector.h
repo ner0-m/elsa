@@ -281,7 +281,10 @@ namespace elsa::mr
                 if constexpr (is_trivial<TypeTag>) {
                     std::memmove(pointer + (where + diff), pointer + where,
                                  (size - where) * sizeof(value_type));
-                    size = std::max<size_type>(size, (size - where) + diff);
+                    if (diff >= 0)
+                        size = std::max<size_type>(size, (size - where) + diff);
+                    else
+                        size += diff;
                     return;
                 }
 
@@ -706,7 +709,7 @@ namespace elsa::mr
         iterator erase(const_iterator i) { return erase(i, std::next(i)); }
         iterator erase(iterator ibegin, iterator iend)
         {
-            return erase(const_iterator(ibegin.get()), const_iterator(iend.get()));
+            return erase(const_iterator(ibegin), const_iterator(iend));
         }
         iterator erase(const_iterator ibegin, const_iterator iend)
         {
