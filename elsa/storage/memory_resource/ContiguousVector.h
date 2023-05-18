@@ -456,8 +456,9 @@ namespace elsa::mr
      *    - move-construct (inherit the incoming resource)
      *    - other-constructors (parameter-resource or mr::defaultInstance)
      *    - swap_resource calls
+     *    - swap_content calls
+     *    - swap() calls (optional parameter-resource else unchanged)
      *    - assign()/assign_default() calls (optional parameter-resource else unchanged)
-     *    - swap() will swap resource with other container
      */
     template <class Type, class TypeTag, template <class> class PointerType,
               template <class> class IteratorType>
@@ -555,6 +556,9 @@ namespace elsa::mr
             _self.reserve(0, _self.size, actual);
         }
 
+        /* o::resourse will be used */
+        void swap_content(self_type& o) { std::swap(_self, o._self); }
+
         /* current resource will be kept */
         self_type& operator=(const self_type& s)
         {
@@ -610,6 +614,23 @@ namespace elsa::mr
         void assign(const self_type& s, const mr::MemoryResource& mr = mr::MemoryResource())
         {
             assign(s._self.pointer, s._self.end_ptr(), mr);
+        }
+
+        /* if mr is invalid, current resource will be kept */
+        void swap(self_type& o, const mr::MemoryResource& mr = mr::MemoryResource())
+        {
+            mr::MemoryResource actual = mr.valid() ? mr : _self.resource;
+
+            if (_self.resource == actual && o._self.resource == actual)
+                std::swap(_self, o._self);
+            else {
+                container_type _old = _self.reserve(o._self.size, 0, actual);
+                _self.insert_range(0, o._self.pointer, o._self.size);
+
+                o._self.reserve(_old.size, 0);
+                o._self.insert_range(0, _old.pointer, _old.size);
+                o._self.destruct_until(_old.size);
+            }
         }
 
         reference at(size_type i)
@@ -809,6 +830,5 @@ namespace elsa::mr
             _self.reserve(count, _self.size);
             _self.set_range(_self.size, &value, count - _self.size);
         }
-        void swap(self_type& o) noexcept { std::swap(_self, o._self); }
     };
 } // namespace elsa::mr

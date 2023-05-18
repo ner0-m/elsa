@@ -94,12 +94,12 @@ private:
     void* allocate(size_t size, size_t alignment) override
     {
         void* p = HostStandardResource::allocate(size, alignment);
-        if (!testStats.intest) {
+        if (!testStats.intest)
             testStats.preTestAllocated.insert({p, {size, alignment}});
-            return p;
+        else {
+            testStats.allocations.insert({p, {size, alignment}});
+            ++testStats.allocOperations;
         }
-        testStats.allocations.insert({p, {size, alignment}});
-        ++testStats.allocOperations;
 
         /* fill the content with non-zero values */
         uint8_t* p8 = reinterpret_cast<uint8_t*>(p);
@@ -381,7 +381,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
     testStats.resource = mres;
     using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
 
-    SUBCASE("Default constructor")
+    SUBCASE("Constructor()")
     {
         StartTestStats();
 
@@ -1492,6 +1492,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1
         {
             Vector storage(vec.begin(), vec.end(), mres);
 
+            // NOLINTNEXTLINE(readability-container-data-pointer)
             CHECK(&storage.front() == &storage[0]);
         }
 
@@ -1508,6 +1509,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1
             Vector storage(vec.begin(), vec.end(), mres);
             const Vector& cstorage = storage;
 
+            // NOLINTNEXTLINE(readability-container-data-pointer)
             CHECK(&cstorage.front() == &cstorage[0]);
         }
 
@@ -1558,6 +1560,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1
 
             storage.assign(vec.begin(), vec.end());
 
+            // NOLINTNEXTLINE(readability-container-data-pointer)
             CHECK(storage.data() == &storage[0]);
 
             storage.clear();
@@ -1583,6 +1586,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1
 
             storage.assign(vec.begin(), vec.end());
 
+            // NOLINTNEXTLINE(readability-container-data-pointer)
             CHECK(cstorage.data() == &cstorage[0]);
 
             storage.clear();
@@ -1689,7 +1693,258 @@ TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1
     testStats.resource.release();
 }
 
+TEST_CASE_TEMPLATE("ContiguousVector:: resource", T, ComplexType<1>, TrivialType<1>, UninitType,
+                   ComplexType<6>, TrivialType<8>)
+{
+    MemoryResource mres0 = CheckedResource::make();
+    MemoryResource mres1 = CheckedResource::make();
+    using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
+
+    SUBCASE("Constructor()")
+    {
+        Vector storage(mres0);
+
+        CHECK(storage.resource() == mres0);
+    }
+
+    SUBCASE("Constructor(size_type)")
+    {
+        auto count = Randoms::count(true);
+
+        Vector storage(count, mres0);
+
+        CHECK(storage.resource() == mres0);
+    }
+
+    SUBCASE("Constructor(size_type, const value&)")
+    {
+        auto count = Randoms::count(true);
+        auto value = Randoms::value();
+
+        Vector storage(count, value, mres0);
+
+        CHECK(storage.resource() == mres0);
+    }
+
+    SUBCASE("Constructor(ItType, ItType)")
+    {
+        auto vec = Randoms::vec<T>(true);
+
+        Vector storage(vec.begin(), vec.end(), mres0);
+
+        CHECK(storage.resource() == mres0);
+    }
+
+    SUBCASE("Constructor(initializer_list)")
+    {
+        std::initializer_list<T> init = {-437549, 20832,   -18796,  474164, 564578,
+                                         -920349, -814035, -354463, 343376, 306481,
+                                         -994375, 507727,  -314557, 458829, -872564};
+
+        Vector storage(init, mres0);
+
+        CHECK(storage.resource() == mres0);
+    }
+
+    SUBCASE("Constructor(const self_type&)")
+    {
+        auto vec = Randoms::vec<T>(true);
+
+        Vector storage0(vec.begin(), vec.end(), mres0);
+        Vector storage1(storage0);
+        Vector storage2(storage0, mres1);
+
+        CHECK(storage0.resource() == mres0);
+        CHECK(storage1.resource() == mres0);
+        CHECK(storage2.resource() == mres1);
+    }
+
+    SUBCASE("Constructor(self_type&&)")
+    {
+        auto vec = Randoms::vec<T>(true);
+
+        Vector storage0(vec.begin(), vec.end(), mres0);
+        Vector storage1(std::move(storage0));
+
+        CHECK(storage1.resource() == mres0);
+    }
+
+    SUBCASE("assign_default(size_type)")
+    {
+        auto vec = Randoms::vec<T>(true);
+        auto count = Randoms::count(true);
+
+        Vector storage(vec.begin(), vec.end(), mres0);
+
+        storage.assign_default(count, mres1);
+
+        CHECK(storage.size() == count);
+        CHECK(CheckAllEqual(storage.begin(), T::initValue, count));
+        CHECK(storage.resource() == mres1);
+    }
+
+    SUBCASE("assign(size_type, const value&)")
+    {
+        auto vec = Randoms::vec<T>(true);
+        auto count = Randoms::count(true);
+        auto value = Randoms::value();
+
+        Vector storage(vec.begin(), vec.end(), mres0);
+
+        storage.assign(count, value, mres1);
+
+        CHECK(storage.size() == count);
+        CHECK(CheckAllEqual(storage.begin(), value, count));
+        CHECK(storage.resource() == mres1);
+    }
+
+    SUBCASE("assign(ItType, ItType)")
+    {
+        auto vec0 = Randoms::vec<T>(true);
+        auto vec1 = Randoms::vec<T>(true);
+
+        Vector storage(vec0.begin(), vec0.end(), mres0);
+
+        storage.assign(vec1.begin(), vec1.end(), mres1);
+
+        CHECK(storage.size() == vec1.size());
+        CHECK(CheckAllMatch(storage.begin(), vec1.begin(), vec1.size()));
+        CHECK(storage.resource() == mres1);
+    }
+
+    SUBCASE("assign(initializer_list)")
+    {
+        std::initializer_list<T> init = {-868808, -543553, -235794, -878427, 810713,
+                                         -430621, -590444, -259631, -544793, 163178,
+                                         794595,  609654,  870213,  -17751,  181069};
+
+        auto vec = Randoms::vec<T>(true);
+
+        Vector storage(vec.begin(), vec.end(), mres0);
+
+        storage.assign(init, mres1);
+
+        CHECK(storage.size() == init.size());
+        CHECK(CheckAllMatch(storage.begin(), init.begin(), init.size()));
+        CHECK(storage.resource() == mres1);
+    }
+
+    SUBCASE("assign(const self_type&)")
+    {
+        auto vec0 = Randoms::vec<T>(true);
+        auto vec1 = Randoms::vec<T>(true);
+
+        Vector storage0(vec0.begin(), vec0.end(), mres0);
+        Vector storage1(vec1.begin(), vec1.end(), mres0);
+        Vector storage2(vec1.begin(), vec1.end(), mres0);
+
+        storage1.assign(storage0);
+        storage2.assign(storage0, mres1);
+
+        CHECK(storage0.size() == vec0.size());
+        CHECK(storage1.size() == vec0.size());
+        CHECK(storage2.size() == vec0.size());
+        CHECK(CheckAllMatch(storage0.begin(), vec0.begin(), vec0.size()));
+        CHECK(CheckAllMatch(storage1.begin(), vec0.begin(), vec0.size()));
+        CHECK(CheckAllMatch(storage2.begin(), vec0.begin(), vec0.size()));
+        CHECK(storage0.resource() == mres0);
+        CHECK(storage1.resource() == mres0);
+        CHECK(storage2.resource() == mres1);
+    }
+
+    SUBCASE("swap_resource()")
+    {
+        auto vec = Randoms::vec<T>(true);
+
+        Vector storage(vec.begin(), vec.end(), mres0);
+
+        storage.swap_resource(mres1);
+
+        CHECK(storage.size() == vec.size());
+        CHECK(CheckAllMatch(storage.begin(), vec.begin(), vec.size()));
+        CHECK(storage.resource() == mres1);
+    }
+
+    SUBCASE("swap_content(self_type&)")
+    {
+        auto vec0 = Randoms::vec<T>(true);
+        auto vec1 = Randoms::vec<T>(true);
+
+        Vector storage0(vec0.begin(), vec0.end(), mres0);
+        Vector storage1(vec1.begin(), vec1.end(), mres1);
+
+        storage0.swap_content(storage1);
+
+        CHECK(storage0.size() == vec1.size());
+        CHECK(storage1.size() == vec0.size());
+        CHECK(CheckAllMatch(storage0.begin(), vec1.begin(), vec1.size()));
+        CHECK(CheckAllMatch(storage1.begin(), vec0.begin(), vec0.size()));
+        CHECK(storage0.resource() == mres1);
+        CHECK(storage1.resource() == mres0);
+    }
+
+    SUBCASE("swap(self_type&)")
+    {
+        auto vec0 = Randoms::vec<T>(true);
+        auto vec1 = Randoms::vec<T>(true);
+
+        Vector storage0(vec0.begin(), vec0.end(), mres0);
+        Vector storage1(vec1.begin(), vec1.end(), mres0);
+
+        storage1.swap(storage0, mres1);
+
+        CHECK(storage0.size() == vec1.size());
+        CHECK(storage1.size() == vec0.size());
+        CHECK(CheckAllMatch(storage0.begin(), vec1.begin(), vec1.size()));
+        CHECK(CheckAllMatch(storage1.begin(), vec0.begin(), vec0.size()));
+        CHECK(storage0.resource() == mres0);
+        CHECK(storage1.resource() == mres1);
+
+        storage0.assign(vec0.begin(), vec0.end(), mres0);
+        storage1.assign(vec1.begin(), vec1.end(), mres1);
+
+        storage1.swap(storage0);
+
+        CHECK(storage0.size() == vec1.size());
+        CHECK(storage1.size() == vec0.size());
+        CHECK(CheckAllMatch(storage0.begin(), vec1.begin(), vec1.size()));
+        CHECK(CheckAllMatch(storage1.begin(), vec0.begin(), vec0.size()));
+        CHECK(storage0.resource() == mres0);
+        CHECK(storage1.resource() == mres1);
+    }
+
+    SUBCASE("operator=(const self_type&)")
+    {
+        auto vec0 = Randoms::vec<T>(true);
+        auto vec1 = Randoms::vec<T>(true);
+
+        Vector storage0(vec0.begin(), vec0.end(), mres0);
+        Vector storage1(vec1.begin(), vec1.end(), mres1);
+
+        storage0 = storage1;
+
+        CHECK(storage0.size() == vec1.size());
+        CHECK(CheckAllMatch(storage0.begin(), vec1.begin(), vec1.size()));
+        CHECK(storage0.resource() == mres0);
+        CHECK(storage1.resource() == mres1);
+    }
+
+    SUBCASE("operator=(self_type&&)")
+    {
+        auto vec0 = Randoms::vec<T>(true);
+        auto vec1 = Randoms::vec<T>(true);
+
+        Vector storage0(vec0.begin(), vec0.end(), mres0);
+        Vector storage1(vec1.begin(), vec1.end(), mres1);
+
+        storage0 = std::move(storage1);
+
+        CHECK(storage0.size() == vec1.size());
+        CHECK(CheckAllMatch(storage0.begin(), vec1.begin(), vec1.size()));
+        CHECK(storage0.resource() == mres0);
+    }
+}
+
 TEST_SUITE_END();
 
-/* test when resource is changed */
 /* add test for 'exception-handling' */
