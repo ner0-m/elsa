@@ -87,7 +87,7 @@ namespace elsa::mr
     /// memory-resource from the last call to setBaselineInstance.
     ///
     /// If setBaselineInstance has never been called, an instance
-    ///     of HostStandardResource will be instantiated.
+    ///     of UniversalResource will be instantiated.
     /// @param r Must be a synchronized memory resource!
     void setBaselineInstance(const MemoryResource& r);
     /// Return the memory-resource currently set as baseline instance.

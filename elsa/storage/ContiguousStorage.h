@@ -15,20 +15,6 @@ DISABLE_WARNING_POP
 
 namespace elsa
 {
-    namespace detail
-    {
-        class ConfigMemoryResource
-        {
-        public:
-            ConfigMemoryResource()
-            {
-                if (!mr::baselineInstanceSet())
-                    mr::setBaselineInstance(mr::UniversalResource::make());
-            }
-        };
-        static ConfigMemoryResource _singleton;
-    } // namespace detail
-
     template <class T>
     using ContiguousStorage =
         mr::ContiguousVector<T, mr::type_tags::complex, mr::detail::ContPointer,
