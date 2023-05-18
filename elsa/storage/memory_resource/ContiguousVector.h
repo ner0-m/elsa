@@ -300,7 +300,7 @@ namespace elsa::mr
                  *   constructed and an exception would therefore not leave an invalid state */
                 size_type end = size, next = size - diff;
                 while (next < end) {
-                    new (pointer + size) value_type(std::move(pointer + next));
+                    new (pointer + size) value_type(std::move(pointer[next]));
                     ++size;
                     ++next;
                 }
@@ -645,7 +645,7 @@ namespace elsa::mr
             container_type old = _self.reserve(_self.size + count, off);
 
             if (old.pointer == nullptr)
-                _self.move_tail(_self.pointer + off, count);
+                _self.move_tail(off, count);
             _self.set_range(off, nullptr, count);
             if (old.pointer != nullptr)
                 _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
@@ -662,7 +662,7 @@ namespace elsa::mr
             container_type old = _self.reserve(_self.size + count, off);
 
             if (old.pointer == nullptr)
-                _self.move_tail(_self.pointer + off, count);
+                _self.move_tail(off, count);
             _self.set_range(off, &value, count);
             if (old.pointer != nullptr)
                 _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
@@ -676,7 +676,7 @@ namespace elsa::mr
             container_type old = _self.reserve(_self.size + total, off);
 
             if (old.pointer == nullptr)
-                _self.move_tail(_self.pointer + off, off);
+                _self.move_tail(off, total);
             _self.insert_range(off, ibegin, iend, total);
             if (old.pointer != nullptr)
                 _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
@@ -694,7 +694,7 @@ namespace elsa::mr
             container_type old = _self.reserve(_self.size + 1, off);
 
             if (old.pointer == nullptr) {
-                _self.move_tail(_self.pointer + off, 1);
+                _self.move_tail(off, 1);
                 _self.pointer[off] = std::move(value_type(std::forward<Args>(args)...));
             } else {
                 new (_self.end_ptr()) value_type(std::forward<Args>(args)...);

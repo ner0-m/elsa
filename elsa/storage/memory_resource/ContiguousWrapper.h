@@ -22,6 +22,7 @@ namespace elsa::mr::detail
     {
     public:
         using self_type = ContPointer<Type>;
+        using const_self_type = ContPointer<const Type>;
         using value_type = std::remove_cv_t<Type>;
         using size_type = size_t;
         using difference_type = std::ptrdiff_t;
@@ -53,6 +54,7 @@ namespace elsa::mr::detail
             _where = p._where;
             return *this;
         }
+        __host__ __device__ operator const_self_type() const { return const_self_type(_where); }
         __host__ __device__ bool operator==(const self_type& p) const { return _where == p._where; }
         __host__ __device__ bool operator!=(const self_type& p) const { return !(*this == p); }
         __host__ __device__ reference operator*() const { return *_where; }
@@ -118,6 +120,7 @@ namespace elsa::mr::detail
     {
     public:
         using self_type = ContIterator<Type>;
+        using const_self_type = ContIterator<const Type>;
         using value_type = std::remove_cv_t<Type>;
         using iterator_category = std::random_access_iterator_tag;
         using difference_type = std::ptrdiff_t;
@@ -145,6 +148,7 @@ namespace elsa::mr::detail
             _where = p._where;
             return *this;
         }
+        __host__ __device__ operator const_self_type() const { return const_self_type(_where); }
         __host__ __device__ bool operator==(const self_type& p) const { return _where == p._where; }
         __host__ __device__ bool operator!=(const self_type& p) const { return !(*this == p); }
         __host__ __device__ reference operator*() const { return *_where; }

@@ -134,30 +134,74 @@ public:
     static MemoryResource make() { return MemoryResource::MakeRef(new CheckedResource()); }
 };
 
-/* count how many values in the container match the given requirements */
-template <class T>
-static size_t CheckAllEqual(const T& t, int val, size_t off)
+/* check if all values match the given requirements */
+template <class FIt>
+static bool CheckAllEqual(FIt f, int val, size_t values)
 {
-    size_t count = 0;
-    for (size_t i = off; i < t.size(); ++i) {
-        if (t[i] == val)
-            ++count;
+    while (values-- > 0) {
+        if (*f != val)
+            return false;
+        ++f;
     }
-    return count;
+    return true;
 }
-template <class T, class It>
-static size_t CheckAllMatch(const T& t, It it, size_t values)
+template <class FIt, class SIt>
+static bool CheckAllMatch(FIt f, SIt s, size_t values)
 {
-    size_t count = 0;
-    auto tt = t.begin();
-    while (tt != t.end() && values-- > 0) {
-        if (*tt == *it)
-            ++count;
-        ++tt;
-        ++it;
+    while (values-- > 0) {
+        if (*f != *s)
+            return false;
+        ++f;
+        ++s;
     }
-    return count;
+    return true;
 }
+
+/* generate random counts/values or lists/vectors */
+struct Randoms {
+private:
+    std::random_device _dev;
+    std::mt19937 _engine;
+    std::uniform_int_distribution<size_t> _count;
+    std::uniform_int_distribution<int> _value;
+
+private:
+    Randoms() : _engine(_dev())
+    {
+        _count = std::uniform_int_distribution<size_t>(4, 80);
+        _value = std::uniform_int_distribution<int>(-100000000, 100000000);
+    }
+
+private:
+    size_t makeCount() { return _count(_engine); }
+    int makeValue() { return _value(_engine); }
+
+public:
+    static size_t count() { return Randoms().makeCount(); }
+    static int value() { return Randoms().makeValue(); }
+    template <class Type>
+    static std::list<Type> list()
+    {
+        Randoms _r;
+        std::list<Type> out;
+        size_t tmp = _r.makeCount();
+
+        for (size_t i = 0; i < tmp; ++i)
+            out.push_back(_r.makeValue());
+        return out;
+    }
+    template <class Type>
+    static std::vector<Type> vec()
+    {
+        Randoms _r;
+        std::vector<Type> out;
+        size_t tmp = _r.makeCount();
+
+        for (size_t i = 0; i < tmp; ++i)
+            out.push_back(_r.makeValue());
+        return out;
+    }
+};
 
 /* rotate bits (to initialize all integer values deterministically with non-null values) */
 static unsigned int RotateIntBits(unsigned int i, uint32_t c)
@@ -317,51 +361,6 @@ public:
     UninitType& operator=(UninitType&&) = default;
 };
 
-struct Randoms {
-private:
-    std::random_device _dev;
-    std::mt19937 _engine;
-    std::uniform_int_distribution<size_t> _count;
-    std::uniform_int_distribution<int> _value;
-
-private:
-    Randoms() : _engine(_dev())
-    {
-        _count = std::uniform_int_distribution<size_t>(4, 80);
-        _value = std::uniform_int_distribution<int>(-100000000, 100000000);
-    }
-
-private:
-    size_t makeCount() { return _count(_engine); }
-    int makeValue() { return _value(_engine); }
-
-public:
-    static size_t count() { return Randoms().makeCount(); }
-    static int value() { return Randoms().makeValue(); }
-    template <class Type>
-    static std::list<Type> list()
-    {
-        Randoms _r;
-        std::list<Type> out;
-        size_t tmp = _r.makeCount();
-
-        for (size_t i = 0; i < tmp; ++i)
-            out.push_back(_r.makeValue());
-        return out;
-    }
-    template <class Type>
-    static std::vector<Type> vec()
-    {
-        Randoms _r;
-        std::vector<Type> out;
-        size_t tmp = _r.makeCount();
-
-        for (size_t i = 0; i < tmp; ++i)
-            out.push_back(_r.makeValue());
-        return out;
-    }
-};
-
 TEST_SUITE_BEGIN("memoryresources");
 TYPE_TO_STRING(ComplexType<1>);
 TYPE_TO_STRING(TrivialType<1>);
@@ -399,7 +398,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
             Vector storage(count, mres);
 
             CHECK(storage.size() == count);
-            CHECK(CheckAllEqual(storage, T::initValue, 0) == count);
+            CHECK(CheckAllEqual(storage.begin(), T::initValue, count));
         }
 
         VerifyTestStats();
@@ -417,7 +416,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
             Vector storage(count, temp, mres);
 
             CHECK(storage.size() == count);
-            CHECK(CheckAllEqual(storage, value, 0) == count);
+            CHECK(CheckAllEqual(storage.begin(), value, count));
         }
 
         VerifyTestStats();
@@ -433,7 +432,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
             Vector storage(vec.begin(), vec.end(), mres);
 
             CHECK(storage.size() == vec.size());
-            CHECK(CheckAllMatch(storage, vec.begin(), vec.size()) == vec.size());
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), vec.size()));
         }
 
         VerifyTestStats();
@@ -449,7 +448,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
             Vector storage(list.begin(), list.end(), mres);
 
             CHECK(storage.size() == list.size());
-            CHECK(CheckAllMatch(storage, list.begin(), list.size()) == list.size());
+            CHECK(CheckAllMatch(storage.begin(), list.begin(), list.size()));
         }
 
         VerifyTestStats();
@@ -457,7 +456,9 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
 
     SUBCASE("Constructor(initializer_list)")
     {
-        std::initializer_list<T> init = {1, -12, 0, -1123, 0532, 7123, -1239, -67345, 012, -4};
+        std::initializer_list<T> init = {-398209, 479982,  235255,  709892, 967199,
+                                         697198,  818550,  1245640, 85076,  -440662,
+                                         1493450, 1491831, 379199,  544652, 935449};
 
         StartTestStats();
 
@@ -465,7 +466,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
             Vector storage(init, mres);
 
             CHECK(storage.size() == init.size());
-            CHECK(CheckAllMatch(storage, init.begin(), init.size()) == init.size());
+            CHECK(CheckAllMatch(storage.begin(), init.begin(), init.size()));
         }
 
         VerifyTestStats();
@@ -483,8 +484,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
 
             CHECK(storage.size() == vec.size());
             CHECK(self.size() == vec.size());
-            CHECK(CheckAllMatch(storage, vec.begin(), vec.size()) == vec.size());
-            CHECK(CheckAllMatch(self, vec.begin(), vec.size()) == vec.size());
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), vec.size()));
+            CHECK(CheckAllMatch(self.begin(), vec.begin(), vec.size()));
         }
 
         VerifyTestStats();
@@ -503,7 +504,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
             // NOLINTNEXTLINE(*-use-after-move)
             CHECK(self.size() == 0);
             CHECK(storage.size() == vec.size());
-            CHECK(CheckAllMatch(storage, vec.begin(), vec.size()) == vec.size());
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), vec.size()));
 
             /* necessary as move-constructor 'steals' the values from the pre-constructed storage */
             std::swap(testStats.preTestConstructed, testStats.constructed);
@@ -539,8 +540,8 @@ TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType
 
             CHECK(storage.size() == vec1.size());
             CHECK(self.size() == vec1.size());
-            CHECK(CheckAllMatch(storage, vec1.begin(), vec1.size()) == vec1.size());
-            CHECK(CheckAllMatch(self, vec1.begin(), vec1.size()) == vec1.size());
+            CHECK(CheckAllMatch(storage.begin(), vec1.begin(), vec1.size()));
+            CHECK(CheckAllMatch(self.begin(), vec1.begin(), vec1.size()));
         }
 
         VerifyTestStats();
@@ -562,7 +563,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType
             CHECK(storage.size() == vec1.size());
             // NOLINTNEXTLINE(*-use-after-move)
             CHECK(self.size() == 0);
-            CHECK(CheckAllMatch(storage, vec1.begin(), vec1.size()) == vec1.size());
+            CHECK(CheckAllMatch(storage.begin(), vec1.begin(), vec1.size()));
 
             /* necessary as move-constructor 'steals' the values from the pre-constructed storage */
             std::swap(testStats.preTestConstructed, testStats.constructed);
@@ -575,8 +576,9 @@ TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType
     SUBCASE("operator=(initializer_list)")
     {
         auto vec = Randoms::vec<T>();
-        std::initializer_list<T> init = {-12011, 7768,  5991, 4419,  -5819, -7972,
-                                         -1214,  -8911, 9401, -2669, -4947, -2232};
+        std::initializer_list<T> init = {1208778, 857116,  -128880, 1400514, 718035,
+                                         1311674, 657510,  1202315, 1264138, -329564,
+                                         -191651, -231824, 100457,  -403368, 1025825};
 
         StartTestStats();
 
@@ -586,7 +588,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType
             storage = init;
 
             CHECK(storage.size() == init.size());
-            CHECK(CheckAllMatch(storage, init.begin(), init.size()) == init.size());
+            CHECK(CheckAllMatch(storage.begin(), init.begin(), init.size()));
         }
 
         VerifyTestStats();
@@ -618,9 +620,9 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
 
             /* if new size is smaller than vector, uninitialized will not re-initialize */
             if (UninitType::is<T> && count < vec.size())
-                CHECK(CheckAllMatch(storage, vec.begin(), count) == count);
+                CHECK(CheckAllMatch(storage.begin(), vec.begin(), count));
             else
-                CHECK(CheckAllEqual(storage, T::initValue, 0) == count);
+                CHECK(CheckAllEqual(storage.begin(), T::initValue, count));
         }
 
         VerifyTestStats();
@@ -641,7 +643,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
             storage.assign(count, temp);
 
             CHECK(storage.size() == count);
-            CHECK(CheckAllEqual(storage, value, 0) == count);
+            CHECK(CheckAllEqual(storage.begin(), value, count));
         }
 
         VerifyTestStats();
@@ -660,7 +662,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
             storage.assign(vec1.begin(), vec1.end());
 
             CHECK(storage.size() == vec1.size());
-            CHECK(CheckAllMatch(storage, vec1.begin(), vec1.size()) == vec1.size());
+            CHECK(CheckAllMatch(storage.begin(), vec1.begin(), vec1.size()));
         }
 
         VerifyTestStats();
@@ -679,7 +681,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
             storage.assign(list.begin(), list.end());
 
             CHECK(storage.size() == list.size());
-            CHECK(CheckAllMatch(storage, list.begin(), list.size()) == list.size());
+            CHECK(CheckAllMatch(storage.begin(), list.begin(), list.size()));
         }
 
         VerifyTestStats();
@@ -688,8 +690,9 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
     SUBCASE("assign(initializer_list)")
     {
         auto vec = Randoms::vec<T>();
-        std::initializer_list<T> init = {142, -165,   6561,   315,   -3790,
-                                         313, 988872, 132109, -1970, 12319};
+        std::initializer_list<T> init = {120003,  -343400, 375390,  1224936, 8455,
+                                         -312424, 1456582, 768649,  1393532, 586647,
+                                         1093424, 1071102, -205884, 118497,  -326290};
 
         StartTestStats();
 
@@ -699,7 +702,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
             storage.assign(init);
 
             CHECK(storage.size() == init.size());
-            CHECK(CheckAllMatch(storage, init.begin(), init.size()) == init.size());
+            CHECK(CheckAllMatch(storage.begin(), init.begin(), init.size()));
         }
 
         VerifyTestStats();
@@ -720,8 +723,204 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
 
             CHECK(storage.size() == vec1.size());
             CHECK(self.size() == vec1.size());
-            CHECK(CheckAllMatch(storage, vec1.begin(), vec1.size()) == vec1.size());
-            CHECK(CheckAllMatch(self, vec1.begin(), vec1.size()) == vec1.size());
+            CHECK(CheckAllMatch(storage.begin(), vec1.begin(), vec1.size()));
+            CHECK(CheckAllMatch(self.begin(), vec1.begin(), vec1.size()));
+        }
+
+        VerifyTestStats();
+    }
+}
+
+TEST_CASE_TEMPLATE("ContiguousVector::insert", T, ComplexType<1>, TrivialType<1>, UninitType,
+                   ComplexType<6>, TrivialType<8>)
+{
+    MemoryResource mres = CheckedResource::make();
+    testStats.resource = mres;
+    using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
+
+    SUBCASE("insert_default(ItType, size_t)")
+    {
+        auto vec = Randoms::vec<T>();
+        size_t index = Randoms::count() % vec.size(), count = Randoms::count();
+        size_t pre = index, post = vec.size() - index;
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.insert_default(storage.begin() + index, count);
+
+            CHECK(storage.size() == vec.size() + count);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllMatch(storage.begin() + (index + count), vec.begin() + pre, post));
+            CHECK(CheckAllEqual(storage.begin() + index, T::initValue, count));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("insert(ItType, const value&)")
+    {
+        auto vec = Randoms::vec<T>();
+        size_t index = Randoms::count() % vec.size(), count = 1;
+        size_t pre = index, post = vec.size() - index;
+        auto value = Randoms::value();
+        T temp(value);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.insert(storage.begin() + index, temp);
+
+            CHECK(storage.size() == vec.size() + count);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllMatch(storage.begin() + (index + count), vec.begin() + pre, post));
+            CHECK(CheckAllEqual(storage.begin() + index, value, count));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("insert(ItType, value&&)")
+    {
+        auto vec = Randoms::vec<T>();
+        size_t index = Randoms::count() % vec.size(), count = 1;
+        size_t pre = index, post = vec.size() - index;
+        auto value = Randoms::value();
+        T temp(value);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.insert(storage.begin() + index, temp);
+
+            CHECK(storage.size() == vec.size() + count);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllMatch(storage.begin() + (index + count), vec.begin() + pre, post));
+            CHECK(CheckAllEqual(storage.begin() + index, value, count));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("insert(ItType, size_t, const value&)")
+    {
+        auto vec = Randoms::vec<T>();
+        size_t index = Randoms::count() % vec.size(), count = Randoms::count();
+        size_t pre = index, post = vec.size() - index;
+        auto value = Randoms::value();
+        T temp(value);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.insert(storage.begin() + index, count, temp);
+
+            CHECK(storage.size() == vec.size() + count);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllMatch(storage.begin() + (index + count), vec.begin() + pre, post));
+            CHECK(CheckAllEqual(storage.begin() + index, value, count));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("insert(ItType, ItType, ItType) [consecutive]")
+    {
+        auto vec0 = Randoms::vec<T>();
+        auto vec1 = Randoms::vec<T>();
+        size_t index = Randoms::count() % vec0.size();
+        size_t pre = index, post = vec0.size() - index;
+
+        StartTestStats();
+
+        {
+            Vector storage(vec0.begin(), vec0.end(), mres);
+
+            storage.insert(storage.begin() + index, vec1.begin(), vec1.end());
+
+            CHECK(storage.size() == vec0.size() + vec1.size());
+            CHECK(CheckAllMatch(storage.begin(), vec0.begin(), pre));
+            CHECK(CheckAllMatch(storage.begin() + (index + vec1.size()), vec0.begin() + pre, post));
+            CHECK(CheckAllMatch(storage.begin() + index, vec1.begin(), vec1.size()));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("insert(ItType, ItType, ItType) [non-consecutive]")
+    {
+        auto vec = Randoms::vec<T>();
+        auto list = Randoms::list<T>();
+        size_t index = Randoms::count() % vec.size();
+        size_t pre = index, post = vec.size() - index;
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.insert(storage.begin() + index, list.begin(), list.end());
+
+            CHECK(storage.size() == vec.size() + list.size());
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllMatch(storage.begin() + (index + list.size()), vec.begin() + pre, post));
+            CHECK(CheckAllMatch(storage.begin() + index, list.begin(), list.size()));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("insert(ItType, initializer_list)")
+    {
+        auto vec = Randoms::vec<T>();
+        size_t index = Randoms::count() % vec.size();
+        size_t pre = index, post = vec.size() - index;
+        std::initializer_list<T> init = {-490882, 4245,    -497502, 1038916, 861215,
+                                         -6817,   1461747, 332086,  -480681, -362049,
+                                         -250110, -371747, -228368, -431462, -292826};
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.insert(storage.begin() + index, init);
+
+            CHECK(storage.size() == vec.size() + init.size());
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllMatch(storage.begin() + (index + init.size()), vec.begin() + pre, post));
+            CHECK(CheckAllMatch(storage.begin() + index, init.begin(), init.size()));
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("emplace(ItType, Args&&...)")
+    {
+        auto vec = Randoms::vec<T>();
+        size_t index = Randoms::count() % vec.size(), count = 1;
+        size_t pre = index, post = vec.size() - index;
+        auto value = Randoms::value();
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            storage.emplace(storage.begin() + index, value);
+
+            CHECK(storage.size() == vec.size() + count);
+            CHECK(CheckAllMatch(storage.begin(), vec.begin(), pre));
+            CHECK(CheckAllMatch(storage.begin() + (index + count), vec.begin() + pre, post));
+            CHECK(CheckAllEqual(storage.begin() + index, value, count));
         }
 
         VerifyTestStats();
