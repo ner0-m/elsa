@@ -136,9 +136,9 @@ public:
 
 /* check if all values match the given requirements */
 template <class FIt>
-static bool CheckAllEqual(FIt f, int val, size_t values)
+static bool CheckAllEqual(FIt f, int val, size_t count)
 {
-    while (values-- > 0) {
+    while (count-- > 0) {
         if (*f != val)
             return false;
         ++f;
@@ -146,9 +146,9 @@ static bool CheckAllEqual(FIt f, int val, size_t values)
     return true;
 }
 template <class FIt, class SIt>
-static bool CheckAllMatch(FIt f, SIt s, size_t values)
+static bool CheckAllMatch(FIt f, SIt s, size_t count)
 {
-    while (values-- > 0) {
+    while (count-- > 0) {
         if (*f != *s)
             return false;
         ++f;

@@ -118,6 +118,11 @@ namespace elsa::mr
         {
             std::memcpy(ptr, src, count * sizeof(Type));
         }
+        template <class Type>
+        void moveMemory(void* ptr, const void* src, size_t count)
+        {
+            std::memmove(ptr, src, count * sizeof(Type));
+        }
 
         /*
          *  A container is a managing unit of 'capacity' number of types, allocated with the
@@ -287,8 +292,8 @@ namespace elsa::mr
             {
                 /* check if this move can be delegated to the mr */
                 if constexpr (is_trivial<TypeTag>) {
-                    std::memmove(pointer + (where + diff), pointer + where,
-                                 (size - where) * sizeof(value_type));
+                    moveMemory<value_type>(pointer + (where + diff), pointer + where,
+                                           (size - where));
                     if (diff >= 0)
                         size = std::max<size_type>(size, (size - where) + diff);
                     else
@@ -659,7 +664,7 @@ namespace elsa::mr
             container_type old = _self.reserve(_self.size + count, pre);
 
             /* check if a new buffer has been constructed */
-            if (old.pointer != 0) {
+            if (old.pointer != nullptr) {
                 _self.set_range(pre, nullptr, count);
                 _self.insert_range(_self.size, old.pointer + pre, post);
             }
@@ -692,7 +697,7 @@ namespace elsa::mr
             container_type old = _self.reserve(_self.size + count, pre);
 
             /* check if a new buffer has been constructed */
-            if (old.pointer != 0) {
+            if (old.pointer != nullptr) {
                 _self.set_range(pre, &value, count);
                 _self.insert_range(_self.size, old.pointer + pre, post);
             }
@@ -722,7 +727,7 @@ namespace elsa::mr
             container_type old = _self.reserve(_self.size + count, pre);
 
             /* check if a new buffer has been constructed */
-            if (old.pointer != 0) {
+            if (old.pointer != nullptr) {
                 _self.insert_range(pre, ibegin, count);
                 _self.insert_range(_self.size, old.pointer + pre, post);
             }
