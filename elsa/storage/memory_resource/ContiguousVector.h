@@ -237,12 +237,17 @@ namespace elsa::mr
                  *   case the capacity should not just satisfy the request but by some form
                  *   of equation to prevent to many reallocations */
                 size_type new_cap = std::max<size_type>(count, move);
-                if (new_cap > capacity && capacity > 1) {
+                if (new_cap > capacity && capacity > 0) {
                     size_type min_cap = new_cap;
                     new_cap = capacity;
 
-                    while (new_cap < min_cap)
-                        new_cap += (new_cap / 2);
+                    if (capacity >= 4) {
+                        while (new_cap < min_cap)
+                            new_cap += (new_cap / 2);
+                    } else {
+                        while (new_cap < min_cap)
+                            new_cap += new_cap;
+                    }
                 }
 
                 /* check if an empty container has been requested */
@@ -274,7 +279,10 @@ namespace elsa::mr
                 return old;
             }
 
-            /* move [where; end] by diff within the container */
+            /*
+             *  move [where; end] by diff within the container
+             *  (where + diff) must be less or equal to size
+             */
             void move_tail(size_type where, difference_type diff)
             {
                 /* check if this move can be delegated to the mr */
@@ -316,19 +324,19 @@ namespace elsa::mr
 
             /* copy a range into a given range */
             template <class ItType>
-            void insert_range(size_type off, ItType ibegin, ItType iend, size_type count)
+            void insert_range(size_type off, ItType ibegin, size_type count)
             {
                 size_type end = off + count;
 
                 /* check if the iterator has a 'base' function to get the raw pointer */
                 if constexpr (detail::base_returns_pointer<ItType>::value
                               && detail::is_random_iterator<ItType>::value)
-                    insert_range(off, ibegin.base(), iend.base(), count);
+                    insert_range(off, ibegin.base(), count);
 
                 /* check if the iterator has a 'get' function to get the raw pointer */
                 else if constexpr (detail::get_returns_pointer<ItType>::value
                                    && detail::is_random_iterator<ItType>::value)
-                    insert_range(off, ibegin.get(), iend.get(), count);
+                    insert_range(off, ibegin.get(), count);
 
                 /* check if the iterator is a pointer of the right type
                  *   and can be reduced to a memory operation */
@@ -352,7 +360,7 @@ namespace elsa::mr
                     }
 
                     /* copy-construct the remaining part */
-                    while (ibegin != iend) {
+                    while (size < end) {
                         new (pointer + size) value_type(*ibegin);
                         ++size;
                         ++ibegin;
@@ -506,7 +514,7 @@ namespace elsa::mr
 
             size_type count = std::distance(ibegin, iend);
             _self.reserve(count, 0);
-            _self.insert_range(0, ibegin, iend, count);
+            _self.insert_range(0, ibegin, count);
         }
         ContiguousVector(std::initializer_list<value_type> l,
                          const mr::MemoryResource& mr = mr::MemoryResource())
@@ -515,7 +523,7 @@ namespace elsa::mr
                 _self.resource = mr::defaultInstance();
 
             _self.reserve(l.size(), 0);
-            _self.insert_range(0, l.begin(), l.end(), l.size());
+            _self.insert_range(0, l.begin(), l.size());
         }
 
         /* if mr is invalid, s::resource will be used */
@@ -525,7 +533,7 @@ namespace elsa::mr
                 _self.resource = s._self.resource;
 
             _self.reserve(s._self.size, 0);
-            _self.insert_range(0, s._self.pointer, s._self.end_ptr(), s._self.size);
+            _self.insert_range(0, s._self.pointer, s._self.size);
         }
         ContiguousVector(self_type&& s) noexcept { std::swap(_self, s._self); }
 
@@ -586,7 +594,7 @@ namespace elsa::mr
         {
             size_type count = std::distance(ibegin, iend);
             _self.reserve(count, 0, mr);
-            _self.insert_range(0, ibegin, iend, count);
+            _self.insert_range(0, ibegin, count);
             _self.destruct_until(count);
         }
         void assign(std::initializer_list<value_type> l,
@@ -645,13 +653,29 @@ namespace elsa::mr
         iterator insert_default(const_iterator i, size_type count)
         {
             difference_type off = i - const_iterator(_self.pointer);
-            container_type old = _self.reserve(_self.size + count, off);
+            size_type pre = static_cast<size_type>(off);
+            size_type post = _self.size - static_cast<size_type>(off);
 
-            if (old.pointer == nullptr)
-                _self.move_tail(off, count);
-            _self.set_range(off, nullptr, count);
-            if (old.pointer != nullptr)
-                _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
+            container_type old = _self.reserve(_self.size + count, pre);
+
+            /* check if a new buffer has been constructed */
+            if (old.pointer != 0) {
+                _self.set_range(pre, nullptr, count);
+                _self.insert_range(_self.size, old.pointer + pre, post);
+            }
+
+            /* check if the current content will overlap itself upon moving */
+            else if (count < post) {
+                _self.move_tail(pre, count);
+                _self.set_range(pre, nullptr, count);
+            }
+
+            else {
+                /* construct the new part in order for the tail to be appended */
+                _self.set_range(_self.size, nullptr, count - post);
+                _self.insert_range(_self.size, _self.pointer + pre, post);
+                _self.set_range(pre, nullptr, post);
+            }
             return iterator(_self.pointer + off);
         }
         iterator insert(const_iterator i, const_reference value) { return emplace(i, value); }
@@ -662,28 +686,59 @@ namespace elsa::mr
         iterator insert(const_iterator i, size_type count, const_reference value)
         {
             difference_type off = i - const_iterator(_self.pointer);
-            container_type old = _self.reserve(_self.size + count, off);
+            size_type pre = static_cast<size_type>(off);
+            size_type post = _self.size - static_cast<size_type>(off);
 
-            if (old.pointer == nullptr)
-                _self.move_tail(off, count);
-            _self.set_range(off, &value, count);
-            if (old.pointer != nullptr)
-                _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
+            container_type old = _self.reserve(_self.size + count, pre);
+
+            /* check if a new buffer has been constructed */
+            if (old.pointer != 0) {
+                _self.set_range(pre, &value, count);
+                _self.insert_range(_self.size, old.pointer + pre, post);
+            }
+
+            /* check if the current content will overlap itself upon moving */
+            else if (count < post) {
+                _self.move_tail(pre, count);
+                _self.set_range(pre, &value, count);
+            }
+
+            else {
+                /* construct the new part in order for the tail to be appended */
+                _self.set_range(_self.size, &value, count - post);
+                _self.insert_range(_self.size, _self.pointer + pre, post);
+                _self.set_range(pre, &value, post);
+            }
             return iterator(_self.pointer + off);
         }
         template <class ItType>
         iterator insert(const_iterator i, ItType ibegin, ItType iend)
         {
             difference_type off = i - const_iterator(_self.pointer);
-            difference_type total = std::distance(ibegin, iend);
-            container_type old = _self.reserve(_self.size + total, off);
+            size_type pre = static_cast<size_type>(off);
+            size_type post = _self.size - static_cast<size_type>(off);
+            difference_type count = std::distance(ibegin, iend);
 
-            if (old.pointer == nullptr)
-                _self.move_tail(off, total);
-            _self.insert_range(off, ibegin, iend, total);
-            if (old.pointer != nullptr)
-                _self.insert_range(_self.size, old.pointer + off, old.end_ptr(), old.size - off);
+            container_type old = _self.reserve(_self.size + count, pre);
 
+            /* check if a new buffer has been constructed */
+            if (old.pointer != 0) {
+                _self.insert_range(pre, ibegin, count);
+                _self.insert_range(_self.size, old.pointer + pre, post);
+            }
+
+            /* check if the current content will overlap itself upon moving */
+            else if (count < post) {
+                _self.move_tail(pre, count);
+                _self.insert_range(pre, ibegin, count);
+            }
+
+            else {
+                /* construct the new part in order for the tail to be appended */
+                _self.insert_range(_self.size, std::next(ibegin, post), count - post);
+                _self.insert_range(_self.size, _self.pointer + pre, post);
+                _self.insert_range(pre, ibegin, post);
+            }
             return iterator(_self.pointer + off);
         }
         iterator insert(const_iterator i, std::initializer_list<value_type> l)
@@ -696,12 +751,15 @@ namespace elsa::mr
             difference_type off = i - const_iterator(_self.pointer);
             container_type old = _self.reserve(_self.size + 1, off);
 
-            if (old.pointer == nullptr) {
+            if (old.pointer != nullptr) {
+                new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
+                _self.insert_range(++_self.size, old.pointer + off, old.size - off);
+            } else if (off >= _self.size) {
+                new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
+                ++_self.size;
+            } else {
                 _self.move_tail(off, 1);
                 _self.pointer[off] = std::move(value_type(std::forward<Args>(args)...));
-            } else {
-                new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
-                _self.insert_range(++_self.size, old.pointer + off, old.end_ptr(), old.size - off);
             }
             return iterator(_self.pointer + off);
         }
