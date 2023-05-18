@@ -1390,9 +1390,306 @@ TEST_CASE_TEMPLATE("ContiguousVector:: capacity", T, ComplexType<1>, TrivialType
     testStats.resource.release();
 }
 
+TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1>, UninitType,
+                   ComplexType<6>, TrivialType<8>)
+{
+    MemoryResource mres = CheckedResource::make();
+    testStats.resource = mres;
+    using Vector = ContiguousVector<T, typename T::tag, detail::ContPointer, detail::ContIterator>;
+
+    SUBCASE("at(size_t)")
+    {
+        auto vec = Randoms::vec<T>(false);
+        auto count = Randoms::count(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            for (size_t i = 0; i < vec.size(); ++i)
+                CHECK(storage.at(i) == vec[i]);
+
+            for (size_t i = 0; i < count; ++i) {
+                size_t index = Randoms::index(storage.size() * 2);
+
+                if (index >= storage.size())
+                    CHECK_THROWS(storage.at(index));
+                else
+                    CHECK_NOTHROW(storage.at(index));
+            }
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("at(size_t) const")
+    {
+        auto vec = Randoms::vec<T>(false);
+        auto count = Randoms::count(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+            const Vector& cstorage = storage;
+
+            for (size_t i = 0; i < vec.size(); ++i)
+                CHECK(cstorage.at(i) == vec[i]);
+
+            for (size_t i = 0; i < count; ++i) {
+                size_t index = Randoms::index(cstorage.size() * 2);
+
+                if (index >= cstorage.size())
+                    CHECK_THROWS(cstorage.at(index));
+                else
+                    CHECK_NOTHROW(cstorage.at(index));
+            }
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("operator[](size_t)")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            for (size_t i = 0; i < vec.size(); ++i)
+                CHECK(storage[i] == vec[i]);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("operator[](size_t) const")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+            const Vector& cstorage = storage;
+
+            for (size_t i = 0; i < vec.size(); ++i)
+                CHECK(cstorage[i] == vec[i]);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("front()")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            CHECK(&storage.front() == &storage[0]);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("front() const")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+            const Vector& cstorage = storage;
+
+            CHECK(&cstorage.front() == &cstorage[0]);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("back()")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+
+            CHECK(&storage.back() == &storage[storage.size() - 1]);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("back() const")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+            const Vector& cstorage = storage;
+
+            CHECK(&cstorage.back() == &cstorage[cstorage.size() - 1]);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("data()")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(mres);
+
+            CHECK(storage.data() == nullptr);
+
+            storage.assign(vec.begin(), vec.end());
+
+            CHECK(storage.data() == &storage[0]);
+
+            storage.clear();
+            storage.shrink_to_fit();
+
+            CHECK(storage.data() == nullptr);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("data() const")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(mres);
+            const Vector& cstorage = storage;
+
+            CHECK(cstorage.data() == nullptr);
+
+            storage.assign(vec.begin(), vec.end());
+
+            CHECK(cstorage.data() == &cstorage[0]);
+
+            storage.clear();
+            storage.shrink_to_fit();
+
+            CHECK(cstorage.data() == nullptr);
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("iterators")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+            const Vector& cstorage = storage;
+
+            auto it = storage.begin();
+            auto cit0 = storage.cbegin();
+            auto cit1 = cstorage.begin();
+            for (size_t i = 0; i < storage.size(); ++i) {
+                CHECK(*it == storage[i]);
+                CHECK(*cit0 == storage[i]);
+                CHECK(*cit1 == storage[i]);
+                ++it;
+                ++cit0;
+                ++cit1;
+            }
+            CHECK(it == storage.end());
+            CHECK(cit0 == storage.cend());
+            CHECK(cit1 == cstorage.end());
+
+            for (size_t i = storage.size(); i > 0; --i) {
+                --it;
+                --cit0;
+                --cit1;
+                CHECK(*it == storage[i - 1]);
+                CHECK(*cit0 == storage[i - 1]);
+                CHECK(*cit1 == storage[i - 1]);
+            }
+            CHECK(it == storage.begin());
+            CHECK(cit0 == storage.cbegin());
+            CHECK(cit1 == cstorage.begin());
+
+            storage.clear();
+            CHECK(storage.begin() == storage.end());
+            CHECK(storage.cbegin() == storage.cend());
+            CHECK(cstorage.begin() == cstorage.end());
+        }
+
+        VerifyTestStats();
+    }
+
+    SUBCASE("reverse_iterators")
+    {
+        auto vec = Randoms::vec<T>(false);
+
+        StartTestStats();
+
+        {
+            Vector storage(vec.begin(), vec.end(), mres);
+            const Vector& cstorage = storage;
+
+            auto it = storage.rbegin();
+            auto cit0 = storage.crbegin();
+            auto cit1 = cstorage.rbegin();
+            for (size_t i = storage.size(); i > 0; --i) {
+                CHECK(*it == storage[i - 1]);
+                CHECK(*cit0 == storage[i - 1]);
+                CHECK(*cit1 == storage[i - 1]);
+                ++it;
+                ++cit0;
+                ++cit1;
+            }
+            CHECK(it == storage.rend());
+            CHECK(cit0 == storage.crend());
+            CHECK(cit1 == cstorage.rend());
+
+            for (size_t i = 0; i < storage.size(); ++i) {
+                --it;
+                --cit0;
+                --cit1;
+                CHECK(*it == storage[i]);
+                CHECK(*cit0 == storage[i]);
+                CHECK(*cit1 == storage[i]);
+            }
+            CHECK(it == storage.rbegin());
+            CHECK(cit0 == storage.crbegin());
+            CHECK(cit1 == cstorage.rbegin());
+
+            storage.clear();
+            CHECK(storage.rbegin() == storage.rend());
+            CHECK(storage.crbegin() == storage.crend());
+            CHECK(cstorage.rbegin() == cstorage.rend());
+        }
+
+        VerifyTestStats();
+    }
+
+    testStats.resource.release();
+}
+
 TEST_SUITE_END();
 
-/* test on empty: begin() == end() */
-/* test that ptr is != to zero on allocations and else zero */
 /* test when resource is changed */
 /* add test for 'exception-handling' */
