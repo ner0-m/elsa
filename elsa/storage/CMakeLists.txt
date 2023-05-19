@@ -38,6 +38,7 @@ set(MODULE_SOURCES
     memory_resource/CacheResource.cpp
     memory_resource/RegionResource.cpp
     memory_resource/AllocationHint.cpp
+    memory_resource/MemoryOperations.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa::Thrust elsa_config)
