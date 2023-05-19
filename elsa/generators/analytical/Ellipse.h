@@ -1,48 +1,55 @@
 #pragma once
 #include "Image.h"
+#include <Eigen/src/Core/util/Constants.h>
 
 namespace elsa::phantoms
 {
 
-    template <typename data_t = float>
-    class Ellipse : public Image<data_t>
+    template <int n, typename data_t = float>
+    class Ellipsoid : public Image<data_t>
     {
     public:
-        Ellipse(data_t density, Position<data_t> center, data_t a, data_t b, data_t phi = 0)
-            : w{density}, c{center}, A{1 / (a * a), 1 / (b * b)}, R{phi}
+        Ellipsoid(data_t density, Eigen::Vector<data_t, n> center,
+                  Eigen::DiagonalMatrix<data_t, n> A, Eigen::Matrix<data_t, n, n> R)
+            : w{density}, c{center}, A{A}, R{R}
+        {
+        }
+        Ellipsoid(data_t density, Eigen::Vector<data_t, n> center, Eigen::Vector<data_t, n> axes,
+                  Eigen::Matrix<data_t, n, n> R)
+            : w{density}, c{center}, A{axes.array().square().cwiseInverse().matrix()}, R{R}
         {
         }
 
         DataContainer<data_t> makeSinogram(const DataDescriptor& sinogramDescriptor) override
         {
             assert(is<DetectorDescriptor>(sinogramDescriptor));
-            assert(sinogramDescriptor.getNumberOfDimensions() == 2);
+            assert(sinogramDescriptor.getNumberOfDimensions() == 2
+                   || sinogramDescriptor.getNumberOfDimensions() == 3);
 
             DataContainer<data_t> sinogram{sinogramDescriptor};
             auto& detDesc = downcast<DetectorDescriptor>(sinogramDescriptor);
 
-            for (index_t pose = 0; pose < detDesc.getNumberOfGeometryPoses(); pose++) {
-                for (index_t pixel = 0; pixel < detDesc.getNumberOfCoefficientsPerDimension()[0];
-                     pixel++) {
+#pragma omp parallel for
+            for (index_t index = 0; index < detDesc.getNumberOfCoefficients(); index++) {
 
-                    auto ray = detDesc.computeRayFromDetectorCoord(IndexVector_t{{pixel, pose}});
+                auto coord = detDesc.getCoordinateFromIndex(index);
+                auto ray = detDesc.computeRayFromDetectorCoord(coord);
 
-                    auto o = c - ray.origin();
-                    auto d = ray.direction();
+                auto o = c - ray.origin();
+                auto d = ray.direction();
 
-                    auto Ro = R * o;
-                    auto Rd = R * d;
+                auto Ro = R * o;
+                auto Rd = R * d;
 
-                    auto alpha = Ro.dot(A * Ro) - 1;
-                    auto beta = Rd.dot(A * Ro);
-                    auto gamma = Rd.dot(A * Rd);
-                    auto discriminant = beta * beta / (alpha * alpha) - gamma / alpha;
+                auto alpha = Ro.dot(A * Ro) - 1;
+                auto beta = Rd.dot(A * Ro);
+                auto gamma = Rd.dot(A * Rd);
+                auto discriminant = beta * beta / (alpha * alpha) - gamma / alpha;
 
-                    if (discriminant < 0) {
-                        sinogram(IndexVector_t{{pixel, pose}}) = 0;
-                    } else {
-                        sinogram(IndexVector_t{{pixel, pose}}) = 2 * sqrt(discriminant) * w;
-                    }
+                if (discriminant < 0) {
+                    sinogram(coord) = 0;
+                } else {
+                    sinogram(coord) = 2 * sqrt(discriminant) * w;
                 }
             }
 
@@ -50,20 +57,23 @@ namespace elsa::phantoms
         }
 
     protected:
-        virtual Ellipse<data_t>* cloneImpl() const override { return new Ellipse{*this}; }
+        virtual Ellipsoid<n, data_t>* cloneImpl() const override
+        {
+            return new Ellipsoid<n, data_t>{*this};
+        }
         virtual bool isEqual(const Image<data_t>& other) const override
         {
-            if (!is<Ellipse<data_t>>(other))
+            if (!is<Ellipsoid<n, data_t>>(other))
                 return false;
-            const auto& asEllipse = downcast<Ellipse<data_t>>(other);
+            const auto& asEllipse = downcast<Ellipsoid<n, data_t>>(other);
             return *this == asEllipse;
         };
 
     private:
         data_t w;
-        Position<data_t> c;
-        Eigen::DiagonalMatrix<data_t, 2> A;
-        Eigen::Rotation2D<data_t> R;
+        Eigen::Vector<data_t, n> c;
+        Eigen::DiagonalMatrix<data_t, n> A;
+        Eigen::Matrix<data_t, n, n> R;
     };
 
 } // namespace elsa::phantoms

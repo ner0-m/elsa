@@ -12,9 +12,6 @@ namespace elsa::phantoms
 {
 
     template <typename data_t>
-    using Position = Eigen::Vector2<data_t>;
-
-    template <typename data_t>
     class Image : public Cloneable<Image<data_t>>
     {
     public:

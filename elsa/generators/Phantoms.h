@@ -84,7 +84,7 @@ namespace elsa::phantoms
              // x0,y0,z0: center coordinates
              // phi:    rotation around x axis
              // theta:  rotation around y axis
-             // psi:    rotation arount z axis
+             // psi:    rotation around z axis
              //
              //   A     a       b      c      x0     y0       z0      phi   theta  psi
              //  --------------------------------------------------------------------------

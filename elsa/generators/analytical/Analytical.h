@@ -8,40 +8,30 @@
 #include "Scaling.h"
 #include "Ellipse.h"
 
+#include "StrongTypes.h"
 #include "Phantoms.h"
+#include "PhantomDefines.h"
 #include "VolumeDescriptor.h"
 #include "elsaDefines.h"
+#include <Eigen/src/Core/Diagonal.h>
 #include <Eigen/src/Core/DiagonalMatrix.h>
+#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/src/Core/util/Constants.h>
+#include <Eigen/src/Geometry/AngleAxis.h>
+#include <Eigen/src/Geometry/Scaling.h>
+#include <Eigen/src/Geometry/Transform.h>
 
 namespace elsa::phantoms
 {
 
     template <typename data_t>
-    Position<data_t> getPosition(const VolumeDescriptor& imageDescriptor, data_t x0, data_t y0)
-    {
-        const auto& coeffs = imageDescriptor.getNumberOfCoefficientsPerDimension();
-        return imageDescriptor.getLocationOfOrigin() + Position<data_t>{x0, y0} * coeffs[0] / 2;
-    }
-
-    template <typename data_t>
-    std::tuple<Position<data_t>, data_t, data_t, data_t>
-        rescale(const VolumeDescriptor& imageDescriptor, data_t x0, data_t y0, data_t a, data_t b,
-                data_t phi)
-    {
-        auto px = imageDescriptor.getNumberOfCoefficientsPerDimension()[0];
-
-        return std::tuple{getPosition(imageDescriptor, x0, y0), a * px / 2.0, b * px / 2.0,
-                          -phi / 180.0
-                              * pi<data_t>}; // Invert angle due to parity mistake somewhere
-    }
-
-    template <typename data_t>
     DataContainer<data_t> analyticalSheppLogan(const VolumeDescriptor& imageDescriptor,
                                                const DetectorDescriptor& sinogramDescriptor)
     {
-        if (imageDescriptor.getNumberOfDimensions() != 2
-            || sinogramDescriptor.getNumberOfDimensions() != 2) {
-            throw InvalidArgumentError("only 2d shepplogan supported (yet)");
+        auto imgDim = imageDescriptor.getNumberOfDimensions();
+        auto sinoDim = sinogramDescriptor.getNumberOfDimensions();
+        if (!((imgDim == 2 && sinoDim == 2) || (imgDim == 3 && sinoDim == 3))) {
+            throw InvalidArgumentError("only 2/3d shepplogan supported (yet)");
         }
 
         const auto& coeffs = imageDescriptor.getNumberOfCoefficientsPerDimension();
@@ -50,17 +40,50 @@ namespace elsa::phantoms
             throw InvalidArgumentError("only square shepplogan supported!");
         }
 
-        Canvas<float> sheppLogan;
+        Canvas<data_t> sheppLogan;
 
-        using std::get;
+        if (imgDim == 3) {
+            Eigen::Transform<data_t, 3, Eigen::Affine> scale;
 
-        for (auto [A, a, b, c, x0, y0, z0, phi, theta, psi] :
-             modifiedSheppLoganParameters<data_t>) {
-            auto S = rescale(imageDescriptor, x0, y0, a, b, phi);
-            sheppLogan += 100 * Ellipse<data_t>{A, get<0>(S), get<1>(S), get<2>(S), get<3>(S)};
+            scale.linear() = Eigen::Matrix3<data_t>::Identity() * (coeffs[0] / 2.0);
+            scale.translation() = imageDescriptor.getLocationOfOrigin();
+
+            for (auto [A, a, b, c, x0, y0, z0, phi, theta, psi] :
+                 modifiedSheppLoganParameters<data_t>) {
+
+                Eigen::Vector3<data_t> center{x0, y0, z0};
+                Eigen::Vector3<data_t> axes{a, b, c};
+
+                Eigen::Matrix3<data_t> rotation;
+                fillRotationMatrix({phi, theta, psi}, rotation);
+
+                center = scale * center;
+                axes = axes * (coeffs[0] / 2.0);
+
+                sheppLogan += Ellipsoid<3, data_t>{100 * A, center, axes, rotation};
+            }
+        } else {
+            Eigen::Transform<data_t, 2, Eigen::Affine> scale;
+
+            scale.linear() = Eigen::Matrix2<data_t>::Identity() * (coeffs[0] / 2.0);
+            scale.translation() = imageDescriptor.getLocationOfOrigin();
+
+            for (auto [A, a, b, c, x0, y0, z0, phi, theta, psi] :
+                 modifiedSheppLoganParameters<data_t>) {
+
+                Eigen::Vector2<data_t> center{x0, y0};
+                Eigen::Vector2<data_t> axes{a, b};
+
+                Eigen::Rotation2D<data_t> rotation{-phi * pi<data_t> / 180};
+
+                center = scale * center;
+                axes = axes * (coeffs[0] / 2.0);
+
+                sheppLogan += Ellipsoid<2, data_t>{
+                    100 * A, center, axes, rotation.toRotationMatrix()}; // Why do I need *100?
+            }
         }
 
         return sheppLogan.makeSinogram(sinogramDescriptor);
     }
-
 }; // namespace elsa::phantoms
