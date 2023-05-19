@@ -6,7 +6,8 @@ set(MODULE_HEADERS
     ProximalBoxConstraint.h
     CombinedProximal.h
     ProximalL2Squared.h
-    ProximalHuber.cpp
+    ProximalHuber.h
+    ProximalMixedL21Norm.h
 )
 
 # list all the code files of the module
@@ -18,6 +19,7 @@ set(MODULE_SOURCES
     CombinedProximal.cpp
     ProximalL2Squared.cpp
     ProximalHuber.cpp
+    ProximalMixedL21Norm.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
