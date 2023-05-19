@@ -2,6 +2,7 @@
 #include "DataContainerFormatter.hpp"
 #include "FormatConfig.h"
 #include "BlockDescriptor.h"
+#include "IdenticalBlocksDescriptor.h"
 #include "RandomBlocksDescriptor.h"
 #include "PartitionDescriptor.h"
 #include "Error.h"
@@ -417,6 +418,28 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<GetFloatingPointType_t<data_t>> DataContainer<data_t>::pL2Norm() const
+    {
+        if (!is<IdenticalBlocksDescriptor>(getDataDescriptor())) {
+            throw Error("pL2Norm: Descriptor must be of type IdenticalBlocksDescriptor");
+        }
+
+        // Create temporary to hold the running sum of each "column"
+        auto tmp = DataContainer<GetFloatingPointType_t<data_t>>(getBlock(0).getDataDescriptor());
+        tmp = 0;
+
+        for (int i = 0; i < getNumberOfBlocks(); ++i) {
+            if constexpr (isComplex<data_t>) {
+                tmp += ::elsa::square(elsa::cwiseAbs(getBlock(i)));
+            } else {
+                tmp += ::elsa::square(getBlock(i));
+            }
+        }
+
+        return ::elsa::sqrt(tmp);
+    }
+
+    template <typename data_t>
     index_t DataContainer<data_t>::l0PseudoNorm() const
     {
         return elsa::l0PseudoNorm(begin(), end());
@@ -426,6 +449,24 @@ namespace elsa
     GetFloatingPointType_t<data_t> DataContainer<data_t>::l1Norm() const
     {
         return elsa::l1Norm(begin(), end());
+    }
+
+    template <typename data_t>
+    DataContainer<GetFloatingPointType_t<data_t>> DataContainer<data_t>::pL1Norm() const
+    {
+        if (!is<IdenticalBlocksDescriptor>(getDataDescriptor())) {
+            throw Error("pL1Norm: Descriptor must be of type IdenticalBlocksDescriptor");
+        }
+
+        // Create temporary to hold the running sum of each "column"
+        auto tmp = DataContainer<GetFloatingPointType_t<data_t>>(getBlock(0).getDataDescriptor());
+        tmp = 0;
+
+        for (int i = 0; i < getNumberOfBlocks(); ++i) {
+            tmp += ::elsa::cwiseAbs(getBlock(i));
+        }
+
+        return tmp;
     }
 
     template <typename data_t>

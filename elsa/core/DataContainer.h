@@ -189,11 +189,26 @@ namespace elsa
         /// return the l2 norm of this signal (square root of dot product with itself)
         GetFloatingPointType_t<data_t> l2Norm() const;
 
+        /// return the pointwise l2 norm of this signal. Pointwise norms assume
+        /// blocked DataContainers, and then the norm is taken column-wise.
+        /// The pointwise l2 norm is equivalent to the following NumPy code
+        /// snippet: `np.sqrt(np.sum(x ** 2, axis=0))`, assuming a signal,
+        /// where the first axis indexes each block of the data.
+        DataContainer<GetFloatingPointType_t<data_t>> pL2Norm() const;
+
         /// return the l0 pseudo-norm of this signal (number of non-zero values)
         index_t l0PseudoNorm() const;
 
         /// return the l1 norm of this signal (sum of absolute values)
         GetFloatingPointType_t<data_t> l1Norm() const;
+
+        /// return the pointwise l1 norm of this signal. Pointwise norms assume
+        /// blocked DataContainers, and then the norm is taken column-wise.
+        ///
+        /// The pointwise l1 norm is equivalent to the following NumPy code
+        /// snippet: `np.sum(np.abs(x), axis=0)`, assuming a signal,
+        /// where the first axis indexes each block of the data.
+        DataContainer<GetFloatingPointType_t<data_t>> pL1Norm() const;
 
         /// return the linf norm of this signal (maximum of absolute values)
         GetFloatingPointType_t<data_t> lInfNorm() const;

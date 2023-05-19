@@ -27,19 +27,11 @@ namespace elsa
             throw Error("ProximalMixedL21Norm: Blocked DataContainer expected");
         }
 
-        // compute the p2norm, only possible with identical block
-        // TODO: Move this to DataContainer
-        auto tmp = DataContainer<data_t>(v.getBlock(0).getDataDescriptor());
-        tmp = 0;
-
-        for (int i = 0; i < v.getNumberOfBlocks(); ++i) {
-            tmp += square(v.getBlock(i));
-        }
-        tmp = ::elsa::sqrt(tmp);
+        auto p21norm = v.pL2Norm();
 
         // set each block of prox to be tmp
         for (int i = 0; i < v.getNumberOfBlocks(); ++i) {
-            prox.getBlock(i) = tmp;
+            prox.getBlock(i) = p21norm;
         }
 
         auto tau = t * sigma_;
