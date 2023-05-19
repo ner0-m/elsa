@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ContiguousMemory.h"
+#include "MemoryOperations.h"
 
 #include <algorithm>
 #include <iterator>
@@ -88,40 +89,19 @@ namespace elsa::mr
         constexpr bool is_complex = std::is_base_of<type_tags::complex, Tag>::value;
 
         template <class Type>
-        void fillTyped(void* ptr, const void* src, size_t stride, size_t totalWrites)
+        void fillMemory(Type* ptr, const void* src, size_t count)
         {
-            const Type* s = static_cast<const Type*>(src);
-            const Type* e = s + stride;
-            Type* p = static_cast<Type*>(ptr);
-
-            for (size_t i = 0; i < totalWrites; i++) {
-                *p = *s;
-                ++p;
-                if (++s == e)
-                    s = static_cast<const Type*>(src);
-            }
+            detail::memOpSet(ptr, src, count, sizeof(Type));
         }
         template <class Type>
-        void fillMemory(Type* ptr, const void* src, size_t stride, size_t count)
+        void copyMemory(void* ptr, const void* src, size_t count, bool src_universal)
         {
-            if ((stride % 8) == 0)
-                fillTyped<uint64_t>(ptr, src, (stride / 8), (stride / 8) * count);
-            else if ((stride % 4) == 0)
-                fillTyped<uint32_t>(ptr, src, (stride / 4), (stride / 4) * count);
-            else if ((stride % 2) == 0)
-                fillTyped<uint16_t>(ptr, src, (stride / 2), (stride / 2) * count);
-            else
-                fillTyped<uint8_t>(ptr, src, stride, stride * count);
-        }
-        template <class Type>
-        void copyMemory(void* ptr, const void* src, size_t count)
-        {
-            std::memcpy(ptr, src, count * sizeof(Type));
+            detail::memOpCopy(ptr, src, count * sizeof(Type), src_universal);
         }
         template <class Type>
         void moveMemory(void* ptr, const void* src, size_t count)
         {
-            std::memmove(ptr, src, count * sizeof(Type));
+            detail::memOpMove(ptr, src, count * sizeof(Type));
         }
 
         /*
@@ -278,7 +258,7 @@ namespace elsa::mr
                         ++size;
                     }
                 } else if (move > 0) {
-                    copyMemory<value_type>(new_ptr, old.pointer, move);
+                    copyMemory<value_type>(new_ptr, old.pointer, move, true);
                     size = move;
                 }
                 return old;
@@ -329,19 +309,19 @@ namespace elsa::mr
 
             /* copy a range into a given range */
             template <class ItType>
-            void insert_range(size_type off, ItType ibegin, size_type count)
+            void insert_range(size_type off, ItType ibegin, size_type count, bool is_universal)
             {
                 size_type end = off + count;
 
                 /* check if the iterator has a 'base' function to get the raw pointer */
                 if constexpr (detail::base_returns_pointer<ItType>::value
                               && detail::is_random_iterator<ItType>::value)
-                    insert_range(off, ibegin.base(), count);
+                    insert_range(off, ibegin.base(), count, is_universal);
 
                 /* check if the iterator has a 'get' function to get the raw pointer */
                 else if constexpr (detail::get_returns_pointer<ItType>::value
                                    && detail::is_random_iterator<ItType>::value)
-                    insert_range(off, ibegin.get(), count);
+                    insert_range(off, ibegin.get(), count, is_universal);
 
                 /* check if the iterator is a pointer of the right type
                  *   and can be reduced to a memory operation */
@@ -349,7 +329,7 @@ namespace elsa::mr
                                    && std::is_same<std::decay_t<decltype(*ibegin)>,
                                                    std::decay_t<value_type>>::value
                                    && is_trivial<TypeTag>) {
-                    copyMemory<value_type>(pointer + off, ibegin, count);
+                    copyMemory<value_type>(pointer + off, ibegin, count, is_universal);
                     size = std::max<size_type>(size, end);
                 }
 
@@ -390,7 +370,7 @@ namespace elsa::mr
                         uint8_t tmp[sizeof(value_type)] = {0};
                         new (tmp) value_type();
 
-                        fillMemory<value_type>(pointer + off, tmp, sizeof(value_type), count);
+                        fillMemory<value_type>(pointer + off, tmp, count);
                         size = std::max<size_type>(size, end);
 
                     } else {
@@ -406,7 +386,7 @@ namespace elsa::mr
 
                 /* set/update the range with the given value */
                 else if constexpr (is_trivial<TypeTag>) {
-                    fillMemory<value_type>(pointer + off, value, sizeof(value_type), count);
+                    fillMemory<value_type>(pointer + off, value, count);
                     size = std::max<size_type>(size, end);
                 }
 
@@ -484,6 +464,14 @@ namespace elsa::mr
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     private:
+        template <class ItType>
+        static constexpr bool is_universal_impl =
+            std::is_same<ItType, iterator>::value || std::is_same<ItType, const_iterator>::value
+            || std::is_same<ItType, pointer>::value || std::is_same<ItType, const_pointer>::value;
+        template <class ItType>
+        static constexpr bool is_universal = is_universal_impl<std::decay_t<ItType>>;
+
+    private:
         container_type _self;
 
     public:
@@ -520,7 +508,7 @@ namespace elsa::mr
 
             size_type count = std::distance(ibegin, iend);
             _self.reserve(count, 0);
-            _self.insert_range(0, ibegin, count);
+            _self.insert_range(0, ibegin, count, is_universal<ItType>);
         }
         ContiguousVector(std::initializer_list<value_type> l,
                          const mr::MemoryResource& mr = mr::MemoryResource())
@@ -529,7 +517,7 @@ namespace elsa::mr
                 _self.resource = mr::defaultInstance();
 
             _self.reserve(l.size(), 0);
-            _self.insert_range(0, l.begin(), l.size());
+            _self.insert_range(0, l.begin(), l.size(), false);
         }
 
         /* if mr is invalid, s::resource will be used */
@@ -539,7 +527,7 @@ namespace elsa::mr
                 _self.resource = s._self.resource;
 
             _self.reserve(s._self.size, 0);
-            _self.insert_range(0, s._self.pointer, s._self.size);
+            _self.insert_range(0, s._self.pointer, s._self.size, true);
         }
         ContiguousVector(self_type&& s) noexcept { std::swap(_self, s._self); }
 
@@ -603,7 +591,7 @@ namespace elsa::mr
         {
             size_type count = std::distance(ibegin, iend);
             _self.reserve(count, 0, mr);
-            _self.insert_range(0, ibegin, count);
+            _self.insert_range(0, ibegin, count, is_universal<ItType>);
             _self.destruct_until(count);
         }
         void assign(std::initializer_list<value_type> l,
@@ -625,10 +613,10 @@ namespace elsa::mr
                 std::swap(_self, o._self);
             else {
                 container_type _old = _self.reserve(o._self.size, 0, actual);
-                _self.insert_range(0, o._self.pointer, o._self.size);
+                _self.insert_range(0, o._self.pointer, o._self.size, true);
 
                 o._self.reserve(_old.size, 0);
-                o._self.insert_range(0, _old.pointer, _old.size);
+                o._self.insert_range(0, _old.pointer, _old.size, true);
                 o._self.destruct_until(_old.size);
             }
         }
@@ -687,7 +675,7 @@ namespace elsa::mr
             /* check if a new buffer has been constructed */
             if (old.pointer != nullptr) {
                 _self.set_range(pre, nullptr, count);
-                _self.insert_range(_self.size, old.pointer + pre, post);
+                _self.insert_range(_self.size, old.pointer + pre, post, true);
             }
 
             /* check if the current content will overlap itself upon moving */
@@ -699,7 +687,7 @@ namespace elsa::mr
             else {
                 /* construct the new part in order for the tail to be appended */
                 _self.set_range(_self.size, nullptr, count - post);
-                _self.insert_range(_self.size, _self.pointer + pre, post);
+                _self.insert_range(_self.size, _self.pointer + pre, post, true);
                 _self.set_range(pre, nullptr, post);
             }
             return iterator(_self.pointer + off);
@@ -720,7 +708,7 @@ namespace elsa::mr
             /* check if a new buffer has been constructed */
             if (old.pointer != nullptr) {
                 _self.set_range(pre, &value, count);
-                _self.insert_range(_self.size, old.pointer + pre, post);
+                _self.insert_range(_self.size, old.pointer + pre, post, true);
             }
 
             /* check if the current content will overlap itself upon moving */
@@ -732,7 +720,7 @@ namespace elsa::mr
             else {
                 /* construct the new part in order for the tail to be appended */
                 _self.set_range(_self.size, &value, count - post);
-                _self.insert_range(_self.size, _self.pointer + pre, post);
+                _self.insert_range(_self.size, _self.pointer + pre, post, true);
                 _self.set_range(pre, &value, post);
             }
             return iterator(_self.pointer + off);
@@ -749,21 +737,22 @@ namespace elsa::mr
 
             /* check if a new buffer has been constructed */
             if (old.pointer != nullptr) {
-                _self.insert_range(pre, ibegin, count);
-                _self.insert_range(_self.size, old.pointer + pre, post);
+                _self.insert_range(pre, ibegin, count, is_universal<ItType>);
+                _self.insert_range(_self.size, old.pointer + pre, post, true);
             }
 
             /* check if the current content will overlap itself upon moving */
             else if (count < post) {
                 _self.move_tail(pre, count);
-                _self.insert_range(pre, ibegin, count);
+                _self.insert_range(pre, ibegin, count, is_universal<ItType>);
             }
 
             else {
                 /* construct the new part in order for the tail to be appended */
-                _self.insert_range(_self.size, std::next(ibegin, post), count - post);
-                _self.insert_range(_self.size, _self.pointer + pre, post);
-                _self.insert_range(pre, ibegin, post);
+                _self.insert_range(_self.size, std::next(ibegin, post), count - post,
+                                   is_universal<ItType>);
+                _self.insert_range(_self.size, _self.pointer + pre, post, true);
+                _self.insert_range(pre, ibegin, post, is_universal<ItType>);
             }
             return iterator(_self.pointer + off);
         }
@@ -779,7 +768,7 @@ namespace elsa::mr
 
             if (old.pointer != nullptr) {
                 new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
-                _self.insert_range(++_self.size, old.pointer + off, old.size - off);
+                _self.insert_range(++_self.size, old.pointer + off, old.size - off, true);
             } else if (off >= _self.size) {
                 new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
                 ++_self.size;

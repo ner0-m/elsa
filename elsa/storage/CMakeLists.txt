@@ -38,6 +38,7 @@ set(MODULE_SOURCES
     memory_resource/CacheResource.cpp
     memory_resource/RegionResource.cpp
     memory_resource/AllocationHint.cpp
+    memory_resource/MemoryOperations.cpp
     memory_resource/ElsaThrustMRAdaptor.cpp
 )
 
