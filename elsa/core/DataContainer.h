@@ -140,6 +140,10 @@ namespace elsa
         /// signal)
         index_t getSize() const;
 
+        /// get the number of blocks the signal is created from. If the descriptor
+        /// is not of type `BlockDescriptor` 1 is returned;
+        index_t getNumberOfBlocks() const;
+
         /// return the index-th element of linearized signal (not bounds-checked!)
         reference operator[](index_t index);
 

@@ -323,6 +323,17 @@ namespace elsa
     }
 
     template <typename data_t>
+    index_t DataContainer<data_t>::getNumberOfBlocks() const
+    {
+        if (!is<BlockDescriptor>(getDataDescriptor())) {
+            return 1;
+        }
+
+        auto& blockDesc = downcast_safe<BlockDescriptor>(getDataDescriptor());
+        return blockDesc.getNumberOfBlocks();
+    }
+
+    template <typename data_t>
     typename DataContainer<data_t>::reference DataContainer<data_t>::operator[](index_t index)
     {
         ELSA_VERIFY(index >= 0);
