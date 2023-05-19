@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cinttypes>
+#include <cstring>
 
 namespace elsa::mr::detail
 {
