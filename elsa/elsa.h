@@ -91,3 +91,6 @@
 #include "Landweber.h"
 #include "AB_GMRES.h"
 #include "BA_GMRES.h"
+#include "SplitBregman.h"
+#include "LBK.h"
+#include "LB.h"

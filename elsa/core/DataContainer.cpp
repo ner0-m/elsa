@@ -476,14 +476,40 @@ namespace elsa
     }
 
     template <typename data_t>
-    GetFloatingPointType_t<data_t> DataContainer<data_t>::l21MixedNorm() const
+    data_t DataContainer<data_t>::l12MixedNorm() const
     {
-        auto num_blocks = getDataDescriptor().getNumberOfDimensions() - 1;
-        GetFloatingPointType_t<data_t> res(0);
-        for (index_t i = 0; i < num_blocks; ++i) {
-            res += elsa::fn::square(getBlock(i).l1Norm());
+        return l12SmoothMixedNorm(0);
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::l12SmoothMixedNorm(data_t epsilon) const
+    {
+        const auto blockDesc = downcast_safe<BlockDescriptor>(_dataDescriptor.get());
+        if (!blockDesc)
+            throw LogicError("DataContainer: cannot get block from not-blocked container");
+
+        data_t res(0);
+        for (index_t i = 0; i < blockDesc->getNumberOfBlocks(); ++i) {
+            res += elsa::fn::square(getBlock(i).l1Norm() + getBlock(i).getSize() * epsilon);
         }
         return sqrt(res);
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::l21MixedNorm() const
+    {
+        return l21SmoothMixedNorm(0);
+    }
+
+    template <typename data_t>
+    data_t DataContainer<data_t>::l21SmoothMixedNorm(data_t epsilon) const
+    {
+        auto num_blocks = getDataDescriptor().getNumberOfDimensions() - 1;
+        data_t res(0);
+        for (index_t i = 0; i < num_blocks; ++i) {
+            res += sqrt(getBlock(i).squaredL2Norm() + (epsilon * epsilon));
+        }
+        return res;
     }
 
     template <typename data_t>

@@ -14,7 +14,7 @@ namespace elsa
     {
         FiniteDifferences<data_t> fdOperator(Rx.getDataDescriptor());
         auto gradient = fdOperator.apply(Rx);
-        return gradient.l21MixedNorm();
+        return gradient.l12MixedNorm();
     }
 
     template <typename data_t>

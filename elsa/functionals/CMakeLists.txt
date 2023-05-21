@@ -22,6 +22,9 @@ set(MODULE_HEADERS
     SeparableSum.h
     AnisotropicTV.h
     IsotropicTV.h
+    MixedL12.h
+    SmoothMixedL12.h
+    MixedL21.h
 )
 
 # list all the code files of the module
@@ -48,6 +51,9 @@ set(MODULE_SOURCES
     SeparableSum.cpp
     AnisotropicTV.cpp
     IsotropicTV.cpp
+    MixedL12.cpp
+    SmoothMixedL12.cpp
+    MixedL21.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators)
