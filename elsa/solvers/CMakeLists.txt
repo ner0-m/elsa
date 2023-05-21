@@ -19,6 +19,9 @@ set(MODULE_HEADERS
     PowerIterations.h
     RegularizedInversion.h
     LinearizedADMM.h
+    SplitBregman.h
+    LBK.h
+    LB.h
 )
 
 # list all the code files of the module
@@ -42,6 +45,9 @@ set(MODULE_SOURCES
     PowerIterations.cpp
     RegularizedInversion.cpp
     LinearizedADMM.cpp
+    SplitBregman.cpp
+    LBK.cpp
+    LB.cpp
 )
 
 list(
