@@ -11,6 +11,7 @@
 #include "Complex.h"
 
 #include "Functions.hpp"
+#include "TypeTraits.hpp"
 #include "elsaDefines.h"
 #include "functions/Conj.hpp"
 #include "functions/Imag.hpp"
@@ -36,6 +37,7 @@
 #include "transforms/InplaceSub.h"
 #include "transforms/InplaceMul.h"
 #include "transforms/InplaceDiv.h"
+#include "transforms/Sign.h"
 #include "transforms/Square.h"
 #include "transforms/Sqrt.h"
 #include "transforms/Log.h"
@@ -893,6 +895,16 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<value_type_of_t<data_t>> sign(const DataContainer<data_t>& dc)
+    {
+        using T = GetFloatingPointType_t<data_t>;
+        DataContainer<T> copy(dc.getDataDescriptor());
+
+        elsa::sign(dc.begin(), dc.end(), copy.begin());
+        return copy;
+    }
+
+    template <typename data_t>
     DataContainer<value_type_of_t<data_t>> real(const DataContainer<data_t>& dc)
     {
         DataContainer<value_type_of_t<data_t>> result(dc.getDataDescriptor());
@@ -1082,6 +1094,7 @@ namespace elsa
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET_TYPES(cwiseAbs)
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET_TYPES(real)
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET_TYPES(imag)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET_TYPES(sign)
 
 #undef ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET
 

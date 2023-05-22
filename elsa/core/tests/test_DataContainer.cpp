@@ -15,6 +15,7 @@
 #include "testHelpers.h"
 #include "VolumeDescriptor.h"
 
+#include "functions/Sign.hpp"
 #include "functions/Abs.hpp"
 
 #include <thrust/complex.h>
@@ -289,6 +290,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                 DataContainer dcAbs = cwiseAbs(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(dcAbs[i], randVec.array().abs()[i]));
+
+                DataContainer dcSign = sign(dc);
+                for (index_t i = 0; i < dc.getSize(); ++i)
+                    REQUIRE_UNARY(checkApproxEq(dcSign[i], ::elsa::fn::sign(randVec[i])));
 
                 DataContainer dcSquare = square(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)

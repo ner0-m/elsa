@@ -497,6 +497,28 @@ namespace elsa
     template <typename data_t>
     DataContainer<value_type_of_t<data_t>> cwiseAbs(const DataContainer<data_t>& dc);
 
+    /// @brief compute the sign of each entry of the input DataContainer. The
+    /// function is defined as:
+    /// \[
+    /// \operatorname{sign}(x_i) =
+    /// \begin{cases}
+    /// 1 & \text{if } x_i > 0 \\
+    /// -1 & \text{if } x_i < 0 \\
+    /// 0 & \text{elsa}
+    /// \end{cases} \quad \forall i
+    /// \]
+    /// For complex numbers, the definition is givens as:
+    /// \[
+    /// \operatorname{sign}(x_i) =
+    /// \begin{cases}
+    /// 1 & \text{if } \mathrm{Re}(x_i) > 0 \\
+    /// -1 & \text{if } \mathrm{Re}(x_i) < 0 \\
+    /// sign(\mathrm{Im}(x_i)) & \text{elsa}
+    /// \end{cases} \quad \forall i
+    /// \]
+    template <typename data_t>
+    DataContainer<value_type_of_t<data_t>> sign(const DataContainer<data_t>& dc);
+
     template <typename data_t>
     DataContainer<add_complex_t<data_t>> asComplex(const DataContainer<data_t>& dc);
 
