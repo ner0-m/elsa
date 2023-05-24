@@ -10,18 +10,7 @@ namespace elsa::phantoms
     public:
         Scaling(scalar k, std::unique_ptr<Image<data_t>> a) : k{k}, a{std::move(a)} {}
 
-        DataContainer<data_t> makeSinogram(const DataDescriptor& sinogramDescriptor)
-        {
-            return k * a->makeSinogram(sinogramDescriptor);
-        }
-
-        void addSinogram(const DataDescriptor& sinogramDescriptor,
-                         const std::vector<Ray_t<data_t>>& rays,
-                         DataContainer<data_t>& container) override
-        {
-            auto sinogram = k * a->makeSinogram(sinogramDescriptor);
-            container += sinogram;
-        }
+        data_t traceRay(const Ray_t<data_t>& ray) override { return k * a->traceRay(ray); }
 
     protected:
         virtual Image<data_t>* cloneImpl() const override

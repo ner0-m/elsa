@@ -19,33 +19,23 @@ namespace elsa::phantoms
         {
         }
 
-        void addSinogram(const DataDescriptor& sinogramDescriptor,
-                         const std::vector<Ray_t<data_t>>& rays,
-                         DataContainer<data_t>& container) override
+        data_t traceRay(const Ray_t<data_t>& ray) override
         {
-            assert(is<DetectorDescriptor>(sinogramDescriptor));
-            assert(sinogramDescriptor.getNumberOfDimensions() == 2
-                   || sinogramDescriptor.getNumberOfDimensions() == 3);
+            auto o = c - ray.origin();
+            auto d = ray.direction();
 
-#pragma omp parallel for
-            for (index_t index = 0; index < sinogramDescriptor.getNumberOfCoefficients(); index++) {
+            auto Ro = R * o;
+            auto Rd = R * d;
 
-                auto ray = rays[index];
+            auto alpha = Ro.dot(A * Ro) - 1;
+            auto beta = Rd.dot(A * Ro);
+            auto gamma = Rd.dot(A * Rd);
+            auto discriminant = beta * beta / (alpha * alpha) - gamma / alpha;
 
-                auto o = c - ray.origin();
-                auto d = ray.direction();
-
-                auto Ro = R * o;
-                auto Rd = R * d;
-
-                auto alpha = Ro.dot(A * Ro) - 1;
-                auto beta = Rd.dot(A * Ro);
-                auto gamma = Rd.dot(A * Rd);
-                auto discriminant = beta * beta / (alpha * alpha) - gamma / alpha;
-
-                if (discriminant >= 0) {
-                    container[index] += 2 * sqrt(discriminant) * w;
-                }
+            if (discriminant >= 0) {
+                return 2 * sqrt(discriminant) * w;
+            } else {
+                return 0;
             }
         }
 

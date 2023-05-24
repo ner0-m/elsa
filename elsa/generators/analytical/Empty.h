@@ -21,13 +21,13 @@ namespace elsa::phantoms
             }
         }
 
-        void addSinogram(const DataDescriptor& sinogramDescriptor,
-                         const std::vector<Ray_t<data_t>>& rays,
-                         DataContainer<data_t>& container) override
+        data_t traceRay(const Ray_t<data_t>& ray) override
         {
+            data_t acc = 0;
             for (const auto& component : components) {
-                component->addSinogram(sinogramDescriptor, rays, container);
+                acc += component->traceRay(ray);
             }
+            return acc;
         }
         Canvas& operator+=(const Image<data_t>& image)
         {
