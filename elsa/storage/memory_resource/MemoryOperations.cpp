@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#ifdef ELSA_CUDA_ENABLE
+#ifdef ELSA_CUDA_ENABLED
 #include <cuda_runtime.h>
 static constexpr bool CudaAvailable = true;
 #else
@@ -11,7 +11,9 @@ static constexpr bool CudaAvailable = false;
 /* placeholders */
 void cudaMemcpy(void*, const void*, size_t, int) {}
 void cudaMemset(void*, int, size_t) {}
+void cudaMemPrefetchAsync(void *, size_t, int) {}
 static constexpr int cudaMemcpyDefault = 0;
+static constexpr int cudaMemcpyDeviceToDevice = 0;
 #endif
 
 template <class Type>
@@ -38,10 +40,18 @@ void elsa::mr::detail::memOpMove(void* ptr, const void* src, std::size_t size)
 /* expects ptr to be universally accessible and src to be optional */
 void elsa::mr::detail::memOpCopy(void* ptr, const void* src, std::size_t size, bool src_universal)
 {
-    if (CudaAvailable && src_universal)
-        cudaMemcpy(ptr, src, size, cudaMemcpyDefault);
-    else
+    if (CudaAvailable && src_universal) {
+        cudaMemPrefetchAsync(src, size, 0);
+        cudaMemPrefetchAsync(ptr, size, 0);
+        cudaMemcpy(ptr, src, size, cudaMemcpyDeviceToDevice);
+    }
+    else {
+        if(CudaAvailable) {
+            cudaMemPrefetchAsync(src, size, cudaCpuDeviceId);
+            cudaMemPrefetchAsync(ptr, size, cudaCpuDeviceId);
+        }
         std::memcpy(ptr, src, size);
+    }
 }
 
 /* expects ptr to be universally accessible */
