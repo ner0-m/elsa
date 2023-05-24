@@ -1,6 +1,5 @@
 #pragma once
 #include "Image.h"
-#include <Eigen/src/Core/util/Constants.h>
 
 namespace elsa::phantoms
 {
@@ -20,20 +19,18 @@ namespace elsa::phantoms
         {
         }
 
-        DataContainer<data_t> makeSinogram(const DataDescriptor& sinogramDescriptor) override
+        void addSinogram(const DataDescriptor& sinogramDescriptor,
+                         const std::vector<Ray_t<data_t>>& rays,
+                         DataContainer<data_t>& container) override
         {
             assert(is<DetectorDescriptor>(sinogramDescriptor));
             assert(sinogramDescriptor.getNumberOfDimensions() == 2
                    || sinogramDescriptor.getNumberOfDimensions() == 3);
 
-            DataContainer<data_t> sinogram{sinogramDescriptor};
-            auto& detDesc = downcast<DetectorDescriptor>(sinogramDescriptor);
-
 #pragma omp parallel for
-            for (index_t index = 0; index < detDesc.getNumberOfCoefficients(); index++) {
+            for (index_t index = 0; index < sinogramDescriptor.getNumberOfCoefficients(); index++) {
 
-                auto coord = detDesc.getCoordinateFromIndex(index);
-                auto ray = detDesc.computeRayFromDetectorCoord(coord);
+                auto ray = rays[index];
 
                 auto o = c - ray.origin();
                 auto d = ray.direction();
@@ -46,14 +43,10 @@ namespace elsa::phantoms
                 auto gamma = Rd.dot(A * Rd);
                 auto discriminant = beta * beta / (alpha * alpha) - gamma / alpha;
 
-                if (discriminant < 0) {
-                    sinogram(coord) = 0;
-                } else {
-                    sinogram(coord) = 2 * sqrt(discriminant) * w;
+                if (discriminant >= 0) {
+                    container[index] += 2 * sqrt(discriminant) * w;
                 }
             }
-
-            return sinogram;
         }
 
     protected:

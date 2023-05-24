@@ -14,12 +14,12 @@ namespace elsa::phantoms
         {
         }
 
-        DataContainer<data_t> makeSinogram(const DataDescriptor& sinogramDescriptor) override
+        virtual void addSinogram(const DataDescriptor& sinogramDescriptor,
+                                 const std::vector<Ray_t<data_t>>& rays,
+                                 DataContainer<data_t>& container) override
         {
-            DataContainer<data_t> sinogram{*sinogramDescriptor.clone()};
-            sinogram += a->makeSinogram(sinogramDescriptor);
-            sinogram += b->makeSinogram(sinogramDescriptor);
-            return sinogram;
+            a->addSinogram(sinogramDescriptor, rays, container);
+            b->addSinogram(sinogramDescriptor, rays, container);
         }
 
         virtual Image<data_t>* cloneImpl() const override

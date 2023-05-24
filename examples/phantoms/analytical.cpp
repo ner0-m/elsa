@@ -3,7 +3,8 @@
 #include "elsa.h"
 #include "Phantoms.h"
 #include "analytical/Analytical.h"
-#include "projectors_cuda/JosephsMethodCUDA.h"
+
+#include "JosephsMethod.h"
 
 using namespace elsa;
 using namespace elsa::phantoms;
@@ -22,7 +23,7 @@ int main(int, char*[])
 
     io::write(sinogram, "sinogram.pgm");
 
-    JosephsMethodCUDA projector{image, *sinoDescriptor};
+    JosephsMethod projector{image, *sinoDescriptor};
 
     auto A = FiniteDifferences<real_t>{image};
     auto proxg = ProximalL1<real_t>{};
