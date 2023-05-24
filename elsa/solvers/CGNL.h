@@ -4,7 +4,7 @@
 #include <optional>
 
 #include "Solver.h"
-#include "Problem.h"
+#include "Functional.h"
 
 namespace elsa
 {
@@ -48,9 +48,9 @@ namespace elsa
          * @return[out] a pair consisting of a boolean indicating if the line search has converged
          * and the new xVector after this line search iteration
          */
-        using LineSearchFunction = std::function<std::pair<bool, DataContainer<data_t>>(
-            std::unique_ptr<Problem<data_t>>& problem, DataContainer<data_t>& xVector,
-            DataContainer<data_t>& dVector, data_t& deltaD, data_t& epsilon)>;
+        using LineSearchFunction = std::function<DataContainer<data_t>(
+            Functional<data_t>& functional, const DataContainer<data_t>& xVector,
+            const DataContainer<data_t>& dVector, data_t deltaD, data_t epsilon)>;
 
         /**
          * @brief Function Object which calculates a beta value based on the direction
@@ -62,7 +62,8 @@ namespace elsa
          * @return[out] a pair consisting of the calculated beta and the deltaNew
          */
         using BetaFunction = std::function<std::pair<data_t, data_t>(
-            DataContainer<data_t>& dVector, DataContainer<data_t>& rVector, data_t& deltaNew)>;
+            const DataContainer<data_t>& dVector, const DataContainer<data_t>& rVector,
+            data_t deltaNew)>;
 
         /**
          * @brief Constructor for CGNL, accepting an optimization problem and, optionally, a
@@ -74,7 +75,7 @@ namespace elsa
          * @param[in] problem the problem that is supposed to be solved
          * @param[in] epsilon affects the stopping condition
          */
-        explicit CGNL(const Problem<data_t>& problem,
+        explicit CGNL(const Functional<data_t>& functional,
                       data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /**
@@ -88,7 +89,7 @@ namespace elsa
          * @param[in] epsilon affects the stopping condition
          * @param[in] line_search_iterations number of iterations for each line search
          */
-        CGNL(const Problem<data_t>& problem, data_t epsilon, index_t line_search_iterations);
+        CGNL(const Functional<data_t>& functional, data_t epsilon, index_t line_search_iterations);
 
         /**
          * @brief Constructor for CGNL, accepting an optimization problem and, optionally, a
@@ -100,7 +101,7 @@ namespace elsa
          * @param[in] line_search_function function which will be evaluated each
          * @param[in] beta_function affects the stopping condition
          */
-        CGNL(const Problem<data_t>& problem, data_t epsilon, index_t line_search_iterations,
+        CGNL(const Functional<data_t>& functional, data_t epsilon, index_t line_search_iterations,
              const LineSearchFunction& line_search_function, const BetaFunction& beta_function);
 
         /// make copy constructor deletion explicit
@@ -124,32 +125,37 @@ namespace elsa
 
         /// Line search Newton-Raphson
         static const inline LineSearchFunction lineSearchNewtonRaphson =
-            [](std::unique_ptr<Problem<data_t>>& problem, DataContainer<data_t>& xVector,
-               DataContainer<data_t>& dVector, data_t& deltaD,
-               data_t& epsilon) -> std::pair<bool, DataContainer<data_t>> {
-            // alpha <= -([f'(xVector)]^T * d) / (d^T * f''(xVector) * d)
-            auto alpha = static_cast<data_t>(-1.0) * problem->getGradient(xVector).dot(dVector)
-                         / dVector.dot(problem->getHessian(xVector).apply(dVector));
-            // xVector <= xVector + alpha * d
-            xVector = xVector + alpha * dVector;
-            // calculate if the line search has converged
-            bool converged = alpha * alpha * deltaD < epsilon * epsilon;
-            return {converged, xVector};
+            [](Functional<data_t>& functional, const DataContainer<data_t>& xVectorInput,
+               const DataContainer<data_t>& dVector, data_t deltaD,
+               data_t epsilon) -> DataContainer<data_t> {
+            auto xVector = xVectorInput;
+            for (index_t j = 0; j < 10; j++) {
+                // alpha <= -([f'(xVector)]^T * d) / (d^T * f''(xVector) * d)
+                auto alpha = static_cast<data_t>(-1.0)
+                             * functional.getGradient(xVector).dot(dVector)
+                             / dVector.dot(functional.getHessian(xVector).apply(dVector));
+                // xVector <= xVector + alpha * d
+                xVector = xVector + alpha * dVector;
+                // calculate if the line search has converged
+                bool converged = alpha * alpha * deltaD < epsilon * epsilon;
+                if (converged) {
+                    return xVector;
+                }
+            }
+            return xVector;
         };
 
         /// Line search constant step size
         static const inline LineSearchFunction lineSearchConstantStepSize =
-            [](std::unique_ptr<Problem<data_t>>&, DataContainer<data_t>& xVector,
-               DataContainer<data_t>& dVector, data_t&,
-               data_t&) -> std::pair<bool, DataContainer<data_t>> {
-            xVector = xVector + std::numeric_limits<data_t>::epsilon() * 150.0 * dVector;
-            return {true, xVector};
+            [](const Functional<data_t>&, const DataContainer<data_t>& xVector,
+               const DataContainer<data_t>& dVector, data_t, data_t) -> DataContainer<data_t> {
+            return xVector + std::numeric_limits<data_t>::epsilon() * 150.0 * dVector;
         };
 
         /// beta calculation Polak-Ribière
         static const inline BetaFunction betaPolakRibiere =
-            [](DataContainer<data_t>& dVector, DataContainer<data_t>& rVector,
-               data_t& deltaNew) -> std::pair<data_t, data_t> {
+            [](const DataContainer<data_t>& dVector, const DataContainer<data_t>& rVector,
+               data_t deltaNew) -> std::pair<data_t, data_t> {
             // deltaOld <= deltaNew
             auto deltaOld = deltaNew;
             // deltaMid <= r^T * d
@@ -164,7 +170,7 @@ namespace elsa
 
     private:
         /// the differentiable optimization problem
-        std::unique_ptr<Problem<data_t>> problem_;
+        std::unique_ptr<Functional<data_t>> functional_;
 
         /// variable affecting the stopping condition
         data_t epsilon_;

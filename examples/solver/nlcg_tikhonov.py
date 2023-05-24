@@ -3,7 +3,7 @@ import pyelsa as elsa
 import matplotlib.pyplot as plt
 
 
-def example2d(s: int):
+def tikhonov(s: int):
     size = np.array([s] * 2)
     phantom = elsa.phantoms.modifiedSheppLogan(size)
 
@@ -14,10 +14,12 @@ def example2d(s: int):
 
     projector = elsa.SiddonsMethod(phantom.getDataDescriptor(), sino_descriptor)
     sinogram = projector.apply(phantom)
-    wsl_problem = elsa.WLSProblem(projector, sinogram)
-    problem = elsa.TikhonovProblem(wsl_problem,
-                                   elsa.RegularizationTerm(1.0, elsa.L2NormPow2(phantom.getDataDescriptor())))
-    solver = elsa.NLCG(problem)
+
+    ls = elsa.LeastSquares(projector, sinogram)
+    reg = elsa.L2Squared(phantom.getDataDescriptor())
+    problem = ls + 1. * reg
+
+    solver = elsa.CGNL(problem)
     reconstruction = solver.solve(20)
     plt.imshow(reconstruction)
     plt.show()
@@ -30,4 +32,4 @@ if __name__ == "__main__":
     parser.add_argument("--size", default=128, type=int, help="size of reconstruction")
 
     args = parser.parse_args()
-    example2d(args.size)
+    tikhonov(args.size)

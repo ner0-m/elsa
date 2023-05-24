@@ -157,17 +157,17 @@ namespace detail
     void add_nonlinear_conjugate_gradient(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
+        using Functional = elsa::Functional<data_t>;
 
         py::class_<elsa::CGNL<data_t>, Solver> cg(m, name);
-        cg.def(py::init<const Problem&>(), py::arg("problem"));
-        cg.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
-        cg.def(py::init<const Problem&, data_t, elsa::index_t>(), py::arg("problem"),
+        cg.def(py::init<const Functional&>(), py::arg("problem"));
+        cg.def(py::init<const Functional&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+        cg.def(py::init<const Functional&, data_t, elsa::index_t>(), py::arg("problem"),
                py::arg("epsilon"), py::arg("line_search_iterations"));
-        cg.def(py::init<const Problem&, data_t, elsa::index_t,
+        cg.def(py::init<const Functional&, data_t, elsa::index_t,
                         const typename elsa::CGNL<data_t>::LineSearchFunction&,
                         const typename elsa::CGNL<data_t>::BetaFunction&>(),
-               py::arg("problem"), py::arg("epsilon"), py::arg("line_search_iterations"),
+               py::arg("functional"), py::arg("epsilon"), py::arg("line_search_iterations"),
                py::arg("line_search_function"), py::arg("beta_function"));
 
         cg.def_readonly_static("lineSearchNewtonRaphson",
@@ -180,10 +180,10 @@ namespace detail
 
 void add_nonlinear_conjugate_gradient(py::module& m)
 {
-    detail::add_nonlinear_conjugate_gradient<float>(m, "NLCGf");
-    detail::add_nonlinear_conjugate_gradient<double>(m, "NLCGd");
+    detail::add_nonlinear_conjugate_gradient<float>(m, "CGNLf");
+    detail::add_nonlinear_conjugate_gradient<double>(m, "CGNLd");
 
-    m.attr("CGNL") = m.attr("NLCGf");
+    m.attr("CGNL") = m.attr("CGNLf");
 }
 namespace detail
 {

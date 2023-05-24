@@ -7,12 +7,12 @@ namespace elsa
 {
 
     template <typename data_t>
-    CGNL<data_t>::CGNL(const Problem<data_t>& problem, data_t epsilon,
+    CGNL<data_t>::CGNL(const Functional<data_t>& functional, data_t epsilon,
                        index_t line_search_iterations,
                        const LineSearchFunction& line_search_function,
                        const BetaFunction& beta_function)
         : Solver<data_t>(),
-          problem_{problem.clone()},
+          functional_{functional.clone()},
           epsilon_{epsilon},
           line_search_iterations_{line_search_iterations},
           line_search_function_{line_search_function},
@@ -21,16 +21,16 @@ namespace elsa
     }
 
     template <typename data_t>
-    CGNL<data_t>::CGNL(const Problem<data_t>& problem, data_t epsilon,
+    CGNL<data_t>::CGNL(const Functional<data_t>& functional, data_t epsilon,
                        index_t line_search_iterations)
-        : CGNL<data_t>(problem, epsilon, line_search_iterations, lineSearchNewtonRaphson,
+        : CGNL<data_t>(functional, epsilon, line_search_iterations, lineSearchNewtonRaphson,
                        betaPolakRibiere)
     {
     }
 
     template <typename data_t>
-    CGNL<data_t>::CGNL(const Problem<data_t>& problem, data_t epsilon)
-        : CGNL<data_t>(problem, epsilon, 1, lineSearchConstantStepSize, betaPolakRibiere)
+    CGNL<data_t>::CGNL(const Functional<data_t>& functional, data_t epsilon)
+        : CGNL<data_t>(functional, epsilon, 1, lineSearchConstantStepSize, betaPolakRibiere)
     {
     }
 
@@ -42,11 +42,10 @@ namespace elsa
         Logger::get("CGNL")->info("Start preparations...");
 
         // Restart Nonlinear CG every n iterations, with n being the number of dimensions
-        index_t nIterationMax =
-            problem_->getDataTerm().getDomainDescriptor().getNumberOfDimensions();
+        index_t nIterationMax = functional_->getDomainDescriptor().getNumberOfDimensions();
 
         // use xStart as start point if provided, use 0 otherwise
-        DataContainer<data_t> xVector{problem_->getDataTerm().getDomainDescriptor()};
+        DataContainer<data_t> xVector{functional_->getDomainDescriptor()};
         if (xStart.has_value()) {
             xVector = *xStart;
         } else {
@@ -56,7 +55,7 @@ namespace elsa
         // kIndex <= 0
         index_t kIndex = 0;
         // rVector <= -f'(xVector)
-        auto rVector = static_cast<data_t>(-1.0) * problem_->getGradient(xVector);
+        auto rVector = static_cast<data_t>(-1.0) * functional_->getGradient(xVector);
         // dVector <= rVector
         auto dVector = rVector;
         // deltaNew <= rVector^T * dVector
@@ -85,23 +84,12 @@ namespace elsa
             // deltaD = dVector^T * dVector
             auto deltaD = dVector.dot(dVector);
 
-            // Newton-Raphson iterations
-            for (index_t j = 0; j < line_search_iterations_; j++) {
-                spdlog::stopwatch iter_time_inner;
-                bool converged;
-                std::tie(converged, xVector) =
-                    line_search_function_(problem_, xVector, dVector, deltaD, epsilon_);
+            // line search
+            xVector = line_search_function_(*functional_, xVector, dVector, deltaD, epsilon_);
 
-                Logger::get("CGNL")->info("{:>5} |{:>15} |{:>15} | {:>6.3} |{:>6.3}s |{:>15} |", it,
-                                          j, "line search", iter_time_inner, aggregate_time, 0);
-                if (converged) {
-                    break;
-                }
-            }
-
-            // Polak-Ribière parameters
+            // beta function
             // r <= -f'(x)
-            rVector = static_cast<data_t>(-1.0) * problem_->getGradient(xVector);
+            rVector = static_cast<data_t>(-1.0) * functional_->getGradient(xVector);
 
             data_t beta;
             std::tie(beta, deltaNew) = beta_function_(dVector, rVector, deltaNew);
@@ -128,7 +116,7 @@ namespace elsa
     template <typename data_t>
     CGNL<data_t>* CGNL<data_t>::cloneImpl() const
     {
-        return new CGNL(*problem_, epsilon_);
+        return new CGNL(*functional_, epsilon_);
     }
 
     template <typename data_t>

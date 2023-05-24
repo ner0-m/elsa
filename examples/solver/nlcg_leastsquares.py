@@ -3,7 +3,7 @@ import pyelsa as elsa
 import matplotlib.pyplot as plt
 
 
-def example2d(s: int):
+def example_leastsquares(s: int):
     size = np.array([s] * 2)
     phantom = elsa.phantoms.modifiedSheppLogan(size)
 
@@ -14,8 +14,9 @@ def example2d(s: int):
 
     projector = elsa.SiddonsMethod(phantom.getDataDescriptor(), sino_descriptor)
     sinogram = projector.apply(phantom)
-    problem = elsa.WLSProblem(projector, sinogram)
-    solver = elsa.NLCG(problem)
+    problem = elsa.LeastSquares(projector, sinogram)
+
+    solver = elsa.CGNL(problem)
     reconstruction = solver.solve(20)
     plt.imshow(reconstruction)
     plt.show()
@@ -28,4 +29,4 @@ if __name__ == "__main__":
     parser.add_argument("--size", default=128, type=int, help="size of reconstruction")
 
     args = parser.parse_args()
-    example2d(args.size)
+    example_leastsquares(args.size)

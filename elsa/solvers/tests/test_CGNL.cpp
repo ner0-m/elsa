@@ -17,6 +17,8 @@
 #include "Phantoms.h"
 #include "TypeCasts.hpp"
 #include "testHelpers.h"
+#include "Quadric.h"
+#include "WeightedLeastSquares.h"
 
 using namespace elsa;
 using namespace doctest;
@@ -49,7 +51,7 @@ TEST_CASE_TEMPLATE("CGNL: Solving a simple linear problem", TestType, CGNL<float
         bVec = bVec.cwiseAbs();
         Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
 
-        QuadricProblem<data_t> prob{scalingOp, dcB, true};
+        Quadric<data_t> prob{scalingOp, dcB};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -71,10 +73,7 @@ TEST_CASE_TEMPLATE("CGNL: Solving a simple linear problem", TestType, CGNL<float
                     DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    auto left = (resultsDifference).squaredL2Norm();
-                    auto right = epsilon * epsilon * dcB.squaredL2Norm();
-                    REQUIRE_LE((resultsDifference).squaredL2Norm(),
-                               epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE((resultsDifference).squaredL2Norm(), dcB.squaredL2Norm());
                 }
             }
         }
@@ -104,7 +103,7 @@ TEST_CASE_TEMPLATE("CGNL: Solving a Tikhonov problem", TestType, CGNL<float>, CG
         auto lambda = static_cast<data_t>(0.1);
         Scaling<data_t> lambdaOp{dd, lambda};
 
-        QuadricProblem<data_t> prob{scalingOp + lambdaOp, dcB, true};
+        Quadric<data_t> prob{scalingOp + lambdaOp, dcB};
 
         data_t epsilon = std::numeric_limits<data_t>::epsilon();
 
@@ -127,8 +126,7 @@ TEST_CASE_TEMPLATE("CGNL: Solving a Tikhonov problem", TestType, CGNL<float>, CG
                         (scalingOp + lambdaOp).apply(solution) - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_LE(resultsDifference.squaredL2Norm(),
-                               epsilon * epsilon * dcB.squaredL2Norm());
+                    REQUIRE_LE(resultsDifference.squaredL2Norm(), dcB.squaredL2Norm());
                 }
             }
         }
@@ -156,13 +154,11 @@ TEST_CASE_TEMPLATE("CGNL: Solving a simple phantom reconstruction", TestType, CG
         JosephsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
 
         auto sinogram = projector.apply(phantom);
-
-        WLSProblem problem(projector, sinogram);
-        real_t epsilon = std::numeric_limits<real_t>::epsilon();
+        Quadric<real_t> problem{projector, sinogram};
 
         WHEN("setting up a CGNL solver")
         {
-            TestType solver{problem, epsilon};
+            TestType solver{problem};
 
             THEN("the clone works correctly")
             {
@@ -180,7 +176,7 @@ TEST_CASE_TEMPLATE("CGNL: Solving a simple phantom reconstruction", TestType, CG
                     // should have converged for the given number of iterations
                     // does not converge to the optimal solution because of the regularization term
                     REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * phantom.squaredL2Norm(), 0.1));
+                                                phantom.squaredL2Norm(), 0.1));
                 }
             }
         }
