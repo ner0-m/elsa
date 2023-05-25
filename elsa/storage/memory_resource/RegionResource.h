@@ -37,6 +37,11 @@ namespace elsa::mr
         void* _bumpPtr;
         size_t _allocatedSize;
 
+        RegionResource(const RegionResource &other) = delete;
+        RegionResource& operator=(const RegionResource &other) = delete;
+        RegionResource(RegionResource &&other) noexcept = delete;
+        RegionResource& operator=(RegionResource &&other) noexcept = delete;
+
     protected:
         RegionResource(const MemoryResource& upstream,
                        const RegionResourceConfig& config = RegionResourceConfig::defaultConfig());
