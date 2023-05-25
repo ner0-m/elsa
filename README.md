@@ -186,7 +186,14 @@ There are also two guides using the C++ and Python API:
 * [C++ guide](https://ciip.cit.tum.de/elsadocs/guides/quickstart-cxx.html)
 * [Python guide](https://ciip.cit.tum.de/elsadocs/guides/python_guide/index.html)
 
-Check the example folder for specific cases and more code examples.
+For specific usage examples, have a look at the example folder. If you want to
+see how to use specific solvers and problem formulations see the
+`examples/solver` folder. Example reconstructions for open-access datasets
+are in the `examples/dataset` folder. Datasets include:
+
+* [Dataset published for the Helsinki Tomography Challenge 2022](https://www.fips.fi/HTC2022.php)
+* [Dataset of a walnut](https://www.fips.fi/dataset.php#walnut2020)
+* [Dataset of a chickenbone scanned at 4 different dose levels](https://www.fips.fi/dataset.php#chickenbone)
 
 Contributing
 ------------
