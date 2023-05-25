@@ -69,6 +69,11 @@ namespace elsa::mr
 
         void releaseCache();
 
+        CacheResource(const CacheResource &other) = delete;
+        CacheResource& operator=(const CacheResource &other) = delete;
+        CacheResource(CacheResource &&other) noexcept = delete;
+        CacheResource& operator=(CacheResource &&other) noexcept = delete;
+
     protected:
         CacheResource(MemoryResource upstream,
                       const CacheResourceConfig& config = CacheResourceConfig::defaultConfig());

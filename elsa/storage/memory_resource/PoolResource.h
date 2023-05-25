@@ -146,6 +146,11 @@ namespace elsa::mr
             // Neither of these should throw, if the inner type raises no exceptions.
             void doDeallocate(void* ptr) noexcept;
 
+            PoolResource(const PoolResource &other) = delete;
+            PoolResource& operator=(const PoolResource &other) = delete;
+            PoolResource(PoolResource &&other) noexcept = delete;
+            PoolResource& operator=(PoolResource &&other) noexcept = delete;
+
         protected:
             PoolResource(MemoryResource upstream,
                          PoolResourceConfig config = PoolResourceConfig::defaultConfig());
