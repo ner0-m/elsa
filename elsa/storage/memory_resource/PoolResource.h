@@ -65,7 +65,9 @@ namespace elsa::mr
     namespace pool_resource
     {
         // must be set to a power of 2, with sufficient unused bits for the bitfield
-        const size_t BLOCK_GRANULARITY = 32;
+        // => granularity must be at least 8!
+        // 256 is chosen to make sure types for cuda kernels are sufficiently aligned.
+        const size_t BLOCK_GRANULARITY = 256;
         const size_t MIN_BLOCK_SIZE = BLOCK_GRANULARITY;
         const size_t MIN_BLOCK_SIZE_LOG = 5;
         const size_t BITFIELD_MASK = BLOCK_GRANULARITY - 1;

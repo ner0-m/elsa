@@ -93,7 +93,7 @@ namespace elsa::mr
         PoolResource<FreeListStrategy>::~PoolResource()
         {
             for (size_t i = 0; i < _cachedChunkCount; i++) {
-                _upstream->deallocate(_cachedChunks[i]->_address, _config.chunkSize,
+                _upstream->deallocate(_cachedChunks[i]->_address, _cachedChunks[i]->size(),
                                       pool_resource::BLOCK_GRANULARITY);
             }
         }
