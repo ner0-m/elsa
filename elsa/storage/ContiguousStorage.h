@@ -2,6 +2,7 @@
 
 #include "memory_resource/ContiguousVector.h"
 #include "memory_resource/PoolResource.h"
+#include "memory_resource/ElsaThrustMRAdaptor.h"
 #include "memory_resource/UniversalResource.h"
 #include "memory_resource/ContiguousWrapper.h"
 
@@ -17,7 +18,7 @@ namespace elsa
 {
     template <class T>
     using ContiguousStorage =
-        mr::ContiguousVector<T, mr::type_tags::complex, mr::detail::ContPointer,
-                             mr::detail::ContIterator>;
-    // using ContiguousStorage = thrust::universal_vector<T>;
+        mr::ContiguousVector<T, mr::type_tags::uninitialized, thrust::universal_ptr,
+                             thrust::universal_ptr>;
+    //using ContiguousStorage = thrust::universal_vector<T>;
 } // namespace elsa
