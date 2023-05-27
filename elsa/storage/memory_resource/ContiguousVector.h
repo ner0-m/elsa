@@ -8,6 +8,10 @@
 #include <limits>
 #include <stdexcept>
 
+#include <thrust/universal_vector.h>
+#include <thrust/copy.h>
+#include <thrust/execution_policy.h>
+
 namespace elsa::mr
 {
     namespace type_tags
@@ -91,12 +95,22 @@ namespace elsa::mr
         template <class Type>
         void fillMemory(Type* ptr, const void* src, size_t count)
         {
-            detail::memOpSet(ptr, src, count, sizeof(Type));
+            auto src_ = thrust::universal_ptr<const Type>(reinterpret_cast<const Type*>(src));
+            auto dst_ = thrust::universal_ptr<Type>(ptr);
+            thrust::fill(thrust::device, dst_, dst_ + count, *src_);
         }
         template <class Type>
         void copyMemory(void* ptr, const void* src, size_t count, bool src_universal)
         {
-            detail::memOpCopy(ptr, src, count * sizeof(Type), src_universal);
+            if(src_universal) {
+                auto src_ = thrust::universal_ptr<const Type>(reinterpret_cast<const Type*>(src));
+                auto dst_ = thrust::universal_ptr<Type>(reinterpret_cast<Type*>(ptr));
+                thrust::copy(thrust::device, src_, src_ + count, dst_);
+            } else {
+                auto src_ = reinterpret_cast<const Type*>(src);
+                auto dst_ = reinterpret_cast<Type*>(ptr);
+                thrust::copy(thrust::host, src_, src_ + count, dst_);
+            }
         }
         template <class Type>
         void moveMemory(void* ptr, const void* src, size_t count)
@@ -318,9 +332,11 @@ namespace elsa::mr
                               && detail::is_random_iterator<ItType>::value)
                     insert_range(off, ibegin.base(), count, is_universal);
 
-                /* check if the iterator has a 'get' function to get the raw pointer */
-                else if constexpr (detail::get_returns_pointer<ItType>::value
-                                   && detail::is_random_iterator<ItType>::value)
+                /* Check if the iterator has a 'get' function to get the raw pointer.
+                 * Not checking for random access iterator, because we are checking for a
+                 * thrust pointer type here, which is not tagged as random access iterator.
+                 */
+                else if constexpr (detail::get_returns_pointer<ItType>::value)
                     insert_range(off, ibegin.get(), count, is_universal);
 
                 /* check if the iterator is a pointer of the right type
@@ -559,7 +575,7 @@ namespace elsa::mr
         {
             if (&s == this)
                 return *this;
-            if (_self.resource == s._self.resource)
+            if (true || _self.resource == s._self.resource)
                 std::swap(_self, s._self);
             else
                 assign(s);
@@ -601,7 +617,8 @@ namespace elsa::mr
         }
         void assign(const self_type& s, const mr::MemoryResource& mr = mr::MemoryResource())
         {
-            assign(s._self.pointer, s._self.end_ptr(), mr);
+            //assign(s._self.pointer, s._self.end_ptr(), mr);
+            assign(s.begin(), s.end(), mr);
         }
 
         /* if mr is invalid, current resource will be kept */
