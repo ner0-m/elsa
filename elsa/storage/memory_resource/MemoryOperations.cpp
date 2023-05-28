@@ -11,9 +11,10 @@ static constexpr bool CudaAvailable = false;
 /* placeholders */
 void cudaMemcpy(void*, const void*, size_t, int) {}
 void cudaMemset(void*, int, size_t) {}
-void cudaMemPrefetchAsync(void *, size_t, int) {}
+void cudaMemPrefetchAsync(const void *, size_t, int) {}
 static constexpr int cudaMemcpyDefault = 0;
 static constexpr int cudaMemcpyDeviceToDevice = 0;
+static constexpr int cudaCpuDeviceId = 0;
 #endif
 
 template <class Type>

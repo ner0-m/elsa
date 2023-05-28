@@ -95,20 +95,29 @@ namespace elsa::mr
         template <class Type>
         void fillMemory(Type* ptr, const void* src, size_t count)
         {
-            auto src_ = thrust::universal_ptr<const Type>(reinterpret_cast<const Type*>(src));
-            auto dst_ = thrust::universal_ptr<Type>(ptr);
+            struct TmpType {
+                uint8_t payload[sizeof(Type)];
+            };
+
+            auto src_ = thrust::universal_ptr<const TmpType>(reinterpret_cast<const TmpType*>(src));
+            auto dst_ = thrust::universal_ptr<TmpType>(reinterpret_cast<TmpType*>(ptr));
             thrust::fill(thrust::device, dst_, dst_ + count, *src_);
         }
         template <class Type>
         void copyMemory(void* ptr, const void* src, size_t count, bool src_universal)
         {
-            if(src_universal) {
-                auto src_ = thrust::universal_ptr<const Type>(reinterpret_cast<const Type*>(src));
-                auto dst_ = thrust::universal_ptr<Type>(reinterpret_cast<Type*>(ptr));
+            struct TmpType {
+                uint8_t payload[sizeof(Type)];
+            };
+
+            if (src_universal) {
+                auto src_ =
+                    thrust::universal_ptr<const TmpType>(reinterpret_cast<const TmpType*>(src));
+                auto dst_ = thrust::universal_ptr<TmpType>(reinterpret_cast<TmpType*>(ptr));
                 thrust::copy(thrust::device, src_, src_ + count, dst_);
             } else {
-                auto src_ = reinterpret_cast<const Type*>(src);
-                auto dst_ = reinterpret_cast<Type*>(ptr);
+                auto src_ = reinterpret_cast<const TmpType*>(src);
+                auto dst_ = reinterpret_cast<TmpType*>(ptr);
                 thrust::copy(thrust::host, src_, src_ + count, dst_);
             }
         }
@@ -615,8 +624,9 @@ namespace elsa::mr
         }
         void assign(const self_type& s, const mr::MemoryResource& mr = mr::MemoryResource())
         {
-            //assign(s._self.pointer, s._self.end_ptr(), mr);
-            assign(s.begin(), s.end(), mr);
+            _self.reserve(s._self.size, 0, mr);
+            _self.insert_range(0, s._self.pointer, s._self.size, true);
+            _self.destruct_until(s._self.size);
         }
 
         /* if mr is invalid, current resource will be kept */
