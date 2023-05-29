@@ -24,6 +24,7 @@
 #include "AB_GMRES.h"
 #include "BA_GMRES.h"
 #include "Solver.h"
+#include "FBP.h"
 
 #include "bind_common.h"
 #include "hints/solvers_hints.cpp"
@@ -366,6 +367,36 @@ void add_generalized_minimum_residual(py::module& m)
     m.attr("GMRES") = m.attr("ABGMRESf");
 }
 
+void add_fbp(py::module& m)
+{
+    py::class_<elsa::FBP<double>> fbpd(m, "FBPd");
+    fbpd.def(py::init<const elsa::LinearOperator<double>&, const elsa::Filter<double>&>(),
+             py::arg("P"), py::arg("g"));
+    fbpd.def("apply", &elsa::FBP<double>::apply);
+
+    auto policy = py::return_value_policy::reference;
+
+    m.def("makeRamLakd", &elsa::makeRamLak<double>, policy);
+    m.def("makeSheppLogand", &elsa::makeSheppLogan<double>, policy);
+    m.def("makeCosined", &elsa::makeCosine<double>, policy);
+    m.def("makeHannd", &elsa::makeHann<double>, policy);
+
+    py::class_<elsa::FBP<float>> fbpf(m, "FBPf");
+    fbpf.def(py::init<const elsa::LinearOperator<float>&, const elsa::Filter<float>&>(),
+             py::arg("P"), py::arg("g"));
+    fbpf.def("apply", &elsa::FBP<float>::apply);
+    m.def("makeRamLakf", &elsa::makeRamLak<float>, policy);
+    m.def("makeSheppLoganf", &elsa::makeSheppLogan<float>, policy);
+    m.def("makeCosinef", &elsa::makeCosine<float>, policy);
+    m.def("makeHannf", &elsa::makeHann<float>, policy);
+
+    m.attr("FBP") = m.attr("FBPf");
+    m.attr("makeRamLak") = m.attr("makeRamLakf");
+    m.attr("makeSheppLogan") = m.attr("makeSheppLoganf");
+    m.attr("makeCosine") = m.attr("makeCosinef");
+    m.attr("makeHann") = m.attr("makeHannf");
+}
+
 void add_definitions_pyelsa_solvers(py::module& m)
 {
     add_solver(m);
@@ -380,6 +411,8 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_sqs(m);
     add_omp(m);
     add_admml2(m);
+
+    add_fbp(m);
 
     add_generalized_minimum_residual(m);
 

@@ -11,7 +11,7 @@
 
 namespace elsa
 {
-    template <typename data_t = float> // template <std::floating_point data_t = float>
+    template <typename data_t = float>
     class FBP
     {
         /**

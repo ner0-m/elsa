@@ -49,7 +49,7 @@ void fbp2d()
     auto cosine = makeCosine(sinogram.getDataDescriptor());
     auto hann = makeHann(sinogram.getDataDescriptor());
 
-    auto reconstruction = FBP{projector, cosine}.apply(sinogram);
+    auto reconstruction = FBP{projector, *cosine}.apply(sinogram);
     io::write(reconstruction, "fbp2d_Cosine.pgm");
 
     DataContainer diff = reconstruction - phantom;

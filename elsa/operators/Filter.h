@@ -26,8 +26,9 @@ namespace elsa
      * @return Filter<data_t> Scaling with DC bin at position 0
      */
     template <typename data_t = float>
-    Filter<data_t> makeFilter(const DataDescriptor& descriptor,
-                              std::function<add_complex_t<data_t>(IndexVector_t)> transferFunction)
+    std::unique_ptr<Filter<data_t>>
+        makeFilter(const DataDescriptor& descriptor,
+                   std::function<add_complex_t<data_t>(IndexVector_t)> transferFunction)
     {
 
         auto dim = descriptor.getNumberOfDimensions();
@@ -43,13 +44,14 @@ namespace elsa
             throw InvalidArgumentError("makeFilter:: Should only be used for 2D or 3D sinograms");
         }
 
+#pragma omp parallel for
         for (index_t i = 0; i < sliceDesc.getNumberOfCoefficients(); ++i) {
             IndexVector_t nu = sliceDesc.getCoordinateFromIndex(i) - midPoint;
             auto H = transferFunction(nu);
             filter[i] = H;
         }
 
-        return Filter<data_t>{sliceDesc, ifftShift(filter)};
+        return std::make_unique<Filter<data_t>>(sliceDesc, ifftShift(filter));
     }
 
     template <typename data_t = float>
@@ -67,7 +69,7 @@ namespace elsa
 
     // TODO: skimage computes spectrum of space representation to "lessen artifacts" -> investigate
     template <typename data_t = float>
-    Filter<data_t> makeRamLak(const DataDescriptor& descriptor)
+    std::unique_ptr<Filter<data_t>> makeRamLak(const DataDescriptor& descriptor)
     {
         auto n = descriptor.getNumberOfCoefficientsPerDimension()[0] / 2;
         auto kmax = kMax<data_t>(descriptor);
@@ -79,7 +81,7 @@ namespace elsa
     }
 
     template <typename data_t = float>
-    Filter<data_t> makeSheppLogan(const DataDescriptor& descriptor)
+    std::unique_ptr<Filter<data_t>> makeSheppLogan(const DataDescriptor& descriptor)
     {
         auto kmax = kMax<data_t>(descriptor);
         return makeFilter<data_t>(descriptor, [&](IndexVector_t nu) {
@@ -90,7 +92,7 @@ namespace elsa
     }
 
     template <typename data_t = float>
-    Filter<data_t> makeCosine(const DataDescriptor& descriptor)
+    std::unique_ptr<Filter<data_t>> makeCosine(const DataDescriptor& descriptor)
     {
         auto kmax = kMax<data_t>(descriptor);
         return makeFilter<data_t>(descriptor, [&](IndexVector_t nu) {
@@ -100,7 +102,7 @@ namespace elsa
     }
 
     template <typename data_t = float>
-    Filter<data_t> makeHann(const DataDescriptor& descriptor)
+    std::unique_ptr<Filter<data_t>> makeHann(const DataDescriptor& descriptor)
     {
         auto kmax = kMax<data_t>(descriptor);
         return makeFilter<data_t>(descriptor, [&](IndexVector_t nu) {

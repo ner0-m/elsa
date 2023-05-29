@@ -11,7 +11,6 @@
 
 namespace elsa
 {
-    // TODO: tests
     template <typename data_t>
     FBP<data_t>::FBP(const LinearOperator<data_t>& P, const Filter<data_t>& g)
         : projector_{P.clone()}, filter_{downcast<Filter<data_t>>(g.clone())}
