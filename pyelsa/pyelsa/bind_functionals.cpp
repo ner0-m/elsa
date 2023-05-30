@@ -1,6 +1,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/complex.h>
+#include <pybind11/operators.h>
 
+#include "Complex.h"
 #include "Constraint.h"
 #include "DataContainer.h"
 #include "DataDescriptor.h"
@@ -114,6 +116,28 @@ namespace detail
                py::arg("x"), py::arg("result"));
         fn.def("getHessian", py::overload_cast<const DataContainer&>(&Functional::getHessian),
                py::arg("x"), py::return_value_policy::move);
+
+        fn.def(py::self + py::self, py::return_value_policy::take_ownership);
+        fn.def(data_t{} * py::self, py::return_value_policy::take_ownership);
+        fn.def(py::self * data_t{}, py::return_value_policy::take_ownership);
+    }
+
+    template <class data_t>
+    void add_functional_add(py::module& m, const char* name)
+    {
+        using Functional = elsa::Functional<data_t>;
+
+        py::class_<elsa::FunctionalSum<data_t>, Functional> fn(m, name);
+        fn.def(py::init<const Functional&, const Functional&>());
+    }
+
+    template <class data_t>
+    void add_functional_scalar_mul(py::module& m, const char* name)
+    {
+        using Functional = elsa::Functional<data_t>;
+
+        py::class_<elsa::FunctionalScalarMul<data_t>, Functional> fn(m, name);
+        fn.def(py::init<const Functional&, data_t>());
     }
 } // namespace detail
 
@@ -130,6 +154,18 @@ void add_functional(py::module& m)
     detail::add_functional<thrust::complex<double>>(m, "Functionalcd");
 
     m.attr("Functional") = m.attr("Functionalf");
+
+    detail::add_functional_scalar_mul<float>(m, "FunctionalScalarMulf");
+    detail::add_functional_scalar_mul<double>(m, "FunctionalScalarMuld");
+    detail::add_functional_scalar_mul<elsa::complex<float>>(m, "FunctionalScalarMulcf");
+    detail::add_functional_scalar_mul<elsa::complex<double>>(m, "FunctionalScalarMulcd");
+    m.attr("FunctionalScalarMul") = m.attr("FunctionalScalarMulf");
+
+    detail::add_functional_add<float>(m, "FunctionalAddf");
+    detail::add_functional_add<double>(m, "FunctionalAddd");
+    detail::add_functional_add<elsa::complex<float>>(m, "FunctionalAddcf");
+    detail::add_functional_add<elsa::complex<double>>(m, "FunctionalAddcd");
+    m.attr("FunctionalAdd") = m.attr("FunctionalAddf");
 }
 
 namespace detail

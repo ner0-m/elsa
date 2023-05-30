@@ -172,8 +172,29 @@ namespace elsa
         /// Make deletion of copy constructor explicit
         FunctionalSum(const FunctionalSum<data_t>&) = delete;
 
+        /// Default Move constructor
+        FunctionalSum(FunctionalSum<data_t>&& other)
+            : Functional<data_t>(other.getDomainDescriptor()),
+              lhs_(std::move(other.lhs_)),
+              rhs_(std::move(other.rhs_))
+        {
+        }
+
         /// Make deletion of copy assignment explicit
         FunctionalSum& operator=(const FunctionalSum<data_t>&) = delete;
+
+        /// Default Move assignment
+        FunctionalSum& operator=(FunctionalSum<data_t>&& other) noexcept
+        {
+            this->_domainDescriptor = std::move(other._domainDescriptor);
+            lhs_ = std::move(other.lhs_);
+            rhs_ = std::move(other.rhs_);
+
+            return *this;
+        }
+
+        // Default destructor
+        ~FunctionalSum() override = default;
 
     private:
         /// evaluate the functional as \f$g(x) + h(x)\f$
@@ -229,9 +250,28 @@ namespace elsa
         /// Make deletion of copy constructor explicit
         FunctionalScalarMul(const FunctionalScalarMul<data_t>&) = delete;
 
+        /// Implement the move constructor
+        FunctionalScalarMul(FunctionalScalarMul<data_t>&& other)
+            : Functional<data_t>(other.getDomainDescriptor()),
+              fn_(std::move(other.fn_)),
+              scalar_(std::move(other.scalar_))
+        {
+        }
+
         /// Make deletion of copy assignment explicit
         FunctionalScalarMul& operator=(const FunctionalScalarMul<data_t>&) = delete;
 
+        /// Implement the move assignment operator
+        FunctionalScalarMul& operator=(FunctionalScalarMul<data_t>&& other) noexcept
+        {
+            this->_domainDescriptor = std::move(other._domainDescriptor);
+            fn_ = std::move(other.fn_);
+            scalar_ = std::move(other.scalar_);
+
+            return *this;
+        }
+
+        /// Default destructor
         ~FunctionalScalarMul() override = default;
 
     private:
