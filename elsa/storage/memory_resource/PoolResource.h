@@ -146,10 +146,10 @@ namespace elsa::mr
             // Neither of these should throw, if the inner type raises no exceptions.
             void doDeallocate(void* ptr) noexcept;
 
-            PoolResource(const PoolResource &other) = delete;
-            PoolResource& operator=(const PoolResource &other) = delete;
-            PoolResource(PoolResource &&other) noexcept = delete;
-            PoolResource& operator=(PoolResource &&other) noexcept = delete;
+            PoolResource(const PoolResource& other) = delete;
+            PoolResource& operator=(const PoolResource& other) = delete;
+            PoolResource(PoolResource&& other) noexcept = delete;
+            PoolResource& operator=(PoolResource&& other) noexcept = delete;
 
         protected:
             PoolResource(MemoryResource upstream,
@@ -187,9 +187,15 @@ namespace elsa::mr
                 selectBlock(uint64_t listOccupancy,
                             const std::vector<pool_resource::Block*>& freeLists, size_t blockSize);
         };
+
+        struct HybridFit {
+            static pool_resource::Block*
+                selectBlock(uint64_t listOccupancy,
+                            const std::vector<pool_resource::Block*>& freeLists, size_t blockSize);
+        };
     } // namespace pool_resource
 
-    using PoolResource = pool_resource::PoolResource<pool_resource::ConstantTimeFit>;
+    using PoolResource = pool_resource::PoolResource<pool_resource::HybridFit>;
 
     /// @brief Pool resource able to serve allocations in average constant time (provided the
     /// upstream allocator also gives this guarantee). May lead to more fragmentation than a first
@@ -198,5 +204,9 @@ namespace elsa::mr
 
     /// @brief Pool resource that serves allocations via searching the corresponding seg. free list
     /// in linear time.
-    using FirstFitResource = pool_resource::PoolResource<pool_resource::FirstFit>;
+    using FirstFitPoolResource = pool_resource::PoolResource<pool_resource::FirstFit>;
+
+    /// @brief Pool resource follows the constant time fit strategy, but falls back to linear time
+    /// search when no block can be found in the larger lists.
+    using HybridFitPoolResource = pool_resource::PoolResource<pool_resource::HybridFit>;
 } // namespace elsa::mr

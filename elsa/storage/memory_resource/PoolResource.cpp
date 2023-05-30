@@ -603,7 +603,30 @@ namespace elsa::mr
             }
         }
 
+        pool_resource::Block*
+            HybridFit::selectBlock(uint64_t listOccupancy,
+                                   const std::vector<pool_resource::Block*>& freeLists,
+                                   size_t blockSize)
+        {
+            pool_resource::Block* block =
+                ConstantTimeFit::selectBlock(listOccupancy, freeLists, blockSize);
+            if (block) {
+                return block;
+            }
+
+            size_t logBlockSize = log2Floor(blockSize);
+            size_t freeListIndex = logBlockSize - pool_resource::MIN_BLOCK_SIZE_LOG;
+            for (block = freeLists[freeListIndex]; block; block = block->_nextFree) {
+                if (block->size() >= blockSize) {
+                    return block;
+                }
+            }
+
+            return nullptr;
+        }
+
         template class PoolResource<ConstantTimeFit>;
         template class PoolResource<FirstFit>;
+        template class PoolResource<HybridFit>;
     } // namespace pool_resource
 } // namespace elsa::mr
