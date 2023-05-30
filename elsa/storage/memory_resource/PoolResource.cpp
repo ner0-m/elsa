@@ -215,10 +215,7 @@ namespace elsa::mr
             void* nextAdress = voidPtrOffset(block->_address, block->size());
             auto nextIt = _addressToBlock.find(nextAdress);
             if (nextIt != _addressToBlock.end() && nextIt->second->isFree()
-                && nextIt->second->_prevAddress
-                       != nullptr) { // _prevAddress == nullptr indicates that the block is the
-                                     // start block of another chunk, which just happens to be next
-                                     // to this one. Never coalesce accross chunk boundaries
+                && !nextIt->second->isChunkStart()) { // Never coalesce accross chunk boundaries
                 // coalesce with next block
                 pool_resource::Block* next = nextIt->second.get();
                 unlinkFreeBlock(next);
@@ -481,7 +478,7 @@ namespace elsa::mr
                 // (if there is one and we are not at the end of the chunk)
                 void* successorAddress = voidPtrOffset(blockAddress, oldSize);
                 auto successorIt = _addressToBlock.find(successorAddress);
-                if (successorIt != _addressToBlock.end()) {
+                if (successorIt != _addressToBlock.end() && !successorIt->second->isChunkStart()) {
                     successorIt->second->_prevAddress = subblockAddress;
                 }
             }
