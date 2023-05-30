@@ -5,16 +5,16 @@ find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 
 # list all the headers of the module
 set(MODULE_HEADERS projector_kernels/TraverseSiddonsCUDA.cuh projector_kernels/TraverseJosephsCUDA.cuh
-                   projector_kernels/ProjectVoxelsCUDA.cuh SiddonsMethodCUDA.h JosephsMethodCUDA.h VoxelProjectorCUDA.h
+                   projector_kernels/ProjectVoxelsCUDA.cuh SiddonsMethodCUDA.h JosephsMethodCUDA.h VoxelProjectorCUDA.h CUDAEllipses.h
 )
 
 # list all the code files of the module
 set(MODULE_SOURCES
-    projector_kernels/TraverseSiddonsCUDA.cu projector_kernels/TraverseJosephsCUDA.cu
+    projector_kernels/TraverseSiddonsCUDA.cu projector_kernels/TraverseJosephsCUDA.cu CUDAEllipses.cu
     projector_kernels/ProjectVoxelsCUDA.cu SiddonsMethodCUDA.cpp JosephsMethodCUDA.cpp VoxelProjectorCUDA.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_projectors ${CUDART_LIBRARY})
+list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_projectors ${CUDART_LIBRARY} elsa_generators)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 ADD_ELSA_MODULE(

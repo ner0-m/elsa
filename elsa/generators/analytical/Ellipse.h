@@ -52,7 +52,7 @@ namespace elsa::phantoms
             return *this == asEllipse;
         };
 
-    private:
+    public:
         data_t w;
         Eigen::Vector<data_t, n> c;
         Eigen::DiagonalMatrix<data_t, n> A;

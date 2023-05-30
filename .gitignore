@@ -107,3 +107,8 @@ skbuild/cmake_test_compile/*
 
 # Generated manifests
 MANIFEST
+
+htc
+.clangd
+pyelsa
+env

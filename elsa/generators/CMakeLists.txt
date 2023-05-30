@@ -21,6 +21,7 @@ set(MODULE_HEADERS
     TrajectoryGenerator.h
     analytical/Analytical.h
     analytical/Image.h
+    analytical/Canvas.h
     analytical/Sum.h
     analytical/Scaling.h
     analytical/Ellipse.h

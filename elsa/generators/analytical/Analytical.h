@@ -1,7 +1,8 @@
 #pragma once
+#include "CUDAEllipses.h"
 #include "DataContainer.h"
 #include "DetectorDescriptor.h"
-#include "Empty.h"
+#include "Canvas.h"
 #include "Error.h"
 #include "Image.h"
 #include "Sum.h"
@@ -24,7 +25,7 @@
 namespace elsa::phantoms
 {
 
-    template <typename data_t>
+    template <typename data_t, bool useCUDA = false>
     DataContainer<data_t> analyticalSheppLogan(const VolumeDescriptor& imageDescriptor,
                                                const DetectorDescriptor& sinogramDescriptor)
     {
@@ -40,9 +41,11 @@ namespace elsa::phantoms
             throw InvalidArgumentError("only square shepplogan supported!");
         }
 
-        Canvas<data_t> sheppLogan;
-
         if (imgDim == 3) {
+
+            auto sheppLogan =
+                std::conditional_t<useCUDA, CUDAEllipses<data_t, 3>, Canvas<data_t>>{};
+
             Eigen::Transform<data_t, 3, Eigen::Affine> scale;
 
             scale.linear() = Eigen::Matrix3<data_t>::Identity() * (coeffs[0] / 2.0);
@@ -62,7 +65,12 @@ namespace elsa::phantoms
 
                 sheppLogan += Ellipsoid<3, data_t>{100 * A, center, axes, rotation};
             }
+            return sheppLogan.makeSinogram(sinogramDescriptor);
         } else {
+
+            auto sheppLogan =
+                std::conditional_t<useCUDA, CUDAEllipses<data_t, 2>, Canvas<data_t>>{};
+
             Eigen::Transform<data_t, 2, Eigen::Affine> scale;
 
             scale.linear() = Eigen::Matrix2<data_t>::Identity() * (coeffs[0] / 2.0);
@@ -82,8 +90,7 @@ namespace elsa::phantoms
                 sheppLogan += Ellipsoid<2, data_t>{
                     100 * A, center, axes, rotation.toRotationMatrix()}; // Why do I need *100?
             }
+            return sheppLogan.makeSinogram(sinogramDescriptor);
         }
-
-        return sheppLogan.makeSinogram(sinogramDescriptor);
     }
 }; // namespace elsa::phantoms
