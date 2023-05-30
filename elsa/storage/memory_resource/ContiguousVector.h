@@ -341,9 +341,11 @@ namespace elsa::mr
                               && detail::is_random_iterator<ItType>::value)
                     insert_range(off, ibegin.base(), count, is_universal);
 
-                /* check if the iterator has a 'get' function to get the raw pointer */
-                else if constexpr (detail::get_returns_pointer<ItType>::value
-                                   && detail::is_random_iterator<ItType>::value)
+                /* Check if the iterator has a 'get' function to get the raw pointer.
+                 * Not checking for random access iterator, because we are checking for a
+                 * thrust pointer type here, which is not tagged as random access iterator.
+                 */
+                else if constexpr (detail::get_returns_pointer<ItType>::value)
                     insert_range(off, ibegin.get(), count, is_universal);
 
                 /* check if the iterator is a pointer of the right type
