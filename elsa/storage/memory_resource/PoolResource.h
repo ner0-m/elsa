@@ -69,7 +69,7 @@ namespace elsa::mr
         // 256 is chosen to make sure types for cuda kernels are sufficiently aligned.
         const size_t BLOCK_GRANULARITY = 256;
         const size_t MIN_BLOCK_SIZE = BLOCK_GRANULARITY;
-        const size_t MIN_BLOCK_SIZE_LOG = 5;
+        const size_t MIN_BLOCK_SIZE_LOG = 8;
         const size_t BITFIELD_MASK = BLOCK_GRANULARITY - 1;
         const size_t SIZE_MASK = ~BITFIELD_MASK;
         const size_t FREE_BIT = 1 << 0;

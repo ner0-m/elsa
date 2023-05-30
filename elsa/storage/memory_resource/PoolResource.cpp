@@ -70,7 +70,7 @@ namespace elsa::mr
     bool PoolResourceConfig::validate()
     {
         // chunk must at least by able to accomodate the largest possible block
-        return chunkSize <= maxChunkSize;
+        return chunkSize <= maxChunkSize && chunkSize >= pool_resource::MIN_BLOCK_SIZE;
     };
 
     namespace pool_resource
@@ -83,8 +83,8 @@ namespace elsa::mr
             if (!config.validate()) {
                 _config = PoolResourceConfig::defaultConfig();
             }
-            _freeLists.resize(log2Floor(_config.maxChunkSize) - pool_resource::MIN_BLOCK_SIZE_LOG,
-                              nullptr);
+            _freeLists.resize(
+                log2Floor(_config.maxChunkSize) - pool_resource::MIN_BLOCK_SIZE_LOG + 1, nullptr);
             _cachedChunks =
                 std::make_unique<std::unique_ptr<pool_resource::Block>[]>(_config.maxCachedChunks);
         }
@@ -93,7 +93,7 @@ namespace elsa::mr
         PoolResource<FreeListStrategy>::~PoolResource()
         {
             for (size_t i = 0; i < _cachedChunkCount; i++) {
-                _upstream->deallocate(_cachedChunks[i]->_address, _cachedChunks[i]->size(),
+                _upstream->deallocate(_cachedChunks[i]->_address, _cachedChunks[i]->_chunkSize,
                                       pool_resource::BLOCK_GRANULARITY);
             }
         }
@@ -417,6 +417,7 @@ namespace elsa::mr
                 // from _upstream again
                 size_t chunkSize =
                     std::min(std::max(requestedSize << 2, _config.chunkSize), _config.maxChunkSize);
+                chunkSize = alignUp(chunkSize, pool_resource::BLOCK_GRANULARITY);
                 // May throw std::bad_alloc
                 newChunkAddress = _upstream->allocate(chunkSize, pool_resource::BLOCK_GRANULARITY);
                 newChunk = std::make_unique<pool_resource::Block>();
@@ -430,7 +431,7 @@ namespace elsa::mr
                 auto [it, _] = _addressToBlock.insert({newChunkAddress, std::move(newChunk)});
                 return it->second.get();
             } catch (...) {
-                _upstream->deallocate(newChunkAddress, _config.chunkSize,
+                _upstream->deallocate(newChunkAddress, newChunk->_chunkSize,
                                       pool_resource::BLOCK_GRANULARITY);
                 throw;
             }
@@ -442,7 +443,7 @@ namespace elsa::mr
             if (_cachedChunkCount < _config.maxCachedChunks) {
                 _cachedChunks[_cachedChunkCount++] = std::move(chunk);
             } else {
-                _upstream->deallocate(chunk->_address, _config.chunkSize,
+                _upstream->deallocate(chunk->_address, chunk->_chunkSize,
                                       pool_resource::BLOCK_GRANULARITY);
             }
         }
