@@ -425,12 +425,15 @@ TEST_CASE_POOL("Cache chunk")
     MemoryResource dummy = DummyResource::make();
     MemoryResource resource = Pool::make(dummy, config);
     DummyResource* dummyNonOwning = dynamic_cast<DummyResource*>(dummy.get());
+    GIVEN("Single chunk-sized allocation")
     {
         void* ptr = resource->allocate(0x100, 0x1);
         size_t allocatedSize = dummyNonOwning->allocatedSize();
         resource->deallocate(ptr, 0x100, 0x1);
         CHECK_EQ(allocatedSize, dummyNonOwning->allocatedSize());
     }
+
+    GIVEN("Two chunk-sized allocations")
     {
         void* ptr1 = resource->allocate(0x100, 0x1);
         size_t sizeWithOneChunk = dummyNonOwning->allocatedSize();
@@ -440,6 +443,46 @@ TEST_CASE_POOL("Cache chunk")
         resource->deallocate(ptr2, 0x100, 0x1);
         CHECK_LT(sizeWithOneChunk, sizeWithTwoChunks);
         CHECK_EQ(sizeWithOneChunk, dummyNonOwning->allocatedSize());
+    }
+}
+
+TEST_CASE_POOL("Small max chunk size")
+{
+    PoolResourceConfig config = PoolResourceConfig::defaultConfig();
+    config.setChunkSize(0x400);
+    config.setMaxChunkSize(0x1000);
+    MemoryResource dummy = DummyResource::make();
+    DummyResource* dummyNonOwning = dynamic_cast<DummyResource*>(dummy.get());
+
+    GIVEN("Allocation the size of maxChunkSize")
+    {
+        MemoryResource resource = Pool::make(dummy, config);
+        void* ptr1 = resource->allocate(0x1000, 0x1);
+        CHECK_LE(dummyNonOwning->allocatedSize(), 0x1000);
+        resource->deallocate(ptr1, 0x1000, 0x1);
+    }
+
+    /* Sanity check for memory leak */
+    CHECK_EQ(dummyNonOwning->allocatedSize(), 0);
+
+    GIVEN("Allocation much smaller than chunkSize")
+    {
+        MemoryResource resource = Pool::make(dummy, config);
+        void* ptr1 = resource->allocate(0x100, 0x1);
+        CHECK_EQ(dummyNonOwning->allocatedSize(), 0x400);
+        resource->deallocate(ptr1, 0x100, 0x1);
+    }
+
+    /* Sanity check for memory leak */
+    CHECK_EQ(dummyNonOwning->allocatedSize(), 0);
+
+    GIVEN("Allocation larger than maxChunkSize")
+    {
+        MemoryResource resource = Pool::make(dummy, config);
+        void* ptr1 = resource->allocate(0x10000, 0x1);
+        resource->deallocate(ptr1, 0x10000, 0x1);
+        /* make sure this chunk is not cached. it is too large! */
+        CHECK_EQ(dummyNonOwning->allocatedSize(), 0);
     }
 }
 
