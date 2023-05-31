@@ -168,7 +168,7 @@ namespace elsa::mr
             /// configuration is used instead.
             /// @return A MemoryResource that encapsulates a PoolResource.
             static MemoryResource
-                make(MemoryResource upstream,
+                make(MemoryResource upstream = baselineInstance(),
                      PoolResourceConfig config = PoolResourceConfig::defaultConfig());
 
             void* allocate(size_t size, size_t alignment) override;
