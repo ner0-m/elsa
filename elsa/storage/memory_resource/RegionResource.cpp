@@ -1,6 +1,7 @@
 #include "RegionResource.h"
 
 #include "BitUtil.h"
+#include "Util.h"
 
 namespace elsa::mr
 {
@@ -30,7 +31,7 @@ namespace elsa::mr
                                    const RegionResourceConfig& config)
         : _upstream{upstream}, _config{config}
     {
-        _basePtr = _upstream->allocate(_config.regionSize, 8);
+        _basePtr = _upstream->allocate(_config.regionSize, region_resource::BLOCK_GRANULARITY);
         _bumpPtr = _basePtr;
         _allocatedSize = 0;
         _endPtr = voidPtrOffset(_basePtr, _config.regionSize);
@@ -38,7 +39,7 @@ namespace elsa::mr
 
     RegionResource::~RegionResource()
     {
-        _upstream->deallocate(_basePtr, _config.regionSize, 8);
+        _upstream->deallocate(_basePtr, _config.regionSize, region_resource::BLOCK_GRANULARITY);
     }
 
     MemoryResource RegionResource::make(const MemoryResource& upstream,
@@ -49,16 +50,19 @@ namespace elsa::mr
 
     void* RegionResource::allocate(size_t size, size_t alignment)
     {
+        auto [_, sizeWithAlignment] =
+            util::computeSizeWithAlignment(size, alignment, region_resource::BLOCK_GRANULARITY);
+
         size_t remainingSize =
             reinterpret_cast<uintptr_t>(_endPtr) - reinterpret_cast<uintptr_t>(_bumpPtr);
 
-        if (size > remainingSize) {
-            return _upstream->allocate(size, alignment);
+        if (sizeWithAlignment > remainingSize) {
+            return _upstream->allocate(sizeWithAlignment, alignment);
         }
 
-        _allocatedSize += size;
-        void* ret = _bumpPtr;
-        _bumpPtr = voidPtrOffset(_bumpPtr, size);
+        _allocatedSize += sizeWithAlignment;
+        void* ret = alignUp(_bumpPtr, alignment);
+        _bumpPtr = voidPtrOffset(_bumpPtr, sizeWithAlignment);
         return ret;
     }
 
@@ -66,7 +70,9 @@ namespace elsa::mr
     {
         if (reinterpret_cast<uintptr_t>(_basePtr) <= reinterpret_cast<uintptr_t>(ptr)
             && reinterpret_cast<uintptr_t>(ptr) < reinterpret_cast<uintptr_t>(_endPtr)) {
-            _allocatedSize -= size;
+            auto [_, sizeWithAlignment] =
+                util::computeSizeWithAlignment(size, alignment, region_resource::BLOCK_GRANULARITY);
+            _allocatedSize -= sizeWithAlignment;
 
             if (_allocatedSize == 0) {
                 // arena can be reused

@@ -6,6 +6,11 @@
 
 namespace elsa::mr
 {
+    namespace region_resource
+    {
+        constexpr size_t BLOCK_GRANULARITY = 256;
+    }
+
     class RegionResource;
 
     class RegionResourceConfig
