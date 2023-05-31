@@ -69,10 +69,10 @@ namespace elsa::mr
 
         void releaseCache();
 
-        CacheResource(const CacheResource &other) = delete;
-        CacheResource& operator=(const CacheResource &other) = delete;
-        CacheResource(CacheResource &&other) noexcept = delete;
-        CacheResource& operator=(CacheResource &&other) noexcept = delete;
+        CacheResource(const CacheResource& other) = delete;
+        CacheResource& operator=(const CacheResource& other) = delete;
+        CacheResource(CacheResource&& other) noexcept = delete;
+        CacheResource& operator=(CacheResource&& other) noexcept = delete;
 
     protected:
         CacheResource(MemoryResource upstream,
@@ -82,7 +82,7 @@ namespace elsa::mr
 
     public:
         static MemoryResource
-            make(MemoryResource upstream,
+            make(MemoryResource upstream = baselineInstance(),
                  const CacheResourceConfig& config = CacheResourceConfig::defaultConfig());
 
         void* allocate(size_t size, size_t alignment) override;

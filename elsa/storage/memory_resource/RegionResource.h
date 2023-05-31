@@ -6,6 +6,11 @@
 
 namespace elsa::mr
 {
+    namespace region_resource
+    {
+        constexpr size_t BLOCK_GRANULARITY = 256;
+    }
+
     class RegionResource;
 
     class RegionResourceConfig
@@ -37,10 +42,10 @@ namespace elsa::mr
         void* _bumpPtr;
         size_t _allocatedSize;
 
-        RegionResource(const RegionResource &other) = delete;
-        RegionResource& operator=(const RegionResource &other) = delete;
-        RegionResource(RegionResource &&other) noexcept = delete;
-        RegionResource& operator=(RegionResource &&other) noexcept = delete;
+        RegionResource(const RegionResource& other) = delete;
+        RegionResource& operator=(const RegionResource& other) = delete;
+        RegionResource(RegionResource&& other) noexcept = delete;
+        RegionResource& operator=(RegionResource&& other) noexcept = delete;
 
     protected:
         RegionResource(const MemoryResource& upstream,
@@ -50,7 +55,7 @@ namespace elsa::mr
 
     public:
         static MemoryResource
-            make(const MemoryResource& upstream,
+            make(const MemoryResource& upstream = baselineInstance(),
                  const RegionResourceConfig& config = RegionResourceConfig::defaultConfig());
 
         void* allocate(size_t size, size_t alignment) override;
