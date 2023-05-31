@@ -81,6 +81,10 @@ namespace elsa::mr
             return;
         }
 
+        if (!ptr) {
+            return;
+        }
+
         try {
             _cache.push_back({ptr, size, alignment});
         } catch (std::bad_alloc& e) {
