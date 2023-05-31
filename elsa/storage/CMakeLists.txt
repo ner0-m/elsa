@@ -40,6 +40,7 @@ set(MODULE_SOURCES
     memory_resource/AllocationHint.cpp
     memory_resource/MemoryOperations.cpp
     memory_resource/ElsaThrustMRAdaptor.cpp
+    memory_resource/Util.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa::Thrust elsa_config)

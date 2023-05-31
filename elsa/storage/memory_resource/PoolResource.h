@@ -127,13 +127,6 @@ namespace elsa::mr
             void linkFreeBlock(pool_resource::Block* block);
             void unlinkFreeBlock(pool_resource::Block* block);
             size_t freeListIndexForFreeChunk(size_t size);
-            size_t computeRealSize(size_t size);
-            // pair element 1: realSize, i.e. the size of the block to return
-            // pair element 2: blockSize, i.e. the required size for a block,
-            //                 so that the allocation can be carved out of it.
-            //                 blockSize >= realSize holds, to satisfy alignment guarantees.
-            std::pair<size_t, size_t> computeSizeWithAlginment(size_t requestedSize,
-                                                               size_t requestedAlignment);
             // Returns a registered (in the address map) block that is not in the free list.
             // The metadata of the block is correctly initialized.
             pool_resource::Block* expandPool(size_t requestedSize);

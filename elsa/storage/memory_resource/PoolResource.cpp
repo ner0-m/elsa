@@ -2,6 +2,7 @@
 
 #include "BitUtil.h"
 #include "Assertions.h"
+#include "Util.h"
 
 /*
  * Free list layout:
@@ -108,7 +109,8 @@ namespace elsa::mr
         template <typename FreeListStrategy>
         void* PoolResource<FreeListStrategy>::allocate(size_t size, size_t alignment)
         {
-            auto [realSize, blockSize] = computeSizeWithAlginment(size, alignment);
+            auto [realSize, blockSize] =
+                util::computeSizeWithAlignment(size, alignment, pool_resource::BLOCK_GRANULARITY);
             if (blockSize > _config.maxChunkSize) {
                 // allocation too big to be handled by the pool
                 return _upstream->allocate(size, alignment);
@@ -183,7 +185,8 @@ namespace elsa::mr
             // This behavior seems appropriate, since this is essentially an invalid free.
             // The provided pointer cannot possible be allocated with that alignment.
             // If this behavior is undesired, let me know.
-            auto [_, blockSize] = computeSizeWithAlginment(size, alignment);
+            auto [_, blockSize] =
+                util::computeSizeWithAlignment(size, alignment, pool_resource::BLOCK_GRANULARITY);
             if (blockSize > _config.maxChunkSize) {
                 // allocation too big to be handled by the pool, must have come from upstream
                 _upstream->deallocate(ptr, size, alignment);
@@ -252,7 +255,7 @@ namespace elsa::mr
             ENSURE(blockIt != _addressToBlock.end());
             std::unique_ptr<pool_resource::Block>& block = blockIt->second;
 
-            size_t realSize = computeRealSize(newSize);
+            size_t realSize = util::computeRealSize(newSize, pool_resource::BLOCK_GRANULARITY);
             size_t currentSize = block->size();
             if (realSize == currentSize) {
                 return true;
@@ -350,44 +353,6 @@ namespace elsa::mr
             // all blocks larger than the size for the largest free list are stored there as well
             freeListIndex = std::min(freeListIndex, _freeLists.size() - 1);
             return freeListIndex;
-        }
-
-        template <typename FreeListStrategy>
-        size_t PoolResource<FreeListStrategy>::computeRealSize(size_t size)
-        {
-            return (size + pool_resource::BLOCK_GRANULARITY - 1)
-                   & ~(pool_resource::BLOCK_GRANULARITY - 1);
-        }
-
-        template <typename FreeListStrategy>
-        std::pair<size_t, size_t>
-            PoolResource<FreeListStrategy>::computeSizeWithAlginment(size_t requestedSize,
-                                                                     size_t requestedAlignment)
-        {
-            if (requestedSize == 0) {
-                ++requestedSize;
-            }
-
-            if (!isPowerOfTwo(requestedAlignment)) {
-                throw std::bad_alloc();
-            }
-
-            // find best-fitting non-empty bin
-            size_t realSize = computeRealSize(requestedSize);
-
-            // this overflow check is probably unnecessary, since the log is already compared
-            // against the max block size
-            ENSURE(realSize >= requestedSize);
-            // minimal size of the free block to carve the allocation out of. must be enough for to
-            // contain an aligned allocation
-            size_t blockSize;
-            if (requestedAlignment <= pool_resource::BLOCK_GRANULARITY) {
-                blockSize = realSize;
-            } else {
-                blockSize = realSize + requestedAlignment;
-                ENSURE(blockSize >= realSize);
-            }
-            return {realSize, blockSize};
         }
 
         template <typename FreeListStrategy>
