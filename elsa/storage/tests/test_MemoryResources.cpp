@@ -5,6 +5,7 @@
 #include "memory_resource/UniversalResource.h"
 #include "memory_resource/SynchResource.h"
 #include "memory_resource/CacheResource.h"
+#include "memory_resource/RegionResource.h"
 #include "memory_resource/BitUtil.h"
 
 #include "Assertions.h"
@@ -51,33 +52,6 @@ static MemoryResource provideResource()
 {
     ENSURE(false);
     return defaultInstance();
-}
-
-template <>
-MemoryResource provideResource<PoolResource>()
-{
-    MemoryResource upstream = UniversalResource::make();
-    return PoolResource::make(upstream);
-}
-
-template <>
-MemoryResource provideResource<UniversalResource>()
-{
-    return UniversalResource::make();
-}
-
-template <>
-MemoryResource provideResource<SynchResource<PoolResource>>()
-{
-    MemoryResource upstream = UniversalResource::make();
-    return SynchResource<PoolResource>::make(upstream);
-}
-
-template <>
-MemoryResource provideResource<CacheResource>()
-{
-    MemoryResource upstream = UniversalResource::make();
-    return PoolResource::make(upstream);
 }
 
 static size_t sizeForIndex(size_t i)
@@ -130,12 +104,13 @@ static void testNonoverlappingAllocations(MemoryResource resource)
 
 TEST_SUITE_BEGIN("memoryresources");
 
-TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
-                   SynchResource<PoolResource>, CacheResource)
+TEST_CASE_TEMPLATE("Memory resource", T, ConstantFitPoolResource, FirstFitPoolResource,
+                   HybridFitPoolResource, UniversalResource, SynchResource<UniversalResource>,
+                   CacheResource, RegionResource)
 {
     GIVEN("Check overlap")
     {
-        MemoryResource resource = provideResource<T>();
+        MemoryResource resource = T::make();
         unsigned char* ptrs[100];
         for (int i = 0; i < 100; i++) {
             ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(256, 4));
@@ -150,7 +125,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
 
     GIVEN("Check alignment")
     {
-        MemoryResource resource = provideResource<T>();
+        MemoryResource resource = T::make();
 
         void* ptrs[12];
         for (size_t i = 0, alignment = 1; i < 12; i++, alignment <<= 1) {
@@ -170,7 +145,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
         std::uniform_int_distribution<size_t> dist;
         rng.seed(0xdeadbeef);
 
-        MemoryResource resource = provideResource<T>();
+        MemoryResource resource = T::make();
         std::vector<unsigned char*> ptrs(10000);
         for (size_t i = 0; i < 10000; i++) {
             size_t size = sizeForIndex(i);
@@ -192,7 +167,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
 
     GIVEN("Large allocation")
     {
-        MemoryResource resource = provideResource<T>();
+        MemoryResource resource = T::make();
         // allocation may fail by std::bad_alloc, just as long as it does not fail in some
         // unspecified way
         try {
@@ -208,16 +183,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
 
     GIVEN("Empty allocation")
     {
-        MemoryResource resource = provideResource<T>();
-        unsigned char* ptr = reinterpret_cast<unsigned char*>(resource->allocate(0, 32));
-        // it must not be a nullptr (similar to new)
-        CHECK_NE(ptr, nullptr);
-        resource->deallocate(ptr, 0, 32);
-    }
-
-    GIVEN("Empty allocation")
-    {
-        MemoryResource resource = provideResource<T>();
+        MemoryResource resource = T::make();
         unsigned char* ptr = reinterpret_cast<unsigned char*>(resource->allocate(0, 32));
         // it must not be a nullptr (similar to new)
         CHECK_NE(ptr, nullptr);
@@ -226,7 +192,7 @@ TEST_CASE_TEMPLATE("Memory resource", T, PoolResource, UniversalResource,
 
     GIVEN("Invalid alignment")
     {
-        MemoryResource resource = provideResource<T>();
+        MemoryResource resource = T::make();
         CHECK_THROWS_AS(resource->allocate(32, 0), std::bad_alloc);
         CHECK_THROWS_AS(resource->allocate(32, 54), std::bad_alloc);
         CHECK_THROWS_AS(resource->allocate(32, 1023), std::bad_alloc);
@@ -274,13 +240,14 @@ public:
     size_t allocatedSize() { return _allocatedSize; }
 };
 
-TEST_CASE("Pool resource")
+TEST_CASE_TEMPLATE("Pool resource", Pool, ConstantFitPoolResource, FirstFitPoolResource,
+                   HybridFitPoolResource)
 {
 
     GIVEN("Allocation untouched by resource")
     {
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy);
+        MemoryResource resource = Pool::make(dummy);
         unsigned char* ptrs[100];
         for (int i = 0; i < 100; i++) {
             ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(256, 4));
@@ -298,7 +265,7 @@ TEST_CASE("Pool resource")
         config.setMaxCachedChunks(0);
 
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy, config);
+        MemoryResource resource = Pool::make(dummy, config);
         unsigned char* ptrs[109];
         for (int i = 0; i < 109; i++) {
             ptrs[i] =
@@ -316,7 +283,7 @@ TEST_CASE("Pool resource")
     GIVEN("Resize growth")
     {
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy);
+        MemoryResource resource = Pool::make(dummy);
         void* ptr = resource->allocate(1234, 0x10);
         CHECK(resource->tryResize(ptr, 1234, 0x10, 5678));
         testNonoverlappingAllocations(resource);
@@ -326,7 +293,7 @@ TEST_CASE("Pool resource")
     GIVEN("Resize same size")
     {
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy);
+        MemoryResource resource = Pool::make(dummy);
         void* ptr = resource->allocate(1234, 0x10);
         CHECK(resource->tryResize(ptr, 1234, 0x10, 1234));
         // different size, but the effective size of the block is the same
@@ -339,7 +306,7 @@ TEST_CASE("Pool resource")
     GIVEN("Resize shrink")
     {
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy);
+        MemoryResource resource = Pool::make(dummy);
         void* ptr = resource->allocate(1234, 0x10);
         // shrinking should always work for the pool allocator
         CHECK(resource->tryResize(ptr, 1234, 0x10, 50));
@@ -353,7 +320,7 @@ TEST_CASE("Pool resource")
         // This test relies on internal allocator details, so that ptr2 is always allocated directly
         // after the first
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy);
+        MemoryResource resource = Pool::make(dummy);
         void* ptr = resource->allocate(1234, 0x10);
         void* ptr2 = resource->allocate(1234, 0x10);
         CHECK_FALSE(resource->tryResize(ptr, 1234, 0x10, 5678));
@@ -368,7 +335,7 @@ TEST_CASE("Pool resource")
         // release memory to upstream immediately
         config.setMaxCachedChunks(0);
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy, config);
+        MemoryResource resource = Pool::make(dummy, config);
 
         void* ptrs[100];
         for (int i = 0; i < 50; i++) {
@@ -404,7 +371,7 @@ TEST_CASE("Pool resource")
         // release memory to upstream immediately
         config.setMaxCachedChunks(0);
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy, config);
+        MemoryResource resource = Pool::make(dummy, config);
 
         void* ptrs[100];
         for (int i = 0; i < 100; i++) {
@@ -431,7 +398,7 @@ TEST_CASE("Pool resource")
         PoolResourceConfig config = PoolResourceConfig::defaultConfig();
         config.setMaxCachedChunks(0);
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy, config);
+        MemoryResource resource = Pool::make(dummy, config);
 
         void* ptr = resource->allocate(0x1000, 0x10);
 
@@ -453,7 +420,7 @@ TEST_CASE("Pool resource")
         config.setMaxChunkSize(0x100);
         config.setMaxCachedChunks(1);
         MemoryResource dummy = DummyResource::make();
-        MemoryResource resource = PoolResource::make(dummy, config);
+        MemoryResource resource = Pool::make(dummy, config);
         DummyResource* dummyNonOwning = dynamic_cast<DummyResource*>(dummy.get());
         {
             void* ptr = resource->allocate(0x100, 0x1);
