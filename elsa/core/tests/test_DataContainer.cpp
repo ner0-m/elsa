@@ -1751,6 +1751,60 @@ TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", da
     }
 }
 
+TEST_CASE_TEMPLATE("DataContainer: zeros and zeroslike", data_t, float, double, complex<float>,
+                   complex<double>)
+{
+    IndexVector_t numCoeff({{3, 3}});
+    VolumeDescriptor dd(numCoeff);
+
+    auto x1 = zeros<data_t>(dd);
+    auto x2 = zeroslike(x1);
+
+    CHECK_EQ(x1.getSize(), dd.getNumberOfCoefficients());
+    CHECK_EQ(x2.getSize(), dd.getNumberOfCoefficients());
+
+    for (int i = 0; i < x1.getSize(); ++i) {
+        CHECK_EQ(x1[i], data_t{0});
+        CHECK_EQ(x2[i], data_t{0});
+    }
+}
+
+TEST_CASE_TEMPLATE("DataContainer: ones and oneslike", data_t, float, double, complex<float>,
+                   complex<double>)
+{
+    IndexVector_t numCoeff({{3, 3}});
+    VolumeDescriptor dd(numCoeff);
+
+    auto x1 = ones<data_t>(dd);
+    auto x2 = oneslike(x1);
+
+    CHECK_EQ(x1.getSize(), dd.getNumberOfCoefficients());
+    CHECK_EQ(x2.getSize(), dd.getNumberOfCoefficients());
+
+    for (int i = 0; i < x1.getSize(); ++i) {
+        CHECK_EQ(x1[i], data_t{1});
+        CHECK_EQ(x2[i], data_t{1});
+    }
+}
+
+TEST_CASE_TEMPLATE("DataContainer: full and fulllike", data_t, float, double, complex<float>,
+                   complex<double>)
+{
+    IndexVector_t numCoeff({{3, 3}});
+    VolumeDescriptor dd(numCoeff);
+
+    auto x1 = full<data_t>(dd, data_t{5});
+    auto x2 = fulllike(x1, data_t{42});
+
+    CHECK_EQ(x1.getSize(), dd.getNumberOfCoefficients());
+    CHECK_EQ(x2.getSize(), dd.getNumberOfCoefficients());
+
+    for (int i = 0; i < x1.getSize(); ++i) {
+        CHECK_EQ(x1[i], data_t{5});
+        CHECK_EQ(x2[i], data_t{42});
+    }
+}
+
 TEST_CASE_TEMPLATE("DataContainer: minimum/maximum", data_t, float, double)
 {
     GIVEN("Some container")

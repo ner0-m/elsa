@@ -572,4 +572,38 @@ namespace elsa
     void lincomb(SelfType_t<data_t> alpha, const DataContainer<data_t>& x, SelfType_t<data_t> b,
                  const DataContainer<data_t>& y, DataContainer<data_t>& out);
 
+    /// Create a DataContainer filled with zeros and the given DataDescriptor
+    template <class data_t>
+    DataContainer<data_t> zeros(const DataDescriptor& desc);
+
+    /// Create a DataContainer filled with zeros and the DataDescriptor of the given DataContainer
+    template <class data_t>
+    DataContainer<data_t> zeroslike(const DataContainer<data_t>& dc);
+
+    /// Create a DataContainer filled with ones values and the given DataDescriptor
+    template <class data_t>
+    DataContainer<data_t> ones(const DataDescriptor& desc);
+
+    /// Create a DataContainer filled with ones and the DataDescriptor of the given DataContainer
+    template <class data_t>
+    DataContainer<data_t> oneslike(const DataContainer<data_t>& dc);
+
+    /// Create a DataContainer filled with the given value and DataDescriptor
+    template <class data_t>
+    DataContainer<data_t> full(const DataDescriptor& desc, SelfType_t<data_t> value);
+
+    /// Create a DataContainer filled with the given value and the DataDescriptor of the given
+    /// DataContainer
+    template <class data_t>
+    DataContainer<data_t> fulllike(const DataContainer<data_t>& dc, SelfType_t<data_t> value);
+
+    /// Create an uninitialized DataContainer, the caller is responsible to fill DataContainer
+    /// before use
+    template <class data_t>
+    DataContainer<data_t> empty(const DataDescriptor& desc);
+
+    /// Create an uninitialized DataContainer with the DataDescriptor of the given DataContainer.
+    /// The caller is responsible to fill DataContainer before use
+    template <class data_t>
+    DataContainer<data_t> emptylike(const DataContainer<data_t>& dc);
 } // namespace elsa

@@ -1099,6 +1099,56 @@ namespace elsa
         lincomb(a, x.begin(), x.end(), b, y.begin(), out.begin());
     }
 
+    template <class data_t>
+    DataContainer<data_t> zeros(const DataDescriptor& desc)
+    {
+        return full<data_t>(desc, 0);
+    }
+
+    template <class data_t>
+    DataContainer<data_t> zeroslike(const DataContainer<data_t>& dc)
+    {
+        return zeros<data_t>(dc.getDataDescriptor());
+    }
+
+    template <class data_t>
+    DataContainer<data_t> ones(const DataDescriptor& desc)
+    {
+        return full<data_t>(desc, 1);
+    }
+
+    template <class data_t>
+    DataContainer<data_t> oneslike(const DataContainer<data_t>& dc)
+    {
+        return ones<data_t>(dc.getDataDescriptor());
+    }
+
+    template <class data_t>
+    DataContainer<data_t> full(const DataDescriptor& desc, SelfType_t<data_t> value)
+    {
+        auto dc = DataContainer<data_t>(desc);
+        dc = value;
+        return dc;
+    }
+
+    template <class data_t>
+    DataContainer<data_t> fulllike(const DataContainer<data_t>& dc, SelfType_t<data_t> value)
+    {
+        return full<data_t>(dc.getDataDescriptor(), value);
+    }
+
+    template <class data_t>
+    DataContainer<data_t> empty(const DataDescriptor& desc)
+    {
+        return DataContainer<data_t>(desc);
+    }
+
+    template <class data_t>
+    DataContainer<data_t> emptylike(const DataContainer<data_t>& dc)
+    {
+        return empty<data_t>(dc.getDataDescriptor());
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
@@ -1309,4 +1359,54 @@ namespace elsa
     ELSA_INSTANTIATE_AS_COMPLEX(complex<double>)
 
 #undef ELSA_INSTANTIATE_AS_COMPLEX
+
+#define ELSA_INSTANTIATE_FILL_FN(fn, type) \
+    template DataContainer<type> fn<type>(const DataDescriptor&);
+
+#define ELSA_INSTANTIATE_FILL_FN_TYPES(fn)       \
+    ELSA_INSTANTIATE_FILL_FN(fn, index_t)        \
+    ELSA_INSTANTIATE_FILL_FN(fn, float)          \
+    ELSA_INSTANTIATE_FILL_FN(fn, double)         \
+    ELSA_INSTANTIATE_FILL_FN(fn, complex<float>) \
+    ELSA_INSTANTIATE_FILL_FN(fn, complex<double>)
+
+    ELSA_INSTANTIATE_FILL_FN_TYPES(empty)
+    ELSA_INSTANTIATE_FILL_FN_TYPES(zeros)
+    ELSA_INSTANTIATE_FILL_FN_TYPES(ones)
+
+#undef ELSA_INSTANTIATE_FILL_FN
+#undef ELSA_INSTANTIATE_FILL_FN_TYPES
+
+#define ELSA_INSTANTIATE_FILL_LIKE_FN(fn, type) \
+    template DataContainer<type> fn<type>(const DataContainer<type>&);
+
+#define ELSA_INSTANTIATE_FILL_LIKE_FN_TYPES(fn)       \
+    ELSA_INSTANTIATE_FILL_LIKE_FN(fn, index_t)        \
+    ELSA_INSTANTIATE_FILL_LIKE_FN(fn, float)          \
+    ELSA_INSTANTIATE_FILL_LIKE_FN(fn, double)         \
+    ELSA_INSTANTIATE_FILL_LIKE_FN(fn, complex<float>) \
+    ELSA_INSTANTIATE_FILL_LIKE_FN(fn, complex<double>)
+
+    ELSA_INSTANTIATE_FILL_LIKE_FN_TYPES(emptylike)
+    ELSA_INSTANTIATE_FILL_LIKE_FN_TYPES(zeroslike)
+    ELSA_INSTANTIATE_FILL_LIKE_FN_TYPES(oneslike)
+
+#undef ELSA_INSTANTIATE_FILL_LIKE_FN
+#undef ELSA_INSTANTIATE_FILL_LIKE_FN_TYPES
+
+#define ELSA_INSTANTIATE_FULL_FN(type)                                                \
+    template DataContainer<type> full<type>(const DataDescriptor&, SelfType_t<type>); \
+    template DataContainer<type> fulllike<type>(const DataContainer<type>&, SelfType_t<type>);
+
+#define ELSA_INSTANTIATE_FULL_FN_TYPES()     \
+    ELSA_INSTANTIATE_FULL_FN(index_t)        \
+    ELSA_INSTANTIATE_FULL_FN(float)          \
+    ELSA_INSTANTIATE_FULL_FN(double)         \
+    ELSA_INSTANTIATE_FULL_FN(complex<float>) \
+    ELSA_INSTANTIATE_FULL_FN(complex<double>)
+
+    ELSA_INSTANTIATE_FULL_FN_TYPES()
+
+#undef ELSA_INSTANTIATE_FULL_FN
+#undef ELSA_INSTANTIATE_FULL_FN_TYPES
 } // namespace elsa

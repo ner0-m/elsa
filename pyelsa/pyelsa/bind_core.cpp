@@ -225,6 +225,14 @@ void add_datacontainer_free_functions(py::module& m)
     ELSA_ADD_FREE_FUNCTION_ALL_TYPES(square)
     ELSA_ADD_FREE_FUNCTION_ALL_TYPES(exp)
     ELSA_ADD_FREE_FUNCTION_ALL_TYPES(log)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(empty)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(emptylike)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(zeros)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(zeroslike)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(ones)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(oneslike)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(empty)
+    ELSA_ADD_FREE_FUNCTION_ALL_TYPES(emptylike)
 
     // Why doesn't this work, I don't know...but whatever, I DOOOO NOT CAAAARE
     /* m.def("sqrt", elsa::sqrt<elsa::index_t>); */
