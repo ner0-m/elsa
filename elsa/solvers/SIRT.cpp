@@ -24,19 +24,14 @@ namespace elsa
         const auto& domain = A.getDomainDescriptor();
         const auto& range = A.getRangeDescriptor();
 
-        DataContainer<data_t> domOnes(domain);
-        domOnes = 1;
-        auto rowsum = A.apply(domOnes);
+        auto rowsum = A.apply(domain.template element<data_t>().one());
 
-        // Preven division by zero (and hence NaNs), by sligthly lifting everything up a touch
+        // Prevent division by zero (and hence NaNs), by slightly lifting everything up a touch
         rowsum += data_t{1e-10f};
 
         Scaling<data_t> M(rowsum.getDataDescriptor(), data_t{1.} / rowsum);
 
-        DataContainer<data_t> rangeOnes(range);
-        rangeOnes = 1;
-        auto colsum = A.applyAdjoint(rangeOnes);
-
+        auto colsum = A.applyAdjoint(range.template element<data_t>().one());
         Scaling<data_t> T(colsum.getDataDescriptor(), data_t{1.} / colsum);
 
         return (T * adjoint(A) * M).clone();

@@ -21,12 +21,7 @@ namespace elsa
     {
         auto eval = [&](auto x) { return 0.5 * (dict_.apply(x) - signal_).squaredL2Norm(); };
 
-        auto x = DataContainer<data_t>(dict_.getDomainDescriptor());
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto x = extract_or(x0, dict_.getDomainDescriptor());
 
         IndexVector_t support(0); // the atoms used for the representation
 

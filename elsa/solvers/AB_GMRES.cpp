@@ -32,12 +32,7 @@ namespace elsa
     DataContainer<data_t> AB_GMRES<data_t>::solveAndRestart(index_t iterations, index_t restarts,
                                                             std::optional<DataContainer<data_t>> x0)
     {
-        auto x = DataContainer<data_t>(_A->getDomainDescriptor());
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto x = extract_or(x0, _A->getDomainDescriptor());
 
         for (index_t k = 0; k < restarts; k++) {
             x = solve(iterations, x);

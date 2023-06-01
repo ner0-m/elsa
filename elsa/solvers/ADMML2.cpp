@@ -47,22 +47,16 @@ namespace elsa
     DataContainer<data_t> ADMML2<data_t>::solve(index_t iterations,
                                                 std::optional<DataContainer<data_t>> x0)
     {
-        DataContainer<data_t> x(op_->getDomainDescriptor());
+        const auto& domain = op_->getDomainDescriptor();
+        const auto& range = op_->getRangeDescriptor();
 
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto x = extract_or(x0, domain);
 
-        DataContainer<data_t> z(A_->getRangeDescriptor());
-        z = 0;
+        auto z = zeros<data_t>(range);
+        auto u = zeros<data_t>(range);
 
-        DataContainer<data_t> u(A_->getRangeDescriptor());
-        u = 0;
-
-        DataContainer<data_t> Ax(A_->getRangeDescriptor());
-        DataContainer<data_t> tmp(A_->getRangeDescriptor());
+        auto Ax = empty<data_t>(range);
+        auto tmp = empty<data_t>(range);
 
         auto sqrttau = data_t{1} / std::sqrt(tau_);
 

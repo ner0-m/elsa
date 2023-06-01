@@ -27,12 +27,7 @@ namespace elsa
     DataContainer<data_t> GradientDescent<data_t>::solve(index_t iterations,
                                                          std::optional<DataContainer<data_t>> x0)
     {
-        auto x = DataContainer<data_t>(_problem->getDomainDescriptor());
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto x = extract_or(x0, _problem->getDomainDescriptor());
 
         // If stepSize is not initialized yet, we do it know with x0
         if (!_stepSize.isInitialized()) {

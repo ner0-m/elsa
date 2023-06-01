@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataDescriptor.h"
 #include "elsaDefines.h"
 #include "DataContainer.h"
 #include "Cloneable.h"
@@ -41,4 +42,14 @@ namespace elsa
         virtual DataContainer<data_t>
             solve(index_t iterations, std::optional<DataContainer<data_t>> x0 = std::nullopt) = 0;
     };
+
+    /// Extract the default value from the optional if present, else create a
+    /// new DataContainer with the given Descriptor and initial value
+    template <class data_t>
+    DataContainer<data_t> extract_or(std::optional<DataContainer<data_t>> x0,
+                                     const DataDescriptor& domain,
+                                     SelfType_t<data_t> val = data_t{0})
+    {
+        return x0.has_value() ? x0.value() : full<data_t>(domain, val);
+    }
 } // namespace elsa

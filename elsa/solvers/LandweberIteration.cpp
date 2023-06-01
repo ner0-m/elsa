@@ -27,15 +27,7 @@ namespace elsa
     DataContainer<data_t> LandweberIteration<data_t>::solve(index_t iterations,
                                                             std::optional<DataContainer<data_t>> x0)
     {
-        auto x = [&]() {
-            if (x0.has_value()) {
-                return *x0;
-            } else {
-                auto x = DataContainer<data_t>(A_->getDomainDescriptor());
-                x = 0;
-                return x;
-            }
-        }();
+        auto x = extract_or(x0, A_->getDomainDescriptor());
 
         // We cannot call a virtual function in the constructor, so call it here
         if (!tam_) {
@@ -54,7 +46,7 @@ namespace elsa
         Logger::get("LandweberIterations")
             ->info(" {:^7} | {:^12} | {:^12} |", "Iters", "Recon", "Residual");
 
-        auto residual = DataContainer<data_t>(A_->getRangeDescriptor());
+        auto residual = empty<data_t>(A_->getRangeDescriptor());
         for (index_t i = 0; i < iterations; ++i) {
             // Compute Ax - b memory efficient
             A_->apply(x, residual);

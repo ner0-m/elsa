@@ -15,8 +15,7 @@ namespace elsa
             throw LogicError("powerIterations: Operator for power iterations must be symmetric");
         }
 
-        DataContainer<data_t> u(op.getDomainDescriptor());
-        u = 1;
+        auto u = ones<data_t>(op.getDomainDescriptor());
 
         for (index_t i = 0; i < niters; i++) {
             op.apply(u, u);

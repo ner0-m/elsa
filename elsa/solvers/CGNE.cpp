@@ -23,13 +23,7 @@ namespace elsa
     {
         spdlog::stopwatch aggregate_time;
 
-        auto x = DataContainer<data_t>(A_->getDomainDescriptor());
-
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto x = extract_or(x0, A_->getDomainDescriptor());
 
         // setup A^T * A, and A^T * b
         auto A = adjoint(*A_) * (*A_);
@@ -45,7 +39,7 @@ namespace elsa
         // Squared Norm of residual
         auto kold = r.squaredL2Norm();
 
-        auto Ac = DataContainer<data_t>(A.getRangeDescriptor());
+        auto Ac = empty<data_t>(A.getRangeDescriptor());
 
         Logger::get("CGNE")->info("{:^5} | {:^15} | {:^15} | {:^15} | {:^15} |", "Iters", "r", "c",
                                   "alpha", "beta");

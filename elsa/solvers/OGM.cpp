@@ -1,4 +1,5 @@
 #include "OGM.h"
+#include "DataContainer.h"
 #include "Functional.h"
 #include "TypeCasts.hpp"
 #include "Logger.h"
@@ -40,23 +41,18 @@ namespace elsa
     DataContainer<data_t> OGM<data_t>::solve(index_t iterations,
                                              std::optional<DataContainer<data_t>> x0)
     {
-        auto prevTheta = static_cast<data_t>(1.0);
-        auto x = DataContainer<data_t>(_problem->getDomainDescriptor());
+        auto thetaOld = static_cast<data_t>(1.0);
+        auto x = extract_or(x0, _problem->getDomainDescriptor());
 
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
-
-        auto prevY = x;
+        auto y = emptylike(x);
+        auto yold = x;
 
         // OGM is very picky when it comes to the accuracy of the used lipschitz constant therefore
         // we use 20 power iterations instead of 5 here to be more precise.
         // In some cases OGM might still not converge then an even more precise constant is needed
-        auto lipschitz = powerIterations(_problem->getHessian(x), 20);
+        auto L = powerIterations(_problem->getHessian(x), 20);
         auto deltaZero = _problem->getGradient(x).squaredL2Norm();
-        Logger::get("OGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
+        Logger::get("OGM")->info("Starting optimization with lipschitz constant {}", L);
 
         // log history legend
         Logger::get("OGM")->info("| {:^4} | {:^13} | {:^13} |", "", "objective", "gradient");
@@ -67,21 +63,21 @@ namespace elsa
             if (_preconditionerInverse)
                 gradient = _preconditionerInverse->apply(gradient);
 
-            DataContainer<data_t> y = x - gradient / lipschitz;
+            lincomb(1, x, -1 / L, gradient, y);
             const auto f = (i == iterations - 1) ? data_t{8} : data_t{4};
             const auto theta =
-                data_t{0.5} * (data_t{1} + std::sqrt(data_t{1} + f * std::pow(prevTheta, 2)));
+                data_t{0.5} * (data_t{1} + std::sqrt(data_t{1} + f * std::pow(thetaOld, 2)));
 
             // x_{i+1} = y_{i+1} + \frac{\theta_i-1}{\theta_{i+1}}(y_{i+1} - y_i) +
             // \frac{\theta_i}{\theta_{i+1}}/(y_{i+1} - x_i)
-            x = y + ((prevTheta - static_cast<data_t>(1.0)) / theta) * (y - prevY)
-                - (prevTheta / theta) * (gradient / lipschitz);
+            lincomb(1, y, ((thetaOld - static_cast<data_t>(1.0)) / theta), (y - yold), x);
+            lincomb(1, x, -(thetaOld / theta) / L, gradient, x);
 
             Logger::get("OGM")->info("| {:>4} | {:>13} | {:>13} |", i, _problem->evaluate(x),
                                      gradient.squaredL2Norm());
 
-            prevTheta = theta;
-            prevY = y;
+            thetaOld = theta;
+            yold = y;
 
             // if the gradient is too small we stop
             if (gradient.squaredL2Norm() <= _epsilon * _epsilon * deltaZero) {

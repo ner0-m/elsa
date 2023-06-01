@@ -3,6 +3,7 @@
 #include "LinearOperator.h"
 #include "LinearResidual.h"
 #include "ProximalL1.h"
+#include "Solver.h"
 #include "TypeCasts.hpp"
 #include "Logger.h"
 #include "PowerIterations.h"
@@ -36,16 +37,11 @@ namespace elsa
     {
         spdlog::stopwatch aggregate_time;
 
-        auto x = DataContainer<data_t>(A_->getDomainDescriptor());
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto x = extract_or(x0, A_->getDomainDescriptor());
 
         auto Atb = A_->applyAdjoint(b_);
-        auto Ay = DataContainer<data_t>(A_->getRangeDescriptor());
-        auto grad = DataContainer<data_t>(A_->getDomainDescriptor());
+        auto Ay = empty<data_t>(A_->getRangeDescriptor());
+        auto grad = empty<data_t>(A_->getDomainDescriptor());
 
         // Compute gradient as A^T(A(x) - A^T(b)) memory efficient
         auto gradient = [&](const DataContainer<data_t>& x) {
@@ -58,7 +54,7 @@ namespace elsa
         Logger::get("PGD")->info("|*{:^6}*|*{:*^12}*|*{:*^8}*|*{:^8}*|", "iter", "gradient", "time",
                                  "elapsed");
 
-        auto y = DataContainer<data_t>(x.getDataDescriptor());
+        auto y = emptylike(x);
 
         for (index_t iter = 0; iter < iterations; ++iter) {
             spdlog::stopwatch iter_time;

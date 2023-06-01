@@ -22,20 +22,19 @@ namespace elsa
     {
         spdlog::stopwatch aggregate_time;
 
-        auto x = DataContainer<data_t>(A_->getDomainDescriptor());
-        auto r = DataContainer<data_t>(A_->getDomainDescriptor());
-        auto s = DataContainer<data_t>(A_->getRangeDescriptor());
+        auto x = empty<data_t>(A_->getDomainDescriptor());
+        auto r = empty<data_t>(A_->getDomainDescriptor());
+        auto s = empty<data_t>(A_->getRangeDescriptor());
 
         if (x0.has_value()) {
             x = *x0;
 
-            // s = b_ - A_->applx(x), but without temporary allocating memory
+            // s = b_ - A_->applx(x)
             A_->apply(x, s);
-            s *= -1;
-            s += b_;
+            lincomb(1, b_, -1, s, s);
 
             A_->applyAdjoint(s, r);
-            r -= damp_ * x;
+            lincomb(1, r, -damp_, x, r);
         } else {
             x = 0;
             s = b_;
@@ -43,7 +42,7 @@ namespace elsa
         }
 
         auto c = r;
-        auto q = DataContainer<data_t>(b_.getDataDescriptor());
+        auto q = emptylike(b_);
 
         auto k = r.squaredL2Norm();
         auto kold = k;

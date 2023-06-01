@@ -47,24 +47,16 @@ namespace elsa
         auto& domain = K_->getDomainDescriptor();
         auto& range = K_->getRangeDescriptor();
 
-        auto x = DataContainer<data_t>(domain);
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto x = extract_or(x0, domain);
 
-        auto z = DataContainer<data_t>(range);
-        z = 0;
-
-        auto u = DataContainer<data_t>(range);
-        u = 0;
+        auto z = zeros<data_t>(range);
+        auto u = zeros<data_t>(range);
 
         // Temporary for Kx + u - z
         auto tmpRange = K_->apply(x);
 
         // Temporary for L^T (Lx + u - z)
-        auto tmpDomain = DataContainer<data_t>(domain);
+        auto tmpDomain = empty<data_t>(domain);
 
         Logger::get("LinearizedADMM")
             ->info("| {:^4} | {:^12} | {:^12} | {:^12} |", "iter", "x", "z", "u");

@@ -2,6 +2,7 @@
 #include "BlockLinearOperator.h"
 #include "RandomBlocksDescriptor.h"
 #include "CGNE.h"
+#include "Solver.h"
 
 #include <variant>
 #include <vector>
@@ -18,15 +19,7 @@ namespace elsa
     {
         index_t size = 1 + asSigned(regOps.size());
 
-        auto x = [&]() {
-            if (x0.has_value()) {
-                return *x0;
-            } else {
-                auto x = DataContainer<data_t>(op.getDomainDescriptor());
-                x = 0;
-                return x;
-            }
-        }();
+        auto x = extract_or(x0, op.getDomainDescriptor());
 
         // Setup a block problem, where K = [Op; regOps..], and w = [b; c - Bz - u]
         std::vector<std::unique_ptr<DataDescriptor>> descs;

@@ -1,4 +1,5 @@
 #include "FGM.h"
+#include "DataContainer.h"
 #include "Error.h"
 #include "Functional.h"
 #include "Logger.h"
@@ -41,19 +42,17 @@ namespace elsa
     DataContainer<data_t> FGM<data_t>::solve(index_t iterations,
                                              std::optional<DataContainer<data_t>> x0)
     {
-        auto prevTheta = static_cast<data_t>(1.0);
-        auto x = DataContainer<data_t>(_problem->getDomainDescriptor());
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
-        auto prevY = x;
+        auto x = extract_or(x0, _problem->getDomainDescriptor());
+
+        auto thetaOld = static_cast<data_t>(1.0);
+        auto yOld = x;
 
         auto deltaZero = _problem->getGradient(x).squaredL2Norm();
-        auto lipschitz = powerIterations(_problem->getHessian(x), 5);
+        auto L = powerIterations(_problem->getHessian(x), 5);
 
-        Logger::get("FGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
+        auto y = emptylike(x);
+
+        Logger::get("FGM")->info("Starting optimization with lipschitz constant {}", L);
         Logger::get("FGM")->info("| {:^4} | {:^13} | {:^13} |", "", "objective", "gradient");
 
         for (index_t i = 0; i < iterations; ++i) {
@@ -62,17 +61,18 @@ namespace elsa
             if (_preconditionerInverse)
                 gradient = _preconditionerInverse->apply(gradient);
 
-            DataContainer<data_t> y = x - gradient / lipschitz;
+            lincomb(1, x, -1 / L, gradient, y);
+
             const auto theta =
-                (data_t{1.0} + std::sqrt(data_t{1.0} + data_t{4.0} * prevTheta * prevTheta))
+                (data_t{1.0} + std::sqrt(data_t{1.0} + data_t{4.0} * thetaOld * thetaOld))
                 / data_t{2.0};
-            x = y + (prevTheta - data_t{1.0}) / theta * (y - prevY);
+            lincomb(1, y, (thetaOld - data_t{1}) / theta, (y - yOld), x);
 
             Logger::get("FGM")->info("| {:>4} | {:>13} | {:>13} |", i, _problem->evaluate(x),
                                      gradient.squaredL2Norm());
 
-            prevTheta = theta;
-            prevY = y;
+            thetaOld = theta;
+            yOld = y;
 
             // if the gradient is too small we stop
             if (gradient.squaredL2Norm() <= _epsilon * _epsilon * deltaZero) {

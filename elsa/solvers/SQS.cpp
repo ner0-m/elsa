@@ -2,6 +2,7 @@
 #include "Identity.h"
 #include "Scaling.h"
 #include "Logger.h"
+#include "Solver.h"
 #include "TypeCasts.hpp"
 
 namespace elsa
@@ -83,33 +84,26 @@ namespace elsa
     DataContainer<data_t> SQS<data_t>::solve(index_t iterations,
                                              std::optional<DataContainer<data_t>> x0)
     {
-        auto& solutionDesc = fullProblem_->getDomainDescriptor();
-        auto x = DataContainer<data_t>(solutionDesc);
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto& domain = fullProblem_->getDomainDescriptor();
+        auto x = extract_or(x0, domain);
 
         auto convergenceThreshold =
             fullProblem_->getGradient(x).squaredL2Norm() * epsilon_ * epsilon_;
 
         auto hessian = fullProblem_->getHessian(x);
 
-        auto ones = DataContainer<data_t>(solutionDesc);
-        ones = 1;
-        auto diagVector = hessian.apply(ones);
-        diagVector = static_cast<data_t>(1.0) / diagVector;
-        auto diag = Scaling<data_t>(hessian.getDomainDescriptor(), diagVector);
+        auto rowsum = hessian.apply(ones<data_t>(domain));
+        rowsum = static_cast<data_t>(1.0) / rowsum;
+        auto diag = Scaling<data_t>(hessian.getDomainDescriptor(), rowsum);
 
-        data_t prevT = 1;
+        data_t tOld = 1;
         data_t t = 1;
-        data_t nextT = 0;
+        data_t tNew = 0;
 
         auto& z = x;
-        // z = 0;
-        DataContainer<data_t> prevX = x;
-        DataContainer<data_t> gradient(solutionDesc);
+
+        DataContainer<data_t> xOld = x;
+        auto gradient = empty<data_t>(domain);
 
         index_t nSubsets = subsetMode_ ? subsets_.size() : 1;
 
@@ -129,13 +123,13 @@ namespace elsa
 
                 // TODO: element wise relu
                 if (momentumAcceleration_) {
-                    nextT = as<data_t>(1)
-                            + std::sqrt(as<data_t>(1) + as<data_t>(4) * t * t) / as<data_t>(2);
+                    tNew = as<data_t>(1)
+                           + std::sqrt(as<data_t>(1) + as<data_t>(4) * t * t) / as<data_t>(2);
 
-                    x = z - nSubsets * diag.apply(gradient);
-                    z = x + prevT / nextT * (x - prevX);
+                    lincomb(1, z, -nSubsets, diag.apply(gradient), x);
+                    lincomb(1, x, tOld / tNew, (x - xOld), z);
                 } else {
-                    z = z - nSubsets * diag.apply(gradient);
+                    lincomb(1, z, -nSubsets, diag.apply(gradient), z);
                 }
 
                 // if the gradient is too small we stop
@@ -154,9 +148,9 @@ namespace elsa
                 }
 
                 if (momentumAcceleration_) {
-                    prevT = t;
-                    t = nextT;
-                    prevX = x;
+                    tOld = t;
+                    t = tNew;
+                    xOld = x;
                 }
             }
         }

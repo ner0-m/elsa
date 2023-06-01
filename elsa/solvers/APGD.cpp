@@ -36,12 +36,7 @@ namespace elsa
     {
         spdlog::stopwatch aggregate_time;
 
-        auto x = DataContainer<data_t>(A_->getDomainDescriptor());
-        if (x0.has_value()) {
-            x = *x0;
-        } else {
-            x = 0;
-        }
+        auto x = extract_or(x0, A_->getDomainDescriptor());
 
         auto xPrev = x;
         auto y = x;
@@ -49,8 +44,8 @@ namespace elsa
         data_t tPrev = 1;
 
         auto Atb = A_->applyAdjoint(b_);
-        auto Ay = DataContainer<data_t>(A_->getRangeDescriptor());
-        auto grad = DataContainer<data_t>(A_->getDomainDescriptor());
+        auto Ay = empty<data_t>(A_->getRangeDescriptor());
+        auto grad = empty<data_t>(A_->getDomainDescriptor());
 
         // Compute gradient as A^T(A(x) - A^T(b)) memory efficient
         auto gradient = [&](const DataContainer<data_t>& x) {
