@@ -14,6 +14,7 @@
 #include "VolumeDescriptor.h"
 #include "PartitionDescriptor.h"
 #include "DescriptorUtils.h"
+#include "DataContainer.h"
 #include <stdexcept>
 
 using namespace elsa;
@@ -56,6 +57,14 @@ TEST_CASE("VolumeDescriptor: Constructing VolumeDescriptors")
                 REQUIRE_EQ(dd.getNumberOfCoefficientsPerDimension(), validNumCoeff);
                 REQUIRE_EQ(dd.getSpacingPerDimension(), RealVector_t::Ones(1));
                 REQUIRE_EQ(dd.getLocationOfOrigin(), origin);
+            }
+
+            THEN("A correct element is returned")
+            {
+                auto dc = dd.element<float>();
+
+                CHECK_EQ(dc.getSize(), dd.getNumberOfCoefficients());
+                CHECK_EQ(dc.getDataDescriptor(), dd);
             }
         }
 

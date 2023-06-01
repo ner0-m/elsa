@@ -7,7 +7,6 @@
 
 namespace elsa
 {
-
     namespace detail
     {
         template <typename Derived>
@@ -46,6 +45,10 @@ namespace elsa
         }
     } // namespace detail
 
+    // declare DataContainer
+    template <typename data_t>
+    class DataContainer;
+
     /**
      * @brief Base class for representing metadata for linearized n-dimensional signal stored in
      * memory
@@ -60,7 +63,6 @@ namespace elsa
      * important parameters (i.e. dimensionality, size and spacing) of the metadata.
      *
      */
-
     class DataDescriptor : public Cloneable<DataDescriptor>
     {
     public:
@@ -135,6 +137,12 @@ namespace elsa
          * dimensions.
          */
         IndexVector_t getCoordinateFromIndex(index_t index) const;
+
+        /// @brief create a DataContainer for the given DataDescriptor. By
+        /// default an uninitialized element is returned, and the caller
+        /// is responsible to properly initialize the element
+        template <class data_t>
+        DataContainer<data_t> element() const;
 
     protected:
         /// Number of dimensions

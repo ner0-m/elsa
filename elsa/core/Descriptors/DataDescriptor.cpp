@@ -2,7 +2,9 @@
 
 #include <algorithm>
 
+#include "Complex.h"
 #include "Error.h"
+#include "DataContainer.h"
 
 namespace elsa
 {
@@ -102,6 +104,12 @@ namespace elsa
         return detail::idx2Coord(index, _productOfCoefficientsPerDimension);
     }
 
+    template <class data_t>
+    DataContainer<data_t> DataDescriptor::element() const
+    {
+        return DataContainer<data_t>(*this);
+    }
+
     bool DataDescriptor::isEqual(const DataDescriptor& other) const
     {
         if (typeid(other) != typeid(*this))
@@ -118,4 +126,11 @@ namespace elsa
         return _productOfCoefficientsPerDimension;
     }
 
+    // ------------------------------------------
+    // explicit template instantiation
+    template DataContainer<index_t> DataDescriptor::element() const;
+    template DataContainer<float> DataDescriptor::element() const;
+    template DataContainer<double> DataDescriptor::element() const;
+    template DataContainer<complex<float>> DataDescriptor::element() const;
+    template DataContainer<complex<double>> DataDescriptor::element() const;
 } // namespace elsa

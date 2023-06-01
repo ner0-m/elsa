@@ -5,6 +5,7 @@
 #include <pybind11/operators.h>
 
 #include "Cloneable.h"
+#include "Complex.h"
 #include "DataContainer.h"
 #include "Descriptors/BlockDescriptor.h"
 #include "Descriptors/DataDescriptor.h"
@@ -21,6 +22,7 @@
 #include "Utilities/FormatConfig.h"
 
 #include "bind_common.h"
+#include "elsaDefines.h"
 #include "hints/core_hints.cpp"
 
 namespace py = pybind11;
@@ -302,6 +304,11 @@ void add_definitions_pyelsa_core(py::module& m)
     dd.def("getNumberOfCoefficients",
            py::overload_cast<>(&DD::getNumberOfCoefficients, py::const_));
     dd.def("getNumberOfDimensions", py::overload_cast<>(&DD::getNumberOfDimensions, py::const_));
+    dd.def("element", &DD::element<elsa::index_t>);
+    dd.def("element", &DD::element<float>);
+    dd.def("element", &DD::element<double>);
+    dd.def("element", &DD::element<elsa::complex<float>>);
+    dd.def("element", &DD::element<elsa::complex<double>>);
 
     py::class_<elsa::format_config> format_config(m, "format_config");
     format_config
