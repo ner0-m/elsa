@@ -1,8 +1,7 @@
 #include "Util.h"
 
-#include "Assertions.h"
+#include <new>
 #include "BitUtil.h"
-#include "elsaDefines.h"
 
 size_t elsa::mr::util::computeRealSize(size_t requestedSize, size_t granularity)
 {

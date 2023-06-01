@@ -8,8 +8,6 @@
 #include "memory_resource/RegionResource.h"
 #include "memory_resource/BitUtil.h"
 
-#include "Assertions.h"
-
 #include <random>
 #include <functional>
 #include <cstring>
@@ -50,8 +48,7 @@ void operator delete(void* ptr, size_t size) noexcept
 template <typename T>
 static MemoryResource provideResource()
 {
-    ENSURE(false);
-    return defaultInstance();
+    throw std::exception();
 }
 
 static size_t sizeForIndex(size_t i)

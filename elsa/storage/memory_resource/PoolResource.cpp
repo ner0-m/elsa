@@ -1,7 +1,6 @@
 #include "PoolResource.h"
 
 #include "BitUtil.h"
-#include "Assertions.h"
 #include "Util.h"
 
 /*
@@ -126,7 +125,7 @@ namespace elsa::mr
                 unlinkFreeBlock(block);
             }
             // by this point, block is a registered, but unlinked block
-            ENSURE(block && checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
+            ASSERT(block && checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
                    && block->size() >= realSize);
 
             void* retAddress = alignUp(block->_address, alignment);
@@ -199,7 +198,7 @@ namespace elsa::mr
         void PoolResource<FreeListStrategy>::doDeallocate(void* ptr) noexcept
         {
             auto blockIt = _addressToBlock.find(ptr);
-            ENSURE(blockIt != _addressToBlock.end());
+            ASSERT(blockIt != _addressToBlock.end());
             pool_resource::Block* block = blockIt->second.get();
             block->markFree();
 
@@ -252,7 +251,7 @@ namespace elsa::mr
                 return false;
             }
             auto blockIt = _addressToBlock.find(ptr);
-            ENSURE(blockIt != _addressToBlock.end());
+            ASSERT(blockIt != _addressToBlock.end());
             std::unique_ptr<pool_resource::Block>& block = blockIt->second;
 
             size_t realSize = util::computeRealSize(newSize, pool_resource::BLOCK_GRANULARITY);
@@ -274,7 +273,7 @@ namespace elsa::mr
                         } catch (...) {
                             // Erase should never be able to throw here, so if this is reached we
                             // are in dire straits
-                            ENSURE(0, "Unreachable!");
+                            ASSERT(0);
                         }
                         block->setSize(realSize);
                         if (cumulativeSize > realSize) {
@@ -320,7 +319,7 @@ namespace elsa::mr
         void PoolResource<FreeListStrategy>::linkFreeBlock(pool_resource::Block* block)
         {
             size_t size = block->size();
-            ENSURE(checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
+            ASSERT(checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
                    && size % pool_resource::BLOCK_GRANULARITY == 0);
             uint64_t freeListLog = log2Floor(size);
             size_t freeListIndex = freeListLog - pool_resource::MIN_BLOCK_SIZE_LOG;
@@ -372,7 +371,7 @@ namespace elsa::mr
 
             if (!newChunk) {
                 // This should be enforced in allocate, by forwarding to _upstream
-                ENSURE(requestedSize <= _config.maxChunkSize);
+                ASSERT(requestedSize <= _config.maxChunkSize);
                 // Rationale for the chunk size: if a chunk of this size is requested,
                 // another chunk of similar size will likely be requested soon. With this
                 // choice of chunkSize, 4 such allocations can be served without allocating
@@ -514,7 +513,7 @@ namespace elsa::mr
 
         void Block::setSize(size_t size)
         {
-            ENSURE((size & BITFIELD_MASK) == 0);
+            ASSERT((size & BITFIELD_MASK) == 0);
             _size = (_size & BITFIELD_MASK) | size;
         }
 
