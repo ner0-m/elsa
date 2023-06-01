@@ -43,6 +43,16 @@ protected:
     {
         return new MockOperator<data_t>(this->getDomainDescriptor(), this->getRangeDescriptor());
     }
+
+    bool isEqual(const LinearOperator<data_t>& other) const override
+    {
+        auto tmp = downcast_safe<MockOperator<data_t>>(&other);
+        if (!tmp)
+            return false;
+
+        return this->getDomainDescriptor() == tmp->getDomainDescriptor()
+               && this->getRangeDescriptor() == tmp->getRangeDescriptor();
+    }
 };
 
 TYPE_TO_STRING(complex<float>);
@@ -530,6 +540,146 @@ TEST_CASE_TEMPLATE("LinearOperator: Testing composite LinearOperator", TestType,
                 assignedOp = newOp;
                 REQUIRE_EQ(assignedOp, newOp);
             }
+        }
+    }
+}
+
+template <typename data_t = real_t>
+class UniqueMockOperator : public LinearOperator<data_t>
+{
+public:
+    UniqueMockOperator(index_t id, const DataDescriptor& domain, const DataDescriptor& range)
+        : LinearOperator<data_t>(domain, range), id_(id)
+    {
+    }
+
+protected:
+    void applyImpl([[maybe_unused]] const DataContainer<data_t>& x,
+                   DataContainer<data_t>& Ax) const override
+    {
+        Ax = id_;
+    }
+
+    void applyAdjointImpl([[maybe_unused]] const DataContainer<data_t>& y,
+                          DataContainer<data_t>& Aty) const override
+    {
+        Aty = 1. / id_;
+    }
+
+protected:
+    UniqueMockOperator<data_t>* cloneImpl() const override
+    {
+        return new UniqueMockOperator<data_t>(id_, this->getDomainDescriptor(),
+                                              this->getRangeDescriptor());
+    }
+
+    bool isEqual(const LinearOperator<data_t>& other) const override
+    {
+        auto tmp = downcast_safe<UniqueMockOperator<data_t>>(&other);
+        if (!tmp)
+            return false;
+
+        return id_ == tmp->id_ && this->getDomainDescriptor() == tmp->getDomainDescriptor()
+               && this->getRangeDescriptor() == tmp->getRangeDescriptor();
+    }
+
+private:
+    index_t id_;
+};
+
+TEST_CASE_TEMPLATE("LinearOperator: Testing OperatorList", data_t, float, double)
+{
+    IndexVector_t numCoeff(2);
+    numCoeff << 47, 11;
+    IndexVector_t numCoeff2(2);
+    numCoeff2 << 31, 23;
+    VolumeDescriptor domain(numCoeff);
+    VolumeDescriptor range(numCoeff2);
+
+    UniqueMockOperator<data_t> op1(1, domain, range);
+    UniqueMockOperator<data_t> op2(2, domain, range);
+    UniqueMockOperator<data_t> op3(3, domain, range);
+
+    GIVEN("A list of three operators")
+    {
+        LinearOperatorList<data_t> oplist(op1, op2, op3);
+
+        THEN("Copy works")
+        {
+            auto copy = oplist;
+
+            CHECK_EQ(oplist.getSize(), copy.getSize());
+            CHECK_EQ(oplist[0], copy[0]);
+            CHECK_EQ(oplist[1], copy[1]);
+            CHECK_EQ(oplist[2], copy[2]);
+        }
+
+        THEN("Move works")
+        {
+            auto move = std::move(oplist);
+
+            CHECK_EQ(move.getSize(), 3);
+            CHECK_EQ(move[0], op1);
+            CHECK_EQ(move[1], op2);
+            CHECK_EQ(move[2], op3);
+        }
+
+        THEN("Iterators work")
+        {
+            auto begin = oplist.begin();
+            auto end = oplist.end();
+
+            CHECK_EQ(*begin, op1);
+            ++begin;
+            CHECK_EQ(*begin, op2);
+            ++begin;
+            CHECK_EQ(*begin, op3);
+            ++begin;
+            CHECK_EQ(begin, end);
+        }
+    }
+}
+
+TEST_CASE_TEMPLATE("LinearOperator: Testing const OperatorList", data_t, float, double)
+{
+    IndexVector_t numCoeff(2);
+    numCoeff << 47, 11;
+    IndexVector_t numCoeff2(2);
+    numCoeff2 << 31, 23;
+    VolumeDescriptor domain(numCoeff);
+    VolumeDescriptor range(numCoeff2);
+
+    UniqueMockOperator<data_t> op1(1, domain, range);
+    UniqueMockOperator<data_t> op2(2, domain, range);
+    UniqueMockOperator<data_t> op3(3, domain, range);
+
+    GIVEN("A list of three operators")
+    {
+        const LinearOperatorList<data_t> oplist(op1, op2, op3);
+
+        THEN("Copy works")
+        {
+            auto copy = oplist;
+
+            CHECK_EQ(oplist.getSize(), copy.getSize());
+            CHECK_EQ(oplist[0], copy[0]);
+            CHECK_EQ(oplist[1], copy[1]);
+            CHECK_EQ(oplist[2], copy[2]);
+        }
+
+        THEN("Iteration works")
+        {
+
+            auto begin = oplist.begin();
+            auto end = oplist.end();
+
+            CHECK_EQ(*begin, op1);
+            ++begin;
+            CHECK_EQ(*begin, op2);
+            ++begin;
+            CHECK_EQ(*begin, op3);
+            ++begin;
+            CHECK_EQ(begin, end);
         }
     }
 }

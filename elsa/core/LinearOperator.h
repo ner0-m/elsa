@@ -1,5 +1,6 @@
 #pragma once
 
+#include "TypeCasts.hpp"
 #include "elsaDefines.h"
 #include "Cloneable.h"
 #include "DataDescriptor.h"
@@ -7,6 +8,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 namespace elsa
 {
@@ -192,6 +194,171 @@ namespace elsa
 
         /// constructor to produce a composite (internal node) of the evaluation tree
         LinearOperator(data_t scalar, const LinearOperator<data_t>& op);
+    };
+
+    namespace detail
+    {
+        template <class data_t, class... Ts>
+        std::vector<std::unique_ptr<LinearOperator<data_t>>> makeLinearOpVector(Ts&&... ts)
+        {
+            std::vector<std::unique_ptr<LinearOperator<data_t>>> v;
+            v.reserve(sizeof...(ts));
+
+            (v.emplace_back(std::forward<Ts>(ts).clone()), ...);
+            return std::move(v);
+        }
+    } // namespace detail
+
+    /// @brief A thin confinient wrapper around
+    /// `std::vector<std::unique_ptr<LinearOperator>>>`. As that they is not
+    /// easily handable, we wrap it to make it a regular type. Hence, the type
+    /// is both easily copyiable and moveable.
+    ///
+    /// Further, when iterating over the list the access functions return a
+    /// reference to the `LinearOperator` instead of an
+    /// `std::unique_ptr<LinearOperator>`.
+    template <class data_t>
+    class LinearOperatorList
+    {
+        struct Iterator {
+            using iterator =
+                typename std::vector<std::unique_ptr<LinearOperator<data_t>>>::iterator;
+
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type = std::ptrdiff_t;
+            using value_type = LinearOperator<data_t>;
+            using pointer = value_type*;
+            using reference = value_type&;
+
+            Iterator(iterator iter) : cur_(iter) {}
+
+            reference operator*() const { return **cur_; }
+            pointer operator->() { return (*cur_).get(); }
+
+            Iterator& operator++()
+            {
+                ++cur_;
+                return *this;
+            }
+
+            Iterator operator++(int)
+            {
+                auto copy = *this;
+                ++(*this);
+                return copy;
+            }
+
+            friend bool operator==(const Iterator& a, const Iterator& b)
+            {
+                return a.cur_ == b.cur_;
+            }
+
+            friend bool operator!=(const Iterator& a, const Iterator& b) { return !(a == b); }
+
+            iterator cur_;
+        };
+
+        struct ConstIterator {
+            using const_iterator =
+                typename std::vector<std::unique_ptr<LinearOperator<data_t>>>::const_iterator;
+
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type = std::ptrdiff_t;
+            using value_type = LinearOperator<data_t>;
+            using pointer = const value_type*;
+            using reference = const value_type&;
+
+            ConstIterator(const_iterator iter) : cur_(iter) {}
+
+            const_iterator cur_;
+
+            reference operator*() const { return **cur_; }
+            pointer operator->() { return (*cur_).get(); }
+
+            ConstIterator& operator++()
+            {
+                ++cur_;
+                return *this;
+            }
+
+            ConstIterator operator++(int)
+            {
+                auto copy = *this;
+                ++(*this);
+                return copy;
+            }
+
+            friend bool operator==(const ConstIterator& a, const ConstIterator& b)
+            {
+                return a.cur_ == b.cur_;
+            }
+
+            friend bool operator!=(const ConstIterator& a, const ConstIterator& b)
+            {
+                return !(a == b);
+            }
+        };
+
+    public:
+        using iterator = Iterator;
+        using const_iterator = ConstIterator;
+
+        LinearOperatorList(std::vector<std::unique_ptr<LinearOperator<data_t>>> list);
+
+        LinearOperatorList(const LinearOperator<data_t>& op);
+
+        LinearOperatorList(const LinearOperator<data_t>& op1, const LinearOperator<data_t>& op2);
+
+        LinearOperatorList(const LinearOperator<data_t>& op1, const LinearOperator<data_t>& op2,
+                           const LinearOperator<data_t>& op3);
+
+        LinearOperatorList(const LinearOperator<data_t>& op1, const LinearOperator<data_t>& op2,
+                           const LinearOperator<data_t>& op3, const LinearOperator<data_t>& op4);
+
+        template <class... Args>
+        LinearOperatorList(const LinearOperator<data_t>& op1, const LinearOperator<data_t>& op2,
+                           const LinearOperator<data_t>& op3, const LinearOperator<data_t>& op4,
+                           const LinearOperator<data_t>& op5, Args&&... ops)
+            : ops_(detail::makeLinearOpVector<data_t>(op1, op2, op3, op4, op5,
+                                                      std::forward<Args>(ops)...))
+        {
+        }
+
+        /// Copy constructor
+        LinearOperatorList(const LinearOperatorList& other);
+
+        /// Move constructor
+        LinearOperatorList(LinearOperatorList&& other) noexcept;
+
+        /// Copy assignment
+        LinearOperatorList& operator=(const LinearOperatorList& other);
+
+        /// Move assignment
+        LinearOperatorList& operator=(LinearOperatorList&& other) noexcept;
+
+        index_t getSize() const { return asSigned(ops_.size()); }
+
+        const LinearOperator<data_t>& operator[](index_t idx) const
+        {
+            return *ops_[asUnsigned(idx)];
+        }
+
+        LinearOperator<data_t>& operator[](index_t idx) { return *ops_[asUnsigned(idx)]; }
+
+        iterator begin() { return Iterator(ops_.begin()); }
+
+        iterator end() { return Iterator(ops_.end()); }
+
+        const_iterator begin() const { return cbegin(); }
+
+        const_iterator end() const { return cend(); }
+
+        const_iterator cbegin() const { return ConstIterator(ops_.begin()); }
+
+        const_iterator cend() const { return ConstIterator(ops_.end()); }
+
+    private:
+        std::vector<std::unique_ptr<LinearOperator<data_t>>> ops_;
     };
 
 } // namespace elsa

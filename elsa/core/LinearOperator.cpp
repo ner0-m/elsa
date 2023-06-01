@@ -364,10 +364,92 @@ namespace elsa
     }
 
     // ------------------------------------------
+    // LinearOperatorList
+    template <class data_t>
+    LinearOperatorList<data_t>::LinearOperatorList(
+        std::vector<std::unique_ptr<LinearOperator<data_t>>> list)
+        : ops_(std::move(list))
+    {
+    }
+
+    template <class data_t>
+    LinearOperatorList<data_t>::LinearOperatorList(const LinearOperator<data_t>& op)
+        : ops_(detail::makeLinearOpVector<data_t>(op))
+    {
+    }
+
+    template <class data_t>
+    LinearOperatorList<data_t>::LinearOperatorList(const LinearOperator<data_t>& op1,
+                                                   const LinearOperator<data_t>& op2)
+        : ops_(detail::makeLinearOpVector<data_t>(op1, op2))
+    {
+    }
+
+    template <class data_t>
+    LinearOperatorList<data_t>::LinearOperatorList(const LinearOperator<data_t>& op1,
+                                                   const LinearOperator<data_t>& op2,
+                                                   const LinearOperator<data_t>& op3)
+        : ops_(detail::makeLinearOpVector<data_t>(op1, op2, op3))
+    {
+    }
+
+    template <class data_t>
+    LinearOperatorList<data_t>::LinearOperatorList(const LinearOperator<data_t>& op1,
+                                                   const LinearOperator<data_t>& op2,
+                                                   const LinearOperator<data_t>& op3,
+                                                   const LinearOperator<data_t>& op4)
+        : ops_(detail::makeLinearOpVector<data_t>(op1, op2, op3, op4))
+    {
+    }
+
+    template <class data_t>
+    LinearOperatorList<data_t>::LinearOperatorList(const LinearOperatorList& other) : ops_()
+    {
+        ops_.reserve(other.ops_.size());
+        for (int i = 0; i < other.ops_.size(); ++i) {
+            ops_.emplace_back(other.ops_[i]->clone());
+        }
+    }
+
+    template <class data_t>
+    LinearOperatorList<data_t>::LinearOperatorList(LinearOperatorList&& other) noexcept
+        : ops_(std::move(other.ops_))
+    {
+    }
+
+    template <class data_t>
+    LinearOperatorList<data_t>&
+        LinearOperatorList<data_t>::operator=(const LinearOperatorList& other)
+    {
+        std::vector<std::unique_ptr<LinearOperator<data_t>>> newOps;
+
+        newOps.reserve(other.ops_.size());
+        for (int i = 0; i < ops_.size(); ++i) {
+            newOps.emplace_back(other.ops_[i]->clone());
+        }
+
+        ops_ = std::move(newOps);
+        return *this;
+    }
+
+    template <class data_t>
+    LinearOperatorList<data_t>&
+        LinearOperatorList<data_t>::operator=(LinearOperatorList&& other) noexcept
+    {
+        ops_ = std::move(other.ops_);
+        return *this;
+    }
+
+    // ------------------------------------------
     // explicit template instantiation
     template class LinearOperator<float>;
     template class LinearOperator<complex<float>>;
     template class LinearOperator<double>;
     template class LinearOperator<complex<double>>;
+
+    template class LinearOperatorList<float>;
+    template class LinearOperatorList<complex<float>>;
+    template class LinearOperatorList<double>;
+    template class LinearOperatorList<complex<double>>;
 
 } // namespace elsa

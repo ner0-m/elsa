@@ -1,3 +1,4 @@
+#include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/complex.h>
 #include <pybind11/eigen.h>
@@ -196,6 +197,36 @@ void add_linear_operator(py::module& m)
 
 namespace detail
 {
+    template <class data_t>
+    void add_linear_operator_list(py::module& m, const char* name)
+    {
+        py::class_<elsa::LinearOperatorList<data_t>> oplist(m, name);
+
+        using LOp = elsa::LinearOperator<data_t>;
+        oplist.def(py::init<const LOp&>());
+        oplist.def(py::init<const LOp&, const LOp&>());
+        oplist.def(py::init<const LOp&, const LOp&, const LOp&>());
+        oplist.def(py::init([](std::vector<LOp*>& l) {
+            std::vector<std::unique_ptr<LOp>> oplist;
+            oplist.reserve(l.size());
+            for (auto op : l) {
+                oplist.emplace_back(op->clone());
+            }
+
+            return elsa::LinearOperatorList<data_t>(std::move(oplist));
+        }));
+
+        py::implicitly_convertible<py::list, elsa::LinearOperatorList<data_t>>();
+    }
+} // namespace detail
+
+void add_linear_operator_list(py::module& m)
+{
+    detail::add_linear_operator_list<float>(m, "LinearOperatorListf");
+}
+
+namespace detail
+{
     template <class Fn>
     void add_fn(py::module& m, std::string name, Fn fn)
     {
@@ -311,6 +342,7 @@ void add_definitions_pyelsa_core(py::module& m)
 
     add_data_container(m);
     add_linear_operator(m);
+    add_linear_operator_list(m);
 
     py::class_<elsa::VolumeDescriptor, DD> VolumeDescriptor(m, "VolumeDescriptor");
     VolumeDescriptor.def(py::init<IndexVec>(), py::arg("numberOfCoefficientsPerDimension"))
