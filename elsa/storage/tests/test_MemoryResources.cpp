@@ -105,6 +105,13 @@ static void testNonoverlappingAllocations(MemoryResource resource)
                        CacheResource, RegionResource)
 
 TEST_SUITE_BEGIN("memoryresources");
+TYPE_TO_STRING(ConstantFitPoolResource);
+TYPE_TO_STRING(FirstFitPoolResource);
+TYPE_TO_STRING(HybridFitPoolResource);
+TYPE_TO_STRING(UniversalResource);
+TYPE_TO_STRING(SynchResource<UniversalResource>);
+TYPE_TO_STRING(CacheResource);
+TYPE_TO_STRING(RegionResource);
 
 TEST_CASE_MR("Check overlap")
 {

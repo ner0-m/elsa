@@ -22,7 +22,6 @@ namespace elsa::mr::detail
     {
     public:
         using self_type = ContPointer<Type>;
-        using const_self_type = ContPointer<const Type>;
         using value_type = std::remove_cv_t<Type>;
         using size_type = size_t;
         using difference_type = std::ptrdiff_t;
@@ -37,8 +36,11 @@ namespace elsa::mr::detail
     public:
         __host__ __device__ ContPointer() {}
         __host__ __device__ ContPointer(pointer w) : _where(w) {}
-        __host__ __device__ ContPointer(const self_type& p) : _where(p._where) {}
         __host__ __device__ ContPointer(self_type&& p) noexcept : _where(p._where) {}
+        __host__ __device__ ContPointer(const ContPointer<std::remove_const_t<Type>>& p) : _where(p.get()) {}
+        __host__ __device__ ContPointer(const ContPointer<std::add_const_t<Type>>& p) : _where(p.get()) {
+            static_assert(std::is_const<Type>::value, "Const pointer cannot be converted to a normal pointer");
+        }
 
     public:
         __host__ __device__ raw_pointer get() const { return _where; }
@@ -54,7 +56,6 @@ namespace elsa::mr::detail
             _where = p._where;
             return *this;
         }
-        __host__ __device__ operator const_self_type() const { return const_self_type(_where); }
         __host__ __device__ bool operator==(const self_type& p) const { return _where == p._where; }
         __host__ __device__ bool operator!=(const self_type& p) const { return !(*this == p); }
         __host__ __device__ reference operator*() const { return *_where; }
@@ -120,7 +121,6 @@ namespace elsa::mr::detail
     {
     public:
         using self_type = ContIterator<Type>;
-        using const_self_type = ContIterator<const Type>;
         using value_type = std::remove_cv_t<Type>;
         using iterator_category = std::random_access_iterator_tag;
         using difference_type = std::ptrdiff_t;
@@ -134,8 +134,11 @@ namespace elsa::mr::detail
     public:
         __host__ __device__ ContIterator() {}
         __host__ __device__ ContIterator(pointer w) : _where(w) {}
-        __host__ __device__ ContIterator(const self_type& p) : _where(p._where) {}
         __host__ __device__ ContIterator(self_type&& p) noexcept : _where(p._where) {}
+        __host__ __device__ ContIterator(const ContIterator<std::remove_const_t<Type>>& p) : _where(p.base()) {}
+        __host__ __device__ ContIterator(const ContIterator<std::add_const_t<Type>>& p) : _where(p.base()) {
+            static_assert(std::is_const<Type>::value, "Const iterator cannot be converted to a normal iterator");
+        }
 
     public:
         __host__ __device__ self_type& operator=(const self_type& p)
@@ -148,7 +151,6 @@ namespace elsa::mr::detail
             _where = p._where;
             return *this;
         }
-        __host__ __device__ operator const_self_type() const { return const_self_type(_where); }
         __host__ __device__ bool operator==(const self_type& p) const { return _where == p._where; }
         __host__ __device__ bool operator!=(const self_type& p) const { return !(*this == p); }
         __host__ __device__ reference operator*() const { return *_where; }
