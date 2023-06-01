@@ -4,8 +4,8 @@
 #include <memory>
 #include <cuda_runtime.h>
 
-#include "elsaDefines.h"
 #include "BitUtil.h"
+#include "Util.h"
 
 namespace elsa::mr
 {

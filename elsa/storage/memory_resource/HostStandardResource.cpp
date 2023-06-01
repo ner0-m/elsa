@@ -1,7 +1,7 @@
 #include "HostStandardResource.h"
 
 #include "BitUtil.h"
-#include "elsaDefines.h"
+#include "Util.h"
 
 #include <memory>
 #include <cstdlib>
