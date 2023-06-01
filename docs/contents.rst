@@ -16,7 +16,7 @@
    modules/operators
    modules/functionals
    modules/problems
-   modules/solvers/solvers
+   modules/solvers
    modules/projectors
    modules/projectors_cuda
    modules/proximal_operators

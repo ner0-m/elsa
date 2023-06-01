@@ -13,7 +13,7 @@ C++ API Reference
    operators
    functionals
    problems
-   solvers/solvers
+   solvers
    projectors
    projectors_cuda
    proximal_operators
