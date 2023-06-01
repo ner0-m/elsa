@@ -2,7 +2,7 @@
 
 #include "memory_resource/ContiguousVector.h"
 #include "memory_resource/ContiguousWrapper.h"
-#include "memory_resource/HostStandardResource.h"
+#include "memory_resource/UniversalResource.h"
 #include "Assertions.h"
 
 #include <map>
@@ -75,7 +75,7 @@ static void VerifyTestStats()
 }
 
 /* checked resource which keeps track of accesses/allocations */
-class CheckedResource : private HostStandardResource
+class CheckedResource : private UniversalResource
 {
 private:
     static constexpr uint8_t InitByteValue = 42;
@@ -93,7 +93,7 @@ public:
 private:
     void* allocate(size_t size, size_t alignment) override
     {
-        void* p = HostStandardResource::allocate(size, alignment);
+        void* p = UniversalResource::allocate(size, alignment);
         if (!testStats.intest)
             testStats.preTestAllocated.insert({p, {size, alignment}});
         else {
@@ -115,7 +115,7 @@ private:
                 size = it->second.first;
                 alignment = it->second.second;
                 testStats.preTestAllocated.erase(it);
-                HostStandardResource::deallocate(ptr, size, alignment);
+                UniversalResource::deallocate(ptr, size, alignment);
             }
             return;
         }
@@ -126,7 +126,7 @@ private:
             ++testStats.invalidFree;
         else {
             testStats.allocations.erase(it);
-            HostStandardResource::deallocate(ptr, size, alignment);
+            UniversalResource::deallocate(ptr, size, alignment);
         }
     }
 

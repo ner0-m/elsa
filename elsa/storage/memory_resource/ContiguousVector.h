@@ -1,14 +1,15 @@
 #pragma once
 
 #include "ContiguousMemory.h"
-#include "MemoryOperations.h"
 
 #include <algorithm>
 #include <iterator>
 #include <limits>
 #include <stdexcept>
+#include <cstring>
 
 #include <thrust/universal_vector.h>
+#include <thrust/fill.h>
 #include <thrust/copy.h>
 #include <thrust/execution_policy.h>
 
@@ -92,39 +93,42 @@ namespace elsa::mr
         template <class Tag>
         constexpr bool is_complex = std::is_base_of<type_tags::complex, Tag>::value;
 
+        /* type-wrapper for the pointer to be casted to to prevent native
+         *  opeartions on the type to be called (as the contigous-vector already takes care of them) */
+        template <class Type>
+        struct type_wrapper {
+            uint8_t payload[sizeof(Type)];
+        };
+
         template <class Type>
         void fillMemory(Type* ptr, const void* src, size_t count)
         {
-            struct TmpType {
-                uint8_t payload[sizeof(Type)];
-            };
+            using Tp = type_wrapper<Type>;
 
-            auto src_ = thrust::universal_ptr<const TmpType>(reinterpret_cast<const TmpType*>(src));
-            auto dst_ = thrust::universal_ptr<TmpType>(reinterpret_cast<TmpType*>(ptr));
+            auto src_ = reinterpret_cast<const Tp*>(src);
+            auto dst_ = thrust::universal_ptr<Tp>(reinterpret_cast<Tp*>(ptr));
+
             thrust::fill(thrust::device, dst_, dst_ + count, *src_);
         }
         template <class Type>
         void copyMemory(void* ptr, const void* src, size_t count, bool src_universal)
         {
-            struct TmpType {
-                uint8_t payload[sizeof(Type)];
-            };
+            using Tp = type_wrapper<Type>;
+
+            auto src_ = reinterpret_cast<const Tp*>(src);
+            auto dst_ = reinterpret_cast<Tp*>(ptr);
 
             if (src_universal) {
-                auto src_ =
-                    thrust::universal_ptr<const TmpType>(reinterpret_cast<const TmpType*>(src));
-                auto dst_ = thrust::universal_ptr<TmpType>(reinterpret_cast<TmpType*>(ptr));
-                thrust::copy(thrust::device, src_, src_ + count, dst_);
-            } else {
-                auto src_ = reinterpret_cast<const TmpType*>(src);
-                auto dst_ = reinterpret_cast<TmpType*>(ptr);
+                auto usrc = thrust::universal_ptr<const Tp>(src_);
+                auto udst = thrust::universal_ptr<Tp>(dst_);
+                thrust::copy(thrust::device, usrc, usrc + count, udst);
+            } else
                 thrust::copy(thrust::host, src_, src_ + count, dst_);
-            }
         }
         template <class Type>
         void moveMemory(void* ptr, const void* src, size_t count)
         {
-            detail::memOpMove(ptr, src, count * sizeof(Type));
+            std::memmove(ptr, src, count * sizeof(Type));
         }
 
         /*
@@ -360,6 +364,8 @@ namespace elsa::mr
 
                 /* insert the range by using the iterators */
                 else {
+                    static_cast<void>(is_universal);
+
                     size_type transition = std::min<size_type>(size, end);
 
                     /* copy-assign the currently existing and to-be-overwritten part */

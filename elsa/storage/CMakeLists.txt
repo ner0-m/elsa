@@ -27,6 +27,19 @@ set(MODULE_HEADERS
     transforms/Exp.h
     transforms/Imag.h
     transforms/Real.h
+    memory_resource/AllocationHint.h
+    memory_resource/CacheResource.h
+    memory_resource/ContiguousMemory.h
+    memory_resource/ContiguousVector.h
+    memory_resource/ContiguousWrapper.h
+    memory_resource/ElsaThrustMRAdaptor.h
+    memory_resource/HostStandardResource.h
+    memory_resource/LoggingResource.h
+    memory_resource/PoolResource.h
+    memory_resource/RegionResource.h
+    memory_resource/SynchResource.h
+    memory_resource/ThrustElsaMRAdaptor.h
+    memory_resource/UniversalResource.h
 )
 
 # list all the code files of the module
@@ -38,7 +51,6 @@ set(MODULE_SOURCES
     memory_resource/CacheResource.cpp
     memory_resource/RegionResource.cpp
     memory_resource/AllocationHint.cpp
-    memory_resource/MemoryOperations.cpp
     memory_resource/ElsaThrustMRAdaptor.cpp
     memory_resource/Util.cpp
 )
