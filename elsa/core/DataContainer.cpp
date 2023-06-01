@@ -518,6 +518,44 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<data_t>& DataContainer<data_t>::zero() &
+    {
+        return fill(0);
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DataContainer<data_t>::zero() &&
+    {
+        return std::move(fill(0));
+    }
+
+    template <typename data_t>
+    DataContainer<data_t>& DataContainer<data_t>::one() &
+    {
+        return fill(1);
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DataContainer<data_t>::one() &&
+    {
+        return std::move(fill(1));
+    }
+
+    template <typename data_t>
+    DataContainer<data_t>& DataContainer<data_t>::fill(SelfType_t<data_t> value) &
+    {
+        *this = value;
+        return *this;
+    }
+
+    template <typename data_t>
+    DataContainer<data_t> DataContainer<data_t>::fill(SelfType_t<data_t> value) &&
+    {
+        *this = value;
+        return std::move(*this);
+    }
+
+    template <typename data_t>
     DataContainer<data_t>& DataContainer<data_t>::operator+=(const DataContainer<data_t>& dc)
     {
         elsa::inplaceAdd(begin(), end(), dc.begin());

@@ -228,6 +228,24 @@ namespace elsa
         /// convert to the inverse fourier transformed signal
         void ifft(FFTNorm norm);
 
+        /// Set all values of the DataContainer to zero
+        DataContainer<data_t>& zero() &;
+
+        /// Set all values of the DataContainer to zero
+        DataContainer<data_t> zero() &&;
+
+        /// Set all values of the DataContainer to one
+        DataContainer<data_t>& one() &;
+
+        /// Set all values of the DataContainer to one
+        DataContainer<data_t> one() &&;
+
+        /// Set all values of the DataContainer to the given value
+        DataContainer<data_t>& fill(SelfType_t<data_t> value) &;
+
+        /// Set all values of the DataContainer to the given value
+        DataContainer<data_t> fill(SelfType_t<data_t> value) &&;
+
         /// if the datacontainer is already complex, return itself.
         DataContainer<add_complex_t<data_t>> asComplex() const;
 
@@ -343,43 +361,44 @@ namespace elsa
 
     /// clip the container values outside of the interval, to the interval edges
     template <typename data_t>
-    DataContainer<data_t> clip(const DataContainer<data_t>& dc, data_t min, data_t max);
+    [[nodiscard]] DataContainer<data_t> clip(const DataContainer<data_t>& dc, data_t min,
+                                             data_t max);
 
     /// Concatenate two DataContainers to one (requires copying of both)
     template <typename data_t>
-    DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
-                                      const DataContainer<data_t>& dc2);
+    [[nodiscard]] DataContainer<data_t> concatenate(const DataContainer<data_t>& dc1,
+                                                    const DataContainer<data_t>& dc2);
 
     /// Perform the FFT shift operation to the provided signal. Refer to
     /// https://numpy.org/doc/stable/reference/generated/numpy.fft.fftshift.html for further
     /// details.
     template <typename data_t>
-    DataContainer<data_t> fftShift2D(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> fftShift2D(const DataContainer<data_t>& dc);
 
     /// Perform the IFFT shift operation to the provided signal. Refer to
     /// https://numpy.org/doc/stable/reference/generated/numpy.fft.ifftshift.html for further
     /// details.
     template <typename data_t>
-    DataContainer<data_t> ifftShift2D(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> ifftShift2D(const DataContainer<data_t>& dc);
 
     /// Unary plus operator
     template <typename data_t>
-    inline DataContainer<data_t> operator+(const DataContainer<data_t>& x)
+    [[nodiscard]] inline DataContainer<data_t> operator+(const DataContainer<data_t>& x)
     {
         return x;
     }
 
     /// Unary negation operator
     template <typename data_t>
-    inline DataContainer<data_t> operator-(const DataContainer<data_t>& x)
+    [[nodiscard]] inline DataContainer<data_t> operator-(const DataContainer<data_t>& x)
     {
         return static_cast<data_t>(-1) * x;
     }
 
     /// Multiplying two DataContainers
     template <typename data_t>
-    inline DataContainer<data_t> operator*(const DataContainer<data_t>& lhs,
-                                           const DataContainer<data_t>& rhs)
+    [[nodiscard]] inline DataContainer<data_t> operator*(const DataContainer<data_t>& lhs,
+                                                         const DataContainer<data_t>& rhs)
     {
         auto copy = lhs;
         copy *= rhs;
@@ -389,7 +408,8 @@ namespace elsa
     template <typename data_t, typename Scalar,
               typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
-    inline DataContainer<data_t> operator*(const DataContainer<data_t>& dc, const Scalar& s)
+    [[nodiscard]] inline DataContainer<data_t> operator*(const DataContainer<data_t>& dc,
+                                                         const Scalar& s)
     {
         auto copy = dc;
         copy *= static_cast<data_t>(s);
@@ -399,7 +419,8 @@ namespace elsa
     template <typename data_t, typename Scalar,
               typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
-    inline DataContainer<data_t> operator*(const Scalar& s, const DataContainer<data_t>& dc)
+    [[nodiscard]] inline DataContainer<data_t> operator*(const Scalar& s,
+                                                         const DataContainer<data_t>& dc)
     {
         auto copy = dc;
         copy *= static_cast<data_t>(s);
@@ -408,8 +429,8 @@ namespace elsa
 
     /// Add two DataContainers
     template <typename data_t>
-    inline DataContainer<data_t> operator+(const DataContainer<data_t>& lhs,
-                                           const DataContainer<data_t>& rhs)
+    [[nodiscard]] inline DataContainer<data_t> operator+(const DataContainer<data_t>& lhs,
+                                                         const DataContainer<data_t>& rhs)
     {
         auto copy = lhs;
         copy += rhs;
@@ -419,7 +440,8 @@ namespace elsa
     template <typename data_t, typename Scalar,
               typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
-    inline DataContainer<data_t> operator+(const DataContainer<data_t>& dc, const Scalar& s)
+    [[nodiscard]] inline DataContainer<data_t> operator+(const DataContainer<data_t>& dc,
+                                                         const Scalar& s)
     {
         auto copy = dc;
         copy += static_cast<data_t>(s);
@@ -429,7 +451,8 @@ namespace elsa
     template <typename data_t, typename Scalar,
               typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
-    inline DataContainer<data_t> operator+(const Scalar& s, const DataContainer<data_t>& dc)
+    [[nodiscard]] inline DataContainer<data_t> operator+(const Scalar& s,
+                                                         const DataContainer<data_t>& dc)
     {
         auto copy = dc;
         copy += static_cast<data_t>(s);
@@ -438,83 +461,85 @@ namespace elsa
 
     /// Subtract two DataContainers
     template <typename data_t>
-    DataContainer<data_t> operator-(const DataContainer<data_t>& lhs,
-                                    const DataContainer<data_t>& rhs);
+    [[nodiscard]] DataContainer<data_t> operator-(const DataContainer<data_t>& lhs,
+                                                  const DataContainer<data_t>& rhs);
 
     template <typename data_t, typename Scalar,
               typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
-    DataContainer<std::common_type_t<data_t, Scalar>> operator-(const DataContainer<data_t>& dc,
-                                                                const Scalar& s);
+    [[nodiscard]] DataContainer<std::common_type_t<data_t, Scalar>>
+        operator-(const DataContainer<data_t>& dc, const Scalar& s);
 
     template <typename Scalar, typename data_t,
               typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
-    DataContainer<std::common_type_t<Scalar, data_t>> operator-(const Scalar& s,
-                                                                const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<std::common_type_t<Scalar, data_t>>
+        operator-(const Scalar& s, const DataContainer<data_t>& dc);
 
     /// Divide two DataContainers
     template <typename data_t>
-    DataContainer<data_t> operator/(const DataContainer<data_t>& lhs,
-                                    const DataContainer<data_t>& rhs);
+    [[nodiscard]] DataContainer<data_t> operator/(const DataContainer<data_t>& lhs,
+                                                  const DataContainer<data_t>& rhs);
 
     /// Divide DataContainer by scalar
     template <typename data_t, typename Scalar,
               typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
-    DataContainer<std::common_type_t<data_t, Scalar>> operator/(const DataContainer<data_t>& dc,
-                                                                const Scalar& s);
+    [[nodiscard]] DataContainer<std::common_type_t<data_t, Scalar>>
+        operator/(const DataContainer<data_t>& dc, const Scalar& s);
 
     /// Divide scalar with DataContainer
     template <typename Scalar, typename data_t,
               typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
-    DataContainer<std::common_type_t<Scalar, data_t>> operator/(const Scalar& s,
-                                                                const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<std::common_type_t<Scalar, data_t>>
+        operator/(const Scalar& s, const DataContainer<data_t>& dc);
 
     template <typename xdata_t, typename ydata_t>
-    DataContainer<value_type_of_t<std::common_type_t<xdata_t, ydata_t>>>
+    [[nodiscard]] DataContainer<value_type_of_t<std::common_type_t<xdata_t, ydata_t>>>
         cwiseMax(const DataContainer<xdata_t>& lhs, const DataContainer<ydata_t>& rhs);
 
     template <typename xdata_t, typename ydata_t>
-    DataContainer<value_type_of_t<std::common_type_t<xdata_t, ydata_t>>>
+    [[nodiscard]] DataContainer<value_type_of_t<std::common_type_t<xdata_t, ydata_t>>>
         cwiseMin(const DataContainer<xdata_t>& lhs, const DataContainer<ydata_t>& rhs);
 
     /// @brief Compute a coefficient wise square for each element of the `DataContainer`
     template <typename data_t>
-    DataContainer<data_t> square(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> square(const DataContainer<data_t>& dc);
 
     /// @brief Compute a coefficient wise square root for each element of the `DataContainer`
     template <typename data_t>
-    DataContainer<data_t> sqrt(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> sqrt(const DataContainer<data_t>& dc);
 
     /// @brief Compute a coefficient wise exponential for each element of the `DataContainer`
     template <typename data_t>
-    DataContainer<data_t> exp(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> exp(const DataContainer<data_t>& dc);
 
     /// @brief Compute a coefficient wise log for each element of the `DataContainer`
     template <typename data_t>
-    DataContainer<data_t> log(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> log(const DataContainer<data_t>& dc);
 
     /// @brief Compute a coefficient wise minimum with a scalar.
     /// For each element in `x_i` the given `DataContainer`, compute
     /// `min(x_i, scalar)`
     template <typename data_t>
-    DataContainer<data_t> minimum(const DataContainer<data_t>& dc, SelfType_t<data_t> scalar);
+    [[nodiscard]] DataContainer<data_t> minimum(const DataContainer<data_t>& dc,
+                                                SelfType_t<data_t> scalar);
 
     /// @brief Compute a coefficient wise maximum with a scalar.
     /// For each element in `x_i` the given `DataContainer`, compute
     /// `max(x_i, scalar)`
     template <typename data_t>
-    DataContainer<data_t> maximum(const DataContainer<data_t>& dc, SelfType_t<data_t> scalar);
+    [[nodiscard]] DataContainer<data_t> maximum(const DataContainer<data_t>& dc,
+                                                SelfType_t<data_t> scalar);
 
     /// Return an owning DataContainer, if given an non-owning one, the data is copied to a new
     /// owning buffer.
     template <class data_t>
-    DataContainer<data_t> materialize(const DataContainer<data_t>& x);
+    [[nodiscard]] DataContainer<data_t> materialize(const DataContainer<data_t>& x);
 
     template <typename data_t>
-    DataContainer<value_type_of_t<data_t>> cwiseAbs(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<value_type_of_t<data_t>> cwiseAbs(const DataContainer<data_t>& dc);
 
     /// @brief compute the sign of each entry of the input DataContainer. The
     /// function is defined as:
@@ -536,18 +561,18 @@ namespace elsa
     /// \end{cases} \quad \forall i
     /// \]
     template <typename data_t>
-    DataContainer<value_type_of_t<data_t>> sign(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<value_type_of_t<data_t>> sign(const DataContainer<data_t>& dc);
 
     template <typename data_t>
-    DataContainer<add_complex_t<data_t>> asComplex(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<add_complex_t<data_t>> asComplex(const DataContainer<data_t>& dc);
 
     /// Real for complex DataContainers
     template <typename data_t>
-    DataContainer<value_type_of_t<data_t>> real(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<value_type_of_t<data_t>> real(const DataContainer<data_t>& dc);
 
     /// Imag for complex DataContainers
     template <typename data_t>
-    DataContainer<value_type_of_t<data_t>> imag(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<value_type_of_t<data_t>> imag(const DataContainer<data_t>& dc);
 
     /// Compute the linear combination of \f$a * x + b * y\f$.
     ///
@@ -557,8 +582,9 @@ namespace elsa
     ///
     /// The function throws, if x and y do not have the same data descriptor
     template <class data_t>
-    DataContainer<data_t> lincomb(SelfType_t<data_t> a, const DataContainer<data_t>& x,
-                                  SelfType_t<data_t> b, const DataContainer<data_t>& y);
+    [[nodiscard]] DataContainer<data_t>
+        lincomb(SelfType_t<data_t> a, const DataContainer<data_t>& x, SelfType_t<data_t> b,
+                const DataContainer<data_t>& y);
 
     /// Compute the linear combination of \f$a * x + b * y\f$, and write it to
     /// the output variable.
@@ -574,36 +600,37 @@ namespace elsa
 
     /// Create a DataContainer filled with zeros and the given DataDescriptor
     template <class data_t>
-    DataContainer<data_t> zeros(const DataDescriptor& desc);
+    [[nodiscard]] DataContainer<data_t> zeros(const DataDescriptor& desc);
 
     /// Create a DataContainer filled with zeros and the DataDescriptor of the given DataContainer
     template <class data_t>
-    DataContainer<data_t> zeroslike(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> zeroslike(const DataContainer<data_t>& dc);
 
     /// Create a DataContainer filled with ones values and the given DataDescriptor
     template <class data_t>
-    DataContainer<data_t> ones(const DataDescriptor& desc);
+    [[nodiscard]] DataContainer<data_t> ones(const DataDescriptor& desc);
 
     /// Create a DataContainer filled with ones and the DataDescriptor of the given DataContainer
     template <class data_t>
-    DataContainer<data_t> oneslike(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> oneslike(const DataContainer<data_t>& dc);
 
     /// Create a DataContainer filled with the given value and DataDescriptor
     template <class data_t>
-    DataContainer<data_t> full(const DataDescriptor& desc, SelfType_t<data_t> value);
+    [[nodiscard]] DataContainer<data_t> full(const DataDescriptor& desc, SelfType_t<data_t> value);
 
     /// Create a DataContainer filled with the given value and the DataDescriptor of the given
     /// DataContainer
     template <class data_t>
-    DataContainer<data_t> fulllike(const DataContainer<data_t>& dc, SelfType_t<data_t> value);
+    [[nodiscard]] DataContainer<data_t> fulllike(const DataContainer<data_t>& dc,
+                                                 SelfType_t<data_t> value);
 
     /// Create an uninitialized DataContainer, the caller is responsible to fill DataContainer
     /// before use
     template <class data_t>
-    DataContainer<data_t> empty(const DataDescriptor& desc);
+    [[nodiscard]] DataContainer<data_t> empty(const DataDescriptor& desc);
 
     /// Create an uninitialized DataContainer with the DataDescriptor of the given DataContainer.
     /// The caller is responsible to fill DataContainer before use
     template <class data_t>
-    DataContainer<data_t> emptylike(const DataContainer<data_t>& dc);
+    [[nodiscard]] DataContainer<data_t> emptylike(const DataContainer<data_t>& dc);
 } // namespace elsa
