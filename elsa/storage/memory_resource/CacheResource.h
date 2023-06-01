@@ -69,6 +69,7 @@ namespace elsa::mr
 
         void releaseCache();
 
+    public:
         CacheResource(const CacheResource& other) = delete;
         CacheResource& operator=(const CacheResource& other) = delete;
         CacheResource(CacheResource&& other) noexcept = delete;

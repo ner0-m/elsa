@@ -94,7 +94,8 @@ namespace elsa::mr
         constexpr bool is_complex = std::is_base_of<type_tags::complex, Tag>::value;
 
         /* type-wrapper for the pointer to be casted to to prevent native
-         *  opeartions on the type to be called (as the contigous-vector already takes care of them) */
+         *  opeartions on the type to be called (as the contigous-vector already takes care of them)
+         */
         template <class Type>
         struct type_wrapper {
             uint8_t payload[sizeof(Type)];

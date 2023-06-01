@@ -1,5 +1,6 @@
 #pragma once
-#include <stddef.h>
+
+#include <cstddef>
 #include <tuple>
 
 namespace elsa::mr::util
@@ -25,6 +26,7 @@ namespace elsa::mr::util
 #define unlikely(x) (x)
 #endif
 
-#define ASSERT(x) if(unlikely(!static_cast<bool>(x))) {\
-    std::abort();\
-}
+#define ASSERT(x)                          \
+    if (unlikely(!static_cast<bool>(x))) { \
+        std::abort();                      \
+    }

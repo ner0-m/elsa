@@ -37,9 +37,15 @@ namespace elsa::mr::detail
         __host__ __device__ ContPointer() {}
         __host__ __device__ ContPointer(pointer w) : _where(w) {}
         __host__ __device__ ContPointer(self_type&& p) noexcept : _where(p._where) {}
-        __host__ __device__ ContPointer(const ContPointer<std::remove_const_t<Type>>& p) : _where(p.get()) {}
-        __host__ __device__ ContPointer(const ContPointer<std::add_const_t<Type>>& p) : _where(p.get()) {
-            static_assert(std::is_const<Type>::value, "Const pointer cannot be converted to a normal pointer");
+        __host__ __device__ ContPointer(const ContPointer<std::remove_const_t<Type>>& p)
+            : _where(p.get())
+        {
+        }
+        __host__ __device__ ContPointer(const ContPointer<std::add_const_t<Type>>& p)
+            : _where(p.get())
+        {
+            static_assert(std::is_const<Type>::value,
+                          "Const pointer cannot be converted to a normal pointer");
         }
 
     public:
@@ -135,9 +141,15 @@ namespace elsa::mr::detail
         __host__ __device__ ContIterator() {}
         __host__ __device__ ContIterator(pointer w) : _where(w) {}
         __host__ __device__ ContIterator(self_type&& p) noexcept : _where(p._where) {}
-        __host__ __device__ ContIterator(const ContIterator<std::remove_const_t<Type>>& p) : _where(p.base()) {}
-        __host__ __device__ ContIterator(const ContIterator<std::add_const_t<Type>>& p) : _where(p.base()) {
-            static_assert(std::is_const<Type>::value, "Const iterator cannot be converted to a normal iterator");
+        __host__ __device__ ContIterator(const ContIterator<std::remove_const_t<Type>>& p)
+            : _where(p.base())
+        {
+        }
+        __host__ __device__ ContIterator(const ContIterator<std::add_const_t<Type>>& p)
+            : _where(p.base())
+        {
+            static_assert(std::is_const<Type>::value,
+                          "Const iterator cannot be converted to a normal iterator");
         }
 
     public:

@@ -1,12 +1,13 @@
 #include "ElsaThrustMRAdaptor.h"
 
-elsa::mr::ElsaThrustMRAdaptor::pointer elsa::mr::ElsaThrustMRAdaptor::do_allocate(std::size_t bytes,
-                                                                          std::size_t alignment)
+elsa::mr::ElsaThrustMRAdaptor::pointer
+    elsa::mr::ElsaThrustMRAdaptor::do_allocate(std::size_t bytes, std::size_t alignment)
 {
     return pointer(_mr->allocate(bytes, alignment));
 }
 
-void elsa::mr::ElsaThrustMRAdaptor::do_deallocate(pointer p, std::size_t bytes, std::size_t alignment)
+void elsa::mr::ElsaThrustMRAdaptor::do_deallocate(pointer p, std::size_t bytes,
+                                                  std::size_t alignment)
 {
     _mr->deallocate(p.get(), bytes, alignment);
 }
