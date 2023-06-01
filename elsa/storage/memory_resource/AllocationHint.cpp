@@ -20,7 +20,6 @@ namespace elsa
     overloaded(Ts...) -> overloaded<Ts...>;
 } // namespace elsa
 
-
 namespace elsa::mr::hint
 {
     thread_local std::unique_ptr<std::variant<MemoryResource, AllocationBehavior>> HINT;

@@ -5,7 +5,8 @@
 
 namespace elsa::mr
 {
-    class ElsaThrustMRAdaptor final : public thrust::mr::memory_resource<thrust::universal_ptr<void>>
+    class ElsaThrustMRAdaptor final
+        : public thrust::mr::memory_resource<thrust::universal_ptr<void>>
     {
     private:
         MemoryResource _mr;
