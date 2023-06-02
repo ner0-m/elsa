@@ -13,6 +13,7 @@
 #include <cstring>
 #include <mutex>
 #include <list>
+#include <set>
 
 using namespace elsa::mr;
 
@@ -45,57 +46,106 @@ void operator delete(void* ptr, size_t size) noexcept
     free(ptr);
 }
 
-template <typename T>
-static MemoryResource provideResource()
+class DummyResource : public MemResInterface
 {
-    throw std::exception();
-}
+private:
+    void* _bumpPtr;
+    size_t _allocatedSize{0};
 
-static size_t sizeForIndex(size_t i)
+protected:
+    DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)} {}
+    ~DummyResource() = default;
+
+public:
+    static MemoryResource make() { return MemoryResource::MakeRef(new DummyResource()); }
+
+    void* allocate(size_t size, size_t alignment) override
+    {
+        static_cast<void>(alignment);
+        // this can certainly not be deref'd, as it is too large for a 48-bit sign-extended
+        // address
+        _allocatedSize += size;
+        void* ret = _bumpPtr;
+        _bumpPtr = voidPtrOffset(_bumpPtr, size);
+        return ret;
+    }
+    void deallocate(void* ptr, size_t size, size_t alignment) noexcept override
+    {
+        static_cast<void>(ptr);
+        static_cast<void>(alignment);
+        _allocatedSize -= size;
+    }
+    bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override
+    {
+        static_cast<void>(ptr);
+        static_cast<void>(size);
+        static_cast<void>(alignment);
+        static_cast<void>(newSize);
+        return false;
+    }
+
+    size_t allocatedSize() { return _allocatedSize; }
+};
+
+static size_t sizeForRandom(size_t random)
 {
-    constexpr size_t MAX_POWER = 20;
-    size_t hash = std::hash<size_t>{}(i);
-    size_t power = hash % MAX_POWER;
-    size_t size = hash & ((1 << power) - 1);
+    constexpr size_t MAX_POWER = 17;
+    size_t power = random % MAX_POWER;
+    size_t size = random & ((1 << power) - 1);
     return std::max(size, static_cast<size_t>(1));
 }
 
-// call this to check whether the basic allocator functionality still works,
-// i.e. that the metadata is still intact
-// (e.g. after peforming some special operation)
-static void testNonoverlappingAllocations(MemoryResource resource)
+static void testVaryingAllocations(MemoryResource resource)
 {
-    const size_t NUM_ALLOCATIONS = 128;
-    std::vector<std::pair<void*, size_t>> allocations;
-
     std::random_device dev;
     std::mt19937 rng(dev());
     std::uniform_int_distribution<size_t> dist;
     rng.seed(0xdeadbeef);
 
-    for (size_t i = 0; i < NUM_ALLOCATIONS; i++) {
-        // first pick the bin at random
-        size_t size = (2 << (dist(rng) % 17));
-        // then pick a random size within that bin
-        size |= (size - 1) & dist(rng);
-        void* ptr = resource->allocate(size, 4);
-        allocations.emplace_back(ptr, size);
-    }
-
-    std::sort(allocations.begin(), allocations.end(), [](auto& a, auto& b) {
+    auto cmp = [](auto& a, auto& b) {
         return reinterpret_cast<uintptr_t>(a.first) < reinterpret_cast<uintptr_t>(b.first);
-    });
+    };
+    std::set<std::pair<void*, size_t>, decltype(cmp)> ptrs(cmp);
+    for (size_t i = 0; i < 10000; i++) {
+        size_t size = sizeForRandom(dist(rng));
+        void* ptr = nullptr;
+        try {
+            ptr = reinterpret_cast<unsigned char*>(resource->allocate(size, 8));
+        } catch (const std::bad_alloc& e) {
+            // out of memory
+        }
+        if (ptr) {
+            auto [it, inserted] = ptrs.insert(std::make_pair(ptr, size));
+            CHECK(inserted);
+            auto prevIt = std::prev(it);
+            if (prevIt != it) {
+                /* check overlap with previous */
+                REQUIRE_LT(reinterpret_cast<uintptr_t>(prevIt->first), // + it->second,
+                           reinterpret_cast<uintptr_t>(ptr));
+            }
+            auto nextIt = std::next(it);
+            if (nextIt != ptrs.end()) {
+                /* check overlap with next */
+                REQUIRE_LT(reinterpret_cast<uintptr_t>(ptr), // + size,
+                           reinterpret_cast<uintptr_t>(nextIt->first));
+            }
+        }
 
-    // check if any allocations overlap
-    for (size_t i = 1; i < NUM_ALLOCATIONS; i++) {
-        auto [ptr1, size] = allocations[i - 1];
-        auto [ptr2, _] = allocations[i];
-        CHECK_LE(reinterpret_cast<uintptr_t>(ptr1) + size, reinterpret_cast<uintptr_t>(ptr2));
+        constexpr size_t invDeletionProbability = 100;
+        if (dist(rng) % invDeletionProbability == 0 || ptrs.size() > 3 * invDeletionProbability) {
+            // E(toDelete) = invDeletionProbability => the set should not grow indefinitely
+            size_t toDelete = dist(rng) % (2 * (invDeletionProbability + 1));
+            for (size_t i = 0; i < toDelete && !ptrs.empty(); i++) {
+                auto toDeleteIt = ptrs.begin();
+                std::advance(toDeleteIt, dist(rng) % ptrs.size());
+                resource->deallocate(toDeleteIt->first, toDeleteIt->second, 8);
+                ptrs.erase(toDeleteIt);
+            }
+        }
     }
 
-    for (size_t i = 0; i < NUM_ALLOCATIONS; i++) {
-        auto [ptr, size] = allocations[i];
-        resource->deallocate(ptr, size, 4);
+    for (auto [ptr, size] : ptrs) {
+        resource->deallocate(ptr, size, 8);
     }
 }
 
@@ -145,29 +195,12 @@ TEST_CASE_MR("Check alignment")
 
 TEST_CASE_MR("Varying allocations")
 {
-    std::random_device dev;
-    std::mt19937 rng(dev());
-    std::uniform_int_distribution<size_t> dist;
-    rng.seed(0xdeadbeef);
-
-    MemoryResource resource = T::make();
-    std::vector<unsigned char*> ptrs(10000);
-    for (size_t i = 0; i < 10000; i++) {
-        size_t size = sizeForIndex(i);
-        ptrs[i] = reinterpret_cast<unsigned char*>(resource->allocate(size, 8));
-        *ptrs[i] = 0xff;
-        if (i > 0 && dist(rng) % 2 == 0) {
-            size_t indexToDeallocate = dist(rng) % i;
-            size_t size = sizeForIndex(indexToDeallocate);
-            resource->deallocate(ptrs[indexToDeallocate], size, 8);
-            ptrs[indexToDeallocate] = nullptr;
-        }
-    }
-
-    for (size_t i = 0; i < 10000; i++) {
-        size_t size = sizeForIndex(i);
-        resource->deallocate(ptrs[i], size, 8);
-    }
+    MemoryResource baseline = baselineInstance();
+    MemoryResource dummy = DummyResource::make();
+    setBaselineInstance(dummy);
+    testVaryingAllocations(T::make());
+    setBaselineInstance(baseline);
+    CHECK_EQ(dynamic_cast<DummyResource*>(dummy.get())->allocatedSize(), 0);
 }
 
 TEST_CASE_MR("Large allocation")
@@ -204,47 +237,6 @@ TEST_CASE_MR("Invalid alignment")
 }
 
 TEST_SUITE_END();
-
-class DummyResource : public MemResInterface
-{
-private:
-    void* _bumpPtr;
-    size_t _allocatedSize{0};
-
-protected:
-    DummyResource() : _bumpPtr{reinterpret_cast<void*>(0xfffffffffff000)} {}
-    ~DummyResource() = default;
-
-public:
-    static MemoryResource make() { return MemoryResource::MakeRef(new DummyResource()); }
-
-    void* allocate(size_t size, size_t alignment) override
-    {
-        static_cast<void>(alignment);
-        // this can certainly not be deref'd, as it is too large for a 48-bit sign-extended
-        // address
-        _allocatedSize += size;
-        void* ret = _bumpPtr;
-        _bumpPtr = voidPtrOffset(_bumpPtr, size);
-        return ret;
-    }
-    void deallocate(void* ptr, size_t size, size_t alignment) noexcept override
-    {
-        static_cast<void>(ptr);
-        static_cast<void>(alignment);
-        _allocatedSize -= size;
-    }
-    bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override
-    {
-        static_cast<void>(ptr);
-        static_cast<void>(size);
-        static_cast<void>(alignment);
-        static_cast<void>(newSize);
-        return false;
-    }
-
-    size_t allocatedSize() { return _allocatedSize; }
-};
 
 #define TEST_CASE_POOL(name)                                                      \
     TEST_CASE_TEMPLATE(name, Pool, ConstantFitPoolResource, FirstFitPoolResource, \
@@ -293,7 +285,7 @@ TEST_CASE_POOL("Resize growth")
     MemoryResource resource = Pool::make(dummy);
     void* ptr = resource->allocate(1234, 0x10);
     CHECK(resource->tryResize(ptr, 1234, 0x10, 5678));
-    testNonoverlappingAllocations(resource);
+    testVaryingAllocations(resource);
     resource->deallocate(ptr, 1234, 0x10);
 }
 
@@ -305,7 +297,7 @@ TEST_CASE_POOL("Resize same size")
     CHECK(resource->tryResize(ptr, 1234, 0x10, 1234));
     // different size, but the effective size of the block is the same
     CHECK(resource->tryResize(ptr, 1234, 0x10, 1233));
-    testNonoverlappingAllocations(resource);
+    testVaryingAllocations(resource);
 
     resource->deallocate(ptr, 1234, 0x10);
 }
@@ -317,7 +309,7 @@ TEST_CASE_POOL("Resize shrink")
     void* ptr = resource->allocate(1234, 0x10);
     // shrinking should always work for the pool allocator
     CHECK(resource->tryResize(ptr, 1234, 0x10, 50));
-    testNonoverlappingAllocations(resource);
+    testVaryingAllocations(resource);
 
     resource->deallocate(ptr, 1234, 0x10);
 }
@@ -331,7 +323,7 @@ TEST_CASE_POOL("Resize failure")
     void* ptr = resource->allocate(1234, 0x10);
     void* ptr2 = resource->allocate(1234, 0x10);
     CHECK_FALSE(resource->tryResize(ptr, 1234, 0x10, 5678));
-    testNonoverlappingAllocations(resource);
+    testVaryingAllocations(resource);
     resource->deallocate(ptr, 1234, 0x10);
     resource->deallocate(ptr2, 1234, 0x10);
 }
@@ -362,7 +354,7 @@ TEST_CASE_POOL("Heap allocation fail during PoolResource::allocate")
     }
     CHECK_EQ(exceptions, 1);
 
-    testNonoverlappingAllocations(resource);
+    testVaryingAllocations(resource);
 
     for (int i = 0; i < 100; i++) {
         resource->deallocate(ptrs[i], 1234, 0x10);
