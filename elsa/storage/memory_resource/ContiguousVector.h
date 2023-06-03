@@ -591,7 +591,7 @@ namespace elsa::mr
         {
             if (&s == this)
                 return *this;
-            if (true || _self.resource == s._self.resource)
+            if (_self.resource == s._self.resource)
                 std::swap(_self, s._self);
             else
                 assign(s);
