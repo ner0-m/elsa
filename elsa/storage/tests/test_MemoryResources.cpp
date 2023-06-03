@@ -110,23 +110,23 @@ static void testVaryingAllocations(MemoryResource resource)
         size_t size = sizeForRandom(dist(rng));
         void* ptr = nullptr;
         try {
-            ptr = reinterpret_cast<unsigned char*>(resource->allocate(size, 8));
+            ptr = resource->allocate(size, 8);
         } catch (const std::bad_alloc& e) {
             // out of memory
         }
         if (ptr) {
             auto [it, inserted] = ptrs.insert(std::make_pair(ptr, size));
             CHECK(inserted);
-            auto prevIt = std::prev(it);
-            if (prevIt != it) {
+            if (ptrs.begin() != it) {
+                auto prevIt = std::prev(it);
                 /* check overlap with previous */
-                REQUIRE_LT(reinterpret_cast<uintptr_t>(prevIt->first), // + it->second,
+                REQUIRE_LE(reinterpret_cast<uintptr_t>(prevIt->first) + prevIt->second,
                            reinterpret_cast<uintptr_t>(ptr));
             }
             auto nextIt = std::next(it);
             if (nextIt != ptrs.end()) {
                 /* check overlap with next */
-                REQUIRE_LT(reinterpret_cast<uintptr_t>(ptr), // + size,
+                REQUIRE_LE(reinterpret_cast<uintptr_t>(ptr) + size,
                            reinterpret_cast<uintptr_t>(nextIt->first));
             }
         }
