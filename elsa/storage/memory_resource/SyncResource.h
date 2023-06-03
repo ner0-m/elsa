@@ -8,17 +8,17 @@ namespace elsa::mr
     /// @brief Trivially synchs all allocations and deallocations to the wrapped resource with a
     /// single lock.
     template <typename T>
-    class SynchResource : public T
+    class SyncResource : public T
     {
     private:
         std::mutex _m;
 
     protected:
         template <typename... Ts>
-        SynchResource(Ts&&... args);
+        SyncResource(Ts&&... args);
 
     public:
-        /// @brief Creates a SynchResource wrapping a back-end resource, which performs the actual
+        /// @brief Creates a SyncResource wrapping a back-end resource, which performs the actual
         /// allocations.
         /// @param ...args Parameters passed to the constructor of the wrapped resource.
         /// @return A MemoryResource encapsulationg the SynchedResource
@@ -36,22 +36,21 @@ namespace elsa::mr
     };
 
     template <typename T>
-    inline void* SynchResource<T>::allocate(size_t size, size_t alignment)
+    inline void* SyncResource<T>::allocate(size_t size, size_t alignment)
     {
         std::unique_lock lock{_m};
         return T::allocate(size, alignment);
     }
 
     template <typename T>
-    inline void SynchResource<T>::deallocate(void* ptr, size_t size, size_t alignment) noexcept
+    inline void SyncResource<T>::deallocate(void* ptr, size_t size, size_t alignment) noexcept
     {
         std::unique_lock lock{_m};
         return T::deallocate(ptr, size, alignment);
     }
 
     template <typename T>
-    inline bool SynchResource<T>::tryResize(void* ptr, size_t size, size_t alignment,
-                                            size_t newSize)
+    inline bool SyncResource<T>::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
     {
         std::unique_lock lock{_m};
         return T::tryResize(ptr, size, alignment, newSize);
@@ -59,14 +58,14 @@ namespace elsa::mr
 
     template <typename T>
     template <typename... Ts>
-    inline SynchResource<T>::SynchResource(Ts&&... args) : T{std::forward<Ts>(args)...}
+    inline SyncResource<T>::SyncResource(Ts&&... args) : T{std::forward<Ts>(args)...}
     {
     }
 
     template <typename T>
     template <typename... Ts>
-    inline MemoryResource SynchResource<T>::make(Ts&&... args)
+    inline MemoryResource SyncResource<T>::make(Ts&&... args)
     {
-        return MemoryResource::MakeRef(new SynchResource<T>(std::forward<Ts>(args)...));
+        return MemoryResource::MakeRef(new SyncResource<T>(std::forward<Ts>(args)...));
     }
 } // namespace elsa::mr

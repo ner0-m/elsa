@@ -3,7 +3,7 @@
 #include "memory_resource/ContiguousMemory.h"
 #include "memory_resource/PoolResource.h"
 #include "memory_resource/UniversalResource.h"
-#include "memory_resource/SynchResource.h"
+#include "memory_resource/SyncResource.h"
 #include "memory_resource/CacheResource.h"
 #include "memory_resource/RegionResource.h"
 #include "memory_resource/BitUtil.h"
@@ -149,9 +149,9 @@ static void testVaryingAllocations(MemoryResource resource)
     }
 }
 
-#define TEST_CASE_MR(name)                                                                         \
-    TEST_CASE_TEMPLATE(name, T, ConstantFitPoolResource, FirstFitPoolResource,                     \
-                       HybridFitPoolResource, UniversalResource, SynchResource<UniversalResource>, \
+#define TEST_CASE_MR(name)                                                                        \
+    TEST_CASE_TEMPLATE(name, T, ConstantFitPoolResource, FirstFitPoolResource,                    \
+                       HybridFitPoolResource, UniversalResource, SyncResource<UniversalResource>, \
                        CacheResource, RegionResource)
 
 TEST_SUITE_BEGIN("memoryresources");
@@ -159,7 +159,7 @@ TYPE_TO_STRING(ConstantFitPoolResource);
 TYPE_TO_STRING(FirstFitPoolResource);
 TYPE_TO_STRING(HybridFitPoolResource);
 TYPE_TO_STRING(UniversalResource);
-TYPE_TO_STRING(SynchResource<UniversalResource>);
+TYPE_TO_STRING(SyncResource<UniversalResource>);
 TYPE_TO_STRING(CacheResource);
 TYPE_TO_STRING(RegionResource);
 

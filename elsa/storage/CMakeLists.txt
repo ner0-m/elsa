@@ -37,7 +37,7 @@ set(MODULE_HEADERS
     memory_resource/LoggingResource.h
     memory_resource/PoolResource.h
     memory_resource/RegionResource.h
-    memory_resource/SynchResource.h
+    memory_resource/SyncResource.h
     memory_resource/ThrustElsaMRAdaptor.h
     memory_resource/UniversalResource.h
 )
