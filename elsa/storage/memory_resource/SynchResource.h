@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ContiguousMemory.h"
 #include <mutex>
 
@@ -14,7 +15,7 @@ namespace elsa::mr
 
     protected:
         template <typename... Ts>
-        SynchResource(Ts... args);
+        SynchResource(Ts&&... args);
 
     public:
         /// @brief Creates a SynchResource wrapping a back-end resource, which performs the actual
@@ -22,7 +23,7 @@ namespace elsa::mr
         /// @param ...args Parameters passed to the constructor of the wrapped resource.
         /// @return A MemoryResource encapsulationg the SynchedResource
         template <typename... Ts>
-        static MemoryResource make(Ts... args);
+        static MemoryResource make(Ts&&... args);
 
         /// @brief Allocates from the wrapped resource. Blocking until the resource is not busy.
         void* allocate(size_t size, size_t alignment) override;
@@ -58,14 +59,14 @@ namespace elsa::mr
 
     template <typename T>
     template <typename... Ts>
-    inline SynchResource<T>::SynchResource(Ts... args) : T{args...}
+    inline SynchResource<T>::SynchResource(Ts&&... args) : T{std::forward<Ts>(args)...}
     {
     }
 
     template <typename T>
     template <typename... Ts>
-    inline MemoryResource SynchResource<T>::make(Ts... args)
+    inline MemoryResource SynchResource<T>::make(Ts&&... args)
     {
-        return MemoryResource::MakeRef(new SynchResource<T>(args...));
+        return MemoryResource::MakeRef(new SynchResource<T>(std::forward<Ts>(args)...));
     }
 } // namespace elsa::mr

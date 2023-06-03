@@ -75,8 +75,8 @@ TEST_CASE("Allocation pattern hint")
     {
         using namespace elsa::mr;
 
-        auto hint = hint::AllocationBehavior::ALLOC_THEN_FULL_RELEASE
-                    | hint::AllocationBehavior::BULK | hint::AllocationBehavior::sizeHint(0x1000);
+        auto hint = hint::behavior::ALLOC_THEN_FULL_RELEASE | hint::behavior::BULK
+                    | hint::AllocationBehavior::sizeHint(0x1000);
         CHECK(hint.allocThenFullRelease());
         CHECK(hint.bulk());
         CHECK_EQ(hint.getSizeHint(), 0x1000);

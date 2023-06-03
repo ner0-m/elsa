@@ -13,7 +13,7 @@ namespace elsa::mr
     {
         // minimal alignment of pointers returned by any of the cuda malloc calls
         // according to the cuda C programming guide, section 5.3.2 version 12.1
-        constexpr size_t GUARANTEED_ALIGNMENT = 256;
+        static constexpr size_t GUARANTEED_ALIGNMENT = 256;
 
         struct ChunkHeader {
             uintptr_t offset;
@@ -43,7 +43,7 @@ namespace elsa::mr
             if (unlikely(cudaMallocManaged(reinterpret_cast<void**>(&ptr), size))) {
                 throw std::bad_alloc();
             }
-            uintptr_t retPtr = alignDown(ptr + totalSize - 1, alignment);
+            uintptr_t retPtr = detail::alignDown(ptr + totalSize - 1, alignment);
             universal_resource::ChunkHeader* hdr =
                 reinterpret_cast<universal_resource::ChunkHeader*>(
                     retPtr - sizeof(universal_resource::ChunkHeader));

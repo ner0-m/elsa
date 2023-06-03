@@ -35,44 +35,6 @@
 
 namespace elsa::mr
 {
-
-    PoolResourceConfig::PoolResourceConfig(size_t maxChunkSize, size_t chunkSize,
-                                           size_t maxCachedChunks)
-        : maxChunkSize{maxChunkSize}, chunkSize{chunkSize}, maxCachedChunks{maxCachedChunks}
-    {
-    }
-
-    PoolResourceConfig PoolResourceConfig::defaultConfig()
-    {
-        return PoolResourceConfig(static_cast<size_t>(1) << 33, static_cast<size_t>(1) << 22, 1);
-    }
-
-    PoolResourceConfig& PoolResourceConfig::setMaxChunkSize(size_t size)
-    {
-        maxChunkSize = std::max(alignUp(size, pool_resource::BLOCK_GRANULARITY),
-                                pool_resource::MIN_BLOCK_SIZE);
-        return *this;
-    }
-
-    PoolResourceConfig& PoolResourceConfig::setChunkSize(size_t size)
-    {
-        chunkSize = std::max(alignUp(size, pool_resource::BLOCK_GRANULARITY),
-                             pool_resource::MIN_BLOCK_SIZE);
-        return *this;
-    }
-
-    PoolResourceConfig& PoolResourceConfig::setMaxCachedChunks(size_t count)
-    {
-        maxCachedChunks = count;
-        return *this;
-    }
-
-    bool PoolResourceConfig::validate()
-    {
-        // chunk must at least by able to accomodate the largest possible block
-        return chunkSize <= maxChunkSize && chunkSize >= pool_resource::MIN_BLOCK_SIZE;
-    };
-
     namespace pool_resource
     {
         template <typename FreeListStrategy>
@@ -83,8 +45,9 @@ namespace elsa::mr
             if (!config.validate()) {
                 _config = PoolResourceConfig::defaultConfig();
             }
-            _freeLists.resize(
-                log2Floor(_config.maxChunkSize) - pool_resource::MIN_BLOCK_SIZE_LOG + 1, nullptr);
+            _freeLists.resize(detail::log2Floor(_config.maxChunkSize)
+                                  - pool_resource::MIN_BLOCK_SIZE_LOG + 1,
+                              nullptr);
             _cachedChunks =
                 std::make_unique<std::unique_ptr<pool_resource::Block>[]>(_config.maxCachedChunks);
         }
@@ -125,10 +88,11 @@ namespace elsa::mr
                 unlinkFreeBlock(block);
             }
             // by this point, block is a registered, but unlinked block
-            ASSERT(block && checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
+            ASSERT(block
+                   && detail::checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
                    && block->size() >= realSize);
 
-            void* retAddress = alignUp(block->_address, alignment);
+            void* retAddress = detail::alignUp(block->_address, alignment);
             size_t headSplitSize = reinterpret_cast<uintptr_t>(retAddress)
                                    - reinterpret_cast<uintptr_t>(block->_address);
             size_t remainingSize = block->size() - headSplitSize;
@@ -214,7 +178,7 @@ namespace elsa::mr
                 }
             }
 
-            void* nextAdress = voidPtrOffset(block->_address, block->size());
+            void* nextAdress = detail::voidPtrOffset(block->_address, block->size());
             auto nextIt = _addressToBlock.find(nextAdress);
             if (nextIt != _addressToBlock.end() && nextIt->second->isFree()
                 && !nextIt->second->isChunkStart()) { // Never coalesce accross chunk boundaries
@@ -225,7 +189,7 @@ namespace elsa::mr
                 _addressToBlock.erase(nextIt);
             }
 
-            nextAdress = voidPtrOffset(block->_address, block->size());
+            nextAdress = detail::voidPtrOffset(block->_address, block->size());
             nextIt = _addressToBlock.find(nextAdress);
             if (nextIt != _addressToBlock.end() && !nextIt->second->isChunkStart()) {
                 std::unique_ptr<pool_resource::Block>& next = nextIt->second;
@@ -259,7 +223,7 @@ namespace elsa::mr
             if (realSize == currentSize) {
                 return true;
             } else if (realSize > currentSize) {
-                void* nextAdress = voidPtrOffset(ptr, currentSize);
+                void* nextAdress = detail::voidPtrOffset(ptr, currentSize);
                 auto nextIt = _addressToBlock.find(nextAdress);
                 if (nextIt != _addressToBlock.end() && nextIt->second->isFree()
                     && nextIt->second->_prevAddress != nullptr) {
@@ -277,7 +241,7 @@ namespace elsa::mr
                         }
                         block->setSize(realSize);
                         if (cumulativeSize > realSize) {
-                            next->_address = voidPtrOffset(ptr, realSize);
+                            next->_address = detail::voidPtrOffset(ptr, realSize);
                             next->setSize(cumulativeSize - realSize);
                             try {
                                 insertFreeBlock(std::move(next));
@@ -319,9 +283,9 @@ namespace elsa::mr
         void PoolResource<FreeListStrategy>::linkFreeBlock(pool_resource::Block* block)
         {
             size_t size = block->size();
-            ASSERT(checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
+            ASSERT(detail::checkAlignment(block->_address, pool_resource::BLOCK_GRANULARITY)
                    && size % pool_resource::BLOCK_GRANULARITY == 0);
-            uint64_t freeListLog = log2Floor(size);
+            uint64_t freeListLog = detail::log2Floor(size);
             size_t freeListIndex = freeListLog - pool_resource::MIN_BLOCK_SIZE_LOG;
             // all blocks larger than the size for the largest free list are stored there as well
             freeListIndex = std::min(freeListIndex, _freeLists.size() - 1);
@@ -347,7 +311,7 @@ namespace elsa::mr
             // as a result of this, allocations are sometimes served from a larger free list, even
             // if a smaller one would fit. However, this categorization saves us from having to
             // iterate through free lists, looking for the best fit
-            uint64_t freeListLog = log2Floor(size);
+            uint64_t freeListLog = detail::log2Floor(size);
             size_t freeListIndex = freeListLog - pool_resource::MIN_BLOCK_SIZE_LOG;
             // all blocks larger than the size for the largest free list are stored there as well
             freeListIndex = std::min(freeListIndex, _freeLists.size() - 1);
@@ -378,7 +342,7 @@ namespace elsa::mr
                 // from _upstream again
                 size_t chunkSize =
                     std::min(std::max(requestedSize << 2, _config.chunkSize), _config.maxChunkSize);
-                chunkSize = alignUp(chunkSize, pool_resource::BLOCK_GRANULARITY);
+                chunkSize = detail::alignUp(chunkSize, pool_resource::BLOCK_GRANULARITY);
                 // May throw std::bad_alloc
                 newChunkAddress = _upstream->allocate(chunkSize, pool_resource::BLOCK_GRANULARITY);
                 newChunk = std::make_unique<pool_resource::Block>();
@@ -417,7 +381,7 @@ namespace elsa::mr
             // oldSize and newSize must be multiples of pool_resource::BLOCK_GRANULARITY
             size_t tailSplitSize = oldSize - newSize;
             if (tailSplitSize != 0) {
-                void* subblockAddress = voidPtrOffset(blockAddress, newSize);
+                void* subblockAddress = detail::voidPtrOffset(blockAddress, newSize);
                 // insert sub-block after the allocation into a free-list
                 try {
                     auto subblock = std::make_unique<pool_resource::Block>();
@@ -440,7 +404,7 @@ namespace elsa::mr
                 // its tail, and B is the successor.
                 // So, the successor's (B) _prevAddress must be adjusted
                 // (if there is one and we are not at the end of the chunk)
-                void* successorAddress = voidPtrOffset(blockAddress, oldSize);
+                void* successorAddress = detail::voidPtrOffset(blockAddress, oldSize);
                 auto successorIt = _addressToBlock.find(successorAddress);
                 if (successorIt != _addressToBlock.end() && !successorIt->second->isChunkStart()) {
                     successorIt->second->_prevAddress = subblockAddress;
@@ -522,10 +486,10 @@ namespace elsa::mr
                                          const std::vector<pool_resource::Block*>& freeLists,
                                          size_t blockSize)
         {
-            size_t logBlockSize = log2Ceil(blockSize);
+            size_t logBlockSize = detail::log2Ceil(blockSize);
             size_t minFreeListIndex = logBlockSize - pool_resource::MIN_BLOCK_SIZE_LOG;
             uint64_t matchingFreeListMask = ~((1 << static_cast<uint64_t>(minFreeListIndex)) - 1);
-            uint64_t freeListIndex = lowestSetBit(listOccupancy & matchingFreeListMask) - 1;
+            uint64_t freeListIndex = detail::lowestSetBit(listOccupancy & matchingFreeListMask) - 1;
             if (freeListIndex == std::numeric_limits<uint64_t>::max()) {
                 return nullptr;
             } else {
@@ -538,10 +502,10 @@ namespace elsa::mr
                                   const std::vector<pool_resource::Block*>& freeLists,
                                   size_t blockSize)
         {
-            size_t logBlockSize = log2Floor(blockSize);
+            size_t logBlockSize = detail::log2Floor(blockSize);
             size_t minFreeListIndex = logBlockSize - pool_resource::MIN_BLOCK_SIZE_LOG;
             uint64_t matchingFreeListMask = ~((1 << static_cast<uint64_t>(minFreeListIndex)) - 1);
-            uint64_t freeListIndex = lowestSetBit(listOccupancy & matchingFreeListMask) - 1;
+            uint64_t freeListIndex = detail::lowestSetBit(listOccupancy & matchingFreeListMask) - 1;
             if (freeListIndex == std::numeric_limits<uint64_t>::max()) {
                 return nullptr;
             } else if (freeListIndex == minFreeListIndex) {
@@ -553,7 +517,7 @@ namespace elsa::mr
                     }
                 }
                 matchingFreeListMask &= ~(1 << static_cast<uint64_t>(freeListIndex));
-                freeListIndex = lowestSetBit(listOccupancy & matchingFreeListMask);
+                freeListIndex = detail::lowestSetBit(listOccupancy & matchingFreeListMask);
                 if (freeListIndex == std::numeric_limits<uint64_t>::max()) {
                     return freeLists[freeListIndex];
                 } else {
@@ -575,7 +539,7 @@ namespace elsa::mr
                 return block;
             }
 
-            size_t logBlockSize = log2Floor(blockSize);
+            size_t logBlockSize = detail::log2Floor(blockSize);
             size_t freeListIndex = logBlockSize - pool_resource::MIN_BLOCK_SIZE_LOG;
             for (block = freeLists[freeListIndex]; block; block = block->_nextFree) {
                 if (block->size() >= blockSize) {

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ContiguousMemory.h"
 
 namespace elsa::mr
@@ -11,7 +12,7 @@ namespace elsa::mr
 
     protected:
         template <typename... Ts>
-        ThrustElsaMRAdaptor(Ts... args) : _thrustMR{args...} {};
+        ThrustElsaMRAdaptor(Ts&&... args) : _thrustMR{std::forward<Ts>(args)...} {};
 
     public:
         void* allocate(size_t size, size_t alignment) override
@@ -28,9 +29,9 @@ namespace elsa::mr
         }
 
         template <typename... Ts>
-        static MemoryResource make(Ts... args)
+        static MemoryResource make(Ts&&... args)
         {
-            return MemoryResource::MakeRef(new ThrustElsaMRAdaptor<T>(args...));
+            return MemoryResource::MakeRef(new ThrustElsaMRAdaptor<T>(std::forward<Ts>(args)...));
         };
     };
 } // namespace elsa::mr

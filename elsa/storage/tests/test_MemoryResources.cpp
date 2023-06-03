@@ -66,7 +66,7 @@ public:
         // address
         _allocatedSize += size;
         void* ret = _bumpPtr;
-        _bumpPtr = voidPtrOffset(_bumpPtr, size);
+        _bumpPtr = detail::voidPtrOffset(_bumpPtr, size);
         return ret;
     }
     void deallocate(void* ptr, size_t size, size_t alignment) noexcept override

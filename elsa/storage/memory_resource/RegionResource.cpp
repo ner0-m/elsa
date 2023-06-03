@@ -5,28 +5,6 @@
 
 namespace elsa::mr
 {
-    RegionResourceConfig::RegionResourceConfig(size_t regionSize, bool adaptive)
-        : regionSize{regionSize}, isAdaptive{adaptive}
-    {
-    }
-
-    RegionResourceConfig RegionResourceConfig::defaultConfig()
-    {
-        return RegionResourceConfig(static_cast<size_t>(1) << 31, true);
-    }
-
-    RegionResourceConfig& RegionResourceConfig::setAdaptive(bool adaptive)
-    {
-        isAdaptive = adaptive;
-        return *this;
-    }
-
-    RegionResourceConfig& RegionResourceConfig::setRegionSize(size_t size)
-    {
-        regionSize = size;
-        return *this;
-    }
-
     RegionResource::RegionResource(const MemoryResource& upstream,
                                    const RegionResourceConfig& config)
         : _upstream{upstream}, _config{config}
@@ -34,7 +12,7 @@ namespace elsa::mr
         _basePtr = _upstream->allocate(_config.regionSize, region_resource::BLOCK_GRANULARITY);
         _bumpPtr = _basePtr;
         _allocatedSize = 0;
-        _endPtr = voidPtrOffset(_basePtr, _config.regionSize);
+        _endPtr = detail::voidPtrOffset(_basePtr, _config.regionSize);
     }
 
     RegionResource::~RegionResource()
@@ -61,8 +39,8 @@ namespace elsa::mr
         }
 
         _allocatedSize += sizeWithAlignment;
-        void* ret = alignUp(_bumpPtr, alignment);
-        _bumpPtr = voidPtrOffset(_bumpPtr, sizeWithAlignment);
+        void* ret = detail::alignUp(_bumpPtr, alignment);
+        _bumpPtr = detail::voidPtrOffset(_bumpPtr, sizeWithAlignment);
         return ret;
     }
 

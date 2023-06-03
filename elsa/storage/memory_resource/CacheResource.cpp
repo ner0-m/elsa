@@ -1,30 +1,7 @@
 #include "CacheResource.h"
-#include <limits>
 
 namespace elsa::mr
 {
-    CacheResourceConfig::CacheResourceConfig(size_t maxCacheSize, size_t maxCachedCount)
-        : maxCacheSize{maxCacheSize}, maxCachedCount{maxCachedCount}
-    {
-    }
-
-    CacheResourceConfig CacheResourceConfig::defaultConfig()
-    {
-        return CacheResourceConfig(std::numeric_limits<size_t>::max(), 16);
-    }
-
-    CacheResourceConfig& CacheResourceConfig::setMaxCacheSize(size_t size)
-    {
-        maxCacheSize = size;
-        return *this;
-    }
-
-    CacheResourceConfig& CacheResourceConfig::setMaxCachedCount(size_t count)
-    {
-        maxCachedCount = count;
-        return *this;
-    }
-
     void CacheResource::releaseCache()
     {
         for (auto& entry : _cache) {

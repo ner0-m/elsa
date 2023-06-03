@@ -1,4 +1,6 @@
 #pragma once
+
+#include "BitUtil.h"
 #include "ContiguousMemory.h"
 #include <unordered_map>
 #include <vector>
@@ -10,7 +12,19 @@ namespace elsa::mr
     {
         template <typename T>
         class PoolResource;
-    }
+
+        // must be set to a power of 2, with sufficient unused bits for the bitfield
+        // => granularity must be at least 8!
+        // 256 is chosen to make sure types for cuda kernels are sufficiently aligned.
+        static constexpr size_t BLOCK_GRANULARITY = 256;
+        static constexpr size_t MIN_BLOCK_SIZE = BLOCK_GRANULARITY;
+        static constexpr size_t MIN_BLOCK_SIZE_LOG = 8;
+        static constexpr size_t BITFIELD_MASK = BLOCK_GRANULARITY - 1;
+        static constexpr size_t SIZE_MASK = ~BITFIELD_MASK;
+        static constexpr size_t FREE_BIT = 1 << 0;
+        static constexpr size_t PREV_FREE_BIT = 1 << 1;
+        static constexpr size_t CHUNK_START_BIT = 1 << 2;
+    } // namespace pool_resource
 
     class PoolResourceConfig
     {
@@ -23,12 +37,19 @@ namespace elsa::mr
         size_t chunkSize;
         size_t maxCachedChunks;
 
-        PoolResourceConfig(size_t maxChunkSize, size_t chunkSize, size_t maxCachedChunks);
+        constexpr PoolResourceConfig(size_t maxChunkSize, size_t chunkSize, size_t maxCachedChunks)
+            : maxChunkSize{maxChunkSize}, chunkSize{chunkSize}, maxCachedChunks{maxCachedChunks}
+        {
+        }
 
     public:
         /// @brief Default configuration for a pool resource with (hopefully) sensible defaults.
         /// @return Default configuration for a pool resource.
-        static PoolResourceConfig defaultConfig();
+        static constexpr PoolResourceConfig defaultConfig()
+        {
+            return PoolResourceConfig(static_cast<size_t>(1) << 33, static_cast<size_t>(1) << 22,
+                                      1);
+        }
 
         /// @brief Set the maximum size for chunks allocated by this resource.
         /// Chunks are regions of memory, from which the blocks that are returned by allocate()
@@ -39,7 +60,12 @@ namespace elsa::mr
         /// The pool resource may not use this exact value, as some minimal internal
         /// alignment requirements are applied to it.
         /// @return self
-        PoolResourceConfig& setMaxChunkSize(size_t size);
+        constexpr PoolResourceConfig& setMaxChunkSize(size_t size)
+        {
+            maxChunkSize = std::max(detail::alignUp(size, pool_resource::BLOCK_GRANULARITY),
+                                    pool_resource::MIN_BLOCK_SIZE);
+            return *this;
+        }
 
         /// @brief Set the size of the chunks requested from the back-end resource. Allocations are
         /// serviced from these chunks.
@@ -47,35 +73,36 @@ namespace elsa::mr
         /// as big as the maximum chunk size. The pool resource may not use this exact value, as
         /// some minimal internal alignment requirements are applied to it.
         /// @return self
-        PoolResourceConfig& setChunkSize(size_t size);
+        constexpr PoolResourceConfig& setChunkSize(size_t size)
+        {
+            chunkSize = std::max(detail::alignUp(size, pool_resource::BLOCK_GRANULARITY),
+                                 pool_resource::MIN_BLOCK_SIZE);
+            return *this;
+        }
 
         /// @brief  Set the maximum number of empty chunks that are cached. Further empty chunks are
         /// returned to the upstream allocator.
         /// @param count Manimum count of empty chunks to cache, before releasing memory to the
         /// upstream allocator.
         /// @return self
-        PoolResourceConfig& setMaxCachedChunks(size_t count);
+        constexpr PoolResourceConfig& setMaxCachedChunks(size_t count)
+        {
+            maxCachedChunks = count;
+            return *this;
+        }
 
         /// @brief Check if the pool is misconfigured.
         /// @return true if: the configuration is valid.
         /// false if: chunkSize > maxChunkSize
-        bool validate();
+        constexpr bool validate()
+        {
+            // chunk must at least by able to accomodate the largest possible block
+            return chunkSize <= maxChunkSize && chunkSize >= pool_resource::MIN_BLOCK_SIZE;
+        }
     };
 
     namespace pool_resource
     {
-        // must be set to a power of 2, with sufficient unused bits for the bitfield
-        // => granularity must be at least 8!
-        // 256 is chosen to make sure types for cuda kernels are sufficiently aligned.
-        const size_t BLOCK_GRANULARITY = 256;
-        const size_t MIN_BLOCK_SIZE = BLOCK_GRANULARITY;
-        const size_t MIN_BLOCK_SIZE_LOG = 8;
-        const size_t BITFIELD_MASK = BLOCK_GRANULARITY - 1;
-        const size_t SIZE_MASK = ~BITFIELD_MASK;
-        const size_t FREE_BIT = 1 << 0;
-        const size_t PREV_FREE_BIT = 1 << 1;
-        const size_t CHUNK_START_BIT = 1 << 2;
-
         struct Block {
             // size of the block, also storing the free and prevFree flags in its lowest two bits
             size_t _size;

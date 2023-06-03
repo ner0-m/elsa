@@ -27,7 +27,7 @@ namespace elsa::mr
         /// @param ...args Parameters passed to the constructor of the wrapped resource.
         /// @return A MemoryResource encapsulationg the SynchedResource
         template <typename... Ts>
-        static MemoryResource make(Ts... args);
+        static MemoryResource make(Ts&&... args);
 
         // A brief note on exception safety: during logging, spdlog should not throw
         // (https://github.com/gabime/spdlog/wiki/Error-handling)
@@ -46,7 +46,6 @@ namespace elsa::mr
     template <typename T>
     inline void* LoggingResource<T>::allocate(size_t size, size_t alignment)
     {
-
         try {
             auto start = std::chrono::system_clock::now();
             void* ptr = T::allocate(size, alignment);
@@ -120,8 +119,8 @@ namespace elsa::mr
 
     template <typename T>
     template <typename... Ts>
-    inline MemoryResource LoggingResource<T>::make(Ts... args)
+    inline MemoryResource LoggingResource<T>::make(Ts&&... args)
     {
-        return MemoryResource::MakeRef(new LoggingResource<T>(args...));
+        return MemoryResource::MakeRef(new LoggingResource<T>(std::forward<Ts>(args)...));
     }
 } // namespace elsa::mr
