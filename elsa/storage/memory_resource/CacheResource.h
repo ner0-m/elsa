@@ -1,8 +1,10 @@
 #pragma once
+
 #include "ContiguousMemory.h"
 #include <unordered_map>
 #include <list>
 #include <memory>
+#include <limits>
 
 template <>
 class std::hash<std::pair<size_t, size_t>>
@@ -35,18 +37,28 @@ namespace elsa::mr
         size_t maxCacheSize;
         size_t maxCachedCount;
 
-        CacheResourceConfig(size_t maxCacheSize, size_t maxCachedCount);
+        constexpr CacheResourceConfig(size_t maxCacheSize, size_t maxCachedCount)
+            : maxCacheSize{maxCacheSize}, maxCachedCount{maxCachedCount}
+        {
+        }
 
     public:
         /// @brief Default configuration for a cache resource with (hopefully) sensible defaults.
         /// @return Default configuration for a cache resource.
-        static CacheResourceConfig defaultConfig();
+        static constexpr CacheResourceConfig defaultConfig()
+        {
+            return CacheResourceConfig(std::numeric_limits<size_t>::max(), 16);
+        }
 
         /// @brief Set the maximum cumulative size of cached chunks, before releasing chunks to the
         /// upstream allocator
         /// @param size Maximum cumulative size of cached chunks
         /// @return self
-        CacheResourceConfig& setMaxCacheSize(size_t size);
+        constexpr CacheResourceConfig& setMaxCacheSize(size_t size)
+        {
+            maxCacheSize = size;
+            return *this;
+        }
 
         /// @brief Set the maximum number of cached chunks, before releasing chunks to the
         /// upstream allocator
@@ -54,7 +66,11 @@ namespace elsa::mr
         /// set this value to std::numeric_limits<usize>::max(). Be aware that, for any other
         /// value, space for the cache entries may be pre-reserved.
         /// @return self
-        CacheResourceConfig& setMaxCachedCount(size_t count);
+        constexpr CacheResourceConfig& setMaxCachedCount(size_t count)
+        {
+            maxCachedCount = count;
+            return *this;
+        }
     };
 
     class CacheResource : public MemResInterface

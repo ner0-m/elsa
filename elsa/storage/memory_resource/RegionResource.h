@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ContiguousMemory.h"
 #include <unordered_map>
 #include <list>
@@ -8,7 +9,7 @@ namespace elsa::mr
 {
     namespace region_resource
     {
-        constexpr size_t BLOCK_GRANULARITY = 256;
+        static constexpr size_t BLOCK_GRANULARITY = 256;
     }
 
     class RegionResource;
@@ -21,14 +22,28 @@ namespace elsa::mr
         size_t regionSize;
         bool isAdaptive;
 
-        RegionResourceConfig(size_t regionSize, bool adaptive);
+        constexpr RegionResourceConfig(size_t regionSize, bool adaptive)
+            : regionSize{regionSize}, isAdaptive{adaptive}
+        {
+        }
 
     public:
         /// @brief Default configuration for a region resource with (hopefully) sensible defaults.
         /// @return Default configuration for a region resource.
-        static RegionResourceConfig defaultConfig();
-        RegionResourceConfig& setRegionSize(size_t size);
-        RegionResourceConfig& setAdaptive(bool adaptive);
+        static constexpr RegionResourceConfig defaultConfig()
+        {
+            return RegionResourceConfig(static_cast<size_t>(1) << 31, true);
+        }
+        constexpr RegionResourceConfig& setRegionSize(size_t size)
+        {
+            regionSize = size;
+            return *this;
+        }
+        constexpr RegionResourceConfig& setAdaptive(bool adaptive)
+        {
+            isAdaptive = adaptive;
+            return *this;
+        }
     };
 
     class RegionResource : public MemResInterface

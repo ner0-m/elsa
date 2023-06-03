@@ -7,6 +7,8 @@ namespace elsa::mr::hint
 {
     class AllocationBehavior
     {
+        friend struct behavior;
+
     private:
         size_t _sizeHint{0};
         union {
@@ -19,37 +21,57 @@ namespace elsa::mr::hint
             };
         };
 
-        AllocationBehavior(size_t sizeHint, bool repeating, bool allocFullRelease, bool bulk);
-        AllocationBehavior() = default;
+        constexpr AllocationBehavior(size_t sizeHint, bool repeating, bool allocFullRelease,
+                                     bool bulk)
+            : _sizeHint{sizeHint},
+              _repeating{repeating},
+              _allocFullRelease{allocFullRelease},
+              _bulk{bulk}
+        {
+        }
+        constexpr AllocationBehavior() = default;
 
     public:
+        /// @brief Hint about the maximum amount of memory that may be allocated from the resource
+        /// at any given time.
+        static AllocationBehavior sizeHint(size_t size)
+        {
+            AllocationBehavior ret;
+            ret._sizeHint = size;
+            return ret;
+        }
+
+        constexpr AllocationBehavior operator|(const AllocationBehavior& other) const
+        {
+            AllocationBehavior ret;
+            ret._sizeHint = std::max(this->_sizeHint, other._sizeHint);
+            ret._flags = this->_flags | other._flags;
+            return ret;
+        }
+        constexpr size_t getSizeHint() const { return _sizeHint; }
+        constexpr bool mixed() const { return !_repeating && !_allocFullRelease; }
+        constexpr bool repeating() const { return _repeating; }
+        constexpr bool allocThenFullRelease() const { return _allocFullRelease; }
+        constexpr bool incremental() const { return !_bulk; }
+        constexpr bool bulk() const { return _bulk; }
+    };
+
+    struct behavior {
         /// @brief  Allocations and deallocations do not follow a pattern. Few to no assumptions can
         /// be made about allocation behaviour. Do not specify together with REPEATING or
         /// ALLOC_THEN_FULL_RELEASE.
-        static const AllocationBehavior MIXED;
+        static constexpr AllocationBehavior MIXED{0, false, false, false};
         /// @brief Ideal for an repeated allocation and deallocation of blocks of the same size and
         /// alignment, e.g. in a loop.
-        static const AllocationBehavior REPEATING;
+        static constexpr AllocationBehavior REPEATING{0, true, false, false};
         /// @brief Ideal for a triangle allocation pattern, i.e. first allocate, potentially through
         /// multiple allocations, then release. Only specify this behavior when all the memory is
-        /// released after each iteration, otherwise the released memory may not be reused!
-        static const AllocationBehavior ALLOC_THEN_FULL_RELEASE;
+        /// released after each iteration, otherwise the released memory may not be reused
+        static constexpr AllocationBehavior ALLOC_THEN_FULL_RELEASE{0, false, true, false};
         /// @brief Many allocations small are made. Do not specify together with BULK.
-        static const AllocationBehavior INCREMENTAL;
+        static constexpr AllocationBehavior INCREMENTAL{0, false, false, false};
         /// @brief Few large allocations are made.
-        static const AllocationBehavior BULK;
-
-        /// @brief Hint about the maximum amount of memory that may be allocated from the resource
-        /// at any given time.
-        static AllocationBehavior sizeHint(size_t size);
-
-        AllocationBehavior operator|(const AllocationBehavior& other) const;
-        size_t getSizeHint() const;
-        bool mixed() const;
-        bool repeating() const;
-        bool allocThenFullRelease() const;
-        bool incremental() const;
-        bool bulk() const;
+        static constexpr AllocationBehavior BULK{0, false, false, true};
     };
 
     namespace detail

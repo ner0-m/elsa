@@ -21,7 +21,7 @@ std::pair<size_t, size_t> elsa::mr::util::computeSizeWithAlignment(size_t reques
                                                                    size_t requestedAlignment,
                                                                    size_t granularity)
 {
-    if (!isPowerOfTwo(requestedAlignment)) {
+    if (!detail::isPowerOfTwo(requestedAlignment)) {
         throw std::bad_alloc();
     }
 

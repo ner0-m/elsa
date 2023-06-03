@@ -8,9 +8,9 @@
 #include <stdexcept>
 #include <cstring>
 
-#include <thrust/universal_vector.h>
-#include <thrust/fill.h>
 #include <thrust/copy.h>
+#include <thrust/fill.h>
+#include <thrust/universal_vector.h>
 #include <thrust/execution_policy.h>
 
 namespace elsa::mr

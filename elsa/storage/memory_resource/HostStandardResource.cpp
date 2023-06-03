@@ -20,12 +20,12 @@ namespace elsa::mr
         if (size == 0) {
             ++size;
         }
-        if (!isPowerOfTwo(alignment)) {
+        if (!detail::isPowerOfTwo(alignment)) {
             throw std::bad_alloc();
         }
 
         // std::aligned_alloc requires size as a multiple of alignment
-        size = alignUp(size, alignment);
+        size = detail::alignUp(size, alignment);
         void* ptr = std::aligned_alloc(alignment, size);
         if (unlikely(!ptr)) {
             throw std::bad_alloc();
