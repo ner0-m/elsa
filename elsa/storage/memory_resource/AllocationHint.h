@@ -32,7 +32,7 @@ namespace elsa::mr::hint
               _bulk{bulk}
         {
         }
-        constexpr AllocationBehavior() : _sizeHint{0}, _flags{0} {}
+        constexpr AllocationBehavior() {}
 
     public:
         /// @brief Hint about the maximum amount of memory that may be allocated from the resource
