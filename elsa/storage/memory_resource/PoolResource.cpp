@@ -65,7 +65,8 @@ namespace elsa::mr
         MemoryResource PoolResource<FreeListStrategy>::make(MemoryResource upstream,
                                                             PoolResourceConfig config)
         {
-            return MemoryResource::MakeRef(new PoolResource(upstream, config));
+            return std::shared_ptr<MemResInterface>(new PoolResource(upstream, config),
+                                                    [](PoolResource* p) { delete p; });
         }
 
         template <typename FreeListStrategy>
@@ -207,7 +208,7 @@ namespace elsa::mr
 
         template <typename FreeListStrategy>
         bool PoolResource<FreeListStrategy>::tryResize(void* ptr, size_t size, size_t alignment,
-                                                       size_t newSize)
+                                                       size_t newSize) noexcept
         {
             static_cast<void>(size);
             static_cast<void>(alignment);

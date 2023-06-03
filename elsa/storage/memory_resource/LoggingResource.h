@@ -1,5 +1,5 @@
 #pragma once
-#include "ContiguousMemory.h"
+#include "MemoryResource.h"
 #include "Logger.h"
 
 #define ELSA_MR_LOGGING_RESOURCE_STRINGIFY(x) #x
@@ -40,7 +40,7 @@ namespace elsa::mr
         void deallocate(void* ptr, size_t size, size_t alignment) noexcept override;
         /// @brief Tries to have the wrapped resource resize the allocation, logging the parameters
         /// and result.
-        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override;
+        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) noexcept override;
     };
 
     template <typename T>
@@ -88,7 +88,7 @@ namespace elsa::mr
 
     template <typename T>
     inline bool LoggingResource<T>::tryResize(void* ptr, size_t size, size_t alignment,
-                                              size_t newSize)
+                                              size_t newSize) noexcept
     {
         auto start = std::chrono::system_clock::now();
         bool resized = T::tryResize(ptr, size, alignment, newSize);
@@ -121,6 +121,7 @@ namespace elsa::mr
     template <typename... Ts>
     inline MemoryResource LoggingResource<T>::make(Ts&&... args)
     {
-        return MemoryResource::MakeRef(new LoggingResource<T>(std::forward<Ts>(args)...));
+        return std::shared_ptr<MemResInterface>(new LoggingResource<T>(std::forward<Ts>(args)...),
+                                                [](LoggingResource<T>* p) { delete p; });
     }
 } // namespace elsa::mr

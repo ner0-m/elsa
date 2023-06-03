@@ -75,8 +75,12 @@ static void VerifyTestStats()
 }
 
 /* checked resource which keeps track of accesses/allocations */
-class CheckedResource : private UniversalResource
+class CheckedResource : public UniversalResource
 {
+protected:
+    CheckedResource() = default;
+    ~CheckedResource() = default;
+
 private:
     static constexpr uint8_t InitByteValue = 42;
 
@@ -131,7 +135,11 @@ private:
     }
 
 public:
-    static MemoryResource make() { return MemoryResource::MakeRef(new CheckedResource()); }
+    static MemoryResource make()
+    {
+        return std::shared_ptr<MemResInterface>(new CheckedResource(),
+                                                [](CheckedResource* p) { delete p; });
+    }
 };
 
 /* check if all values match the given requirements */
@@ -520,7 +528,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::Constructors", T, ComplexType<1>, TrivialT
         VerifyTestStats();
     }
 
-    testStats.resource.release();
+    testStats.resource.reset();
 }
 
 TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType<1>, UninitType,
@@ -600,7 +608,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::operator=", T, ComplexType<1>, TrivialType
         VerifyTestStats();
     }
 
-    testStats.resource.release();
+    testStats.resource.reset();
 }
 
 TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>, UninitType,
@@ -736,7 +744,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::assign", T, ComplexType<1>, TrivialType<1>
         VerifyTestStats();
     }
 
-    testStats.resource.release();
+    testStats.resource.reset();
 }
 
 TEST_CASE_TEMPLATE("ContiguousVector::insert", T, ComplexType<1>, TrivialType<1>, UninitType,
@@ -934,7 +942,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::insert", T, ComplexType<1>, TrivialType<1>
         VerifyTestStats();
     }
 
-    testStats.resource.release();
+    testStats.resource.reset();
 }
 
 TEST_CASE_TEMPLATE("ContiguousVector::erase", T, ComplexType<1>, TrivialType<1>, UninitType,
@@ -1032,7 +1040,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::erase", T, ComplexType<1>, TrivialType<1>,
         VerifyTestStats();
     }
 
-    testStats.resource.release();
+    testStats.resource.reset();
 }
 
 TEST_CASE_TEMPLATE("ContiguousVector:: modifier", T, ComplexType<1>, TrivialType<1>, UninitType,
@@ -1205,7 +1213,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: modifier", T, ComplexType<1>, TrivialType
         VerifyTestStats();
     }
 
-    testStats.resource.release();
+    testStats.resource.reset();
 }
 
 TEST_CASE_TEMPLATE("ContiguousVector:: capacity", T, ComplexType<1>, TrivialType<1>, UninitType,
@@ -1387,7 +1395,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: capacity", T, ComplexType<1>, TrivialType
         VerifyTestStats();
     }
 
-    testStats.resource.release();
+    testStats.resource.reset();
 }
 
 TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1>, UninitType,
@@ -1690,7 +1698,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1
         VerifyTestStats();
     }
 
-    testStats.resource.release();
+    testStats.resource.reset();
 }
 
 TEST_CASE_TEMPLATE("ContiguousVector:: resource", T, ComplexType<1>, TrivialType<1>, UninitType,

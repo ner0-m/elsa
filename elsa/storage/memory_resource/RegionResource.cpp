@@ -23,7 +23,8 @@ namespace elsa::mr
     MemoryResource RegionResource::make(const MemoryResource& upstream,
                                         const RegionResourceConfig& config)
     {
-        return MemoryResource::MakeRef(new RegionResource(upstream, config));
+        return std::shared_ptr<MemResInterface>(new RegionResource(upstream, config),
+                                                [](RegionResource* p) { delete p; });
     }
 
     void* RegionResource::allocate(size_t size, size_t alignment)
@@ -64,7 +65,8 @@ namespace elsa::mr
         }
     }
 
-    bool RegionResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
+    bool RegionResource::tryResize(void* ptr, size_t size, size_t alignment,
+                                   size_t newSize) noexcept
     {
         if (reinterpret_cast<uintptr_t>(_basePtr) <= reinterpret_cast<uintptr_t>(ptr)
             && reinterpret_cast<uintptr_t>(ptr) < reinterpret_cast<uintptr_t>(_endPtr)) {

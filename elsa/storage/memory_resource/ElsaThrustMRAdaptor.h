@@ -2,7 +2,7 @@
 
 #include <thrust/mr/memory_resource.h>
 #include <thrust/universal_ptr.h>
-#include "memory_resource/ContiguousMemory.h"
+#include "memory_resource/MemoryResource.h"
 
 namespace elsa::mr
 {

@@ -106,4 +106,4 @@ if(ELSA_CUDA_ENABLED)
     set_source_files_properties(DataContainer.cpp PROPERTIES LANGUAGE CUDA)
 endif()
 
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging)
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging elsa_storage)

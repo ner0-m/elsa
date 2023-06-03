@@ -17,4 +17,4 @@ bool elsa::mr::ElsaThrustMRAdaptor::do_is_equal(const memory_resource& other) co
     return this == &other;
 }
 
-elsa::mr::ElsaThrustMRAdaptor::ElsaThrustMRAdaptor() : _mr{elsa::mr::defaultInstance()} {}
+elsa::mr::ElsaThrustMRAdaptor::ElsaThrustMRAdaptor() : _mr{elsa::mr::defaultResource()} {}

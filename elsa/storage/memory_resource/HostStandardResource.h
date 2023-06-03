@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ContiguousMemory.h"
+#include "MemoryResource.h"
 
 namespace elsa::mr
 {
@@ -15,6 +15,6 @@ namespace elsa::mr
     public:
         void* allocate(size_t size, size_t alignment) override;
         void deallocate(void* ptr, size_t size, size_t alignment) noexcept override;
-        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override;
+        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) noexcept override;
     };
 } // namespace elsa::mr

@@ -29,7 +29,7 @@ set(MODULE_HEADERS
     transforms/Real.h
     memory_resource/AllocationHint.h
     memory_resource/CacheResource.h
-    memory_resource/ContiguousMemory.h
+    memory_resource/MemoryResource.h
     memory_resource/ContiguousVector.h
     memory_resource/ContiguousWrapper.h
     memory_resource/ElsaThrustMRAdaptor.h
@@ -37,14 +37,14 @@ set(MODULE_HEADERS
     memory_resource/LoggingResource.h
     memory_resource/PoolResource.h
     memory_resource/RegionResource.h
-    memory_resource/SynchResource.h
+    memory_resource/SyncResource.h
     memory_resource/ThrustElsaMRAdaptor.h
     memory_resource/UniversalResource.h
 )
 
 # list all the code files of the module
 set(MODULE_SOURCES
-    memory_resource/ContiguousMemory.cpp
+    memory_resource/MemoryResource.cpp
     memory_resource/HostStandardResource.cpp
     memory_resource/UniversalResource.cpp
     memory_resource/PoolResource.cpp
@@ -65,9 +65,10 @@ ADD_ELSA_MODULE(
 
 # If CUDA is enabled, all of the reductions should be compiled with CUDA not the host compiler
 if(ELSA_CUDA_ENABLED)
+    target_compile_definitions(elsa_storage PUBLIC ELSA_CUDA_ENABLED)
     set_target_properties(elsa_storage PROPERTIES LINKER_LANGUAGE CUDA)
 else()
     set_target_properties(elsa_storage PROPERTIES LINKER_LANGUAGE CXX)
 endif()
 
-write_module_config(${ELSA_MODULE_NAME})
+write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_logging)

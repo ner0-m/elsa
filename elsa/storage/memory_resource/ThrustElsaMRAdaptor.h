@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ContiguousMemory.h"
+#include "MemoryResource.h"
 
 namespace elsa::mr
 {
@@ -35,7 +35,7 @@ namespace elsa::mr
         }
         /// @brief This is a no-op.
         /// @return false
-        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override
+        bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) noexcept override
         {
             return false;
         }
@@ -43,7 +43,9 @@ namespace elsa::mr
         template <typename... Ts>
         static MemoryResource make(Ts&&... args)
         {
-            return MemoryResource::MakeRef(new ThrustElsaMRAdaptor<T>(std::forward<Ts>(args)...));
+            return std::shared_ptr<MemResInterface>(
+                new ThrustElsaMRAdaptor<T>(std::forward<Ts>(args)...),
+                [](ThrustElsaMRAdaptor<T>* p) { delete p; });
         };
     };
 } // namespace elsa::mr

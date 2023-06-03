@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BitUtil.h"
-#include "ContiguousMemory.h"
+#include "MemoryResource.h"
 #include <unordered_map>
 #include <vector>
 #include <memory>
@@ -17,12 +17,19 @@ namespace elsa::mr
         // => granularity must be at least 8!
         // 256 is chosen to make sure types for cuda kernels are sufficiently aligned.
         static constexpr size_t BLOCK_GRANULARITY = 256;
+
         static constexpr size_t MIN_BLOCK_SIZE = BLOCK_GRANULARITY;
+
         static constexpr size_t MIN_BLOCK_SIZE_LOG = 8;
+
         static constexpr size_t BITFIELD_MASK = BLOCK_GRANULARITY - 1;
+
         static constexpr size_t SIZE_MASK = ~BITFIELD_MASK;
+
         static constexpr size_t FREE_BIT = 1 << 0;
+
         static constexpr size_t PREV_FREE_BIT = 1 << 1;
+
         static constexpr size_t CHUNK_START_BIT = 1 << 2;
     } // namespace pool_resource
 
@@ -33,8 +40,10 @@ namespace elsa::mr
         friend class pool_resource::PoolResource;
 
         size_t maxChunkSize;
+
         // size of the large allocation chunks that are requested from the underlying allocator
         size_t chunkSize;
+
         size_t maxCachedChunks;
 
         constexpr PoolResourceConfig(size_t maxChunkSize, size_t chunkSize, size_t maxCachedChunks)
@@ -120,20 +129,27 @@ namespace elsa::mr
             Block** _pprevFree;
 
             void markFree();
+
             void markAllocated();
+
             void markChunkStart();
 
             void markPrevFree();
+
             void markPrevAllocated();
 
             bool isFree();
+
             bool isPrevFree();
+
             bool isChunkStart();
 
             void unlinkFree();
+
             void insertAfterFree(Block** pprev);
 
             size_t size();
+
             void setSize(size_t size);
         };
 
@@ -142,22 +158,32 @@ namespace elsa::mr
         {
         private:
             MemoryResource _upstream;
+
             PoolResourceConfig _config;
+
             std::unordered_map<void*, std::unique_ptr<pool_resource::Block>> _addressToBlock;
+
             std::vector<pool_resource::Block*> _freeLists;
+
             uint64_t _freeListNonEmpty{0};
 
             size_t _cachedChunkCount{0};
+
             std::unique_ptr<std::unique_ptr<pool_resource::Block>[]> _cachedChunks;
 
             void insertFreeBlock(std::unique_ptr<pool_resource::Block>&& block);
+
             void linkFreeBlock(pool_resource::Block* block);
+
             void unlinkFreeBlock(pool_resource::Block* block);
+
             size_t freeListIndexForFreeChunk(size_t size);
             // Returns a registered (in the address map) block that is not in the free list.
             // The metadata of the block is correctly initialized.
             pool_resource::Block* expandPool(size_t requestedSize);
+
             void shrinkPool(std::unique_ptr<pool_resource::Block> block);
+
             void shrinkBlockAtTail(pool_resource::Block& block, void* blockAddress, size_t newSize,
                                    size_t oldSize);
 
@@ -168,8 +194,11 @@ namespace elsa::mr
 
         public:
             PoolResource(const PoolResource& other) = delete;
+
             PoolResource& operator=(const PoolResource& other) = delete;
+
             PoolResource(PoolResource&& other) noexcept = delete;
+
             PoolResource& operator=(PoolResource&& other) noexcept = delete;
 
         protected:
@@ -189,12 +218,15 @@ namespace elsa::mr
             /// configuration is used instead.
             /// @return A MemoryResource that encapsulates a PoolResource.
             static MemoryResource
-                make(MemoryResource upstream = baselineInstance(),
+                make(MemoryResource upstream = globalResource(),
                      PoolResourceConfig config = PoolResourceConfig::defaultConfig());
 
             void* allocate(size_t size, size_t alignment) override;
+
             void deallocate(void* ptr, size_t size, size_t alignment) noexcept override;
-            bool tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) override;
+
+            bool tryResize(void* ptr, size_t size, size_t alignment,
+                           size_t newSize) noexcept override;
         };
 
         struct ConstantTimeFit {
@@ -216,6 +248,16 @@ namespace elsa::mr
         };
     } // namespace pool_resource
 
+    /// @brief Flexible memory resource for the ContiguousStorage class.
+    /// It allocates large chunks from its upstream allocator and suballocates from these
+    /// chunks to serve requests. It can efficiently handle a wide range of allocation patterns.
+    /// IMPORTANT: THIS RESOURCE IS NOT SYNCHRONIZED!
+    /// Advantage over a plain UniversalResource: allocations/deallocations are faster, memory is
+    /// potentially already mapped from previous use.
+    /// Disadvantage: higher memory usage than a plain UniversalResource. Also, move assignment
+    /// between containers with different memory resources is more costly. Use it only if you are
+    /// sure that memory allocations are your bottle-neck! If your algorithm works on huge data,
+    /// allocations are probably not worth optimizing.
     using PoolResource = pool_resource::PoolResource<pool_resource::HybridFit>;
 
     /// @brief Pool resource able to serve allocations in average constant time (provided the

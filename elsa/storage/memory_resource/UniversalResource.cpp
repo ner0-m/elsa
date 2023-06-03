@@ -22,7 +22,8 @@ namespace elsa::mr
 
     MemoryResource UniversalResource::make()
     {
-        return MemoryResource::MakeRef(new UniversalResource());
+        return std::shared_ptr<MemResInterface>(new UniversalResource(),
+                                                [](UniversalResource* p) { delete p; });
     }
 
     void* UniversalResource::allocate(size_t size, size_t alignment)
@@ -74,7 +75,8 @@ namespace elsa::mr
         }
     }
 
-    bool UniversalResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
+    bool UniversalResource::tryResize(void* ptr, size_t size, size_t alignment,
+                                      size_t newSize) noexcept
     {
         static_cast<void>(ptr);
         static_cast<void>(size);

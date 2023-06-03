@@ -28,7 +28,8 @@ namespace elsa::mr
 
     MemoryResource CacheResource::make(MemoryResource upstream, const CacheResourceConfig& config)
     {
-        return MemoryResource::MakeRef(new CacheResource(upstream, config));
+        return std::shared_ptr<MemResInterface>(new CacheResource(upstream, config),
+                                                [](CacheResource* p) { delete p; });
     }
 
     void* CacheResource::allocate(size_t size, size_t alignment)
@@ -43,10 +44,10 @@ namespace elsa::mr
                 return _upstream->allocate(size, alignment);
             }
         } else {
-            _sizeToCacheElement.erase(mapIt);
             void* ptr = mapIt->second->ptr;
             _cachedSize -= mapIt->second->size;
             _cache.erase(mapIt->second);
+            _sizeToCacheElement.erase(mapIt);
             return ptr;
         }
     }
@@ -92,7 +93,7 @@ namespace elsa::mr
         }
     }
 
-    bool CacheResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
+    bool CacheResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize) noexcept
     {
         return _upstream->tryResize(ptr, size, alignment, newSize);
     }

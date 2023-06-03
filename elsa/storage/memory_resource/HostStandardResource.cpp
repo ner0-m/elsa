@@ -12,7 +12,8 @@ namespace elsa::mr
 {
     MemoryResource HostStandardResource::make()
     {
-        return MemoryResource::MakeRef(new HostStandardResource());
+        return std::shared_ptr<MemResInterface>(new HostStandardResource(),
+                                                [](HostStandardResource* p) { delete p; });
     }
 
     void* HostStandardResource::allocate(size_t size, size_t alignment)
@@ -40,7 +41,8 @@ namespace elsa::mr
         std::free(ptr);
     }
 
-    bool HostStandardResource::tryResize(void* ptr, size_t size, size_t alignment, size_t newSize)
+    bool HostStandardResource::tryResize(void* ptr, size_t size, size_t alignment,
+                                         size_t newSize) noexcept
     {
         static_cast<void>(ptr);
         static_cast<void>(size);
