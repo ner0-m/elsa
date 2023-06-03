@@ -22,6 +22,7 @@ set(MODULE_HEADERS
     Descriptors/IdenticalBlocksDescriptor.h
     Descriptors/PartitionDescriptor.h
     Descriptors/RandomBlocksDescriptor.h
+    transforms/FFT.h
     DataContainer.h
     DataContainerIterator.h
     Error.h
@@ -47,6 +48,7 @@ set(MODULE_SOURCES
     Descriptors/IdenticalBlocksDescriptor.cpp
     Descriptors/DetectorDescriptor.cpp
     Descriptors/PartitionDescriptor.cpp
+    transforms/FFT.cpp
     DataContainer.cpp
     Error.cpp
     LinearOperator.cpp
@@ -56,6 +58,10 @@ set(MODULE_SOURCES
 
 list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging elsa_storage)
 list(APPEND MODULE_PRIVATE_DEPS)
+
+if(ELSA_CUDA_ENABLED)
+    list(APPEND MODULE_PRIVATE_DEPS CUDA::cufft)
+endif()
 
 # use OpenMP if available
 if(OpenMP_CXX_FOUND)

@@ -46,135 +46,14 @@
 #include "transforms/Exp.h"
 #include "transforms/Imag.h"
 #include "transforms/Real.h"
+#include "transforms/FFT.h"
 
 #include <utility>
 #include <cmath>
 #include <algorithm>
 
-#if WITH_FFTW
-#define EIGEN_FFTW_DEFAULT
-#endif
-#include <unsupported/Eigen/FFT>
 namespace elsa
 {
-    // TODO: Move this somewhere elsa!
-    namespace detail
-    {
-        template <class data_t, bool is_forward>
-        void fftImpl(data_t* this_data, const IndexVector_t& src_shape, index_t src_dims,
-                     FFTNorm norm)
-        {
-            using DataVector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
-
-            if constexpr (isComplex<data_t>) {
-                // TODO: fftw variant
-
-                // generalization of an 1D-FFT
-                // walk over each dimension and 1d-fft one 'line' of data
-                for (index_t dim_idx = 0; dim_idx < src_dims; ++dim_idx) {
-                    // jumps in the data for the current dimension's data
-                    // dim_size[0] * dim_size[1] * ...
-                    // 1 for dim_idx == 0.
-                    const index_t stride = src_shape.head(dim_idx).prod();
-
-                    // number of coefficients for the current dimension
-                    const index_t dim_size = src_shape(dim_idx);
-
-                    // number of coefficients for the other dimensions
-                    // this is the number of 1d-ffts we'll do
-                    // e.g. shape=[2, 3, 4] and we do dim_idx=2 (=shape 4)
-                    //   -> src_shape.prod() == 24 / 4 = 6 == 2*3
-                    const index_t other_dims_size = src_shape.prod() / dim_size;
-
-#ifndef EIGEN_FFTW_DEFAULT
-// when using eigen+fftw, this corrupts the memory, so don't parallelize.
-// error messages may include:
-// * double free or corruption (fasttop)
-// * malloc_consolidate(): unaligned fastbin chunk detected
-#pragma omp parallel for
-#endif
-                    // do all the 1d-ffts along the current dimensions axis
-                    for (index_t i = 0; i < other_dims_size; ++i) {
-
-                        index_t ray_start = i;
-                        // each time i is a multiple of stride,
-                        // jump forward the current+previous dimensions' shape product
-                        // (draw an indexed 3d cube to visualize this)
-                        ray_start += (stride * (dim_size - 1)) * ((i - (i % stride)) / stride);
-
-                        // this is one "ray" through the volume
-                        Eigen::Map<DataVector_t, Eigen::AlignmentType::Unaligned,
-                                   Eigen::InnerStride<>>
-                            input_map(this_data + ray_start, dim_size,
-                                      Eigen::InnerStride<>(stride));
-
-                        using inner_t = GetFloatingPointType_t<typename DataVector_t::Scalar>;
-
-                        Eigen::FFT<inner_t> fft_op;
-
-                        // disable any scaling in eigen - normally it does 1/n for ifft
-                        fft_op.SetFlag(Eigen::FFT<inner_t>::Flag::Unscaled);
-
-                        Eigen::Matrix<std::complex<inner_t>, Eigen::Dynamic, 1> fft_in{dim_size};
-                        Eigen::Matrix<std::complex<inner_t>, Eigen::Dynamic, 1> fft_out{dim_size};
-
-                        // eigen internally copies the fwd input matrix anyway if
-                        // it doesn't have stride == 1
-                        fft_in = input_map.block(0, 0, dim_size, 1)
-                                     .template cast<std::complex<inner_t>>();
-
-                        if (unlikely(dim_size == 1)) {
-                            // eigen kiss-fft crashes for size=1...
-                            fft_out = fft_in;
-                        } else {
-                            // arguments for in and out _must not_ be the same matrix!
-                            // they will corrupt wildly otherwise.
-                            if constexpr (is_forward) {
-                                fft_op.fwd(fft_out, fft_in);
-                                if (norm == FFTNorm::FORWARD) {
-                                    fft_out /= dim_size;
-                                } else if (norm == FFTNorm::ORTHO) {
-                                    fft_out /= std::sqrt(dim_size);
-                                }
-                            } else {
-                                fft_op.inv(fft_out, fft_in);
-                                if (norm == FFTNorm::BACKWARD) {
-                                    fft_out /= dim_size;
-                                } else if (norm == FFTNorm::ORTHO) {
-                                    fft_out /= std::sqrt(dim_size);
-                                }
-                            }
-                        }
-
-                        // we can't directly use the map as fft output,
-                        // since Eigen internally just uses the pointer to
-                        // the map's first element, and doesn't respect stride at all..
-                        input_map.block(0, 0, dim_size, 1) = fft_out.template cast<data_t>();
-                    }
-                }
-            } else {
-                throw Error{"fft with non-complex input container not supported"};
-            }
-        }
-    } // namespace detail
-
-    template <class data_t>
-    void fft(ContiguousStorage<data_t>& x, const DataDescriptor& desc, FFTNorm norm)
-    {
-        const auto& src_shape = desc.getNumberOfCoefficientsPerDimension();
-        const auto& src_dims = desc.getNumberOfDimensions();
-
-        detail::fftImpl<data_t, true>(x.data().get(), src_shape, src_dims, norm);
-    }
-
-    template <class data_t>
-    void ifft(ContiguousStorage<data_t>& x, const DataDescriptor& desc, FFTNorm norm)
-    {
-        const auto& src_shape = desc.getNumberOfCoefficientsPerDimension();
-        const auto& src_dims = desc.getNumberOfDimensions();
-
-        detail::fftImpl<data_t, false>(x.data().get(), src_shape, src_dims, norm);
-    }
 
     template <typename data_t>
     DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor)
@@ -494,25 +373,25 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::fft(FFTNorm norm)
+    void DataContainer<data_t>::fft(FFTNorm norm, bool forceCPU)
     {
         std::visit(overloaded{[&](ContiguousStorage<data_t>& storage) {
-                                  elsa::fft(storage, *_dataDescriptor, norm);
+                                  elsa::fft(storage, *_dataDescriptor, norm, forceCPU);
                               },
                               [&](ContiguousStorageView<data_t>& storage) {
-                                  elsa::fft(storage.storage(), *_dataDescriptor, norm);
+                                  elsa::fft(storage.storage(), *_dataDescriptor, norm, forceCPU);
                               }},
                    storage_);
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::ifft(FFTNorm norm)
+    void DataContainer<data_t>::ifft(FFTNorm norm, bool forceCPU)
     {
         std::visit(overloaded{[&](ContiguousStorage<data_t>& storage) {
-                                  elsa::ifft(storage, *_dataDescriptor, norm);
+                                  elsa::ifft(storage, *_dataDescriptor, norm, forceCPU);
                               },
                               [&](ContiguousStorageView<data_t>& storage) {
-                                  elsa::ifft(storage.storage(), *_dataDescriptor, norm);
+                                  elsa::ifft(storage.storage(), *_dataDescriptor, norm, forceCPU);
                               }},
                    storage_);
     }

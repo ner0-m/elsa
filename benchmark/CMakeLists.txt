@@ -25,3 +25,7 @@ add_dependencies(benchmark bench_norms)
 add_executable(bench_lincomb benchmark_lincomb.cpp)
 target_link_libraries(bench_lincomb PRIVATE nanobench elsa::all)
 add_dependencies(benchmark bench_lincomb)
+
+add_executable(bench_fft benchmark_fft.cpp)
+target_link_libraries(bench_fft PRIVATE nanobench elsa::all)
+add_dependencies(benchmark bench_fft)

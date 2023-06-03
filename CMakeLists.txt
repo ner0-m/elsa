@@ -32,6 +32,10 @@ option(ELSA_BUILD_BENCHMARKS "Enable building of benchmarks" OFF)
 option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (requires libclang-dev)" ON)
 option(ELSA_BINDINGS_IN_SINGLE_MODULE "Combine the bindings for all elsa modules in a single python module" OFF)
 
+set(ELSA_CUFFT_CACHE_SIZE "1"
+    CACHE STRING "Number of cached CuFFT plans, improving performance at the cost of GPU memory. 0 to disable caching"
+)
+
 set(ELSA_WARNING_LEVEL "base" CACHE STRING "Warning level with which elsa is build. Options are: base, all")
 set(ELSA_SANITIZER
     ""
@@ -265,6 +269,13 @@ if(ELSA_MASTER_PROJECT)
             set(THRUST_DEVICE_SYSTEM CPP)
         endif()
     endif()
+
+    if(ELSA_CUDA_ENABLED)
+        find_package(CUDAToolkit)
+        add_compile_definitions(ELSA_CUDA_ENABLED)
+    endif()
+
+    add_compile_definitions(ELSA_CUFFT_CACHE_SIZE=${ELSA_CUFFT_CACHE_SIZE})
 
     # Follow thrusts defaults, overwrite the by passing THRUST_[HOST|DEVICE]_SYSTEM to CMake
     thrust_create_target(elsa::Thrust FROM_OPTIONS)

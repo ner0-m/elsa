@@ -19,6 +19,8 @@
 #include "functions/Abs.hpp"
 
 #include <thrust/complex.h>
+#include <thrust/generate.h>
+#include <thrust/execution_policy.h>
 #include <type_traits>
 
 using namespace elsa;
@@ -1781,6 +1783,95 @@ TEST_CASE_TEMPLATE("DataContainer: minimum/maximum", data_t, float, double)
         }
     }
 }
+
+#ifdef ELSA_CUDA_ENABLED
+TEST_CASE_TEMPLATE("DataContainer: fft", data_t, float, double)
+{
+    GIVEN("Some container")
+    {
+        auto setup = [&](size_t dim, size_t size) {
+            std::random_device r;
+
+            std::default_random_engine e(r());
+            std::uniform_real_distribution<data_t> uniform_dist;
+
+            auto shape = elsa::IndexVector_t(dim);
+            shape.setConstant(size);
+
+            auto desc = elsa::VolumeDescriptor(shape);
+
+            auto dc = elsa::DataContainer<elsa::complex<data_t>>(desc);
+            thrust::generate(thrust::host, dc.begin(), dc.end(), [&]() {
+                elsa::complex<data_t> c;
+                c.real(uniform_dist(e));
+                c.imag(uniform_dist(e));
+                return c;
+            });
+            return dc;
+        };
+
+        size_t size[] = {4096, 512, 64};
+
+        for (size_t dims = 1; dims <= 3; dims++) {
+            auto dc1 = setup(dims, size[dims - 1]);
+            auto dc2 = dc1;
+
+            WHEN("Using fft (ORTHO)")
+            {
+                dc1.fft(FFTNorm::ORTHO, false);
+                dc2.fft(FFTNorm::ORTHO, true);
+                THEN("CPU and GPU implementation are equivalent")
+                {
+                    for (index_t i = 0; i < dc1.getSize(); ++i)
+                        REQUIRE_UNARY(checkApproxEq(dc1[i], dc2[i]));
+                }
+            }
+
+            dc1 = setup(dims, size[dims - 1]);
+            dc2 = dc1;
+
+            WHEN("Using ifft (ORTHO)")
+            {
+                dc1.ifft(FFTNorm::ORTHO, false);
+                dc2.ifft(FFTNorm::ORTHO, true);
+                THEN("CPU and GPU implementation are equivalent")
+                {
+                    for (index_t i = 0; i < dc1.getSize(); ++i)
+                        REQUIRE_UNARY(checkApproxEq(dc1[i], dc2[i]));
+                }
+            }
+
+            dc1 = setup(dims, size[dims - 1]);
+            dc2 = dc1;
+
+            WHEN("Using fft (FORWARD)")
+            {
+                dc1.fft(FFTNorm::FORWARD, false);
+                dc2.fft(FFTNorm::FORWARD, true);
+                THEN("CPU and GPU implementation are equivalent")
+                {
+                    for (index_t i = 0; i < dc1.getSize(); ++i)
+                        REQUIRE_UNARY(checkApproxEq(dc1[i], dc2[i]));
+                }
+            }
+
+            dc1 = setup(dims, size[dims - 1]);
+            dc2 = dc1;
+
+            WHEN("Using ifft (BACKWARD)")
+            {
+                dc1.ifft(FFTNorm::BACKWARD, false);
+                dc2.ifft(FFTNorm::BACKWARD, true);
+                THEN("CPU and GPU implementation are equivalent")
+                {
+                    for (index_t i = 0; i < dc1.getSize(); ++i)
+                        REQUIRE_UNARY(checkApproxEq(dc1[i], dc2[i]));
+                }
+            }
+        }
+    }
+}
+#endif
 
 // "instantiate" the test templates for CPU types
 TEST_CASE_TEMPLATE_APPLY(datacontainer_construction, CPUTypeTuple);
