@@ -1,3 +1,6 @@
+#pragma once
+
+#include <algorithm>
 #include <memory>
 #include <variant>
 #include <optional>
@@ -29,7 +32,7 @@ namespace elsa::mr::hint
               _bulk{bulk}
         {
         }
-        constexpr AllocationBehavior() = default;
+        constexpr AllocationBehavior() : _sizeHint{0}, _flags{0} {}
 
     public:
         /// @brief Hint about the maximum amount of memory that may be allocated from the resource
