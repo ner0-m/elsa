@@ -65,6 +65,7 @@ ADD_ELSA_MODULE(
 
 # If CUDA is enabled, all of the reductions should be compiled with CUDA not the host compiler
 if(ELSA_CUDA_ENABLED)
+    target_compile_definitions(elsa_storage PUBLIC ELSA_CUDA_ENABLED)
     set_target_properties(elsa_storage PROPERTIES LINKER_LANGUAGE CUDA)
 else()
     set_target_properties(elsa_storage PROPERTIES LINKER_LANGUAGE CXX)
