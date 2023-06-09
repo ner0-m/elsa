@@ -86,7 +86,7 @@ ADD_ELSA_MODULE(
 )
 
 # CMAKE_DL_LIBS is a weird name, so I can't figure out now, how to pass it via argument, so add it later...
-target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE ${CMAKE_DL_LIBS})
+target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE ${CMAKE_DL_LIBS} -lcublas -lcurand)
 
 # Add additional folders for core
 target_include_directories(

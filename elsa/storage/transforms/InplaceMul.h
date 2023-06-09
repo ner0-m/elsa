@@ -1,6 +1,7 @@
 #pragma once
 
 #include "transforms/Mul.h"
+#include "CublasTransforms.h"
 
 namespace elsa
 {
@@ -18,6 +19,10 @@ namespace elsa
     template <class InOutIter, class Scalar>
     void inplaceMulScalar(InOutIter xfirst, InOutIter xlast, const Scalar& scalar)
     {
-        elsa::mulScalar(xfirst, xlast, scalar, xfirst);
+        if (cublas::inplaceMulScalar<InOutIter, Scalar>(xfirst, xlast, scalar))
+            return;
+
+        /* ensure that cublas-operations occur (at least for now) */
+        // elsa::mulScalar(xfirst, xlast, scalar, xfirst);
     }
 } // namespace elsa
