@@ -223,10 +223,10 @@ namespace elsa
         data_t maxElement() const;
 
         /// convert to the fourier transformed signal
-        void fft(FFTNorm norm, bool forceCPU = false);
+        void fft(FFTNorm norm);
 
         /// convert to the inverse fourier transformed signal
-        void ifft(FFTNorm norm, bool forceCPU = false);
+        void ifft(FFTNorm norm);
 
         /// if the datacontainer is already complex, return itself.
         DataContainer<add_complex_t<data_t>> asComplex() const;

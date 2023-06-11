@@ -373,25 +373,25 @@ namespace elsa
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::fft(FFTNorm norm, bool forceCPU)
+    void DataContainer<data_t>::fft(FFTNorm norm)
     {
         std::visit(overloaded{[&](ContiguousStorage<data_t>& storage) {
-                                  elsa::fft(storage, *_dataDescriptor, norm, forceCPU);
+                                  elsa::fft(storage, *_dataDescriptor, norm);
                               },
                               [&](ContiguousStorageView<data_t>& storage) {
-                                  elsa::fft(storage.storage(), *_dataDescriptor, norm, forceCPU);
+                                  elsa::fft(storage.storage(), *_dataDescriptor, norm);
                               }},
                    storage_);
     }
 
     template <typename data_t>
-    void DataContainer<data_t>::ifft(FFTNorm norm, bool forceCPU)
+    void DataContainer<data_t>::ifft(FFTNorm norm)
     {
         std::visit(overloaded{[&](ContiguousStorage<data_t>& storage) {
-                                  elsa::ifft(storage, *_dataDescriptor, norm, forceCPU);
+                                  elsa::ifft(storage, *_dataDescriptor, norm);
                               },
                               [&](ContiguousStorageView<data_t>& storage) {
-                                  elsa::ifft(storage.storage(), *_dataDescriptor, norm, forceCPU);
+                                  elsa::ifft(storage.storage(), *_dataDescriptor, norm);
                               }},
                    storage_);
     }

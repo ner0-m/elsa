@@ -110,7 +110,7 @@ namespace elsa
             int direction = is_forward ? CUFFT_FORWARD : CUFFT_INVERSE;
 
             cufftHandle plan;
-#ifdef ELSA_CUFFT_CACHE_SIZE != 0
+#if ELSA_CUFFT_CACHE_SIZE != 0
             std::optional<cufftHandle> planOpt = cufftCache.get(type, src_shape);
             if (planOpt) {
                 plan = *planOpt;
@@ -132,6 +132,7 @@ namespace elsa
                 auto data_ptr = reinterpret_cast<cufftDoubleComplex*>(this_data.get());
                 success = cufftExecZ2Z(plan, data_ptr, data_ptr, direction) == CUFFT_SUCCESS;
             }
+            cudaDeviceSynchronize();
 
             if (likely(success)) {
                 /* cuFFT performs unnormalized FFTs, therefor we are left to do scaling according to
@@ -262,34 +263,28 @@ namespace elsa
     } // namespace detail
 
     template <class data_t>
-    void fft(ContiguousStorage<data_t>& x, const DataDescriptor& desc, FFTNorm norm,
-             bool forceCPU = false)
+    void fft(ContiguousStorage<data_t>& x, const DataDescriptor& desc, FFTNorm norm)
     {
         const auto& src_shape = desc.getNumberOfCoefficientsPerDimension();
         const auto& src_dims = desc.getNumberOfDimensions();
 
 #ifdef ELSA_CUDA_ENABLED
-        if (!forceCPU && detail::fftDevice<data_t, true>(x.data(), src_shape, src_dims, norm)) {
+        if (detail::fftDevice<data_t, true>(x.data(), src_shape, src_dims, norm)) {
             return;
         }
-#else
-        static_cast<void>(forceCPU);
 #endif
         detail::fftHost<data_t, true>(x.data().get(), src_shape, src_dims, norm);
     }
 
     template <class data_t>
-    void ifft(ContiguousStorage<data_t>& x, const DataDescriptor& desc, FFTNorm norm,
-              bool forceCPU = false)
+    void ifft(ContiguousStorage<data_t>& x, const DataDescriptor& desc, FFTNorm norm)
     {
         const auto& src_shape = desc.getNumberOfCoefficientsPerDimension();
         const auto& src_dims = desc.getNumberOfDimensions();
 #ifdef ELSA_CUDA_ENABLED
-        if (!forceCPU && detail::fftDevice<data_t, false>(x.data(), src_shape, src_dims, norm)) {
+        if (detail::fftDevice<data_t, false>(x.data(), src_shape, src_dims, norm)) {
             return;
         }
-#else
-        static_cast<void>(forceCPU);
 #endif
         detail::fftHost<data_t, false>(x.data().get(), src_shape, src_dims, norm);
     }

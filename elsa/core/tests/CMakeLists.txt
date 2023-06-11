@@ -14,6 +14,7 @@ add_custom_target(
 add_custom_target(build-tests-core)
 
 ELSA_DOCTEST(elsaDefines)
+ELSA_DOCTEST(FFT)
 ELSA_DOCTEST(VolumeDescriptor)
 ELSA_DOCTEST(CurvedDetectorDescriptor)
 ELSA_DOCTEST(PlanarDetectorDescriptor)
@@ -29,3 +30,7 @@ ELSA_DOCTEST(CartesianIndices)
 ELSA_DOCTEST(Bessel)
 ELSA_DOCTEST(Math)
 ELSA_DOCTEST(MaybeUninitialized)
+
+if(ELSA_CUDA_ENABLED)
+    set_source_files_properties(test_FFT.cpp PROPERTIES LANGUAGE CUDA)
+endif()
