@@ -13,7 +13,6 @@
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
 #include "Solver.h"
-#include "CGNL.h"
 
 #include "hints/solvers_hints.cpp"
 
@@ -114,29 +113,6 @@ void add_cgls(py::module& m)
     detail::add_cgls<double>(m, "CGLSd");
 
     m.attr("CGLS") = m.attr("CGLSf");
-}
-
-namespace detail
-{
-    template <class data_t>
-    void add_cgnl(py::module& m, const char* name)
-    {
-        using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
-
-        py::class_<elsa::CGNL<data_t>, Solver> cg(m, name);
-        cg.def(py::init<const Problem&, data_t, data_t, long, long>(), py::arg("problem"),
-               py::arg("eps_CG") = 1e-4, py::arg("eps_NR") = 1e-4,
-               py::arg("iterations_NR") = 2, py::arg("restart_NR") = 5);
-    }
-} // namespace detail
-
-void add_cgnl(py::module& m)
-{
-    detail::add_cgnl<float>(m, "CGNLf");
-    detail::add_cgnl<double>(m, "CGNLd");
-
-    m.attr("CGNL") = m.attr("CGNLf");
 }
 
 namespace detail
@@ -305,7 +281,6 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_cgls(m);
     add_ista(m);
     add_fista(m);
-    add_cgnl(m);
 
     add_fgm(m);
     add_ogm(m);
