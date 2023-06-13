@@ -53,15 +53,11 @@ namespace elsa
          * @param[in] N total grating-stepping steps
          * @param[in] recon_type enum specifying the statistical model for reconstruction
          */
-        AXDTStatRecon(const DataContainer<data_t>& ffa,
-                      const DataContainer<data_t>& ffb,
-                      const DataContainer<data_t>& a,
-                      const DataContainer<data_t>& b,
+        AXDTStatRecon(const DataContainer<data_t>& ffa, const DataContainer<data_t>& ffb,
+                      const DataContainer<data_t>& a, const DataContainer<data_t>& b,
                       const LinearOperator<data_t>& absorp_op,
-                      const LinearOperator<data_t>& axdt_op,
-                      index_t N,
-                      const StatReconType& recon_type
-                      );
+                      const LinearOperator<data_t>& axdt_op, index_t N,
+                      const StatReconType& recon_type);
 
         /**
          * @brief short-hand constructor for the AXDTStatRecon functional,
@@ -74,10 +70,8 @@ namespace elsa
          * @throw InvalidArgumentError if mode other than Gaussian_log_d or Gaussian_d is
          * specified in this constructor
          */
-        AXDTStatRecon(const DataContainer<data_t>& axdt_proj,
-                      const LinearOperator<data_t>& axdt_op,
-                      const StatReconType& recon_type
-        );
+        AXDTStatRecon(const DataContainer<data_t>& axdt_proj, const LinearOperator<data_t>& axdt_op,
+                      const StatReconType& recon_type);
 
         /// make copy constructor deletion explicit
         AXDTStatRecon(const AXDTStatRecon<data_t>&) = delete;
@@ -90,8 +84,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient
-        void getGradientImpl(const DataContainer<data_t>& Rx,
-                             DataContainer<data_t>& out) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -108,13 +101,13 @@ namespace elsa
         /// construct a RandomBlockDescriptor to wrap up the absorption projection data
         /// and the axdt projection data as a single input for this functional
         static RandomBlocksDescriptor generate_descriptors(const DataDescriptor& desc1,
-                                                     const DataDescriptor& desc2);
+                                                           const DataDescriptor& desc2);
 
     private:
         /// the flat-field measured value of RV a
         std::optional<DataContainer<data_t>> ffa_;
 
-        ///the flat-field measured value of RV b
+        /// the flat-field measured value of RV b
         std::optional<DataContainer<data_t>> ffb_;
 
         /// the measured value of RV a
@@ -142,21 +135,24 @@ namespace elsa
         StatReconType recon_type_;
     };
 
-    namespace axdt {
+    namespace axdt
+    {
         /// element-wise logarithm of modified Bessel function of the first
         /// kind of order zero. i.e. log(B_i(0, x))
         template <typename data_t>
-        DataContainer<data_t> log_bessel_0(const DataContainer<data_t>& x) {
+        DataContainer<data_t> log_bessel_0(const DataContainer<data_t>& x)
+        {
             return bessel_log_0(x);
         }
 
         /// element-wise quotient between modified Bessel function of the first
         /// kind of order one and that of order zero. i.e. B_i(1, x) / B_i(0, x)
         template <typename data_t>
-        DataContainer<data_t> quot_bessel_1_0(const DataContainer<data_t>& x) {
+        DataContainer<data_t> quot_bessel_1_0(const DataContainer<data_t>& x)
+        {
             return bessel_1_0(x);
         }
 
-    }  // namespace axdt
+    } // namespace axdt
 
 } // namespace elsa

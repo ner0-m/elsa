@@ -4,21 +4,22 @@
 namespace elsa
 {
     template <typename data_t>
-    ZeroOperator<data_t>::ZeroOperator(const DataDescriptor& domainDescriptor, const DataDescriptor& rangeDescriptor)
+    ZeroOperator<data_t>::ZeroOperator(const DataDescriptor& domainDescriptor,
+                                       const DataDescriptor& rangeDescriptor)
         : LinearOperator<data_t>(domainDescriptor, rangeDescriptor)
     {
     }
 
     template <typename data_t>
-    void ZeroOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
-                                     DataContainer<data_t>& Ax) const
+    void ZeroOperator<data_t>::applyImpl([[maybe_unused]] const DataContainer<data_t>& x,
+                                         DataContainer<data_t>& Ax) const
     {
         Ax = 0;
     }
 
     template <typename data_t>
-    void ZeroOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
-                                            DataContainer<data_t>& Aty) const
+    void ZeroOperator<data_t>::applyAdjointImpl([[maybe_unused]] const DataContainer<data_t>& y,
+                                                DataContainer<data_t>& Aty) const
     {
         Aty = 0;
     }
