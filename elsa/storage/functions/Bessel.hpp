@@ -11,9 +11,20 @@ namespace elsa::fn
             template <typename T>
             __host__ __device__ constexpr T operator()(const T& arg) const noexcept
             {
-                if (arg < static_cast<T>(3.75))
-                    return std::log(std::cyl_bessel_i(0, arg));
-                else {
+                if (arg < static_cast<T>(3.75)) {
+                    const T ratio = arg / static_cast<T>(3.75);
+                    const T y = ratio * ratio;
+
+                    const T p0 = static_cast<T>(0.45813e-2);
+                    const T p1 = static_cast<T>(0.360768e-1) + y * p0;
+                    const T p2 = static_cast<T>(0.2659732) + y * p1;
+                    const T p3 = static_cast<T>(1.2067492) + y * p2;
+                    const T p4 = static_cast<T>(3.0899424) + y * p3;
+                    const T p5 = static_cast<T>(3.5156229) + y * p4;
+                    const T p6 = static_cast<T>(1.0) + y * p5;
+
+                    return std::log(p6);
+                } else {
                     // see Numerical Recipes in C - 2nd Edition
                     // by W. H. Press, S. A. Teukolsky, W. T. Vetterling, B. P. Flannery
                     // p.237
@@ -38,9 +49,34 @@ namespace elsa::fn
             template <typename T>
             __host__ __device__ constexpr T operator()(const T& arg) const noexcept
             {
-                if (arg < static_cast<T>(3.75))
-                    return std::cyl_bessel_i(1, arg) / std::cyl_bessel_i(0, arg);
-                else {
+                if (arg < static_cast<T>(3.75)) {
+                    T bessel_0_p6 = 0;
+                    const T ratio = arg / static_cast<T>(3.75);
+                    const T y = ratio * ratio;
+
+                    {
+                        const T p0 = static_cast<T>(0.45813e-2);
+                        const T p1 = static_cast<T>(0.360768e-1) + y * p0;
+                        const T p2 = static_cast<T>(0.2659732) + y * p1;
+                        const T p3 = static_cast<T>(1.2067492) + y * p2;
+                        const T p4 = static_cast<T>(3.0899424) + y * p3;
+                        const T p5 = static_cast<T>(3.5156229) + y * p4;
+                        bessel_0_p6 = static_cast<T>(1.0) + y * p5;
+                    }
+
+                    T bessel_1_p6 = 0;
+                    {
+                        const T p0 = static_cast<T>(0.32411e-3);
+                        const T p1 = static_cast<T>(0.301532e-2) + y * p0;
+                        const T p2 = static_cast<T>(0.2658733e-1) + y * p1;
+                        const T p3 = static_cast<T>(0.15084934) + y * p2;
+                        const T p4 = static_cast<T>(0.51498869) + y * p3;
+                        const T p5 = static_cast<T>(0.87890594) + y * p4;
+                        bessel_1_p6 = arg * (static_cast<T>(0.5) + y * p5);
+                    }
+
+                    return bessel_1_p6 / bessel_0_p6;
+                } else {
                     // see Numerical Recipes in C - 2nd Edition
                     // by W. H. Press, S. A. Teukolsky, W. T. Vetterling, B. P. Flannery
                     // p.238
