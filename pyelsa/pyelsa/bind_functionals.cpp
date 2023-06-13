@@ -2,6 +2,7 @@
 #include <pybind11/complex.h>
 #include <pybind11/operators.h>
 
+#include "AXDTStatRecon.h"
 #include "Complex.h"
 #include "Constraint.h"
 #include "DataContainer.h"
@@ -22,13 +23,8 @@
 #include "SeparableSum.h"
 #include "TransmissionLogLikelihood.h"
 #include "WeightedL1Norm.h"
-<<<<<<< HEAD
-#include "WeightedL2NormPow2.h"
-#include "AXDTStatRecon.h"
-=======
 #include "WeightedLeastSquares.h"
 #include "WeightedL2Squared.h"
->>>>>>> master
 
 #include "hints/functionals_hints.cpp"
 
