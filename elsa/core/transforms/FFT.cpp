@@ -33,8 +33,12 @@ namespace elsa::detail
             We do not perform batched FFTs, so the batch number is set to 1, effectively
             making the cufftMakePlanMany64 into cufftMakePlan64 (which does not exist on its own).
          */
-        return cufftMakePlanMany64(*plan, rank, dimensions, NULL, 0, 0, NULL, 0, 0, type, 1,
+        result = cufftMakePlanMany64(*plan, rank, dimensions, NULL, 0, 0, NULL, 0, 0, type, 1,
                                    &workArea);
+        if (unlikely(result != CUFFT_SUCCESS)) {
+            cufftDestroy(*plan);
+        }
+        return result;
     }
 
     thread_local CuFFTPlanCache cufftCache;

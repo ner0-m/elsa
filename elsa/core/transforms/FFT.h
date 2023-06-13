@@ -30,8 +30,16 @@ namespace elsa
     namespace detail
     {
 #ifdef ELSA_CUDA_ENABLED
+
+        /* Create a cufft handle and plan an FFT for the given type and dimensions.
+         * This handle is to be freed via cufftDestroy(...)
+         * Returns a result indicating whether creating the plan was successful. If not,
+         * the plan is not initialized and does not need to be freed.
+         */
         cufftResult createPlan(cufftHandle* plan, cufftType type, const IndexVector_t& shape);
 
+        /* Normalize the result after an fft with the factor size or sqrt(size), depending on
+           the flag applySqrt. */ 
         template <typename data_t>
         void fftNormalize(thrust::universal_ptr<data_t> ptr, index_t size, bool applySqrt)
         {
@@ -41,24 +49,25 @@ namespace elsa
         }
 
         /* Cache is not thread safe, also plans should not be used across multiple threads at the
-           same time! Hence, we use a thread local instance. Potential optimizations, should the
-           caches GPU memory consumption ever be a problem: Aside from disabling the caching
-           mechanism, there are two potential optimizations.
-            - Currently, when no new plan can be allocated, the cache is flushed. This could be
-           extended also flush the caches of all other threads.
-            - cuFFT allows us to manage the work area memory. Before planning,
-           cufftSetAutoAllocation(false) could be called, then the work area can be explicitely set.
-           This way, all elements of the cache could share a work area, fitting the requirements of
-           the largest cached plan. This would increase the management overhead, but reduce memory
-           consumption. Currently, the cache has to few elements for this to be worth it.
-           */
+         * same time! Hence, we use a thread local instance. Potential optimizations, should the
+         * caches GPU memory consumption ever be a problem: Aside from disabling the caching
+         * mechanism, there are two potential optimizations.
+         *  - Currently, when no new plan can be allocated, the cache is flushed. This could be
+         * extended also flush the caches of all other threads.
+         *  - cuFFT allows us to manage the work area memory. Before planning,
+         * cufftSetAutoAllocation(false) could be called, then the work area can be explicitely set.
+         * This way, all elements of the cache could share a work area, fitting the requirements of
+         * the largest cached plan. This would increase the management overhead, but reduce memory
+         * consumption. Currently, the cache has to few elements for this to be worth it.
+         */
         class CuFFTPlanCache
         {
         private:
             using CacheElement = std::tuple<cufftHandle, IndexVector_t, cufftType>;
             using CacheList = std::list<CacheElement>;
             CacheList _cache;
-            /* this should be very low, to conserve GPU memory! */
+            /* this should be very low, to conserve GPU memory!
+               Initialized via ELSA_CUFFT_CACHE_SIZE */
             size_t _limit;
 
             void flush();
@@ -76,13 +85,22 @@ namespace elsa
 
         extern thread_local CuFFTPlanCache cufftCache;
 
+        /* Perform am fft on the GPU using cuFFT if possible.
+         * Template parameter is_forward determines whether an fft or ifft is performed.
+         * true -> fft
+         * false -> ifft
+         *
+         * A return value of false indicates that the operation was not successful and the
+         * input data is unchanged.
+         */
         template <class data_t, bool is_forward>
         bool fftDevice(thrust::universal_ptr<data_t> this_data, const IndexVector_t& src_shape,
                        index_t src_dims, FFTNorm norm)
         {
             /* According to this example:
              * https://github.com/NVIDIA/CUDALibrarySamples/blob/master/cuFFT/1d_c2c/1d_c2c_example.cpp
-             * it is fine to reinterpret_cast std::complex to cufftComplex
+             * it is fine to reinterpret_cast std::complex to cufftComplex.
+             * The same applies to thrust::complex, which is what elsa::complex maps to.
              */
 
             cufftType type;
@@ -136,7 +154,7 @@ namespace elsa
 
             if (likely(success)) {
                 /* cuFFT performs unnormalized FFTs, therefor we are left to do scaling according to
-                 * FFTNorm */
+                   FFTNorm */
                 if constexpr (is_forward) {
                     if (norm == FFTNorm::FORWARD) {
                         fftNormalize(this_data, src_shape.prod(), false);
