@@ -27,7 +27,6 @@ namespace elsa
      * see http://onlinelibrary.fully3d.org/papers/2017/Fully3D.2017-11-3203019.pdf for details,
      * (this implementation follows the notation in the paper)
      *
-     * Also, this functional(AXDTStatRecon) does not wrap any residuals
      */
     template <typename data_t = real_t>
     class AXDTStatRecon : public Functional<data_t>
@@ -90,8 +89,9 @@ namespace elsa
         /// the evaluation of this functional
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
-        /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        /// the computation of the gradient
+        void getGradientImpl(const DataContainer<data_t>& Rx,
+                             DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;

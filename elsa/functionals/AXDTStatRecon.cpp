@@ -126,7 +126,8 @@ namespace elsa
     }
 
     template <typename data_t>
-    void AXDTStatRecon<data_t>::getGradientInPlaceImpl(DataContainer<data_t>& Rx)
+    void AXDTStatRecon<data_t>::getGradientImpl(const DataContainer<data_t>& Rx,
+                                                DataContainer<data_t>& out)
     {
         Timer timeguard("AXDTStatRecon", "getGradient");
 
@@ -136,8 +137,8 @@ namespace elsa
         auto log_d = -axdt_op_->apply(eta);
         auto d = exp(log_d);
 
-        auto grad_mu = Rx.getBlock(0);
-        auto grad_eta = Rx.getBlock(1);
+        auto grad_mu = out.getBlock(0);
+        auto grad_eta = out.getBlock(1);
 
         switch (recon_type_) {
             case Gaussian_log_d:

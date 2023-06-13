@@ -54,11 +54,6 @@ TEST_CASE_TEMPLATE("AXDTStatRecon: Testing reconstruction type - Gaussian_log_d"
                auto* funcDomainDesc = dynamic_cast<const RandomBlocksDescriptor*>(&funcDomainDesc_raw);
                REQUIRE_UNARY(funcDomainDesc);
                REQUIRE_EQ(funcDomainDesc->getDescriptorOfBlock(1), dd);
-
-               auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-               REQUIRE_UNARY(linRes);
-               REQUIRE_UNARY_FALSE(linRes->hasOperator());
-               REQUIRE_UNARY_FALSE(linRes->hasDataVector());
            }
 
            THEN("a clone behaves as expected")
@@ -139,11 +134,6 @@ TEST_CASE_TEMPLATE("AXDTStatRecon: Testing reconstruction type - Gaussian_d", Te
                auto* funcDomainDesc = dynamic_cast<const RandomBlocksDescriptor*>(&funcDomainDesc_raw);
                REQUIRE_UNARY(funcDomainDesc);
                REQUIRE_EQ(funcDomainDesc->getDescriptorOfBlock(1), dd);
-
-               auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-               REQUIRE_UNARY(linRes);
-               REQUIRE_UNARY_FALSE(linRes->hasOperator());
-               REQUIRE_UNARY_FALSE(linRes->hasDataVector());
            }
 
            THEN("a clone behaves as expected")
@@ -256,11 +246,6 @@ TEST_CASE_TEMPLATE("AXDTStatRecon: Testing reconstruction type - Gaussian_approx
                REQUIRE_UNARY(funcDomainDesc);
                REQUIRE_EQ(funcDomainDesc->getDescriptorOfBlock(0), dd);
                REQUIRE_EQ(funcDomainDesc->getDescriptorOfBlock(1), dd);
-
-               auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-               REQUIRE_UNARY(linRes);
-               REQUIRE_UNARY_FALSE(linRes->hasOperator());
-               REQUIRE_UNARY_FALSE(linRes->hasDataVector());
            }
 
            THEN("a clone behaves as expected")
@@ -406,11 +391,6 @@ TEST_CASE_TEMPLATE("AXDTStatRecon: Testing reconstruction type - Racian_direct",
                REQUIRE_UNARY(funcDomainDesc);
                REQUIRE_EQ(funcDomainDesc->getDescriptorOfBlock(0), dd);
                REQUIRE_EQ(funcDomainDesc->getDescriptorOfBlock(1), dd);
-
-               auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-               REQUIRE_UNARY(linRes);
-               REQUIRE_UNARY_FALSE(linRes->hasOperator());
-               REQUIRE_UNARY_FALSE(linRes->hasDataVector());
            }
 
            THEN("a clone behaves as expected")
