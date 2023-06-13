@@ -525,10 +525,10 @@ namespace detail
             .value("Racian_direct", Fn::StatReconType::Racian_direct)
             .export_values();
 
-        fn.def(py::init<const DC&, const DC&, const DC&, const DC&,
-                        const LOp&, const LOp&, long, const typename Fn::StatReconType&>(),
-               py::arg("ffa"), py::arg("ffb"), py::arg("a"), py::arg("b"),
-               py::arg("absorp_op"), py::arg("axdt_op"), py::arg("N"), py::arg("recon_type"));
+        fn.def(py::init<const DC&, const DC&, const DC&, const DC&, const LOp&, const LOp&, long,
+                        const typename Fn::StatReconType&>(),
+               py::arg("ffa"), py::arg("ffb"), py::arg("a"), py::arg("b"), py::arg("absorp_op"),
+               py::arg("axdt_op"), py::arg("N"), py::arg("recon_type"));
 
         fn.def(py::init<const DC&, const LOp&, const typename Fn::StatReconType&>(),
                py::arg("axdt_proj"), py::arg("axdt_op"), py::arg("recon_type"));

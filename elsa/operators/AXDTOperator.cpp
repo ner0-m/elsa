@@ -65,7 +65,7 @@ namespace elsa
         Timer timeguard("AXDTOperator", "apply");
 
         bl_op->apply(x, Ax);
-//        Logger::get("AXDTOperator")->info("Apply result {}", Ax.sum());
+        //        Logger::get("AXDTOperator")->info("Apply result {}", Ax.sum());
     }
 
     template <typename data_t>
@@ -75,7 +75,7 @@ namespace elsa
         Timer timeguard("AXDTOperator", "applyAdjoint");
 
         bl_op->applyAdjoint(y, Aty);
-//        Logger::get("AXDTOperator")->info("ApplyAdjoint result {}", Aty.sum());
+        //        Logger::get("AXDTOperator")->info("ApplyAdjoint result {}", Aty.sum());
     }
 
     template <typename data_t>
@@ -117,7 +117,7 @@ namespace elsa
                     return std::make_unique<Scaling<data_t>>(rangeDescriptor, tmp);
                 } else {
                     return std::make_unique<Scaling<data_t>>(rangeDescriptor,
-                                                          materialize(weights->getBlock(i)));
+                                                             materialize(weights->getBlock(i)));
                 }
             }();
 

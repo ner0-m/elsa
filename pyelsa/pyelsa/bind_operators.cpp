@@ -297,9 +297,8 @@ namespace detail
 
         py::class_<Op, elsa::LinearOperator<data_t>> op(m, name);
 
-        op.def(
-            py::init<const elsa::DataDescriptor&, const elsa::DataDescriptor&>(),
-            py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+        op.def(py::init<const elsa::DataDescriptor&, const elsa::DataDescriptor&>(),
+               py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
     }
 } // namespace detail
 

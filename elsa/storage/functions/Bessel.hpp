@@ -13,8 +13,7 @@ namespace elsa::fn
             {
                 if (arg < static_cast<T>(3.75))
                     return std::log(std::cyl_bessel_i(0, arg));
-                else
-                {
+                else {
                     // see Numerical Recipes in C - 2nd Edition
                     // by W. H. Press, S. A. Teukolsky, W. T. Vetterling, B. P. Flannery
                     // p.237
@@ -41,8 +40,7 @@ namespace elsa::fn
             {
                 if (arg < static_cast<T>(3.75))
                     return std::cyl_bessel_i(1, arg) / std::cyl_bessel_i(0, arg);
-                else
-                {
+                else {
                     // see Numerical Recipes in C - 2nd Edition
                     // by W. H. Press, S. A. Teukolsky, W. T. Vetterling, B. P. Flannery
                     // p.238
