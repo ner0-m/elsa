@@ -20,9 +20,13 @@ TEST_SUITE_BEGIN("core");
 
 #ifdef ELSA_CUDA_ENABLED
 
-TEST_CASE_TEMPLATE("fft", data_t, float, double)
+/* Althoug one might consider it bad style to test
+   detail functions instead of the public interface,
+   the point of this test is to ensure the equivalence
+   of both possible detail implementations, so my hands
+   are tied. */
+TEST_CASE_TEMPLATE("fft on host and device", data_t, float, double)
 {
-
     GIVEN("Some container")
     {
         auto setup = [&](size_t dim, size_t size) {
