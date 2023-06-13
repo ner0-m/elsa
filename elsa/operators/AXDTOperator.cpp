@@ -2,7 +2,7 @@
 #include "IdenticalBlocksDescriptor.h"
 #include "Scaling.h"
 #include "Math.hpp"
-#include "Logger.h"
+#include "Timer.h"
 
 using namespace elsa::axdt;
 
@@ -22,6 +22,8 @@ namespace elsa
                                       domainDescriptor},
             rangeDescriptor}
     {
+        Timer timeguard("AXDTOperator", "Construction");
+
         auto sf_info = SphericalFunctionInformation<data_t>(sphericalFuncDirs, sphericalFuncWeights,
                                                             sphericalHarmonicsSymmetry,
                                                             sphericalHarmonicsMaxDegree);
@@ -60,14 +62,20 @@ namespace elsa
     void AXDTOperator<data_t>::applyImpl(const DataContainer<data_t>& x,
                                          DataContainer<data_t>& Ax) const
     {
+        Timer timeguard("AXDTOperator", "apply");
+
         bl_op->apply(x, Ax);
+//        Logger::get("AXDTOperator")->info("Apply result {}", Ax.sum());
     }
 
     template <typename data_t>
     void AXDTOperator<data_t>::applyAdjointImpl(const DataContainer<data_t>& y,
                                                 DataContainer<data_t>& Aty) const
     {
+        Timer timeguard("AXDTOperator", "applyAdjoint");
+
         bl_op->applyAdjoint(y, Aty);
+//        Logger::get("AXDTOperator")->info("ApplyAdjoint result {}", Aty.sum());
     }
 
     template <typename data_t>
@@ -84,37 +92,36 @@ namespace elsa
 
         // create composite operators of projector and scalings
         for (index_t i = 0; i < numBlocks; ++i) {
-            Logger::get("AXDTOperator")->info("constructing... {}/{}", i + 1, numBlocks);
-            // create a matching scaling operator
-            std::unique_ptr<Scaling<data_t>> s;
-
             // weights has shape (J, BasisCnt), but J = (#detectorPixels x #measurements) for
-            // cone beams and J = (#measurements) for parallel beams in order to speed up the
-            // calculation for parallel beams. At this point we can unify this interface as
+            // cone beams and J = (#measurements) for parallel beams (efficiency reasons).
+            // At this point we can unify this interface as
             // J = (#detectorPixels x #measurements) by expanding the coalesced weights for
             // parallel beams
-            if (rangeDescriptor.isParallelBeam()) {
-                DataContainer<data_t> tmp{rangeDescriptor};
-                index_t totalCnt = rangeDescriptor.getNumberOfCoefficients();
-                index_t blkCnt = rangeDescriptor.getNumberOfCoefficientsPerDimension()
-                                     [rangeDescriptor.getNumberOfDimensions() - 1];
-                index_t perBlkCnt = totalCnt / blkCnt;
 
-                index_t idx = 0;
-                for (index_t j = 0; j < blkCnt; ++j) {
-                    index_t cnt_down = perBlkCnt;
-                    while ((cnt_down--) != 0) {
-                        tmp[idx++] = weights->getBlock(i)[j];
+            // create a matching scaling operator
+            auto scales = [&]() -> std::unique_ptr<Scaling<data_t>> {
+                if (rangeDescriptor.isParallelBeam()) {
+                    DataContainer<data_t> tmp{rangeDescriptor};
+                    index_t totalCnt = rangeDescriptor.getNumberOfCoefficients();
+                    index_t blkCnt = rangeDescriptor.getNumberOfCoefficientsPerDimension()
+                                         [rangeDescriptor.getNumberOfDimensions() - 1];
+                    index_t perBlkCnt = totalCnt / blkCnt;
+
+                    index_t idx = 0;
+                    for (index_t j = 0; j < blkCnt; ++j) {
+                        for (index_t k = 0; k < perBlkCnt; ++k) {
+                            tmp[idx++] = weights->getBlock(i)[j];
+                        }
                     }
+
+                    return std::make_unique<Scaling<data_t>>(rangeDescriptor, tmp);
+                } else {
+                    return std::make_unique<Scaling<data_t>>(rangeDescriptor,
+                                                          materialize(weights->getBlock(i)));
                 }
+            }();
 
-                s = std::make_unique<Scaling<data_t>>(rangeDescriptor, tmp);
-            } else {
-                s = std::make_unique<Scaling<data_t>>(rangeDescriptor,
-                                                      materialize(weights->getBlock(i)));
-            }
-
-            ops.emplace_back(std::make_unique<LinearOperator<data_t>>(*s * projector));
+            ops.emplace_back((*scales * projector).clone());
         }
 
         //        EDF::write<data_t>(*weights,"_weights.edf");
@@ -126,12 +133,12 @@ namespace elsa
         const XGIDetectorDescriptor& rangeDescriptor,
         const SphericalFunctionInformation<data_t>& sf_info)
     {
-        std::unique_ptr<DataContainer<data_t>> spfWeights;
-
-        if (rangeDescriptor.isParallelBeam())
-            spfWeights = computeParallelWeights(rangeDescriptor, sf_info);
-        else
-            spfWeights = computeConeBeamWeights(rangeDescriptor, sf_info);
+        auto spfWeights = [&]() -> std::unique_ptr<DataContainer<data_t>> {
+            if (rangeDescriptor.isParallelBeam())
+                return computeParallelWeights(rangeDescriptor, sf_info);
+            else
+                return computeConeBeamWeights(rangeDescriptor, sf_info);
+        }();
 
         // extract volDescriptor
         const auto& trueFuncWeightsDesc =
@@ -214,14 +221,10 @@ namespace elsa
                 for (index_t y = 0; y < py; ++y) {
                     for (index_t x = 0; x < px; ++x) {
                         // sampling direction: set above, normalized by design
-                        // beam direction: get ray as provided by projection matrix, catch nans
-                        // (yes, that can happen :()
+                        // beam direction: get ray as provided by projection matrix
                         pt << x, y, n;
                         auto ray = rangeDescriptor.computeRayFromDetectorCoord(pt);
                         s = ray.direction().cast<data_t>();
-                        if (s.hasNaN())
-                            throw std::invalid_argument(
-                                "computation of ray produced nans (fall back to parallel mode?)");
 
                         // sensitivity direction: first column of rotation matrix (scaling is forced
                         // to be isotropic, x-direction/horizontal axis)

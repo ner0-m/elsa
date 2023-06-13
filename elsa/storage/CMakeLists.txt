@@ -27,6 +27,7 @@ set(MODULE_HEADERS
     transforms/Exp.h
     transforms/Imag.h
     transforms/Real.h
+    transforms/Bessel.h
 )
 
 # list all the code files of the module

@@ -40,6 +40,7 @@
 #include "transforms/Exp.h"
 #include "transforms/Imag.h"
 #include "transforms/Real.h"
+#include "transforms/Bessel.h"
 
 #include <utility>
 #include <cmath>
@@ -878,6 +879,22 @@ namespace elsa
         }
     }
 
+    template <class data_t>
+    DataContainer<data_t> bessel_log_0(const DataContainer<data_t>& dc)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        elsa::bessel_log_0(dc.begin(), dc.end(), copy.begin());
+        return copy;
+    }
+
+    template <class data_t>
+    DataContainer<data_t> bessel_1_0(const DataContainer<data_t>& dc)
+    {
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        elsa::bessel_1_0(dc.begin(), dc.end(), copy.begin());
+        return copy;
+    }
+
     template <typename data_t>
     DataContainer<value_type_of_t<data_t>> cwiseAbs(const DataContainer<data_t>& dc)
     {
@@ -1059,6 +1076,11 @@ namespace elsa
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_TYPES(square)
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_TYPES(sqrt)
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_TYPES(materialize)
+
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION(bessel_log_0, float)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION(bessel_1_0, float)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION(bessel_log_0, double)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION(bessel_1_0, double)
 
 #undef ELSA_INSTANTIATE_UNARY_TRANSFORMATION
 

@@ -12,6 +12,7 @@
 #include "ShearletTransform.h"
 #include "AXDTOperator.h"
 #include "XGIDetectorDescriptor.h"
+#include "ZeroOperator.h"
 
 #include "hints/operators_hints.cpp"
 
@@ -305,6 +306,29 @@ void add_AXDT_operator(py::module& m)
     m.attr("AXDTOperator") = m.attr("AXDTOperatorf");
 }
 
+namespace detail
+{
+    template <typename data_t>
+    void add_Zero_op(py::module& m, const char* name)
+    {
+        using Op = elsa::ZeroOperator<data_t>;
+
+        py::class_<Op, elsa::LinearOperator<data_t>> op(m, name);
+
+        op.def(
+            py::init<const elsa::DataDescriptor&, const elsa::DataDescriptor&>(),
+            py::arg("domainDescriptor"), py::arg("rangeDescriptor"));
+    }
+} // namespace detail
+
+void add_Zero_operator(py::module& m)
+{
+    detail::add_Zero_op<float>(m, "ZeroOperatorf");
+    detail::add_Zero_op<double>(m, "ZeroOperatord");
+
+    m.attr("ZeroOperator") = m.attr("ZeroOperatorf");
+}
+
 void add_definitions_pyelsa_operators(py::module& m)
 {
     add_finite_difference_difftype(m);
@@ -316,6 +340,7 @@ void add_definitions_pyelsa_operators(py::module& m)
     add_block_op(m);
     add_shearlet_operator(m);
     add_AXDT_operator(m);
+    add_Zero_operator(m);
 
     elsa::OperatorsHints::addCustomFunctions(m);
 }

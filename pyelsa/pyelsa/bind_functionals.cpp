@@ -16,6 +16,7 @@
 #include "TransmissionLogLikelihood.h"
 #include "WeightedL1Norm.h"
 #include "WeightedL2NormPow2.h"
+#include "AXDTStatRecon.h"
 
 #include "hints/functionals_hints.cpp"
 
@@ -479,6 +480,43 @@ void add_constraint(py::module& m)
     m.attr("Constraint") = m.attr("Constraintf");
 }
 
+namespace detail
+{
+    template <class data_t>
+    void add_axdtStatRecon_fn(py::module& m, const char* name)
+    {
+        using Fn = elsa::AXDTStatRecon<data_t>;
+        using Functional = elsa::Functional<data_t>;
+
+        using DC = elsa::DataContainer<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<Fn, Functional> fn(m, name);
+        py::enum_<typename Fn::StatReconType>(fn, "StatReconType")
+            .value("Gaussian_log_d", Fn::StatReconType::Gaussian_log_d)
+            .value("Gaussian_d", Fn::StatReconType::Gaussian_d)
+            .value("Gaussian_approximate_racian", Fn::StatReconType::Gaussian_approximate_racian)
+            .value("Racian_direct", Fn::StatReconType::Racian_direct)
+            .export_values();
+
+        fn.def(py::init<const DC&, const DC&, const DC&, const DC&,
+                        const LOp&, const LOp&, long, const typename Fn::StatReconType&>(),
+               py::arg("ffa"), py::arg("ffb"), py::arg("a"), py::arg("b"),
+               py::arg("absorp_op"), py::arg("axdt_op"), py::arg("N"), py::arg("recon_type"));
+
+        fn.def(py::init<const DC&, const LOp&, const typename Fn::StatReconType&>(),
+               py::arg("axdt_proj"), py::arg("axdt_op"), py::arg("recon_type"));
+    }
+} // namespace detail
+
+void add_AXDTStatRecon(py::module& m)
+{
+    detail::add_axdtStatRecon_fn<float>(m, "AXDTStatReconf");
+    detail::add_axdtStatRecon_fn<double>(m, "AXDTStatRecond");
+
+    m.attr("AXDTStatRecon") = m.attr("AXDTStatReconf");
+}
+
 void add_definitions_pyelsa_functionals(py::module& m)
 {
     add_residual(m);
@@ -502,6 +540,8 @@ void add_definitions_pyelsa_functionals(py::module& m)
     add_transmission(m);
 
     add_constraint(m);
+
+    add_AXDTStatRecon(m);
 
     elsa::FunctionalsHints::addCustomFunctions(m);
 }
