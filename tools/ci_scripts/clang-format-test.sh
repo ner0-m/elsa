@@ -11,19 +11,20 @@ GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 NC='\033[0m' # No Color
 
+base_remote=origin
+base_branch=master
+
 # preference list
 clang_format_version=14
 clang_format_tool_candiates=(clang-format-$clang_format_version clang-format)
 
-# update origin
-git fetch origin
-master_ahead=$(git log HEAD..origin/master --oneline | wc -l)
+master_ahead=$(git log HEAD..$base_remote/$base_branch --oneline | wc -l)
 
 if [[ "$master_ahead" -gt "0" ]]; then
-    echo -e "[${ORANGE}WARNING${NC}]: Not all commits which are part of origin/master are part of your branch, maybe you need to rebase?"
+    echo -e "[${ORANGE}WARNING${NC}]: Not all commits which are part of $base_remote/$base_branch are part of your branch, maybe you need to rebase?"
 fi
 
-files=($(git diff origin/master --name-only --diff-filter=d | egrep ".+\.(h|hpp|cpp|cu|cuh)$"))
+files=($(git diff $base_remote/$base_branch --name-only --diff-filter=d | grep -E ".+\.(h|hpp|cpp|cu|cuh)$"))
 
 if (( ${#files[@]} )); then
     clang_format_tool=false

@@ -1,19 +1,34 @@
+#include <optional>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
 
+#include "DataContainer.h"
+#include "DataDescriptor.h"
+#include "Dictionary.h"
 #include "FGM.h"
+#include "LeastSquares.h"
+#include "LinearOperator.h"
 #include "PGD.h"
 #include "APGD.h"
+#include "ADMML2.h"
 #include "GradientDescent.h"
 #include "Landweber.h"
+#include "ProximalOperator.h"
 #include "SIRT.h"
 #include "OGM.h"
 #include "CGLS.h"
+#include "CGNL.h"
+#include "CGNE.h"
 #include "OrthogonalMatchingPursuit.h"
 #include "SQS.h"
+#include "AB_GMRES.h"
+#include "BA_GMRES.h"
+#include "LinearizedADMM.h"
 #include "Solver.h"
+#include "ProximalOperator.h"
 
+#include "bind_common.h"
 #include "hints/solvers_hints.cpp"
 
 namespace py = pybind11;
@@ -76,7 +91,7 @@ namespace detail
     void add_gradient_descent(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
+        using Problem = elsa::Functional<data_t>;
 
         py::class_<elsa::GradientDescent<data_t>, Solver> solver(m, name);
         solver.def(py::init<const Problem&>(), py::arg("problem"));
@@ -98,7 +113,6 @@ namespace detail
     void add_cgls(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
         using LOp = elsa::LinearOperator<data_t>;
 
         py::class_<elsa::CGLS<data_t>, Solver> cg(m, name);
@@ -118,18 +132,73 @@ void add_cgls(py::module& m)
 namespace detail
 {
     template <class data_t>
+    void add_cgne(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::CGNE<data_t>, Solver> cg(m, name);
+        cg.def(py::init<const LOp&, const elsa::DataContainer<data_t>&>(), py::arg("A"),
+               py::arg("b"));
+    }
+} // namespace detail
+
+void add_cgne(py::module& m)
+{
+    detail::add_cgne<float>(m, "CGNEf");
+    detail::add_cgne<double>(m, "CGNEd");
+
+    m.attr("CGNE") = m.attr("CGNEf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_nonlinear_conjugate_gradient(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using Functional = elsa::Functional<data_t>;
+
+        py::class_<elsa::CGNL<data_t>, Solver> cg(m, name);
+        cg.def(py::init<const Functional&>(), py::arg("problem"));
+        cg.def(py::init<const Functional&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+        cg.def(py::init<const Functional&, data_t, elsa::index_t>(), py::arg("problem"),
+               py::arg("epsilon"), py::arg("line_search_iterations"));
+        cg.def(py::init<const Functional&, data_t, elsa::index_t,
+                        const typename elsa::CGNL<data_t>::LineSearchFunction&,
+                        const typename elsa::CGNL<data_t>::BetaFunction&>(),
+               py::arg("functional"), py::arg("epsilon"), py::arg("line_search_iterations"),
+               py::arg("line_search_function"), py::arg("beta_function"));
+
+        cg.def_readonly_static("lineSearchNewtonRaphson",
+                               &elsa::CGNL<data_t>::lineSearchNewtonRaphson);
+        cg.def_readonly_static("lineSearchConstantStepSize",
+                               &elsa::CGNL<data_t>::lineSearchConstantStepSize);
+        cg.def_readonly_static("betaPolakRibiere", &elsa::CGNL<data_t>::betaPolakRibiere);
+    }
+} // namespace detail
+
+void add_nonlinear_conjugate_gradient(py::module& m)
+{
+    detail::add_nonlinear_conjugate_gradient<float>(m, "CGNLf");
+    detail::add_nonlinear_conjugate_gradient<double>(m, "CGNLd");
+
+    m.attr("CGNL") = m.attr("CGNLf");
+}
+namespace detail
+{
+    template <class data_t>
     void add_ista(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
-        using Threshold = elsa::geometry::Threshold<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using DC = elsa::DataContainer<data_t>;
+        using Prox = elsa::ProximalOperator<data_t>;
 
-        py::class_<elsa::PGD<data_t>, Solver> ista(m, name);
-        ista.def(py::init<const Problem&, Threshold>(), py::arg("problem"), py::arg("mu"));
-        ista.def(py::init<const Problem&, Threshold, data_t>(), py::arg("problem"), py::arg("mu"),
-                 py::arg("epsilon"));
-        ista.def(py::init<const Problem&>(), py::arg("problem"));
-        ista.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+        py::class_<elsa::PGD<data_t>, Solver> pgd(m, name);
+        pgd.def(py::init<const LOp&, const DC&, Prox, std::optional<data_t>, data_t>(),
+                py::arg("A"), py::arg("b"), py::arg("prox"), py::arg("mu") = py::none(),
+                py::arg("eps") = 1e-6);
     }
 } // namespace detail
 
@@ -139,6 +208,7 @@ void add_ista(py::module& m)
     detail::add_ista<double>(m, "PGDd");
 
     m.attr("PGD") = m.attr("PGDf");
+    m.attr("ISTA") = m.attr("PGDf");
 }
 
 namespace detail
@@ -147,15 +217,14 @@ namespace detail
     void add_fista(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
-        using Threshold = elsa::geometry::Threshold<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using Prox = elsa::ProximalOperator<data_t>;
+        using DC = elsa::DataContainer<data_t>;
 
-        py::class_<elsa::APGD<data_t>, Solver> fista(m, name);
-        fista.def(py::init<const Problem&, Threshold>(), py::arg("problem"), py::arg("mu"));
-        fista.def(py::init<const Problem&, Threshold, data_t>(), py::arg("problem"), py::arg("mu"),
-                  py::arg("epsilon"));
-        fista.def(py::init<const Problem&>(), py::arg("problem"));
-        fista.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+        py::class_<elsa::APGD<data_t>, Solver> apgd(m, name);
+        apgd.def(py::init<const LOp&, const DC&, Prox, std::optional<data_t>, data_t>(),
+                 py::arg("A"), py::arg("b"), py::arg("prox"), py::arg("mu") = py::none(),
+                 py::arg("eps") = 1e-6);
     }
 } // namespace detail
 
@@ -165,6 +234,7 @@ void add_fista(py::module& m)
     detail::add_fista<double>(m, "APGDd");
 
     m.attr("APGD") = m.attr("APGDf");
+    m.attr("FISTA") = m.attr("APGDf");
 }
 
 namespace detail
@@ -173,16 +243,13 @@ namespace detail
     void add_fgm(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
+        using Problem = elsa::Functional<data_t>;
         using LOp = elsa::LinearOperator<data_t>;
 
         py::class_<elsa::FGM<data_t>, Solver> fgm(m, name);
-        fgm.def(py::init<const Problem&, const LOp&>(), py::arg("problem"),
-                py::arg("preconditionerInverse"));
+        fgm.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("eps") = 1e-10);
         fgm.def(py::init<const Problem&, const LOp&, data_t>(), py::arg("problem"),
-                py::arg("preconditionerInverse"), py::arg("epsilon"));
-        fgm.def(py::init<const Problem&>(), py::arg("problem"));
-        fgm.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+                py::arg("preconditioner"), py::arg("eps") = 1e-10);
     }
 } // namespace detail
 
@@ -200,16 +267,13 @@ namespace detail
     void add_ogm(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
+        using Problem = elsa::Functional<data_t>;
         using LOp = elsa::LinearOperator<data_t>;
 
         py::class_<elsa::OGM<data_t>, Solver> ogm(m, name);
-        ogm.def(py::init<const Problem&, const LOp&>(), py::arg("problem"),
-                py::arg("preconditionerInverse"));
+        ogm.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("eps") = 1e-10);
         ogm.def(py::init<const Problem&, const LOp&, data_t>(), py::arg("problem"),
-                py::arg("preconditionerInverse"), py::arg("epsilon"));
-        ogm.def(py::init<const Problem&>(), py::arg("problem"));
-        ogm.def(py::init<const Problem&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+                py::arg("preconditioner"), py::arg("eps") = 1e-10);
     }
 } // namespace detail
 
@@ -227,19 +291,26 @@ namespace detail
     void add_sqs(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
+        using L2Pow2 = elsa::LeastSquares<data_t>;
+        using Subsets = std::vector<std::unique_ptr<L2Pow2>>;
         using LOp = elsa::LinearOperator<data_t>;
 
         py::class_<elsa::SQS<data_t>, Solver> sqs(m, name);
-        sqs.def(py::init<const Problem&, bool>(), py::arg("problem"),
-                py::arg("momentumAcceleration") = static_cast<bool>(true));
-        sqs.def(py::init<const Problem&, bool, data_t>(), py::arg("problem"),
-                py::arg("momentumAcceleration"), py::arg("epsilon"));
-        sqs.def(py::init<const Problem&, const LOp&, bool>(), py::arg("problem"),
+        sqs.def(py::init<const L2Pow2&, bool, data_t>(), py::arg("problem"),
+                py::arg("momentumAcceleration") = static_cast<bool>(true), py::arg("eps") = 1e-10);
+        sqs.def(py::init<const L2Pow2&, const LOp&, bool, data_t>(), py::arg("problem"),
                 py::arg("preconditioner"),
-                py::arg("momentumAcceleration") = static_cast<bool>(true));
-        sqs.def(py::init<const Problem&, LOp&, bool, data_t>(), py::arg("problem"),
-                py::arg("preconditioner"), py::arg("momentumAcceleration"), py::arg("epsilon"));
+                py::arg("momentumAcceleration") = static_cast<bool>(true), py::arg("eps") = 1e-10);
+
+        // TODO: This should be possible
+        // sqs.def(py::init<const L2Pow2&, Subsets&&, bool, data_t>(), py::arg("problem"),
+        //         py::arg("subsets"), py::arg("momentumAcceleration") = static_cast<bool>(true),
+        //         py::arg("eps") = 1e-10);
+        // sqs.def(py::init<const L2Pow2&, Subsets&&, const LOp&, bool, data_t>(),
+        // py::arg("problem"),
+        //         py::arg("subsets"), py::arg("preconditioner"),
+        //         py::arg("momentumAcceleration") = static_cast<bool>(true), py::arg("eps") =
+        //         1e-10);
     }
 } // namespace detail
 
@@ -257,11 +328,11 @@ namespace detail
     void add_omp(py::module& m, const char* name)
     {
         using Solver = elsa::Solver<data_t>;
-        using Problem = elsa::Problem<data_t>;
-        using LOp = elsa::LinearOperator<data_t>;
+        using Dict = elsa::Dictionary<data_t>;
+        using DC = elsa::DataContainer<data_t>;
 
         py::class_<elsa::OrthogonalMatchingPursuit<data_t>, Solver> omp(m, name);
-        omp.def(py::init<const elsa::RepresentationProblem<data_t>&, data_t>(), py::arg("problem"),
+        omp.def(py::init<const Dict&, const DC&, data_t>(), py::arg("dict"), py::arg("signal"),
                 py::arg("epsilon"));
     }
 } // namespace detail
@@ -274,11 +345,93 @@ void add_omp(py::module& m)
     m.attr("OrthogonalMatchingPursuit") = m.attr("OrthogonalMatchingPursuitf");
 }
 
+namespace detail
+{
+    template <class data_t, template <class> class solver_t = elsa::Solver>
+    void add_generalized_minimum_residual(py::module& m, const char* name)
+    {
+        using gmres = solver_t<data_t>;
+        using Solver = elsa::Solver<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using dc = elsa::DataContainer<data_t>;
+
+        py::class_<gmres, Solver> GMRES(m, name);
+        GMRES
+            .def(py::init<const LOp&, const LOp&, const dc&>(), py::arg("projector"),
+                 py::arg("backprojector"), py::arg("sinogram"))
+            .def(py::init<const LOp&, const LOp&, const dc&, data_t>(), py::arg("projector"),
+                 py::arg("backprojector"), py::arg("sinogram"), py::arg("epsilon"))
+            .def(py::init<const LOp&, const dc&, data_t>(), py::arg("projector"),
+                 py::arg("sinogram"), py::arg("epsilon"))
+            .def(py::init<const LOp&, const dc&>(), py::arg("projector"), py::arg("sinogram"));
+    }
+
+    template <class data_t>
+    void add_admml2(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using DC = elsa::DataContainer<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using Prox = elsa::ProximalOperator<data_t>;
+
+        py::class_<elsa::ADMML2<data_t>, Solver> admm(m, name);
+        admm.def(py::init<const LOp&, const DC&, const LOp&, const Prox&, std::optional<data_t>>(),
+                 py::arg("Op"), py::arg("b"), py::arg("A"), py::arg("proxg"),
+                 py::arg("tau") = py::none());
+    }
+
+    template <class data_t>
+    void add_ladmm(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using ProxOp = elsa::ProximalOperator<data_t>;
+
+        py::class_<elsa::LinearizedADMM<data_t>, Solver> ladmm(m, name);
+        ladmm.def(py::init<const LOp&, ProxOp, ProxOp, data_t, data_t, bool>(), py::arg("K"),
+                  py::arg("proxf"), py::arg("proxg"), py::arg("sigma"), py::arg("tau"),
+                  py::arg("computeKNorm") = true);
+    }
+} // namespace detail
+
+void add_admml2(py::module& m)
+{
+    detail::add_admml2<float>(m, "ADMML2f");
+    detail::add_admml2<double>(m, "ADMML2d");
+
+    m.attr("ADMML2") = m.attr("ADMML2f");
+}
+
+void add_ladmm(py::module& m)
+{
+    detail::add_ladmm<float>(m, "LinearizedADMMf");
+    detail::add_ladmm<double>(m, "LinearizedADMMd");
+
+    m.attr("LinearizedADMM") = m.attr("LinearizedADMMf");
+}
+
+void add_generalized_minimum_residual(py::module& m)
+{
+    detail::add_generalized_minimum_residual<float, elsa::AB_GMRES>(m, "ABGMRESf");
+    detail::add_generalized_minimum_residual<double, elsa::AB_GMRES>(m, "ABGMRESd");
+
+    detail::add_generalized_minimum_residual<float, elsa::BA_GMRES>(m, "BAGMRESf");
+    detail::add_generalized_minimum_residual<double, elsa::BA_GMRES>(m, "BAGMRESd");
+
+    m.attr("ABGMRES") = m.attr("ABGMRESf");
+    m.attr("BAGMRES") = m.attr("BAGMRESf");
+
+    // adding a GMRES function that uses ABGMRES by default:
+    m.attr("GMRES") = m.attr("ABGMRESf");
+}
+
 void add_definitions_pyelsa_solvers(py::module& m)
 {
     add_solver(m);
     add_gradient_descent(m);
     add_cgls(m);
+    add_cgne(m);
+    add_nonlinear_conjugate_gradient(m);
     add_ista(m);
     add_fista(m);
 
@@ -286,6 +439,10 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_ogm(m);
     add_sqs(m);
     add_omp(m);
+    add_ladmm(m);
+    add_admml2(m);
+
+    add_generalized_minimum_residual(m);
 
     py::class_<elsa::Landweber<float>, elsa::Solver<float>> Landweberf(m, "Landweberf");
     Landweberf.def(
@@ -294,9 +451,6 @@ void add_definitions_pyelsa_solvers(py::module& m)
     Landweberf.def(
         py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&, float>(),
         py::arg("A"), py::arg("b"), py::arg("stepSize"));
-    Landweberf.def(py::init<const elsa::WLSProblem<float>&>(), py::arg("problem"));
-    Landweberf.def(py::init<const elsa::WLSProblem<float>&, float>(), py::arg("problem"),
-                   py::arg("stepSize"));
 
     m.attr("Landweber") = m.attr("Landweberf");
 
@@ -307,9 +461,6 @@ void add_definitions_pyelsa_solvers(py::module& m)
     Landweberd.def(
         py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&, double>(),
         py::arg("A"), py::arg("b"), py::arg("stepSize"));
-    Landweberd.def(py::init<const elsa::WLSProblem<double>&>(), py::arg("problem"));
-    Landweberd.def(py::init<const elsa::WLSProblem<double>&, double>(), py::arg("problem"),
-                   py::arg("stepSize"));
 
     py::class_<elsa::SIRT<float>, elsa::Solver<float>> sirtf(m, "SIRTf");
     sirtf.def(py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&>(),
@@ -317,9 +468,6 @@ void add_definitions_pyelsa_solvers(py::module& m)
     sirtf.def(
         py::init<const elsa::LinearOperator<float>&, const elsa::DataContainer<float>&, float>(),
         py::arg("A"), py::arg("b"), py::arg("stepSize"));
-    sirtf.def(py::init<const elsa::WLSProblem<float>&>(), py::arg("problem"));
-    sirtf.def(py::init<const elsa::WLSProblem<float>&, float>(), py::arg("problem"),
-              py::arg("stepSize"));
 
     m.attr("SIRT") = m.attr("SIRTf");
 
@@ -329,9 +477,6 @@ void add_definitions_pyelsa_solvers(py::module& m)
     sirtd.def(
         py::init<const elsa::LinearOperator<double>&, const elsa::DataContainer<double>&, double>(),
         py::arg("A"), py::arg("b"), py::arg("stepSize"));
-    sirtd.def(py::init<const elsa::WLSProblem<double>&>(), py::arg("problem"));
-    sirtd.def(py::init<const elsa::WLSProblem<double>&, double>(), py::arg("problem"),
-              py::arg("stepSize"));
 
     elsa::SolversHints::addCustomFunctions(m);
 }

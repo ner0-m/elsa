@@ -1,13 +1,9 @@
 #pragma once
 #include "PhantomDefines.h"
+#include "EllipCylinder.h"
 
 namespace elsa::phantoms
 {
-
-    // Fix 3d vector
-    template <typename data_t = double,
-              typename = std::enable_if_t<std::is_floating_point<data_t>::value>>
-    using Vec2X = Eigen::Matrix<data_t, 2, 1>;
 
     template <typename data_t = double>
     class EllipCylinderFree

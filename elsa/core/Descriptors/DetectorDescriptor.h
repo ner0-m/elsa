@@ -65,6 +65,7 @@ namespace elsa
 
         /**
          * @brief Computes the projection of the center of a voxel to the detector and its scaling
+         *        !!be aware that this function is not optimized, as it uses dynamic sized arrays!!
          *
          * @param[in] voxelCoord coordinate of the voxel to be projected in volume coordinates
          * @param[in] poseIndex index into geometryList array, which pose to use for projection

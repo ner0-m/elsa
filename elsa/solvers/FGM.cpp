@@ -1,28 +1,38 @@
 #include "FGM.h"
+#include "Error.h"
+#include "Functional.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
+#include "PowerIterations.h"
 
 namespace elsa
 {
     template <typename data_t>
-    FGM<data_t>::FGM(const Problem<data_t>& problem, data_t epsilon)
+    FGM<data_t>::FGM(const Functional<data_t>& problem, data_t epsilon)
         : Solver<data_t>(), _problem(problem.clone()), _epsilon{epsilon}
     {
+        if (!problem.isDifferentiable()) {
+            throw InvalidArgumentError("FGM: Given problem is not differentiable!");
+        }
     }
 
     template <typename data_t>
-    FGM<data_t>::FGM(const Problem<data_t>& problem,
+    FGM<data_t>::FGM(const Functional<data_t>& problem,
                      const LinearOperator<data_t>& preconditionerInverse, data_t epsilon)
         : Solver<data_t>(),
           _problem(problem.clone()),
           _epsilon{epsilon},
           _preconditionerInverse{preconditionerInverse.clone()}
     {
+        if (!problem.isDifferentiable()) {
+            throw InvalidArgumentError("FGM: Given problem is not differentiable!");
+        }
+
         // check that preconditioner is compatible with problem
         if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
-                != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()
+                != _problem->getDomainDescriptor().getNumberOfCoefficients()
             || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
-                   != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()) {
+                   != _problem->getDomainDescriptor().getNumberOfCoefficients()) {
             throw InvalidArgumentError("FGM: incorrect size of preconditioner");
         }
     }
@@ -32,7 +42,7 @@ namespace elsa
                                              std::optional<DataContainer<data_t>> x0)
     {
         auto prevTheta = static_cast<data_t>(1.0);
-        auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());
+        auto x = DataContainer<data_t>(_problem->getDomainDescriptor());
         if (x0.has_value()) {
             x = *x0;
         } else {
@@ -41,23 +51,26 @@ namespace elsa
         auto prevY = x;
 
         auto deltaZero = _problem->getGradient(x).squaredL2Norm();
-        auto lipschitz = _problem->getLipschitzConstant(x);
+        auto lipschitz = powerIterations(_problem->getHessian(x), 5);
+
         Logger::get("FGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
+        Logger::get("FGM")->info("| {:^4} | {:^13} | {:^13} |", "", "objective", "gradient");
 
         for (index_t i = 0; i < iterations; ++i) {
-            Logger::get("FGM")->info("iteration {} of {}", i + 1, iterations);
-
             auto gradient = _problem->getGradient(x);
 
             if (_preconditionerInverse)
                 gradient = _preconditionerInverse->apply(gradient);
 
             DataContainer<data_t> y = x - gradient / lipschitz;
-            const auto theta = (static_cast<data_t>(1.0)
-                                + std::sqrt(static_cast<data_t>(1.0)
-                                            + static_cast<data_t>(4.0) * prevTheta * prevTheta))
-                               / static_cast<data_t>(2.0);
-            x = y + (prevTheta - static_cast<data_t>(1.0)) / theta * (y - prevY);
+            const auto theta =
+                (data_t{1.0} + std::sqrt(data_t{1.0} + data_t{4.0} * prevTheta * prevTheta))
+                / data_t{2.0};
+            x = y + (prevTheta - data_t{1.0}) / theta * (y - prevY);
+
+            Logger::get("FGM")->info("| {:>4} | {:>13} | {:>13} |", i, _problem->evaluate(x),
+                                     gradient.squaredL2Norm());
+
             prevTheta = theta;
             prevY = y;
 

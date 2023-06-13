@@ -3,16 +3,12 @@
 #include <optional>
 
 #include "Solver.h"
-#include "RepresentationProblem.h"
+#include "Dictionary.h"
 
 namespace elsa
 {
     /**
      * @brief Class representing the Orthogonal Matching Pursuit.
-     *
-     * @author Jonas Buerger - initial code
-     *
-     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
      *
      * Orthogonal Matching Pursuit is a greedy algorithm to find a sparse representation. It starts
      * with the 0-vector and adds one non-zero entry per iteration. The algorithm works in the
@@ -22,6 +18,10 @@ namespace elsa
      * -# Construct a dictionary that only contains the atoms that are being used, defined as \f$
      * D_S \f$ (dictionary restricted to the support).
      * -# The representation is the solution to the least square problem \f$ min_x \|y-D_S*x\| \f$
+     *
+     * @tparam data_t data type for the domain and range of the problem, defaulting to real_t
+     *
+     * @author Jonas Buerger - initial code
      *
      */
     template <typename data_t = real_t>
@@ -35,10 +35,12 @@ namespace elsa
          * @brief Constructor for OrthogonalMatchingPursuit, accepting a dictionary representation
          * problem and, optionally, a value for epsilon
          *
-         * @param[in] problem the representation problem that is supposed to be solved
+         * @param[in] D dictionary operator
+         * @param[in] y signal that should be sparsely represented
          * @param[in] epsilon affects the stopping condition
          */
-        OrthogonalMatchingPursuit(const RepresentationProblem<data_t>& problem, data_t epsilon);
+        OrthogonalMatchingPursuit(const Dictionary<data_t>& D, const DataContainer<data_t>& y,
+                                  data_t epsilon);
 
         /// make copy constructor deletion explicit
         OrthogonalMatchingPursuit(const OrthogonalMatchingPursuit<data_t>&) = delete;
@@ -61,12 +63,6 @@ namespace elsa
                   std::optional<DataContainer<data_t>> x0 = std::nullopt) override;
 
     private:
-        /// The representation optimization problem
-        RepresentationProblem<data_t> _problem;
-
-        /// variable affecting the stopping condition
-        data_t _epsilon;
-
         /// helper method to find the index of the atom that is most correlated with the residual
         index_t mostCorrelatedAtom(const Dictionary<data_t>& dict,
                                    const DataContainer<data_t>& evaluatedResidual);
@@ -76,5 +72,12 @@ namespace elsa
 
         /// implement the polymorphic comparison operation
         bool isEqual(const Solver<data_t>& other) const override;
+
+        Dictionary<data_t> dict_;
+
+        DataContainer<data_t> signal_;
+
+        /// variable affecting the stopping condition
+        data_t epsilon_;
     };
 } // namespace elsa

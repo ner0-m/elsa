@@ -16,17 +16,58 @@
 
 namespace elsa::detail
 {
-    void assert_nomsg(const char* expr_str, bool expr, const char* file, int line);
-
     void assert_msg(const char* expr_str, bool expr, const char* file, int line, const char* msg);
 } // namespace elsa::detail
 
-#define GET_MACRO(_1, _2, NAME, ...) NAME
+/*
+  implementation of ENSURE - which is like an assert but "extensible"
+  ENSURE(condition)
+  ENSURE(condition, errormessage)
 
-#define ELSA_VERIFY_IMPL2(Expr, Msg) \
-    ::elsa::detail::assert_msg(#Expr, Expr, __FILE__, __LINE__, Msg)
-#define ELSA_VERIFY_IMPL1(Expr) ::elsa::detail::assert_nomsg(#Expr, Expr, __FILE__, __LINE__)
+  currently calls assert_msg above.
+  alternatively we could throw a backtrace capturing elsa-exception here.
+*/
+#ifndef ENSURE
 
-#define ELSA_VERIFY(...) GET_MACRO(__VA_ARGS__, ELSA_VERIFY_IMPL2, ELSA_VERIFY_IMPL1)(__VA_ARGS__)
+#define ELSA_EXPRTEXT(expr) #expr
 
+#define ENSURE(...)                                                                 \
+    do {                                                                            \
+        ::elsa::detail::assert_msg(ELSA_EXPRTEXT(ELSA_ENS_FIRST(__VA_ARGS__)),      \
+                                   ELSA_ENS_FIRST(__VA_ARGS__), __FILE__, __LINE__, \
+                                   ELSA_ENS_REST(__VA_ARGS__));                     \
+    } while (0)
+
+/*
+ * expands to the first argument
+ * Modified for MSVC using the technique by Jeff Walden
+ * https://stackoverflow.com/a/9338429
+ */
+#define ELSA_PP_GLUE(macro, args) macro args
+#define ELSA_ENS_FIRST(...) ELSA_PP_GLUE(ELSA_ENS_FIRST_HELPER, (__VA_ARGS__, throwaway))
+#define ELSA_ENS_FIRST_HELPER(first, ...) (first)
+
+/*
+ * Standard alternative to GCC's ##__VA_ARGS__ trick (Richard Hansen)
+ * http://stackoverflow.com/a/11172679/4742108
+ *
+ * If there's only one argument, expands to 'nullptr'
+ * If there is more than one argument, expands to everything but
+ * the first argument. Only supports up to 2 arguments but can be trivially expanded.
+ *
+ * We could extend this to support arbitrary assert message formatting, with streams, ...
+ */
+#define ELSA_ENS_REST(...) \
+    ELSA_PP_GLUE(ELSA_ENS_REST_HELPER(ELSA_ENS_NUM(__VA_ARGS__)), (__VA_ARGS__))
+#define ELSA_ENS_REST_HELPER(qty) ELSA_ENS_REST_HELPER1(qty)
+#define ELSA_ENS_REST_HELPER1(qty) ELSA_ENS_REST_HELPER2(qty)
+#define ELSA_ENS_REST_HELPER2(qty) ELSA_ENS_REST_HELPER_##qty
+#define ELSA_ENS_REST_HELPER_ONE(first) nullptr
+#define ELSA_ENS_REST_HELPER_TWOORMORE(first, ...) __VA_ARGS__
+#define ELSA_ENS_NUM(...) ELSA_ENS_NUM_IMPL((__VA_ARGS__, TWOORMORE, ONE, throwaway))
+#define ELSA_ENS_NUM_IMPL(args) ELSA_ENS_SELECT_2ND args
+#define ELSA_ENS_SELECT_2ND(a1, a2, a3, ...) a3
+#endif // ENSURE
+
+#define ELSA_VERIFY ENSURE
 #define ELSA_TODO() ELSA_VERIFY(false, "TODO")

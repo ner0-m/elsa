@@ -4,8 +4,14 @@ message(STATUS "Enabling CUDA projectors...")
 find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 
 # list all the headers of the module
-set(MODULE_HEADERS projector_kernels/TraverseSiddonsCUDA.cuh projector_kernels/TraverseJosephsCUDA.cuh
-                   projector_kernels/ProjectVoxelsCUDA.cuh SiddonsMethodCUDA.h JosephsMethodCUDA.h VoxelProjectorCUDA.h
+set(MODULE_HEADERS
+    projector_kernels/TraverseSiddonsCUDA.cuh
+    projector_kernels/TraverseJosephsCUDA.cuh
+    projector_kernels/ProjectVoxelsCUDA.cuh
+    SiddonsMethodCUDA.h
+    JosephsMethodCUDA.h
+    VoxelProjectorCUDA.h
+    projector_kernels/VoxelCUDAHelper.cuh
 )
 
 # list all the code files of the module

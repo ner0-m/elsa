@@ -43,7 +43,7 @@ namespace elsa
         _centerOfCircle = RealVector_t(2);
         _centerOfCircle << _detectorCenter[0], _s2d - _radius;
 
-        _planarCoords.reserve(detectorLen * detectorHeight);
+        _planarCoords.reserve(static_cast<size_t>(detectorLen * detectorHeight));
 
         for (index_t coordH{0}; coordH < detectorHeight; coordH++) {
             for (index_t coordL{0}; coordL < detectorLen; coordL++) {
@@ -93,7 +93,7 @@ namespace elsa
         CurvedDetectorDescriptor::computeRayFromDetectorCoord(const RealVector_t& detectorCoord,
                                                               const index_t poseIndex) const
     {
-        index_t pixelIndex{static_cast<index_t>(detectorCoord[0])};
+        size_t pixelIndex{static_cast<size_t>(detectorCoord[0])};
 
         // instead of multiplying the detectorCoord with the projection matrix we retrieve the
         // actual coordinate in detector space by treating detectorCoord as an Index into
@@ -103,12 +103,13 @@ namespace elsa
             <= static_cast<real_t>(0.0001)};
 
         if (_numberOfDimensions == 3) {
-            index_t pixelIndexWidth{static_cast<index_t>(detectorCoord[1])};
+            size_t pixelIndexWidth{static_cast<size_t>(detectorCoord[1])};
             isPixelCenter = isPixelCenter
                             && std::abs(detectorCoord[1] - static_cast<real_t>(pixelIndexWidth)
                                         - static_cast<real_t>(0.5))
                                    <= static_cast<real_t>(0.0001);
-            pixelIndex += pixelIndexWidth * _numberOfCoefficientsPerDimension[0];
+            pixelIndex +=
+                pixelIndexWidth * static_cast<size_t>(_numberOfCoefficientsPerDimension[0]);
         }
 
         RealVector_t curvedDetectorCoord{

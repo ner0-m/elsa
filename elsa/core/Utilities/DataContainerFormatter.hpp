@@ -124,7 +124,7 @@ namespace elsa
                     // newlines between rows
                     // the more dimensions, the more newlines.
                     auto line_separator = (std::string(this->rstrip(this->config.separator))
-                                           + std::string(dims_left - 1, '\n'));
+                                           + std::string(static_cast<size_t>(dims_left) - 1, '\n'));
 
                     for (index_t i = 0; i < leading_items; i++) {
                         index(current_dim) = i;
@@ -230,8 +230,9 @@ namespace elsa
                 T val_max = dc.maxElement();
                 T val_min = dc.minElement();
 
-                if (val_max > 1e7
-                    or (not suppress_small and (val_min < 0.0001 or val_max / val_min > 1000.0))) {
+                if (val_max > 1e7f
+                    or (not suppress_small
+                        and (val_min < 0.0001f or val_max / val_min > 1000.0f))) {
 
                     use_exp = true;
                 }

@@ -1,28 +1,33 @@
 #pragma once
 
 #include "Cloneable.h"
+#include "DataContainer.h"
 #include "DataDescriptor.h"
-#include "Residual.h"
+#include "Error.h"
 #include "LinearOperator.h"
+#include "TypeCasts.hpp"
+#include "elsaDefines.h"
 
 namespace elsa
 {
     /**
      * @brief Abstract base class representing a functional, i.e. a mapping from vectors to scalars.
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Maximilian Hornung - modularization
-     * @author Tobias Lasser - rewrite
-     *
-     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
-     * real_t
-     *
      * A functional is a mapping a vector to a scalar value (e.g. mapping the output of a Residual
      * to a scalar). Typical examples of functionals are norms or semi-norms, such as the L2 or L1
      * norms.
      *
-     * Using LinearOperators, Residuals (e.g. LinearResidual) and a Functional (e.g. L2NormPow2)
+     * Using LinearOperators, Residuals (e.g. LinearResidual) and a Functional (e.g. LeastSquares)
      * enables the formulation of typical terms in an OptimizationProblem.
+     *
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * real_t
+     *
+     * @author
+     * * Matthias Wieczorek - initial code
+     * * Maximilian Hornung - modularization
+     * * Tobias Lasser - rewrite
+     *
      */
     template <typename data_t = real_t>
     class Functional : public Cloneable<Functional<data_t>>
@@ -36,21 +41,18 @@ namespace elsa
          */
         explicit Functional(const DataDescriptor& domainDescriptor);
 
-        /**
-         * @brief Constructor for the functional, using a Residual as input to map to a scalar
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivatives)
-         */
-        explicit Functional(const Residual<data_t>& residual);
-
         /// default destructor
         ~Functional() override = default;
 
         /// return the domain descriptor
         const DataDescriptor& getDomainDescriptor() const;
 
-        /// return the residual (will be trivial if Functional was constructed without one)
-        const Residual<data_t>& getResidual() const;
+        /**
+         * @brief Indicate if a functional is differentiable. The default implementation returns
+         * `false`. Functionals which are at least once differentiable should override this
+         * functions.
+         */
+        virtual bool isDifferentiable() const;
 
         /**
          * @brief evaluate the functional at x and return the result
@@ -82,11 +84,6 @@ namespace elsa
          *
          * @param[in] x input DataContainer (in the domain of the functional)
          * @param[out] result output DataContainer (in the domain of the functional)
-         *
-         * Please note: after evaluating the residual at x, this methods calls the method
-         * getGradientInPlaceImpl that has to be overridden in derived classes to compute the
-         * functional's gradient, and after that the chain rule for the residual is applied (if
-         * necessary).
          */
         void getGradient(const DataContainer<data_t>& x, DataContainer<data_t>& result);
 
@@ -110,9 +107,6 @@ namespace elsa
         /// the data descriptor of the domain of the functional
         std::unique_ptr<DataDescriptor> _domainDescriptor;
 
-        /// the residual
-        std::unique_ptr<Residual<data_t>> _residual;
-
         /// implement the polymorphic comparison operation
         bool isEqual(const Functional<data_t>& other) const override;
 
@@ -129,16 +123,17 @@ namespace elsa
         virtual data_t evaluateImpl(const DataContainer<data_t>& Rx) = 0;
 
         /**
-         * @brief the getGradientInPlaceImpl method that has to be overridden in derived classes
+         * @brief the getGradientImplt method that has to be overridden in derived classes
          *
-         * @param[in,out] Rx the residual evaluated at x (in), and the gradient of the functional
-         * (out)
+         * @param[in] Rx the value to evaluate the gradient of the functional
+         * @param[in,out] out the evaluated gradient of the functional
          *
          * Please note: the evaluation of the residual is already performed in getGradient, as well
          * as the application of the chain rule. This method here only has to compute the gradient
          * of the functional itself, in an in-place manner (to avoid unnecessary DataContainers).
          */
-        virtual void getGradientInPlaceImpl(DataContainer<data_t>& Rx) = 0;
+        virtual void getGradientImpl(const DataContainer<data_t>& Rx,
+                                     DataContainer<data_t>& out) = 0;
 
         /**
          * @brief the getHessianImpl method that has to be overridden in derived classes
@@ -153,4 +148,182 @@ namespace elsa
          */
         virtual LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) = 0;
     };
+
+    /**
+     * @brief Class representing a sum of two functionals
+     * \f[
+     * f(x) = h(x) + g(x)
+     * \f]
+     *
+     * The gradient at \f$x\f$ is given as:
+     * \f[
+     * \nabla f(x) = \nabla h(x) + \nabla g(x)
+     * \f]
+     *
+     * and finally the hessian is given by:
+     * \f[
+     * \nabla^2 f(x) = \nabla^2 h(x) \nabla^2 g(x)
+     * \f]
+     *
+     * The gradient and hessian is only valid if the functional is (twice)
+     * differentiable. The `operator+` is overloaded for, to conveniently create
+     * this class. It should not be necessary to create it explicitly.
+     */
+    template <class data_t>
+    class FunctionalSum final : public Functional<data_t>
+    {
+    public:
+        /// Construct from two functionals
+        FunctionalSum(const Functional<data_t>& lhs, const Functional<data_t>& rhs);
+
+        /// Make deletion of copy constructor explicit
+        FunctionalSum(const FunctionalSum<data_t>&) = delete;
+
+        /// Default Move constructor
+        FunctionalSum(FunctionalSum<data_t>&& other)
+            : Functional<data_t>(other.getDomainDescriptor()),
+              lhs_(std::move(other.lhs_)),
+              rhs_(std::move(other.rhs_))
+        {
+        }
+
+        /// Make deletion of copy assignment explicit
+        FunctionalSum& operator=(const FunctionalSum<data_t>&) = delete;
+
+        /// Default Move assignment
+        FunctionalSum& operator=(FunctionalSum<data_t>&& other) noexcept
+        {
+            this->_domainDescriptor = std::move(other._domainDescriptor);
+            lhs_ = std::move(other.lhs_);
+            rhs_ = std::move(other.rhs_);
+
+            return *this;
+        }
+
+        // Default destructor
+        ~FunctionalSum() override = default;
+
+    private:
+        /// evaluate the functional as \f$g(x) + h(x)\f$
+        data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
+
+        /// evaluate the gradient as: \f$\nabla g(x) + \nabla h(x)\f$
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
+
+        /// construct the hessian as: \f$\nabla^2 g(x) + \nabla^2 h(x)\f$
+        LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
+
+        /// Implement polymorphic clone
+        FunctionalSum<data_t>* cloneImpl() const override;
+
+        /// Implement polymorphic equality
+        bool isEqual(const Functional<data_t>& other) const override;
+
+        /// Store the left hand side functionl
+        std::unique_ptr<Functional<data_t>> lhs_{};
+
+        /// Store the right hand side functional
+        std::unique_ptr<Functional<data_t>> rhs_{};
+    };
+
+    /**
+     * @brief Class representing a functional with a scalar multiplication:
+     * \f[
+     * f(x) = \lambda * g(x)
+     * \f]
+     *
+     * The gradient at \f$x\f$ is given as:
+     * \f[
+     * \nabla f(x) = \lambda \nabla g(x)
+     * \f]
+     *
+     * and finally the hessian is given by:
+     * \f[
+     * \nabla^2 f(x) = \lambda \nabla^2 g(x)
+     * \f]
+     *
+     * The gradient and hessian is only valid if the functional is differentiable.
+     * The `operator*` is overloaded for scalar values with functionals, to
+     * conveniently create this class. It should not be necessary to create it
+     * explicitly.
+     */
+    template <class data_t>
+    class FunctionalScalarMul final : public Functional<data_t>
+    {
+    public:
+        /// Construct functional from other functional and scalar
+        FunctionalScalarMul(const Functional<data_t>& fn, SelfType_t<data_t> scalar);
+
+        /// Make deletion of copy constructor explicit
+        FunctionalScalarMul(const FunctionalScalarMul<data_t>&) = delete;
+
+        /// Implement the move constructor
+        FunctionalScalarMul(FunctionalScalarMul<data_t>&& other)
+            : Functional<data_t>(other.getDomainDescriptor()),
+              fn_(std::move(other.fn_)),
+              scalar_(std::move(other.scalar_))
+        {
+        }
+
+        /// Make deletion of copy assignment explicit
+        FunctionalScalarMul& operator=(const FunctionalScalarMul<data_t>&) = delete;
+
+        /// Implement the move assignment operator
+        FunctionalScalarMul& operator=(FunctionalScalarMul<data_t>&& other) noexcept
+        {
+            this->_domainDescriptor = std::move(other._domainDescriptor);
+            fn_ = std::move(other.fn_);
+            scalar_ = std::move(other.scalar_);
+
+            return *this;
+        }
+
+        /// Default destructor
+        ~FunctionalScalarMul() override = default;
+
+    private:
+        /// Evaluate as \f$\lambda * \nabla g(x)\f$
+        data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
+
+        /// Evaluate gradient as: \f$\lambda * \nabla g(x)\f$
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
+
+        /// Construct hessian as: \f$\lambda * \nabla^2 g(x)\f$
+        LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
+
+        /// Implementation of polymorphic clone
+        FunctionalScalarMul<data_t>* cloneImpl() const override;
+
+        /// Implementation of polymorphic equality
+        bool isEqual(const Functional<data_t>& other) const override;
+
+        /// Store other functional \f$g\f$
+        std::unique_ptr<Functional<data_t>> fn_{};
+
+        /// The scalar
+        data_t scalar_;
+    };
+
+    template <class data_t>
+    FunctionalScalarMul<data_t> operator*(SelfType_t<data_t> s, const Functional<data_t>& f)
+    {
+        // TODO: consider returning the ZeroFunctional, if s == 0, but then
+        // it's necessary to return unique_ptr and I hate that
+        return FunctionalScalarMul<data_t>(f, s);
+    }
+
+    template <class data_t>
+    FunctionalScalarMul<data_t> operator*(const Functional<data_t>& f, SelfType_t<data_t> s)
+    {
+        // TODO: consider returning the ZeroFunctional, if s == 0, but then
+        // it's necessary to return unique_ptr and I hate that
+        return FunctionalScalarMul<data_t>(f, s);
+    }
+
+    template <class data_t>
+    FunctionalSum<data_t> operator+(const Functional<data_t>& lhs, const Functional<data_t>& rhs)
+    {
+        return FunctionalSum<data_t>(lhs, rhs);
+    }
+
 } // namespace elsa

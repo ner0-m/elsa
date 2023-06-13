@@ -3,7 +3,6 @@ from .pyelsa_functionals import *
 from .pyelsa_generators import *
 from .pyelsa_io import *
 from .pyelsa_operators import *
-from .pyelsa_problems import *
 from .pyelsa_proximal_operators import *
 from .pyelsa_solvers import *
 from .pyelsa_projectors import *

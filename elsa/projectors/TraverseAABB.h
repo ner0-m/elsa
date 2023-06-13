@@ -16,12 +16,15 @@ namespace elsa
      * @author Maximilian Hornung - modularization
      * @author Nikola Dinev - fixes
      *
-     * This traversal always proceeds along "long" voxel edges, it will never "jump diagonally".
-     * The method is based on J. Amantides, A. Woo: A Fast Voxel Traversal Algorithm for Ray
-     * Tracing.
+     * This traversal proceeds along "long" voxel edges, it will "jump diagonally" iff that "long"
+     * voxel edge has the same value along more than one dimension.
+     * The method is based on Xiao et al.:  Efficient implementation of the 3D-DDA ray traversal
+     * algorithm on GPU and its application in radiation dose calculation.
      */
+    template <int dim>
     class TraverseAABB
     {
+
     public:
         /**
          * @brief Constructor for traversal, accepting bounding box and ray
@@ -29,19 +32,13 @@ namespace elsa
          * @param[in] aabb axis-aligned boundary box describing the volume
          * @param[in] r the ray to be traversed
          */
-        TraverseAABB(const BoundingBox& aabb, const RealRay_t& r);
+        TraverseAABB(const BoundingBox& aabb, const RealRay_t& r,
+                     IndexArray_t<dim> productOfCoefficientsPerDimension);
 
         /**
-         * @brief Update the traverser status by taking the next traversal step in case the
-         * indexToChange is unknown
+         * @brief Update the traverser status by taking the next traversal step
          */
         void updateTraverse();
-
-        /**
-         * @brief Update the traverser status by taking the next traversal step in case the
-         * indexToChange is known
-         */
-        void updateTraverse(const index_t& indexToChange);
 
         /**
          * @brief Update the traverser status by taking the next traversal step, return the distance
@@ -63,44 +60,56 @@ namespace elsa
          *
          * @returns coordinate vector
          */
-        IndexVector_t getCurrentVoxel() const;
+        IndexArray_t<dim> getCurrentVoxel() const;
+
+        /**
+         * @brief Return the index that corresponds to the current position
+         */
+        index_t getCurrentIndex() const;
 
     private:
-        /// the volume / axis-aligned bounding box
-        BoundingBox _aabb;
-        /// the entry point parameters of the ray in the aabb
-        RealVector_t _entryPoint{_aabb.dim()};
         /// the step direction of the traverser
-        RealVector_t _stepDirection{_aabb.dim()};
+        IndexArray_t<dim> _stepDirection;
         /// the current position of the traverser in the aabb
-        RealVector_t _currentPos{_aabb.dim()};
+        RealArray_t<dim> _currentPos;
         /// the current maximum step parameter along the ray
-        RealVector_t _tMax{_aabb.dim()};
+        RealArray_t<dim> _T;
         /// the step sizes for the step parameter along the ray
-        RealVector_t _tDelta{_aabb.dim()};
+        RealArray_t<dim> _tDelta;
         /// flag if traverser still in bounding box
         bool _isInAABB{false};
         /// the current step parameter exiting the current voxel
         real_t _tExit{0.0};
-
-        /// constant vector containing epsilon
-        const RealVector_t _EPS{
-            RealVector_t(_aabb.dim()).setConstant(std::numeric_limits<real_t>::epsilon())};
-        /// constant vector containing the maximum number
-        const RealVector_t _MAX{
-            RealVector_t(_aabb.dim()).setConstant(std::numeric_limits<real_t>::max())};
+        /// the current mask, with true for the directions in which we are stepping, and else fals
+        BooleanArray_t<dim> _mask;
+        /// result of aabb.min(), the lower corner of the aabb
+        RealArray_t<dim> _aabbMin;
+        /// result of aabb.max(), the upper corner of the aabb
+        RealArray_t<dim> _aabbMax;
+        /// the product of coefficients per dimension
+        IndexArray_t<dim> _productOfCoefficientsPerDimension;
+        /// the current index which corresponds to the current position
+        index_t _currentIndex;
 
         /// compute the entry and exit points of ray r with the volume (aabb)
-        void calculateAABBIntersections(const RealRay_t& r);
+        RealArray_t<dim> calculateAABBIntersections(const RealRay_t& r, const BoundingBox& aabb);
         /// setup the step directions (which is basically the sign of the ray direction rd)
-        void initStepDirection(const RealVector_t& rd);
+        void initStepDirection(const RealArray_t<dim>& rd);
         /// select the closest voxel to the entry point
-        void selectClosestVoxel();
+        void selectClosestVoxel(const RealArray_t<dim>& entryPoint);
         /// setup the step sizes considering the ray direction rd
-        void initDelta(const RealVector_t& rd);
+        void initDelta(const RealArray_t<dim>& rd, const RealArray_t<dim>& EPS,
+                       const RealArray_t<dim>& MAX);
         /// setup the maximum step parameters considering the ray direction rd
-        void initMax(const RealVector_t& rd);
+        void initT(const RealArray_t<dim>& rd, const RealArray_t<dim>& EPS,
+                   const RealArray_t<dim>& MAX, const RealArray_t<dim>& entryPoint);
         /// check if the current index is still in the bounding box
-        bool isCurrentPositionInAABB(index_t index) const;
+        bool isCurrentPositionInAABB() const;
+        /// calculate the mask which masks out all but the minimal coefficients in _T.
+        void calcMask();
+        /// compute the index that corresponds to the initial position
+        void initCurrentIndex();
+        /// compute the index that corresponds to the current position
+        void updateCurrentIndex();
     };
 } // namespace elsa

@@ -9,6 +9,7 @@ set(MODULE_HEADERS
     ShearletTransform.h
     AXDTOperator.h
     ZeroOperator.h
+    JacobiPreconditioner.h
 )
 
 # list all the code files of the module
@@ -22,6 +23,7 @@ set(MODULE_SOURCES
     ShearletTransform.cpp
     AXDTOperator.cpp
     ZeroOperator.cpp
+    JacobiPreconditioner.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)

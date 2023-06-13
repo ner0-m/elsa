@@ -4,7 +4,7 @@ name = "pyelsa"
 [build-system]
 requires = [
     "setuptools>=42",
-    "pybind11~=2.9.2",
+    "pybind11~=2.10.3",
     "cmake>=3.22",
     "scikit-build>=0.15.0",
     "ninja; platform_system!='Windows'"

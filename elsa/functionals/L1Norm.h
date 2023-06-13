@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Functional.h"
 
 namespace elsa
@@ -7,16 +8,18 @@ namespace elsa
     /**
      * @brief Class representing the l1 norm functional.
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Maximilian Hornung - modularization
-     * @author Tobias Lasser - modernization
+     * The l1 norm functional evaluates to \f$ \sum_{i=1}^n |x_i| \f$ for \f$ x=(x_i)_{i=1}^n \f$.
+     * Please note that it is not differentiable, hence getGradient and getHessian will throw
+     * exceptions.
      *
      * @tparam data_t data type for the domain of the residual of the functional, defaulting to
      * real_t
      *
-     * The l1 norm functional evaluates to \f$ \sum_{i=1}^n |x_i| \f$ for \f$ x=(x_i)_{i=1}^n \f$.
-     * Please note that it is not differentiable, hence getGradient and getHessian will throw
-     * exceptions.
+     * @author
+     * * Matthias Wieczorek - initial code
+     * * Maximilian Hornung - modularization
+     * * Tobias Lasser - modernization
+     *
      */
     template <typename data_t = real_t>
     class L1Norm : public Functional<data_t>
@@ -30,14 +33,6 @@ namespace elsa
          */
         explicit L1Norm(const DataDescriptor& domainDescriptor);
 
-        /**
-         * @brief Constructor for the l1 norm functional, using a residual as input to map to a
-         * scalar
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivatives)
-         */
-        explicit L1Norm(const Residual<data_t>& residual);
-
         /// make copy constructor deletion explicit
         L1Norm(const L1Norm<data_t>&) = delete;
 
@@ -49,7 +44,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;

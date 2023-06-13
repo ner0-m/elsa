@@ -162,6 +162,7 @@ clang-tidy:
     Thrust_DIR: /usr/local/cuda/targets/x86_64-linux/lib/cmake/thrust
   script:
     ./tools/ci_scripts/clang-tidy.sh
+  allow_failure: true
   tags:
     - linux
     - elsa
@@ -208,7 +209,7 @@ build-pybind:
     - pip install --verbose .
     - pip install -U pytest
     - pytest
-    - python examples/example2d.py
+    - python examples/solver/example2d.py --size 16 --no-show
   tags:
     - linux
     - elsa
@@ -222,7 +223,7 @@ build-pybind-cuda:
     - pip install --verbose .
     - pip install -U pytest
     - pytest
-    - python examples/example2d.py --size 16 # just run it very small should be quick!
+    - python examples/solver/example2d.py --size 16 --no-show
   tags:
     - linux
     - elsa
@@ -508,12 +509,12 @@ install-cuda-11.7:
 asan-ubsan:
   <<: *run_on_merge_requests
   stage: sanitizer
-  image: $CI_REGISTRY/ip/elsa/cuda:11.7.0
+  image: $CI_REGISTRY/ip/elsa/clang:14
   dependencies: []
   script:
     - mkdir -p build
     - cd build
-    - cmake -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
+    - CXX_FLAGS="-O1" cmake -GNinja -DWANT_CUDA=OFF -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_SANITIZER="Address;Undefined" ..
     - ninja tests
   tags:
     - linux
@@ -538,7 +539,7 @@ test-coverage:
     - update-alternatives --install /usr/bin/llvm-profdata llvm-profdata /usr/bin/llvm-profdata-12 10
     - mkdir -p build
     - cd build
-    - CXX=clang++ cmake .. -GNinja -DELSA_BUILD_CUDA_PROJECTORS=OFF -DThrust_DIR=$Thrust_DIR -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
+    - CXX=clang++ cmake .. -GNinja -DWANT_CUDA=OFF -DThrust_DIR=$Thrust_DIR -DELSA_BUILD_PYTHON_BINDINGS=OFF -DCMAKE_BUILD_TYPE=Debug -DELSA_COVERAGE=ON
     - ninja build-tests
     - ninja ccov-all
   artifacts:

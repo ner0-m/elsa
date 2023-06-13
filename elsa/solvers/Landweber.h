@@ -43,21 +43,6 @@ namespace elsa
          */
         Landweber(const LinearOperator<data_t>& A, const DataContainer<data_t>& b);
 
-        /**
-         * @brief Constructor for Landweber, accepting a problem and a fixed step size
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         * @param[in] stepSize the fixed step size to be used while solving
-         */
-        Landweber(const WLSProblem<data_t>& problem, data_t stepSize);
-
-        /**
-         * @brief Constructor for Landweber, accepting a problem
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         */
-        explicit Landweber(const WLSProblem<data_t>& problem);
-
         /// make copy constructor deletion explicit
         Landweber(const Landweber<data_t>&) = delete;
 

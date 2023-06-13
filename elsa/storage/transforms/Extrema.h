@@ -138,7 +138,7 @@ namespace elsa
             template <class T>
             __host__ __device__ auto operator()(const T& val) const noexcept
             {
-                return TernaryGreater{}(val, scalar_);
+                return TernaryLess{}(val, scalar_);
             }
         };
 
@@ -149,7 +149,7 @@ namespace elsa
             template <class T>
             __host__ __device__ auto operator()(const T& val) const noexcept
             {
-                return TernaryLess{}(val, scalar_);
+                return TernaryGreater{}(val, scalar_);
             }
         };
 

@@ -3,138 +3,186 @@
 
 namespace elsa
 {
-    TraverseAABB::TraverseAABB(const BoundingBox& aabb, const RealRay_t& r) : _aabb{aabb}
+    template <int dim>
+    TraverseAABB<dim>::TraverseAABB(const BoundingBox& aabb, const RealRay_t& r,
+                                    IndexArray_t<dim> productOfCoefficientsPerDimension)
+        : _productOfCoefficientsPerDimension{std::move(productOfCoefficientsPerDimension)}
     {
+        static_assert(dim == 2 || dim == 3);
+        _aabbMin = aabb.min();
+        _aabbMax = aabb.max();
+
         // compute the first intersection
-        calculateAABBIntersections(r);
+        const RealArray_t<dim> entryPoint = calculateAABBIntersections(r, aabb);
         if (!isInBoundingBox()) // early abort if necessary
             return;
+
+        // constant array containing epsilon
+        const RealArray_t<dim> EPS{
+            RealArray_t<dim>().setConstant(std::numeric_limits<real_t>::epsilon())};
+
+        // constant vector containing the maximum number
+        const RealArray_t<dim> MAX{
+            RealArray_t<dim>().setConstant(std::numeric_limits<real_t>::max())};
 
         // determine whether we go up/down or left/right
         initStepDirection(r.direction());
 
         // select the initial voxel (closest to the entry point)
-        selectClosestVoxel();
+        selectClosestVoxel(entryPoint);
 
         // initialize the step sizes for the step parameter
-        initDelta(r.direction());
+        initDelta(r.direction(), EPS, MAX);
 
         // initialize the maximum step parameters
-        initMax(r.direction());
+        initT(r.direction(), EPS, MAX, entryPoint);
+        initCurrentIndex();
     }
 
-    void TraverseAABB::updateTraverse()
+    template <int dim>
+    void TraverseAABB<dim>::updateTraverse()
     {
-        // --> select the index that has lowest t value
-        index_t indexToChange;
-        _tMax.minCoeff(&indexToChange);
+        // --> calculate the mask that masks out all but the lowest t values
+        calcMask();
 
-        updateTraverse(indexToChange);
-    }
-
-    void TraverseAABB::updateTraverse(const index_t& indexToChange)
-    {
         // --> step into the current direction
-        _currentPos(indexToChange) += _stepDirection(indexToChange);
+        _currentPos += _mask.select(_stepDirection.template cast<real_t>(), 0);
 
-        // --> update the tMax for next iteration
-        _tMax(indexToChange) += _tDelta(indexToChange);
+        // --> update the T for next iteration
+        _T += _mask.select(_tDelta, 0);
 
         // --> check if we are still in bounding box
-        _isInAABB = isCurrentPositionInAABB(indexToChange);
+        _isInAABB = isCurrentPositionInAABB();
     }
 
-    real_t TraverseAABB::updateTraverseAndGetDistance()
+    template <int dim>
+    void TraverseAABB<dim>::calcMask()
     {
-        // --> select the index that has lowest t value
-        index_t indexToChange;
-        _tMax.minCoeff(&indexToChange);
+        if constexpr (dim == 2) {
+            _mask[0] = (_T[0] <= _T[1]);
+            _mask[1] = (_T[1] <= _T[0]);
+        } else if constexpr (dim == 3) {
+            _mask[0] = ((_T[0] <= _T[1]) && (_T[0] <= _T[2]));
+            _mask[1] = ((_T[1] <= _T[0]) && (_T[1] <= _T[2]));
+            _mask[2] = ((_T[2] <= _T[0]) && (_T[2] <= _T[1]));
+        }
+    }
 
+    template <int dim>
+    real_t TraverseAABB<dim>::updateTraverseAndGetDistance()
+    {
         // --> compute the distance
         real_t tEntry = _tExit;
-        _tExit = _tMax(indexToChange);
+        _tExit = _T.minCoeff();
 
         // --> do the update
-        updateTraverse(indexToChange);
+        updateTraverse();
+        updateCurrentIndex();
 
         return (_tExit - tEntry);
     }
 
-    bool TraverseAABB::isInBoundingBox() const
+    template <int dim>
+    bool TraverseAABB<dim>::isInBoundingBox() const
     {
         return _isInAABB;
     }
 
-    IndexVector_t TraverseAABB::getCurrentVoxel() const
+    template <int dim>
+    IndexArray_t<dim> TraverseAABB<dim>::getCurrentVoxel() const
     {
-        return _currentPos.template cast<IndexVector_t::Scalar>();
+        return _currentPos.template cast<index_t>();
     }
 
-    void TraverseAABB::calculateAABBIntersections(const RealRay_t& r)
+    template <int dim>
+    index_t TraverseAABB<dim>::getCurrentIndex() const
     {
+        return _currentIndex;
+    }
+
+    template <int dim>
+    RealArray_t<dim> TraverseAABB<dim>::calculateAABBIntersections(const RealRay_t& r,
+                                                                   const BoundingBox& aabb)
+    {
+        RealArray_t<dim> entryPoint;
         // entry and exit point parameters
         real_t tmin;
 
         // --> calculate intersection parameter and if the volume is hit
-        auto opt = intersectRay(_aabb, r);
+        auto opt = intersectRay(aabb, r);
 
         if (opt) { // hit!
             _isInAABB = true;
             tmin = opt->_tmin;
 
             // --> get points at which they intersect
-            _entryPoint = r.pointAt(tmin);
+            entryPoint = r.pointAt(tmin);
 
             // --> because of floating point error it can happen, that values are out of
             // the bounding box, this can lead to errors
-            _entryPoint =
-                (_entryPoint.array() < _aabb.min().array()).select(_aabb.min(), _entryPoint);
-            _entryPoint =
-                (_entryPoint.array() > _aabb.max().array()).select(_aabb.max(), _entryPoint);
+            entryPoint = (entryPoint < _aabbMin).select(_aabbMin, entryPoint);
+            entryPoint = (entryPoint > _aabbMax).select(_aabbMax, entryPoint);
         }
+        return entryPoint;
     }
 
-    void TraverseAABB::initStepDirection(const RealVector_t& rd)
+    template <int dim>
+    void TraverseAABB<dim>::initStepDirection(const RealArray_t<dim>& rd)
     {
-        _stepDirection = rd.array().sign();
+        _stepDirection = rd.sign().template cast<index_t>();
     }
 
-    void TraverseAABB::selectClosestVoxel()
+    template <int dim>
+    void TraverseAABB<dim>::selectClosestVoxel(const RealArray_t<dim>& entryPoint)
     {
-        RealVector_t lowerCorner = _entryPoint.array().floor();
-        lowerCorner =
-            ((lowerCorner.array() == _entryPoint.array()) && (_stepDirection.array() < 0.0))
-                .select(lowerCorner.array() - 1, lowerCorner);
+        RealArray_t<dim> lowerCorner = entryPoint.floor();
+        lowerCorner = ((lowerCorner == entryPoint) && (_stepDirection < 0.0))
+                          .select(lowerCorner - 1, lowerCorner);
 
         _currentPos = lowerCorner;
 
         // check if we are still inside the aabb
-        if ((_currentPos.array() >= _aabb.max().array()).any()
-            || (_currentPos.array() < _aabb.min().array()).any())
+        if ((_currentPos >= _aabbMax).any() || (_currentPos < _aabbMin).any())
             _isInAABB = false;
     }
 
-    void TraverseAABB::initDelta(const RealVector_t& rd)
+    template <int dim>
+    void TraverseAABB<dim>::initDelta(const RealArray_t<dim>& rd, const RealArray_t<dim>& EPS,
+                                      const RealArray_t<dim>& MAX)
     {
-        RealVector_t tdelta = _stepDirection.template cast<real_t>().cwiseQuotient(rd);
+        RealArray_t<dim> tdelta = _stepDirection.template cast<real_t>() / rd;
 
-        _tDelta = (Eigen::abs(rd.array()) > _EPS.array()).select(tdelta, _MAX);
+        _tDelta = (Eigen::abs(rd) > EPS).select(tdelta, MAX);
     }
 
-    void TraverseAABB::initMax(const RealVector_t& rd)
+    template <int dim>
+    void TraverseAABB<dim>::initT(const RealArray_t<dim>& rd, const RealArray_t<dim>& EPS,
+                                  const RealArray_t<dim>& MAX, const RealArray_t<dim>& entryPoint)
     {
-        RealVector_t tmax =
-            (((rd.array() > 0.0f).select(_currentPos.array() + 1., _currentPos)).matrix()
-             - _entryPoint)
-                .cwiseQuotient(rd)
-                .matrix();
+        RealArray_t<dim> T =
+            (((rd > 0.0f).select(_currentPos + 1., _currentPos)) - entryPoint) / rd;
 
-        _tMax = (Eigen::abs(rd.array()) > _EPS.array()).select(tmax, _MAX);
+        _T = (Eigen::abs(rd) > EPS).select(T, MAX);
     }
 
-    bool TraverseAABB::isCurrentPositionInAABB(index_t index) const
+    template <int dim>
+    bool TraverseAABB<dim>::isCurrentPositionInAABB() const
     {
-        return _currentPos(index) < _aabb.max()(index) && _currentPos(index) >= _aabb.min()(index);
+        return (_currentPos < _aabbMax).all() && (_currentPos >= _aabbMin).all();
     }
 
+    template <int dim>
+    void TraverseAABB<dim>::updateCurrentIndex()
+    {
+        _currentIndex +=
+            (_stepDirection * _mask.select(_productOfCoefficientsPerDimension, 0)).sum();
+    }
+    template <int dim>
+    void TraverseAABB<dim>::initCurrentIndex()
+    {
+        _currentIndex = (_productOfCoefficientsPerDimension * getCurrentVoxel()).sum();
+    }
+
+    template class TraverseAABB<2>;
+    template class TraverseAABB<3>;
 } // namespace elsa

@@ -40,14 +40,14 @@ TEST_CASE_TEMPLATE("ProximalL1: Testing in 1D", data_t, float, double)
 
             THEN("Values under threshold=4 are 0 and values above are sign(v) * (abs(v) - t)")
             {
-                auto res = sThrOp.apply(x, geometry::Threshold<data_t>{4});
+                auto res = sThrOp.apply(x, data_t{4});
                 REQUIRE_UNARY(isApprox(expected, res));
             }
 
             THEN("Is works when accessed as ProximalOperator")
             {
                 ProximalOperator<data_t> prox(sThrOp);
-                auto res = prox.apply(x, geometry::Threshold<data_t>{4});
+                auto res = prox.apply(x, data_t{4});
                 REQUIRE_UNARY(isApprox(expected, res));
             }
         }
@@ -74,8 +74,7 @@ TEST_CASE_TEMPLATE("ProximalL1: Testing in 3D", data_t, float, double)
                     {{0, 0, 1, 1, 0, 0, 0, -4, 2, 2, 2, 0, 0, 0, 3, 4, 0, 0}});
                 DataContainer<data_t> dCRes(volDescr, expectedRes);
 
-                REQUIRE_UNARY(
-                    isApprox(dCRes, sThrOp.apply(dataCont, geometry::Threshold<data_t>{5})));
+                REQUIRE_UNARY(isApprox(dCRes, sThrOp.apply(dataCont, data_t{5})));
             }
         }
     }
@@ -99,21 +98,7 @@ TEST_CASE_TEMPLATE("ProximalL1: Testing general behaviour", data_t, float, doubl
                 Vector_t<data_t> expectedRes({{0, 0, 0, 0, 0, 0, 0, 0}});
                 DataContainer<data_t> dc(volDescr, expectedRes);
 
-                REQUIRE_UNARY(isApprox(dc, sThrOp.apply(dczero, geometry::Threshold<data_t>{4})));
-            }
-
-            THEN("ProximalL1 operator throws exception for t = 0")
-            {
-                // actually the geometry::Threshold throws this
-                REQUIRE_THROWS_AS(sThrOp.apply(dczero, geometry::Threshold<data_t>{0}),
-                                  InvalidArgumentError);
-            }
-
-            THEN("ProximalL1 operator throws exception for t < 0")
-            {
-                // actually the geometry::Threshold throws this
-                REQUIRE_THROWS_AS(sThrOp.apply(dczero, geometry::Threshold<data_t>{-1}),
-                                  InvalidArgumentError);
+                REQUIRE_UNARY(isApprox(dc, sThrOp.apply(dczero, data_t{4})));
             }
 
             THEN("ProximalL1 operator throws exception for differently sized v and prox")
@@ -123,8 +108,7 @@ TEST_CASE_TEMPLATE("ProximalL1: Testing general behaviour", data_t, float, doubl
                 Vector_t<data_t> data1({{0, 0, 0, 0, 0, 0, 0, 0, 0}});
                 DataContainer<data_t> largerDc(volDescr1, data1);
 
-                REQUIRE_THROWS_AS(sThrOp.apply(dczero, geometry::Threshold<data_t>{1}, largerDc),
-                                  LogicError);
+                REQUIRE_THROWS_AS(sThrOp.apply(dczero, data_t{1}, largerDc), LogicError);
             }
         }
     }

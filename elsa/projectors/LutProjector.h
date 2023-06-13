@@ -2,7 +2,6 @@
 
 #include "elsaDefines.h"
 #include "Timer.h"
-#include "Luts.hpp"
 #include "SliceTraversal.h"
 #include "LinearOperator.h"
 #include "VolumeDescriptor.h"
@@ -11,6 +10,7 @@
 #include "BoundingBox.h"
 #include "Logger.h"
 #include "Blobs.h"
+#include "BSplines.h"
 #include "CartesianIndices.h"
 
 #include "XrayProjector.h"
@@ -81,8 +81,6 @@ namespace elsa
         data_t traverseRayForward(const BoundingBox& boundingbox, const RealRay_t& ray,
                                   const DataContainer<data_t>& x) const
         {
-            const auto dim = ray.dim();
-
             const IndexVector_t lower = boundingbox.min().template cast<index_t>();
             const IndexVector_t upper = boundingbox.max().template cast<index_t>();
             const auto support = this->self().support();
@@ -127,8 +125,6 @@ namespace elsa
         void traverseRayBackward(const BoundingBox& boundingbox, const RealRay_t& ray,
                                  const value_type& detectorValue, DataContainer<data_t>& Aty) const
         {
-            const auto dim = ray.dim();
-
             const IndexVector_t lower = boundingbox.min().template cast<index_t>();
             const IndexVector_t upper = boundingbox.max().template cast<index_t>();
             const auto support = this->self().support();
@@ -193,16 +189,14 @@ namespace elsa
     public:
         using self_type = BlobProjector<data_t>;
 
-        BlobProjector(data_t radius, data_t alpha, data_t order,
-                      const VolumeDescriptor& domainDescriptor,
-                      const DetectorDescriptor& rangeDescriptor);
-
         BlobProjector(const VolumeDescriptor& domainDescriptor,
-                      const DetectorDescriptor& rangeDescriptor);
+                      const DetectorDescriptor& rangeDescriptor,
+                      data_t radius = blobs::DEFAULT_RADIUS, data_t alpha = blobs::DEFAULT_ALPHA,
+                      index_t order = blobs::DEFAULT_ORDER);
 
-        data_t weight(data_t distance) const { return lut_(distance); }
+        data_t weight(data_t distance) const { return blob_.get_lut()(distance); }
 
-        index_t support() const { return static_cast<index_t>(std::ceil(lut_.radius())); }
+        index_t support() const { return static_cast<index_t>(std::ceil(blob_.radius())); }
 
         /// implement the polymorphic clone operation
         BlobProjector<data_t>* _cloneImpl() const;
@@ -211,7 +205,7 @@ namespace elsa
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        ProjectedBlobLut<data_t, 100> lut_;
+        ProjectedBlob<data_t> blob_;
 
         using Base = LutProjector<data_t, BlobProjector<data_t>>;
 
@@ -224,11 +218,9 @@ namespace elsa
     public:
         using self_type = BlobProjector<data_t>;
 
-        BSplineProjector(data_t degree, const VolumeDescriptor& domainDescriptor,
-                         const DetectorDescriptor& rangeDescriptor);
-
         BSplineProjector(const VolumeDescriptor& domainDescriptor,
-                         const DetectorDescriptor& rangeDescriptor);
+                         const DetectorDescriptor& rangeDescriptor,
+                         index_t order = bspline::DEFAULT_ORDER);
 
         data_t weight(data_t distance) const;
 
@@ -241,7 +233,7 @@ namespace elsa
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
     private:
-        ProjectedBSplineLut<data_t, 100> lut_;
+        ProjectedBSpline<data_t> bspline_;
 
         using Base = LutProjector<data_t, BSplineProjector<data_t>>;
 

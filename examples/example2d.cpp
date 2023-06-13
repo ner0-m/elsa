@@ -1,7 +1,6 @@
 /// Elsa example program: basic 2d X-ray CT simulation and reconstruction
 
 #include "elsa.h"
-#include "LutProjector.h"
 
 #include <iostream>
 
@@ -10,9 +9,7 @@ using namespace elsa;
 void example2d()
 {
     // generate 2d phantom
-    IndexVector_t size(2);
-    // size << 128, 128;
-    size << 512, 512;
+    IndexVector_t size({{128, 128}});
     auto phantom = phantoms::modifiedSheppLogan(size);
     auto& volumeDescriptor = phantom.getDataDescriptor();
 
@@ -28,7 +25,7 @@ void example2d()
     // dynamic_cast to VolumeDescriptor is legal and will not throw, as Phantoms returns a
     // VolumeDescriptor
     Logger::get("Info")->info("Create BlobProjector");
-    BlobProjector projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
+    SiddonsMethod projector(dynamic_cast<const VolumeDescriptor&>(volumeDescriptor),
                             *sinoDescriptor);
 
     // simulate the sinogram
@@ -50,26 +47,6 @@ void example2d()
 
     // write the reconstruction out
     io::write(cgReconstruction, "2dreconstruction_cg.pgm");
-
-    // LASSOProblem lassoProb(projector, sinogram);
-    //
-    // // solve the reconstruction problem with PGD
-    // PGD istaSolver(lassoProb);
-    //
-    // Logger::get("Info")->info("Solving reconstruction using {} iterations of PGD",
-    // noIterations); auto istaReconstruction = istaSolver.solve(noIterations);
-    //
-    // // write the reconstruction out
-    // EDF::write(istaReconstruction, "2dreconstruction_ista.edf");
-    //
-    // // solve the reconstruction problem with APGD
-    // APGD fistaSolver(lassoProb);
-    //
-    // Logger::get("Info")->info("Solving reconstruction using {} iterations of APGD",
-    // noIterations); auto fistaReconstruction = fistaSolver.solve(noIterations);
-    //
-    // // write the reconstruction out
-    // EDF::write(fistaReconstruction, "2dreconstruction_fista.edf");
 }
 
 int main()

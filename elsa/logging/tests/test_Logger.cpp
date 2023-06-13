@@ -28,9 +28,9 @@ TEST_CASE("Logger: Use test")
         {
             THEN("the parameters fit")
             {
-                REQUIRE(testLogger->name() == name);
-                REQUIRE(testLogger->level() == spdlog::level::info);
-                REQUIRE(testLogger->sinks().size() == 1);
+                CHECK_EQ(testLogger->name(), name);
+                CHECK_EQ(testLogger->level(), spdlog::level::info);
+                CHECK_EQ(testLogger->sinks().size(), 1);
             }
         }
 
@@ -40,9 +40,9 @@ TEST_CASE("Logger: Use test")
 
             THEN("it has the same settings")
             {
-                REQUIRE(sameLogger->name() == name);
-                REQUIRE(sameLogger->level() == spdlog::level::info);
-                REQUIRE(sameLogger->sinks().size() == 1);
+                CHECK_EQ(sameLogger->name(), name);
+                CHECK_EQ(sameLogger->level(), spdlog::level::info);
+                CHECK_EQ(sameLogger->sinks().size(), 1);
             }
         }
 
@@ -52,13 +52,13 @@ TEST_CASE("Logger: Use test")
 
             THEN("our logger is updated to that level")
             {
-                REQUIRE(testLogger->level() == spdlog::level::err);
+                CHECK_EQ(testLogger->level(), spdlog::level::err);
             }
 
             THEN("new loggers have the correct level")
             {
                 auto newLogger = Logger::get("newLogger");
-                REQUIRE(newLogger->level() == spdlog::level::err);
+                CHECK_EQ(newLogger->level(), spdlog::level::err);
             }
         }
 
@@ -72,14 +72,14 @@ TEST_CASE("Logger: Use test")
 
             THEN("the returned loglevel is the exact level from when the function is called")
             {
-                REQUIRE(lvl == Logger::LogLevel::ERR);
+                CHECK_EQ(lvl, Logger::LogLevel::ERR);
             }
 
             Logger::setLevel(lvl);
 
             THEN("Testlogger was correctly reset to its previous level")
             {
-                REQUIRE(testLogger->level() == spdlog::level::err);
+                CHECK_EQ(testLogger->level(), spdlog::level::err);
             }
         }
 
@@ -90,13 +90,13 @@ TEST_CASE("Logger: Use test")
 
             THEN("We still should only have one sink")
             {
-                REQUIRE(testLogger->sinks().size() == 1);
+                CHECK_EQ(testLogger->sinks().size(), 1);
             }
 
             THEN("a new logger has file logging enabled")
             {
                 auto newLogger = Logger::get("fileLogger");
-                REQUIRE(newLogger->sinks().size() == 1);
+                CHECK_EQ(newLogger->sinks().size(), 1);
 
                 newLogger->info("This is an info");
                 REQUIRE(true);
@@ -109,91 +109,49 @@ TEST_CASE("Logger: Use test")
             }
         }
     }
+}
 
+TEST_CASE("Logger: Write to stream")
+{
     // Add buffer as sink to test the logging
     std::stringstream buffer;
 
-    // Keep this flat, as it would at everything multiple times, which duplicates the messages
-    GIVEN("A logger at info level")
-    {
-        Logger::addSink(buffer);
+    Logger::addSink(buffer);
 
-        Logger::setLevel(Logger::LogLevel::INFO);
-        auto logger = Logger::get("logger");
+    Logger::setLevel(Logger::LogLevel::INFO);
+    auto logger = Logger::get("logger");
 
-        // Set pattern that we can easily check it
-        logger->set_pattern("%v");
+    // Set pattern that we can easily check it
+    logger->set_pattern("%v");
 
-        // we expect there to be exactly 1 sink
-        REQUIRE(logger->sinks().size() == 1);
+    // we expect there to be exactly 1 sink
+    CHECK_EQ(logger->sinks().size(), 1);
 
-        auto msg = "This is a test"s;
-        logger->info(msg);
+    auto msg = "This is a test"s;
+    logger->info(msg);
 
-        // Get string from buffer
-        auto resultString = buffer.str();
-        REQUIRE(resultString == (msg + '\n'));
+    // Get string from buffer
+    auto resultString = buffer.str();
+    CHECK_EQ(resultString, (msg + '\n'));
 
-        // reset buffer
-        buffer = std::stringstream();
+    // reset buffer
+    buffer = std::stringstream();
 
-        msg = "This is a test"s;
-        logger->debug(msg);
+    msg = "This is a test"s;
+    logger->debug(msg);
 
-        // Get string from buffer
-        resultString = buffer.str();
-        REQUIRE(resultString == "");
+    // Get string from buffer
+    resultString = buffer.str();
+    CHECK_EQ(resultString, "");
 
-        // reset buffer
-        buffer = std::stringstream();
+    // reset buffer
+    buffer = std::stringstream();
 
-        msg = "This is a warning"s;
-        logger->warn(msg);
+    msg = "This is a warning"s;
+    logger->warn(msg);
 
-        resultString = buffer.str();
-        REQUIRE(resultString == (msg + '\n'));
-    }
-
-    GIVEN("A logger at debug level")
-    {
-        // reset buffer
-        buffer = std::stringstream();
-
-        Logger::setLevel(Logger::LogLevel::DEBUG);
-        auto logger = Logger::get("logger");
-
-        // Set pattern that we can easily check it
-        logger->set_pattern("%v");
-
-        // we expect there to be exactly 1 sink
-        REQUIRE(logger->sinks().size() == 1);
-
-        auto msg = "This is a test"s;
-        logger->info(msg);
-
-        // Get string from buffer
-        auto resultString = buffer.str();
-        REQUIRE(resultString == (msg + '\n'));
-
-        // reset buffer
-        buffer = std::stringstream();
-
-        msg = "This is a debug"s;
-        logger->debug(msg);
-
-        // Get string from buffer
-        resultString = buffer.str();
-        REQUIRE(resultString == (msg + '\n'));
-
-        // reset buffer
-        buffer = std::stringstream();
-
-        msg = "This is a warning"s;
-        logger->warn(msg);
-
-        resultString = buffer.str();
-        REQUIRE(resultString == (msg + '\n'));
-    }
+    resultString = buffer.str();
+    CHECK_EQ(resultString, (msg + '\n'));
 }
 
 TEST_SUITE_END();

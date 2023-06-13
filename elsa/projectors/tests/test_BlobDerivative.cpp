@@ -32,13 +32,13 @@ TEST_CASE_TEMPLATE("Blobs: Test evaluation of projected blob derivative", data_t
 
                 auto expected = getExpected<data_t>(1, alpha, m);
 
-                ProjectedBlob<data_t> blob(a, alpha, m);
-                for (int i = 0; i <= 100; ++i) {
+                ProjectedBlob<data_t, size> blob(a, alpha, m);
+                for (int i = 0; i < size; ++i) {
                     const auto x = i / scale;
 
                     CAPTURE(x);
 
-                    CHECK_EQ(Approx(blob.derivative(x)), expected[i]);
+                    CHECK_EQ(Approx(blob.template derivative<true>(x)), expected[i]);
                 }
             }
         }

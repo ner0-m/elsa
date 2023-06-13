@@ -25,7 +25,10 @@ TEST_CASE("IdenticalBlocksDescriptor: Construction")
         index_t size = 11;
         VolumeDescriptor dd(IndexVector_t::Constant(1, size));
 
-        WHEN("creating 0 blocks") { REQUIRE_THROWS(IdenticalBlocksDescriptor(0, dd)); }
+        WHEN("creating 0 blocks")
+        {
+            REQUIRE_THROWS(IdenticalBlocksDescriptor(0, dd));
+        }
 
         WHEN("creating 5 blocks")
         {

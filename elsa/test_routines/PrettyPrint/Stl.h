@@ -3,7 +3,6 @@
 #include <optional>
 #include <vector>
 #include "spdlog/fmt/fmt.h"
-#include "spdlog/fmt/bundled/ranges.h"
 
 namespace doctest
 {

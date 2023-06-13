@@ -24,7 +24,10 @@ TEST_CASE("StrongTypes: Testing RotationAngles")
     {
         RotationAngles<1> angle{Degree{90}};
 
-        THEN("The value and size are correct") { CHECK_EQ(angle[0], Radian{pi_t / 2}); }
+        THEN("The value and size are correct")
+        {
+            CHECK_EQ(angle[0], Radian{pi_t / 2});
+        }
     }
 
     GIVEN("A 2D RotationAngles")

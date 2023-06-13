@@ -5,13 +5,18 @@
 #include "Error.h"
 #include "TypeCasts.hpp"
 #include "Math.hpp"
+#include "elsaDefines.h"
 
 namespace elsa
 {
+    template <typename data_t>
+    ProximalL1<data_t>::ProximalL1(data_t sigma) : sigma_(sigma)
+    {
+    }
 
     template <typename data_t>
     DataContainer<data_t> ProximalL1<data_t>::apply(const DataContainer<data_t>& v,
-                                                    geometry::Threshold<data_t> t) const
+                                                    SelfType_t<data_t> t) const
     {
         DataContainer<data_t> out{v.getDataDescriptor()};
         apply(v, t, out);
@@ -19,7 +24,7 @@ namespace elsa
     }
 
     template <typename data_t>
-    void ProximalL1<data_t>::apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+    void ProximalL1<data_t>::apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                                    DataContainer<data_t>& prox) const
     {
         if (v.getSize() != prox.getSize()) {
@@ -30,20 +35,11 @@ namespace elsa
         auto out = prox.begin();
 
         for (; first != v.end() && out != prox.end(); first++, out++) {
-            *out = std::max(std::abs(*first) - t, data_t{0}) * sign<data_t, data_t>(*first);
+            auto tmp = std::abs(*first) - (t * sigma_);
+            tmp = 0.5 * (tmp + std::abs(tmp));
+
+            *out = sign(*first) * tmp;
         }
-    }
-
-    template <typename data_t>
-    bool operator==(const ProximalL1<data_t>&, const ProximalL1<data_t>&)
-    {
-        return true;
-    }
-
-    template <typename data_t>
-    bool operator!=(const ProximalL1<data_t>&, const ProximalL1<data_t>&)
-    {
-        return false;
     }
 
     // ------------------------------------------

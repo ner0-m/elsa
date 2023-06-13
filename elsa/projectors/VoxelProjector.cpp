@@ -5,19 +5,19 @@
 namespace elsa
 {
     template <typename data_t>
-    BlobVoxelProjector<data_t>::BlobVoxelProjector(data_t radius, data_t alpha, data_t order,
-                                                   const VolumeDescriptor& domainDescriptor,
-                                                   const DetectorDescriptor& rangeDescriptor)
-        : VoxelProjector<data_t, BlobVoxelProjector<data_t>>(domainDescriptor, rangeDescriptor),
-          lut_(radius, alpha, order)
+    BlobVoxelProjector<data_t>::BlobVoxelProjector(const VolumeDescriptor& domainDescriptor,
+                                                   const DetectorDescriptor& rangeDescriptor,
+                                                   data_t radius, data_t alpha, index_t order)
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+          blob(radius, alpha, order),
+          _dim(domainDescriptor.getNumberOfDimensions())
     {
         // sanity checks
-        auto dim = domainDescriptor.getNumberOfDimensions();
-        if (dim < 2 || dim > 3) {
+        if (_dim < 2 || _dim > 3) {
             throw InvalidArgumentError("BlobVoxelProjector: only supporting 2d/3d operations");
         }
 
-        if (dim != rangeDescriptor.getNumberOfDimensions()) {
+        if (_dim != rangeDescriptor.getNumberOfDimensions()) {
             throw InvalidArgumentError(
                 "BlobVoxelProjector: domain and range dimension need to match");
         }
@@ -28,90 +28,107 @@ namespace elsa
     }
 
     template <typename data_t>
-    BlobVoxelProjector<data_t>::BlobVoxelProjector(const VolumeDescriptor& domainDescriptor,
-                                                   const DetectorDescriptor& rangeDescriptor)
-        : BlobVoxelProjector(2, 10.83, 2, domainDescriptor, rangeDescriptor)
+    void BlobVoxelProjector<data_t>::applyImpl(const elsa::DataContainer<data_t>& x,
+                                               elsa::DataContainer<data_t>& Ax) const
     {
+        if (_dim == 2)
+            voxel::forwardVoxel<2>(x, Ax, blob.get_lut(),
+                                   voxel::classic_weight_function<1, data_t>);
+        else
+            voxel::forwardVoxel<3>(x, Ax, blob.get_lut(),
+                                   voxel::classic_weight_function<2, data_t>);
     }
 
     template <typename data_t>
-    BlobVoxelProjector<data_t>* BlobVoxelProjector<data_t>::_cloneImpl() const
+    void BlobVoxelProjector<data_t>::applyAdjointImpl(const elsa::DataContainer<data_t>& y,
+                                                      elsa::DataContainer<data_t>& Aty) const
     {
-        return new BlobVoxelProjector(this->lut_.radius(), this->lut_.alpha(), this->lut_.order(),
-                                      downcast<VolumeDescriptor>(*this->_domainDescriptor),
-                                      downcast<DetectorDescriptor>(*this->_rangeDescriptor));
+        if (_dim == 2)
+            voxel::backwardVoxel<2>(y, Aty, blob.get_lut(),
+                                    voxel::classic_weight_function<1, data_t>);
+        else
+            voxel::backwardVoxel<3>(y, Aty, blob.get_lut(),
+                                    voxel::classic_weight_function<2, data_t>);
     }
 
     template <typename data_t>
-    bool BlobVoxelProjector<data_t>::_isEqual(const LinearOperator<data_t>& other) const
+    bool BlobVoxelProjector<data_t>::isEqual(const elsa::LinearOperator<data_t>& other) const
     {
-        if (!Base::isEqual(other))
-            return false;
-
-        auto otherOp = downcast_safe<BlobVoxelProjector>(&other);
-        return static_cast<bool>(otherOp);
+        return LinearOperator<data_t>::isEqual(other);
     }
 
     template <typename data_t>
-    PhaseContrastBlobVoxelProjector<data_t>::PhaseContrastBlobVoxelProjector(
-        data_t radius, data_t alpha, data_t order, const VolumeDescriptor& domainDescriptor,
-        const DetectorDescriptor& rangeDescriptor)
-        : VoxelProjector<data_t, PhaseContrastBlobVoxelProjector<data_t>>(domainDescriptor,
-                                                                          rangeDescriptor),
-          lut_(radius, alpha, order),
-          lut3D_(radius, alpha, order)
+    BlobVoxelProjector<data_t>* BlobVoxelProjector<data_t>::cloneImpl() const
+    {
+        return new BlobVoxelProjector(downcast<VolumeDescriptor>(*this->_domainDescriptor),
+                                      downcast<DetectorDescriptor>(*this->_rangeDescriptor),
+                                      blob.radius(), blob.alpha(), blob.order());
+    }
+
+    template <typename data_t>
+    BSplineVoxelProjector<data_t>::BSplineVoxelProjector(const VolumeDescriptor& domainDescriptor,
+                                                         const DetectorDescriptor& rangeDescriptor,
+                                                         const index_t order)
+        : LinearOperator<data_t>(domainDescriptor, rangeDescriptor),
+          _dim(domainDescriptor.getNumberOfDimensions()),
+          bspline(_dim, order)
     {
         // sanity checks
-        auto dim = domainDescriptor.getNumberOfDimensions();
-        if (dim < 2 || dim > 3) {
-            throw InvalidArgumentError(
-                "PhaseContrastBlobVoxelProjector: only supporting 2d/3d operations");
+        if (_dim < 2 || _dim > 3) {
+            throw InvalidArgumentError("BSplineVoxelProjector: only supporting 2d/3d operations");
         }
 
-        if (dim != rangeDescriptor.getNumberOfDimensions()) {
+        if (_dim != rangeDescriptor.getNumberOfDimensions()) {
             throw InvalidArgumentError(
-                "PhaseContrastBlobVoxelProjector: domain and range dimension need to match");
+                "BSplineVoxelProjector: domain and range dimension need to match");
         }
 
         if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
             throw InvalidArgumentError(
-                "PhaseContrastBlobVoxelProjector: rangeDescriptor without any geometry");
+                "BSplineVoxelProjector: rangeDescriptor without any geometry");
         }
     }
 
     template <typename data_t>
-    PhaseContrastBlobVoxelProjector<data_t>::PhaseContrastBlobVoxelProjector(
-        const VolumeDescriptor& domainDescriptor, const DetectorDescriptor& rangeDescriptor)
-        : PhaseContrastBlobVoxelProjector(2, 10.83, 2, domainDescriptor, rangeDescriptor)
+    void BSplineVoxelProjector<data_t>::applyImpl(const elsa::DataContainer<data_t>& x,
+                                                  elsa::DataContainer<data_t>& Ax) const
     {
+        if (_dim == 2)
+            voxel::forwardVoxel<2>(x, Ax, bspline.get_lut(),
+                                   voxel::classic_weight_function<1, data_t>);
+        else
+            voxel::forwardVoxel<3>(x, Ax, bspline.get_lut(),
+                                   voxel::classic_weight_function<2, data_t>);
     }
 
     template <typename data_t>
-    PhaseContrastBlobVoxelProjector<data_t>*
-        PhaseContrastBlobVoxelProjector<data_t>::_cloneImpl() const
+    void BSplineVoxelProjector<data_t>::applyAdjointImpl(const elsa::DataContainer<data_t>& y,
+                                                         elsa::DataContainer<data_t>& Aty) const
     {
-        return new PhaseContrastBlobVoxelProjector(
-            this->lut_.radius(), this->lut_.alpha(), this->lut_.order(),
-            downcast<VolumeDescriptor>(*this->_domainDescriptor),
-            downcast<DetectorDescriptor>(*this->_rangeDescriptor));
+        if (_dim == 2)
+            voxel::backwardVoxel<2>(y, Aty, bspline.get_lut(),
+                                    voxel::classic_weight_function<1, data_t>);
+        else
+            voxel::backwardVoxel<3>(y, Aty, bspline.get_lut(),
+                                    voxel::classic_weight_function<2, data_t>);
     }
 
     template <typename data_t>
-    bool
-        PhaseContrastBlobVoxelProjector<data_t>::_isEqual(const LinearOperator<data_t>& other) const
+    bool BSplineVoxelProjector<data_t>::isEqual(const elsa::LinearOperator<data_t>& other) const
     {
-        if (!Base::isEqual(other))
-            return false;
-
-        auto otherOp = downcast_safe<PhaseContrastBlobVoxelProjector>(&other);
-        return static_cast<bool>(otherOp);
+        return LinearOperator<data_t>::isEqual(other);
     }
 
-    // ------------------------------------------
-    // explicit template instantiation
+    template <typename data_t>
+    BSplineVoxelProjector<data_t>* BSplineVoxelProjector<data_t>::cloneImpl() const
+    {
+        return new BSplineVoxelProjector(downcast<VolumeDescriptor>(*this->_domainDescriptor),
+                                         downcast<DetectorDescriptor>(*this->_rangeDescriptor),
+                                         bspline.order());
+    }
+
     template class BlobVoxelProjector<float>;
     template class BlobVoxelProjector<double>;
-
-    template class PhaseContrastBlobVoxelProjector<float>;
-    template class PhaseContrastBlobVoxelProjector<double>;
-} // namespace elsa
+    template class BSplineVoxelProjector<float>;
+    template class BSplineVoxelProjector<double>;
+}; // namespace elsa

@@ -4,7 +4,6 @@
 
 #include "DataContainer.h"
 #include "Solver.h"
-#include "WLSProblem.h"
 #include "Scaling.h"
 #include "MaybeUninitialized.hpp"
 
@@ -91,21 +90,6 @@ namespace elsa
          */
         LandweberIteration(const LinearOperator<data_t>& A, const DataContainer<data_t>& b);
 
-        /**
-         * @brief Constructor for Landweber type solver, accepting a problem and a fixed step size
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         * @param[in] stepSize the fixed step size to be used while solving
-         */
-        LandweberIteration(const WLSProblem<data_t>& wls, data_t stepSize);
-
-        /**
-         * @brief Constructor for Landweber type solver, accepting a problem
-         *
-         * @param[in] problem the problem that is supposed to be solved
-         */
-        explicit LandweberIteration(const WLSProblem<data_t>& wls);
-
         /// make copy constructor deletion explicit
         LandweberIteration(const LandweberIteration<data_t>&) = delete;
 
@@ -119,9 +103,6 @@ namespace elsa
         void setProjection(const std::function<void(DataContainer<data_t>&)> projection);
 
     protected:
-        /// Setup the \f$T * A^T * M\f& operator given a wls problem
-        std::unique_ptr<LinearOperator<data_t>> setupOperators(const WLSProblem<data_t>& wls) const;
-
         /// Setup the \f$T * A^T * M\f& operator, implemented by the base classes to allow for
         /// different types of solvers
         virtual std::unique_ptr<LinearOperator<data_t>>

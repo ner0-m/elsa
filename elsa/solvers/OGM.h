@@ -4,7 +4,7 @@
 #include <optional>
 
 #include "Solver.h"
-#include "Problem.h"
+#include "Functional.h"
 #include "DataContainer.h"
 
 namespace elsa
@@ -65,7 +65,7 @@ namespace elsa
          * @param[in] problem the problem that is supposed to be solved
          * @param[in] epsilon affects the stopping condition
          */
-        OGM(const Problem<data_t>& problem,
+        OGM(const Functional<data_t>& problem,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /**
@@ -76,7 +76,7 @@ namespace elsa
          * @param[in] preconditionerInverse the inverse of the preconditioner
          * @param[in] epsilon affects the stopping condition
          */
-        OGM(const Problem<data_t>& problem, const LinearOperator<data_t>& preconditionerInverse,
+        OGM(const Functional<data_t>& problem, const LinearOperator<data_t>& preconditionerInverse,
             data_t epsilon = std::numeric_limits<data_t>::epsilon());
 
         /// make copy constructor deletion explicit
@@ -100,7 +100,7 @@ namespace elsa
 
     private:
         /// the differentiable optimizaion problem
-        std::unique_ptr<Problem<data_t>> _problem;
+        std::unique_ptr<Functional<data_t>> _problem;
 
         /// variable affecting the stopping condition
         data_t _epsilon;

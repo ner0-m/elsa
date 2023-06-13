@@ -5,7 +5,7 @@
 
 function(elsa_add_pymodule name)
     pybind11_add_module(pyelsa_${name} MODULE pyelsa/bind_${name}.cpp)
-    target_link_libraries(pyelsa_${name} PUBLIC elsa::${name})
+    target_link_libraries(pyelsa_${name} PUBLIC elsa::all)
     install(TARGETS pyelsa_${name} DESTINATION .)
 endfunction()
 
@@ -15,11 +15,10 @@ elsa_add_pymodule(functionals)
 elsa_add_pymodule(generators)
 elsa_add_pymodule(io)
 elsa_add_pymodule(operators)
-elsa_add_pymodule(problems)
 elsa_add_pymodule(projectors)
 elsa_add_pymodule(proximal_operators)
 elsa_add_pymodule(solvers)
 
-if(ELSA_BUILD_CUDA_PROJECTORS)
+if(WITH_CUDA)
     elsa_add_pymodule(projectors_cuda)
 endif()

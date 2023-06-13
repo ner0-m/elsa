@@ -31,10 +31,9 @@ TEST_CASE_TEMPLATE("Landweber: Solving a simple linear problem", data_t, float, 
     // Setup A
     Scaling<data_t> A{desc, 5.f};
 
-    GIVEN("A WLSProblem")
+    GIVEN("An operator and data")
     {
-        WLSProblem<data_t> prob{A, b};
-        Landweber<data_t> solver(prob);
+        Landweber<data_t> solver(A, b, 1);
 
         auto x = solver.solve(1);
 
@@ -46,21 +45,12 @@ TEST_CASE_TEMPLATE("Landweber: Solving a simple linear problem", data_t, float, 
         for (index_t i = 0; i < desc.getNumberOfCoefficients(); ++i) {
             CHECK_EQ(x[i], expected[i]);
         }
-    }
 
-    GIVEN("A WLSProblem")
-    {
-        Landweber<data_t> solver(A, b);
+        THEN("Check clone is equal")
+        {
+            auto clone = solver.clone();
 
-        auto x = solver.solve(1);
-
-        DataContainer<data_t> zero{desc};
-        zero = 0;
-
-        auto expected = -A.applyAdjoint(A.apply(zero) - b);
-
-        for (index_t i = 0; i < desc.getNumberOfCoefficients(); ++i) {
-            CHECK_EQ(x[i], expected[i]);
+            CHECK_EQ(*clone, solver);
         }
     }
 }

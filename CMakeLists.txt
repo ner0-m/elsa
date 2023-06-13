@@ -7,8 +7,6 @@ project(
     LANGUAGES CXX
 )
 
-# ------------ elsa options ------------
-# ------------
 # detect if elsa is being as a submodule, enable/disable some options based on this
 if(NOT DEFINED ELSA_MASTER_PROJECT)
     if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -18,6 +16,12 @@ if(NOT DEFINED ELSA_MASTER_PROJECT)
     endif()
 endif()
 
+# add our cmake modules under cmake/
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+# ------------ elsa configuration options ------------
+# ------------
+
 option(ELSA_TESTING "Enable building the unit tests" ${ELSA_MASTER_PROJECT})
 option(ELSA_COVERAGE "Enable test coverage computation and reporting" OFF)
 
@@ -25,7 +29,6 @@ option(ELSA_INSTALL "Enable generating the install targets for make install" ${E
 option(ELSA_BUILD_EXAMPLES "Enable building of examples" ${ELSA_MASTER_PROJECT})
 option(ELSA_BUILD_BENCHMARKS "Enable building of benchmarks" OFF)
 
-option(ELSA_BUILD_CUDA_PROJECTORS "Enable building (or attempting to) the CUDA projectors" ON)
 option(ELSA_BUILD_PYTHON_BINDINGS "Attempt to build python bindings if enabled (requires libclang-dev)" ON)
 option(ELSA_BINDINGS_IN_SINGLE_MODULE "Combine the bindings for all elsa modules in a single python module" OFF)
 
@@ -48,11 +51,23 @@ option(SYSTEM_DOCTEST "Build elsa using the system doctest installation" OFF)
 option(SYSTEM_THRUST "Build elsa using the system thrust installation" OFF)
 option(SYSTEM_CATCH "Build elsa using the system catch installation" OFF)
 
+option(BUILD_SHARED_LIBS "Build elsa as shared (dynamic) libraries" OFF)
+
+# optional features can be controlled with a variable named WANT_DEPENDENCYNAME. it can be controlled with three values:
+#
+# * ON: support is enabled and required
+# * if_available: support is enabled, but skipped if not found
+# * OFF: support is disabled
+
+# default definitions for optional features
+if(NOT DEFINED WANT_CUDA)
+    set(WANT_CUDA if_available)
+endif()
+
+include(options)
+
 # ------------ general setup -----------
 # ------------
-
-# add our cmake modules under cmake/
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # set default built type to "Release" (if no other specified)
 set(DEFAULT_BUILD_TYPE "Release")
@@ -109,11 +124,28 @@ if(NOT "${ELSA_ALTERNATIVE_LINKER}" STREQUAL "")
     set_alternate_linker(${ELSA_ALTERNATIVE_LINKER})
 endif()
 
+# ------------ ccache compiler cache ------------
+# ------------
+
+# distros can also do this but they don't use this mechanism
+option(ENABLE_CCACHE "prefix each compile command with ccache")
+
+if(ENABLE_CCACHE)
+    find_program(CCACHE_FOUND "ccache" REQUIRED)
+
+    if(CCACHE_FOUND)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    else()
+        message(FATAL_ERROR "ccache not found, but you requested it")
+    endif(CCACHE_FOUND)
+endif()
+
 # ------------ dependencies ------------
 # ------------
 
 # Enable CUDA support if requested
-if(ELSA_BUILD_CUDA_PROJECTORS)
+if(WANT_CUDA)
     message(STATUS "CUDA support requested...")
     include(CheckLanguage)
     check_language(CUDA)
@@ -139,15 +171,14 @@ if(ELSA_BUILD_CUDA_PROJECTORS)
         add_definitions(-DELSA_HAS_CUDA_PROJECTORS)
         set(ELSA_CUDA_UNIFIED_MEMORY ON)
         set(ELSA_CUDA_ENABLED ON)
+        have_config_option(cuda CUDA true)
 
     else()
-        message(STATUS "Deactivate CUDA projectors")
-        # Be sure everything is off
-        set(ELSA_BUILD_CUDA_PROJECTORS OFF)
+        have_config_option(cuda CUDA false)
     endif()
 else()
     # Be sure everything is off
-    set(ELSA_BUILD_CUDA_PROJECTORS OFF)
+    have_config_option(cuda CUDA false)
 endif()
 
 if(NOT
@@ -213,8 +244,8 @@ if(ELSA_MASTER_PROJECT)
     endif()
 
     if(ELSA_CUDA_ENABLED OR SYSTEM_THRUST)
-        message(STATUS "Using thrust library provided by CUDA enviroement...")
-        find_package(Thrust 1.13 REQUIRED CONFIG)
+        message(STATUS "Using system-wide thrust library (e.g. provided by CUDA environment)...")
+        find_package(Thrust 1.13 REQUIRED CONFIG HINTS "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/../lib/cmake/thrust")
     else()
         CPMAddPackage(
             NAME thrust
@@ -222,10 +253,17 @@ if(ELSA_MASTER_PROJECT)
             GIT_TAG 1.17.2
             OPTIONS "THRUST_ENABLE_INSTALL_RULES ON"
         )
-
-        # This is too conservative  TODO: Try to find OpenMP, if found use it, else fallback to CPP backend
-        set(THRUST_DEVICE_SYSTEM CPP)
         # TODO: We should export and install thrust properly
+    endif()
+
+    if(ELSA_CUDA_ENABLED)
+        set(THRUST_DEVICE_SYSTEM CUDA)
+    else()
+        if(OpenMP_CXX_FOUND)
+            set(THRUST_DEVICE_SYSTEM OMP)
+        else()
+            set(THRUST_DEVICE_SYSTEM CPP)
+        endif()
     endif()
 
     # Follow thrusts defaults, overwrite the by passing THRUST_[HOST|DEVICE]_SYSTEM to CMake
@@ -413,20 +451,33 @@ add_custom_target(
 )
 
 # build information overview
+message("
+elsa configuration: |
+--------------------+"
+)
+
 string(TOUPPER "CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}" BUILD_TYPE_CXX_FLAGS)
 message(
-    "
-            project | ${PROJECT_NAME}
+    "            project | ${PROJECT_NAME}
            compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
          build type | ${CMAKE_BUILD_TYPE}
            cxxflags | ${CMAKE_CXX_FLAGS}
    build type flags | ${${BUILD_TYPE_CXX_FLAGS}}
           build dir | ${CMAKE_BINARY_DIR}
      install prefix | ${CMAKE_INSTALL_PREFIX}
- thrust CPP backend | ${THRUST_CPP_FOUND}
- thrust TBB backend | ${THRUST_TBB_FOUND}
- thrust OMP backend | ${THRUST_OMP_FOUND}
-thrust CUDA backend | ${THRUST_CUDA_FOUND}
+                    |
+--------------------+"
+)
+
+print_config_options()
+
+message(
+    "                    |
+   thrust backends: |
+                C++ | ${THRUST_CPP_FOUND}
+          Intel TBB | ${THRUST_TBB_FOUND}
+             OpenMP | ${THRUST_OMP_FOUND}
+               CUDA | ${THRUST_CUDA_FOUND}
 "
 )
 

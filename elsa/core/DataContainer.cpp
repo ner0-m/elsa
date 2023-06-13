@@ -2,6 +2,7 @@
 #include "DataContainerFormatter.hpp"
 #include "FormatConfig.h"
 #include "BlockDescriptor.h"
+#include "IdenticalBlocksDescriptor.h"
 #include "RandomBlocksDescriptor.h"
 #include "PartitionDescriptor.h"
 #include "Error.h"
@@ -11,6 +12,8 @@
 #include "Complex.h"
 
 #include "Functions.hpp"
+#include "TypeTraits.hpp"
+#include "elsaDefines.h"
 #include "functions/Conj.hpp"
 #include "functions/Imag.hpp"
 #include "functions/Real.hpp"
@@ -24,6 +27,7 @@
 #include "reductions/Extrema.h"
 
 #include "transforms/Absolute.h"
+#include "transforms/Add.h"
 #include "transforms/Assign.h"
 #include "transforms/Clip.h"
 #include "transforms/Cast.h"
@@ -34,9 +38,11 @@
 #include "transforms/InplaceSub.h"
 #include "transforms/InplaceMul.h"
 #include "transforms/InplaceDiv.h"
+#include "transforms/Sign.h"
 #include "transforms/Square.h"
 #include "transforms/Sqrt.h"
 #include "transforms/Log.h"
+#include "transforms/Lincomb.h"
 #include "transforms/Exp.h"
 #include "transforms/Imag.h"
 #include "transforms/Real.h"
@@ -313,9 +319,20 @@ namespace elsa
     {
         return std::visit(
             overloaded{
-                [](const auto& storage) { return storage.size(); },
+                [](const auto& storage) { return asSigned(storage.size()); },
             },
             storage_);
+    }
+
+    template <typename data_t>
+    index_t DataContainer<data_t>::getNumberOfBlocks() const
+    {
+        if (!is<BlockDescriptor>(getDataDescriptor())) {
+            return 1;
+        }
+
+        auto& blockDesc = downcast_safe<BlockDescriptor>(getDataDescriptor());
+        return blockDesc.getNumberOfBlocks();
     }
 
     template <typename data_t>
@@ -402,6 +419,28 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<GetFloatingPointType_t<data_t>> DataContainer<data_t>::pL2Norm() const
+    {
+        if (!is<IdenticalBlocksDescriptor>(getDataDescriptor())) {
+            throw Error("pL2Norm: Descriptor must be of type IdenticalBlocksDescriptor");
+        }
+
+        // Create temporary to hold the running sum of each "column"
+        auto tmp = DataContainer<GetFloatingPointType_t<data_t>>(getBlock(0).getDataDescriptor());
+        tmp = 0;
+
+        for (int i = 0; i < getNumberOfBlocks(); ++i) {
+            if constexpr (isComplex<data_t>) {
+                tmp += ::elsa::square(elsa::cwiseAbs(getBlock(i)));
+            } else {
+                tmp += ::elsa::square(getBlock(i));
+            }
+        }
+
+        return ::elsa::sqrt(tmp);
+    }
+
+    template <typename data_t>
     index_t DataContainer<data_t>::l0PseudoNorm() const
     {
         return elsa::l0PseudoNorm(begin(), end());
@@ -411,6 +450,24 @@ namespace elsa
     GetFloatingPointType_t<data_t> DataContainer<data_t>::l1Norm() const
     {
         return elsa::l1Norm(begin(), end());
+    }
+
+    template <typename data_t>
+    DataContainer<GetFloatingPointType_t<data_t>> DataContainer<data_t>::pL1Norm() const
+    {
+        if (!is<IdenticalBlocksDescriptor>(getDataDescriptor())) {
+            throw Error("pL1Norm: Descriptor must be of type IdenticalBlocksDescriptor");
+        }
+
+        // Create temporary to hold the running sum of each "column"
+        auto tmp = DataContainer<GetFloatingPointType_t<data_t>>(getBlock(0).getDataDescriptor());
+        tmp = 0;
+
+        for (int i = 0; i < getNumberOfBlocks(); ++i) {
+            tmp += ::elsa::cwiseAbs(getBlock(i));
+        }
+
+        return tmp;
     }
 
     template <typename data_t>
@@ -552,9 +609,9 @@ namespace elsa
         if (i >= blockDesc->getNumberOfBlocks() || i < 0)
             throw InvalidArgumentError("DataContainer: block index out of bounds");
 
-        index_t startIndex = blockDesc->getOffsetOfBlock(i);
+        size_t startIndex = asUnsigned(blockDesc->getOffsetOfBlock(i));
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
-        index_t blockSize = ithDesc.getNumberOfCoefficients();
+        size_t blockSize = asUnsigned(ithDesc.getNumberOfCoefficients());
 
         return std::visit(overloaded{[&](ContiguousStorage<data_t>& storage) {
                                          auto span = ContiguousStorageView<data_t>(
@@ -579,9 +636,9 @@ namespace elsa
         if (i >= blockDesc->getNumberOfBlocks() || i < 0)
             throw InvalidArgumentError("DataContainer: block index out of bounds");
 
-        index_t startIndex = blockDesc->getOffsetOfBlock(i);
+        size_t startIndex = asUnsigned(blockDesc->getOffsetOfBlock(i));
         const auto& ithDesc = blockDesc->getDescriptorOfBlock(i);
-        index_t blockSize = ithDesc.getNumberOfCoefficients();
+        size_t blockSize = asUnsigned(ithDesc.getNumberOfCoefficients());
 
         return std::visit(overloaded{[&](const ContiguousStorage<data_t>& storage) {
                                          auto span = ContiguousStorageView<data_t>(
@@ -607,7 +664,8 @@ namespace elsa
 
         return std::visit(overloaded{[&](ContiguousStorage<data_t>& storage) {
                                          auto span = ContiguousStorageView<data_t>(
-                                             storage, 0, dataDescriptor.getNumberOfCoefficients());
+                                             storage, 0,
+                                             asUnsigned(dataDescriptor.getNumberOfCoefficients()));
                                          return DataContainer<data_t>{dataDescriptor, span};
                                      },
                                      [&](ContiguousStorageView<data_t> storage) {
@@ -626,7 +684,7 @@ namespace elsa
         return std::visit(overloaded{[&](const ContiguousStorage<data_t>& storage) {
                                          auto span = ContiguousStorageView<data_t>(
                                              const_cast<ContiguousStorage<data_t>&>(storage), 0,
-                                             dataDescriptor.getNumberOfCoefficients());
+                                             asUnsigned(dataDescriptor.getNumberOfCoefficients()));
                                          return DataContainer<data_t>{dataDescriptor, span};
                                      },
                                      [&](ContiguousStorageView<data_t> storage) {
@@ -906,6 +964,16 @@ namespace elsa
     }
 
     template <typename data_t>
+    DataContainer<value_type_of_t<data_t>> sign(const DataContainer<data_t>& dc)
+    {
+        using T = GetFloatingPointType_t<data_t>;
+        DataContainer<T> copy(dc.getDataDescriptor());
+
+        elsa::sign(dc.begin(), dc.end(), copy.begin());
+        return copy;
+    }
+
+    template <typename data_t>
     DataContainer<value_type_of_t<data_t>> real(const DataContainer<data_t>& dc)
     {
         DataContainer<value_type_of_t<data_t>> result(dc.getDataDescriptor());
@@ -1020,6 +1088,34 @@ namespace elsa
         return copy;
     }
 
+    template <class data_t>
+    DataContainer<data_t> lincomb(SelfType_t<data_t> a, const DataContainer<data_t>& x,
+                                  SelfType_t<data_t> b, const DataContainer<data_t>& y)
+    {
+        if (x.getDataDescriptor() != y.getDataDescriptor()) {
+            throw InvalidArgumentError("lincomb: x and y are of different size");
+        }
+
+        auto out = DataContainer<data_t>(x.getDataDescriptor());
+        lincomb(a, x, b, y, out);
+        return out;
+    }
+
+    template <class data_t>
+    void lincomb(SelfType_t<data_t> a, const DataContainer<data_t>& x, SelfType_t<data_t> b,
+                 const DataContainer<data_t>& y, DataContainer<data_t>& out)
+    {
+        if (x.getDataDescriptor() != y.getDataDescriptor()) {
+            throw InvalidArgumentError("lincomb: x and y are of different size");
+        }
+
+        if (x.getDataDescriptor() != out.getDataDescriptor()) {
+            throw InvalidArgumentError("lincomb: input and output vectors are of different size");
+        }
+
+        lincomb(a, x.begin(), x.end(), b, y.begin(), out.begin());
+    }
+
     // ------------------------------------------
     // explicit template instantiation
     template class DataContainer<float>;
@@ -1043,6 +1139,17 @@ namespace elsa
         concatenate<complex<double>>(const DataContainer<complex<double>>&,
                                      const DataContainer<complex<double>>&);
 
+    template void lincomb<float>(SelfType_t<float>, const DataContainer<float>&, SelfType_t<float>,
+                                 const DataContainer<float>&, DataContainer<float>&);
+    template void lincomb<double>(SelfType_t<double>, const DataContainer<double>&,
+                                  SelfType_t<double>, const DataContainer<double>&,
+                                  DataContainer<double>&);
+    template DataContainer<float> lincomb<float>(SelfType_t<float>, const DataContainer<float>&,
+                                                 SelfType_t<float>, const DataContainer<float>&);
+    template DataContainer<double> lincomb<double>(SelfType_t<double>, const DataContainer<double>&,
+                                                   SelfType_t<double>,
+                                                   const DataContainer<double>&);
+
 #define ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET(fn, type) \
     template DataContainer<value_type_of_t<type>> fn<type>(const DataContainer<type>&);
 
@@ -1056,6 +1163,7 @@ namespace elsa
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET_TYPES(cwiseAbs)
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET_TYPES(real)
     ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET_TYPES(imag)
+    ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET_TYPES(sign)
 
 #undef ELSA_INSTANTIATE_UNARY_TRANSFORMATION_REAL_RET
 

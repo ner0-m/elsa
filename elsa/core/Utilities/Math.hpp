@@ -22,15 +22,17 @@ namespace elsa
                                             : (binom(n - 1, k) * n) / (n - k);
         }
 
-        /// Compute Heaviside-function
-        /// \f[
-        /// x \mapsto
-        /// \begin{cases}
-        /// 0: & x < 0 \\
-        /// c: & x = 0 \\
-        /// 1: & x > 0
-        /// \end{cases}
-        /// \f]
+        /**
+         * Compute Heaviside-function
+         * \f[
+         * x \mapsto
+         * \begin{cases}
+         * 0: & x < 0 \\
+         * c: & x = 0 \\
+         * 1: & x > 0
+         * \end{cases}
+         * \f]
+         */
         template <typename data_t>
         constexpr data_t heaviside(data_t x1, data_t c)
         {
@@ -48,6 +50,23 @@ namespace elsa
         {
             return (T(0) < val) - (val < T(0));
         }
+
+        template <typename data_t>
+        data_t lerp(data_t a, SelfType_t<data_t> b, SelfType_t<data_t> t)
+        {
+            if ((a <= 0 && b >= 0) || (a >= 0 && b <= 0))
+                return t * b + (1 - t) * a;
+
+            if (t == 1)
+                return b;
+
+            const data_t x = a + t * (b - a);
+
+            if ((t > 1) == (b > a))
+                return b < x ? x : b;
+            else
+                return x < b ? x : b;
+        }
     } // namespace math
 
     /// proposed in Y. Meyer, Oscillating Patterns in Image Processing and Nonlinear Evolution
@@ -55,11 +74,11 @@ namespace elsa
     template <typename data_t>
     data_t meyerFunction(data_t x)
     {
-        if (x < 0) {
+        if (x < 0.f) {
             return 0;
-        } else if (0 <= x && x <= 1) {
-            return 35 * std::pow(x, 4) - 84 * std::pow(x, 5) + 70 * std::pow(x, 6)
-                   - 20 * std::pow(x, 7);
+        } else if (0.f <= x && x <= 1.f) {
+            return 35 * std::pow(x, 4.f) - 84 * std::pow(x, 5.f) + 70 * std::pow(x, 6.f)
+                   - 20 * std::pow(x, 7.f);
         } else {
             return 1;
         }
@@ -73,9 +92,9 @@ namespace elsa
         data_t b(data_t w)
         {
             if (1 <= std::abs(w) && std::abs(w) <= 2) {
-                return std::sin(pi<data_t> / 2.0 * meyerFunction(std::abs(w) - 1));
+                return std::sin(pi<data_t> / 2.f * meyerFunction(std::abs(w) - 1));
             } else if (2 < std::abs(w) && std::abs(w) <= 4) {
-                return std::cos(pi<data_t> / 2.0 * meyerFunction(1.0 / 2 * std::abs(w) - 1));
+                return std::cos(pi<data_t> / 2.f * meyerFunction(1.f / 2.f * std::abs(w) - 1.f));
             } else {
                 return 0;
             }
@@ -86,10 +105,10 @@ namespace elsa
         template <typename data_t>
         data_t phi(data_t w)
         {
-            if (std::abs(w) <= 1.0 / 2) {
+            if (std::abs(w) <= 1.f / 2) {
                 return 1;
-            } else if (1.0 / 2 < std::abs(w) && std::abs(w) < 1) {
-                return std::cos(pi<data_t> / 2.0 * meyerFunction(2 * std::abs(w) - 1));
+            } else if (1.f / 2 < std::abs(w) && std::abs(w) < 1) {
+                return std::cos(pi<data_t> / 2.f * meyerFunction(2.f * std::abs(w) - 1));
             } else {
                 return 0;
             }
@@ -112,7 +131,7 @@ namespace elsa
         template <typename data_t>
         data_t psiHat1(data_t w)
         {
-            return std::sqrt(std::pow(b(2 * w), 2) + std::pow(b(w), 2));
+            return std::sqrt(std::pow(b(2.f * w), 2.f) + std::pow(b(w), 2.f));
         }
 
         /// defined in Sören Häuser and Gabriele Steidl, Fast Finite Shearlet Transform: a

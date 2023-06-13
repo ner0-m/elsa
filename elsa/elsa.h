@@ -12,18 +12,20 @@
 
 // Functional headers
 #include "Functional.h"
-#include "Residual.h"
 #include "LinearResidual.h"
 #include "Huber.h"
 #include "L0PseudoNorm.h"
 #include "L1Norm.h"
-#include "L2NormPow2.h"
-#include "WeightedL2NormPow2.h"
+#include "L2Squared.h"
+#include "L2Reg.h"
+#include "WeightedL2Squared.h"
+#include "LeastSquares.h"
 #include "LInfNorm.h"
 #include "PseudoHuber.h"
 #include "Quadric.h"
 #include "EmissionLogLikelihood.h"
 #include "TransmissionLogLikelihood.h"
+#include "SeparableSum.h"
 
 // Generators headers
 #include "Phantoms.h"
@@ -52,25 +54,18 @@
 
 // Proximal Operator headers
 #include "ProximalOperator.h"
+#include "ProximalIdentity.h"
 #include "ProximalL1.h"
 #include "ProximalL0.h"
-
-// Problem headers
-#include "Problem.h"
-#include "RegularizationTerm.h"
-#include "QuadricProblem.h"
-#include "WLSProblem.h"
-#include "TikhonovProblem.h"
-#include "LASSOProblem.h"
-#include "SubsetProblem.h"
-#include "WLSSubsetProblem.h"
+#include "ProximalBoxConstraint.h"
+#include "ProximalL2Squared.h"
+#include "CombinedProximal.h"
 
 // Projector headers
 #include "Geometry.h"
 #include "BinaryMethod.h"
 #include "JosephsMethod.h"
 #include "SiddonsMethod.h"
-#include "SiddonsMethodBranchless.h"
 #include "SubsetSampler.h"
 #include "VoxelProjector.h"
 
@@ -86,10 +81,13 @@
 #include "GradientDescent.h"
 #include "PGD.h"
 #include "APGD.h"
+#include "CGNE.h"
 #include "CGLS.h"
 #include "FGM.h"
 #include "OGM.h"
-#include "ADMM.h"
+#include "ADMML2.h"
 #include "SQS.h"
 #include "SIRT.h"
 #include "Landweber.h"
+#include "AB_GMRES.h"
+#include "BA_GMRES.h"

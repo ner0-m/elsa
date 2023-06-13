@@ -10,11 +10,11 @@ namespace elsa
     /**
      * @brief Class to handle writing PGM image files from DataContainers.
      *
-     * The fileformat is split into the header and the body (with image data).
-     * The header starts with a magic number, then width and height (in ASCII) are specified and the
-     * last part of the header is the maximum value of the colour component. The Magic number in our
-     * case is "P2" as we want to write a grey scale image. The width and height are taken from the
-     * `DataContainer` and the maximum value is 255 (values are scaled accordingly)
+     * The "portable gray map" (PGM) fileformat is split into the header and the body (with image
+     * data). The header starts with a magic number, then width and height (in ASCII) are specified
+     * and the last part of the header is the maximum value of the colour component. The Magic
+     * number in our case is "P2" as we want to write a grey scale image. The width and height are
+     * taken from the `DataContainer` and the maximum value is 255 (values are scaled accordingly)
      *
      * An example of a header would be:
      * ```
@@ -25,7 +25,7 @@ namespace elsa
      *
      * Then the body prints one value in each line
      *
-     * Note: This class currently only handels 2D `DataContainer`s.
+     * Note: This class currently only handles 2D `DataContainer`s.
      *
      * Reference: http://paulbourke.net/dataformats/ppm/
      *

@@ -4,7 +4,7 @@
 namespace elsa::phantoms
 {
 
-    // Fix 3d vector
+    // Fix 2d vector
     template <typename data_t = double,
               typename = std::enable_if_t<std::is_floating_point<data_t>::value>>
     using Vec2X = Eigen::Matrix<data_t, 2, 1>;
@@ -91,6 +91,6 @@ struct fmt::formatter<elsa::phantoms::EllipCylinder<data_t>> : fmt::formatter<st
                          _amplit, _center[elsa::phantoms::INDEX_X],
                          _center[elsa::phantoms::INDEX_Y], _center[elsa::phantoms::INDEX_Z],
                          _halfAxis[elsa::phantoms::INDEX_X], _halfAxis[elsa::phantoms::INDEX_Y],
-                         _length, _orientation);
+                         _length, getString(_orientation));
     }
 };

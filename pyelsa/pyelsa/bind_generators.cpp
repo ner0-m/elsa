@@ -11,6 +11,8 @@
 #include "SphereTrajectoryGenerator.h"
 #include "TrajectoryGenerator.h"
 
+#include "bind_common.h"
+
 #include "hints/generators_hints.cpp"
 
 namespace py = pybind11;
@@ -41,6 +43,11 @@ void add_definitions_pyelsa_generators(py::module& m)
                  (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
                      &elsa::phantoms::modifiedSheppLogan<float>),
                  py::arg("sizes"), py::return_value_policy::move);
+    phantoms.def("smoothBlob",
+                 (elsa::DataContainer<float>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>, double))(
+                     &elsa::phantoms::smoothBlob<float>),
+                 py::arg("sizes"), py::arg("radius_manipulation") = 1.0,
+                 py::return_value_policy::move);
     phantoms.def("rectangle",
                  (elsa::DataContainer<float>(*)(
                      Eigen::Matrix<long, -1, 1, 0, -1, 1>, Eigen::Matrix<long, -1, 1, 0, -1, 1>,
@@ -56,6 +63,22 @@ void add_definitions_pyelsa_generators(py::module& m)
                  (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
                      &elsa::phantoms::modifiedSheppLogan<double>),
                  py::arg("sizes"), py::return_value_policy::move);
+
+    phantoms.def("forbildHead",
+                 (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                     &elsa::phantoms::forbildHead<double>),
+                 py::arg("sizes"), py::return_value_policy::move);
+
+    phantoms.def("forbildThorax",
+                 (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                     &elsa::phantoms::forbildThorax<double>),
+                 py::arg("sizes"), py::return_value_policy::move);
+
+    phantoms.def("forbildAbdomen",
+                 (elsa::DataContainer<double>(*)(Eigen::Matrix<long, -1, 1, 0, -1, 1>))(
+                     &elsa::phantoms::forbildAbdomen<double>),
+                 py::arg("sizes"), py::return_value_policy::move);
+
     phantoms.def("rectangle",
                  (elsa::DataContainer<double>(*)(
                      Eigen::Matrix<long, -1, 1, 0, -1, 1>, Eigen::Matrix<long, -1, 1, 0, -1, 1>,

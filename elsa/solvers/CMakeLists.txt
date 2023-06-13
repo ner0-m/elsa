@@ -4,16 +4,22 @@ set(MODULE_HEADERS
     GradientDescent.h
     PGD.h
     APGD.h
+    CGNE.h
     CGLS.h
+    CGNL.h
     FGM.h
     OGM.h
-    ADMM.h
+    ADMML2.h
     SQS.h
     OrthogonalMatchingPursuit.h
     LandweberIteration.h
     Landweber.h
     SIRT.h
-    CGNL.h
+    AB_GMRES.h
+    BA_GMRES.h
+    PowerIterations.h
+    RegularizedInversion.h
+    LinearizedADMM.h
 )
 
 # list all the code files of the module
@@ -22,17 +28,33 @@ set(MODULE_SOURCES
     GradientDescent.cpp
     PGD.cpp
     APGD.cpp
+    CGNE.cpp
     CGLS.cpp
+    CGNL.cpp
     FGM.cpp
     OGM.cpp
+    ADMML2.cpp
     SQS.cpp
     OrthogonalMatchingPursuit.cpp
     LandweberIteration.cpp
     Landweber.cpp
     SIRT.cpp
+    AB_GMRES.cpp
+    BA_GMRES.cpp
+    PowerIterations.cpp
+    RegularizedInversion.cpp
+    LinearizedADMM.cpp
 )
 
-list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_problems elsa_proximal_operators)
+list(
+    APPEND
+    MODULE_PUBLIC_DEPS
+    elsa_core
+    elsa_logging
+    elsa_proximal_operators
+    elsa_operators
+    elsa_functionals
+)
 list(APPEND MODULE_PRIVATE_DEPS)
 
 ADD_ELSA_MODULE(
@@ -40,4 +62,12 @@ ADD_ELSA_MODULE(
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
 
-write_module_config(${ELSA_MODULE_NAME} DEPENDENCIES elsa_core elsa_logging elsa_problems elsa_proximal_operators)
+write_module_config(
+    ${ELSA_MODULE_NAME}
+    DEPENDENCIES
+    elsa_core
+    elsa_logging
+    elsa_proximal_operators
+    elsa_operators
+    elsa_functionals
+)

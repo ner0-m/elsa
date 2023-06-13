@@ -7,5 +7,8 @@ namespace elsa
     {
     }
 
-    Timer::~Timer() { Logger::get(_caller)->debug("{} took {:.3}s", _method, _watch); }
+    Timer::~Timer()
+    {
+        Logger::get(_caller)->debug("{} took {:.3}s", _method, _watch);
+    }
 } // namespace elsa

@@ -1,12 +1,14 @@
 # list all the headers of the module
 set(MODULE_HEADERS
-    Residual.h
     LinearResidual.h
     Functional.h
     L0PseudoNorm.h
     L1Norm.h
-    L2NormPow2.h
-    WeightedL2NormPow2.h
+    L2Squared.h
+    L2Reg.h
+    LeastSquares.h
+    WeightedLeastSquares.h
+    WeightedL2Squared.h
     LInfNorm.h
     Huber.h
     PseudoHuber.h
@@ -16,17 +18,22 @@ set(MODULE_HEADERS
     Constraint.h
     WeightedL1Norm.h
     AXDTStatRecon.h
+    ConstantFunctional.h
+    IndicatorFunctionals.h
+    SeparableSum.h
 )
 
 # list all the code files of the module
 set(MODULE_SOURCES
-    Residual.cpp
     LinearResidual.cpp
     Functional.cpp
     L0PseudoNorm.cpp
     L1Norm.cpp
-    L2NormPow2.cpp
-    WeightedL2NormPow2.cpp
+    L2Squared.cpp
+    L2Reg.cpp
+    LeastSquares.cpp
+    WeightedLeastSquares.cpp
+    WeightedL2Squared.cpp
     LInfNorm.cpp
     Huber.cpp
     PseudoHuber.cpp
@@ -36,6 +43,9 @@ set(MODULE_SOURCES
     Constraint.cpp
     WeightedL1Norm.cpp
     AXDTStatRecon.cpp
+    ConstantFunctional.cpp
+    IndicatorFunctionals.cpp
+    SeparableSum.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators)

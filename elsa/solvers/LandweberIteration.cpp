@@ -1,8 +1,10 @@
 #include "LandweberIteration.h"
 #include "DataContainer.h"
+#include "Functional.h"
 #include "LinearOperator.h"
 #include "Logger.h"
 #include "TypeCasts.hpp"
+#include "PowerIterations.h"
 #include <iostream>
 
 namespace elsa
@@ -19,52 +21,6 @@ namespace elsa
                                                    const DataContainer<data_t>& b)
         : Solver<data_t>(), A_(A.clone()), b_(b)
     {
-    }
-
-    template <typename data_t>
-    LandweberIteration<data_t>::LandweberIteration(const WLSProblem<data_t>& wls, data_t stepSize)
-        : Solver<data_t>(), b_(wls.getDataTerm().getDomainDescriptor()), stepSize_{stepSize}
-    {
-        // sanity check
-        if (stepSize <= 0)
-            throw InvalidArgumentError("LandweberIteration: step size has to be positive");
-
-        const auto& dataterm = wls.getDataTerm();
-        const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
-
-        if (!residual.hasOperator()) {
-            throw InvalidArgumentError(
-                "LandweberIteration: WLSProblem passed to requieres an operator");
-        }
-
-        if (!residual.hasDataVector()) {
-            throw InvalidArgumentError(
-                "LandweberIteration: WLSProblem passed to requieres a data vector");
-        }
-
-        A_ = residual.getOperator().clone();
-        b_ = residual.getDataVector();
-    }
-
-    template <typename data_t>
-    LandweberIteration<data_t>::LandweberIteration(const WLSProblem<data_t>& wls)
-        : Solver<data_t>(), b_(wls.getDataTerm().getDomainDescriptor())
-    {
-        const auto& dataterm = wls.getDataTerm();
-        const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
-
-        if (!residual.hasOperator()) {
-            throw InvalidArgumentError(
-                "LandweberIteration: WLSProblem passed to requieres an operator");
-        }
-
-        if (!residual.hasDataVector()) {
-            throw InvalidArgumentError(
-                "LandweberIteration: WLSProblem passed to requieres a data vector");
-        }
-
-        A_ = residual.getOperator().clone();
-        b_ = residual.getDataVector();
     }
 
     template <typename data_t>
@@ -87,13 +43,18 @@ namespace elsa
         }
 
         if (!stepSize_.isInitialized()) {
-            stepSize_ = 1;
+            // Choose step length to be just below \f$\frac{2}{\sigma^2}\f$, where \f$\sigma\f$
+            // is the largest eigenvalue of \f$T * A^T * M * A\f$. This is computed using the power
+            // iterations.
+            auto Anorm = powerIterations(*tam_ * *A_);
+            stepSize_ = 0.9 * (2. / Anorm);
         }
 
-        Logger::get("LandweberIterations")->info(" {:^7} | {:^12} |", "Iters", "Residual");
+        Logger::get("LandweberIterations")->info("Using Steplength: {}", *stepSize_);
+        Logger::get("LandweberIterations")
+            ->info(" {:^7} | {:^12} | {:^12} |", "Iters", "Recon", "Residual");
 
         auto residual = DataContainer<data_t>(A_->getRangeDescriptor());
-        auto tmpx = DataContainer<data_t>(A_->getDomainDescriptor());
         for (index_t i = 0; i < iterations; ++i) {
             // Compute Ax - b memory efficient
             A_->apply(x, residual);
@@ -103,36 +64,19 @@ namespace elsa
             projection_(x);
 
             Logger::get("LandweberIterations")
-                ->info(" {:>3}/{:>3} | {:>12.5f} |", i + 1, iterations, residual.l2Norm());
+                ->info(" {:>3}/{:>3} | {:>12.5f} | {:>12.5f} |", i + 1, iterations, x.l2Norm(),
+                       residual.l2Norm());
         }
 
         return x;
     }
 
     template <typename data_t>
-    std::unique_ptr<LinearOperator<data_t>>
-        LandweberIteration<data_t>::setupOperators(const WLSProblem<data_t>& wls) const
-    {
-
-        const auto& dataterm = wls.getDataTerm();
-        const auto& residual = downcast_safe<LinearResidual<data_t>>(dataterm.getResidual());
-
-        const auto& domain = residual.getDomainDescriptor();
-        const auto& range = residual.getRangeDescriptor();
-
-        const auto& A = residual.getOperator();
-
-        return setupOperators(A);
-    }
-
-    template <typename data_t>
     bool LandweberIteration<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        auto otherSolver = downcast_safe<LandweberIteration<data_t>>(&other);
-        if (!otherSolver)
-            return false;
-
-        return stepSize_ == otherSolver->stepSize_ && tam_ == otherSolver->tam_;
+        auto landweber = downcast_safe<LandweberIteration<data_t>>(&other);
+        return landweber && *A_ == *landweber->A_ && b_ == landweber->b_
+               && stepSize_ == landweber->stepSize_;
     }
 
     template <class data_t>

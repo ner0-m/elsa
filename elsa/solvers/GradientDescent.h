@@ -3,7 +3,7 @@
 #include <optional>
 
 #include "Solver.h"
-#include "Problem.h"
+#include "Functional.h"
 #include "MaybeUninitialized.hpp"
 
 namespace elsa
@@ -38,7 +38,7 @@ namespace elsa
          * @param[in] problem the problem that is supposed to be solved
          * @param[in] stepSize the fixed step size to be used while solving
          */
-        GradientDescent(const Problem<data_t>& problem, data_t stepSize);
+        GradientDescent(const Functional<data_t>& problem, data_t stepSize);
 
         /**
          * @brief Constructor for gradient descent, accepting a problem. The step size will be
@@ -47,7 +47,7 @@ namespace elsa
          *
          * @param[in] problem the problem that is supposed to be solved
          */
-        explicit GradientDescent(const Problem<data_t>& problem);
+        explicit GradientDescent(const Functional<data_t>& problem);
 
         /// make copy constructor deletion explicit
         GradientDescent(const GradientDescent<data_t>&) = delete;
@@ -69,7 +69,7 @@ namespace elsa
 
     private:
         /// the differentiable optimizaion problem
-        std::unique_ptr<Problem<data_t>> _problem;
+        std::unique_ptr<Functional<data_t>> _problem;
 
         /// the step size
         MaybeUninitialized<data_t> _stepSize;

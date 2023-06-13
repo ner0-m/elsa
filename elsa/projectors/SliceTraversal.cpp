@@ -38,11 +38,13 @@ namespace elsa
     {
         auto identity = []() { return RealMatrix_t({{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}); };
 
+        /*
         auto rotationX = [](real_t radian) {
             real_t c = std::cos(radian);
             real_t s = std::sin(radian);
             return RealMatrix_t({{1, 0, 0}, {0, c, -s}, {0, s, c}});
         };
+        */
 
         auto rotationY = [](real_t radian) {
             real_t c = std::cos(radian);
@@ -62,7 +64,7 @@ namespace elsa
             // Already identity, so do nothing
             return identity();
         } else if (leadingAxisIndex == 0 && leadingCoeff < 0) {
-            return rotationY(pi_t);
+            return rotationY(pi_t); // flip x axis
         } else if (leadingAxisIndex == 1 && leadingCoeff >= 0) {
             return rotationZ(-0.5 * pi_t);
         } else if (leadingAxisIndex == 1 && leadingCoeff <= 0) {

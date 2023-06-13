@@ -21,6 +21,27 @@ namespace elsa::phantoms
     template <typename data_t = real_t>
     DataContainer<data_t> modifiedSheppLogan(IndexVector_t sizes);
 
+    template <typename data_t>
+    DataContainer<data_t> forbildHead(IndexVector_t sizes);
+
+    template <typename data_t>
+    DataContainer<data_t> forbildAbdomen(IndexVector_t sizes);
+
+    template <typename data_t>
+    DataContainer<data_t> forbildThorax(IndexVector_t sizes);
+
+    /**
+     * @brief Create a smooth phantom that is a centered blob function in 2d or 3d.
+     *
+     * @param[in] sizes a 2d/3d vector indicating the requested size (has to be square!)
+     * @param[in] radius_manipulation a scalar to modify the relative radius of the blob.
+     *            Defaults to 1
+     *
+     * @returns DataContainer of specified size containing the phantom.
+     */
+    template <typename data_t = real_t>
+    DataContainer<data_t> smoothBlob(IndexVector_t sizes, double radius_manipulation = 1.0);
+
     /**
      * @brief Create a phantom with a simple n-dimensional rectangle  going from lower to upper.
      * It is assumed that lower < upper.
@@ -43,6 +64,8 @@ namespace elsa::phantoms
     template <typename data_t = real_t>
     DataContainer<data_t> circular(IndexVector_t volumesize, data_t radius);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
     /**
      * @brief  https://de.mathworks.com/matlabcentral/fileexchange/9416-3d-shepp-logan-phantom
      *         This head phantom is the same as the Shepp-Logan except
@@ -63,20 +86,21 @@ namespace elsa::phantoms
              // theta:  rotation around y axis
              // psi:    rotation arount z axis
              //
-             //   A       a     b     c   x0      y0      z0    phi  theta  psi
-             //  -----------------------------------------------------------------
-             {{   1,   .6900, .920, .810,  0,     0,      0,      0,   0,   0    }},
-             {{   -.8, .6624, .874, .780,  0,    -.0184,  0,      0,   0,   0    }},
-             {{   -.2, .1100, .310, .220,  .22,   0,      0,    -18,   0,   10   }},
-             {{   -.2, .1600, .410, .280, -.22,   0,      0,     18,   0,   10   }},
-             {{   .1,  .2100, .250, .410,  0,     .35,   -.15,    0,   0,   0    }},
-             {{   .1,  .0460, .046, .050,  0,     .1,     .25,    0,   0,   0    }},
-             {{   .1,  .0460, .046, .050,  0,    -.1,     .25,    0,   0,   0    }},
-             {{   .1,  .0460, .023, .050,  -.08, -.605,   0,      0,   0,   0    }},
-             {{   .1,  .0230, .023, .020,  0,    -.606,   0,      0,   0,   0    }},
-             {{   .1,  .0230, .046, .020,  .06,  -.605,   0,      0,   0,   0    }}
+             //   A     a       b      c      x0     y0       z0      phi   theta  psi
+             //  --------------------------------------------------------------------------
+             {{  1.0f,  .6900f, .920f, .810f, 0.00f, 0.f,     0.f,     0.f,  0.f,  0.f   }},
+             {{  -.8f,  .6624f, .874f, .780f, 0.00f, -.0184f, 0.f,     0.f,  0.f,  0.f   }},
+             {{  -.2f,  .1100f, .310f, .220f,  .22f, 0.f,     0.f,   -18.f,  0.f, 10.f   }},
+             {{  -.2f,  .1600f, .410f, .280f, -.22f, 0.f,     0.f,    18.f,  0.f, 10.f   }},
+             {{   .1f,  .2100f, .250f, .410f, 0.00f,  .35f,   -.15f,   0.f,  0.f,  0.f   }},
+             {{   .1f,  .0460f, .046f, .050f, 0.00f,  .1f,     .25f,   0.f,  0.f,  0.f   }},
+             {{   .1f,  .0460f, .046f, .050f, 0.00f, -.1f,     .25f,   0.f,  0.f,  0.f   }},
+             {{   .1f,  .0460f, .023f, .050f, -.08f, -.605f,  0.f,     0.f,  0.f,  0.f   }},
+             {{   .1f,  .0230f, .023f, .020f, 0.00f, -.606f,  0.f,     0.f,  0.f,  0.f   }},
+             {{   .1f,  .0230f, .046f, .020f,  .06f, -.605f,  0.f,     0.f,  0.f,  0.f   }},
         // clang-format on
     }};
+#pragma GCC diagnostic pop
 
     // explicit template instantiation
     template const std::array<std::array<double, 10>, 10> modifiedSheppLoganParameters<double>;

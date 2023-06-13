@@ -1,78 +1,18 @@
 #include "CGLS.h"
 #include "DataContainer.h"
 #include "Error.h"
-#include "L2NormPow2.h"
 #include "LinearOperator.h"
 #include "LinearResidual.h"
-#include "TikhonovProblem.h"
 #include "TypeCasts.hpp"
-#include "WLSProblem.h"
 #include "spdlog/stopwatch.h"
 #include "Logger.h"
 
 namespace elsa
 {
     template <class data_t>
-    const LinearOperator<data_t>& extractOperator(const Problem<data_t>& prob)
-    {
-        auto& residual = downcast<LinearResidual<data_t>>(prob.getDataTerm().getResidual());
-
-        if (!residual.hasOperator()) {
-            throw InvalidArgumentError("CGLS: Problem must have an operator in data term");
-        }
-        return residual.getOperator();
-    }
-
-    template <class data_t>
-    const DataContainer<data_t>& extractDataterm(const Problem<data_t>& prob)
-    {
-        auto& residual = downcast<LinearResidual<data_t>>(prob.getDataTerm().getResidual());
-
-        if (!residual.hasDataVector()) {
-            throw InvalidArgumentError("CGLS: Problem must have a data vector in data term");
-        }
-        return residual.getDataVector();
-    }
-
-    template <class data_t>
-    data_t extractDampening(const TikhonovProblem<data_t>& prob)
-    {
-        auto& regTerm = prob.getRegularizationTerms().at(0);
-        auto& residual = downcast<LinearResidual<data_t>>(regTerm.getFunctional().getResidual());
-
-        if (residual.hasOperator()) {
-            throw InvalidArgumentError(
-                "CGLS: regularization terms of Tikhonov problem must be without operator");
-        }
-
-        if (residual.hasDataVector()) {
-            throw InvalidArgumentError(
-                "CGLS: regularization terms of Tikhonov problem must be without data vector");
-        }
-
-        auto weight = regTerm.getWeight();
-        return weight * weight;
-    }
-
-    template <class data_t>
     CGLS<data_t>::CGLS(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
                        SelfType_t<data_t> eps, SelfType_t<data_t> tol)
         : A_(A.clone()), b_(b), damp_(eps * eps), tol_(tol)
-    {
-    }
-
-    template <class data_t>
-    CGLS<data_t>::CGLS(const WLSProblem<data_t>& wls, SelfType_t<data_t> tol)
-        : A_(extractOperator(wls).clone()), b_(extractDataterm(wls)), damp_(0), tol_(tol)
-    {
-    }
-
-    template <class data_t>
-    CGLS<data_t>::CGLS(const TikhonovProblem<data_t>& tikhonov, SelfType_t<data_t> tol)
-        : A_(extractOperator(tikhonov).clone()),
-          b_(extractDataterm(tikhonov)),
-          damp_(extractDampening(tikhonov)),
-          tol_(tol)
     {
     }
 
@@ -138,7 +78,8 @@ namespace elsa
             k = r.squaredL2Norm();
             auto beta = k / kold;
 
-            c = r + beta * c;
+            // c = r + beta * c;
+            lincomb(1, r, beta, c, c);
             kold = k;
 
             Logger::get("CGLS")->info("{:>5} | {:>15.10} |", iter, s.l2Norm());

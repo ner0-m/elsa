@@ -17,17 +17,6 @@ namespace elsa
     {
     }
 
-    template <typename data_t>
-    SIRT<data_t>::SIRT(const WLSProblem<data_t>& wls, data_t stepSize)
-        : LandweberIteration<data_t>(wls, stepSize)
-    {
-    }
-
-    template <typename data_t>
-    SIRT<data_t>::SIRT(const WLSProblem<data_t>& wls) : LandweberIteration<data_t>(wls)
-    {
-    }
-
     template <class data_t>
     std::unique_ptr<LinearOperator<data_t>>
         SIRT<data_t>::setupOperators(const LinearOperator<data_t>& A) const

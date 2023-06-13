@@ -9,11 +9,10 @@
 #include "doctest/doctest.h"
 
 #include "GradientDescent.h"
-#include "WLSProblem.h"
-#include "Problem.h"
 #include "Identity.h"
 #include "LinearResidual.h"
-#include "L2NormPow2.h"
+#include "LeastSquares.h"
+#include "L2Squared.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
 #include "testHelpers.h"
@@ -50,8 +49,7 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", data_t, f
 
         Identity<data_t> idOp(dd);
 
-        WLSProblem prob(idOp, dcB);
-        data_t epsilon = std::numeric_limits<data_t>::epsilon();
+        LeastSquares<data_t> prob(idOp, dcB);
 
         WHEN("setting up a Gradient Descent solver with fixed step size")
         {
@@ -61,18 +59,17 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", data_t, f
             {
                 auto gdClone = solver.clone();
 
-                REQUIRE_NE(gdClone.get(), &solver);
-                REQUIRE_EQ(*gdClone, solver);
+                CHECK_NE(gdClone.get(), &solver);
+                CHECK_EQ(*gdClone, solver);
 
                 AND_THEN("it works as expected")
                 {
                     auto solution = solver.solve(100);
 
-                    DataContainer<data_t> resultsDifference = solution - dcB;
+                    DataContainer<data_t> diff = solution - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_LE(resultsDifference.squaredL2Norm(),
-                               epsilon * epsilon * dcB.squaredL2Norm());
+                    CHECK_EQ(diff.squaredL2Norm(), doctest::Approx(0));
                 }
             }
         }
@@ -85,75 +82,65 @@ TEST_CASE_TEMPLATE("GradientDescent: Solving a simple linear problem", data_t, f
             {
                 auto gdClone = solver.clone();
 
-                REQUIRE_NE(gdClone.get(), &solver);
-                REQUIRE_EQ(*gdClone, solver);
+                CHECK_NE(gdClone.get(), &solver);
+                CHECK_EQ(*gdClone, solver);
 
                 AND_THEN("it works as expected")
                 {
-                    auto solution = solver.solve(10);
+                    auto solution = solver.solve(50);
 
-                    DataContainer<data_t> resultsDifference = solution - dcB;
+                    DataContainer<data_t> diff = solution - dcB;
 
                     // should have converged for the given number of iterations
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                epsilon * epsilon * dcB.squaredL2Norm()));
+                    CHECK_EQ(diff.squaredL2Norm(), doctest::Approx(0));
                 }
             }
         }
     }
 }
 
-TEST_CASE_TEMPLATE("GradientDescent: Solving a Tikhonov problem", TestType, GradientDescent<float>,
-                   GradientDescent<double>)
+TEST_CASE_TEMPLATE("GradientDescent: Solving a Tikhonov problem", data_t, float, double)
 {
     // Set seed for Eigen Matrices!
     srand((unsigned int) 666);
 
-    using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
 
     GIVEN("a Tikhonov problem")
     {
-        IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
-        VolumeDescriptor dd(numCoeff);
+        VolumeDescriptor dd({13, 24});
 
-        Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
         DataContainer dcB(dd, bVec);
 
-        Identity<data_t> idOp(dd);
-        LinearResidual<data_t> linRes(idOp, dcB);
-        L2NormPow2<data_t> func(linRes);
+        Identity<data_t> op(dd);
+        LeastSquares<data_t> fn(op, dcB);
 
         // the regularization term
-        L2NormPow2<data_t> regFunc(dd);
-        auto lambda = static_cast<data_t>(0.1f);
-        RegularizationTerm<data_t> regTerm(lambda, regFunc);
-        Problem prob(func, regTerm);
+        L2Squared<data_t> l2(dd);
+        auto prob = fn + data_t{0.0001} * l2;
 
         WHEN("setting up a Gradient Descent solver with fixed step size")
         {
-            TestType solver{prob, 0.5};
+            GradientDescent<data_t> solver{prob, 0.5};
 
             THEN("the clone works correctly")
             {
                 auto gdClone = solver.clone();
 
-                REQUIRE_NE(gdClone.get(), &solver);
-                REQUIRE_EQ(*gdClone, solver);
+                CHECK_NE(gdClone.get(), &solver);
+                CHECK_EQ(*gdClone, solver);
             }
             THEN("it works as expected")
             {
-                auto solution = solver.solve(10);
+                auto solution = solver.solve(50);
 
-                DataContainer<data_t> resultsDifference = solution - dcB;
+                DataContainer<data_t> diff = solution - dcB;
 
                 // should have converged for the given number of iterations
-                // does not converge to the optimal solution because of the regularization term
-                // Therefore, just check to fixed value
-                REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(), 0.85f));
+                CHECK_EQ(diff.squaredL2Norm(), doctest::Approx(0));
             }
         }
     }
