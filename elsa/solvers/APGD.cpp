@@ -13,58 +13,21 @@ namespace elsa
 {
     template <typename data_t>
     APGD<data_t>::APGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-                       ProximalOperator<data_t> prox, geometry::Threshold<data_t> mu,
-                       data_t epsilon)
-        : A_(A.clone()), b_(b), prox_(prox), mu_(data_t{mu}), epsilon_(epsilon)
+                       ProximalOperator<data_t> prox, std::optional<data_t> mu, data_t epsilon)
+        : A_(A.clone()), b_(b), prox_(prox), mu_(0), epsilon_(epsilon)
     {
-    }
+        if (!mu.has_value()) {
+            Logger::get("APGD")->info("Computing Lipschitz constant to compute step size");
+            spdlog::stopwatch time;
 
-    template <typename data_t>
-    APGD<data_t>::APGD(const LinearOperator<data_t>& A, const DataContainer<data_t>& b,
-                       ProximalOperator<data_t> prox, data_t epsilon)
-        : A_(A.clone()), b_(b), prox_(prox), epsilon_(epsilon)
-    {
-    }
-
-    template <typename data_t>
-    APGD<data_t>::APGD(const LASSOProblem<data_t>& problem, geometry::Threshold<data_t> mu,
-                       data_t epsilon)
-        : Solver<data_t>(),
-          A_(downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual())
-                 .getOperator()
-                 .clone()),
-          b_(downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual()).getDataVector()),
-          prox_(ProximalL1<data_t>()),
-          lambda_(problem.getRegularizationTerms()[0].getWeight()),
-          mu_{data_t(mu)},
-          epsilon_{epsilon}
-    {
-    }
-
-    template <typename data_t>
-    APGD<data_t>::APGD(const Problem<data_t>& problem, geometry::Threshold<data_t> mu,
-                       data_t epsilon)
-        : APGD(LASSOProblem<data_t>(problem), mu, epsilon)
-    {
-    }
-
-    template <typename data_t>
-    APGD<data_t>::APGD(const Problem<data_t>& problem, data_t epsilon)
-        : APGD<data_t>(LASSOProblem<data_t>(problem), epsilon)
-    {
-    }
-
-    template <typename data_t>
-    APGD<data_t>::APGD(const LASSOProblem<data_t>& problem, data_t epsilon)
-        : Solver<data_t>(),
-          A_(downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual())
-                 .getOperator()
-                 .clone()),
-          b_(downcast<LinearResidual<data_t>>(problem.getDataTerm().getResidual()).getDataVector()),
-          prox_(ProximalL1<data_t>()),
-          lambda_(problem.getRegularizationTerms()[0].getWeight()),
-          epsilon_{epsilon}
-    {
+            // FISTA converges if \f$\mu \in (0, \frac{2}{L})\f$, where \f$L\f$
+            // is the Lipschitz constant. A value just below the upper limit is chosen by default
+            mu_ = data_t{0.45} / powerIterations(adjoint(*A_) * (*A_));
+            Logger::get("APGD")->info("Step length is chosen to be: {:8.5}, (it took {}s)", mu_,
+                                      time);
+        } else {
+            mu_ = *mu;
+        }
     }
 
     template <typename data_t>
@@ -72,7 +35,6 @@ namespace elsa
         -> DataContainer<data_t>
     {
         spdlog::stopwatch aggregate_time;
-        Logger::get("APGD")->info("Start preparations...");
 
         auto x = DataContainer<data_t>(A_->getDomainDescriptor());
         if (x0.has_value()) {
@@ -81,46 +43,57 @@ namespace elsa
             x = 0;
         }
 
-        DataContainer<data_t> xPrev = x;
-        DataContainer<data_t> y = x;
-        DataContainer<data_t> yPrev = x;
-        data_t t;
+        auto xPrev = x;
+        auto y = x;
+        auto z = x;
         data_t tPrev = 1;
 
-        if (!mu_.isInitialized()) {
-            mu_ = powerIterations(adjoint(*A_) * (*A_));
-        }
+        auto Atb = A_->applyAdjoint(b_);
+        auto Ay = DataContainer<data_t>(A_->getRangeDescriptor());
+        auto grad = DataContainer<data_t>(A_->getDomainDescriptor());
 
-        DataContainer<data_t> Atb = A_->applyAdjoint(b_);
-        DataContainer<data_t> gradient = A_->applyAdjoint(A_->apply(yPrev)) - Atb;
+        // Compute gradient as A^T(A(x) - A^T(b)) memory efficient
+        auto gradient = [&](const DataContainer<data_t>& x) {
+            A_->apply(x, Ay);
+            A_->applyAdjoint(Ay, grad);
+            grad -= Atb;
+        };
 
-        Logger::get("APGD")->info("Preparations done, tooke {}s", aggregate_time);
+        Logger::get("APGD")->info("|*{:^6}*|*{:*^12}*|*{:*^8}*|*{:^8}*|", "iter", "gradient",
+                                  "time", "elapsed");
 
-        Logger::get("APGD")->info("{:^6}|{:*^16}|{:*^8}|{:*^8}|", "iter", "gradient", "time",
-                                  "elapsed");
+        // Compute gradient here
+        gradient(y);
 
-        auto deltaZero = gradient.squaredL2Norm();
         for (index_t iter = 0; iter < iterations; ++iter) {
             spdlog::stopwatch iter_time;
 
-            gradient = A_->applyAdjoint(A_->apply(yPrev)) - Atb;
-            x = prox_.apply(yPrev - *mu_ * gradient, geometry::Threshold{*mu_ * lambda_});
+            // z = y - mu_ * grad
+            lincomb(1, y, -mu_, grad, z);
 
-            t = (1 + std::sqrt(1 + 4 * tPrev * tPrev)) / 2;
-            y = x + ((tPrev - 1) / t) * (x - xPrev);
+            // x_{k+1} = prox_{mu * g}(y - mu * grad)
+            x = prox_.apply(z, mu_);
+
+            // t_{k+1} = \frac{\sqrt{1 + 4t_k^2} + 1}{2}
+            data_t t = (1 + std::sqrt(1 + 4 * tPrev * tPrev)) / 2;
+
+            // y_{k+1} = x_k + \frac{t_{k-1} - 1}{t_k}(x_k - x_{k-1})
+            lincomb(1, x, (tPrev - 1) / t, x - xPrev, y); // 1 temporary
 
             xPrev = x;
-            yPrev = y;
             tPrev = t;
 
-            Logger::get("APGD")->info("{:>5} |{:>15} | {:>6.3} |{:>6.3}s |", iter,
-                                      gradient.squaredL2Norm(), iter_time, aggregate_time);
-
-            if (gradient.squaredL2Norm() <= epsilon_ * epsilon_ * deltaZero) {
+            if (grad.squaredL2Norm() <= epsilon_) {
                 Logger::get("APGD")->info("SUCCESS: Reached convergence at {}/{} iteration",
                                           iter + 1, iterations);
                 return x;
             }
+
+            // Update gradient as a last step
+            gradient(y);
+
+            Logger::get("APGD")->info("| {:>6} | {:>12} | {:>8.3} | {:>8.3}s |", iter,
+                                      grad.squaredL2Norm(), iter_time, aggregate_time);
         }
 
         Logger::get("APGD")->warn("Failed to reach convergence at {} iterations", iterations);
@@ -131,11 +104,7 @@ namespace elsa
     template <typename data_t>
     auto APGD<data_t>::cloneImpl() const -> APGD<data_t>*
     {
-        if (mu_.isInitialized()) {
-            return new APGD(*A_, b_, prox_, geometry::Threshold<data_t>{*mu_}, epsilon_);
-        } else {
-            return new APGD(*A_, b_, prox_, epsilon_);
-        }
+        return new APGD<data_t>(*A_, b_, prox_, mu_, epsilon_);
     }
 
     template <typename data_t>
@@ -145,10 +114,7 @@ namespace elsa
         if (!otherAPGD)
             return false;
 
-        if (mu_.isInitialized() != otherAPGD->mu_.isInitialized())
-            return false;
-
-        if (*mu_ != *otherAPGD->mu_)
+        if (mu_ != otherAPGD->mu_)
             return false;
 
         if (epsilon_ != otherAPGD->epsilon_)

@@ -69,11 +69,11 @@ namespace elsa
 
             if (it != sizeToIndex.end()) {
                 _indexMap[i] = it->second;
-                auto index = asSigned(it->second);
+                auto index = static_cast<size_t>(it->second);
                 numCoeffs = _blockDescriptors[index]->getNumberOfCoefficients();
             } else {
                 sizeToIndex.insert({slicesInBlock[i], _blockDescriptors.size()});
-                _indexMap[i] = asUnsigned(_blockDescriptors.size());
+                _indexMap[i] = static_cast<index_t>(_blockDescriptors.size());
                 _blockDescriptors.push_back(generateDescriptorOfPartition(slicesInBlock[i]));
                 numCoeffs = _blockDescriptors.back()->getNumberOfCoefficients();
             }
@@ -90,7 +90,10 @@ namespace elsa
             _blockDescriptors.push_back(blockDesc->clone());
     }
 
-    index_t PartitionDescriptor::getNumberOfBlocks() const { return _indexMap.size(); }
+    index_t PartitionDescriptor::getNumberOfBlocks() const
+    {
+        return _indexMap.size();
+    }
 
     const DataDescriptor& PartitionDescriptor::getDescriptorOfBlock(index_t i) const
     {

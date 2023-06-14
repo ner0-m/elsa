@@ -38,7 +38,7 @@ TEST_CASE_TEMPLATE("ProximalL0: Testing in 1D", data_t, float, double)
                 DataContainer<data_t> expected(volDescr,
                                                Vector_t<data_t>({{0, 0, 0, -7, 7, 8, 8, 0}}));
 
-                auto res = hardThrsOp.apply(x, geometry::Threshold<data_t>{4});
+                auto res = hardThrsOp.apply(x, data_t{4});
                 REQUIRE_UNARY(isApprox(expected, res));
             }
 
@@ -50,7 +50,7 @@ TEST_CASE_TEMPLATE("ProximalL0: Testing in 1D", data_t, float, double)
                 DataContainer<data_t> expected(volDescr,
                                                Vector_t<data_t>({{0, 0, 0, -7, 7, 8, 8, 0}}));
 
-                auto res = prox.apply(x, geometry::Threshold<data_t>{4});
+                auto res = prox.apply(x, data_t{4});
                 REQUIRE_UNARY(isApprox(expected, res));
             }
         }
@@ -78,7 +78,7 @@ TEST_CASE_TEMPLATE("ProximalL0: Testing in 3D", data_t, float, double)
                     volumeDescriptor,
                     Vector_t<data_t>{{{0, 0, 6, 6, 0, 0, 0, -9, 7, 7, 7, 0, 0, 0, 8, 9, 0, 0}}});
 
-                auto res = hardThrsOp.apply(x, geometry::Threshold<data_t>{5});
+                auto res = hardThrsOp.apply(x, data_t{5});
                 REQUIRE_UNARY(isApprox(expected, res));
             }
         }
@@ -102,21 +102,8 @@ TEST_CASE_TEMPLATE("ProximalL0: Testing general behaviour", data_t, float, doubl
                 DataContainer<data_t> x(desc, zero);
                 DataContainer<data_t> expected(desc, zero);
 
-                auto res = hardThrOp.apply(x, geometry::Threshold<data_t>{4});
+                auto res = hardThrOp.apply(x, data_t{4});
                 REQUIRE_UNARY(isApprox(expected, res));
-            }
-
-            THEN("ProximalL0 operator throws exception for t <= 0")
-            {
-                DataContainer<data_t> x(desc, Vector_t<data_t>{{{0, 0, 0, 0, 0, 0, 0, 0}}});
-
-                // actually the geometry::Threshold throws this
-                REQUIRE_THROWS_AS(hardThrOp.apply(x, geometry::Threshold<data_t>{0}),
-                                  InvalidArgumentError);
-
-                // actually the geometry::Threshold throws this
-                REQUIRE_THROWS_AS(hardThrOp.apply(x, geometry::Threshold<data_t>{-1}),
-                                  InvalidArgumentError);
             }
 
             THEN("ProximalL0 operator throws exception for differently sized v and prox")
@@ -127,8 +114,7 @@ TEST_CASE_TEMPLATE("ProximalL0: Testing general behaviour", data_t, float, doubl
                 DataContainer<data_t> largeX(largeDesc,
                                              Vector_t<data_t>{{{0, 0, 0, 0, 0, 0, 0, 0, 0}}});
 
-                REQUIRE_THROWS_AS(hardThrOp.apply(x, geometry::Threshold<data_t>{1}, largeX),
-                                  LogicError);
+                REQUIRE_THROWS_AS(hardThrOp.apply(x, data_t{1}, largeX), LogicError);
             }
         }
     }

@@ -1,8 +1,26 @@
 # list all the headers of the module
-set(MODULE_HEADERS ProximalOperator.h ProximalL1.h ProximalL0.h)
+set(MODULE_HEADERS
+    ProximalOperator.h
+    ProximalL1.h
+    ProximalL0.h
+    ProximalBoxConstraint.h
+    CombinedProximal.h
+    ProximalL2Squared.h
+    ProximalHuber.h
+    ProximalMixedL21Norm.h
+)
 
 # list all the code files of the module
-set(MODULE_SOURCES ProximalOperator.cpp ProximalL1.cpp ProximalL0.cpp)
+set(MODULE_SOURCES
+    ProximalOperator.cpp
+    ProximalL1.cpp
+    ProximalL0.cpp
+    ProximalBoxConstraint.cpp
+    CombinedProximal.cpp
+    ProximalL2Squared.cpp
+    ProximalHuber.cpp
+    ProximalMixedL21Norm.cpp
+)
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)
 list(APPEND MODULE_PRIVATE_DEPS)

@@ -3,6 +3,8 @@
 #include "Error.h"
 #include "elsaDefines.h"
 #include "Bessel.h"
+#include "Luts.hpp"
+#include "Math.hpp"
 
 namespace elsa
 {
@@ -14,15 +16,15 @@ namespace elsa
         // (r/a)^2})^m \f$ for any \f$ 0 <= r <= a \f$.
         template <typename data_t>
         constexpr data_t blob_evaluate(data_t r, SelfType_t<data_t> a, SelfType_t<data_t> alpha,
-                                       int m) noexcept
+                                       index_t m) noexcept
         {
             const auto w = static_cast<data_t>(1) - std::pow(r / a, static_cast<data_t>(2));
             if (w >= 0) {
-                const data_t Im1 = math::bessi(m, alpha);
+                const data_t Im1 = static_cast<data_t>(math::bessi(m, alpha));
                 const data_t arg = std::sqrt(w);
-                const data_t Im2 = math::bessi(m, alpha * arg);
+                const data_t Im2 = static_cast<data_t>(math::bessi(m, alpha * arg));
 
-                return Im2 / Im1 * std::pow(arg, m);
+                return (Im2 / Im1) * static_cast<data_t>(std::pow(arg, m));
             }
             return 0;
         }
@@ -64,32 +66,35 @@ namespace elsa
         /// Semi-Discrete Iteration Methods in X-Ray Tomography - Jonas Vogelgesang
         template <typename data_t>
         constexpr data_t blob_projected(data_t s, SelfType_t<data_t> a, SelfType_t<data_t> alpha,
-                                        int m)
+                                        index_t m)
         {
             // expect alpha > 0
             using namespace elsa::math;
 
             const data_t sda = s / a;
-            const data_t sdas = std::pow(sda, 2);
-            const data_t w = 1.0 - sdas;
+            const data_t sdas = std::pow(sda, 2.f);
+            const data_t w = 1.f - sdas;
 
             if (w > 1.0e-10) {
                 const auto arg = alpha * std::sqrt(w);
                 if (m == 0) {
-                    return (2.0 * a / alpha) * std::sinh(arg) / math::bessi0(alpha);
+                    return (2.f * a / alpha) * std::sinh(arg)
+                           / static_cast<data_t>(math::bessi0(alpha));
                 } else if (m == 1) {
-                    return (2.0 * a / alpha) * std::sqrt(w)
-                           * (std::cosh(arg) - std::sinh(arg) / arg) / math::bessi1(alpha);
+                    return (2.f * a / alpha) * std::sqrt(w)
+                           * (std::cosh(arg) - std::sinh(arg) / arg)
+                           / static_cast<data_t>(math::bessi1(alpha));
 
                 } else if (m == 2) {
-                    return (2.0 * a / alpha) * w
-                           * ((3.0 / (arg * arg) + 1.0) * std::sinh(arg) - (3.0 / arg) * cosh(arg))
-                           / bessi2(alpha);
+                    return (2.f * a / alpha) * w
+                           * ((3.f / (arg * arg) + 1.f) * std::sinh(arg)
+                              - (3.f / arg) * std::cosh(arg))
+                           / static_cast<data_t>(math::bessi2(alpha));
                 } else {
                     throw Error("m out of range in blob_projected()");
                 }
             }
-            return 0.0;
+            return 0.0f;
         }
 
         template <typename data_t>
@@ -141,7 +146,7 @@ namespace elsa
                     return (-2.0 * s / alpha / a) * (std::cosh(arg) * arg - std::sinh(arg))
                            / bessi2(alpha);
                 } else {
-                    throw Error("m out of range in blob_projected()");
+                    throw Error("m out of range in blob_derivative_projected()");
                 }
             }
             return 0.0;
@@ -198,7 +203,7 @@ namespace elsa
                     return (-2.0 / alpha / a) * (std::cosh(arg) * arg - std::sinh(arg))
                            / bessi2(alpha);
                 } else {
-                    throw Error("m out of range in blob_projected()");
+                    throw Error("m out of range in blob_normalized_derivative_projected()");
                 }
             }
             return 0.0;
@@ -210,48 +215,73 @@ namespace elsa
             return blob_derivative_projected(s, 2.f, 10.83f, 2);
         }
 
+        static constexpr double DEFAULT_RADIUS = 2.0;
+        static constexpr double DEFAULT_ALPHA = 10.83;
+        static constexpr index_t DEFAULT_ORDER = 2;
+
     } // namespace blobs
 
     template <typename data_t>
     class Blob
     {
     public:
-        constexpr Blob(data_t radius, SelfType_t<data_t> alpha, int order);
+        constexpr Blob(data_t radius, SelfType_t<data_t> alpha, index_t order)
+            : radius_(radius), alpha_(alpha), order_(order)
+        {
+        }
+        constexpr data_t operator()(data_t s)
+        {
+            return blobs::blob_evaluate(s, radius_, alpha_, order_);
+        }
 
-        constexpr data_t operator()(data_t s);
+        constexpr data_t radius() const { return radius_; }
 
-        constexpr data_t radius() const;
+        constexpr data_t alpha() const { return alpha_; }
 
-        constexpr data_t alpha() const;
-
-        constexpr int order() const;
+        constexpr index_t order() const { return order_; }
 
     private:
         data_t radius_;
         data_t alpha_;
-        int order_;
+        index_t order_;
     };
 
-    template <typename data_t>
+    template <typename data_t, size_t N = DEFAULT_PROJECTOR_LUT_SIZE>
     class ProjectedBlob
     {
     public:
-        constexpr ProjectedBlob(data_t radius, SelfType_t<data_t> alpha, int order)
-            : radius_(radius), alpha_(alpha), order_(order)
+        constexpr ProjectedBlob(data_t radius, SelfType_t<data_t> alpha, index_t order)
+            : radius_(radius),
+              alpha_(alpha),
+              order_(order),
+              lut_([this](data_t s) { return this->operator()<true>(s); }, radius_),
+              derivative_lut_(
+                  [this](data_t s) { return order_ > 0 ? this->derivative<true>(s) : 0; }, radius_),
+              normalized_gradient_lut_(
+                  [this](data_t s) { return order_ > 0 ? this->normalized_gradient(s) : 0; },
+                  radius_)
         {
         }
 
-        constexpr data_t operator()(data_t s)
+        template <bool accurate = false>
+        constexpr data_t operator()(data_t s) const
         {
-            return blobs::blob_projected(s, radius_, alpha_, order_);
+            if constexpr (accurate)
+                return blobs::blob_projected(s, radius_, alpha_, order_);
+            else
+                return lut_(std::abs(s));
         }
 
-        constexpr data_t derivative(data_t s)
+        template <bool accurate = false>
+        constexpr data_t derivative(data_t s) const
         {
-            return blobs::blob_derivative_projected(s, radius_, alpha_, order_);
+            if constexpr (accurate)
+                return blobs::blob_derivative_projected(s, radius_, alpha_, order_);
+            else
+                return derivative_lut_(std::abs(s)) * math::sgn(s);
         }
 
-        constexpr data_t gradient_helper(data_t s)
+        constexpr data_t normalized_gradient(data_t s) const
         {
             return blobs::blob_normalized_derivative_projected(s, radius_, alpha_, order_);
         }
@@ -260,12 +290,30 @@ namespace elsa
 
         constexpr data_t alpha() const { return alpha_; }
 
-        constexpr int order() const { return order_; }
+        constexpr index_t order() const { return order_; }
+
+        constexpr const Lut<data_t, N>& get_lut() const { return lut_; }
+
+        constexpr const Lut<data_t, N>& get_derivative_lut() const { return derivative_lut_; }
+
+        constexpr const Lut<data_t, N>& get_normalized_gradient_lut() const
+        {
+            return normalized_gradient_lut_;
+        }
 
     private:
         data_t radius_;
         data_t alpha_;
-        int order_;
+        index_t order_;
+
+        /// LUT for projected Blob
+        Lut<data_t, N> lut_;
+
+        /// LUT for projected derivative
+        Lut<data_t, N> derivative_lut_;
+
+        /// LUT for projected normalized gradient
+        Lut<data_t, N> normalized_gradient_lut_;
     };
 
 } // namespace elsa

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Functional.h"
 #include "LinearResidual.h"
 
@@ -8,19 +9,21 @@ namespace elsa
     /**
      * @brief Class representing a quadric functional.
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Maximilian Hornung - modularization
-     * @author Tobias Lasser - modernization
-     * @author Nikola Dinev - add functionality
-     *
-     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
-     * real_t
-     *
      * The Quadric functional evaluates to \f$ \frac{1}{2} x^tAx - x^tb \f$ for a symmetric positive
      * definite operator A and a vector b.
      *
      * Please note: contrary to other functionals, Quadric does not allow wrapping an explicit
      * residual.
+     *
+     * @tparam data_t data type for the domain of the residual of the functional, defaulting to
+     * real_t
+     *
+     * @author
+     * * Matthias Wieczorek - initial code
+     * * Maximilian Hornung - modularization
+     * * Tobias Lasser - modernization
+     * * Nikola Dinev - add functionality
+     *
      */
     template <typename data_t = real_t>
     class Quadric : public Functional<data_t>
@@ -69,12 +72,14 @@ namespace elsa
         /// functional
         const LinearResidual<data_t>& getGradientExpression() const;
 
+        bool isDifferentiable() const override;
+
     protected:
         /// the evaluation of the Quadric functional
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
@@ -87,10 +92,7 @@ namespace elsa
 
     private:
         /// storing A,b in a linear residual
-        LinearResidual<data_t> _linearResidual;
-
-        /// lift from base class
-        using Functional<data_t>::_domainDescriptor;
+        LinearResidual<data_t> linResidual_;
     };
 
 } // namespace elsa

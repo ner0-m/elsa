@@ -1,14 +1,3 @@
-/**
- * @file test_Quadric.cpp
- *
- * @brief Tests for the Quadric class
- *
- * @author Matthias Wieczorek - initial code
- * @author Maximilian Hornung - modularization
- * @author David Frank - rewrite
- * @author Tobias Lasser - modernization
- */
-
 #include <doctest/doctest.h>
 
 #include "testHelpers.h"
@@ -44,11 +33,6 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
             THEN("the functional is as expected")
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
-
-                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-                REQUIRE_UNARY(linRes);
-                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
-                REQUIRE_UNARY_FALSE(linRes->hasOperator());
 
                 const auto& gradExpr = func.getGradientExpression();
                 REQUIRE_UNARY_FALSE(gradExpr.hasDataVector());
@@ -92,11 +76,6 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
             THEN("the functional is as expected")
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
-
-                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-                REQUIRE_UNARY(linRes);
-                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
-                REQUIRE_UNARY_FALSE(linRes->hasOperator());
 
                 const auto& gradExpr = func.getGradientExpression();
                 REQUIRE_UNARY_FALSE(gradExpr.hasDataVector());
@@ -144,11 +123,6 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
 
-                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-                REQUIRE_UNARY(linRes);
-                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
-                REQUIRE_UNARY_FALSE(linRes->hasOperator());
-
                 const auto& gradExpr = func.getGradientExpression();
                 REQUIRE_EQ(gradExpr.getDataVector(), dc);
                 REQUIRE_UNARY_FALSE(gradExpr.hasOperator());
@@ -195,11 +169,6 @@ TEST_CASE_TEMPLATE("Quadric: Testing without residual", TestType, float, double,
             THEN("the functional is as expected")
             {
                 REQUIRE_EQ(func.getDomainDescriptor(), dd);
-
-                auto* linRes = downcast_safe<LinearResidual<TestType>>(&func.getResidual());
-                REQUIRE_UNARY(linRes);
-                REQUIRE_UNARY_FALSE(linRes->hasDataVector());
-                REQUIRE_UNARY_FALSE(linRes->hasOperator());
 
                 const auto& gradExpr = func.getGradientExpression();
                 REQUIRE(isApprox(gradExpr.getDataVector(), dc));

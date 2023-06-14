@@ -30,7 +30,12 @@ Accelerated Proximal Gradient Descent
 Alternating Direction Method of Multipliers
 ===========================================
 
-.. doxygenclass:: elsa::ADMM
+.. doxygenclass:: elsa::ADMML2
+
+Linearized ADMM
++++++++++++++++
+
+.. doxygenclass:: elsa::LinearizedADMM
 
 SQS Ordered Subsets
 ===================

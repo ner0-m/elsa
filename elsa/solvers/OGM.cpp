@@ -1,28 +1,37 @@
 #include "OGM.h"
+#include "Functional.h"
 #include "TypeCasts.hpp"
 #include "Logger.h"
+#include "PowerIterations.h"
 
 namespace elsa
 {
     template <typename data_t>
-    OGM<data_t>::OGM(const Problem<data_t>& problem, data_t epsilon)
+    OGM<data_t>::OGM(const Functional<data_t>& problem, data_t epsilon)
         : Solver<data_t>(), _problem(problem.clone()), _epsilon{epsilon}
     {
+        if (!problem.isDifferentiable()) {
+            throw InvalidArgumentError("OGM: Given problem is not differentiable!");
+        }
     }
 
     template <typename data_t>
-    OGM<data_t>::OGM(const Problem<data_t>& problem,
+    OGM<data_t>::OGM(const Functional<data_t>& problem,
                      const LinearOperator<data_t>& preconditionerInverse, data_t epsilon)
         : Solver<data_t>(),
           _problem(problem.clone()),
           _epsilon{epsilon},
           _preconditionerInverse{preconditionerInverse.clone()}
     {
+        if (!problem.isDifferentiable()) {
+            throw InvalidArgumentError("OGM: Given problem is not differentiable!");
+        }
+
         // check that preconditioner is compatible with problem
         if (_preconditionerInverse->getDomainDescriptor().getNumberOfCoefficients()
-                != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()
+                != _problem->getDomainDescriptor().getNumberOfCoefficients()
             || _preconditionerInverse->getRangeDescriptor().getNumberOfCoefficients()
-                   != _problem->getDataTerm().getDomainDescriptor().getNumberOfCoefficients()) {
+                   != _problem->getDomainDescriptor().getNumberOfCoefficients()) {
             throw InvalidArgumentError("OGM: incorrect size of preconditioner");
         }
     }
@@ -32,7 +41,7 @@ namespace elsa
                                              std::optional<DataContainer<data_t>> x0)
     {
         auto prevTheta = static_cast<data_t>(1.0);
-        auto x = DataContainer<data_t>(_problem->getDataTerm().getDomainDescriptor());
+        auto x = DataContainer<data_t>(_problem->getDomainDescriptor());
 
         if (x0.has_value()) {
             x = *x0;
@@ -45,13 +54,12 @@ namespace elsa
         // OGM is very picky when it comes to the accuracy of the used lipschitz constant therefore
         // we use 20 power iterations instead of 5 here to be more precise.
         // In some cases OGM might still not converge then an even more precise constant is needed
-        auto lipschitz = _problem->getLipschitzConstant(x, 20);
+        auto lipschitz = powerIterations(_problem->getHessian(x), 20);
         auto deltaZero = _problem->getGradient(x).squaredL2Norm();
         Logger::get("OGM")->info("Starting optimization with lipschitz constant {}", lipschitz);
 
         // log history legend
-        Logger::get("OGM")->info("{:*^20}|{:*^20}|{:*^20}|{:*^20}|{:*^20}", "iteration",
-                                 "thetaRatio0", "thetaRatio1", "y", "gradient");
+        Logger::get("OGM")->info("| {:^4} | {:^13} | {:^13} |", "", "objective", "gradient");
 
         for (index_t i = 0; i < iterations; ++i) {
             auto gradient = _problem->getGradient(x);
@@ -60,27 +68,18 @@ namespace elsa
                 gradient = _preconditionerInverse->apply(gradient);
 
             DataContainer<data_t> y = x - gradient / lipschitz;
-            data_t theta;
-            if (i == iterations - 1) { // last iteration
-                theta = (static_cast<data_t>(1.0)
-                         + std::sqrt(static_cast<data_t>(1.0)
-                                     + static_cast<data_t>(8.0) * prevTheta * prevTheta))
-                        / static_cast<data_t>(2.0);
-            } else {
-                theta = (static_cast<data_t>(1.0)
-                         + std::sqrt(static_cast<data_t>(1.0)
-                                     + static_cast<data_t>(4.0) * prevTheta * prevTheta))
-                        / static_cast<data_t>(2.0);
-            }
-
-            Logger::get("OGM")->info(" {:<19}| {:<19}| {:<19}| {:<19}| {:<19}", i,
-                                     (prevTheta - 1) / theta, prevTheta / theta, y.squaredL2Norm(),
-                                     gradient.squaredL2Norm());
+            const auto f = (i == iterations - 1) ? data_t{8} : data_t{4};
+            const auto theta =
+                data_t{0.5} * (data_t{1} + std::sqrt(data_t{1} + f * std::pow(prevTheta, 2)));
 
             // x_{i+1} = y_{i+1} + \frac{\theta_i-1}{\theta_{i+1}}(y_{i+1} - y_i) +
             // \frac{\theta_i}{\theta_{i+1}}/(y_{i+1} - x_i)
             x = y + ((prevTheta - static_cast<data_t>(1.0)) / theta) * (y - prevY)
                 - (prevTheta / theta) * (gradient / lipschitz);
+
+            Logger::get("OGM")->info("| {:>4} | {:>13} | {:>13} |", i, _problem->evaluate(x),
+                                     gradient.squaredL2Norm());
+
             prevTheta = theta;
             prevY = y;
 

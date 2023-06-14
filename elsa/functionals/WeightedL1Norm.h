@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Functional.h"
 
 namespace elsa
@@ -26,15 +27,6 @@ namespace elsa
          */
         explicit WeightedL1Norm(const DataContainer<data_t>& weightingOp);
 
-        /**
-         * @brief Constructor for the weighted l1 norm, using a residual as input to map to
-         * a scalar
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivatives)
-         * @param[in] weightingOp container of the weights
-         */
-        WeightedL1Norm(const Residual<data_t>& residual, const DataContainer<data_t>& weightingOp);
-
         /// make copy constructor deletion explicit
         WeightedL1Norm(const WeightedL1Norm<data_t>&) = delete;
 
@@ -49,7 +41,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;

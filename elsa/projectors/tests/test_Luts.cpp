@@ -1,6 +1,7 @@
 #include "doctest/doctest.h"
 
-#include "Luts.hpp"
+#include "BSplines.h"
+#include "Blobs.h"
 #include <algorithm>
 #include <numeric>
 
@@ -13,10 +14,10 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with an array of ones", data_t, float, doub
 {
     constexpr index_t size = 100;
 
-    std::array<data_t, size> array;
+    std::array<data_t, size + 1> array;
     std::fill(std::begin(array), std::end(array), 1);
 
-    Lut lut(array);
+    Lut lut(std::move(array), (data_t) size);
 
     WHEN("Accessing with at integer values")
     {
@@ -38,10 +39,10 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
 {
     constexpr index_t size = 100;
 
-    std::array<data_t, size> array;
+    std::array<data_t, size + 1> array;
     std::iota(std::begin(array), std::end(array), 0);
 
-    Lut lut(array);
+    Lut lut(std::move(array), (data_t) size);
 
     WHEN("Accessing with at integer values")
     {
@@ -56,7 +57,7 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
             CAPTURE(i);
             CAPTURE(lut(i));
             CAPTURE(lut(i + 1));
-            CHECK_EQ(lut(i + 0.5), i + 0.5);
+            CHECK_EQ(Approx(lut(i + 0.5)), i + 0.5);
         }
     }
 
@@ -66,7 +67,7 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
             CAPTURE(i);
             CAPTURE(lut(i));
             CAPTURE(lut(i + 1));
-            CHECK_EQ(lut(i + 0.25), i + 0.25);
+            CHECK_EQ(Approx(lut(i + 0.25)), i + 0.25);
         }
     }
 
@@ -86,7 +87,7 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
             CAPTURE(i);
             CAPTURE(lut(i));
             CAPTURE(lut(i + 1));
-            CHECK_EQ(lut(i + 0.75), i + 0.75);
+            CHECK_EQ(Approx(lut(i + 0.75)), i + 0.75);
         }
     }
 }
@@ -95,15 +96,17 @@ TEST_CASE_TEMPLATE("Lut: Testing Lut with integer sequence", data_t, float, doub
 #undef GIVEN
 #define GIVEN(...) DOCTEST_SUBCASE((std::string("   Given: ") + std::string(__VA_ARGS__)).c_str())
 
-TEST_CASE_TEMPLATE("ProjectedBSlineLut: testing with various degrees", data_t, float, double)
+TEST_CASE_TEMPLATE("ProjectedBSplineLut: testing with various degrees", data_t, float, double)
 {
-    for (int degree = 0; degree < 4; ++degree) {
-        for (int dim = 2; dim < 4; ++dim) {
+    for (int degree = 0; degree < 6; ++degree) {
+        for (int dim = 2; dim < 6; ++dim) {
             GIVEN("BSpline Lut of degree " + std::to_string(degree)
                   + " with dim: " + std::to_string(dim))
             {
-                ProjectedBSplineLut<data_t, 50> lut(dim, degree);
-                ProjectedBSpline<data_t> proj_blob(dim, degree);
+                ProjectedBSpline<data_t, 50> proj_spline(dim, degree);
+
+                auto& lut = proj_spline.get_lut();
+                CAPTURE(proj_spline.radius());
 
                 for (int i = 0; i < 100; ++i) {
                     const auto distance = i / 25.;
@@ -112,8 +115,7 @@ TEST_CASE_TEMPLATE("ProjectedBSlineLut: testing with various degrees", data_t, f
                     CAPTURE(distance);
                     CAPTURE(lut(distance));
 
-                    CHECK_EQ(lut(distance), Approx(proj_blob(distance)));
-                    CHECK_EQ(lut(-distance), Approx(proj_blob(-distance)));
+                    CHECK_EQ(lut(distance), Approx(proj_spline(distance)).epsilon(1e-3));
                 }
             }
         }
@@ -228,13 +230,72 @@ TEST_CASE_TEMPLATE("ProjectedBlobLut: ", data_t, float, double)
                                      4.029329203627377e-07,
                                      0};
 
-    ProjectedBlobLut<data_t, 100> lut(a, alpha, m);
+    ProjectedBlob<data_t, 101> proj_blob(a, alpha, m);
+    auto& lut = proj_blob.get_lut();
 
     CAPTURE(a);
     CAPTURE(alpha);
     CAPTURE(m);
 
     for (int i = 0; i < 99; ++i) {
+        const auto distance = i / 50.;
+
+        CAPTURE(i);
+        CAPTURE(distance);
+        CHECK_EQ(Approx(lut(distance)).epsilon(0.000001), expected[i]);
+    }
+}
+
+TEST_CASE_TEMPLATE("ProjectedBSplineLut: ", data_t, float, double)
+{
+    const auto order = 3;
+    const auto dim = 2;
+    const size_t TABLE_SIZE = 101;
+
+    std::array<double, TABLE_SIZE> expected{
+        0.6666666666666666,     0.6662706666666667,    0.6650986666666668,
+        0.6631746666666667,     0.6605226666666665,    0.6571666666666666,
+        0.6531306666666663,     0.6484386666666664,    0.6431146666666666,
+        0.6371826666666665,     0.6306666666666665,    0.6235906666666666,
+        0.6159786666666667,     0.6078546666666668,    0.5992426666666665,
+        0.5901666666666665,     0.5806506666666662,    0.5707186666666668,
+        0.5603946666666667,     0.5497026666666668,    0.5386666666666665,
+        0.5273106666666669,     0.5156586666666667,    0.5037346666666666,
+        0.49156266666666676,    0.4791666666666665,    0.46657066666666686,
+        0.45379866666666707,    0.440874666666667,     0.4278226666666668,
+        0.4146666666666662,     0.4014306666666667,    0.3881386666666664,
+        0.37481466666666674,    0.36148266666666695,   0.34816666666666657,
+        0.3348906666666667,     0.3216786666666665,    0.30855466666666703,
+        0.2955426666666664,     0.28266666666666673,   0.26995066666666734,
+        0.25741866666666646,    0.24509466666666646,   0.23300266666666647,
+        0.22116666666666662,    0.2096106666666664,    0.19835866666666635,
+        0.18743466666666697,    0.1768626666666664,    0.16666666666666696,
+        0.1568653333333326,     0.14745599999999934,   0.1384306666666665,
+        0.12978133333333305,    0.1215000000000001,    0.11357866666666698,
+        0.10600933333333376,    0.09878399999999997,   0.09189466666666615,
+        0.08533333333333333,    0.07909199999999988,   0.07316266666666546,
+        0.06753733333333228,    0.06220800000000013,   0.05716666666666797,
+        0.05240533333333441,    0.04791599999999959,   0.04369066666666471,
+        0.03972133333333355,    0.03600000000000025,   0.03251866666666516,
+        0.029269333333332086,   0.026244000000000378,  0.023434666666665854,
+        0.020833333333333634,   0.018431999999999088,  0.016222666666665553,
+        0.01419733333333284,    0.012348000000000331,  0.0106666666666691,
+        0.009145333333335032,   0.007775999999997785,  0.006550666666665872,
+        0.005461333333334373,   0.004499999999999699,  0.0036586666666668932,
+        0.0029293333333331173,  0.0023039999999991956, 0.0017746666666672573,
+        0.0013333333333340192,  0.0009719999999988072, 0.0006826666666672199,
+        0.00045733333333397574, 0.0002879999999997884, 0.00016666666666681484,
+        8.533333333371473e-05,  3.599999999948089e-05, 1.066666666660332e-05,
+        1.3333333348519716e-06, -5.551115123125783e-16};
+
+    ProjectedBSpline<data_t, TABLE_SIZE> proj_spline(dim, order);
+
+    auto& lut = proj_spline.get_lut();
+
+    CAPTURE(order);
+    CAPTURE(dim);
+
+    for (int i = 0; i < TABLE_SIZE; ++i) {
         const auto distance = i / 50.;
 
         CAPTURE(i);

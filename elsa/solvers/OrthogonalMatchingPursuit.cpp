@@ -1,6 +1,5 @@
 #include "OrthogonalMatchingPursuit.h"
 #include "TypeCasts.hpp"
-#include "WLSProblem.h"
 #include "CGLS.h"
 
 #include <iostream>
@@ -8,9 +7,10 @@
 namespace elsa
 {
     template <typename data_t>
-    OrthogonalMatchingPursuit<data_t>::OrthogonalMatchingPursuit(
-        const RepresentationProblem<data_t>& problem, data_t epsilon)
-        : Solver<data_t>(), _problem(problem), _epsilon{epsilon}
+    OrthogonalMatchingPursuit<data_t>::OrthogonalMatchingPursuit(const Dictionary<data_t>& D,
+                                                                 const DataContainer<data_t>& y,
+                                                                 data_t epsilon)
+        : Solver<data_t>(), dict_(D), signal_(y), epsilon_{epsilon}
     {
     }
 
@@ -19,41 +19,41 @@ namespace elsa
         OrthogonalMatchingPursuit<data_t>::solve(index_t iterations,
                                                  std::optional<DataContainer<data_t>> x0)
     {
-        const auto& dict = _problem.getDictionary();
-        const auto& residual = _problem.getDataTerm().getResidual();
-        auto currentRepresentation =
-            DataContainer<data_t>(_problem.getDataTerm().getDomainDescriptor());
+        auto eval = [&](auto x) { return 0.5 * (dict_.apply(x) - signal_).squaredL2Norm(); };
+
+        auto x = DataContainer<data_t>(dict_.getDomainDescriptor());
         if (x0.has_value()) {
-            currentRepresentation = *x0;
+            x = *x0;
         } else {
-            currentRepresentation = 0;
+            x = 0;
         }
 
         IndexVector_t support(0); // the atoms used for the representation
 
         index_t i = 0;
-        while (i < iterations && _problem.evaluate(currentRepresentation) > _epsilon) {
-            index_t k = mostCorrelatedAtom(dict, residual.evaluate(currentRepresentation));
+        while (i < iterations && eval(x) > epsilon_) {
+            auto residual = dict_.apply(x) - signal_;
+            index_t k = mostCorrelatedAtom(dict_, residual);
 
             support.conservativeResize(support.size() + 1);
             support[support.size() - 1] = k;
-            Dictionary<data_t> purgedDict = dict.getSupportedDictionary(support);
+            Dictionary<data_t> purgedDict = dict_.getSupportedDictionary(support);
 
-            CGLS<data_t> cgSolver(purgedDict, _problem.getSignal());
+            CGLS<data_t> cgSolver(purgedDict, signal_);
             const auto wlsSolution = cgSolver.solve(10);
 
             // wlsSolution has only non-zero coefficients, copy those to the full solution with zero
             // coefficients
             index_t j = 0;
             for (const auto& atomIndex : support) {
-                currentRepresentation[atomIndex] = wlsSolution[j];
+                x[atomIndex] = wlsSolution[j];
                 ++j;
             }
 
             ++i;
         }
 
-        return currentRepresentation;
+        return x;
     }
 
     template <typename data_t>
@@ -80,7 +80,7 @@ namespace elsa
     template <typename data_t>
     OrthogonalMatchingPursuit<data_t>* OrthogonalMatchingPursuit<data_t>::cloneImpl() const
     {
-        return new OrthogonalMatchingPursuit(_problem, _epsilon);
+        return new OrthogonalMatchingPursuit(dict_, signal_, epsilon_);
     }
 
     template <typename data_t>
@@ -90,7 +90,7 @@ namespace elsa
         if (!otherOMP)
             return false;
 
-        if (_epsilon != otherOMP->_epsilon)
+        if (epsilon_ != otherOMP->epsilon_)
             return false;
 
         return true;

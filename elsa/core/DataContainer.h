@@ -140,6 +140,10 @@ namespace elsa
         /// signal)
         index_t getSize() const;
 
+        /// get the number of blocks the signal is created from. If the descriptor
+        /// is not of type `BlockDescriptor` 1 is returned;
+        index_t getNumberOfBlocks() const;
+
         /// return the index-th element of linearized signal (not bounds-checked!)
         reference operator[](index_t index);
 
@@ -185,11 +189,26 @@ namespace elsa
         /// return the l2 norm of this signal (square root of dot product with itself)
         GetFloatingPointType_t<data_t> l2Norm() const;
 
+        /// return the pointwise l2 norm of this signal. Pointwise norms assume
+        /// blocked DataContainers, and then the norm is taken column-wise.
+        /// The pointwise l2 norm is equivalent to the following NumPy code
+        /// snippet: `np.sqrt(np.sum(x ** 2, axis=0))`, assuming a signal,
+        /// where the first axis indexes each block of the data.
+        DataContainer<GetFloatingPointType_t<data_t>> pL2Norm() const;
+
         /// return the l0 pseudo-norm of this signal (number of non-zero values)
         index_t l0PseudoNorm() const;
 
         /// return the l1 norm of this signal (sum of absolute values)
         GetFloatingPointType_t<data_t> l1Norm() const;
+
+        /// return the pointwise l1 norm of this signal. Pointwise norms assume
+        /// blocked DataContainers, and then the norm is taken column-wise.
+        ///
+        /// The pointwise l1 norm is equivalent to the following NumPy code
+        /// snippet: `np.sum(np.abs(x), axis=0)`, assuming a signal,
+        /// where the first axis indexes each block of the data.
+        DataContainer<GetFloatingPointType_t<data_t>> pL1Norm() const;
 
         /// return the linf norm of this signal (maximum of absolute values)
         GetFloatingPointType_t<data_t> lInfNorm() const;
@@ -497,6 +516,28 @@ namespace elsa
     template <typename data_t>
     DataContainer<value_type_of_t<data_t>> cwiseAbs(const DataContainer<data_t>& dc);
 
+    /// @brief compute the sign of each entry of the input DataContainer. The
+    /// function is defined as:
+    /// \[
+    /// \operatorname{sign}(x_i) =
+    /// \begin{cases}
+    /// 1 & \text{if } x_i > 0 \\
+    /// -1 & \text{if } x_i < 0 \\
+    /// 0 & \text{elsa}
+    /// \end{cases} \quad \forall i
+    /// \]
+    /// For complex numbers, the definition is givens as:
+    /// \[
+    /// \operatorname{sign}(x_i) =
+    /// \begin{cases}
+    /// 1 & \text{if } \mathrm{Re}(x_i) > 0 \\
+    /// -1 & \text{if } \mathrm{Re}(x_i) < 0 \\
+    /// sign(\mathrm{Im}(x_i)) & \text{elsa}
+    /// \end{cases} \quad \forall i
+    /// \]
+    template <typename data_t>
+    DataContainer<value_type_of_t<data_t>> sign(const DataContainer<data_t>& dc);
+
     template <typename data_t>
     DataContainer<add_complex_t<data_t>> asComplex(const DataContainer<data_t>& dc);
 
@@ -507,5 +548,28 @@ namespace elsa
     /// Imag for complex DataContainers
     template <typename data_t>
     DataContainer<value_type_of_t<data_t>> imag(const DataContainer<data_t>& dc);
+
+    /// Compute the linear combination of \f$a * x + b * y\f$.
+    ///
+    /// This function can be used as a memory efficient version for the computation
+    /// of the above expression, as for such an expression (without expression template)
+    /// multiple copies need to be created and allocated.
+    ///
+    /// The function throws, if x and y do not have the same data descriptor
+    template <class data_t>
+    DataContainer<data_t> lincomb(SelfType_t<data_t> a, const DataContainer<data_t>& x,
+                                  SelfType_t<data_t> b, const DataContainer<data_t>& y);
+
+    /// Compute the linear combination of \f$a * x + b * y\f$, and write it to
+    /// the output variable.
+    ///
+    /// This function can be used as a memory efficient version for the computation
+    /// of the above expression, as for such an expression (without expression template)
+    /// multiple copies need to be created and allocated.
+    ///
+    /// The function throws, if x, y and out do not have the same data descriptor
+    template <class data_t>
+    void lincomb(SelfType_t<data_t> alpha, const DataContainer<data_t>& x, SelfType_t<data_t> b,
+                 const DataContainer<data_t>& y, DataContainer<data_t>& out);
 
 } // namespace elsa

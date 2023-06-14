@@ -74,13 +74,22 @@ namespace elsa::math
         return x < 0.0 ? -result : result;
     }
 
-    double bessi2(double x) { return (x == 0) ? 0 : bessi0(x) - ((2 * 1) / x) * bessi1(x); }
+    double bessi2(double x)
+    {
+        return (x == 0) ? 0 : bessi0(x) - ((2 * 1) / x) * bessi1(x);
+    }
 
-    double bessi3(double x) { return (x == 0) ? 0 : bessi1(x) - ((2 * 2) / x) * bessi2(x); }
+    double bessi3(double x)
+    {
+        return (x == 0) ? 0 : bessi1(x) - ((2 * 2) / x) * bessi2(x);
+    }
 
-    double bessi4(double x) { return (x == 0) ? 0 : bessi2(x) - ((2 * 3) / x) * bessi3(x); }
+    double bessi4(double x)
+    {
+        return (x == 0) ? 0 : bessi2(x) - ((2 * 3) / x) * bessi3(x);
+    }
 
-    double bessi(int m, double x)
+    double bessi(index_t m, double x)
     {
         if (m == 0) {
             return bessi0(x);
@@ -105,8 +114,10 @@ namespace elsa::math
             double result = 0.0;
             double bip = 0.0;
             double bi = 1.0;
-            for (int j = 2 * (m + (int) std::sqrt(ACC * m)); j > 0; --j) {
-                double bim = bip + j * tox * bi;
+            for (index_t j =
+                     2 * (m + static_cast<index_t>(std::sqrt(ACC * static_cast<double>(m))));
+                 j > 0; --j) {
+                double bim = bip + static_cast<double>(j) * tox * bi;
                 bip = bi;
                 bi = bim;
                 if (std::abs(bi) > BIGNO) {

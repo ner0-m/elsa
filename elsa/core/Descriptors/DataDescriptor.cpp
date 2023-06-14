@@ -90,7 +90,7 @@ namespace elsa
             throw InvalidArgumentError(
                 "DataDescriptor: mismatch of coordinate and descriptor size");
 
-        return _productOfCoefficientsPerDimension.cwiseProduct(coordinate).sum();
+        return detail::coord2Idx(coordinate, _productOfCoefficientsPerDimension);
     }
 
     IndexVector_t DataDescriptor::getCoordinateFromIndex(elsa::index_t index) const
@@ -99,16 +99,7 @@ namespace elsa
         if (index < 0 || index >= getNumberOfCoefficients())
             throw InvalidArgumentError("DataDescriptor: invalid index");
 
-        IndexVector_t coordinate(_numberOfDimensions);
-
-        index_t leftOver = index;
-        for (index_t i = _numberOfDimensions - 1; i >= 1; --i) {
-            coordinate(i) = leftOver / _productOfCoefficientsPerDimension(i);
-            leftOver %= _productOfCoefficientsPerDimension(i);
-        }
-        coordinate(0) = leftOver;
-
-        return coordinate;
+        return detail::idx2Coord(index, _productOfCoefficientsPerDimension);
     }
 
     bool DataDescriptor::isEqual(const DataDescriptor& other) const

@@ -22,7 +22,10 @@ namespace elsa
         return result;
     }
 
-    CartesianIndices::CartesianIndices(std::vector<IndexRange> ranges) : size_(ranges.size()) {}
+    CartesianIndices::CartesianIndices(std::vector<IndexRange> ranges)
+        : size_(static_cast<index_t>(ranges.size()))
+    {
+    }
 
     CartesianIndices::CartesianIndices(const IndexVector_t& to)
         : size_(to.size()), first_(IndexVector_t::Zero(size_)), last_(to)
@@ -37,27 +40,60 @@ namespace elsa
         }
     }
 
-    auto CartesianIndices::dims() const -> index_t { return size_; }
+    auto CartesianIndices::dims() const -> index_t
+    {
+        return size_;
+    }
 
-    auto CartesianIndices::size() const -> index_t { return (last_ - first_).prod(); }
+    auto CartesianIndices::size() const -> index_t
+    {
+        return (last_ - first_).prod();
+    }
 
-    auto CartesianIndices::range(index_t i) const -> IndexRange { return {first_[i], last_[i]}; }
+    auto CartesianIndices::range(index_t i) const -> IndexRange
+    {
+        return {first_[i], last_[i]};
+    }
 
-    auto CartesianIndices::first() -> IndexVector_t& { return first_; }
+    auto CartesianIndices::first() -> IndexVector_t&
+    {
+        return first_;
+    }
 
-    auto CartesianIndices::first() const -> const IndexVector_t& { return first_; }
+    auto CartesianIndices::first() const -> const IndexVector_t&
+    {
+        return first_;
+    }
 
-    auto CartesianIndices::last() -> IndexVector_t& { return last_; }
+    auto CartesianIndices::last() -> IndexVector_t&
+    {
+        return last_;
+    }
 
-    auto CartesianIndices::last() const -> const IndexVector_t& { return last_; }
+    auto CartesianIndices::last() const -> const IndexVector_t&
+    {
+        return last_;
+    }
 
-    auto CartesianIndices::begin() -> iterator { return iterator(first(), first(), last()); }
+    auto CartesianIndices::begin() -> iterator
+    {
+        return iterator(first(), first(), last());
+    }
 
-    auto CartesianIndices::begin() const -> iterator { return {first(), first(), last()}; }
+    auto CartesianIndices::begin() const -> iterator
+    {
+        return {first(), first(), last()};
+    }
 
-    auto CartesianIndices::end() -> iterator { return {as_sentinel_t, first(), last()}; }
+    auto CartesianIndices::end() -> iterator
+    {
+        return {as_sentinel_t, first(), last()};
+    }
 
-    auto CartesianIndices::end() const -> iterator { return {as_sentinel_t, first(), last()}; }
+    auto CartesianIndices::end() const -> iterator
+    {
+        return {as_sentinel_t, first(), last()};
+    }
 
     /****** Iterator implementation ******/
     CartesianIndices::iterator::iterator(as_sentinel, const IndexVector_t& begin,
@@ -78,7 +114,10 @@ namespace elsa
     {
     }
 
-    auto CartesianIndices::iterator::operator*() const -> const IndexVector_t& { return cur_; }
+    auto CartesianIndices::iterator::operator*() const -> const IndexVector_t&
+    {
+        return cur_;
+    }
 
     auto CartesianIndices::iterator::operator++() -> iterator&
     {
@@ -183,9 +222,15 @@ namespace elsa
         return !(lhs < rhs);
     }
 
-    auto CartesianIndices::iterator::at_end() -> bool { return cur_[0] == ends_[0]; }
+    auto CartesianIndices::iterator::at_end() -> bool
+    {
+        return cur_[0] == ends_[0];
+    }
 
-    auto CartesianIndices::iterator::at_end() const -> bool { return cur_[0] == ends_[0]; }
+    auto CartesianIndices::iterator::at_end() const -> bool
+    {
+        return cur_[0] == ends_[0];
+    }
 
     auto CartesianIndices::iterator::inc_recursive(index_t N) -> void
     {
@@ -197,7 +242,10 @@ namespace elsa
         }
     }
 
-    auto CartesianIndices::iterator::inc() -> void { inc_recursive(cur_.size() - 1); }
+    auto CartesianIndices::iterator::inc() -> void
+    {
+        inc_recursive(cur_.size() - 1);
+    }
 
     auto CartesianIndices::iterator::prev_recursive(index_t N) -> void
     {
@@ -210,7 +258,10 @@ namespace elsa
         --iter;
     }
 
-    auto CartesianIndices::iterator::prev() -> void { prev_recursive(cur_.size() - 1); }
+    auto CartesianIndices::iterator::prev() -> void
+    {
+        prev_recursive(cur_.size() - 1);
+    }
 
     auto CartesianIndices::iterator::distance_to_recusrive(const iterator& other,
                                                            difference_type N) const

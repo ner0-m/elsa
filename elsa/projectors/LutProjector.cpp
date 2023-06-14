@@ -6,11 +6,11 @@
 namespace elsa
 {
     template <typename data_t>
-    BlobProjector<data_t>::BlobProjector(data_t radius, data_t alpha, data_t order,
-                                         const VolumeDescriptor& domainDescriptor,
-                                         const DetectorDescriptor& rangeDescriptor)
+    BlobProjector<data_t>::BlobProjector(const VolumeDescriptor& domainDescriptor,
+                                         const DetectorDescriptor& rangeDescriptor, data_t radius,
+                                         data_t alpha, index_t order)
         : LutProjector<data_t, BlobProjector<data_t>>(domainDescriptor, rangeDescriptor),
-          lut_(radius, alpha, order)
+          blob_(radius, alpha, order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
@@ -25,13 +25,6 @@ namespace elsa
         if (rangeDescriptor.getNumberOfGeometryPoses() == 0) {
             throw InvalidArgumentError("BlobProjector: rangeDescriptor without any geometry");
         }
-    }
-
-    template <typename data_t>
-    BlobProjector<data_t>::BlobProjector(const VolumeDescriptor& domainDescriptor,
-                                         const DetectorDescriptor& rangeDescriptor)
-        : BlobProjector(2, 10.83, 2, domainDescriptor, rangeDescriptor)
-    {
     }
 
     template <typename data_t>
@@ -52,11 +45,11 @@ namespace elsa
     }
 
     template <typename data_t>
-    BSplineProjector<data_t>::BSplineProjector(data_t degree,
-                                               const VolumeDescriptor& domainDescriptor,
-                                               const DetectorDescriptor& rangeDescriptor)
+    BSplineProjector<data_t>::BSplineProjector(const VolumeDescriptor& domainDescriptor,
+                                               const DetectorDescriptor& rangeDescriptor,
+                                               index_t order)
         : LutProjector<data_t, BSplineProjector<data_t>>(domainDescriptor, rangeDescriptor),
-          lut_(domainDescriptor.getNumberOfDimensions(), degree)
+          bspline_(domainDescriptor.getNumberOfDimensions(), order)
     {
         // sanity checks
         auto dim = domainDescriptor.getNumberOfDimensions();
@@ -75,16 +68,9 @@ namespace elsa
     }
 
     template <typename data_t>
-    BSplineProjector<data_t>::BSplineProjector(const VolumeDescriptor& domainDescriptor,
-                                               const DetectorDescriptor& rangeDescriptor)
-        : BSplineProjector(2, domainDescriptor, rangeDescriptor)
-    {
-    }
-
-    template <typename data_t>
     data_t BSplineProjector<data_t>::weight(data_t distance) const
     {
-        return lut_(distance);
+        return bspline_.get_lut()(distance);
     }
 
     template <typename data_t>

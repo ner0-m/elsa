@@ -45,18 +45,47 @@ namespace elsa
     }
 
     template <typename data_t>
-    data_t SiddonsMethod<data_t>::traverseRayForward(const BoundingBox& aabb, const RealRay_t& ray,
+    data_t SiddonsMethod<data_t>::traverseRayForward(BoundingBox aabb, const RealRay_t& ray,
                                                      const DataContainer<data_t>& x) const
     {
         const auto& domain = x.getDataDescriptor();
 
+        if (domain.getNumberOfDimensions() == 2) {
+            return doTraverseRayForward<2>(aabb, ray, x, domain);
+        } else if (domain.getNumberOfDimensions() == 3) {
+            return doTraverseRayForward<3>(aabb, ray, x, domain);
+        }
+
+        return data_t(0);
+    }
+
+    template <typename data_t>
+    void SiddonsMethod<data_t>::traverseRayBackward(BoundingBox aabb, const RealRay_t& ray,
+                                                    const value_type& detectorValue,
+                                                    DataContainer<data_t>& Aty) const
+    {
+        const auto& domain = Aty.getDataDescriptor();
+
+        if (domain.getNumberOfDimensions() == 2) {
+            doTraverseRayBackward<2>(aabb, ray, detectorValue, Aty);
+        } else if (domain.getNumberOfDimensions() == 3) {
+            doTraverseRayBackward<3>(aabb, ray, detectorValue, Aty);
+        }
+    }
+
+    template <typename data_t>
+    template <int dim>
+    data_t SiddonsMethod<data_t>::doTraverseRayForward(BoundingBox aabb, const RealRay_t& ray,
+                                                       const DataContainer<data_t>& x,
+                                                       const DataDescriptor& domain) const
+    {
         // --> setup traversal algorithm
-        TraverseAABB traverse(aabb, ray);
+        TraverseAABB<dim> traverse(aabb, ray, domain.getProductOfCoefficientsPerDimension());
 
         data_t accumulator = data_t(0);
 
         // --> initial index to access the data vector
-        auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+        auto dataIndexForCurrentVoxel = traverse.getCurrentIndex();
 
         while (traverse.isInBoundingBox()) {
 
@@ -64,24 +93,24 @@ namespace elsa
             // --> update result depending on the operation performed
             accumulator += x[dataIndexForCurrentVoxel] * weight;
 
-            dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+            dataIndexForCurrentVoxel = traverse.getCurrentIndex();
         }
 
         return accumulator;
     }
 
     template <typename data_t>
-    void SiddonsMethod<data_t>::traverseRayBackward(const BoundingBox& aabb, const RealRay_t& ray,
-                                                    const value_type& detectorValue,
-                                                    DataContainer<data_t>& Aty) const
+    template <int dim>
+    void SiddonsMethod<data_t>::doTraverseRayBackward(BoundingBox aabb, const RealRay_t& ray,
+                                                      const value_type& detectorValue,
+                                                      DataContainer<data_t>& Aty) const
     {
         const auto& domain = Aty.getDataDescriptor();
 
         // --> setup traversal algorithm
-        TraverseAABB traverse(aabb, ray);
-
+        TraverseAABB<dim> traverse(aabb, ray, domain.getProductOfCoefficientsPerDimension());
         // --> initial index to access the data vector
-        auto dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+        auto dataIndexForCurrentVoxel = traverse.getCurrentIndex();
 
         while (traverse.isInBoundingBox()) {
 
@@ -90,7 +119,7 @@ namespace elsa
 #pragma omp atomic
             Aty[dataIndexForCurrentVoxel] += detectorValue * weight;
 
-            dataIndexForCurrentVoxel = domain.getIndexFromCoordinate(traverse.getCurrentVoxel());
+            dataIndexForCurrentVoxel = traverse.getCurrentIndex();
         }
     }
 

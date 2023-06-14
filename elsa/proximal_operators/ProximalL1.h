@@ -2,6 +2,7 @@
 
 #include "DataContainer.h"
 #include "StrongTypes.h"
+#include "elsaDefines.h"
 
 namespace elsa
 {
@@ -24,6 +25,8 @@ namespace elsa
     public:
         ProximalL1() = default;
 
+        explicit ProximalL1(data_t sigma);
+
         /// default destructor
         ~ProximalL1() = default;
 
@@ -34,15 +37,24 @@ namespace elsa
          * @param[in] t input Threshold
          * @param[out] prox output DataContainer
          */
-        void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+        void apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                    DataContainer<data_t>& prox) const;
 
-        DataContainer<data_t> apply(const DataContainer<data_t>& v,
-                                    geometry::Threshold<data_t> t) const;
+        DataContainer<data_t> apply(const DataContainer<data_t>& v, SelfType_t<data_t> t) const;
 
-        friend bool operator==(const ProximalL1<data_t>& lhs, const ProximalL1<data_t>& rhs);
-        friend bool operator!=(const ProximalL1<data_t>& lhs, const ProximalL1<data_t>& rhs);
+    private:
+        data_t sigma_{1};
     };
+    template <typename T>
+    bool operator==(const ProximalL1<T>& lhs, const ProximalL1<T>& rhs)
+    {
+        return true;
+    }
+    template <typename T>
+    bool operator!=(const ProximalL1<T>& lhs, const ProximalL1<T>& rhs)
+    {
+        return false;
+    }
 
     template <class data_t>
     using SoftThresholding = ProximalL1<data_t>;

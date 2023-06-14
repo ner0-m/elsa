@@ -53,9 +53,6 @@ namespace elsa
     class JosephsMethod : public XrayProjector<JosephsMethod<data_t>>
     {
     public:
-        /// Available interpolation modes
-        enum class Interpolation { NN, LINEAR };
-
         using self_type = JosephsMethod<data_t>;
         using base_type = XrayProjector<self_type>;
         using value_type = typename base_type::value_type;
@@ -73,8 +70,7 @@ namespace elsa
          * the range is expected to be matching the domain (detSizeX, [detSizeY], acqPoses).
          */
         JosephsMethod(const VolumeDescriptor& domainDescriptor,
-                      const DetectorDescriptor& rangeDescriptor,
-                      Interpolation interpolation = Interpolation::LINEAR);
+                      const DetectorDescriptor& rangeDescriptor);
 
         /// default destructor
         ~JosephsMethod() = default;
@@ -98,39 +94,10 @@ namespace elsa
         /// implement the polymorphic comparison operation
         bool _isEqual(const LinearOperator<data_t>& other) const;
 
-        /// the interpolation mode
-        Interpolation _interpolation;
-
         /// the traversal routine (for both apply/applyAdjoint)
-        template <bool adjoint>
+        template <bool adjoint, int dim>
         void traverseVolume(const BoundingBox& aabb, const DataContainer<data_t>& vector,
                             DataContainer<data_t>& result) const;
-
-        /**
-         * @brief  Linear interpolation, works in any dimension
-         *
-         * @tparam adjoint true for backward projection, false for forward
-         *
-         * @param[in] vector the input DataContainer
-         * @param[out] result DataContainer for results
-         * @param[in] fractionals the fractional numbers used in the interpolation
-         * @param[in] domainDim number of dimensions
-         * @param[in] currentVoxel coordinates of voxel for interpolation
-         * @param[in] intersection weighting for the interpolated values depending on the incidence
-         * angle
-         * @param[in] from index of the current vector position
-         * @param[in] to index of the current result position
-         * @param[in] mainDirection specifies the main direction of the ray
-         */
-        template <bool adjoint>
-        void linear(const BoundingBox& aabb, const DataContainer<data_t>& vector,
-                    DataContainer<data_t>& result, const RealVector_t& fractionals,
-                    index_t domainDim, const IndexVector_t& currentVoxel, float intersection,
-                    index_t from, index_t to, int mainDirection) const;
-
-        /// lift from base class
-        // using LinearOperator<data_t>::_domainDescriptor;
-        // using LinearOperator<data_t>::_rangeDescriptor;
 
         friend class XrayProjector<self_type>;
     };

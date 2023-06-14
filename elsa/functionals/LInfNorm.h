@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataContainer.h"
 #include "Functional.h"
 
 namespace elsa
@@ -30,14 +31,6 @@ namespace elsa
          */
         explicit LInfNorm(const DataDescriptor& domainDescriptor);
 
-        /**
-         * @brief Constructor for the linf norm functional, using a residual as input to map to a
-         * scalar
-         *
-         * @param[in] residual to be used when evaluating the functional (or its derivative)
-         */
-        explicit LInfNorm(const Residual<data_t>& residual);
-
         /// make copy constructor deletion explicit
         LInfNorm(const LInfNorm<data_t>&) = delete;
 
@@ -49,7 +42,7 @@ namespace elsa
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
 
         /// the computation of the gradient (in place)
-        void getGradientInPlaceImpl(DataContainer<data_t>& Rx) override;
+        void getGradientImpl(const DataContainer<data_t>& Rx, DataContainer<data_t>& out) override;
 
         /// the computation of the Hessian
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;

@@ -37,6 +37,17 @@ namespace elsa
     template <typename data_t>
     using Vector_t = Eigen::Matrix<data_t, Eigen::Dynamic, 1>;
 
+    /// global type for arrays of index_t of size dim
+    template <int dim>
+    using IndexArray_t = Eigen::Array<index_t, dim, 1>;
+
+    /// global type for arrrays of real_t of size dim
+    template <int dim>
+    using RealArray_t = Eigen::Array<real_t, dim, 1>;
+
+    /// global type for arrays of bol of size dim
+    template <int dim>
+    using BooleanArray_t = Eigen::Array<bool, dim, 1>;
     /// global type for matrices of real numbers
     using RealMatrix_t = Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic>;
 

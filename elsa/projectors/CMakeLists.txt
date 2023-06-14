@@ -3,14 +3,14 @@ set(MODULE_HEADERS
     BoundingBox.h
     Intersection.h
     TraverseAABB.h
-    TraverseAABBBranchless.h
-    TraverseAABBJosephsMethod.h
+    DrivingDirectionTraversal.h
     SliceTraversal.h
     LutProjector.h
     VoxelProjector.h
+    PhaseContrastProjector.h
+    VoxelComputation.h
     BinaryMethod.h
     SiddonsMethod.h
-    SiddonsMethodBranchless.h
     JosephsMethod.h
     SubsetSampler.h
     Blobs.h
@@ -23,14 +23,13 @@ set(MODULE_SOURCES
     BoundingBox.cpp
     Intersection.cpp
     TraverseAABB.cpp
-    TraverseAABBBranchless.cpp
-    TraverseAABBJosephsMethod.cpp
+    DrivingDirectionTraversal.cpp
     SliceTraversal.cpp
     LutProjector.cpp
     VoxelProjector.cpp
+    PhaseContrastProjector.cpp
     BinaryMethod.cpp
     SiddonsMethod.cpp
-    SiddonsMethodBranchless.cpp
     JosephsMethod.cpp
     SubsetSampler.cpp
     Blobs.cpp

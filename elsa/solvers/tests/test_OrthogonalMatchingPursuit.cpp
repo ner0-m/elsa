@@ -14,7 +14,6 @@
 #include "Dictionary.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
-#include "RepresentationProblem.h"
 #include "testHelpers.h"
 
 using namespace elsa;
@@ -43,11 +42,10 @@ TEST_CASE("OrthogonalMatchingPursuit: Solving a RepresentationProblem")
         signalVec << 5, 3;
         DataContainer dcSignal(dd, signalVec);
 
-        RepresentationProblem reprProb(dictOp, dcSignal);
-
         WHEN("setting up a OrthogonalMatchingPursuit solver")
         {
-            OrthogonalMatchingPursuit solver(reprProb, std::numeric_limits<real_t>::epsilon());
+            OrthogonalMatchingPursuit solver(dictOp, dcSignal,
+                                             std::numeric_limits<real_t>::epsilon());
 
             THEN("cloned OrthogonalMatchingPursuit solver equals original "
                  "OrthogonalMatchingPursuit solver")

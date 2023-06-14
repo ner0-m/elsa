@@ -268,5 +268,9 @@ namespace elsa
 
         _Pinv = Sinv * Rtinv * tmpIdinv * Kinv;
     }
+    index_t Geometry::getDimension() const
+    {
+        return _objectDimension;
+    }
 
 } // namespace elsa

@@ -2,6 +2,7 @@
 
 #include "CGLS.h"
 #include "Logger.h"
+#include "Scaling.h"
 #include "VolumeDescriptor.h"
 #include "Identity.h"
 #include "TypeCasts.hpp"
@@ -67,6 +68,13 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
             CAPTURE(i);
             CHECK(checkApproxEq(result[i], bVec[i]));
         }
+
+        THEN("A clone is equal to the original")
+        {
+            auto clone = cgls.clone();
+
+            CHECK_EQ(*clone, cgls);
+        }
     }
 
     GIVEN("a linear problem")
@@ -79,9 +87,9 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
         bVec.setRandom();
         DataContainer<data_t> b{dd, bVec};
 
-        Scaling<data_t> scale{dd, 5};
+        Scaling<data_t> scaling{dd, 5};
 
-        CGLS<data_t> cgls(scale, b, 0);
+        CGLS<data_t> cgls(scaling, b);
 
         auto result = cgls.solve(1);
 
@@ -90,6 +98,13 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
         for (int i = 0; i < result.getSize(); ++i) {
             CAPTURE(i);
             CHECK_EQ(5. * result[i], doctest::Approx(bVec[i]));
+        }
+
+        THEN("A clone is equal to the original")
+        {
+            auto clone = cgls.clone();
+
+            CHECK_EQ(*clone, cgls);
         }
     }
 
@@ -103,9 +118,9 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
         bVec.setRandom();
         DataContainer<data_t> b{dd, bVec};
 
-        Scaling<data_t> scale{dd, 0.5};
+        Scaling<data_t> scaling{dd, 0.5};
 
-        CGLS<data_t> cgls(scale, b, 0);
+        CGLS<data_t> cgls(scaling, b);
 
         auto result = cgls.solve(1);
 
@@ -114,6 +129,13 @@ TEST_CASE_TEMPLATE("CGLS: Solving a simple linear problem", data_t, float, doubl
         for (int i = 0; i < result.getSize(); ++i) {
             CAPTURE(i);
             CHECK_EQ(0.5 * result[i], doctest::Approx(bVec[i]));
+        }
+
+        THEN("A clone is equal to the original")
+        {
+            auto clone = cgls.clone();
+
+            CHECK_EQ(*clone, cgls);
         }
     }
 }

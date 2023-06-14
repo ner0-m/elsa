@@ -15,6 +15,7 @@
 #include "testHelpers.h"
 #include "VolumeDescriptor.h"
 
+#include "functions/Sign.hpp"
 #include "functions/Abs.hpp"
 
 #include <thrust/complex.h>
@@ -290,6 +291,10 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(dcAbs[i], randVec.array().abs()[i]));
 
+                DataContainer dcSign = sign(dc);
+                for (index_t i = 0; i < dc.getSize(); ++i)
+                    REQUIRE_UNARY(checkApproxEq(dcSign[i], ::elsa::fn::sign(randVec[i])));
+
                 DataContainer dcSquare = square(dc);
                 for (index_t i = 0; i < dc.getSize(); ++i)
                     REQUIRE_UNARY(checkApproxEq(dcSquare[i], randVec.array().square()[i]));
@@ -314,15 +319,15 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                     CAPTURE(i);
                     if constexpr (std::is_arithmetic_v<data_t>) {
                         if (randVec[i] < mean) {
-                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
-                        } else {
                             REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
                         }
                     } else {
                         if (elsa::abs(randVec[i]) < elsa::abs(mean)) {
-                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
-                        } else {
                             REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
                         }
                     }
                 }
@@ -331,15 +336,15 @@ TEST_CASE_TEMPLATE_DEFINE("DataContainer: Testing element-wise access", TestType
                 for (index_t i = 0; i < dc.getSize(); ++i) {
                     if constexpr (std::is_arithmetic_v<data_t>) {
                         if (randVec[i] > mean) {
-                            REQUIRE_UNARY(checkApproxEq(dcMaximum[i], mean));
-                        } else {
                             REQUIRE_UNARY(checkApproxEq(dcMaximum[i], randVec[i]));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMaximum[i], mean));
                         }
                     } else {
                         if (elsa::abs(randVec[i]) < elsa::abs(mean)) {
-                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
-                        } else {
                             REQUIRE_UNARY(checkApproxEq(dcMinimum[i], randVec[i]));
+                        } else {
+                            REQUIRE_UNARY(checkApproxEq(dcMinimum[i], mean));
                         }
                     }
                 }
@@ -565,6 +570,95 @@ TEST_CASE_TEMPLATE_DEFINE(
             for (index_t i = 0; i < dc.getSize(); ++i)
                 REQUIRE_UNARY(checkApproxEq(unaryNeg[i], -dc[i]));
         }
+    }
+}
+
+TEST_CASE_TEMPLATE("DataContainer: Testing lincomb", data_t, float, double)
+{
+    VolumeDescriptor desc({7, 29});
+
+    auto [dc1, randVec] = generateRandomContainer<data_t>(desc);
+    auto [dc2, randVec2] = generateRandomContainer<data_t>(desc);
+
+    THEN("lincomb of two vectors with scalars of 1 is just the sum")
+    {
+        DataContainer res = lincomb(1, dc1, 1, dc2);
+        CAPTURE(res);
+        for (index_t i = 0; i < res.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(res[i], doctest::Approx(dc1[i] + dc2[i]));
+        }
+    }
+
+    THEN("lincomb of two vectors with scalar 1 and -1 is just subtraction")
+    {
+        DataContainer res = lincomb(1, dc1, -1, dc2);
+        CAPTURE(res);
+        for (index_t i = 0; i < res.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(res[i], doctest::Approx(dc1[i] - dc2[i]));
+        }
+    }
+
+    WHEN("aliasing: both inputs are the same")
+    {
+        DataContainer res = lincomb(1.5, dc1, 1.5f, dc1);
+        CAPTURE(res);
+        for (index_t i = 0; i < res.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(res[i], doctest::Approx(3 * dc1[i]));
+        }
+    }
+
+    WHEN("Testing with out parameter")
+    {
+        auto res = DataContainer<data_t>(dc1.getDataDescriptor());
+        lincomb(1.5, dc1, -1.5f, dc2, res);
+        CAPTURE(res);
+        for (index_t i = 0; i < res.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(res[i], doctest::Approx(1.5 * dc1[i] - 1.5 * dc2[i]));
+        }
+    }
+
+    WHEN("aliasing: first input parameter is the same as out")
+    {
+        // Copy to keep original values alive
+        auto copy = dc1;
+
+        lincomb(1.5, dc1, -1.5f, dc2, dc1);
+        for (index_t i = 0; i < dc1.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(dc1[i], doctest::Approx(1.5 * copy[i] - 1.5 * dc2[i]));
+        }
+    }
+
+    WHEN("aliasing: second input parameter is the same as out")
+    {
+        // Copy to keep original values alive
+        auto copy = dc2;
+
+        lincomb(1.5, dc1, -1.5f, dc2, dc2);
+        for (index_t i = 0; i < dc1.getSize(); ++i) {
+            CAPTURE(i);
+            CHECK_EQ(dc2[i], doctest::Approx(1.5 * dc1[i] - 1.5 * copy[i]));
+        }
+    }
+
+    WHEN("Input is not the same size")
+    {
+        VolumeDescriptor smallDesc({2, 10});
+        VolumeDescriptor largeDesc({8, 29});
+
+        auto smalldc = DataContainer<data_t>(smallDesc);
+        auto largedc = DataContainer<data_t>(largeDesc);
+
+        CHECK_THROWS(lincomb(12, smalldc, 34, dc1));
+        CHECK_THROWS(lincomb(12, dc1, 34, smalldc));
+        CHECK_THROWS(lincomb(12, largedc, 34, dc1));
+        CHECK_THROWS(lincomb(12, dc1, 34, largedc));
+        CHECK_THROWS(lincomb(12, dc1, 34, dc2, smalldc));
+        CHECK_THROWS(lincomb(12, dc1, 34, dc2, largedc));
     }
 }
 
@@ -903,7 +997,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec1);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), size);
             }
@@ -922,7 +1017,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec2);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), size);
             }
@@ -941,7 +1037,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec3);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), size);
             }
@@ -960,7 +1057,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec4);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), size);
             }
@@ -994,7 +1092,8 @@ TEST_CASE_TEMPLATE("DataContainer: Clip a DataContainer", data_t, float, double)
             DataContainer dc(desc, dataVec);
             auto clipped = clip(dc, min, max);
 
-            THEN("the size of the clipped DataContainer is equal to that of the original container")
+            THEN("the size of the clipped DataContainer is equal to that of the original "
+                 "container")
             {
                 REQUIRE_EQ(clipped.getSize(), desc.getNumberOfCoefficients());
             }
@@ -1648,6 +1747,37 @@ TEST_CASE_TEMPLATE("DataContainer: FFT shift and IFFT shift a DataContainer", da
             {
                 REQUIRE_UNARY(ifftShiftedDC == expectedIFFTShiftDC);
             }
+        }
+    }
+}
+
+TEST_CASE_TEMPLATE("DataContainer: minimum/maximum", data_t, float, double)
+{
+    GIVEN("Some container")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 3, 3;
+        VolumeDescriptor dd(numCoeff);
+        Vector_t<data_t> data(dd.getNumberOfCoefficients());
+        data << 1, -1, 2, -2, 3, -3, -4, 5, 10;
+        DataContainer<data_t> dc(dd, data);
+
+        WHEN("Using minimum")
+        {
+            Vector_t<data_t> res(dd.getNumberOfCoefficients());
+            res << 1, -1, 2, -2, 2, -3, -4, 2, 2;
+            DataContainer<data_t> dcRes(dd, res);
+
+            REQUIRE(isCwiseApprox(dcRes, minimum(dc, 2)));
+        }
+
+        WHEN("Using maximum")
+        {
+            Vector_t<data_t> res(dd.getNumberOfCoefficients());
+            res << 1, 1, 2, 1, 3, 1, 1, 5, 10;
+            DataContainer<data_t> dcRes(dd, res);
+
+            REQUIRE(isCwiseApprox(dcRes, maximum(dc, 1)));
         }
     }
 }

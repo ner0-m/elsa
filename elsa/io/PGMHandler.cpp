@@ -37,21 +37,26 @@ namespace elsa
         const auto maxValue = data.maxElement();
         const auto minValue = data.minElement();
 
-        // Scale all values from DataContainer to a range from [0, 255]
-        const auto scaleFactor =
-            255.f / static_cast<CastType>(std::ceil(maxValue + std::abs(minValue)));
+        const auto range = static_cast<real_t>(maxValue - minValue);
+        real_t scaleFactor;
+        if (unlikely(range < std::numeric_limits<real_t>::epsilon())) {
+            scaleFactor = 0.f;
+        } else {
+            // data is scaled to the range of [0, 255]
+            scaleFactor = 255.f / range;
+        }
 
         // P2: Magic number specifying grey scale, then the two dimensions in the next line
         // Then the maximum value of the image in our case always 255
         stream << "P2\n" << dims[0] << " " << dims[1] << "\n" << 255 << "\n";
 
-        // Write data, ugly casts to silence warnings
+        // write all image pixels
         for (int i = 0; i < data.getSize(); ++i) {
-            // Scale everything to the range [0, 1]
-            const auto normalized = (data[i] - minValue) / (maxValue - minValue);
+            // move data down to its minimum value, then scale it to the range of [0, 255]
+            int pixel_value =
+                static_cast<int>(static_cast<CastType>(data[i] - minValue) * scaleFactor);
 
-            // Then scale it up to the range [0, 255]
-            stream << static_cast<int>(normalized * 255.f) << " ";
+            stream << pixel_value << " ";
         }
     }
 

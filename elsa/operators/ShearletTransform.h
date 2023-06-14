@@ -129,5 +129,20 @@ namespace elsa
                                            index_t vSliceIndex) const;
 
         void _computeSpectraAtSeamLines(index_t j, index_t k, index_t hxvSliceIndex) const;
+
+        /**
+         * Fractions of the input data shape, needed internally in many functions.
+         */
+        struct shape_fractions {
+            index_t negativeHalfWidth;
+            index_t halfWidth;
+            index_t negativeHalfHeight;
+            index_t halfHeight;
+        };
+
+        /**
+         * helper function to calculate input data fractions.
+         */
+        auto getShapeFractions() const -> shape_fractions;
     };
 } // namespace elsa

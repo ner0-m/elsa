@@ -17,18 +17,6 @@ namespace elsa
     {
     }
 
-    template <typename data_t>
-    Landweber<data_t>::Landweber(const WLSProblem<data_t>& problem, data_t stepSize)
-        : LandweberIteration<data_t>(problem, stepSize)
-    {
-    }
-
-    template <typename data_t>
-    Landweber<data_t>::Landweber(const WLSProblem<data_t>& problem)
-        : LandweberIteration<data_t>(problem)
-    {
-    }
-
     template <class data_t>
     std::unique_ptr<LinearOperator<data_t>>
         Landweber<data_t>::setupOperators(const LinearOperator<data_t>& A) const

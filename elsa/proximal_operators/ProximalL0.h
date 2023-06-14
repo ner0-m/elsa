@@ -2,6 +2,7 @@
 
 #include "DataContainer.h"
 #include "StrongTypes.h"
+#include "elsaDefines.h"
 
 namespace elsa
 {
@@ -34,8 +35,7 @@ namespace elsa
          * @param[in] v input DataContainer
          * @param[in] t input Threshold
          */
-        DataContainer<data_t> apply(const DataContainer<data_t>& v,
-                                    geometry::Threshold<data_t> t) const;
+        DataContainer<data_t> apply(const DataContainer<data_t>& v, SelfType_t<data_t> t) const;
 
         /**
          * @brief apply the proximal operator of the l0 pseudo-norm to an element in the operator's
@@ -45,12 +45,20 @@ namespace elsa
          * @param[in] t input Threshold
          * @param[out] prox output DataContainer
          */
-        void apply(const DataContainer<data_t>& v, geometry::Threshold<data_t> t,
+        void apply(const DataContainer<data_t>& v, SelfType_t<data_t> t,
                    DataContainer<data_t>& prox) const;
-
-        friend bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&);
-        friend bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&);
     };
+
+    template <typename data_t>
+    bool operator==(const ProximalL0<data_t>&, const ProximalL0<data_t>&)
+    {
+        return true;
+    }
+    template <typename data_t>
+    bool operator!=(const ProximalL0<data_t>&, const ProximalL0<data_t>&)
+    {
+        return false;
+    }
 
     template <class data_t>
     using HardThresholding = ProximalL0<data_t>;

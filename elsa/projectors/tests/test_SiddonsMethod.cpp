@@ -316,9 +316,7 @@ TEST_CASE("SiddoneMethod: Output DataContainer is not zero initialized")
         auto sinoData = SinogramData2D{Size2D{sinoDims}};
 
         std::vector<Geometry> geom;
-        VolumeData2D volDataCopy{volData};
-        SinogramData2D sinoDataCopy{sinoData};
-        geom.emplace_back(stc, ctr, Radian{0}, std::move(volDataCopy), std::move(sinoDataCopy));
+        geom.emplace_back(stc, ctr, Radian{0}, std::move(volData), std::move(sinoData));
 
         PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
         DataContainer sino(sinoDescriptor);
@@ -371,9 +369,7 @@ TEST_CASE("SiddoneMethod: Output DataContainer is not zero initialized")
         auto sinoData = SinogramData3D{Size3D{sinoDims}};
 
         std::vector<Geometry> geom;
-        VolumeData3D volDataCopy{volData};
-        SinogramData3D sinoDataCopy{sinoData};
-        geom.emplace_back(stc, ctr, std::move(volDataCopy), std::move(sinoDataCopy),
+        geom.emplace_back(stc, ctr, std::move(volData), std::move(sinoData),
                           RotationAngles3D{Gamma{0}});
 
         PlanarDetectorDescriptor sinoDescriptor(sinoDims, geom);
@@ -411,7 +407,7 @@ TEST_CASE("SiddoneMethod: Output DataContainer is not zero initialized")
     }
 }
 
-TEST_CASE("SidddonMethod: Rays not intersecting the bounding box are present")
+TEST_CASE("SiddonMethod: Rays not intersecting the bounding box are present")
 {
     // Turn logger of
     Logger::setLevel(Logger::LogLevel::OFF);

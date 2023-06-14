@@ -155,9 +155,6 @@ TEST_CASE_TEMPLATE("Phantoms: Drawing a 2d Shepp-Logan phantom", data_t, float, 
 
             THEN("It's close to the reference (This is just to track difference)")
             {
-// I'm sorry, but I'm not going to cast each and every single float here
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-float-conversion"
                 const Vector_t<data_t> expected({{
                     // clang-format off
                     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -178,7 +175,6 @@ TEST_CASE_TEMPLATE("Phantoms: Drawing a 2d Shepp-Logan phantom", data_t, float, 
                     0,   0,   0,   0,   0,   0,   0, 0.2, 0.2, 0.2,   0,   0,   0,   0,   0,   0
                     // clang-format on
                 }});
-#pragma GCC diagnostic pop
 
                 auto ref = DataContainer(VolumeDescriptor(size), expected);
 
@@ -192,9 +188,6 @@ TEST_CASE_TEMPLATE("Phantoms: Drawing a 2d Shepp-Logan phantom", data_t, float, 
             }
             THEN("It's not close to the matlab reference :-(")
             {
-// I'm sorry, but I'm not going to cast each and every single float here
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-float-conversion"
                 const Vector_t<data_t> matlab({{
                     // clang-format off
                     0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,  0,  0,
@@ -215,7 +208,6 @@ TEST_CASE_TEMPLATE("Phantoms: Drawing a 2d Shepp-Logan phantom", data_t, float, 
                     0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,  0,  0
                     // clang-format on
                 }});
-#pragma GCC diagnostic pop
 
                 auto ref = DataContainer(VolumeDescriptor(size), matlab);
                 CHECK_UNARY_FALSE(isApprox(dc, ref));

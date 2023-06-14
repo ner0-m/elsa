@@ -1,25 +1,29 @@
 #pragma once
 
-#include "Residual.h"
 #include <optional>
+
+#include "DataContainer.h"
+#include "DataDescriptor.h"
+#include "LinearOperator.h"
 
 namespace elsa
 {
     /**
      * @brief Class representing a linear residual, i.e. Ax - b with operator A and vectors x, b.
      *
-     * @author Matthias Wieczorek - initial code
-     * @author Tobias Lasser - modularization, modernization
-     *
-     * @tparam data_t data type for the domain and range of the operator, default to real_t
-     *
      * A linear residual is a vector-valued mapping \f$ \mathbb{R}^n\to\mathbb{R}^m \f$, namely
      * \f$ x \mapsto  Ax - b \f$, where A is a LinearOperator, b a constant data vector
      * (DataContainer) and x a variable (DataContainer). This linear residual can be used as input
      * to a Functional.
+     *
+     * @tparam data_t data type for the domain and range of the operator, default to real_t
+     *
+     * @author
+     * * Matthias Wieczorek - initial code
+     * * Tobias Lasser - modularization, modernization
      */
     template <typename data_t = real_t>
-    class LinearResidual : public Residual<data_t>
+    class LinearResidual
     {
     public:
         /**
@@ -50,11 +54,26 @@ namespace elsa
          */
         LinearResidual(const LinearOperator<data_t>& A, const DataContainer<data_t>& b);
 
-        /// make copy constructor deletion explicit
-        LinearResidual(const LinearResidual<data_t>&) = delete;
+        // Copy constructor
+        LinearResidual(const LinearResidual<data_t>&);
+
+        // Copy assignment
+        LinearResidual& operator=(const LinearResidual<data_t>&);
+
+        // Move constructor
+        LinearResidual(LinearResidual<data_t>&&) noexcept;
+
+        // Move assignment
+        LinearResidual& operator=(LinearResidual<data_t>&&) noexcept;
 
         /// default destructor
-        ~LinearResidual() override = default;
+        ~LinearResidual() = default;
+
+        /// return the domain descriptor of the residual
+        const DataDescriptor& getDomainDescriptor() const;
+
+        /// return the range descriptor of the residual
+        const DataDescriptor& getRangeDescriptor() const;
 
         /// return true if the residual has an operator A
         bool hasOperator() const;
@@ -68,35 +87,75 @@ namespace elsa
         /// return the data vector b (throws if the residual has none)
         const DataContainer<data_t>& getDataVector() const;
 
-    protected:
-        /// implement the polymorphic clone operation
-        LinearResidual<data_t>* cloneImpl() const override;
+        /**
+         * @brief evaluate the residual at x and return the result
+         *
+         * @param[in] x input DataContainer (in the domain of the residual)
+         *
+         * @returns result DataContainer (in the range of the residual) containing the result of
+         * the evaluation of the residual at x
+         */
+        DataContainer<data_t> evaluate(const DataContainer<data_t>& x) const;
 
-        /// implement the polymorphic comparison operation
-        bool isEqual(const Residual<data_t>& other) const override;
-
-        /// the evaluate method, evaluating the residual at x and placing the value in result
-        void evaluateImpl(const DataContainer<data_t>& x,
-                          DataContainer<data_t>& result) const override;
+        /**
+         * @brief evaluate the residual at x and store in result
+         *
+         * @param[in] x input DataContainer (in the domain of the residual)
+         * @param[out] result output DataContainer (in the range of the residual)
+         */
+        void evaluate(const DataContainer<data_t>& x, DataContainer<data_t>& result) const;
 
         /**
          * @brief return the Jacobian (first derivative) of the linear residual at x.
+         * If A is set, then the Jacobian is A and this returns a copy of A.
+         * If A is not set, then an Identity operator is returned.
          *
          * @param x input DataContainer (in the domain of the residual)
          *
          * @returns  a LinearOperator (the Jacobian)
-         *
-         * If A is set, then the Jacobian is A and this returns a copy of A.
-         * If A is not set, then an Identity operator is returned.
          */
-        LinearOperator<data_t> getJacobianImpl(const DataContainer<data_t>& x) override;
+        LinearOperator<data_t> getJacobian(const DataContainer<data_t>& x);
 
     private:
+        /// Descriptor of domain
+        std::unique_ptr<DataDescriptor> domainDesc_;
+
+        /// Descriptor of range
+        std::unique_ptr<DataDescriptor> rangeDesc_;
+
         /// the operator A, nullptr implies no operator present
         std::unique_ptr<LinearOperator<data_t>> _operator{};
 
         /// optional  data vector b
-        std::optional<const DataContainer<data_t>> _dataVector{};
+        std::optional<DataContainer<data_t>> _dataVector{};
     };
 
+    template <class data_t>
+    bool operator==(const LinearResidual<data_t>& lhs, const LinearResidual<data_t>& rhs)
+    {
+        if (lhs.getDomainDescriptor() != rhs.getDomainDescriptor()) {
+            return false;
+        }
+
+        if (lhs.getRangeDescriptor() != rhs.getRangeDescriptor()) {
+            return false;
+        }
+
+        if (lhs.hasOperator() && rhs.hasOperator() && lhs.getOperator() != rhs.getOperator()) {
+            return false;
+        }
+
+        if (lhs.hasDataVector() && rhs.hasDataVector()
+            && lhs.getDataVector() != rhs.getDataVector()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <class data_t>
+    bool operator!=(const LinearResidual<data_t>& lhs, const LinearResidual<data_t>& rhs)
+    {
+        return !(lhs == rhs);
+    }
 } // namespace elsa

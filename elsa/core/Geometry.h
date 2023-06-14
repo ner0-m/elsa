@@ -177,6 +177,13 @@ namespace elsa
          */
         const RealVector_t& getTranslationVector() const;
 
+        /**
+         * @brief Return the dimension of the geometry
+         *
+         * @returns the dimension of the geometry
+         */
+        index_t getDimension() const;
+
         /// comparison operator
         bool operator==(const Geometry& other) const;
 

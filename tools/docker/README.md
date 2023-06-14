@@ -225,7 +225,7 @@ All images have their own test scripts, and if it's a compiler image, then elsa 
   - `--build-pybinds` will activate the genration of python bindings and check that `llvm-config` is present
   - `--build-coverage`, additionally build the test coverage
   - `--build-asan`, additionally build elsa with Address Sanitizer activated
-  - `--build-cuda`, set CMake flag `ELSA_BUILD_CUDA_PROJECTORS`
+  - `--build-cuda`, set CMake flag `WANT_CUDA`
   - `--build-quickvec`, set CMake flag `ELSA_CUDA_VECTOR=ON`
   - `--build-docs`, don't build elsa, just it's documentation
 

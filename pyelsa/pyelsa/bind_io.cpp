@@ -4,6 +4,8 @@
 #include "MHDHandler.h"
 #include "PGMHandler.h"
 
+#include "bind_common.h"
+
 #include "hints/io_hints.cpp"
 
 namespace py = pybind11;

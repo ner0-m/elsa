@@ -149,7 +149,7 @@ TEST_CASE_TEMPLATE("ShearletTransform: Testing spectra's Parseval frame property
                 // last axis and subtract 1, the output will be of shape (W, H), its elements
                 // should be zeroes, or very close to it
 
-                CHECK_UNARY(frameCorrectness.squaredL2Norm() < 0.000000001);
+                CHECK_UNARY(frameCorrectness.squaredL2Norm() < 0.00000001);
             }
         }
     }

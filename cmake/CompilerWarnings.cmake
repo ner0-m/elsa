@@ -49,25 +49,22 @@ function(set_target_warnings target)
         /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
     )
 
-    if(${ELSA_CUDA_ENABLED})
-        # NVCC emits lots of compiler-specific code, so we omit pedantic when quickvec is enabled
-        set(base_clang_warnings
-            -Wall # included -Wmisleading-indentation, -Wmost, -Wparentheses, -Wswitch, -Wswitch-bool.
-            -Wextra # reasonable and standard
-            -Wconversion # warn on type conversions that may lose data
-            -Wfatal-errors
-        )
-    else()
-        set(base_clang_warnings
-            -Wall # included -Wmisleading-indentation, -Wmost, -Wparentheses, -Wswitch, -Wswitch-bool.
-            -Wextra # reasonable and standard
-            -Wconversion # warn on type conversions that may lose data
-            -Wfatal-errors
-        )
+    set(base_gcc_warnings
+        -Wall # included -Wmisleading-indentation, -Wmost, -Wparentheses, -Wswitch, -Wswitch-bool.
+        -Wextra # reasonable and standard
+        -Wfatal-errors
+    )
+
+    if(WARNINGS_AS_ERRORS)
+        set(base_gcc_warnings ${base_gcc_warnings} -Werror)
+        set(msvc_base_warnings ${base_msvc_warnings} /WX)
     endif()
 
+    # if(${ELSA_CUDA_ENABLED}) # NVCC emits lots of compiler-specific code, so we omit pedantic when cuda is enabled
+    # else()
+
     set(all_clang_warnings
-        ${base_clang_warnings}
+        ${base_gcc_warnings}
         -Wshadow # warn the user if a variable declaration shadows one from a parent context
         -Wnon-virtual-dtor # warn the user if a class with virtual functions has a non-virtual destructor. This helps
                            # catch hard to track down memory errors
@@ -77,18 +74,7 @@ function(set_target_warnings target)
         -Woverloaded-virtual # warn if you overload (not override) a virtual function
         -Wsign-conversion # warn on sign conversions
         -Wnull-dereference # warn if a null dereference is detected
-        -Wdouble-promotion # warn if float is implicit promoted to double
         -Wformat=2 # warn on security issues around functions that format output (ie printf)
-    )
-
-    if(WARNINGS_AS_ERRORS)
-        set(base_clang_warnings ${base_clang_warnings} -Werror)
-        set(msvc_base_warnings ${base_msvc_warnings} /WX)
-    endif()
-
-    set(base_gcc_warnings
-        ${base_clang_warnings} -Wmisleading-indentation # warn if indentation implies blocks where blocks
-        # do not exist
     )
 
     set(all_gcc_warnings
