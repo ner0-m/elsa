@@ -362,6 +362,11 @@ namespace elsa
     template <typename data_t>
     DataContainer<data_t> ifftShift2D(const DataContainer<data_t>& dc);
 
+    /// Return an owning DataContainer, if given an non-owning one, the data is copied to a new
+    /// owning buffer.
+    template <class data_t>
+    DataContainer<data_t> materialize(const DataContainer<data_t>& x);
+
     /// Unary plus operator
     template <typename data_t>
     inline DataContainer<data_t> operator+(const DataContainer<data_t>& x)
@@ -381,7 +386,7 @@ namespace elsa
     inline DataContainer<data_t> operator*(const DataContainer<data_t>& lhs,
                                            const DataContainer<data_t>& rhs)
     {
-        auto copy = lhs;
+        auto copy = materialize(lhs);
         copy *= rhs;
         return copy;
     }
@@ -391,7 +396,7 @@ namespace elsa
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator*(const DataContainer<data_t>& dc, const Scalar& s)
     {
-        auto copy = dc;
+        auto copy = materialize(dc);
         copy *= static_cast<data_t>(s);
         return copy;
     }
@@ -401,7 +406,7 @@ namespace elsa
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator*(const Scalar& s, const DataContainer<data_t>& dc)
     {
-        auto copy = dc;
+        auto copy = materialize(dc);
         copy *= static_cast<data_t>(s);
         return copy;
     }
@@ -411,7 +416,7 @@ namespace elsa
     inline DataContainer<data_t> operator+(const DataContainer<data_t>& lhs,
                                            const DataContainer<data_t>& rhs)
     {
-        auto copy = lhs;
+        auto copy = materialize(lhs);
         copy += rhs;
         return copy;
     }
@@ -421,7 +426,7 @@ namespace elsa
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator+(const DataContainer<data_t>& dc, const Scalar& s)
     {
-        auto copy = dc;
+        auto copy = materialize(dc);
         copy += static_cast<data_t>(s);
         return copy;
     }
@@ -431,7 +436,7 @@ namespace elsa
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator+(const Scalar& s, const DataContainer<data_t>& dc)
     {
-        auto copy = dc;
+        auto copy = materialize(dc);
         copy += static_cast<data_t>(s);
         return copy;
     }
@@ -507,11 +512,6 @@ namespace elsa
     /// `max(x_i, scalar)`
     template <typename data_t>
     DataContainer<data_t> maximum(const DataContainer<data_t>& dc, SelfType_t<data_t> scalar);
-
-    /// Return an owning DataContainer, if given an non-owning one, the data is copied to a new
-    /// owning buffer.
-    template <class data_t>
-    DataContainer<data_t> materialize(const DataContainer<data_t>& x);
 
     template <typename data_t>
     DataContainer<value_type_of_t<data_t>> cwiseAbs(const DataContainer<data_t>& dc);
