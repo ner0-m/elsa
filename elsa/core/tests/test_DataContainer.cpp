@@ -1782,7 +1782,8 @@ TEST_CASE_TEMPLATE("DataContainer: minimum/maximum", data_t, float, double)
     }
 }
 
-TEST_CASE_TEMPLATE("DataContainer: ops on const view should not affect the original", data_t, float, double)
+TEST_CASE_TEMPLATE("DataContainer: ops on const view should not affect the original", data_t, float,
+                   double)
 {
     GIVEN("Some container")
     {
@@ -1800,17 +1801,17 @@ TEST_CASE_TEMPLATE("DataContainer: ops on const view should not affect the origi
             {
                 auto original_sum = dc.sum();
 
-                + dc_view;
-                - dc_view;
+                +dc_view;
+                -dc_view;
 
                 dc_view + static_cast<data_t>(233.0);
                 dc_view - static_cast<data_t>(233.0);
-                dc_view * static_cast<data_t>(233.0);
+                dc_view* static_cast<data_t>(233.0);
                 dc_view / static_cast<data_t>(233.0);
 
                 dc_view + dc_view;
                 dc_view - dc_view;
-                dc_view * dc_view;
+                dc_view* dc_view;
                 dc_view / dc_view;
 
                 auto new_sum = dc.sum();
