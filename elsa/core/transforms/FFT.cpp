@@ -1,6 +1,6 @@
-#include "FFT.h"
+#ifdef ELSA_CUDA_TOOLKIT_PRESENT
 
-#ifdef ELSA_CUDA_ENABLED
+#include "FFT.h"
 
 namespace elsa::detail
 {
@@ -34,7 +34,7 @@ namespace elsa::detail
             making the cufftMakePlanMany64 into cufftMakePlan64 (which does not exist on its own).
          */
         result = cufftMakePlanMany64(*plan, rank, dimensions, NULL, 0, 0, NULL, 0, 0, type, 1,
-                                   &workArea);
+                                     &workArea);
         if (unlikely(result != CUFFT_SUCCESS)) {
             cufftDestroy(*plan);
         }

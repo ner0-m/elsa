@@ -6,10 +6,6 @@
 #include "VolumeDescriptor.h"
 #include "transforms/FFT.h"
 
-#ifdef ELSA_CUDA_ENABLED
-#include <cuda_runtime.h>
-#endif
-
 #include <thrust/complex.h>
 #include <thrust/generate.h>
 #include <thrust/execution_policy.h>
@@ -18,7 +14,7 @@
 
 TEST_SUITE_BEGIN("core");
 
-#ifdef ELSA_CUDA_ENABLED
+#ifdef ELSA_CUDA_TOOLKIT_PRESENT
 
 /* Althoug one might consider it bad style to test
    detail functions instead of the public interface,

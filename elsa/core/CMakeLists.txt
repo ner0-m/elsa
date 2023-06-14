@@ -59,10 +59,6 @@ set(MODULE_SOURCES
 list(APPEND MODULE_PUBLIC_DEPS "Eigen3::Eigen" elsa_logging elsa_storage)
 list(APPEND MODULE_PRIVATE_DEPS)
 
-if(ELSA_CUDA_ENABLED)
-    list(APPEND MODULE_PRIVATE_DEPS CUDA::cufft)
-endif()
-
 # use OpenMP if available
 if(OpenMP_CXX_FOUND)
     list(APPEND MODULE_PUBLIC_DEPS "OpenMP::OpenMP_CXX")
@@ -86,10 +82,21 @@ if(WITH_FFTW)
     endif()
 endif()
 
+# use cuFFT if available
+if(CUDAToolkit_FOUND)
+    list(APPEND MODULE_PUBLIC_DEPS CUDA::cufft)
+endif()
+
 ADD_ELSA_MODULE(
     core "${MODULE_HEADERS}" "${MODULE_SOURCES}" INSTALL_DIR PUBLIC_DEPS ${MODULE_PUBLIC_DEPS}
     PRIVATE_DEPS ${MODULE_PRIVATE_DEPS}
 )
+
+if(CUDAToolkit_FOUND)
+    target_compile_definitions(
+        "${ELSA_MODULE_TARGET_NAME}" PRIVATE ELSA_CUDA_TOOLKIT_PRESENT ELSA_CUFFT_CACHE_SIZE=${ELSA_CUFFT_CACHE_SIZE}
+    )
+endif()
 
 # CMAKE_DL_LIBS is a weird name, so I can't figure out now, how to pass it via argument, so add it later...
 target_link_libraries(${ELSA_MODULE_TARGET_NAME} PRIVATE ${CMAKE_DL_LIBS})

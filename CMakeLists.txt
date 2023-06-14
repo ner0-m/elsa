@@ -272,10 +272,10 @@ if(ELSA_MASTER_PROJECT)
 
     if(ELSA_CUDA_ENABLED)
         find_package(CUDAToolkit)
-        add_compile_definitions(ELSA_CUDA_ENABLED)
+        if(NOT CUDAToolkit_FOUND)
+            message(STATUS "CUDA Toolkit not found")
+        endif()
     endif()
-
-    add_compile_definitions(ELSA_CUFFT_CACHE_SIZE=${ELSA_CUFFT_CACHE_SIZE})
 
     # Follow thrusts defaults, overwrite the by passing THRUST_[HOST|DEVICE]_SYSTEM to CMake
     thrust_create_target(elsa::Thrust FROM_OPTIONS)

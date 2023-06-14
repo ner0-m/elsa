@@ -31,6 +31,9 @@ ELSA_DOCTEST(Bessel)
 ELSA_DOCTEST(Math)
 ELSA_DOCTEST(MaybeUninitialized)
 
-if(ELSA_CUDA_ENABLED)
+if(CUDAToolkit_FOUND)
+    target_compile_definitions(
+        "${ELSA_MODULE_TARGET_NAME}" PRIVATE ELSA_CUDA_TOOLKIT_PRESENT ELSA_CUFFT_CACHE_SIZE=${ELSA_CUFFT_CACHE_SIZE}
+    )
     set_source_files_properties(test_FFT.cpp PROPERTIES LANGUAGE CUDA)
 endif()

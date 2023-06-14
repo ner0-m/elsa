@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef ELSA_CUDA_ENABLED
+#ifdef ELSA_CUDA_TOOLKIT_PRESENT
 #include <cuda_runtime.h>
 #include <cufftXt.h>
 
@@ -29,7 +29,7 @@ namespace elsa
 {
     namespace detail
     {
-#ifdef ELSA_CUDA_ENABLED
+#ifdef ELSA_CUDA_TOOLKIT_PRESENT
 
         /* Create a cufft handle and plan an FFT for the given type and dimensions.
          * This handle is to be freed via cufftDestroy(...)
@@ -39,7 +39,7 @@ namespace elsa
         cufftResult createPlan(cufftHandle* plan, cufftType type, const IndexVector_t& shape);
 
         /* Normalize the result after an fft with the factor size or sqrt(size), depending on
-           the flag applySqrt. */ 
+           the flag applySqrt. */
         template <typename data_t>
         void fftNormalize(thrust::universal_ptr<data_t> ptr, index_t size, bool applySqrt)
         {
@@ -286,7 +286,7 @@ namespace elsa
         const auto& src_shape = desc.getNumberOfCoefficientsPerDimension();
         const auto& src_dims = desc.getNumberOfDimensions();
 
-#ifdef ELSA_CUDA_ENABLED
+#ifdef ELSA_CUDA_TOOLKIT_PRESENT
         if (detail::fftDevice<data_t, true>(x.data(), src_shape, src_dims, norm)) {
             return;
         }
@@ -299,7 +299,7 @@ namespace elsa
     {
         const auto& src_shape = desc.getNumberOfCoefficientsPerDimension();
         const auto& src_dims = desc.getNumberOfDimensions();
-#ifdef ELSA_CUDA_ENABLED
+#ifdef ELSA_CUDA_TOOLKIT_PRESENT
         if (detail::fftDevice<data_t, false>(x.data(), src_shape, src_dims, norm)) {
             return;
         }
