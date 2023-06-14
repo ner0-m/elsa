@@ -14,6 +14,7 @@
 #include "DataContainer.h"
 #include "Identity.h"
 #include "Scaling.h"
+#include "Logger.h"
 
 using namespace elsa;
 using namespace doctest;
@@ -23,6 +24,10 @@ TEST_SUITE_BEGIN("core");
 
 TEST_CASE_TEMPLATE("AXDTOperator: Testing SphericalFieldsTransform", data_t, float, double)
 {
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::OFF);
+    srand((unsigned int) 666);
+
     const size_t volSize{2};
     IndexVector_t vol(2);
     vol << volSize, volSize;
@@ -154,6 +159,10 @@ TEST_CASE_TEMPLATE("AXDTOperator: Testing SphericalFieldsTransform", data_t, flo
 
 TEST_CASE_TEMPLATE("AXDTOperator: Testing apply & applyAdjoint", data_t, float, double)
 {
+    // eliminate the timing info from console for the tests
+    Logger::setLevel(Logger::LogLevel::OFF);
+    srand((unsigned int) 666);
+
     const index_t domainSize{2};
     IndexVector_t domain{3};
     domain << domainSize, domainSize, domainSize;
