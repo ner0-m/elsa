@@ -1,7 +1,7 @@
 #pragma once
 
 #include "transforms/Mul.h"
-#include "CublasTransforms.h"
+#include "../CublasTransforms.h"
 
 namespace elsa
 {
@@ -23,6 +23,6 @@ namespace elsa
             return;
 
         /* ensure that cublas-operations occur (at least for now) */
-        // elsa::mulScalar(xfirst, xlast, scalar, xfirst);
+        elsa::mulScalar(xfirst, xlast, scalar, xfirst);
     }
 } // namespace elsa

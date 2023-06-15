@@ -30,11 +30,11 @@ namespace elsa::cublas
                 initialized = false;
             }
         };
-        static CublasState _cublasState;
+        thread_local CublasState _cublasState;
 
         inline bool tryInitCublas()
         {
-            std::scope_guard<std::mutex> _lock(_cublasState.lock);
+            std::scoped_lock<std::mutex> _lock(_cublasState.lock);
             if (_cublasState.initialized)
                 return true;
             if (cublasCreate(&_cublasState.handle) == CUBLAS_STATUS_SUCCESS)
@@ -60,11 +60,12 @@ namespace elsa::cublas
              || is_dcomplex<ItType>) &&thrust::is_contiguous_iterator<ItType>::value;
         template <class ItType, class Scalar>
         static constexpr bool is_element = std::is_same<iret_type<ItType>, Scalar>::value;
-
+        template <class AItType, class BItType>
+        static constexpr bool is_compatible = std::is_same<iret_type<AItType>, iret_type<BItType>>::value && thrust::is_contiguous_iterator<BItType>::value;
     } // namespace detail
 
-    template <class ItType, class Scalar, class X = detail::iret_type<ItType>>
-    bool inplaceMulScalar(ItType begin, ItType end, const Scalar& scalar)
+    template <class ItType, class Scalar>
+    bool inplaceMulScalar(ItType begin, ItType end, const Scalar& scalar) 
     {
         if constexpr (!detail::is_cublas_type<ItType> || !detail::is_element<ItType, Scalar>)
             return false;
@@ -88,6 +89,32 @@ namespace elsa::cublas
         else if constexpr (detail::is_dcomplex<ItType>)
             out = cublasZscal(detail::_cublasState.handle, static_cast<int>(count),
                               (const cuDoubleComplex*) &scalar, (cuDoubleComplex*) &(*begin), 1);
+        return (out == CUBLAS_STATUS_SUCCESS);
+    }
+
+    template <class AItType, class BItType, class Scalar>
+    bool inplaceDotProduct(AItType aBegin, AItType aEnd, BItType bBegin, Scalar& result)
+    {
+        if constexpr (!detail::is_cublas_type<AItType> || !detail::is_element<AItType, Scalar>)
+            return false;
+        if constexpr (!detail::is_compatible<AItType, BItType>)
+            return false;
+
+        size_t count = std::distance(aBegin, aEnd);
+        if (count > std::numeric_limits<int>::max())
+            return false;
+        if (!detail::tryInitCublas())
+            return false;
+
+        cublasStatus_t out = CUBLAS_STATUS_EXECUTION_FAILED;
+        if constexpr (detail::is_float<AItType>)
+            out = cublasSdot(detail::_cublasState.handle, static_cast<int>(count), (const float*)&(*aBegin), 1, (const float*)&(*bBegin), 1, (float*)&result);
+        else if constexpr (detail::is_double<AItType>)
+            out = cublasDdot(detail::_cublasState.handle, static_cast<int>(count), (const double*)&(*aBegin), 1, (const double*)&(*bBegin), 1, (double*)&result);
+        else if constexpr (detail::is_fcomplex<AItType>)
+            out = cublasCdotc(detail::_cublasState.handle, static_cast<int>(count), (const cuComplex*)&(*aBegin), 1, (const cuComplex*)&(*bBegin), 1, (cuComplex*)&result);
+        else if constexpr (detail::is_dcomplex<AItType>)
+            out = cublasZdotc(detail::_cublasState.handle, static_cast<int>(count), (const cuDoubleComplex*)&(*aBegin), 1, (const cuDoubleComplex*)&(*bBegin), 1, (cuDoubleComplex*)&result);
         return (out == CUBLAS_STATUS_SUCCESS);
     }
 } // namespace elsa::cublas

@@ -3,6 +3,7 @@
 #include "TypeTraits.hpp"
 #include "functions/Conj.hpp"
 #include "Functions.hpp"
+#include "../CublasTransforms.h"
 
 #include <thrust/complex.h>
 #include <thrust/inner_product.h>
@@ -30,8 +31,13 @@ namespace elsa
     {
         using xdata_t = thrust::iterator_value_t<InputIter1>;
         using ydata_t = thrust::iterator_value_t<InputIter2>;
+        using common_t = std::common_type_t<thrust::iterator_value_t<InputIter1>,
+                              thrust::iterator_value_t<InputIter2>>;
 
         // using data_t = std::common_type_t<xdata_t, ydata_t>;
+        common_t temp = common_t();
+        if (cublas::inplaceDotProduct<InputIter1, InputIter2, common_t>(xfirst, xlast, yfirst, temp))
+            return temp;
 
         if constexpr (is_specialization_v<
                           xdata_t,
