@@ -19,10 +19,14 @@ namespace elsa
     template <class InOutIter, class Scalar>
     void inplaceMulScalar(InOutIter xfirst, InOutIter xlast, const Scalar& scalar)
     {
-        if (cublas::inplaceMulScalar<InOutIter, Scalar>(xfirst, xlast, scalar))
-            return;
-
         /* ensure that cublas-operations occur (at least for now) */
         elsa::mulScalar(xfirst, xlast, scalar, xfirst);
+    }
+
+    template <class InOutIter, class Scalar>
+    void inplaceMulScalar_v2(InOutIter xfirst, InOutIter xlast, const Scalar& scalar)
+    {
+        if (cublas::inplaceMulScalar<InOutIter, Scalar>(xfirst, xlast, scalar))
+            return;
     }
 } // namespace elsa
