@@ -126,6 +126,7 @@ namespace elsa
             }();
 
             ops.emplace_back((*scales * projector).clone());
+            Logger::get("AXDTOperator")->info("constructed AXDTOperator Block {} / {}", i, numBlocks);
         }
 
         //        EDF::write<data_t>(*weights,"_weights.edf");
