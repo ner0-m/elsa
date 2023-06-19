@@ -1,141 +1,114 @@
 #include "CGNL.h"
-#include "Logger.h"
+#include "DataContainer.h"
+#include "LinearOperator.h"
 #include "TypeCasts.hpp"
 #include "spdlog/stopwatch.h"
+#include "Logger.h"
 
 namespace elsa
 {
-
-    template <typename data_t>
-    CGNL<data_t>::CGNL(const Functional<data_t>& functional, data_t epsilon,
-                       index_t line_search_iterations,
-                       const LineSearchFunction& line_search_function,
-                       const BetaFunction& beta_function)
-        : Solver<data_t>(),
-          functional_{functional.clone()},
-          epsilon_{epsilon},
-          line_search_iterations_{line_search_iterations},
-          line_search_function_{line_search_function},
-          beta_function_{beta_function}
+    template <class data_t>
+    CGNL<data_t>::CGNL(const Functional<data_t>& func, data_t eps_CG,
+                       data_t eps_NR, index_t iterations_NR, index_t restart)
+        : func_(func.clone()), eps_CG_(eps_CG), eps_NR_(eps_NR), iterations_NR_(iterations_NR),
+          restart_(restart)
     {
     }
 
-    template <typename data_t>
-    CGNL<data_t>::CGNL(const Functional<data_t>& functional, data_t epsilon,
-                       index_t line_search_iterations)
-        : CGNL<data_t>(functional, epsilon, line_search_iterations, lineSearchNewtonRaphson,
-                       betaPolakRibiere)
-    {
-    }
-
-    template <typename data_t>
-    CGNL<data_t>::CGNL(const Functional<data_t>& functional, data_t epsilon)
-        : CGNL<data_t>(functional, epsilon, 1, lineSearchConstantStepSize, betaPolakRibiere)
-    {
-    }
-
-    template <typename data_t>
-    DataContainer<data_t> CGNL<data_t>::solve(index_t iterations,
-                                              std::optional<DataContainer<data_t>> xStart)
+    template <class data_t>
+    DataContainer<data_t> CGNL<data_t>::solve(index_t iterations_CG,
+                                              std::optional<DataContainer<data_t>> x0)
     {
         spdlog::stopwatch aggregate_time;
-        Logger::get("CGNL")->info("Start preparations...");
 
-        // Restart Nonlinear CG every n iterations, with n being the number of dimensions
-        index_t nIterationMax = functional_->getDomainDescriptor().getNumberOfDimensions();
+        auto x = DataContainer<data_t>(func_->getDomainDescriptor());
+        auto r = DataContainer<data_t>(func_->getDomainDescriptor());
+        auto d = DataContainer<data_t>(func_->getDomainDescriptor());
 
-        // use xStart as start point if provided, use 0 otherwise
-        DataContainer<data_t> xVector{functional_->getDomainDescriptor()};
-        if (xStart.has_value()) {
-            xVector = *xStart;
-        } else {
-            xVector = 0;
+        if (x0.has_value()) {
+            x = *x0;
+        }
+        else {
+            x = 0;
         }
 
-        // kIndex <= 0
-        index_t kIndex = 0;
-        // rVector <= -f'(xVector)
-        auto rVector = static_cast<data_t>(-1.0) * functional_->getGradient(xVector);
-        // dVector <= rVector
-        auto dVector = rVector;
-        // deltaNew <= rVector^T * dVector
-        auto deltaNew = rVector.dot(dVector);
-        // deltaZero <= deltaNew
-        auto deltaZero = deltaNew;
+        func_->getGradient(x, r);
+        r *= static_cast<data_t>(-1.0);
+        d = r;
 
-        Logger::get("CGNL")->info("Preparations done, tooke {}s", aggregate_time);
-        Logger::get("CGNL")->info("epsilon: {}", epsilon_);
-        Logger::get("CGNL")->info("delta zero: {}", deltaZero);
+        data_t delta_new = r.dot(r);
+        data_t delta_zero = delta_new;
 
-        // log history legend
-        Logger::get("CGNL")->info("{:^6}|{:*^16}|{:*^16}|{:*^10}|{:*^10}|{:*^16}|", "iter",
-                                  "sqrtDeltaNew", "sqrtDeltaZero", "time", "elapsed", "alpha");
-
-        for (index_t it = 0; it != iterations; ++it) {
-            spdlog::stopwatch iter_time;
-
-            // Check if convergence is reached
-            if (deltaNew <= epsilon_ * epsilon_ * deltaZero) {
-                Logger::get("CGNL")->info("SUCCESS: Reached convergence at {}/{} iteration", it + 1,
-                                          iterations);
-                return xVector;
+        Logger::get("CGNL")->info("{:^5} | {:^15} | {:^15} |", "Iters", "delta_new", "delta_zero");
+        for (index_t iter_CG = 0; iter_CG < iterations_CG; ++iter_CG) {
+            if (delta_new < eps_CG_ * eps_CG_ * delta_zero) {
+                Logger::get("CGNL")->info("SUCCESS: Reached convergence at {}/{} iteration", iter_CG, iterations_CG);
+                return x;
             }
 
-            // deltaD = dVector^T * dVector
-            auto deltaD = dVector.dot(dVector);
+            data_t delta_d = d.dot(d);
+            for (index_t iter_NR = 0; iter_NR < iterations_NR_; ++iter_NR) {
+                data_t alpha_numerator = static_cast<data_t>(-1.0) * func_->getGradient(x).dot(d);
 
-            // line search
-            xVector = line_search_function_(*functional_, xVector, dVector, deltaD, epsilon_);
+                auto hessian = func_->getHessian(x);
+                data_t alpha_denominator = hessian.apply(d).dot(d);
 
-            // beta function
-            // r <= -f'(x)
-            rVector = static_cast<data_t>(-1.0) * functional_->getGradient(xVector);
+                auto alpha = alpha_numerator / alpha_denominator;
 
-            data_t beta;
-            std::tie(beta, deltaNew) = beta_function_(dVector, rVector, deltaNew);
+                x += alpha * d;
 
-            Logger::get("CGNL")->info("{:>5} |{:>15} |{:>15} | {:>6.3} |{:>6.3}s |", it,
-                                      std::sqrt(deltaNew), std::sqrt(deltaZero), iter_time,
-                                      aggregate_time);
+//                Logger::get("CGNL")->info("NR: alpha {}", alpha);
+//                Logger::get("CGNL")->info("NR: alpha:nume {}", alpha_numerator);
+//                Logger::get("CGNL")->info("NR: alpha:deno {}", alpha_denominator);
+//                Logger::get("CGNL")->info("NR: x {}", x.sum());
 
-            kIndex = kIndex + 1;
-            // restart Nonlinear CG  whenever the Polak-Ribière parameter beta is negative
-            if (kIndex >= nIterationMax || beta <= 0.0) {
-                dVector = rVector;
-                kIndex = 0;
-            } else {
-                dVector = rVector + beta * dVector;
+                if (alpha * alpha * delta_d < eps_NR_ * eps_NR_) {
+                    break;
+                }
             }
+
+            r = func_->getGradient(x);
+            r *= static_cast<data_t>(-1.0);
+
+            data_t delta_old = delta_new;
+            delta_new = r.dot(r);
+            auto beta = delta_new / delta_old;
+            d = r + (beta * d);
+            if (r.dot(d) <= 0 || (iter_CG + 1) % restart_ == 0) {
+                d = r;
+            }
+
+//            Logger::get("CGNL")->info("beta {}", beta);
+//            Logger::get("CGNL")->info("delta_new {}", delta_new);
+
+            Logger::get("CGNL")->info("{:>5} | {:>15.10} | {:>15.10} |", iter_CG, std::sqrt(delta_new), std::sqrt(delta_zero));
         }
 
-        Logger::get("CGNL")->warn("Failed to reach convergence at {} iterations", iterations);
-
-        return xVector;
+        Logger::get("CGNL")->warn("Failed to reach convergence at {} iterations", iterations_CG);
+        return x;
     }
 
-    template <typename data_t>
+    template <class data_t>
     CGNL<data_t>* CGNL<data_t>::cloneImpl() const
     {
-        return new CGNL(*functional_, epsilon_);
+        return new CGNL(*func_, eps_CG_, eps_NR_, iterations_NR_, restart_);
     }
 
-    template <typename data_t>
+    template <class data_t>
     bool CGNL<data_t>::isEqual(const Solver<data_t>& other) const
     {
-        auto otherCG = downcast_safe<CGNL>(&other);
-        if (!otherCG)
-            return false;
+        auto otherCGNL = downcast_safe<CGNL>(&other);
 
-        if (epsilon_ != otherCG->epsilon_)
-            return false;
-
-        return true;
+        return otherCGNL && *(otherCGNL->func_) == *func_
+               && otherCGNL->eps_CG_ == eps_CG_
+               && otherCGNL->eps_NR_ == eps_NR_
+               && otherCGNL->iterations_NR_ == iterations_NR_
+               && otherCGNL->restart_ == restart_;
     }
 
     // ------------------------------------------
     // explicit template instantiation
     template class CGNL<float>;
-
     template class CGNL<double>;
 
 } // namespace elsa

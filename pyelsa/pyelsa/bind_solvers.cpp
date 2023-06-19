@@ -160,21 +160,26 @@ namespace detail
         using Functional = elsa::Functional<data_t>;
 
         py::class_<elsa::CGNL<data_t>, Solver> cg(m, name);
-        cg.def(py::init<const Functional&>(), py::arg("problem"));
-        cg.def(py::init<const Functional&, data_t>(), py::arg("problem"), py::arg("epsilon"));
-        cg.def(py::init<const Functional&, data_t, elsa::index_t>(), py::arg("problem"),
-               py::arg("epsilon"), py::arg("line_search_iterations"));
-        cg.def(py::init<const Functional&, data_t, elsa::index_t,
-                        const typename elsa::CGNL<data_t>::LineSearchFunction&,
-                        const typename elsa::CGNL<data_t>::BetaFunction&>(),
-               py::arg("functional"), py::arg("epsilon"), py::arg("line_search_iterations"),
-               py::arg("line_search_function"), py::arg("beta_function"));
 
-        cg.def_readonly_static("lineSearchNewtonRaphson",
-                               &elsa::CGNL<data_t>::lineSearchNewtonRaphson);
-        cg.def_readonly_static("lineSearchConstantStepSize",
-                               &elsa::CGNL<data_t>::lineSearchConstantStepSize);
-        cg.def_readonly_static("betaPolakRibiere", &elsa::CGNL<data_t>::betaPolakRibiere);
+        cg.def(py::init<const Functional&, data_t, data_t, long, long>(), py::arg("functional"),
+               py::arg("eps_CG") = 1e-4, py::arg("eps_NR") = 1e-4,
+               py::arg("iterations_NR") = 2, py::arg("restart_NR") = 5);
+
+//        cg.def(py::init<const Functional&>(), py::arg("problem"));
+//        cg.def(py::init<const Functional&, data_t>(), py::arg("problem"), py::arg("epsilon"));
+//        cg.def(py::init<const Functional&, data_t, elsa::index_t>(), py::arg("problem"),
+//               py::arg("epsilon"), py::arg("line_search_iterations"));
+//        cg.def(py::init<const Functional&, data_t, elsa::index_t,
+//                        const typename elsa::CGNL<data_t>::LineSearchFunction&,
+//                        const typename elsa::CGNL<data_t>::BetaFunction&>(),
+//               py::arg("functional"), py::arg("epsilon"), py::arg("line_search_iterations"),
+//               py::arg("line_search_function"), py::arg("beta_function"));
+
+//        cg.def_readonly_static("lineSearchNewtonRaphson",
+//                               &elsa::CGNL<data_t>::lineSearchNewtonRaphson);
+//        cg.def_readonly_static("lineSearchConstantStepSize",
+//                               &elsa::CGNL<data_t>::lineSearchConstantStepSize);
+//        cg.def_readonly_static("betaPolakRibiere", &elsa::CGNL<data_t>::betaPolakRibiere);
     }
 } // namespace detail
 

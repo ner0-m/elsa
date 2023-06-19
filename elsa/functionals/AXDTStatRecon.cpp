@@ -78,6 +78,7 @@ namespace elsa
     data_t AXDTStatRecon<data_t>::evaluateImpl(const DataContainer<data_t>& Rx)
     {
         Timer timeguard("AXDTStatRecon", "evaluate");
+        spdlog::stopwatch timer;
 
         const auto mu = materialize(Rx.getBlock(0));
         const auto eta = materialize(Rx.getBlock(1));
@@ -121,7 +122,7 @@ namespace elsa
                 ll = (term_1 + term_2 + term_3).sum();
             } break;
         }
-
+        Logger::get("AXDTStatRecon")->info("eval(), tooke {}s", timer);
         return -ll; // to minimize --> NEGATIVE log likelihood
     }
 
@@ -130,6 +131,7 @@ namespace elsa
                                                 DataContainer<data_t>& out)
     {
         Timer timeguard("AXDTStatRecon", "getGradient");
+        spdlog::stopwatch timer;
 
         const auto mu = materialize(Rx.getBlock(0));
         const auto eta = materialize(Rx.getBlock(1));
@@ -192,6 +194,7 @@ namespace elsa
 
         grad_mu = -grad_mu;
         grad_eta = -grad_eta;
+        Logger::get("AXDTStatRecon")->info("getGradient(), tooke {}s", timer);
 
         //        {
         //            data_t max_mu = 0;
@@ -219,6 +222,7 @@ namespace elsa
     LinearOperator<data_t> AXDTStatRecon<data_t>::getHessianImpl(const DataContainer<data_t>& Rx)
     {
         Timer timeguard("AXDTStatRecon", "getHessian");
+        spdlog::stopwatch timer;
 
         const auto mu = materialize(Rx.getBlock(0));
         const auto eta = materialize(Rx.getBlock(1));
@@ -352,6 +356,7 @@ namespace elsa
         ops.clear();
         ops.emplace_back(hessian_absorp->clone());
         ops.emplace_back(hessian_axdt->clone());
+        Logger::get("AXDTStatRecon")->info("getHessian(), tooke {}s", timer);
         return leaf(BlockLinearOperator<data_t>(ops, BlockType::ROW));
     }
 

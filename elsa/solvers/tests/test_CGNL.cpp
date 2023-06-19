@@ -1,184 +1,167 @@
 /**
- * @file test_CGNL.cpp
- *
- * @brief Tests for the CG class
- * @author Nikola Dinev - initial code
- * @author Eddie Groh - refactor and modifications for CGNL
+* @file testCGNL.cpp
+*
+* @brief Tests for the Non-linear conjugate gradient solver
+*
+* @author Shen Hu - initial code
  */
 
 #include "doctest/doctest.h"
 
 #include "CGNL.h"
-#include "Scaling.h"
 #include "Logger.h"
 #include "VolumeDescriptor.h"
-#include "JosephsMethod.h"
-#include "CircleTrajectoryGenerator.h"
-#include "Phantoms.h"
-#include "TypeCasts.hpp"
+#include "Identity.h"
 #include "testHelpers.h"
-#include "Quadric.h"
-#include "WeightedLeastSquares.h"
+#include "LeastSquares.h"
+#include "Scaling.h"
+
+//#include "AXDTStatRecon.h"
+//#include "iostream"
 
 using namespace elsa;
 using namespace doctest;
 
 TEST_SUITE_BEGIN("solvers");
 
-template <template <typename> typename T, typename data_t>
-constexpr data_t return_data_t(const T<data_t>&);
+//TEST_CASE_TEMPLATE("CGNL: Solving a simple linear problem", data_t, float, double)
+//{
+//    srand((unsigned int) 666);
+//
+//    GIVEN("a linear problem")
+//    {
+//        IndexVector_t numCoeff(1);
+//        numCoeff << 5;
+//        VolumeDescriptor dd(numCoeff);
+//
+//        Vector_t<data_t> axdt_proj_raw(dd.getNumberOfCoefficients());
+//        axdt_proj_raw.setConstant(1);
+//        DataContainer<data_t> axdt_proj(dd, axdt_proj_raw);
+//
+//        Scaling<data_t> axdt_op(dd, 2);
+//
+//        AXDTStatRecon<data_t> func(axdt_proj, axdt_op, AXDTStatRecon<data_t>::Gaussian_log_d);
+//
+//        index_t numOfDims {1};
+//        IndexVector_t dims(numOfDims);
+//        dims << 1;
+//        auto phDD = std::make_unique<VolumeDescriptor>(dims);
+//        std::vector<std::unique_ptr<DataDescriptor>> descs;
+//        descs.emplace_back(phDD->clone());
+//        descs.emplace_back(dd.clone());
+//        auto ansDD = RandomBlocksDescriptor(descs);
+//        Vector_t<data_t> ans_raw(ansDD.getNumberOfCoefficients());
+//        ans_raw.setConstant(0.5);
+//        ans_raw[0] = 0;
+//        DataContainer<data_t> ans(ansDD, ans_raw);
+//
+//        Problem<data_t> prob(func);
+//
+//        CGNL<data_t> cgnl(prob);
+//
+//        auto result = cgnl.solve(10);
+//
+//        for (int i = 0; i < result.getSize(); ++i) {
+//            std::cout << result[i] << std::endl;
+//        }
+//    }
+//}
 
-TYPE_TO_STRING(CGNL<float>);
-TYPE_TO_STRING(CGNL<double>);
-
-TEST_CASE_TEMPLATE("CGNL: Solving a simple linear problem", TestType, CGNL<float>)
+TEST_CASE_TEMPLATE("CGNL: Solving a simple linear problem", data_t, float, double)
 {
-    using data_t = decltype(return_data_t(std::declval<TestType>()));
     // eliminate the timing info from console for the tests
     Logger::setLevel(Logger::LogLevel::OFF);
+    srand((unsigned int) 666);
+
+    GIVEN("a linear problem")
+    {
+        IndexVector_t numCoeff(1);
+        numCoeff << 10;
+        VolumeDescriptor dd{numCoeff};
+
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
+        bVec.setRandom();
+        DataContainer<data_t> b{dd, bVec};
+
+        Identity<data_t> id{dd};
+
+        LeastSquares<data_t> prob(id, b);
+
+        CGNL<data_t> cgnl(prob);
+
+        auto result = cgnl.solve(5);
+
+        for (int i = 0; i < result.getSize(); ++i) {
+            CHECK(checkApproxEq(result[i], bVec[i]));
+        }
+    }
 
     GIVEN("a linear problem")
     {
         IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
+        numCoeff << 10, 15;
         VolumeDescriptor dd{numCoeff};
 
-        Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer<data_t> dcB{dd, bVec};
+        DataContainer<data_t> b{dd, bVec};
 
-        bVec.setRandom();
-        bVec = bVec.cwiseAbs();
-        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
+        Identity<data_t> id{dd};
 
-        Quadric<data_t> prob{scalingOp, dcB};
+        LeastSquares<data_t> prob(id, b);
 
-        data_t epsilon = std::numeric_limits<data_t>::epsilon();
+        CGNL<data_t> cgnl(prob);
 
-        WHEN("setting up a CGNL solver")
-        {
-            TestType solver{prob, epsilon};
+        auto result = cgnl.solve(5);
 
-            THEN("the clone works correctly")
-            {
-                auto cgnClone = solver.clone();
-
-                REQUIRE_NE(cgnClone.get(), &solver);
-                REQUIRE_EQ(*cgnClone, solver);
-
-                AND_THEN("it works as expected")
-                {
-                    auto solution = solver.solve(dd.getNumberOfCoefficients() * 4);
-
-                    DataContainer<data_t> resultsDifference = scalingOp.apply(solution) - dcB;
-
-                    // should have converged for the given number of iterations
-                    REQUIRE_LE((resultsDifference).squaredL2Norm(), dcB.squaredL2Norm());
-                }
-            }
+        for (int i = 0; i < result.getSize(); ++i) {
+            CHECK(checkApproxEq(result[i], bVec[i]));
         }
     }
-}
 
-TEST_CASE_TEMPLATE("CGNL: Solving a Tikhonov problem", TestType, CGNL<float>, CGNL<double>)
-{
-    using data_t = decltype(return_data_t(std::declval<TestType>()));
-    // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::OFF);
+    GIVEN("a linear problem")
+    {
+        IndexVector_t numCoeff(1);
+        numCoeff << 10;
+        VolumeDescriptor dd{numCoeff};
 
-    GIVEN("a Tikhonov problem")
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
+        bVec.setRandom();
+        DataContainer<data_t> b{dd, bVec};
+
+        Scaling<data_t> scale{dd, 5};
+
+        LeastSquares<data_t> prob(scale, b);
+
+        CGNL<data_t> cgnl(prob);
+
+        auto result = cgnl.solve(5);
+
+        for (int i = 0; i < result.getSize(); ++i) {
+            CHECK_EQ(5. * result[i], doctest::Approx(bVec[i]));
+        }
+    }
+
+    GIVEN("a linear problem")
     {
         IndexVector_t numCoeff(2);
-        numCoeff << 13, 24;
+        numCoeff << 10, 15;
         VolumeDescriptor dd{numCoeff};
 
-        Eigen::Matrix<data_t, -1, 1> bVec(dd.getNumberOfCoefficients());
+        Vector_t<data_t> bVec(dd.getNumberOfCoefficients());
         bVec.setRandom();
-        DataContainer<data_t> dcB{dd, bVec};
+        DataContainer<data_t> b{dd, bVec};
 
-        bVec.setRandom();
-        bVec = bVec.cwiseProduct(bVec);
-        Scaling<data_t> scalingOp{dd, DataContainer<data_t>{dd, bVec}};
+        Scaling<data_t> scale{dd, 0.5};
 
-        auto lambda = static_cast<data_t>(0.1);
-        Scaling<data_t> lambdaOp{dd, lambda};
+        LeastSquares<data_t> prob(scale, b);
 
-        Quadric<data_t> prob{scalingOp + lambdaOp, dcB};
+        CGNL<data_t> cgnl(prob);
 
-        data_t epsilon = std::numeric_limits<data_t>::epsilon();
+        auto result = cgnl.solve(5);
 
-        WHEN("setting up a CGNL solver")
-        {
-            TestType solver{prob, epsilon};
-
-            THEN("the clone works correctly")
-            {
-                auto cgnClone = solver.clone();
-
-                REQUIRE_NE(cgnClone.get(), &solver);
-                REQUIRE_EQ(*cgnClone, solver);
-
-                AND_THEN("it works as expected")
-                {
-                    auto solution = solver.solve(dd.getNumberOfCoefficients() * 4);
-
-                    DataContainer<data_t> resultsDifference =
-                        (scalingOp + lambdaOp).apply(solution) - dcB;
-
-                    // should have converged for the given number of iterations
-                    REQUIRE_LE(resultsDifference.squaredL2Norm(), dcB.squaredL2Norm());
-                }
-            }
-        }
-    }
-}
-
-TEST_CASE_TEMPLATE("CGNL: Solving a simple phantom reconstruction", TestType, CGNL<float>)
-{
-    // eliminate the timing info from console for the tests
-    Logger::setLevel(Logger::LogLevel::OFF);
-
-    GIVEN("a Phantom reconstruction problem")
-    {
-
-        IndexVector_t size(2);
-        size << 16, 16; // TODO: determine optimal phantom size for efficient testing
-        auto phantom = phantoms::modifiedSheppLogan(size);
-        auto& volumeDescriptor = phantom.getDataDescriptor();
-
-        index_t numAngles{30}, arc{180};
-        auto sinoDescriptor = CircleTrajectoryGenerator::createTrajectory(
-            numAngles, phantom.getDataDescriptor(), arc, static_cast<real_t>(size(0)) * 100.0f,
-            static_cast<real_t>(size(0)));
-
-        JosephsMethod projector(downcast<VolumeDescriptor>(volumeDescriptor), *sinoDescriptor);
-
-        auto sinogram = projector.apply(phantom);
-        Quadric<real_t> problem{projector, sinogram};
-
-        WHEN("setting up a CGNL solver")
-        {
-            TestType solver{problem};
-
-            THEN("the clone works correctly")
-            {
-                auto cgnClone = solver.clone();
-
-                REQUIRE_NE(cgnClone.get(), &solver);
-                REQUIRE_EQ(*cgnClone, solver);
-
-                AND_THEN("it works as expected")
-                {
-                    auto reconstruction = solver.solve(40);
-
-                    DataContainer resultsDifference = reconstruction - phantom;
-
-                    // should have converged for the given number of iterations
-                    // does not converge to the optimal solution because of the regularization term
-                    REQUIRE_UNARY(checkApproxEq(resultsDifference.squaredL2Norm(),
-                                                phantom.squaredL2Norm(), 0.1));
-                }
-            }
+        for (int i = 0; i < result.getSize(); ++i) {
+            CHECK_EQ(0.5 * result[i], doctest::Approx(bVec[i]));
         }
     }
 }
