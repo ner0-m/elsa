@@ -42,7 +42,11 @@ namespace elsa
                                          const LinearOperator<data_t>& axdt_op, index_t N,
                                          const StatReconType& recon_type)
         : Functional<data_t>(
-            generate_descriptors(absorp_op.getDomainDescriptor(), axdt_op.getDomainDescriptor())),
+            generate_descriptors((recon_type == Gaussian_approximate_racian ||
+                                  recon_type == Racian_direct) ?
+                                     absorp_op.getDomainDescriptor() :
+                                     *generate_placeholder_descriptor(),
+                                 axdt_op.getDomainDescriptor())),
           ffa_(ffa),
           ffb_(ffb),
           a_tilde_(a),
@@ -122,7 +126,7 @@ namespace elsa
                 ll = (term_1 + term_2 + term_3).sum();
             } break;
         }
-        Logger::get("AXDTStatRecon")->info("eval(), tooke {}s", timer);
+        Logger::get("AXDTStatRecon")->info("eval(), took {}s", timer);
         return -ll; // to minimize --> NEGATIVE log likelihood
     }
 
@@ -194,7 +198,7 @@ namespace elsa
 
         grad_mu = -grad_mu;
         grad_eta = -grad_eta;
-        Logger::get("AXDTStatRecon")->info("getGradient(), tooke {}s", timer);
+        Logger::get("AXDTStatRecon")->info("getGradient(), took {}s", timer);
 
         //        {
         //            data_t max_mu = 0;
@@ -356,7 +360,7 @@ namespace elsa
         ops.clear();
         ops.emplace_back(hessian_absorp->clone());
         ops.emplace_back(hessian_axdt->clone());
-        Logger::get("AXDTStatRecon")->info("getHessian(), tooke {}s", timer);
+        Logger::get("AXDTStatRecon")->info("getHessian(), took {}s", timer);
         return leaf(BlockLinearOperator<data_t>(ops, BlockType::ROW));
     }
 

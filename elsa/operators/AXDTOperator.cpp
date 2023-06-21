@@ -67,7 +67,7 @@ namespace elsa
 
         bl_op->apply(x, Ax);
         //        Logger::get("AXDTOperator")->info("Apply result {}", Ax.sum());
-        Logger::get("AXDTOperator")->info("apply(), tooke {}s", timer);
+        Logger::get("AXDTOperator")->info("apply(), took {}s", timer);
     }
 
     template <typename data_t>
@@ -79,7 +79,7 @@ namespace elsa
 
         bl_op->applyAdjoint(y, Aty);
         //        Logger::get("AXDTOperator")->info("ApplyAdjoint result {}", Aty.sum());
-        Logger::get("AXDTOperator")->info("applyAdjoint(), tooke {}s", timer);
+        Logger::get("AXDTOperator")->info("applyAdjoint(), took {}s", timer);
     }
 
     template <typename data_t>
