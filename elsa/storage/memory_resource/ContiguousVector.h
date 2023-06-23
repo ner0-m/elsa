@@ -7,6 +7,8 @@
 #include <limits>
 #include <stdexcept>
 #include <cstring>
+#include <functional>
+#include <atomic>
 
 #include <thrust/copy.h>
 #include <thrust/fill.h>
@@ -137,12 +139,16 @@ namespace elsa::mr
         }
 
         /*
-         *  A container is a managing unit of 'capacity' number of types, allocated with the
-         *  corresponding resource and managed with the given type-tags.
+         *  A container is a reference-counted managing unit of 'capacity' number of types,
+         *  allocated with the corresponding resource and managed with the given type-tags.
          *  - The first 'size' number of values are at all times considered constructed.
          *  - Size will always be less or equal to capacity.
          *  - A capacity of zero implies no allocation and therefore a null-pointer (vice versa).
          *  - A pointer of zero is the null-container.
+         *
+         *  Additionally the container can also manage external alloctions. For
+         *  this, it will call the cleanup function whenever the container is not used anymore,
+         *  and resizing is disabled.
          */
         template <class Type, class TypeTag>
         struct ContContainer {
@@ -162,6 +168,7 @@ namespace elsa::mr
             raw_pointer pointer = nullptr;
             size_type size = 0;
             size_type capacity = 0;
+            std::function<void()> release;
 
         public:
             ContContainer()
@@ -179,29 +186,30 @@ namespace elsa::mr
                 capacity = c;
             }
 
+            ContContainer(const mr::MemoryResource& r, raw_pointer p, size_type s,
+                          std::function<void()>&& cleanup)
+            {
+                resource = r;
+                pointer = p;
+                size = s;
+                capacity = s;
+                release = std::move(cleanup);
+            }
+
             ContContainer(const self_type&) = delete;
 
-            ContContainer(self_type&& c) noexcept
-            {
-                std::swap(resource, c.resource);
-                std::swap(pointer, c.pointer);
-                std::swap(size, c.size);
-                std::swap(capacity, c.capacity);
-            }
+            ContContainer(self_type&& c) = delete;
 
             ContContainer& operator=(const self_type&) = delete;
 
-            ContContainer& operator=(self_type&& c) noexcept
-            {
-                std::swap(resource, c.resource);
-                std::swap(pointer, c.pointer);
-                std::swap(size, c.size);
-                std::swap(capacity, c.capacity);
-                return *this;
-            }
+            ContContainer& operator=(self_type&& c) = delete;
 
             ~ContContainer()
             {
+                if (release) {
+                    release();
+                    return;
+                }
                 if (pointer == nullptr)
                     return;
                 destruct_until(0);
@@ -221,26 +229,17 @@ namespace elsa::mr
                 }
             }
 
-            self_type swap(const mr::MemoryResource& mr, raw_pointer p, size_type sz, size_type cp)
-            {
-                self_type old{resource, pointer, size, capacity};
-                resource = mr;
-                pointer = p;
-                size = sz;
-                capacity = cp;
-                return old;
-            }
-
             /*
              *  The container will at most have capacity 'count' after the call
              *      -> count must be smaller or equal to 'size'
              */
-            void reduce(size_type count)
+            std::shared_ptr<self_type> reduce(size_type count, bool single_ref)
             {
                 /* set the recouce-argument, which will force a new allocation
                  *  even if the capacity would be large enough */
                 if (capacity > count)
-                    reserve(count, count, resource);
+                    return reserve(count, count, single_ref, resource);
+                return nullptr;
             }
 
             /*
@@ -248,14 +247,14 @@ namespace elsa::mr
              *  move: if realloc, how many to move-construct over (must be less than size)
              *  mr: if not zero, force-relloc to the new memory resource
              *      (even if its the same resource)
-             * returns null-container or old container on relocation in case of a
-             * relocation, this container will have a size of 'copy'
+             *  returns null-container or new container if relocation occurred, in
+             *  which case the new container will have a size of 'copy'
              */
-            self_type reserve(size_type count, size_type move,
-                              const mr::MemoryResource& mr = mr::MemoryResource())
+            std::shared_ptr<self_type> reserve(size_type count, size_type move, bool single_ref,
+                                               const mr::MemoryResource& mr)
             {
                 if (count <= capacity && !mr)
-                    return self_type();
+                    return nullptr;
                 mr::MemoryResource new_mr = bool(mr) ? mr : resource;
 
                 /* check if this is a noninitial reserving for a growing size in which
@@ -277,31 +276,34 @@ namespace elsa::mr
 
                 /* check if an empty container has been requested */
                 if (new_cap == 0)
-                    return swap(new_mr, nullptr, 0, 0);
+                    return std::make_shared<self_type>(new_mr, nullptr, 0, 0);
 
-                /* check if a relocation could suffice (not considered a container-change) */
-                if (pointer != nullptr && new_mr == resource
+                /* check if a relocation could suffice (not considered a container-change)
+                 *  (can only occur, if this container has only one reference and is self-owned) */
+                if (pointer != nullptr && new_mr == resource && !bool(release) && single_ref
                     && resource->tryResize(pointer, capacity * sizeof(value_type),
                                            alignof(value_type), new_cap * sizeof(value_type))) {
                     capacity = new_cap;
-                    return self_type();
+                    return nullptr;
                 }
 
+                /* perform the new allocation */
                 raw_pointer new_ptr = static_cast<raw_pointer>(
                     new_mr->allocate(new_cap * sizeof(value_type), alignof(value_type)));
-                self_type old = swap(new_mr, new_ptr, 0, new_cap);
+                std::shared_ptr<self_type> next =
+                    std::make_shared<self_type>(new_mr, new_ptr, 0, new_cap);
 
                 /* either move-initialize the data or perform the memory move */
                 if constexpr (!is_trivial<TypeTag>) {
                     for (size_type i = 0; i < move; ++i) {
-                        new (pointer + i) value_type(std::move(old.pointer[i]));
-                        ++size;
+                        new (new_ptr + i) value_type(std::move(pointer[i]));
+                        ++next->size;
                     }
                 } else if (move > 0) {
-                    copyMemory<value_type>(new_ptr, old.pointer, move, true);
-                    size = move;
+                    copyMemory<value_type>(new_ptr, pointer, move, true);
+                    next->size = move;
                 }
-                return old;
+                return next;
             }
 
             /*
@@ -447,6 +449,16 @@ namespace elsa::mr
         };
     } // namespace detail
 
+    template <class Type>
+    struct NativeContainer {
+    public:
+        Type* raw_pointer;
+        size_t capacity;
+
+    public:
+        void release() {}
+    };
+
     /*
      *  ContiguousVector behaves like an stl-vector (std::vector) with the difference of
      *      configuring its type behavior and allocations. Otherwise it uses copy/move
@@ -517,130 +529,165 @@ namespace elsa::mr
         static constexpr bool is_universal = is_universal_impl<std::decay_t<ItType>>;
 
     private:
-        container_type _self;
+        std::shared_ptr<container_type> _self;
+
+    private:
+        /* reserves the given amount, updates the current container, and returns the old container
+         */
+        std::shared_ptr<container_type>
+            _reserve(size_type count, size_type move,
+                     const mr::MemoryResource& mr = mr::MemoryResource())
+        {
+            std::shared_ptr<container_type> _tmp = _self->reserve(count, move, _self.unique(), mr);
+
+            /* check if a new container was allocated and swap them */
+            if (_tmp == nullptr)
+                return nullptr;
+            std::swap(_self, _tmp);
+
+            /* return the old container, if it is non-empty */
+            if (_tmp->pointer == nullptr)
+                return nullptr;
+            return _tmp;
+        }
+
+        /* reduce the current container to the given amount */
+        void _reduce(size_type count)
+        {
+            std::shared_ptr<container_type> _tmp = _self->reduce(count, _self.unique());
+            if (_tmp == nullptr)
+                return;
+            _self = _tmp;
+        }
 
     public:
         /* use defaultResource as initial resource */
-        ContiguousVector() { _self.resource = mr::defaultResource(); }
+        ContiguousVector()
+        {
+            _self = std::make_shared<container_type>(mr::defaultResource(), nullptr, 0, 0);
+        }
 
         explicit ContiguousVector(size_type count)
         {
-            _self.resource = mr::defaultResource();
+            _self = std::make_shared<container_type>(mr::defaultResource(), nullptr, 0, 0);
 
-            _self.reserve(count, 0);
-            _self.set_range(0, nullptr, count);
+            _reserve(count, 0);
+            _self->set_range(0, nullptr, count);
         }
 
         explicit ContiguousVector(size_type count, const_reference init)
         {
-            _self.resource = mr::defaultResource();
+            _self = std::make_shared<container_type>(mr::defaultResource(), nullptr, 0, 0);
 
-            _self.reserve(count, 0);
-            _self.set_range(0, &init, count);
+            _reserve(count, 0);
+            _self->set_range(0, &init, count);
         }
 
         template <class ItType>
         ContiguousVector(ItType ibegin, ItType iend)
         {
-            _self.resource = mr::defaultResource();
+            _self = std::make_shared<container_type>(mr::defaultResource(), nullptr, 0, 0);
 
             size_type count = std::distance(ibegin, iend);
-            _self.reserve(count, 0);
-            _self.insert_range(0, ibegin, count, is_universal<ItType>);
+            _reserve(count, 0);
+            _self->insert_range(0, ibegin, count, is_universal<ItType>);
         }
 
         ContiguousVector(std::initializer_list<value_type> l)
         {
-            _self.resource = mr::defaultResource();
+            _self = std::make_shared<container_type>(mr::defaultResource(), nullptr, 0, 0);
 
-            _self.reserve(l.size(), 0);
-            _self.insert_range(0, l.begin(), l.size(), false);
+            _reserve(l.size(), 0);
+            _self->insert_range(0, l.begin(), l.size(), false);
         }
 
         /* if mr is invalid, mr::defaultResource will be used */
         explicit ContiguousVector(const mr::MemoryResource& mr)
         {
-            if (!(_self.resource = mr))
-                _self.resource = mr::defaultResource();
+            _self =
+                std::make_shared<container_type>(!mr ? mr::defaultResource() : mr, nullptr, 0, 0);
         }
 
         explicit ContiguousVector(size_type count, const mr::MemoryResource& mr)
         {
-            if (!(_self.resource = mr))
-                _self.resource = mr::defaultResource();
+            _self =
+                std::make_shared<container_type>(!mr ? mr::defaultResource() : mr, nullptr, 0, 0);
 
-            _self.reserve(count, 0);
-            _self.set_range(0, nullptr, count);
+            _reserve(count, 0);
+            _self->set_range(0, nullptr, count);
         }
 
         explicit ContiguousVector(size_type count, const_reference init,
                                   const mr::MemoryResource& mr)
         {
-            if (!(_self.resource = mr))
-                _self.resource = mr::defaultResource();
+            _self =
+                std::make_shared<container_type>(!mr ? mr::defaultResource() : mr, nullptr, 0, 0);
 
-            _self.reserve(count, 0);
-            _self.set_range(0, &init, count);
+            _reserve(count, 0);
+            _self->set_range(0, &init, count);
         }
 
         template <class ItType>
         explicit ContiguousVector(ItType ibegin, ItType iend, const mr::MemoryResource& mr)
         {
-            if (!(_self.resource = mr))
-                _self.resource = mr::defaultResource();
+            _self =
+                std::make_shared<container_type>(!mr ? mr::defaultResource() : mr, nullptr, 0, 0);
 
             size_type count = std::distance(ibegin, iend);
-            _self.reserve(count, 0);
-            _self.insert_range(0, ibegin, count, is_universal<ItType>);
+            _reserve(count, 0);
+            _self->insert_range(0, ibegin, count, is_universal<ItType>);
         }
 
         explicit ContiguousVector(std::initializer_list<value_type> l, const mr::MemoryResource& mr)
         {
-            if (!(_self.resource = mr))
-                _self.resource = mr::defaultResource();
+            _self =
+                std::make_shared<container_type>(!mr ? mr::defaultResource() : mr, nullptr, 0, 0);
 
-            _self.reserve(l.size(), 0);
-            _self.insert_range(0, l.begin(), l.size(), false);
+            _reserve(l.size(), 0);
+            _self->insert_range(0, l.begin(), l.size(), false);
         }
 
         /* use s::resource as initial resource */
         ContiguousVector(const self_type& s)
         {
-            _self.resource = s._self.resource;
+            _self = std::make_shared<container_type>(s._self->resource, nullptr, 0, 0);
 
-            _self.reserve(s._self.size, 0);
-            _self.insert_range(0, s._self.pointer, s._self.size, true);
+            _reserve(s._self->size, 0);
+            _self->insert_range(0, s._self->pointer, s._self->size, true);
         }
 
         /* if mr is invalid, s::resource will be used */
         explicit ContiguousVector(const self_type& s, const mr::MemoryResource& mr)
         {
-            if (!(_self.resource = mr))
-                _self.resource = s._self.resource;
+            _self = std::make_shared<container_type>(!mr ? s._self->resource : mr, nullptr, 0, 0);
 
-            _self.reserve(s._self.size, 0);
-            _self.insert_range(0, s._self.pointer, s._self.size, true);
+            _reserve(s._self->size, 0);
+            _self->insert_range(0, s._self->pointer, s._self->size, true);
         }
 
         /* use s::resource as initial resource */
         ContiguousVector(self_type&& s) noexcept
         {
+            _self = std::make_shared<container_type>(s._self->resource, nullptr, 0, 0);
             std::swap(_self, s._self);
-            s._self.resource = _self.resource;
         }
 
         ~ContiguousVector() = default;
 
     public:
+        /* underlying container accessing */
+        // NativeContainer<Type> lock_native() {}
+        // void from_remote(Type* raw_pointer, size_t size, std::function<void()> destruct) {}
+
         /* if mr is invalid, mr::defaultResource will be used */
-        mr::MemoryResource resource() const { return _self.resource; }
+        mr::MemoryResource resource() const { return _self->resource; }
 
         void swap_resource(const mr::MemoryResource& mr)
         {
             mr::MemoryResource actual = bool(mr) ? mr : mr::defaultResource();
-            if (actual == _self.resource)
+            if (actual == _self->resource)
                 return;
-            _self.reserve(0, _self.size, actual);
+            _reserve(0, _self->size, actual);
         }
 
         /* o::resourse will be used */
@@ -659,11 +706,11 @@ namespace elsa::mr
         {
             if (&s == this)
                 return *this;
-            if (_self.resource == s._self.resource)
+            if (_self->resource == s._self->resource)
                 std::swap(_self, s._self);
             else
                 assign(s);
-            s._self.reduce(0);
+            s._reduce(0);
             return *this;
         }
 
@@ -676,26 +723,26 @@ namespace elsa::mr
         /* if mr is invalid, current resource will be used */
         void assign_default(size_type count, const mr::MemoryResource& mr = mr::MemoryResource())
         {
-            _self.reserve(count, 0, mr);
-            _self.set_range(0, nullptr, count);
-            _self.destruct_until(count);
+            _reserve(count, 0, mr);
+            _self->set_range(0, nullptr, count);
+            _self->destruct_until(count);
         }
 
         void assign(size_type count, const_reference init,
                     const mr::MemoryResource& mr = mr::MemoryResource())
         {
-            _self.reserve(count, 0, mr);
-            _self.set_range(0, &init, count);
-            _self.destruct_until(count);
+            _reserve(count, 0, mr);
+            _self->set_range(0, &init, count);
+            _self->destruct_until(count);
         }
 
         template <class ItType>
         void assign(ItType ibegin, ItType iend, const mr::MemoryResource& mr = mr::MemoryResource())
         {
             size_type count = std::distance(ibegin, iend);
-            _self.reserve(count, 0, mr);
-            _self.insert_range(0, ibegin, count, is_universal<ItType>);
-            _self.destruct_until(count);
+            _reserve(count, 0, mr);
+            _self->insert_range(0, ibegin, count, is_universal<ItType>);
+            _self->destruct_until(count);
         }
 
         void assign(std::initializer_list<value_type> l,
@@ -706,69 +753,71 @@ namespace elsa::mr
 
         void assign(const self_type& s, const mr::MemoryResource& mr = mr::MemoryResource())
         {
-            _self.reserve(s._self.size, 0, mr);
-            _self.insert_range(0, s._self.pointer, s._self.size, true);
-            _self.destruct_until(s._self.size);
+            _reserve(s._self->size, 0, mr);
+            _self->insert_range(0, s._self->pointer, s._self->size, true);
+            _self->destruct_until(s._self->size);
         }
 
         /* if mr is invalid, current resource will be kept */
         void swap(self_type& o, const mr::MemoryResource& mr = mr::MemoryResource())
         {
-            mr::MemoryResource actual = bool(mr) ? mr : _self.resource;
+            mr::MemoryResource actual = bool(mr) ? mr : _self->resource;
 
-            if (_self.resource == actual && o._self.resource == actual)
+            if (_self->resource == actual && o._self->resource == actual)
                 std::swap(_self, o._self);
             else {
-                container_type _old = _self.reserve(o._self.size, 0, actual);
-                _self.insert_range(0, o._self.pointer, o._self.size, true);
+                std::shared_ptr<container_type> _old = _reserve(o._self->size, 0, actual);
 
-                o._self.reserve(_old.size, 0);
-                o._self.insert_range(0, _old.pointer, _old.size, true);
-                o._self.destruct_until(_old.size);
+                _self->insert_range(0, o._self->pointer, o._self->size, true);
+
+                o._reserve(_old == nullptr ? 0 : _old->size, 0);
+                if (_old != nullptr)
+                    o._self->insert_range(0, _old->pointer, _old->size, true);
+                o._self->destruct_until(_old == nullptr ? 0 : _old->size);
             }
         }
 
         reference at(size_type i)
         {
-            if (i >= _self.size)
+            if (i >= _self->size)
                 throw std::out_of_range("Index into ContiguousVector is out of range");
-            return _self.pointer[i];
+            return _self->pointer[i];
         }
 
         const_reference at(size_type i) const
         {
-            if (i >= _self.size)
+            if (i >= _self->size)
                 throw std::out_of_range("Index into ContiguousVector is out of range");
-            return _self.pointer[i];
+            return _self->pointer[i];
         }
 
-        reference operator[](size_type i) { return _self.pointer[i]; }
+        reference operator[](size_type i) { return _self->pointer[i]; }
 
-        const_reference operator[](size_type i) const { return _self.pointer[i]; }
+        const_reference operator[](size_type i) const { return _self->pointer[i]; }
 
-        reference front() { return *_self.pointer; }
+        reference front() { return *_self->pointer; }
 
-        const_reference front() const { return *_self.pointer; }
+        const_reference front() const { return *_self->pointer; }
 
-        reference back() { return *(_self.end_ptr() - 1); }
+        reference back() { return *(_self->end_ptr() - 1); }
 
-        const_reference back() const { return *(_self.end_ptr() - 1); }
+        const_reference back() const { return *(_self->end_ptr() - 1); }
 
-        pointer data() { return pointer(_self.pointer); }
+        pointer data() { return pointer(_self->pointer); }
 
-        const_pointer data() const { return const_pointer(_self.pointer); }
+        const_pointer data() const { return const_pointer(_self->pointer); }
 
-        iterator begin() { return iterator(_self.pointer); }
+        iterator begin() { return iterator(_self->pointer); }
 
-        const_iterator begin() const { return const_iterator(_self.pointer); }
+        const_iterator begin() const { return const_iterator(_self->pointer); }
 
-        const_iterator cbegin() const { return const_iterator(_self.pointer); }
+        const_iterator cbegin() const { return const_iterator(_self->pointer); }
 
-        iterator end() { return iterator(_self.end_ptr()); }
+        iterator end() { return iterator(_self->end_ptr()); }
 
-        const_iterator end() const { return const_iterator(_self.end_ptr()); }
+        const_iterator end() const { return const_iterator(_self->end_ptr()); }
 
-        const_iterator cend() const { return const_iterator(_self.end_ptr()); }
+        const_iterator cend() const { return const_iterator(_self->end_ptr()); }
 
         reverse_iterator rbegin() { return reverse_iterator(end()); }
 
@@ -782,47 +831,47 @@ namespace elsa::mr
 
         const_reverse_iterator crend() const { return const_reverse_iterator(cbegin()); }
 
-        size_type size() const { return _self.size; }
+        size_type size() const { return _self->size; }
 
         bool empty() const { return size() == 0; }
 
         size_type max_size() const { return std::numeric_limits<difference_type>::max(); }
 
-        void reserve(size_type cap) { _self.reserve(cap, _self.size); }
+        void reserve(size_type cap) { _reserve(cap, _self->size); }
 
-        size_type capacity() const { return _self.capacity; }
+        size_type capacity() const { return _self->capacity; }
 
-        void shrink_to_fit() { _self.reduce(_self.size); }
+        void shrink_to_fit() { _reduce(_self->size); }
 
-        void clear() noexcept { _self.destruct_until(0); }
+        void clear() noexcept { _self->destruct_until(0); }
 
         iterator insert_default(const_iterator i, size_type count)
         {
-            difference_type off = i - const_iterator(_self.pointer);
+            difference_type off = i - const_iterator(_self->pointer);
             size_type pre = static_cast<size_type>(off);
-            size_type post = _self.size - static_cast<size_type>(off);
+            size_type post = _self->size - static_cast<size_type>(off);
 
-            container_type old = _self.reserve(_self.size + count, pre);
+            std::shared_ptr<container_type> _old = _reserve(_self->size + count, pre);
 
             /* check if a new buffer has been constructed */
-            if (old.pointer != nullptr) {
-                _self.set_range(pre, nullptr, count);
-                _self.insert_range(_self.size, old.pointer + pre, post, true);
+            if (_old != nullptr) {
+                _self->set_range(pre, nullptr, count);
+                _self->insert_range(_self->size, _old->pointer + pre, post, true);
             }
 
             /* check if the current content will overlap itself upon moving */
             else if (count < post) {
-                _self.move_tail(pre, count);
-                _self.set_range(pre, nullptr, count);
+                _self->move_tail(pre, count);
+                _self->set_range(pre, nullptr, count);
             }
 
             else {
                 /* construct the new part in order for the tail to be appended */
-                _self.set_range(_self.size, nullptr, count - post);
-                _self.insert_range(_self.size, _self.pointer + pre, post, true);
-                _self.set_range(pre, nullptr, post);
+                _self->set_range(_self->size, nullptr, count - post);
+                _self->insert_range(_self->size, _self->pointer + pre, post, true);
+                _self->set_range(pre, nullptr, post);
             }
-            return iterator(_self.pointer + off);
+            return iterator(_self->pointer + off);
         }
 
         iterator insert(const_iterator i, const_reference value) { return emplace(i, value); }
@@ -834,63 +883,63 @@ namespace elsa::mr
 
         iterator insert(const_iterator i, size_type count, const_reference value)
         {
-            difference_type off = i - const_iterator(_self.pointer);
+            difference_type off = i - const_iterator(_self->pointer);
             size_type pre = static_cast<size_type>(off);
-            size_type post = _self.size - static_cast<size_type>(off);
+            size_type post = _self->size - static_cast<size_type>(off);
 
-            container_type old = _self.reserve(_self.size + count, pre);
+            std::shared_ptr<container_type> _old = _reserve(_self->size + count, pre);
 
             /* check if a new buffer has been constructed */
-            if (old.pointer != nullptr) {
-                _self.set_range(pre, &value, count);
-                _self.insert_range(_self.size, old.pointer + pre, post, true);
+            if (_old != nullptr) {
+                _self->set_range(pre, &value, count);
+                _self->insert_range(_self->size, _old->pointer + pre, post, true);
             }
 
             /* check if the current content will overlap itself upon moving */
             else if (count < post) {
-                _self.move_tail(pre, count);
-                _self.set_range(pre, &value, count);
+                _self->move_tail(pre, count);
+                _self->set_range(pre, &value, count);
             }
 
             else {
                 /* construct the new part in order for the tail to be appended */
-                _self.set_range(_self.size, &value, count - post);
-                _self.insert_range(_self.size, _self.pointer + pre, post, true);
-                _self.set_range(pre, &value, post);
+                _self->set_range(_self->size, &value, count - post);
+                _self->insert_range(_self->size, _self->pointer + pre, post, true);
+                _self->set_range(pre, &value, post);
             }
-            return iterator(_self.pointer + off);
+            return iterator(_self->pointer + off);
         }
 
         template <class ItType>
         iterator insert(const_iterator i, ItType ibegin, ItType iend)
         {
-            difference_type off = i - const_iterator(_self.pointer);
+            difference_type off = i - const_iterator(_self->pointer);
             size_type pre = static_cast<size_type>(off);
-            size_type post = _self.size - static_cast<size_type>(off);
+            size_type post = _self->size - static_cast<size_type>(off);
             size_type count = static_cast<size_type>(std::distance(ibegin, iend));
 
-            container_type old = _self.reserve(_self.size + count, pre);
+            std::shared_ptr<container_type> _old = _reserve(_self->size + count, pre);
 
             /* check if a new buffer has been constructed */
-            if (old.pointer != nullptr) {
-                _self.insert_range(pre, ibegin, count, is_universal<ItType>);
-                _self.insert_range(_self.size, old.pointer + pre, post, true);
+            if (_old != nullptr) {
+                _self->insert_range(pre, ibegin, count, is_universal<ItType>);
+                _self->insert_range(_self->size, _old->pointer + pre, post, true);
             }
 
             /* check if the current content will overlap itself upon moving */
             else if (count < post) {
-                _self.move_tail(pre, count);
-                _self.insert_range(pre, ibegin, count, is_universal<ItType>);
+                _self->move_tail(pre, count);
+                _self->insert_range(pre, ibegin, count, is_universal<ItType>);
             }
 
             else {
                 /* construct the new part in order for the tail to be appended */
-                _self.insert_range(_self.size, std::next(ibegin, post), count - post,
-                                   is_universal<ItType>);
-                _self.insert_range(_self.size, _self.pointer + pre, post, true);
-                _self.insert_range(pre, ibegin, post, is_universal<ItType>);
+                _self->insert_range(_self->size, std::next(ibegin, post), count - post,
+                                    is_universal<ItType>);
+                _self->insert_range(_self->size, _self->pointer + pre, post, true);
+                _self->insert_range(pre, ibegin, post, is_universal<ItType>);
             }
-            return iterator(_self.pointer + off);
+            return iterator(_self->pointer + off);
         }
 
         iterator insert(const_iterator i, std::initializer_list<value_type> l)
@@ -901,20 +950,20 @@ namespace elsa::mr
         template <class... Args>
         iterator emplace(const_iterator i, Args&&... args)
         {
-            size_type off = static_cast<size_type>(i - const_iterator(_self.pointer));
-            container_type old = _self.reserve(_self.size + 1, off);
+            size_type off = static_cast<size_type>(i - const_iterator(_self->pointer));
+            std::shared_ptr<container_type> _old = _reserve(_self->size + 1, off);
 
-            if (old.pointer != nullptr) {
-                new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
-                _self.insert_range(++_self.size, old.pointer + off, old.size - off, true);
-            } else if (off >= _self.size) {
-                new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
-                ++_self.size;
+            if (_old != nullptr) {
+                new (_self->end_ptr()) value_type(std::forward<Args>(args)...);
+                _self->insert_range(++_self->size, _old->pointer + off, _old->size - off, true);
+            } else if (off >= _self->size) {
+                new (_self->end_ptr()) value_type(std::forward<Args>(args)...);
+                ++_self->size;
             } else {
-                _self.move_tail(off, 1);
-                _self.pointer[off] = std::move(value_type(std::forward<Args>(args)...));
+                _self->move_tail(off, 1);
+                _self->pointer[off] = std::move(value_type(std::forward<Args>(args)...));
             }
-            return iterator(_self.pointer + off);
+            return iterator(_self->pointer + off);
         }
 
         iterator erase(iterator i) { return erase(i, std::next(i)); }
@@ -928,44 +977,44 @@ namespace elsa::mr
 
         iterator erase(const_iterator ibegin, const_iterator iend)
         {
-            difference_type offset = ibegin - const_iterator(_self.pointer);
+            difference_type offset = ibegin - const_iterator(_self->pointer);
             difference_type count = iend - ibegin;
-            _self.move_tail(iend - const_iterator(_self.pointer), -count);
-            return iterator(_self.pointer + offset);
+            _self->move_tail(iend - const_iterator(_self->pointer), -count);
+            return iterator(_self->pointer + offset);
         }
 
         template <class... Args>
         reference emplace_back(Args&&... args)
         {
-            _self.reserve(_self.size + 1, _self.size);
-            new (_self.end_ptr()) value_type(std::forward<Args>(args)...);
-            return _self.pointer[_self.size++];
+            _reserve(_self->size + 1, _self->size);
+            new (_self->end_ptr()) value_type(std::forward<Args>(args)...);
+            return _self->pointer[_self->size++];
         }
 
         void push_back(const_reference value) { emplace_back(value); }
 
         void push_back(value_type&& value) { emplace_back(std::move(value)); }
 
-        void pop_back() { _self.destruct_until(_self.size - 1); }
+        void pop_back() { _self->destruct_until(_self->size - 1); }
 
         void resize(size_type count)
         {
-            if (count <= _self.size) {
-                _self.destruct_until(count);
+            if (count <= _self->size) {
+                _self->destruct_until(count);
                 return;
             }
-            _self.reserve(count, _self.size);
-            _self.set_range(_self.size, nullptr, count - _self.size);
+            _reserve(count, _self->size);
+            _self->set_range(_self->size, nullptr, count - _self->size);
         }
 
         void resize(size_type count, const_reference value)
         {
-            if (count <= _self.size) {
-                _self.destruct_until(count);
+            if (count <= _self->size) {
+                _self->destruct_until(count);
                 return;
             }
-            _self.reserve(count, _self.size);
-            _self.set_range(_self.size, &value, count - _self.size);
+            _reserve(count, _self->size);
+            _self->set_range(_self->size, &value, count - _self->size);
         }
     };
 } // namespace elsa::mr
