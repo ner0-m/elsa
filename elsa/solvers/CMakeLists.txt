@@ -22,6 +22,7 @@ set(MODULE_HEADERS
     SplitBregman.h
     LBK.h
     LB.h
+    TGV_LADMM.h
 )
 
 # list all the code files of the module
@@ -48,6 +49,7 @@ set(MODULE_SOURCES
     SplitBregman.cpp
     LBK.cpp
     LB.cpp
+    TGV_LADMM.cpp
 )
 
 list(

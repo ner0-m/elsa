@@ -8,6 +8,8 @@ set(MODULE_HEADERS
     Dictionary.h
     ShearletTransform.h
     JacobiPreconditioner.h
+        SymmetrizedDerivative.h
+    EmptyTransform.h
 )
 
 # list all the code files of the module
@@ -20,6 +22,8 @@ set(MODULE_SOURCES
     Dictionary.cpp
     ShearletTransform.cpp
     JacobiPreconditioner.cpp
+        SymmetrizedDerivative.cpp
+    EmptyTransform.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging)

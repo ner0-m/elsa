@@ -51,6 +51,8 @@
 #include "FiniteDifferences.h"
 #include "BlockLinearOperator.h"
 #include "ShearletTransform.h"
+#include "SymmetrizedDerivative.h"
+#include "EmptyTransform.h"
 
 // Proximal Operator headers
 #include "ProximalOperator.h"
@@ -94,3 +96,5 @@
 #include "SplitBregman.h"
 #include "LBK.h"
 #include "LB.h"
+#include "TGV_LADMM.h"
+#include "LinearizedADMM.h"
