@@ -25,6 +25,7 @@ set(MODULE_HEADERS
     MixedL12.h
     SmoothMixedL12.h
     MixedL21.h
+    SmoothMixedL21.h
 )
 
 # list all the code files of the module
@@ -54,6 +55,7 @@ set(MODULE_SOURCES
     MixedL12.cpp
     SmoothMixedL12.cpp
     MixedL21.cpp
+    SmoothMixedL21.cpp
 )
 
 list(APPEND MODULE_PUBLIC_DEPS elsa_core elsa_logging elsa_operators)

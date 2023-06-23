@@ -484,12 +484,8 @@ namespace elsa
     template <typename data_t>
     data_t DataContainer<data_t>::l12SmoothMixedNorm(data_t epsilon) const
     {
-        const auto blockDesc = downcast_safe<BlockDescriptor>(_dataDescriptor.get());
-        if (!blockDesc)
-            throw LogicError("DataContainer: cannot get block from not-blocked container");
-
         data_t res(0);
-        for (index_t i = 0; i < blockDesc->getNumberOfBlocks(); ++i) {
+        for (index_t i = 0; i < this->getNumberOfBlocks(); ++i) {
             res += elsa::fn::square(getBlock(i).l1Norm() + getBlock(i).getSize() * epsilon);
         }
         return sqrt(res);
@@ -504,12 +500,15 @@ namespace elsa
     template <typename data_t>
     data_t DataContainer<data_t>::l21SmoothMixedNorm(data_t epsilon) const
     {
-        auto num_blocks = getDataDescriptor().getNumberOfDimensions() - 1;
-        data_t res(0);
-        for (index_t i = 0; i < num_blocks; ++i) {
-            res += sqrt(getBlock(i).squaredL2Norm() + (epsilon * epsilon));
+        auto tmp = DataContainer(this->getBlock(0).getDataDescriptor());
+
+        for (index_t i = 0; i < this->getNumberOfBlocks(); ++i) {
+            tmp += (square(this->getBlock(i)));
         }
-        return res;
+
+        tmp += (epsilon * epsilon);
+
+        return sqrt(tmp).l1Norm();
     }
 
     template <typename data_t>

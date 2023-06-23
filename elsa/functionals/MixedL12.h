@@ -12,8 +12,8 @@ namespace elsa
      * j}\right|^p\right)^{\frac{q}{p}}\right)^{\frac{1}{q}}
      *
      * The mixed L12 functional evaluates to
-     * \|A\|_{2,
-     * 1}=\left(\sum_{j=1}^n\left(\sum_{i=1}^m\left|a_{ij}\right|^2\right)^{\frac{1}{2}}\right)
+     * \|A\|_{1,
+     * 2}=\left(\sum_{j=1}^n\left(\sum_{i=1}^m\left|a_{ij}\right|^1\right)^2\right)^{\frac{1}{2}}
      *
      */
     template <typename data_t = real_t>

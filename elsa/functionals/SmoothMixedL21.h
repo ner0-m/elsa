@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Functional.h"
+#include <iostream>
 
 namespace elsa
 {
@@ -11,20 +12,20 @@ namespace elsa
      * \|A\|_{p, q}=\left(\sum_{j=1}^n\left(\sum_{i=1}^m\left|a_{i
      * j}\right|^p\right)^{\frac{q}{p}}\right)^{\frac{1}{q}}
      *
-     * The mixed L21 functional evaluates to
-     * \|A\|_{2,
-     * 1}=\left(\sum_{j=1}^n\left(\sum_{i=1}^m\left|a_{ij}\right|^2\right)^{\frac{1}{2}}\right)
+     * The smooth mixed L12 functional evaluates to
+     * \|A\|_{1, 2}=\left(\sum_{j=1}^n\left(e +
+     * \sum_{i=1}^m\left|a_{ij}\right|^1\right)^2\right)^{\frac{1}{2}}
      *
      */
     template <typename data_t = real_t>
-    class MixedL21 : public Functional<data_t>
+    class SmoothMixedL21 : public Functional<data_t>
     {
     public:
-        explicit MixedL21(const DataDescriptor& domainDescriptor);
+        explicit SmoothMixedL21(const DataDescriptor& domainDescriptor, data_t epsilon);
 
-        MixedL21(const MixedL21<data_t>&) = delete;
+        SmoothMixedL21(const SmoothMixedL21<data_t>&) = delete;
 
-        ~MixedL21() override = default;
+        ~SmoothMixedL21() override = default;
 
     protected:
         data_t evaluateImpl(const DataContainer<data_t>& Rx) override;
@@ -33,9 +34,12 @@ namespace elsa
 
         LinearOperator<data_t> getHessianImpl(const DataContainer<data_t>& Rx) override;
 
-        MixedL21<data_t>* cloneImpl() const override;
+        SmoothMixedL21<data_t>* cloneImpl() const override;
 
         bool isEqual(const Functional<data_t>& other) const override;
+
+    private:
+        data_t epsilon;
     };
 
 } // namespace elsa
