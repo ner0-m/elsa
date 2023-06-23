@@ -1043,7 +1043,7 @@ TEST_CASE_TEMPLATE("ContiguousVector::erase", T, ComplexType<1>, TrivialType<1>,
     testStats.resource.reset();
 }
 
-TEST_CASE_TEMPLATE("ContiguousVector:: modifier", T, ComplexType<1>, TrivialType<1>, UninitType,
+TEST_CASE_TEMPLATE("ContiguousVector::modifier", T, ComplexType<1>, TrivialType<1>, UninitType,
                    ComplexType<6>, TrivialType<8>)
 {
     MemoryResource mres = CheckedResource::make();
@@ -1216,7 +1216,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: modifier", T, ComplexType<1>, TrivialType
     testStats.resource.reset();
 }
 
-TEST_CASE_TEMPLATE("ContiguousVector:: capacity", T, ComplexType<1>, TrivialType<1>, UninitType,
+TEST_CASE_TEMPLATE("ContiguousVector::capacity", T, ComplexType<1>, TrivialType<1>, UninitType,
                    ComplexType<6>, TrivialType<8>)
 {
     MemoryResource mres = CheckedResource::make();
@@ -1398,7 +1398,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: capacity", T, ComplexType<1>, TrivialType
     testStats.resource.reset();
 }
 
-TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1>, UninitType,
+TEST_CASE_TEMPLATE("ContiguousVector::access", T, ComplexType<1>, TrivialType<1>, UninitType,
                    ComplexType<6>, TrivialType<8>)
 {
     MemoryResource mres = CheckedResource::make();
@@ -1701,7 +1701,7 @@ TEST_CASE_TEMPLATE("ContiguousVector:: access", T, ComplexType<1>, TrivialType<1
     testStats.resource.reset();
 }
 
-TEST_CASE_TEMPLATE("ContiguousVector:: resource", T, ComplexType<1>, TrivialType<1>, UninitType,
+TEST_CASE_TEMPLATE("ContiguousVector::resource", T, ComplexType<1>, TrivialType<1>, UninitType,
                    ComplexType<6>, TrivialType<8>)
 {
     MemoryResource mres0 = CheckedResource::make();

@@ -449,14 +449,15 @@ namespace elsa::mr
         };
     } // namespace detail
 
+    /*
+     *  Return the state of the container and ensure its contents will
+     *  not be released until the returned release-function has been called.
+     */
     template <class Type>
     struct NativeContainer {
-    public:
-        Type* raw_pointer;
-        size_t capacity;
-
-    public:
-        void release() {}
+        std::function<void()> release;
+        Type* raw_pointer = nullptr;
+        size_t size = 0;
     };
 
     /*
@@ -675,9 +676,41 @@ namespace elsa::mr
         ~ContiguousVector() = default;
 
     public:
-        /* underlying container accessing */
-        // NativeContainer<Type> lock_native() {}
-        // void from_remote(Type* raw_pointer, size_t size, std::function<void()> destruct) {}
+        /*
+         *  Retrieve a copy of the underlying native container.
+         *  The underlying memory will not be released until the release function has been invoked.
+         *  Any relocations/releases of this ContiguousVector will allocate a new container, but
+         *  leave the old container alive.
+         */
+        NativeContainer<Type> lock_native()
+        {
+            /* setup the release function to be a functor, which has a shared
+             *  pointer and upon inocation it releases the shared pointer */
+            struct CleanupFunctor {
+                std::shared_ptr<container_type> _object;
+                CleanupFunctor(const std::shared_ptr<container_type>& in) : _object(in) {}
+                void operator()() { _object.reset(); }
+            };
+
+            NativeContainer<Type> _out;
+            _out.raw_pointer = _self->pointer;
+            _out.size = _self->size;
+            _out.resize = CleanupFunctor(_self);
+            return _out;
+        }
+
+        /*
+         *  Setup the internal structure to point to the raw_pointer and use the size/capacity =
+         *  size. The ContiguousVector will call destruct whenever the last reference to the
+         *  resource has been released. The current resource will be stored and any
+         *  relocation/release will allocate a new container with the old resource, thereby calling
+         *  destruct on this object.
+         */
+        void from_extern(Type* raw_pointer, size_t size, std::function<void()> destruct)
+        {
+            _self = std::make_shared<container_type>(_self->resource, raw_pointer, size,
+                                                     std::move(destruct));
+        }
 
         /* if mr is invalid, mr::defaultResource will be used */
         mr::MemoryResource resource() const { return _self->resource; }
