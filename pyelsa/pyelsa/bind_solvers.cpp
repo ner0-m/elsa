@@ -24,6 +24,9 @@
 #include "AB_GMRES.h"
 #include "BA_GMRES.h"
 #include "LinearizedADMM.h"
+#include "LB.h"
+#include "LBK.h"
+#include "TGV_LADMM.h"
 #include "Solver.h"
 #include "ProximalOperator.h"
 
@@ -311,6 +314,77 @@ void add_omp(py::module& m)
 
 namespace detail
 {
+    template <class data_t>
+    void add_lb(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using DC = elsa::DataContainer<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using Prox = elsa::ProximalOperator<data_t>;
+
+        py::class_<elsa::LB<data_t>, Solver> lb(m, name);
+        lb.def(py::init<const LOp&, const DC&, const Prox&, data_t>(),
+               py::arg("A"), py::arg("b"), py::arg("prox"), py::arg("mu"));
+    }
+} // namespace detail
+
+void add_lb(py::module& m)
+{
+    detail::add_lb<float>(m, "LBf");
+    detail::add_lb<double>(m, "LBd");
+
+    m.attr("LB") = m.attr("LBf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_lbk(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using DC = elsa::DataContainer<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+        using Prox = elsa::ProximalOperator<data_t>;
+
+        py::class_<elsa::LBK<data_t>, Solver> lbk(m, name);
+        lbk.def(py::init<const LOp&, const DC&, const Prox&, data_t>(),
+               py::arg("A"), py::arg("b"), py::arg("prox"), py::arg("mu"));
+    }
+} // namespace detail
+
+void add_lbk(py::module& m)
+{
+    detail::add_lbk<float>(m, "LBKf");
+    detail::add_lbk<double>(m, "LBKd");
+
+    m.attr("LBK") = m.attr("LBKf");
+}
+
+namespace detail
+{
+    template <class data_t>
+    void add_tgv_ladmm(py::module& m, const char* name)
+    {
+        using Solver = elsa::Solver<data_t>;
+        using DC = elsa::DataContainer<data_t>;
+        using LOp = elsa::LinearOperator<data_t>;
+
+        py::class_<elsa::TGV_LADMM<data_t>, Solver> tgv(m, name);
+        tgv.def(py::init<const LOp&, const DC&>(),
+                py::arg("A"), py::arg("b"));
+    }
+} // namespace detail
+
+void add_tgv_ladmm(py::module& m)
+{
+    detail::add_tgv_ladmm<float>(m, "TGV_LADMMf");
+    detail::add_tgv_ladmm<double>(m, "TGV_LADMMd");
+
+    m.attr("TGV_LADMM") = m.attr("TGV_LADMMf");
+}
+
+namespace detail
+{
     template <class data_t, template <class> class solver_t = elsa::Solver>
     void add_generalized_minimum_residual(py::module& m, const char* name)
     {
@@ -402,6 +476,9 @@ void add_definitions_pyelsa_solvers(py::module& m)
     add_ogm(m);
     add_sqs(m);
     add_omp(m);
+    add_lb(m);
+    add_lbk(m);
+    add_tgv_ladmm(m);
     add_ladmm(m);
     add_admml2(m);
 
