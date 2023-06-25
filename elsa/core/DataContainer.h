@@ -52,6 +52,12 @@ namespace elsa
         /// const iterator for DataContainer (random access and continuous)
         using const_iterator = typename ContiguousStorage<data_t>::const_iterator;
 
+        enum class ImportStrategy {
+            View,
+            HostCopy,
+            DeviceCopy,
+        };
+
         /// delete default constructor (without metadata there can be no valid container)
         DataContainer() = delete;
 
@@ -78,6 +84,14 @@ namespace elsa
 
         /// constructor accepting a DataDescriptor and a DataHandler
         DataContainer(const DataDescriptor& dataDescriptor, ContiguousStorageView<data_t> storage);
+
+        /// Constructor accepting a DataDescriptor and raw data, intended to interface with DLPack.
+        /// The caller is the caller is responsible to make sure that the data pointer and strategy
+        /// are compatible with the storage type, according to elsa::mr::storageType().
+        /// E.g. it is not possible to copy from a cudaMalloc allocated pointer with the CopyHost strategy.
+        /// Note that if the strategy View is chosen, the caller is responsible to make sure that the
+        /// data pointer is compatible with the storage type.
+        DataContainer(const DataDescriptor& dataDescriptor, data_t *rawData, ImportStrategy strategy, std::function<void()> destructor);
 
         /**
          * @brief Copy constructor for DataContainer

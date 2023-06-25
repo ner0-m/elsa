@@ -71,9 +71,7 @@ namespace detail {
         for(elsa::index_t i = 0; i < ndim; i++) {
             shape(i) = tensor->dl_tensor.shape[i];
         }
-        elsa::VolumeDescriptor desc(shape);
-        std::unique_ptr<elsa::DataContainer<data_t>> dc = std::make_unique<elsa::DataContainer<data_t>>(desc);
-
+        
         bool strided_copy = false;
         if(tensor->dl_tensor.strides) {
             /* stride is not in bytes, but array elements */
@@ -93,54 +91,24 @@ namespace detail {
         }
 
         data_t * imported_data_begin = static_cast<data_t *>(tensor->dl_tensor.data + tensor->dl_tensor.byte_offset);
-        data_t * imported_data_end = imported_data_begin + shape.prod();
-
-        switch (device.device_type) {
-            case kDLCPU:
-                if(elsa::mr::storageType() == elsa::mr::StorageType::Host) {
-                    /* TODO: create view (then also rename capsule and have view not deleted by other library) */
-                    thrust::copy(thrust::host, imported_data_begin, imported_data_end, dc->storage().data());
-                } else if(elsa::mr::storageType() == elsa::mr::StorageType::CUDAManaged) {
-                    thrust::copy(thrust::host, imported_data_begin, imported_data_end, dc->storage().data());
-                } else {
-                    PyErr_SetString(PyExc_RuntimeError, "Internal error! Unknown storage type.");
-                    return py::none();
-                }
-                break;
-            case kDLCUDAHost:
-                /* like the CPU case, except with faster memcpy if the storage type is CUDAManaged*/
-                if(elsa::mr::storageType() == elsa::mr::StorageType::Host) {
-                    /* TODO: create view (then also rename capsule and have view not deleted by other library) */
-                } else if(elsa::mr::storageType() == elsa::mr::StorageType::CUDAManaged) {
-                    thrust::copy(thrust::device, imported_data_begin, imported_data_end, dc->storage().data());
-                } else {
-                    PyErr_SetString(PyExc_RuntimeError, "Internal error! Unknown storage type.");
-                    return py::none();
-                }
-            case kDLCUDAManaged:
-                if(elsa::mr::storageType() == elsa::mr::StorageType::Host) {
-                    thrust::copy(thrust::host, imported_data_begin, imported_data_end, dc->storage().data());
-                } else if(elsa::mr::storageType() == elsa::mr::StorageType::CUDAManaged) {
-                    /* TODO: create view */
-                    thrust::copy(thrust::device, imported_data_begin, imported_data_end, dc->storage().data());
-                } else {
-                    PyErr_SetString(PyExc_RuntimeError, "Internal error! Unknown storage type.");
-                    return py::none();
-                }
-                break;
-            case kDLCUDA:
-                if(elsa::mr::storageType() == elsa::mr::StorageType::Host) {
-                    PyErr_SetString(PyExc_RuntimeError, "Unsupported storage type kDLCUDA. elsa is built without CUDA support.");
-                    return py::none();
-                } else if(elsa::mr::storageType() == elsa::mr::StorageType::CUDAManaged) {
-                    thrust::copy(thrust::device, imported_data_begin, imported_data_end, dc->storage().data());
-                } else {
-                    PyErr_SetString(PyExc_RuntimeError, "Internal error! Unknown storage type.");
-                    return py::none();
-                }
-            default:
-                PyErr_SetString(PyExc_RuntimeError, "unsupported device.");
+        
+        elsa::VolumeDescriptor desc(shape);
+        std::unique_ptr<elsa::DataContainer<data_t>> dc;
+        if(elsa::mr::storageType() == elsa::mr::StorageType::Host && device.device_type == kDLCPU
+            || elsa::mr::storageType() == elsa::mr::StorageType::CUDAManaged
+                && device.device_type == kDLCUDAManaged) {
+                    /* TODO: view destructor */
+            dc = std::make_unique<elsa::DataContainer<data_t>>(desc, imported_data_begin,
+                elsa::DataContainer<data_t>::ImportStrategy::View, [](){});
+        } else {
+            auto strategy = elsa::DataContainer<data_t>::ImportStrategy::DeviceCopy;
+            if(elsa::mr::storageType() == elsa::mr::StorageType::Host && device.device_type == kDLCUDA) {
+                PyErr_SetString(PyExc_RuntimeError, "Unsupported storage type kDLCUDA. elsa is built without CUDA support.");
                 return py::none();
+            } else if(device.device_type == kDLCPU || elsa::mr::storageType() == elsa::mr::StorageType::Host) {
+                strategy = elsa::DataContainer<data_t>::ImportStrategy::HostCopy;
+            }
+            dc = std::make_unique<elsa::DataContainer<data_t>>(desc, imported_data_begin, strategy, [](){});
         }
         return py::cast(dc.release());
     }
