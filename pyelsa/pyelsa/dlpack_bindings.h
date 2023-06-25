@@ -217,9 +217,8 @@ namespace detail
         /* release unique pointers so that lifetime is controlled by
            capsule destructor from now on */
         shape.release();
-        managed.release();
         raw_data.release();
-        return py::capsule(managed.get(), "dltensor", dlpack_capsule_destructor);
+        return py::capsule(managed.release(), "dltensor", dlpack_capsule_destructor);
     }
 
     template <class data_t>
@@ -297,7 +296,7 @@ namespace detail
     template <class data_t>
     void add_data_container_dlpack(py::module& m, py::class_<elsa::DataContainer<data_t>> dc)
     {
-        dc.def("__dlpack__", data_container_dlpack<data_t>);
+        dc.def("__dlpack__", data_container_dlpack<data_t>, py::arg("stream") = py::none());
 
         m.def("from_dlpack", data_container_from_dlpack<data_t>);
     }
