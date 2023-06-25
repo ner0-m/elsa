@@ -40,4 +40,12 @@ namespace elsa::mr
     {
         return bool(mrSingleton);
     }
+
+    StorageType storageType() {
+#ifdef ELSA_CUDA_ENABLED
+        return StorageType::CUDAManaged;
+#else
+        return StorageType::Host;
+#endif
+    }
 } // namespace elsa::mr

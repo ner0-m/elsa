@@ -52,4 +52,11 @@ namespace elsa::mr
     /// Return the most recent thread-local set resource (when using hints/scoped-mr).
     /// If no hints/scopes have been applied, defaults to globalResource.
     MemoryResource defaultResource();
+
+    enum class StorageType {
+        Host,
+        CUDAManaged,
+    };
+
+    StorageType storageType();
 } // namespace elsa::mr
