@@ -208,20 +208,19 @@ namespace elsa
     {
     }
 
-        template <typename data_t>
-    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor,
-                                         data_t *rawData, ImportStrategy strategy,
-                                         std::function<void()> destructor)
+    template <typename data_t>
+    DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor, data_t* rawData,
+                                         ImportStrategy strategy, std::function<void()> destructor)
         : _dataDescriptor{dataDescriptor.clone()}, storage_{ContiguousStorage<data_t>(0)}
     {
         size_t elementCount = dataDescriptor.getNumberOfCoefficients();
-        auto &storage = this->storage();
-        if(strategy == ImportStrategy::View) {
+        auto& storage = this->storage();
+        if (strategy == ImportStrategy::View) {
             storage.from_extern(rawData, elementCount, destructor);
         } else {
-            data_t * rawDataEnd = rawData + elementCount;
+            data_t* rawDataEnd = rawData + elementCount;
             storage.resize(elementCount);
-            if(strategy == ImportStrategy::HostCopy) {
+            if (strategy == ImportStrategy::HostCopy) {
                 thrust::copy(thrust::host, rawData, rawDataEnd, storage.data());
             } else {
                 ENSURE(strategy == ImportStrategy::DeviceCopy);

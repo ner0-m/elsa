@@ -88,10 +88,11 @@ namespace elsa
         /// Constructor accepting a DataDescriptor and raw data, intended to interface with DLPack.
         /// The caller is the caller is responsible to make sure that the data pointer and strategy
         /// are compatible with the storage type, according to elsa::mr::storageType().
-        /// E.g. it is not possible to copy from a cudaMalloc allocated pointer with the CopyHost strategy.
-        /// Note that if the strategy View is chosen, the caller is responsible to make sure that the
-        /// data pointer is compatible with the storage type.
-        DataContainer(const DataDescriptor& dataDescriptor, data_t *rawData, ImportStrategy strategy, std::function<void()> destructor);
+        /// E.g. it is not possible to copy from a cudaMalloc allocated pointer with the CopyHost
+        /// strategy. Note that if the strategy View is chosen, the caller is responsible to make
+        /// sure that the data pointer is compatible with the storage type.
+        DataContainer(const DataDescriptor& dataDescriptor, data_t* rawData,
+                      ImportStrategy strategy, std::function<void()> destructor);
 
         /**
          * @brief Copy constructor for DataContainer
@@ -174,8 +175,8 @@ namespace elsa
 
         /// return an element by its coordinates (not bounds-checked!)
         template <typename idx0_t, typename... idx_t,
-                  typename = std::enable_if_t<
-                      std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
+                  typename = std::enable_if_t<std::is_integral_v<idx0_t>
+                                              && (... && std::is_integral_v<idx_t>)>>
         reference operator()(idx0_t idx0, idx_t... indices)
         {
             IndexVector_t coordinate(sizeof...(indices) + 1);
@@ -185,8 +186,8 @@ namespace elsa
 
         /// return an element by its coordinates as read-only (not bounds-checked!)
         template <typename idx0_t, typename... idx_t,
-                  typename = std::enable_if_t<
-                      std::is_integral_v<idx0_t> && (... && std::is_integral_v<idx_t>)>>
+                  typename = std::enable_if_t<std::is_integral_v<idx0_t>
+                                              && (... && std::is_integral_v<idx_t>)>>
         const_reference operator()(idx0_t idx0, idx_t... indices) const
         {
             IndexVector_t coordinate(sizeof...(indices) + 1);
@@ -401,8 +402,8 @@ namespace elsa
     }
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
-                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>
+                                          && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator*(const DataContainer<data_t>& dc, const Scalar& s)
     {
         auto copy = dc;
@@ -411,8 +412,8 @@ namespace elsa
     }
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
-                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>
+                                          && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator*(const Scalar& s, const DataContainer<data_t>& dc)
     {
         auto copy = dc;
@@ -431,8 +432,8 @@ namespace elsa
     }
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
-                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>
+                                          && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator+(const DataContainer<data_t>& dc, const Scalar& s)
     {
         auto copy = dc;
@@ -441,8 +442,8 @@ namespace elsa
     }
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
-                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>
+                                          && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator+(const Scalar& s, const DataContainer<data_t>& dc)
     {
         auto copy = dc;
@@ -456,14 +457,14 @@ namespace elsa
                                     const DataContainer<data_t>& rhs);
 
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
-                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>
+                                          && std::is_convertible_v<Scalar, data_t>>>
     DataContainer<std::common_type_t<data_t, Scalar>> operator-(const DataContainer<data_t>& dc,
                                                                 const Scalar& s);
 
     template <typename Scalar, typename data_t,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
-                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>
+                                          && std::is_convertible_v<Scalar, data_t>>>
     DataContainer<std::common_type_t<Scalar, data_t>> operator-(const Scalar& s,
                                                                 const DataContainer<data_t>& dc);
 
@@ -474,15 +475,15 @@ namespace elsa
 
     /// Divide DataContainer by scalar
     template <typename data_t, typename Scalar,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
-                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>
+                                          && std::is_convertible_v<Scalar, data_t>>>
     DataContainer<std::common_type_t<data_t, Scalar>> operator/(const DataContainer<data_t>& dc,
                                                                 const Scalar& s);
 
     /// Divide scalar with DataContainer
     template <typename Scalar, typename data_t,
-              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<
-                                              Scalar>> && std::is_convertible_v<Scalar, data_t>>>
+              typename = std::enable_if_t<std::is_arithmetic_v<GetFloatingPointType_t<Scalar>>
+                                          && std::is_convertible_v<Scalar, data_t>>>
     DataContainer<std::common_type_t<Scalar, data_t>> operator/(const Scalar& s,
                                                                 const DataContainer<data_t>& dc);
 

@@ -19,28 +19,33 @@
 
 #include <limits.h>
 
-namespace detail {
+namespace detail
+{
 
     namespace py = pybind11;
 
-    template<class data_t>
-    void tensor_destructor(DLManagedTensor *self) {
+    template <class data_t>
+    void tensor_destructor(DLManagedTensor* self)
+    {
         delete[] self->dl_tensor.shape;
         /* strides is NULL, but might be needed in the future */
         delete[] self->dl_tensor.strides;
-        elsa::mr::NativeContainer<data_t> * nc = static_cast<elsa::mr::NativeContainer<data_t> *>(self->manager_ctx);
+        elsa::mr::NativeContainer<data_t>* nc =
+            static_cast<elsa::mr::NativeContainer<data_t>*>(self->manager_ctx);
         /* this is a bit redundant, deletion should do this as well*/
         nc->release();
         delete nc;
         delete self;
     }
 
-    static void dlpack_capsule_destructor(PyObject *self) {
+    static void dlpack_capsule_destructor(PyObject* self)
+    {
         /* At the risk of editorializing, I would like to say that it is terrible how
             cpython leaks through pybind here. Why have a capsule wrapper at all, if it
             needs to be supplied with a cpython PyCapsule_Destructor? */
-        
-        /* used https://github.com/numpy/numpy/blob/main/numpy/core/src/multiarray/dlpack.c as reference*/
+
+        /* used https://github.com/numpy/numpy/blob/main/numpy/core/src/multiarray/dlpack.c as
+         * reference*/
 
         /* exception free name check */
         if (PyCapsule_IsValid(self, "used_dltensor")) {
@@ -51,7 +56,8 @@ namespace detail {
         PyObject *type, *value, *traceback;
         PyErr_Fetch(&type, &value, &traceback);
 
-        DLManagedTensor *managed = reinterpret_cast<DLManagedTensor *>(PyCapsule_GetPointer(self, "dltensor"));
+        DLManagedTensor* managed =
+            reinterpret_cast<DLManagedTensor*>(PyCapsule_GetPointer(self, "dltensor"));
         if (managed == NULL) {
             PyErr_WriteUnraisable(self);
         } else if (managed->deleter) {
@@ -62,70 +68,77 @@ namespace detail {
     }
 
     template <class data_t>
-    py::object build_data_container(DLManagedTensor *tensor, py::capsule &capsule) {
+    py::object build_data_container(DLManagedTensor* tensor, py::capsule& capsule)
+    {
         static_assert(std::is_trivially_copyable<data_t>::value);
-        
+
         DLDevice device = tensor->dl_tensor.device;
         elsa::index_t ndim = tensor->dl_tensor.ndim;
         elsa::IndexVector_t shape(ndim);
-        for(elsa::index_t i = 0; i < ndim; i++) {
+        for (elsa::index_t i = 0; i < ndim; i++) {
             shape(i) = tensor->dl_tensor.shape[i];
         }
-        
+
         bool strided_copy = false;
-        if(tensor->dl_tensor.strides) {
+        if (tensor->dl_tensor.strides) {
             /* stride is not in bytes, but array elements */
             elsa::index_t stride = 1;
-            for(elsa::index_t i = 0; i < ndim; i++) {
-                if(tensor->dl_tensor.strides[ndim - 1 - i] != stride) {
-                        strided_copy = true;
+            for (elsa::index_t i = 0; i < ndim; i++) {
+                if (tensor->dl_tensor.strides[ndim - 1 - i] != stride) {
+                    strided_copy = true;
                 }
                 stride *= shape(ndim - 1 - i);
             }
         }
 
-        if(strided_copy) {
+        if (strided_copy) {
             /* TODO */
-            PyErr_SetString(PyExc_RuntimeError, "data with non row major densely packed layout not yet supported.");
+            PyErr_SetString(PyExc_RuntimeError,
+                            "data with non row major densely packed layout not yet supported.");
             return py::none();
         }
 
-        data_t * imported_data_begin = static_cast<data_t *>(tensor->dl_tensor.data + tensor->dl_tensor.byte_offset);
-        
+        data_t* imported_data_begin =
+            static_cast<data_t*>(tensor->dl_tensor.data + tensor->dl_tensor.byte_offset);
+
         elsa::VolumeDescriptor desc(shape);
         std::unique_ptr<elsa::DataContainer<data_t>> dc;
-        if(elsa::mr::storageType() == elsa::mr::StorageType::Host && device.device_type == kDLCPU
+        if (elsa::mr::storageType() == elsa::mr::StorageType::Host && device.device_type == kDLCPU
             || elsa::mr::storageType() == elsa::mr::StorageType::CUDAManaged
-                && device.device_type == kDLCUDAManaged) {
+                   && device.device_type == kDLCUDAManaged) {
             /* inform the capsule that the tensor should not be deleted */
             capsule.set_name("used_dltensor");
 
-            dc = std::make_unique<elsa::DataContainer<data_t>>(desc, imported_data_begin,
-                elsa::DataContainer<data_t>::ImportStrategy::View, [tensor](){
-                    tensor->deleter(tensor);
-                });
+            dc = std::make_unique<elsa::DataContainer<data_t>>(
+                desc, imported_data_begin, elsa::DataContainer<data_t>::ImportStrategy::View,
+                [tensor]() { tensor->deleter(tensor); });
         } else {
             auto strategy = elsa::DataContainer<data_t>::ImportStrategy::DeviceCopy;
-            if(elsa::mr::storageType() == elsa::mr::StorageType::Host && device.device_type == kDLCUDA) {
-                PyErr_SetString(PyExc_RuntimeError, "Unsupported storage type kDLCUDA. elsa is built without CUDA support.");
+            if (elsa::mr::storageType() == elsa::mr::StorageType::Host
+                && device.device_type == kDLCUDA) {
+                PyErr_SetString(
+                    PyExc_RuntimeError,
+                    "Unsupported storage type kDLCUDA. elsa is built without CUDA support.");
                 return py::none();
-            } else if(device.device_type == kDLCPU || elsa::mr::storageType() == elsa::mr::StorageType::Host) {
+            } else if (device.device_type == kDLCPU
+                       || elsa::mr::storageType() == elsa::mr::StorageType::Host) {
                 strategy = elsa::DataContainer<data_t>::ImportStrategy::HostCopy;
             }
-            dc = std::make_unique<elsa::DataContainer<data_t>>(desc, imported_data_begin, strategy, [](){});
+            dc = std::make_unique<elsa::DataContainer<data_t>>(desc, imported_data_begin, strategy,
+                                                               []() {});
         }
         return py::cast(dc.release());
     }
 
     template <class data_t>
-    py::object data_container_dlpack(elsa::DataContainer<data_t>& self, py::object stream) {
+    py::object data_container_dlpack(elsa::DataContainer<data_t>& self, py::object stream)
+    {
         /* for now, support only stream none, like numpy */
-        if(stream != py::none()) {
-            PyErr_SetString(PyExc_RuntimeError,
-                    "elsa only supports stream=None.");
+        if (stream != py::none()) {
+            PyErr_SetString(PyExc_RuntimeError, "elsa only supports stream=None.");
             return py::none();
         }
-        
+
         DLDataType dl_type;
         dl_type.bits = CHAR_BIT * sizeof(data_t);
         dl_type.lanes = 1;
@@ -140,16 +153,16 @@ namespace detail {
             dl_type.code = kDLFloat;
         } else if constexpr (std::is_integral<data_t>::value) {
             if constexpr (std::is_unsigned<data_t>::value) {
-                    dl_type.code = kDLUInt;
+                dl_type.code = kDLUInt;
             } else {
-                    dl_type.code = kDLInt;
+                dl_type.code = kDLInt;
             }
         } else if (std::is_same<data_t, elsa::complex<float>>::value
-                || std::is_same<data_t, elsa::complex<double>>::value) {
-                    dl_type.code = kDLComplex;
+                   || std::is_same<data_t, elsa::complex<double>>::value) {
+            dl_type.code = kDLComplex;
         } else {
             PyErr_SetString(PyExc_RuntimeError,
-                    "__dlpack__ unsupported for data container of this type.");
+                            "__dlpack__ unsupported for data container of this type.");
             return py::none();
         }
 
@@ -162,8 +175,7 @@ namespace detail {
                 dl_device_type = kDLCUDAManaged;
                 break;
             default:
-                PyErr_SetString(PyExc_RuntimeError,
-                        "Internal error! Unknown storage type.");
+                PyErr_SetString(PyExc_RuntimeError, "Internal error! Unknown storage type.");
                 return py::none();
         }
 
@@ -172,15 +184,15 @@ namespace detail {
         /* 0 is expected for both managed CUDA memory and regular host memory */
         dl_device.device_id = 0;
 
-        auto &desc = self.getDataDescriptor();
+        auto& desc = self.getDataDescriptor();
         int32_t ndim = desc.getNumberOfDimensions();
         /* use unique pointers for exception safety */
         std::unique_ptr<int64_t[]> shape = std::make_unique<int64_t[]>(ndim);
         const auto& shape_vector = desc.getNumberOfCoefficientsPerDimension();
-        for(size_t i = 0; i < ndim; i++) {
+        for (size_t i = 0; i < ndim; i++) {
             shape[i] = shape_vector(i);
         }
-        
+
         std::unique_ptr<DLManagedTensor> managed = std::make_unique<DLManagedTensor>();
 
         managed->dl_tensor.device = dl_device;
@@ -191,12 +203,13 @@ namespace detail {
         /* according to the spec, NULL signifies row-major, densely packed layout */
         managed->dl_tensor.strides = NULL;
 
-        std::unique_ptr<elsa::mr::NativeContainer<data_t>> raw_data = std::make_unique<elsa::mr::NativeContainer<data_t>>(self.storage().lock_native());
+        std::unique_ptr<elsa::mr::NativeContainer<data_t>> raw_data =
+            std::make_unique<elsa::mr::NativeContainer<data_t>>(self.storage().lock_native());
         managed->manager_ctx = raw_data.get();
 
         uintptr_t data_ptr = reinterpret_cast<uintptr_t>(raw_data->raw_pointer);
         uintptr_t aligned_data_ptr = data_ptr & ~(DLPACK_ALIGNMENT - 1);
-        managed->dl_tensor.data = reinterpret_cast<void *>(aligned_data_ptr);
+        managed->dl_tensor.data = reinterpret_cast<void*>(aligned_data_ptr);
         managed->dl_tensor.byte_offset = data_ptr - aligned_data_ptr;
 
         managed->deleter = tensor_destructor<data_t>;
@@ -210,38 +223,40 @@ namespace detail {
     }
 
     template <class data_t>
-    py::object data_container_from_dlpack(py::object obj) {
+    py::object data_container_from_dlpack(py::object obj)
+    {
         py::capsule capsule = obj.attr("__dlpack__")();
-        if(capsule == py::none()) {
+        if (capsule == py::none()) {
             return py::none();
         }
 
-        if(std::strcmp(capsule.name(), "dltensor") != 0) {
+        if (std::strcmp(capsule.name(), "dltensor") != 0) {
             PyErr_SetString(PyExc_RuntimeError, "result of __dlpack__ does not contain a tensor.");
             return py::none();
         }
 
-        /* get_pointer never returns null (defined in pytypes.h, nothing in pybind is properly documented)*/
-        DLManagedTensor *tensor = capsule.get_pointer<DLManagedTensor>();
+        /* get_pointer never returns null (defined in pytypes.h, nothing in pybind is properly
+         * documented)*/
+        DLManagedTensor* tensor = capsule.get_pointer<DLManagedTensor>();
 
         DLDataType dtype = tensor->dl_tensor.dtype;
-        if(dtype.lanes != 1) {
+        if (dtype.lanes != 1) {
             PyErr_SetString(PyExc_RuntimeError, "unsupported data type.");
             return py::none();
         }
 
-        switch(dtype.code) {
+        switch (dtype.code) {
             case kDLFloat:
-                if(dtype.bits == sizeof(float) * CHAR_BIT) {
+                if (dtype.bits == sizeof(float) * CHAR_BIT) {
                     return build_data_container<float>(tensor, capsule);
-                } else if (dtype.bits == sizeof(double) * CHAR_BIT){
+                } else if (dtype.bits == sizeof(double) * CHAR_BIT) {
                     return build_data_container<double>(tensor, capsule);
                 }
                 break;
             case kDLComplex:
-                if(dtype.bits == sizeof(elsa::complex<float>) * CHAR_BIT) {
+                if (dtype.bits == sizeof(elsa::complex<float>) * CHAR_BIT) {
                     return build_data_container<elsa::complex<float>>(tensor, capsule);
-                } else if (dtype.bits == sizeof(elsa::complex<double>) * CHAR_BIT){
+                } else if (dtype.bits == sizeof(elsa::complex<double>) * CHAR_BIT) {
                     return build_data_container<elsa::complex<double>>(tensor, capsule);
                 }
                 break;
@@ -280,9 +295,10 @@ namespace detail {
     }
 
     template <class data_t>
-    void add_data_container_dlpack(py::module& m, py::class_<elsa::DataContainer<data_t>> dc) {
+    void add_data_container_dlpack(py::module& m, py::class_<elsa::DataContainer<data_t>> dc)
+    {
         dc.def("__dlpack__", data_container_dlpack<data_t>);
 
         m.def("from_dlpack", data_container_from_dlpack<data_t>);
     }
-}
+} // namespace detail
