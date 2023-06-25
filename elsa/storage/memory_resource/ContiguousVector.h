@@ -695,7 +695,7 @@ namespace elsa::mr
             NativeContainer<Type> _out;
             _out.raw_pointer = _self->pointer;
             _out.size = _self->size;
-            _out.resize = CleanupFunctor(_self);
+            _out.release = CleanupFunctor(_self);
             return _out;
         }
 
