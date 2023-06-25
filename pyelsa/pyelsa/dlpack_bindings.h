@@ -62,7 +62,7 @@ namespace detail {
     }
 
     template <class data_t>
-    py::object build_data_container(DLManagedTensor *tensor) {
+    py::object build_data_container(DLManagedTensor *tensor, py::capsule &capsule) {
         static_assert(std::is_trivially_copyable<data_t>::value);
         
         DLDevice device = tensor->dl_tensor.device;
@@ -97,9 +97,13 @@ namespace detail {
         if(elsa::mr::storageType() == elsa::mr::StorageType::Host && device.device_type == kDLCPU
             || elsa::mr::storageType() == elsa::mr::StorageType::CUDAManaged
                 && device.device_type == kDLCUDAManaged) {
-                    /* TODO: view destructor */
+            /* inform the capsule that the tensor should not be deleted */
+            capsule.set_name("used_dltensor");
+
             dc = std::make_unique<elsa::DataContainer<data_t>>(desc, imported_data_begin,
-                elsa::DataContainer<data_t>::ImportStrategy::View, [](){});
+                elsa::DataContainer<data_t>::ImportStrategy::View, [tensor](){
+                    tensor->deleter(tensor);
+                });
         } else {
             auto strategy = elsa::DataContainer<data_t>::ImportStrategy::DeviceCopy;
             if(elsa::mr::storageType() == elsa::mr::StorageType::Host && device.device_type == kDLCUDA) {
@@ -229,44 +233,44 @@ namespace detail {
         switch(dtype.code) {
             case kDLFloat:
                 if(dtype.bits == sizeof(float) * CHAR_BIT) {
-                    return build_data_container<float>(tensor);
+                    return build_data_container<float>(tensor, capsule);
                 } else if (dtype.bits == sizeof(double) * CHAR_BIT){
-                    return build_data_container<double>(tensor);
+                    return build_data_container<double>(tensor, capsule);
                 }
                 break;
             case kDLComplex:
                 if(dtype.bits == sizeof(elsa::complex<float>) * CHAR_BIT) {
-                    return build_data_container<elsa::complex<float>>(tensor);
+                    return build_data_container<elsa::complex<float>>(tensor, capsule);
                 } else if (dtype.bits == sizeof(elsa::complex<double>) * CHAR_BIT){
-                    return build_data_container<elsa::complex<double>>(tensor);
+                    return build_data_container<elsa::complex<double>>(tensor, capsule);
                 }
                 break;
 #if 0
             case kDLBool:
                 if(dtype.bits == sizeof(bool) * CHAR_BIT) {
-                    return build_data_container<bool>(tensor);
+                    return build_data_container<bool>(tensor, capsule);
                 }
                 break;
             case kDLInt:
                 if(dtype.bits == sizeof(int8_t) * CHAR_BIT) {
-                    return build_data_container<int8_t>(tensor);
+                    return build_data_container<int8_t>(tensor, capsule);
                 } else if (dtype.bits == sizeof(int16_t) * CHAR_BIT){
-                    return build_data_container<int16_t>(tensor);
+                    return build_data_container<int16_t>(tensor, capsule);
                 } else if (dtype.bits == sizeof(int32_t) * CHAR_BIT){
-                    return build_data_container<int32_t>(tensor);
+                    return build_data_container<int32_t>(tensor, capsule);
                 } else if (dtype.bits == sizeof(int64_t) * CHAR_BIT){
-                    return build_data_container<int64_t>(tensor);
+                    return build_data_container<int64_t>(tensor, capsule);
                 }
                 break;
             case kDLUInt:
                 if(dtype.bits == sizeof(uint8_t) * CHAR_BIT) {
-                    return build_data_container<uint8_t>(tensor);
+                    return build_data_container<uint8_t>(tensor, capsule);
                 } else if (dtype.bits == sizeof(uint16_t) * CHAR_BIT){
-                    return build_data_container<uint16_t>(tensor);
+                    return build_data_container<uint16_t>(tensor, capsule);
                 } else if (dtype.bits == sizeof(uint32_t) * CHAR_BIT){
-                    return build_data_container<uint32_t>(tensor);
+                    return build_data_container<uint32_t>(tensor, capsule);
                 } else if (dtype.bits == sizeof(uint64_t) * CHAR_BIT){
-                    return build_data_container<uint64_t>(tensor);
+                    return build_data_container<uint64_t>(tensor, capsule);
                 }
                 break;
 #endif
