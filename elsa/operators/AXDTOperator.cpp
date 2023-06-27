@@ -67,7 +67,7 @@ namespace elsa
 
         bl_op->apply(x, Ax);
         //        Logger::get("AXDTOperator")->info("Apply result {}", Ax.sum());
-        Logger::get("AXDTOperator")->info("apply(), took {}s", timer);
+//        Logger::get("AXDTOperator")->info("apply(), took {}s", timer);
     }
 
     template <typename data_t>
@@ -79,7 +79,7 @@ namespace elsa
 
         bl_op->applyAdjoint(y, Aty);
         //        Logger::get("AXDTOperator")->info("ApplyAdjoint result {}", Aty.sum());
-        Logger::get("AXDTOperator")->info("applyAdjoint(), took {}s", timer);
+//        Logger::get("AXDTOperator")->info("applyAdjoint(), took {}s", timer);
     }
 
     template <typename data_t>
@@ -126,7 +126,7 @@ namespace elsa
             }();
 
             ops.emplace_back((*scales * projector).clone());
-            Logger::get("AXDTOperator")->info("constructed AXDTOperator Block {} / {}", i, numBlocks);
+//            Logger::get("AXDTOperator")->info("constructed AXDTOperator Block {} / {}", i, numBlocks);
         }
 
         //        EDF::write<data_t>(*weights,"_weights.edf");
