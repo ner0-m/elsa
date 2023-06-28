@@ -26,8 +26,10 @@ if(EXISTS "@CMAKE_CUDA_COMPILER@")
     find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 endif()
 
-find_dependency(Thrust REQUIRED PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH)
-thrust_create_target(elsa::Thrust FROM_OPTIONS)
+if(NOT TARGET elsa::Thrust)
+    find_dependency(Thrust REQUIRED PATHS ${CMAKE_INSTALL_PREFIX} NO_DEFAULT_PATH)
+    thrust_create_target(elsa::Thrust FROM_OPTIONS)
+endif()
 
 set(_supported_components @ELSA_REGISTERED_COMPONENTS@)
 
