@@ -80,8 +80,8 @@ namespace elsa
     {
         Timer timeguard("AXDTStatRecon", "evaluate");
 
-        const auto mu = Rx.getBlock(0);
-        const auto eta = Rx.getBlock(1);
+        const auto mu = materialize(Rx.getBlock(0));
+        const auto eta = materialize(Rx.getBlock(1));
 
         auto log_d = -axdt_op_->apply(eta);
         auto d = exp(log_d);
@@ -132,8 +132,8 @@ namespace elsa
     {
         Timer timeguard("AXDTStatRecon", "getGradient");
 
-        const auto mu = Rx.getBlock(0);
-        const auto eta = Rx.getBlock(1);
+        const auto mu = materialize(Rx.getBlock(0));
+        const auto eta = materialize(Rx.getBlock(1));
 
         auto log_d = -axdt_op_->apply(eta);
         auto d = exp(log_d);
@@ -223,8 +223,8 @@ namespace elsa
     {
         Timer timeguard("AXDTStatRecon", "getHessian");
 
-        const auto mu = Rx.getBlock(0);
-        const auto eta = Rx.getBlock(1);
+        const auto mu = materialize(Rx.getBlock(0));
+        const auto eta = materialize(Rx.getBlock(1));
 
         auto d = exp(-axdt_op_->apply(eta));
 
