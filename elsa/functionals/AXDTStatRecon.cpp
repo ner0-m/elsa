@@ -8,9 +8,6 @@
 #include "ZeroOperator.h"
 #include "Timer.h"
 
-//#include "Logger.h"
-//#include "cmath"
-
 namespace elsa
 {
     template <typename data_t>
@@ -42,7 +39,11 @@ namespace elsa
                                          const LinearOperator<data_t>& axdt_op, index_t N,
                                          const StatReconType& recon_type)
         : Functional<data_t>(
-            generate_descriptors(absorp_op.getDomainDescriptor(), axdt_op.getDomainDescriptor())),
+            generate_descriptors((recon_type == Gaussian_approximate_racian ||
+                                  recon_type == Racian_direct) ?
+                                     absorp_op.getDomainDescriptor() :
+                                     *generate_placeholder_descriptor(),
+                                 axdt_op.getDomainDescriptor())),
           ffa_(ffa),
           ffb_(ffb),
           a_tilde_(a),
@@ -79,8 +80,8 @@ namespace elsa
     {
         Timer timeguard("AXDTStatRecon", "evaluate");
 
-        const auto mu = materialize(Rx.getBlock(0));
-        const auto eta = materialize(Rx.getBlock(1));
+        const auto mu = Rx.getBlock(0);
+        const auto eta = Rx.getBlock(1);
 
         auto log_d = -axdt_op_->apply(eta);
         auto d = exp(log_d);
@@ -131,14 +132,14 @@ namespace elsa
     {
         Timer timeguard("AXDTStatRecon", "getGradient");
 
-        const auto mu = materialize(Rx.getBlock(0));
-        const auto eta = materialize(Rx.getBlock(1));
+        const auto mu = Rx.getBlock(0);
+        const auto eta = Rx.getBlock(1);
 
         auto log_d = -axdt_op_->apply(eta);
         auto d = exp(log_d);
 
-        auto grad_mu = out.getBlock(0);
-        auto grad_eta = out.getBlock(1);
+        DataContainer<data_t> grad_mu {out.getBlock(0).getDataDescriptor()};
+        DataContainer<data_t> grad_eta {out.getBlock(1).getDataDescriptor()};
 
         switch (recon_type_) {
             case Gaussian_log_d:
@@ -162,12 +163,12 @@ namespace elsa
                 grad_mu_tmp *= N_ / a / static_cast<data_t>(4.0);
                 grad_mu_tmp += static_cast<data_t>(1.0);
 
-                absorp_op_->applyAdjoint(grad_mu_tmp, grad_mu);
+                grad_mu = absorp_op_->applyAdjoint(grad_mu_tmp);
 
                 auto grad_eta_tmp = a * *alpha_ * d - *b_tilde_;
                 grad_eta_tmp *= *alpha_ * d * N_ * static_cast<data_t>(0.5);
 
-                axdt_op_->applyAdjoint(grad_eta_tmp, grad_eta);
+                grad_eta = axdt_op_->applyAdjoint(grad_eta_tmp);
             } break;
 
             case Racian_direct: {
@@ -180,18 +181,20 @@ namespace elsa
                 grad_mu_tmp *= N_ / a / static_cast<data_t>(4.0);
                 grad_mu_tmp += static_cast<data_t>(1.5);
 
-                absorp_op_->applyAdjoint(grad_mu_tmp, grad_mu);
+                grad_mu = absorp_op_->applyAdjoint(grad_mu_tmp);
 
                 auto grad_eta_tmp = static_cast<data_t>(0.5) * N_ * a * *alpha_ * *alpha_ * d * d;
                 auto grad_eta_tmp_bessel = *b_tilde_ * *alpha_ * d * N_ * static_cast<data_t>(0.5);
                 grad_eta_tmp -= grad_eta_tmp_bessel * axdt::quot_bessel_1_0(grad_eta_tmp_bessel);
 
-                axdt_op_->applyAdjoint(grad_eta_tmp, grad_eta);
+                grad_eta = axdt_op_->applyAdjoint(grad_eta_tmp);
             } break;
         }
 
         grad_mu = -grad_mu;
         grad_eta = -grad_eta;
+        out.getBlock(0) = grad_mu;
+        out.getBlock(1) = grad_eta;
 
         //        {
         //            data_t max_mu = 0;
@@ -220,8 +223,8 @@ namespace elsa
     {
         Timer timeguard("AXDTStatRecon", "getHessian");
 
-        const auto mu = materialize(Rx.getBlock(0));
-        const auto eta = materialize(Rx.getBlock(1));
+        const auto mu = Rx.getBlock(0);
+        const auto eta = Rx.getBlock(1);
 
         auto d = exp(-axdt_op_->apply(eta));
 
