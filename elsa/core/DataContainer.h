@@ -228,6 +228,9 @@ namespace elsa
         /// convert to the inverse fourier transformed signal
         void ifft(FFTNorm norm);
 
+        /// similar to copy assignment, but reallocates if other is view
+        void assign(const DataContainer<data_t>& other);
+
         /// if the datacontainer is already complex, return itself.
         DataContainer<add_complex_t<data_t>> asComplex() const;
 
@@ -381,7 +384,8 @@ namespace elsa
     inline DataContainer<data_t> operator*(const DataContainer<data_t>& lhs,
                                            const DataContainer<data_t>& rhs)
     {
-        auto copy = lhs;
+        DataContainer<data_t> copy(lhs.getDataDescriptor());
+        copy.assign(lhs);
         copy *= rhs;
         return copy;
     }
@@ -391,7 +395,8 @@ namespace elsa
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator*(const DataContainer<data_t>& dc, const Scalar& s)
     {
-        auto copy = dc;
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        copy.assign(dc);
         copy *= static_cast<data_t>(s);
         return copy;
     }
@@ -401,7 +406,8 @@ namespace elsa
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator*(const Scalar& s, const DataContainer<data_t>& dc)
     {
-        auto copy = dc;
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        copy.assign(dc);
         copy *= static_cast<data_t>(s);
         return copy;
     }
@@ -411,7 +417,8 @@ namespace elsa
     inline DataContainer<data_t> operator+(const DataContainer<data_t>& lhs,
                                            const DataContainer<data_t>& rhs)
     {
-        auto copy = lhs;
+        DataContainer<data_t> copy(lhs.getDataDescriptor());
+        copy.assign(lhs);
         copy += rhs;
         return copy;
     }
@@ -421,7 +428,8 @@ namespace elsa
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator+(const DataContainer<data_t>& dc, const Scalar& s)
     {
-        auto copy = dc;
+        DataContainer<data_t> copy(dc.getDataDescriptor());
+        copy.assign(dc);
         copy += static_cast<data_t>(s);
         return copy;
     }
@@ -431,7 +439,8 @@ namespace elsa
                                               Scalar>> && std::is_convertible_v<Scalar, data_t>>>
     inline DataContainer<data_t> operator+(const Scalar& s, const DataContainer<data_t>& dc)
     {
-        auto copy = dc;
+        auto copy = DataContainer<data_t>(dc.getDataDescriptor());
+        copy.assign(dc);
         copy += static_cast<data_t>(s);
         return copy;
     }
