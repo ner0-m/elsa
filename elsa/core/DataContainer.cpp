@@ -180,6 +180,9 @@ namespace elsa
     template <typename data_t>
     void DataContainer<data_t>::assign(const DataContainer<data_t>& other)
     {
+        if (this->getSize() != other.getSize()) {
+            throw InvalidArgumentError("assign: sizes are not equal");
+        }
         elsa::assign(other.begin(), other.end(), this->begin());
     }
 
