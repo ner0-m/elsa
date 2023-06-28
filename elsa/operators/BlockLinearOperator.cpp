@@ -117,7 +117,7 @@ namespace elsa
                 auto xView = x.viewAs(*_domainDescriptor);
                 index_t i = 0;
                 for (const auto& op : _operatorList) {
-                    op->apply(xView.getBlock(i), tmpAx);
+                    op->apply(materialize(xView.getBlock(i)), tmpAx);
                     Ax += tmpAx;
                     ++i;
                 }
@@ -163,7 +163,7 @@ namespace elsa
                 auto yView = y.viewAs(*_rangeDescriptor);
                 index_t i = 0;
                 for (const auto& op : _operatorList) {
-                    op->applyAdjoint(yView.getBlock(i), tmpAty);
+                    op->applyAdjoint(materialize(yView.getBlock(i)), tmpAty);
                     Aty += tmpAty;
                     ++i;
                 }
