@@ -38,12 +38,11 @@ namespace elsa
                                          const LinearOperator<data_t>& absorp_op,
                                          const LinearOperator<data_t>& axdt_op, index_t N,
                                          const StatReconType& recon_type)
-        : Functional<data_t>(
-            generate_descriptors((recon_type == Gaussian_approximate_racian ||
-                                  recon_type == Racian_direct) ?
-                                     absorp_op.getDomainDescriptor() :
-                                     *generate_placeholder_descriptor(),
-                                 axdt_op.getDomainDescriptor())),
+        : Functional<data_t>(generate_descriptors(
+            (recon_type == Gaussian_approximate_racian || recon_type == Racian_direct)
+                ? absorp_op.getDomainDescriptor()
+                : *generate_placeholder_descriptor(),
+            axdt_op.getDomainDescriptor())),
           ffa_(ffa),
           ffb_(ffb),
           a_tilde_(a),
@@ -138,8 +137,8 @@ namespace elsa
         auto log_d = -axdt_op_->apply(eta);
         auto d = exp(log_d);
 
-        DataContainer<data_t> grad_mu {out.getBlock(0).getDataDescriptor()};
-        DataContainer<data_t> grad_eta {out.getBlock(1).getDataDescriptor()};
+        DataContainer<data_t> grad_mu{out.getBlock(0).getDataDescriptor()};
+        DataContainer<data_t> grad_eta{out.getBlock(1).getDataDescriptor()};
 
         switch (recon_type_) {
             case Gaussian_log_d:
