@@ -228,7 +228,7 @@ namespace elsa
         /// convert to the inverse fourier transformed signal
         void ifft(FFTNorm norm);
 
-        /// similar to copy assignment, but reallocates if other is view
+        /// copy the values from other DataContainer to this DataContainer
         void assign(const DataContainer<data_t>& other);
 
         /// if the datacontainer is already complex, return itself.
