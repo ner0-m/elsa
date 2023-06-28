@@ -1782,6 +1782,46 @@ TEST_CASE_TEMPLATE("DataContainer: minimum/maximum", data_t, float, double)
     }
 }
 
+TEST_CASE_TEMPLATE("DataContainer: ops on const view should not affect the original", data_t, float,
+                   double)
+{
+    GIVEN("Some container")
+    {
+        IndexVector_t numCoeff(2);
+        numCoeff << 3, 3;
+        VolumeDescriptor dd(numCoeff);
+        Vector_t<data_t> data(dd.getNumberOfCoefficients());
+        data.setConstant(static_cast<data_t>(3.0));
+        DataContainer<data_t> dc(dd, data);
+
+        WHEN("create a view on the DataContainer")
+        {
+            const auto& dc_view = dc.viewAs(dd);
+            THEN("operations on the view should not affect the original one")
+            {
+                auto original_sum = dc.sum();
+
+                +dc_view;
+                -dc_view;
+
+                dc_view + static_cast<data_t>(233.0);
+                dc_view - static_cast<data_t>(233.0);
+                dc_view* static_cast<data_t>(233.0);
+                dc_view / static_cast<data_t>(233.0);
+
+                dc_view + dc_view;
+                dc_view - dc_view;
+                dc_view* dc_view;
+                dc_view / dc_view;
+
+                auto new_sum = dc.sum();
+
+                REQUIRE_EQ(original_sum, new_sum);
+            }
+        }
+    }
+}
+
 // "instantiate" the test templates for CPU types
 TEST_CASE_TEMPLATE_APPLY(datacontainer_construction, CPUTypeTuple);
 TEST_CASE_TEMPLATE_APPLY(datacontainer_reduction, CPUTypeTuple);
