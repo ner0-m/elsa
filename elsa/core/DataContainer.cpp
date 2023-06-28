@@ -177,6 +177,12 @@ namespace elsa
     }
 
     template <typename data_t>
+    void DataContainer<data_t>::assign(const DataContainer<data_t>& other)
+    {
+        elsa::assign(other.begin(), other.end(), this->begin());
+    }
+
+    template <typename data_t>
     DataContainer<data_t>::DataContainer(const DataDescriptor& dataDescriptor)
         : _dataDescriptor{dataDescriptor.clone()},
           storage_{
