@@ -19,7 +19,7 @@ The framework is mostly developed by the Computational Imaging and Inverse Probl
 checkout our at [ciip.cit.tum.de/](https://ciip.cit.tum.de/).
 
 The source code of **elsa** is hosted at
-[gitlab.lrz.de/IP/elsa](https://gitlab.lrz.de/IP/elsa). It is available under the
+[github.com/ner0-m/elsa](https://github.com/ner0-m/elsa). It is available under the
 Apache 2 open source license.
 
 [[_TOC_]]
